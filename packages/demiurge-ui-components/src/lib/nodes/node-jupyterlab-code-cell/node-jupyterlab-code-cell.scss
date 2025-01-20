@@ -1,0 +1,82 @@
+.node-jupyterlab-code-cell {
+  .node-wrapper-body.jupyterlab-code-cell {
+    background: var(--color-node-background);
+    width: 350px;
+    height: 200px;
+    position: relative;
+
+    .cell-output {
+      /*
+        --fit-tx: 0px;
+        --fit-ty: 0px;
+        --fit-scale: 1;
+        transform: translate(var(--fit-tx), var(--fit-ty)) scale(var(--fit-scale));
+        &:hover {
+          transform: translate(0, 0) scale(1);
+          opacity: 1;
+          z-index: 10000;
+        }
+        */
+      width: calc(100% - 20px);
+      margin: 0 10px 5px 10px;
+      background-color: var(--c-gray-12);
+      color: var(--color-code-output-text);
+      border: solid 1px var(--c-gray-10);
+      padding: 0 5px;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+  }
+
+  &.busy {
+    border: solid 1.5px var(--color-background);
+
+    &:before,
+    &:after {
+      content: '';
+      position: absolute;
+      left: -2px;
+      top: -2px;
+      background: linear-gradient(
+        45deg,
+        var(--color-kernel-state-1),
+        var(--color-kernel-state-2),
+        var(--color-kernel-state-1),
+        var(--color-kernel-state-2),
+        var(--color-kernel-state-1)
+      );
+      background-size: 400%;
+      width: calc(100% + 4px);
+      height: calc(100% + 4px);
+      z-index: -1;
+      animation: steam 30s linear infinite;
+
+      filter: blur(3px);
+    }
+
+    @keyframes steam {
+      0% {
+        background-position: 0 0;
+      }
+      50% {
+        background-position: 400% 0;
+      }
+      100% {
+        background-position: 0 0;
+      }
+    }
+  }
+
+  /* python output */
+  --jp-widgets-label-color: var(--color-code-output-text);
+  .jp-RenderedText pre {
+    color: var(--color-code-output-text);
+  }
+  .jupyter-output-area-box {
+    border: solid 1px transparent;
+    .jupyter-output-area-box-debug {
+      font-size: 13px;
+      color: var(--color-debug);
+    }
+  }
+}

@@ -1,0 +1,28 @@
+.providers {
+  display: flex;
+  margin-bottom: 40px;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+
+  .provider-logo {
+    width: 40px;
+    height: 40px;
+    margin: auto;
+
+    &.gitlab {
+      background-color: var(--c-white-1);
+      border-radius: 50%;
+      color: var(--color-background);
+    }
+  }
+}
+
+.signup-link,
+.login-form,
+.providers {
+  padding: 15px;
+  margin: 25px;
+  box-shadow: 0 0 2px 0 var(--ca-white-3);
+  border-radius: var(--form-input-border-radius);
+}

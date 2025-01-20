@@ -1,0 +1,61 @@
+.datetime {
+  position: relative;
+  vertical-align: middle;
+
+  .datetime-main {
+    display: inline-block;
+
+    svg {
+      vertical-align: middle;
+      width: 16px;
+      height: 16px;
+      margin-right: 5px;
+      display: inline;
+      path {
+        stroke: var(--c-gray-8);
+        fill: var(--c-gray-8);
+      }
+    }
+
+    > span:not(:first-of-type) {
+      margin-left: 15px;
+    }
+  }
+
+  .datetime-hover {
+    position: absolute;
+    background-color: var(--c-black-5);
+    border: solid 1px var(--c-white-1);
+    color: var(--c-white-1);
+    padding: 0px 7px;
+    border-radius: 9999px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    opacity: 0;
+    transition: opacity ease-in 0.3s;
+    display: none;
+
+    > span:not(:first-of-type) {
+      margin-left: 15px;
+    }
+    &.right {
+      top: 0;
+      left: 21px;
+    }
+    &.left {
+      top: 0;
+      right: 21px;
+    }
+    &.bottom {
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+  }
+
+  &:hover .datetime-hover {
+    opacity: 1;
+    display: initial;
+  }
+}

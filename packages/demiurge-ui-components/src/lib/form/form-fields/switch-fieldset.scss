@@ -1,0 +1,97 @@
+
+.switch-fieldset {
+    --button-width: 31px;
+    --button-height: 17px;
+    --toggle-diameter: 15px;
+    --button-toggle-offset: calc(
+      (var(--button-height) - var(--toggle-diameter)) / 2
+    );
+    --toggle-shadow-offset: 10px;
+    --toggle-wider: 20px;
+  
+    margin-right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    height: fit-content;
+  
+    label.Label {
+      display: flex;
+      align-items: center;
+  
+      p {
+        margin: 0;
+        margin-left: 15px;
+        padding: 0;
+        color: var(--c-white-1);
+        font-size: 9px;
+        font-weight: 500;
+        transition: 0.2s;
+  
+        &.switch-active {
+          color: var(--c-green-1);
+        }
+      }
+    }
+  
+    span {
+      display: inline-block;
+      width: var(--button-width);
+      height: var(--button-height);
+      background-color: var(--color-node-background);
+      border-radius: calc(var(--button-height) / 1.8);
+      position: relative;
+      transition: 0.3s all ease-in-out;
+      cursor: pointer;
+      border: 1px solid var(--c-gray-7);
+    }
+  
+    span::after {
+      content: '';
+      display: inline-block;
+      width: var(--toggle-diameter);
+      height: var(--toggle-diameter);
+      background-color: var(--c-gray-7);
+      border-radius: calc(var(--toggle-diameter) / 2);
+      position: absolute;
+      top: var(--button-toggle-offset);
+      left: 0;
+      transform: translateX(var(--button-toggle-offset));
+      box-shadow: var(--toggle-shadow-offset) 0
+        calc(var(--toggle-shadow-offset) * 4) var(--ca-black-8);
+      transition: 0.3s all ease-in-out;
+    }
+  
+    input[type='checkbox']:checked + span {
+      background-color: var(--c-green-1);
+    }
+  
+    input[type='checkbox']:checked + span::after {
+      background-color: var(--c-white-1);
+      transform: translateX(
+        calc(
+          var(--button-width) - var(--toggle-diameter) -
+            var(--button-toggle-offset)
+        )
+      );
+      box-shadow: calc(var(--toggle-shadow-offset) * -1) 0
+        calc(var(--toggle-shadow-offset) * 4) var(--ca-black-8);
+    }
+  
+    input[type='checkbox'] {
+      display: none;
+    }
+  
+    input[type='checkbox']:active + span::after {
+      width: var(--toggle-wider);
+    }
+  
+    input[type='checkbox']:checked:active + span::after {
+      transform: translateX(
+        calc(
+          var(--button-width) - var(--toggle-wider) - var(--button-toggle-offset)
+        )
+      );
+    }
+  }
+  

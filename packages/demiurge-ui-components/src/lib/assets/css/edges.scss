@@ -1,0 +1,92 @@
+/**
+ *
+ * Edges
+ * TODO: menage and story of all edges possible (matrix: group, type, semantic, hilighted)
+ *
+ */
+
+g.react-flow__edge {
+  //
+  path {
+    transition: color 0.2s;
+    stroke: var(--c-pink-3);
+    stroke-width: 1.5px;
+  }
+
+  &.edge-reference {
+    path {
+      stroke: var(--color-edge-reference);
+      stroke-dasharray: 5;
+      /* animation: dashdraw 5s linear infinite; */
+    }
+    &.mount path {
+      stroke: var(--color-volume);
+      stroke-width: 2;
+      stroke-dasharray: 0;
+    }
+    &.terminal path {
+      stroke: var(--color-terminal);
+      stroke-width: 2;
+    }
+    &.chat-anchor path {
+      stroke: var(--color-chat-new);
+      stroke-width: 2.5;
+      stroke-dasharray: 0;
+    }
+  }
+
+  &.edge-sequence {
+    path {
+      stroke: var(--color-edge-sequence);
+      stroke-width: 2;
+    }
+  }
+
+  &.edge-unknown {
+    path {
+      stroke: var(--c-black-6);
+      stroke-width: 3;
+    }
+  }
+
+  &:hover path.react-flow__edge-path,
+  &.testhover path.react-flow__edge-path {
+    stroke: var(--c-pink-1) !important;
+  }
+
+  &.edges-group path.react-flow__edge-path {
+    stroke: var(--c-pink-2);
+    stroke-width: 2px;
+  }
+
+  &.source-highlighted path.react-flow__edge-path,
+  &.target-highlighted path.react-flow__edge-path {
+    stroke: var(--c-pink-1);
+  }
+}
+
+/*
+ * edge labels
+ */
+
+.edge-label {
+  box-sizing: border-box;
+  max-width: 100px;
+  vertical-align: middle;
+  padding: 0 10px;
+  line-height: 18px;
+  font-size: 11px;
+  color: var(--c-white-1);
+  border-radius: 4px;
+  background-color: var(--c-black-6);
+  border: solid 1px var(--c-blue-3);
+
+  .edge-label-icon,
+  .edge-label-icon.red {
+    pointer-events: all;
+    width: 22px;
+    height: 22px;
+    background: none;
+    color: var(--c-white-1);
+  }
+}

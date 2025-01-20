@@ -1,0 +1,135 @@
+@mixin left-curve($color) {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='33' height='30'><path d='M21.12 9.6C23.8866 3.63882 29 0 33 0V30H0C19.5 26.4 17.5 17.4 21.12 9.6Z' fill='#{$color}'/></svg>");
+}
+
+.tabs-container {
+  width: 700px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  .tab {
+    background: var(--c-blue-gray-5);
+    padding: 0 20px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    overflow-x: auto;
+    height: 30px;
+  }
+
+  /* Custom .tab scrollbar */
+  .tab::-webkit-scrollbar {
+    height: 5px;
+    width: 5px;
+    background: var(--c-blue-gray-6);
+  }
+
+  .tab::-webkit-scrollbar-thumb {
+    background: var(--c-blue-gray-4);
+    border-radius: 5px;
+  }
+
+  .tab ul {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+  }
+
+  .tab ul li {
+    color: var(--c-gray-7);
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    height: 100%;
+    padding: 0 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .tab .line {
+    min-width: 2px;
+    border-radius: 2px;
+    height: 20px;
+    background: var(--c-blue-gray-4);
+  }
+
+  .bg-tab {
+    background: var(--color-background);
+    background-size: contain;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 0 20px;
+    position: relative;
+  }
+
+  .bg-tab:before {
+    content: '';
+    position: absolute;
+    left: -33px;
+    width: 33px;
+    height: 30px;
+    @include left-curve('%23141432');
+  }
+
+  .bg-tab:after {
+    content: '';
+    position: absolute;
+    right: -33px;
+    width: 33px;
+    height: 30px;
+    @include left-curve('%23141432');
+    transform: scaleX(-1);
+  }
+
+  .add {
+    cursor: pointer;
+    min-width: fit-content;
+  }
+
+  .tab-item {
+    position: relative;
+  }
+
+  .icon-add,
+  .icon-close {
+    position: absolute;
+    opacity: 0;
+    transition: 0.2s;
+    cursor: pointer;
+  }
+  .bg-tab:hover .icon-add,
+  .bg-tab:hover .icon-close {
+    opacity: 1;
+  }
+
+  .icon-add {
+    left: 2px;
+    background: var(--c-blue-gray-7);
+    height: 12px;
+    width: 12px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .icon-add svg {
+    height: 8px;
+    width: 8px;
+  }
+
+  .icon-close {
+    height: 12px;
+    width: 12px;
+    right: 2px;
+  }
+}

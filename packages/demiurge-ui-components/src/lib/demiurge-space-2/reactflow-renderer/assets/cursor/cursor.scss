@@ -1,0 +1,25 @@
+/* Cursor */
+.cursor {
+  position: relative;
+
+  .transparent-cursor path {
+    fill: none !important;
+  }
+
+  /* Label */
+
+  .d-none {
+    display: none;
+  }
+
+  .transparent-cursor {
+    color: none !important;
+  }
+
+  .label-cursor {
+    position: absolute;
+    bottom: -15px;
+    right: -60px;
+    width: 60px;
+  }
+}

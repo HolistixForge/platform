@@ -1,0 +1,34 @@
+.accordion-item {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.accordion-item .accordion-title {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  background: var(--c-blue-gray-1);
+}
+
+.accordion-item .accordion-title p {
+  padding: 0;
+  margin: 0;
+  color: var(--c-pink-41);
+  font-size: 6px;
+}
+
+.accordion-item .accordion-title span {
+  padding: 0;
+  margin: 0;
+  font-size: 6px;
+  color: var(--c-white-1);
+}
+
+.accordion-content {
+  color: var(--c-white-1);
+  font-size: 7px;
+  padding: 5px 10px;
+  background: var(--c-blue-gray-2);
+}

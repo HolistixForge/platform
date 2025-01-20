@@ -1,0 +1,54 @@
+.reply-item {
+  display: flex;
+  flex-direction: column;
+
+  .replyed-to {
+    display: flex;
+    gap: 10px;
+    overflow-x: hidden;
+  }
+
+  .reply-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: calc(100% - 70px);
+    .reply-header {
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  .replyed-to p,
+  .reply-header h5 {
+    margin: 0;
+    padding: 0;
+  }
+
+  .replyed-to svg.reply-link {
+    margin-left: 10px;
+    margin-top: 4px;
+    margin-bottom: 10px;
+    min-width: 29px;
+    height: 27px;
+  }
+
+  .reply-header {
+    h5 {
+      font-size: 14px;
+    }
+
+    p {
+      font-size: 10px;
+      color: var(--c-white-1);
+    }
+  }
+
+  .reply-wrapper .content-text {
+    font-size: 11px;
+    max-width: 82%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--c-gray-9);
+    overflow: hidden;
+  }
+}

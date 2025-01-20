@@ -1,0 +1,35 @@
+h1,
+h2,
+h3 {
+  color: var(--c-white-1);
+}
+
+.palette-viewer {
+  text-align: center;
+  padding: 20px;
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.color-box {
+  border: solid 1px var(--c-gray-9);
+  height: 100px;
+  padding: 20px 15px;
+  border-radius: 5px;
+  box-sizing: border-box;
+  color: var(--c-white-1);
+  font-weight: bold;
+  cursor: pointer;
+}
+.color-box:hover {
+  color: var(--c-black-4);
+}
+
+.color-label {
+  font-size: 14px;
+}

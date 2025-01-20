@@ -1,0 +1,692 @@
+/**
+ * context menu 
+ */
+
+.ContextMenuContent,
+.ContextMenuSubContent {
+  min-width: 170px;
+  background-color: var(--c-white-1);
+  border-radius: var(--border-radius-box);
+  overflow: hidden;
+  padding: 5px;
+  box-shadow:
+    0px 10px 38px -10px var(--ca-black-6),
+    0px 10px 20px -15px var(--ca-black-8);
+}
+
+.ContextMenuItem,
+.ContextMenuCheckboxItem,
+.ContextMenuRadioItem,
+.ContextMenuSubTrigger {
+  font-size: 13px;
+  line-height: 1;
+  color: var(--c-gray-12);
+  border-radius: var(--form-input-border-radius);
+  display: flex;
+  align-items: center;
+  height: 25px;
+  padding: 0 5px;
+  position: relative;
+  padding-left: 25px;
+  user-select: none;
+  outline: none;
+}
+.ContextMenuSubTrigger[data-state='open'] {
+  background-color: var(--c-pink-2);
+  color: var(--c-white-1);
+}
+.ContextMenuItem[data-disabled],
+.ContextMenuCheckboxItem[data-disabled],
+.ContextMenuRadioItem[data-disabled],
+.ContextMenuSubTrigger[data-disabled] {
+  color: var(--c-gray-6);
+  pointer-events: 'none';
+}
+.ContextMenuItem[data-highlighted],
+.ContextMenuCheckboxItem[data-highlighted],
+.ContextMenuRadioItem[data-highlighted],
+.ContextMenuSubTrigger[data-highlighted] {
+  background-color: var(--c-pink-1);
+  color: var(--c-white-1);
+}
+
+.ContextMenuLabel {
+  padding-left: 25px;
+  font-size: 12px;
+  line-height: 25px;
+  color: var(--c-gray-11);
+}
+
+.ContextMenuSeparator {
+  height: 1px;
+  background-color: var(--c-pink-2);
+  margin: 5px;
+}
+
+.ContextMenuItemIndicator {
+  position: absolute;
+  left: 0;
+  width: 25px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.RightSlot {
+  margin-left: auto;
+  padding-left: 20px;
+  color: var(--c-gray-11);
+}
+[data-highlighted] > .RightSlot {
+  color: var(--c-white-1);
+}
+[data-disabled] .RightSlot {
+  color: var(--c-gray-8);
+}
+
+/**
+ * Dialog
+ */
+
+.DialogOverlay {
+  background-color: var(--ca-black-9);
+  position: fixed;
+  inset: 0;
+  animation: overlayShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.DialogContent {
+  background-color: rgba(43, 43, 68, 0.92);
+  backdrop-filter: blur(2px);
+  border-radius: var(--border-radius-box);
+  box-shadow:
+    hsl(206 22% 7% / 35%) 0px 10px 38px -10px,
+    hsl(206 22% 7% / 20%) 0px 10px 20px -15px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90vw;
+  max-width: 450px;
+  max-height: 85vh;
+  padding: 25px;
+  animation: contentShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.DialogContent:focus {
+  outline: none;
+}
+
+.DialogTitle {
+  margin: 0;
+  font-weight: 500;
+  color: var(--ca-white-9);
+  font-size: 17px;
+}
+
+.DialogDescription {
+  margin: 10px 0 20px;
+  color: var(--c-gray-11);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+@keyframes overlayShow {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes contentShow {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/**
+ * Form
+ */
+
+.IconButton {
+  padding: 0;
+  font-family: inherit;
+  border-radius: 100%;
+  height: 25px;
+  width: 25px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--c-gray-11);
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+.IconButton:hover {
+  background-color: var(--c-gray-4);
+}
+.IconButton:focus {
+  box-shadow: 0 0 0 2px var(--c-gray-7);
+}
+
+.Fieldset {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 15px;
+  width: 100%;
+
+  &.integrated {
+    width: auto;
+  }
+}
+
+.Label {
+  font-size: 15px;
+  color: var(--form-label-color);
+  width: 150px;
+  min-width: 150px;
+  text-align: right;
+}
+
+.Input {
+  width: 100%;
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  height: var(--form-input-height);
+}
+.Input::placeholder {
+  color: var(--form-input-placeholder-color);
+  opacity: 1; /* Firefox */
+}
+
+.Input,
+.SelectTrigger {
+  text-align: left;
+  border-radius: var(--form-input-border-radius);
+  padding: 0 var(--form-input-padding-x);
+  font-size: var(--form-input-font-size);
+  color: var(--form-input-color);
+  box-shadow: var(--form-input-bs-x, 0) var(--form-input-bs-y, 0)
+    var(--form-input-bs-blur) var(--form-input-bs-scale, 0)
+    var(--form-input-bs-color, transparent);
+}
+.Input:focus,
+.SelectTrigger:focus,
+.Button.submit:focus {
+  outline: none;
+  box-shadow:
+    var(--form-input-bs-x, 0) var(--form-input-bs-y, 0)
+      var(--form-input-bs-blur) var(--form-input-bs-scale, 0)
+      var(--form-input-bs-color, transparent),
+    var(--form-input-focus-bs-x, 0) var(--form-input-focus-bs-y, 0)
+      var(--form-input-focus-bs-blur) var(--form-input-focus-bs-scale, 0)
+      var(--form-input-focus-bs-color, transparent);
+}
+
+.Fieldset.text.with-copy-button {
+  position: relative;
+  input {
+    padding-right: 45px;
+  }
+  button {
+    position: absolute;
+    right: 0px;
+  }
+}
+
+/**
+ * Select
+ */
+
+.SelectTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: left;
+  line-height: 1;
+  width: 100%;
+  height: var(--form-input-height);
+  gap: 5px;
+
+  &:hover {
+    background: none;
+    color: var(--form-input-color);
+  }
+
+  &[data-placeholder] {
+    color: var(--form-input-placeholder-color);
+  }
+
+  > span:first-child {
+    width: 100%;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &.integrated {
+    background: red;
+    border: none;
+    cursor: pointer;
+    outline: none;
+    box-shadow: none;
+    padding: 0;
+    width: fit-content;
+    height: auto;
+  }
+
+  &.small {
+    font-size: 9px;
+    color: var(--c-white-1);
+    background: none;
+
+    .SelectIcon {
+      color: var(--c-white-1);
+      svg {
+        width: 11px;
+        height: 11px;
+      }
+    }
+  }
+
+  &.w-full {
+    width: 100%;
+  }
+}
+
+.SelectIcon {
+  color: Var(--c-gray-11);
+}
+
+.SelectContent {
+  overflow: hidden;
+  background-color: var(--c-blue-gray-2);
+  border-radius: var(--border-radius-box);
+  box-shadow: 0px 0px 5px 0px var(--form-input-bs-color);
+}
+
+.SelectViewport {
+  padding: 5px;
+}
+
+.SelectItem {
+  font-size: var(--form-input-font-size);
+  line-height: 1;
+  color: var(--form-input-color);
+  border-radius: var(--form-input-border-radius);
+  display: flex;
+  align-items: center;
+  height: var(--form-input-height);
+  padding: 0 35px 0 25px;
+  position: relative;
+  user-select: none;
+}
+.SelectItem[data-disabled] {
+  color: var(--c-gray-8);
+  pointer-events: none;
+}
+.SelectItem[data-highlighted] {
+  outline: none;
+  background-color: var(--c-pink-1);
+  color: var(--c-white-1);
+}
+
+.SelectLabel {
+  padding: 0 25px;
+  font-size: 12px;
+  line-height: 25px;
+  color: var(--form-label-color);
+}
+
+.SelectSeparator {
+  height: 1px;
+  background-color: var(--c-pink-2);
+  margin: 5px;
+}
+
+.SelectItemIndicator {
+  position: absolute;
+  left: 0;
+  width: 25px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.SelectScrollButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 25px;
+  background-color: var(--c-blue-gray-2);
+  color: var(--c-pink-6);
+  cursor: default;
+
+  svg {
+    fill: white;
+    stroke: white;
+  }
+}
+
+/**
+ * Sliders
+ */
+
+.SliderRoot {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.SliderTrack {
+  position: relative;
+  flex-grow: 1;
+  background-color: var(--c-gray-7);
+  height: 4px;
+  border-radius: 9999px;
+}
+
+.SliderRange {
+  position: absolute;
+  background-color: var(--c-pink-3);
+  border-radius: 9999px;
+  height: 100%;
+}
+
+.SliderThumb {
+  display: block;
+  width: 17px;
+  height: 17px;
+  background-color: var(--c-pink-2);
+  border-radius: 50%;
+  box-shadow: 0 2px 10px var(--c-pink-2);
+}
+
+.SliderValue {
+  font-size: var(--form-input-font-size);
+  color: var(--form-input-color);
+  min-width: 70px;
+}
+
+/**
+ * Popover
+ */
+
+.PopoverContent {
+  border-radius: 4px;
+  padding: 20px;
+  width: fit-content;
+  background-color: var(--c-white-1);
+  box-shadow:
+    hsl(206 22% 7% / 35%) 0px 10px 38px -10px,
+    hsl(206 22% 7% / 20%) 0px 10px 20px -15px;
+  animation-duration: 400ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+  outline: none;
+}
+.PopoverContent:focus {
+  box-shadow:
+    hsl(206 22% 7% / 35%) 0px 10px 38px -10px,
+    hsl(206 22% 7% / 20%) 0px 10px 20px -15px,
+    0 0 0 2px var(--c-pink-2);
+}
+.PopoverContent[data-state='open'][data-side='top'] {
+  animation-name: slideDownAndFade;
+}
+.PopoverContent[data-state='open'][data-side='right'] {
+  animation-name: slideLeftAndFade;
+}
+.PopoverContent[data-state='open'][data-side='bottom'] {
+  animation-name: slideUpAndFade;
+}
+.PopoverContent[data-state='open'][data-side='left'] {
+  animation-name: slideRightAndFade;
+}
+
+.PopoverArrow {
+  fill: var(--c-white-1);
+}
+
+.PopoverClose {
+  font-family: inherit;
+  border-radius: 100%;
+  height: 25px;
+  width: 25px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--c-pink-6);
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}
+
+@keyframes slideUpAndFade {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideRightAndFade {
+  from {
+    opacity: 0;
+    transform: translateX(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideDownAndFade {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideLeftAndFade {
+  from {
+    opacity: 0;
+    transform: translateX(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/**
+ * Checkox
+ */
+
+button.CheckboxRoot {
+  all: unset;
+  background-color: var(--c-white-1);
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px var(--ca-black-7);
+  cursor: pointer;
+}
+.CheckboxRoot:hover {
+  background-color: var(--c-pink-1);
+}
+.CheckboxRoot:focus {
+  box-shadow: 0 0 0 1.5px var(--c-pink-1);
+}
+
+.CheckboxIndicator {
+  color: var(--c-pink-6);
+}
+
+/**
+ * Menubar
+ */
+
+.MenubarRoot {
+  display: flex;
+  background-color: white;
+  padding: 3px;
+  border-radius: 6px;
+  box-shadow: 0 2px 10px var(--black-a7);
+
+  &.integrated {
+    padding: 0;
+    background: none;
+    box-shadow: none;
+  }
+}
+
+.MenubarTrigger {
+  padding: 8px 12px;
+  outline: none;
+  user-select: none;
+  font-weight: 500;
+  line-height: 1;
+  border-radius: 4px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+}
+
+.MenubarTrigger[data-highlighted],
+.MenubarTrigger[data-state='open'] {
+  background-color: var(--c-pink-1);
+}
+
+.MenubarContent,
+.MenubarSubContent {
+  min-width: 160px;
+  background-color: var(--c-blue-6);
+  border-radius: 6px;
+  padding: 5px;
+  animation-duration: 400ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+  box-shadow:
+    hsl(206 22% 7% / 35%) 0px 10px 38px -10px,
+    hsl(206 22% 7% / 20%) 0px 10px 20px -15px;
+}
+
+.MenubarItem,
+.MenubarSubTrigger,
+.MenubarCheckboxItem,
+.MenubarRadioItem {
+  all: unset;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--mauve-9);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  height: 25px;
+  padding: 0 10px;
+  position: relative;
+  user-select: none;
+
+  cursor: pointer;
+
+  &.red {
+    color: var(--c-red-1);
+    fill: var(--c-red-1);
+    stroke: var(--c-red-1);
+  }
+}
+
+.MenubarItem.inset,
+.MenubarSubTrigger.inset,
+.MenubarCheckboxItem.inset,
+.MenubarRadioItem.inset {
+  padding-left: 20px;
+}
+
+.MenubarItem[data-state='open'],
+.MenubarSubTrigger[data-state='open'] {
+  background-color: var(--c-pink-3);
+  color: white;
+}
+
+.MenubarItem[data-highlighted],
+.MenubarSubTrigger[data-highlighted],
+.MenubarCheckboxItem[data-highlighted],
+.MenubarRadioItem[data-highlighted] {
+  background-image: linear-gradient(
+    135deg,
+    var(--c-pink-3) 0%,
+    var(--c-pink-51) 100%
+  );
+  color: white;
+  fill: white;
+  stroke: white;
+
+  &.red {
+    background-image: linear-gradient(
+    135deg,
+    var(--c-red-1) 0%,
+    var(--c-red-3) 100%
+  );
+  }
+}
+
+.MenubarItem[data-disabled],
+.MenubarSubTrigger[data-disabled],
+.MenubarCheckboxItem[data-disabled],
+.MenubarRadioItem[data-disabled] {
+  color: var(--mauve-8);
+  pointer-events: none;
+}
+
+.MenubarItemIndicator {
+  position: absolute;
+  left: 0;
+  width: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.MenubarSeparator {
+  height: 1px;
+  background-color: var(--c-pink-1);
+  margin: 5px;
+}
+
+.RightSlot {
+  margin-left: auto;
+  padding-left: 20px;
+  color: var(--mauve-9);
+}
+
+[data-highlighted] > .RightSlot {
+  color: white;
+}
+
+[data-disabled] > .RightSlot {
+  color: var(--mauve-8);
+}

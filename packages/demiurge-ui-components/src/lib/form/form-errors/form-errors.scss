@@ -1,0 +1,35 @@
+/**
+ * form 
+ */
+
+.form-error {
+  color: var(--color-error);
+  font-size: 10px;
+  text-align: center;
+}
+
+.form-errors {
+  padding: 10px;
+  border-radius: var(--border-radius-box);
+  box-shadow: 0 0 10px -5px var(--color-error);
+
+  ul {
+    list-style-type: none;
+    margin: 0;
+    padding-left: 25px;
+
+    li {
+      margin: 0 0 5px 0;
+
+      &:last-of-type {
+        margin: 0;
+      }
+
+      p.form-error {
+        padding: 0;
+        margin: 0;
+        text-align: left;
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+.react-flow__node-wrapper.node-closed {
+  .selections-awareness {
+    left: 100px;
+  }
+}
+
+.selections-awareness {
+  position: absolute;
+  left: calc(100% + 10px);
+  font-size: 10px;
+  width: 150px;
+  top: 0;
+}

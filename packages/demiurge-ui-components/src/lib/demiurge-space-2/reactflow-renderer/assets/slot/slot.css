@@ -1,0 +1,53 @@
+.handles-bar ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  gap: 2px;
+  margin: 0 4px;
+}
+
+.handles-bar ul li {
+  font-size: 8px;
+  color: var(--c-yellow-1);
+  white-space: nowrap;
+  margin: 0;
+  padding: 0;
+  width: 8.5px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--c-yellow-1);
+  user-select: none;
+  position: relative;
+}
+
+.handles-bar ul li p {
+  white-space: nowrap;
+  line-height: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 40px;
+  transform-origin: 0 0;
+  margin: 0;
+}
+
+.node-outputs-opened .handles-bar ul li p {
+  transform: rotate(90deg) translate(-3px, 0);
+  transform-origin: 0% 100%;
+}
+
+.node-inputs-opened .handles-bar ul li p {
+  transform: rotate(-90deg) translate(-36px, 0);
+}
+
+.handles-bar ul li div.react-flow__handle {
+  width: 100%;
+  height: 100%;
+  transform: none;
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: none;
+  border: none;
+  border-radius: 4px;
+}

@@ -1,0 +1,89 @@
+.comment-icon {
+  position: relative;
+  cursor: pointer;
+
+  .resolved-comment {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+  }
+
+  .new-comment {
+    height: 14px;
+    width: 14px;
+    border-radius: 50%;
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-chat-default);
+  }
+
+  .new-comment span {
+    color: var(--c-white-1);
+    font-size: 10px;
+  }
+
+  .comment-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: absolute;
+    right: -180px;
+    width: 150px;
+    top: 0%;
+  }
+
+  .comment-round {
+    height: 20px;
+    width: 20px;
+    background: var(--color-chat-new);
+    border-radius: 50%;
+  }
+
+  .comment-open {
+    transform: translate(0, -50%);
+  }
+
+  .side-comment-open {
+    width: 281px;
+  }
+
+  .side-comment {
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+
+  .side-comment p {
+    margin: 0;
+    padding: 0;
+    font-size: 9px;
+    outline: none;
+  }
+}
+
+/* custom invisible edge handle */
+
+.comment-icon {
+  .node-outputs-closed {
+    bottom: 50%;
+    z-index: -1;
+    .edges-count {
+      top: 0;
+      transform: translate(-50%, -50%);
+      width: 10px;
+      height: 10px;
+      opacity: 0;
+
+      .react-flow__handle {
+        width: 1px;
+        height: 1px;
+      }
+    }
+    .handles-bar {
+      display: none;
+    }
+  }
+}

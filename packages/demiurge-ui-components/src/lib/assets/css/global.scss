@@ -1,0 +1,318 @@
+.disable-pan-select {
+  cursor: default;
+}
+
+.node-wrapper {
+  position: relative;
+}
+
+.input,
+.output {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* Side outputs / inputs */
+
+.number-field-input,
+.number-field-output {
+  transform: rotate(0deg) !important;
+}
+
+.number-field-input {
+  right: -20px !important;
+  top: 10px !important;
+}
+
+.number-field-output {
+  left: -25px !important;
+  bottom: 12px !important;
+}
+
+.number-field-input .number,
+.number-field-output .number {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid var(--c-white-1);
+  background: var(--c-blue-62);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.number-field-input .number p,
+.number-field-output .number p {
+  margin: 0;
+  font-size: 10px;
+  color: var(--c-white-1);
+}
+
+.node-io-grid-output {
+  position: absolute;
+  left: -27px;
+  bottom: 6px;
+  display: flex;
+  transform: rotate(159deg);
+  gap: 2px;
+
+  .output-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 2px;
+
+    span {
+      clip-path: polygon(
+        30% 0%,
+        70% 0%,
+        100% 30%,
+        100% 70%,
+        70% 100%,
+        30% 100%,
+        0% 70%,
+        0% 30%
+      );
+      height: 9px;
+      width: 9px;
+      background: var(--c-alt-blue-1);
+    }
+  }
+}
+
+.node-io-grid-input {
+  position: absolute;
+  right: -27px;
+  top: 6px;
+  display: flex;
+  transform: rotate(-21deg);
+  gap: 2px;
+
+  .input-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 2px;
+
+    span {
+      clip-path: polygon(
+        30% 0%,
+        70% 0%,
+        100% 30%,
+        100% 70%,
+        70% 100%,
+        30% 100%,
+        0% 70%,
+        0% 30%
+      );
+      height: 9px;
+      width: 9px;
+      background: var(--c-alt-blue-4);
+    }
+  }
+}
+
+/* Mains infos text */
+
+.main-infos {
+  color: var(--c-white-1);
+}
+
+.main-infos p {
+  white-space: nowrap;
+  font-weight: 700;
+  margin: 0;
+  padding: 0;
+}
+
+.main-infos ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  margin-top: 5px;
+}
+
+.main-infos ul li {
+  white-space: nowrap;
+  font-size: 10px;
+  color: var(--c-white-1);
+  font-weight: 300;
+}
+
+/* Menu */
+
+.target-container {
+  position: absolute;
+  top: -80px;
+  left: -150px;
+  width: 380px;
+  height: 250px;
+}
+
+.node-wrapper:hover,
+.node-wrapper.testhover {
+  .node-menu,
+  .node-hover-visible {
+    opacity: 1;
+  }
+  .node-menu {
+    z-index: 5;
+  }
+}
+
+.node-menu {
+  position: absolute;
+  top: -62%;
+  left: -150%;
+  opacity: 0;
+  transition: 0.4s;
+}
+
+.expanded-menu {
+  opacity: 1 !important;
+  z-index: 3;
+}
+
+.gradient-conic-pink {
+  // conic-gradient(from 180deg at 50% 50%, #7C2CCB 0deg, #77239E 160.19999742507935deg, #4A1A76 261.00000858306885deg, #391665 360deg)
+  background: conic-gradient(
+    from 180deg at 50% 50%,
+    #7c2ccb 0deg,
+    #77239e 70deg,
+    #4a1a76 160deg,
+    #391665 250deg,
+    #7c2ccb 360deg
+  );
+}
+.gradient-notebook-card {
+  --gradient-opacity: 0.4;
+  background: conic-gradient(
+      from 203deg at 18.94% 0%,
+      rgba(20, 20, 50, var(--gradient-opacity)) 0deg,
+      rgba(20, 20, 50, var(--gradient-opacity)) 67deg,
+      rgba(36, 0, 95, var(--gradient-opacity)) 202deg,
+      rgba(20, 20, 50, var(--gradient-opacity)) 290deg,
+      rgba(20, 20, 50, var(--gradient-opacity)) 360deg
+    ),
+    conic-gradient(
+      from 56deg at 52.71% 105%,
+      rgba(226, 103, 34, var(--gradient-opacity)) 110deg,
+      rgba(20, 20, 50, var(--gradient-opacity)) 201deg,
+      rgba(222, 37, 148, var(--gradient-opacity)) 300deg,
+      rgba(226, 103, 34, var(--gradient-opacity)) 360deg
+    ),
+    conic-gradient(
+      from 106deg at 50% 50%,
+      rgba(75, 75, 163, 1) 66deg,
+      rgba(124, 62, 155, 1) 106deg,
+      rgba(97, 69, 160, 1) 244deg,
+      rgba(88, 71, 161, 1) 289deg,
+      rgba(144, 57, 152, 1) 330deg,
+      rgba(75, 75, 163, 1) 360deg
+    );
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  background-color: rgba(20, 20, 50, 0.3);
+
+  &:hover {
+    --gradient-opacity: 0.8;
+    background-color: rgba(20, 20, 50, 0.2);
+    border: 2px solid #9744a3;
+    box-shadow: 0px 0px 90px -10px #92329f;
+  }
+
+  &:active:not(:has(button:active)):not(:has(.tags-container:active)) {
+    --gradient-opacity: 0.2;
+    border: 2px solid #8e60f4;
+    box-shadow: 0px 0px 90px -10px #b562c0;
+  }
+}
+
+.node-background {
+  background: var(--color-node-background);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+}
+
+.resource-bar-gradient {
+  background: linear-gradient(
+    270deg,
+    #141432 10.89%,
+    #352c58 50.29%,
+    #241d42 91.52%,
+    #641e6b 100%
+  );
+}
+
+.resource-bar-gradient-secondary {
+  background: linear-gradient(
+    270deg,
+    #141432 4.11%,
+    #1b193a 18.25%,
+    #1f1c3f 23.24%,
+    rgba(27, 25, 58, 0.77) 29.74%,
+    #141432 49.21%,
+    #141432 52.14%,
+    #352c58 71.43%,
+    #241d42 85.71%,
+    #641e6b 100%
+  );
+}
+
+.description-gradient {
+  background: linear-gradient(180deg, #833a9d 0%, #141432 50%, #833a9d 100%);
+}
+
+.text-host {
+  text-shadow:
+    0px 0px 102.06px #1f41ea,
+    0px 0px 58.32px #1f41ea,
+    0px 0px 34.02px #1f41ea,
+    0px 0px 17.01px #1f41ea,
+    0px 0px 4.86px #1f41ea,
+    0px 0px 2.43px #1f41ea;
+  font-weight: 900;
+  line-height: 14px;
+}
+
+.text-stroke-host {
+  -webkit-text-stroke: 0.7px #8498ff;
+}
+
+.conic-gradient-live {
+  background: radial-gradient(circle, #f7c8de 0%, #f72686 50%);
+  box-shadow: 0px 0px 10px 1px #f72686;
+}
+
+.text-shadow-pink {
+  text-shadow:
+    0px 0px 204.12px #f72585,
+    0px 0px 116.64px #f72585,
+    0px 0px 68.04px #f72585,
+    0px 0px 34.02px #f72585,
+    0px 0px 9.72px #f72585,
+    0px 0px 4.86px #f72585;
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+* {
+  scrollbar-width: none; /* Options: auto, thin, none */
+  scrollbar-color: green orange; /* Thumb and track colors */
+}

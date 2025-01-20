@@ -20,6 +20,9 @@
     },
     {
       "path": "./packages/demiurge-ui-components"
+    },
+    {
+      "path": "./packages/ui-toolkit"
     }
   ],
   "ts-node": {

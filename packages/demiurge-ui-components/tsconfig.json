@@ -3,10 +3,19 @@
   "include": [],
   "references": [
     {
+      "path": "../log"
+    },
+    {
+      "path": "../demiurge-types"
+    },
+    {
       "path": "./tsconfig.lib.json"
     },
     {
       "path": "./tsconfig.spec.json"
+    },
+    {
+      "path": "./tsconfig.storybook.json"
     }
   ],
   "extends": "../../tsconfig.base.json"

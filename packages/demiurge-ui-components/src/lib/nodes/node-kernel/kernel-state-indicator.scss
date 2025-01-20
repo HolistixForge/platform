@@ -1,0 +1,30 @@
+.kernel-ready-progress-bar {
+  width: calc(100% - 20px);
+  margin: 5px 10px;
+  height: 8px;
+  border-radius: 4px;
+  border: solid 1px var(--c-gray-9);
+  overflow: hidden;
+  position: relative;
+  background-color: var(--c-gray-12);
+
+  span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    line-height: 8px;
+    font-size: 8px;
+    color: var(--c-white-1);
+    margin-left: 5px;
+  }
+
+  .progress {
+    background: linear-gradient(
+      45deg,
+      var(--color-kernel-state-1),
+      var(--color-kernel-state-2)
+    );
+    height: 100%;
+    transition: width ease-out 1s;
+  }
+}

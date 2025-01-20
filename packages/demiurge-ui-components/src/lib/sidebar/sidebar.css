@@ -1,0 +1,58 @@
+aside {
+  background: var(--c-blue-gray-0);
+  border-radius: 8px;
+  width: fit-content;
+  height: auto;
+  position: fixed;
+  top: 50%;
+  left: 15px;
+  transform: translateY(-50%);
+}
+
+aside ul {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  list-style: none;
+  width: fit-content;
+  margin: 0;
+  padding: 16px 0;
+  position: relative;
+}
+
+aside ul li {
+  padding: 0 12px;
+  margin: 0;
+  height: 32px;
+  cursor: pointer;
+}
+
+aside ul:before {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  background: var(--c-white-1);
+  width: 2px;
+  height: 24px;
+  border-radius: 8px;
+  transition: 0.4s;
+  top: calc(
+    (
+        var(--sidebar-active-item) * (32px + 24px)
+          /* : icon height + vertical flex gap */
+      ) + 16px /* : padding-top */ + (32px - 24px) / 2
+      /* : vertical center off 24px :before on 32px icon */
+  );
+}
+
+aside ul li svg {
+  width: 32px;
+  height: 32px;
+  opacity: 0.5;
+  transition: 0.4s;
+}
+
+aside ul li svg.active {
+  opacity: 1;
+}

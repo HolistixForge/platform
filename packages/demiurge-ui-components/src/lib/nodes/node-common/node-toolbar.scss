@@ -1,0 +1,38 @@
+.node-toolbar {
+  background: var(--c-blue-gray-1);
+  flex: 0 0 120px;
+  text-align: right;
+
+  &.outside {
+    padding: 7.5px 12px;
+  }
+
+  span.button-root button {
+    border: none;
+    background: none;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border-radius: 50%;
+    vertical-align: middle;
+
+    &:hover {
+      background: var(--color-button-blue);
+      &.red {
+        background: var(--c-red-4);
+      }
+    }
+    svg {
+      --icon-width: 14px;
+      --icon-height: 14px;
+
+      path {
+        fill: var(--c-white-1);
+      }
+    }
+
+    &.nofill svg path {
+      fill: none;
+    }
+  }
+}

@@ -1,0 +1,88 @@
+.discussion-item {
+  --reply-bt-color: var(--c-pink-2);
+  --reply-bt-color-hover: var(--c-pink-3);
+  --avatar-width: 25px;
+  display: flex;
+  gap: 6px;
+  position: relative;
+
+  .node-toolbar {
+    position: absolute;
+    top: 25px;
+    right: 0px;
+    width: fit-content;
+    opacity: 0;
+    transition: 0.4s;
+  }
+  &:hover .node-toolbar {
+    opacity: 1;
+  }
+
+  .discussion-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    overflow: hidden;
+
+    .discussion-content-header {
+      display: flex;
+      align-items: center;
+      margin-top: 6px;
+      width: 100%;
+
+      h4,
+      p {
+        padding: 0;
+        margin: 0;
+      }
+
+      h4 {
+        font-size: 14px;
+      }
+
+      p {
+        font-size: 12px;
+        color: var(--c-white-1);
+      }
+    }
+  }
+
+  .discussion-content .content-text {
+    margin: 0;
+    padding: 0;
+    color: var(--c-gray-7);
+    font-size: 12px;
+  }
+}
+
+.discussion-item,
+.reply-item {
+  .dot {
+    flex: 0 0 4px;
+    width: 4px;
+    height: 4px;
+    background: var(--ca-white-2);
+    border-radius: 50%;
+    margin: 0 5px;
+  }
+  p {
+    flex: 0 0 auto;
+
+    .datetime-main {
+      width: 24px;
+      text-align: center;
+      > svg {
+        width: 14px;
+        margin: 0;
+      }
+    }
+  }
+  h4,
+  h5 {
+    flex: 1 1 100px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

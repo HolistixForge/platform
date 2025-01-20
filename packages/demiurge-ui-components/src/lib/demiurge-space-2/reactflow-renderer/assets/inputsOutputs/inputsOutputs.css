@@ -1,0 +1,88 @@
+.node-inputs-closed,
+.node-inputs-opened,
+.node-outputs-closed,
+.node-outputs-opened {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  /*border: solid 1px green;*/
+}
+.node-inputs-closed {
+  top: -23px;
+}
+.node-inputs-opened {
+  height: 0;
+  top: -47px;
+}
+.node-outputs-closed {
+  height: 0;
+  bottom: -9px;
+}
+.node-outputs-opened {
+  bottom: -47px;
+}
+
+/* */
+
+.handles-bar {
+  display: flex;
+}
+.node-inputs-opened .handles-bar {
+  align-items: flex-end;
+}
+
+/**
+ * Edge group handle with counter 
+ */
+
+.edges-count {
+  --edges-count-offset-closed: 5px;
+  --edges-count-offset-opened: 20px;
+  border-radius: 50%;
+  background: var(--c-blue-gray-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid white;
+  color: var(--c-white-1);
+  font-size: 10px;
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, 0);
+}
+.edges-count,
+.edges-count .react-flow__handle {
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+}
+.edges-count .react-flow__handle {
+  /*opacity: 0;*/
+  background: none;
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: none;
+  border: none;
+}
+
+.node-inputs-closed .edges-count {
+  top: calc(-16px - var(--edges-count-offset-closed));
+}
+.node-inputs-opened .edges-count {
+  top: calc(-21px - var(--edges-count-offset-opened));
+}
+.node-outputs-closed .edges-count {
+  top: calc(9px + var(--edges-count-offset-closed));
+}
+.node-outputs-opened .edges-count {
+  top: calc(41px + var(--edges-count-offset-opened));
+}
+
+/**
+ *
+ */
+
+.icon-closed {
+  margin: 0 auto;
+}

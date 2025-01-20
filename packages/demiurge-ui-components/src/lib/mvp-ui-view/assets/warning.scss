@@ -1,0 +1,31 @@
+.status-led {
+  &.led-blue {
+    --led-color: #5aa3f8;
+    --led-shadow-color: #2b6da0;
+  }
+
+  &.led-green {
+    --led-color: #5bc773;
+    --led-shadow-color: #2b961d;
+  }
+
+  &.led-red {
+    --led-color: #f75252;
+    --led-shadow-color: #ab3030;
+  }
+
+  &.led-yellow {
+    --led-color: #ffe921;
+    --led-shadow-color: #67600e;
+  }
+
+  > div {
+    background-color: var(--led-color);
+    filter: drop-shadow(0px 0px 4px var(--led-color));
+    box-shadow: 0px 0px 2px 1px var(--led-shadow-color);
+
+    > div {
+      background-color: var(--led-color);
+    }
+  }
+}
