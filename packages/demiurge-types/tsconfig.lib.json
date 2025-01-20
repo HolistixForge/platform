@@ -1,0 +1,27 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": "src",
+    "outDir": "dist",
+    "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
+    "emitDeclarationOnly": false,
+    "types": ["node"],
+    "module": "ESNext", // Change from default (CommonJS) to ES module output
+    "target": "ES2022", // Ensure compatibility with ES modules
+    "moduleResolution": "Node", // Use Node-style resolution for ES modules
+    "esModuleInterop": true, // Ensure compatibility with CommonJS modules
+    "allowSyntheticDefaultImports": true, // Allow default imports from CommonJS modules
+    "importHelpers": true // Optimize output by using tslib
+  },
+  "include": ["src/**/*.ts"],
+  "references": [
+    {
+      "path": "../simple-types/tsconfig.lib.json"
+    },
+    {
+      "path": "../collaborative/tsconfig.lib.json"
+    }
+  ],
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+}
