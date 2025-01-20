@@ -1,0 +1,48 @@
+⚠️ Antoine's stuffs
+
+- gateway to docker
+- close tab for down resource
+- click on card go to settings if down
+
+- token update for resources
+
+- iframe app wrapping, live status, stoped message, refresh gateway
+- close reset retry websocket in frontend when project go down
+- remove k8s ?
+- use env for { "sshKeyName": "dev-antoine-key", "securityGroupId": "sg-058d2af5f284c993c" }
+- deploy cloud: storage = desired size + image size + image size uncompressed + os
+- TODO_GATEWAY: delete connected server ?
+- resource detail page
+- share link ? user/resource association
+- kind of remanence
+- gateway disk image, auto resize gateway pool
+- fine grained access control
+- terminal, live users, granted users
+- user finished free credits / payment
+- API key : github gitlab, aws
+- gpu access doc and docker options wizard
+- /me trop bavard
+- nginx error, home pages
+- event permissions control
+- delete hosted server: check down, only remove it from UI, explain it in user dialog, 
+- check server exist for /collab/vpn, /collab/event endpoint
+- shared terminals
+- new project from repo: data initialization from .py .ypmb .yaml
+- TODO_EMAIL_VALIDATION
+- TODO_JL_PROBE
+- TODO_MENU
+- db: prune old session, old magick link, old tokens and codes
+- billing / cleaning cron (and also extraction of server run time from "project_servers" and "projects" before delete triggers, or aws have runtime data per instance ?)
+- organization, group
+- version monitoring/management: helm, terraform, eks cluster, npm dependencies, nodejs, react, react flow, jupyterlab/hub/widget
+- db: not root for app. setup backup for prod db
+- vscode server image
+- open api: describe and validate cookies schemas
+- template project sharing
+- dispose terminals
+- monaco function handle plugin
+- collaborative bokeh widget
+- requirejs version
+- MyJvascriptRenderer... sandboxing / isolation. still needed for cloud labs ?
+- useSharedData() re-render only if changes, performance audit
+- monaco language chunks useless compilation
