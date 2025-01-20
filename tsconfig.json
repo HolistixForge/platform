@@ -4,7 +4,7 @@
   "files": [],
   "references": [
     {
-      "path": "./packages/demiurge-ui-components"
+      "path": "./packages/simple-types"
     }
   ],
   "ts-node": {
