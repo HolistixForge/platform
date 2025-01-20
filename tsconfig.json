@@ -17,6 +17,9 @@
     },
     {
       "path": "./packages/demiurge-types"
+    },
+    {
+      "path": "./packages/demiurge-ui-components"
     }
   ],
   "ts-node": {
