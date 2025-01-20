@@ -5,6 +5,15 @@
   "references": [
     {
       "path": "./packages/simple-types"
+    },
+    {
+      "path": "./packages/collaborative"
+    },
+    {
+      "path": "./packages/log"
+    },
+    {
+      "path": "./packages/api-fetch"
     }
   ],
   "ts-node": {

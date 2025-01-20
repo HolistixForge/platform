@@ -28,8 +28,9 @@
     "@swc/core": "~1.5.7",
     "@swc/helpers": "~0.5.11",
     "@testing-library/react": "15.0.6",
+    "@types/event-source-polyfill": "^1.0.5",
     "@types/jest": "^29.5.12",
-    "@types/node": "18.16.9",
+    "@types/node": "^18.16.9",
     "@types/react": "18.3.1",
     "@types/react-dom": "18.3.0",
     "@vitejs/plugin-react": "^4.2.0",
@@ -61,11 +62,16 @@
   },
   "workspaces": [
     "packages/*",
-    "packagessimple-types}"
+    "packagessimple-types}",
+    "packagesloge"
   ],
   "dependencies": {
+    "event-source-polyfill": "^1.0.31",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "tailwindcss": "^3.4.17"
+    "react-hotkeys-hook": "^4.6.1",
+    "tailwindcss": "^3.4.17",
+    "y-websocket": "^2.1.0",
+    "yjs": "^13.6.23"
   }
 }
