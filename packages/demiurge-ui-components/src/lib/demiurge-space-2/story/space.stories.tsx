@@ -1,26 +1,27 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useMemo } from 'react';
 
-import { PointerTracker } from '../reactflow-renderer/pointerTracker';
-import { FakeSpaceAwareness } from '../reactflow-renderer/spaceAwareness';
-import { AvatarStore } from '../reactflow-renderer/avatarStore';
-import { DemiurgeSpace } from '../reactflow-renderer/main';
 import { TPosition, TEdgeEnd, TEdge } from '@monorepo/demiurge-types';
+
+import { DemiurgeSpace } from '../reactflow-renderer/main';
+import { ReactflowPointerTracker } from '../reactflow-renderer/reactflowPointerTracker';
+import { HtmlAvatarStore } from '../reactflow-renderer/htmlAvatarStore';
+
+import { FakeSpaceAwareness } from './fakeSpaceAwareness';
+import { LocalSpaceActionsDispatcher } from './localSpaceActionsDispatcher';
+import { LocalSpaceState } from './spaceState';
 import { CustomStoryEdge } from './edge';
 import { CustomStoryNode } from './node';
-import { DummySpaceActionsDispatcher } from '../reactflow-renderer/spaceActionsDispatcher';
-import { DummySpaceState } from '../reactflow-renderer/spaceState';
-//
 
 //
 
 const Demo = () => {
   const logics = useMemo(() => {
     const ga = new FakeSpaceAwareness();
-    const pt = new PointerTracker(ga);
-    const as = new AvatarStore(pt, ga);
-    const sad = new DummySpaceActionsDispatcher();
-    const ss = new DummySpaceState();
+    const pt = new ReactflowPointerTracker(ga);
+    const as = new HtmlAvatarStore(pt, ga);
+    const sad = new LocalSpaceActionsDispatcher();
+    const ss = new LocalSpaceState();
 
     return { ga, pt, as, sad, ss };
   }, []);

@@ -1,8 +1,8 @@
 import { createContext, useContext, ReactNode } from 'react';
 import { ReactFlowProvider } from 'reactflow';
-import { SpaceActionsDispatcher } from './spaceActionsDispatcher';
-import { SpaceAwareness } from './spaceAwareness';
-import { SpaceState } from './spaceState';
+import { SpaceState } from '../apis/spaceState';
+import { SpaceActionsDispatcher } from '../apis/spaceActionsDispatcher';
+import { SpaceAwareness } from '../apis/spaceAwareness';
 
 //
 

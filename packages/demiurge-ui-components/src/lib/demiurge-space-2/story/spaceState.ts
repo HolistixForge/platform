@@ -1,25 +1,11 @@
 import {
-  nodeViewDefaultStatus,
   TEdge,
   TNodeView,
+  nodeViewDefaultStatus,
 } from '@monorepo/demiurge-types';
-import { THandle } from './assets/inputsOutputs/inputsOutputs';
+import { SpaceState, TConnector } from '../apis/spaceState';
 
-type TConnector = {
-  isOpened: boolean;
-  groupedEdgesCount: number;
-  slots: THandle[];
-  type: 'source' | 'target';
-};
-
-export abstract class SpaceState {
-  abstract addListener(l: () => void): void;
-  abstract getNodes(): TNodeView[];
-  abstract getEdges(): TEdge[];
-  abstract getConnector(nodeId: string, connectorName: string): TConnector;
-}
-
-export class DummySpaceState extends SpaceState {
+export class LocalSpaceState extends SpaceState {
   addListener(l: () => void): void {
     console.log('addListener called');
   }

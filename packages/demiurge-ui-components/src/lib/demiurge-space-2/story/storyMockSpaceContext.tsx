@@ -1,9 +1,9 @@
 import { ReactNode, useMemo } from 'react';
 import { SpaceContext } from '../reactflow-renderer/spaceContext';
 import { TUseNodeValue } from '@monorepo/demiurge-types';
-import { DummySpaceAwareness } from '../reactflow-renderer/spaceAwareness';
-import { DummySpaceActionsDispatcher } from '../reactflow-renderer/spaceActionsDispatcher';
-import { DummySpaceState } from '../reactflow-renderer/spaceState';
+import { DummySpaceAwareness } from './fakeSpaceAwareness';
+import { DummySpaceActionsDispatcher } from './localSpaceActionsDispatcher';
+import { DummySpaceState } from './spaceState';
 
 //
 
@@ -43,7 +43,7 @@ export const StoryMockSpaceContext = ({
       spaceState: new DummySpaceState(),
       currentUser: { username: 'toto', color: '#ffa500' },
     }),
-    [],
+    []
   );
 
   return (

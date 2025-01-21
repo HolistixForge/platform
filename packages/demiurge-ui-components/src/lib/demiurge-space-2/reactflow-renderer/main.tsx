@@ -13,16 +13,16 @@ import ReactFlow, {
 } from 'reactflow';
 
 import { TEdge, TEdgeEnd, TPosition } from '@monorepo/demiurge-types';
-import { PointerTracker } from './pointerTracker';
+import { PointerTracker } from './reactflowPointerTracker';
 import { AvatarsRenderer } from './avatarsRenderer';
 import { clientXY } from '@monorepo/ui-toolkit';
 import { SpaceContext } from './spaceContext';
 import * as _ from 'lodash';
 import { NodeWrapper } from './node-wrappers/node-wrapper';
-import { SpaceActionsDispatcher } from './spaceActionsDispatcher';
-import { SpaceState } from './spaceState';
-import { SpaceAwareness } from './spaceAwareness';
-import { AvatarStore } from './avatarStore';
+import { SpaceActionsDispatcher } from '../story/localSpaceActionsDispatcher';
+import { SpaceState } from '../story/spaceState';
+import { SpaceAwareness } from '../story/fakeSpaceAwareness';
+import { AvatarStore } from './htmlAvatarStore';
 import { translateEdges, translateNodes } from './to-rf-nodes';
 
 //

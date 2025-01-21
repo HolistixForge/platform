@@ -1,15 +1,19 @@
 import { Viewport } from 'reactflow';
 import { TPosition } from '@monorepo/demiurge-types';
 import * as _ from 'lodash';
-import { SpaceAwareness } from './spaceAwareness';
+import { SpaceAwareness } from '../apis/spaceAwareness';
+import { PointerTracker } from '../apis/pointerTracker';
 
-export class PointerTracker {
+//
+
+export class ReactflowPointerTracker extends PointerTracker {
   private _viewport = { x: 0, y: 0, zoom: 1 };
   private _pointer: TPosition = { x: 0, y: 0 };
   private ga: SpaceAwareness;
   private reactFlowParentDiv: HTMLDivElement | null = null;
 
   constructor(ga: SpaceAwareness) {
+    super();
     this.ga = ga;
   }
 
@@ -51,7 +55,7 @@ export class PointerTracker {
       this.ga.setPointer(x, y);
     },
     250,
-    { maxWait: 250 },
+    { maxWait: 250 }
   );
 
   public setPointerInactive() {

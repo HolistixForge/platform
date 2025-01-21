@@ -10,13 +10,6 @@ import './inputsOutputs.css';
  *
  */
 
-/** one pin */
-export type THandle = {
-  name: string;
-  id: string;
-  isConnectable?: boolean;
-};
-
 type InputsProps = {
   nodeId: string;
   forceOpened?: boolean;

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { AvatarStore } from './avatarStore';
-import { Listenable } from './listenable';
+import { AvatarStore } from './htmlAvatarStore';
+import { Listenable } from '../apis/listenable';
 
 //
 
