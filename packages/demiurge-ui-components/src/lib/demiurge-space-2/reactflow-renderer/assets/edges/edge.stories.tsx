@@ -10,8 +10,8 @@ import ReactFlow, {
 } from 'reactflow';
 
 import 'reactflow/dist/style.css';
+
 import { EdgeComponent, LabelEnd, LabelMiddle, LabelStart } from './edge';
-import { sleep } from '../../../../storybook-utils';
 
 //
 type NData = { id: string };
@@ -27,16 +27,18 @@ const edges: Edge[] = [];
 const GAP = 120;
 
 const edgeStyles: string[][] = [
-  ['edge-reference'],
-  ['edge-reference', 'chat-anchor'],
-  ['edge-reference', 'mount'],
-  ['edge-reference', 'mount', 'source-highlighted', 'testhover'],
-  ['edge-reference', 'terminal'],
-  ['edge-reference', 'terminal', 'source-highlighted', 'testhover'],
-  ['edge-sequence'],
-  ['edge-sequence', 'target-highlighted', 'testhover'],
-  ['edges-group'],
-  ['edges-group', 'testhover'],
+  ['_unknown_'],
+  ['_unknown_', 'edges-group'],
+  ['_unknown_', 'testhover'],
+  ['_unknown_', 'edges-group', 'testhover'],
+  ['referenced_by'],
+  ['next_in_sequence'],
+  ['owned_by'],
+  ['composed_of'],
+  ['satisfied_by'],
+  ['tested_by'],
+  ['wired_to'],
+  ['depends_on'],
 ];
 
 for (let index = 0; index < edgeStyles.length; index++) {

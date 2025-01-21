@@ -23,6 +23,7 @@ import { SpaceActionsDispatcher } from './spaceActionsDispatcher';
 import { SpaceState } from './spaceState';
 import { SpaceAwareness } from './spaceAwareness';
 import { AvatarStore } from './avatarStore';
+import { translateEdges, translateNodes } from './to-rf-nodes';
 
 //
 //
@@ -43,7 +44,7 @@ type DemiurgeSpaceProps = {
   onContextMenuNewEdge: (
     from: TEdgeEnd,
     xy: TPosition,
-    clientPosition: TPosition,
+    clientPosition: TPosition
   ) => void;
   onConnect: (edge: TEdge) => void;
 };
@@ -77,14 +78,14 @@ export const DemiurgeSpace = ({
     () => ({
       wrapper: NodeWrapper(nodeComponent),
     }),
-    [nodeComponent],
+    [nodeComponent]
   );
 
   const edgeTypes: EdgeTypes = useMemo(
     () => ({
       custom: edgeComponent,
     }),
-    [edgeComponent],
+    [edgeComponent]
   );
 
   //
@@ -108,11 +109,11 @@ export const DemiurgeSpace = ({
           node: c.target as string,
           connector: c.targetHandle || undefined,
         },
-        type: 'UNKNOWN',
+        type: '_unknown_',
       };
       onConnect(e);
     },
-    [onConnect],
+    [onConnect]
   );
 
   //
@@ -147,7 +148,7 @@ export const DemiurgeSpace = ({
     (event: MouseEvent | TouchEvent) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const targetIsPane = (event as any).target.classList.contains(
-        'react-flow__pane',
+        'react-flow__pane'
       );
 
       if (targetIsPane && connectingNodeId.current) {
@@ -156,7 +157,7 @@ export const DemiurgeSpace = ({
         onContextMenuNewEdge(connectingNodeId.current, p, pclient);
       }
     },
-    [onContextMenuNewEdge],
+    [onContextMenuNewEdge]
   );
 
   //
@@ -174,9 +175,9 @@ export const DemiurgeSpace = ({
         });
       },
       25,
-      { maxWait: 25 },
+      { maxWait: 25 }
     ),
-    [],
+    []
   );
 
   //
@@ -187,7 +188,7 @@ export const DemiurgeSpace = ({
       pointerTracker.onMove(event, viewport);
       avatarsStore.updateAllAvatars();
     },
-    [avatarsStore],
+    [avatarsStore]
   );
 
   /**
@@ -200,7 +201,7 @@ export const DemiurgeSpace = ({
       onContextMenu(p, pclient);
       event.preventDefault();
     },
-    [onContextMenu],
+    [onContextMenu]
   );
 
   const context = useMemo(
@@ -210,7 +211,7 @@ export const DemiurgeSpace = ({
       spaceState,
       currentUser,
     }),
-    [],
+    []
   );
 
   /**
@@ -226,8 +227,8 @@ export const DemiurgeSpace = ({
       <SpaceContext value={context}>
         <ReactFlow
           // todo_ factorise with flow story
-          nodes={spaceState.getNodes()}
-          edges={spaceState.getEdges()}
+          nodes={translateNodes(spaceState.getNodes(), viewId)}
+          edges={translateEdges(spaceState.getEdges())}
           //
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
@@ -240,7 +241,7 @@ export const DemiurgeSpace = ({
           //
           onPaneMouseMove={pointerTracker.onPaneMouseMove.bind(pointerTracker)}
           onPaneMouseLeave={pointerTracker.setPointerInactive.bind(
-            pointerTracker,
+            pointerTracker
           )}
           onMove={_onMove}
         >

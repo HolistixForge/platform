@@ -13,55 +13,81 @@ g.react-flow__edge {
     stroke-width: 1.5px;
   }
 
-  &.edge-reference {
+  &._unknown_ {
     path {
-      stroke: var(--color-edge-reference);
-      stroke-dasharray: 5;
-      /* animation: dashdraw 5s linear infinite; */
-    }
-    &.mount path {
-      stroke: var(--color-volume);
-      stroke-width: 2;
-      stroke-dasharray: 0;
-    }
-    &.terminal path {
-      stroke: var(--color-terminal);
-      stroke-width: 2;
-    }
-    &.chat-anchor path {
-      stroke: var(--color-chat-new);
-      stroke-width: 2.5;
-      stroke-dasharray: 0;
-    }
-  }
-
-  &.edge-sequence {
-    path {
-      stroke: var(--color-edge-sequence);
-      stroke-width: 2;
-    }
-  }
-
-  &.edge-unknown {
-    path {
-      stroke: var(--c-black-6);
+      stroke: #000000; /* black */
       stroke-width: 3;
+    }
+  }
+
+  &.referenced_by {
+    path {
+      stroke: #ff0000; /* red */
+      stroke-dasharray: 5;
+    }
+  }
+
+  &.next_in_sequence {
+    path {
+      stroke: #00ff00; /* green */
+      stroke-width: 2;
+    }
+  }
+
+  &.owned_by {
+    path {
+      stroke: #0000ff; /* blue */
+      stroke-width: 2;
+    }
+  }
+
+  &.composed_of {
+    path {
+      stroke: #ffff00; /* yellow */
+      stroke-width: 2;
+    }
+  }
+
+  &.satisfied_by {
+    path {
+      stroke: #ff00ff; /* magenta */
+      stroke-width: 2;
+    }
+  }
+
+  &.tested_by {
+    path {
+      stroke: #00ffff; /* cyan */
+      stroke-width: 2;
+    }
+  }
+
+  &.wired_to {
+    path {
+      stroke: #ffa500; /* orange */
+      stroke-width: 2;
+    }
+  }
+
+  &.depends_on {
+    path {
+      stroke: #800080; /* purple */
+      stroke-width: 2;
     }
   }
 
   &:hover path.react-flow__edge-path,
   &.testhover path.react-flow__edge-path {
-    stroke: var(--c-pink-1) !important;
+    stroke-width: 4px;
   }
 
   &.edges-group path.react-flow__edge-path {
-    stroke: var(--c-pink-2);
-    stroke-width: 2px;
+    stroke-width: 4px;
   }
 
   &.source-highlighted path.react-flow__edge-path,
   &.target-highlighted path.react-flow__edge-path {
-    stroke: var(--c-pink-1);
+    stroke-width: 4px;
   }
 }
 

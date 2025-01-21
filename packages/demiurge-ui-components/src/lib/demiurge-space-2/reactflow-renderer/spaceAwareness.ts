@@ -15,7 +15,7 @@ export type TUserPosition = {
 
 export abstract class SpaceAwareness extends Listenable {
   abstract getPointersUpdates(): TUserPosition[];
-  abstract getSelectedNodes(): {[k:string]: TSelectingUsers};
+  abstract getSelectedNodes(): { [k: string]: TSelectingUsers };
   abstract selectNode(nid: string): void;
   abstract setPointer(x: number, y: number): void;
 }
@@ -42,16 +42,21 @@ export class DummySpaceAwareness extends SpaceAwareness {
 
 //
 
+const generateRandomPosition = (): TPosition => {
+  const RANGE = 1500;
+  return {
+    x: Math.floor(Math.random() * RANGE * 2 + 1) - RANGE,
+    y: Math.floor(Math.random() * RANGE * 2 + 1) - RANGE,
+  };
+};
+
+//
+
 export class FakeSpaceAwareness extends SpaceAwareness {
   private userPositions: TUserPosition[];
-  private intervalId: NodeJS.Timeout | null = null;
 
   constructor() {
     super();
-    const generateRandomPosition = (): TPosition => ({
-      x: Math.floor(Math.random() * 6001) - 3000,
-      y: Math.floor(Math.random() * 6001) - 3000,
-    });
 
     const generateRandomUserPosition = (key: number): TUserPosition => ({
       key,
@@ -64,16 +69,15 @@ export class FakeSpaceAwareness extends SpaceAwareness {
     });
 
     this.userPositions = Array.from({ length: 7 }, (_, index) =>
-      generateRandomUserPosition(index),
+      generateRandomUserPosition(index)
     );
-
     this.startRandomUpdates();
   }
 
   private startRandomUpdates() {
     const updateInterval = () => {
       const interval = Math.random() * (20000 - 2000) + 2000;
-      this.intervalId = setTimeout(() => {
+      setTimeout(() => {
         this.randomlyUpdateUserPositions();
         this.notifyListeners();
         updateInterval();
@@ -85,10 +89,7 @@ export class FakeSpaceAwareness extends SpaceAwareness {
   private randomlyUpdateUserPositions() {
     this.userPositions.forEach((userPosition) => {
       if (Math.random() > 0.5) {
-        userPosition.position = {
-          x: Math.floor(Math.random() * 6001) - 3000,
-          y: Math.floor(Math.random() * 6001) - 3000,
-        };
+        userPosition.position = generateRandomPosition();
         userPosition.inactive = Math.random() > 0.5;
       }
     });

@@ -28,6 +28,7 @@ export class AvatarStore extends Listenable {
     this.ga.addListener(() => {
       this.processUpdates();
     });
+    this.processUpdates();
   }
 
   //
@@ -121,13 +122,14 @@ export class AvatarStore extends Listenable {
     ups.forEach((up, key) => {
       this.updateAvatar(key, up);
     });
+    this.notifyListeners();
   }
 
   //
 
   public getAvatarsElements() {
     return Array.from(this.avatars.values()).map(
-      (avatar) => avatar.reactElement,
+      (avatar) => avatar.reactElement
     );
   }
 }

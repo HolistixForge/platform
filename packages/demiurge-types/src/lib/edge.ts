@@ -1,6 +1,15 @@
 // ----- Edge
 
-type EEdgeType = 'UNKNOWN' | 'REFERENCE' | 'SEQUENCE';
+type EEdgeType =
+  | '_unknown_'
+  | 'referenced_by'
+  | 'next_in_sequence'
+  | 'owned_by'
+  | 'composed_of'
+  | 'satisfied_by'
+  | 'tested_by'
+  | 'wired_to'
+  | 'depends_on';
 
 type Def = 'none';
 type HasData<T> = T extends Def
