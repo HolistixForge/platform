@@ -13,16 +13,16 @@ import ReactFlow, {
 } from 'reactflow';
 
 import { TEdge, TEdgeEnd, TPosition } from '@monorepo/demiurge-types';
-import { PointerTracker } from './reactflowPointerTracker';
-import { AvatarsRenderer } from './avatarsRenderer';
+import { PointerTracker } from '../apis/pointerTracker';
+import { AvatarsRenderer, useRegisterListener } from './avatarsRenderer';
 import { clientXY } from '@monorepo/ui-toolkit';
 import { SpaceContext } from './spaceContext';
 import * as _ from 'lodash';
 import { NodeWrapper } from './node-wrappers/node-wrapper';
-import { SpaceActionsDispatcher } from '../story/localSpaceActionsDispatcher';
-import { SpaceState } from '../story/spaceState';
-import { SpaceAwareness } from '../story/fakeSpaceAwareness';
-import { AvatarStore } from './htmlAvatarStore';
+import { SpaceActionsDispatcher } from '../apis/spaceActionsDispatcher';
+import { SpaceState } from '../apis/spaceState';
+import { SpaceAwareness } from '../apis/spaceAwareness';
+import { HtmlAvatarStore } from './htmlAvatarStore';
 import { translateEdges, translateNodes } from './to-rf-nodes';
 
 //
@@ -37,7 +37,7 @@ type DemiurgeSpaceProps = {
   spaceActionsDispatcher: SpaceActionsDispatcher;
   spaceAwareness: SpaceAwareness;
   pointerTracker: PointerTracker;
-  avatarsStore: AvatarStore;
+  avatarsStore: HtmlAvatarStore;
   currentUser: { username: string; color: string } | undefined;
   //
   onContextMenu: (xy: TPosition, clientPosition: TPosition) => void;
@@ -69,6 +69,8 @@ export const DemiurgeSpace = ({
   onConnect,
 }: DemiurgeSpaceProps) => {
   //
+
+  useRegisterListener(spaceState);
 
   //
   // ***************  ***************
@@ -169,7 +171,6 @@ export const DemiurgeSpace = ({
         const { x, y } = node.position;
         spaceActionsDispatcher.dispatch({
           type: 'move-node',
-          viewId: viewId,
           nid: node.id,
           position: { x, y },
         });

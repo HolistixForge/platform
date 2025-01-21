@@ -44,26 +44,36 @@ export const useConnector = (nodeId: string, connectorName: string) => {
 
   const updateNodeInternals = useUpdateNodeInternals();
 
+  const c = spaceState.getConnector(nodeId, connectorName);
+
+  if (!c) throw new Error('oops');
+
+  const { isOpened, groupedEdgesCount, slots, type } = c;
+
   const openClose: () => void = useCallback(() => {
     /* the open close action display and hide the handles
      * so updateNodeInternals() is called to force reactFlow to update
      * internal state of handlers position   */
     spaceActionsDispatcher.dispatch({
-      action: 'open-close-connector',
-      nodeId,
+      type: isOpened ? 'close-connector' : 'open-connector',
+      nid: nodeId,
       connectorName,
     });
     setTimeout(() => {
       // TODO_: edges readraw is delayed and it's ugly
       updateNodeInternals(nodeId);
     }, 500);
-  }, [nodeId, connectorName, updateNodeInternals]);
+  }, [nodeId, connectorName, isOpened, updateNodeInternals]);
 
   //
 
   const handleMouseOver = useCallback((event: React.MouseEvent) => {
     const h = getHandleFromEvent(event);
-    spaceActionsDispatcher.dispatch({ action: 'hightliht', connector: h });
+    spaceActionsDispatcher.dispatch({
+      type: 'highlight',
+      nid: nodeId,
+      connectorName,
+    });
   }, []);
 
   //
@@ -73,7 +83,11 @@ export const useConnector = (nodeId: string, connectorName: string) => {
       // if handle not been clicked, remove highlight by passing a non
       // existing {nodeId, handleId} so no edges will match
       !forceHighlight &&
-        spaceActionsDispatcher.dispatch({ action: 'unhightliht' });
+        spaceActionsDispatcher.dispatch({
+          type: 'unhighlight',
+          nid: nodeId,
+          connectorName,
+        });
     },
     [forceHighlight]
   );
@@ -83,12 +97,6 @@ export const useConnector = (nodeId: string, connectorName: string) => {
   const handleLockHighlight = useCallback((event: React.MouseEvent) => {
     setForceHighlight(true);
   }, []);
-
-  // count of the grouped edges
-  const { isOpened, groupedEdgesCount, slots, type } = spaceState.getConnector(
-    nodeId,
-    connectorName
-  );
 
   return {
     openClose,

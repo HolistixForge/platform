@@ -68,6 +68,12 @@ export class HtmlAvatarStore extends AvatarStore {
 
   //
 
+  public override updateAllAvatars() {
+    this.avatars.forEach((a, k) => {
+      this.updateAvatar(k, a.state);
+    });
+  }
+
   //
 
   // awareness state to Avatar spring style

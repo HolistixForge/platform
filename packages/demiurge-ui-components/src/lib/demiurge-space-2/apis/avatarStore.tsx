@@ -21,4 +21,6 @@ export class AvatarStore extends Listenable {
   public getAvatarsElements(): (ReactElement | undefined)[] {
     return [];
   }
+
+  public updateAllAvatars() {}
 }

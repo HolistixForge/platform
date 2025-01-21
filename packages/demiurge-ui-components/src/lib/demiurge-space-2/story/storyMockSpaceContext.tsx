@@ -3,7 +3,7 @@ import { SpaceContext } from '../reactflow-renderer/spaceContext';
 import { TUseNodeValue } from '@monorepo/demiurge-types';
 import { DummySpaceAwareness } from './fakeSpaceAwareness';
 import { DummySpaceActionsDispatcher } from './localSpaceActionsDispatcher';
-import { DummySpaceState } from './spaceState';
+import { DummySpaceState } from './localSpaceState';
 
 //
 

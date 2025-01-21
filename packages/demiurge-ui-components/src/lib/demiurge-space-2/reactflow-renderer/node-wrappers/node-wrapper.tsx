@@ -39,22 +39,25 @@ export const NodeWrapper =
     //
     const zoom = useStore(zoomSelector);
 
-    const { spaceActionsDispatcher: graphActionsDispatcher, spaceAwareness: graphAwareness, currentUser } =
-      useSpaceContext();
+    const {
+      spaceActionsDispatcher: graphActionsDispatcher,
+      spaceAwareness: graphAwareness,
+      currentUser,
+    } = useSpaceContext();
 
     const { viewStatus, viewId } = data;
 
     const close = () =>
-      graphActionsDispatcher.dispatch({ type: 'close-node', nid: id, viewId });
+      graphActionsDispatcher.dispatch({ type: 'close-node', nid: id });
 
     const open = () =>
-      graphActionsDispatcher.dispatch({ type: 'open-node', nid: id, viewId });
+      graphActionsDispatcher.dispatch({ type: 'open-node', nid: id });
 
     const reduce = () =>
-      graphActionsDispatcher.dispatch({ type: 'reduce-node', nid: id, viewId });
+      graphActionsDispatcher.dispatch({ type: 'reduce-node', nid: id });
 
     const expand = () =>
-      graphActionsDispatcher.dispatch({ type: 'expand-node', nid: id, viewId });
+      graphActionsDispatcher.dispatch({ type: 'expand-node', nid: id });
 
     const opened = isNodeOpened(viewStatus);
 
@@ -64,7 +67,7 @@ export const NodeWrapper =
     const selected =
       currentUser &&
       selectingUsers.find(
-        (u) => u.user.username === currentUser.username && u.viewId === viewId,
+        (u) => u.user.username === currentUser.username && u.viewId === viewId
       )
         ? true
         : false;

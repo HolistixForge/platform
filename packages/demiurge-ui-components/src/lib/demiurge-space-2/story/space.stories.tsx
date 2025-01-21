@@ -9,7 +9,7 @@ import { HtmlAvatarStore } from '../reactflow-renderer/htmlAvatarStore';
 
 import { FakeSpaceAwareness } from './fakeSpaceAwareness';
 import { LocalSpaceActionsDispatcher } from './localSpaceActionsDispatcher';
-import { LocalSpaceState } from './spaceState';
+import { LocalSpaceState } from './localSpaceState';
 import { CustomStoryEdge } from './edge';
 import { CustomStoryNode } from './node';
 
@@ -20,8 +20,8 @@ const Demo = () => {
     const ga = new FakeSpaceAwareness();
     const pt = new ReactflowPointerTracker(ga);
     const as = new HtmlAvatarStore(pt, ga);
-    const sad = new LocalSpaceActionsDispatcher();
     const ss = new LocalSpaceState();
+    const sad = new LocalSpaceActionsDispatcher(ss);
 
     return { ga, pt, as, sad, ss };
   }, []);

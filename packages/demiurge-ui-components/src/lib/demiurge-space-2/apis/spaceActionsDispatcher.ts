@@ -1,5 +1,5 @@
-export type SpaceAction = {};
+import { TSpaceActions } from './spaceActions';
 
 export abstract class SpaceActionsDispatcher {
-  abstract dispatch(e: SpaceAction): void;
+  abstract dispatch(e: TSpaceActions): void;
 }

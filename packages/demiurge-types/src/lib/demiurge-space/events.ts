@@ -8,11 +8,11 @@ export type TEventOrigin = {
   position: TPosition;
 };
 
-//
+// TODO_DEMIURGE_SPACE: delete
 
 export type TEventNewNode<
   NodeData extends TJson = TJson,
-  EdgeData extends TJson = TJson,
+  EdgeData extends TJson = TJson
 > = {
   type: 'new-node';
   from?: TEdgeEnd;
