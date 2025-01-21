@@ -4,7 +4,7 @@ type TConnector = {
   isOpened: boolean;
   groupedEdgesCount: number;
   slots: THandle[];
-  type: 'source' | 'target'
+  type: 'source' | 'target';
 };
 
 export abstract class SpaceState {
@@ -30,6 +30,21 @@ export class DummySpaceState extends SpaceState {
   }
 
   getConnector(nodeId: string, connectorName: string): TConnector {
-    throw new Error('Method not implemented.');
+    return {
+      isOpened: false,
+      groupedEdgesCount: 0,
+      slots: Array(10)
+        .fill(1)
+        .map((v, k) => ({
+          id: `handle_${connectorName}_${k}`,
+          name: `slot ${k}`,
+        })),
+      type:
+        connectorName === 'inputs'
+          ? 'target'
+          : connectorName === 'outputs'
+          ? 'source'
+          : 'target',
+    };
   }
 }

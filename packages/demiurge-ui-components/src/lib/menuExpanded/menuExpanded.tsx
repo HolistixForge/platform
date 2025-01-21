@@ -32,7 +32,9 @@ export const MenuExpanded = ({
           <div className="node-info">
             <p>{nodeName}</p>
             <ul>
-              {nodeInfos?.map((info, index) => <li key={index}>{info}</li>)}
+              {nodeInfos?.map((info, index) => (
+                <li key={index}>{info}</li>
+              ))}
             </ul>
           </div>
           <div className="node-type">
@@ -50,10 +52,10 @@ export const MenuExpanded = ({
                 nodeType === 'scene'
                   ? 'orange'
                   : nodeType === 'vault'
-                    ? 'red'
-                    : nodeType === 'dataset' || nodeType === 'screening'
-                      ? 'blue'
-                      : ''
+                  ? 'red'
+                  : nodeType === 'dataset' || nodeType === 'screening'
+                  ? 'blue'
+                  : ''
               }`}
             >
               <p>{nodeType}</p>
@@ -81,7 +83,9 @@ export const MenuExpanded = ({
               integrated
             >
               {['dev', 'master', 'prod', 'intern'].map((v) => (
-                <SelectItem value={v}>{v}</SelectItem>
+                <SelectItem key={v} value={v}>
+                  {v}
+                </SelectItem>
               ))}
             </SelectFieldset>
           </div>
@@ -100,7 +104,9 @@ export const MenuExpanded = ({
               'python 3.10.13 modele',
               'python 3.10.14 modele',
             ].map((v) => (
-              <SelectItem value={v}>{v}</SelectItem>
+              <SelectItem key={v} value={v}>
+                {v}
+              </SelectItem>
             ))}
           </SelectFieldset>
         </div>

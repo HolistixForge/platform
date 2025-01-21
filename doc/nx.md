@@ -71,13 +71,13 @@ add in packages/{APP_NAME}/package.json
 ## tailwind
 
 ```
-npm install tailwindcss
+npm install -D tailwindcss autoprefixer
 ```
 
-### create tailwind.config.js, postcss.cofig.js
+### create tailwind.config.js, postcss.config.js
 
 ```
-cd packages/{LIB_NAME}
+# in monorepo root
 npx tailwindcss init -p
 ```
 

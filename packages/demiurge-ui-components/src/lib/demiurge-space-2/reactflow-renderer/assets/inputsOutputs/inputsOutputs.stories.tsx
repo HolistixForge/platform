@@ -1,22 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { InputsOutputs, InputsOutputsProps, THandle } from './inputsOutputs';
+import { InputsOutputs, InputsOutputsProps } from './inputsOutputs';
 import { StoryMockSpaceContext } from '../../../story/storyMockSpaceContext';
-
-/**
- *
- */
-
-const mockSlots = (connectorName: string): THandle[] => {
-  if (connectorName === 'inputs')
-    return Array(10)
-      .fill(1)
-      .map((v, k) => ({ id: `handle_target_${k}`, name: `slot ${k}` }));
-  else if (connectorName === 'outputs')
-    return Array(10)
-      .fill(1)
-      .map((v, k) => ({ id: `handle_source_${k}`, name: `slot ${k}` }));
-  else return [];
-};
 
 //
 
@@ -38,16 +22,7 @@ const meta = {
   parameters: {
     layout: 'centered',
   },
-  argTypes: {
-    type: {
-      options: ['inputs', 'outputs'],
-      mapping: ['inputs', 'outputs'],
-      control: {
-        type: 'select',
-        labels: ['inputs', 'outputs'],
-      },
-    },
-  },
+  argTypes: {},
 } satisfies Meta<typeof InputsOutputs>;
 
 //
@@ -63,47 +38,43 @@ type Story = StoryObj<typeof InputsOutputs>;
 export const Simple_Input: Story = {
   args: {
     nodeId: 'node-1',
-    type: 'target',
+    connectorName: 'inputs',
   },
 };
 
 export const Simple_Ouput: Story = {
   args: {
     nodeId: 'node-1',
-    type: 'source',
+    connectorName: 'outputs',
   },
 };
 
 export const Piano_Input_Open: Story = {
   args: {
     nodeId: 'node-1',
-    type: 'target',
-    slots: mockSlots('inputs'),
     forceOpened: true,
+    connectorName: 'inputs',
   },
 };
 
 export const Piano_Input_Closed: Story = {
   args: {
     nodeId: 'node-1',
-    type: 'target',
-    slots: mockSlots('inputs'),
+    connectorName: 'inputs',
   },
 };
 
 export const Piano_Ouput_Open: Story = {
   args: {
     nodeId: 'node-1',
-    type: 'source',
-    slots: mockSlots('outputs'),
     forceOpened: true,
+    connectorName: 'outputs',
   },
 };
 
 export const Piano_Ouput_Closed: Story = {
   args: {
     nodeId: 'node-1',
-    type: 'source',
-    slots: mockSlots('outputs'),
+    connectorName: 'outputs',
   },
 };

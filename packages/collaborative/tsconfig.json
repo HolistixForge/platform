@@ -7,6 +7,12 @@
       "path": "../simple-types"
     },
     {
+      "path": "../api-fetch"
+    },
+    {
+      "path": "../log"
+    },
+    {
       "path": "./tsconfig.lib.json"
     },
     {

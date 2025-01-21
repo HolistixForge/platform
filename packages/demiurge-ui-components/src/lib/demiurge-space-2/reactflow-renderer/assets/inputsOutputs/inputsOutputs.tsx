@@ -19,14 +19,12 @@ export type THandle = {
 
 type InputsProps = {
   nodeId: string;
-  slots?: THandle[];
   forceOpened?: boolean;
   disabled?: boolean;
 };
 
 /** one connector */
 export type InputsOutputsProps = InputsProps & {
-  type: 'source' | 'target';
   connectorName: string;
 };
 
@@ -84,7 +82,7 @@ export const useConnector = (nodeId: string, connectorName: string) => {
       !forceHighlight &&
         spaceActionsDispatcher.dispatch({ action: 'unhightliht' });
     },
-    [forceHighlight],
+    [forceHighlight]
   );
 
   //
@@ -96,7 +94,7 @@ export const useConnector = (nodeId: string, connectorName: string) => {
   // count of the grouped edges
   const { isOpened, groupedEdgesCount, slots, type } = spaceState.getConnector(
     nodeId,
-    connectorName,
+    connectorName
   );
 
   return {
@@ -148,7 +146,6 @@ const GroupHandle = ({
 export const InputsOutputs = ({
   connectorName,
   nodeId,
-  slots,
   forceOpened = false,
   disabled = false,
 }: InputsOutputsProps) => {
@@ -162,6 +159,7 @@ export const InputsOutputs = ({
     groupedEdgesCount,
     type,
     isOpened,
+    slots,
   } = useConnector(nodeId, connectorName);
 
   /**
@@ -298,11 +296,11 @@ export const InputsOutputs = ({
  */
 
 export const Inputs = (props: InputsProps) => (
-  <InputsOutputs type="target" connectorName="inputs" {...props} />
+  <InputsOutputs connectorName="inputs" {...props} />
 );
 
 export const Outputs = (props: InputsProps) => (
-  <InputsOutputs type="source" connectorName="outputs" {...props} />
+  <InputsOutputs connectorName="outputs" {...props} />
 );
 
 //

@@ -83,12 +83,20 @@ export class Logger {
   //
 
   static _logger: Logger = new Logger();
-  static _priority: EPriority =
-    process.env['LOG_LEVEL'] !== undefined
-      ? parseInt(process.env['LOG_LEVEL'])
-      : process.env['NODE_ENV'] !== 'development'
-      ? 6
-      : 7;
+
+  static _priority: EPriority = (() => {
+    if (typeof process !== 'undefined') {
+      if (process.env['LOG_LEVEL'] !== undefined) {
+        return parseInt(process.env['LOG_LEVEL']);
+      } else if (process.env['NODE_ENV'] !== 'development') {
+        return 6;
+      } else {
+        return 7;
+      }
+    } else {
+      return 7;
+    }
+  })();
 
   static setLogger(logger: Logger): void {
     Logger._logger = logger;
