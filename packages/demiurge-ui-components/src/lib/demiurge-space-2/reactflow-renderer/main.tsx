@@ -12,7 +12,6 @@ import ReactFlow, {
   NodeChange,
 } from 'reactflow';
 
-import { TEdge, TEdgeEnd, TPosition } from '@monorepo/demiurge-types';
 import { PointerTracker } from '../apis/pointerTracker';
 import { AvatarsRenderer, useRegisterListener } from './avatarsRenderer';
 import { clientXY } from '@monorepo/ui-toolkit';
@@ -24,6 +23,8 @@ import { SpaceState } from '../apis/spaceState';
 import { SpaceAwareness } from '../apis/spaceAwareness';
 import { HtmlAvatarStore } from './htmlAvatarStore';
 import { translateEdges, translateNodes } from './to-rf-nodes';
+import { TPosition } from '../apis/types/node';
+import { TEdge, TEdgeEnd } from '../apis/types/edge';
 
 //
 //
@@ -105,11 +106,11 @@ export const DemiurgeSpace = ({
       const e: TEdge = {
         from: {
           node: c.source as string,
-          connector: c.sourceHandle || undefined,
+          connectorName: c.sourceHandle || '',
         },
         to: {
           node: c.target as string,
-          connector: c.targetHandle || undefined,
+          connectorName: c.targetHandle || '',
         },
         type: '_unknown_',
       };
@@ -137,7 +138,7 @@ export const DemiurgeSpace = ({
     if (handleType === 'source')
       connectingNodeId.current = {
         node: nodeId,
-        connector: handleId || undefined,
+        connectorName: handleId || '',
       };
     else connectingNodeId.current = null;
   }, []);

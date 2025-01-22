@@ -1,13 +1,11 @@
 import {
   isNodeOpened,
   nodeViewDefaultStatus,
-  TAnyEdge,
-  TEdge,
   TNodeView,
   TNodeViewStatus,
-} from '@monorepo/demiurge-types';
+} from '../apis/types/node';
 import { Edge as RfEdge, Node as RfNode } from 'reactflow';
-import { SimpleEdgePayload } from '../old/graphLogic/graph-logic';
+import { edgeId, EdgePayload, pinId, TEdge } from '../apis/types/edge';
 
 //
 //
@@ -66,33 +64,39 @@ const edgeClassName = (e: TEdge) => {
 //
 //
 
-export type SpaceEdgePayload = SimpleEdgePayload & {
-  text: string;
-  edge: TAnyEdge;
-};
-
-type SpaceEdge = Omit<RfEdge, 'data'> & { data: SpaceEdgePayload };
-
-//
-//
-
-const translateEdge = (e: TEdge): SpaceEdge => {
-  const l = edgeLabel(e);
-  return {
-    id: l,
-    source: e.from.node,
-    target: e.to.node,
-    label: l,
-    sourceHandle: e.from.connector,
-    targetHandle: e.to.connector,
-    className: `${edgeClassName(e).join(' ')}`,
-    type: 'custom',
-    data: {
-      type: 'simple',
-      text: l,
-      edge: e,
-    },
-  };
+const translateEdge = (e: TEdge): RfEdge<EdgePayload> => {
+  const id = edgeId(e);
+  if (e.group) {
+    return {
+      type: 'custom',
+      id,
+      label: id,
+      source: e.from.node,
+      target: e.to.node,
+      className: 'edges-group',
+      data: {
+        type: 'group',
+        id,
+        edge: e,
+      },
+    };
+  } else {
+    return {
+      type: 'custom',
+      id,
+      label: id,
+      source: e.from.node,
+      target: e.to.node,
+      sourceHandle: pinId(e.from),
+      targetHandle: pinId(e.to),
+      className: `${edgeClassName(e).join(' ')}`,
+      data: {
+        type: 'simple',
+        id,
+        edge: e,
+      },
+    };
+  }
 };
 
 //
@@ -100,11 +104,3 @@ const translateEdge = (e: TEdge): SpaceEdge => {
 
 export const translateEdges = (edges: Array<TEdge>) =>
   edges.map((edge) => translateEdge(edge));
-
-//
-//
-
-export const edgeLabel = (e: TEdge) =>
-  `[${e.from.node} # ${e.from.connector || 'default'}] -> [${e.to.node} # ${
-    e.to.connector || 'default'
-  }]`;

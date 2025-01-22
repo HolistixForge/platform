@@ -1,9 +1,9 @@
-import { TEdge, TNodeView } from '@monorepo/demiurge-types';
 import { Listenable } from './listenable';
-// TODO_DEMIURGE_SPACE: relocate from demiurge-types
+import { TEdge } from './types/edge';
+import { TNodeView } from './types/node';
 
 /** one pin */
-export type THandle = {
+export type TPin = {
   name: string;
   id: string;
   isConnectable?: boolean;
@@ -15,7 +15,7 @@ export type TConnector = {
   connectorName: string;
   isOpened: boolean;
   groupedEdgesCount: number;
-  slots: THandle[];
+  slots: TPin[];
   type: 'source' | 'target';
 };
 
@@ -49,10 +49,6 @@ export class SpaceState extends Listenable {
     const cs = this._state.connectors.get(nodeId);
     if (cs) return cs.find((c) => c.connectorName === connectorName);
     return undefined;
-  }
-
-  public getStateCopy() {
-    return structuredClone(this._state);
   }
 
   public setState(s: TSpaceState) {

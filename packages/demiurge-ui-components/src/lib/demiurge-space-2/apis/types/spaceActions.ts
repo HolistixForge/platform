@@ -1,4 +1,4 @@
-import { TPosition } from '@monorepo/demiurge-types';
+import { TPosition } from './node';
 
 export type TSAMoveNode = {
   type: 'move-node';
@@ -24,11 +24,6 @@ export type TSAReduceNode = {
 export type TSAExpandNode = {
   type: 'expand-node';
   nid: string;
-};
-
-export type TSAUpdateGraphView = {
-  type: '_update-graph-view_';
-  why: string;
 };
 
 export type TSASelectionChange = {
@@ -60,15 +55,20 @@ export type TSAUnhighlightFromConnector = {
   connectorName: string;
 };
 
+export type TSAResizeNode = {
+  type: 'resize-node';
+  nid: string;
+};
+
 export type TSpaceActions =
   | TSAOpenNode
   | TSACloseNode
   | TSAMoveNode
   | TSASelectionChange
-  | TSAUpdateGraphView
   | TSAExpandNode
   | TSAReduceNode
   | TSACloseConnector
   | TSAOpenConnector
   | TSAHighlightFromConnector
-  | TSAUnhighlightFromConnector;
+  | TSAUnhighlightFromConnector
+  | TSAResizeNode;

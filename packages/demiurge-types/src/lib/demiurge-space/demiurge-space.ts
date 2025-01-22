@@ -3,6 +3,8 @@ import { TGraphView } from './graph-view';
 import { TUserSelections } from './user-selection';
 import { TDemiurgeEdge } from '../demiurge-notebook/edge-types';
 
+// TODO_DEMIURGE_SPACE : relocate all this folder except for this file
+
 export type TDemiurgeSpaceSharedData = {
   edges: SharedArray<TDemiurgeEdge>;
   graphViews: SharedMap<TGraphView>;

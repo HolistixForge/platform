@@ -1,8 +1,8 @@
 import { Viewport } from 'reactflow';
-import { TPosition } from '@monorepo/demiurge-types';
 import * as _ from 'lodash';
 import { SpaceAwareness } from '../apis/spaceAwareness';
 import { PointerTracker } from '../apis/pointerTracker';
+import { TPosition } from '../apis/types/node';
 
 //
 

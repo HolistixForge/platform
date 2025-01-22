@@ -1,5 +1,5 @@
 import { Listenable } from './listenable';
-import { TPosition, TSelectingUsers } from '@monorepo/demiurge-types';
+import { TPosition, TSelectingUsers } from './types/node';
 
 export type TUserPosition = {
   key: number;

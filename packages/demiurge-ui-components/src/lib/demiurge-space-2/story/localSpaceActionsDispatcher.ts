@@ -1,7 +1,8 @@
-import { TSpaceActions } from '../apis/spaceActions';
+import { TSpaceActions } from '../apis/types/spaceActions';
 import { SpaceActionsDispatcher } from '../apis/spaceActionsDispatcher';
 import { SpaceActionsReducer } from '../apis/spaceActionsReducer';
 import { SpaceState } from '../apis/spaceState';
+import { graph1 } from './graphs-data/graph-1';
 
 //
 
@@ -11,17 +12,14 @@ export class LocalSpaceActionsDispatcher extends SpaceActionsDispatcher {
 
   constructor(ss: SpaceState) {
     super();
-    this.reducer = new SpaceActionsReducer();
+    this.reducer = new SpaceActionsReducer(graph1);
     this.ss = ss;
+    this.ss.setState(this.reducer.currentView);
   }
 
   dispatch(action: TSpaceActions): void {
     console.log('Dispatching action:', action);
-
-    const stateCopy = this.ss.getStateCopy();
-
-    this.reducer.reduce(stateCopy, action);
-
-    this.ss.setState(stateCopy);
+    this.reducer.reduce(action);
+    this.ss.setState(this.reducer.currentView);
   }
 }

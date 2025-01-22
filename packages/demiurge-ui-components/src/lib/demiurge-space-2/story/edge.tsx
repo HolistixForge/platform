@@ -5,24 +5,17 @@ import {
   EdgeComponent,
   LabelMiddle,
 } from '../reactflow-renderer/assets/edges/edge';
-import { TAnyEdge } from '@monorepo/demiurge-types';
+import { EdgePayload } from '../apis/types/edge';
 
 //
 //
-//
-
-type EdgePayload = { text: string; edge: TAnyEdge };
-
 //
 
 export const CustomStoryEdge: FC<EdgeProps<EdgePayload>> = (props) => {
   const { edge } = props.data as EdgePayload;
 
-  const type =
-    edge?.data?.demiurge_type === 'chat-anchor' ? 'straight' : 'default';
-
   return (
-    <EdgeComponent {...props} type={type}>
+    <EdgeComponent {...props} type={'default'}>
       <LabelMiddle className="debug-edge-label">{edge.type}</LabelMiddle>
     </EdgeComponent>
   );

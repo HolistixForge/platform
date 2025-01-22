@@ -1,5 +1,15 @@
-import { nodeViewDefaultStatus } from '@monorepo/demiurge-types';
+import { nodeViewDefaultStatus } from '../../apis/types/node';
 import { TConnector, TSpaceState } from '../../apis/spaceState';
+import { pinId } from '../../apis/types/edge';
+
+const makeSlots = (connectorName: string, count: number) => {
+  return Array.from({ length: count }, (_, index) => ({
+    id: pinId({ connectorName, pinName: `slot-${index}` }),
+    name: `slot ${index}`,
+  }));
+};
+
+//
 
 export const graph1: TSpaceState = {
   nodes: [
@@ -15,7 +25,15 @@ export const graph1: TSpaceState = {
       id: 'node-2',
       position: {
         x: 400,
-        y: 500,
+        y: 700,
+      },
+      status: nodeViewDefaultStatus(),
+    },
+    {
+      id: 'node-3',
+      position: {
+        x: 600,
+        y: 300,
       },
       status: nodeViewDefaultStatus(),
     },
@@ -25,13 +43,41 @@ export const graph1: TSpaceState = {
     {
       from: {
         node: 'node-1',
-        connector: 'handle_outputs_1',
+        connectorName: 'outputs',
+        pinName: 'slot-2',
       },
       to: {
         node: 'node-2',
-        connector: 'handle_inputs_0',
+        connectorName: 'inputs',
+        pinName: 'slot-1',
       },
       type: 'satisfied_by',
+    },
+    {
+      from: {
+        node: 'node-1',
+        connectorName: 'outputs',
+        pinName: 'slot-0',
+      },
+      to: {
+        node: 'node-2',
+        connectorName: 'inputs',
+        pinName: 'slot-2',
+      },
+      type: 'composed_of',
+    },
+    {
+      from: {
+        node: 'node-3',
+        connectorName: 'outputs',
+        pinName: 'slot-1',
+      },
+      to: {
+        node: 'node-2',
+        connectorName: 'inputs',
+        pinName: 'slot-2',
+      },
+      type: 'depends_on',
     },
   ],
   //
@@ -43,20 +89,14 @@ export const graph1: TSpaceState = {
           connectorName: 'outputs',
           isOpened: true,
           groupedEdgesCount: 0,
-          slots: [
-            { id: 'handle_outputs_0', name: 'slot 0' },
-            { id: 'handle_outputs_1', name: 'slot 1' },
-          ],
+          slots: makeSlots('outputs', 3),
           type: 'source',
         },
         {
           connectorName: 'inputs',
           isOpened: false,
           groupedEdgesCount: 0,
-          slots: [
-            { id: 'handle_inputs_0', name: 'slot 0' },
-            { id: 'handle_inputs_1', name: 'slot 1' },
-          ],
+          slots: makeSlots('inputs', 3),
           type: 'target',
         },
       ],
@@ -68,23 +108,38 @@ export const graph1: TSpaceState = {
           connectorName: 'outputs',
           isOpened: false,
           groupedEdgesCount: 0,
-          slots: [
-            { id: 'handle_outputs_0', name: 'slot 0' },
-            { id: 'handle_outputs_1', name: 'slot 1' },
-          ],
+          slots: makeSlots('outputs', 3),
           type: 'source',
         },
         {
           connectorName: 'inputs',
           isOpened: true,
           groupedEdgesCount: 0,
-          slots: [
-            { id: 'handle_inputs_0', name: 'slot 0' },
-            { id: 'handle_inputs_1', name: 'slot 1' },
-          ],
+          slots: makeSlots('inputs', 3),
+          type: 'target',
+        },
+      ],
+    ],
+    [
+      'node-3',
+      [
+        {
+          connectorName: 'outputs',
+          isOpened: false,
+          groupedEdgesCount: 0,
+          slots: makeSlots('outputs', 3),
+          type: 'source',
+        },
+        {
+          connectorName: 'inputs',
+          isOpened: true,
+          groupedEdgesCount: 0,
+          slots: makeSlots('inputs', 3),
           type: 'target',
         },
       ],
     ],
   ]),
 };
+
+//

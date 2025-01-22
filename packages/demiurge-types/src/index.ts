@@ -12,18 +12,6 @@ export type {
 } from './lib/user';
 
 export type * from './lib/server-image';
-export type {
-  ENodeType,
-  TSelectingUsers,
-  TPosition,
-  ENodeViewMode,
-  TNodeViewStatus,
-  TNodeView,
-  TUseNodeValue,
-} from './lib/node';
-export { isNodeOpened, nodeViewDefaultStatus } from './lib/node';
-
-export type * from './lib/edge';
 
 //
 
@@ -68,8 +56,6 @@ export {
 } from './lib/demiurge-notebook/demiurge-notebook';
 
 export type * from './lib/demiurge-notebook/node-types';
-
-export type * from './lib/demiurge-space/events';
 
 export type * from './lib/demiurge-notebook/events';
 

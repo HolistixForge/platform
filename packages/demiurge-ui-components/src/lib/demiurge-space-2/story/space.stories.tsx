@@ -1,17 +1,17 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useMemo } from 'react';
 
-import { TPosition, TEdgeEnd, TEdge } from '@monorepo/demiurge-types';
-
+import { TPosition } from '../apis/types/node';
+import { TEdgeEnd, TEdge } from '../apis/types/edge';
 import { DemiurgeSpace } from '../reactflow-renderer/main';
 import { ReactflowPointerTracker } from '../reactflow-renderer/reactflowPointerTracker';
 import { HtmlAvatarStore } from '../reactflow-renderer/htmlAvatarStore';
 
 import { FakeSpaceAwareness } from './fakeSpaceAwareness';
 import { LocalSpaceActionsDispatcher } from './localSpaceActionsDispatcher';
-import { LocalSpaceState } from './localSpaceState';
 import { CustomStoryEdge } from './edge';
 import { CustomStoryNode } from './node';
+import { SpaceState } from '../apis/spaceState';
 
 //
 
@@ -20,7 +20,7 @@ const Demo = () => {
     const ga = new FakeSpaceAwareness();
     const pt = new ReactflowPointerTracker(ga);
     const as = new HtmlAvatarStore(pt, ga);
-    const ss = new LocalSpaceState();
+    const ss = new SpaceState();
     const sad = new LocalSpaceActionsDispatcher(ss);
 
     return { ga, pt, as, sad, ss };

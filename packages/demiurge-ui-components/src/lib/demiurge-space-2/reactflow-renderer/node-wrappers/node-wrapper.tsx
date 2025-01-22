@@ -5,7 +5,7 @@ import {
   isNodeOpened,
   TNodeViewStatus,
   TUseNodeValue,
-} from '@monorepo/demiurge-types';
+} from '../../apis/types/node';
 import { SelectionsAwareness } from './selection-awareness';
 import { useSpaceContext } from '../spaceContext';
 

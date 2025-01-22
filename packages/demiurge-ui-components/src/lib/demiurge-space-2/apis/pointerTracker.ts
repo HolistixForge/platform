@@ -1,6 +1,6 @@
 import { Viewport } from 'reactflow';
-import { TPosition } from '@monorepo/demiurge-types';
 import * as _ from 'lodash';
+import { TPosition } from './types/node';
 
 export abstract class PointerTracker {
   public abstract bindReactFlowParentDiv(div: HTMLDivElement): void;

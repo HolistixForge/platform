@@ -50,8 +50,8 @@ export const nodeViewDefaultStatus = (): TNodeViewStatus => ({
   forceOpened: false,
   forceClosed: false,
   isFiltered: false,
-  rank: NaN,
-  maxRank: NaN,
+  rank: 0,
+  maxRank: 1,
 });
 
 export const isNodeOpened = (status: TNodeViewStatus): boolean => {

@@ -1,4 +1,4 @@
-import { TPosition } from '@monorepo/demiurge-types';
+import { TPosition } from '../apis/types/node';
 import { SpaceAwareness, TUserPosition } from '../apis/spaceAwareness';
 
 //

@@ -1,4 +1,4 @@
-import { TUseNodeValue } from '@monorepo/demiurge-types';
+import { TUseNodeValue } from '../../apis/types/node';
 import { UserUsername } from '../../../users/users';
 
 import './selection-awareness.scss';
