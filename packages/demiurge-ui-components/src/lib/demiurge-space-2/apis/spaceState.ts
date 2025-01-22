@@ -15,7 +15,7 @@ export type TConnector = {
   connectorName: string;
   isOpened: boolean;
   groupedEdgesCount: number;
-  slots: TPin[];
+  slots?: TPin[];
   type: 'source' | 'target';
 };
 

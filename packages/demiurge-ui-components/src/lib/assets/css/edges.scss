@@ -83,11 +83,14 @@ g.react-flow__edge {
 
   &.edges-group path.react-flow__edge-path {
     stroke-width: 4px;
+    &.highlighted path.react-flow__edge-path {
+      filter: drop-shadow(0 0 3px #fff);
+    }
   }
 
-  &.source-highlighted path.react-flow__edge-path,
-  &.target-highlighted path.react-flow__edge-path {
+  &.highlighted path.react-flow__edge-path {
     stroke-width: 4px;
+    filter: drop-shadow(0 0 3px #fff);
   }
 }
 
@@ -104,8 +107,8 @@ g.react-flow__edge {
   font-size: 11px;
   color: var(--c-white-1);
   border-radius: 4px;
-  background-color: var(--c-black-6);
-  border: solid 1px var(--c-blue-3);
+  background-color: var(--c-black-5);
+  // border: solid 1px var(--c-blue-3);
 
   .edge-label-icon,
   .edge-label-icon.red {

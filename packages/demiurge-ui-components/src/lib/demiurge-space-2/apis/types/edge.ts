@@ -25,12 +25,21 @@ export type TEdge = {
   to: TEdgeEnd;
   type: EEdgeType;
   group?: { edges: TEdge[] };
+  highlighted?: boolean;
 };
 
 //
 
 export const pinId = (ee: { connectorName: string; pinName?: string }) =>
   `${ee.connectorName}::${ee.pinName}`;
+
+export const fromPinId = (id: string) => {
+  const [connectorName, pinName] = id.split('::');
+  return {
+    connectorName,
+    pinName,
+  };
+};
 
 //
 

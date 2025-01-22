@@ -2,7 +2,12 @@ import { TEdge } from './types/edge';
 import {
   TSACloseConnector,
   TSAOpenConnector,
+  TSAMoveNode,
   TSpaceActions,
+  TSAHighlightFromConnector,
+  TSAUnhighlightFromConnector,
+  TSAReduceNode,
+  TSAExpandNode,
 } from './types/spaceActions';
 import { TSpaceState } from './spaceState';
 
@@ -35,6 +40,26 @@ export class SpaceActionsReducer {
       case 'open-connector':
         this.openCloseConnector(action);
         break;
+
+      case 'move-node':
+        this.moveNode(action);
+        break;
+
+      case 'highlight':
+        this.setEdgeHighlight(action, true);
+        break;
+
+      case 'unhighlight':
+        this.setEdgeHighlight(action, false);
+        break;
+
+      case 'reduce-node':
+        this.changeNodeMode(action, 'REDUCED');
+        break;
+
+      case 'expand-node':
+        this.changeNodeMode(action, 'EXPANDED');
+        break;
     }
 
     return /*structuredClone*/ this.currentView;
@@ -50,6 +75,49 @@ export class SpaceActionsReducer {
         c.isOpened = action.type === 'close-connector' ? false : true;
         this.resolveDrawnEdges();
       }
+    }
+  }
+
+  //
+
+  private moveNode(action: TSAMoveNode) {
+    const node = this.currentView.nodes.find((n) => n.id === action.nid);
+    if (node) {
+      node.position = action.position;
+    }
+  }
+
+  //
+
+  private setEdgeHighlight(
+    action: TSAHighlightFromConnector | TSAUnhighlightFromConnector,
+    highlighted: boolean
+  ) {
+    this.currentView.edges.forEach((edge) => {
+      if (
+        (edge.from.node === action.nid &&
+          edge.from.connectorName === action.connectorName &&
+          (action.pinName === undefined ||
+            edge.from.pinName === action.pinName)) ||
+        (edge.to.node === action.nid &&
+          edge.to.connectorName === action.connectorName &&
+          (action.pinName === undefined || edge.to.pinName === action.pinName))
+      ) {
+        edge.highlighted = highlighted;
+        console.log('found', edge);
+      }
+    });
+  }
+
+  //
+
+  private changeNodeMode(
+    action: TSAReduceNode | TSAExpandNode,
+    mode: 'REDUCED' | 'EXPANDED'
+  ) {
+    const node = this.currentView.nodes.find((n) => n.id === action.nid);
+    if (node) {
+      node.status.mode = mode;
     }
   }
 

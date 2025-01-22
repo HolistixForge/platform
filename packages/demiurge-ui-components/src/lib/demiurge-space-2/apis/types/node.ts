@@ -24,7 +24,7 @@ export type TNodeViewStatus = {
 export type TNodeView = {
   id: string;
   position: TPosition;
-  status?: TNodeViewStatus;
+  status: TNodeViewStatus;
   standalone?: boolean;
 };
 

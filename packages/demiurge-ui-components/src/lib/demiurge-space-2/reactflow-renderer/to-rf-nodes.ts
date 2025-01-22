@@ -58,7 +58,14 @@ export const translateNodes = (nodes: Array<TNodeView>, viewId: string) =>
 //
 
 const edgeClassName = (e: TEdge) => {
-  return ['demiurge-space-edge', e.type];
+  const classNames = ['demiurge-space-edge', e.type];
+  if (e.highlighted) {
+    classNames.push('highlighted');
+  }
+  if (e.group) {
+    classNames.push('edges-group');
+  }
+  return classNames;
 };
 
 //
@@ -73,7 +80,7 @@ const translateEdge = (e: TEdge): RfEdge<EdgePayload> => {
       label: id,
       source: e.from.node,
       target: e.to.node,
-      className: 'edges-group',
+      className: `${edgeClassName(e).join(' ')}`,
       data: {
         type: 'group',
         id,

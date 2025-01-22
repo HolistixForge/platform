@@ -6,16 +6,6 @@ export type TSAMoveNode = {
   position: TPosition;
 };
 
-export type TSAOpenNode = {
-  type: 'open-node';
-  nid: string;
-};
-
-export type TSACloseNode = {
-  type: 'close-node';
-  nid: string;
-};
-
 export type TSAReduceNode = {
   type: 'reduce-node';
   nid: string;
@@ -23,11 +13,6 @@ export type TSAReduceNode = {
 
 export type TSAExpandNode = {
   type: 'expand-node';
-  nid: string;
-};
-
-export type TSASelectionChange = {
-  type: 'selection-change';
   nid: string;
 };
 
@@ -47,12 +32,36 @@ export type TSAHighlightFromConnector = {
   type: 'highlight';
   nid: string;
   connectorName: string;
+  pinName?: string;
 };
 
 export type TSAUnhighlightFromConnector = {
   type: 'unhighlight';
   nid: string;
   connectorName: string;
+  pinName?: string;
+};
+
+//
+
+export type TSASelectionChange = {
+  type: 'selection-change';
+  nid: string;
+};
+
+export type TSAOpenNode = {
+  type: 'open-node';
+  nid: string;
+};
+
+export type TSACloseNode = {
+  type: 'close-node';
+  nid: string;
+};
+
+export type TSAPopNode = {
+  type: 'pop-node';
+  nid: string;
 };
 
 export type TSAResizeNode = {
@@ -71,4 +80,5 @@ export type TSpaceActions =
   | TSAOpenConnector
   | TSAHighlightFromConnector
   | TSAUnhighlightFromConnector
-  | TSAResizeNode;
+  | TSAResizeNode
+  | TSAPopNode;

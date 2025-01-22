@@ -1,10 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { icons } from '../../../../assets/icons';
 import { Slot } from '../slot/Slot';
 import { Handle, Position, useUpdateNodeInternals } from 'reactflow';
 import { useSpaceContext } from '../../spaceContext';
 
 import './inputsOutputs.css';
+import { fromPinId } from '../../../apis/types/edge';
 
 /*
  *
@@ -40,8 +41,6 @@ const getHandleFromEvent = (event: React.MouseEvent) => {
 export const useConnector = (nodeId: string, connectorName: string) => {
   const { spaceActionsDispatcher, spaceState } = useSpaceContext();
 
-  const [forceHighlight, setForceHighlight] = useState(false);
-
   const updateNodeInternals = useUpdateNodeInternals();
 
   const c = spaceState.getConnector(nodeId, connectorName);
@@ -69,40 +68,37 @@ export const useConnector = (nodeId: string, connectorName: string) => {
 
   const handleMouseOver = useCallback((event: React.MouseEvent) => {
     const h = getHandleFromEvent(event);
+    const { connectorName, pinName } = fromPinId(h.handleId);
     spaceActionsDispatcher.dispatch({
       type: 'highlight',
       nid: nodeId,
       connectorName,
+      pinName,
     });
   }, []);
 
   //
 
-  const handleMouseLeave = useCallback(
-    (event: React.MouseEvent) => {
-      // if handle not been clicked, remove highlight by passing a non
-      // existing {nodeId, handleId} so no edges will match
-      !forceHighlight &&
-        spaceActionsDispatcher.dispatch({
-          type: 'unhighlight',
-          nid: nodeId,
-          connectorName,
-        });
-    },
-    [forceHighlight]
-  );
+  const handleMouseLeave = useCallback((event: React.MouseEvent) => {
+    // if handle not been clicked, remove highlight by passing a non
+    // existing {nodeId, handleId} so no edges will match
+
+    const h = getHandleFromEvent(event);
+    const { connectorName, pinName } = fromPinId(h.handleId);
+    spaceActionsDispatcher.dispatch({
+      type: 'unhighlight',
+      nid: nodeId,
+      connectorName,
+      pinName,
+    });
+  }, []);
 
   //
-
-  const handleLockHighlight = useCallback((event: React.MouseEvent) => {
-    setForceHighlight(true);
-  }, []);
 
   return {
     openClose,
     handleMouseOver,
     handleMouseLeave,
-    handleLockHighlight,
     groupedEdgesCount,
     type,
     isOpened,
@@ -120,11 +116,15 @@ const GroupHandle = ({
   count,
   isConnectable = false,
   type,
+  onMouseOver,
+  onMouseLeave,
 }: {
   connectorName: string;
   count: number;
   isConnectable?: boolean;
   type: 'source' | 'target';
+  onMouseOver?: (event: React.MouseEvent) => void;
+  onMouseLeave?: (event: React.MouseEvent) => void;
 }) => {
   return (
     <div className="edges-count">
@@ -133,7 +133,9 @@ const GroupHandle = ({
         type={type}
         position={connectorName === 'inputs' ? Position.Top : Position.Bottom}
         isConnectable={isConnectable}
-        id=""
+        id={connectorName}
+        onMouseOver={onMouseOver}
+        onMouseLeave={onMouseLeave}
       />
     </div>
   );
@@ -156,7 +158,6 @@ export const InputsOutputs = ({
     openClose,
     handleMouseOver,
     handleMouseLeave,
-    handleLockHighlight,
     groupedEdgesCount,
     type,
     isOpened,
@@ -181,6 +182,8 @@ export const InputsOutputs = ({
           type={type}
           isConnectable={!disabled}
           count={groupedEdgesCount}
+          onMouseOver={handleMouseOver}
+          onMouseLeave={handleMouseLeave}
         />
         <div className="handles-bar">
           {type === 'target' ? (
@@ -215,6 +218,8 @@ export const InputsOutputs = ({
             connectorName={connectorName}
             isConnectable={!disabled}
             count={groupedEdgesCount}
+            onMouseOver={handleMouseOver}
+            onMouseLeave={handleMouseLeave}
           />
         )}
         <div className="handles-bar">
@@ -248,6 +253,8 @@ export const InputsOutputs = ({
             type={type}
             isConnectable={!disabled}
             count={groupedEdgesCount}
+            onMouseOver={handleMouseOver}
+            onMouseLeave={handleMouseLeave}
           />
         )}
         <div className="handles-bar">
@@ -278,7 +285,6 @@ export const InputsOutputs = ({
                   }
                   onMouseOver={handleMouseOver}
                   onMouseLeave={handleMouseLeave}
-                  onClick={handleLockHighlight}
                 />
               ))}
           </ul>

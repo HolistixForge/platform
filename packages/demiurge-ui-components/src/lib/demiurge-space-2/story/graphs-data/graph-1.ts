@@ -37,6 +37,14 @@ export const graph1: TSpaceState = {
       },
       status: nodeViewDefaultStatus(),
     },
+    {
+      id: 'node-4',
+      position: {
+        x: 800,
+        y: 600,
+      },
+      status: nodeViewDefaultStatus(),
+    },
   ],
   //
   edges: [
@@ -78,6 +86,18 @@ export const graph1: TSpaceState = {
         pinName: 'slot-2',
       },
       type: 'depends_on',
+    },
+    {
+      from: {
+        node: 'node-2',
+        connectorName: 'outputs',
+        pinName: 'slot-1',
+      },
+      to: {
+        node: 'node-4',
+        connectorName: 'inputs',
+      },
+      type: 'referenced_by',
     },
   ],
   //
@@ -135,6 +155,25 @@ export const graph1: TSpaceState = {
           isOpened: true,
           groupedEdgesCount: 0,
           slots: makeSlots('inputs', 3),
+          type: 'target',
+        },
+      ],
+    ],
+    [
+      'node-4',
+      [
+        {
+          connectorName: 'outputs',
+          isOpened: false,
+          groupedEdgesCount: 0,
+          slots: undefined,
+          type: 'source',
+        },
+        {
+          connectorName: 'inputs',
+          isOpened: true,
+          groupedEdgesCount: 0,
+          slots: undefined,
           type: 'target',
         },
       ],

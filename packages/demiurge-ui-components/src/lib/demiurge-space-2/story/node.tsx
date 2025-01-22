@@ -19,7 +19,7 @@ export const CustomStoryNode = () => {
     close,
   });
   return (
-    <div style={{ width: '200px' }}>
+    <div style={{ width: isExpanded ? '250px' : '100px' }}>
       <InputsAndOutputs id={data.id} />
       <NodeHeader
         nodeType={'test'}
