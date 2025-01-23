@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { NodeChatAnchor, NodeChatAnchorProps } from './node-chat-anchor';
 import { useTestBoolean } from '../../storybook-utils';
-import { StoryMockSpaceContext } from '../../demiurge-space-2/story/storyMockSpaceContext';
+import { StoryMockSpaceContext } from '../../demiurge-space-2';
 
 //
 
@@ -14,7 +14,7 @@ const StoryWrapper = (
     | 'isOpened'
     | 'title'
     | 'unreadCount'
-  > & { selected: boolean },
+  > & { selected: boolean }
 ) => {
   //
   const { is: isOpened, set: open } = useTestBoolean(props.isOpened);

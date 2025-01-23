@@ -4,8 +4,10 @@ import {
   NodeJupyterlabCodeCell,
   NodeJupyterlabCodeCellProps,
 } from './node-jupyterlab-code-cell';
-import { StoryMockSpaceContext } from '../../demiurge-space-2/story/storyMockSpaceContext';
-import { nodeViewDefaultStatus } from '@monorepo/demiurge-types';
+import {
+  StoryMockSpaceContext,
+  nodeViewDefaultStatus,
+} from '../../demiurge-space-2';
 
 //
 
@@ -25,7 +27,7 @@ const StoryWrapper = (
   > & {
     expanded: boolean;
     selected: boolean;
-  },
+  }
 ) => {
   //
   const { is: isOpened, set: open, unset: close } = useTestBoolean(true);

@@ -1,9 +1,8 @@
-import { TEventOrigin } from '../demiurge-space/events';
 import { TDKID, TJKID } from './demiurge-notebook';
 import { IOutput } from './node-types';
 
 export type FormFieldsOnly<T extends TDemiurgeNotebookEvent> = Partial<
-  Omit<T, keyof TEventOrigin | 'type'>
+  Omit<T, 'viewId' | 'position' | 'type'>
 >;
 
 /*
@@ -48,7 +47,9 @@ export type TEventNewKernel = {
   type: 'new-kernel';
   project_server_id: number;
   kernelName: string;
-} & TEventOrigin;
+  viewId: string;
+  position: { x: number; y: number };
+};
 
 export type TEventDeleteKernel = {
   type: 'delete-kernel';

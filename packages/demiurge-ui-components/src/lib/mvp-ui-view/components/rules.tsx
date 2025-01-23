@@ -1,6 +1,4 @@
-import { useState } from 'react';
 import { icons } from '../../assets/icons';
-import { Wrapper } from '../assets/wrapper';
 
 interface FilterBoxProps {}
 

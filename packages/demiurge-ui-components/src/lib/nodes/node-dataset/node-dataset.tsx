@@ -2,8 +2,7 @@ import { icons } from '../../assets/icons';
 import { MenuExpanded } from '../../menuExpanded/menuExpanded';
 import { Outputs } from '../../demiurge-space-2';
 import { NodeToolbar, useMakeButton } from '../node-common/node-toolbar';
-import { TUseNodeValue } from '@monorepo/demiurge-types';
-import { useConnector } from '../../demiurge-space-2/reactflow-renderer/assets/inputsOutputs/inputsOutputs';
+import { TUseNodeValue } from '../../demiurge-space-2';
 
 import './node-dataset.scss';
 
@@ -28,8 +27,6 @@ export const NodeDataset = ({
   expand,
   viewStatus,
 }: NodeDatasetProps) => {
-  const outCon = useConnector(nodeId, 'outputs');
-
   const isExpanded = viewStatus?.mode === 'EXPANDED';
   const buttons = useMakeButton({
     isExpanded,
@@ -49,7 +46,7 @@ export const NodeDataset = ({
       )}
 
       {/* Output bottom */}
-      <Outputs nodeId={nodeId} slots={outCon.slots} />
+      <Outputs nodeId={nodeId} />
 
       {/* Main infos top */}
       {!isExpanded && (

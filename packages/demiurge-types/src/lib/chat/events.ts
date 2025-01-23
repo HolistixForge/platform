@@ -1,5 +1,3 @@
-import { TEventOrigin } from '../demiurge-space/events';
-
 export type ReducersPrivate<T> = {
   __private__?: T;
 };
@@ -20,8 +18,9 @@ export type TEventDeleteMessage = {
 export type TEventNewChat = {
   type: 'new-chat';
   spaceId?: string;
-} & TEventOrigin &
-  ReducersPrivate<{ id: string }>;
+  viewId: string;
+  position: { x: number; y: number };
+} & ReducersPrivate<{ id: string }>;
 
 export type TEventIsWriting = {
   type: 'is-writing';

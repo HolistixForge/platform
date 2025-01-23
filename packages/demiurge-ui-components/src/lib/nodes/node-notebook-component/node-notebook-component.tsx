@@ -1,11 +1,14 @@
 import { icons } from '../../assets/icons';
-import { Inputs, Outputs } from '../../demiurge-space-2';
+import {
+  Inputs,
+  Outputs,
+  TUseNodeValue,
+  useConnector,
+} from '../../demiurge-space-2';
 import { NodeToolbar, useMakeButton } from '../node-common/node-toolbar';
 import { useState, useEffect } from 'react';
 import { CellsHive, CellsHiveProps } from '../node-notebook/cells-hive';
 import { NodeNotebook } from '../node-notebook/node-notebook';
-import { TUseNodeValue } from '@monorepo/demiurge-types';
-import { useConnector } from '../../demiurge-space-2/reactflow-renderer/assets/inputsOutputs/inputsOutputs';
 
 //
 
@@ -52,7 +55,7 @@ export const NodeNotebookComponent = ({
   const [handleBarHeight, setHandleBarHeight] = useState<number>(0);
 
   const [openNotebook, setOpenNotebook] = useState<boolean>(
-    notebookOpened || false,
+    notebookOpened || false
   );
 
   // get handle bar height
@@ -128,13 +131,13 @@ export const NodeNotebookComponent = ({
               <div
                 className={`absolute right-0 top-1/2 -translate-y-1/2 -rotate-90 input-output-rotated opacity-0 transition-opacity group-hover:opacity-100 group-[.testhover]:opacity-100`}
               >
-                <Outputs nodeId={nodeId} slots={outCon.slots} />
+                <Outputs nodeId={nodeId} />
               </div>
               {/* Input left */}
               <div
                 className={`absolute left-0 top-1/2 -translate-y-1/2 -rotate-90 input-output-rotated opacity-0 transition-opacity group-hover:opacity-100 group-[.testhover]:opacity-100`}
               >
-                <Inputs nodeId={nodeId} slots={inCon.slots} />
+                <Inputs nodeId={nodeId} />
               </div>
             </>
           )}
@@ -164,7 +167,7 @@ export const NodeNotebookComponent = ({
                   <div
                     className={`absolute top-1/2 left-[-20px] -translate-y-1/2 -rotate-90 input-output-rotated opacity-0 transition-opacity group-hover:opacity-100 group-[.testhover]:opacity-100`}
                   >
-                    <Inputs nodeId={nodeId} slots={inCon.slots} />
+                    <Inputs nodeId={nodeId} />
                   </div>
 
                   <div className={`flex flex-col gap-4 transition-all`}>
@@ -185,7 +188,7 @@ export const NodeNotebookComponent = ({
                   <div
                     className={`absolute right-[-20px] top-1/2 -translate-y-1/2 -rotate-90 input-output-rotated opacity-0 transition-opacity group-hover:opacity-100 group-[.testhover]:opacity-100`}
                   >
-                    <Outputs nodeId={nodeId} slots={outCon.slots} />
+                    <Outputs nodeId={nodeId} />
                   </div>
                 </div>
 

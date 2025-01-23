@@ -2,8 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { NodeNotebookProps } from './node-notebook';
 import { NodeNotebook } from './node-notebook';
 import { playAdd__hover, useTestBoolean } from '../../storybook-utils';
-import { StoryMockSpaceContext } from '../../demiurge-space-2/story/storyMockSpaceContext';
-import { nodeViewDefaultStatus } from '@monorepo/demiurge-types';
+import {
+  StoryMockSpaceContext,
+  nodeViewDefaultStatus,
+} from '../../demiurge-space-2';
 
 const NodeStory = (
   props: Omit<
@@ -12,7 +14,7 @@ const NodeStory = (
   > & {
     expanded: boolean;
     selected: boolean;
-  },
+  }
 ) => {
   //
   const { is: isOpened, set: open, unset: close } = useTestBoolean(true);

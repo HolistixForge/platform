@@ -1,13 +1,16 @@
 import { icons } from '../../assets/icons';
 import { MenuExpanded } from '../../menuExpanded/menuExpanded';
-import { Inputs, Outputs } from '../../demiurge-space-2';
+import {
+  Inputs,
+  Outputs,
+  TUseNodeValue,
+  useConnector,
+} from '../../demiurge-space-2';
 import { NodeToolbar, useMakeButton } from '../node-common/node-toolbar';
-import { TUseNodeValue } from '@monorepo/demiurge-types';
 import {
   SelectFieldset,
   SelectItem,
 } from '../../form/form-fields/select-fieldset';
-import { useConnector } from '../../demiurge-space-2/reactflow-renderer/assets/inputsOutputs/inputsOutputs';
 
 //
 
@@ -120,10 +123,10 @@ export const NodePython = ({
       )}
 
       {/* Output Bottom */}
-      <Outputs nodeId={nodeId} slots={outCon.slots} />
+      <Outputs nodeId={nodeId} />
 
       {/* Input top */}
-      <Inputs nodeId={nodeId} slots={inCon.slots} />
+      <Inputs nodeId={nodeId} />
 
       {/* Info bottom-right */}
       {!isExpanded && (

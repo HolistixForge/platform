@@ -13,11 +13,10 @@ import {
 import {
   TServerComponentCallbacks,
   TServerComponentProps,
-  TUseNodeValue,
 } from '@monorepo/demiurge-types';
 import { randomGuy } from '../../utils/random-guys';
 import { useMockServerBehaviours } from '../../mvp-ui-view/components/server-card-mock';
-import { StoryMockSpaceContext } from '../../demiurge-space-2/story/storyMockSpaceContext';
+import { TUseNodeValue, StoryMockSpaceContext } from '../../demiurge-space-2';
 
 //
 
@@ -27,7 +26,7 @@ const StoryWrapper = (
     Pick<TUseNodeValue, 'id'> & {
       expanded: boolean;
       selected: boolean;
-    },
+    }
 ) => {
   //
   const { is: isOpened, set: open, unset: close } = useTestBoolean(true);

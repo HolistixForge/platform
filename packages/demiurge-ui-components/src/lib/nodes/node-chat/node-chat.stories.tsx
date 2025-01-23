@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { NodeChatProps, NodeChat } from './node-chat';
 import { useTestChatBox } from './test';
-import { StoryMockSpaceContext } from '../../demiurge-space-2/story/storyMockSpaceContext';
+import { StoryMockSpaceContext } from '../../demiurge-space-2';
 
 //
 
@@ -12,7 +12,7 @@ const StoryWrapper = (
     'id' | 'chatId' | 'status' | 'general' | 'viewStatus'
   > & {
     selected: boolean;
-  },
+  }
 ) => {
   const {
     status,

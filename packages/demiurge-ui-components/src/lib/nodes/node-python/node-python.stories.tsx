@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { NodePython, NodePythonProps } from './node-python';
 import { playAdd__hover, useTestBoolean } from '../../storybook-utils';
-import { StoryMockSpaceContext } from '../../demiurge-space-2/story/storyMockSpaceContext';
-import { nodeViewDefaultStatus } from '@monorepo/demiurge-types';
+import {
+  StoryMockSpaceContext,
+  nodeViewDefaultStatus,
+} from '../../demiurge-space-2';
 
 //
 
@@ -10,7 +12,7 @@ const NodeStory = (
   props: Omit<NodePythonProps, 'viewStatus' | 'expand' | 'reduce'> & {
     expanded: boolean;
     selected: boolean;
-  },
+  }
 ) => {
   //
   const { is: isOpened, set: open, unset: close } = useTestBoolean(true);

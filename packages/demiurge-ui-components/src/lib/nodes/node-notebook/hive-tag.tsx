@@ -1,8 +1,3 @@
-interface HiveTagProps {
-  title: string;
-  color: string;
-}
-
 export const HiveTag = ({ title, color }: { title: string; color: string }) => {
   return (
     <div className="flex items-center gap-3">

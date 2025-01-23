@@ -1,11 +1,11 @@
 //
-import { TEdge } from '../edge';
-import { TNodeView } from '../node';
+import { TEdge } from './types/edge';
+import { TNodeView } from './types/node';
 
 export type TFunc<TN, TE> = (
   node: TN,
   edge: TE | undefined,
-  rank: number,
+  rank: number
 ) => boolean;
 
 export const graphTraversal = <TN, TE>(
@@ -15,7 +15,7 @@ export const graphTraversal = <TN, TE>(
   getEdges: (edges: Array<TE>, nid: string) => Array<TE>,
   getEdgeOtherEndId: (e: TE, nid: string) => string,
   doContinue: TFunc<TN, TE>,
-  roots: string[],
+  roots: string[]
 ) => {
   //
   const result = {
@@ -27,7 +27,7 @@ export const graphTraversal = <TN, TE>(
   const recurse = (
     currNodeId: string,
     edge: TE | undefined = undefined,
-    rank = 0,
+    rank = 0
   ) => {
     //
     // console.log(currNodeId, edge, rank);
@@ -84,9 +84,9 @@ export const viewGraphTraversal = (
   processEdge: (
     node: TNodeView,
     edge: TEdge | undefined,
-    rank: number,
+    rank: number
   ) => boolean,
-  roots: string[],
+  roots: string[]
 ) => {
   const getNode = (nodes: Array<TNodeView>, id: string) =>
     nodes.find((node) => node.id === id);
@@ -101,6 +101,6 @@ export const viewGraphTraversal = (
     getNodeEdges,
     getEdgeOtherEndId,
     processEdge,
-    roots,
+    roots
   );
 };

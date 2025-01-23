@@ -1,11 +1,12 @@
-import { TEventOrigin } from './demiurge-space/events';
 import { ServerSystemInfo, TEc2InstanceState } from './project-server';
 
 export type TEventNewServer = {
   type: 'new-server';
   serverName: string;
   imageId: number;
-} & Partial<TEventOrigin>;
+  viewId?: string;
+  position?: { x: number; y: number };
+};
 
 export type TEventDeleteServer = {
   type: 'delete-server';
@@ -71,7 +72,9 @@ export type TEventNewVolume = {
   type: 'new-volume';
   name: string;
   storage: number;
-} & TEventOrigin;
+  viewId: string;
+  position: { x: number; y: number };
+};
 
 export type TEventMountVolume = {
   type: 'mount-volume';

@@ -1,4 +1,6 @@
 .node-jupyterlab-code-cell {
+  --jp-widgets-label-color: var(--color-code-output-text);
+
   .node-wrapper-body.jupyterlab-code-cell {
     background: var(--color-node-background);
     width: 350px;
@@ -68,7 +70,6 @@
   }
 
   /* python output */
-  --jp-widgets-label-color: var(--color-code-output-text);
   .jp-RenderedText pre {
     color: var(--color-code-output-text);
   }

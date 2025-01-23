@@ -3,7 +3,7 @@ import { SpaceContext } from '../reactflow-renderer/spaceContext';
 import { TUseNodeValue } from '../apis/types/node';
 import { DummySpaceAwareness } from './fakeSpaceAwareness';
 import { LocalSpaceActionsDispatcher } from './localSpaceActionsDispatcher';
-import { LocalSpaceState } from './localSpaceState';
+import { SpaceState } from '../apis/spaceState';
 
 //
 
@@ -37,7 +37,7 @@ export const StoryMockSpaceContext = ({
   isOpened?: boolean;
 }) => {
   const context = useMemo(() => {
-    const spaceState = new LocalSpaceState();
+    const spaceState = new SpaceState();
     return {
       spaceAwareness: new DummySpaceAwareness(),
       spaceActionsDispatcher: new LocalSpaceActionsDispatcher(spaceState),

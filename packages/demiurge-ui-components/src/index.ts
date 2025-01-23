@@ -1,7 +1,6 @@
 import './lib/assets/css/index.scss';
 
 export { Accordion } from './lib/accordion/Accordion';
-export { Cursor } from './lib/demiurge-space-2/reactflow-renderer/assets/cursor/Cursor';
 export { LiveSpace } from './lib/liveSpace/liveSpace';
 export { MenuExpanded } from './lib/menuExpanded/menuExpanded';
 export { Preview } from './lib/preview/Preview';
@@ -26,8 +25,6 @@ export { NodeTerminal } from './lib/nodes/node-terminal/node-terminal';
 
 export { NodeServer } from './lib/nodes/node-server/node-server';
 
-export { SpaceContext as GraphContext } from './lib/demiurge-space-2/reactflow-renderer/spaceContext';
-
 export { CodeEditorMonaco } from './lib/code-editor-monaco/code-editor-monaco-lazy';
 export { NodeJupyterlabCodeCell } from './lib/nodes/node-jupyterlab-code-cell/node-jupyterlab-code-cell';
 
@@ -42,13 +39,6 @@ export type {
 } from './lib/users-scopes/users-scopes';
 
 export { KernelStateIndicator } from './lib/nodes/node-kernel/kernel-state-indicator';
-
-export {
-  EdgeComponent,
-  LabelEnd,
-  LabelMiddle,
-  LabelStart,
-} from './lib/demiurge-space-2/reactflow-renderer/assets/edges/edge';
 
 export { WrapperCssCoordinates } from './lib/css-utils/wrapper-css-coordinates';
 export {
@@ -100,7 +90,6 @@ export type { NewPasswordFormData } from './lib/form/form-new-password/new-passw
 export { icons } from './lib/assets/icons';
 
 export { Sidebar } from './lib/sidebar/Sidebar';
-export { SelectionsAwareness as SelectionsAwreness } from './lib/demiurge-space-2/reactflow-renderer/node-wrappers/selection-awareness';
 
 export { Countdown } from './lib/countdown/countdown';
 
@@ -116,3 +105,7 @@ export { DialogControlled } from './lib/dialog/dialog';
 
 export { TabsRadix } from './lib/tabs/tabs-radix';
 export { TabsRadixLogic } from './lib/tabs/tabs-radix-logic';
+
+//
+
+export type { TEdge } from './lib/demiurge-space-2';

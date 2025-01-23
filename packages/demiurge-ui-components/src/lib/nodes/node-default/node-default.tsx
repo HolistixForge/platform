@@ -1,5 +1,8 @@
-import { TUseNodeValue } from '@monorepo/demiurge-types';
-import { DisablePanSelect, InputsAndOutputs } from '../../demiurge-space-2';
+import {
+  DisablePanSelect,
+  InputsAndOutputs,
+  TUseNodeValue,
+} from '../../demiurge-space-2';
 import { NodeHeader } from '../node-common/node-header';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

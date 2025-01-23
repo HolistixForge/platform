@@ -18,7 +18,7 @@ type TabsRadixLogicProps<T> = {
 export const TabsRadixLogic = <
   T extends {
     /**/
-  },
+  }
 >({
   initialTree,
   PanelComponent,
@@ -28,7 +28,7 @@ export const TabsRadixLogic = <
   hidden,
 }: TabsRadixLogicProps<T>) => {
   //
-  const [, update] = useState({});
+
   const [active, setActive] = useState<string[]>([
     initialTree.children[0].title,
   ]);
@@ -55,6 +55,7 @@ export const TabsRadixLogic = <
       tree.insert([...path, title], newTabPayload());
       return title;
     }
+    return undefined;
   };
 
   //

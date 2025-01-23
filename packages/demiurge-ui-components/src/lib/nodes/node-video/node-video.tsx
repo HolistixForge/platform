@@ -1,8 +1,7 @@
 import { FC, Suspense } from 'react';
-import { DisablePanSelect } from '../../demiurge-space-2';
+import { DisablePanSelect, TUseNodeValue } from '../../demiurge-space-2';
 import { NodeHeader } from '../node-common/node-header';
 import { useMakeButton } from '../node-common/node-toolbar';
-import { TUseNodeValue } from '@monorepo/demiurge-types';
 
 export type NodeVideoProps = {
   youtubeId: string;

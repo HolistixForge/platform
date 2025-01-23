@@ -10,12 +10,11 @@ import { ReplyItem, ReplyMessage } from '../../replyItem/replyItem';
 import { InputsAndOutputs } from '../../demiurge-space-2';
 import { ButtonIcon, ButtonIconProps } from '../../buttons/buttonIcon';
 import { useAction } from '../../buttons/useAction';
-import { DisablePanSelect } from '../../demiurge-space-2';
+import { DisablePanSelect, TUseNodeValue } from '../../demiurge-space-2';
 import { useTimer } from './use-timer';
 import { SwitchFieldset } from '../../form/form-fields/switch-fieldset';
 
 import './node-chat.scss';
-import { TUseNodeValue } from '@monorepo/demiurge-types';
 
 //
 //
@@ -76,7 +75,7 @@ export const ChatBox = ({
 
   const { rearm, trigAndStop, isRunning } = useTimer(
     () => onCurrentUserWriting?.(false),
-    [onCurrentUserWriting],
+    [onCurrentUserWriting]
   );
 
   //
@@ -114,6 +113,7 @@ export const ChatBox = ({
       const flag = (els[0] as HTMLDivElement) || undefined;
       if (flag) return flag.offsetTop;
     }
+    return NaN;
   };
 
   /* scroll to the Unread flag or to the bottom */
@@ -172,7 +172,9 @@ export const ChatBox = ({
 
   return (
     <div
-      className={`node-background chat-container ${general ? 'chat-general' : ''}`}
+      className={`node-background chat-container ${
+        general ? 'chat-general' : ''
+      }`}
     >
       <div className="chat-header">
         <div className="chat-infos">
@@ -182,8 +184,8 @@ export const ChatBox = ({
                 fill: general
                   ? 'var(--c-yellow-1)'
                   : status === 'new'
-                    ? 'var(--color-chat-new)'
-                    : 'var(--color-chat-default)',
+                  ? 'var(--color-chat-new)'
+                  : 'var(--color-chat-default)',
               }}
             />
             <div
@@ -192,8 +194,8 @@ export const ChatBox = ({
                 backgroundColor: general
                   ? 'var(--c-yellow-1)'
                   : status === 'new'
-                    ? 'var(--color-chat-new)'
-                    : 'var(--color-chat-default)',
+                  ? 'var(--color-chat-new)'
+                  : 'var(--color-chat-default)',
               }}
             >
               {general ? 'GENERAL CHAT' : 'CHAT'}

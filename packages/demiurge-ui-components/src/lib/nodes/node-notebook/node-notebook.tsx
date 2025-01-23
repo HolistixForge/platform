@@ -3,10 +3,8 @@ import { NodeToolbar, useMakeButton } from '../node-common/node-toolbar';
 import { DisplayMenu } from './display-menu';
 import { Tag } from './tag';
 import { useState } from 'react';
-import { Inputs, Outputs } from '../../demiurge-space-2';
+import { Inputs, Outputs, TUseNodeValue } from '../../demiurge-space-2';
 import { CodeEditorMonaco } from '../../code-editor-monaco/code-editor-monaco-lazy';
-import { TUseNodeValue } from '@monorepo/demiurge-types';
-import { useConnector } from '../../demiurge-space-2/reactflow-renderer/assets/inputsOutputs/inputsOutputs';
 
 export type NodeNotebookProps = {
   arrow: 'top' | 'bottom' | 'left' | 'right';
@@ -32,9 +30,6 @@ export const NodeNotebook = ({
   expand,
   reduce,
 }: NodeNotebookProps) => {
-  const inCon = useConnector(nodeId, 'inputs');
-  const outCon = useConnector(nodeId, 'outputs');
-
   const [title, setTitle] = useState<boolean>(titleFixed);
   const [input, setInput] = useState<boolean>(true);
   const [output, setOutput] = useState<boolean>(true);
@@ -71,7 +66,7 @@ export const NodeNotebook = ({
           return { ...tag, crowned };
         }
         return { ...tag, crowned: false };
-      }),
+      })
     );
   };
 
@@ -96,12 +91,12 @@ export const NodeNotebook = ({
 
       {/* input left */}
       <div className="absolute left-0 top-1/2 -translate-y-1/2 -rotate-90 input-output-rotated opacity-0 group-hover:opacity-100 transition-opacity group-[.testhover]:opacity-100">
-        <Inputs nodeId={'node-1'} slots={inCon.slots} />
+        <Inputs nodeId={'node-1'} />
       </div>
 
       {/* Output right */}
       <div className="absolute right-0 top-1/2 -translate-y-1/2 -rotate-90 input-output-rotated opacity-0 group-hover:opacity-100 transition-opacity group-[.testhover]:opacity-100">
-        <Outputs nodeId={'node-1'} slots={outCon.slots} />
+        <Outputs nodeId={'node-1'} />
       </div>
 
       {expanded ? (

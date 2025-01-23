@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { sleep, useTestBoolean } from '../../storybook-utils';
 import { NodeVolume, NodeVolumeProps } from './node-volume';
-import { StoryMockSpaceContext } from '../../demiurge-space-2/story/storyMockSpaceContext';
-import { nodeViewDefaultStatus } from '@monorepo/demiurge-types';
+import {
+  StoryMockSpaceContext,
+  nodeViewDefaultStatus,
+} from '../../demiurge-space-2';
 
 //
 
@@ -10,7 +12,7 @@ const StoryWrapper = (
   props: Pick<NodeVolumeProps, 'id' | 'volume_name' | 'volume_storage'> & {
     expanded: boolean;
     selected: boolean;
-  },
+  }
 ) => {
   //
   const { is: isOpened, set: open, unset: close } = useTestBoolean(true);

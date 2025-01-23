@@ -3,12 +3,15 @@ import {
   CodeEditorMonaco,
   CodeEditorMonacoProps,
 } from '../../code-editor-monaco/code-editor-monaco-lazy';
-import { InputsAndOutputs, DisablePanSelect } from '../../demiurge-space-2';
+import {
+  InputsAndOutputs,
+  DisablePanSelect,
+  TUseNodeValue,
+} from '../../demiurge-space-2';
 import { NodeHeader } from '../node-common/node-header';
 import { useMakeButton } from '../node-common/node-toolbar';
 
 import './node-jupyterlab-code-cell.scss';
-import { TUseNodeValue } from '@monorepo/demiurge-types';
 
 //
 //

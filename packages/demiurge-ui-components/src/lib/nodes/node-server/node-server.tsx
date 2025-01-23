@@ -1,12 +1,11 @@
 import { NodeHeader } from '../node-common/node-header';
-import { DisablePanSelect } from '../../demiurge-space-2';
+import { DisablePanSelect, TUseNodeValue } from '../../demiurge-space-2';
 import { useMakeButton } from '../node-common/node-toolbar';
 import { ServerCard } from '../../mvp-ui-view/components/server-card';
 import { CSSProperties } from 'react';
 import {
   TServerComponentProps,
   TServerComponentCallbacks,
-  TUseNodeValue,
 } from '@monorepo/demiurge-types';
 
 /**
@@ -19,7 +18,7 @@ export const NodeServer = (
     Pick<
       TUseNodeValue,
       'id' | 'isOpened' | 'open' | 'close' | 'viewStatus' | 'expand' | 'reduce'
-    >,
+    >
 ) => {
   //
 

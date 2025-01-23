@@ -1,4 +1,4 @@
-import { InputsAndOutputs } from '../../demiurge-space-2';
+import { InputsAndOutputs, TUseNodeValue } from '../../demiurge-space-2';
 import { DisablePanSelect } from '../../demiurge-space-2';
 import { NodeHeader } from '../node-common/node-header';
 import {
@@ -7,7 +7,6 @@ import {
 } from './kernel-state-indicator';
 import { useMakeButton } from '../node-common/node-toolbar';
 import { ButtonBase, ButtonBaseProps } from '../../buttons/buttonBase';
-import { TUseNodeValue } from '@monorepo/demiurge-types';
 
 export type NodeKernelProps = {
   state: 'kernel-started' | 'kernel-stopped' | 'server-stopped';
@@ -78,8 +77,8 @@ export const NodeKernel = ({
                 {state === 'kernel-started'
                   ? 'started'
                   : state === 'kernel-stopped'
-                    ? 'stopped'
-                    : null}
+                  ? 'stopped'
+                  : null}
               </span>
               {startStopButton && (
                 <ButtonBase

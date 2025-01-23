@@ -1,9 +1,12 @@
 import { icons } from '../../assets/icons';
 import { MenuExpanded } from '../../menuExpanded/menuExpanded';
-import { Inputs, Outputs } from '../../demiurge-space-2';
+import {
+  Inputs,
+  Outputs,
+  TUseNodeValue,
+  useConnector,
+} from '../../demiurge-space-2';
 import { NodeToolbar, useMakeButton } from '../node-common/node-toolbar';
-import { TUseNodeValue } from '@monorepo/demiurge-types';
-import { useConnector } from '../../demiurge-space-2/reactflow-renderer/assets/inputsOutputs/inputsOutputs';
 
 import './node-vault.scss';
 
@@ -32,7 +35,7 @@ export const NodeVault = ({
 }: NodeVaultProps) => {
   //
 
- const isExpanded = viewStatus?.mode === 'EXPANDED';
+  const isExpanded = viewStatus?.mode === 'EXPANDED';
   const buttons = useMakeButton({
     isExpanded: isExpanded,
     expand,
@@ -43,7 +46,6 @@ export const NodeVault = ({
   });
 
   const inCon = useConnector(nodeId, 'inputs');
-  const outCon = useConnector(nodeId, 'outputs');
 
   return (
     <div className="node-wrapper">
@@ -58,9 +60,9 @@ export const NodeVault = ({
       )}
 
       {/* Output bottom */}
-      <Outputs nodeId={nodeId} slots={outCon.slots} />
+      <Outputs nodeId={nodeId} />
 
-      <Inputs nodeId={nodeId} slots={inCon.slots} />
+      <Inputs nodeId={nodeId} />
 
       {/* Input top-right */}
       {!isExpanded && <NodeInputsOutputsGrid type="input" count={inputs} />}

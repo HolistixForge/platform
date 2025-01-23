@@ -1,8 +1,6 @@
 import { Header } from '../components/header';
 import { ResourceBar } from '../components/resource-bar';
 import { Sidebar } from '../../sidebar/Sidebar';
-import { icons } from '../../assets/icons';
-import { useState } from 'react';
 import { FilterBox } from '../components/filter-box';
 import { UserList } from '../components/user-list';
 import { menuItems } from './access-role';
@@ -10,22 +8,6 @@ import { menuItems } from './access-role';
 export interface AccessesProps {}
 
 export const Accesses = ({}: AccessesProps) => {
-
-
-  const [tags, setTags] = useState<any>([
-    {
-      text: 'Boosting',
-      color: '#45AFDD',
-    },
-    {
-      text: 'Prediction',
-      color: '#F72585',
-    },
-  ]);
-  const addTag = (text: string, color: string) => {
-    setTags((prevState: any) => [...prevState, { text, color }]);
-  };
-
   return (
     <div className="w-[1920px] h-[1080px] border">
       <Header hasNotifications />
@@ -54,17 +36,5 @@ export const Accesses = ({}: AccessesProps) => {
         </div>
       </div>
     </div>
-  );
-};
-
-const Tags = ({ text, color }: { text: string; color?: string }) => {
-  return (
-    <span
-      className={`uppercase bg-[#252546] rounded-[4px] px-2 py-1 text-[10px] font-medium leading-[14px] min-h-[22px] h-[22px] flex items-center w-fit`}
-      style={{ color: color }}
-      contentEditable={true}
-    >
-      {text}
-    </span>
   );
 };

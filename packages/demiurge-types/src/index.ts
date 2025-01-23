@@ -17,20 +17,10 @@ export type * from './lib/server-image';
 
 export type * from './lib/ganymede-api/types';
 
-export {
-  getNodeEdges,
-  viewGraphTraversal,
-} from './lib/demiurge-space/graph-utils';
-
 export type {
   TUserSelections,
   TUserViewSelection,
 } from './lib/demiurge-space/user-selection';
-
-export type { TDemiurgeSpaceSharedData } from './lib/demiurge-space/demiurge-space';
-export { DemiurgeSpace_loadData } from './lib/demiurge-space/demiurge-space';
-
-export type { TGraphView } from './lib/demiurge-space/graph-view';
 
 export type {
   TDKID,

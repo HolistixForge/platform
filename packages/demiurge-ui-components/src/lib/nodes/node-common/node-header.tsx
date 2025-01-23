@@ -1,7 +1,7 @@
 import { NodeToolbar, NodeToolbarProps } from './node-toolbar';
+import { TUseNodeValue } from '../../demiurge-space-2';
 
 import './node-header.scss';
-import { TUseNodeValue } from '@monorepo/demiurge-types';
 
 type NodeHeaderProps = {
   nodeType: string;

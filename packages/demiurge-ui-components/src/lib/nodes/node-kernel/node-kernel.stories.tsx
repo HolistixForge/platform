@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { sleep, useTestBoolean } from '../../storybook-utils';
 import { NodeKernel, NodeKernelProps } from './node-kernel';
-import { StoryMockSpaceContext } from '../../demiurge-space-2/story/storyMockSpaceContext';
-import { nodeViewDefaultStatus } from '@monorepo/demiurge-types';
+import {
+  StoryMockSpaceContext,
+  nodeViewDefaultStatus,
+} from '../../demiurge-space-2';
 
 //
 
@@ -13,7 +15,7 @@ const StoryWrapper = (
   > & {
     expanded: boolean;
     selected: boolean;
-  },
+  }
 ) => {
   //
   const { is: isOpened, set: open, unset: close } = useTestBoolean(true);

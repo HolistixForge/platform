@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { useAction } from './buttons/useAction';
-import { TUseNodeValue } from '@monorepo/demiurge-types';
 import { useMakeButton } from './nodes/node-common/node-toolbar';
+import { TUseNodeValue } from './demiurge-space-2';
 
 //
 
@@ -35,7 +35,7 @@ export const sleep = (s?: number) =>
       () => {
         resolve();
       },
-      s ? s * 1000 : 1000,
+      s ? s * 1000 : 1000
     );
   });
 
@@ -109,7 +109,7 @@ export const useNotImplemented = () => {
       });
     },
     [],
-    { errorLatchTime: 5000 },
+    { errorLatchTime: 5000 }
   );
   return action;
 };

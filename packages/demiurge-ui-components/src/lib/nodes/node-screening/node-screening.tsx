@@ -1,10 +1,8 @@
 import { icons } from '../../assets/icons';
 import { MenuExpanded } from '../../menuExpanded/menuExpanded';
-import { Inputs } from '../../demiurge-space-2';
+import { Inputs, TUseNodeValue, useConnector } from '../../demiurge-space-2';
 import { NodeInputsOutputsGrid } from '../node-vault/node-vault';
 import { NodeToolbar, useMakeButton } from '../node-common/node-toolbar';
-import { TUseNodeValue } from '@monorepo/demiurge-types';
-import { useConnector } from '../../demiurge-space-2/reactflow-renderer/assets/inputsOutputs/inputsOutputs';
 
 import './node-screening.scss';
 
@@ -54,7 +52,7 @@ export const NodeScreening = ({
       )}
 
       {/* Input icon top */}
-      <Inputs nodeId={nodeId} slots={inCon.slots} />
+      <Inputs nodeId={nodeId} />
 
       {/* Input top-right */}
       {!isExpanded && <NodeInputsOutputsGrid type="input" count={inputs} />}

@@ -52,25 +52,6 @@ export const cssVar = (varName: string) => {
 //
 //
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const getCssProperties_Egde_NotWorking = (match: string) => {
-  const rootStyles = getComputedStyle(document.documentElement);
-  console.log(rootStyles);
-  // Filtering properties that match '--c-*'
-  const filteredProperties: { [key: string]: string } = {};
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  for (const propertyName of rootStyles as any) {
-    if (propertyName.startsWith(match)) {
-      filteredProperties[propertyName] = rootStyles
-        .getPropertyValue(propertyName)
-        .trim();
-    }
-  }
-  return filteredProperties;
-};
-
-//
-
 /**
  * @warning expensive !
  * @todo cache results
