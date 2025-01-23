@@ -1,5 +1,4 @@
-import { TDKID, TJKID } from './demiurge-notebook';
-import { IOutput } from './node-types';
+import { TDKID, TJKID, IOutput } from '@monorepo/jupyterlab-api';
 
 export type FormFieldsOnly<T extends TDemiurgeNotebookEvent> = Partial<
   Omit<T, 'viewId' | 'position' | 'type'>

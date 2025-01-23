@@ -18,24 +18,13 @@ export type * from './lib/server-image';
 export type * from './lib/ganymede-api/types';
 
 export type {
-  TDKID,
-  TJKID,
-  TKernelType,
-  TJupyterKernelInfo,
   TJupyterServerInfo,
-  TJupyterSpecificInfo,
   TPgadminServerInfo,
   TPgadminSpecificInfo,
   TServer,
-  TServerSettings,
   TProjectMeta,
   TNodeData,
   TNodeCommon,
-} from './lib/demiurge-notebook/demiurge-notebook';
-export {
-  serverUrl,
-  dkidToServer,
-  jupyterlabIsReachable,
 } from './lib/demiurge-notebook/demiurge-notebook';
 
 export type * from './lib/demiurge-notebook/node-types';

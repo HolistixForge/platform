@@ -70,7 +70,10 @@
     "packagesloge"
   ],
   "dependencies": {
+    "@jupyter-widgets/base": "^6.0.10",
+    "@jupyter-widgets/html-manager": "^1.0.13",
     "@jupyterlab/nbformat": "^4.3.4",
+    "@jupyterlab/rendermime": "^4.3.4",
     "@jupyterlab/services": "^7.3.4",
     "@radix-ui/colors": "^3.0.0",
     "@radix-ui/react-avatar": "^1.1.2",

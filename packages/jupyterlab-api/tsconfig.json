@@ -1,10 +1,15 @@
 {
-  "extends": "../../tsconfig.base.json",
   "files": [],
   "include": [],
   "references": [
     {
-      "path": "../jupyterlab-api"
+      "path": "../ui-toolkit"
+    },
+    {
+      "path": "../api-fetch"
+    },
+    {
+      "path": "../log"
     },
     {
       "path": "./tsconfig.lib.json"
@@ -12,5 +17,6 @@
     {
       "path": "./tsconfig.spec.json"
     }
-  ]
+  ],
+  "extends": "../../tsconfig.base.json"
 }

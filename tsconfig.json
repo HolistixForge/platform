@@ -26,6 +26,9 @@
     },
     {
       "path": "./packages/shared-data-model"
+    },
+    {
+      "path": "./packages/jupyterlab-api"
     }
   ],
   "ts-node": {

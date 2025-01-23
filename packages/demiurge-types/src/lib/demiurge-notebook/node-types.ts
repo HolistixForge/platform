@@ -1,9 +1,4 @@
-import * as nbformat from '@jupyterlab/nbformat';
-import { TDKID } from './demiurge-notebook';
-
-//
-
-export type IOutput = nbformat.IOutput;
+import { IOutput } from '@monorepo/jupyterlab-api';
 
 export type TNodeGeneric<name extends TNodeType, TPayload> = {
   type: name;
@@ -14,7 +9,7 @@ export type TNodeGeneric<name extends TNodeType, TPayload> = {
 export type TNodePython = {
   code: string;
   output?: IOutput[];
-  dkid: TDKID;
+  dkid: string;
 };
 
 export type TNodeMarkDown = {
@@ -37,7 +32,7 @@ export type TNodeServer = {
 
 export type TNodeKernel = {
   project_server_id: number;
-  dkid: TDKID;
+  dkid: string;
 };
 
 export type TNodeVolume = {
