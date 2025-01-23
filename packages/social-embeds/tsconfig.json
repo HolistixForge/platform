@@ -1,0 +1,19 @@
+{
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../ui-toolkit"
+    },
+    {
+      "path": "../lazy-factory"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ],
+  "extends": "../../tsconfig.base.json"
+}

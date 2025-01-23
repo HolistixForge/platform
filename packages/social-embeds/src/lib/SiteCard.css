@@ -1,0 +1,41 @@
+.sitecard {
+  border-radius: 15px;
+  color: var(--c-white-1);
+  font-size: 14px;
+  background-color: var(--c-black-3);
+}
+
+.sitecard img {
+  width: 100%;
+  object-fit: cover;
+}
+
+.sitecard p {
+  margin: 0 0 7px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sitecard .sitecard-bottom {
+  padding: 15px;
+}
+
+.sitecard .sitecard-title {
+  color: var(--c-white-1);
+  font-size: 12px;
+}
+
+.sitecard .sitecard-description {
+  color: var(--c-white-1);
+  font-weight: 600;
+}
+
+.sitecard .sitecard-site {
+  color: var(--c-gray-7);
+  font-size: 12px;
+}
+
+.sitecard a {
+  text-decoration: none;
+}
