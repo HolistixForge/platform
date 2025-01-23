@@ -1,10 +1,18 @@
 {
-  "extends": "../../tsconfig.base.json",
   "files": [],
   "include": [],
   "references": [
     {
+      "path": "../ui-toolkit"
+    },
+    {
       "path": "../simple-types"
+    },
+    {
+      "path": "../api-fetch"
+    },
+    {
+      "path": "../log"
     },
     {
       "path": "./tsconfig.lib.json"
@@ -12,5 +20,6 @@
     {
       "path": "./tsconfig.spec.json"
     }
-  ]
+  ],
+  "extends": "../../tsconfig.base.json"
 }

@@ -18,9 +18,6 @@
   "references": [
     {
       "path": "../simple-types/tsconfig.lib.json"
-    },
-    {
-      "path": "../collaborative/tsconfig.lib.json"
     }
   ],
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]

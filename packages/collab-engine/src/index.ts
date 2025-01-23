@@ -33,3 +33,29 @@ export type {
   TEventPeriodic,
   TCollabNativeEvent,
 } from './lib/events';
+
+//
+
+export {
+  CollaborativeContext,
+  useAwareness,
+  useAwarenessListenData,
+  useSharedData,
+  useDispatcher,
+  useExtraContext,
+} from './lib/front-hooks/context';
+export type {
+  TSharedDataHook,
+  TCollabConfig,
+  TYjsCollabConfig,
+  TNoneCollabConfig,
+} from './lib/front-hooks/context';
+
+export type { TokenMethods } from './lib/front-hooks/ydocs';
+
+export { bindEditor } from './lib/front-hooks/bind-editor';
+export type { TEditor } from './lib/front-hooks/bind-editor';
+
+export { getYDoc } from './lib/front-hooks/ydocs';
+
+export { buildUserCss } from './lib/front-hooks/YjsCssStylesheet';

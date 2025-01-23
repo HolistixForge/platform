@@ -7,9 +7,6 @@
       "path": "./packages/simple-types"
     },
     {
-      "path": "./packages/collaborative"
-    },
-    {
       "path": "./packages/log"
     },
     {
@@ -23,6 +20,12 @@
     },
     {
       "path": "./packages/ui-toolkit"
+    },
+    {
+      "path": "./packages/collab-engine"
+    },
+    {
+      "path": "./packages/shared-data-model"
     }
   ],
   "ts-node": {

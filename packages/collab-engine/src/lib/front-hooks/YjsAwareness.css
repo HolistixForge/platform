@@ -1,0 +1,19 @@
+.yRemoteSelection {
+  background-color: var(--ca-orange-45);
+}
+.yRemoteSelectionHead {
+  position: absolute;
+  border-left: var(--color-yjs-awareness-default) solid 2px;
+  border-top: var(--color-yjs-awareness-default) solid 2px;
+  border-bottom: var(--color-yjs-awareness-default) solid 2px;
+  height: 100%;
+  box-sizing: border-box;
+}
+.yRemoteSelectionHead::after {
+  position: absolute;
+  content: ' ';
+  border: 3px solid var(--color-yjs-awareness-default);
+  border-radius: 4px;
+  left: -4px;
+  top: -5px;
+}

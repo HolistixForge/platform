@@ -1,5 +1,3 @@
-import { SharedMap, SharedTypes } from '@monorepo/collaborative';
-
 export type TChatMessage = {
   user_id: string;
   content: string;
@@ -18,14 +16,4 @@ export type TChat = {
     [key: string]: boolean; // user_id: boolean
   };
   resolved: boolean;
-};
-
-export type TChatSharedData = {
-  chats: SharedMap<TChat>;
-};
-
-export const Chat_loadData = (st: SharedTypes): TChatSharedData => {
-  return {
-    chats: st.getSharedMap<TChat>('chat_chats'),
-  };
 };

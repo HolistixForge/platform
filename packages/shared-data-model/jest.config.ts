@@ -1,5 +1,5 @@
 export default {
-  displayName: 'collaborative',
+  displayName: 'shared-data-model',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
   transform: {

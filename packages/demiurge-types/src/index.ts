@@ -18,11 +18,6 @@ export type * from './lib/server-image';
 export type * from './lib/ganymede-api/types';
 
 export type {
-  TUserSelections,
-  TUserViewSelection,
-} from './lib/demiurge-space/user-selection';
-
-export type {
   TDKID,
   TJKID,
   TKernelType,
@@ -33,13 +28,11 @@ export type {
   TPgadminSpecificInfo,
   TServer,
   TServerSettings,
-  TDemiurgeNotebookSharedData,
   TProjectMeta,
   TNodeData,
   TNodeCommon,
 } from './lib/demiurge-notebook/demiurge-notebook';
 export {
-  DemiurgeNotebook_loadData,
   serverUrl,
   dkidToServer,
   jupyterlabIsReachable,
@@ -54,7 +47,6 @@ export { makeYjsDocId } from './lib/yjs/doc-id';
 export type * from './lib/demiurge-notebook/edge-types';
 
 export type * from './lib/chat/events';
-export { Chat_loadData } from './lib/chat/chat';
 export type * from './lib/chat/chat';
 
 export {
@@ -73,6 +65,6 @@ export type { TScope } from './lib/ganymede-api/scope';
 
 export type * from './lib/tabs/tabs-event';
 export type * from './lib/tabs/tabs';
-export { MAX_TAB_ROW, Tabs_loadData } from './lib/tabs/tabs';
+export { MAX_TAB_ROW } from './lib/tabs/tabs';
 export type { TreeElement } from './lib/tabs/tree';
 export { ReadOnlyTree, ReadWriteTree } from './lib/tabs/tree';

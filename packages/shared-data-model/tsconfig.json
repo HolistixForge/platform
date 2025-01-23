@@ -4,13 +4,13 @@
   "include": [],
   "references": [
     {
-      "path": "../simple-types"
+      "path": "../demiurge-ui-components"
     },
     {
-      "path": "../api-fetch"
+      "path": "../demiurge-types"
     },
     {
-      "path": "../log"
+      "path": "../collab-engine"
     },
     {
       "path": "./tsconfig.lib.json"

@@ -43,7 +43,6 @@ export { KernelStateIndicator } from './lib/nodes/node-kernel/kernel-state-indic
 export { WrapperCssCoordinates } from './lib/css-utils/wrapper-css-coordinates';
 export {
   addAlphaToHexColor,
-  injectCssClass,
   randomColor,
   cssVar,
   getCssProperties,
@@ -108,4 +107,4 @@ export { TabsRadixLogic } from './lib/tabs/tabs-radix-logic';
 
 //
 
-export type { TEdge } from './lib/demiurge-space-2';
+export type { TEdge, TNodeView } from './lib/demiurge-space-2';

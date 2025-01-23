@@ -1,4 +1,3 @@
-import { SharedMap, SharedTypes } from '@monorepo/collaborative';
 import { TreeElement } from './tree';
 
 export type TabPath = string[];
@@ -22,15 +21,3 @@ export type TTabsTree = {
 };
 
 //
-
-export type TTabsSharedData = {
-  tabs: SharedMap<TTabsTree>;
-};
-
-//
-
-export const Tabs_loadData = (st: SharedTypes): TTabsSharedData => {
-  return {
-    tabs: st.getSharedMap<TTabsTree>('tabs_system'),
-  };
-};

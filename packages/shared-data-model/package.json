@@ -1,5 +1,5 @@
 {
-  "name": "@monorepo/collaborative",
+  "name": "@monorepo/shared-data-model",
   "version": "0.0.1",
   "private": true,
   "dependencies": {
@@ -17,8 +17,8 @@
   },
   "module": "./dist/index.js",
   "nx": {
-    "sourceRoot": "packages/collaborative/src",
+    "sourceRoot": "packages/shared-data-model/src",
     "projectType": "library",
-    "name": "collaborative"
+    "name": "shared-data-model"
   }
 }
