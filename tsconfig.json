@@ -29,6 +29,9 @@
     },
     {
       "path": "./packages/jupyterlab-api"
+    },
+    {
+      "path": "./packages/frontend-data"
     }
   ],
   "ts-node": {

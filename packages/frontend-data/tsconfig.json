@@ -1,0 +1,28 @@
+{
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../demiurge-ui-components"
+    },
+    {
+      "path": "../demiurge-types"
+    },
+    {
+      "path": "../simple-types"
+    },
+    {
+      "path": "../log"
+    },
+    {
+      "path": "../api-fetch"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ],
+  "extends": "../../tsconfig.base.json"
+}
