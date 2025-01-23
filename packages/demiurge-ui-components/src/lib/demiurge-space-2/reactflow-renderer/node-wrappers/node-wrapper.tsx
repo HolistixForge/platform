@@ -8,6 +8,7 @@ import {
 } from '../../apis/types/node';
 import { SelectionsAwareness } from './selection-awareness';
 import { useSpaceContext } from '../spaceContext';
+import { useRegisterListener } from '../avatarsRenderer';
 
 //
 //
@@ -40,28 +41,27 @@ export const NodeWrapper =
     const zoom = useStore(zoomSelector);
 
     const {
-      spaceActionsDispatcher: graphActionsDispatcher,
-      spaceAwareness: graphAwareness,
+      spaceActionsDispatcher: sad,
+      spaceAwareness,
       currentUser,
     } = useSpaceContext();
 
+    useRegisterListener(spaceAwareness);
+
     const { viewStatus, viewId } = data;
 
-    const close = () =>
-      graphActionsDispatcher.dispatch({ type: 'close-node', nid: id });
+    const close = () => sad.dispatch({ type: 'close-node', nid: id });
 
-    const open = () =>
-      graphActionsDispatcher.dispatch({ type: 'open-node', nid: id });
+    const open = () => sad.dispatch({ type: 'open-node', nid: id });
 
-    const reduce = () =>
-      graphActionsDispatcher.dispatch({ type: 'reduce-node', nid: id });
+    const reduce = () => sad.dispatch({ type: 'reduce-node', nid: id });
 
-    const expand = () =>
-      graphActionsDispatcher.dispatch({ type: 'expand-node', nid: id });
+    const expand = () => sad.dispatch({ type: 'expand-node', nid: id });
 
     const opened = isNodeOpened(viewStatus);
 
-    const selectingUsers = graphAwareness.getSelectedNodes()[id] || [];
+    const selectingUsers = spaceAwareness.getSelectedNodes()[id] || [];
+    console.log({ selectingUsers });
 
     // is this object selected on this view by current user ?
     const selected =
@@ -88,8 +88,9 @@ export const NodeWrapper =
 
     return (
       <nodeContext.Provider value={contextValue}>
-        <NodeComponent />
-        <SelectionsAwareness selectingUsers={selectingUsers} />
+        <SelectionsAwareness selectingUsers={selectingUsers}>
+          <NodeComponent />
+        </SelectionsAwareness>
         <NodeStatusDebugOverlay {...viewStatus} zoom={zoom} />
       </nodeContext.Provider>
     );

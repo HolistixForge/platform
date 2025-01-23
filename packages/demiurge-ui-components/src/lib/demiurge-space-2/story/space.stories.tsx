@@ -34,7 +34,7 @@ const Demo = () => {
         edgeComponent={CustomStoryEdge}
         spaceState={logics.ss}
         spaceActionsDispatcher={logics.sad}
-        currentUser={{ username: 'toto', color: '#ffa500' }}
+        currentUser={{ username: 'User-0', color: '#ffa500' }}
         spaceAwareness={logics.ga}
         pointerTracker={logics.pt}
         avatarsStore={logics.as}

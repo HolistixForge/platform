@@ -3,7 +3,6 @@
 
 .react-flow__node-wrapper {
   border: solid 2px transparent;
-  padding: 15px;
   --handle-offset: 7px;
   border-radius: var(--node-border-radius);
   font-size: 13px;
@@ -11,19 +10,28 @@
 }
 
 .react-flow__node-wrapper > div {
-  box-shadow:
-    0 4px 6px -1px var(--ca-black-7),
+  box-shadow: 0 4px 6px -1px var(--ca-black-7),
     0 2px 4px -1px rvar(--ca-black-8);
 }
 
 .react-flow__node-wrapper.selected {
-  border: solid 2px var(--color-selection);
+  //
 }
 
 .react-flow__node-wrapper.node-closed {
   .common-node {
     width: 0;
     height: 0;
+  }
+}
+
+.selection-awareness-box {
+  padding: 10px;
+  box-sizing: border-box;
+  border: dashed 1.5px rgba(255, 255, 255, 0);
+  border-radius: var(--node-border-radius);
+  &.has-selection {
+    border-color: rgba(255, 255, 255, 0.2);
   }
 }
 
@@ -50,7 +58,7 @@
 .node-bottom-right,
 .node-bottom-left {
   position: absolute;
-  
+
   display: flex;
   align-items: center;
   gap: 6px;
