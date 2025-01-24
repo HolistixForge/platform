@@ -41,6 +41,12 @@
     },
     {
       "path": "./packages/backend-engine"
+    },
+    {
+      "path": "./packages/app-ganymede-e2e"
+    },
+    {
+      "path": "./packages/app-ganymede"
     }
   ],
   "ts-node": {

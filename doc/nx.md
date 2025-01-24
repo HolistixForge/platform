@@ -48,7 +48,7 @@ add compilerOptions in {LIB_NAME}/tsconfig.lib.json
 ## app node
 
 ```
-npx nx g @nx/node:app  packages/app-node1 --linter eslint --e2eTestRunner jest --framework none ----unitTestRunner jest
+npx nx g @nx/node:app  packages/{APP_NAME} --linter eslint --e2eTestRunner jest --framework none ----unitTestRunner jest
 ```
 
 add in packages/{APP_NAME}/package.json
@@ -162,6 +162,17 @@ src/lib/index.scss
 ## svg
 
 ## json
+
+add "resolveJsonModule": true in compilerOptions on tsconfig.app.json or tsconfig.lib.json
+
+```json
+{
+  "compilerOptions": {
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.json"]
+}
+```
 
 ## Others Actions
 

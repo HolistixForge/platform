@@ -1,0 +1,851 @@
+{
+  "$schema": "../../../../packages/backend-api-engine/src/lib/json-schemas/exec-pipe-schema.json",
+  "pipelines": {
+    "fake-hub-version": {
+      "steps": [
+        {
+          "description": "return the hub version expected by jupyterlab pod",
+          "type": "args",
+          "args": {
+            "data": {
+              "message": "Ganymede. X-JupyterHub-Version: {env.JUPYTER_HUB_VERSION}"
+            },
+            "headers": {
+              "X-JupyterHub-Version": "{env.JUPYTER_HUB_VERSION}"
+            }
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "new-project": {
+      "steps": [
+        {
+          "description": "sql query",
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "proc_projects_new_personal",
+            "args": [
+              "{jwt.user_id}",
+              "{json.name}",
+              null
+            ]
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "delete-project": {
+      "steps": [
+        {
+          "type": "authorization-control",
+          "args": {
+            "type": "jwt",
+            "action": "p:{path.project_id}:project:delete"
+          }
+        },
+        {
+          "description": "delete a project",
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "proc_projects_delete",
+            "args": [
+              "{path.project_id}"
+            ]
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "list-user-project": {
+      "steps": [
+        {
+          "description": "return list of project the user in involved in",
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "func_projects_list_by_user",
+            "args": [
+              "{jwt.user_id}"
+            ]
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "new-project-server": {
+      "steps": [
+        {
+          "type": "authorization-control",
+          "args": {
+            "type": "jwt",
+            "action": "p:{path.project_id}:server:create"
+          }
+        },
+        {
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "proc_projects_servers_new",
+            "args": [
+              "{path.project_id}",
+              "{json.name}",
+              {},
+              "{json.imageId}",
+              null
+            ]
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "delete-project-server": {
+      "steps": [
+        {
+          "type": "authorization-control",
+          "args": {
+            "type": "jwt",
+            "action": "p:{path.project_id}:server:delete"
+          }
+        },
+        {
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "proc_projects_servers_delete",
+            "args": [
+              "{path.project_id}",
+              "{path.project_server_id}"
+            ]
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "list-project-servers": {
+      "steps": [
+        {
+          "type": "authorization-control",
+          "args": {
+            "type": "jwt",
+            "action": "p:{path.project_id}:server:list"
+          }
+        },
+        {
+          "description": "list project's servers",
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "func_projects_servers_list",
+            "args": [
+              "{path.project_id}"
+            ]
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "search-users": {
+      "steps": [
+        {
+          "description": "search through users",
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "func_users_search",
+            "args": [
+              "{query.user_id}",
+              "{query.searched}"
+            ]
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "new-volume": {
+      "steps": [
+        {
+          "type": "authorization-control",
+          "args": {
+            "type": "jwt",
+            "action": "p:{path.project_id}:volume:create"
+          }
+        },
+        {
+          "description": "save volume info",
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "proc_volumes_new",
+            "args": [
+              "{path.project_id}",
+              "{json.name}",
+              "{json.storage}",
+              null
+            ]
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "list-volume": {
+      "steps": [
+        {
+          "type": "authorization-control",
+          "args": {
+            "type": "jwt",
+            "action": "p:{path.project_id}:volume:list"
+          }
+        },
+        {
+          "description": "list project's volumes",
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "func_volumes_project_list",
+            "args": [
+              "{path.project_id}"
+            ]
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "list-project-server-mounts": {
+      "steps": [
+        {
+          "type": "authorization-control",
+          "args": {
+            "type": "jwt",
+            "action": "p:{path.project_id}:mount:list"
+          }
+        },
+        {
+          "description": "list server's mounts",
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "func_mounts_server_list",
+            "args": [
+              "{path.project_id}",
+              "{path.project_server_id}"
+            ]
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "mount-volume": {
+      "steps": [
+        {
+          "type": "authorization-control",
+          "args": {
+            "type": "jwt",
+            "action": "p:{path.project_id}:mount:create"
+          }
+        },
+        {
+          "description": "save volume mount",
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "proc_mounts_new",
+            "args": [
+              "{path.project_id}",
+              "{path.project_server_id}",
+              "{json.volume_id}",
+              "{json.mount_point}"
+            ]
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "unmount-volume": {
+      "steps": [
+        {
+          "type": "authorization-control",
+          "args": {
+            "type": "jwt",
+            "action": "p:{path.project_id}:mount:delete"
+          }
+        },
+        {
+          "description": "delete volume mount",
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "proc_mounts_delete",
+            "args": [
+              "{path.project_server_id}",
+              "{json.volume_id}",
+              "{json.mount_point}"
+            ]
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "delete-volume": {
+      "steps": [
+        {
+          "type": "authorization-control",
+          "args": {
+            "type": "jwt",
+            "action": "p:{path.project_id}:volume:delete"
+          }
+        },
+        {
+          "description": "delete volume",
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "proc_volumes_delete",
+            "args": [
+              "{path.volume_id}",
+              null
+            ]
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "list-images": {
+      "steps": [
+        {
+          "description": "get list of active images",
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "func_images_list_available",
+            "args": []
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "get-project-by-name": {
+      "steps": [
+        {
+          "description": "get project by its owner and name",
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "func_projects_get_by_owner_and_name",
+            "args": [
+              "{query.user_id}",
+              "{query.project_name}",
+              null
+            ]
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "get-project-gateway": {
+      "steps": [
+        {
+          "type": "authorization-control",
+          "args": {
+            "type": "jwt",
+            "action": "p:{path.project_id}:project:get-gateway"
+          }
+        },
+        {
+          "description": "get project gateway",
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "func_projects_get_by_id",
+            "args": [
+              "{path.project_id}"
+            ]
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "get-jupyterlab-user-model": {
+      "steps": [
+        {
+          "type": "token-to-jupyterlab-user-model",
+          "args": {
+            "client_id": "{jwt.client_id}",
+            "scope": "{jwt.scope}",
+            "username": "{jwt.username}"
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "list-scope": {
+      "steps": [
+        {
+          "type": "list-scope",
+          "args": {},
+          "graft": "."
+        }
+      ]
+    },
+    "list-project-authorizations": {
+      "steps": [
+        {
+          "type": "authorization-control",
+          "args": {
+            "type": "jwt",
+            "action": "p:{path.project_id}:scope:list"
+          }
+        },
+        {
+          "description": "list all users having authorization on the project",
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "func_projects_members_list",
+            "args": [
+              "{path.project_id}"
+            ]
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "update-project-authorizations": {
+      "steps": [
+        {
+          "type": "authorization-control",
+          "args": {
+            "type": "jwt",
+            "action": "p:{path.project_id}:scope:edit"
+          }
+        },
+        {
+          "type": "validate-scope",
+          "args": {
+            "scope": "{json.scope}"
+          },
+          "graft": ".scope"
+        },
+        {
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "proc_projects_members_edit",
+            "args": [
+              "{path.project_id}",
+              "{json.user_id}",
+              "{current.scope.tojson}"
+            ]
+          }
+        }
+      ]
+    },
+    "start-project": {
+      "steps": [
+        {
+          "type": "authorization-control",
+          "args": {
+            "type": "jwt",
+            "action": "p:{path.project_id}:project:start"
+          }
+        },
+        {
+          "description": "bind a gateway to project",
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "proc_projects_start",
+            "args": [
+              "{path.project_id}",
+              null,
+              null
+            ]
+          },
+          "graft": "."
+        },
+        {
+          "description": "trig gateway project initialization",
+          "type": "api-call",
+          "args": {
+            "method": "POST",
+            "url": "https://{current._0.gateway_hostname}/collab/start",
+            "jsonBody": {
+              "tmp_handshake_token": "{current._0.tmp_handshake_token}"
+            }
+          }
+        }
+      ]
+    },
+    "gateway-config": {
+      "steps": [
+        {
+          "description": "get project from tmp_handshake_token",
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "func_projects_gateways_get",
+            "args": [
+              "{json.tmp_handshake_token}"
+            ]
+          },
+          "graft": ".project"
+        },
+        {
+          "description": "return gateway configuraton",
+          "type": "gateway-config",
+          "args": {
+            "project_id": "{current.project._0.project_id}",
+            "frontend_fqdn": "{env.FRONTEND_FQDN}"
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "project-server-host": {
+      "steps": [
+        {
+          "type": "authorization-control",
+          "args": {
+            "type": "jwt",
+            "action": "p:{path.project_id}:server:host"
+          }
+        },
+        {
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "proc_projects_servers_set_location",
+            "args": [
+              "{path.project_id}",
+              "{path.project_server_id}",
+              "{jwt.user_id}",
+              null
+            ]
+          }
+        }
+      ]
+    },
+    "project-server-cmd": {
+      "steps": [
+        {
+          "type": "authorization-control",
+          "args": {
+            "type": "jwt",
+            "action": "p:{path.project_id}:server:host"
+          }
+        },
+        {
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "func_projects_servers_get",
+            "args": [
+              "{path.project_id}",
+              "{path.project_server_id}"
+            ]
+          },
+          "graft": ".server"
+        },
+        {
+          "type": "server-command",
+          "args": {
+            "user_id": "{jwt.user_id}",
+            "frontend_fqdn": "{env.FRONTEND_FQDN}",
+            "ganymede_fqdn": "{env.GANYMEDE_FQDN}",
+            "account_fqdn": "{env.ACCOUNT_FQDN}",
+            "project_id": "{path.project_id}",
+            "project_server_id": "{path.project_server_id}",
+            "server": "{current.server._0}"
+          },
+          "graft": ".command"
+        }
+      ]
+    },
+    "project-server-to-cloud": {
+      "steps": [
+        {
+          "type": "authorization-control",
+          "args": {
+            "type": "jwt",
+            "action": "p:{path.project_id}:server:cloud"
+          }
+        },
+        {
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "proc_projects_servers_set_location",
+            "args": [
+              "{path.project_id}",
+              "{path.project_server_id}",
+              null,
+              "allocating"
+            ]
+          },
+          "graft": ".server"
+        },
+        {
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "func_projects_servers_get",
+            "args": [
+              "{path.project_id}",
+              "{path.project_server_id}"
+            ]
+          },
+          "graft": ".server"
+        },
+        {
+          "type": "server-command",
+          "args": {
+            "frontend_fqdn": "{env.FRONTEND_FQDN}",
+            "ganymede_fqdn": "{env.GANYMEDE_FQDN}",
+            "account_fqdn": "{env.ACCOUNT_FQDN}",
+            "project_id": "{path.project_id}",
+            "project_server_id": "{path.project_server_id}",
+            "server": "{current.server._0}"
+          },
+          "graft": ".command"
+        },
+        {
+          "type": "ec2-instance-create",
+          "args": {
+            "region": "eu-west-3",
+            "name": "p-{path.project_id}-s-{path.project_server_id}",
+            "cmd": "#!/bin/bash\napt update\napt install -y docker.io\n{current.command}",
+            "amiId": "ami-045a8ab02aadf4f88",
+            "instanceType": "{json.instanceType}",
+            "storageSize": "{json.storage}",
+            "sshKeyName": "dev-antoine-key",
+            "securityGroupId": "sg-058d2af5f284c993c"
+          },
+          "graft": ".instance"
+        },
+        {
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "proc_projects_servers_set_location",
+            "args": [
+              "{path.project_id}",
+              "{path.project_server_id}",
+              null,
+              "{current.instance.instanceId}"
+            ]
+          },
+          "graft": ".server"
+        }
+      ]
+    },
+    "project-server-cloud-state": {
+      "steps": [
+        {
+          "type": "authorization-control",
+          "args": {
+            "type": "jwt",
+            "action": "p:{path.project_id}:server:list"
+          }
+        },
+        {
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "func_projects_servers_get",
+            "args": [
+              "{path.project_id}",
+              "{path.project_server_id}"
+            ]
+          },
+          "graft": ".server"
+        },
+        {
+          "type": "ec2-instance-state",
+          "args": {
+            "region": "eu-west-3",
+            "server": "{current.server._0}"
+          },
+          "graft": "."
+        },
+        {
+          "if": {
+            "{current.state}": {
+              "is": "terminated"
+            }
+          },
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "proc_projects_servers_set_location",
+            "args": [
+              "{path.project_id}",
+              "{path.project_server_id}",
+              null,
+              null
+            ]
+          }
+        }
+      ]
+    },
+    "project-server-cloud-stop": {
+      "steps": [
+        {
+          "type": "authorization-control",
+          "args": {
+            "type": "jwt",
+            "action": "p:{path.project_id}:server:stop"
+          }
+        },
+        {
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "func_projects_servers_get",
+            "args": [
+              "{path.project_id}",
+              "{path.project_server_id}"
+            ]
+          },
+          "graft": ".server"
+        },
+        {
+          "type": "ec2-instance-stop",
+          "args": {
+            "region": "eu-west-3",
+            "server": "{current.server._0}"
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "project-server-cloud-start": {
+      "steps": [
+        {
+          "type": "authorization-control",
+          "args": {
+            "type": "jwt",
+            "action": "p:{path.project_id}:server:stop"
+          }
+        },
+        {
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "func_projects_servers_get",
+            "args": [
+              "{path.project_id}",
+              "{path.project_server_id}"
+            ]
+          },
+          "graft": ".server"
+        },
+        {
+          "type": "ec2-instance-start",
+          "args": {
+            "region": "eu-west-3",
+            "server": "{current.server._0}"
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "project-server-cloud-delete": {
+      "steps": [
+        {
+          "type": "authorization-control",
+          "args": {
+            "type": "jwt",
+            "action": "p:{path.project_id}:server:delete-cloud"
+          }
+        },
+        {
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "func_projects_servers_get",
+            "args": [
+              "{path.project_id}",
+              "{path.project_server_id}"
+            ]
+          },
+          "graft": ".server"
+        },
+        {
+          "type": "ec2-instance-delete",
+          "args": {
+            "region": "eu-west-3",
+            "server": "{current.server._0}"
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "dynredir": {
+      "steps": [
+        {
+          "description": "get project gateway",
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "func_projects_get_by_server_id",
+            "args": [
+              "{path.project_server_id}"
+            ]
+          },
+          "graft": ".gw"
+        },
+        {
+          "type": "redirection",
+          "args": {
+            "url": "https://{current.gw._0.gateway_hostname}/{path.project_server_id}/{path.service_name}/{path.request_path}",
+            "queryParameters": "{query.*}"
+          }
+        }
+      ]
+    },
+    "gateway-ready": {
+      "steps": [
+        {
+          "type": "authorization-control",
+          "args": {
+            "type": "jwt",
+            "action": "gateway:{jwt.gateway_id}:ready"
+          }
+        },
+        {
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "proc_gateways_set_ready",
+            "args": [
+              "{jwt.gateway_id}"
+            ]
+          }
+        }
+      ]
+    },
+    "gateway-stop": {
+      "steps": [
+        {
+          "type": "authorization-control",
+          "args": {
+            "type": "jwt",
+            "action": "gateway:{jwt.gateway_id}:stop"
+          }
+        },
+        {
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "proc_projects_gateways_stop",
+            "args": [
+              "{jwt.gateway_id}"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

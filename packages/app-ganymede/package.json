@@ -1,0 +1,73 @@
+{
+  "name": "@monorepo/app-ganymede",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "name": "app-ganymede",
+    "projectType": "application",
+    "sourceRoot": "packages/app-ganymede/src",
+    "targets": {
+      "build": {
+        "executor": "@nx/esbuild:esbuild",
+        "outputs": [
+          "{options.outputPath}"
+        ],
+        "defaultConfiguration": "production",
+        "options": {
+          "platform": "node",
+          "outputPath": "dist/packages/app-ganymede",
+          "format": [
+            "cjs"
+          ],
+          "bundle": false,
+          "main": "packages/app-ganymede/src/main.ts",
+          "tsConfig": "packages/app-ganymede/tsconfig.app.json",
+          "assets": [
+            "packages/app-ganymede/src/assets"
+          ],
+          "esbuildOptions": {
+            "sourcemap": true,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        },
+        "configurations": {
+          "development": {},
+          "production": {
+            "esbuildOptions": {
+              "sourcemap": false,
+              "outExtension": {
+                ".js": ".js"
+              }
+            }
+          }
+        }
+      },
+      "serve": {
+        "executor": "@nx/js:node",
+        "defaultConfiguration": "development",
+        "dependsOn": [
+          "build"
+        ],
+        "options": {
+          "buildTarget": "app-ganymede:build",
+          "runBuildTargetDependencies": false
+        },
+        "configurations": {
+          "development": {
+            "buildTarget": "app-ganymede:build:development"
+          },
+          "production": {
+            "buildTarget": "app-ganymede:build:production"
+          }
+        }
+      },
+      "test": {
+        "options": {
+          "passWithNoTests": true
+        }
+      }
+    }
+  }
+}
