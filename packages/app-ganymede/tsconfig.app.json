@@ -2,10 +2,8 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "out-tsc/app-ganymede",
-    "module": "nodenext",
     "types": ["node"],
     "rootDir": "src",
-    "moduleResolution": "nodenext",
     "tsBuildInfoFile": "out-tsc/app-ganymede/tsconfig.app.tsbuildinfo",
     "resolveJsonModule": true
   },

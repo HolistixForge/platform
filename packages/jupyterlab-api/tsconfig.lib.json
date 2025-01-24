@@ -10,8 +10,6 @@
     ],
     "rootDir": "src",
     "jsx": "react-jsx",
-    "module": "esnext",
-    "moduleResolution": "bundler",
     "tsBuildInfoFile": "out-tsc/jupyterlab-api/tsconfig.lib.tsbuildinfo"
   },
   "exclude": [

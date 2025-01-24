@@ -1,6 +1,7 @@
 {
   "name": "@monorepo/app-ganymede",
   "version": "0.0.1",
+  "type": "module",
   "private": true,
   "nx": {
     "name": "app-ganymede",
@@ -17,7 +18,7 @@
           "platform": "node",
           "outputPath": "dist/packages/app-ganymede",
           "format": [
-            "cjs"
+            "esm"
           ],
           "bundle": false,
           "main": "packages/app-ganymede/src/main.ts",
