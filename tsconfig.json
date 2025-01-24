@@ -38,6 +38,9 @@
     },
     {
       "path": "./packages/social-embeds"
+    },
+    {
+      "path": "./packages/backend-engine"
     }
   ],
   "ts-node": {

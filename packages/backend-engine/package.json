@@ -1,0 +1,24 @@
+{
+  "name": "@monorepo/backend-engine",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "module": "./dist/index.js",
+  "nx": {
+    "sourceRoot": "packages/backend-engine/src",
+    "projectType": "library",
+    "name": "backend-engine"
+  }
+}

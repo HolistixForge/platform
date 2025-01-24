@@ -5,3 +5,12 @@ export type TJson =
   | Date
   | { [x: string]: TJson }
   | Array<TJson>;
+
+export type TJsonWithNull =
+  | string
+  | number
+  | boolean
+  | Date
+  | null
+  | { [x: string]: TJsonWithNull }
+  | Array<TJsonWithNull>;
