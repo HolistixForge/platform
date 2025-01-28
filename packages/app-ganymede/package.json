@@ -1,7 +1,6 @@
 {
   "name": "@monorepo/app-ganymede",
   "version": "0.0.1",
-  "type": "module",
   "private": true,
   "nx": {
     "name": "app-ganymede",
@@ -18,7 +17,7 @@
           "platform": "node",
           "outputPath": "dist/packages/app-ganymede",
           "format": [
-            "esm"
+            "cjs"
           ],
           "bundle": true,
           "thirdParty": true,
@@ -26,7 +25,7 @@
             "react",
             "react-dom"
           ],
-          "main": "packages/app-ganymede/src/main.mts",
+          "main": "packages/app-ganymede/src/main.ts",
           "tsConfig": "packages/app-ganymede/tsconfig.app.json",
           "assets": [
             "packages/app-ganymede/src/assets"
@@ -34,7 +33,7 @@
           "esbuildOptions": {
             "sourcemap": true,
             "outExtension": {
-              ".js": ".mjs"
+              ".js": ".js"
             }
           }
         },
@@ -44,7 +43,7 @@
             "esbuildOptions": {
               "sourcemap": false,
               "outExtension": {
-                ".js": ".mjs"
+                ".js": ".js"
               }
             }
           }

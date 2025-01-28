@@ -1,4 +1,4 @@
-# NX app and lib generators
+# NX How to
 
 ```shell
 npx create-nx-workspace
@@ -46,6 +46,14 @@ npx nx run {APP_NAME}:serve
 npx nx g @nx/node:app  packages/{APP_NAME} --linter eslint --e2eTestRunner jest --framework none --unitTestRunner jest
 ```
 
+In packages/_{APP_NAME}_/**package.json** :
+
+- (optional) set **bundle** to true and **thirdParty** to true
+- set react and react-dom as **external** to not bundle them when importing a lib that use jsx
+- set **runBuildTargetDependencies** in **serve** target to force recompilation on file changes
+
+### app node ESM
+
 Rename all .ts file to .mts
 
 Use **.mjs** extension in relative local import
@@ -54,10 +62,7 @@ In packages/_{APP_NAME}_/**package.json** :
 
 - add type: **module**
 - change **outExtension** from .js to **.mjs**
-- (optional) set **bundle** to true and **thirdParty** to true
-- set react and react-dom as **external** to not bundle them when importing a lib that use jsx
 - change main path from **.ts** to **.mts**
-- set **runBuildTargetDependencies** in **serve** target to force recompilation on file changes
 
 ```json
 {
