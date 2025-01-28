@@ -1,30 +1,21 @@
 # NX app and lib generators
 
-```
+```shell
 npx create-nx-workspace
 cd monorepo
 ```
 
 ## React lib
 
-```
+```shell
 npm install --save-dev @nx/react
-npm install --save-dev @nx/storybook
 npx nx g @nx/react:lib packages/{LIB_NAME} --linter eslint --bundler vite --style scss --unitTestRunner jest
-npx nx g @nx/react:storybook-configuration {LIB_NAME}
-```
-
-```
-npm install -D sass-embedded
-npx nx run {LIB_NAME}:storybook
-
-npm install -D sass
 npx nx run {LIB_NAME}:build
 ```
 
 ## node lib
 
-```
+```shell
 npm install -D @nx/node
 npx nx g @nx/node:lib packages/{LIB_NAME} --buildable --linter eslint --unitTestRunner jest
 npx nx run {LIB_NAME}:build
@@ -36,31 +27,69 @@ add compilerOptions in {LIB_NAME}/tsconfig.lib.json
 {
   "compilerOptions": {
     "module": "ESNext", // Change from default (CommonJS) to ES module output
-    "target": "ES2022", // Ensure compatibility with ES modules
-    "moduleResolution": "Node", // Use Node-style resolution for ES modules
-    "esModuleInterop": true, // Ensure compatibility with CommonJS modules
-    "allowSyntheticDefaultImports": true, // Allow default imports from CommonJS modules
-    "importHelpers": true // Optimize output by using tslib
+    "moduleResolution": "Node" // Use Node-style resolution for ES modules
   }
 }
 ```
 
+## react app
+
+```shell
+npx nx g @nx/react:app packages/{APP_NAME} --style scss --bundler vite --linter eslint
+npx nx run {APP_NAME}:build
+npx nx run {APP_NAME}:serve
+```
+
 ## app node
 
-```
-npx nx g @nx/node:app  packages/{APP_NAME} --linter eslint --e2eTestRunner jest --framework none ----unitTestRunner jest
+```shell
+npx nx g @nx/node:app  packages/{APP_NAME} --linter eslint --e2eTestRunner jest --framework none --unitTestRunner jest
 ```
 
-add in packages/{APP_NAME}/package.json
+Rename all .ts file to .mts
+
+Use **.mjs** extension in relative local import
+
+In packages/_{APP_NAME}_/**package.json** :
+
+- add type: **module**
+- change **outExtension** from .js to **.mjs**
+- (optional) set **bundle** to true and **thirdParty** to true
+- set react and react-dom as **external** to not bundle them when importing a lib that use jsx
+- change main path from **.ts** to **.mts**
+- set **runBuildTargetDependencies** in **serve** target to force recompilation on file changes
 
 ```json
 {
+  "type": "module",
   "nx": {
     "targets": {
       "build": {
         "options": {
+          "format": ["esm"],
           "bundle": true,
-          "thirdParty": true
+          "thirdParty": true,
+          "external": ["react", "react-dom"],
+          "main": "packages/app-node-1/src/main.mts",
+          "esbuildOptions": {
+            "outExtension": {
+              ".js": ".mjs"
+            }
+          }
+        },
+        "configurations": {
+          "production": {
+            "esbuildOptions": {
+              "outExtension": {
+                ".js": ".mjs"
+              }
+            }
+          }
+        }
+      },
+      "serve": {
+        "options": {
+          "runBuildTargetDependencies": true
         }
       }
     }
@@ -68,10 +97,25 @@ add in packages/{APP_NAME}/package.json
 }
 ```
 
+In packages/_{APP_NAME}_/**tsconfig.app.json** : Add **.mts** to **include** array
+
+```json
+{
+  "include": ["src/**/*.ts", "src/**/*.mts"]
+}
+```
+
+## storybook
+
+```shell
+npm install --save-dev @nx/storybook
+npx nx g @nx/react:storybook-configuration {LIB_NAME}
+```
+
 ## tailwind
 
 ```
-npm install -D tailwindcss autoprefixer
+npm install -D tailwindcss@3.4.17 autoprefixer postcss
 ```
 
 ### create tailwind.config.js, postcss.config.js
@@ -109,9 +153,62 @@ module.exports = {
 };
 ```
 
+Create a scss file that import tailwind styles
+
+packages/_{LIB_NAME}_/src/lib/**index.scss** :
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+Import it from **index.ts**
+
+packages/_{LIB_NAME}_/src/**index.ts** :
+
+```typescript
+import './lib/index.scss';
+
+// ...
+// export { ... } from ...
+```
+
+In package.json, declare style and export the resulting compiled css file
+
+packages/_{LIB_NAME}_/**package.json** :
+
+```json
+{
+  "style": "./dist/style.css",
+  "exports": {
+    "./style": "./dist/style.css"
+  }
+}
+```
+
+In the app using the react lib, import the lib styles
+
+packages/_{APP_NAME}_/src/**main.tsx** :
+
+```typescript
+import '@monorepo/{LIB_NAME}/style';
+```
+
 ### setup storybook
 
-.storybook/preview.ts
+If necessary, create a storybook global wrapper for adding contexts and mock
+
+packages/_{LIB_NAME}_/.storybook/**global-wrapper.tsx** :
+
+```typescript
+// add common wrapper, mock context etc in this component
+export const GlobalWrapper = (Story: any) => <Story />;
+```
+
+Import the **index.scss** (containing tailwind styles) file from **preview.ts**
+
+packages/_{LIB_NAME}_/.storybook/**preview.ts** :
 
 ```typescript
 import type { Preview } from '@storybook/react';
@@ -144,26 +241,9 @@ const preview: Preview = {
 export default preview;
 ```
 
-.storybook/global-wrapper.tsx
-
-```typescript
-// add common wrapper, mock context etc in this component
-export const GlobalWrapper = (Story: any) => <Story />;
-```
-
-src/lib/index.scss
-
-```css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-```
-
-## svg
-
 ## json
 
-add "resolveJsonModule": true in compilerOptions on tsconfig.app.json or tsconfig.lib.json
+add **"resolveJsonModule": true** in compilerOptions on **tsconfig.app.json** or **tsconfig.lib.json**
 
 ```json
 {
@@ -190,8 +270,8 @@ nx g remove three-flow
 
 ### Update everything
 
-```
-upgrade nodejs
+```shell
+# upgrade nodejs
 # remove package.json: overrides: {}
 npm install -g npm@latest
 nx migrate latest
