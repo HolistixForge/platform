@@ -20,8 +20,13 @@
           "format": [
             "esm"
           ],
-          "bundle": false,
-          "main": "packages/app-ganymede/src/main.ts",
+          "bundle": true,
+          "thirdParty": true,
+          "external": [
+            "react",
+            "react-dom"
+          ],
+          "main": "packages/app-ganymede/src/main.mts",
           "tsConfig": "packages/app-ganymede/tsconfig.app.json",
           "assets": [
             "packages/app-ganymede/src/assets"
@@ -29,7 +34,7 @@
           "esbuildOptions": {
             "sourcemap": true,
             "outExtension": {
-              ".js": ".js"
+              ".js": ".mjs"
             }
           }
         },
@@ -39,7 +44,7 @@
             "esbuildOptions": {
               "sourcemap": false,
               "outExtension": {
-                ".js": ".js"
+                ".js": ".mjs"
               }
             }
           }
@@ -53,7 +58,7 @@
         ],
         "options": {
           "buildTarget": "app-ganymede:build",
-          "runBuildTargetDependencies": false
+          "runBuildTargetDependencies": true
         },
         "configurations": {
           "development": {

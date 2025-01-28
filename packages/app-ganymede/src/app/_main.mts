@@ -15,17 +15,18 @@ import {
   ConfigException,
 } from '@monorepo/backend-engine';
 import { OpenAPIV3 } from 'express-openapi-validator/dist/framework/types';
-import { TokenToJupyterlabUserModel } from './commands/jupyterlab-user-model';
-import { ListScope, ValidateUserScope } from './commands/scope';
-import { GatewayConfig } from './commands/gateway-config';
-import { ServerCommand } from './commands/server-command';
+
+import { TokenToJupyterlabUserModel } from './commands/jupyterlab-user-model.mjs';
+import { ListScope, ValidateUserScope } from './commands/scope.mjs';
+import { GatewayConfig } from './commands/gateway-config.mjs';
+import { ServerCommand } from './commands/server-command.mjs';
 import {
   Ec2InstanceCreate,
   Ec2InstanceState,
   Ec2InstanceStop,
   Ec2InstanceStart,
   Ec2InstanceDelete,
-} from './commands/ec2-instance';
+} from './commands/ec2-instance.mjs';
 
 //
 //
