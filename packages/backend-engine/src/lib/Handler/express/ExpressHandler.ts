@@ -3,21 +3,22 @@ import * as fs from 'fs';
 import * as http from 'http';
 import * as https from 'https';
 
+import { error, log } from '@monorepo/log';
+
 import { Handler } from '../Handler';
 import { Executor } from '../../Executor/Executor';
 import { ApiDefinition } from '../../ApiDefinition/ApiDefinition';
 import { Request, TRequestData } from '../../Request/Request';
-import { error, log } from '@monorepo/log';
 import { Response } from '../../Response/Response';
 import { OpenApiValidatorOpts } from 'express-openapi-validator/dist/framework/types';
 import { respond } from './responses';
+import { setupValidator } from './openapi-validator';
+import { NotFoundException } from '../../Exceptions/Exception';
 import {
   BasicExpressAppOptions,
   setupBasicExpressApp,
   setupErrorsHandler,
 } from './app-setup';
-import { setupValidator } from './openapi-validator';
-import { NotFoundException } from 'src/lib/Exceptions/Exception';
 
 type ExpressRequest = express.Request;
 type ExpressResponse = express.Response;
