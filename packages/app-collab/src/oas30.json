@@ -1,0 +1,264 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ganymede API",
+    "version": "1.0"
+  },
+  "paths": {
+    "/collab/ping": {
+      "get": {
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        },
+        "x-backend-engine": {
+          "points": [
+            {
+              "selector": true,
+              "exec-pipe-id": "ping"
+            }
+          ]
+        }
+      }
+    },
+    "/collab/event": {
+      "post": {
+        "summary": "event",
+        "description": "reduce event",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "event": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": true,
+                    "required": [
+                      "type"
+                    ]
+                  }
+                },
+                "required": [
+                  "event"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        },
+        "x-backend-engine": {
+          "points": [
+            {
+              "selector": true,
+              "exec-pipe-id": "event"
+            }
+          ]
+        }
+      }
+    },
+    "/collab/start": {
+      "post": {
+        "summary": "start project collaboration event API and websocket",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "tmp_handshake_token": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "tmp_handshake_token"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        },
+        "x-backend-engine": {
+          "points": [
+            {
+              "selector": true,
+              "exec-pipe-id": "start"
+            }
+          ]
+        }
+      }
+    },
+    "/collab/vpn": {
+      "get": {
+        "summary": "",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "vpn config",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "config": {
+                      "type": "string"
+                    },
+                    "certificates": {
+                      "type": "object",
+                      "properties": {
+                        "clients.crt": {
+                          "type": "string"
+                        },
+                        "clients.key": {
+                          "type": "string"
+                        },
+                        "ca.crt": {
+                          "type": "string"
+                        },
+                        "ta.key": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        },
+        "x-backend-engine": {
+          "points": [
+            {
+              "selector": true,
+              "exec-pipe-id": "vpn"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "headers_authorization": {
+        "in": "header",
+        "name": "authorization",
+        "description": "demiurge user's access token or server (JWT)",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "maxLength": 4096,
+          "pattern": "^(?:token\\s)?[-A-Za-z0-9_+./]*={0,3}$"
+        }
+      }
+    },
+    "responses": {
+      "empty": {
+        "description": "ok",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          }
+        }
+      },
+      "errors": {
+        "description": "errors",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/errors"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Empty": {
+        "title": "Empty Schema",
+        "type": "object"
+      },
+      "errors": {
+        "type": "object",
+        "properties": {
+          "uuid": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "public": {
+                  "type": "boolean"
+                },
+                "default": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

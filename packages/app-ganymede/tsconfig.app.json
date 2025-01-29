@@ -13,7 +13,7 @@
     "src/app/data-connections.json",
     "src/app/sql-api-pg.json"
   ],
-  "include": ["src/**/*.ts", "src/**/*.mts"],
+  "include": ["src/**/*.ts"],
   "exclude": [
     "out-tsc",
     "dist",

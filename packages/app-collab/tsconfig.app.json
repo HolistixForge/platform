@@ -1,0 +1,22 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "out-tsc/app-collab",
+    "types": ["node"],
+    "rootDir": "src",
+    "tsBuildInfoFile": "out-tsc/app-collab/tsconfig.app.tsbuildinfo",
+    "resolveJsonModule": true
+  },
+  "files": ["src/oas30.json", "src/exec-pipes.json"],
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "out-tsc",
+    "dist",
+    "jest.config.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "eslint.config.js",
+    "eslint.config.cjs",
+    "eslint.config.mjs"
+  ]
+}

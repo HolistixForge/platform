@@ -59,6 +59,12 @@
     },
     {
       "path": "./packages/app-ganymede-cmds"
+    },
+    {
+      "path": "./packages/app-collab-e2e"
+    },
+    {
+      "path": "./packages/app-collab"
     }
   ],
   "ts-node": {

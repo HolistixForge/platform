@@ -268,7 +268,13 @@ add **"resolveJsonModule": true** in compilerOptions on **tsconfig.app.json** or
   "compilerOptions": {
     "resolveJsonModule": true
   },
-  "include": ["src/**/*.ts", "src/**/*.json"]
+  "files": [
+    "src/app/oas30.json",
+    "src/app/exec-pipes.json",
+    "src/app/data-connections.json",
+    "src/app/sql-api-pg.json"
+  ],
+  "include": ["src/**/*.ts"]
 }
 ```
 
