@@ -1,16 +1,14 @@
-export type TJson =
-  | string
-  | number
-  | boolean
-  | Date
-  | { [x: string]: TJson }
-  | Array<TJson>;
+export type TJson = string | number | boolean | null | TJsonObject | TJsonArray;
+export type TJsonObject = { [key: string]: TJson };
+export type TJsonArray = TJson[];
 
-export type TJsonWithNull =
+export type TJsonWithDate =
+  | Date
   | string
   | number
   | boolean
-  | Date
   | null
-  | { [x: string]: TJsonWithNull }
-  | Array<TJsonWithNull>;
+  | TJsonObjectWithDate
+  | TJsonArrayWithDate;
+type TJsonObjectWithDate = { [key: string]: TJsonWithDate };
+type TJsonArrayWithDate = TJsonWithDate[];

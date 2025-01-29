@@ -1,4 +1,9 @@
-export type { TJson, TJsonWithNull } from './lib/simple-types';
+export type {
+  TJson,
+  TJsonObject,
+  TJsonArray,
+  TJsonWithDate,
+} from './lib/simple-types';
 
 export type {
   THeaders,

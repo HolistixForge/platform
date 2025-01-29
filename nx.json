@@ -52,7 +52,10 @@
       "options": {
         "targetName": "test"
       },
-      "exclude": ["packages/app-ganymede-e2e/**/*"]
+      "exclude": [
+        "packages/app-ganymede-e2e/**/*",
+        "packages/app-account-e2e/**/*"
+      ]
     },
     {
       "plugin": "@nx/storybook/plugin",

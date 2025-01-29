@@ -1,7 +1,7 @@
 import { TStringMap } from '../Request/Request';
 import { TCookie } from '../Response/Response';
 import { TCommandConfig } from './CommandFactory';
-import { TJson, TJsonWithNull, TUri } from '@monorepo/simple-types';
+import { TJson, TUri } from '@monorepo/simple-types';
 
 export type TCommandReturn = {
   data?: TJson;
@@ -18,5 +18,5 @@ export abstract class Command {
     this._config = config;
   }
 
-  abstract run(args: TJsonWithNull): Promise<TCommandReturn>;
+  abstract run(args: TJson): Promise<TCommandReturn>;
 }

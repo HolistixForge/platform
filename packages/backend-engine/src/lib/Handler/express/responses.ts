@@ -1,5 +1,5 @@
 import { EColor, log } from '@monorepo/log';
-import { TJson, TUri, fullUri } from '@monorepo/simple-types';
+import { TJson, TJsonWithDate, TUri, fullUri } from '@monorepo/simple-types';
 import express from 'express';
 import { TStringMap } from '../../Request/Request';
 import { jaegerSetResponse } from '../../Logs/jaeger';
@@ -58,7 +58,7 @@ type HeadersType = {
 type TResponse = {
   headers?: HeadersType;
 } & (
-  | { type: 'json'; json: TJson; status: number }
+  | { type: 'json'; json: TJsonWithDate; status: number }
   | { type: 'stream'; isFirst: boolean; events: string[] }
   | { type: 'options' }
   | ({ type: 'redirect' } & TUri)

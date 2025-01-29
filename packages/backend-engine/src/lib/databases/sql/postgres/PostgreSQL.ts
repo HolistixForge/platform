@@ -1,13 +1,11 @@
 import { QueryResult, Pool, PoolClient } from 'pg';
 import { SqlException } from '../../../Exceptions/Exception';
 import { TSqlApi } from '../Connections';
-import { Sql, SqlResult, SqlResultsSet, TSqlConfig } from '../Sql';
-import { TJson } from '@monorepo/simple-types';
+import { Row, Sql, SqlResult, SqlResultsSet, TSqlConfig } from '../Sql';
+import { TJsonWithDate } from '@monorepo/simple-types';
 import { log } from '@monorepo/log';
 
 //
-
-type Row = Array<TJson>;
 
 export class PostgresResult extends SqlResult {
   _data: QueryResult;
@@ -81,7 +79,7 @@ export class PostgreSQL extends Sql {
 
   async query(
     query: string,
-    args: Array<string | number | TJson>
+    args: Array<TJsonWithDate>
   ): Promise<PostgresResultsSet> {
     let reconnect = false;
 

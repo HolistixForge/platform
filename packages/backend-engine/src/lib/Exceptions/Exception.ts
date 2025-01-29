@@ -15,7 +15,7 @@ type ApiErrors = {
 //
 //
 
-export abstract class Exception extends Error {
+export class Exception extends Error {
   httpStatus: number;
   _uuid: string;
   _errors: MyError[];
@@ -128,12 +128,12 @@ export class OAuthRefreshTokenException extends Exception {
 
 export class OpenapiException extends Exception {
   constructor(
-    err: Error & { name: 'Bad Request'; status: 400; errors: MyError[] },
+    err: Error & { name: 'Bad Request'; status: 400; errors: MyError[] }
   ) {
     super(
       400,
       err.errors.map((e) => ({ ...e, public: true })),
-      err,
+      err
     );
   }
 }

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../packages/backend-api-engine/src/lib/json-schemas/exec-pipe-schema.json",
+  "$schema": "../../../../packages/backend-engine/src/lib/json-schemas/exec-pipe-schema.json",
   "pipelines": {
     "fake-hub-version": {
       "steps": [

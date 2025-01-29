@@ -22,10 +22,10 @@ interface IAuth {
 //
 //
 
-function formUrlEncode(o: TJson) {
+function formUrlEncode(o: object) {
   const formData = new URLSearchParams();
   for (const [key, value] of Object.entries(o)) {
-    formData.append(key, value);
+    formData.append(key, value as string);
   }
   return formData;
 }

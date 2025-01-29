@@ -122,7 +122,7 @@ export const main = async () => {
     eh.start(b);
   });
 
-  // ajv lib issue workaround,
+  // TODO_DEM: delete if fixed by ajv: ajv lib issue workaround,
   // when first request is one with pathParameters, openapi spec validation fail within ajv lib
   // (required field must be 'array')
   // else, openapi spec compilation is fine.

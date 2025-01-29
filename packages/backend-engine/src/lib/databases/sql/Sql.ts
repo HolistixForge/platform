@@ -1,6 +1,6 @@
 import { DeepReadonly } from 'ts-essentials';
 import { TSqlApi, TSqlQueryDefinition } from './Connections';
-import { TJson } from '@monorepo/simple-types';
+import { TJsonWithDate } from '@monorepo/simple-types';
 
 export type TSqlConfig = {
   host: string;
@@ -12,10 +12,12 @@ export type TSqlConfig = {
 
 export type TSqlQueryArgs = Array<string | number>;
 
+export type Row = { [k: string]: TJsonWithDate };
+
 export abstract class SqlResult {
   abstract isError(): string | false;
-  abstract oneRow(): TJson;
-  abstract allRows(): TJson[];
+  abstract oneRow(): Row;
+  abstract allRows(): Row[];
 }
 
 export abstract class SqlResultsSet {

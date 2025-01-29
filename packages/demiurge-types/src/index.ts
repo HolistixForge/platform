@@ -1,7 +1,33 @@
-export type * from './lib/project-server';
+export type {
+  TD_Server,
+  TG_Server,
+  TServerPublishedInfo,
+  TSSS_Server,
+  TServerComponentProps,
+  TServerComponentCallbacks,
+  ServerSystemInfo,
+  TEc2InstanceState,
+} from './lib/project-server';
 export { TSSS_Server_to_TServerComponentProps } from './lib/project-server';
 
-export type * from './lib/project-server-events';
+export type {
+  TEventNewServer,
+  TEventDeleteServer,
+  TEventHostServer,
+  TEventServerToCloud,
+  TEventServerCloudPause,
+  TEventServerCloudStart,
+  TEventServerCloudDelete,
+  TEventUpdateInstanceState,
+  TEventServerWatchdog,
+  TEventServerActivity,
+  TEventServerMapHttpService,
+  TEventNewVolume,
+  TEventMountVolume,
+  TEventUnmountVolume,
+  TEventDeleteVolume,
+  TServerEvents,
+} from './lib/project-server-events';
 
 export type {
   TD_User,
@@ -11,11 +37,20 @@ export type {
   TCollaborator,
 } from './lib/user';
 
-export type * from './lib/server-image';
+export type {
+  TD_ServerImage,
+  TServerImageOptions,
+  TG_ServerImage,
+} from './lib/server-image';
 
 //
 
-export type * from './lib/ganymede-api/types';
+export type {
+  TApi_Project,
+  TApi_Volume,
+  TApi_Mount,
+  TApi_Authorization,
+} from './lib/ganymede-api/types';
 
 export type {
   TJupyterServerInfo,
@@ -27,16 +62,52 @@ export type {
   TNodeCommon,
 } from './lib/demiurge-notebook/demiurge-notebook';
 
-export type * from './lib/demiurge-notebook/node-types';
+export type {
+  TNodeGeneric,
+  TNodePython,
+  TNodeMarkDown,
+  TNodeVideo,
+  TNodeTerminal,
+  TNodeServer,
+  TNodeKernel,
+  TNodeVolume,
+  TNodeChat,
+  TNodeType,
+  TNotebookNode,
+} from './lib/demiurge-notebook/node-types';
 
-export type * from './lib/demiurge-notebook/events';
+export type {
+  TEventExecutePythonNode,
+  TEventPythonNodeOutput,
+  TEventClearNodeOutput,
+  TEventKernelStarted,
+  TEventStartKernel,
+  TEventStopKernel,
+  TEventNewKernel,
+  TEventDeleteKernel,
+  TDemiurgeNotebookEvent,
+} from './lib/demiurge-notebook/events';
 
 export { makeYjsDocId } from './lib/yjs/doc-id';
 
-export type * from './lib/demiurge-notebook/edge-types';
+export type {
+  TEdgeMountData,
+  TEdgeChatAnchorData,
+  TEdgeTerminalData,
+  TDemiurgeEdgeData,
+} from './lib/demiurge-notebook/edge-types';
 
-export type * from './lib/chat/events';
-export type * from './lib/chat/chat';
+export type {
+  TEventNewMessage,
+  TEventDeleteMessage,
+  TEventNewChat,
+  TEventIsWriting,
+  TEventUserHasRead,
+  TEventChatResolve,
+  TChatEvent,
+} from './lib/chat/events';
+
+export type { TChatMessage, TChat } from './lib/chat/chat';
 
 export {
   USER_SCOPE,
@@ -52,8 +123,24 @@ export type { TScope } from './lib/ganymede-api/scope';
 
 //
 
-export type * from './lib/tabs/tabs-event';
-export type * from './lib/tabs/tabs';
+export type {
+  TEventActiveTabChange,
+  TEventAddTab,
+  TEventDeleteTab,
+  TEventConvertTabToGroup,
+  TEventRenameTab,
+  TTabEvents,
+} from './lib/tabs/tabs-event';
+
+export type {
+  TabPath,
+  TabPayload,
+  TUsersActiveTabs,
+  TTabsTree,
+} from './lib/tabs/tabs';
+
 export { MAX_TAB_ROW } from './lib/tabs/tabs';
+
 export type { TreeElement } from './lib/tabs/tree';
+
 export { ReadOnlyTree, ReadWriteTree } from './lib/tabs/tree';

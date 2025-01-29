@@ -22,7 +22,23 @@ export type { TStringMap } from './lib/Request/Request';
 export { Inputs } from './lib/InputSource/Inputs';
 export { InputSource } from './lib/InputSource/InputSource';
 export { jwtPayload } from './lib/InputSource/Jwt';
-export * from './lib/Exceptions/Exception';
+
+export {
+  Exception,
+  ForwardException,
+  UserException,
+  ForbiddenException,
+  NotFoundException,
+  EpDefinitionException,
+  SqlException,
+  ConfigException,
+  RunException,
+  EC2Exception,
+  UnknownException,
+  OAuthRefreshTokenException,
+  OpenapiException,
+} from './lib/Exceptions/Exception';
+
 export { JsonValue } from './lib/JsonValue';
 export { myfetch } from './lib/utils/fetch';
 export type { MyfetchResponse } from './lib/utils/fetch';

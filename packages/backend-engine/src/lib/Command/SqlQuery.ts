@@ -1,4 +1,4 @@
-import { TSqlQueryArgs } from '../databases/sql/Sql';
+import { Row, TSqlQueryArgs } from '../databases/sql/Sql';
 import { SqlException, UserException } from '../Exceptions/Exception';
 import { error } from '@monorepo/log';
 import { Command, TCommandReturn } from './Command';
@@ -50,7 +50,7 @@ export class SqlQuery extends Command {
         } else {
           const expResult = q.return?.resultsets[resultsSetsIndex];
           if (expResult) {
-            let d: TJson | null = null;
+            let d: Row | Row[] | null = null;
             if (expResult.expect === 'one-row') d = currentResultSet.oneRow();
             else if (expResult.expect === 'multiple')
               d = currentResultSet.allRows();

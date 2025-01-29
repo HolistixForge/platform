@@ -40,7 +40,7 @@ npx nx run {APP_NAME}:build
 npx nx run {APP_NAME}:serve
 ```
 
-## app node
+## node app
 
 ```shell
 npx nx g @nx/node:app  packages/{APP_NAME} --linter eslint --e2eTestRunner jest --framework none --unitTestRunner jest
@@ -51,6 +51,19 @@ In packages/_{APP_NAME}_/**package.json** :
 - (optional) set **bundle** to true and **thirdParty** to true
 - set react and react-dom as **external** to not bundle them when importing a lib that use jsx
 - set **runBuildTargetDependencies** in **serve** target to force recompilation on file changes
+
+In packages/_{APP_NAME}_/**tsconfig.app.json** :
+
+remove :
+
+```json
+{
+  "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodenext"
+  }
+}
+```
 
 ### app node ESM
 
