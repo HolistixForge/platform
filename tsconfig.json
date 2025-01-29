@@ -53,6 +53,12 @@
     },
     {
       "path": "./packages/app-account"
+    },
+    {
+      "path": "./packages/app-ganymede-cmds-e2e"
+    },
+    {
+      "path": "./packages/app-ganymede-cmds"
     }
   ],
   "ts-node": {
