@@ -1,18 +1,24 @@
-import { PostgreSQL } from '@monorepo/backend-api-engine';
+import { PostgreSQL } from '@monorepo/backend-engine';
 
-const PG_HOST = process.env.PG_HOST;
-const PG_PORT = process.env.PG_PORT;
-const PG_DATABASE = process.env.PG_DATABASE;
-const PG_USER = process.env.PG_USER;
-const PG_PASSWORD = process.env.PG_PASSWORD;
+const PG = {
+  host: process.env.PG_HOST,
+  port: process.env.PG_PORT,
+  database: process.env.PG_DATABASE,
+  user: process.env.PG_USER,
+  password: process.env.PG_PASSWORD,
+};
 
-export const pg = new PostgreSQL(
-  {
-    host: PG_HOST,
-    port: PG_PORT,
-    database: PG_DATABASE,
-    user: PG_USER,
-    password: PG_PASSWORD,
-  },
-  {}
-);
+const undefinedValues = Object.entries(PG)
+  .filter(([key, value]) => value === undefined)
+  .map(([key, value]) => key);
+
+if (undefinedValues.length > 0) {
+  console.error(
+    `The following environment variables are not defined: ${undefinedValues.join(
+      ', '
+    )}`
+  );
+  throw new Error('Undefined environment variables');
+}
+
+export const pg = new PostgreSQL(PG as any, {});

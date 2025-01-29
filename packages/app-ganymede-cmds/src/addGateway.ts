@@ -1,4 +1,4 @@
-import { generateJwtToken, jwtPayload } from '@monorepo/backend-api-engine';
+import { generateJwtToken, jwtPayload } from '@monorepo/backend-engine';
 import {
   GATEWAY_SCOPE,
   makeGatewayScopeString,
@@ -30,7 +30,7 @@ export const addGateway = async (fqdn: string, version: string) => {
     version,
     null,
   ]);
-  const gwId = r.next().oneRow()['gateway_id'];
+  const gwId = r.next()!.oneRow()['gateway_id'] as string;
 
   const token = gatewayGlobalToken(gwId);
 

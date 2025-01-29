@@ -16,5 +16,19 @@
     "eslint.config.js",
     "eslint.config.cjs",
     "eslint.config.mjs"
+  ],
+  "references": [
+    {
+      "path": "../log/tsconfig.lib.json"
+    },
+    {
+      "path": "../simple-types/tsconfig.lib.json"
+    },
+    {
+      "path": "../demiurge-types/tsconfig.lib.json"
+    },
+    {
+      "path": "../backend-engine/tsconfig.lib.json"
+    }
   ]
 }
