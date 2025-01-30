@@ -91,6 +91,7 @@ export type {
   TEventUserHasRead,
   TEventChatResolve,
   TChatEvent,
+  TEventNewChat,
 } from './lib/chat/events';
 
 export type { TChatMessage, TChat } from './lib/chat/chat';

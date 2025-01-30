@@ -33,9 +33,14 @@ export type TEventChatResolve = {
   value: boolean;
 };
 
+export type TEventNewChat = {
+  type: 'new-chat';
+};
+
 export type TChatEvent =
   | TEventNewMessage
   | TEventDeleteMessage
   | TEventIsWriting
   | TEventUserHasRead
-  | TEventChatResolve;
+  | TEventChatResolve
+  | TEventNewChat;

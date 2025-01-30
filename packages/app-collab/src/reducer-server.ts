@@ -13,14 +13,10 @@ import {
 } from '@monorepo/backend-engine';
 import { TAllEvents } from './build-collab';
 import { Dispatcher } from '@monorepo/collab-engine';
-import { TNotebookReducersExtraArgs } from './event-reducers/notebook-reducer';
 import { OpenAPIV3 } from 'express-openapi-validator/dist/framework/types';
 import { TProjectConfig, VPN } from './project-config';
 import { startProjectCollab } from './main';
 import { TJson } from '@monorepo/simple-types';
-import { TProjectServerReducersExtraArgs } from './event-reducers/servers-reducer';
-import { TTabsReducersExtraArgs } from './event-reducers/tabs-reducer';
-import { TChatReducersExtraArgs } from './event-reducers/chat-reducer';
 
 //
 //
@@ -29,17 +25,10 @@ import oas from './oas30.json';
 
 import execPipesDefinition from './exec-pipes.json';
 
-//
-//
-type ExtraArgs = TNotebookReducersExtraArgs &
-  TProjectServerReducersExtraArgs &
-  TTabsReducersExtraArgs &
-  TChatReducersExtraArgs;
-
 class ReduceEventCommand extends Command {
-  _dispatcher: Dispatcher<TAllEvents, ExtraArgs>;
+  _dispatcher: Dispatcher<TAllEvents, any>;
 
-  constructor(config: TCommandConfig, d: Dispatcher<TAllEvents, ExtraArgs>) {
+  constructor(config: TCommandConfig, d: Dispatcher<TAllEvents, any>) {
     super(config);
     this._dispatcher = d;
   }
@@ -111,7 +100,7 @@ class SendVPNConfigCommand extends Command {
 //
 
 export const startEventsReducerServer = async (
-  dispatcher: Dispatcher<TAllEvents, TNotebookReducersExtraArgs>,
+  dispatcher: Dispatcher<TAllEvents, any>,
   reducerServerBind: TStart[]
 ) => {
   CommandFactory.setCustomCommand((type: string, config) => {

@@ -7,7 +7,6 @@ export type TChatMessage = {
 
 export type TChat = {
   id: string;
-  spaceId: string;
   messages: TChatMessage[];
   lastRead: {
     [key: string]: number; // user_id: message_index

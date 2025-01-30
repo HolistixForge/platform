@@ -2,30 +2,28 @@ import { ReduceArgs, Reducer, SharedTypes } from '@monorepo/collab-engine';
 import {
   TChat,
   TChatEvent,
-  TChatSharedData,
   TEventChatResolve,
   TEventDeleteMessage,
   TEventIsWriting,
-  TEventNewChat,
   TEventNewMessage,
   TEventUserHasRead,
+  TEventNewChat,
 } from '@monorepo/demiurge-types';
+import { TChatSharedData } from '@monorepo/shared-data-model';
 import { makeUuid } from '@monorepo/simple-types';
+import { TEventNewEdge, TEventNewNode } from './core-reducer';
 
 /**
  *
  */
 
-export type TChatReducersExtraArgs = {
+type TExtraArgs = {
   user_id: string;
 };
 
-export type Ra<T> = ReduceArgs<
-  TChatSharedData,
-  T,
-  undefined,
-  TChatReducersExtraArgs
->;
+type DispatchedEvents = TEventNewNode | TEventNewEdge;
+
+type Ra<T> = ReduceArgs<TChatSharedData, T, DispatchedEvents, TExtraArgs>;
 
 /**
  *
@@ -34,8 +32,8 @@ export type Ra<T> = ReduceArgs<
 export class ChatReducer extends Reducer<
   TChatSharedData,
   TChatEvent,
-  undefined,
-  TChatReducersExtraArgs
+  DispatchedEvents,
+  TExtraArgs
 > {
   //
 
@@ -94,9 +92,12 @@ export class ChatReducer extends Reducer<
   //
 
   _newChat(g: Ra<TEventNewChat>): Promise<void> {
-    const nc = newChat(g.st, g.event.spaceId);
+    const nc = newChat(g.st);
     g.sd.chats.set(nc.id, nc);
-    g.event.__private__ = { id: nc.id };
+
+    g.dispatcher.dispatch({ type: 'new-node', nodeData: {}, edges: [] });
+    g.dispatcher.dispatch({ type: 'new-node', nodeData: {}, edges: [{}] });
+
     return Promise.resolve();
   }
 
@@ -145,11 +146,10 @@ export class ChatReducer extends Reducer<
  *
  */
 
-const newChat = (st: SharedTypes, spaceId?: string): TChat => {
+const newChat = (st: SharedTypes): TChat => {
   return {
     id: makeUuid(),
     resolved: false,
-    spaceId,
     messages: [],
     lastRead: {},
     isWriting: {},

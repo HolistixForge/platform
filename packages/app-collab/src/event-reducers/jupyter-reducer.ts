@@ -23,7 +23,7 @@ import {
   dkidToServer,
 } from '@monorepo/jupyterlab-api';
 import { projectServerNodeId } from './servers-reducer';
-import { TNotebookSharedData } from '@monorepo/shared-data-model';
+import { TServersSharedData } from '@monorepo/shared-data-model';
 
 /**
  *
@@ -38,7 +38,7 @@ type ReducedEvents = TDemiurgeNotebookEvent;
 
 type DispatchedEvents = TDemiurgeGraphEvent;
 
-type UsedSharedData = TNotebookSharedData;
+type UsedSharedData = TServersSharedData;
 
 type Ra<T> = ReduceArgs<UsedSharedData, T, DispatchedEvents, TExtraArgs>;
 
@@ -46,7 +46,7 @@ type Ra<T> = ReduceArgs<UsedSharedData, T, DispatchedEvents, TExtraArgs>;
  *
  */
 
-export class NotebookReducer extends Reducer<
+export class JupyterReducer extends Reducer<
   UsedSharedData,
   ReducedEvents,
   DispatchedEvents,

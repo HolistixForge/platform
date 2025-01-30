@@ -16,12 +16,14 @@ import {
 } from '@monorepo/demiurge-types';
 import {
   Chat_loadData,
-  Notebook_loadData,
+  Core_loadData,
+  Jupyter_loadData,
+  Servers_loadData,
   Space_loadData,
   Tabs_loadData,
   TChatSharedData,
   TCoreSharedData,
-  TNotebookSharedData,
+  TServersSharedData,
   TSpaceSharedData,
   TTabsSharedData,
 } from '@monorepo/shared-data-model';
@@ -39,11 +41,12 @@ import {
   TDemiurgeSpaceEvent,
 } from './event-reducers/graphviews-reducer';
 import { ChatReducer } from './event-reducers/chat-reducer';
-import { NotebookReducer } from './event-reducers/notebook-reducer';
+import { JupyterReducer } from './event-reducers/jupyter-reducer';
 import { MetaReducer } from './event-reducers/meta-reducer';
 import { ProjectServerReducer } from './event-reducers/servers-reducer';
 import { TabsReducer } from './event-reducers/tabs-reducer';
 import { CONFIG } from './config';
+import { CoreReducer, TCoreEvent } from './event-reducers/core-reducer';
 
 //
 //
@@ -52,42 +55,51 @@ import { CONFIG } from './config';
 const chunks: TCollaborativeChunk[] = [
   {
     initChunk: (st) => {
-      const sharedData = Space_loadData(st);
       return {
-        sharedData,
+        sharedData: Core_loadData(st),
+        reducers: [new CoreReducer(), new MetaReducer()],
+      };
+    },
+  },
+  {
+    initChunk: (st) => {
+      return {
+        sharedData: Space_loadData(st),
         reducers: [new SelectionReducer(), new GraphViewsReducer()],
       };
     },
   },
   {
     initChunk: (st) => {
-      const sharedData = Chat_loadData(st);
       return {
-        sharedData,
+        sharedData: Chat_loadData(st),
         reducers: [new ChatReducer()],
       };
     },
   },
   {
     initChunk: (st) => {
-      const sharedData = Notebook_loadData(st);
-      const dsb = new DriversStoreBackend(sharedData);
       return {
-        sharedData,
-        reducers: [
-          new NotebookReducer(dsb),
-          new ProjectServerReducer(),
-          new MetaReducer(),
-        ],
+        sharedData: Servers_loadData(st),
+        reducers: [new ProjectServerReducer()],
       };
     },
   },
   {
     initChunk: (st) => {
-      const sharedData = Tabs_loadData(st);
+      return {
+        sharedData: Tabs_loadData(st),
+        reducers: [new TabsReducer()],
+      };
+    },
+  },
+  {
+    initChunk: (st) => {
+      const sharedData = Jupyter_loadData(st);
+      const dsb = new DriversStoreBackend(sharedData.projectServers as any);
       return {
         sharedData,
-        reducers: [new TabsReducer()],
+        reducers: [new JupyterReducer(dsb)],
       };
     },
   },
@@ -98,12 +110,13 @@ const chunks: TCollaborativeChunk[] = [
 //
 
 export type TSd = TCoreSharedData &
-  TNotebookSharedData &
+  TServersSharedData &
   TSpaceSharedData &
   TChatSharedData &
   TTabsSharedData;
 
 export type TAllEvents =
+  | TCoreEvent
   | TDemiurgeNotebookEvent
   | TDemiurgeSpaceEvent
   | TServerEvents
@@ -216,7 +229,6 @@ export const toGanymedeEventSource = async (
     const es = new EventSourcePolyfill(fu, {
       headers: request.headers,
     });
-    es.onmessage = (event: MessageEvent) =>
-      onMessage(event, resolve, reject, es);
+    es.onmessage = (event: any) => onMessage(event, resolve, reject, es);
   });
 };

@@ -35,7 +35,7 @@ import { updateProjectMetaActivity } from './meta-reducer';
 import { error, log } from '@monorepo/log';
 import {
   TCoreSharedData,
-  TNotebookSharedData,
+  TServersSharedData,
   TGraphNode,
 } from '@monorepo/shared-data-model';
 import { TJupyterServerData } from '@monorepo/jupyterlab-api';
@@ -52,7 +52,7 @@ import {
  *
  */
 
-export type TProjectServerReducersExtraArgs = {
+type TExtraArgs = {
   toGanymede: <T>(r: TMyfetchRequest) => Promise<T>;
   authorizationHeader: string;
   jwt: TJwtServer | TJwtUser;
@@ -68,14 +68,9 @@ type DispatchedEvents =
   | TEventNewEdge
   | TEventDeleteEdge;
 
-type UsedSharedData = TCoreSharedData & TNotebookSharedData;
+type UsedSharedData = TCoreSharedData & TServersSharedData;
 
-type Ra<T> = ReduceArgs<
-  UsedSharedData,
-  T,
-  DispatchedEvents,
-  TProjectServerReducersExtraArgs
->;
+type Ra<T> = ReduceArgs<UsedSharedData, T, DispatchedEvents, TExtraArgs>;
 
 /**
  *
@@ -85,7 +80,7 @@ export class ProjectServerReducer extends Reducer<
   UsedSharedData,
   ReducedEvents,
   DispatchedEvents,
-  TProjectServerReducersExtraArgs
+  TExtraArgs
 > {
   reduce(g: Ra<ReducedEvents>): Promise<void> {
     switch (g.event.type) {

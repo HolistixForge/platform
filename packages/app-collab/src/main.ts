@@ -10,7 +10,7 @@ import {
 import { startEventsReducerServer } from './reducer-server';
 import { TStart, development } from '@monorepo/backend-engine';
 import { Dispatcher } from '@monorepo/collab-engine';
-import { TNotebookReducersExtraArgs } from './event-reducers/notebook-reducer';
+import { TNotebookReducersExtraArgs } from './event-reducers/jupyter-reducer';
 import {
   PROJECT,
   TProjectConfig,

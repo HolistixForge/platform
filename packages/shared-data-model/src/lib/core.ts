@@ -35,7 +35,7 @@ export type TCoreSharedData = {
 export const Core_loadData = (st: SharedTypes): TCoreSharedData => {
   return {
     meta: st.getSharedMap('demiurge-meta'),
-    nodes: st.getSharedMap<TGraphNode>('demiurge-notebook_nodeData'),
-    edges: st.getSharedArray<TEdge>('demiurge-space_edges'),
+    nodes: st.getSharedMap<TGraphNode>('demiurge-nodes'),
+    edges: st.getSharedArray<TEdge>('demiurge-edges'),
   };
 };

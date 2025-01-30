@@ -19,16 +19,11 @@ import { TTabsSharedData } from '@monorepo/shared-data-model';
  *
  */
 
-export type TTabsReducersExtraArgs = {
+type TExtraArgs = {
   user_id: string;
 };
 
-export type Ra<T> = ReduceArgs<
-  TTabsSharedData,
-  T,
-  undefined,
-  TTabsReducersExtraArgs
->;
+export type Ra<T> = ReduceArgs<TTabsSharedData, T, undefined, TExtraArgs>;
 
 /**
  *
@@ -38,7 +33,7 @@ export class TabsReducer extends Reducer<
   TTabsSharedData,
   TTabEvents<TabPayload>,
   undefined,
-  TTabsReducersExtraArgs
+  TExtraArgs
 > {
   //
 

@@ -1,7 +1,7 @@
 import { Dispatcher, TEvent } from '@monorepo/collab-engine';
 import { TEdge, TNodeView } from '@monorepo/demiurge-ui-components';
 import { TSd } from './build-collab';
-import { TNotebookReducersExtraArgs } from './event-reducers/notebook-reducer';
+import { TNotebookReducersExtraArgs } from './event-reducers/jupyter-reducer';
 import { TDemiurgeSpaceEvent } from './event-reducers/graphviews-reducer';
 import { nodeViewDefaultStatus } from '@monorepo/demiurge-ui-components/dist/lib/demiurge-space-2';
 

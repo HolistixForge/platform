@@ -1,12 +1,12 @@
 import { SharedMap, SharedTypes } from '@monorepo/collab-engine';
 import { TServer } from '@monorepo/demiurge-types';
 
-export type TNotebookSharedData = {
+export type TServersSharedData = {
   projectServers: SharedMap<TServer>;
 };
 
-export const Notebook_loadData = (st: SharedTypes): TNotebookSharedData => {
+export const Servers_loadData = (st: SharedTypes): TServersSharedData => {
   return {
-    projectServers: st.getSharedMap('demiurge-notebook_projectServers'),
+    projectServers: st.getSharedMap('plugin-servers'),
   };
 };

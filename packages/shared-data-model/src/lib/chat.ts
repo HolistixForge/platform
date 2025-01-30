@@ -7,6 +7,6 @@ export type TChatSharedData = {
 
 export const Chat_loadData = (st: SharedTypes): TChatSharedData => {
   return {
-    chats: st.getSharedMap<TChat>('chat_chats'),
+    chats: st.getSharedMap<TChat>('plugin-chats'),
   };
 };

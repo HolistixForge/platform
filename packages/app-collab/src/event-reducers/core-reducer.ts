@@ -45,7 +45,7 @@ export type TEventNewView = {
   viewId: string;
 };
 
-type TDemiurgeGraphEvent =
+export type TCoreEvent =
   | TEventNewNode
   | TEventDeleteNode
   | TEventNewView
@@ -54,9 +54,9 @@ type TDemiurgeGraphEvent =
 
 //
 
-export type TExtraArgs = {};
+type TExtraArgs = {};
 
-type ReducedEvents = TDemiurgeGraphEvent;
+type ReducedEvents = TCoreEvent;
 
 type DispatchedEvents = TDemiurgeSpaceEvent;
 
