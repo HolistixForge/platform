@@ -41,7 +41,7 @@ import {
 import { ChatReducer } from './event-reducers/chat-reducer';
 import { NotebookReducer } from './event-reducers/notebook-reducer';
 import { MetaReducer } from './event-reducers/meta-reducer';
-import { ProjectServerReducer } from './event-reducers/project-server-reducer';
+import { ProjectServerReducer } from './event-reducers/servers-reducer';
 import { TabsReducer } from './event-reducers/tabs-reducer';
 import { CONFIG } from './config';
 

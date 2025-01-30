@@ -1,3 +1,4 @@
+import { TJupyterServerData } from '@monorepo/jupyterlab-api';
 import { TG_ServerImage } from './server-image';
 import { TG_User } from './user';
 
@@ -88,7 +89,7 @@ export const TSSS_Server_to_TServerComponentProps = (
   server: TSSS_Server,
   gatewayFQDN: string,
   host?: TG_User,
-  images?: TG_ServerImage[],
+  images?: TG_ServerImage[]
 ): TServerComponentProps => {
   const image = images?.find((i) => i.image_id === server.image_id) || {
     image_id: -1,
@@ -141,3 +142,17 @@ export type TEc2InstanceState =
   | 'stopped'
   | 'stopping'
   | 'terminated';
+
+//
+
+export type TJupyterServer = TSSS_Server & TJupyterServerData;
+
+export type TPgadminServerData = {
+  type: 'pgadmin';
+};
+
+export type TPgadminServer = TSSS_Server & TPgadminServerData;
+
+//
+
+export type TServer = TJupyterServer | TPgadminServer;

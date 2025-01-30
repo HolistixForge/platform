@@ -1,6 +1,6 @@
 // ----- Edge
 
-import { TJson } from '@monorepo/simple-types';
+import { TJsonObject } from '@monorepo/simple-types';
 
 type EEdgeType =
   | '_unknown_'
@@ -20,7 +20,7 @@ export type TEdgeEnd = {
   node: string;
   connectorName: string;
   pinName?: string;
-  data?: TJson;
+  data?: TJsonObject;
 };
 
 export type TEdge = {
@@ -29,6 +29,7 @@ export type TEdge = {
   type: EEdgeType;
   group?: { edges: TEdge[] };
   highlighted?: boolean;
+  data?: TJsonObject;
 };
 
 //

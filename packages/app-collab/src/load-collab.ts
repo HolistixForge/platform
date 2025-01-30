@@ -14,8 +14,8 @@ import {
   addMountEdge,
   addServer,
   addVolume,
-} from './event-reducers/project-server-reducer';
-import { TEventNewView } from './event-reducers/graph-reducer';
+} from './event-reducers/servers-reducer';
+import { TEventNewView } from './event-reducers/core-reducer';
 
 //
 

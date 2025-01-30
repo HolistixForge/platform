@@ -22,7 +22,7 @@ import {
   TDKID,
   dkidToServer,
 } from '@monorepo/jupyterlab-api';
-import { projectServerNodeId } from './project-server-reducer';
+import { projectServerNodeId } from './servers-reducer';
 import { TNotebookSharedData } from '@monorepo/shared-data-model';
 
 /**

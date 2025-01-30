@@ -18,7 +18,7 @@ import { OpenAPIV3 } from 'express-openapi-validator/dist/framework/types';
 import { TProjectConfig, VPN } from './project-config';
 import { startProjectCollab } from './main';
 import { TJson } from '@monorepo/simple-types';
-import { TProjectServerReducersExtraArgs } from './event-reducers/project-server-reducer';
+import { TProjectServerReducersExtraArgs } from './event-reducers/servers-reducer';
 import { TTabsReducersExtraArgs } from './event-reducers/tabs-reducer';
 import { TChatReducersExtraArgs } from './event-reducers/chat-reducer';
 

@@ -113,5 +113,5 @@ export type {
   TNodeView,
   TSpaceActions,
   TPosition,
-  nodeViewDefaultStatus,
 } from './lib/demiurge-space-2';
+export { nodeViewDefaultStatus } from './lib/demiurge-space-2';

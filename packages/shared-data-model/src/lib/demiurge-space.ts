@@ -1,4 +1,4 @@
-import { SharedMap, SharedTypes, SharedArray } from '@monorepo/collab-engine';
+import { SharedMap, SharedTypes } from '@monorepo/collab-engine';
 import { TEdge, TNodeView } from '@monorepo/demiurge-ui-components';
 
 export type TUserViewSelection = {
@@ -41,14 +41,12 @@ export type TGraphView = {
 //
 
 export type TSpaceSharedData = {
-  edges: SharedArray<TEdge>;
   graphViews: SharedMap<TGraphView>;
   selections: SharedMap<TUserSelections>;
 };
 
 export const Space_loadData = (st: SharedTypes): TSpaceSharedData => {
   return {
-    edges: st.getSharedArray<TEdge>('demiurge-space_edges'),
     graphViews: st.getSharedMap<TGraphView>('demiurge-space_graphViews'),
     selections: st.getSharedMap<TUserSelections>('demiurge-space_selections'),
   };

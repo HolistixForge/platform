@@ -1,11 +1,13 @@
-import { ServerSystemInfo, TEc2InstanceState } from './project-server';
+import { ServerSystemInfo, TEc2InstanceState } from './servers';
 
 export type TEventNewServer = {
   type: 'new-server';
   serverName: string;
   imageId: number;
-  viewId?: string;
-  position?: { x: number; y: number };
+  origin?: {
+    viewId: string;
+    position: { x: number; y: number };
+  };
 };
 
 export type TEventDeleteServer = {
@@ -72,8 +74,10 @@ export type TEventNewVolume = {
   type: 'new-volume';
   name: string;
   storage: number;
-  viewId: string;
-  position: { x: number; y: number };
+  origin?: {
+    viewId: string;
+    position: { x: number; y: number };
+  };
 };
 
 export type TEventMountVolume = {

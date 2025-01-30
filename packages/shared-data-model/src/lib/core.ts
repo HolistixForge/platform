@@ -1,16 +1,41 @@
-import { SharedMap, SharedTypes } from '@monorepo/collab-engine';
-import { TProjectMeta } from '@monorepo/demiurge-types';
+import { SharedMap, SharedTypes, SharedArray } from '@monorepo/collab-engine';
+import { TEdge } from '@monorepo/demiurge-ui-components';
+import { TJsonObject } from '@monorepo/simple-types';
 
-type MinimalNodeData = { id: string; type: string };
+export type TProjectMeta = {
+  projectActivity: {
+    last_activity: string;
+    gateway_shutdown: string;
+  };
+};
+
+export type TGraphNode = {
+  id: string;
+  name: string;
+  type: string;
+  root: boolean;
+  data?: TJsonObject;
+  connectors: {
+    connectorName: string;
+    disabled?: boolean;
+    pins: {
+      pinName: string;
+      disabled?: boolean;
+      type?: 'in' | 'out' | 'inout';
+    }[];
+  }[];
+};
 
 export type TCoreSharedData = {
   meta: SharedMap<TProjectMeta>;
-  nodeData: SharedMap<MinimalNodeData>;
+  nodes: SharedMap<TGraphNode>;
+  edges: SharedArray<TEdge>;
 };
 
 export const Core_loadData = (st: SharedTypes): TCoreSharedData => {
   return {
     meta: st.getSharedMap('demiurge-meta'),
-    nodeData: st.getSharedMap<MinimalNodeData>('demiurge-notebook_nodeData'),
+    nodes: st.getSharedMap<TGraphNode>('demiurge-notebook_nodeData'),
+    edges: st.getSharedArray<TEdge>('demiurge-space_edges'),
   };
 };

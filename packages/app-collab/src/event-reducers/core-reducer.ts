@@ -1,16 +1,13 @@
+import isEqual from 'lodash.isequal';
 import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
 import { TDemiurgeSpaceEvent } from './graphviews-reducer';
 import {
   TSpaceSharedData,
   TGraphView,
   TCoreSharedData,
+  TGraphNode,
 } from '@monorepo/shared-data-model';
-import { makeUuid } from '@monorepo/simple-types';
-import {
-  TEdge,
-  nodeViewDefaultStatus,
-  TPosition,
-} from '@monorepo/demiurge-ui-components';
+import { TEdge, TPosition } from '@monorepo/demiurge-ui-components';
 
 /**
  *
@@ -23,14 +20,24 @@ type TEventOrigin = {
 
 export type TEventNewNode = {
   type: 'new-node';
-  nodeData: { type: string };
-  rootNode?: boolean;
-  edge: Omit<TEdge, 'to'>;
-} & TEventOrigin;
+  nodeData: TGraphNode;
+  edges: TEdge[];
+  origin?: TEventOrigin;
+};
 
 export type TEventDeleteNode = {
   type: 'delete-node';
   id: string;
+};
+
+export type TEventNewEdge = {
+  type: 'new-edge';
+  edge: TEdge;
+};
+
+export type TEventDeleteEdge = {
+  type: 'delete-edge';
+  edge: TEdge;
 };
 
 export type TEventNewView = {
@@ -38,7 +45,12 @@ export type TEventNewView = {
   viewId: string;
 };
 
-type TDemiurgeGraphEvent = TEventNewNode | TEventDeleteNode | TEventNewView;
+type TDemiurgeGraphEvent =
+  | TEventNewNode
+  | TEventDeleteNode
+  | TEventNewView
+  | TEventNewEdge
+  | TEventDeleteEdge;
 
 //
 
@@ -56,7 +68,7 @@ type Ra<T> = ReduceArgs<UsedSharedData, T, DispatchedEvents, TExtraArgs>;
  *
  */
 
-export class GraphReducer extends Reducer<
+export class CoreReducer extends Reducer<
   UsedSharedData,
   ReducedEvents,
   DispatchedEvents,
@@ -72,6 +84,10 @@ export class GraphReducer extends Reducer<
         return this._deleteNode(g as Ra<TEventDeleteNode>);
       case 'new-view':
         return this._newView(g as Ra<TEventNewView>);
+      case 'new-edge':
+        return this._newEdge(g as Ra<TEventNewEdge>);
+      case 'delete-edge':
+        return this._deleteEdge(g as Ra<TEventDeleteEdge>);
       default:
         return Promise.resolve();
     }
@@ -82,46 +98,17 @@ export class GraphReducer extends Reducer<
    */
 
   async _newNode(g: Ra<TEventNewNode>) {
-    const nd = { id: makeUuid(), ...g.event.nodeData };
-
-    const edges: TEdge[] = g.event.edge
-      ? [
-          {
-            ...g.event.edge,
-            to: {
-              node: nd.id,
-              connectorName: 'inputs',
-            },
-          },
-        ]
-      : [];
+    const nd = g.event.nodeData;
 
     // add node data
-    g.sd.nodeData.set(nd.id, nd);
+    g.sd.nodes.set(nd.id, nd);
 
-    // add this node to each view
-    g.sd.graphViews.forEach((gv, k) => {
-      const ngv = { ...gv };
-      ngv.nodeViews = [
-        ...ngv.nodeViews,
-        {
-          id: nd.id,
-          position: g.event.position,
-          status: nodeViewDefaultStatus(),
-        },
-      ];
-
-      if (g.event.rootNode) ngv.roots = [...ngv.roots, nd.id];
-
-      g.sd.graphViews.set(k, ngv);
-    });
     // add edges
-    if (edges) {
-      g.sd.edges.push(edges);
+    if (g.event.edges) {
+      g.sd.edges.push(g.event.edges);
     }
 
     this._dispatchUpdateAllGraphViews(g);
-    return;
   }
 
   /**
@@ -134,21 +121,31 @@ export class GraphReducer extends Reducer<
     // delete all edges from or to this node
     // console.log({ before: 'before', edges: edgesToStrings(sd.edges) });
     g.sd.edges.deleteMatching((e) => e.from.node === id || e.to.node === id);
-    // console.log({ after: 'after', edges: edgesToStrings(sd.edges) });
-    // delete this node in each view
-    g.sd.graphViews.forEach((gv, k) => {
-      const ngv = structuredClone(gv);
-      const index = ngv.nodeViews.findIndex((nv) => nv.id === id);
-      if (index !== -1) {
-        ngv.nodeViews.splice(index, 1);
-        g.sd.graphViews.set(k, ngv);
-      }
-    });
+
     // delete node data
-    g.sd.nodeData.delete(id);
+    g.sd.nodes.delete(id);
 
     this._dispatchUpdateAllGraphViews(g);
-    return;
+  }
+
+  /**
+   *
+   */
+
+  _newEdge(g: Ra<TEventNewEdge>) {
+    g.sd.edges.push([g.event.edge]);
+    this._dispatchUpdateAllGraphViews(g);
+    return Promise.resolve();
+  }
+
+  /**
+   *
+   */
+
+  _deleteEdge(g: Ra<TEventDeleteEdge>) {
+    g.sd.edges.deleteMatching((e) => isEqual(g.event.edge, e));
+    this._dispatchUpdateAllGraphViews(g);
+    return Promise.resolve();
   }
 
   /**

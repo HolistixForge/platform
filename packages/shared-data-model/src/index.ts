@@ -1,8 +1,8 @@
 export { Chat_loadData } from './lib/chat';
 export type { TChatSharedData } from './lib/chat';
 
-export { Notebook_loadData } from './lib/demiurge-notebook';
-export type { TNotebookSharedData } from './lib/demiurge-notebook';
+export { Notebook_loadData } from './lib/servers';
+export type { TNotebookSharedData } from './lib/servers';
 
 export { Space_loadData } from './lib/demiurge-space';
 export type {
@@ -15,4 +15,4 @@ export { Tabs_loadData } from './lib/tabs';
 export type { TTabsSharedData } from './lib/tabs';
 
 export { Core_loadData } from './lib/core';
-export type { TCoreSharedData } from './lib/core';
+export type { TCoreSharedData, TGraphNode, TProjectMeta } from './lib/core';

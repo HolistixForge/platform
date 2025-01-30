@@ -1,5 +1,3 @@
-import _ from 'lodash.isequal';
-
 import {
   ReduceArgs,
   Reducer,
@@ -7,12 +5,10 @@ import {
   TEventPeriodic,
 } from '@monorepo/collab-engine';
 import {
-  TNodeData,
   TEventNewServer,
   TEventNewVolume,
   TApi_Volume,
   TEventMountVolume,
-  TApi_Mount,
   TEventUnmountVolume,
   TEventDeleteVolume,
   TEventDeleteServer,
@@ -36,20 +32,21 @@ import {
 import { TMyfetchRequest, secondAgo } from '@monorepo/simple-types';
 import { runScript } from '../run-script';
 import { updateProjectMetaActivity } from './meta-reducer';
-import {
-  deleteNode,
-  dispatchUpdateAllGraphViews,
-  newNode,
-} from './notebook-reducer';
 import { error, log } from '@monorepo/log';
-import { TGanymedeEventSourceCallback } from '../build-collab';
 import {
+  TCoreSharedData,
   TNotebookSharedData,
-  TSpaceSharedData,
+  TGraphNode,
 } from '@monorepo/shared-data-model';
 import { TJupyterServerData } from '@monorepo/jupyterlab-api';
-import { TEdge, TPosition } from '@monorepo/demiurge-ui-components';
+import { TEdge } from '@monorepo/demiurge-ui-components';
 import { UserException } from '@monorepo/backend-engine';
+import {
+  TEventDeleteEdge,
+  TEventDeleteNode,
+  TEventNewEdge,
+  TEventNewNode,
+} from './core-reducer';
 
 /**
  *
@@ -57,10 +54,6 @@ import { UserException } from '@monorepo/backend-engine';
 
 export type TProjectServerReducersExtraArgs = {
   toGanymede: <T>(r: TMyfetchRequest) => Promise<T>;
-  toGanymedeEventSource: (
-    r: TMyfetchRequest,
-    onMessage: TGanymedeEventSourceCallback
-  ) => Promise<void>;
   authorizationHeader: string;
   jwt: TJwtServer | TJwtUser;
   ip: string;
@@ -68,12 +61,19 @@ export type TProjectServerReducersExtraArgs = {
 
 type ReducedEvents = TServerEvents | TCollabNativeEvent;
 
-type UsedSharedData = TNotebookSharedData & TSpaceSharedData;
+type DispatchedEvents =
+  | TEventUpdateInstanceState
+  | TEventNewNode
+  | TEventDeleteNode
+  | TEventNewEdge
+  | TEventDeleteEdge;
+
+type UsedSharedData = TCoreSharedData & TNotebookSharedData;
 
 type Ra<T> = ReduceArgs<
   UsedSharedData,
   T,
-  TEventUpdateInstanceState | TEventUpdateGraphView,
+  DispatchedEvents,
   TProjectServerReducersExtraArgs
 >;
 
@@ -84,7 +84,7 @@ type Ra<T> = ReduceArgs<
 export class ProjectServerReducer extends Reducer<
   UsedSharedData,
   ReducedEvents,
-  null,
+  DispatchedEvents,
   TProjectServerReducersExtraArgs
 > {
   reduce(g: Ra<ReducedEvents>): Promise<void> {
@@ -168,9 +168,20 @@ export class ProjectServerReducer extends Reducer<
     );
 
     // create corresponding node in each view
-    if (newServer) addServer(g.sd, newServer, g.event.position);
+    if (newServer) {
+      const { node, projectServer } = addServer(newServer);
+      g.sd.projectServers.set(
+        `${projectServer.project_server_id}`,
+        projectServer
+      );
 
-    dispatchUpdateAllGraphViews(g, 'new-server');
+      g.dispatcher.dispatch({
+        type: 'new-node',
+        nodeData: node,
+        edges: [],
+        origin: g.event.origin,
+      });
+    }
 
     return;
   }
@@ -281,24 +292,29 @@ export class ProjectServerReducer extends Reducer<
       }
       attempts++;
 
-      g.dispatcher.dispatch({
-        type: '_update-instance-state',
-        project_server_id,
-        state,
-      });
-
-      if (state && stableStates.includes(state)) {
-        log(7, 'CLOUD_INSTANCE', `reached stable state: ${state}`);
-
-        const update = await this._getUpToDateServerData(g, project_server_id);
-
-        g.sd.projectServers.set(`${project_server_id}`, {
-          ...s,
-          ...update,
-          ec2_instance_state: state,
+      if (state) {
+        g.dispatcher.dispatch({
+          type: '_update-instance-state',
+          project_server_id,
+          state,
         });
 
-        break; // Exit the loop if the state is stable
+        if (stableStates.includes(state)) {
+          log(7, 'CLOUD_INSTANCE', `reached stable state: ${state}`);
+
+          const update = await this._getUpToDateServerData(
+            g,
+            project_server_id
+          );
+
+          g.sd.projectServers.set(`${project_server_id}`, {
+            ...s,
+            ...update,
+            ec2_instance_state: state,
+          });
+
+          break; // Exit the loop if the state is stable
+        }
       }
 
       await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait 5 seconds before next attempt
@@ -497,64 +513,6 @@ export class ProjectServerReducer extends Reducer<
 
   //
 
-  /*
-  async _updateProjectServers(g: Ra<TDemiurgeNotebookEvent>) {
-    // TODO: polling 6 x 10s, why ?
-    repeatFunction(
-      async () => {
-        const r2 = await g.extraArgs.toGanymede<{ _0: TApi_Server[] }>({
-          url: '/projects/{project_id}/servers',
-          method: 'GET',
-          headers: { authorization: g.extraArgs.authorizationHeader },
-        });
-
-        const servers = r2._0;
-
-        servers.forEach((s) => {
-          const prev = g.sd.projectServers.get(`${s.project_server_id}`);
-          // new server declared
-          if (!prev)
-            g.sd.projectServers.set(`${s.project_server_id}`, {
-              ...s,
-              kernels: [],
-              last_watchdog_at: null,
-              httpServices: [],
-              type: 'jupyter',
-              last_activity: new Date().toISOString(),
-            });
-          else
-            g.sd.projectServers.set(`${s.project_server_id}`, {
-              ...prev,
-              ...s,
-            });
-        });
-      },
-      6,
-      10000
-    );
-  }
-  */
-
-  //
-
-  //   async _startServer(g: Ra<TEventStartServer>) {
-  //     const pathParameters = {
-  //       project_server_id: g.event.project_server_id,
-  //     };
-
-  //     // call api endpoint to start a server
-  //     await g.extraArgs.toGanymede({
-  //       url: '/projects/{project_id}/server/{project_server_id}/start',
-  //       pathParameters,
-  //       method: 'POST',
-  //       headers: { authorization: g.extraArgs.authorizationHeader },
-  //     });
-
-  //     return;
-  //   }
-
-  //
-
   async _deleteServer(g: Ra<TEventDeleteServer>) {
     const pid = g.event.project_server_id;
     await g.extraArgs.toGanymede({
@@ -568,52 +526,9 @@ export class ProjectServerReducer extends Reducer<
 
     g.sd.projectServers.delete(`${pid}`);
     const id = projectServerNodeId(pid);
-    deleteNode(g.sd, id);
-    dispatchUpdateAllGraphViews(g, 'new-server');
-    return;
+
+    g.dispatcher.dispatch({ type: 'delete-node', id });
   }
-  //
-
-  //
-
-  //   async _stopServer(g: Ra<TEventStopServer>) {
-  //     /*
-  //      * stop all kernels
-  //      */
-  //     const s = g.sd.projectServers.get(`${g.event.project_server_id}`);
-  //     for (let i = 0; i < s.kernels.length; i++) {
-  //       const k = s.kernels[i];
-  //       if (k.jkid) {
-  //         await this._stopKernel({
-  //           ...g,
-  //           event: {
-  //             dkid: k.dkid,
-  //             type: 'stop-kernel',
-  //           },
-  //         });
-  //       }
-  //     }
-  //     /*
-  //      * call api endpoint to stop a server
-  //      */
-  //     await g.extraArgs.toGanymede({
-  //       url: '/projects/{project_id}/server/{project_server_id}/stop',
-  //       pathParameters: {
-  //         project_server_id: g.event.project_server_id,
-  //       },
-  //       method: 'POST',
-  //       headers: { authorization: g.extraArgs.authorizationHeader },
-  //     });
-
-  //     /**
-  //      * delete driver
-  //      */
-  //     this._drivers.deleteDrivers(s.project_server_id);
-
-  //     this._updateProjectServers(g);
-
-  //     return;
-  //   }
 
   //
 
@@ -638,11 +553,15 @@ export class ProjectServerReducer extends Reducer<
     const volumes = r2._0;
     const newVolume = volumes.find((s) => s.volume_id === r._0.new_volume_id);
 
-    if (newVolume) addVolume(g.sd, newVolume, g.event.position);
-
-    dispatchUpdateAllGraphViews(g, 'new-volume');
-
-    return;
+    if (newVolume) {
+      const node = addVolume(newVolume);
+      g.dispatcher.dispatch({
+        type: 'new-node',
+        nodeData: node,
+        origin: g.event.origin,
+        edges: [],
+      });
+    }
   }
 
   /**
@@ -663,11 +582,9 @@ export class ProjectServerReducer extends Reducer<
       headers: { authorization: g.extraArgs.authorizationHeader },
     });
 
-    addMountEdge(g.sd, g.event, g.event.project_server_id);
+    const edge = makeMountEdge(g.event);
 
-    dispatchUpdateAllGraphViews(g, 'mount-volume');
-
-    return;
+    g.dispatcher.dispatch({ type: 'new-edge', edge });
   }
 
   /**
@@ -689,14 +606,9 @@ export class ProjectServerReducer extends Reducer<
     });
 
     // we make the exact edge to match for deletion
-    const match = makeMountEdge(g.event, g.event.project_server_id);
+    const match = makeMountEdge(g.event);
 
-    // we delete matching edges (should be only one)
-    g.sd.edges.deleteMatching((e) => _.isEqual(match, e));
-
-    dispatchUpdateAllGraphViews(g, 'unmount-volume');
-
-    return;
+    g.dispatcher.dispatch({ type: 'delete-edge', edge: match });
   }
 
   /**
@@ -713,11 +625,10 @@ export class ProjectServerReducer extends Reducer<
       headers: { authorization: g.extraArgs.authorizationHeader },
     });
 
-    deleteNode(g.sd, projectVolumeNodeId(g.event.volume_id));
-
-    dispatchUpdateAllGraphViews(g, 'delete-volume');
-
-    return;
+    g.dispatcher.dispatch({
+      type: 'delete-node',
+      id: projectVolumeNodeId(g.event.volume_id),
+    });
   }
 }
 
@@ -754,13 +665,13 @@ const serverInitialInfo = (image_id: number) => {
   throw new UserException('server image unknown');
 };
 
+//
+
 export const addServer = (
-  sd: TSpaceSharedData & TNotebookSharedData,
   s: TG_Server,
-  position?: TPosition,
   ec2_instance_state?: TEc2InstanceState
 ) => {
-  const data: TServer = {
+  const projectServer: TServer = {
     ...s,
     httpServices: [],
     last_watchdog_at: null,
@@ -769,56 +680,57 @@ export const addServer = (
     ...serverInitialInfo(s.image_id),
   };
 
-  // store server data
-  sd.projectServers.set(`${s.project_server_id}`, data);
-
   const id = projectServerNodeId(s.project_server_id);
 
   // create a node representing this server
-  const nd: TNodeData = {
+  const node: TGraphNode = {
     id,
+    name: s.server_name,
     type: 'server',
-    server_name: s.server_name,
-    project_server_id: s.project_server_id,
+    root: true,
+    connectors: [],
+    data: {
+      project_server_id: s.project_server_id,
+    },
   };
 
-  newNode(sd, nd, position || { x: 0, y: 0 }, true);
+  return { projectServer, node };
 };
 
 /**
  *
  */
-export const addVolume = (
-  sd: TSpaceSharedData & TNotebookSharedData,
-  v: TApi_Volume,
-  position: TPosition
-) => {
-  const nd: TNodeData = {
+export const addVolume = (v: TApi_Volume) => {
+  const nd: TGraphNode = {
     id: projectVolumeNodeId(v.volume_id),
+    name: v.volume_name,
+    root: true,
     type: 'volume',
-    ...v,
+    connectors: [{ connectorName: 'outputs', pins: [] }],
+    data: v,
   };
-  newNode(sd, nd, position, true);
+  return nd;
 };
 
 /**
  *
  */
 
-const makeMountEdge = (
-  m: Pick<TApi_Mount, 'mount_point' | 'volume_id'>,
-  project_server_id: number
-) => {
+const makeMountEdge = (a: {
+  mount_point: string;
+  volume_id: number;
+  project_server_id: number;
+}) => {
   const edge: TEdge = {
     from: {
-      node: projectVolumeNodeId(m.volume_id),
+      node: projectVolumeNodeId(a.volume_id),
       connectorName: 'outputs',
     },
     to: {
-      node: projectServerNodeId(project_server_id),
+      node: projectServerNodeId(a.project_server_id),
       connectorName: 'inputs',
       data: {
-        mount_point: m.mount_point,
+        mount_point: a.mount_point,
       },
     },
     type: 'wired_to',
@@ -827,15 +739,6 @@ const makeMountEdge = (
     },
   };
   return edge;
-};
-
-export const addMountEdge = (
-  sd: TSpaceSharedData & TNotebookSharedData,
-  m: Pick<TApi_Mount, 'mount_point' | 'volume_id'>,
-  project_server_id: number
-) => {
-  const e = makeMountEdge(m, project_server_id);
-  sd.edges.push([e]);
 };
 
 /**

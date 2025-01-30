@@ -7,8 +7,12 @@ export type {
   TServerComponentCallbacks,
   ServerSystemInfo,
   TEc2InstanceState,
-} from './lib/project-server';
-export { TSSS_Server_to_TServerComponentProps } from './lib/project-server';
+  TJupyterServer,
+  TPgadminServer,
+  TPgadminServerData,
+  TServer,
+} from './lib/servers';
+export { TSSS_Server_to_TServerComponentProps } from './lib/servers';
 
 export type {
   TEventNewServer,
@@ -51,16 +55,6 @@ export type {
   TApi_Mount,
   TApi_Authorization,
 } from './lib/ganymede-api/types';
-
-export type {
-  TJupyterServer,
-  TPgadminServer,
-  TPgadminServerData,
-  TServer,
-  TProjectMeta,
-  TNodeData,
-  TNodeCommon,
-} from './lib/demiurge-notebook/demiurge-notebook';
 
 export type {
   TNodeGeneric,
