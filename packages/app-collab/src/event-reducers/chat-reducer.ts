@@ -1,4 +1,4 @@
-import { ReduceArgs, Reducer, SharedTypes } from '@monorepo/collaborative';
+import { ReduceArgs, Reducer, SharedTypes } from '@monorepo/collab-engine';
 import {
   TChat,
   TChatEvent,

@@ -1,7 +1,7 @@
 import { SharedMap, SharedTypes, SharedArray } from '@monorepo/collab-engine';
 import { TEdge, TNodeView } from '@monorepo/demiurge-ui-components';
 
-type TUserViewSelection = {
+export type TUserViewSelection = {
   user: { username: string; color: string };
   userId: number;
   viewId: string;
@@ -19,7 +19,7 @@ type TGraphViewParams = {
   maxRank: number;
 };
 
-type TGraphView = {
+export type TGraphView = {
   /** views options */
   params: TGraphViewParams;
   /** the nodes id from wich the displayed graph is calculated */
@@ -40,15 +40,13 @@ type TGraphView = {
 //
 //
 
-export type TDemiurgeSpaceSharedData = {
+export type TSpaceSharedData = {
   edges: SharedArray<TEdge>;
   graphViews: SharedMap<TGraphView>;
   selections: SharedMap<TUserSelections>;
 };
 
-export const DemiurgeSpace_loadData = (
-  st: SharedTypes
-): TDemiurgeSpaceSharedData => {
+export const Space_loadData = (st: SharedTypes): TSpaceSharedData => {
   return {
     edges: st.getSharedArray<TEdge>('demiurge-space_edges'),
     graphViews: st.getSharedMap<TGraphView>('demiurge-space_graphViews'),

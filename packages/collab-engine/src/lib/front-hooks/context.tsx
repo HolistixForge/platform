@@ -12,7 +12,6 @@ import {
 import {
   TValidSharedData,
   Dispatcher,
-  TEvent,
   TAwarenessUser,
   TCollaborativeChunk,
   TCollabNativeEvent,
@@ -49,7 +48,7 @@ type TCollaborationContext = {
   sharedTypes: SharedTypes;
   sharedData: TValidSharedData;
   awareness: Awareness;
-  dispatcher: Dispatcher<TEvent, Record<string, never>>;
+  dispatcher: Dispatcher<any, Record<string, never>>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   extraContext: any;
 };
@@ -254,7 +253,7 @@ export const useSharedData = <TSharedData extends TValidSharedData>(
 //
 //
 
-export const useDispatcher = <TE extends TEvent>() => {
+export const useDispatcher = <TE,>() => {
   const { dispatcher } = useContext(
     collaborationContext
   ) as TCollaborationContext;

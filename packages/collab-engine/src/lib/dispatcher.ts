@@ -1,23 +1,17 @@
 import { log } from '@monorepo/log';
 import { Reducer } from './reducer';
 import { SharedTypes } from './SharedTypes';
-import { TEvent } from './events';
 import { TValidSharedData } from './chunk';
 import { ApiFetch } from '@monorepo/api-fetch';
 import { TJson } from '@monorepo/simple-types';
 
 //
 
-type ValidReducer<Targs> = Reducer<
-  TValidSharedData,
-  TEvent,
-  TEvent,
-  Partial<Targs>
->;
+type ValidReducer<Targs> = Reducer<TValidSharedData, any, any, Partial<Targs>>;
 
 //
 
-export class Dispatcher<TE extends TEvent, Targs> {
+export class Dispatcher<TE, Targs> {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   _sharedTypes: SharedTypes = null!;
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -72,7 +66,7 @@ export class Dispatcher<TE extends TEvent, Targs> {
 //
 //
 
-export class BrowserDispatcher<TE extends TEvent> extends Dispatcher<
+export class BrowserDispatcher<TE> extends Dispatcher<
   TE,
   Record<string, never>
 > {

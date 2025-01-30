@@ -1,17 +1,18 @@
 import { TNotebookNode } from './node-types';
 import { TSSS_Server } from '../project-server';
+import { TJupyterServerData } from '@monorepo/jupyterlab-api';
 
-export type TJupyterServerInfo = TSSS_Server;
+export type TJupyterServer = TSSS_Server & TJupyterServerData;
 
-export type TPgadminSpecificInfo = {
+export type TPgadminServerData = {
   type: 'pgadmin';
 };
 
-export type TPgadminServerInfo = TSSS_Server & TPgadminSpecificInfo;
+export type TPgadminServer = TSSS_Server & TPgadminServerData;
 
 //
 
-export type TServer = TJupyterServerInfo | TPgadminServerInfo;
+export type TServer = TJupyterServer | TPgadminServer;
 
 /**
  *

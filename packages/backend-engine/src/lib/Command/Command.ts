@@ -18,5 +18,5 @@ export abstract class Command {
     this._config = config;
   }
 
-  abstract run(args: TJson): Promise<TCommandReturn>;
+  abstract run(args: object): Promise<TCommandReturn>;
 }

@@ -1,9 +1,9 @@
-import { TDemiurgeSpaceEvent } from '@monorepo/demiurge-types';
-import { Dispatcher, TEvent } from '@monorepo/collaborative';
-
-import { TEdge, TNodeView } from '@monorepo/demiurge-types';
+import { Dispatcher, TEvent } from '@monorepo/collab-engine';
+import { TEdge, TNodeView } from '@monorepo/demiurge-ui-components';
 import { TSd } from './build-collab';
 import { TNotebookReducersExtraArgs } from './event-reducers/notebook-reducer';
+import { TDemiurgeSpaceEvent } from './event-reducers/graphviews-reducer';
+import { nodeViewDefaultStatus } from '@monorepo/demiurge-ui-components/dist/lib/demiurge-space-2';
 
 //
 //
@@ -56,51 +56,75 @@ const edges: Array<TEdge> = [
   {
     from: {
       node: '1',
+      connectorName: 'outputs',
     },
-    to: { node: '2' },
-    type: 'SEQUENCE',
+    to: {
+      node: '2',
+      connectorName: 'inputs',
+    },
+    type: 'next_in_sequence',
   },
 
   {
     from: {
       node: '1',
+      connectorName: 'outputs',
     },
-    to: { node: '3' },
-    type: 'SEQUENCE',
+    to: {
+      node: '3',
+      connectorName: 'inputs',
+    },
+    type: 'next_in_sequence',
   },
 
   {
     from: {
       node: '2',
+      connectorName: 'outputs',
     },
-    to: { node: '4' },
-    type: 'SEQUENCE',
+    to: {
+      node: '4',
+      connectorName: 'inputs',
+    },
+    type: 'next_in_sequence',
   },
 
   {
     from: {
       node: '4',
-      connector: 'handle-0',
+      connectorName: 'outputs',
+      pinName: 'pin-0',
     },
-    to: { node: '5' },
-    type: 'REFERENCE',
+    to: {
+      node: '5',
+      connectorName: 'inputs',
+    },
+    type: 'next_in_sequence',
   },
 
   {
     from: {
       node: '4',
-      connector: 'handle-1',
+      connectorName: 'outputs',
+      pinName: 'pin-1',
     },
-    to: { node: '6' },
-    type: 'REFERENCE',
+    to: {
+      node: '6',
+      connectorName: 'inputs',
+    },
+    type: 'next_in_sequence',
   },
 
   {
     from: {
       node: '4',
+      connectorName: 'outputs',
     },
-    to: { node: '7' },
-    type: 'SEQUENCE',
+    to: {
+      node: '7',
+      connectorName: 'inputs',
+    },
+    type: 'next_in_sequence',
   },
 ];
 
@@ -110,7 +134,7 @@ const edges: Array<TEdge> = [
 
 export const loadExampleData = (
   sd: TSd,
-  dispatcher: Dispatcher<TEvent, TNotebookReducersExtraArgs>,
+  dispatcher: Dispatcher<TEvent, TNotebookReducersExtraArgs>
 ) => {
   sd.edges.push(edges);
 
@@ -121,6 +145,7 @@ export const loadExampleData = (
     roots: ['1'],
     nodeViews: nodesViews.map((nv) => ({
       ...nv,
+      status: nodeViewDefaultStatus(),
     })),
     graph: {
       nodes: [],
@@ -135,6 +160,7 @@ export const loadExampleData = (
     roots: ['4'],
     nodeViews: nodesViews.map((nv) => ({
       ...nv,
+      status: nodeViewDefaultStatus(),
     })),
     graph: {
       nodes: [],
@@ -142,14 +168,14 @@ export const loadExampleData = (
     },
   });
 
-  sd.graphViews.forEach((gv, viewId) =>
+  sd.graphViews.forEach((gv: any, viewId: string) =>
     (
       dispatcher as Dispatcher<TDemiurgeSpaceEvent, TNotebookReducersExtraArgs>
     ).dispatch({
-      type: '_update-graph-view_',
-      why: 'init',
+      type: 'space-action',
+      action: { type: 'update-graph-view' },
       viewId,
-    }),
+    })
   );
 
   // --------------------
@@ -315,7 +341,7 @@ export const loadExampleData = (
     project_id: 1000000,
     project_server_id: 1,
     server_name: 'server1',
-    ip: null,
+    ip: undefined,
     kernels: [
       {
         dkid: 'kernel_1_uid',

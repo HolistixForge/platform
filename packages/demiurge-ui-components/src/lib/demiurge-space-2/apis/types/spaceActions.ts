@@ -44,11 +44,6 @@ export type TSAUnhighlightFromConnector = {
 
 //
 
-export type TSASelectionChange = {
-  type: 'selection-change';
-  nid: string;
-};
-
 export type TSAOpenNode = {
   type: 'open-node';
   nid: string;
@@ -69,11 +64,14 @@ export type TSAResizeNode = {
   nid: string;
 };
 
+export type TSAUpdateGraphView = {
+  type: 'update-graph-view';
+};
+
 export type TSpaceActions =
   | TSAOpenNode
   | TSACloseNode
   | TSAMoveNode
-  | TSASelectionChange
   | TSAExpandNode
   | TSAReduceNode
   | TSACloseConnector
@@ -81,4 +79,5 @@ export type TSpaceActions =
   | TSAHighlightFromConnector
   | TSAUnhighlightFromConnector
   | TSAResizeNode
-  | TSAPopNode;
+  | TSAPopNode
+  | TSAUpdateGraphView;

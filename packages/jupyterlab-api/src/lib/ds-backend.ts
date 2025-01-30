@@ -1,7 +1,7 @@
 import {
   TDKID,
   TJupyterKernelInfo,
-  TJupyterServerInfo,
+  TJupyterServerData,
   TServerSettings,
   dkidToServer,
 } from './types';
@@ -10,20 +10,20 @@ import { serverUrl } from '@monorepo/api-fetch';
 
 //
 
-export type TOnNewDriverCb = (s: TJupyterServerInfo) => Promise<void>;
+export type TOnNewDriverCb = (s: TJupyterServerData) => Promise<void>;
 
 //
 
 export class DriversStoreBackend {
   //
   _drivers: Map<string, JupyterlabDriver> = new Map();
-  _projectServers: Map<string, TJupyterServerInfo>;
+  _projectServers: Map<string, TJupyterServerData>;
   _onNewDriver?: TOnNewDriverCb;
 
   //
 
   constructor(
-    pss: Map<string, TJupyterServerInfo>,
+    pss: Map<string, TJupyterServerData>,
     onNewDriver?: TOnNewDriverCb
   ) {
     this._projectServers = pss;
@@ -33,7 +33,7 @@ export class DriversStoreBackend {
   //
   //
 
-  getServerSetting(s: TJupyterServerInfo, token: string): TServerSettings {
+  getServerSetting(s: TJupyterServerData, token: string): TServerSettings {
     const service = s.httpServices.find((srv) => srv.name === 'jupyterlab');
     const baseUrl =
       service && s.ip
@@ -94,7 +94,7 @@ export class DriversStoreBackend {
     }
 
     return {
-      server: server as TJupyterServerInfo,
+      server: server as TJupyterServerData,
       kernel: kernel as TJupyterKernelInfo,
       driver,
     };

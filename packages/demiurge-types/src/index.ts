@@ -53,9 +53,9 @@ export type {
 } from './lib/ganymede-api/types';
 
 export type {
-  TJupyterServerInfo,
-  TPgadminServerInfo,
-  TPgadminSpecificInfo,
+  TJupyterServer,
+  TPgadminServer,
+  TPgadminServerData,
   TServer,
   TProjectMeta,
   TNodeData,
@@ -91,16 +91,8 @@ export type {
 export { makeYjsDocId } from './lib/yjs/doc-id';
 
 export type {
-  TEdgeMountData,
-  TEdgeChatAnchorData,
-  TEdgeTerminalData,
-  TDemiurgeEdgeData,
-} from './lib/demiurge-notebook/edge-types';
-
-export type {
   TEventNewMessage,
   TEventDeleteMessage,
-  TEventNewChat,
   TEventIsWriting,
   TEventUserHasRead,
   TEventChatResolve,
@@ -144,3 +136,10 @@ export { MAX_TAB_ROW } from './lib/tabs/tabs';
 export type { TreeElement } from './lib/tabs/tree';
 
 export { ReadOnlyTree, ReadWriteTree } from './lib/tabs/tree';
+
+export type {
+  TJwtServer,
+  TJwtProject,
+  TJwtGateway,
+  TJwtUser,
+} from './lib/jwt/jwt';

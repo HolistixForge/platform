@@ -1,6 +1,5 @@
 import { SharedArray, SharedMap, SharedTypes } from './SharedTypes';
 import { Dispatcher } from './dispatcher';
-import { TEvent } from './events';
 import { Reducer } from './reducer';
 
 //
@@ -18,7 +17,7 @@ export type TCollaborativeChunk = {
   initChunk: (st: SharedTypes) => {
     sharedData: TValidSharedData;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    reducers: Readonly<Reducer<TValidSharedData, TEvent, TEvent, any>[]>;
+    reducers: Readonly<Reducer<TValidSharedData, any, any, any>[]>;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     extraContext?: any;
   };
@@ -30,7 +29,7 @@ export type TCollaborativeChunk = {
 export const compileChunks = (
   cc: TCollaborativeChunk[],
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  dispatcher: Dispatcher<TEvent, any>,
+  dispatcher: Dispatcher<any, any>,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   extraContext: any
 ) => {

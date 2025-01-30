@@ -1,4 +1,4 @@
-import { ReduceArgs, Reducer } from '@monorepo/collaborative';
+import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
 import {
   MAX_TAB_ROW,
   ReadWriteTree,
@@ -10,9 +10,10 @@ import {
   TEventDeleteTab,
   TEventRenameTab,
   TTabEvents,
-  TTabsSharedData,
+  TTabsTree,
   TUsersActiveTabs,
 } from '@monorepo/demiurge-types';
+import { TTabsSharedData } from '@monorepo/shared-data-model';
 
 /**
  *
@@ -63,14 +64,14 @@ export class TabsReducer extends Reducer<
 
   __deepCopyEditAndApply(
     g: Ra<{}>,
-    f: (t: ReadWriteTree<TabPayload>, a: TUsersActiveTabs) => void,
+    f: (t: ReadWriteTree<TabPayload>, a: TUsersActiveTabs) => void
   ) {
-    const o = g.sd.tabs.get('unique');
+    const o = g.sd.tabs.get('unique') as TTabsTree;
     if (o) {
       let no = structuredClone(o);
-      const t = new ReadWriteTree<TabPayload>(no.tree);
-      f(t, no.actives);
-      g.sd.tabs.set('unique', { tree: t.get([], 0), actives: no.actives });
+      const trw = new ReadWriteTree<TabPayload>(no.tree);
+      f(trw, no.actives);
+      g.sd.tabs.set('unique', { tree: trw.get([], 0)!, actives: no.actives });
     }
   }
 
@@ -78,7 +79,7 @@ export class TabsReducer extends Reducer<
     actives: TUsersActiveTabs,
     path: TabPath,
     user_id: string,
-    old?: TabPath,
+    old?: TabPath
   ) {
     actives[user_id] = path;
     Object.keys(actives).forEach((key) => {
@@ -160,7 +161,7 @@ export class TabsReducer extends Reducer<
             actives,
             [...npath, newGroupTitle, initial.title],
             g.extraArgs.user_id,
-            path,
+            path
           );
         }
       }

@@ -15,13 +15,6 @@ export type TEventDeleteMessage = {
   index: number;
 };
 
-export type TEventNewChat = {
-  type: 'new-chat';
-  spaceId?: string;
-  viewId: string;
-  position: { x: number; y: number };
-} & ReducersPrivate<{ id: string }>;
-
 export type TEventIsWriting = {
   type: 'is-writing';
   chatId: string;
@@ -43,7 +36,6 @@ export type TEventChatResolve = {
 export type TChatEvent =
   | TEventNewMessage
   | TEventDeleteMessage
-  | TEventNewChat
   | TEventIsWriting
   | TEventUserHasRead
   | TEventChatResolve;

@@ -107,4 +107,11 @@ export { TabsRadixLogic } from './lib/tabs/tabs-radix-logic';
 
 //
 
-export type { TEdge, TNodeView } from './lib/demiurge-space-2';
+export type {
+  TEdge,
+  TEdgeEnd,
+  TNodeView,
+  TSpaceActions,
+  TPosition,
+  nodeViewDefaultStatus,
+} from './lib/demiurge-space-2';

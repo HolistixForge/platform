@@ -25,11 +25,11 @@ export type TJupyterKernelInfo = {
   kernelType: TKernelType;
 };
 
-export type TJupyterServerInfo = {
+export type TJupyterServerData = {
   type: 'jupyter';
   kernels: Array<TJupyterKernelInfo>;
-  ip: string;
-  httpServices: { name: string; location: string }[];
+  ip?: string;
+  httpServices: { name: string; location: string; port: number }[];
 };
 
 /**
@@ -38,11 +38,11 @@ export type TJupyterServerInfo = {
  */
 
 export const dkidToServer = (
-  projectServers: Map<string, TJupyterServerInfo>,
+  projectServers: Map<string, TJupyterServerData>,
   dkid: TDKID
-): { server: TJupyterServerInfo; kernel: TJupyterKernelInfo } | undefined => {
+): { server: TJupyterServerData; kernel: TJupyterKernelInfo } | undefined => {
   //
-  let server: TJupyterServerInfo | null = null;
+  let server: TJupyterServerData | null = null;
   let kernel: TJupyterKernelInfo | null = null;
 
   projectServers.forEach((s) => {

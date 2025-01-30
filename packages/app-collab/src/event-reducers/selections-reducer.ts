@@ -3,29 +3,27 @@ import {
   Reducer,
   TCollabNativeEvent,
   TEventUserLeave,
-} from '@monorepo/collaborative';
+} from '@monorepo/collab-engine';
 import {
-  TDemiurgeSpaceEvent,
-  TDemiurgeSpaceSharedData,
-  TEventSelectionChange,
-} from '@monorepo/demiurge-types';
+  TSpaceSharedData,
+  TUserViewSelection,
+} from '@monorepo/shared-data-model';
 
 /**
  *
  */
 
-type ReducedEvents = TDemiurgeSpaceEvent | TCollabNativeEvent;
+type TEventSelectionChange = {
+  type: 'selection-change';
+} & TUserViewSelection;
 
-type Ra<T> = ReduceArgs<
-  TDemiurgeSpaceSharedData,
-  T,
-  undefined,
-  Record<string, never>
->;
+type ReducedEvents = TEventSelectionChange | TCollabNativeEvent;
+
+type Ra<T> = ReduceArgs<TSpaceSharedData, T, undefined, Record<string, never>>;
 
 export class SelectionReducer extends Reducer<
-  TDemiurgeSpaceSharedData,
-  TDemiurgeSpaceEvent,
+  TSpaceSharedData,
+  ReducedEvents,
   undefined,
   Record<string, never>
 > {

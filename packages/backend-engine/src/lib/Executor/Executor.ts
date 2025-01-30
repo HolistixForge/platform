@@ -95,7 +95,7 @@ export class Executor {
       request: request,
     });
 
-    const stepResult = await command.run(args);
+    const stepResult = await command.run(args as object);
 
     log(7, 'PIPELINE', 'returned', stepResult);
 

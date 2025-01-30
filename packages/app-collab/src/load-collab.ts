@@ -7,24 +7,19 @@ import {
   TreeElement,
   TabPayload,
 } from '@monorepo/demiurge-types';
-import { Dispatcher, TEvent } from '@monorepo/collaborative';
+import { Dispatcher } from '@monorepo/collab-engine';
 import { PROJECT } from './project-config';
-import {
-  TNotebookReducersExtraArgs,
-  dispatchUpdateAllGraphViews,
-  newView,
-} from './event-reducers/notebook-reducer';
 import { updateProjectMetaActivity } from './event-reducers/meta-reducer';
 import {
   addMountEdge,
   addServer,
   addVolume,
 } from './event-reducers/project-server-reducer';
+import { TEventNewView } from './event-reducers/graph-reducer';
 
 //
 
 const DEFAULT_VIEW_1 = 'view-1';
-const DEFAULT_VIEW_2 = 'view-2';
 
 const initialTabsTree: TreeElement<TabPayload> = {
   payload: { type: 'group' },
@@ -50,22 +45,17 @@ const initialTabsTree: TreeElement<TabPayload> = {
 
 //
 
-const headers = () => ({ authorization: PROJECT.GANYMEDE_API_TOKEN });
+const headers = () => ({ authorization: PROJECT!.GANYMEDE_API_TOKEN });
 
 //
 //
 
 export const loadCollaborationData = async (
   sd: TSd,
-  dispatcher: Dispatcher<TEvent, TNotebookReducersExtraArgs>,
+  dispatcher: Dispatcher<TEventNewView, {}>
 ) => {
   try {
     updateProjectMetaActivity(sd.meta);
-    /**
-     * set defaults views
-     */
-    sd.graphViews.set(DEFAULT_VIEW_1, newView());
-    sd.graphViews.set(DEFAULT_VIEW_2, newView());
 
     sd.tabs.set('unique', { tree: initialTabsTree, actives: {} });
 
@@ -84,7 +74,7 @@ export const loadCollaborationData = async (
       for (let i = 0; i < servers.length; i++) {
         const s = servers[i];
 
-        let state: TEc2InstanceState | null = null;
+        let state: TEc2InstanceState | undefined = undefined;
 
         if (s.location === 'aws') {
           const is = await toGanymede<{ state: TEc2InstanceState }>({
@@ -139,11 +129,11 @@ export const loadCollaborationData = async (
       });
     }
 
-    /**
-     * init graph views from root node
-     */
-    dispatchUpdateAllGraphViews({ sd, dispatcher }, 'init');
-  } catch (err) {
+    dispatcher.dispatch({
+      type: 'new-view',
+      viewId: DEFAULT_VIEW_1,
+    });
+  } catch (err: any) {
     console.log(err, JSON.stringify(err.toJson?.() || err.message, null, 4));
     throw new Error('STOP');
   }

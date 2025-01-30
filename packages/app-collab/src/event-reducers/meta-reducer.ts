@@ -1,8 +1,5 @@
-import { ReduceArgs, Reducer, SharedMap } from '@monorepo/collaborative';
-import {
-  TDemiurgeNotebookSharedData,
-  TProjectMeta,
-} from '@monorepo/demiurge-types';
+import { ReduceArgs, Reducer, SharedMap } from '@monorepo/collab-engine';
+import { TNotebookSharedData, TProjectMeta } from '@monorepo/demiurge-types';
 import { log } from '@monorepo/log';
 import { inSeconds, isPassed } from '@monorepo/simple-types';
 import { runScript } from '../run-script';
@@ -22,7 +19,7 @@ let shouldIBeDead = false;
 type ReducedEvents = { type: string };
 
 type Ra<T> = ReduceArgs<
-  TDemiurgeNotebookSharedData,
+  TNotebookSharedData,
   T,
   undefined,
   Record<string, never>
@@ -37,7 +34,7 @@ const eventFilter = [
 ];
 
 export class MetaReducer extends Reducer<
-  TDemiurgeNotebookSharedData,
+  TNotebookSharedData,
   ReducedEvents,
   undefined,
   Record<string, never>

@@ -4,6 +4,30 @@
   "include": [],
   "references": [
     {
+      "path": "../demiurge-ui-components"
+    },
+    {
+      "path": "../backend-engine"
+    },
+    {
+      "path": "../jupyterlab-api"
+    },
+    {
+      "path": "../simple-types"
+    },
+    {
+      "path": "../log"
+    },
+    {
+      "path": "../shared-data-model"
+    },
+    {
+      "path": "../demiurge-types"
+    },
+    {
+      "path": "../collab-engine"
+    },
+    {
       "path": "./tsconfig.app.json"
     },
     {

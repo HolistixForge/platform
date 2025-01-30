@@ -1,4 +1,6 @@
 import { graftYjsWebsocket } from './websocket';
+import * as http from 'http';
+import * as https from 'https';
 import {
   TAllEvents,
   initProjectCollaboration,
@@ -7,7 +9,7 @@ import {
 } from './build-collab';
 import { startEventsReducerServer } from './reducer-server';
 import { TStart, development } from '@monorepo/backend-engine';
-import { Dispatcher } from '@monorepo/collaborative';
+import { Dispatcher } from '@monorepo/collab-engine';
 import { TNotebookReducersExtraArgs } from './event-reducers/notebook-reducer';
 import {
   PROJECT,
@@ -21,8 +23,8 @@ import { CONFIG } from './config';
 
 //
 
-let dispatcher: Dispatcher;
-let servers;
+let dispatcher: Dispatcher<TAllEvents, TNotebookReducersExtraArgs>;
+let servers: (http.Server | https.Server)[];
 
 ///
 

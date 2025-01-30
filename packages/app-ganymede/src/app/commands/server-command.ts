@@ -9,6 +9,7 @@ import {
   makeProjectScopeString,
   TD_ServerImage,
   TG_Server,
+  TJwtServer,
   TServerImageOptions,
 } from '@monorepo/demiurge-types';
 import { ONE_YEAR_MS, makeShortUuid } from '@monorepo/simple-types';
@@ -44,15 +45,16 @@ export class ServerCommand extends Command {
         { message: 'You do not host this server' },
       ]);
 
+    const payload: TJwtServer = {
+      type: 'server_token',
+      project_id: args.project_id,
+      project_server_id: args.project_server_id,
+      scope: ['project:get-gateway', 'server:activity', 'project:vpn-access']
+        .map((s) => makeProjectScopeString(args.project_id, s))
+        .join(' '),
+    };
     const token = generateJwtToken(
-      {
-        type: 'server_token',
-        project_id: args.project_id,
-        project_server_id: args.project_server_id,
-        scope: ['project:get-gateway', 'server:activity', 'project:vpn-access']
-          .map((s) => makeProjectScopeString(args.project_id, s))
-          .join(' '),
-      },
+      payload,
       `${ONE_YEAR_MS}` // TODO: adjust expiration ?
     );
 

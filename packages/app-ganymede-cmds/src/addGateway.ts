@@ -2,6 +2,7 @@ import { generateJwtToken, jwtPayload } from '@monorepo/backend-engine';
 import {
   GATEWAY_SCOPE,
   makeGatewayScopeString,
+  TJwtGateway,
 } from '@monorepo/demiurge-types';
 import { ONE_YEAR_MS } from '@monorepo/simple-types';
 import { pg } from './pg';
@@ -9,17 +10,19 @@ import { log } from '@monorepo/log';
 
 //
 
-const gatewayGlobalToken = (gateway_id: string) =>
-  generateJwtToken(
-    {
-      type: 'gateway_token',
-      gateway_id,
-      scope: GATEWAY_SCOPE.map((s) =>
-        makeGatewayScopeString(gateway_id, s.name)
-      ).join(' '),
-    },
+const gatewayGlobalToken = (gateway_id: string) => {
+  const payload: TJwtGateway = {
+    type: 'gateway_token',
+    gateway_id,
+    scope: GATEWAY_SCOPE.map((s) =>
+      makeGatewayScopeString(gateway_id, s.name)
+    ).join(' '),
+  };
+  return generateJwtToken(
+    payload,
     `${ONE_YEAR_MS}` // TODO: adjust expiration ?
   );
+};
 
 //
 //

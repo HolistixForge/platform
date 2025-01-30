@@ -30,7 +30,7 @@ export const runScript = (name: EScripts, inputString?: string) => {
       );
     }
     output = result.stdout.toString();
-  } catch (err) {
+  } catch (err: any) {
     throw new RunException(`Error executing [${fcmd}]: ${err.message}`);
   }
   let json;

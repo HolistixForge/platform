@@ -10,13 +10,14 @@ import {
   Response,
 } from '@node-oauth/oauth2-server';
 import { error, log } from '@monorepo/log';
-import { TJson, makeUuid } from '@monorepo/simple-types';
+import { makeUuid } from '@monorepo/simple-types';
 import { CONFIG } from '../config';
 import { pg } from '../pg';
 import { userFromSession } from '../totp';
 import { Req, UserSerializedInfo } from '../main';
 import {
   GLOBAL_CLIENT_ID,
+  TJwtUser,
   TServerImageOptions,
   USER_SCOPE,
   makeProjectScopeString,
@@ -117,7 +118,7 @@ export const model: AuthorizationCodeModel &
     user: OauthModelUser,
     scope: string[]
   ): Promise<string> => {
-    const payload = JwtPayload('access_token', client, user, scope);
+    const payload = makeJwtUserPayload('access_token', client, user, scope);
     const r = generateJwtToken(
       payload,
       `${client.accessTokenLifetime! * 1000}`
@@ -133,7 +134,7 @@ export const model: AuthorizationCodeModel &
     user: OauthModelUser,
     scope: string[]
   ): Promise<string> => {
-    const payload = JwtPayload('refresh_token', client, user, scope);
+    const payload = makeJwtUserPayload('refresh_token', client, user, scope);
     const r = generateJwtToken(
       payload,
       `${client.refreshTokenLifetime! * 1000}`
@@ -472,12 +473,12 @@ export const authenticateHandler = {
 
 //
 
-const JwtPayload = (
+const makeJwtUserPayload = (
   type: 'access_token' | 'refresh_token',
   client: Client,
   user: OauthModelUser,
   scope: string[]
-): TJson => {
+): TJwtUser => {
   return {
     type,
     client_id: client.id,

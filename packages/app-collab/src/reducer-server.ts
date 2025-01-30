@@ -9,9 +9,10 @@ import {
   CommandFactory,
   TCommandReturn,
   NotFoundException,
+  TCommandConfig,
 } from '@monorepo/backend-engine';
 import { TAllEvents } from './build-collab';
-import { Dispatcher } from '@monorepo/collaborative';
+import { Dispatcher } from '@monorepo/collab-engine';
 import { TNotebookReducersExtraArgs } from './event-reducers/notebook-reducer';
 import { OpenAPIV3 } from 'express-openapi-validator/dist/framework/types';
 import { TProjectConfig, VPN } from './project-config';
@@ -38,7 +39,7 @@ type ExtraArgs = TNotebookReducersExtraArgs &
 class ReduceEventCommand extends Command {
   _dispatcher: Dispatcher<TAllEvents, ExtraArgs>;
 
-  constructor(config, d: Dispatcher<TAllEvents, ExtraArgs>) {
+  constructor(config: TCommandConfig, d: Dispatcher<TAllEvents, ExtraArgs>) {
     super(config);
     this._dispatcher = d;
   }
@@ -91,7 +92,7 @@ class SendVPNConfigCommand extends Command {
         config: `client
       dev tun
       proto udp
-      remote GATEWAY_HOSTNAME ${VPN.port}
+      remote GATEWAY_HOSTNAME ${VPN!.port}
       resolv-retry infinite
       nobind
       cipher AES-256-GCM
@@ -122,11 +123,13 @@ export const startEventsReducerServer = async (
       case 'send-vpn-config':
         return new SendVPNConfigCommand(config);
     }
+
+    return null;
   });
 
   const apiDefinition = new ApiDefinition(oas);
 
-  const epDefinition = new EpDefinition(execPipesDefinition);
+  const epDefinition = new EpDefinition(execPipesDefinition as any);
 
   const inputs = new Inputs({});
 
@@ -136,7 +139,7 @@ export const startEventsReducerServer = async (
   //
 
   const eh = new ExpressHandler(executor, apiDefinition, {
-    openApiValidator: { apiSpec: oas as OpenAPIV3.Document },
+    openApiValidator: { apiSpec: oas as OpenAPIV3.DocumentV3 },
     basicExpressApp: {
       jaeger: process.env.JAEGER_FQDN
         ? {
@@ -144,7 +147,7 @@ export const startEventsReducerServer = async (
             serviceTag: 'collab',
             host: process.env.JAEGER_FQDN,
           }
-        : null,
+        : undefined,
     },
   });
 

@@ -12,6 +12,10 @@ import { PROJECT } from './project-config';
 //
 //
 
+type MyJwtPayload = { type: string; scope: string[]; exp: number };
+
+//
+
 export function graftYjsWebsocket(
   servers: (http.Server | https.Server)[],
   docId: string
@@ -20,31 +24,41 @@ export function graftYjsWebsocket(
 
   servers.forEach((server) => {
     const isSsl = server instanceof https.Server;
-    const wss = new ws.Server(isSsl ? { server } : { noServer: true });
+    const wss: ws.Server = new ws.Server(
+      isSsl ? { server } : { noServer: true }
+    );
 
     //
 
-    wss.on('connection', (ws, req, err, jwt) => {
-      if (err) {
-        ws.close(4001, 'REFRESH_TOKEN');
-        return;
+    wss.on(
+      'connection',
+      (
+        ws: ws,
+        req: http.IncomingMessage,
+        err: Error | null,
+        jwt: MyJwtPayload
+      ) => {
+        if (err) {
+          ws.close(4001, 'REFRESH_TOKEN');
+          return;
+        }
+
+        // close socket when the token will expire
+        const currentTime = Date.now() / 1000; // Get current time in seconds
+        const timeDifference = jwt.exp - currentTime;
+        if (timeDifference > 0) {
+          setTimeout(() => {
+            log(6, 'WS_CONNECTION', 'destroy socket, token expired');
+            ws.close(4000, 'expired');
+          }, timeDifference * 1000); // Convert seconds to milliseconds
+        }
+
+        log(6, 'WS_CONNECTION', `connection: url: ${req.url}`);
+
+        // setup Yjs
+        u.setupWSConnection(ws, req, { docName: docId, gc: false });
       }
-
-      // close socket when the token will expire
-      const currentTime = Date.now() / 1000; // Get current time in seconds
-      const timeDifference = jwt.exp - currentTime;
-      if (timeDifference > 0) {
-        setTimeout(() => {
-          log(6, 'WS_CONNECTION', 'destroy socket, token expired');
-          ws.close(4000, 'expired');
-        }, timeDifference * 1000); // Convert seconds to milliseconds
-      }
-
-      log(6, 'WS_CONNECTION', `connection: url: ${req.url}`);
-
-      // setup Yjs
-      u.setupWSConnection(ws, req, { docName: docId, gc: false });
-    });
+    );
 
     //
 
@@ -74,19 +88,22 @@ export function graftYjsWebsocket(
 
 //
 
-function authenticate(request, callback) {
+function authenticate(
+  request: http.IncomingMessage,
+  callback: (e: Error | null, payload: MyJwtPayload | null) => void
+) {
   const u = new URL(`https://localhost${request.url}`);
   const token = u.searchParams.get('token');
 
-  let payload: { type: string; scope: string[] };
+  let payload: MyJwtPayload;
   if (!token) {
     callback(new Error('Forbidden'), null);
     return;
   }
 
   try {
-    payload = jwtPayload(token);
-  } catch (err) {
+    payload = jwtPayload(token) as MyJwtPayload;
+  } catch (err: any) {
     callback(err, null);
     return;
   }
@@ -99,7 +116,7 @@ function authenticate(request, callback) {
     return;
   }
 
-  if (!payload.scope.includes(makeProjectScopeString(PROJECT.PROJECT_ID))) {
+  if (!payload.scope.includes(makeProjectScopeString(PROJECT!.PROJECT_ID))) {
     const err = new ForbiddenException([{ message: `insufficient scope` }]);
     callback(err, null);
     return;

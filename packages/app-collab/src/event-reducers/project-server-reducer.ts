@@ -1,33 +1,25 @@
-import { EventSourcePolyfill } from 'event-source-polyfill';
-import * as _ from 'lodash.isequal';
+import _ from 'lodash.isequal';
 
 import {
   ReduceArgs,
   Reducer,
   TCollabNativeEvent,
   TEventPeriodic,
-} from '@monorepo/collaborative';
+} from '@monorepo/collab-engine';
 import {
-  TDemiurgeNotebookSharedData,
   TNodeData,
   TEventNewServer,
-  TDemiurgeSpaceSharedData,
-  TGraphView,
   TEventNewVolume,
   TApi_Volume,
   TEventMountVolume,
   TApi_Mount,
-  TEdgeMount,
   TEventUnmountVolume,
   TEventDeleteVolume,
   TEventDeleteServer,
-  TPosition,
   TEventServerWatchdog,
   TEventServerActivity,
   TEventServerMapHttpService,
   TG_Server,
-  TJupyterSpecificInfo,
-  TPgadminSpecificInfo,
   TServerEvents,
   TEventHostServer,
   TEventServerToCloud,
@@ -36,9 +28,12 @@ import {
   TEventServerCloudStart,
   TEventServerCloudDelete,
   TEventUpdateInstanceState,
-  TEventUpdateGraphView,
+  TJwtServer,
+  TJwtUser,
+  TPgadminServerData,
+  TServer,
 } from '@monorepo/demiurge-types';
-import { TJson, TMyfetchRequest, secondAgo } from '@monorepo/simple-types';
+import { TMyfetchRequest, secondAgo } from '@monorepo/simple-types';
 import { runScript } from '../run-script';
 import { updateProjectMetaActivity } from './meta-reducer';
 import {
@@ -47,6 +42,14 @@ import {
   newNode,
 } from './notebook-reducer';
 import { error, log } from '@monorepo/log';
+import { TGanymedeEventSourceCallback } from '../build-collab';
+import {
+  TNotebookSharedData,
+  TSpaceSharedData,
+} from '@monorepo/shared-data-model';
+import { TJupyterServerData } from '@monorepo/jupyterlab-api';
+import { TEdge, TPosition } from '@monorepo/demiurge-ui-components';
+import { UserException } from '@monorepo/backend-engine';
 
 /**
  *
@@ -56,16 +59,16 @@ export type TProjectServerReducersExtraArgs = {
   toGanymede: <T>(r: TMyfetchRequest) => Promise<T>;
   toGanymedeEventSource: (
     r: TMyfetchRequest,
-    onMessage: (event, resolve, reject, es: EventSourcePolyfill) => void,
+    onMessage: TGanymedeEventSourceCallback
   ) => Promise<void>;
   authorizationHeader: string;
-  jwt: TJson;
+  jwt: TJwtServer | TJwtUser;
   ip: string;
 };
 
 type ReducedEvents = TServerEvents | TCollabNativeEvent;
 
-type UsedSharedData = TDemiurgeNotebookSharedData & TDemiurgeSpaceSharedData;
+type UsedSharedData = TNotebookSharedData & TSpaceSharedData;
 
 type Ra<T> = ReduceArgs<
   UsedSharedData,
@@ -161,7 +164,7 @@ export class ProjectServerReducer extends Reducer<
 
     const newServer = await this._getUpToDateServerData(
       g,
-      r._0.new_project_server_id,
+      r._0.new_project_server_id
     );
 
     // create corresponding node in each view
@@ -175,7 +178,8 @@ export class ProjectServerReducer extends Reducer<
   //
 
   async _serverWatchdog(g: Ra<TEventServerWatchdog>) {
-    const psid = g.extraArgs.jwt['project_server_id'];
+    const jwt = g.extraArgs.jwt as TJwtServer;
+    const psid = jwt.project_server_id;
     if (psid) {
       const s = g.sd.projectServers.get(`${psid}`);
       if (s) {
@@ -194,7 +198,8 @@ export class ProjectServerReducer extends Reducer<
   //
 
   async _serverActivity(g: Ra<TEventServerActivity>) {
-    const psid = g.extraArgs.jwt['project_server_id'];
+    const jwt = g.extraArgs.jwt as TJwtServer;
+    const psid = jwt.project_server_id;
     if (psid) {
       const s = g.sd.projectServers.get(`${psid}`);
       if (s) {
@@ -240,7 +245,7 @@ export class ProjectServerReducer extends Reducer<
    */
   async _pollCloudInstanceState(
     g: Ra<{ project_server_id: number }>,
-    timeout = 300,
+    timeout = 300
   ) {
     const { project_server_id } = g.event;
 
@@ -257,7 +262,7 @@ export class ProjectServerReducer extends Reducer<
       log(
         7,
         'CLOUD_INSTANCE',
-        `attemps: ${attempts}, maxAttemps: ${maxAttempts}`,
+        `attemps: ${attempts}, maxAttemps: ${maxAttempts}`
       );
       try {
         const response = await g.extraArgs.toGanymede<{
@@ -271,8 +276,8 @@ export class ProjectServerReducer extends Reducer<
           headers: { authorization: g.extraArgs.authorizationHeader },
         });
         state = response.state;
-      } catch (error) {
-        error('CLOUD_INSTANCE', `Error polling instance state: ${error}`);
+      } catch (err) {
+        error('CLOUD_INSTANCE', `Error polling instance state: ${err}`);
       }
       attempts++;
 
@@ -282,7 +287,7 @@ export class ProjectServerReducer extends Reducer<
         state,
       });
 
-      if (stableStates.includes(state)) {
+      if (state && stableStates.includes(state)) {
         log(7, 'CLOUD_INSTANCE', `reached stable state: ${state}`);
 
         const update = await this._getUpToDateServerData(g, project_server_id);
@@ -302,13 +307,13 @@ export class ProjectServerReducer extends Reducer<
     if (attempts === maxAttempts) {
       error(
         'CLOUD_INSTANCE',
-        `Failed to determine stable instance state for project_server_id: ${project_server_id}`,
+        `Failed to determine stable instance state for project_server_id: ${project_server_id}`
       );
     } else {
       log(
         7,
         'CLOUD_INSTANCE',
-        `Instance state for project_server_id: ${project_server_id} is ${state}`,
+        `Instance state for project_server_id: ${project_server_id} is ${state}`
       );
     }
   }
@@ -427,7 +432,8 @@ export class ProjectServerReducer extends Reducer<
   //
 
   async _serverMapHttpService(g: Ra<TEventServerMapHttpService>) {
-    const psid = g.extraArgs.jwt['project_server_id'];
+    const jwt = g.extraArgs.jwt as TJwtServer;
+    const psid = jwt.project_server_id;
     if (psid) {
       const s = g.sd.projectServers.get(`${psid}`);
       if (s) {
@@ -435,7 +441,7 @@ export class ProjectServerReducer extends Reducer<
         if (
           !httpServices.find(
             (service) =>
-              service.name === g.event.name && service.port === g.event.port,
+              service.name === g.event.name && service.port === g.event.port
           )
         ) {
           httpServices.push({
@@ -632,7 +638,7 @@ export class ProjectServerReducer extends Reducer<
     const volumes = r2._0;
     const newVolume = volumes.find((s) => s.volume_id === r._0.new_volume_id);
 
-    addVolume(g.sd, newVolume, g.event.position);
+    if (newVolume) addVolume(g.sd, newVolume, g.event.position);
 
     dispatchUpdateAllGraphViews(g, 'new-volume');
 
@@ -726,12 +732,14 @@ export class ProjectServerReducer extends Reducer<
  *
  */
 
-const jupyterServerInitialInfo = (): TJupyterSpecificInfo => ({
+const jupyterServerInitialInfo = (): TJupyterServerData => ({
   kernels: [],
   type: 'jupyter',
+  ip: undefined,
+  httpServices: [],
 });
 
-const pgadminServerInitialInfo = (): TPgadminSpecificInfo => ({
+const pgadminServerInitialInfo = (): TPgadminServerData => ({
   type: 'pgadmin',
 });
 
@@ -743,15 +751,16 @@ const serverInitialInfo = (image_id: number) => {
     case 4:
       return pgadminServerInitialInfo();
   }
+  throw new UserException('server image unknown');
 };
 
 export const addServer = (
-  sd: TDemiurgeSpaceSharedData & TDemiurgeNotebookSharedData,
+  sd: TSpaceSharedData & TNotebookSharedData,
   s: TG_Server,
   position?: TPosition,
-  ec2_instance_state?: TEc2InstanceState,
+  ec2_instance_state?: TEc2InstanceState
 ) => {
-  const data = {
+  const data: TServer = {
     ...s,
     httpServices: [],
     last_watchdog_at: null,
@@ -780,9 +789,9 @@ export const addServer = (
  *
  */
 export const addVolume = (
-  sd: TDemiurgeSpaceSharedData & TDemiurgeNotebookSharedData,
+  sd: TSpaceSharedData & TNotebookSharedData,
   v: TApi_Volume,
-  position: TPosition,
+  position: TPosition
 ) => {
   const nd: TNodeData = {
     id: projectVolumeNodeId(v.volume_id),
@@ -798,19 +807,21 @@ export const addVolume = (
 
 const makeMountEdge = (
   m: Pick<TApi_Mount, 'mount_point' | 'volume_id'>,
-  project_server_id: number,
+  project_server_id: number
 ) => {
-  const edge: TEdgeMount = {
+  const edge: TEdge = {
     from: {
       node: projectVolumeNodeId(m.volume_id),
+      connectorName: 'outputs',
     },
     to: {
       node: projectServerNodeId(project_server_id),
+      connectorName: 'inputs',
       data: {
         mount_point: m.mount_point,
       },
     },
-    type: 'REFERENCE',
+    type: 'wired_to',
     data: {
       demiurge_type: 'mount',
     },
@@ -819,30 +830,13 @@ const makeMountEdge = (
 };
 
 export const addMountEdge = (
-  sd: TDemiurgeSpaceSharedData & TDemiurgeNotebookSharedData,
+  sd: TSpaceSharedData & TNotebookSharedData,
   m: Pick<TApi_Mount, 'mount_point' | 'volume_id'>,
-  project_server_id: number,
+  project_server_id: number
 ) => {
   const e = makeMountEdge(m, project_server_id);
   sd.edges.push([e]);
 };
-
-/**
- *
- * create a default view
- *
- */
-export const newView = (): TGraphView => ({
-  params: {
-    maxRank: 2,
-  },
-  nodeViews: [],
-  graph: {
-    nodes: [],
-    edges: [],
-  },
-  roots: [],
-});
 
 /**
  *

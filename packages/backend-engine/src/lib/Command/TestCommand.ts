@@ -1,12 +1,12 @@
-import { Command, TCommandReturn } from './Command';
 import { TJson } from '@monorepo/simple-types';
+import { Command, TCommandReturn } from './Command';
 
 export class TestCommand extends Command {
-  async run(args: TJson): Promise<TCommandReturn> {
+  async run(args: object): Promise<TCommandReturn> {
     return {
       data: {
         'test-result': {
-          received: args,
+          received: args as TJson,
         },
       },
     };

@@ -6,23 +6,25 @@ import {
   TCollaborativeChunk,
   YjsSharedTypes,
   compileChunks,
-} from '@monorepo/collaborative';
+} from '@monorepo/collab-engine';
 import {
-  Chat_loadData,
-  DemiurgeNotebook_loadData,
-  DemiurgeSpace_loadData,
   TabPayload,
-  Tabs_loadData,
   TChatEvent,
-  TChatSharedData,
   TDemiurgeNotebookEvent,
-  TDemiurgeNotebookSharedData,
-  TDemiurgeSpaceEvent,
-  TDemiurgeSpaceSharedData,
   TServerEvents,
   TTabEvents,
-  TTabsSharedData,
 } from '@monorepo/demiurge-types';
+import {
+  Chat_loadData,
+  Notebook_loadData,
+  Space_loadData,
+  Tabs_loadData,
+  TChatSharedData,
+  TCoreSharedData,
+  TNotebookSharedData,
+  TSpaceSharedData,
+  TTabsSharedData,
+} from '@monorepo/shared-data-model';
 import { log } from '@monorepo/log';
 import { loadCollaborationData } from './load-collab';
 import { TMyfetchRequest, fullUri } from '@monorepo/simple-types';
@@ -32,12 +34,12 @@ import { ForwardException, myfetch } from '@monorepo/backend-engine';
 import { EventSourcePolyfill } from 'event-source-polyfill';
 import { PROJECT } from './project-config';
 import { SelectionReducer } from './event-reducers/selections-reducer';
-import { GraphViewsReducer } from './event-reducers/graphviews-reducer';
-import { ChatReducer } from './event-reducers/chat-reducer';
 import {
-  NotebookReducer,
-  TNotebookReducersExtraArgs,
-} from './event-reducers/notebook-reducer';
+  GraphViewsReducer,
+  TDemiurgeSpaceEvent,
+} from './event-reducers/graphviews-reducer';
+import { ChatReducer } from './event-reducers/chat-reducer';
+import { NotebookReducer } from './event-reducers/notebook-reducer';
 import { MetaReducer } from './event-reducers/meta-reducer';
 import { ProjectServerReducer } from './event-reducers/project-server-reducer';
 import { TabsReducer } from './event-reducers/tabs-reducer';
@@ -50,7 +52,7 @@ import { CONFIG } from './config';
 const chunks: TCollaborativeChunk[] = [
   {
     initChunk: (st) => {
-      const sharedData = DemiurgeSpace_loadData(st);
+      const sharedData = Space_loadData(st);
       return {
         sharedData,
         reducers: [new SelectionReducer(), new GraphViewsReducer()],
@@ -68,7 +70,7 @@ const chunks: TCollaborativeChunk[] = [
   },
   {
     initChunk: (st) => {
-      const sharedData = DemiurgeNotebook_loadData(st);
+      const sharedData = Notebook_loadData(st);
       const dsb = new DriversStoreBackend(sharedData);
       return {
         sharedData,
@@ -95,8 +97,9 @@ const chunks: TCollaborativeChunk[] = [
 //
 //
 
-export type TSd = TDemiurgeNotebookSharedData &
-  TDemiurgeSpaceSharedData &
+export type TSd = TCoreSharedData &
+  TNotebookSharedData &
+  TSpaceSharedData &
   TChatSharedData &
   TTabsSharedData;
 
@@ -111,17 +114,17 @@ export type TAllEvents =
 //
 //
 
-class WSSharedDoc extends Y.Doc {
+type WSSharedDoc = Y.Doc & {
   awareness: WebsocketProvider['awareness'];
-}
+};
 
 //
 //
 
 export async function initProjectCollaboration(
-  dispatcher: Dispatcher<TAllEvents, TNotebookReducersExtraArgs>
+  dispatcher: Dispatcher<TAllEvents, {}>
 ) {
-  const docId = PROJECT.YJS_DOC_ID;
+  const docId = PROJECT!.YJS_DOC_ID;
   log(6, 'YJS', `Creating Yjs doc: [${docId}]`);
   const ydoc: WSSharedDoc = u.getYDoc(docId);
 
@@ -133,7 +136,7 @@ export async function initProjectCollaboration(
 
   dispatcher.bindData(yst, sd);
 
-  ydoc.awareness.on('change', ({ removed }) => {
+  ydoc.awareness.on('change', ({ removed }: { removed: number[] }) => {
     // console.log('AWARENESS CHANGES:', { added, updated, removed });
     removed.forEach((userId) => {
       dispatcher.dispatch({
@@ -177,7 +180,7 @@ export const toGanymede = async <T>(request: TMyfetchRequest): Promise<T> => {
   request.url = `${ganymede_api}${request.url}`;
   request.pathParameters = {
     ...request.pathParameters,
-    project_id: PROJECT?.PROJECT_ID,
+    project_id: PROJECT!.PROJECT_ID,
   };
   const response = await myfetch(request);
   if (response.statusCode !== 200)
@@ -188,15 +191,24 @@ export const toGanymede = async <T>(request: TMyfetchRequest): Promise<T> => {
 
 //
 
+export type TGanymedeEventSourceCallback = (
+  event: MessageEvent,
+  resolve: (v: any) => void,
+  reject: (reason?: any) => void,
+  es: EventSourcePolyfill
+) => void;
+
+//
+
 export const toGanymedeEventSource = async (
   request: TMyfetchRequest,
-  onMessage: (event, resolve, reject, es: EventSourcePolyfill) => void
+  onMessage: TGanymedeEventSourceCallback
 ): Promise<void> => {
   if (!request.url.startsWith('/')) request.url = `/${request.url}`;
   request.url = `${ganymede_api}${request.url}`;
   request.pathParameters = {
     ...request.pathParameters,
-    project_id: PROJECT?.PROJECT_ID,
+    project_id: PROJECT!.PROJECT_ID,
   };
   const fu = fullUri(request);
 
@@ -204,6 +216,7 @@ export const toGanymedeEventSource = async (
     const es = new EventSourcePolyfill(fu, {
       headers: request.headers,
     });
-    es.onmessage = (event) => onMessage(event, resolve, reject, es);
+    es.onmessage = (event: MessageEvent) =>
+      onMessage(event, resolve, reject, es);
   });
 };

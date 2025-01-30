@@ -12,6 +12,9 @@
       "path": "../demiurge-types"
     },
     {
+      "path": "../simple-types"
+    },
+    {
       "path": "./tsconfig.lib.json"
     },
     {

@@ -1,5 +1,7 @@
 // ----- Edge
 
+import { TJson } from '@monorepo/simple-types';
+
 type EEdgeType =
   | '_unknown_'
   | 'grouped_edges'
@@ -18,6 +20,7 @@ export type TEdgeEnd = {
   node: string;
   connectorName: string;
   pinName?: string;
+  data?: TJson;
 };
 
 export type TEdge = {
