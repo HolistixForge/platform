@@ -1,10 +1,5 @@
-import _ from 'lodash.isequal';
-
 import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
 import {
-  TNodePython,
-  TNodeGeneric,
-  TNodeData,
   TEventKernelStarted,
   TEventStopKernel,
   TEventDeleteKernel,
@@ -23,7 +18,11 @@ import {
   dkidToServer,
 } from '@monorepo/jupyterlab-api';
 import { projectServerNodeId } from './servers-reducer';
-import { TServersSharedData } from '@monorepo/shared-data-model';
+import {
+  TJupyterSharedData,
+  TServersSharedData,
+} from '@monorepo/shared-data-model';
+import { TEventDeleteNode, TEventNewNode } from './core-reducer';
 
 /**
  *
@@ -36,9 +35,12 @@ type TExtraArgs = {
 
 type ReducedEvents = TDemiurgeNotebookEvent;
 
-type DispatchedEvents = TDemiurgeGraphEvent;
+type DispatchedEvents =
+  | TDemiurgeNotebookEvent
+  | TEventNewNode
+  | TEventDeleteNode;
 
-type UsedSharedData = TServersSharedData;
+type UsedSharedData = TServersSharedData & TJupyterSharedData;
 
 type Ra<T> = ReduceArgs<UsedSharedData, T, DispatchedEvents, TExtraArgs>;
 
@@ -101,40 +103,44 @@ export class JupyterReducer extends Reducer<
   //
 
   async _execute(g: Ra<TEventExecutePythonNode>): Promise<void> {
-    const nd = g.sd.nodeData.get(g.event.nid);
-    if (nd)
-      g.sd.nodeData.set(g.event.nid, {
-        ...(nd as TNodeData & TNodeGeneric<'python', TNodePython>),
+    const cell = g.sd.cells.get(g.event.cellId);
+    if (cell) {
+      g.sd.cells.set(g.event.cellId, {
+        ...cell,
         busy: true,
         output: [],
       });
 
-    const { kernel, driver } = await this._getDriver(g);
-    return driver
-      .execute(kernel.jkid, g.event.code)
-      .then((output) => {
-        g.dispatcher.dispatch({
-          type: 'python-node-output',
-          nid: g.event.nid,
-          output,
-        });
-      })
-      .catch((e) => {
-        g.sd.nodeData.set(g.event.nid, {
-          ...(nd as TNodeData & TNodeGeneric<'python', TNodePython>),
-          busy: false,
-        });
-        throw e;
-      });
+      const { kernel, driver } = await this._getDriver(g);
+
+      if (kernel.jkid) {
+        return driver
+          .execute(kernel.jkid, g.event.code)
+          .then((output) => {
+            g.dispatcher.dispatch({
+              type: 'python-node-output',
+              cellId: g.event.cellId,
+              output,
+            });
+          })
+          .catch((e) => {
+            g.sd.cells.set(g.event.cellId, {
+              ...cell,
+              busy: false,
+            });
+            throw e;
+          });
+      }
+    }
   }
 
   //
 
   _nodeOutput(g: Ra<TEventPythonNodeOutput>): Promise<void> {
-    const nd = g.sd.nodeData.get(g.event.nid);
-    if (nd)
-      g.sd.nodeData.set(g.event.nid, {
-        ...(nd as TNodeData & TNodeGeneric<'python', TNodePython>),
+    const cell = g.sd.cells.get(g.event.cellId);
+    if (cell)
+      g.sd.cells.set(g.event.cellId, {
+        ...cell,
         output: g.event.output,
         busy: false,
       });
@@ -144,10 +150,10 @@ export class JupyterReducer extends Reducer<
   //
 
   _clearOutput(g: Ra<TEventClearNodeOutput>): Promise<void> {
-    const nd = g.sd.nodeData.get(g.event.nid);
-    if (nd)
-      g.sd.nodeData.set(g.event.nid, {
-        ...(nd as TNodeData & TNodeGeneric<'python', TNodePython>),
+    const cell = g.sd.cells.get(g.event.cellId);
+    if (cell)
+      g.sd.cells.set(g.event.cellId, {
+        ...cell,
         output: [],
         busy: false,
       });
@@ -177,9 +183,12 @@ export class JupyterReducer extends Reducer<
    */
 
   _kernelStarted(g: Ra<TEventKernelStarted>): Promise<void> {
-    const { server, kernel } = dkidToServer(g.sd.projectServers, g.event.dkid);
-    kernel.jkid = g.event.jkid;
-    g.sd.projectServers.set(`${server.project_server_id}`, server);
+    const r = dkidToServer(g.sd.jupyterServers as any, g.event.dkid);
+    if (r) {
+      const { server, kernel } = r;
+      kernel.jkid = g.event.jkid;
+      g.sd.jupyterServers.set(`${server.project_server_id}`, server);
+    }
     return Promise.resolve();
   }
 
@@ -194,55 +203,65 @@ export class JupyterReducer extends Reducer<
     if (!kernel.jkid) throw new Error('kernel not started');
     await driver.stopKernel(kernel.jkid);
     kernel.jkid = undefined;
-    g.sd.projectServers.set(`${server.project_server_id}`, server);
+    g.sd.jupyterServers.set(`${server.project_server_id}`, server);
   }
 
   /**
    *
    */
 
+  //
+
+  makeKernelNodeId(dkid: string) {
+    return `kernel:${dkid}`;
+  }
+
+  //
+
   async _newKernel(g: Ra<TEventNewKernel>) {
     // add kernel to project server
-    const ps = g.sd.projectServers.get(`${g.event.project_server_id}`);
-    if (!ps || ps.type !== 'jupyter')
+    const js = g.sd.jupyterServers.get(`${g.event.project_server_id}`);
+    if (!js)
       throw new NotFoundException([
         { message: `No such project server [${g.event.project_server_id}]` },
       ]);
     const dkid = makeUuid();
-    ps.kernels = [
-      ...ps.kernels,
+    js.kernels = [
+      ...js.kernels,
       {
         dkid,
         kernelName: g.event.kernelName,
         kernelType: 'python3',
       },
     ];
-    g.sd.projectServers.set(`${g.event.project_server_id}`, ps);
+    g.sd.jupyterServers.set(`${g.event.project_server_id}`, js);
     // add new node representing the kernel and link to project server node
-    const id = `kernel:${dkid}`;
-    newNode(
-      g.sd,
-      {
+    const id = this.makeKernelNodeId(dkid);
+
+    g.dispatcher.dispatch({
+      type: 'new-node',
+      nodeData: {
         id,
-        project_server_id: g.event.project_server_id,
-        dkid,
-        type: 'kernel',
+        name: `kernel ${dkid}`,
+        type: 'jupyter-kernel',
+        root: false,
+        data: { dkid },
+        connectors: [
+          { connectorName: 'inputs', pins: [] },
+          { connectorName: 'outputs', pins: [] },
+        ],
       },
-      g.event.position,
-      false,
-      [
+      edges: [
         {
           from: {
             node: projectServerNodeId(g.event.project_server_id),
+            connectorName: 'outputs',
           },
-          to: {
-            node: id,
-          },
-          type: 'REFERENCE',
+          to: { node: id, connectorName: 'inputs' },
+          type: 'referenced_by',
         },
-      ]
-    );
-    return;
+      ],
+    });
   }
 
   /**
@@ -252,12 +271,14 @@ export class JupyterReducer extends Reducer<
     const { server, kernel, driver } = await this._getDriver(g);
     const index = server.kernels.findIndex((k) => k.dkid === g.event.dkid);
     if (index !== -1) {
-      driver.stopKernel(kernel.jkid);
+      if (kernel.jkid) driver.stopKernel(kernel.jkid);
       server.kernels.splice(index, 1);
-      g.sd.projectServers.set(`${server.project_server_id}`, server);
+      g.sd.jupyterServers.set(`${server.project_server_id}`, server);
     }
-    const id = `kernel:${g.event.dkid}`;
-    deleteNode(g.sd, id);
-    return;
+
+    g.dispatcher.dispatch({
+      type: 'delete-node',
+      id: this.makeKernelNodeId(kernel.dkid),
+    });
   }
 }

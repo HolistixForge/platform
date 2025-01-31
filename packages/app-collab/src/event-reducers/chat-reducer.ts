@@ -95,8 +95,50 @@ export class ChatReducer extends Reducer<
     const nc = newChat(g.st);
     g.sd.chats.set(nc.id, nc);
 
-    g.dispatcher.dispatch({ type: 'new-node', nodeData: {}, edges: [] });
-    g.dispatcher.dispatch({ type: 'new-node', nodeData: {}, edges: [{}] });
+    const chatId = makeUuid();
+    const anchorNodeId = makeUuid();
+    const chatNodeId = makeUuid();
+
+    g.dispatcher.dispatch({
+      type: 'new-node',
+      nodeData: {
+        type: 'chat-anchor',
+        id: anchorNodeId,
+        name: `Chat Anchor ${chatId}`,
+        root: false,
+        connectors: [{ connectorName: 'inputs', pins: [] }],
+        data: { chatId: chatId },
+      },
+      edges: [],
+    });
+
+    g.dispatcher.dispatch({
+      type: 'new-node',
+      nodeData: {
+        type: 'chat',
+        id: chatNodeId,
+        name: `Chat ${chatId}`,
+        root: true,
+        connectors: [{ connectorName: 'outputs', pins: [] }],
+        data: { chatId: chatId },
+      },
+      edges: [
+        {
+          from: {
+            node: anchorNodeId,
+            connectorName: 'outputs',
+          },
+          to: {
+            node: chatNodeId,
+            connectorName: 'inputs',
+          },
+          type: 'referenced_by',
+          data: {
+            detailType: 'chat-anchor',
+          },
+        },
+      ],
+    });
 
     return Promise.resolve();
   }

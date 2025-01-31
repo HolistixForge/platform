@@ -12,5 +12,7 @@ export type {
   TDKID,
   TJKID,
   TJupyterServerData,
-  dkidToServer,
+  TCell,
 } from './lib/types';
+
+export { dkidToServer } from './lib/types';

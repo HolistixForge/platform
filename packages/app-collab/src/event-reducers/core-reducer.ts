@@ -192,49 +192,4 @@ export class CoreReducer extends Reducer<
 
     return Promise.resolve();
   }
-
-  //
-  /*
-  _newChat(g: Ra<TEventNewChat>): Promise<void> {
-    console.log({ event: g.event });
-
-    const nca: TNodeData = {
-      type: 'chat-anchor',
-      id: makeUuid(),
-      chatId: g.event.__private__.id,
-    };
-
-    const nc: TNodeData = {
-      type: 'chat',
-      id: makeUuid(),
-      chatId: g.event.__private__.id,
-    };
-
-    const edge: TEdgeChatAnchor = {
-      from: {
-        node: nca.id,
-      },
-      to: {
-        node: nc.id,
-      },
-      type: 'REFERENCE',
-      data: {
-        demiurge_type: 'chat-anchor',
-      },
-    };
-
-    newNode(g.sd, nca, g.event.position, true);
-
-    newNode(
-      g.sd,
-      nc,
-      { x: g.event.position.x + 150, y: g.event.position.y - 150 },
-      false,
-      [edge]
-    );
-
-    dispatchUpdateAllGraphViews(g, 'new-chat');
-    return Promise.resolve();
-  }
-  */
 }

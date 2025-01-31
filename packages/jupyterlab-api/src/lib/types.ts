@@ -26,10 +26,8 @@ export type TJupyterKernelInfo = {
 };
 
 export type TJupyterServerData = {
-  type: 'jupyter';
+  project_server_id: number;
   kernels: Array<TJupyterKernelInfo>;
-  ip?: string;
-  httpServices: { name: string; location: string; port: number }[];
 };
 
 /**
@@ -38,15 +36,15 @@ export type TJupyterServerData = {
  */
 
 export const dkidToServer = (
-  projectServers: Map<string, TJupyterServerData>,
+  jupyterServers: Map<string, TJupyterServerData>,
   dkid: TDKID
 ): { server: TJupyterServerData; kernel: TJupyterKernelInfo } | undefined => {
   //
   let server: TJupyterServerData | null = null;
   let kernel: TJupyterKernelInfo | null = null;
 
-  projectServers.forEach((s) => {
-    const k = s.type === 'jupyter' && s.kernels.find((k) => k.dkid === dkid);
+  jupyterServers.forEach((s) => {
+    const k = s.kernels.find((k) => k.dkid === dkid);
     if (k) {
       server = s;
       kernel = k;
@@ -56,4 +54,12 @@ export const dkidToServer = (
   if (!server || !kernel) return undefined;
 
   return { server, kernel };
+};
+
+//
+
+export type TCell = {
+  cellId: string;
+  busy: boolean;
+  output: IOutput[];
 };

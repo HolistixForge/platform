@@ -7,6 +7,7 @@ import {
 } from './types';
 import { JupyterlabDriver } from './driver';
 import { serverUrl } from '@monorepo/api-fetch';
+import { TServer } from '@monorepo/demiurge-types';
 
 //
 
@@ -17,37 +18,44 @@ export type TOnNewDriverCb = (s: TJupyterServerData) => Promise<void>;
 export class DriversStoreBackend {
   //
   _drivers: Map<string, JupyterlabDriver> = new Map();
-  _projectServers: Map<string, TJupyterServerData>;
+  _jupyterServers: Map<string, TJupyterServerData>;
+  _servers: Map<string, TServer>;
   _onNewDriver?: TOnNewDriverCb;
 
   //
 
   constructor(
-    pss: Map<string, TJupyterServerData>,
+    jss: Map<string, TJupyterServerData>,
+    pss: Map<string, TServer>,
     onNewDriver?: TOnNewDriverCb
   ) {
-    this._projectServers = pss;
+    this._jupyterServers = jss;
+    this._servers = pss;
     this._onNewDriver = onNewDriver;
   }
 
   //
   //
 
-  getServerSetting(s: TJupyterServerData, token: string): TServerSettings {
-    const service = s.httpServices.find((srv) => srv.name === 'jupyterlab');
-    const baseUrl =
-      service && s.ip
-        ? serverUrl({
-            host: s.ip,
-            location: service.location,
-            port: 8888,
-          })
-        : '';
-
-    return {
-      baseUrl,
-      token,
-    };
+  getServerSetting(psid: number, token: string): TServerSettings {
+    const server = this._servers.get(`${psid}`);
+    if (server && server.ip) {
+      const service = server.httpServices.find(
+        (srv) => srv.name === 'jupyterlab'
+      );
+      if (service) {
+        const baseUrl = serverUrl({
+          host: server.ip,
+          location: service.location,
+          port: 8888,
+        });
+        return {
+          baseUrl,
+          token,
+        };
+      }
+    }
+    throw new Error('no such server or is down');
   }
 
   //
@@ -57,7 +65,7 @@ export class DriversStoreBackend {
     /*
      * get server and kernel information from share data by dkid
      */
-    const r = dkidToServer(this._projectServers, dkid);
+    const r = dkidToServer(this._jupyterServers, dkid);
     if (!r) throw new Error(`kernel [${dkid}] is unknown`);
 
     const { server, kernel } = r;
@@ -89,7 +97,9 @@ export class DriversStoreBackend {
     let driver = this._drivers.get(KEY);
     if (!driver) {
       await this._onNewDriver?.(server);
-      driver = new JupyterlabDriver(this.getServerSetting(server, token));
+      driver = new JupyterlabDriver(
+        this.getServerSetting(server.project_server_id, token)
+      );
       this._drivers.set(KEY, driver);
     }
 

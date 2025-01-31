@@ -11,20 +11,20 @@ export type FormFieldsOnly<T extends TDemiurgeNotebookEvent> = Partial<
 
 export type TEventExecutePythonNode = {
   type: 'execute-python-node';
-  nid: string;
+  cellId: string;
   dkid: TDKID;
   code: string;
 };
 
 export type TEventPythonNodeOutput = {
   type: 'python-node-output';
-  nid: string;
+  cellId: string;
   output: IOutput[];
 };
 
 export type TEventClearNodeOutput = {
   type: 'clear-node-output';
-  nid: string;
+  cellId: string;
 };
 
 export type TEventKernelStarted = {

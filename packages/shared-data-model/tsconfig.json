@@ -4,6 +4,9 @@
   "include": [],
   "references": [
     {
+      "path": "../jupyterlab-api"
+    },
+    {
       "path": "../simple-types"
     },
     {
