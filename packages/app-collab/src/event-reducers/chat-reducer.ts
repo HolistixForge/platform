@@ -11,7 +11,10 @@ import {
 } from '@monorepo/demiurge-types';
 import { TChatSharedData } from '@monorepo/shared-data-model';
 import { makeUuid } from '@monorepo/simple-types';
-import { TEventNewEdge, TEventNewNode } from './core-reducer';
+import {
+  TEventNewEdge,
+  TEventNewNode,
+} from '../../../modules/core/src/lib/core-reducer';
 
 /**
  *

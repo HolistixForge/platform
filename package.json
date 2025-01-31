@@ -80,7 +80,8 @@
   "workspaces": [
     "packages/*",
     "packagessimple-types}",
-    "packagesloge"
+    "packagesloge",
+    "packages/modules/*"
   ],
   "dependencies": {
     "@aws-sdk/client-ec2": "^3.734.0",

@@ -10,16 +10,14 @@
     "module": "ESNext",
     "moduleResolution": "Node"
   },
-  "include": ["src/**/*.ts"],
+  "include": [
+    "src/**/*.ts",
+    "../modules/core/src/lib/core-shared-model.ts",
+    "../modules/space/src/lib/space-shared-model.ts"
+  ],
   "references": [
     {
       "path": "../jupyterlab-api/tsconfig.lib.json"
-    },
-    {
-      "path": "../simple-types/tsconfig.lib.json"
-    },
-    {
-      "path": "../demiurge-ui-components/tsconfig.lib.json"
     },
     {
       "path": "../demiurge-types/tsconfig.lib.json"

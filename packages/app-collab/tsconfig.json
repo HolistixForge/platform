@@ -7,6 +7,9 @@
       "path": "../demiurge-ui-components"
     },
     {
+      "path": "../modules/core"
+    },
+    {
       "path": "../backend-engine"
     },
     {

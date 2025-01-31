@@ -31,6 +31,7 @@ export { NodeJupyterlabCodeCell } from './lib/nodes/node-jupyterlab-code-cell/no
 export { useAction } from './lib/buttons/useAction';
 export { ButtonBase } from './lib/buttons/buttonBase';
 export { ButtonIcon } from './lib/buttons/buttonIcon';
+export type { ButtonIconProps } from './lib/buttons/buttonIcon';
 
 export { UsersScopes } from './lib/users-scopes/users-scopes';
 export type {
@@ -105,13 +106,4 @@ export { DialogControlled } from './lib/dialog/dialog';
 export { TabsRadix } from './lib/tabs/tabs-radix';
 export { TabsRadixLogic } from './lib/tabs/tabs-radix-logic';
 
-//
-
-export type {
-  TEdge,
-  TEdgeEnd,
-  TNodeView,
-  TSpaceActions,
-  TPosition,
-} from './lib/demiurge-space-2';
-export { nodeViewDefaultStatus } from './lib/demiurge-space-2';
+export { UserUsername } from './lib/users/users';

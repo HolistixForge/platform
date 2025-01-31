@@ -36,6 +36,9 @@
       "path": "../ui-toolkit/tsconfig.lib.json"
     },
     {
+      "path": "../demiurge-types/tsconfig.lib.json"
+    },
+    {
       "path": "../api-fetch/tsconfig.lib.json"
     },
     {

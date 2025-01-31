@@ -65,6 +65,12 @@
     },
     {
       "path": "./packages/app-collab"
+    },
+    {
+      "path": "./packages/modules/core"
+    },
+    {
+      "path": "./packages/modules/space"
     }
   ],
   "ts-node": {

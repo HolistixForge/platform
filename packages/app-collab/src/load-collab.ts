@@ -15,7 +15,7 @@ import {
   addServer,
   addVolume,
 } from './event-reducers/servers-reducer';
-import { TEventNewView } from './event-reducers/core-reducer';
+import { TEventNewView } from '../../modules/core/src/lib/core-reducer';
 
 //
 

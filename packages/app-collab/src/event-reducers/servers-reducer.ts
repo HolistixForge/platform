@@ -46,7 +46,7 @@ import {
   TEventDeleteNode,
   TEventNewEdge,
   TEventNewNode,
-} from './core-reducer';
+} from '../../../modules/core/src/lib/core-reducer';
 
 /**
  *

@@ -46,7 +46,10 @@ import { MetaReducer } from './event-reducers/meta-reducer';
 import { ProjectServerReducer } from './event-reducers/servers-reducer';
 import { TabsReducer } from './event-reducers/tabs-reducer';
 import { CONFIG } from './config';
-import { CoreReducer, TCoreEvent } from './event-reducers/core-reducer';
+import {
+  CoreReducer,
+  TCoreEvent,
+} from '../../modules/core/src/lib/core-reducer';
 
 //
 //

@@ -22,7 +22,10 @@ import {
   TJupyterSharedData,
   TServersSharedData,
 } from '@monorepo/shared-data-model';
-import { TEventDeleteNode, TEventNewNode } from './core-reducer';
+import {
+  TEventDeleteNode,
+  TEventNewNode,
+} from '../../../modules/core/src/lib/core-reducer';
 
 /**
  *

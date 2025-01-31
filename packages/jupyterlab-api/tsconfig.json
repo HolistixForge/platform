@@ -6,6 +6,9 @@
       "path": "../ui-toolkit"
     },
     {
+      "path": "../demiurge-types"
+    },
+    {
       "path": "../api-fetch"
     },
     {
