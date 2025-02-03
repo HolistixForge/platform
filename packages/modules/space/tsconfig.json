@@ -6,6 +6,15 @@
       "path": "../../collab-engine"
     },
     {
+      "path": "../../log"
+    },
+    {
+      "path": "../../ui-toolkit"
+    },
+    {
+      "path": "../../demiurge-ui-components"
+    },
+    {
       "path": "../core"
     },
     {

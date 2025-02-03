@@ -1,7 +1,5 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAction } from './buttons/useAction';
-import { useMakeButton } from './nodes/node-common/node-toolbar';
-import { TUseNodeValue } from './demiurge-space-2';
 
 //
 
@@ -51,50 +49,6 @@ export const useTestBoolean = (init: boolean) => {
     set: () => set(true),
     unset: () => set(false),
   };
-};
-
-//
-
-export const MockReactFlowNodeWrapper = ({
-  children,
-  selected,
-  isOpened,
-}: Pick<TUseNodeValue, 'selected' | 'isOpened'> & {
-  children: ReactNode;
-}) => {
-  return (
-    <div
-      className={`react-flow__node-wrapper node-${
-        isOpened ? 'opened' : 'closed'
-      } ${selected ? 'selected' : ''}`}
-    >
-      {children}
-    </div>
-  );
-};
-
-//
-
-export const useTestToolbarButtons = (_isOpened = false, _isLocked = false) => {
-  const [isOpened, setIsOpened] = useState(_isOpened);
-  const [isLocked, setIsLocked] = useState(_isLocked);
-  const buttons = useMakeButton({
-    isExpanded: isOpened,
-    expand: () => setIsOpened(true),
-    reduce: () => setIsOpened(false),
-
-    isLocked,
-    onLock: () => setIsLocked(true),
-    onUnlock: () => setIsLocked(false),
-
-    onPlay: () => null,
-    onClear: () => null,
-
-    onFullScreen: () => null,
-
-    onDelete: sleep,
-  });
-  return { buttons };
 };
 
 //

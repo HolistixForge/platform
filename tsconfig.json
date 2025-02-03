@@ -25,12 +25,6 @@
       "path": "./packages/collab-engine"
     },
     {
-      "path": "./packages/shared-data-model"
-    },
-    {
-      "path": "./packages/jupyterlab-api"
-    },
-    {
       "path": "./packages/frontend-data"
     },
     {
@@ -71,6 +65,21 @@
     },
     {
       "path": "./packages/modules/space"
+    },
+    {
+      "path": "./packages/modules/servers"
+    },
+    {
+      "path": "./packages/modules/jupyter"
+    },
+    {
+      "path": "./packages/modules/chats"
+    },
+    {
+      "path": "./packages/modules/tabs"
+    },
+    {
+      "path": "./packages/ui-views"
     }
   ],
   "ts-node": {

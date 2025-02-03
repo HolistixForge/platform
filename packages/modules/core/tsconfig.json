@@ -3,6 +3,9 @@
   "include": [],
   "references": [
     {
+      "path": "../../log"
+    },
+    {
       "path": "../../simple-types"
     },
     {

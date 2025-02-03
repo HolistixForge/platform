@@ -1,5 +1,8 @@
 import * as Y from 'yjs';
 const u = require('y-websocket/bin/utils');
+import { WebsocketProvider } from 'y-websocket';
+import { EventSourcePolyfill } from 'event-source-polyfill';
+
 import {
   Dispatcher,
   TCollabNativeEvent,
@@ -7,49 +10,56 @@ import {
   YjsSharedTypes,
   compileChunks,
 } from '@monorepo/collab-engine';
+
+import {
+  Core_loadData,
+  TCoreSharedData,
+  CoreReducer,
+  TCoreEvent,
+} from '@monorepo/core';
 import {
   TabPayload,
-  TChatEvent,
-  TDemiurgeNotebookEvent,
-  TServerEvents,
   TTabEvents,
-} from '@monorepo/demiurge-types';
-import {
-  Chat_loadData,
-  Core_loadData,
-  Jupyter_loadData,
-  Servers_loadData,
-  Space_loadData,
   Tabs_loadData,
-  TChatSharedData,
-  TCoreSharedData,
-  TServersSharedData,
-  TSpaceSharedData,
   TTabsSharedData,
-} from '@monorepo/shared-data-model';
+  TabsReducer,
+} from '@monorepo/tabs';
+import {
+  Space_loadData,
+  TSpaceSharedData,
+  GraphViewsReducer,
+  TDemiurgeSpaceEvent,
+} from '@monorepo/space';
+import {
+  TChatEvent,
+  Chat_loadData,
+  TChatSharedData,
+  ChatReducer,
+} from '@monorepo/chats';
+import {
+  TServerEvents,
+  Servers_loadData,
+  TServersSharedData,
+  ProjectServerReducer,
+} from '@monorepo/servers';
+import {
+  TDemiurgeNotebookEvent,
+  Jupyter_loadData,
+  DriversStoreBackend,
+  JupyterReducer,
+} from '@monorepo/jupyter';
+
 import { log } from '@monorepo/log';
 import { loadCollaborationData } from './load-collab';
 import { TMyfetchRequest, fullUri } from '@monorepo/simple-types';
-import { DriversStoreBackend } from '@monorepo/jupyterlab-api';
-import { WebsocketProvider } from 'y-websocket';
 import { ForwardException, myfetch } from '@monorepo/backend-engine';
-import { EventSourcePolyfill } from 'event-source-polyfill';
-import { PROJECT } from './project-config';
+
 import { SelectionReducer } from './event-reducers/selections-reducer';
-import {
-  GraphViewsReducer,
-  TDemiurgeSpaceEvent,
-} from './event-reducers/graphviews-reducer';
-import { ChatReducer } from './event-reducers/chat-reducer';
-import { JupyterReducer } from './event-reducers/jupyter-reducer';
 import { MetaReducer } from './event-reducers/meta-reducer';
-import { ProjectServerReducer } from './event-reducers/servers-reducer';
-import { TabsReducer } from './event-reducers/tabs-reducer';
+
 import { CONFIG } from './config';
-import {
-  CoreReducer,
-  TCoreEvent,
-} from '../../modules/core/src/lib/core-reducer';
+
+import { PROJECT } from './project-config';
 
 //
 //

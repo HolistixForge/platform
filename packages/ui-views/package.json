@@ -1,0 +1,21 @@
+{
+  "name": "@monorepo/ui-views",
+  "version": "0.0.1",
+  "nx": {
+    "name": "ui-views",
+    "projectType": "library",
+    "sourceRoot": "packages/ui-views/src"
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "module": "./dist/index.js",
+  "type": "module",
+  "main": "./dist/index.js"
+}

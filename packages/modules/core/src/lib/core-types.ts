@@ -51,3 +51,10 @@ export type TEdge = {
   highlighted?: boolean;
   data?: TJsonObject;
 };
+
+export type TProjectMeta = {
+  projectActivity: {
+    last_activity: string;
+    gateway_shutdown: string;
+  };
+};

@@ -4,9 +4,6 @@
   "include": [],
   "references": [
     {
-      "path": "../jupyterlab-api"
-    },
-    {
       "path": "./tsconfig.lib.json"
     },
     {

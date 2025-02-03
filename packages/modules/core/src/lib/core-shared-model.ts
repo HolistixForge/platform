@@ -1,12 +1,5 @@
 import { SharedMap, SharedTypes, SharedArray } from '@monorepo/collab-engine';
-import { TGraphNode, TEdge } from './core-types';
-
-export type TProjectMeta = {
-  projectActivity: {
-    last_activity: string;
-    gateway_shutdown: string;
-  };
-};
+import { TGraphNode, TEdge, TProjectMeta } from './core-types';
 
 export type TCoreSharedData = {
   meta: SharedMap<TProjectMeta>;

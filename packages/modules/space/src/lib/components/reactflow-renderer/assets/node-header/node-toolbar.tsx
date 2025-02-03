@@ -8,6 +8,7 @@ import {
 } from '@monorepo/demiurge-ui-components';
 
 import './node-toolbar.scss';
+import { useState } from 'react';
 
 export type NodeToolbarProps = {
   buttons: ButtonIconProps[];
@@ -146,4 +147,28 @@ export const useMakeButton = ({
   }
 
   return buttons;
+};
+
+//
+
+export const useTestToolbarButtons = (_isOpened = false, _isLocked = false) => {
+  const [isOpened, setIsOpened] = useState(_isOpened);
+  const [isLocked, setIsLocked] = useState(_isLocked);
+  const buttons = useMakeButton({
+    isExpanded: isOpened,
+    expand: () => setIsOpened(true),
+    reduce: () => setIsOpened(false),
+
+    isLocked,
+    onLock: () => setIsLocked(true),
+    onUnlock: () => setIsLocked(false),
+
+    onPlay: () => null,
+    onClear: () => null,
+
+    onFullScreen: () => null,
+
+    onDelete: sleep,
+  });
+  return { buttons };
 };

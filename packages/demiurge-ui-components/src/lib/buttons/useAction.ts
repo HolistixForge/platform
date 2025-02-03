@@ -10,7 +10,7 @@ import {
 } from 'react';
 import { TFormErrors } from '../form/form-errors/types';
 import { standardizeError } from '../form/form-errors/error-utils';
-import { useTimer } from '../nodes/node-chat/use-timer';
+import { useTimer } from '../timer/use-timer';
 
 /**
  * Need to add in 'eslintrc.json':
@@ -40,7 +40,7 @@ export type TAction<TCallbackArg = MouseEvent<HTMLElement>> = {
   close: () => void;
   formData: TCallbackArg;
   handleInputChange: (
-    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => void;
   handleChange: (d: Partial<TCallbackArg>) => void;
   actionOrigin?: string;
@@ -137,7 +137,7 @@ type TActionMethods<TCallbackArg> = {
   close: () => void;
   disable: () => void;
   handleInputChange: (
-    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => void;
   handleChange: (data: Partial<TCallbackArg>) => void;
 };
@@ -145,7 +145,7 @@ type TActionMethods<TCallbackArg> = {
 export function useAction<TCallbackArg = MouseEvent<HTMLElement>>(
   cb: (
     data: TCallbackArg,
-    methods: TActionMethods<TCallbackArg>,
+    methods: TActionMethods<TCallbackArg>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ) => Promise<any>,
   deps: DependencyList,
@@ -159,7 +159,7 @@ export function useAction<TCallbackArg = MouseEvent<HTMLElement>>(
     closeOnSuccess?: boolean;
     successMessage?: ReactNode;
     tooltip?: ReactNode;
-  },
+  }
 ): TAction<TCallbackArg> {
   //
 
@@ -197,7 +197,7 @@ export function useAction<TCallbackArg = MouseEvent<HTMLElement>>(
       },
 
       handleInputChange: (
-        e: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+        e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
       ) => {
         const { name, value } = e.target;
         dispatch({
@@ -215,7 +215,7 @@ export function useAction<TCallbackArg = MouseEvent<HTMLElement>>(
         });
       },
     }),
-    [],
+    []
   );
 
   const callback = useCallback(
@@ -270,7 +270,7 @@ export function useAction<TCallbackArg = MouseEvent<HTMLElement>>(
         });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [...deps, options],
+    [...deps, options]
   );
 
   return {

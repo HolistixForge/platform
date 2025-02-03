@@ -21,16 +21,13 @@
   ],
   "references": [
     {
+      "path": "../demiurge-types/tsconfig.lib.json"
+    },
+    {
       "path": "../demiurge-ui-components/tsconfig.lib.json"
     },
     {
-      "path": "../modules/core/tsconfig.lib.json"
-    },
-    {
       "path": "../backend-engine/tsconfig.lib.json"
-    },
-    {
-      "path": "../jupyterlab-api/tsconfig.lib.json"
     },
     {
       "path": "../simple-types/tsconfig.lib.json"
@@ -39,10 +36,22 @@
       "path": "../log/tsconfig.lib.json"
     },
     {
-      "path": "../shared-data-model/tsconfig.lib.json"
+      "path": "../modules/jupyter/tsconfig.lib.json"
     },
     {
-      "path": "../demiurge-types/tsconfig.lib.json"
+      "path": "../modules/servers/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/chats/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/space/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/tabs/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/core/tsconfig.lib.json"
     },
     {
       "path": "../collab-engine/tsconfig.lib.json"
