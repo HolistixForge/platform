@@ -1,15 +1,17 @@
 import { ReactNode } from 'react';
-import {
-  CodeEditorMonaco,
-  CodeEditorMonacoProps,
-} from '../../code-editor-monaco/code-editor-monaco-lazy';
+
 import {
   InputsAndOutputs,
   DisablePanSelect,
   TUseNodeValue,
-} from '../../demiurge-space-2';
-import { NodeHeader } from '../node-common/node-header';
-import { useMakeButton } from '../node-common/node-toolbar';
+  NodeHeader,
+  useMakeButton,
+} from '@monorepo/space';
+
+import {
+  CodeEditorMonaco,
+  CodeEditorMonacoProps,
+} from '../code-editor-monaco/code-editor-monaco-lazy';
 
 import './node-jupyterlab-code-cell.scss';
 

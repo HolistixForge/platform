@@ -13,7 +13,7 @@ const meta = {
       control: {
         type: 'select',
       },
-    }
+    },
   },
 } satisfies Meta<typeof SummaryAccesses>;
 
@@ -21,19 +21,18 @@ export default meta;
 
 type Story = StoryObj<typeof SummaryAccesses>;
 
-// variable de definition : le Type de Resource (Notebook server ect.. ) et les Boutton, et le warning
 export const Users: Story = {
   args: {
-    activeTab: "users"
+    activeTab: 'users',
   },
 };
 export const Groups: Story = {
   args: {
-    activeTab: "groups"
+    activeTab: 'groups',
   },
 };
 export const Roles: Story = {
   args: {
-    activeTab: "roles"
+    activeTab: 'roles',
   },
 };

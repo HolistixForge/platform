@@ -1,9 +1,9 @@
-import { TabPath } from './tabs';
+import { TabPath } from './tabs-types';
 
 export type TreeElement<
   T = {
     /* */
-  },
+  }
 > = {
   title: string;
   children: TreeElement<T>[];
@@ -15,7 +15,7 @@ export type TreeElement<
 export class ReadOnlyTree<
   T = {
     /* */
-  },
+  }
 > {
   protected _root: TreeElement<T>;
 
@@ -29,7 +29,7 @@ export class ReadOnlyTree<
     let e = this._root;
     for (let i = 0; i < depth; i++) {
       const next: TreeElement<T> | undefined = e.children.find(
-        (o) => o.title === path[i],
+        (o) => o.title === path[i]
       );
       if (!next) return undefined;
       e = next;
@@ -47,7 +47,7 @@ export class ReadOnlyTree<
     const recurse = (o: TreeElement<T>, path: TabPath) => {
       if (o.children.length === 0) {
         const t: FlatElt = { path, ...o.payload };
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         const u = t as any;
         delete u.children;
         delete u.title;
@@ -71,7 +71,7 @@ export class ReadWriteTree<T> extends ReadOnlyTree<T> {
     let e = this._root;
     for (let i = 0; i < path.length; i++) {
       let next: TreeElement<T> | undefined = e.children.find(
-        (o) => o.title === path[i],
+        (o) => o.title === path[i]
       );
       if (!next) {
         next = { title: path[i], children: [], payload: d };
@@ -106,7 +106,6 @@ export class ReadWriteTree<T> extends ReadOnlyTree<T> {
     const e = this.get(path, path.length);
     if (e) {
       Object.keys(d).forEach((k) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (e as any)[k] = (d as any)[k];
       });
     }

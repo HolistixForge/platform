@@ -169,14 +169,17 @@ export type TEc2InstanceState =
 
 //
 
-export type TJupyterServer = TSSS_Server & { type: 'jupyter' };
+export type TServer = TSSS_Server & { type: string };
 
-export type TPgadminServerData = {
-  type: 'pgadmin';
+export type TApi_Volume = {
+  volume_id: number;
+  volume_name: string;
+  volume_storage: number;
 };
 
-export type TPgadminServer = TSSS_Server & TPgadminServerData;
-
-//
-
-export type TServer = TJupyterServer | TPgadminServer;
+export type TApi_Mount = {
+  volume_id: number;
+  volume_name: string;
+  volume_storage: number;
+  mount_point: string;
+};

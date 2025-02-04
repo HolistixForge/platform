@@ -1,9 +1,11 @@
 import express from 'express';
 import passport from 'passport';
 import * as passportGithub from 'passport-github2';
+import { respond } from '@monorepo/backend-engine';
+import { Exception } from '@monorepo/log';
+
 import { githubFindOrCreate, TGithubReturnedProfile } from './models/users';
 import { UserSerializedInfo } from './main';
-import { Exception, respond } from '@monorepo/backend-engine';
 import { CONFIG } from './config';
 
 //
@@ -84,9 +86,10 @@ export const OAuthCallback = (
   if (err) {
     return next(err);
   } else if (!user) {
-    const e = new Exception(500, [
-      { message: 'Please try again later', public: true },
-    ]);
+    const e = new Exception(
+      [{ message: 'Please try again later', public: true }],
+      500
+    );
     return next(e);
   } else {
     req.login(user, function (err) {

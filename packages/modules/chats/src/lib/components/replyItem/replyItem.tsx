@@ -1,10 +1,12 @@
-import { icons } from '../assets/icons';
-import { Datetime } from '../datetime/datetime';
+import {
+  icons,
+  Datetime,
+  UserUsername,
+} from '@monorepo/demiurge-ui-components';
 import {
   DiscussionItem,
   SimpleMessage,
 } from '../discussionItem/discussionItem';
-import { UserUsername } from '../users/users';
 
 import './replyItem.scss';
 
@@ -19,7 +21,7 @@ export const ReplyItem = (
     onReply: (m: SimpleMessage) => void;
     onDelete: (m: SimpleMessage) => void;
     showId?: boolean;
-  },
+  }
 ) => {
   const { replied } = props;
 

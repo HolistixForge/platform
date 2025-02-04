@@ -11,8 +11,9 @@ import {
   setupBasicExpressApp,
   setupErrorsHandler,
   setupValidator,
-  NotFoundException,
 } from '@monorepo/backend-engine';
+import { NotFoundException } from '@monorepo/log';
+
 import { PgSessionModel } from './models/session';
 import { setupGithubRoutes } from './github';
 import { setupLocalRoutes } from './local';
@@ -33,7 +34,6 @@ import oas from './oas30.json';
 
 export type UserSerializedInfo = { id: string; username: string };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type LoginLogoutCallback = (err: Error) => void;
 
 export type Req = Request & {

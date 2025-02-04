@@ -7,13 +7,16 @@
       "path": "../demiurge-types"
     },
     {
-      "path": "../backend-engine"
+      "path": "../modules/servers"
     },
     {
       "path": "../simple-types"
     },
     {
       "path": "../log"
+    },
+    {
+      "path": "../backend-engine"
     },
     {
       "path": "./tsconfig.app.json"

@@ -7,7 +7,7 @@ import './form-errors.scss';
  * @param param0
  * @returns
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export const FormErrors = ({ errors }: { errors: TFormErrors<any> }) => {
   if (Object.keys(errors).length)
     return (
@@ -35,7 +35,6 @@ export const FormError = ({
   errors,
   id,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   errors: TFormErrors<any>;
   id: string;
 }) => {

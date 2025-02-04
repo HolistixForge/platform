@@ -5,12 +5,11 @@ import {
   TAllEvents,
   initProjectCollaboration,
   toGanymede,
-  toGanymedeEventSource,
 } from './build-collab';
 import { startEventsReducerServer } from './reducer-server';
 import { TStart, development } from '@monorepo/backend-engine';
 import { Dispatcher } from '@monorepo/collab-engine';
-import { TNotebookReducersExtraArgs } from './event-reducers/jupyter-reducer';
+import { TJupyterExtraArgs } from '@monorepo/jupyter';
 import {
   PROJECT,
   TProjectConfig,
@@ -23,7 +22,7 @@ import { CONFIG } from './config';
 
 //
 
-let dispatcher: Dispatcher<TAllEvents, TNotebookReducersExtraArgs>;
+let dispatcher: Dispatcher<TAllEvents, TJupyterExtraArgs>;
 let servers: (http.Server | https.Server)[];
 
 ///
@@ -37,9 +36,8 @@ export const startProjectCollab = async (project: TProjectConfig) => {
 //
 
 (async function main() {
-  dispatcher = new Dispatcher<TAllEvents, TNotebookReducersExtraArgs>({
+  dispatcher = new Dispatcher<TAllEvents, TJupyterExtraArgs>({
     toGanymede,
-    toGanymedeEventSource,
   });
 
   const bindings: TStart[] = JSON.parse(CONFIG.SERVER_BIND);

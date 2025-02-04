@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { sleep, useTestBoolean } from '../../storybook-utils';
+
+import { useTestBoolean } from '@monorepo/demiurge-ui-components';
+import { sleep } from '@monorepo/simple-types';
+import { StoryMockSpaceContext, nodeViewDefaultStatus } from '@monorepo/space';
+
 import { NodeKernel, NodeKernelProps } from './node-kernel';
-import {
-  StoryMockSpaceContext,
-  nodeViewDefaultStatus,
-} from '../../demiurge-space-2';
 
 //
 

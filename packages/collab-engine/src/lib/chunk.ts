@@ -6,7 +6,6 @@ import { Reducer } from './reducer';
 //
 
 export type TValidSharedData = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: SharedArray<any> | SharedMap<any>;
 };
 
@@ -14,42 +13,35 @@ export type TValidSharedData = {
 //
 
 export type TCollaborativeChunk = {
-  initChunk: (st: SharedTypes) => {
-    sharedData: TValidSharedData;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    reducers: Readonly<Reducer<TValidSharedData, any, any, any>[]>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    extraContext?: any;
-  };
+  sharedData: (st: SharedTypes) => TValidSharedData;
+
+  reducers: (
+    sharedData: TValidSharedData
+  ) => Readonly<Reducer<TValidSharedData, any, any, any>[]>;
+
+  extraContext?: any;
 };
 
 //
 //
-
 export const compileChunks = (
   cc: TCollaborativeChunk[],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   dispatcher: Dispatcher<any, any>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   extraContext: any
 ) => {
   return (st: SharedTypes) => {
-    let allSharedData = {};
+    let allSharedData: TValidSharedData = {};
+
     cc.forEach((chunk) => {
-      const {
-        sharedData,
-        reducers: reducers,
-        extraContext: ec,
-      } = chunk.initChunk(st);
+      const sharedData = chunk.sharedData(st);
+      Object.assign(allSharedData, sharedData);
 
-      allSharedData = {
-        ...allSharedData,
-        ...sharedData,
-      };
-
-      for (const key in ec) extraContext[key] = ec[key];
-
+      const reducers = chunk.reducers(allSharedData);
       reducers.forEach((r) => dispatcher.addReducer(r));
+
+      Object.assign(extraContext, chunk.extraContext);
     });
     return allSharedData;
   };

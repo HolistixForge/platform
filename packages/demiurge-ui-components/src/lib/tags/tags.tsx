@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { randomColor } from '../../css-utils/css-utils';
+import { randomColor } from '../css-utils/css-utils';
 
 export type Tag = { text: string; color: string };
 
@@ -35,10 +35,10 @@ export const TagsBar = ({ tags = [], addTag }: TagsBarProps) => {
 
       const containerWidth = containerRef.current.clientWidth;
       const currentTotalWidth = Array.from(
-        containerRef.current.children,
+        containerRef.current.children
       ).reduce(
         (acc, el) => acc + (el as HTMLElement).offsetWidth + 4, // 4px for gap
-        0,
+        0
       );
 
       return currentTotalWidth < containerWidth;
@@ -86,7 +86,9 @@ export const TagsBar = ({ tags = [], addTag }: TagsBarProps) => {
         <button
           className={`border ${
             otherTags.length > 0 ? 'border-[#A998DA]' : 'border-[#50506C]'
-          } h-5 w-5 ${otherTagsOpened && '!border-[#833A9D]'} rounded-[4px] flex items-center justify-center text-[#141432] text-center hover:bg-white/10  transition-all cursor-pointer`}
+          } h-5 w-5 ${
+            otherTagsOpened && '!border-[#833A9D]'
+          } rounded-[4px] flex items-center justify-center text-[#141432] text-center hover:bg-white/10  transition-all cursor-pointer`}
           onClick={() =>
             otherTags.length > 0
               ? openMenu()

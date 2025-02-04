@@ -7,9 +7,6 @@
       "path": "../demiurge-types"
     },
     {
-      "path": "../demiurge-ui-components"
-    },
-    {
       "path": "../backend-engine"
     },
     {

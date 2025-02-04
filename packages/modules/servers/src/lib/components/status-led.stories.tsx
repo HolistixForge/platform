@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { Warning } from './warning';
+import { StatusLed } from './status-led';
 
 const meta = {
   title: 'Mvp/Assets/warning',
-  component: Warning,
+  component: StatusLed,
   parameters: {
     layout: 'centered',
   },
@@ -18,13 +18,12 @@ const meta = {
       options: ['green', 'red', 'yellow', 'blue'],
     },
   },
-} satisfies Meta<typeof Warning>;
+} satisfies Meta<typeof StatusLed>;
 
 export default meta;
 
-type Story = StoryObj<typeof Warning>;
+type Story = StoryObj<typeof StatusLed>;
 
-// variable de definition : le Type de Resource (Notebook server ect.. ) et les Boutton, et le warning
 export const ResourceBar: Story = {
   args: {
     type: 'resource-bar',
@@ -34,12 +33,12 @@ export const ResourceBar: Story = {
 export const ServerCard: Story = {
   args: {
     type: 'server-card',
-    color: 'green'
+    color: 'green',
   },
 };
 export const NotebookCard: Story = {
   args: {
     type: 'notebook-card',
-    color: 'green'
+    color: 'green',
   },
 };

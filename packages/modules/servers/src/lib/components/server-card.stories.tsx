@@ -1,4 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
+import { randomGuy } from '@monorepo/demiurge-ui-components';
+
 import { ServerCard } from './server-card';
 import {
   newServerLocationNoneStory,
@@ -9,17 +12,16 @@ import {
   hostedNotAliveCurrentUserHosting,
   hostedNotAliveCurrentUserNotHosting,
 } from './server-card-stories';
-import { randomGuy } from '../../utils/random-guys';
 import {
   TServerComponentCallbacks,
   TServerComponentProps,
-} from '@monorepo/demiurge-types';
+} from '../servers-types';
 import { useMockServerBehaviours } from './server-card-mock';
 
 //
 
 const StoryWrapper = (
-  props: TServerComponentProps & TServerComponentCallbacks,
+  props: TServerComponentProps & TServerComponentCallbacks
 ) => {
   const state = useMockServerBehaviours(props);
   console.log({ state });

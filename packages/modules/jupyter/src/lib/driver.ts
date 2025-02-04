@@ -33,7 +33,7 @@ export class JupyterlabDriver {
           /* no kernel settings */
         }
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const jkid: TJKID = (kernel as any)._id;
       this.kernelConnections.set(jkid, kernel);
       return jkid;

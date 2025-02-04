@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { useAction } from '../../buttons/useAction';
-import { DialogControlled } from '../../dialog/dialog';
+
+import { useAction, DialogControlled } from '@monorepo/demiurge-ui-components';
+
 import {
   CloudInstanceOptionsForm,
   CloudInstanceOptionsFormData,
@@ -22,7 +23,7 @@ const StoryWrapper = () => {
     [],
     {
       values: { instanceType: 't2.small', storage: 10 },
-    },
+    }
   );
   return (
     <DialogControlled

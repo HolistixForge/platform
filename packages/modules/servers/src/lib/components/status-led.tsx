@@ -1,11 +1,11 @@
-import './warning.scss';
+import './status-led.scss';
 
-interface WarningProps {
+export type StatusLedProps = {
   type: 'resource-bar' | 'server-card' | 'notebook-card';
   color: 'green' | 'red' | 'yellow' | 'blue';
-}
+};
 
-export const Warning = ({ type, color }: WarningProps) => {
+export const StatusLed = ({ type, color }: StatusLedProps) => {
   const dimensions = {
     'resource-bar': { outer: '14px', inner: '12px' },
     'server-card': { outer: '12px', inner: '10px' },

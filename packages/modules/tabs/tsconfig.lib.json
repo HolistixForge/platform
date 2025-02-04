@@ -35,10 +35,10 @@
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "references": [
     {
-      "path": "../../demiurge-types/tsconfig.lib.json"
+      "path": "../../collab-engine/tsconfig.lib.json"
     },
     {
-      "path": "../../collab-engine/tsconfig.lib.json"
+      "path": "../../demiurge-ui-components/tsconfig.lib.json"
     }
   ]
 }

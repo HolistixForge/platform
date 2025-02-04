@@ -49,7 +49,7 @@ type TCollaborationContext = {
   sharedData: TValidSharedData;
   awareness: Awareness;
   dispatcher: Dispatcher<any, Record<string, never>>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   extraContext: any;
 };
 
@@ -180,7 +180,6 @@ export const useAwareness = () => {
   return { awareness };
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useAwarenessListenData(
   callback: (a: _AwarenessListenerArgs, awareness: Awareness) => void,
   deps: DependencyList
@@ -221,7 +220,7 @@ export type TSharedDataHook<TShDt> = <U>(
 
 export const useSharedData = <TSharedData extends TValidSharedData>(
   observe: Array<keyof TSharedData>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   f: (data: TSharedData) => any
 ): ReturnType<typeof f> => {
   const { sharedData } = useContext(

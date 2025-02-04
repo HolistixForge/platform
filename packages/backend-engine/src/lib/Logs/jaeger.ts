@@ -17,7 +17,7 @@ import {
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 import { Resource } from '@opentelemetry/resources';
 import { SEMRESATTRS_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
-import { Exception } from '../Exceptions/Exception';
+import { Exception } from '@monorepo/log';
 
 //
 //
@@ -89,7 +89,6 @@ export const jaegerSetError = (r: express.Request, exception: Exception) => {
 
 //
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const jaegerSetResponse = (r: R, o: { status: number } & any) => {
   if (r._opentelemetry_span) {
     const span = r._opentelemetry_span;

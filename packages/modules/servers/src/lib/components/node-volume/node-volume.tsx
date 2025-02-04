@@ -1,7 +1,10 @@
-import { InputsAndOutputs, TUseNodeValue } from '../../demiurge-space-2';
-import { NodeHeader } from '../node-common/node-header';
-import { DisablePanSelect } from '../../demiurge-space-2';
-import { useMakeButton } from '../node-common/node-toolbar';
+import {
+  InputsAndOutputs,
+  TUseNodeValue,
+  NodeHeader,
+  DisablePanSelect,
+  useMakeButton,
+} from '@monorepo/space';
 
 export type NodeVolumeProps = {
   volume_name: string;

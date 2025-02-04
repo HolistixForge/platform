@@ -1,9 +1,14 @@
-import { ButtonBase } from '../../buttons/buttonBase';
-import { TAction } from '../../buttons/useAction';
-import { FormError, FormErrors } from '../form-errors/form-errors';
 import * as Select from '@radix-ui/react-select';
-import { SelectFieldset, SelectItem } from '../form-fields/select-fieldset';
-import { TextFieldset } from '../form-fields/text-fieldset';
+
+import {
+  ButtonBase,
+  TAction,
+  FormError,
+  FormErrors,
+  SelectFieldset,
+  SelectItem,
+  TextFieldset,
+} from '@monorepo/demiurge-ui-components';
 
 export type CloudInstanceOptionsFormData = {
   instanceType: string;

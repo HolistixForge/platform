@@ -1,5 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { useTestBoolean } from '../../storybook-utils';
+
+import { useTestBoolean } from '@monorepo/demiurge-ui-components';
+import { TUseNodeValue, StoryMockSpaceContext } from '@monorepo/space';
+
 import { NodeServer } from './node-server';
 import {
   newServerLocationNoneStory,
@@ -9,14 +12,13 @@ import {
   cloudStoppedStory,
   hostedNotAliveCurrentUserHosting,
   hostedNotAliveCurrentUserNotHosting,
-} from '../../mvp-ui-view/components/server-card-stories';
+} from '../server-card-stories';
 import {
   TServerComponentCallbacks,
   TServerComponentProps,
-} from '@monorepo/demiurge-types';
-import { randomGuy } from '../../utils/random-guys';
-import { useMockServerBehaviours } from '../../mvp-ui-view/components/server-card-mock';
-import { TUseNodeValue, StoryMockSpaceContext } from '../../demiurge-space-2';
+} from '../../servers-types';
+import { randomGuy } from '@monorepo/demiurge-ui-components';
+import { useMockServerBehaviours } from '../server-card-mock';
 
 //
 

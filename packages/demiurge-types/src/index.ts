@@ -10,8 +10,6 @@ export type {
 
 export type {
   TApi_Project,
-  TApi_Volume,
-  TApi_Mount,
   TApi_Authorization,
 } from './lib/ganymede-api/types';
 

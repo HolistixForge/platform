@@ -1,11 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react';
-
 import { editor } from 'monaco-editor';
+
+import { cssVar } from '@monorepo/demiurge-ui-components';
+
 import {
   CodeEditorMonaco,
   CodeEditorMonacoProps,
 } from './code-editor-monaco-lazy';
-import { cssVar } from '../css-utils/css-utils';
 
 //
 

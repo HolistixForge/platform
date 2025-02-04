@@ -1,5 +1,5 @@
 import { SharedMap, SharedTypes } from '@monorepo/collab-engine';
-import { TServer } from '@monorepo/demiurge-types';
+import { TServer } from './servers-types';
 
 export type TServersSharedData = {
   projectServers: SharedMap<TServer>;

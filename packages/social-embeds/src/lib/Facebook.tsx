@@ -13,7 +13,7 @@ export const Facebook = ({ data }: I_FacebookProps) => {
   const handleDivMount = useCallback((node: HTMLDivElement) => {
     if (node && url) {
       node.innerHTML = embed(url, node.offsetWidth + 2);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       (window as any).FB.XFBML.parse();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

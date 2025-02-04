@@ -1,19 +1,21 @@
 import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
 import {
-  MAX_TAB_ROW,
-  ReadWriteTree,
-  TabPath,
-  TabPayload,
   TEventActiveTabChange,
   TEventAddTab,
   TEventConvertTabToGroup,
   TEventDeleteTab,
   TEventRenameTab,
   TTabEvents,
+} from './tabs-event';
+import {
+  MAX_TAB_ROW,
+  TabPath,
+  TabPayload,
   TTabsTree,
   TUsersActiveTabs,
-} from '@monorepo/demiurge-types';
+} from './tabs-types';
 import { TTabsSharedData } from './tabs-shared-model';
+import { ReadWriteTree } from './tree';
 
 /**
  *

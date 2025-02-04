@@ -1,5 +1,8 @@
-import { icons } from '../../assets/icons';
 import { useState } from 'react';
+
+import { icons } from '@monorepo/demiurge-ui-components';
+
+//
 
 export const ControlBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -22,7 +25,11 @@ export const ControlBar = () => {
         onClick={toggleMenu}
         className="relative h-full cursor-pointer group/list"
       >
-        <div className={`absolute h-[62px] bg-contain bg-toolbar-tertiary w-[98%] left-0 top-0 opacity-0 group-hover/list:opacity-100 transition-opacity ${childArrowHovered && isMenuOpen ? "hidden" : ""}`} />
+        <div
+          className={`absolute h-[62px] bg-contain bg-toolbar-tertiary w-[98%] left-0 top-0 opacity-0 group-hover/list:opacity-100 transition-opacity ${
+            childArrowHovered && isMenuOpen ? 'hidden' : ''
+          }`}
+        />
         {isMenuOpen && (
           <ul className="absolute bottom-full left-0 w-full flex items-center justify-center flex-col -bg--c-blue-gray-0 border border-white border-opacity-20">
             <li
@@ -54,7 +61,9 @@ export const ControlBar = () => {
             </li>
           </ul>
         )}
-        <div className={`flex items-center justify-center h-full px-[7px] -border-l--c-white-2 border-l border-r-[2px]`}>
+        <div
+          className={`flex items-center justify-center h-full px-[7px] -border-l--c-white-2 border-l border-r-[2px]`}
+        >
           {selectedArrow === 'top' ? (
             <icons.RoundedArrowTop className="h-[24px] w-[24px] mb-4" />
           ) : selectedArrow === 'left' ? (

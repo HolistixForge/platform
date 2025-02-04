@@ -24,19 +24,13 @@ export { InputSource } from './lib/InputSource/InputSource';
 export { jwtPayload } from './lib/InputSource/Jwt';
 
 export {
-  Exception,
   ForwardException,
-  UserException,
-  ForbiddenException,
-  NotFoundException,
   EpDefinitionException,
   SqlException,
   ConfigException,
+  OpenapiException,
   RunException,
   EC2Exception,
-  UnknownException,
-  OAuthRefreshTokenException,
-  OpenapiException,
 } from './lib/Exceptions/Exception';
 
 export { JsonValue } from './lib/JsonValue';

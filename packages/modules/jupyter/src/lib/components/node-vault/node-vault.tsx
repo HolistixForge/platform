@@ -1,12 +1,14 @@
-import { icons } from '../../assets/icons';
-import { MenuExpanded } from '../../menuExpanded/menuExpanded';
+import { icons } from '@monorepo/demiurge-ui-components';
 import {
   Inputs,
   Outputs,
   TUseNodeValue,
   useConnector,
-} from '../../demiurge-space-2';
-import { NodeToolbar, useMakeButton } from '../node-common/node-toolbar';
+  NodeToolbar,
+  useMakeButton,
+} from '@monorepo/space';
+
+import { MenuExpanded } from '../menuExpanded/menuExpanded';
 
 import './node-vault.scss';
 

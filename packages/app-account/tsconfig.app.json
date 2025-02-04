@@ -24,13 +24,16 @@
       "path": "../demiurge-types/tsconfig.lib.json"
     },
     {
-      "path": "../backend-engine/tsconfig.lib.json"
+      "path": "../modules/servers/tsconfig.lib.json"
     },
     {
       "path": "../simple-types/tsconfig.lib.json"
     },
     {
       "path": "../log/tsconfig.lib.json"
+    },
+    {
+      "path": "../backend-engine/tsconfig.lib.json"
     }
   ]
 }

@@ -44,6 +44,12 @@
       "path": "../../ui-toolkit/tsconfig.lib.json"
     },
     {
+      "path": "../../simple-types/tsconfig.lib.json"
+    },
+    {
+      "path": "../../demiurge-types/tsconfig.lib.json"
+    },
+    {
       "path": "../../demiurge-ui-components/tsconfig.lib.json"
     },
     {

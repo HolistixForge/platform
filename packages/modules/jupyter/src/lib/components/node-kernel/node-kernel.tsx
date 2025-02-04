@@ -1,12 +1,18 @@
-import { InputsAndOutputs, TUseNodeValue } from '../../demiurge-space-2';
-import { DisablePanSelect } from '../../demiurge-space-2';
-import { NodeHeader } from '../node-common/node-header';
+import {
+  InputsAndOutputs,
+  TUseNodeValue,
+  DisablePanSelect,
+  NodeHeader,
+  useMakeButton,
+} from '@monorepo/space';
+import { ButtonBase, ButtonBaseProps } from '@monorepo/demiurge-ui-components';
+
 import {
   KernelStateIndicator,
   KernelStateIndicatorProps,
 } from './kernel-state-indicator';
-import { useMakeButton } from '../node-common/node-toolbar';
-import { ButtonBase, ButtonBaseProps } from '../../buttons/buttonBase';
+
+//
 
 export type NodeKernelProps = {
   state: 'kernel-started' | 'kernel-stopped' | 'server-stopped';

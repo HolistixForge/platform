@@ -3,10 +3,10 @@
   "include": [],
   "references": [
     {
-      "path": "../../demiurge-types"
+      "path": "../../collab-engine"
     },
     {
-      "path": "../../collab-engine"
+      "path": "../../demiurge-ui-components"
     },
     {
       "path": "./tsconfig.lib.json"

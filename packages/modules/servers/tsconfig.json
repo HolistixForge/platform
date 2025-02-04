@@ -3,25 +3,25 @@
   "include": [],
   "references": [
     {
-      "path": "../../backend-engine"
-    },
-    {
-      "path": "../../demiurge-ui-components"
-    },
-    {
       "path": "../core"
     },
     {
       "path": "../../log"
     },
     {
-      "path": "../../simple-types"
+      "path": "../../demiurge-types"
     },
     {
       "path": "../../collab-engine"
     },
     {
-      "path": "../../demiurge-types"
+      "path": "../../simple-types"
+    },
+    {
+      "path": "../space"
+    },
+    {
+      "path": "../../demiurge-ui-components"
     },
     {
       "path": "./tsconfig.lib.json"

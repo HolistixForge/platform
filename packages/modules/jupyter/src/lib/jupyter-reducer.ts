@@ -1,4 +1,9 @@
 import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
+import { TMyfetchRequest, makeUuid } from '@monorepo/simple-types';
+import { NotFoundException } from '@monorepo/log';
+import { TServersSharedData, projectServerNodeId } from '@monorepo/servers';
+import { TEventDeleteNode, TEventNewNode } from '@monorepo/core';
+
 import {
   TEventKernelStarted,
   TEventStopKernel,
@@ -9,24 +14,16 @@ import {
   TEventPythonNodeOutput,
   TEventStartKernel,
   TEventNewKernel,
-} from '@monorepo/demiurge-types';
-import { TMyfetchRequest, makeUuid } from '@monorepo/simple-types';
-import { NotFoundException } from '@monorepo/backend-engine';
+} from './jupyter-events';
 import { TDKID, dkidToServer } from './jupyter-types';
-import { projectServerNodeId } from './servers-reducer';
 import { TJupyterSharedData } from './jupyter-shared-model';
-import { TServersSharedData } from '@monorepo/servers';
-import {
-  TEventDeleteNode,
-  TEventNewNode,
-} from '../../../modules/core/src/lib/core-reducer';
 import { DriversStoreBackend } from './ds-backend';
 
 /**
  *
  */
 
-type TExtraArgs = {
+export type TExtraArgs = {
   toGanymede: <T>(r: TMyfetchRequest) => Promise<T>;
   authorizationHeader: string;
 };
@@ -56,9 +53,12 @@ export class JupyterReducer extends Reducer<
 
   _drivers: DriversStoreBackend;
 
-  constructor(js: DriversStoreBackend) {
+  constructor(sd: TServersSharedData & TJupyterSharedData) {
     super();
-    this._drivers = js;
+    this._drivers = new DriversStoreBackend(
+      sd.jupyterServers as any,
+      sd.projectServers as any
+    );
   }
 
   //
@@ -237,7 +237,7 @@ export class JupyterReducer extends Reducer<
     const id = this.makeKernelNodeId(dkid);
 
     g.dispatcher.dispatch({
-      type: 'new-node',
+      type: 'core:new-node',
       nodeData: {
         id,
         name: `kernel ${dkid}`,
@@ -275,7 +275,7 @@ export class JupyterReducer extends Reducer<
     }
 
     g.dispatcher.dispatch({
-      type: 'delete-node',
+      type: 'core:delete-node',
       id: this.makeKernelNodeId(kernel.dkid),
     });
   }

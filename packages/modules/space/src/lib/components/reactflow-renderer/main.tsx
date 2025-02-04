@@ -100,7 +100,6 @@ export const DemiurgeSpace = ({
    * just convert react flow type to our's
    */
   const _onConnect = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (c: Connection) => {
       const e: TEdge = {
         from: {
@@ -131,7 +130,7 @@ export const DemiurgeSpace = ({
 
   /** we store the connector from wich an edge is draw to attach new node when
    * user will mouseup. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const onConnectStart = useCallback((_: any, p: any) => {
     const { nodeId, handleId, handleType } = p;
     if (handleType === 'source')
@@ -148,7 +147,6 @@ export const DemiurgeSpace = ({
   /** if user stop edge draw above nothing, we create a new edge */
   const onConnectEnd = useCallback(
     (event: MouseEvent | TouchEvent) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const targetIsPane = (event as any).target.classList.contains(
         'react-flow__pane'
       );
@@ -184,7 +182,6 @@ export const DemiurgeSpace = ({
   //
 
   const _onMove = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (event: any, viewport: Viewport) => {
       pointerTracker.onMove(event, viewport);
       avatarsStore.updateAllAvatars();

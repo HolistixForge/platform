@@ -1,4 +1,4 @@
-import { UnknownException } from '@monorepo/backend-engine';
+import { UnknownException } from '@monorepo/log';
 import { pg } from '../pg';
 
 export class MagicLinkModel {

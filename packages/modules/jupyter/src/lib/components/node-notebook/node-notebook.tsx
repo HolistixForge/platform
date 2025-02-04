@@ -1,10 +1,19 @@
-import { icons } from '../../assets/icons';
-import { NodeToolbar, useMakeButton } from '../node-common/node-toolbar';
+import { useState } from 'react';
+
+import { icons } from '@monorepo/demiurge-ui-components';
+import {
+  NodeToolbar,
+  useMakeButton,
+  Inputs,
+  Outputs,
+  TUseNodeValue,
+} from '@monorepo/space';
+
 import { DisplayMenu } from './display-menu';
 import { Tag } from './tag';
-import { useState } from 'react';
-import { Inputs, Outputs, TUseNodeValue } from '../../demiurge-space-2';
-import { CodeEditorMonaco } from '../../code-editor-monaco/code-editor-monaco-lazy';
+import { CodeEditorMonaco } from '../code-editor-monaco/code-editor-monaco-lazy';
+
+//
 
 export type NodeNotebookProps = {
   arrow: 'top' | 'bottom' | 'left' | 'right';
@@ -33,7 +42,7 @@ export const NodeNotebook = ({
   const [title, setTitle] = useState<boolean>(titleFixed);
   const [input, setInput] = useState<boolean>(true);
   const [output, setOutput] = useState<boolean>(true);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const [tag, setTag] = useState<any[]>([]);
 
   const isExpanded = viewStatus.mode === 'EXPANDED';

@@ -1,5 +1,5 @@
 import { SharedMap, SharedTypes } from '@monorepo/collab-engine';
-import { TTabsTree } from '@monorepo/demiurge-types';
+import { TTabsTree } from './tabs-types';
 
 export type TTabsSharedData = {
   tabs: SharedMap<TTabsTree>;

@@ -1,4 +1,4 @@
-import { TabPath } from './tabs';
+import { TabPath } from './tabs-types';
 
 export type TEventActiveTabChange = {
   type: 'active-tab-change';

@@ -8,7 +8,7 @@
     "resolveJsonModule": true
   },
   "files": ["src/oas30.json", "src/exec-pipes.json"],
-  "include": ["src/**/*.ts", "../modules/core/src/lib/core-reducer.ts"],
+  "include": ["src/**/*.ts"],
   "exclude": [
     "out-tsc",
     "dist",
@@ -22,9 +22,6 @@
   "references": [
     {
       "path": "../demiurge-types/tsconfig.lib.json"
-    },
-    {
-      "path": "../demiurge-ui-components/tsconfig.lib.json"
     },
     {
       "path": "../backend-engine/tsconfig.lib.json"

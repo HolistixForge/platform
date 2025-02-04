@@ -1,11 +1,11 @@
 import { UserUsername } from '@monorepo/demiurge-ui-components';
 
 import './cursor.scss';
+import { TF_User } from '@monorepo/demiurge-types';
 
 type CursorProps = {
   fill: 'transparent' | 'color';
-  color: string;
-};
+} & TF_User;
 
 export const Cursor = ({ fill, ...user }: CursorProps) => {
   return (

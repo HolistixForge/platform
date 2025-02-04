@@ -1,8 +1,8 @@
 import { ChatMessage, ChatBoxProps } from './node-chat';
 import { useState } from 'react';
-import { SimpleMessage } from '../../discussionItem/discussionItem';
-import { sleep } from '../../storybook-utils';
-import { ReplyMessage } from '../../replyItem/replyItem';
+import { SimpleMessage } from '../discussionItem/discussionItem';
+import { ReplyMessage } from '../replyItem/replyItem';
+import { sleep } from '@monorepo/simple-types';
 
 //
 

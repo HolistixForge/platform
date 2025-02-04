@@ -92,7 +92,7 @@ class VirtualOutputArea {
     const model = this.model;
     const msgType = msg.header.msg_type;
     let output: nbformat.IOutput;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const transient = ((msg.content as any).transient || {}) as JSONObject;
     const displayId = transient['display_id'] as string;
     let targets: number[] | undefined;
@@ -145,7 +145,7 @@ class VirtualOutputArea {
     if (!payload || !payload.length) {
       return;
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const pages = payload.filter((i: any) => (i as any).source === 'page');
     if (!pages.length) {
       return;
@@ -153,7 +153,7 @@ class VirtualOutputArea {
     const page = JSON.parse(JSON.stringify(pages[0]));
     const output: nbformat.IOutput = {
       output_type: 'display_data',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       data: (page as any).data as nbformat.IMimeBundle,
       metadata: {},
     };

@@ -1,13 +1,13 @@
-import { icons } from '../../assets/icons';
 import {
+  icons,
   SelectFieldset,
   SelectItem,
-} from '../../form/form-fields/select-fieldset';
-import { NodeToolbar, useMakeButton } from '../node-common/node-toolbar';
+} from '@monorepo/demiurge-ui-components';
+import { NodeToolbar, useMakeButton } from '@monorepo/space';
 
-interface CardSettingsProps {
+type CardSettingsProps = {
   status: 'success' | 'error' | 'warning';
-}
+};
 
 export const CardSettings = ({ status }: CardSettingsProps) => {
   const buttons = useMakeButton({

@@ -1,11 +1,9 @@
 import { ReduceArgs, Reducer, SharedMap } from '@monorepo/collab-engine';
-import { TProjectMeta } from './core-types';
 import { log } from '@monorepo/log';
 import { inSeconds, isPassed } from '@monorepo/simple-types';
-import { runScript } from '../run-script';
-import { toGanymede } from '../build-collab';
 
-import { CONFIG } from '../config';
+import { TCoreSharedData } from './core-shared-model';
+import { TProjectMeta } from './core-types';
 
 /**
  *
@@ -19,13 +17,9 @@ let shouldIBeDead = false;
 
 type ReducedEvents = { type: string };
 
-type Ra<T> = ReduceArgs<
-  TNotebookSharedData,
-  T,
-  undefined,
-  Record<string, never>
->;
+type Ra<T> = ReduceArgs<TCoreSharedData, T, undefined, Record<string, never>>;
 
+// TODO_DEM: timer and events system
 const eventFilter = [
   'activity',
   'periodic',
@@ -35,16 +29,23 @@ const eventFilter = [
 ];
 
 export class MetaReducer extends Reducer<
-  TNotebookSharedData,
+  TCoreSharedData,
   ReducedEvents,
   undefined,
   Record<string, never>
 > {
   //
 
+  gatewayStopNotify: () => Promise<void>;
+
+  constructor(gatewayStopNotify: () => Promise<void>) {
+    super();
+    this.gatewayStopNotify = gatewayStopNotify;
+  }
+
   reduce(g: Ra<ReducedEvents>): Promise<void> {
     if (!eventFilter.includes(g.event.type)) {
-      updateProjectMetaActivity(g.sd.meta);
+      rearmGatewayTimer(g.sd.meta);
     }
 
     if (g.event.type === 'periodic') {
@@ -57,12 +58,7 @@ export class MetaReducer extends Reducer<
           if (shouldIBeDead === false) {
             log(6, 'GATEWAY', 'shutdown');
             // call ganymede "gateway stop" api endpoint
-            toGanymede({
-              url: '/gateway-stop',
-              method: 'POST',
-              headers: { authorization: CONFIG.GATEWAY_TOKEN },
-            });
-            runScript('reset-gateway');
+            this.gatewayStopNotify();
             shouldIBeDead = true;
           } else {
             log(6, 'GATEWAY', 'shutdown failed process still alive');
@@ -75,19 +71,16 @@ export class MetaReducer extends Reducer<
   }
 }
 
-export const updateProjectMetaActivity = (
-  meta: SharedMap<TProjectMeta>,
-  last?: Date
-) => {
+const rearmGatewayTimer = (meta: SharedMap<TProjectMeta>, last?: Date) => {
   if (!last) last = new Date();
-  const previous = meta.get('meta');
+  const curMeta = meta.get('meta') as TProjectMeta;
 
-  const prevLast = new Date(previous?.projectActivity.last_activity);
+  const prevLast = new Date(curMeta.projectActivity.last_activity);
 
-  if (!previous || prevLast.getTime() < last.getTime()) {
+  if (!curMeta || prevLast.getTime() < last.getTime()) {
     log(6, 'META', `last project activity: ${last.toISOString()}`);
     meta.set('meta', {
-      ...previous,
+      ...curMeta,
       projectActivity: {
         last_activity: last.toISOString(),
         gateway_shutdown: inSeconds(

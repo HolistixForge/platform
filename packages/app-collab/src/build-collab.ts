@@ -1,20 +1,22 @@
 import * as Y from 'yjs';
 const u = require('y-websocket/bin/utils');
 import { WebsocketProvider } from 'y-websocket';
-import { EventSourcePolyfill } from 'event-source-polyfill';
+// import { EventSourcePolyfill } from 'event-source-polyfill';
 
 import {
   Dispatcher,
+  SharedTypes,
   TCollabNativeEvent,
   TCollaborativeChunk,
+  TValidSharedData,
   YjsSharedTypes,
   compileChunks,
 } from '@monorepo/collab-engine';
-
 import {
   Core_loadData,
   TCoreSharedData,
   CoreReducer,
+  MetaReducer,
   TCoreEvent,
 } from '@monorepo/core';
 import {
@@ -27,8 +29,9 @@ import {
 import {
   Space_loadData,
   TSpaceSharedData,
-  GraphViewsReducer,
-  TDemiurgeSpaceEvent,
+  SpaceReducer,
+  SelectionReducer,
+  TSpaceEvent,
 } from '@monorepo/space';
 import {
   TChatEvent,
@@ -40,26 +43,48 @@ import {
   TServerEvents,
   Servers_loadData,
   TServersSharedData,
-  ProjectServerReducer,
+  ServersReducer,
 } from '@monorepo/servers';
 import {
   TDemiurgeNotebookEvent,
+  TJupyterSharedData,
   Jupyter_loadData,
-  DriversStoreBackend,
   JupyterReducer,
 } from '@monorepo/jupyter';
 
 import { log } from '@monorepo/log';
 import { loadCollaborationData } from './load-collab';
-import { TMyfetchRequest, fullUri } from '@monorepo/simple-types';
+import { TMyfetchRequest } from '@monorepo/simple-types';
 import { ForwardException, myfetch } from '@monorepo/backend-engine';
-
-import { SelectionReducer } from './event-reducers/selections-reducer';
-import { MetaReducer } from './event-reducers/meta-reducer';
 
 import { CONFIG } from './config';
 
 import { PROJECT } from './project-config';
+import { runScript } from './run-script';
+
+//
+//
+//
+
+const gatewayStopNotify = async () => {
+  toGanymede({
+    url: '/gateway-stop',
+    method: 'POST',
+    headers: { authorization: CONFIG.GATEWAY_TOKEN },
+  });
+  runScript('reset-gateway');
+};
+
+//
+
+const updateReverseProxy = async (
+  services: { location: string; ip: string; port: number }[]
+) => {
+  const config = services
+    .map((s) => `${s.location} ${s.ip} ${s.port}\n`)
+    .join('');
+  runScript('update-nginx-locations', config);
+};
 
 //
 //
@@ -67,54 +92,38 @@ import { PROJECT } from './project-config';
 
 const chunks: TCollaborativeChunk[] = [
   {
-    initChunk: (st) => {
-      return {
-        sharedData: Core_loadData(st),
-        reducers: [new CoreReducer(), new MetaReducer()],
-      };
-    },
+    sharedData: (st: SharedTypes) => Core_loadData(st),
+    reducers: (sd: TValidSharedData) => [
+      new CoreReducer(),
+      new MetaReducer(gatewayStopNotify),
+    ],
   },
   {
-    initChunk: (st) => {
-      return {
-        sharedData: Space_loadData(st),
-        reducers: [new SelectionReducer(), new GraphViewsReducer()],
-      };
-    },
+    sharedData: (st: SharedTypes) => Space_loadData(st),
+    reducers: (sd: TValidSharedData) => [
+      new SelectionReducer(),
+      new SpaceReducer(),
+    ],
   },
   {
-    initChunk: (st) => {
-      return {
-        sharedData: Chat_loadData(st),
-        reducers: [new ChatReducer()],
-      };
-    },
+    sharedData: (st: SharedTypes) => Chat_loadData(st),
+    reducers: (sd: TValidSharedData) => [new ChatReducer()],
   },
   {
-    initChunk: (st) => {
-      return {
-        sharedData: Servers_loadData(st),
-        reducers: [new ProjectServerReducer()],
-      };
-    },
+    sharedData: (st: SharedTypes) => Servers_loadData(st),
+    reducers: (sd: TValidSharedData) => [
+      new ServersReducer(updateReverseProxy),
+    ],
   },
   {
-    initChunk: (st) => {
-      return {
-        sharedData: Tabs_loadData(st),
-        reducers: [new TabsReducer()],
-      };
-    },
+    sharedData: (st: SharedTypes) => Tabs_loadData(st),
+    reducers: (sd: TValidSharedData) => [new TabsReducer()],
   },
   {
-    initChunk: (st) => {
-      const sharedData = Jupyter_loadData(st);
-      const dsb = new DriversStoreBackend(sharedData.projectServers as any);
-      return {
-        sharedData,
-        reducers: [new JupyterReducer(dsb)],
-      };
-    },
+    sharedData: (st: SharedTypes) => Jupyter_loadData(st),
+    reducers: (sd: TValidSharedData) => [
+      new JupyterReducer(sd as TServersSharedData & TJupyterSharedData),
+    ],
   },
 ];
 
@@ -126,12 +135,13 @@ export type TSd = TCoreSharedData &
   TServersSharedData &
   TSpaceSharedData &
   TChatSharedData &
-  TTabsSharedData;
+  TTabsSharedData &
+  TJupyterSharedData;
 
 export type TAllEvents =
   | TCoreEvent
   | TDemiurgeNotebookEvent
-  | TDemiurgeSpaceEvent
+  | TSpaceEvent
   | TServerEvents
   | TChatEvent
   | TTabEvents<TabPayload>
@@ -217,6 +227,7 @@ export const toGanymede = async <T>(request: TMyfetchRequest): Promise<T> => {
 
 //
 
+/*
 export type TGanymedeEventSourceCallback = (
   event: MessageEvent,
   resolve: (v: any) => void,
@@ -245,3 +256,4 @@ export const toGanymedeEventSource = async (
     es.onmessage = (event: any) => onMessage(event, resolve, reject, es);
   });
 };
+*/

@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { EraserIcon, PlayIcon, TrashIcon } from '@radix-ui/react-icons';
-import { DisablePanSelect } from '../../node-wrappers/disable-pan-select';
+
+import { sleep } from '@monorepo/simple-types';
 import {
   icons,
   ButtonIcon,
@@ -7,8 +9,8 @@ import {
   useAction,
 } from '@monorepo/demiurge-ui-components';
 
+import { DisablePanSelect } from '../../node-wrappers/disable-pan-select';
 import './node-toolbar.scss';
-import { useState } from 'react';
 
 export type NodeToolbarProps = {
   buttons: ButtonIconProps[];

@@ -40,20 +40,19 @@ export const SignupForm = ({ action }: SignupFormProps) => {
               label={field}
               name={field}
               onChange={action.handleInputChange}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               value={(action.formData as any)[field]}
               placeholder={field}
               type={
                 field === 'password'
                   ? 'password'
                   : field === 'email'
-                    ? 'email'
-                    : 'text'
+                  ? 'email'
+                  : 'text'
               }
               required={['email', 'password', 'username'].includes(field)}
             />
           </div>
-        ),
+        )
       )}
 
       <FormErrors errors={action.errors} />

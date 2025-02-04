@@ -96,17 +96,14 @@ export const EdgeComponent: FC<
   const esly = sourceY + 20;
 
   const fromLabels = _children.filter(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (child) => isValidElement(child) && (child.type as any) === LabelStart
   );
 
   const toLabels = _children.filter(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (child) => isValidElement(child) && (child.type as any) === LabelEnd
   );
 
   const labels = _children.filter(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (child) => isValidElement(child) && (child.type as any) === LabelMiddle
   );
 

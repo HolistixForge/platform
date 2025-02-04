@@ -16,7 +16,7 @@ import {
   InputsAndOutputs,
 } from '@monorepo/space';
 
-import { useMakeButton } from '../node-common/node-toolbar';
+import { useMakeButton } from '@monorepo/space';
 
 import {
   DiscussionItem,
@@ -90,7 +90,6 @@ export const ChatBox = ({
 
   //
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sendButton = useAction<any>(async () => {
     if (message !== '') {
       // console.log('send ------');

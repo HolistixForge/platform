@@ -8,7 +8,7 @@ type TApiError = {
  * extract errors from an Error coming back from API call.
  * @param error
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export const standardizeError = (error: any): TFormErrors | false => {
   const r: { [k: string]: string } = {};
   if (error.json) {

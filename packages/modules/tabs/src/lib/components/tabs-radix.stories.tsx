@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { PanelProps } from './tabs-radix';
 import { TabsRadixLogic } from './tabs-radix-logic';
 import { FC } from 'react';
-import { TreeElement } from '@monorepo/demiurge-types';
+import { TreeElement } from '../tree';
 
 //
 //

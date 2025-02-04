@@ -1,4 +1,4 @@
-import { nodeViewDefaultStatus } from '../../apis/types/node';
+import { nodeViewDefaultStatus } from '../../../space-types';
 import { TConnector, TSpaceState } from '../../apis/spaceState';
 import { pinId } from '../../apis/types/edge';
 

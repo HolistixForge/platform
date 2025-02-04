@@ -8,7 +8,7 @@ import { HTMLManager, requireLoader } from '@jupyter-widgets/html-manager';
 import * as base from '@jupyter-widgets/base';
 import { IKernelConnection } from '@jupyterlab/services/lib/kernel/kernel';
 import FrontendJsRenderer from './js-renderer';
-import { makeOutputArea } from '../../index';
+import { makeOutputArea } from '../output-area';
 
 //
 //
@@ -28,7 +28,6 @@ export class BrowserWidgetManager extends HTMLManager {
     this.kernel = kernel;
 
     kernel.registerCommTarget(this.comm_target_name, async (comm, msg) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const oldComm = new base.shims.services.Comm(comm as any);
       await this.handle_comm_open(oldComm, msg);
     });
@@ -70,16 +69,16 @@ export class BrowserWidgetManager extends HTMLManager {
   override async _create_comm(
     target_name: string,
     model_id: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     data?: any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     metadata?: any
   ): Promise<base.shims.services.Comm> {
     const comm = this.kernel.createComm(target_name, model_id);
     if (data || metadata) {
       comm.open(data, metadata);
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     return Promise.resolve(new base.shims.services.Comm(comm as any));
   }
 
@@ -89,12 +88,11 @@ export class BrowserWidgetManager extends HTMLManager {
   /**
    * Get the currently-registered comms.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   override _get_comm_info(): Promise<any> {
     return this.kernel
       .requestCommInfo({ target_name: this.comm_target_name })
       .then((reply) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return (reply.content as any).comms;
       });
   }
@@ -103,7 +101,6 @@ export class BrowserWidgetManager extends HTMLManager {
   //
 
   createOutputArea() {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return makeOutputArea(this.renderMime as any);
   }
 }

@@ -4,10 +4,30 @@ import {
   TCollabNativeEvent,
   TEventPeriodic,
 } from '@monorepo/collab-engine';
+import { TJwtServer, TJwtUser } from '@monorepo/demiurge-types';
+import { TMyfetchRequest, secondAgo } from '@monorepo/simple-types';
+import { error, log } from '@monorepo/log';
+import {
+  TCoreSharedData,
+  TGraphNode,
+  TEventDeleteEdge,
+  TEventDeleteNode,
+  TEventNewEdge,
+  TEventNewNode,
+  TEdge,
+} from '@monorepo/core';
+import { UserException } from '@monorepo/log';
+
+import { TServersSharedData } from './servers-shared-model';
+import {
+  TApi_Volume,
+  TG_Server,
+  TEc2InstanceState,
+  TServer,
+} from './servers-types';
 import {
   TEventNewServer,
   TEventNewVolume,
-  TApi_Volume,
   TEventMountVolume,
   TEventUnmountVolume,
   TEventDeleteVolume,
@@ -15,34 +35,14 @@ import {
   TEventServerWatchdog,
   TEventServerActivity,
   TEventServerMapHttpService,
-  TG_Server,
   TServerEvents,
   TEventHostServer,
   TEventServerToCloud,
-  TEc2InstanceState,
   TEventServerCloudPause,
   TEventServerCloudStart,
   TEventServerCloudDelete,
   TEventUpdateInstanceState,
-  TJwtServer,
-  TJwtUser,
-  TPgadminServerData,
-  TServer,
-} from '@monorepo/demiurge-types';
-import { TMyfetchRequest, secondAgo } from '@monorepo/simple-types';
-import { runScript } from '../run-script';
-import { updateProjectMetaActivity } from './meta-reducer';
-import { error, log } from '@monorepo/log';
-import { TCoreSharedData } from '@monorepo/core';
-import { TServersSharedData, TGraphNode } from '@monorepo/core';
-import { TEdge } from '@monorepo/demiurge-ui-components';
-import { UserException } from '@monorepo/backend-engine';
-import {
-  TEventDeleteEdge,
-  TEventDeleteNode,
-  TEventNewEdge,
-  TEventNewNode,
-} from '../../../modules/core/src/lib/core-reducer';
+} from './servers-events';
 
 /**
  *
@@ -68,9 +68,11 @@ type UsedSharedData = TCoreSharedData & TServersSharedData;
 
 type Ra<T> = ReduceArgs<UsedSharedData, T, DispatchedEvents, TExtraArgs>;
 
-/**
- *
- */
+//
+
+type Turp = (
+  locations: { location: string; ip: string; port: number }[]
+) => Promise<void>;
 
 export class ServersReducer extends Reducer<
   UsedSharedData,
@@ -78,6 +80,13 @@ export class ServersReducer extends Reducer<
   DispatchedEvents,
   TExtraArgs
 > {
+  updateReverseProxy: Turp;
+
+  constructor(updateReverseProxy: Turp) {
+    super();
+    this.updateReverseProxy = updateReverseProxy;
+  }
+
   reduce(g: Ra<ReducedEvents>): Promise<void> {
     switch (g.event.type) {
       case 'new-server':
@@ -160,14 +169,14 @@ export class ServersReducer extends Reducer<
 
     // create corresponding node in each view
     if (newServer) {
-      const { node, projectServer } = addServer(newServer);
+      const { node, projectServer } = makeServer(newServer);
       g.sd.projectServers.set(
         `${projectServer.project_server_id}`,
         projectServer
       );
 
       g.dispatcher.dispatch({
-        type: 'new-node',
+        type: 'core:new-node',
         nodeData: node,
         edges: [],
         origin: g.event.origin,
@@ -209,7 +218,6 @@ export class ServersReducer extends Reducer<
           ...s,
           last_activity: g.event.last_activity,
         });
-        updateProjectMetaActivity(g.sd.meta, new Date(g.event.last_activity));
       }
     }
   }
@@ -470,16 +478,19 @@ export class ServersReducer extends Reducer<
   //
 
   async _updateNginx(sd: UsedSharedData) {
-    const locations: string[] = [];
+    const locations: { location: string; ip: string; port: number }[] = [];
     sd.projectServers.forEach((server) => {
       if (server.ip) {
         server.httpServices.forEach((hs) => {
-          locations.push(`${hs.location} ${server.ip} ${hs.port}\n`);
+          locations.push({
+            location: hs.location,
+            ip: server.ip as string,
+            port: hs.port,
+          });
         });
       }
     });
-    const scriptInput = locations.join('');
-    runScript('update-nginx-locations', scriptInput);
+    this.updateReverseProxy(locations);
   }
 
   //
@@ -518,7 +529,7 @@ export class ServersReducer extends Reducer<
     g.sd.projectServers.delete(`${pid}`);
     const id = projectServerNodeId(pid);
 
-    g.dispatcher.dispatch({ type: 'delete-node', id });
+    g.dispatcher.dispatch({ type: 'core:delete-node', id });
   }
 
   //
@@ -545,9 +556,9 @@ export class ServersReducer extends Reducer<
     const newVolume = volumes.find((s) => s.volume_id === r._0.new_volume_id);
 
     if (newVolume) {
-      const node = addVolume(newVolume);
+      const node = makeVolume(newVolume);
       g.dispatcher.dispatch({
-        type: 'new-node',
+        type: 'core:new-node',
         nodeData: node,
         origin: g.event.origin,
         edges: [],
@@ -575,7 +586,7 @@ export class ServersReducer extends Reducer<
 
     const edge = makeMountEdge(g.event);
 
-    g.dispatcher.dispatch({ type: 'new-edge', edge });
+    g.dispatcher.dispatch({ type: 'core:new-edge', edge });
   }
 
   /**
@@ -599,7 +610,7 @@ export class ServersReducer extends Reducer<
     // we make the exact edge to match for deletion
     const match = makeMountEdge(g.event);
 
-    g.dispatcher.dispatch({ type: 'delete-edge', edge: match });
+    g.dispatcher.dispatch({ type: 'core:delete-edge', edge: match });
   }
 
   /**
@@ -617,7 +628,7 @@ export class ServersReducer extends Reducer<
     });
 
     g.dispatcher.dispatch({
-      type: 'delete-node',
+      type: 'core:delete-node',
       id: projectVolumeNodeId(g.event.volume_id),
     });
   }
@@ -634,31 +645,25 @@ export class ServersReducer extends Reducer<
  *
  */
 
-const jupyterServerInitialInfo = (): TJupyterServerData => ({
-  kernels: [],
-  type: 'jupyter',
-  ip: undefined,
-  httpServices: [],
-});
-
-const pgadminServerInitialInfo = (): TPgadminServerData => ({
-  type: 'pgadmin',
-});
-
+// TODO_DEM: from DB images table, column type
 const serverInitialInfo = (image_id: number) => {
   switch (image_id) {
     case 2:
     case 3:
-      return jupyterServerInitialInfo();
+      return {
+        type: 'jupyter',
+      };
     case 4:
-      return pgadminServerInitialInfo();
+      return {
+        type: 'pgadmin',
+      };
   }
   throw new UserException('server image unknown');
 };
 
 //
 
-export const addServer = (
+export const makeServer = (
   s: TG_Server,
   ec2_instance_state?: TEc2InstanceState
 ) => {
@@ -691,7 +696,7 @@ export const addServer = (
 /**
  *
  */
-export const addVolume = (v: TApi_Volume) => {
+export const makeVolume = (v: TApi_Volume) => {
   const nd: TGraphNode = {
     id: projectVolumeNodeId(v.volume_id),
     name: v.volume_name,
@@ -707,7 +712,7 @@ export const addVolume = (v: TApi_Volume) => {
  *
  */
 
-const makeMountEdge = (a: {
+export const makeMountEdge = (a: {
   mount_point: string;
   volume_id: number;
   project_server_id: number;

@@ -31,7 +31,7 @@ import { useTimer } from '../timer/use-timer';
 
 export type TAction<TCallbackArg = MouseEvent<HTMLElement>> = {
   loading: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   callback: (a: TCallbackArg, origin?: string) => void;
   errors: TFormErrors;
   isOpened: boolean;
@@ -146,7 +146,6 @@ export function useAction<TCallbackArg = MouseEvent<HTMLElement>>(
   cb: (
     data: TCallbackArg,
     methods: TActionMethods<TCallbackArg>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ) => Promise<any>,
   deps: DependencyList,
   options?: {
@@ -239,7 +238,6 @@ export function useAction<TCallbackArg = MouseEvent<HTMLElement>>(
       }
 
       cb(data, m)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .then((v: any) => {
           dispatch({
             type: 'stop',

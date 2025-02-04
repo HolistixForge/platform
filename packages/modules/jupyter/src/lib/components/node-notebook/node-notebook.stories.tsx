@@ -1,11 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
+import {
+  playAdd__hover,
+  useTestBoolean,
+} from '@monorepo/demiurge-ui-components';
+import { StoryMockSpaceContext, nodeViewDefaultStatus } from '@monorepo/space';
+
 import { NodeNotebookProps } from './node-notebook';
 import { NodeNotebook } from './node-notebook';
-import { playAdd__hover, useTestBoolean } from '../../storybook-utils';
-import {
-  StoryMockSpaceContext,
-  nodeViewDefaultStatus,
-} from '../../demiurge-space-2';
+
+//
 
 const NodeStory = (
   props: Omit<

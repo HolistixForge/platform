@@ -27,7 +27,7 @@ const MODE = EMODE.NOCACHE as EMODE;
 if (MODE === EMODE.CACHE) {
   window.addEventListener(
     'message',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     (t: any) => {
       if (t.data && t.source) {
         try {
@@ -96,7 +96,6 @@ const debouncer = (start: () => void, delay: number) => {
 //
 
 const trigIframeLoader = debouncer(() => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const process = (window as any).instgrm.Embeds.process;
   process();
 }, 300);

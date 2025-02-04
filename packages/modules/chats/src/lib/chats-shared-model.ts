@@ -1,5 +1,5 @@
 import { SharedMap, SharedTypes } from '@monorepo/collab-engine';
-import { TChat } from '@monorepo/demiurge-types';
+import { TChat } from './chats-types';
 
 export type TChatSharedData = {
   chats: SharedMap<TChat>;

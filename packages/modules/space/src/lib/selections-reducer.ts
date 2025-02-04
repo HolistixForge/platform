@@ -4,7 +4,8 @@ import {
   TCollabNativeEvent,
   TEventUserLeave,
 } from '@monorepo/collab-engine';
-import { TSpaceSharedData, TUserViewSelection } from '@monorepo/space';
+import { TUserViewSelection } from './space-types';
+import { TSpaceSharedData } from './space-shared-model';
 
 /**
  *

@@ -1,7 +1,9 @@
 import { useRef } from 'react';
 import * as monaco from 'monaco-editor';
 import { editor } from 'monaco-editor';
-import { cssVar } from '../css-utils/css-utils';
+
+import { cssVar } from '@monorepo/demiurge-ui-components';
+
 import { CodeEditorMonacoProps } from './code-editor-monaco-lazy';
 
 import './code-editor-monaco.scss';

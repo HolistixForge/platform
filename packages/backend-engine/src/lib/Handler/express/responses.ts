@@ -141,7 +141,6 @@ export const respond = (
       break;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   jaegerSetResponse(req as any, { ...r, status });
   log(6, 'RESPONSE', `[${status}:${r.type}] ${logMsg}`, null, color);
 };

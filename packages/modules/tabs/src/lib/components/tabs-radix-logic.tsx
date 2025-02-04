@@ -1,4 +1,4 @@
-import { ReadWriteTree, TreeElement } from '@monorepo/demiurge-types';
+import { ReadWriteTree, TreeElement } from '../tree';
 import { PanelProps, TabsRadix } from './tabs-radix';
 import { FC, useMemo, useState } from 'react';
 

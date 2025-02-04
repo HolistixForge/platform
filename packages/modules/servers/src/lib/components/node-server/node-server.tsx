@@ -1,12 +1,17 @@
-import { NodeHeader } from '../node-common/node-header';
-import { DisablePanSelect, TUseNodeValue } from '../../demiurge-space-2';
-import { useMakeButton } from '../node-common/node-toolbar';
-import { ServerCard } from '../../mvp-ui-view/components/server-card';
 import { CSSProperties } from 'react';
+
+import {
+  NodeHeader,
+  DisablePanSelect,
+  TUseNodeValue,
+  useMakeButton,
+} from '@monorepo/space';
+
+import { ServerCard } from '../server-card';
 import {
   TServerComponentProps,
   TServerComponentCallbacks,
-} from '@monorepo/demiurge-types';
+} from '../../servers-types';
 
 /**
  *

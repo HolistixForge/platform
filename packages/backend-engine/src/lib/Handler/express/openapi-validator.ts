@@ -32,7 +32,7 @@ export const setupValidator = (
       apiSpec: {} as OpenAPIV3.DocumentV3, // Provide a default empty object if oas is undefined
       // apiSpec: oas as OpenAPIV3.Document,
       validateFormats: true,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       formats: formats as any,
       validateResponses: {
         removeAdditional: 'failing',

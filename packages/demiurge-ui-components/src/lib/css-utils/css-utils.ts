@@ -48,15 +48,15 @@ export const getCssProperties = (match: string) => {
   const extractedPalette: { [key: string]: string } = {};
 
   // Iterate through all style sheets
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   for (const styleSheet of document.styleSheets as any) {
     if (styleSheet instanceof CSSStyleSheet) {
       // Iterate through all rules in the style sheet
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       for (const rule of styleSheet.cssRules as any) {
         if (rule instanceof CSSStyleRule) {
           // Iterate through all style declarations in the rule
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
           for (const declaration of rule.style as any) {
             // Check if the property matches '--c-*'
             if (declaration.startsWith(match)) {

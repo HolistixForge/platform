@@ -95,7 +95,6 @@ export const myfetch: TMyfetch = (request: TMyfetchRequest) => {
     else if (request.url.startsWith('https://')) {
       // allow self signed certificate only in development
       development(() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (options as any).rejectUnauthorized = false;
       });
       req = https.request(full, options, callback);

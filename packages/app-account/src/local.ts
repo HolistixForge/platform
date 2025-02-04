@@ -1,6 +1,18 @@
 import express from 'express';
 import passport from 'passport';
 import * as passportLocal from 'passport-local';
+import { JwtPayload } from 'jsonwebtoken';
+
+import {
+  log,
+  Exception,
+  ForbiddenException,
+  UnknownException,
+} from '@monorepo/log';
+import { jwtPayload, respond } from '@monorepo/backend-engine';
+import { TJson } from '@monorepo/simple-types';
+
+import { verifyPassword } from './models/users';
 import {
   passwordChange,
   getUserSessionDetails,
@@ -8,19 +20,7 @@ import {
   userNeedTotpAuthentication,
 } from './models/users';
 import { Req, UserSerializedInfo } from './main';
-import { log } from '@monorepo/log';
-import {
-  Exception,
-  ForbiddenException,
-  jwtPayload,
-  respond,
-  UnknownException,
-} from '@monorepo/backend-engine';
-import { verifyPassword } from './models/users';
-import { TJson } from '@monorepo/simple-types';
-import { JwtPayload } from 'jsonwebtoken';
 
-//
 //
 
 // set the 'verify' function used by the "local strategie" called in /login POST route
@@ -103,9 +103,10 @@ export const setupLocalRoutes = (router: express.Router) => {
           if (err) {
             return next(err);
           } else if (!user) {
-            const e = new Exception(500, [
-              { message: 'Please try again later', public: true },
-            ]);
+            const e = new Exception(
+              [{ message: 'Please try again later', public: true }],
+              500
+            );
             return next(e);
           } else {
             req.login(user, function (err) {

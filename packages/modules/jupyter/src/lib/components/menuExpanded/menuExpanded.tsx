@@ -1,12 +1,14 @@
-import { icons } from '../assets/icons';
-import { ButtonIconProps } from '../buttons/buttonIcon';
 import {
+  icons,
+  ButtonIconProps,
   SelectFieldset,
   SelectItem,
-} from '../form/form-fields/select-fieldset';
-import { NodeToolbar } from '../nodes/node-common/node-toolbar';
+} from '@monorepo/demiurge-ui-components';
+import { NodeToolbar } from '@monorepo/space';
 
 import './menuExpanded.scss';
+
+//
 
 export type MenuExpandedProps = {
   nodeType: 'scene' | 'vault' | 'dataset' | 'screening';

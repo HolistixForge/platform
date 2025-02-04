@@ -1,8 +1,12 @@
 import { TrashIcon } from '@radix-ui/react-icons';
-import { icons } from '../assets/icons';
-import { Datetime } from '../datetime/datetime';
-import { NodeToolbar } from '../nodes/node-common/node-toolbar';
-import { UserAvatar, UserUsername } from '../users/users';
+
+import {
+  icons,
+  Datetime,
+  UserAvatar,
+  UserUsername,
+} from '@monorepo/demiurge-ui-components';
+import { NodeToolbar } from '@monorepo/space';
 
 import './discussionItem.scss';
 
@@ -21,7 +25,7 @@ export const DiscussionItem = (
     onReply: (m: SimpleMessage) => void;
     onDelete: (m: SimpleMessage) => void;
     showId?: boolean;
-  },
+  }
 ) => {
   const { onReply, onDelete, ...m } = props;
   const { username, picture, content, space, color, id, date } = m;

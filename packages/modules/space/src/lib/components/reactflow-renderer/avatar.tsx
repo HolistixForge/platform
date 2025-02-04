@@ -12,7 +12,7 @@ type UserAvatarProps = {
   id: number;
   name: string;
   color: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   setApi: (sr: SpringRefWeb) => any;
   toSpring: (u: TUserPosition | undefined) => {
     '--user-color': string;

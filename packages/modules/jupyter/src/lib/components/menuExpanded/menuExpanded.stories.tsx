@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
+import { useTestToolbarButtons } from '@monorepo/space';
+
 import { MenuExpanded, MenuExpandedProps } from './menuExpanded';
-import { useTestToolbarButtons } from '../storybook-utils';
+
+//
 
 const StoryWrapper = ({
   isOpened,

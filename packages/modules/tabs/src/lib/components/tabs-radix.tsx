@@ -1,8 +1,8 @@
 import { Children, FC, createRef, useCallback, useMemo, useState } from 'react';
 import { CSSTransition } from 'react-transition-group';
 import * as Tabs from '@radix-ui/react-tabs';
-import { icons } from '../assets/icons';
-import { ReadOnlyTree, TreeElement } from '@monorepo/demiurge-types';
+import { icons } from '@monorepo/demiurge-ui-components';
+import { ReadOnlyTree, TreeElement } from '../tree';
 
 import './tabs-radix.scss';
 
@@ -204,7 +204,7 @@ export const TabsRadix = ({
       Array(maxRow)
         .fill(1)
         .map((_, i) => createRef<HTMLDivElement>()),
-    [maxRow],
+    [maxRow]
   );
 
   const _children = Children.toArray(children);

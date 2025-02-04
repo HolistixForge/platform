@@ -12,6 +12,12 @@
       "path": "../../ui-toolkit"
     },
     {
+      "path": "../../simple-types"
+    },
+    {
+      "path": "../../demiurge-types"
+    },
+    {
       "path": "../../demiurge-ui-components"
     },
     {

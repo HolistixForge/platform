@@ -1,9 +1,10 @@
+import { randomGuy } from '@monorepo/demiurge-ui-components';
+import { sleep } from '@monorepo/simple-types';
+
 import {
   TServerComponentCallbacks,
   TServerComponentProps,
-} from '@monorepo/demiurge-types';
-import { randomGuy } from '../../utils/random-guys';
-import { sleep } from '../../storybook-utils';
+} from '../servers-types';
 
 const image = {
   image_id: 0,

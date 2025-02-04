@@ -21,7 +21,6 @@ export default meta;
 
 type Story = StoryObj<typeof UserInformations>;
 
-// variable de definition : le Type de Resource (Notebook server ect.. ) et les Boutton, et le warning
 export const Default: Story = {
   args: {
     editing: false,

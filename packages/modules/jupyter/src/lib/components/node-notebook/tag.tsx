@@ -1,12 +1,12 @@
-import { icons } from '../../assets/icons';
+import { icons } from '@monorepo/demiurge-ui-components';
 
-interface TagProps {
+type TagProps = {
   text: string;
   textColor: string;
   crowned: boolean;
   removeTag: () => void;
   setCrowned: (crowned: boolean) => void;
-}
+};
 
 export const Tag = ({
   text,
@@ -22,7 +22,9 @@ export const Tag = ({
       }}
       className={`tag flex group/tag items-center gap-2 uppercase text-[10px] font-medium leading-[14px] bg-white bg-opacity-5 rounded-[4px] transition-all`}
     >
-      <span className='py-[2px] px-[10px]' contentEditable>{text}</span>
+      <span className="py-[2px] px-[10px]" contentEditable>
+        {text}
+      </span>
       {crowned ? (
         <div className="cursor-pointer" onClick={() => setCrowned(false)}>
           <icons.Crowned />

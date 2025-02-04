@@ -1,8 +1,4 @@
 import express from 'express';
-import { ForbiddenException, respond } from '@monorepo/backend-engine';
-import { authenticateHandler, model } from './models/oauth';
-import { userIsAuthenticated } from './models/users';
-import { Req } from './main';
 import OAuth2Server, {
   AuthorizeOptions,
   TokenOptions,
@@ -10,6 +6,13 @@ import OAuth2Server, {
   Response,
   AuthorizationCode,
 } from '@node-oauth/oauth2-server';
+
+import { respond } from '@monorepo/backend-engine';
+import { ForbiddenException } from '@monorepo/log';
+
+import { authenticateHandler, model } from './models/oauth';
+import { userIsAuthenticated } from './models/users';
+import { Req } from './main';
 import { CONFIG } from './config';
 
 //
@@ -142,7 +145,6 @@ export const setupOauthRoutes = (router: express.Router) => {
       const request = new Request(req);
       const response = new Response(res);
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await server.token(request, response, tokenOptions as any);
       } catch (err: any) {
         return next(new ForbiddenException([], err));

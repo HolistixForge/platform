@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as http from 'http';
 import * as https from 'https';
 
-import { error, log } from '@monorepo/log';
+import { error, log, NotFoundException } from '@monorepo/log';
 
 import { Handler } from '../Handler';
 import { Executor } from '../../Executor/Executor';
@@ -13,7 +13,6 @@ import { Response } from '../../Response/Response';
 import { OpenApiValidatorOpts } from 'express-openapi-validator/dist/framework/types';
 import { respond } from './responses';
 import { setupValidator } from './openapi-validator';
-import { NotFoundException } from '../../Exceptions/Exception';
 import {
   BasicExpressAppOptions,
   setupBasicExpressApp,
@@ -212,7 +211,6 @@ export class ExpressHandler extends Handler {
       log(6, '', `Express server listening [${url}]`);
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     server.on('error', (...args: any[]) => {
       error('', `express server error`, args);
     });

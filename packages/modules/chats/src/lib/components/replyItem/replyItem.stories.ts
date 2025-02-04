@@ -24,6 +24,7 @@ export const Normal: Story = {
     id: '89461896',
     date: new Date(),
     replied: {
+      picture: '',
       username: 'gitlab:Dave',
       content: 'Amet consectetur adispicing elit',
       color: 'var(--c-pink-3)',

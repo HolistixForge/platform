@@ -1,11 +1,8 @@
-import {
-  DisablePanSelect,
-  InputsAndOutputs,
-  TUseNodeValue,
-} from '../../demiurge-space-2';
-import { NodeHeader } from '../node-common/node-header';
+import { TUseNodeValue } from '../apis/types/node';
+import { InputsAndOutputs } from './assets/inputsOutputs/inputsOutputs';
+import { NodeHeader } from './assets/node-header/node-header';
+import { DisablePanSelect } from './node-wrappers/disable-pan-select';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const NodeDefault = ({
   isOpened,
   id,

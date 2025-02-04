@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { NodeChatProps, NodeChat } from './node-chat';
 import { useTestChatBox } from './test';
-import { StoryMockSpaceContext } from '../../demiurge-space-2';
+import { StoryMockSpaceContext } from '@monorepo/space';
 
 //
 

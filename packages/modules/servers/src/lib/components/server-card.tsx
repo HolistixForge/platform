@@ -1,15 +1,4 @@
 import { CSSProperties, useRef, useState } from 'react';
-import { icons } from '../../assets/icons';
-import { ResourceButtons } from '../../buttons/resource-buttons';
-import { UserBubble } from '../assets/user-bubble';
-import { Warning } from '../assets/warning';
-import { randomGuys } from '../../utils/random-guys';
-import { useAction } from '../../buttons/useAction';
-import { copyToClipboard } from '../../utils/copy-to-clipboard';
-import { randomColor } from '../../css-utils/css-utils';
-import { Datetime } from '../../datetime/datetime';
-import { UserAvatar } from '../../users/users';
-import { Tag, TagsBar } from './tags';
 import {
   CopyIcon,
   GearIcon,
@@ -17,25 +6,38 @@ import {
   TrashIcon,
 } from '@radix-ui/react-icons';
 import * as Tooltip from '@radix-ui/react-tooltip';
+import * as Menubar from '@radix-ui/react-menubar';
+
+import {
+  icons,
+  ResourceButtons,
+  UserBubble,
+  randomGuys,
+  useAction,
+  copyToClipboard,
+  randomColor,
+  Datetime,
+  UserAvatar,
+  Tag,
+  TagsBar,
+  DialogControlled,
+  FormErrorsError,
+  LoadingDots,
+  ButtonBase,
+  ClickStopPropagation,
+} from '@monorepo/demiurge-ui-components';
+
 import {
   ServerSystemInfo,
   TServerComponentCallbacks,
   TServerComponentProps,
-} from '@monorepo/demiurge-types';
-import { DialogControlled } from '../../dialog/dialog';
-import {
-  DockerOptionsForm,
-  DockerOptionsFormData,
-} from '../../form/form-docker-options/docker-options';
+} from '../servers-types';
+import { DockerOptionsForm, DockerOptionsFormData } from './docker-options';
 import {
   CloudInstanceOptionsForm,
   CloudInstanceOptionsFormData,
-} from '../../form/form-cloud-instance/cloud-instance-options';
-import { FormErrorsError } from '../../form/form-errors/types';
-import { LoadingDots } from '../../indicators/loading-dots';
-import * as Menubar from '@radix-ui/react-menubar';
-import { ButtonBase } from '../../buttons/buttonBase';
-import { ClickStopPropagation } from '../../utils/click-stop-propagation';
+} from './cloud-instance-options';
+import { StatusLed } from './status-led';
 
 /**
  *
@@ -44,7 +46,7 @@ import { ClickStopPropagation } from '../../utils/click-stop-propagation';
 const isAlive = (
   last_watchdog_at: Date | null,
   location: TServerComponentProps['location'],
-  ec2_instance_state: TServerComponentProps['ec2_instance_state'],
+  ec2_instance_state: TServerComponentProps['ec2_instance_state']
 ) => {
   const dateDiffSecondes = last_watchdog_at
     ? (new Date().getTime() - last_watchdog_at.getTime()) / 1000
@@ -123,7 +125,7 @@ export const ServerCard = ({
     [],
     {
       errorLatchTime: 5000,
-    },
+    }
   );
 
   //
@@ -142,7 +144,7 @@ export const ServerCard = ({
       values: { instanceType: 't2.small', storage: 10 },
       resetOnSuccess: false,
       tooltip: <span>Create and start instance</span>,
-    },
+    }
   );
 
   //
@@ -211,7 +213,7 @@ export const ServerCard = ({
       resetOnSuccess: false,
       closeOnSuccess: false,
       tooltip: <span>Copy docker command</span>,
-    },
+    }
   );
 
   //
@@ -222,7 +224,7 @@ export const ServerCard = ({
       await copyCmdAction.callback(e);
     },
     [onHost],
-    { errorLatchTime: 5000, tooltip: <span>Host locally with docker</span> },
+    { errorLatchTime: 5000, tooltip: <span>Host locally with docker</span> }
   );
 
   //
@@ -240,7 +242,7 @@ export const ServerCard = ({
     {
       errorLatchTime: 5000,
       tooltip: <span>Choose options and Copy Docker run command</span>,
-    },
+    }
   );
 
   //
@@ -251,7 +253,7 @@ export const ServerCard = ({
       return;
     },
     [onCloudStart],
-    { errorLatchTime: 5000, tooltip: <span>Start server</span> },
+    { errorLatchTime: 5000, tooltip: <span>Start server</span> }
   );
 
   //
@@ -262,7 +264,7 @@ export const ServerCard = ({
       return;
     },
     [onCloudStart],
-    { errorLatchTime: 5000, tooltip: <span>Stop server</span> },
+    { errorLatchTime: 5000, tooltip: <span>Stop server</span> }
   );
 
   //
@@ -273,7 +275,7 @@ export const ServerCard = ({
       return;
     },
     [onCloudStart],
-    { errorLatchTime: 5000, tooltip: <span>Delete cloud resource</span> },
+    { errorLatchTime: 5000, tooltip: <span>Delete cloud resource</span> }
   );
 
   //
@@ -292,7 +294,7 @@ export const ServerCard = ({
   const { alive, color } = isAlive(
     last_watchdog_at,
     location,
-    ec2_instance_state,
+    ec2_instance_state
   );
 
   server_name === 'MyServer1' && console.log({ alive, color });
@@ -303,7 +305,9 @@ export const ServerCard = ({
 
   return (
     <div
-      className={`${color === 'red' ? 'node-background' : 'gradient-notebook-card'} rounded-[8px] col-span-1 flex flex-col p-5 relative w-[400px] pointer`}
+      className={`${
+        color === 'red' ? 'node-background' : 'gradient-notebook-card'
+      } rounded-[8px] col-span-1 flex flex-col p-5 relative w-[400px] pointer`}
       onClick={() => {
         firstServiceName && onOpenService?.(firstServiceName);
       }}
@@ -535,7 +539,7 @@ export const ServerCard = ({
       <TagsBar tags={tags} addTag={addTag} />
 
       <div className="absolute right-4 bottom-[20px]">
-        <Warning color={color} type="server-card" />
+        <StatusLed color={color} type="server-card" />
       </div>
 
       <div className="absolute right-9 bottom-[19px]">
@@ -546,7 +550,7 @@ export const ServerCard = ({
         {location === 'aws' &&
           ec2_instance_state !== null &&
           !['running', 'stopped', 'terminated'].includes(
-            ec2_instance_state,
+            ec2_instance_state
           ) && (
             <span>
               {ec2_instance_state}
@@ -657,7 +661,9 @@ const CloudCircle = ({ on }: { on: boolean }) => {
         <div className="absolute left-[8px] -z-10 h-[31px] w-[31px] bg-[#ABFED4] origin-center rounded-full animate-ping"></div>
       )}
       <div
-        className={`absolute -z-10 h-[48px] w-[48px] rounded-full border border-[#ACFFD5] bg-[#141432] ${on ? 'drop-shadow-[0px_0px_4px_#ABFED4]' : ''}`}
+        className={`absolute -z-10 h-[48px] w-[48px] rounded-full border border-[#ACFFD5] bg-[#141432] ${
+          on ? 'drop-shadow-[0px_0px_4px_#ABFED4]' : ''
+        }`}
       >
         <icons.Cloud
           style={

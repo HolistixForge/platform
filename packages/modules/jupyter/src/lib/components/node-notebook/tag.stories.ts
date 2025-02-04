@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
+import { playAdd__hover } from '@monorepo/demiurge-ui-components';
+
 import { Tag } from './tag';
-import { playAdd__hover } from '../../storybook-utils';
 
 const meta = {
   title: 'Nodes/Notebook/Asset/Tag',

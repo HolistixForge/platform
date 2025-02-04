@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
+import { useAction, DialogControlled } from '@monorepo/demiurge-ui-components';
+
 import { DockerOptionsForm, DockerOptionsFormData } from './docker-options';
-import { useAction } from '../../buttons/useAction';
-import { DialogControlled } from '../../dialog/dialog';
 
 //
 
@@ -31,7 +32,7 @@ const StoryWrapper = () => {
         gpuAccess: 'specific',
         gpuIds: '',
       },
-    },
+    }
   );
   return (
     <DialogControlled

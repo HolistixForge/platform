@@ -23,7 +23,6 @@ export const NewPasswordForm = ({ action }: NewPasswordFormProps) => {
               label={field}
               name={field}
               onChange={action.handleInputChange}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               value={(action.formData as any)[field]}
               placeholder={field}
               type="password"

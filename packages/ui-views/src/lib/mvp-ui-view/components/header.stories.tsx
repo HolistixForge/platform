@@ -4,7 +4,7 @@ import { useNotImplemented } from '../../storybook-utils';
 import { randomGuy } from '../../utils/random-guys';
 
 const StoryWrapper = (
-  props: Pick<HeaderProps, 'hasNotifications' | 'host' | 'share' | 'user'>,
+  props: Pick<HeaderProps, 'hasNotifications' | 'host' | 'share' | 'user'>
 ) => {
   const ni = useNotImplemented();
   return (
@@ -43,7 +43,6 @@ export default meta;
 
 type Story = StoryObj<typeof StoryWrapper>;
 
-// variable de definition : le Type de Resource (Notebook server ect.. ) et les Boutton, et le warning
 export const LoggedIn: Story = {
   args: {
     hasNotifications: true,

@@ -28,7 +28,6 @@ export class Dispatcher<TE, Targs> {
     this._sharedTypes = sharedTypes;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async dispatch(event: TE, eventExtraArgs?: Partial<Targs>): Promise<void> {
     if (this._sharedTypes) {
       log(7, 'DISPATCH', '', event);

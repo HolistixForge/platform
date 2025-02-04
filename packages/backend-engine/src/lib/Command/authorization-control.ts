@@ -1,5 +1,6 @@
+import { ForbiddenException } from '@monorepo/log';
+
 import { Command, TCommandReturn } from './Command';
-import { ForbiddenException } from '../Exceptions/Exception';
 
 type TArgs = {
   type: string; // 'jwt' | 'hmac' | 'jwt,hmac';

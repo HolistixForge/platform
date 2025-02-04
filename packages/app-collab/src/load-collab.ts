@@ -1,21 +1,19 @@
-import { TSd, toGanymede } from './build-collab';
+import { TreeElement, TabPayload } from '@monorepo/tabs';
 import {
   TApi_Mount,
   TG_Server,
   TApi_Volume,
   TEc2InstanceState,
-  TreeElement,
-  TabPayload,
-} from '@monorepo/demiurge-types';
+  makeServer,
+  makeVolume,
+  makeMountEdge,
+} from '@monorepo/servers';
 import { Dispatcher } from '@monorepo/collab-engine';
+import { TEventNewView } from '@monorepo/space';
+import { TEventNewEdge, TEventNewNode } from '@monorepo/core';
+
+import { TSd, toGanymede } from './build-collab';
 import { PROJECT } from './project-config';
-import { updateProjectMetaActivity } from './event-reducers/meta-reducer';
-import {
-  addMountEdge,
-  addServer,
-  addVolume,
-} from './event-reducers/servers-reducer';
-import { TEventNewView } from '../../modules/core/src/lib/core-reducer';
 
 //
 
@@ -52,11 +50,9 @@ const headers = () => ({ authorization: PROJECT!.GANYMEDE_API_TOKEN });
 
 export const loadCollaborationData = async (
   sd: TSd,
-  dispatcher: Dispatcher<TEventNewView, {}>
+  dispatcher: Dispatcher<TEventNewView | TEventNewNode | TEventNewEdge, {}>
 ) => {
   try {
-    updateProjectMetaActivity(sd.meta);
-
     sd.tabs.set('unique', { tree: initialTabsTree, actives: {} });
 
     /**
@@ -88,7 +84,17 @@ export const loadCollaborationData = async (
           state = is.state;
         }
 
-        addServer(sd, s, { x: i * 150, y: 200 + i * 150 }, state);
+        const { node, projectServer } = makeServer(s, state);
+        sd.projectServers.set(
+          `${projectServer.project_server_id}`,
+          projectServer
+        );
+
+        dispatcher.dispatch({
+          type: 'core:new-node',
+          nodeData: node,
+          edges: [],
+        });
 
         /**
          * add incoming edges from volumes nodes
@@ -106,7 +112,16 @@ export const loadCollaborationData = async (
         const mounts = rm._0 as TApi_Mount[];
         if (mounts) {
           mounts.forEach((m) => {
-            addMountEdge(sd, m, s.project_server_id);
+            // addMountEdge(sd, m, s.project_server_id);
+            const edge = makeMountEdge({
+              project_server_id: s.project_server_id,
+              mount_point: m.mount_point,
+              volume_id: m.volume_id,
+            });
+            dispatcher.dispatch({
+              type: 'core:new-edge',
+              edge,
+            });
           });
         }
       }
@@ -125,12 +140,21 @@ export const loadCollaborationData = async (
     const volumes = r2._0;
     if (volumes) {
       volumes.forEach((v, k) => {
-        addVolume(sd, v, { x: k * 150, y: k * 150 });
+        const node = makeVolume(v);
+        dispatcher.dispatch({
+          type: 'core:new-node',
+          nodeData: node,
+          edges: [],
+        });
       });
     }
 
+    /**
+     * create a view
+     */
+
     dispatcher.dispatch({
-      type: 'new-view',
+      type: 'space:new-view',
       viewId: DEFAULT_VIEW_1,
     });
   } catch (err: any) {

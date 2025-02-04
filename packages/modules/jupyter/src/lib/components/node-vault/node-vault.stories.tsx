@@ -1,10 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { NodeVault, NodeVaultProps } from './node-vault';
-import { playAdd__hover, useTestBoolean } from '../../storybook-utils';
+
 import {
-  StoryMockSpaceContext,
-  nodeViewDefaultStatus,
-} from '../../demiurge-space-2';
+  playAdd__hover,
+  useTestBoolean,
+} from '@monorepo/demiurge-ui-components';
+import { StoryMockSpaceContext, nodeViewDefaultStatus } from '@monorepo/space';
+
+import { NodeVault, NodeVaultProps } from './node-vault';
+
 //
 
 const StoryWrapper = (

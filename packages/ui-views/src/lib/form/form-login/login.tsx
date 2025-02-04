@@ -66,15 +66,14 @@ export const LoginForm = ({
               label={field}
               name={field}
               onChange={action.handleInputChange}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               value={(action.formData as any)[field]}
               placeholder={field}
               type={
                 field === 'password'
                   ? 'password'
                   : field === 'email'
-                    ? 'email'
-                    : 'text'
+                  ? 'email'
+                  : 'text'
               }
             />
           </div>
@@ -108,7 +107,6 @@ export const LoginForm = ({
 //
 
 export type SendMagicLinkFormProps = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   action: TAction<any>;
   showForm: boolean;
   title: string;
@@ -133,7 +131,6 @@ export const SendMagicLinkForm = ({
                 label={field}
                 name={field}
                 onChange={action.handleInputChange}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 value={(action.formData as any)[field]}
                 placeholder={field}
                 type="email"

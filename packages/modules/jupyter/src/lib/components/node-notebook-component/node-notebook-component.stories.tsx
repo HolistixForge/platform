@@ -1,13 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
+import {
+  playAdd__hover,
+  useTestBoolean,
+} from '@monorepo/demiurge-ui-components';
+import { StoryMockSpaceContext, nodeViewDefaultStatus } from '@monorepo/space';
+
 import {
   NodeNotebookComponent,
   NodeNotebookComponentProps,
 } from './node-notebook-component';
-import { playAdd__hover, useTestBoolean } from '../../storybook-utils';
-import {
-  StoryMockSpaceContext,
-  nodeViewDefaultStatus,
-} from '../../demiurge-space-2';
 
 //
 

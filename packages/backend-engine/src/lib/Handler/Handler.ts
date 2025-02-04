@@ -9,6 +9,6 @@ export abstract class Handler {
     this._executor = e;
     this._apiDefinition = d;
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   abstract start(config: any): void;
 }

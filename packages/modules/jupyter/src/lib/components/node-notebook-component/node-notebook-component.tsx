@@ -1,12 +1,15 @@
-import { icons } from '../../assets/icons';
+import { useState, useEffect } from 'react';
+
+import { icons } from '@monorepo/demiurge-ui-components';
 import {
   Inputs,
   Outputs,
   TUseNodeValue,
   useConnector,
-} from '../../demiurge-space-2';
-import { NodeToolbar, useMakeButton } from '../node-common/node-toolbar';
-import { useState, useEffect } from 'react';
+  NodeToolbar,
+  useMakeButton,
+} from '@monorepo/space';
+
 import { CellsHive, CellsHiveProps } from '../node-notebook/cells-hive';
 import { NodeNotebook } from '../node-notebook/node-notebook';
 

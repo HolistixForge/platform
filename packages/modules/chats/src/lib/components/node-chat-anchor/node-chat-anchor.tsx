@@ -1,5 +1,5 @@
-import { icons } from '../../assets/icons';
-import { InputsAndOutputs } from '../../demiurge-space-2';
+import { icons } from '@monorepo/demiurge-ui-components';
+import { InputsAndOutputs } from '@monorepo/space';
 
 import './node-chat-anchor.scss';
 

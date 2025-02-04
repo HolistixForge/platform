@@ -1,6 +1,8 @@
 import { ReduceArgs, Reducer, SharedTypes } from '@monorepo/collab-engine';
+import { makeUuid } from '@monorepo/simple-types';
+import { TEventNewEdge, TEventNewNode } from '@monorepo/core';
+
 import {
-  TChat,
   TChatEvent,
   TEventChatResolve,
   TEventDeleteMessage,
@@ -8,10 +10,9 @@ import {
   TEventNewMessage,
   TEventUserHasRead,
   TEventNewChat,
-} from '@monorepo/demiurge-types';
+} from './chats-events';
 import { TChatSharedData } from './chats-shared-model';
-import { makeUuid } from '@monorepo/simple-types';
-import { TEventNewEdge, TEventNewNode } from '@monorepo/core';
+import { TChat } from './chats-types';
 
 /**
  *
@@ -100,7 +101,7 @@ export class ChatReducer extends Reducer<
     const chatNodeId = makeUuid();
 
     g.dispatcher.dispatch({
-      type: 'new-node',
+      type: 'core:new-node',
       nodeData: {
         type: 'chat-anchor',
         id: anchorNodeId,
@@ -113,7 +114,7 @@ export class ChatReducer extends Reducer<
     });
 
     g.dispatcher.dispatch({
-      type: 'new-node',
+      type: 'core:new-node',
       nodeData: {
         type: 'chat',
         id: chatNodeId,

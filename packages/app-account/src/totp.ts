@@ -2,17 +2,15 @@ import express from 'express';
 import passport from 'passport';
 import crypto from 'crypto';
 import base32 from 'thirty-two';
+
+import { respond } from '@monorepo/backend-engine';
+import { log, Exception, ForbiddenException } from '@monorepo/log';
+import { TJsonWithDate } from '@monorepo/simple-types';
+
 import { Req } from './main';
 import { findKeyForUserId, totpSaveKey, totpSuccess } from './models/users';
-import {
-  Exception,
-  ForbiddenException,
-  respond,
-} from '@monorepo/backend-engine';
 import { UserSerializedInfo } from './main';
 import PassportTotpStrategy from './passport-totp.js';
-import { log } from '@monorepo/log';
-import { TJsonWithDate } from '@monorepo/simple-types';
 
 //
 
@@ -154,7 +152,7 @@ export const setupTOTPRoutes = (router: express.Router) => {
           if (err) {
             return next(err);
           } else if (!user) {
-            const e = new Exception(status || 403);
+            const e = new Exception([], status || 403);
             return next(e);
           } else {
             (req as Req).session.secondFactor = 'totp';

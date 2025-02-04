@@ -19,23 +19,10 @@ export const htmlElementToReactProps = (e: HTMLElement | SVGElement) => {
   const attributes = Object.keys(e);
   const propsAttribute = attributes.find((a) => a.includes('__reactProps'));
   if (propsAttribute) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (e as any)[propsAttribute];
   }
   return undefined;
 };
-
-//
-
-export const sleep = (s?: number) =>
-  new Promise<void>((resolve, reject) => {
-    setTimeout(
-      () => {
-        resolve();
-      },
-      s ? s * 1000 : 1000
-    );
-  });
 
 //
 

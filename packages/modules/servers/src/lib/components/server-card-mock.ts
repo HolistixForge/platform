@@ -1,10 +1,12 @@
+import { useEffect, useState } from 'react';
+
+import { randomGuy } from '@monorepo/demiurge-ui-components';
+import { sleep } from '@monorepo/simple-types';
+
 import {
   TServerComponentCallbacks,
   TServerComponentProps,
-} from '@monorepo/demiurge-types';
-import { sleep } from '../../storybook-utils';
-import { useEffect, useState } from 'react';
-import { randomGuy } from '../../utils/random-guys';
+} from '../servers-types';
 
 //
 
@@ -16,7 +18,7 @@ const ni = async function (): Promise<void> {
 //
 
 export const useMockServerBehaviours = (
-  props: TServerComponentProps & TServerComponentCallbacks,
+  props: TServerComponentProps & TServerComponentCallbacks
 ): TServerComponentProps & TServerComponentCallbacks => {
   const [state, setState] = useState<TServerComponentProps>(props);
 
@@ -28,7 +30,7 @@ export const useMockServerBehaviours = (
       setState((prev) => ({ ...prev, ec2_instance_state: 'pending' }));
       setTimeout(
         () => setState((prev) => ({ ...prev, ec2_instance_state: 'running' })),
-        5000,
+        5000
       );
     },
 
@@ -37,7 +39,7 @@ export const useMockServerBehaviours = (
       setState((prev) => ({ ...prev, ec2_instance_state: 'stopping' }));
       setTimeout(
         () => setState((prev) => ({ ...prev, ec2_instance_state: 'stopped' })),
-        5000,
+        5000
       );
     },
 
@@ -71,15 +73,15 @@ export const useMockServerBehaviours = (
       }));
       setTimeout(
         () => setState((prev) => ({ ...prev, ec2_instance_state: 'pending' })),
-        3000,
+        3000
       );
       setTimeout(
         () => setState((prev) => ({ ...prev, ec2_instance_state: 'running' })),
-        7000,
+        7000
       );
       setTimeout(
         () => setState((prev) => ({ ...prev, last_watchdog_at: new Date() })),
-        9500,
+        9500
       );
     },
 

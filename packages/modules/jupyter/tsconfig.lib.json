@@ -35,13 +35,7 @@
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "references": [
     {
-      "path": "../../backend-engine/tsconfig.lib.json"
-    },
-    {
-      "path": "../../simple-types/tsconfig.lib.json"
-    },
-    {
-      "path": "../../demiurge-types/tsconfig.lib.json"
+      "path": "../core/tsconfig.lib.json"
     },
     {
       "path": "../../collab-engine/tsconfig.lib.json"
@@ -57,6 +51,15 @@
     },
     {
       "path": "../../log/tsconfig.lib.json"
+    },
+    {
+      "path": "../../simple-types/tsconfig.lib.json"
+    },
+    {
+      "path": "../space/tsconfig.lib.json"
+    },
+    {
+      "path": "../../demiurge-ui-components/tsconfig.lib.json"
     }
   ]
 }

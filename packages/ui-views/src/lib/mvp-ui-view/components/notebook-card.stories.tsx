@@ -11,7 +11,7 @@ const StoryWrapper = (
     'status' | 'groups' | 'host' | 'tags' | 'addTag'
   > & {
     userCount: number;
-  },
+  }
 ) => {
   const { userCount, tags, ...others } = props;
 
@@ -61,7 +61,6 @@ export default meta;
 
 type Story = StoryObj<typeof StoryWrapper>;
 
-// variable de definition : le Type de Resource (Notebook server ect.. ) et les Boutton, et le warning
 export const Default: Story = {
   args: {
     status: 'running',

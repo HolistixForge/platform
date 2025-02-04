@@ -1,5 +1,5 @@
 import { TF_User } from '@monorepo/demiurge-types';
-import { UserAvatar } from '../../users/users';
+import { UserAvatar } from './users';
 
 export interface UserBubbleProps {
   direction: 'horizontal' | 'vertical';
@@ -39,7 +39,9 @@ export const UserBubble = ({
     >
       {live && !displayPlusN && (
         <div
-          className={`absolute ${size === 'small' ? 'bottom-[2px]' : 'bottom-[4px]'} flex items-center h-fit leading-[10px] text-[12px] text-[#f7c8de] text-shadow-pink w-fit gap-[2px]`}
+          className={`absolute ${
+            size === 'small' ? 'bottom-[2px]' : 'bottom-[4px]'
+          } flex items-center h-fit leading-[10px] text-[12px] text-[#f7c8de] text-shadow-pink w-fit gap-[2px]`}
           style={{ zIndex: 110 }}
         >
           <div className="rounded-full conic-gradient-live h-2 w-2 mb-[2px]" />
@@ -94,7 +96,9 @@ export const UserBubble = ({
             +{users.length - 2}
             {live && (
               <div
-                className={`absolute ${size === 'small' ? 'bottom-[2px]' : 'bottom-[4px]'} flex items-center h-fit leading-[10px] text-[12px] text-[#f7c8de] text-shadow-pink w-fit gap-[2px]`}
+                className={`absolute ${
+                  size === 'small' ? 'bottom-[2px]' : 'bottom-[4px]'
+                } flex items-center h-fit leading-[10px] text-[12px] text-[#f7c8de] text-shadow-pink w-fit gap-[2px]`}
               >
                 <div className="rounded-full conic-gradient-live h-2 w-2 mb-[2px]" />
                 Live

@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { UserBubble, UserBubbleProps } from './user-bubble';
-import { randomGuys } from '../../utils/random-guys';
+import { randomGuys } from '../utils/random-guys';
 
 const StoryWrapper = (
   props: Pick<UserBubbleProps, 'direction' | 'live' | 'size'> & {
     usersCount: number;
-  },
+  }
 ) => {
   const { usersCount, ...others } = props;
   return <UserBubble {...others} users={randomGuys.slice(0, usersCount)} />;
