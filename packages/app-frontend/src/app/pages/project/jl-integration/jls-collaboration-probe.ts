@@ -1,0 +1,334 @@
+import { Map as YMap, Text as YText, Doc as YDoc } from 'yjs';
+import { WebsocketProvider } from 'y-websocket';
+import { TAwarenessUser, YjsAwareness } from '@monorepo/collaborative';
+import { buildUserCss, getYDoc } from '@monorepo/collaborative-hooks';
+import { ApiFetch } from '@monorepo/api-fetch';
+import { log } from '@monorepo/log';
+import { MonacoBinding } from 'y-monaco';
+import { TG_Server } from '@monorepo/demiurge-types';
+
+//
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const debug = (msg: string, ...a: any) => log(7, 'JLS_PROBE', msg, ...a);
+
+//
+
+const identity = (username: string, color: string) => {
+  const name = username.split(':')[0];
+  const finalName = `${name} (from Demiurge)`;
+  const initials = name.charAt(0).toUpperCase();
+  return {
+    avatar_url: null,
+    color,
+    display_name: finalName,
+    initials,
+    name: finalName,
+    username: finalName,
+  };
+};
+
+//
+
+type JLSession = {
+  fileId: string;
+  format: string;
+  sessionId: string;
+  type: string;
+};
+
+type JLFileInfo = {
+  type: string;
+};
+
+type ConnectedRoom = {
+  ydoc: YDoc;
+  provider: WebsocketProvider;
+  syncedPromise: Promise<boolean>;
+  awareness: YjsAwareness;
+};
+
+//
+
+export class CollaborationProbe {
+  server: TG_Server;
+  baseUrl: string;
+  token: string;
+  globalAwareness: ConnectedRoom;
+  api: ApiFetch;
+  _identity: ReturnType<typeof identity>;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private _session: any;
+
+  private _rooms: Map<string, ConnectedRoom> = new Map();
+  private _sessions: Map<string, JLSession> = new Map();
+  private _fileInfos: Map<string, JLFileInfo> = new Map();
+
+  constructor(
+    server: TG_Server,
+    { baseUrl, token }: { baseUrl: string; token: string },
+    user: TAwarenessUser,
+  ) {
+    this.server = server;
+    this.baseUrl = baseUrl;
+    this.token = token;
+    this._identity = identity(user.username, user.color);
+
+    this.globalAwareness = this.connectRoom('JupyterLab:globalAwareness', {});
+    this.globalAwareness.provider.awareness.on('change', () => {
+      debug(
+        `[server: ${this.server.project_server_id}, globalAwareness]: change:`,
+        this.globalAwareness.provider.awareness.getStates(),
+      );
+    });
+
+    this.api = new ApiFetch(`${this.baseUrl}/api`);
+  }
+
+  //
+
+  async _getFileInfos(filename: string) {
+    let fi = this._fileInfos.get(filename);
+    if (fi) return fi;
+    fi = (await this.api.fetch({
+      url: `contents/${filename}`,
+      queryParameters: {
+        content: 0,
+        token: this.token,
+      },
+      method: 'GET',
+    })) as JLFileInfo;
+    this._fileInfos.set(filename, fi);
+    return fi;
+  }
+
+  //
+
+  async _getSession(filename: string) {
+    const fi = await this._getFileInfos(filename);
+    let session = this._sessions.get(filename);
+    if (session) return session;
+    session = (await this.api.fetch({
+      url: 'collaboration/session/{filename}',
+      queryParameters: {
+        token: this.token,
+      },
+      pathParameters: { filename },
+      jsonBody: {
+        format: 'json',
+        type: fi.type,
+      },
+      method: 'PUT',
+    })) as JLSession;
+    return session;
+  }
+
+  //
+
+  async _getFileRoom(filename: string) {
+    let room = this._rooms.get(filename);
+    if (room) return room;
+    const session = await this._getSession(filename);
+    const { fileId, format, sessionId, type } = session;
+    const roomId = `${format}:${type}:${fileId}`;
+    room = this.connectRoom(roomId, {
+      sessionId,
+    });
+    this._rooms.set(filename, room);
+    return room;
+  }
+
+  //
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async bindCellule(notebook: string, cellule: number, editor: any) {
+    const room = await this._getFileRoom(notebook);
+    await room.syncedPromise;
+    const cells = room.ydoc.getArray('cells');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const c = cells.get(cellule) as YMap<any>;
+
+    new MonacoBinding(
+      c.get('source') as YText,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      editor.getModel() as any,
+      new Set([editor]),
+      room.provider.awareness,
+    );
+  }
+
+  //
+
+  async _listRootDirectory() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    /*const rootDir: any =*/ await this.api.fetch({
+      url: 'contents',
+      queryParameters: {
+        content: 1,
+        token: this.token,
+      },
+      method: 'GET',
+    });
+  }
+
+  //
+
+  connectRoom(roomId: string, params: { [k: string]: string }) {
+    const { ydoc, provider, syncedPromise } = getYDoc(
+      `${this.baseUrl}:${roomId}`,
+      roomId,
+      `${this.baseUrl.replace('https://', 'wss://')}/api/collaboration/room`,
+      params,
+      { get: () => this.token },
+    );
+
+    /////////// WORKAROUND ///////////
+    // cursors share from jupyterlab to demiurge and vice versa
+    // jupyterlab's codemirror binding use 'cursors' state field
+    // and demiurge's monaco binding use 'selection' state field
+    // so we alias properties in both way
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (!(provider.awareness as any).__workaround__flag__) {
+      const oldGetStates = provider.awareness.getStates.bind(
+        provider.awareness,
+      );
+      provider.awareness.getStates = () => {
+        const states = oldGetStates();
+        states.forEach((v, k) => {
+          if (v.cursors && v.cursors.length > 0) {
+            v.selection = v.cursors[0];
+          }
+        });
+        return states;
+      };
+
+      const oldSetLocalStateField = provider.awareness.setLocalStateField.bind(
+        provider.awareness,
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      provider.awareness.setLocalStateField = (field: string, value: any) => {
+        if (field === 'selection') {
+          oldSetLocalStateField('cursors', [
+            {
+              ...value,
+              empty:
+                JSON.stringify(value.anchor) === JSON.stringify(value.head),
+              primary: true,
+            },
+          ]);
+        }
+        oldSetLocalStateField(field, value);
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (provider.awareness as any).__workaround__flag__ = true;
+    }
+
+    ///////////
+
+    const awareness = new YjsAwareness(ydoc, provider, buildUserCss);
+    awareness.setUser(this._identity);
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    awareness.addAwarenessListener(({ added, removed, updated, states }, a) => {
+      log(7, 'AWARENESS_JUPYTERLAB', 'change', states);
+    });
+
+    const r = { ydoc, provider, syncedPromise, awareness };
+    return r;
+  }
+}
+
+/*
+/api/contents? content=1 &1708704484014
+{
+	"name": "",
+	"path": "",
+	"last_modified": "2024-02-23T15:12:57.761527Z",
+	"created": "2024-02-23T15:12:57.761527Z",
+	"content": [
+		{
+			"name": "test",
+			"path": "test",
+			"last_modified": "2024-02-23T08:42:35.458645Z",
+			"created": "2024-02-23T08:42:35.458645Z",
+			"content": null,
+			"format": null,
+			"mimetype": null,
+			"size": null,
+			"writable": true,
+			"type": "directory"
+		},
+		{
+			"name": "Untitled.ipynb",
+			"path": "Untitled.ipynb",
+			"last_modified": "2024-02-23T08:39:22.290391Z",
+			"created": "2024-02-23T08:39:22.290391Z",
+			"content": null,
+			"format": null,
+			"mimetype": null,
+			"size": 909,
+			"writable": true,
+			"type": "notebook"
+		},
+		{
+			"name": "untitled.txt",
+			"path": "untitled.txt",
+			"last_modified": "2024-02-23T08:42:19.482621Z",
+			"created": "2024-02-23T08:42:19.482621Z",
+			"content": null,
+			"format": null,
+			"mimetype": "text/plain",
+			"size": 0,
+			"writable": true,
+			"type": "file"
+		},
+		{
+			"name": "work",
+			"path": "work",
+			"last_modified": "2023-10-20T18:36:51Z",
+			"created": "2024-02-06T18:01:16.532299Z",
+			"content": null,
+			"format": null,
+			"mimetype": null,
+			"size": null,
+			"writable": true,
+			"type": "directory"
+		}
+	],
+	"format": "json",
+	"mimetype": null,
+	"size": null,
+	"writable": true,
+	"type": "directory"
+}
+/api/contents/test/in-test.txt? content=0&1708704484033
+{
+	"name": "in-test.txt",
+	"path": "test/in-test.txt",
+	"last_modified": "2024-02-23T08:42:27.958634Z",
+	"created": "2024-02-23T08:42:35.458645Z",
+	"content": null,
+	"format": null,
+	"mimetype": "text/plain",
+	"size": 0,
+	"writable": true,
+	"type": "file"
+}
+/api/collaboration/session/test%2Fin-test.txt?1708704484232
+{
+	"format": "text",
+	"type": "file",
+	"fileId": "d64668ba-239b-4f64-817a-782d71616391",
+	"sessionId": "dca6fa53-2656-4dbd-bfa0-a8e48ba30a8f"
+}
+
+https://github.com/jupyter-server/jupyter_ydoc/blob/main/docs/source/schema.md
+
+wss: /api/collaboration/room/text:file:d64668ba-239b-4f64-817a-782d71616391?sessionId=dca6fa53-2656-4dbd-bfa0-a8e48ba30a8f
+roomId: text:file:d64668ba-239b-4f64-817a-782d71616391,
+param: sessionId: dca6fa53-2656-4dbd-bfa0-a8e48ba30a8f
+[cursor] ytext ?
+*/

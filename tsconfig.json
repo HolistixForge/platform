@@ -80,6 +80,9 @@
     },
     {
       "path": "./packages/ui-views"
+    },
+    {
+      "path": "./packages/app-frontend"
     }
   ],
   "ts-node": {
