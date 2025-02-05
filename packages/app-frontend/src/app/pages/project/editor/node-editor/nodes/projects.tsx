@@ -1,4 +1,6 @@
 import { useMemo, useState, createContext, useContext, ReactNode } from 'react';
+import { InfoCircledIcon } from '@radix-ui/react-icons';
+
 import {
   ButtonBase,
   paletteRandomColor,
@@ -11,26 +13,16 @@ import {
   useCurrentUser,
   useMutationStartProject,
   useQueryProjectByName,
-} from '@monorepo/demiurge-data';
+} from '@monorepo/frontend-data';
 import {
   CollaborativeContext,
   TYjsCollabConfig,
-} from '@monorepo/collaborative-hooks';
-import { DemiurgeSpaceCollabChunk } from '@monorepo/demiurge-space';
-import {
-  TApi_Project,
-  makeYjsDocId,
-  serverUrl,
-} from '@monorepo/demiurge-types';
-import { ApiFetch } from '@monorepo/api-fetch';
-import {
-  ChatCollabChunk,
-  DemiurgeNotebookCollabChunk,
-  TabsCollabChunk,
-} from '../../../model/collab-model-chunk';
+} from '@monorepo/collab-engine';
+import { TApi_Project, makeYjsDocId } from '@monorepo/demiurge-types';
+import { ApiFetch, serverUrl } from '@monorepo/api-fetch';
 import { TMyfetchRequest } from '@monorepo/simple-types';
 import { log } from '@monorepo/log';
-import { InfoCircledIcon } from '@radix-ui/react-icons';
+import { getCollabChunks } from '../../../model/collab-model-chunk';
 
 //
 //
@@ -66,7 +58,7 @@ export const Project = ({
   const { ganymedeApi } = useApi();
 
   const [message, setMessage] = useState(
-    "getting project's collaboration server informations",
+    "getting project's collaboration server informations"
   );
 
   //
@@ -94,7 +86,7 @@ export const Project = ({
 
   const { status: projectStatus, data: projectData } = useQueryProjectByName(
     ownerId,
-    projectName,
+    projectName
   );
 
   //
@@ -153,16 +145,11 @@ export const Project = ({
 
   const collabChunks = useMemo(() => {
     if (project) {
-      return [
-        DemiurgeSpaceCollabChunk,
-        ChatCollabChunk,
-        TabsCollabChunk,
-        DemiurgeNotebookCollabChunk({
-          api: ganymedeApi,
-          gatewayFQDN: project.gatewayFQDN,
-          user,
-        }),
-      ];
+      return getCollabChunks({
+        api: ganymedeApi,
+        gatewayFQDN: project.gatewayFQDN,
+        user,
+      });
     }
     return null;
   }, [ganymedeApi, project, user]);
@@ -264,7 +251,7 @@ const StartProjectBox = ({
   const startProject = useMutationStartProject(
     project_id,
     ownerId,
-    projectName,
+    projectName
   );
   const action = useAction(() => startProject.mutateAsync(), [startProject]);
 

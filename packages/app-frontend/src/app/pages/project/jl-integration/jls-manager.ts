@@ -1,17 +1,16 @@
-import { GanymedeApi } from '@monorepo/demiurge-data';
+import { GanymedeApi } from '@monorepo/frontend-data';
+import { serverUrl } from '@monorepo/api-fetch';
 import {
+  JupyterlabDriver,
+  BrowserWidgetManager,
   TDKID,
-  TDemiurgeNotebookSharedData,
+  TJupyterSharedData,
   TJKID,
-  TJupyterServerInfo,
+  TJupyterServerData,
   dkidToServer,
-  jupyterlabIsReachable,
-  serverUrl,
-} from '@monorepo/demiurge-types';
-import { JupyterlabDriver } from '@monorepo/jupyterlab-api';
-import { BrowserWidgetManager } from '@monorepo/jupyterlab-api-browser';
+} from '@monorepo/jupyter';
 import { CollaborationProbe } from './jls-collaboration-probe';
-import { TAwarenessUser } from '@monorepo/collaborative';
+import { TAwarenessUser } from '@monorepo/collab-engine';
 
 type TKernelState =
   | 'server-stopped'
@@ -52,7 +51,7 @@ export type TKernelPack = {
   listeners: (() => void)[];
 };
 
-export type TOnNewDriverCb = (s: TJupyterServerInfo) => Promise<void>;
+export type TOnNewDriverCb = (s: TJupyterServerData) => Promise<void>;
 
 /**
  * JupyterLabs Manager
@@ -61,7 +60,7 @@ export type TOnNewDriverCb = (s: TJupyterServerInfo) => Promise<void>;
 export class JLsManager {
   _drivers: Map<number, Promise<JupyterlabDriver>> = new Map();
   _kernelPacks: Map<TDKID, TKernelPack> = new Map();
-  _sd: TDemiurgeNotebookSharedData;
+  _sd: TJupyterSharedData;
   _gatewayFQDN: string;
   _onNewDriver: TOnNewDriverCb;
   _ganymedeApi: GanymedeApi;
@@ -76,17 +75,17 @@ export class JLsManager {
    * @param onNewDriver
    */
   constructor(
-    sd: TDemiurgeNotebookSharedData,
+    sd: TJupyterSharedData,
     api: GanymedeApi,
     gatewayFQDN: string,
     onNewDriver: TOnNewDriverCb,
-    user: TAwarenessUser,
+    user: TAwarenessUser
   ) {
     this._sd = sd;
     this._ganymedeApi = api;
     this._gatewayFQDN = gatewayFQDN;
     this._onNewDriver = onNewDriver;
-    this._sd.projectServers.observe(() => this._onChange());
+    this._sd.jupyterServers.observe(() => this._onChange());
     this._user = user;
   }
 
@@ -98,7 +97,7 @@ export class JLsManager {
     this._kernelPacks.forEach((kp) => this._updateKernelPack(kp));
 
     // for each server
-    this._sd.projectServers.forEach(async (server) => {
+    this._sd.jupyterServers.forEach(async (server) => {
       // we only consider jupyterlab server
       if (server.type === 'jupyter') {
         // if running and ready
@@ -138,7 +137,7 @@ export class JLsManager {
      *    - server still exist ?
      *    - kernel still exist ?
      */
-    const s = this._sd.projectServers.get(`${kp.project_server_id}`);
+    const s = this._sd.jupyterServers.get(`${kp.project_server_id}`);
     if (!s || s.type !== 'jupyter') {
       this._disposeKernelPack(kp);
       this._kernelPacks.delete(kp.dkid);
@@ -202,11 +201,11 @@ export class JLsManager {
    *
    */
   getServerSetting = async (
-    server: TJupyterServerInfo,
-    websocket?: boolean,
+    server: TJupyterServerData,
+    websocket?: boolean
   ) => {
     const oauth_client = server.oauth.find(
-      (o) => o.service_name === 'jupyterlab',
+      (o) => o.service_name === 'jupyterlab'
     );
     if (!oauth_client) throw new Error('jupyterlab not mapped');
 
@@ -236,7 +235,7 @@ export class JLsManager {
    * @param project_server_id
    * @returns
    */
-  private _getDriver(server: TJupyterServerInfo): Promise<JupyterlabDriver> {
+  private _getDriver(server: TJupyterServerData): Promise<JupyterlabDriver> {
     const p = this._drivers.get(server.project_server_id);
     if (!p) {
       const np = new Promise<JupyterlabDriver>((resolve, reject) => {
@@ -336,12 +335,12 @@ export class JLsManager {
     notebook: string,
     cellule: number,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    editor: any,
+    editor: any
   ) {
     let probe = this._collaborationProbes.get(project_server_id);
     if (!probe || probe === 'pending') {
       console.log(
-        `No probe for server [${project_server_id}], server does not exists or not started ?`,
+        `No probe for server [${project_server_id}], server does not exists or not started ?`
       );
       return;
     }

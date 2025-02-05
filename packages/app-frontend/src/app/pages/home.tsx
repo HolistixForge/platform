@@ -1,20 +1,22 @@
+import { InfoCircledIcon } from '@radix-ui/react-icons';
+import { Table } from '@radix-ui/themes';
+
 import {
   useCurrentUser,
   useMutationNewProject,
   useQueryUser,
   useQueryUserProjects,
-} from '@monorepo/demiurge-data';
+  NewProjectFormData,
+} from '@monorepo/frontend-data';
 import {
   useAction,
-  NewProjectForm,
-  NewProjectFormData,
   UserInline,
   DialogControlled,
 } from '@monorepo/demiurge-ui-components';
-import { InfoCircledIcon } from '@radix-ui/react-icons';
-import { Table } from '@radix-ui/themes';
-import { HeaderLogic } from '../header/header-logic';
+import { NewProjectForm } from '@monorepo/ui-views';
 import { TApi_Project } from '@monorepo/demiurge-types';
+
+import { HeaderLogic } from '../header/header-logic';
 import { DeleteProjectFormLogic } from '../forms/new-project-form';
 
 //
@@ -56,7 +58,7 @@ const ProjectsList = () => {
       checkForm: (d, e) => {
         if (!d.name) e.name = 'Please choose a name';
       },
-    },
+    }
   );
 
   //

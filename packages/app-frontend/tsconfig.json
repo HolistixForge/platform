@@ -3,6 +3,51 @@
   "include": [],
   "references": [
     {
+      "path": "../modules/jupyter"
+    },
+    {
+      "path": "../modules/chats"
+    },
+    {
+      "path": "../modules/space"
+    },
+    {
+      "path": "../modules/tabs"
+    },
+    {
+      "path": "../modules/core"
+    },
+    {
+      "path": "../modules/servers"
+    },
+    {
+      "path": "../api-fetch"
+    },
+    {
+      "path": "../lazy-factory"
+    },
+    {
+      "path": "../simple-types"
+    },
+    {
+      "path": "../collab-engine"
+    },
+    {
+      "path": "../ui-views"
+    },
+    {
+      "path": "../demiurge-types"
+    },
+    {
+      "path": "../demiurge-ui-components"
+    },
+    {
+      "path": "../frontend-data"
+    },
+    {
+      "path": "../log"
+    },
+    {
       "path": "./tsconfig.app.json"
     }
   ],

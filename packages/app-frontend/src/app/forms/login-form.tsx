@@ -1,10 +1,7 @@
-import { useApi, useMutationLogin } from '@monorepo/demiurge-data';
-import {
-  SendMagicLinkForm,
-  LoginForm,
-  LoginFormData,
-  useAction,
-} from '@monorepo/demiurge-ui-components';
+import { useApi, useMutationLogin } from '@monorepo/frontend-data';
+import { useAction } from '@monorepo/demiurge-ui-components';
+import { SendMagicLinkForm, LoginForm } from '@monorepo/ui-views';
+import { LoginFormData } from '@monorepo/frontend-data';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 

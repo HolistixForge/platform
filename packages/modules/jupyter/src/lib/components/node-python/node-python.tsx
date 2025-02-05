@@ -6,7 +6,7 @@ import {
 import {
   Inputs,
   Outputs,
-  TUseNodeValue,
+  TNodeContext,
   useConnector,
   NodeToolbar,
   useMakeButton,
@@ -21,7 +21,7 @@ export type NodePythonProps = {
   nodeInfos: boolean;
   status: 'success' | 'error' | 'loading';
 } & Pick<
-  TUseNodeValue,
+  TNodeContext,
   'id' | 'isOpened' | 'open' | 'close' | 'viewStatus' | 'expand' | 'reduce'
 >;
 

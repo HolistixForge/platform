@@ -1,7 +1,9 @@
 import { useCallback } from 'react';
 
-import { TNodeCommon, TNodeKernel } from '@monorepo/demiurge-types';
-import { useNode } from '@monorepo/demiurge-space';
+import { TNodeKernel } from '@monorepo/demiurge-types';
+import { useNodeContext } from '@monorepo/space';
+import { useAction } from '@monorepo/demiurge-ui-components';
+import { NodeKernel } from '@monorepo/jupyter';
 
 import { greaterThan } from '../../../jl-integration/jls-manager';
 import {
@@ -9,7 +11,6 @@ import {
   useKernelPack,
   useSharedData,
 } from '../../../model/collab-model-chunk';
-import { NodeKernel, useAction } from '@monorepo/demiurge-ui-components';
 
 //
 //
@@ -20,7 +21,7 @@ export const KernelNodeLogic = ({
   project_server_id,
 }: TNodeCommon & TNodeKernel) => {
   //
-  const useNodeValue = useNode();
+  const useNodeValue = useNodeContext();
 
   const serverData = useSharedData(['projectServers'], (sd) => {
     return sd.projectServers.get(`${project_server_id}`);

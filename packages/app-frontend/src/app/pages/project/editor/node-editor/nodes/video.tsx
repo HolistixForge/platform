@@ -1,9 +1,9 @@
 import { useCallback } from 'react';
 
 import { useFactory } from '@monorepo/lazy-factory';
-import { TNodeCommon, TNodeVideo } from '@monorepo/demiurge-types';
-import { useNode } from '@monorepo/demiurge-space';
-import { NodeVideo } from '@monorepo/demiurge-ui-components';
+import { TNodeVideo } from '@monorepo/demiurge-types';
+import { useNodeContext } from '@monorepo/space';
+import { NodeVideo } from '@monorepo/ui-views';
 
 import { useDispatcher } from '../../../model/collab-model-chunk';
 
@@ -12,7 +12,7 @@ import { useDispatcher } from '../../../model/collab-model-chunk';
 export const VideoNodeLogic = ({ id, youtubeId }: TNodeCommon & TNodeVideo) => {
   //
 
-  const useNodeValue = useNode();
+  const useNodeValue = useNodeContext();
 
   const { Component: Youtube } = useFactory('socials:youtube', ['DOM'], null);
 

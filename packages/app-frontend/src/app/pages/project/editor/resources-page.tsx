@@ -1,23 +1,21 @@
-import {
-  ResourceBar,
-  ServerStack,
-  ServerCard,
-  NewServerForm,
-  DialogControlled,
-} from '@monorepo/demiurge-ui-components';
+import { CSSProperties } from 'react';
+
+import { useQueryServerImages } from '@monorepo/frontend-data';
+import { DialogControlled } from '@monorepo/demiurge-ui-components';
+import { ResourceBar, ServerStack, NewServerForm } from '@monorepo/ui-views';
+import { ServerCard } from '@monorepo/servers';
+
 import { ProjectSidebar } from '../sidebar';
 import { useDispatcher, useSharedData } from '../model/collab-model-chunk';
 import { useServerProps } from './node-editor/nodes/server';
-import { CSSProperties } from 'react';
 import { useNewServerAction } from './node-editor/menus/context-menu-logic';
-import { useQueryServerImages } from '@monorepo/demiurge-data';
 
 //
 
 export const ResourcePage = () => {
   const projectServers = useSharedData(
     ['projectServers'],
-    (sd) => sd.projectServers,
+    (sd) => sd.projectServers
   );
 
   const dispatcher = useDispatcher();
@@ -81,4 +79,6 @@ const ServerCardLogic = ({
         <ServerCard {...props} />
       </div>
     );
+
+  return null;
 };

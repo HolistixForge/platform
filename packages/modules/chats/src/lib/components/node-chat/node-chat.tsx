@@ -11,7 +11,7 @@ import {
 } from '@monorepo/demiurge-ui-components';
 import {
   DisablePanSelect,
-  TUseNodeValue,
+  TNodeContext,
   NodeToolbar,
   InputsAndOutputs,
 } from '@monorepo/space';
@@ -371,7 +371,7 @@ const ChatMessage = ({
 //
 
 export type NodeChatProps = ChatBoxProps &
-  Pick<TUseNodeValue, 'id' | 'viewStatus' | 'selected' | 'close'>;
+  Pick<TNodeContext, 'id' | 'viewStatus' | 'selected' | 'close'>;
 
 export const NodeChat = ({
   id: nodeId,

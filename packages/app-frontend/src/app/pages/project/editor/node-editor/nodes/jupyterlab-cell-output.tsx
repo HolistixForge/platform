@@ -2,13 +2,20 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { OutputArea } from '@jupyterlab/outputarea';
 import { Widget } from '@lumino/widgets';
 
-import { IOutput, TDKID, TNodePython } from '@monorepo/demiurge-types';
-import { useDebugComponent } from '@monorepo/log';
-import { BrowserWidgetManager } from '@monorepo/jupyterlab-api-browser';
-import { KernelStateIndicator } from '@monorepo/demiurge-ui-components';
-
-import { useKernelPack, useSharedData } from '../../../model/collab-model-chunk';
+import { TNodePython } from '@monorepo/demiurge-types';
 import { makeUuid } from '@monorepo/simple-types';
+import {
+  IOutput,
+  TDKID,
+  BrowserWidgetManager,
+  KernelStateIndicator,
+} from '@monorepo/jupyter';
+import { useDebugComponent } from '@monorepo/log';
+
+import {
+  useKernelPack,
+  useSharedData,
+} from '../../../model/collab-model-chunk';
 
 //
 
@@ -50,7 +57,7 @@ const uuidInjecter = () => {
 export const JupyterlabCellOutput = ({ dkid, nid }: PythonOutputProps) => {
   const debug = useDebugComponent();
 
-  const data = useSharedData(['nodeData'], (sd) => sd.nodeData.get(nid));
+  const data = useSharedData(['nodes'], (sd) => sd.nodes.get(nid));
 
   const kernelPack = useKernelPack(dkid);
 

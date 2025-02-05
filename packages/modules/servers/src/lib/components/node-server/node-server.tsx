@@ -3,7 +3,7 @@ import { CSSProperties } from 'react';
 import {
   NodeHeader,
   DisablePanSelect,
-  TUseNodeValue,
+  TNodeContext,
   useMakeButton,
 } from '@monorepo/space';
 
@@ -21,7 +21,7 @@ export const NodeServer = (
   props: TServerComponentProps &
     TServerComponentCallbacks &
     Pick<
-      TUseNodeValue,
+      TNodeContext,
       'id' | 'isOpened' | 'open' | 'close' | 'viewStatus' | 'expand' | 'reduce'
     >
 ) => {

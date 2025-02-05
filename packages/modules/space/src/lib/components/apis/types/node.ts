@@ -1,6 +1,6 @@
 import { TNodeViewStatus, TSelectingUsers } from '../../../space-types';
 
-export type TUseNodeValue = {
+export type TNodeContext = {
   id: string;
   isOpened: boolean;
   zoom: number;

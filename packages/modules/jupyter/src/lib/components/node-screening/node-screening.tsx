@@ -2,7 +2,7 @@ import { icons } from '@monorepo/demiurge-ui-components';
 
 import {
   Inputs,
-  TUseNodeValue,
+  TNodeContext,
   useConnector,
   NodeToolbar,
   useMakeButton,
@@ -19,7 +19,7 @@ export type NodeScreeningProps = {
   color: string;
   inputs: number;
 } & Pick<
-  TUseNodeValue,
+  TNodeContext,
   'id' | 'isOpened' | 'open' | 'close' | 'viewStatus' | 'expand' | 'reduce'
 >;
 

@@ -1,18 +1,20 @@
 import { FC } from 'react';
-import { PanelProps, TabsRadix } from '@monorepo/demiurge-ui-components';
-import { NodeEditorView } from './node-editor/node-editor-view';
-import { ResourcePage } from './resources-page';
+
 import {
+  PanelProps,
+  TabsRadix,
   MAX_TAB_ROW,
   ReadOnlyTree,
   TabPath,
   TabPayload,
-} from '@monorepo/demiurge-types';
+} from '@monorepo/tabs';
+import { useCurrentUser } from '@monorepo/frontend-data';
+
+import { NodeEditorView } from './node-editor/node-editor-view';
+import { ResourcePage } from './resources-page';
 import { useDispatcher, useSharedData } from '../model/collab-model-chunk';
-import { useCurrentUser } from '@monorepo/demiurge-data';
 import { useProject } from './node-editor/nodes/projects';
 
-//
 //
 
 export const EditorTabsSystemLogic = () => {
@@ -28,7 +30,7 @@ export const EditorTabsSystemLogic = () => {
   const onTabAdd = (
     path: string[],
     title = 'New Tab',
-    payload: TabPayload = { type: 'none' },
+    payload: TabPayload = { type: 'none' }
   ) => {
     dispatcher.dispatch({ type: 'add-tab', path, title, payload });
   };
@@ -89,6 +91,8 @@ export const EditorTabsSystemLogic = () => {
       </div>
     );
   }
+
+  return null;
 };
 
 //
@@ -119,11 +123,11 @@ const ProjectServerUIView = (props: {
   const { gatewayFQDN } = useProject();
 
   const server = useSharedData(['projectServers'], (sd) =>
-    sd.projectServers.get(`${props.project_server_id}`),
+    sd.projectServers.get(`${props.project_server_id}`)
   );
 
   const service = server?.httpServices.find(
-    (svc) => svc.name === props.service_name,
+    (svc) => svc.name === props.service_name
   );
 
   if (service)
@@ -135,4 +139,6 @@ const ProjectServerUIView = (props: {
         ></iframe>
       </>
     );
+
+  return null;
 };

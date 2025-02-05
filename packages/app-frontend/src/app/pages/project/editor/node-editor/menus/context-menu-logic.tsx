@@ -7,15 +7,10 @@ import React, {
 } from 'react';
 import * as ContextMenu from '@radix-ui/react-context-menu';
 import { ChevronRightIcon } from '@radix-ui/react-icons';
-import { useDispatcher, useSharedData } from '../../../model/collab-model-chunk';
-import {
-  TEdgeEnd,
-  TNodeKernel,
-  TNodeServer,
-  TPosition,
-  TServerEvents,
-  jupyterlabIsReachable,
-} from '@monorepo/demiurge-types';
+
+import { TServerEvents } from '@monorepo/servers';
+import { TPosition, TEdgeEnd } from '@monorepo/core';
+import { TNodeKernel, TNodeServer } from '@monorepo/demiurge-types';
 import {
   NewKernelForm,
   NewKernelFormData,
@@ -25,11 +20,15 @@ import {
   NewYoutubeFormData,
   NewVolumeForm,
   NewVolumeFormData,
-  useAction,
-  DialogControlled,
-} from '@monorepo/demiurge-ui-components';
-import { useQueryServerImages } from '@monorepo/demiurge-data';
-import { Dispatcher } from '@monorepo/collaborative';
+} from '@monorepo/ui-views';
+import { useAction, DialogControlled } from '@monorepo/demiurge-ui-components';
+import { useQueryServerImages } from '@monorepo/frontend-data';
+import { Dispatcher } from '@monorepo/collab-engine';
+
+import {
+  useDispatcher,
+  useSharedData,
+} from '../../../model/collab-model-chunk';
 
 /**
  *
@@ -107,7 +106,7 @@ export const ContextMenuNew = () => {
 export const useNewServerAction = (
   dispatcher: Dispatcher<TServerEvents, Record<string, never>>,
   viewId?: string,
-  refCoordinates?: React.MutableRefObject<TPosition>,
+  refCoordinates?: React.MutableRefObject<TPosition>
 ) => {
   const s_action = useAction<NewServerFormData>(
     (d) => {
@@ -131,7 +130,7 @@ export const useNewServerAction = (
         if (!d.serverName)
           e.serverName = 'Please choose a name for the new server';
       },
-    },
+    }
   );
 
   return s_action;
@@ -158,10 +157,10 @@ export const ContextMenuLogic = ({
 
   const dispatcher = useDispatcher();
 
-  const sd = useSharedData(['nodeData'], (sd) => sd);
+  const sd = useSharedData(['nodes'], (sd) => sd);
 
   // get the origin node data
-  const originNodeData = from && sd.nodeData.get(from.node);
+  const originNodeData = from && sd.nodes.get(from.node);
 
   /**
    *
@@ -180,7 +179,7 @@ export const ContextMenuLogic = ({
   const k_action = useAction<NewKernelFormData>(
     (d) => {
       const server = sd.projectServers.get(
-        `${(originNodeData as TNodeServer).project_server_id}`,
+        `${(originNodeData as TNodeServer).project_server_id}`
       );
       if (server && server.type === 'jupyter' && jupyterlabIsReachable(server))
         return dispatcher.dispatch({
@@ -200,7 +199,7 @@ export const ContextMenuLogic = ({
       checkForm: (d, e) => {
         if (!d.kernelName) e.kernelName = 'Please enter a kernel name';
       },
-    },
+    }
   );
 
   /**
@@ -212,7 +211,7 @@ export const ContextMenuLogic = ({
   const y_action = useAction<NewYoutubeFormData>(
     (d) => {
       return dispatcher.dispatch({
-        type: 'new-node',
+        type: 'core:new-node',
         viewId: viewId,
         position: {
           x: refCoordinates.current.x,
@@ -220,7 +219,7 @@ export const ContextMenuLogic = ({
         },
         nodeData: {
           type: 'video',
-          youtubeId: d.videoId,
+          data: { youtubeId: d.videoId },
         },
       });
     },
@@ -229,7 +228,7 @@ export const ContextMenuLogic = ({
       checkForm: (d, e) => {
         if (!d.videoId) e.videoId = 'Please enter the youtube video Id';
       },
-    },
+    }
   );
 
   /**
@@ -240,7 +239,7 @@ export const ContextMenuLogic = ({
 
   const onNewCodeCell = useCallback(() => {
     dispatcher.dispatch({
-      type: 'new-node',
+      type: 'core:new-node',
       viewId: viewId,
       position: {
         x: refCoordinates.current.x,
@@ -248,8 +247,10 @@ export const ContextMenuLogic = ({
       },
       nodeData: {
         type: 'python',
-        code: 'print("hello world !")',
-        dkid: (originNodeData as TNodeKernel).dkid,
+        data: {
+          code: 'print("hello world !")',
+          dkid: (originNodeData as TNodeKernel).dkid,
+        },
       },
       from,
     });
@@ -263,7 +264,7 @@ export const ContextMenuLogic = ({
 
   const onNewTerminal = useCallback(() => {
     dispatcher.dispatch({
-      type: 'new-node',
+      type: 'core:new-node',
       viewId: viewId,
       position: {
         x: refCoordinates.current.x,
@@ -271,8 +272,10 @@ export const ContextMenuLogic = ({
       },
       nodeData: {
         type: 'terminal',
-        server_name: (originNodeData as TNodeServer).server_name,
-        project_server_id: (originNodeData as TNodeServer).project_server_id,
+        data: {
+          server_name: (originNodeData as TNodeServer).server_name,
+          project_server_id: (originNodeData as TNodeServer).project_server_id,
+        },
       },
       from,
       edgeData: { demiurge_type: 'terminal' },
@@ -307,7 +310,7 @@ export const ContextMenuLogic = ({
           e.storage = 'storage capacity must be less than 20 Gi';
         if (!d.name) e.name = 'Please choose a name for the new volume';
       },
-    },
+    }
   );
 
   /**

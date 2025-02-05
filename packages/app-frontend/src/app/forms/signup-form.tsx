@@ -1,9 +1,7 @@
-import { useMutationSignup } from '@monorepo/demiurge-data';
-import {
-  SignupForm,
-  SignupFormData,
-  useAction,
-} from '@monorepo/demiurge-ui-components';
+import { useMutationSignup } from '@monorepo/frontend-data';
+import { useAction } from '@monorepo/demiurge-ui-components';
+import { SignupForm } from '@monorepo/ui-views';
+import { SignupFormData } from '@monorepo/frontend-data';
 import { useNavigate } from 'react-router-dom';
 
 //

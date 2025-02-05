@@ -1,7 +1,7 @@
 import { Map as YMap, Text as YText, Doc as YDoc } from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 import { TAwarenessUser, YjsAwareness } from '@monorepo/collaborative';
-import { buildUserCss, getYDoc } from '@monorepo/collaborative-hooks';
+import { buildUserCss, getYDoc } from '@monorepo/collab-engine';
 import { ApiFetch } from '@monorepo/api-fetch';
 import { log } from '@monorepo/log';
 import { MonacoBinding } from 'y-monaco';
@@ -68,7 +68,7 @@ export class CollaborationProbe {
   constructor(
     server: TG_Server,
     { baseUrl, token }: { baseUrl: string; token: string },
-    user: TAwarenessUser,
+    user: TAwarenessUser
   ) {
     this.server = server;
     this.baseUrl = baseUrl;
@@ -79,7 +79,7 @@ export class CollaborationProbe {
     this.globalAwareness.provider.awareness.on('change', () => {
       debug(
         `[server: ${this.server.project_server_id}, globalAwareness]: change:`,
-        this.globalAwareness.provider.awareness.getStates(),
+        this.globalAwareness.provider.awareness.getStates()
       );
     });
 
@@ -154,7 +154,7 @@ export class CollaborationProbe {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       editor.getModel() as any,
       new Set([editor]),
-      room.provider.awareness,
+      room.provider.awareness
     );
   }
 
@@ -180,7 +180,7 @@ export class CollaborationProbe {
       roomId,
       `${this.baseUrl.replace('https://', 'wss://')}/api/collaboration/room`,
       params,
-      { get: () => this.token },
+      { get: () => this.token }
     );
 
     /////////// WORKAROUND ///////////
@@ -192,7 +192,7 @@ export class CollaborationProbe {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (!(provider.awareness as any).__workaround__flag__) {
       const oldGetStates = provider.awareness.getStates.bind(
-        provider.awareness,
+        provider.awareness
       );
       provider.awareness.getStates = () => {
         const states = oldGetStates();
@@ -205,7 +205,7 @@ export class CollaborationProbe {
       };
 
       const oldSetLocalStateField = provider.awareness.setLocalStateField.bind(
-        provider.awareness,
+        provider.awareness
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       provider.awareness.setLocalStateField = (field: string, value: any) => {

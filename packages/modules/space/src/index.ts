@@ -15,8 +15,15 @@ export {
   NodeHeader,
   useTestToolbarButtons,
   useConnector,
+  NodeDefault,
+  useNodeContext,
+  getNodeEdges,
+  LabelEnd,
+  LabelMiddle,
+  LabelStart,
+  EdgeComponent,
 } from './lib/components';
-export type { TUseNodeValue } from './lib/components';
+export type { TNodeContext } from './lib/components';
 
 export { StoryMockSpaceContext } from './lib/components/story/storyMockSpaceContext';
 

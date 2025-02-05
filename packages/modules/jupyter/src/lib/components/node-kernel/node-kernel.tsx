@@ -1,6 +1,6 @@
 import {
   InputsAndOutputs,
-  TUseNodeValue,
+  TNodeContext,
   DisablePanSelect,
   NodeHeader,
   useMakeButton,
@@ -21,7 +21,7 @@ export type NodeKernelProps = {
   startStopButton?: ButtonBaseProps;
   onDelete: () => Promise<void>;
 } & Pick<
-  TUseNodeValue,
+  TNodeContext,
   'id' | 'isOpened' | 'open' | 'close' | 'viewStatus' | 'expand' | 'reduce'
 > &
   KernelStateIndicatorProps;

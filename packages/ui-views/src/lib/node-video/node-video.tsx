@@ -2,7 +2,7 @@ import { FC, Suspense } from 'react';
 
 import {
   DisablePanSelect,
-  TUseNodeValue,
+  TNodeContext,
   NodeHeader,
   useMakeButton,
 } from '@monorepo/space';
@@ -14,7 +14,7 @@ export type NodeVideoProps = {
   Youtube: FC<{ data: { videoId: string } }>;
   onDelete: () => Promise<void>;
 } & Pick<
-  TUseNodeValue,
+  TNodeContext,
   'id' | 'isOpened' | 'open' | 'close' | 'viewStatus' | 'expand' | 'reduce'
 >;
 

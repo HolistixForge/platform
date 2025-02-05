@@ -1,13 +1,11 @@
 import { useCallback } from 'react';
 
-import { useNode } from '@monorepo/demiurge-space';
-import { TNodeCommon, TNodeVolume } from '@monorepo/demiurge-types';
+import { useNodeContext } from '@monorepo/space';
+import { TNodeVolume } from '@monorepo/demiurge-types';
+import { NodeVolume } from '@monorepo/servers';
 
 import { useDispatcher } from '../../../model/collab-model-chunk';
-import { NodeVolume } from '@monorepo/demiurge-ui-components';
 
-//
-//
 //
 
 export const VolumeNodeLogic = ({
@@ -16,7 +14,7 @@ export const VolumeNodeLogic = ({
   volume_storage,
 }: TNodeCommon & TNodeVolume) => {
   //
-  const useNodeValue = useNode();
+  const useNodeValue = useNodeContext();
 
   const dispatcher = useDispatcher();
 

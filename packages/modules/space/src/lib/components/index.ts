@@ -10,7 +10,10 @@ export { useConnector } from './reactflow-renderer/assets/inputsOutputs/inputsOu
 
 export { StoryMockSpaceContext } from './story/storyMockSpaceContext';
 
-export type { TUseNodeValue } from './apis/types/node';
+export type { TNodeContext } from './apis/types/node';
+export { useNodeContext } from './reactflow-renderer/node-wrappers/node-wrapper';
+
+export { NodeDefault } from './reactflow-renderer/node-default';
 
 export { DemiurgeSpace } from './reactflow-renderer/main';
 
@@ -20,3 +23,12 @@ export {
   NodeToolbar,
   useTestToolbarButtons,
 } from './reactflow-renderer/assets/node-header/node-toolbar';
+
+export { getNodeEdges } from './apis/graph-utils';
+
+export {
+  LabelEnd,
+  LabelMiddle,
+  EdgeComponent,
+  LabelStart,
+} from './reactflow-renderer/assets/edges/edge';

@@ -6,7 +6,7 @@ import {
   useMakeButton,
   Inputs,
   Outputs,
-  TUseNodeValue,
+  TNodeContext,
 } from '@monorepo/space';
 
 import { DisplayMenu } from './display-menu';
@@ -22,7 +22,7 @@ export type NodeNotebookProps = {
   nodeInfos?: boolean;
   expanded: boolean;
 } & Pick<
-  TUseNodeValue,
+  TNodeContext,
   'id' | 'isOpened' | 'open' | 'close' | 'viewStatus' | 'expand' | 'reduce'
 >;
 

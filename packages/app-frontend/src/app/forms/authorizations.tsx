@@ -3,7 +3,7 @@ import {
   useMutationUserScope,
   useQueryScope,
   useQueryUsersSearch,
-} from '@monorepo/demiurge-data';
+} from '@monorepo/frontend-data';
 import {
   UsersScopes,
   UsersScopesLogicProps,
@@ -16,7 +16,7 @@ import { TCollaborator, TF_User } from '@monorepo/demiurge-types';
 //
 
 export const useServerScopeEditorProps = (
-  project_id: string,
+  project_id: string
 ): UsersScopesLogicProps => {
   //
 
@@ -44,12 +44,12 @@ export const useServerScopeEditorProps = (
           return;
         });
     },
-    [shareUnshare],
+    [shareUnshare]
   );
 
   const onDelete = useCallback(
     (u: TF_User) => onValidateUser({ ...u, scope: [], is_owner: false }),
-    [onValidateUser],
+    [onValidateUser]
   );
 
   return {

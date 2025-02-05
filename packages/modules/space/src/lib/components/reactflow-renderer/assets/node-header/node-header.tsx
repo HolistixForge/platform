@@ -1,11 +1,11 @@
 import { NodeToolbar, NodeToolbarProps } from './node-toolbar';
-import { TUseNodeValue } from '../../../apis/types/node';
+import { TNodeContext } from '../../../apis/types/node';
 
 import './node-header.scss';
 
 type NodeHeaderProps = {
   nodeType: string;
-} & Pick<TUseNodeValue, 'id' | 'isOpened' | 'open'> &
+} & Pick<TNodeContext, 'id' | 'isOpened' | 'open'> &
   NodeToolbarProps;
 
 //

@@ -1,24 +1,23 @@
+import { useCallback } from 'react';
+
 import {
   useApi,
   useCurrentUser,
   useQueryServerImages,
   useQueryUser,
-} from '@monorepo/demiurge-data';
+} from '@monorepo/frontend-data';
+import { useNodeContext } from '@monorepo/space';
+import {
+  NodeServer,
+  TServerComponentCallbacks,
+  TServerComponentProps,
+  TSSS_Server_to_TServerComponentProps,
+} from '@monorepo/servers';
+
 import {
   useDispatcher,
   useSharedData,
 } from '../../../model/collab-model-chunk';
-import {
-  TJupyterServerInfo,
-  TNodeCommon,
-  TNodeServer,
-  TServerComponentCallbacks,
-  TServerComponentProps,
-  TSSS_Server_to_TServerComponentProps,
-} from '@monorepo/demiurge-types';
-import { useNode } from '@monorepo/demiurge-space';
-import { useCallback } from 'react';
-import { NodeServer } from '@monorepo/demiurge-ui-components';
 import { useProject } from './projects';
 
 /**
@@ -30,21 +29,19 @@ import { useProject } from './projects';
 //
 
 export const useServerProps = (
-  project_server_id: number | string,
+  project_server_id: number | string
 ): (TServerComponentProps & TServerComponentCallbacks) | undefined => {
   //
 
   const server = useSharedData(['projectServers'], (sd) => {
     return sd.projectServers.get(`${project_server_id}`);
-  }) as TJupyterServerInfo | undefined;
+  });
 
-  const { data: currentUserData, status: currentUserStatus } = useCurrentUser();
+  const { data: currentUserData } = useCurrentUser();
 
-  const { status: imageStatus, data: imageData } = useQueryServerImages();
+  const { data: imageData } = useQueryServerImages();
 
-  const { data: hostData, status: hostStatus } = useQueryUser(
-    server?.host_user_id || null,
-  );
+  const { data: hostData } = useQueryUser(server?.host_user_id || null);
 
   const dispatcher = useDispatcher();
 
@@ -88,7 +85,7 @@ export const useServerProps = (
           storage,
         });
     },
-    [dispatcher, server],
+    [dispatcher, server]
   );
 
   //
@@ -151,7 +148,7 @@ export const useServerProps = (
         }
       }
     },
-    [dispatcher, server],
+    [dispatcher, server]
   );
 
   //
@@ -178,7 +175,7 @@ export const useServerProps = (
         server,
         gatewayFQDN,
         hostData,
-        imageData?._0,
+        imageData?._0
       ),
     };
 };
@@ -188,8 +185,11 @@ export const useServerProps = (
 export const ServerNodeLogic = ({
   project_server_id,
 }: TNodeCommon & TNodeServer) => {
-  const useNodeValue = useNode();
+  const useNodeValue = useNodeContext();
 
   const props = useServerProps(project_server_id);
+
   if (props) return <NodeServer {...useNodeValue} {...props} />;
+
+  return null;
 };

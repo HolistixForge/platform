@@ -3,7 +3,7 @@
 // TODO: edges is not needed here, we need to known the handles even if empty
 // Delete
 export const IncomingEdgeHandles = () => {
-  const { edges, id } = useNode();
+  const { edges, id } = useNodeContext();
 
   const handles = edges.filter(
     (e) => e.to.node === id && e.to.connector !== undefined
@@ -36,7 +36,7 @@ export const IncomingEdgeHandles = () => {
 //
 
 export const OutgoingEdgeHandles = () => {
-  const { edges, id } = useNode();
+  const { edges, id } = useNodeContext();
 
   const handles = edges.filter(
     (e) => e.from.node === id && e.from.connector !== undefined

@@ -1,6 +1,6 @@
 import { ReactNode, useMemo } from 'react';
 import { SpaceContext } from '../reactflow-renderer/spaceContext';
-import { TUseNodeValue } from '../apis/types/node';
+import { TNodeContext } from '../apis/types/node';
 import { DummySpaceAwareness } from './fakeSpaceAwareness';
 import { LocalSpaceActionsDispatcher } from './localSpaceActionsDispatcher';
 import { SpaceState } from '../apis/spaceState';
@@ -11,7 +11,7 @@ export const MockReactFlowNodeWrapper = ({
   children,
   selected,
   isOpened,
-}: Pick<TUseNodeValue, 'selected' | 'isOpened'> & {
+}: Pick<TNodeContext, 'selected' | 'isOpened'> & {
   children: ReactNode;
 }) => {
   return (

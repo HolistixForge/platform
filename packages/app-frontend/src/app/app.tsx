@@ -1,6 +1,9 @@
-import { DebugComponentKeyboardShortcut } from '@monorepo/log';
+import * as Tooltip from '@radix-ui/react-tooltip';
 import { Route, Routes } from 'react-router-dom';
-import { ApiContext } from '@monorepo/demiurge-data';
+
+import { DebugComponentKeyboardShortcut } from '@monorepo/log';
+import { ApiContext } from '@monorepo/frontend-data';
+
 import {
   AccountSettingsPage,
   EnforceUserAccountReady,
@@ -13,15 +16,11 @@ import { HomePage } from './pages/home';
 import { ProjectRoot } from './pages/project/project-root';
 import { ProjectAuthorizationsPage } from './pages/project/authorizations';
 import { EditorPage } from './pages/project/editor/editor-page';
-import { ResourcePage } from './pages/project/editor/resources-page';
-import * as Tooltip from '@radix-ui/react-tooltip';
+
 //
-//
+
 import '@radix-ui/themes/styles.css';
 
-//
-
-//
 //
 
 export function App() {

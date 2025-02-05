@@ -1,7 +1,7 @@
 import { useDebugComponent } from '@monorepo/log';
 import { createContext, FC, useContext } from 'react';
 import { ReactFlowState, useStore } from 'reactflow';
-import { TUseNodeValue } from '../../apis/types/node';
+import { TNodeContext } from '../../apis/types/node';
 import { SelectionsAwareness } from './selection-awareness';
 import { useSpaceContext } from '../spaceContext';
 import { useRegisterListener } from '../avatarsRenderer';
@@ -26,7 +26,7 @@ const zoomSelector = (s: ReactFlowState) => {
 //
 //
 
-const nodeContext = createContext<TUseNodeValue | null>(null);
+const nodeContext = createContext<TNodeContext | null>(null);
 
 //
 //
@@ -69,7 +69,7 @@ export const NodeWrapper =
         ? true
         : false;
 
-    const contextValue: TUseNodeValue = {
+    const contextValue: TNodeContext = {
       id,
       zoom,
       isOpened: opened,
@@ -97,7 +97,7 @@ export const NodeWrapper =
 //
 
 export const useNodeContext = () => {
-  const v = useContext(nodeContext) as TUseNodeValue;
+  const v = useContext(nodeContext) as TNodeContext;
   return v;
 };
 

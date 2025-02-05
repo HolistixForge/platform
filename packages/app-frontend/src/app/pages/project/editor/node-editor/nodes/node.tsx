@@ -1,12 +1,12 @@
-import { useNode } from '@monorepo/demiurge-space';
-import { useSharedData } from '../../../model/collab-model-chunk';
+import { useNodeContext, NodeDefault } from '@monorepo/space';
 import factory from '@monorepo/lazy-factory';
+
+import { useSharedData } from '../../../model/collab-model-chunk';
 import { JupyterlabCodeCellNodeLogic } from './jupyterlab-code-cell';
 import { VideoNodeLogic } from './video';
 import { TerminalNodeLogic } from './terminal';
 import { ServerNodeLogic } from './server';
 import { VolumeNodeLogic } from './volume';
-import { NodeDefault } from '@monorepo/demiurge-ui-components';
 import { KernelNodeLogic } from './kernel';
 import { ChatAnchorNodeLogic, ChatNodeLogic } from './chat';
 
@@ -28,7 +28,7 @@ factory.setLibraries({
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const DefaultNodeLogic = (props: any) => {
-  const useNodeValue = useNode();
+  const useNodeValue = useNodeContext();
   return <NodeDefault {...useNodeValue} {...props} />;
 };
 
@@ -37,31 +37,31 @@ const DefaultNodeLogic = (props: any) => {
 
 export const NodeContent = () => {
   //
-  const { id } = useNode();
-  const nodeData = useSharedData(['nodeData'], (sd) => sd.nodeData.get(id));
+  const { id } = useNodeContext();
+  const node = useSharedData(['nodes'], (sd) => sd.nodes.get(id));
 
-  if (!nodeData) {
+  if (!node) {
     return <DefaultNodeLogic />;
   }
 
-  switch (nodeData.type) {
+  switch (node.type) {
     case 'python':
-      return <JupyterlabCodeCellNodeLogic {...nodeData} />;
+      return <JupyterlabCodeCellNodeLogic {...node} />;
     case 'video':
-      return <VideoNodeLogic {...nodeData} />;
+      return <VideoNodeLogic {...node} />;
     case 'terminal':
-      return <TerminalNodeLogic {...nodeData} />;
+      return <TerminalNodeLogic {...node} />;
     case 'server':
-      return <ServerNodeLogic {...nodeData} />;
+      return <ServerNodeLogic {...node} />;
     case 'kernel':
-      return <KernelNodeLogic {...nodeData} />;
+      return <KernelNodeLogic {...node} />;
     case 'volume':
-      return <VolumeNodeLogic {...nodeData} />;
+      return <VolumeNodeLogic {...node} />;
     case 'chat':
-      return <ChatNodeLogic {...nodeData} />;
+      return <ChatNodeLogic {...node} />;
     case 'chat-anchor':
-      return <ChatAnchorNodeLogic {...nodeData} />;
+      return <ChatAnchorNodeLogic {...node} />;
     default:
-      return <DefaultNodeLogic {...nodeData} />;
+      return <DefaultNodeLogic {...node} />;
   }
 };

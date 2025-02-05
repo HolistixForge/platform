@@ -1,6 +1,6 @@
 import {
   InputsAndOutputs,
-  TUseNodeValue,
+  TNodeContext,
   NodeHeader,
   DisablePanSelect,
   useMakeButton,
@@ -11,7 +11,7 @@ export type NodeVolumeProps = {
   volume_storage: number;
   onDelete: () => Promise<void>;
 } & Pick<
-  TUseNodeValue,
+  TNodeContext,
   'id' | 'isOpened' | 'open' | 'close' | 'viewStatus' | 'expand' | 'reduce'
 >;
 

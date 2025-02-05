@@ -2,7 +2,7 @@ import { FC } from 'react';
 
 import {
   InputsAndOutputs,
-  TUseNodeValue,
+  TNodeContext,
   NodeHeader,
   DisablePanSelect,
   useMakeButton,
@@ -16,7 +16,7 @@ export type NodeTerminalProps = {
   onDelete: () => Promise<void>;
   Terminal: FC<{ server_name: string; project_server_id: number }>;
 } & Pick<
-  TUseNodeValue,
+  TNodeContext,
   'id' | 'isOpened' | 'open' | 'close' | 'viewStatus' | 'expand' | 'reduce'
 >;
 

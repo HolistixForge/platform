@@ -1,28 +1,24 @@
 import { useCallback, useRef, useState } from 'react';
-import { DemiurgeSpace } from '@monorepo/demiurge-space';
+
+import { DemiurgeSpace } from '@monorepo/space';
+
 import { NodeContent } from './nodes/node';
 import {
-  TDemiurgeNotebookEvent,
-  TEdge,
-  TAnyEdge,
-  TEdgeEnd,
-  TEventMountVolume,
-  TPosition,
-  TServerEvents,
-} from '@monorepo/demiurge-types';
+  FormErrors,
+  useAction,
+  DialogControlled,
+} from '@monorepo/demiurge-ui-components';
+import { MountVolumeForm, MountVolumeFormData } from '@monorepo/ui-views';
+import { TDemiurgeNotebookEvent } from '@monorepo/jupyter';
+import { TEdge, TEdgeEnd, TPosition } from '@monorepo/core';
+import { TEventMountVolume, TServerEvents } from '@monorepo/servers';
+
 import { ContextMenuLogic } from './menus/context-menu-logic';
 import { SpaceContextMenu } from './menus/context-menu';
 import { NewEdgeContextMenu } from './menus/context-menu-new-edge';
 import { useDispatcher, useSharedData } from '../../model/collab-model-chunk';
 import { edgeToEvent } from './menus/edge-to-event';
 import { CustomEdge } from './edge';
-import {
-  FormErrors,
-  MountVolumeForm,
-  MountVolumeFormData,
-  useAction,
-  DialogControlled,
-} from '@monorepo/demiurge-ui-components';
 
 import './node-editor.scss';
 
@@ -46,7 +42,7 @@ const useOpenRadixContextMenu = () => {
         bubbles: true,
         clientX: clientPosition.x,
         clientY: clientPosition.y,
-      }),
+      })
     );
   };
 
@@ -57,7 +53,7 @@ const useOpenRadixContextMenu = () => {
  *
  */
 export const NodeEditorView = ({ viewId }: { viewId: string }) => {
-  const nodeData = useSharedData(['nodeData'], (sd) => sd.nodeData);
+  const nodes = useSharedData(['nodes'], (sd) => sd.nodes);
 
   const dispatcher = useDispatcher();
 
@@ -85,7 +81,7 @@ export const NodeEditorView = ({ viewId }: { viewId: string }) => {
       setFrom(undefined);
       openMenu1(clientPosition);
     },
-    [openMenu1],
+    [openMenu1]
   );
 
   /**
@@ -98,7 +94,7 @@ export const NodeEditorView = ({ viewId }: { viewId: string }) => {
       setFrom(from);
       openMenu2(clientPosition);
     },
-    [openMenu2],
+    [openMenu2]
   );
 
   /**
@@ -129,7 +125,7 @@ export const NodeEditorView = ({ viewId }: { viewId: string }) => {
       checkForm: (d, e) => {
         if (!d.mount_point) e.mount_point = 'Please choose a mount point';
       },
-    },
+    }
   );
 
   /**
@@ -139,7 +135,7 @@ export const NodeEditorView = ({ viewId }: { viewId: string }) => {
    */
   const handleConnect = (edge: TEdge) => {
     try {
-      const event = edgeToEvent(edge, nodeData);
+      const event = edgeToEvent(edge, nodes);
       if (event.type === 'mount-volume') {
         partialEvent.current = event;
         vm_action.open();
@@ -150,14 +146,6 @@ export const NodeEditorView = ({ viewId }: { viewId: string }) => {
       error_action.open();
     }
   };
-
-  /**
-   *
-   */
-  const edgeClassName = useCallback((e: TAnyEdge) => {
-    if (e.data && e.data.demiurge_type) return e.data.demiurge_type;
-    return '';
-  }, []);
 
   /*
    *
@@ -171,7 +159,6 @@ export const NodeEditorView = ({ viewId }: { viewId: string }) => {
         onConnect={handleConnect}
         onContextMenu={handleContextMenu}
         onContextMenuNewEdge={handleNewEdgeToNewNode}
-        edgeClassName={edgeClassName}
         edgeComponent={CustomEdge}
       />
       <ContextMenuLogic refCoordinates={rcc} viewId={viewId} from={from}>

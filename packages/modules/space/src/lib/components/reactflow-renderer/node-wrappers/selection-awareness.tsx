@@ -1,10 +1,10 @@
-import { TUseNodeValue } from '../../apis/types/node';
+import { TNodeContext } from '../../apis/types/node';
 import { UserUsername } from '@monorepo/demiurge-ui-components';
 
 import './selection-awareness.scss';
 import { ReactNode } from 'react';
 
-type SelectionsAwarenessProps = Pick<TUseNodeValue, 'selectingUsers'> & {
+type SelectionsAwarenessProps = Pick<TNodeContext, 'selectingUsers'> & {
   children: ReactNode;
 };
 

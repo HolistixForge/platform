@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { useTestBoolean } from '@monorepo/demiurge-ui-components';
-import { TUseNodeValue, StoryMockSpaceContext } from '@monorepo/space';
+import { TNodeContext, StoryMockSpaceContext } from '@monorepo/space';
 
 import { NodeServer } from './node-server';
 import {
@@ -25,7 +25,7 @@ import { useMockServerBehaviours } from '../server-card-mock';
 const StoryWrapper = (
   props: TServerComponentProps &
     TServerComponentCallbacks &
-    Pick<TUseNodeValue, 'id'> & {
+    Pick<TNodeContext, 'id'> & {
       expanded: boolean;
       selected: boolean;
     }

@@ -3,20 +3,9 @@ import { EdgeProps } from 'reactflow';
 import { TrashIcon } from '@radix-ui/react-icons';
 
 import { useDebugComponent } from '@monorepo/log';
-import { SpaceEdgePayload } from '@monorepo/demiurge-space';
-import {
-  ButtonIcon,
-  EdgeComponent,
-  LabelEnd,
-  LabelMiddle,
-  useAction,
-} from '@monorepo/demiurge-ui-components';
-import {
-  TAnyEdge,
-  TEdgeMount,
-  TNodeServer,
-  TNodeVolume,
-} from '@monorepo/demiurge-types';
+import { EdgeComponent, LabelEnd, LabelMiddle } from '@monorepo/space';
+import { ButtonIcon, useAction } from '@monorepo/demiurge-ui-components';
+import { TNodeServer, TNodeVolume } from '@monorepo/demiurge-types';
 
 import { useDispatcher, useSharedData } from '../../model/collab-model-chunk';
 
@@ -74,19 +63,19 @@ const EdgeTargetLabel = (props: EdgeTargetLabelProps) => {
 //
 
 const MountTargetLabel = ({ edge }: EdgeTargetLabelProps) => {
-  const nodeData = useSharedData(['nodeData'], (sd) => sd.nodeData);
+  const nodes = useSharedData(['nodes'], (sd) => sd.nodes);
   const dispatcher = useDispatcher();
 
   const deleteButton = useAction(() => {
-    const s = nodeData.get(edge.to.node) as TNodeServer;
-    const v = nodeData.get(edge.from.node) as TNodeVolume;
+    const s = nodes.get(edge.to.node) as TNodeServer;
+    const v = nodes.get(edge.from.node) as TNodeVolume;
     return dispatcher.dispatch({
       type: 'unmount-volume',
       project_server_id: s.project_server_id,
       volume_id: v.volume_id,
       mount_point: (edge as TEdgeMount).to.data.mount_point,
     });
-  }, [dispatcher, edge, nodeData]);
+  }, [dispatcher, edge, nodes]);
 
   return (
     <>

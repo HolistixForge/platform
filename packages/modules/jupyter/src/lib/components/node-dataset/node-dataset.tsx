@@ -2,7 +2,7 @@ import { icons } from '@monorepo/demiurge-ui-components';
 import {
   NodeToolbar,
   useMakeButton,
-  TUseNodeValue,
+  TNodeContext,
   Outputs,
 } from '@monorepo/space';
 
@@ -17,7 +17,7 @@ import './node-dataset.scss';
 export type NodeDatasetProps = {
   color: string;
 } & Pick<
-  TUseNodeValue,
+  TNodeContext,
   'id' | 'isOpened' | 'open' | 'close' | 'reduce' | 'expand' | 'viewStatus'
 >;
 

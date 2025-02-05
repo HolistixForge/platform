@@ -1,9 +1,9 @@
-import { useMutationChangePassword } from '@monorepo/demiurge-data';
-import {
-  NewPasswordForm,
-  NewPasswordFormData,
-  useAction,
-} from '@monorepo/demiurge-ui-components';
+import { useMutationChangePassword } from '@monorepo/frontend-data';
+import { useAction } from '@monorepo/demiurge-ui-components';
+import { NewPasswordForm } from '@monorepo/ui-views';
+import { NewPasswordFormData } from '@monorepo/frontend-data';
+
+//
 
 export const NewPasswordFormLogic = () => {
   const changePassword = useMutationChangePassword();

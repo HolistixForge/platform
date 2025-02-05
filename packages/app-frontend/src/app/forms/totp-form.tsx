@@ -2,14 +2,10 @@ import {
   useCurrentUser,
   useMutationTotpLogin,
   useMutationTotpSetup,
-} from '@monorepo/demiurge-data';
-import {
-  TotpSetupForm,
-  TotpEnableFormData,
-  TotpLoginFormData,
-  useAction,
-  TotpLoginForm,
-} from '@monorepo/demiurge-ui-components';
+} from '@monorepo/frontend-data';
+import { useAction } from '@monorepo/demiurge-ui-components';
+import { TotpSetupForm, TotpLoginForm } from '@monorepo/ui-views';
+import { TotpEnableFormData, TotpLoginFormData } from '@monorepo/frontend-data';
 import { useState } from 'react';
 
 //
@@ -26,7 +22,7 @@ const useTotpLoginAction = () => {
         if (!d.code || !sixDigitRegex.test(d.code))
           e.code = `code format must be 6 digits`;
       },
-    },
+    }
   );
   return action;
 };
@@ -65,7 +61,7 @@ export const TotpSetupFormLogic = () => {
       },
       values: { enabled: totp_enabled },
       resetOnSuccess: false,
-    },
+    }
   );
 
   const actionValidate = useTotpLoginAction();

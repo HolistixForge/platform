@@ -4,7 +4,7 @@ import { icons } from '@monorepo/demiurge-ui-components';
 import {
   Inputs,
   Outputs,
-  TUseNodeValue,
+  TNodeContext,
   useConnector,
   NodeToolbar,
   useMakeButton,
@@ -22,7 +22,7 @@ export type NodeNotebookComponentProps = {
   notebookOpened?: boolean;
   status?: 'success' | 'error' | 'loading';
 } & Pick<
-  TUseNodeValue,
+  TNodeContext,
   'id' | 'isOpened' | 'open' | 'close' | 'viewStatus' | 'expand' | 'reduce'
 >;
 

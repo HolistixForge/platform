@@ -11,20 +11,19 @@ import { ServerConnection, TerminalManager } from '@jupyterlab/services';
 import { Terminal } from '@jupyterlab/terminal';
 import { Widget } from '@lumino/widgets';
 
-import { useNode } from '@monorepo/demiurge-space';
+import { useNodeContext } from '@monorepo/space';
 import {
   TNodeTerminal,
   TNodeCommon,
   TServerSettings,
-  jupyterlabIsReachable,
 } from '@monorepo/demiurge-types';
+import { NodeTerminal } from '@monorepo/jupyter';
 
 import {
   useDispatcher,
   useJLsManager,
   useSharedData,
 } from '../../../model/collab-model-chunk';
-import { NodeTerminal } from '@monorepo/demiurge-ui-components';
 
 //
 
@@ -85,7 +84,7 @@ export const TerminalNodeLogic = ({
   server_name,
   project_server_id,
 }: TNodeCommon & TNodeTerminal) => {
-  const useNodeValue = useNode();
+  const useNodeValue = useNodeContext();
 
   const dispatcher = useDispatcher();
 

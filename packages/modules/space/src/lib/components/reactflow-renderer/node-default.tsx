@@ -1,4 +1,4 @@
-import { TUseNodeValue } from '../apis/types/node';
+import { TNodeContext } from '../apis/types/node';
 import { InputsAndOutputs } from './assets/inputsOutputs/inputsOutputs';
 import { NodeHeader } from './assets/node-header/node-header';
 import { DisablePanSelect } from './node-wrappers/disable-pan-select';
@@ -9,7 +9,7 @@ export const NodeDefault = ({
   open,
   close,
   ...props
-}: TUseNodeValue) => {
+}: TNodeContext) => {
   return (
     <div className={`common-node default-node`}>
       <InputsAndOutputs id={id} />

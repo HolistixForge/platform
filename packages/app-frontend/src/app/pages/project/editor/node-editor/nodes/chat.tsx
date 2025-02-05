@@ -1,20 +1,35 @@
-import { useNode, useNodeEdges } from '@monorepo/demiurge-space';
-import { TNodeChat, TNodeCommon } from '@monorepo/demiurge-types';
+import { useEffect, useState } from 'react';
+
+import { useNodeContext, getNodeEdges } from '@monorepo/space';
+import { TNodeChat } from '@monorepo/demiurge-types';
 import {
   ChatMessage,
   NodeChat,
   NodeChatAnchor,
   NodeChatProps,
-} from '@monorepo/demiurge-ui-components';
-import { useDispatcher, useSharedData } from '../../../model/collab-model-chunk';
-import { useCurrentUser, useQueriesUsers } from '@monorepo/demiurge-data';
-import { useEffect, useState } from 'react';
-import { useAwarenessListenData } from '@monorepo/collaborative-hooks';
+} from '@monorepo/chats';
+import { useCurrentUser, useQueriesUsers } from '@monorepo/frontend-data';
+import { useAwarenessListenData } from '@monorepo/collab-engine';
+
+import {
+  useDispatcher,
+  useSharedData,
+} from '../../../model/collab-model-chunk';
+
+//
 
 const loading = {
   username: 'Loading...',
   color: 'var(--c-gray-9)',
   picture: null,
+};
+
+//
+
+const useNodeEdges = (id: string) => {
+  const { edges: allEdges } = useSharedData(['edges'], (sd) => sd);
+  const nodeEdges = getNodeEdges(allEdges?.toArray() || [], id);
+  return nodeEdges;
 };
 
 /**
@@ -28,7 +43,7 @@ export const ChatNodeLogic = ({
   //
 
   const dispatcher = useDispatcher();
-  const useNodeValue = useNode();
+  const useNodeValue = useNodeContext();
   const edges = useNodeEdges(useNodeValue.id);
   const { data: currentUserData, status: currentUserStatus } = useCurrentUser();
   const chat = useSharedData(['chats'], (sd) => sd.chats.get(chatId));
@@ -238,7 +253,7 @@ export const ChatAnchorNodeLogic = ({
   chatId,
 }: TNodeCommon & TNodeChat) => {
   const dispatcher = useDispatcher();
-  const useNodeValue = useNode();
+  const useNodeValue = useNodeContext();
   const edges = useNodeEdges(nodeId);
   const { data: currentUserData, status: currentUserStatus } = useCurrentUser();
   const chat = useSharedData(['chats'], (sd) => sd.chats.get(chatId));

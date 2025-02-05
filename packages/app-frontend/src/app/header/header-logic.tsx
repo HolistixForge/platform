@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
-import { useCurrentUser, useMutationLogout } from '@monorepo/demiurge-data';
-import { Header, useAction } from '@monorepo/demiurge-ui-components';
+import { useCurrentUser, useMutationLogout } from '@monorepo/frontend-data';
+import { useAction } from '@monorepo/demiurge-ui-components';
+import { Header } from '@monorepo/ui-views';
 
 //
 

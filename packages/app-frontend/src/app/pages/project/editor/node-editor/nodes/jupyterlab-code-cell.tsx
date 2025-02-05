@@ -1,12 +1,11 @@
 import { useCallback, useRef } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 
-import { useAwareness } from '@monorepo/collaborative-hooks';
-import { useNode } from '@monorepo/demiurge-space';
-import { TNodePython, TNodeCommon } from '@monorepo/demiurge-types';
-import { TEditor, bindEditor } from '@monorepo/collaborative-hooks';
-
-import { NodeJupyterlabCodeCell } from '@monorepo/demiurge-ui-components';
+import { useAwareness } from '@monorepo/collab-engine';
+import { useNodeContext } from '@monorepo/space';
+import { TNodePython } from '@monorepo/demiurge-types';
+import { TEditor, bindEditor } from '@monorepo/collab-engine';
+import { NodeJupyterlabCodeCell } from '@monorepo/jupyter';
 
 import { useDispatcher } from '../../../model/collab-model-chunk';
 import { JupyterlabCellOutput } from './jupyterlab-cell-output';
@@ -23,7 +22,7 @@ export const JupyterlabCodeCellNodeLogic = ({
 
   const { awareness } = useAwareness();
 
-  const useNodeValue = useNode();
+  const useNodeValue = useNodeContext();
 
   const dispatcher = useDispatcher();
 

@@ -3,7 +3,7 @@ import { ReactNode } from 'react';
 import {
   InputsAndOutputs,
   DisablePanSelect,
-  TUseNodeValue,
+  TNodeContext,
   NodeHeader,
   useMakeButton,
 } from '@monorepo/space';
@@ -28,7 +28,7 @@ export type NodeJupyterlabCodeCellProps = {
   onDelete: () => Promise<void>;
   onEditorMount: CodeEditorMonacoProps['onMount'];
 } & Pick<
-  TUseNodeValue,
+  TNodeContext,
   'id' | 'isOpened' | 'open' | 'close' | 'viewStatus' | 'expand' | 'reduce'
 >;
 

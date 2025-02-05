@@ -19,7 +19,7 @@ export type TCollaborativeChunk = {
     sharedData: TValidSharedData
   ) => Readonly<Reducer<TValidSharedData, any, any, any>[]>;
 
-  extraContext?: any;
+  extraContext?: (sharedData: TValidSharedData) => object;
 };
 
 //
@@ -41,7 +41,8 @@ export const compileChunks = (
       const reducers = chunk.reducers(allSharedData);
       reducers.forEach((r) => dispatcher.addReducer(r));
 
-      Object.assign(extraContext, chunk.extraContext);
+      const addContext = chunk.extraContext?.(allSharedData) || {};
+      Object.assign(extraContext, addContext);
     });
     return allSharedData;
   };
