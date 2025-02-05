@@ -1,9 +1,15 @@
 import { useState } from 'react';
-import { TF_User } from '@monorepo/demiurge-types';
-import { UserAvatar, UserUsername } from '../../users/users';
-import { icons } from '../../assets/icons';
 
-interface WrapperProps {
+import { TF_User } from '@monorepo/demiurge-types';
+import {
+  UserAvatar,
+  UserUsername,
+  icons,
+} from '@monorepo/demiurge-ui-components';
+
+//
+
+type WrapperProps = {
   tag: string;
   tagSecondary?: string;
   tagColor: string;
@@ -13,7 +19,7 @@ interface WrapperProps {
   displaySettings?: boolean;
   displayRemove?: boolean;
   displayDelete?: boolean;
-}
+};
 
 export const Wrapper = ({
   user,

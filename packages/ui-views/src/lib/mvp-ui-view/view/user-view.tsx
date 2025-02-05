@@ -1,18 +1,24 @@
+import { useState } from 'react';
+
+import {
+  Sidebar,
+  icons,
+  randomGuy,
+  UserAvatar,
+} from '@monorepo/demiurge-ui-components';
+
 import { Header } from '../components/header';
 import { ResourceBar } from '../components/resource-bar';
-import { Sidebar } from '../../sidebar/Sidebar';
-import { icons } from '../../assets/icons';
-import { useState } from 'react';
 import { ResourceList } from '../components/resource-list';
 import { FilterBox } from '../components/filter-box';
 import { UserInformations } from '../components/user-informations';
 import { menuItems } from './access-role';
-import { randomGuy } from '../../utils/random-guys';
-import { UserAvatar } from '../../users/users';
 
-export interface UserViewProps {
+//
+
+export type UserViewProps = {
   editingUser?: boolean;
-}
+};
 
 export const UserView = ({ editingUser }: UserViewProps) => {
   const [tags, setTags] = useState<any>([

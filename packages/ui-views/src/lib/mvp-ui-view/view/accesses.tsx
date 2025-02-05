@@ -1,11 +1,14 @@
+import { Sidebar } from '@monorepo/demiurge-ui-components';
+
 import { Header } from '../components/header';
 import { ResourceBar } from '../components/resource-bar';
-import { Sidebar } from '../../sidebar/Sidebar';
 import { FilterBox } from '../components/filter-box';
 import { UserList } from '../components/user-list';
 import { menuItems } from './access-role';
 
-export interface AccessesProps {}
+//
+
+export type AccessesProps = {};
 
 export const Accesses = ({}: AccessesProps) => {
   return (

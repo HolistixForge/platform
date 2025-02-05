@@ -2,10 +2,10 @@ import {
   TApi_Authorization,
   TApi_Project,
   CurrentUserDetails,
-  TG_ServerImage,
   TCollaborator,
   TG_User,
 } from '@monorepo/demiurge-types';
+import { TG_ServerImage } from '@monorepo/servers';
 import { useApi } from './api-context';
 import {
   useQuery,
@@ -21,7 +21,7 @@ import {
   SignupFormData,
   TotpEnableFormData,
   TotpLoginFormData,
-} from '@monorepo/demiurge-ui-components';
+} from './form-data';
 import { GanymedeApi } from './api-ganymede';
 
 //
@@ -166,7 +166,7 @@ export const useCollaborators = (project_id: string) => {
         // we get the authorizations of this user
         // (we known we have it)
         const userAuths = authorizations.data.find(
-          (a) => a.user_id === (uq.data as TG_User).user_id,
+          (a) => a.user_id === (uq.data as TG_User).user_id
         ) as TApi_Authorization;
         const c: TCollaborator = {
           ...(uq.data as TG_User),
@@ -418,7 +418,7 @@ export const useQueryProjectByName = (owner: string, project_name: string) => {
 export const useMutationStartProject = (
   project_id: string,
   owner: string,
-  project_name: string,
+  project_name: string
 ) => {
   const { ganymedeApi } = useApi();
   const queryClient = useQueryClient();

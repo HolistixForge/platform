@@ -1,9 +1,15 @@
+import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 
+import {
+  randomGuy,
+  randomGuys,
+  TagsBarProps,
+} from '@monorepo/demiurge-ui-components';
+
 import { NotebookCard, NotebookCardProps } from './notebook-card';
-import { randomGuy, randomGuys } from '../../utils/random-guys';
-import { useState } from 'react';
-import { TagsBarProps } from './tags';
+
+//
 
 const StoryWrapper = (
   props: Pick<

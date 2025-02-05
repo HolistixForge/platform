@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { ResourceBar } from './resource-bar';
 
+//
+
 const meta = {
   title: 'Mvp/Components/resource-bar',
   component: ResourceBar,

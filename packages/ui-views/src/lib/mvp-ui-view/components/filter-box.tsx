@@ -1,14 +1,17 @@
 import { useState } from 'react';
-import { icons } from '../../assets/icons';
-import { Wrapper } from '../assets/wrapper';
-import { randomGuy } from '../../utils/random-guys';
 
-interface FilterBoxProps {
+import { icons, randomGuy } from '@monorepo/demiurge-ui-components';
+
+import { Wrapper } from '../assets/wrapper';
+
+//
+
+type FilterBoxProps = {
   //mode : str Group | Role
   mode: 'Group' | 'Role' | 'Tags';
   name: string;
   user?: boolean;
-}
+};
 
 export const FilterBox = ({ mode, name, user }: FilterBoxProps) => {
   const [addFilter, setAddFilter] = useState(1);

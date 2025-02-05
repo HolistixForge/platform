@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { Rules } from './rules';
 
+//
+
 const meta = {
   title: 'Mvp/Components/rules',
   component: Rules,

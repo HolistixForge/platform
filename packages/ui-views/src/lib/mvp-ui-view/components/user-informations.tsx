@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
-import { icons } from '../../assets/icons';
 
-interface UserInformationsProps {
+import { icons } from '@monorepo/demiurge-ui-components';
+
+//
+
+type UserInformationsProps = {
   editing?: boolean;
-}
+};
 
 export const UserInformations = ({ editing }: UserInformationsProps) => {
   const [_editing, _setEditing] = useState(editing);

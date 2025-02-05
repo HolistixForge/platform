@@ -1,13 +1,15 @@
-import { UserAvatar } from '../../users/users';
-import { randomGuy } from '../../utils/random-guys';
-import { ResourceButtons } from '../../buttons/resource-buttons';
-import { Warning } from '../assets/warning';
+import {
+  UserAvatar,
+  randomGuy,
+  ResourceButtons,
+} from '@monorepo/demiurge-ui-components';
+import { StatusLed } from '@monorepo/servers';
+
 import { Tabs } from './tabs';
 
-interface ResourceBarProps {
-  //host bool
-  //share bool
-  //notification int
+//
+
+type ResourceBarProps = {
   title: string;
   tags?: {
     name: string;
@@ -22,7 +24,7 @@ interface ResourceBarProps {
     tab: string;
   }[];
   titleDot?: string;
-}
+};
 
 export const ResourceBar = ({
   tags,
@@ -85,7 +87,7 @@ export const ResourceBar = ({
         </div>
 
         {warningColor ? (
-          <Warning type="resource-bar" color={warningColor} />
+          <StatusLed type="resource-bar" color={warningColor} />
         ) : null}
 
         {host ? (

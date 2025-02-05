@@ -1,18 +1,14 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import {
-  NodeServerProps,
-  ServerStateProps,
-} from '../../node-server/node-server';
-import { ServerStack } from './server-stack';
 import { useState } from 'react';
-import { ServerCard } from './server-card';
+import type { Meta, StoryObj } from '@storybook/react';
+
+import { ServerCard } from '@monorepo/servers';
+
+import { ServerStack } from './server-stack';
 
 //
 
 const StoryWrapper = () => {
-  const [servers, setServers] = useState<
-    (NodeServerProps & ServerStateProps)[]
-  >([]);
+  const [servers, setServers] = useState<any[]>([]);
 
   return (
     <ServerStack

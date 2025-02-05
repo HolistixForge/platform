@@ -1,14 +1,17 @@
+import { useState } from 'react';
+
+import { Sidebar, icons } from '@monorepo/demiurge-ui-components';
+
 import { Header } from '../components/header';
 import { ResourceBar } from '../components/resource-bar';
-import { Sidebar } from '../../sidebar/Sidebar';
-import { icons } from '../../assets/icons';
 import { ResourceDescription } from '../components/resource-description';
-import { useState } from 'react';
 import { ResourceList } from '../components/resource-list';
 import { SummaryAccesses } from '../components/summary-accesses';
 import { menuItems } from './access-role';
 
-export interface ServerViewProps {}
+//
+
+export type ServerViewProps = {};
 
 export const ServerView = ({}: ServerViewProps) => {
   const [tags, setTags] = useState<any>([

@@ -1,21 +1,24 @@
-import { icons } from '../../assets/icons';
-import { ResourceButtons } from '../../buttons/resource-buttons';
-import { Warning } from '../assets/warning';
-import { UserBubble } from '../assets/user-bubble';
-import { UserAvatar } from '../../users/users';
-import { TagsBar, TagsBarProps } from './tags';
-import { TF_User } from '@monorepo/demiurge-types';
 import {
+  icons,
+  ResourceButtons,
+  UserBubble,
+  UserAvatar,
+  TagsBar,
+  TagsBarProps,
   SelectFieldset,
   SelectItem,
-} from '../../form/form-fields/select-fieldset';
+} from '@monorepo/demiurge-ui-components';
+import { StatusLed } from '@monorepo/servers';
+import { TF_User } from '@monorepo/demiurge-types';
 
-export interface NotebookCardProps {
+//
+
+export type NotebookCardProps = {
   status: 'running' | 'loading' | 'stopped';
   liveUsers?: TF_User[];
   host?: TF_User;
   groups?: boolean;
-}
+};
 
 export const NotebookCard = ({
   status,
@@ -138,15 +141,15 @@ export const NotebookCard = ({
       </div>
 
       <div className="absolute right-4 bottom-2 z-30">
-        <Warning
+        <StatusLed
           color={
             status === 'stopped'
               ? 'red'
               : status === 'loading'
-                ? 'yellow'
-                : /* running */ host
-                  ? 'blue'
-                  : 'green'
+              ? 'yellow'
+              : /* running */ host
+              ? 'blue'
+              : 'green'
           }
           type="notebook-card"
         />

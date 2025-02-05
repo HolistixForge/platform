@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
+import { randomGuy } from '@monorepo/demiurge-ui-components';
+
 import { Wrapper } from './wrapper';
-import { randomGuy } from '../../utils/random-guys';
+
+//
 
 const meta = {
   title: 'Mvp/Assets/wrapper',

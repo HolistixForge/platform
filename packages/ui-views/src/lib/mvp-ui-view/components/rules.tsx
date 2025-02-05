@@ -1,6 +1,8 @@
-import { icons } from '../../assets/icons';
+import { icons } from '@monorepo/demiurge-ui-components';
 
-interface FilterBoxProps {}
+//
+
+type FilterBoxProps = {};
 
 export const Rules = ({}: FilterBoxProps) => {
   return (

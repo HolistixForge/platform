@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
-import { icons } from '../..//assets/icons';
 
-interface ResourceButtonsProps {
+import { icons } from '@monorepo/demiurge-ui-components';
+
+//
+
+type ResourceButtonsProps = {
   isOpen: boolean;
-}
+};
 
 interface Resource {
   id: number;

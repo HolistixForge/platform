@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { ResourceDescription } from './resource-description';
 
+//
+
 const meta = {
   title: 'Mvp/Components/resource-description',
   component: ResourceDescription,

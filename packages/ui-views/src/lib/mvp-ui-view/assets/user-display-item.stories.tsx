@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
+import { randomGuy } from '@monorepo/demiurge-ui-components';
+
 import { UserDisplayItem } from './user-display-item';
-import { randomGuy } from '../../utils/random-guys';
+
+//
 
 const meta = {
   title: 'Mvp/Assets/user-display-item',

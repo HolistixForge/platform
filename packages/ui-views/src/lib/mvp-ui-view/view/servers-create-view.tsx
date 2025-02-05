@@ -1,12 +1,12 @@
+import { CSSProperties, useState } from 'react';
+
+import { Sidebar, randomGuy } from '@monorepo/demiurge-ui-components';
+import { ServerCard, TServerComponentProps } from '@monorepo/servers';
+
 import { Header } from '../components/header';
 import { ResourceBar } from '../components/resource-bar';
-import { Sidebar } from '../../sidebar/Sidebar';
 import { ServerStack } from '../components/server-stack';
 import { menuItems } from './access-role';
-import { CSSProperties, useState } from 'react';
-import { ServerCard } from '../components/server-card';
-import { randomGuy } from '../../utils/random-guys';
-import { TServerComponentProps } from '@monorepo/demiurge-types';
 
 //
 
@@ -44,7 +44,7 @@ export const ServersCreateView = () => {
   const [servers, setServers] = useState<TServerComponentProps[]>(
     Array(6)
       .fill(1)
-      .map(() => makeFakeServer()),
+      .map(() => makeFakeServer())
   );
 
   return (
@@ -67,7 +67,7 @@ export const ServersCreateView = () => {
                 <ServerCard
                   onCloud={function (
                     InstanceType: string,
-                    storage: number,
+                    storage: number
                   ): Promise<void> {
                     throw new Error('Function not implemented.');
                   }}

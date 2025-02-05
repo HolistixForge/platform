@@ -1,10 +1,15 @@
-import { TG_ServerImage } from '@monorepo/demiurge-types';
-import { ButtonBase } from '../../buttons/buttonBase';
-import { TAction } from '../../buttons/useAction';
-import { FormError, FormErrors } from '../form-errors/form-errors';
-import { SelectFieldset, SelectItem } from '../form-fields/select-fieldset';
-import { TextFieldset } from '../form-fields/text-fieldset';
 import * as Select from '@radix-ui/react-select';
+
+import { TG_ServerImage } from '@monorepo/servers';
+import {
+  ButtonBase,
+  TAction,
+  FormError,
+  FormErrors,
+  SelectFieldset,
+  SelectItem,
+  TextFieldset,
+} from '@monorepo/demiurge-ui-components';
 
 /**
  *

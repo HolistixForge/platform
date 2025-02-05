@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { SignupForm, SignupFormData } from './signup';
-import { useAction } from '../../buttons/useAction';
+
+import { useAction } from '@monorepo/demiurge-ui-components';
+import { SignupFormData } from '@monorepo/frontend-data';
+
+import { SignupForm } from './signup';
 
 //
 

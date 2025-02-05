@@ -1,20 +1,24 @@
-import { Header } from '../components/header';
-import { ResourceBar } from '../components/resource-bar';
-import { Sidebar } from '../../sidebar/Sidebar';
-import { icons } from '../../assets/icons';
-import { ResourceDescription } from '../components/resource-description';
 import { useState } from 'react';
-import { SummaryAccesses } from '../components/summary-accesses';
-import { menuItems } from './access-role';
+
 import {
+  Sidebar,
+  icons,
   SelectFieldset,
   SelectItem,
-} from '../../form/form-fields/select-fieldset';
-import { awsInstanceTypes } from '../../form/form-cloud-instance/cloud-instance-options';
+} from '@monorepo/demiurge-ui-components';
 
-export interface NotebookViewProps {
+import { Header } from '../components/header';
+import { ResourceBar } from '../components/resource-bar';
+import { ResourceDescription } from '../components/resource-description';
+import { SummaryAccesses } from '../components/summary-accesses';
+import { menuItems } from './access-role';
+import { awsInstanceTypes } from '@monorepo/servers';
+
+//
+
+export type NotebookViewProps = {
   updateDescription: boolean;
-}
+};
 
 export const NotebookView = ({ updateDescription }: NotebookViewProps) => {
   const [tags, setTags] = useState<any>([

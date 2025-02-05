@@ -2,19 +2,15 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { Tabs } from './tabs';
 
+//
+
 const meta = {
   title: 'Mvp/Components/tabs',
   component: Tabs,
   parameters: {
     layout: 'centered',
   },
-  argTypes: {
-    tabs: {
-      control: {
-        type: 'array',
-      },
-    },
-  },
+  argTypes: {},
 } satisfies Meta<typeof Tabs>;
 
 export default meta;

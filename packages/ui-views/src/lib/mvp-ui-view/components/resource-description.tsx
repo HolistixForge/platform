@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
-import { icons } from '../../assets/icons';
 
-interface ResourceDescriptionProps {
+import { icons } from '@monorepo/demiurge-ui-components';
+
+//
+
+type ResourceDescriptionProps = {
   editing: boolean;
-}
+};
 
 export const ResourceDescription = ({ editing }: ResourceDescriptionProps) => {
   const [_editing, _setEditing] = useState(editing);

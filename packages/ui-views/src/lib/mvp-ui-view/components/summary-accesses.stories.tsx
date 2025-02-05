@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { SummaryAccesses } from './summary-accesses';
 
+//
+
 const meta = {
   title: 'Mvp/Components/summary-accesses',
   component: SummaryAccesses,

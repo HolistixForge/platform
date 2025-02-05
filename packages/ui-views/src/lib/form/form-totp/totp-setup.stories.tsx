@@ -1,11 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import {
-  TotpSetupForm,
-  TotpEnableFormData,
-  TotpLoginFormData,
-  TotpSetupFormProps,
-} from './totp';
-import { useAction } from '../../buttons/useAction';
+
+import { useAction } from '@monorepo/demiurge-ui-components';
+import { TotpEnableFormData, TotpLoginFormData } from '@monorepo/frontend-data';
+
+import { TotpSetupForm, TotpSetupFormProps } from './totp';
 
 //
 
@@ -16,7 +14,7 @@ const StoryWrapper = (props: TotpSetupFormProps & { enabled: boolean }) => {
       return Promise.resolve();
     },
     [],
-    { values: { enabled: props.enabled } },
+    { values: { enabled: props.enabled } }
   );
 
   const actionLogin = useAction<TotpLoginFormData>(
@@ -25,7 +23,7 @@ const StoryWrapper = (props: TotpSetupFormProps & { enabled: boolean }) => {
       return Promise.resolve();
     },
     [],
-    { values: { code: '' } },
+    { values: { code: '' } }
   );
 
   return (

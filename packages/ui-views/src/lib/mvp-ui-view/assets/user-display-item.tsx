@@ -1,8 +1,9 @@
-import { icons } from '../../assets/icons';
-import { UserAvatar } from '../../users/users';
+import { icons, UserAvatar } from '@monorepo/demiurge-ui-components';
 import { TF_User } from '@monorepo/demiurge-types';
 
-interface UserDisplayItemProps {
+//
+
+type UserDisplayItemProps = {
   role: string;
   mail?: string;
   roleColor?: string;
@@ -14,7 +15,7 @@ interface UserDisplayItemProps {
     remove?: boolean;
   };
   removeUser?: () => void;
-}
+};
 
 export const UserDisplayItem = ({
   user,
@@ -27,7 +28,9 @@ export const UserDisplayItem = ({
   return (
     <div className={`grid grid-cols-12 max-w-full gap-[20px] w-full`}>
       <div
-        className={`${mail ? 'col-span-5' : 'col-span-7'} flex items-center gap-[8px]`}
+        className={`${
+          mail ? 'col-span-5' : 'col-span-7'
+        } flex items-center gap-[8px]`}
       >
         <UserAvatar {...user} size="small" />
         <p
@@ -40,7 +43,9 @@ export const UserDisplayItem = ({
         </p>
       </div>
       <div
-        className={`${!mail ? 'col-span-3' : 'col-span-5'} flex items-center gap-2`}
+        className={`${
+          !mail ? 'col-span-3' : 'col-span-5'
+        } flex items-center gap-2`}
       >
         <div
           className="text-white rounded-[4px] text-[12px] font-bold px-2"
@@ -53,7 +58,9 @@ export const UserDisplayItem = ({
         <p className="text-[12px] text-[#77768E]">{mail ? mail : null}</p>
       </div>
       <div
-        className={`${mail ? 'col-span-2' : 'col-span-2'} flex items-center justify-end gap-1`}
+        className={`${
+          mail ? 'col-span-2' : 'col-span-2'
+        } flex items-center justify-end gap-1`}
       >
         {buttons?.settings && (
           <div className="cursor-pointer">

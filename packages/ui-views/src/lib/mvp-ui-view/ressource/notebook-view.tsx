@@ -1,15 +1,18 @@
+import { useState } from 'react';
+
+import { Sidebar, icons } from '@monorepo/demiurge-ui-components';
+
 import { Header } from '../components/header';
 import { ResourceBar } from '../components/resource-bar';
-import { Sidebar } from '../../sidebar/Sidebar';
-import { icons } from '../../assets/icons';
-import { useState } from 'react';
 import { ResourceDescription } from '../components/resource-description';
 import { ResourceList } from '../components/resource-list';
 import { SummaryAccesses } from '../components/summary-accesses';
 
-export interface NotebookViewProps {
+//
+
+export type NotebookViewProps = {
   status: 'running' | 'loading' | 'stopped' | 'hosted';
-}
+};
 
 const Tags = ({ text, color }: { text: string; color?: string }) => {
   return (

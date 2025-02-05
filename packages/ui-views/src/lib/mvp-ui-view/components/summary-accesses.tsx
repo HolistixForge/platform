@@ -1,17 +1,20 @@
-import { icons } from '../../assets/icons';
 import { useEffect, useState } from 'react';
+
+import { icons, randomGuy } from '@monorepo/demiurge-ui-components';
+
 import { Tabs } from './tabs';
 import { UserDisplayItem } from '../assets/user-display-item';
 import { Wrapper } from '../assets/wrapper';
-import { randomGuy } from '../../utils/random-guys';
 
-interface SummaryAccessesProps {
+//
+
+type SummaryAccessesProps = {
   activeTab: 'users' | 'groups' | 'roles';
-}
+};
 
 export const SummaryAccesses = ({ activeTab }: SummaryAccessesProps) => {
   const [_activeTab, _setActiveTab] = useState<'users' | 'groups' | 'roles'>(
-    'users',
+    'users'
   );
 
   const [inAdmin, setInAdmin] = useState<any[]>([]);

@@ -18,8 +18,14 @@ export type {
   TEc2InstanceState,
   TServerImageOptions,
   TD_ServerImage,
+  TG_ServerImage,
+  TServerComponentProps,
 } from './lib/servers-types';
 
 export { StatusLed } from './lib/components/status-led';
 
 export type { TServerEvents } from './lib/servers-events';
+
+export { ServerCard } from './lib/components/server-card';
+
+export { awsInstanceTypes } from './lib/components/cloud-instance-options';

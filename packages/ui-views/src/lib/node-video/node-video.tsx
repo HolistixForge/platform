@@ -1,7 +1,13 @@
 import { FC, Suspense } from 'react';
-import { DisablePanSelect, TUseNodeValue } from '../../demiurge-space-2';
-import { NodeHeader } from '../node-common/node-header';
-import { useMakeButton } from '../node-common/node-toolbar';
+
+import {
+  DisablePanSelect,
+  TUseNodeValue,
+  NodeHeader,
+  useMakeButton,
+} from '@monorepo/space';
+
+//
 
 export type NodeVideoProps = {
   youtubeId: string;

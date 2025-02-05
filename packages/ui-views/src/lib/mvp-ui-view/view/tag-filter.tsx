@@ -1,14 +1,17 @@
+import { useState } from 'react';
+
+import { Sidebar, icons } from '@monorepo/demiurge-ui-components';
+
 import { Header } from '../components/header';
 import { ResourceBar } from '../components/resource-bar';
-import { Sidebar } from '../../sidebar/Sidebar';
-import { icons } from '../../assets/icons';
-import { useState } from 'react';
 import { ResourceList } from '../components/resource-list';
 import { FilterBox } from '../components/filter-box';
 import { ResourceSelection } from '../assets/resource-selection';
 import { menuItems } from './access-role';
 
-export interface TagFilterProps {}
+//
+
+export type TagFilterProps = {};
 
 export const TagFilter = ({}: TagFilterProps) => {
   const [tags, setTags] = useState<any>([

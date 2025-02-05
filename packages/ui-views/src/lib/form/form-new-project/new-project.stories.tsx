@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { NewProjectForm, NewProjectFormData } from './new-project';
-import { useAction } from '../../buttons/useAction';
-import { DialogControlled } from '../../dialog/dialog';
+
+import { useAction, DialogControlled } from '@monorepo/demiurge-ui-components';
+import { NewProjectFormData } from '@monorepo/frontend-data';
+
+import { NewProjectForm } from './new-project';
 
 //
 

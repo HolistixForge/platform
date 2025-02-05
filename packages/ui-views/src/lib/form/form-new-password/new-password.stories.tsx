@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { useAction } from '../../buttons/useAction';
+
+import { useAction } from '@monorepo/demiurge-ui-components';
+
 import { NewPasswordForm } from './new-password';
 
 //

@@ -1,26 +1,19 @@
 import { Link } from 'react-router-dom';
-import { FormError, FormErrors } from '../form-errors/form-errors';
-import { TextFieldset } from '../form-fields/text-fieldset';
-import { TAction } from '../../buttons/useAction';
 import { GitHubLogoIcon } from '@radix-ui/react-icons';
-import { icons } from '../../assets/icons';
-import { ButtonBase } from '../../buttons/buttonBase';
+
+import {
+  FormError,
+  FormErrors,
+  TextFieldset,
+  TAction,
+  icons,
+  ButtonBase,
+} from '@monorepo/demiurge-ui-components';
+
+import { LoginFormData } from '@monorepo/frontend-data';
 
 import './login.scss';
 
-/**
- *
- */
-
-export type LoginFormData = {
-  email: string;
-  password: string;
-};
-
-/**
- *
- */
-//
 //
 
 export type LoginFormProps = {

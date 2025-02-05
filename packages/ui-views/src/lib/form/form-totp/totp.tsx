@@ -1,20 +1,19 @@
-import { TAction } from '../../buttons/useAction';
-import { SwitchFieldset } from '../form-fields/switch-fieldset';
 import QRCode from 'react-qr-code';
-import { TextFieldset } from '../form-fields/text-fieldset';
-import { TotpFieldset } from '../form-fields/totp-fieldset';
-import { FormError, FormErrors } from '../form-errors/form-errors';
+
+import {
+  TAction,
+  SwitchFieldset,
+  TextFieldset,
+  TotpFieldset,
+  FormError,
+  FormErrors,
+  ButtonBase,
+} from '@monorepo/demiurge-ui-components';
+import { TotpEnableFormData, TotpLoginFormData } from '@monorepo/frontend-data';
 
 import './totp.scss';
-import { ButtonBase } from '../../buttons/buttonBase';
 
-export type TotpEnableFormData = {
-  enabled: boolean;
-};
-
-export type TotpLoginFormData = {
-  code: string;
-};
+//
 
 export type TotpSetupFormProps = {
   actionEnable: TAction<TotpEnableFormData>;

@@ -1,13 +1,15 @@
+import { Sidebar, icons } from '@monorepo/demiurge-ui-components';
+
 import { Header } from '../components/header';
 import { ResourceBar } from '../components/resource-bar';
-import { Sidebar } from '../../sidebar/Sidebar';
-import { icons } from '../../assets/icons';
 import { useState } from 'react';
 import { ResourceList } from '../components/resource-list';
 import { FilterBox } from '../components/filter-box';
 import { Rules } from '../components/rules';
 
-export interface AccessRoleProps {}
+//
+
+export type AccessRoleProps = {};
 
 //
 

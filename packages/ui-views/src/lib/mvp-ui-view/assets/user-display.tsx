@@ -1,12 +1,10 @@
-import { randomGuy } from '../../utils/random-guys';
+import { randomGuy } from '@monorepo/demiurge-ui-components';
+
 import { UserDisplayItem } from './user-display-item';
 
-interface UserDisplayProps {
-  //mail : bool
-  //team : str
-  //setting : bool
-  //icon-resource : delete | remove | filter
-}
+//
+
+type UserDisplayProps = {};
 
 export const UserDisplay = ({}: UserDisplayProps) => {
   return (

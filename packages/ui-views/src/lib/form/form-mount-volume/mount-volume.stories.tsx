@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
+import { useAction, DialogControlled } from '@monorepo/demiurge-ui-components';
+
 import { MountVolumeForm, MountVolumeFormData } from './mount-volume';
-import { useAction } from '../../buttons/useAction';
-import { DialogControlled } from '../../dialog/dialog';
 
 //
 

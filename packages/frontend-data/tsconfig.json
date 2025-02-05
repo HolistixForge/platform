@@ -3,7 +3,7 @@
   "include": [],
   "references": [
     {
-      "path": "../demiurge-ui-components"
+      "path": "../modules/servers"
     },
     {
       "path": "../demiurge-types"

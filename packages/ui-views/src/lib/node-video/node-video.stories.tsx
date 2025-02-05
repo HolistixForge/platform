@@ -1,12 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { sleep, useTestBoolean } from '../../storybook-utils';
-import { NodeVideo, NodeVideoProps } from './node-video';
-import {
-  StoryMockSpaceContext,
-  nodeViewDefaultStatus,
-} from '../../demiurge-space-2';
 
-//
+import { useTestBoolean } from '@monorepo/demiurge-ui-components';
+import { sleep } from '@monorepo/simple-types';
+import { StoryMockSpaceContext, nodeViewDefaultStatus } from '@monorepo/space';
+
+import { NodeVideo, NodeVideoProps } from './node-video';
+
 //
 
 const Youtube = ({ data }: { data: { videoId: string } }) => {

@@ -1,11 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
+import { useAction } from '@monorepo/demiurge-ui-components';
+
 import { SendMagicLinkForm, SendMagicLinkFormProps } from './login';
-import { useAction } from '../../buttons/useAction';
 
 //
 
 const StoryWrapper = (
-  props: Pick<SendMagicLinkFormProps, 'showForm' | 'title'>,
+  props: Pick<SendMagicLinkFormProps, 'showForm' | 'title'>
 ) => {
   const action = useAction<{ email: string }>((d) => {
     console.log(d);

@@ -3,7 +3,22 @@
   "include": [],
   "references": [
     {
+      "path": "../modules/space"
+    },
+    {
+      "path": "../simple-types"
+    },
+    {
       "path": "../demiurge-types"
+    },
+    {
+      "path": "../modules/servers"
+    },
+    {
+      "path": "../frontend-data"
+    },
+    {
+      "path": "../demiurge-ui-components"
     },
     {
       "path": "./tsconfig.lib.json"

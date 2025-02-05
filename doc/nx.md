@@ -280,11 +280,17 @@ add **"resolveJsonModule": true** in compilerOptions on **tsconfig.app.json** or
 
 ## Others Actions
 
+### build all
+
+````shell
+npx nx run-many -t build
+```
+
 ### Rename lib
 
 ```shell
 nx g @nrwl/workspace:mv --project ganymede-types --destination demiurge-types
-```
+````
 
 ### Delete remove
 

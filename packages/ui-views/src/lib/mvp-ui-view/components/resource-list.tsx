@@ -1,13 +1,16 @@
 import { useState } from 'react';
-import { icons } from '../../assets/icons';
-import { Tabs } from './tabs';
-import { NotebookCard } from './notebook-card';
-import { randomGuy, randomGuys } from '../../utils/random-guys';
 
-interface NotebookCardProps {
+import { icons, randomGuy, randomGuys } from '@monorepo/demiurge-ui-components';
+
+import { NotebookCard } from './notebook-card';
+import { Tabs } from './tabs';
+
+//
+
+type NotebookCardProps = {
   displayTabs?: boolean;
   setActiveView?: (view: string) => void;
-}
+};
 
 export const ResourceList = ({
   displayTabs,

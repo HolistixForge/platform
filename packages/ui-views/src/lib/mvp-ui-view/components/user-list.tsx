@@ -1,13 +1,16 @@
-import { Tabs } from './tabs';
-import { icons } from '../../assets/icons';
 import { useState } from 'react';
-import { UserDisplayItem } from '../assets/user-display-item';
-import { randomGuy } from '../../utils/random-guys';
 
-interface UserListProps {
+import { icons, randomGuy } from '@monorepo/demiurge-ui-components';
+
+import { Tabs } from './tabs';
+import { UserDisplayItem } from '../assets/user-display-item';
+
+//
+
+type UserListProps = {
   displayTabs?: boolean;
   displayEmail?: boolean;
-}
+};
 
 export const UserList = ({ displayEmail, displayTabs }: UserListProps) => {
   const [users, setUsers] = useState<any[]>([]);

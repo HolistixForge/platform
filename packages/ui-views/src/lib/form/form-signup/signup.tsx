@@ -1,25 +1,14 @@
 import { Link } from 'react-router-dom';
-import { FormError, FormErrors } from '../form-errors/form-errors';
-import { TextFieldset } from '../form-fields/text-fieldset';
-import { TAction } from '../../buttons/useAction';
-import { ButtonBase } from '../../buttons/buttonBase';
 
-/**
- *
- */
+import {
+  FormError,
+  FormErrors,
+  TextFieldset,
+  TAction,
+  ButtonBase,
+} from '@monorepo/demiurge-ui-components';
+import { SignupFormData } from '@monorepo/frontend-data';
 
-export type SignupFormData = {
-  email: string;
-  password: string;
-  username: string;
-  firstname: string;
-  lastname: string;
-};
-
-/**
- *
- */
-//
 //
 
 export type SignupFormProps = {

@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { FilterBox } from './filter-box';
 
+//
+
 const meta = {
   title: 'Mvp/Components/filter-box',
   component: FilterBox,

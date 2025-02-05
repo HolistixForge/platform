@@ -42,6 +42,7 @@ export {
   SelectFieldset,
   SelectItem,
 } from './lib/form/form-fields/select-fieldset';
+export { TotpFieldset } from './lib/form/form-fields/totp-fieldset';
 
 //
 
@@ -75,5 +76,5 @@ export { LoadingDots } from './lib/indicators/loading-dots';
 
 export { copyToClipboard } from './lib/utils/copy-to-clipboard';
 
-export type { Tag } from './lib/tags/tags';
+export type { Tag, TagsBarProps } from './lib/tags/tags';
 export { TagsBar } from './lib/tags/tags';

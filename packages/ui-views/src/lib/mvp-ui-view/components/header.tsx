@@ -1,22 +1,27 @@
 import React from 'react';
-import { icons } from '../../assets/icons';
-import { TAction } from '../../buttons/useAction';
-import { useNotImplemented } from '../../storybook-utils';
-import { UserAvatar } from '../../users/users';
 import { Link } from 'react-router-dom';
-import { randomGuy } from '../../utils/random-guys';
-import { ResourceButtons } from '../../buttons/resource-buttons';
-import { ButtonBase } from '../../buttons/buttonBase';
-import { ButtonIcon } from '../../buttons/buttonIcon';
-import {TF_User } from '@monorepo/demiurge-types'
 
-export interface HeaderProps {
+import {
+  icons,
+  TAction,
+  useNotImplemented,
+  UserAvatar,
+  randomGuy,
+  ResourceButtons,
+  ButtonBase,
+  ButtonIcon,
+} from '@monorepo/demiurge-ui-components';
+import { TF_User } from '@monorepo/demiurge-types';
+
+//
+
+export type HeaderProps = {
   hasNotifications?: boolean;
   user?: TF_User;
   logoutAction?: TAction;
   share?: boolean;
   host?: boolean;
-}
+};
 
 export const Header = ({
   hasNotifications,
