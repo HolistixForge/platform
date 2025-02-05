@@ -1,6 +1,5 @@
 ⚠️ Antoine's stuffs
 
-- gateway to docker
 - close tab for down resource
 - click on card go to settings if down
 
@@ -24,7 +23,7 @@
 - /me trop bavard
 - nginx error, home pages
 - event permissions control
-- delete hosted server: check down, only remove it from UI, explain it in user dialog, 
+- delete hosted server: check down, only remove it from UI, explain it in user dialog,
 - check server exist for /collab/vpn, /collab/event endpoint
 - shared terminals
 - new project from repo: data initialization from .py .ypmb .yaml
