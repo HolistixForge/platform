@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { useTestBoolean } from '@monorepo/demiurge-ui-components';
+import { useTestBoolean } from '@monorepo/ui-base';
 import { TNodeContext, StoryMockSpaceContext } from '@monorepo/space';
 
 import { NodeServer } from './node-server';
@@ -17,7 +17,7 @@ import {
   TServerComponentCallbacks,
   TServerComponentProps,
 } from '../../servers-types';
-import { randomGuy } from '@monorepo/demiurge-ui-components';
+import { randomGuy } from '@monorepo/ui-base';
 import { useMockServerBehaviours } from '../server-card-mock';
 
 //

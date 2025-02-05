@@ -1,4 +1,4 @@
-import { icons } from '@monorepo/demiurge-ui-components';
+import { icons } from '@monorepo/ui-base';
 import { InputsAndOutputs } from '@monorepo/space';
 
 import './node-chat-anchor.scss';

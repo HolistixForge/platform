@@ -1,8 +1,4 @@
-import {
-  icons,
-  Datetime,
-  UserUsername,
-} from '@monorepo/demiurge-ui-components';
+import { icons, Datetime, UserUsername } from '@monorepo/ui-base';
 import {
   DiscussionItem,
   SimpleMessage,

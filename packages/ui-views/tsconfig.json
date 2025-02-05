@@ -18,7 +18,7 @@
       "path": "../frontend-data"
     },
     {
-      "path": "../demiurge-ui-components"
+      "path": "../ui-base"
     },
     {
       "path": "./tsconfig.lib.json"

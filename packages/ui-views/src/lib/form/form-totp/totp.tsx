@@ -8,7 +8,7 @@ import {
   FormError,
   FormErrors,
   ButtonBase,
-} from '@monorepo/demiurge-ui-components';
+} from '@monorepo/ui-base';
 import { TotpEnableFormData, TotpLoginFormData } from '@monorepo/frontend-data';
 
 import './totp.scss';

@@ -1,11 +1,6 @@
 import { useState } from 'react';
 
-import {
-  Sidebar,
-  icons,
-  SelectFieldset,
-  SelectItem,
-} from '@monorepo/demiurge-ui-components';
+import { Sidebar, icons, SelectFieldset, SelectItem } from '@monorepo/ui-base';
 
 import { Header } from '../components/header';
 import { ResourceBar } from '../components/resource-bar';

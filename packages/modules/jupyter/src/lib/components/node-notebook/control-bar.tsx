@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { icons } from '@monorepo/demiurge-ui-components';
+import { icons } from '@monorepo/ui-base';
 
 //
 

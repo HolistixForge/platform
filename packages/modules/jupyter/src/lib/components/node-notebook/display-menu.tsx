@@ -1,4 +1,4 @@
-import { icons } from '@monorepo/demiurge-ui-components';
+import { icons } from '@monorepo/ui-base';
 
 type DisplayMenuProps = {
   title: boolean;

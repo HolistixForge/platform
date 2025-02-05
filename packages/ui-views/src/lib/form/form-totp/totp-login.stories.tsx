@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { useAction } from '@monorepo/demiurge-ui-components';
+import { useAction } from '@monorepo/ui-base';
 import { TotpLoginFormData } from '@monorepo/frontend-data';
 
 import { TotpLoginForm } from './totp';

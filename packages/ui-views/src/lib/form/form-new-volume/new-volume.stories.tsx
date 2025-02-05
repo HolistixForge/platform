@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { useAction, DialogControlled } from '@monorepo/demiurge-ui-components';
+import { useAction, DialogControlled } from '@monorepo/ui-base';
 
 import { NewVolumeForm, NewVolumeFormData } from './new-volume';
 

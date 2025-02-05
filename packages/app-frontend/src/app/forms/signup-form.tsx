@@ -1,5 +1,5 @@
 import { useMutationSignup } from '@monorepo/frontend-data';
-import { useAction } from '@monorepo/demiurge-ui-components';
+import { useAction } from '@monorepo/ui-base';
 import { SignupForm } from '@monorepo/ui-views';
 import { SignupFormData } from '@monorepo/frontend-data';
 import { useNavigate } from 'react-router-dom';

@@ -1,8 +1,4 @@
-import {
-  icons,
-  SelectFieldset,
-  SelectItem,
-} from '@monorepo/demiurge-ui-components';
+import { icons, SelectFieldset, SelectItem } from '@monorepo/ui-base';
 import {
   Inputs,
   Outputs,

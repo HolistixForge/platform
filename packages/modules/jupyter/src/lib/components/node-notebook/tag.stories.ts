@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { playAdd__hover } from '@monorepo/demiurge-ui-components';
+import { playAdd__hover } from '@monorepo/ui-base';
 
 import { Tag } from './tag';
 

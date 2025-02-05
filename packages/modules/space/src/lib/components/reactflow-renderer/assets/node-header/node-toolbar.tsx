@@ -7,7 +7,7 @@ import {
   ButtonIcon,
   ButtonIconProps,
   useAction,
-} from '@monorepo/demiurge-ui-components';
+} from '@monorepo/ui-base';
 
 import { DisablePanSelect } from '../../node-wrappers/disable-pan-select';
 import './node-toolbar.scss';

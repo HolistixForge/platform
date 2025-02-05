@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { editor } from 'monaco-editor';
 
-import { cssVar } from '@monorepo/demiurge-ui-components';
+import { cssVar } from '@monorepo/ui-base';
 
 import {
   CodeEditorMonaco,

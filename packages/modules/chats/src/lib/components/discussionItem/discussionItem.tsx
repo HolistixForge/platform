@@ -1,11 +1,6 @@
 import { TrashIcon } from '@radix-ui/react-icons';
 
-import {
-  icons,
-  Datetime,
-  UserAvatar,
-  UserUsername,
-} from '@monorepo/demiurge-ui-components';
+import { icons, Datetime, UserAvatar, UserUsername } from '@monorepo/ui-base';
 import { NodeToolbar } from '@monorepo/space';
 
 import './discussionItem.scss';

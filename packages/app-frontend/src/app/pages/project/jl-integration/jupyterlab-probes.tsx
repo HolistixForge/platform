@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { CodeEditorMonaco } from '@monorepo/demiurge-ui-components';
+import { CodeEditorMonaco } from '@monorepo/ui-base';
 import { useJLsManager } from '../model/collab-model-chunk';
 
 //
@@ -29,7 +29,7 @@ export const JupyterCollaborationProbes = ({
                 project_server_id,
                 notebook,
                 cellule,
-                editor,
+                editor
               );
             }}
           />

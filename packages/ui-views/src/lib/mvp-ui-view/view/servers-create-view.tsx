@@ -1,6 +1,6 @@
 import { CSSProperties, useState } from 'react';
 
-import { Sidebar, randomGuy } from '@monorepo/demiurge-ui-components';
+import { Sidebar, randomGuy } from '@monorepo/ui-base';
 import { ServerCard, TServerComponentProps } from '@monorepo/servers';
 
 import { Header } from '../components/header';

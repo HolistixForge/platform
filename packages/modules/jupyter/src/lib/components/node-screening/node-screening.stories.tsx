@@ -1,9 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import {
-  playAdd__hover,
-  useTestBoolean,
-} from '@monorepo/demiurge-ui-components';
+import { playAdd__hover, useTestBoolean } from '@monorepo/ui-base';
 import { StoryMockSpaceContext, nodeViewDefaultStatus } from '@monorepo/space';
 
 import { NodeScreening, NodeScreeningProps } from './node-screening';

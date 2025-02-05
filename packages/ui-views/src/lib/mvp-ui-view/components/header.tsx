@@ -10,7 +10,7 @@ import {
   ResourceButtons,
   ButtonBase,
   ButtonIcon,
-} from '@monorepo/demiurge-ui-components';
+} from '@monorepo/ui-base';
 import { TF_User } from '@monorepo/demiurge-types';
 
 //

@@ -1,5 +1,5 @@
 import { useMutationDeleteProject } from '@monorepo/frontend-data';
-import { ButtonBase, useAction } from '@monorepo/demiurge-ui-components';
+import { ButtonBase, useAction } from '@monorepo/ui-base';
 
 //
 

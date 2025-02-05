@@ -59,7 +59,7 @@
       "path": "../space/tsconfig.lib.json"
     },
     {
-      "path": "../../demiurge-ui-components/tsconfig.lib.json"
+      "path": "../../ui-base/tsconfig.lib.json"
     }
   ]
 }

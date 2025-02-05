@@ -1,7 +1,7 @@
 import { CSSProperties } from 'react';
 
 import { useQueryServerImages } from '@monorepo/frontend-data';
-import { DialogControlled } from '@monorepo/demiurge-ui-components';
+import { DialogControlled } from '@monorepo/ui-base';
 import { ResourceBar, ServerStack, NewServerForm } from '@monorepo/ui-views';
 import { ServerCard } from '@monorepo/servers';
 

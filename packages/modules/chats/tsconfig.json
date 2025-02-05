@@ -6,7 +6,7 @@
       "path": "../space"
     },
     {
-      "path": "../../demiurge-ui-components"
+      "path": "../../ui-base"
     },
     {
       "path": "../core"

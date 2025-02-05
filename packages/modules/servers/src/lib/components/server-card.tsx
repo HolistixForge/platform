@@ -25,7 +25,7 @@ import {
   LoadingDots,
   ButtonBase,
   ClickStopPropagation,
-} from '@monorepo/demiurge-ui-components';
+} from '@monorepo/ui-base';
 
 import {
   ServerSystemInfo,

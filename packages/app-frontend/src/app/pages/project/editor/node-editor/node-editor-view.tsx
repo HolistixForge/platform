@@ -3,11 +3,7 @@ import { useCallback, useRef, useState } from 'react';
 import { DemiurgeSpace } from '@monorepo/space';
 
 import { NodeContent } from './nodes/node';
-import {
-  FormErrors,
-  useAction,
-  DialogControlled,
-} from '@monorepo/demiurge-ui-components';
+import { FormErrors, useAction, DialogControlled } from '@monorepo/ui-base';
 import { MountVolumeForm, MountVolumeFormData } from '@monorepo/ui-views';
 import { TDemiurgeNotebookEvent } from '@monorepo/jupyter';
 import { TEdge, TEdgeEnd, TPosition } from '@monorepo/core';

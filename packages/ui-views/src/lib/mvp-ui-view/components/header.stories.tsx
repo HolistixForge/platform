@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { useNotImplemented, randomGuy } from '@monorepo/demiurge-ui-components';
+import { useNotImplemented, randomGuy } from '@monorepo/ui-base';
 
 import { Header, HeaderProps } from './header';
 

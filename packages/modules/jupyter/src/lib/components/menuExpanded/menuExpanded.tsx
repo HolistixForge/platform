@@ -3,7 +3,7 @@ import {
   ButtonIconProps,
   SelectFieldset,
   SelectItem,
-} from '@monorepo/demiurge-ui-components';
+} from '@monorepo/ui-base';
 import { NodeToolbar } from '@monorepo/space';
 
 import './menuExpanded.scss';

@@ -1,8 +1,4 @@
-import {
-  UserAvatar,
-  randomGuy,
-  ResourceButtons,
-} from '@monorepo/demiurge-ui-components';
+import { UserAvatar, randomGuy, ResourceButtons } from '@monorepo/ui-base';
 import { StatusLed } from '@monorepo/servers';
 
 import { Tabs } from './tabs';

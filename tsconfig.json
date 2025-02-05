@@ -16,9 +16,6 @@
       "path": "./packages/demiurge-types"
     },
     {
-      "path": "./packages/demiurge-ui-components"
-    },
-    {
       "path": "./packages/ui-toolkit"
     },
     {
@@ -83,6 +80,9 @@
     },
     {
       "path": "./packages/app-frontend"
+    },
+    {
+      "path": "./packages/ui-base"
     }
   ],
   "ts-node": {

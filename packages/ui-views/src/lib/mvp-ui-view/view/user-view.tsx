@@ -1,11 +1,6 @@
 import { useState } from 'react';
 
-import {
-  Sidebar,
-  icons,
-  randomGuy,
-  UserAvatar,
-} from '@monorepo/demiurge-ui-components';
+import { Sidebar, icons, randomGuy, UserAvatar } from '@monorepo/ui-base';
 
 import { Header } from '../components/header';
 import { ResourceBar } from '../components/resource-bar';

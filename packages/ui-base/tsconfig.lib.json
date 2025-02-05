@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "out-tsc/demiurge-ui-components",
+    "outDir": "out-tsc/ui-base",
     "types": [
       "node",
       "@nx/react/typings/cssmodule.d.ts",
@@ -10,7 +10,9 @@
     ],
     "rootDir": "src",
     "jsx": "react-jsx",
-    "tsBuildInfoFile": "out-tsc/demiurge-ui-components/tsconfig.lib.tsbuildinfo"
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "tsBuildInfoFile": "out-tsc/ui-base/tsconfig.lib.tsbuildinfo"
   },
   "exclude": [
     "out-tsc",

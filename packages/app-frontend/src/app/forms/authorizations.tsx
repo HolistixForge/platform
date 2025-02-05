@@ -8,7 +8,7 @@ import {
   UsersScopes,
   UsersScopesLogicProps,
   UsersScopesProps,
-} from '@monorepo/demiurge-ui-components';
+} from '@monorepo/ui-base';
 import { useCallback, useState } from 'react';
 import { useProject } from '../pages/project/editor/node-editor/nodes/projects';
 import { TCollaborator, TF_User } from '@monorepo/demiurge-types';

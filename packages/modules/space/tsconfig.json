@@ -18,7 +18,7 @@
       "path": "../../demiurge-types"
     },
     {
-      "path": "../../demiurge-ui-components"
+      "path": "../../ui-base"
     },
     {
       "path": "../core"

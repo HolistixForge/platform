@@ -10,7 +10,6 @@
     "importHelpers": true,
     "incremental": true,
     "isolatedModules": true,
-
     "lib": ["es2022", "DOM"],
     "module": "ESNext",
     "target": "es2022",
@@ -18,7 +17,6 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "declaration": true,
-
     "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,

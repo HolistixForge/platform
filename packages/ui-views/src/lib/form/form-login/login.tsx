@@ -8,7 +8,7 @@ import {
   TAction,
   icons,
   ButtonBase,
-} from '@monorepo/demiurge-ui-components';
+} from '@monorepo/ui-base';
 
 import { LoginFormData } from '@monorepo/frontend-data';
 

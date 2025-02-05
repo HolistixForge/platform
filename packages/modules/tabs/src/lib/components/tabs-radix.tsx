@@ -1,7 +1,7 @@
 import { Children, FC, createRef, useCallback, useMemo, useState } from 'react';
 import { CSSTransition } from 'react-transition-group';
 import * as Tabs from '@radix-ui/react-tabs';
-import { icons } from '@monorepo/demiurge-ui-components';
+import { icons } from '@monorepo/ui-base';
 import { ReadOnlyTree, TreeElement } from '../tree';
 
 import './tabs-radix.scss';

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { useTestBoolean } from '@monorepo/demiurge-ui-components';
+import { useTestBoolean } from '@monorepo/ui-base';
 import { StoryMockSpaceContext } from '@monorepo/space';
 
 import { NodeChatAnchor, NodeChatAnchorProps } from './node-chat-anchor';

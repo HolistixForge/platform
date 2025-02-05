@@ -21,7 +21,7 @@ import {
   NewVolumeForm,
   NewVolumeFormData,
 } from '@monorepo/ui-views';
-import { useAction, DialogControlled } from '@monorepo/demiurge-ui-components';
+import { useAction, DialogControlled } from '@monorepo/ui-base';
 import { useQueryServerImages } from '@monorepo/frontend-data';
 import { Dispatcher } from '@monorepo/collab-engine';
 

@@ -1,4 +1,4 @@
-import { icons } from '@monorepo/demiurge-ui-components';
+import { icons } from '@monorepo/ui-base';
 
 export interface ReducedCellProps {
   type: 'normal' | 'validate' | 'error' | 'running' | 'selected' | 'glow';

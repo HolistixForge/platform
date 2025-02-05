@@ -7,7 +7,7 @@ import {
   TagsBarProps,
   SelectFieldset,
   SelectItem,
-} from '@monorepo/demiurge-ui-components';
+} from '@monorepo/ui-base';
 import { StatusLed } from '@monorepo/servers';
 import { TF_User } from '@monorepo/demiurge-types';
 

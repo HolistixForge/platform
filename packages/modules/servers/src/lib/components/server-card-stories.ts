@@ -1,4 +1,4 @@
-import { randomGuy } from '@monorepo/demiurge-ui-components';
+import { randomGuy } from '@monorepo/ui-base';
 import { sleep } from '@monorepo/simple-types';
 
 import {

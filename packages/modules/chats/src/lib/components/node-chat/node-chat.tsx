@@ -8,7 +8,7 @@ import {
   ButtonIcon,
   ButtonIconProps,
   useAction,
-} from '@monorepo/demiurge-ui-components';
+} from '@monorepo/ui-base';
 import {
   DisablePanSelect,
   TNodeContext,

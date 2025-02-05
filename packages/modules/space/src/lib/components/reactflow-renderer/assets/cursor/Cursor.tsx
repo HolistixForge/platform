@@ -1,4 +1,4 @@
-import { UserUsername } from '@monorepo/demiurge-ui-components';
+import { UserUsername } from '@monorepo/ui-base';
 
 import './cursor.scss';
 import { TF_User } from '@monorepo/demiurge-types';

@@ -1,4 +1,4 @@
-import { icons, UserAvatar } from '@monorepo/demiurge-ui-components';
+import { icons, UserAvatar } from '@monorepo/ui-base';
 import { TF_User } from '@monorepo/demiurge-types';
 
 //

@@ -5,7 +5,7 @@ import {
   NodeHeader,
   useMakeButton,
 } from '@monorepo/space';
-import { ButtonBase, ButtonBaseProps } from '@monorepo/demiurge-ui-components';
+import { ButtonBase, ButtonBaseProps } from '@monorepo/ui-base';
 
 import {
   KernelStateIndicator,

@@ -4,7 +4,7 @@ import { TrashIcon } from '@radix-ui/react-icons';
 
 import { useDebugComponent } from '@monorepo/log';
 import { EdgeComponent, LabelEnd, LabelMiddle } from '@monorepo/space';
-import { ButtonIcon, useAction } from '@monorepo/demiurge-ui-components';
+import { ButtonIcon, useAction } from '@monorepo/ui-base';
 import { TNodeServer, TNodeVolume } from '@monorepo/demiurge-types';
 
 import { useDispatcher, useSharedData } from '../../model/collab-model-chunk';

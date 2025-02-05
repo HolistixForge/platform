@@ -1,5 +1,5 @@
 import { useApi, useMutationLogin } from '@monorepo/frontend-data';
-import { useAction } from '@monorepo/demiurge-ui-components';
+import { useAction } from '@monorepo/ui-base';
 import { SendMagicLinkForm, LoginForm } from '@monorepo/ui-views';
 import { LoginFormData } from '@monorepo/frontend-data';
 import { useState } from 'react';

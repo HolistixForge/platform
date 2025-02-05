@@ -3,22 +3,7 @@
   "include": [],
   "references": [
     {
-      "path": "../modules/jupyter"
-    },
-    {
-      "path": "../modules/chats"
-    },
-    {
-      "path": "../modules/space"
-    },
-    {
       "path": "../modules/tabs"
-    },
-    {
-      "path": "../modules/core"
-    },
-    {
-      "path": "../modules/servers"
     },
     {
       "path": "../api-fetch"
@@ -30,7 +15,22 @@
       "path": "../simple-types"
     },
     {
+      "path": "../modules/chats"
+    },
+    {
+      "path": "../modules/jupyter"
+    },
+    {
       "path": "../collab-engine"
+    },
+    {
+      "path": "../modules/core"
+    },
+    {
+      "path": "../modules/servers"
+    },
+    {
+      "path": "../modules/space"
     },
     {
       "path": "../ui-views"
@@ -39,7 +39,7 @@
       "path": "../demiurge-types"
     },
     {
-      "path": "../demiurge-ui-components"
+      "path": "../ui-base"
     },
     {
       "path": "../frontend-data"

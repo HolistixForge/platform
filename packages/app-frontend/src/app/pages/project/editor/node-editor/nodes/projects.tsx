@@ -6,7 +6,7 @@ import {
   paletteRandomColor,
   standardizeError,
   useAction,
-} from '@monorepo/demiurge-ui-components';
+} from '@monorepo/ui-base';
 import {
   GanymedeApi,
   useApi,

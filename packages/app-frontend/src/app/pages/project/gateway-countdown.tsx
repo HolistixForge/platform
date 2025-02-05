@@ -1,4 +1,4 @@
-import { Countdown } from '@monorepo/demiurge-ui-components';
+import { Countdown } from '@monorepo/ui-base';
 import { useSharedData } from './model/collab-model-chunk';
 import { useCallback } from 'react';
 
@@ -10,7 +10,7 @@ export const GatewayCountdown = () => {
       // eslint-disable-next-line no-restricted-globals
       () => location.reload(),
       /* TODO: periodic event period + 1000 */
-      16000,
+      16000
     ); // Refresh the page
   }, []);
 

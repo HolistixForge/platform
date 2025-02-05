@@ -1,4 +1,4 @@
-import { Sidebar } from '@monorepo/demiurge-ui-components';
+import { Sidebar } from '@monorepo/ui-base';
 
 import { Header } from '../components/header';
 import { ResourceBar } from '../components/resource-bar';

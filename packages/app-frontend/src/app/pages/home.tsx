@@ -8,11 +8,7 @@ import {
   useQueryUserProjects,
   NewProjectFormData,
 } from '@monorepo/frontend-data';
-import {
-  useAction,
-  UserInline,
-  DialogControlled,
-} from '@monorepo/demiurge-ui-components';
+import { useAction, UserInline, DialogControlled } from '@monorepo/ui-base';
 import { NewProjectForm } from '@monorepo/ui-views';
 import { TApi_Project } from '@monorepo/demiurge-types';
 

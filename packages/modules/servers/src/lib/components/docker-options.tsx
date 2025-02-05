@@ -4,7 +4,7 @@ import {
   FormError,
   FormErrors,
   TextFieldset,
-} from '@monorepo/demiurge-ui-components';
+} from '@monorepo/ui-base';
 import { CheckIcon } from '@radix-ui/react-icons';
 import * as Checkbox from '@radix-ui/react-checkbox';
 

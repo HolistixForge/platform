@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { useTestBoolean } from '@monorepo/demiurge-ui-components';
+import { useTestBoolean } from '@monorepo/ui-base';
 import { sleep } from '@monorepo/simple-types';
 import { StoryMockSpaceContext, nodeViewDefaultStatus } from '@monorepo/space';
 

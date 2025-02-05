@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 
 import { TNodeKernel } from '@monorepo/demiurge-types';
 import { useNodeContext } from '@monorepo/space';
-import { useAction } from '@monorepo/demiurge-ui-components';
+import { useAction } from '@monorepo/ui-base';
 import { NodeKernel } from '@monorepo/jupyter';
 
 import { greaterThan } from '../../../jl-integration/jls-manager';
