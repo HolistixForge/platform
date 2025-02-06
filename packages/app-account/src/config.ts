@@ -6,6 +6,7 @@ const envVars = [
   'GANYMEDE_FQDN',
   'FRONTEND_FQDN',
   'JWT_PUBLIC_KEY',
+  'ALLOWED_ORIGINS',
   'ACCOUNT_SERVER_BIND',
   'PG_HOST',
   'PG_PORT',
