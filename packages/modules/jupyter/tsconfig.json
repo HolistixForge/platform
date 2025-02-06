@@ -1,0 +1,40 @@
+{
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../core"
+    },
+    {
+      "path": "../../collab-engine"
+    },
+    {
+      "path": "../../ui-toolkit"
+    },
+    {
+      "path": "../servers"
+    },
+    {
+      "path": "../../api-fetch"
+    },
+    {
+      "path": "../../log"
+    },
+    {
+      "path": "../../simple-types"
+    },
+    {
+      "path": "../space"
+    },
+    {
+      "path": "../../ui-base"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ],
+  "extends": "../../../tsconfig.base.json"
+}

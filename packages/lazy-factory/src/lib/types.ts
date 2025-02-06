@@ -8,7 +8,6 @@ type ComponentProps = {
   _acceptedMode?: Array<EComponentMode>;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TFactoryComponent = FC<ComponentProps & any>;
 
 type TScript = {

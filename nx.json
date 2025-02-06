@@ -52,7 +52,12 @@
       "options": {
         "targetName": "test"
       },
-      "exclude": ["packages/app-ganymede-e2e/**/*"]
+      "exclude": [
+        "packages/app-ganymede-e2e/**/*",
+        "packages/app-account-e2e/**/*",
+        "packages/app-ganymede-cmds-e2e/**/*",
+        "packages/app-collab-e2e/**/*"
+      ]
     },
     {
       "plugin": "@nx/storybook/plugin",
@@ -67,7 +72,18 @@
   "generators": {
     "@nx/react": {
       "library": {
+        "style": "scss",
+        "linter": "eslint",
         "unitTestRunner": "jest"
+      },
+      "application": {
+        "babel": true,
+        "style": "scss",
+        "linter": "eslint",
+        "bundler": "vite"
+      },
+      "component": {
+        "style": "scss"
       }
     }
   },

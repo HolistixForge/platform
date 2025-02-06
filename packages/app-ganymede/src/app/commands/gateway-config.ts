@@ -8,6 +8,7 @@ import {
   GATEWAY_PROJECT_SCOPE,
   makeProjectScopeString,
   makeYjsDocId,
+  TJwtProject,
 } from '@monorepo/demiurge-types';
 import { ONE_YEAR_MS } from '@monorepo/simple-types';
 
@@ -19,16 +20,18 @@ export class GatewayConfig extends Command {
     frontend_fqdn: string;
   }): Promise<TCommandReturn> {
     if (args.project_id) {
+      const payload: TJwtProject = {
+        type: 'project_token',
+        project_id: args.project_id,
+        scope: GATEWAY_PROJECT_SCOPE.map((s) =>
+          makeProjectScopeString(args.project_id, s)
+        ).join(' '),
+      };
+
       return {
         data: {
           GANYMEDE_API_TOKEN: generateJwtToken(
-            {
-              type: 'gateway_token',
-              project_id: args.project_id,
-              scope: GATEWAY_PROJECT_SCOPE.map((s) =>
-                makeProjectScopeString(args.project_id, s)
-              ).join(' '),
-            },
+            payload,
             `${ONE_YEAR_MS}` // TODO: adjust expiration ?
           ),
 

@@ -24,9 +24,9 @@ export type TMyfetchRequest = TUri & {
 export type TMyfetch = (r: TMyfetchRequest) => Promise<{
   statusCode: number;
   headers: IncomingHttpHeaders;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   response: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   json: TJson;
 }>;
 

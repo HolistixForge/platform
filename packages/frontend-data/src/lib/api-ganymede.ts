@@ -13,7 +13,6 @@ import { Key, LocalStorageStore } from './local-storage-store';
 //
 //
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const debug = (msg: string, ...args: any) => log(7, 'API_CALL', msg, ...args);
 
 type TokenStoreValue = {
@@ -25,7 +24,6 @@ type TokenStoreValue = {
 
 //
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getTokenConfig = (k: any): Omit<TokenStoreValue, 'token'> => {
   let conf: Omit<TokenStoreValue, 'token'>;
   if (k['project_id'])
@@ -118,7 +116,7 @@ export class GanymedeApi extends ApiFetch {
    * check if error is due to token expiration
    * @returns boolean
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   private _isTokenRefreshError(err: any) {
     const r =
       err &&
@@ -144,7 +142,6 @@ export class GanymedeApi extends ApiFetch {
     r: Pick<TMyfetchRequest, 'queryParameters' | 'pathParameters' | 'jsonBody'>
   ): TJson {
     const client_id: string =
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (r.jsonBody && (r.jsonBody as any).event?.client_id) || null;
     if (client_id) return { client_id };
 

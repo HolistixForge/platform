@@ -1,7 +1,6 @@
 import { log } from '@monorepo/log';
 import { TJson } from '@monorepo/simple-types';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const debug = (k: Key, msg: string, ...args: any) =>
   log(7, 'LOCAL_STORAGE_STORE', `[${keyHash(k)}]: ${msg}`, ...args);
 
@@ -48,7 +47,6 @@ type Deserialized<T> = NoValue | AnError | WithValue<T>;
 
 //
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const deserialize = <T>(o: any): Deserialized<T> => {
   return {
     ...o,
@@ -58,7 +56,7 @@ const deserialize = <T>(o: any): Deserialized<T> => {
 
 //
 // JSON.stringify replacer function for having object keys sorted in output
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const replacer = (key: string, value: any) =>
   value instanceof Object && !(value instanceof Array)
     ? Object.keys(value)
@@ -66,7 +64,6 @@ const replacer = (key: string, value: any) =>
         .reduce((sorted, key) => {
           sorted[key] = value[key];
           return sorted;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         }, {} as any)
     : value;
 

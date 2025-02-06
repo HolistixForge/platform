@@ -1,10 +1,13 @@
-import { TSqlQueryArgs } from '../databases/sql/Sql';
-import { SqlException, UserException } from '../Exceptions/Exception';
-import { error } from '@monorepo/log';
-import { Command, TCommandReturn } from './Command';
-import { TJson } from '@monorepo/simple-types';
-import { TSqlQueryDefinition } from '../databases/sql/Connections';
 import { DeepReadonly } from 'ts-essentials';
+
+import { error } from '@monorepo/log';
+import { TJson } from '@monorepo/simple-types';
+import { UserException } from '@monorepo/log';
+
+import { Row, TSqlQueryArgs } from '../databases/sql/Sql';
+import { SqlException } from '../Exceptions/Exception';
+import { Command, TCommandReturn } from './Command';
+import { TSqlQueryDefinition } from '../databases/sql/Connections';
 
 //
 
@@ -17,7 +20,6 @@ type Targs = {
 //
 
 export class SqlQuery extends Command {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   processError(constraintName: string, q: DeepReadonly<TSqlQueryDefinition>) {
     error('', `constraint failed: ${constraintName}`);
     const f =
@@ -50,7 +52,7 @@ export class SqlQuery extends Command {
         } else {
           const expResult = q.return?.resultsets[resultsSetsIndex];
           if (expResult) {
-            let d: TJson | null = null;
+            let d: Row | Row[] | null = null;
             if (expResult.expect === 'one-row') d = currentResultSet.oneRow();
             else if (expResult.expect === 'multiple')
               d = currentResultSet.allRows();

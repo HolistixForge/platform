@@ -1,0 +1,81 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "out-tsc/app-frontend",
+    "tsBuildInfoFile": "out-tsc/app-frontend/tsconfig.app.tsbuildinfo",
+    "jsx": "react-jsx",
+    "lib": ["dom"],
+    "types": [
+      "node",
+      "@nx/react/typings/cssmodule.d.ts",
+      "@nx/react/typings/image.d.ts",
+      "vite/client"
+    ],
+    "rootDir": "src",
+    "module": "esnext",
+    "moduleResolution": "bundler"
+  },
+  "exclude": [
+    "out-tsc",
+    "dist",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.js",
+    "src/**/*.test.js",
+    "src/**/*.spec.jsx",
+    "src/**/*.test.jsx",
+    "eslint.config.js",
+    "eslint.config.cjs",
+    "eslint.config.mjs"
+  ],
+  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
+  "references": [
+    {
+      "path": "../modules/tabs/tsconfig.lib.json"
+    },
+    {
+      "path": "../api-fetch/tsconfig.lib.json"
+    },
+    {
+      "path": "../lazy-factory/tsconfig.lib.json"
+    },
+    {
+      "path": "../simple-types/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/chats/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/jupyter/tsconfig.lib.json"
+    },
+    {
+      "path": "../collab-engine/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/core/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/servers/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/space/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-views/tsconfig.lib.json"
+    },
+    {
+      "path": "../demiurge-types/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui-base/tsconfig.lib.json"
+    },
+    {
+      "path": "../frontend-data/tsconfig.lib.json"
+    },
+    {
+      "path": "../log/tsconfig.lib.json"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../demiurge-types"
+    },
+    {
+      "path": "../backend-engine"
+    },
+    {
+      "path": "../simple-types"
+    },
+    {
+      "path": "../log"
+    },
+    {
+      "path": "../modules/jupyter"
+    },
+    {
+      "path": "../modules/servers"
+    },
+    {
+      "path": "../modules/chats"
+    },
+    {
+      "path": "../modules/space"
+    },
+    {
+      "path": "../modules/tabs"
+    },
+    {
+      "path": "../modules/core"
+    },
+    {
+      "path": "../collab-engine"
+    },
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
+}

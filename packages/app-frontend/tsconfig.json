@@ -1,0 +1,55 @@
+{
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../modules/tabs"
+    },
+    {
+      "path": "../api-fetch"
+    },
+    {
+      "path": "../lazy-factory"
+    },
+    {
+      "path": "../simple-types"
+    },
+    {
+      "path": "../modules/chats"
+    },
+    {
+      "path": "../modules/jupyter"
+    },
+    {
+      "path": "../collab-engine"
+    },
+    {
+      "path": "../modules/core"
+    },
+    {
+      "path": "../modules/servers"
+    },
+    {
+      "path": "../modules/space"
+    },
+    {
+      "path": "../ui-views"
+    },
+    {
+      "path": "../demiurge-types"
+    },
+    {
+      "path": "../ui-base"
+    },
+    {
+      "path": "../frontend-data"
+    },
+    {
+      "path": "../log"
+    },
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ],
+  "extends": "../../tsconfig.base.json"
+}

@@ -7,7 +7,6 @@ let DEBUG = false;
 
 //
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const listeners: React.Dispatch<React.SetStateAction<any>>[] = [];
 
 //

@@ -1,2 +1,2 @@
-import { main } from './app/_main';
+import { main } from './app/_main.js';
 main();

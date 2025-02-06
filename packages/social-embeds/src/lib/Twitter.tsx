@@ -13,7 +13,6 @@ export const Twitter = ({ data }: I_TwitterProps) => {
   const handleDivMount = useCallback((node: HTMLDivElement) => {
     if (node && tweetId) {
       setTimeout(() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const t = (window as any).twttr;
         if (t) t.widgets.createTweet(tweetId, node, { conversation: 'none' });
         else node.innerHTML = 'Your Browser block twitter widgets';

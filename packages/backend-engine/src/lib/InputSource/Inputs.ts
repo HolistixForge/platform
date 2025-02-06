@@ -9,7 +9,7 @@ import { Request, TStringMap } from '../Request/Request';
 import { ConfigException } from '../Exceptions/Exception';
 import { Headers } from './Headers';
 import { Gen } from './Gen';
-import { TJson, TJsonWithNull } from '@monorepo/simple-types';
+import { TJson } from '@monorepo/simple-types';
 import { Jwt } from './Jwt';
 import { HmacToken } from './HmacToken';
 
@@ -63,7 +63,7 @@ export class Inputs {
   async cloneEvalArgs(
     o: DeepReadonly<TJson>,
     request?: Request
-  ): Promise<TJsonWithNull> {
+  ): Promise<TJson> {
     const evalMatch = async (match: string): Promise<TJson | null> => {
       const id = match.replace(/[{}]/g, '');
       const v = await this.evalInput(id, request);
@@ -104,7 +104,7 @@ export class Inputs {
     }
     //
     else if (Array.isArray(o)) {
-      const _array_: Array<TJsonWithNull> = [];
+      const _array_: Array<TJson> = [];
       for (let i = 0; i < o.length; i++) {
         _array_[i] = await this.cloneEvalArgs(o[i], request);
       }
@@ -117,7 +117,7 @@ export class Inputs {
     //
     else if (typeof o === 'object') {
       // for each property in o...
-      const r: TJsonWithNull = {};
+      const r: TJson = {};
       for (const [key, value] of Object.entries(o)) {
         r[key] = await this.cloneEvalArgs(value, request);
       }

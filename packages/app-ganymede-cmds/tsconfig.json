@@ -1,0 +1,25 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../log"
+    },
+    {
+      "path": "../simple-types"
+    },
+    {
+      "path": "../demiurge-types"
+    },
+    {
+      "path": "../backend-engine"
+    },
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
+}

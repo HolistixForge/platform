@@ -1,4 +1,3 @@
-import { TEvent } from './events';
 import { Dispatcher } from './dispatcher';
 import { SharedTypes } from './SharedTypes';
 import { TValidSharedData } from './chunk';
@@ -8,17 +7,12 @@ import { TValidSharedData } from './chunk';
 /**
  *
  */
-export type ReduceArgs<
-  TSd extends TValidSharedData,
-  TRe extends TEvent,
-  TDe extends TEvent,
-  TArgs
-> = {
+export type ReduceArgs<TSd extends TValidSharedData, TRe, TDe, TArgs> = {
   sd: TSd;
   st: SharedTypes;
   event: TRe;
   dispatcher: Dispatcher<TDe, TArgs>;
-  extraArgs?: TArgs;
+  extraArgs: TArgs;
 };
 
 /**

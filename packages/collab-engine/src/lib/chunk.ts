@@ -1,13 +1,11 @@
 import { SharedArray, SharedMap, SharedTypes } from './SharedTypes';
 import { Dispatcher } from './dispatcher';
-import { TEvent } from './events';
 import { Reducer } from './reducer';
 
 //
 //
 
 export type TValidSharedData = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: SharedArray<any> | SharedMap<any>;
 };
 
@@ -15,42 +13,36 @@ export type TValidSharedData = {
 //
 
 export type TCollaborativeChunk = {
-  initChunk: (st: SharedTypes) => {
-    sharedData: TValidSharedData;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    reducers: Readonly<Reducer<TValidSharedData, TEvent, TEvent, any>[]>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    extraContext?: any;
-  };
+  sharedData: (st: SharedTypes) => TValidSharedData;
+
+  reducers: (
+    sharedData: TValidSharedData
+  ) => Readonly<Reducer<TValidSharedData, any, any, any>[]>;
+
+  extraContext?: (sharedData: TValidSharedData) => object;
 };
 
 //
 //
-
 export const compileChunks = (
   cc: TCollaborativeChunk[],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  dispatcher: Dispatcher<TEvent, any>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+  dispatcher: Dispatcher<any, any>,
+
   extraContext: any
 ) => {
   return (st: SharedTypes) => {
-    let allSharedData = {};
+    let allSharedData: TValidSharedData = {};
+
     cc.forEach((chunk) => {
-      const {
-        sharedData,
-        reducers: reducers,
-        extraContext: ec,
-      } = chunk.initChunk(st);
+      const sharedData = chunk.sharedData(st);
+      Object.assign(allSharedData, sharedData);
 
-      allSharedData = {
-        ...allSharedData,
-        ...sharedData,
-      };
-
-      for (const key in ec) extraContext[key] = ec[key];
-
+      const reducers = chunk.reducers(allSharedData);
       reducers.forEach((r) => dispatcher.addReducer(r));
+
+      const addContext = chunk.extraContext?.(allSharedData) || {};
+      Object.assign(extraContext, addContext);
     });
     return allSharedData;
   };

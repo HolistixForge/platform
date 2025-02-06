@@ -1,6 +1,5 @@
 import { SharedTypes, SharedMap, SharedArray } from '../SharedTypes';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TEvent = any;
 
 class Observable<TO> {
@@ -44,7 +43,6 @@ class MyMap<T>
     return this._map.get(k) as T;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   map(f: (v: T, k: string) => any): any[] {
     const keys: Array<string> = Array.from(this._map.keys());
     return keys.map((k) => f(this._map.get(k) as T, k));
@@ -100,7 +98,6 @@ class MyArray<T>
     return this._array[index];
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   map(f: (v: T, k: number) => any): any[] {
     return this._array.map(f);
   }

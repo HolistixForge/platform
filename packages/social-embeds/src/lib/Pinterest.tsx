@@ -14,7 +14,6 @@ export const Pinterest = ({ data }: I_PinterestProps) => {
     if (node && url) {
       node.innerHTML = embed(url);
       const i = setInterval(() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const p = (window as any).PinUtils;
         if (p) {
           p.build();

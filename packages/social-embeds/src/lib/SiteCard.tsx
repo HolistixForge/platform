@@ -13,7 +13,6 @@ interface I_SiteCardProps extends ComponentProps {
 }
 
 const useMetaOg = (url: string) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [ogMetas, setOgMetas] = useState<any>(null);
 
   useEffect(() => {
@@ -62,7 +61,7 @@ const ellipsis = (s: string, l: number) =>
   s.length > l ? s.substring(0, l) + '...' : s;
 
 function openInNewTab(url: string) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  
   (window as any).open(url, '_blank').focus();
 }
 

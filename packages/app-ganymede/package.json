@@ -19,7 +19,12 @@
           "format": [
             "cjs"
           ],
-          "bundle": false,
+          "bundle": true,
+          "thirdParty": true,
+          "external": [
+            "react",
+            "react-dom"
+          ],
           "main": "packages/app-ganymede/src/main.ts",
           "tsConfig": "packages/app-ganymede/tsconfig.app.json",
           "assets": [
@@ -52,7 +57,7 @@
         ],
         "options": {
           "buildTarget": "app-ganymede:build",
-          "runBuildTargetDependencies": false
+          "runBuildTargetDependencies": true
         },
         "configurations": {
           "development": {

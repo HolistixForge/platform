@@ -9,6 +9,9 @@
       "path": "../demiurge-types"
     },
     {
+      "path": "../modules/servers"
+    },
+    {
       "path": "../log"
     },
     {

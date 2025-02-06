@@ -1,6 +1,8 @@
 import { createHmac } from 'crypto';
-import { ForbiddenException } from '../Exceptions/Exception';
+
+import { ForbiddenException } from '@monorepo/log';
 import { TJson } from '@monorepo/simple-types';
+
 import { InputSource } from './InputSource';
 import { Request } from '../Request/Request';
 import { JsonValue } from '../JsonValue';

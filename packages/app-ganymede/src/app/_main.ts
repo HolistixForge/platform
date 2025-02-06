@@ -15,17 +15,18 @@ import {
   ConfigException,
 } from '@monorepo/backend-engine';
 import { OpenAPIV3 } from 'express-openapi-validator/dist/framework/types';
-import { TokenToJupyterlabUserModel } from './commands/jupyterlab-user-model';
-import { ListScope, ValidateUserScope } from './commands/scope';
-import { GatewayConfig } from './commands/gateway-config';
-import { ServerCommand } from './commands/server-command';
+
+import { TokenToJupyterlabUserModel } from './commands/jupyterlab-user-model.js';
+import { ListScope, ValidateUserScope } from './commands/scope.js';
+import { GatewayConfig } from './commands/gateway-config.js';
+import { ServerCommand } from './commands/server-command.js';
 import {
   Ec2InstanceCreate,
   Ec2InstanceState,
   Ec2InstanceStop,
   Ec2InstanceStart,
   Ec2InstanceDelete,
-} from './commands/ec2-instance';
+} from './commands/ec2-instance.js';
 
 //
 //
@@ -121,7 +122,7 @@ export const main = async () => {
     eh.start(b);
   });
 
-  // ajv lib issue workaround,
+  // TODO_DEM: delete if fixed by ajv: ajv lib issue workaround,
   // when first request is one with pathParameters, openapi spec validation fail within ajv lib
   // (required field must be 'array')
   // else, openapi spec compilation is fine.

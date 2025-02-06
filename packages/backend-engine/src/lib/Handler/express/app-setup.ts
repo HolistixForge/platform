@@ -1,15 +1,21 @@
 import express from 'express';
 import nocache from 'nocache';
 import cookieParser from 'cookie-parser';
-import { EColor, error, log } from '@monorepo/log';
-import { respond } from './responses';
+
 import {
+  EColor,
+  error,
+  log,
   Exception,
   NotFoundException,
-  OpenapiException,
   UnknownException,
-} from '../../Exceptions/Exception';
+} from '@monorepo/log';
+
+import { respond } from './responses';
+import { OpenapiException } from '../../Exceptions/Exception';
 import { jaegerSetError, setupJaegerLog } from '../../Logs/jaeger';
+
+//
 
 export type BasicExpressAppOptions = {
   jaeger?: {
@@ -115,7 +121,7 @@ export const setupErrorsHandler = (app: express.Express) => {
     respond(req, res, {
       type: 'json',
       json: { uuid, errors },
-      status: exception.httpStatus,
+      status: exception.httpStatus || 500,
     });
   });
 };

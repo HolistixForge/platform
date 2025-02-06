@@ -1,0 +1,34 @@
+{
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../../collab-engine"
+    },
+    {
+      "path": "../../log"
+    },
+    {
+      "path": "../../ui-toolkit"
+    },
+    {
+      "path": "../../simple-types"
+    },
+    {
+      "path": "../../demiurge-types"
+    },
+    {
+      "path": "../../ui-base"
+    },
+    {
+      "path": "../core"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ],
+  "extends": "../../../tsconfig.base.json"
+}

@@ -1,0 +1,200 @@
+import { ReduceArgs, Reducer, SharedTypes } from '@monorepo/collab-engine';
+import { makeUuid } from '@monorepo/simple-types';
+import { TEventNewEdge, TEventNewNode } from '@monorepo/core';
+
+import {
+  TChatEvent,
+  TEventChatResolve,
+  TEventDeleteMessage,
+  TEventIsWriting,
+  TEventNewMessage,
+  TEventUserHasRead,
+  TEventNewChat,
+} from './chats-events';
+import { TChatSharedData } from './chats-shared-model';
+import { TChat } from './chats-types';
+
+/**
+ *
+ */
+
+type TExtraArgs = {
+  user_id: string;
+};
+
+type DispatchedEvents = TEventNewNode | TEventNewEdge;
+
+type Ra<T> = ReduceArgs<TChatSharedData, T, DispatchedEvents, TExtraArgs>;
+
+/**
+ *
+ */
+
+export class ChatReducer extends Reducer<
+  TChatSharedData,
+  TChatEvent,
+  DispatchedEvents,
+  TExtraArgs
+> {
+  //
+
+  reduce(g: Ra<TChatEvent>): Promise<void> {
+    switch (g.event.type) {
+      case 'new-message':
+        return this._newMessage(g as Ra<TEventNewMessage>);
+
+      case 'new-chat':
+        return this._newChat(g as Ra<TEventNewChat>);
+
+      case 'is-writing':
+        return this._isWriting(g as Ra<TEventIsWriting>);
+
+      case 'user-has-read':
+        return this._userHasRead(g as Ra<TEventUserHasRead>);
+
+      case 'chat-resolve':
+        return this._chatResolve(g as Ra<TEventChatResolve>);
+
+      case 'delete-message':
+        return this._deleteMessage(g as Ra<TEventDeleteMessage>);
+
+      default:
+        return Promise.resolve();
+    }
+  }
+
+  //
+
+  __deepCopyEditAndApply(g: Ra<{ chatId: string }>, f: (chat: TChat) => void) {
+    const chat = g.sd.chats.get(g.event.chatId);
+    if (chat) {
+      const nchat = structuredClone(chat);
+      f(nchat);
+      g.sd.chats.set(g.event.chatId, nchat);
+    }
+  }
+
+  //
+
+  _newMessage(g: Ra<TEventNewMessage>): Promise<void> {
+    this.__deepCopyEditAndApply(g, (chat) => {
+      chat.messages.push({
+        user_id: g.extraArgs.user_id,
+        content: g.event.content,
+        date: new Date().toISOString(),
+        replyIndex: g.event.replyToIndex,
+      });
+      if (chat.lastRead[g.extraArgs.user_id] === chat.messages.length - 2)
+        chat.lastRead[g.extraArgs.user_id] = chat.messages.length - 1;
+    });
+    return Promise.resolve();
+  }
+
+  //
+
+  _newChat(g: Ra<TEventNewChat>): Promise<void> {
+    const nc = newChat(g.st);
+    g.sd.chats.set(nc.id, nc);
+
+    const chatId = makeUuid();
+    const anchorNodeId = makeUuid();
+    const chatNodeId = makeUuid();
+
+    g.dispatcher.dispatch({
+      type: 'core:new-node',
+      nodeData: {
+        type: 'chat-anchor',
+        id: anchorNodeId,
+        name: `Chat Anchor ${chatId}`,
+        root: false,
+        connectors: [{ connectorName: 'inputs', pins: [] }],
+        data: { chatId: chatId },
+      },
+      edges: [],
+    });
+
+    g.dispatcher.dispatch({
+      type: 'core:new-node',
+      nodeData: {
+        type: 'chat',
+        id: chatNodeId,
+        name: `Chat ${chatId}`,
+        root: true,
+        connectors: [{ connectorName: 'outputs', pins: [] }],
+        data: { chatId: chatId },
+      },
+      edges: [
+        {
+          from: {
+            node: anchorNodeId,
+            connectorName: 'outputs',
+          },
+          to: {
+            node: chatNodeId,
+            connectorName: 'inputs',
+          },
+          type: 'referenced_by',
+          data: {
+            detailType: 'chat-anchor',
+          },
+        },
+      ],
+    });
+
+    return Promise.resolve();
+  }
+
+  //
+
+  _isWriting(g: Ra<TEventIsWriting>): Promise<void> {
+    this.__deepCopyEditAndApply(g, (chat) => {
+      chat.isWriting[g.extraArgs.user_id] = g.event.value;
+    });
+    return Promise.resolve();
+  }
+
+  //
+
+  _userHasRead(g: Ra<TEventUserHasRead>): Promise<void> {
+    this.__deepCopyEditAndApply(g, (chat) => {
+      chat.lastRead[g.extraArgs.user_id] = g.event.index;
+    });
+    return Promise.resolve();
+  }
+
+  //
+
+  _chatResolve(g: Ra<TEventChatResolve>): Promise<void> {
+    this.__deepCopyEditAndApply(g, (chat) => {
+      chat.resolved = g.event.value;
+    });
+    return Promise.resolve();
+  }
+
+  //
+
+  _deleteMessage(g: Ra<TEventDeleteMessage>): Promise<void> {
+    this.__deepCopyEditAndApply(g, (chat) => {
+      const m = chat.messages[g.event.index];
+      if (m.user_id === g.extraArgs.user_id) m.content = '[deleted]';
+    });
+    return Promise.resolve();
+  }
+}
+
+/**
+ *
+ *
+ *
+ *
+ */
+
+const newChat = (st: SharedTypes): TChat => {
+  return {
+    id: makeUuid(),
+    resolved: false,
+    messages: [],
+    lastRead: {},
+    isWriting: {},
+  };
+};

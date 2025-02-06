@@ -10,13 +10,11 @@ const DEV =
 
 const DEBUG = parseInt(process.env.DEBUG_API || '1');
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const debug = (f: () => any) => {
   if (DEV || DEBUG) return f();
   return undefined;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const development = (f: () => any) => {
   if (DEV) return f();
   return undefined;

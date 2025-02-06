@@ -1,0 +1,57 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "out-tsc/app-collab",
+    "types": ["node"],
+    "rootDir": "src",
+    "tsBuildInfoFile": "out-tsc/app-collab/tsconfig.app.tsbuildinfo",
+    "resolveJsonModule": true
+  },
+  "files": ["src/oas30.json", "src/exec-pipes.json"],
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "out-tsc",
+    "dist",
+    "jest.config.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "eslint.config.js",
+    "eslint.config.cjs",
+    "eslint.config.mjs"
+  ],
+  "references": [
+    {
+      "path": "../demiurge-types/tsconfig.lib.json"
+    },
+    {
+      "path": "../backend-engine/tsconfig.lib.json"
+    },
+    {
+      "path": "../simple-types/tsconfig.lib.json"
+    },
+    {
+      "path": "../log/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/jupyter/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/servers/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/chats/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/space/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/tabs/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/core/tsconfig.lib.json"
+    },
+    {
+      "path": "../collab-engine/tsconfig.lib.json"
+    }
+  ]
+}

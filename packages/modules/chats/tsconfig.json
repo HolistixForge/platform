@@ -1,0 +1,28 @@
+{
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../space"
+    },
+    {
+      "path": "../../ui-base"
+    },
+    {
+      "path": "../core"
+    },
+    {
+      "path": "../../simple-types"
+    },
+    {
+      "path": "../../collab-engine"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ],
+  "extends": "../../../tsconfig.base.json"
+}

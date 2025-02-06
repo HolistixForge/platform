@@ -22,10 +22,10 @@ interface IAuth {
 //
 //
 
-function formUrlEncode(o: TJson) {
+function formUrlEncode(o: object) {
   const formData = new URLSearchParams();
   for (const [key, value] of Object.entries(o)) {
-    formData.append(key, value);
+    formData.append(key, value as string);
   }
   return formData;
 }
@@ -93,9 +93,9 @@ export class ApiFetch {
 
     if (response.status !== 200) {
       const e = new Error('API error');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       (e as any).status = response.status;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       (e as any).json = json; // { errors: [ {message: "" }, ... ] }
       throw e;
     }

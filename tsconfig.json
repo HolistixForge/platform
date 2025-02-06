@@ -16,19 +16,10 @@
       "path": "./packages/demiurge-types"
     },
     {
-      "path": "./packages/demiurge-ui-components"
-    },
-    {
       "path": "./packages/ui-toolkit"
     },
     {
       "path": "./packages/collab-engine"
-    },
-    {
-      "path": "./packages/shared-data-model"
-    },
-    {
-      "path": "./packages/jupyterlab-api"
     },
     {
       "path": "./packages/frontend-data"
@@ -47,6 +38,51 @@
     },
     {
       "path": "./packages/app-ganymede"
+    },
+    {
+      "path": "./packages/app-account-e2e"
+    },
+    {
+      "path": "./packages/app-account"
+    },
+    {
+      "path": "./packages/app-ganymede-cmds-e2e"
+    },
+    {
+      "path": "./packages/app-ganymede-cmds"
+    },
+    {
+      "path": "./packages/app-collab-e2e"
+    },
+    {
+      "path": "./packages/app-collab"
+    },
+    {
+      "path": "./packages/modules/core"
+    },
+    {
+      "path": "./packages/modules/space"
+    },
+    {
+      "path": "./packages/modules/servers"
+    },
+    {
+      "path": "./packages/modules/jupyter"
+    },
+    {
+      "path": "./packages/modules/chats"
+    },
+    {
+      "path": "./packages/modules/tabs"
+    },
+    {
+      "path": "./packages/ui-views"
+    },
+    {
+      "path": "./packages/app-frontend"
+    },
+    {
+      "path": "./packages/ui-base"
     }
   ],
   "ts-node": {

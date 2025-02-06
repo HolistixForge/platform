@@ -28,7 +28,6 @@ export type { ReduceArgs } from './lib/reducer';
 export { Dispatcher, BrowserDispatcher } from './lib/dispatcher';
 
 export type {
-  TEvent,
   TEventUserLeave,
   TEventPeriodic,
   TCollabNativeEvent,

@@ -1,0 +1,31 @@
+{
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../modules/space"
+    },
+    {
+      "path": "../simple-types"
+    },
+    {
+      "path": "../demiurge-types"
+    },
+    {
+      "path": "../modules/servers"
+    },
+    {
+      "path": "../frontend-data"
+    },
+    {
+      "path": "../ui-base"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ],
+  "extends": "../../tsconfig.base.json"
+}
