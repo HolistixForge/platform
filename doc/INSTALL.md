@@ -1,15 +1,13 @@
-# Development setup summary
-
-We deploy minikube on an Ubuntu VM on AWS.
-Then we access and edit source code over ssh.
+# Development setup 
 
 ## install
 
 ## Aws instance
 
-In AWS, setup an Ubuntu Instance, **Ubuntu server 24.04 LTS 64 bits x86 (t2.xlarge)** with **16 GB** disk
+In AWS, setup an Ubuntu Instance, **Ubuntu server 24.04 LTS 64 bits x86 (t2.xlarge)** with **100 GB** disk
 
 create or reuse an IAM role 'ganymede-aws-api' for this instance to run with.
+This allow the instance to create other for running users projects resources (docker images) in the cloud
 
 add the following permission on this role
 
@@ -33,74 +31,24 @@ add the following permission on this role
 }
 ```
 
-Ganymede app will later use this permission to start and manage demiurge users servers launched in cloud.
-Because Ganymede app will run in a minikube pod itself running in a docker container, in order for Ganymede
-App to access this grant through AWS IMDS api, we need to configure the instance metadata to allow 3 "hop".
-
-```shell
-$ aws ec2 modify-instance-metadata-options \
-    --instance-id i-04b1f5f6f716b0af0 \
-    --http-put-response-hop-limit 3 \
-    --http-endpoint enabled
-```
-
-now the following command will be successfull from Ganymede app pod (try it later after helm chart deployment)
-
-```shell
-$  aws ec2 describe-instances --query "Reservations[*].Instances[*].[InstanceId,State.Name]" --output table
-```
-
 ## Clone repo
 
 in the instance:
 
 - setup your github ssh key,
-- clone [plearnt repo](https://github.com/FL-AntoineDurand/plearnt) in a "workspace" folder
-- run `$ npm install` in plearnt repo
+- clone [repo](https://github.com/DemiurgeGalaxie/monorepo) in a "workspace" folder
 
 ## Install NodeJs
 
 install recent nodejs.
 see [dev-pod Dockerfile](../docker-images/backend-images/dev-pod/Dockerfile) as an example
 
-## Install Kubernetes tools
+- run `$ npm install` in plearnt repo
 
-- install [minikube](https://minikube.sigs.k8s.io/docs/start/)
-- install [corresponding kubectl version](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
+## Install Docker
+
 - install [docker](https://docs.docker.com/engine/install/ubuntu/)
-- install [helm](https://github.com/helm/helm/releases)
 - add user to "docker" group: `$ sudo usermod -aG docker $USER && newgrp docker`
-- `$ minikube start`
-- install minikube ingress addon : `$ minikube addons enable ingress`
-
-  Enable **use-forwarded-headers** nginx option
-
-  ```shell
-  $ kubectl edit configmap ingress-nginx-controller -n ingress-nginx
-  ```
-
-  add **use-forwarded-headers: "true"**
-
-  ```
-  apiVersion: v1
-  data:
-      hsts: "false"
-      use-forwarded-headers: "true"
-  kind: ConfigMap
-  ...
-  ```
-
-  Then apply configuration
-
-  ```shell
-  $ kubectl rollout restart deployment ingress-nginx-controller -n ingress-nginx
-  ```
-
-  This is needed so that X-Forwarded-Proto is set to https, so that we can send secure cookie from services.
-
-- install minikube metrics-server addon : `$ minikube addons enable metrics-server`
-- install k9s : `$ snap install k9s --devmode` (then alias "k9s" to the binary in /snap/...)
-- setup kubectl to work on minikube cluster
 
 ## Build dev-pod docker image
 
@@ -116,36 +64,29 @@ We will serve the same repo over NFS to the different service's pods. Install nf
 
 ⚠️ NOT SURE NEEDED : add user to "nogroup" group: `sudo usermod -a -G nogroup $USER && newgrp nogroup` (to have permission to edit workspace)
 
-## Deploy helm chart
-
-- clone [helm chart repo](https://github.com/DemiurgeGalaxie/helm)
-- create kebernetes secrets as described in the helm chart README
-- edit values-dev.yaml to edit domain name (dev-XXX.demiurge.co)
-- deploy helm chart with values-dev.yaml file.
-
-## Setup external access to minikube
+## Setup access to services
 
 In AWS:
 
 - add CNAME entry for **account** and **ganymede** from ganymede.dev-XXX.demiurge.co to the instance default fqdn
 - add HTTP and HTTPS input to instance security group rules.
 
-On the instance, install **nginx** and configure it to route ganymede and account requests to minikube ip.
+On the instance, install **nginx** and configure it to route ganymede and account requests.
 
 ```
 sudo apt-get update
 sudo apt-get install -y nginx certbot python3-certbot-nginx
 ```
 
-Edit /etc/nginx/sites-available/default to route incoming https request to our minikube ingress controller. Use `$ minikube ip` to find the ip address to redirect traffic to.
+Edit /etc/nginx/sites-available/default to route incoming https request to our apps.
 
 ```
 server {
     listen 80;
-    server_name ganymede.dev-001.demiurge.co;
+    server_name ganymede.dev-002.demiurge.co;
 
     location / {
-        proxy_pass http://192.168.49.2;
+        proxy_pass http://127.0.0.1:6000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -165,10 +106,10 @@ server {
 
 server {
     listen 80;
-    server_name account.dev-001.demiurge.co;
+    server_name account.dev-002.demiurge.co;
 
     location / {
-        proxy_pass http://192.168.49.2;
+        proxy_pass http://127.0.0.1:6001;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -212,9 +153,9 @@ postgres=# CREATE DATABASE ganymede_db;
 postgres=# \l
 postgres=# exit
 
-$ ./run.sh schema
-$ ./run.sh procedures
-$ ./run.sh triggers
+$ PGPASSWORD=xxx ./run.sh schema
+$ PGPASSWORD=xxx ./run.sh procedures
+$ PGPASSWORD=xxx ./run.sh triggers
 ```
 
 ## start a jaeger docker container
@@ -243,7 +184,7 @@ Add a server in Nginx config file to route to jaeger UI
 ```
 server {
     listen 80;
-    server_name jaeger.dev-001.demiurge.co;
+    server_name jaeger.dev-002.demiurge.co;
 
     location / {
         proxy_pass http://127.0.0.1:16686;
@@ -264,20 +205,16 @@ $ sudo certbot --nginx
 
 # Start frontend development server
 
-In **app-frontend** package:
+In **app-frontend** package, change Environment name in:
 
-- in [project.json](../packages/app-frontend/project.json): Change value **"allowedHosts"**
+- in vite.config.js : server.allowedHosts: ["frontend.dev-002.demiurge.co"]
 
-- in [app.tsx](../packages/app-frontend/src/app/app.tsx): Change value of **env** props on line `
-
-  `<ApiContext env={'dev-XXX'} domain={'demiurge.co'}>`
-
-  to the revelant value **XXX**.
+- in [.env](../packages/app-frontend/.env): Change value of **VITE_ENVIRONMENT**
 
 Then start the development server:
 
 ```shell
-$ nohup npx nx serve app-frontend > /tmp/app-frontend 2>&1 &
+$ nohup npx nx run app-frontend:serve --port 6002 > /tmp/app-frontend 2>&1 &
 ```
 
 In AWS route 53 DNS, add CNAME entries for **frontend.dev-XXX.demiurge.co** and **dev-XXX.demiurge.co** to the instance default fqdn
@@ -287,10 +224,10 @@ Add servers definitions in nginx reverse proxy config file to route traffic to f
 ```
 server {
     listen 80;
-    server_name frontend.dev-001.demiurge.co;
+    server_name frontend.dev-002.demiurge.co;
 
     location / {
-        proxy_pass http://127.0.0.1:8888;
+        proxy_pass http://127.0.0.1:6002;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -302,9 +239,9 @@ server {
 }
 
 server {
-    server_name dev-001.demiurge.co;
+    server_name dev-002.demiurge.co;
 
-    root /tmp/app-frontend-build;
+    root /var/www/app-frontend;
     index index.html;
 
     location / {
@@ -325,9 +262,18 @@ Run certbot again:
 $ sudo certbot --nginx
 ```
 
+# build frontend
+
+```shell
+npx nx run app-frontend:build:production \
+    && sudo rm -rf /var/www/app-frontend \
+    && sudo cp -ra dist/packages/app-frontend /var/www/app-frontend \
+    && sudo chown -R www-data /var/www/app-frontend
+```
+
+
 # After reboot
 
 ```shell
-$ minikube start
 $ docker start postgres
 ```

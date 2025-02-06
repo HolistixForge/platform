@@ -8,6 +8,7 @@ export default defineConfig({
   server: {
     port: 4200,
     host: 'localhost',
+    allowedHosts: ['frontend.dev-002.demiurge.co'],
   },
   preview: {
     port: 4300,
@@ -25,5 +26,8 @@ export default defineConfig({
     commonjsOptions: {
       transformMixedEsModules: true,
     },
+  },
+  define: {
+    __webpack_public_path__: '""', // Define it as an empty string
   },
 });

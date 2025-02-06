@@ -1,15 +1,15 @@
-import * as Y from 'yjs';
-import * as YWS from 'y-websocket';
+import { Doc } from 'yjs';
+import { WebsocketProvider } from 'y-websocket';
 import { log } from '@monorepo/log';
 
 const debug = (msg: string) => log(7, 'YDOC_STORE', msg);
 
 type DocBack = {
-  ydoc: Y.Doc;
+  ydoc: Doc;
 };
 
 type DocFront = DocBack & {
-  provider: YWS.WebsocketProvider;
+  provider: WebsocketProvider;
   syncedPromise: Promise<boolean>;
 };
 
@@ -86,7 +86,7 @@ export const getYDoc = (
   //else
   tokensMethods.set(server_url, tm);
 
-  const ydoc = new Y.Doc();
+  const ydoc = new Doc();
 
   const syncedPromise: Promise<boolean> = new Promise((resolve) => {
     ydoc.once('update', () => {
@@ -95,7 +95,7 @@ export const getYDoc = (
     });
   });
 
-  const provider = new YWS.WebsocketProvider(server_url, roomId, ydoc, {
+  const provider = new WebsocketProvider(server_url, roomId, ydoc, {
     WebSocketPolyfill: MyWebSocket,
     params,
   });

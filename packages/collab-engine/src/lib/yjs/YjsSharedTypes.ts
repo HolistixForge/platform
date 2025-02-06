@@ -1,5 +1,5 @@
 import { SharedTypes, SharedArray, SharedMap } from '../SharedTypes';
-import * as Y from 'yjs';
+import { Doc, Array } from 'yjs';
 
 //
 //
@@ -7,12 +7,12 @@ import * as Y from 'yjs';
 export class YjsSharedTypes extends SharedTypes {
   //
 
-  _ydoc: Y.Doc;
+  _ydoc: Doc;
 
   //
   //
 
-  constructor(doc: Y.Doc) {
+  constructor(doc: Doc) {
     super();
     this._ydoc = doc;
   }
@@ -47,7 +47,7 @@ export class YjsSharedTypes extends SharedTypes {
 
 //
 
-const yarrayDeleteMatching = <T>(ya: Y.Array<T>, f: (v: T) => boolean) => {
+const yarrayDeleteMatching = <T>(ya: Array<T>, f: (v: T) => boolean) => {
   for (let i = ya.length - 1; i >= 0; i--) {
     const item = ya.get(i);
     if (f(item)) {

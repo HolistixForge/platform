@@ -38,7 +38,22 @@ export default defineConfig({
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
-      external: ['react', 'react-dom', 'react/jsx-runtime'],
+      /*
+      [
+        'react',
+        'react-dom',
+        'react/jsx-runtime',
+        'yjs',
+        'ydoc',
+        'y-monaco',
+        'y-protocols',
+        'y-websocket',
+        'monaco',
+        '@jupyterlab',
+        '@jupyter-widgets',
+      ],
+      */
+      external: (id) => !id.startsWith('.') && !id.startsWith('/'),
     },
   },
 });

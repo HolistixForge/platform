@@ -29,7 +29,10 @@ export function App() {
       <Tooltip.Provider>
         <DebugComponentKeyboardShortcut />
 
-        <ApiContext env={'dev-001'} domain={'demiurge.co'}>
+        <ApiContext
+          env={import.meta.env.VITE_ENVIRONMENT}
+          domain={'demiurge.co'}
+        >
           <EnforceUserAccountReady>
             <Routes>
               <Route path="/" element={<HomePage />} />

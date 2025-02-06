@@ -1,4 +1,4 @@
-import * as Y from 'yjs';
+import { Doc } from 'yjs';
 const u = require('y-websocket/bin/utils');
 import { WebsocketProvider } from 'y-websocket';
 // import { EventSourcePolyfill } from 'event-source-polyfill';
@@ -150,7 +150,7 @@ export type TAllEvents =
 //
 //
 
-type WSSharedDoc = Y.Doc & {
+type WSSharedDoc = Doc & {
   awareness: WebsocketProvider['awareness'];
 };
 

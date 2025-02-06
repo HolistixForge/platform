@@ -13,6 +13,14 @@ npx nx g @nx/react:lib packages/{LIB_NAME} --linter eslint --bundler vite --styl
 npx nx run {LIB_NAME}:build
 ```
 
+in vite.config.js, set all dependencies external:
+
+```js
+    rollupOptions: {
+      external: (id) => !id.startsWith('.') && !id.startsWith('/'),
+    },
+```
+
 ## node lib
 
 ```shell
@@ -63,6 +71,38 @@ remove :
     "moduleResolution": "nodenext"
   }
 }
+```
+
+if necessary, in package.json
+
+```
+"external": [
+    "react",
+    "react-dom",
+    "*.css",
+    "*.svg",
+    "*.woff",
+    "*.woff2",
+    "*.eot",
+    "*.ttf",
+    "*.otf"
+  ],
+  ...
+  "esbuildOptions": {
+    "sourcemap": true,
+    "outExtension": {
+      ".js": ".js"
+    },
+    "loader": {
+      ".css": "empty",
+      ".svg": "empty",
+      ".woff": "empty",
+      ".woff2": "empty",
+      ".eot": "empty",
+      ".ttf": "empty",
+      ".otf": "empty"
+    }
+  }
 ```
 
 ### app node ESM

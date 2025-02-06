@@ -23,7 +23,14 @@
           "thirdParty": true,
           "external": [
             "react",
-            "react-dom"
+            "react-dom",
+            "*.css",
+            "*.svg",
+            "*.woff",
+            "*.woff2",
+            "*.eot",
+            "*.ttf",
+            "*.otf"
           ],
           "main": "packages/app-collab/src/main.ts",
           "tsConfig": "packages/app-collab/tsconfig.app.json",
@@ -34,6 +41,15 @@
             "sourcemap": true,
             "outExtension": {
               ".js": ".js"
+            },
+            "loader": {
+              ".css": "empty",
+              ".svg": "empty",
+              ".woff": "empty",
+              ".woff2": "empty",
+              ".eot": "empty",
+              ".ttf": "empty",
+              ".otf": "empty"
             }
           }
         },

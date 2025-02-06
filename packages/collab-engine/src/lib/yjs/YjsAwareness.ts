@@ -1,5 +1,5 @@
-import * as Y from 'yjs';
-import * as YWS from 'y-websocket';
+import { Doc, Map, Text } from 'yjs';
+import { WebsocketProvider } from 'y-websocket';
 import { Awareness } from '../Awareness';
 import {
   AwarenessEventArgs,
@@ -12,16 +12,16 @@ import {
 //
 
 export class YjsAwareness extends Awareness {
-  _ydoc: Y.Doc;
-  _provider: YWS.WebsocketProvider;
+  _ydoc: Doc;
+  _provider: WebsocketProvider;
   // ytext, monaco editor collaborative bindings
-  _editorBindings: Y.Map<Y.Text>;
+  _editorBindings: Map<Text>;
   _userName: string | null = null;
   _buildUserCss?: (key: number, color: string | undefined) => void;
 
   constructor(
-    ydoc: Y.Doc,
-    provider: YWS.WebsocketProvider,
+    ydoc: Doc,
+    provider: WebsocketProvider,
     buildUserCss?: (key: number, color: string | undefined) => void
   ) {
     super();
@@ -64,7 +64,7 @@ export class YjsAwareness extends Awareness {
   getBindingObjects(celluleId: string, code: string) {
     let ytext = this._editorBindings.get(celluleId);
     if (!ytext) {
-      ytext = new Y.Text(code);
+      ytext = new Text(code);
       this._editorBindings.set(celluleId, ytext);
     }
     return { ytext, providerAwareness: this._provider.awareness };
