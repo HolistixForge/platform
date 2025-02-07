@@ -103,7 +103,11 @@ export const model: AuthorizationCodeModel &
       r = {
         id: row['client_id'] as string,
         grants: row['grants'] as string[],
-        redirectUris: [CONFIG.APP_FRONTEND_URL, ...uris],
+        redirectUris: [
+          CONFIG.APP_FRONTEND_URL,
+          CONFIG.APP_FRONTEND_URL_DEV,
+          ...uris,
+        ],
         accessTokenLifetime,
         refreshTokenLifetime: REFRESH_TOKEN_LIFETIME,
       };

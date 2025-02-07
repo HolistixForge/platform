@@ -1,5 +1,11 @@
 import './status-led.scss';
 
+// force tailwind class compilation
+const dummy = `
+  h-[14px] w-[14px] h-[12px] w-[12px] h-[10px] w-[10px]
+  h-[8px] w-[8px] h-[6px] w-[6px]
+`;
+
 export type StatusLedProps = {
   type: 'resource-bar' | 'server-card' | 'notebook-card';
   color: 'green' | 'red' | 'yellow' | 'blue';

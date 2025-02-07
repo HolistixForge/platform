@@ -59,10 +59,10 @@ export class Jwt extends InputSource {
       r
     )) as string | undefined;
 
-    let authToken: string | undefined = undefined;
+    let authToken: string | undefined = authorization;
 
-    if (authorization?.startsWith('token ')) {
-      authToken = authorization.replace('token ', '');
+    if (authToken?.startsWith('token ')) {
+      authToken = authToken.replace('token ', '');
 
       /*
        * if authorization is not a JWT, check cookie instead.

@@ -6,6 +6,7 @@ import { App } from './app/app';
 import '@monorepo/ui-base/style';
 import '@monorepo/ui-views/style';
 import '@monorepo/servers/style';
+import './index.scss';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
