@@ -1,3 +1,5 @@
+import './lib/index.scss';
+
 export { MountVolumeForm } from './lib/form/form-mount-volume/mount-volume';
 export type { MountVolumeFormData } from './lib/form/form-mount-volume/mount-volume';
 

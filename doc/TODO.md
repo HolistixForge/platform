@@ -1,9 +1,7 @@
 ⚠️ Antoine's stuffs
 
 - compile app-frontend (dev, prod)
-- fix yjs multiple import
 - dev-002 without minikube and with local gateway ?
-- tailwind and other config check
 - feature come back
 - PR quill
 - modules storybooks

@@ -1,3 +1,5 @@
+import './lib/index.scss';
+
 export type { TServersSharedData } from './lib/servers-shared-model';
 export { Servers_loadData } from './lib/servers-shared-model';
 

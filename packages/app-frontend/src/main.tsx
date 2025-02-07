@@ -4,6 +4,8 @@ import { BrowserRouter } from 'react-router-dom';
 import { App } from './app/app';
 
 import '@monorepo/ui-base/style';
+import '@monorepo/ui-views/style';
+import '@monorepo/servers/style';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
