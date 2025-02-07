@@ -1,3 +1,5 @@
+import './lib/index.scss';
+
 export type { TChatSharedData } from './lib/chats-shared-model';
 export { Chat_loadData } from './lib/chats-shared-model';
 

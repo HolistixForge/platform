@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
 import { ChatBox, ChatBoxProps } from './node-chat';
 import { testUsers, useTestChatBox } from './test';
 
@@ -12,7 +13,7 @@ const StoryWrapper = (
   > & {
     width: number;
     height: number;
-  },
+  }
 ) => {
   const {
     status,
@@ -47,7 +48,7 @@ const StoryWrapper = (
 //
 
 const meta = {
-  title: 'Nodes/Chat',
+  title: 'ChatBox',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

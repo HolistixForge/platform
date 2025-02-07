@@ -111,7 +111,7 @@ export const getCollabChunks = ({
         };
 
         const jlsManager = new JLsManager(
-          sd,
+          sd as TJupyterSharedData,
           api,
           gatewayFQDN,
           onNewServer,

@@ -22,13 +22,11 @@ import {
   Awareness,
   YjsAwareness,
   NoneAwareness,
-  BrowserDispatcher,
   _AwarenessListenerArgs,
 } from '../../index';
 import { TokenMethods, getYDoc } from './ydocs';
 import { buildUserCss } from './YjsCssStylesheet';
 import * as YWS from 'y-websocket';
-import { ApiFetch } from '@monorepo/api-fetch';
 
 //
 //
@@ -63,7 +61,7 @@ type CollaborativeContextProps = {
   id: string;
   collabChunks: TCollaborativeChunk[];
   config: TCollabConfig;
-  eventApi: ApiFetch;
+  dispatcher: Dispatcher<any, any>;
   user: TAwarenessUser;
 };
 
@@ -84,7 +82,7 @@ export const CollaborativeContext = ({
   collabChunks,
   config,
   user,
-  eventApi,
+  dispatcher,
 }: CollaborativeContextProps) => {
   //
   const [state, _setState] = useState<TState>({
@@ -129,17 +127,19 @@ export const CollaborativeContext = ({
     } else {
       sharedTypes = new NoneSharedTypes();
       awareness = new NoneAwareness();
+      setState({ synced: true });
     }
     awareness.setUser(user);
-    const dispatcher = new BrowserDispatcher(eventApi);
+
     const extraContext = {};
     const loadChunks = compileChunks(collabChunks, dispatcher, extraContext);
     const sharedData = loadChunks(sharedTypes);
     dispatcher.bindData(sharedTypes, sharedData);
+
     setState({ built: true });
 
     return { sharedTypes, awareness, sharedData, dispatcher, extraContext };
-  }, [config, user, eventApi, collabChunks, id]);
+  }, [config, user, collabChunks, id]);
 
   //
   //

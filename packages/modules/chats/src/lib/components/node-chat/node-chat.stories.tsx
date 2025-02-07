@@ -42,7 +42,7 @@ const StoryWrapper = (
 //
 
 const meta = {
-  title: 'Nodes/Chat/NodeChat',
+  title: 'Nodes/ChatBox',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

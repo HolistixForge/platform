@@ -15,7 +15,9 @@ import {
   useQueryProjectByName,
 } from '@monorepo/frontend-data';
 import {
+  BrowserDispatcher,
   CollaborativeContext,
+  Dispatcher,
   TYjsCollabConfig,
 } from '@monorepo/collab-engine';
 import { TApi_Project, makeYjsDocId } from '@monorepo/demiurge-types';
@@ -32,7 +34,7 @@ type TProjectContext = Readonly<{
   project: TApi_Project;
   collabConfig: TYjsCollabConfig;
   yjsDocId: string;
-  eventApi: EventApi;
+  dispatcher: Dispatcher<any, any>;
   isOwner: boolean;
   gatewayFQDN: string;
 }>;
@@ -126,12 +128,14 @@ export const Project = ({
 
       const eventApi = new EventApi(ganymedeApi, reducer_server, project_id);
 
+      const dispatcher = new BrowserDispatcher(eventApi);
+
       return {
         project: projectData._0,
         collabConfig,
         gatewayFQDN: gateway_hostname,
         yjsDocId: makeYjsDocId({ project_id: project_id }),
-        eventApi,
+        dispatcher,
       };
     } catch (err) {
       const e = standardizeError(err);
@@ -189,7 +193,7 @@ export const Project = ({
           collabChunks={collabChunks}
           user={user}
           config={project.collabConfig}
-          eventApi={project.eventApi}
+          dispatcher={project.dispatcher}
         >
           {children}
         </CollaborativeContext>

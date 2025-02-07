@@ -99,11 +99,11 @@ export class JLsManager {
     // for each server
     this._sd.jupyterServers.forEach(async (server) => {
       // we only consider jupyterlab server
-      if (server.type === 'jupyter') {
-        // if running and ready
-        if (jupyterlabIsReachable(server)) {
-          // create probe if necessary
-          /*
+
+      // if running and ready
+      if (jupyterlabIsReachable(server)) {
+        // create probe if necessary
+        /*
           TODO_JL_PROBE: uncomment
           if (!this._collaborationProbes.get(server.project_server_id)) {
             this._collaborationProbes.set(server.project_server_id, 'pending');
@@ -114,15 +114,14 @@ export class JLsManager {
             );
           }
           */
-        }
-        // else
-        else {
-          // delete driver and probe for stopped servers
-          if (this._drivers.get(server.project_server_id))
-            this._drivers.delete(server.project_server_id);
-          if (this._collaborationProbes.get(server.project_server_id))
-            this._collaborationProbes.delete(server.project_server_id);
-        }
+      }
+      // else
+      else {
+        // delete driver and probe for stopped servers
+        if (this._drivers.get(server.project_server_id))
+          this._drivers.delete(server.project_server_id);
+        if (this._collaborationProbes.get(server.project_server_id))
+          this._collaborationProbes.delete(server.project_server_id);
       }
     });
   }
@@ -138,7 +137,7 @@ export class JLsManager {
      *    - kernel still exist ?
      */
     const s = this._sd.jupyterServers.get(`${kp.project_server_id}`);
-    if (!s || s.type !== 'jupyter') {
+    if (!s) {
       this._disposeKernelPack(kp);
       this._kernelPacks.delete(kp.dkid);
     } else {

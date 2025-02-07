@@ -28,6 +28,10 @@ class MyMap<T>
     this._sm = sm;
   }
 
+  values(): IterableIterator<T> {
+    return this._map.values();
+  }
+
   delete(k: string): void {
     this._map.delete(k);
   }

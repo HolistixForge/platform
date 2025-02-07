@@ -1,3 +1,5 @@
+import './lib/index.scss';
+
 export type { TSpaceSharedData } from './lib/space-shared-model';
 export { Space_loadData } from './lib/space-shared-model';
 

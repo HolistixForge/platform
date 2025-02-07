@@ -6,13 +6,15 @@
     "projectType": "library",
     "sourceRoot": "packages/modules/chats/src"
   },
+  "style": "./dist/style.css",
   "exports": {
     "./package.json": "./package.json",
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
-    }
+    },
+    "./style": "./dist/style.css"
   },
   "types": "./dist/index.d.ts",
   "module": "./dist/index.js",

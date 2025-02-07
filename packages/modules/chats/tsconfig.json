@@ -3,12 +3,6 @@
   "include": [],
   "references": [
     {
-      "path": "../space"
-    },
-    {
-      "path": "../../ui-base"
-    },
-    {
       "path": "../core"
     },
     {
@@ -18,10 +12,19 @@
       "path": "../../collab-engine"
     },
     {
+      "path": "../space"
+    },
+    {
+      "path": "../../ui-base"
+    },
+    {
       "path": "./tsconfig.lib.json"
     },
     {
       "path": "./tsconfig.spec.json"
+    },
+    {
+      "path": "./tsconfig.storybook.json"
     }
   ],
   "extends": "../../../tsconfig.base.json"

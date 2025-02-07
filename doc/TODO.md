@@ -1,7 +1,7 @@
 ⚠️ Antoine's stuffs
 
 - compile app-frontend (dev, prod)
-- dev-002 without minikube and with local gateway ?
+- dev-002 local gateway ?
 - feature come back
 - PR quill
 - modules storybooks

@@ -17,7 +17,6 @@ export interface SharedArray<T> {
 }
 
 //
-
 export interface SharedMap<T> {
   delete: (k: string) => void;
   set: (k: string, o: T) => void;
@@ -27,6 +26,7 @@ export interface SharedMap<T> {
 
   unobserve: (event: any) => void;
   forEach: (f: (v: T, k: string) => void) => void;
+  values(): IterableIterator<T>;
 }
 
 //
