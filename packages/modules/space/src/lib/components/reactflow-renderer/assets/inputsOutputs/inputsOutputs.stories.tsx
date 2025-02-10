@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { InputsOutputs, InputsOutputsProps } from './inputsOutputs';
-import { StoryMockSpaceContext } from '../../../story/storyMockSpaceContext';
+import { StoryMockSpaceContext } from '../../../local-test/storyMockSpaceContext';
 
 //
 

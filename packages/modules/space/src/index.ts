@@ -27,7 +27,7 @@ export {
 } from './lib/components';
 export type { TNodeContext } from './lib/components';
 
-export { StoryMockSpaceContext } from './lib/components/story/storyMockSpaceContext';
+export { StoryMockSpaceContext } from './lib/components/local-test/storyMockSpaceContext';
 
 export { nodeViewDefaultStatus } from './lib/space-types';
 export type { TNodeView } from './lib/space-types';

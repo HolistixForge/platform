@@ -38,17 +38,7 @@ export class SpaceReducer extends Reducer<
   //
 
   _newView(g: Ra<TEventNewView>) {
-    const nv: TGraphView = {
-      params: {
-        maxRank: 2,
-        roots: [],
-      },
-      nodeViews: [],
-      graph: {
-        nodes: [],
-        edges: [],
-      },
-    };
+    const nv: TGraphView = defaultGraphView();
     g.sd.graphViews.set(g.event.viewId, nv);
 
     g.dispatcher.dispatch({
@@ -62,3 +52,17 @@ export class SpaceReducer extends Reducer<
     return Promise.resolve();
   }
 }
+
+//
+
+export const defaultGraphView = (): TGraphView => ({
+  params: {
+    maxRank: 2,
+    roots: [],
+  },
+  nodeViews: [],
+  graph: {
+    nodes: [],
+    edges: [],
+  },
+});

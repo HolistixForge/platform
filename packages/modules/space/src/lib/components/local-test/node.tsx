@@ -1,4 +1,4 @@
-import { useMakeButton, NodeHeader } from '../../components';
+import { useMakeButton, NodeHeader } from '..';
 import { InputsAndOutputs } from '../reactflow-renderer/assets/inputsOutputs/inputsOutputs';
 import { useNodeContext } from '../reactflow-renderer/node-wrappers/node-wrapper';
 

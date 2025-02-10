@@ -8,7 +8,7 @@ export { DisablePanSelect } from './reactflow-renderer/node-wrappers/disable-pan
 
 export { useConnector } from './reactflow-renderer/assets/inputsOutputs/inputsOutputs';
 
-export { StoryMockSpaceContext } from './story/storyMockSpaceContext';
+export { StoryMockSpaceContext } from './local-test/storyMockSpaceContext';
 
 export type { TNodeContext } from './apis/types/node';
 export { useNodeContext } from './reactflow-renderer/node-wrappers/node-wrapper';
