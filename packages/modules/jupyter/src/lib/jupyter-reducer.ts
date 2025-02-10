@@ -76,21 +76,21 @@ export class JupyterReducer extends Reducer<
 
   reduce(g: Ra<ReducedEvents>): Promise<void> {
     switch (g.event.type) {
-      case 'execute-python-node':
+      case 'jupyter:execute-python-node':
         return this._execute(g as Ra<TEventExecutePythonNode>);
-      case 'python-node-output':
+      case 'jupyter:python-node-output':
         return this._nodeOutput(g as Ra<TEventPythonNodeOutput>);
-      case 'start-kernel':
+      case 'jupyter:start-kernel':
         return this._startKernel(g as Ra<TEventStartKernel>);
-      case 'kernel-started':
+      case 'jupyter:kernel-started':
         return this._kernelStarted(g as Ra<TEventKernelStarted>);
-      case 'clear-node-output':
+      case 'jupyter:clear-node-output':
         return this._clearOutput(g as Ra<TEventClearNodeOutput>);
-      case 'new-kernel':
+      case 'jupyter:new-kernel':
         return this._newKernel(g as Ra<TEventNewKernel>);
-      case 'delete-kernel':
+      case 'jupyter:delete-kernel':
         return this._deleteKernel(g as Ra<TEventDeleteKernel>);
-      case 'stop-kernel':
+      case 'jupyter:stop-kernel':
         return this._stopKernel(g as Ra<TEventStopKernel>);
 
       default:
@@ -116,7 +116,7 @@ export class JupyterReducer extends Reducer<
           .execute(kernel.jkid, g.event.code)
           .then((output) => {
             g.dispatcher.dispatch({
-              type: 'python-node-output',
+              type: 'jupyter:python-node-output',
               cellId: g.event.cellId,
               output,
             });
@@ -167,7 +167,7 @@ export class JupyterReducer extends Reducer<
     return driver.newKernel('python3').then((jkid) => {
       if (jkid)
         g.dispatcher.dispatch({
-          type: 'kernel-started',
+          type: 'jupyter:kernel-started',
           dkid: g.event.dkid,
           jkid,
         });

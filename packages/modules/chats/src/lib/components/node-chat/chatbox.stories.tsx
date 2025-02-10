@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { ChatBox, ChatBoxProps } from './node-chat';
+import { Chatbox, ChatboxProps } from './chatbox';
 import { testUsers, useTestChatBox } from './test';
 
 //
@@ -8,7 +8,7 @@ import { testUsers, useTestChatBox } from './test';
 
 const StoryWrapper = (
   props: Pick<
-    ChatBoxProps,
+    ChatboxProps,
     'chatId' | 'status' | 'general' | 'writingUsers' | 'lastRead'
   > & {
     width: number;
@@ -27,7 +27,7 @@ const StoryWrapper = (
   return (
     <div>
       <div style={{ width: `${props.width}px`, height: `${props.height}px` }}>
-        <ChatBox
+        <Chatbox
           onResolve={(v) => setStatus(v ? 'resolved' : 'default')}
           messageList={messageList}
           onSendMessage={handleSendMessage}

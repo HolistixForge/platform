@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { OutputArea } from '@jupyterlab/outputarea';
 import { Widget } from '@lumino/widgets';
 
-import { TNodePython } from '@monorepo/demiurge-types';
 import { makeUuid } from '@monorepo/simple-types';
 import {
   IOutput,
@@ -54,17 +53,23 @@ const uuidInjecter = () => {
 //
 //
 
+type TNodePython = {
+  code: string;
+  output?: IOutput[];
+  dkid: string;
+};
+
 export const JupyterlabCellOutput = ({ dkid, nid }: PythonOutputProps) => {
   const debug = useDebugComponent();
 
-  const data = useSharedData(['nodes'], (sd) => sd.nodes.get(nid));
+  const node = useSharedData(['nodes'], (sd) => sd.nodes.get(nid));
 
   const kernelPack = useKernelPack(dkid);
 
   const { uuid, uuidInject } = useMemo(() => uuidInjecter(), []);
 
   /** the serialized python output data */
-  const output = (data && (data as TNodePython).output) || constEmptyArray;
+  const output = (node && (node.data as TNodePython).output) || constEmptyArray;
 
   const [oa, setOa] = useState<OutputArea | null>(null);
 

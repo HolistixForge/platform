@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 
 import { useNodeContext } from '@monorepo/space';
-import { TNodeVolume } from '@monorepo/demiurge-types';
 import { NodeVolume } from '@monorepo/servers';
 
 import { useDispatcher } from '../../../model/collab-model-chunk';
@@ -12,7 +11,11 @@ export const VolumeNodeLogic = ({
   volume_id,
   volume_name,
   volume_storage,
-}: TNodeCommon & TNodeVolume) => {
+}: {
+  volume_id: number;
+  volume_name: string;
+  volume_storage: number;
+}) => {
   //
   const useNodeValue = useNodeContext();
 
@@ -20,7 +23,7 @@ export const VolumeNodeLogic = ({
 
   const handleDeleteVolume = useCallback(async () => {
     await dispatcher.dispatch({
-      type: 'delete-volume',
+      type: 'servers:delete-volume',
       volume_id,
     });
   }, [dispatcher, volume_id]);

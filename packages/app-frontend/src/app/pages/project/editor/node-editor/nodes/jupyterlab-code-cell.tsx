@@ -3,9 +3,8 @@ import { useHotkeys } from 'react-hotkeys-hook';
 
 import { useAwareness } from '@monorepo/collab-engine';
 import { useNodeContext } from '@monorepo/space';
-import { TNodePython } from '@monorepo/demiurge-types';
 import { TEditor, bindEditor } from '@monorepo/collab-engine';
-import { NodeJupyterlabCodeCell } from '@monorepo/jupyter';
+import { NodeJupyterlabCodeCell, TDKID } from '@monorepo/jupyter';
 
 import { useDispatcher } from '../../../model/collab-model-chunk';
 import { JupyterlabCellOutput } from './jupyterlab-cell-output';
@@ -14,10 +13,17 @@ import { JupyterlabCellOutput } from './jupyterlab-cell-output';
 
 export const JupyterlabCodeCellNodeLogic = ({
   id,
+  cellId,
   code,
   dkid,
   busy,
-}: TNodeCommon & TNodePython) => {
+}: {
+  id: string;
+  cellId: string;
+  code: string;
+  dkid: TDKID;
+  busy: boolean;
+}) => {
   //
 
   const { awareness } = useAwareness();
@@ -32,7 +38,7 @@ export const JupyterlabCodeCellNodeLogic = ({
 
   const handleDeleteCell = useCallback(async () => {
     await dispatcher.dispatch({
-      type: 'delete-node',
+      type: 'core:delete-node',
       id,
     });
   }, [dispatcher, id]);
@@ -51,8 +57,8 @@ export const JupyterlabCodeCellNodeLogic = ({
 
   const handleClearOutput = () => {
     dispatcher.dispatch({
-      type: 'clear-node-output',
-      nid: id,
+      type: 'jupyter:clear-node-output',
+      cellId,
     });
   };
 
@@ -62,8 +68,8 @@ export const JupyterlabCodeCellNodeLogic = ({
     const code = editorRef.current?.getValue();
     if (code) {
       dispatcher.dispatch({
-        type: 'execute-python-node',
-        nid: id,
+        type: 'jupyter:execute-python-node',
+        cellId,
         code,
         dkid,
       });

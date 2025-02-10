@@ -41,15 +41,15 @@ export class TabsReducer extends Reducer<
 
   reduce(g: Ra<TTabEvents<TabPayload>>): Promise<void> {
     switch (g.event.type) {
-      case 'active-tab-change':
+      case 'tabs:active-tab-change':
         return this._activeTabChange(g as Ra<TEventActiveTabChange>);
-      case 'add-tab':
+      case 'tabs:add-tab':
         return this._addTab(g as Ra<TEventAddTab<TabPayload>>);
-      case 'delete-tab':
+      case 'tabs:delete-tab':
         return this._deleteTab(g as Ra<TEventDeleteTab>);
-      case 'rename-tab':
+      case 'tabs:rename-tab':
         return this._renameTab(g as Ra<TEventRenameTab>);
-      case 'convert-tab-to-group':
+      case 'tabs:convert-tab-to-group':
         return this._convertTabToGroup(g as Ra<TEventConvertTabToGroup>);
 
       default:

@@ -12,12 +12,7 @@ import { Terminal } from '@jupyterlab/terminal';
 import { Widget } from '@lumino/widgets';
 
 import { useNodeContext } from '@monorepo/space';
-import {
-  TNodeTerminal,
-  TNodeCommon,
-  TServerSettings,
-} from '@monorepo/demiurge-types';
-import { NodeTerminal } from '@monorepo/jupyter';
+import { NodeTerminal, TServerSettings } from '@monorepo/jupyter';
 
 import {
   useDispatcher,
@@ -47,10 +42,13 @@ const newTerminal = async (s: TServerSettings) => {
 export const DemiurgeTerminal = ({
   server_name,
   project_server_id,
-}: TNodeTerminal) => {
+}: {
+  server_name: string;
+  project_server_id: number;
+}) => {
   //
-  const server = useSharedData(['projectServers'], (sd) => {
-    return sd.projectServers.get(`${project_server_id}`);
+  const server = useSharedData(['jupyterServers'], (sd) => {
+    return sd.jupyterServers.get(`${project_server_id}`);
   });
 
   const { jlsManager } = useJLsManager();
@@ -58,7 +56,7 @@ export const DemiurgeTerminal = ({
   const ref = useRef<HTMLDivElement>(null);
   const yet = useRef<boolean>(false);
 
-  const reachable = server?.type === 'jupyter' && jupyterlabIsReachable(server);
+  const reachable = jupyterlabIsReachable(server);
 
   useEffect(() => {
     if (reachable) {
@@ -83,14 +81,18 @@ export const TerminalNodeLogic = ({
   id,
   server_name,
   project_server_id,
-}: TNodeCommon & TNodeTerminal) => {
+}: {
+  id: string;
+  server_name: string;
+  project_server_id: number;
+}) => {
   const useNodeValue = useNodeContext();
 
   const dispatcher = useDispatcher();
 
   const handleDelete = useCallback(async () => {
     await dispatcher.dispatch({
-      type: 'delete-node',
+      type: 'core:delete-node',
       id,
     });
   }, [dispatcher, id]);

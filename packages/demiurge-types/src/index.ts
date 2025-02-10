@@ -13,20 +13,6 @@ export type {
   TApi_Authorization,
 } from './lib/ganymede-api/types';
 
-export type {
-  TNodeGeneric,
-  TNodePython,
-  TNodeMarkDown,
-  TNodeVideo,
-  TNodeTerminal,
-  TNodeServer,
-  TNodeKernel,
-  TNodeVolume,
-  TNodeChat,
-  TNodeType,
-  TNotebookNode,
-} from './lib/node-types';
-
 export { makeYjsDocId } from './lib/yjs/doc-id';
 
 export {

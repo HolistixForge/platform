@@ -151,7 +151,7 @@ map_http_service() {
             -X POST http://${GATEWAY_VPN_IP}/collab/event \
             -H "Authorization: ${TOKEN}" \
             -H "Content-Type: application/json" \
-            -d "{\"event\":{\"type\":\"server-map-http-service\",\"port\":${PORT},\"name\":\"${NAME}\"}}" \
+            -d "{\"event\":{\"type\":\"server:map-http-service\",\"port\":${PORT},\"name\":\"${NAME}\"}}" \
             2>/dev/null
         sleep 15
     done

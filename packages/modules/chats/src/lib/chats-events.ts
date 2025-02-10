@@ -1,40 +1,45 @@
+import { TEventOrigin } from '@monorepo/core';
+
 export type ReducersPrivate<T> = {
   __private__?: T;
 };
 
 export type TEventNewMessage = {
-  type: 'new-message';
+  type: 'chats:new-message';
   chatId: string;
   content: string;
   replyToIndex?: number;
+  __dev__user_id?: string;
 };
 
 export type TEventDeleteMessage = {
-  type: 'delete-message';
+  type: 'chats:delete-message';
   chatId: string;
   index: number;
 };
 
 export type TEventIsWriting = {
-  type: 'is-writing';
+  type: 'chats:is-writing';
   chatId: string;
   value: boolean;
+  __dev__user_id?: string;
 };
 
 export type TEventUserHasRead = {
-  type: 'user-has-read';
+  type: 'chats:user-has-read';
   chatId: string;
   index: number;
 };
 
 export type TEventChatResolve = {
-  type: 'chat-resolve';
+  type: 'chats:chat-resolve';
   chatId: string;
   value: boolean;
 };
 
 export type TEventNewChat = {
-  type: 'new-chat';
+  type: 'chats:new-chat';
+  origin?: TEventOrigin;
 };
 
 export type TChatEvent =

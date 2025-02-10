@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { useMemo } from 'react';
 
 import {
   CollaborativeContext,
@@ -10,13 +11,18 @@ import {
   Dispatcher,
   SharedMap,
 } from '@monorepo/collab-engine';
+import { randomGuys } from '@monorepo/ui-base';
+import { Logger } from '@monorepo/log';
 
 import { ChatReducer } from './chats-reducer';
 import { Chat_loadData, TChatSharedData } from './chats-shared-model';
 import { TChatEvent } from './chats-events';
-import { useMemo } from 'react';
 import { TChat } from './chats-types';
-import { ChatBox, ChatMessage } from './components/node-chat/node-chat';
+import { ChatboxLogic } from './components/node-chat/chatbox-logic';
+
+//
+
+Logger.setPriority(7);
 
 //
 
@@ -26,11 +32,81 @@ const chunks: TCollaborativeChunk[] = [
     reducers: (sd: TValidSharedData) => [new ChatReducer()],
   },
 ];
-
 //
+
+const li =
+  'Lorem ipsum dolor sit amet consectetur adipiscing elit Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat';
+
+const makeLoremIpsum = () => {
+  const words = li.split(' ');
+  const numWords = Math.floor(Math.random() * 20) + 5; // Between 5-25 words
+  const punctuation = [',', '.', '!', '?', '...'];
+
+  let result = '';
+
+  for (let i = 0; i < numWords; i++) {
+    // Add random word
+    const word = words[Math.floor(Math.random() * words.length)];
+    result += word;
+
+    // Randomly add punctuation (20% chance)
+    if (Math.random() < 0.2) {
+      const punct = punctuation[Math.floor(Math.random() * punctuation.length)];
+      result += punct;
+    }
+
+    result += ' ';
+  }
+
+  // Ensure it ends with proper punctuation
+  result = result.trim();
+  if (!result.match(/[.!?]$/)) {
+    result += '.';
+  }
+
+  // Capitalize first letter
+  return result.charAt(0).toUpperCase() + result.slice(1);
+};
 
 const StoryWrapper = () => {
   const dispatcher = useMemo(() => {
+    // fake users messages
+    setInterval(() => {
+      const chats = dispatcher._sharedData.chats as SharedMap<TChat>;
+      chats.forEach((c) => {
+        const randomGuy =
+          randomGuys[Math.floor(Math.random() * randomGuys.length)];
+
+        // Send is writing event
+        dispatcher.dispatch({
+          type: 'chats:is-writing',
+          chatId: c.id,
+          value: true,
+          __dev__user_id: randomGuy.user_id,
+        });
+
+        // Wait 2 seconds before sending message
+        setTimeout(() => {
+          const newMessageEvent = {
+            __dev__user_id: randomGuy.user_id,
+            type: 'chats:new-message',
+            chatId: c.id,
+            content: makeLoremIpsum(),
+            replyToIndex: Math.floor(Math.random() * c.messages.length),
+          };
+          dispatcher.dispatch(newMessageEvent);
+
+          // Send stopped writing event
+          dispatcher.dispatch({
+            type: 'chats:is-writing',
+            chatId: c.id,
+            value: false,
+            __dev__user_id: randomGuy.user_id,
+          });
+        }, 2000);
+      });
+    }, 7000);
+
     return new Dispatcher({});
   }, []);
 
@@ -54,6 +130,8 @@ const StoryWrapper = () => {
 
 //
 
+const guys = new Map(randomGuys.map((guy) => [guy.user_id, guy]));
+
 const ChatsGrid = () => {
   const chats: SharedMap<TChat> = useSharedData<TChatSharedData>(
     ['chats'],
@@ -61,153 +139,32 @@ const ChatsGrid = () => {
   );
   const dispatcher = useDispatcher<TChatEvent>();
 
-  console.log({ chats });
-
   const addChat = () => {
-    dispatcher.dispatch({ type: 'new-chat' });
+    dispatcher.dispatch({ type: 'chats:new-chat' });
   };
 
   return (
     <div>
       <button onClick={addChat}>+</button>
-      {Array.from(chats.values()).map((chat) => (
-        <ChatLogic chatId={chat.id} />
-      ))}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, 450px)',
+          gap: '10px',
+        }}
+      >
+        {Array.from(chats.values()).map((chat) => (
+          <div key={chat.id} style={{ maxHeight: '650px' }}>
+            <ChatboxLogic
+              chatId={chat.id}
+              usersInfo={guys}
+              userId={randomGuys[0].user_id}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
-};
-
-//
-
-const ChatLogic = ({ chatId }: { chatId: string }) => {
-  const chat: TChat | undefined = useSharedData<TChatSharedData>(
-    ['chats'],
-    (sd) => sd.chats.get(chatId)
-  );
-  const dispatcher = useDispatcher<TChatEvent>();
-
-  //
-
-  /*
-  const messageList: ChatMessage[] =
-    chat?.messages.map((m, k) => {
-      const u = usersInfo.get(m.user_id) || loading;
-
-      let replied = undefined;
-      if (m.replyIndex) {
-        const mr = chat.messages[m.replyIndex];
-        const ur = usersInfo.get(mr.user_id) || loading;
-
-        replied = {
-          username: ur.username,
-          picture: null,
-          content: chat.messages[m.replyIndex].content,
-          color: ur.color,
-          space: 'todo',
-          date: new Date(),
-          id: `${m.replyIndex}`,
-        };
-      }
-
-      const cm: ChatMessage = {
-        username: u.username,
-        picture: u.picture,
-        content: m.content,
-        color: u.color,
-        space: 'todo',
-        date: new Date(m.date),
-        id: `${k}`,
-        replied,
-      };
-      return cm;
-    }) || [];
-*/
-
-  const handleSendMessage = (msg: string, replyTo?: number) => {
-    return dispatcher.dispatch({
-      type: 'new-message',
-      chatId,
-      content: msg,
-      replyToIndex: replyTo,
-    });
-  };
-
-  const handleCurrentUserWriting = (w: boolean) => {
-    dispatcher.dispatch({
-      type: 'is-writing',
-      chatId,
-      value: w,
-    });
-  };
-
-  /*
-  const writingUsers: NodeChatProps['writingUsers'] = [];
-  if (chat) {
-    Object.keys(chat.isWriting).forEach((k) => {
-      if (
-        currentUserStatus !== 'success' ||
-        k !== currentUserData.user.user_id
-      ) {
-        const u = chat.isWriting[k];
-        if (u) {
-          writingUsers.push(usersInfo.get(k) || loading);
-        }
-      }
-    });
-  }
-    */
-
-  const handleResolve = () => {
-    if (chat)
-      dispatcher.dispatch({
-        type: 'chat-resolve',
-        chatId,
-        value: !chat.resolved,
-      });
-  };
-
-  const handleDeleteMessage = (id: string) => {
-    if (chat)
-      dispatcher.dispatch({
-        type: 'delete-message',
-        chatId,
-        index: parseInt(id),
-      });
-  };
-
-  const handleAllRead = () => {
-    if (chat)
-      dispatcher.dispatch({
-        type: 'user-has-read',
-        chatId,
-        index: chat?.messages.length - 1,
-      });
-  };
-
-  /*
-  const lastRead =
-    chat && currentUserStatus === 'success' && currentUserData.user.user_id
-      ? chat.lastRead[currentUserData.user.user_id]
-      : undefined;
-      */
-
-  if (chat)
-    return (
-      <ChatBox
-        status={chat?.resolved ? 'resolved' : 'new'}
-        chatId={chatId}
-        messageList={[]}
-        onResolve={handleResolve}
-        onSendMessage={handleSendMessage}
-        onCurrentUserWriting={handleCurrentUserWriting}
-        writingUsers={[]}
-        onAllRead={handleAllRead}
-        lastRead={'2'}
-        onDeleteMessage={handleDeleteMessage}
-      />
-    );
-
-  return 'not found';
 };
 
 //

@@ -1,13 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { useNodeContext, getNodeEdges } from '@monorepo/space';
-import { TNodeChat } from '@monorepo/demiurge-types';
-import {
-  ChatMessage,
-  NodeChat,
-  NodeChatAnchor,
-  NodeChatProps,
-} from '@monorepo/chats';
+import { NodeChatAnchor, NodeChatbox } from '@monorepo/chats';
 import { useCurrentUser, useQueriesUsers } from '@monorepo/frontend-data';
 import { useAwarenessListenData } from '@monorepo/collab-engine';
 
@@ -33,13 +27,16 @@ const useNodeEdges = (id: string) => {
 };
 
 /**
- * TODO: perf test and refacto
+ *
  */
 
 export const ChatNodeLogic = ({
   id: nodeId,
   chatId,
-}: TNodeCommon & TNodeChat) => {
+}: {
+  id: string;
+  chatId: string;
+}) => {
   //
 
   const dispatcher = useDispatcher();
@@ -111,134 +108,27 @@ export const ChatNodeLogic = ({
     usersInfo.set(uid, u);
   });
 
-  //
-  // build the all resolved message list to pass to UI component
-
-  const messageList: ChatMessage[] =
-    chat?.messages.map((m, k) => {
-      const u = usersInfo.get(m.user_id) || loading;
-
-      let replied = undefined;
-      if (m.replyIndex) {
-        const mr = chat.messages[m.replyIndex];
-        const ur = usersInfo.get(mr.user_id) || loading;
-
-        replied = {
-          username: ur.username,
-          picture: null,
-          content: chat.messages[m.replyIndex].content,
-          color: ur.color,
-          space: 'todo',
-          date: new Date(),
-          id: `${m.replyIndex}`,
-        };
-      }
-
-      const cm: ChatMessage = {
-        username: u.username,
-        picture: u.picture,
-        content: m.content,
-        color: u.color,
-        space: 'todo',
-        date: new Date(m.date),
-        id: `${k}`,
-        replied,
-      };
-      return cm;
-    }) || [];
-
-  //
-  //
-
   const anchorNodeId = edges.length === 1 && edges[0].from.node;
 
   // we want to close the anchor node rather than this node
   const handleClose = () => {
     anchorNodeId &&
       dispatcher.dispatch({
-        type: 'close-node',
-        nid: anchorNodeId,
+        type: 'space:action',
+        action: { type: 'close-node', nid: anchorNodeId },
         viewId: useNodeValue.viewId,
       });
   };
 
-  const handleSendMessage = (msg: string, replyTo?: number) => {
-    return dispatcher.dispatch({
-      type: 'new-message',
-      chatId,
-      content: msg,
-      replyToIndex: replyTo,
-    });
-  };
-
-  const handleCurrentUserWriting = (w: boolean) => {
-    dispatcher.dispatch({
-      type: 'is-writing',
-      chatId,
-      value: w,
-    });
-  };
-
-  const writingUsers: NodeChatProps['writingUsers'] = [];
-  if (chat) {
-    Object.keys(chat.isWriting).forEach((k) => {
-      if (
-        currentUserStatus !== 'success' ||
-        k !== currentUserData.user.user_id
-      ) {
-        const u = chat.isWriting[k];
-        if (u) {
-          writingUsers.push(usersInfo.get(k) || loading);
-        }
-      }
-    });
-  }
-
-  const handleResolve = () => {
-    if (chat)
-      dispatcher.dispatch({
-        type: 'chat-resolve',
-        chatId,
-        value: !chat.resolved,
-      });
-  };
-
-  const handleDeleteMessage = (id: string) => {
-    if (chat)
-      dispatcher.dispatch({
-        type: 'delete-message',
-        chatId,
-        index: parseInt(id),
-      });
-  };
-
-  const handleAllRead = () => {
-    if (chat)
-      dispatcher.dispatch({
-        type: 'user-has-read',
-        chatId,
-        index: chat?.messages.length - 1,
-      });
-  };
-
-  const lastRead =
-    chat && currentUserStatus === 'success' && currentUserData.user.user_id
-      ? chat.lastRead[currentUserData.user.user_id]
-      : undefined;
-
   return (
-    <NodeChat
-      status={chat?.resolved ? 'resolved' : 'new'}
+    <NodeChatbox
+      id={nodeId}
       chatId={chatId}
-      messageList={messageList}
-      onResolve={handleResolve}
-      onSendMessage={handleSendMessage}
-      onCurrentUserWriting={handleCurrentUserWriting}
-      writingUsers={writingUsers}
-      onAllRead={handleAllRead}
-      lastRead={lastRead ? `${lastRead}` : undefined}
-      onDeleteMessage={handleDeleteMessage}
-      {...useNodeValue}
+      userId={
+        (currentUserStatus === 'success' && currentUserData.user.user_id) ||
+        undefined
+      }
+      usersInfo={usersInfo}
       close={handleClose}
     />
   );
@@ -251,7 +141,10 @@ export const ChatNodeLogic = ({
 export const ChatAnchorNodeLogic = ({
   id: nodeId,
   chatId,
-}: TNodeCommon & TNodeChat) => {
+}: {
+  id: string;
+  chatId: string;
+}) => {
   const dispatcher = useDispatcher();
   const useNodeValue = useNodeContext();
   const edges = useNodeEdges(nodeId);
@@ -265,8 +158,8 @@ export const ChatAnchorNodeLogic = ({
     useNodeValue.open();
     chatNodeId &&
       dispatcher.dispatch({
-        type: 'open-node',
-        nid: chatNodeId,
+        type: 'space:action',
+        action: { type: 'open-node', nid: chatNodeId },
         viewId: useNodeValue.viewId,
       });
   };

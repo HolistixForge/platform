@@ -89,38 +89,38 @@ export class ServersReducer extends Reducer<
 
   reduce(g: Ra<ReducedEvents>): Promise<void> {
     switch (g.event.type) {
-      case 'new-server':
+      case 'servers:new':
         return this._newServer(g as Ra<TEventNewServer>);
-      case 'delete-server':
+      case 'servers:delete':
         return this._deleteServer(g as Ra<TEventDeleteServer>);
       case 'periodic':
         return this._periodic(g as Ra<TEventPeriodic>);
-      case 'server-watchdog':
+      case 'server:watchdog':
         return this._serverWatchdog(g as Ra<TEventServerWatchdog>);
-      case 'server-map-http-service':
+      case 'server:map-http-service':
         return this._serverMapHttpService(g as Ra<TEventServerMapHttpService>);
-      case 'activity':
+      case 'servers:activity':
         return this._serverActivity(g as Ra<TEventServerActivity>);
-      case 'host-server':
+      case 'servers:host':
         return this._hostServer(g as Ra<TEventHostServer>);
-      case 'server-to-cloud':
+      case 'servers:to-cloud':
         return this._serverToCloud(g as Ra<TEventServerToCloud>);
-      case 'server-cloud-pause':
+      case 'servers:cloud-pause':
         return this._serverCloudPause(g as Ra<TEventServerCloudPause>);
-      case 'server-cloud-start':
+      case 'servers:cloud-start':
         return this._serverCloudStart(g as Ra<TEventServerCloudStart>);
-      case 'server-cloud-delete':
+      case 'servers:cloud-delete':
         return this._serverCloudDelete(g as Ra<TEventServerCloudDelete>);
-      case '_update-instance-state':
+      case 'servers:_update-instance-state':
         return this._updateInstanceState(g as Ra<TEventUpdateInstanceState>);
 
-      case 'new-volume':
+      case 'servers:new-volume':
         return this._newVolume(g as Ra<TEventNewVolume>);
-      case 'mount-volume':
+      case 'servers:mount-volume':
         return this._mountVolume(g as Ra<TEventMountVolume>);
-      case 'unmount-volume':
+      case 'servers:unmount-volume':
         return this._unmountVolume(g as Ra<TEventUnmountVolume>);
-      case 'delete-volume':
+      case 'servers:delete-volume':
         return this._deleteVolume(g as Ra<TEventDeleteVolume>);
 
       default:
@@ -293,7 +293,7 @@ export class ServersReducer extends Reducer<
 
       if (state) {
         g.dispatcher.dispatch({
-          type: '_update-instance-state',
+          type: 'servers:_update-instance-state',
           project_server_id,
           state,
         });

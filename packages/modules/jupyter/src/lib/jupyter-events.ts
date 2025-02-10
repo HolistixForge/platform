@@ -1,4 +1,5 @@
 // TODO_DEM: move in plugin/jupyter
+import { TEventOrigin } from '@monorepo/core';
 import { TDKID, TJKID, IOutput } from './jupyter-types';
 
 export type FormFieldsOnly<T extends TDemiurgeNotebookEvent> = Partial<
@@ -10,49 +11,48 @@ export type FormFieldsOnly<T extends TDemiurgeNotebookEvent> = Partial<
  */
 
 export type TEventExecutePythonNode = {
-  type: 'execute-python-node';
+  type: 'jupyter:execute-python-node';
   cellId: string;
   dkid: TDKID;
   code: string;
 };
 
 export type TEventPythonNodeOutput = {
-  type: 'python-node-output';
+  type: 'jupyter:python-node-output';
   cellId: string;
   output: IOutput[];
 };
 
 export type TEventClearNodeOutput = {
-  type: 'clear-node-output';
+  type: 'jupyter:clear-node-output';
   cellId: string;
 };
 
 export type TEventKernelStarted = {
-  type: 'kernel-started';
+  type: 'jupyter:kernel-started';
   dkid: TDKID;
   jkid: TJKID;
 };
 
 export type TEventStartKernel = {
-  type: 'start-kernel';
+  type: 'jupyter:start-kernel';
   dkid: TDKID;
 };
 
 export type TEventStopKernel = {
-  type: 'stop-kernel';
+  type: 'jupyter:stop-kernel';
   dkid: TDKID;
 };
 
 export type TEventNewKernel = {
-  type: 'new-kernel';
+  type: 'jupyter:new-kernel';
   project_server_id: number;
   kernelName: string;
-  viewId: string;
-  position: { x: number; y: number };
+  origin?: TEventOrigin;
 };
 
 export type TEventDeleteKernel = {
-  type: 'delete-kernel';
+  type: 'jupyter:delete-kernel';
   dkid: TDKID;
 };
 

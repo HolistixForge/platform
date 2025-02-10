@@ -29,7 +29,7 @@ import { useProject } from './projects';
 //
 
 export const useServerProps = (
-  project_server_id: number | string
+  project_server_id: number
 ): (TServerComponentProps & TServerComponentCallbacks) | undefined => {
   //
 
@@ -54,7 +54,7 @@ export const useServerProps = (
   const onHost = useCallback(async () => {
     if (server)
       await dispatcher.dispatch({
-        type: 'host-server',
+        type: 'servers:host',
         project_server_id: server.project_server_id,
       });
   }, [dispatcher, server]);
@@ -79,7 +79,7 @@ export const useServerProps = (
     async (instanceType: string, storage: number) => {
       if (server)
         await dispatcher.dispatch({
-          type: 'server-to-cloud',
+          type: 'servers:to-cloud',
           project_server_id: server.project_server_id,
           instanceType,
           storage,
@@ -93,7 +93,7 @@ export const useServerProps = (
   const onCloudStart = async () => {
     if (server)
       await dispatcher.dispatch({
-        type: 'server-cloud-start',
+        type: 'servers:cloud-start',
         project_server_id: server.project_server_id,
       });
   };
@@ -103,7 +103,7 @@ export const useServerProps = (
   const onCloudStop = async () => {
     if (server)
       await dispatcher.dispatch({
-        type: 'server-cloud-pause',
+        type: 'servers:cloud-pause',
         project_server_id: server.project_server_id,
       });
   };
@@ -113,7 +113,7 @@ export const useServerProps = (
   const onCloudDelete = useCallback(async () => {
     if (server)
       await dispatcher.dispatch({
-        type: 'server-cloud-delete',
+        type: 'servers:cloud-delete',
         project_server_id: server.project_server_id,
       });
   }, [dispatcher, server]);
@@ -123,7 +123,7 @@ export const useServerProps = (
   const onDelete = useCallback(async () => {
     if (server)
       await dispatcher.dispatch({
-        type: 'delete-server',
+        type: 'servers:delete',
         project_server_id: server.project_server_id,
       });
   }, [dispatcher, server]);
@@ -178,13 +178,17 @@ export const useServerProps = (
         imageData?._0
       ),
     };
+
+  return undefined;
 };
 
 //
 
 export const ServerNodeLogic = ({
   project_server_id,
-}: TNodeCommon & TNodeServer) => {
+}: {
+  project_server_id: number;
+}) => {
   const useNodeValue = useNodeContext();
 
   const props = useServerProps(project_server_id);

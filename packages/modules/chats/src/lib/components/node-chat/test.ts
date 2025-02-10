@@ -1,4 +1,4 @@
-import { ChatMessage, ChatBoxProps } from './node-chat';
+import { ChatMessage, ChatBoxProps } from './node-chatbox';
 import { useState } from 'react';
 import { SimpleMessage } from '../discussionItem/discussionItem';
 import { ReplyMessage } from '../replyItem/replyItem';

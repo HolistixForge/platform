@@ -1,7 +1,7 @@
 import { ServerSystemInfo, TEc2InstanceState } from './servers-types';
 
 export type TEventNewServer = {
-  type: 'new-server';
+  type: 'servers:new';
   serverName: string;
   imageId: number;
   origin?: {
@@ -11,39 +11,39 @@ export type TEventNewServer = {
 };
 
 export type TEventDeleteServer = {
-  type: 'delete-server';
+  type: 'servers:delete';
   project_server_id: number;
 };
 
 export type TEventHostServer = {
-  type: 'host-server';
+  type: 'servers:host';
   project_server_id: number;
 };
 
 export type TEventServerToCloud = {
-  type: 'server-to-cloud';
+  type: 'servers:to-cloud';
   project_server_id: number;
   instanceType: string;
   storage: number;
 };
 
 export type TEventServerCloudPause = {
-  type: 'server-cloud-pause';
+  type: 'servers:cloud-pause';
   project_server_id: number;
 };
 
 export type TEventServerCloudStart = {
-  type: 'server-cloud-start';
+  type: 'servers:cloud-start';
   project_server_id: number;
 };
 
 export type TEventServerCloudDelete = {
-  type: 'server-cloud-delete';
+  type: 'servers:cloud-delete';
   project_server_id: number;
 };
 
 export type TEventUpdateInstanceState = {
-  type: '_update-instance-state';
+  type: 'servers:_update-instance-state';
   project_server_id: number;
   state: TEc2InstanceState;
 };
@@ -51,18 +51,18 @@ export type TEventUpdateInstanceState = {
 //
 
 export type TEventServerWatchdog = {
-  type: 'server-watchdog';
+  type: 'server:watchdog';
   host_user_id: string;
   system?: ServerSystemInfo;
 };
 
 export type TEventServerActivity = {
-  type: 'activity';
+  type: 'servers:activity';
   last_activity: string;
 };
 
 export type TEventServerMapHttpService = {
-  type: 'server-map-http-service';
+  type: 'server:map-http-service';
   port: number;
   name: string;
 };
@@ -71,7 +71,7 @@ export type TEventServerMapHttpService = {
 //
 
 export type TEventNewVolume = {
-  type: 'new-volume';
+  type: 'servers:new-volume';
   name: string;
   storage: number;
   origin?: {
@@ -81,21 +81,21 @@ export type TEventNewVolume = {
 };
 
 export type TEventMountVolume = {
-  type: 'mount-volume';
+  type: 'servers:mount-volume';
   project_server_id: number;
   volume_id: number;
   mount_point: string;
 };
 
 export type TEventUnmountVolume = {
-  type: 'unmount-volume';
+  type: 'servers:unmount-volume';
   project_server_id: number;
   volume_id: number;
   mount_point: string;
 };
 
 export type TEventDeleteVolume = {
-  type: 'delete-volume';
+  type: 'servers:delete-volume';
   volume_id: number;
 };
 

@@ -1,9 +1,8 @@
 import { useCallback } from 'react';
 
-import { TNodeKernel } from '@monorepo/demiurge-types';
 import { useNodeContext } from '@monorepo/space';
 import { useAction } from '@monorepo/ui-base';
-import { NodeKernel } from '@monorepo/jupyter';
+import { NodeKernel, TDKID } from '@monorepo/jupyter';
 
 import { greaterThan } from '../../../jl-integration/jls-manager';
 import {
@@ -19,18 +18,18 @@ import {
 export const KernelNodeLogic = ({
   dkid,
   project_server_id,
-}: TNodeCommon & TNodeKernel) => {
+}: {
+  project_server_id: number;
+  dkid: TDKID;
+}) => {
   //
   const useNodeValue = useNodeContext();
 
-  const serverData = useSharedData(['projectServers'], (sd) => {
-    return sd.projectServers.get(`${project_server_id}`);
+  const serverData = useSharedData(['jupyterServers'], (sd) => {
+    return sd.jupyterServers.get(`${project_server_id}`);
   });
 
-  const kernel =
-    serverData?.type === 'jupyter'
-      ? serverData?.kernels.find((k) => k.dkid === dkid)
-      : undefined;
+  const kernel = serverData?.kernels.find((k) => k.dkid === dkid);
 
   const kernelPack = useKernelPack(dkid);
 
@@ -38,21 +37,21 @@ export const KernelNodeLogic = ({
 
   const handleDeleteKernel = useCallback(async () => {
     await dispatcher.dispatch({
-      type: 'delete-kernel',
+      type: 'jupyter:delete-kernel',
       dkid,
     });
   }, [dispatcher, dkid]);
 
   const startButton = useAction(async () => {
     await dispatcher.dispatch({
-      type: 'start-kernel',
+      type: 'jupyter:start-kernel',
       dkid,
     });
   }, [dispatcher, dkid]);
 
   const stopButton = useAction(async () => {
     dispatcher.dispatch({
-      type: 'stop-kernel',
+      type: 'jupyter:stop-kernel',
       dkid,
     });
   }, [dispatcher, dkid]);

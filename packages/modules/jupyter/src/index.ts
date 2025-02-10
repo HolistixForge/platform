@@ -16,6 +16,7 @@ export type {
   TJKID,
   TJupyterServerData,
   IOutput,
+  TServerSettings,
 } from './lib/jupyter-types';
 export { dkidToServer } from './lib/jupyter-types';
 

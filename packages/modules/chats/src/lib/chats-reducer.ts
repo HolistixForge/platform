@@ -40,22 +40,22 @@ export class ChatReducer extends Reducer<
 
   reduce(g: Ra<TChatEvent>): Promise<void> {
     switch (g.event.type) {
-      case 'new-message':
+      case 'chats:new-message':
         return this._newMessage(g as Ra<TEventNewMessage>);
 
-      case 'new-chat':
+      case 'chats:new-chat':
         return this._newChat(g as Ra<TEventNewChat>);
 
-      case 'is-writing':
+      case 'chats:is-writing':
         return this._isWriting(g as Ra<TEventIsWriting>);
 
-      case 'user-has-read':
+      case 'chats:user-has-read':
         return this._userHasRead(g as Ra<TEventUserHasRead>);
 
-      case 'chat-resolve':
+      case 'chats:chat-resolve':
         return this._chatResolve(g as Ra<TEventChatResolve>);
 
-      case 'delete-message':
+      case 'chats:delete-message':
         return this._deleteMessage(g as Ra<TEventDeleteMessage>);
 
       default:
@@ -79,7 +79,7 @@ export class ChatReducer extends Reducer<
   _newMessage(g: Ra<TEventNewMessage>): Promise<void> {
     this.__deepCopyEditAndApply(g, (chat) => {
       chat.messages.push({
-        user_id: g.extraArgs.user_id,
+        user_id: g.extraArgs.user_id || g.event.__dev__user_id || 'unknown',
         content: g.event.content,
         date: new Date().toISOString(),
         replyIndex: g.event.replyToIndex,
@@ -148,7 +148,8 @@ export class ChatReducer extends Reducer<
 
   _isWriting(g: Ra<TEventIsWriting>): Promise<void> {
     this.__deepCopyEditAndApply(g, (chat) => {
-      chat.isWriting[g.extraArgs.user_id] = g.event.value;
+      const userId = g.extraArgs.user_id || g.event.__dev__user_id || 'unknown';
+      chat.isWriting[userId] = g.event.value;
     });
     return Promise.resolve();
   }

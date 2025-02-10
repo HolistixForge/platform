@@ -9,14 +9,7 @@ import {
   ButtonIconProps,
   useAction,
 } from '@monorepo/ui-base';
-import {
-  DisablePanSelect,
-  TNodeContext,
-  NodeToolbar,
-  InputsAndOutputs,
-} from '@monorepo/space';
-
-import { useMakeButton } from '@monorepo/space';
+import { DisablePanSelect, NodeToolbar } from '@monorepo/space';
 
 import {
   DiscussionItem,
@@ -24,28 +17,27 @@ import {
 } from '../discussionItem/discussionItem';
 import { ReplyItem, ReplyMessage } from '../replyItem/replyItem';
 
-import './node-chat.scss';
+import './chatbox.scss';
 
-//
 //
 
 export type ChatMessage = SimpleMessage | ReplyMessage;
 
-export type ChatBoxProps = {
+export type ChatboxProps = {
   status?: 'default' | 'resolved' | 'new';
   chatId: string;
   messageList: ChatMessage[];
   onResolve: (resolved: boolean) => void;
   onSendMessage: (msg: string, replyTo?: number) => Promise<void>;
   onCurrentUserWriting?: (write: boolean) => void;
-  writingUsers?: { username: string; color: string }[];
+  writingUsers?: { username: string; color?: string }[];
   onAllRead?: () => void;
   onDeleteMessage?: (id: string) => void;
   general?: boolean;
   lastRead?: string;
+  buttons?: ButtonIconProps[];
 };
 
-//
 //
 
 const readStatusFlagsReset = {
@@ -54,9 +46,8 @@ const readStatusFlagsReset = {
 };
 
 //
-//
 
-export const ChatBox = ({
+export const Chatbox = ({
   status,
   chatId,
   messageList,
@@ -69,7 +60,7 @@ export const ChatBox = ({
   general = false,
   buttons = [],
   lastRead,
-}: ChatBoxProps & { buttons?: ButtonIconProps[] }) => {
+}: ChatboxProps) => {
   //
 
   const [replyingTo, setReplyingTo] = useState<number | undefined>(undefined);
@@ -363,32 +354,5 @@ const ChatMessage = ({
         )
       }
     </>
-  );
-};
-
-//
-//
-//
-
-export type NodeChatProps = ChatBoxProps &
-  Pick<TNodeContext, 'id' | 'viewStatus' | 'selected' | 'close'>;
-
-export const NodeChat = ({
-  id: nodeId,
-  viewStatus,
-  close,
-  ...props
-}: NodeChatProps) => {
-  // chat node reduce button is special :
-  // reduce button actually close the chat node anchor, so the node disapears
-  const buttons = useMakeButton({
-    isExpanded: true,
-    reduce: close,
-  });
-  return (
-    <div className="common-node chat-node">
-      <InputsAndOutputs id={nodeId} bottom={false} topDisabled={true} />
-      <ChatBox {...props} buttons={buttons} />
-    </div>
   );
 };

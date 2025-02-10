@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 
 import { useFactory } from '@monorepo/lazy-factory';
-import { TNodeVideo } from '@monorepo/demiurge-types';
 import { useNodeContext } from '@monorepo/space';
 import { NodeVideo } from '@monorepo/ui-views';
 
@@ -9,7 +8,13 @@ import { useDispatcher } from '../../../model/collab-model-chunk';
 
 //
 
-export const VideoNodeLogic = ({ id, youtubeId }: TNodeCommon & TNodeVideo) => {
+export const VideoNodeLogic = ({
+  id,
+  youtubeId,
+}: {
+  id: string;
+  youtubeId: string;
+}) => {
   //
 
   const useNodeValue = useNodeContext();
@@ -20,7 +25,7 @@ export const VideoNodeLogic = ({ id, youtubeId }: TNodeCommon & TNodeVideo) => {
 
   const handleDelete = useCallback(async () => {
     await dispatcher.dispatch({
-      type: 'delete-node',
+      type: 'core:delete-node',
       id,
     });
   }, [dispatcher, id]);
