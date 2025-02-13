@@ -17,7 +17,7 @@ const InputStory = (props: InputsOutputsProps) => {
 //
 
 const meta = {
-  title: 'Space/ReactFlow/InputsOutputs',
+  title: 'Modules/Space/Components/Inputs Outputs',
   component: InputStory,
   parameters: {
     layout: 'centered',

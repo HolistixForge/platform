@@ -1,58 +1,53 @@
+import { TEdge, TConnector, TGraphNode } from '@monorepo/core';
+
 import { Listenable } from './listenable';
-import { TEdge } from '@monorepo/core';
-import { TNodeView } from '../../space-types';
-
-/** one pin */
-export type TPin = {
-  name: string;
-  id: string;
-  isConnectable?: boolean;
-};
+import {
+  TNodeView,
+  TConnectorView,
+  TGraphView,
+  defaultGraphView,
+} from '../../space-types';
 
 //
-
-export type TConnector = {
-  connectorName: string;
-  isOpened: boolean;
-  groupedEdgesCount: number;
-  slots?: TPin[];
-  type: 'source' | 'target';
-};
-
-//
-
-export type TSpaceState = {
-  nodes: TNodeView[];
-  edges: TEdge[];
-  connectors: Map<string, TConnector[]>;
-};
 
 export class SpaceState extends Listenable {
-  protected _state: TSpaceState = {
-    nodes: [],
-    edges: [],
-    connectors: new Map(),
-  };
+  protected state: TGraphView = defaultGraphView();
+  protected nodes: Map<string, TGraphNode> = new Map();
 
   public getNodes(): TNodeView[] {
-    return this._state.nodes;
+    return this.state.graph.nodes;
   }
 
   public getEdges(): TEdge[] {
-    return this._state.edges;
+    return this.state.graph.edges;
   }
 
   public getConnector(
     nodeId: string,
     connectorName: string
-  ): TConnector | undefined {
-    const cs = this._state.connectors.get(nodeId);
-    if (cs) return cs.find((c) => c.connectorName === connectorName);
-    return undefined;
+  ): (TConnector & TConnectorView) | undefined {
+    const node = this.nodes.get(nodeId);
+    if (!node) return undefined;
+
+    const connector = node.connectors.find(
+      (c) => c.connectorName === connectorName
+    );
+    if (!connector) return undefined;
+
+    const cv = this.state.connectorViews
+      .get(nodeId)
+      ?.find((cv) => cv.connectorName === connectorName);
+    if (!cv) return undefined;
+    return { ...connector, ...cv };
   }
 
-  public setState(s: TSpaceState) {
-    this._state = s;
+  public setState(s: TGraphView, nodes: Map<string, TGraphNode>) {
+    this.state = s;
+    this.nodes = nodes;
     this.notifyListeners();
+  }
+
+  public getState(): TGraphView {
+    return this.state;
   }
 }

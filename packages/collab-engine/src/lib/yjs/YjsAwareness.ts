@@ -1,5 +1,8 @@
 import { Doc, Map, Text } from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
+
+import { TJsonObject } from '@monorepo/simple-types';
+
 import { Awareness } from '../Awareness';
 import {
   AwarenessEventArgs,
@@ -70,16 +73,20 @@ export class YjsAwareness extends Awareness {
     return { ytext, providerAwareness: this._provider.awareness };
   }
 
-  emitPositionAwareness(a: _PositionAwareness) {
+  override emitPositionAwareness(a: _PositionAwareness) {
     this._provider.awareness.setLocalStateField('position', a);
   }
 
-  getStates(): _AwarenessStates {
+  override emitSelectionAwareness(a: TJsonObject): void {
+    this._provider.awareness.setLocalStateField('selections', a);
+  }
+
+  override getStates(): _AwarenessStates {
     const states = this._provider.awareness.getStates();
     return states;
   }
 
-  getMyId(): number {
+  override getMyId(): number {
     return this._provider.awareness.clientID;
   }
 }

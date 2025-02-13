@@ -1,6 +1,11 @@
 import { useMemo } from 'react';
 
 import { TPosition, TEdgeEnd, TEdge } from '@monorepo/core';
+import {
+  useDispatcher,
+  useAwareness,
+  useSharedData,
+} from '@monorepo/collab-engine';
 
 import { DemiurgeSpace } from '../reactflow-renderer/main';
 import { ReactflowPointerTracker } from '../reactflow-renderer/reactflowPointerTracker';
@@ -15,13 +20,17 @@ import { CollabSpaceActionsDispatcher } from './collab-space-actions-dispatcher'
 
 //
 
-export const SpaceModule = () => {
+export const SpaceModule = ({ viewId }: { viewId: string }) => {
+  const sd = useSharedData(['graphViews'], (sd) => sd);
+  const collabDispatcher = useDispatcher();
+  const { awareness } = useAwareness();
+
   const logics = useMemo(() => {
-    const ga = new CollabSpaceAwareness();
+    const ga = new CollabSpaceAwareness(viewId, awareness);
     const pt = new ReactflowPointerTracker(ga);
     const as = new HtmlAvatarStore(pt, ga);
-    const ss = new CollabSpaceState();
-    const sad = new CollabSpaceActionsDispatcher();
+    const ss = new CollabSpaceState(viewId, sd);
+    const sad = new CollabSpaceActionsDispatcher(viewId, collabDispatcher);
 
     return { ga, pt, as, sad, ss };
   }, []);

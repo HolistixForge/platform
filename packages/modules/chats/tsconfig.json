@@ -3,13 +3,16 @@
   "include": [],
   "references": [
     {
-      "path": "../core"
+      "path": "../../log"
     },
     {
       "path": "../../simple-types"
     },
     {
       "path": "../../collab-engine"
+    },
+    {
+      "path": "../core"
     },
     {
       "path": "../space"

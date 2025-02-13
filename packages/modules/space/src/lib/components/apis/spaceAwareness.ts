@@ -16,5 +16,5 @@ export abstract class SpaceAwareness extends Listenable {
   abstract getPointersUpdates(): TUserPosition[];
   abstract getSelectedNodes(): { [k: string]: TSelectingUsers };
   abstract selectNode(nid: string): void;
-  abstract setPointer(x: number, y: number): void;
+  abstract setPointer(x: number, y: number, inactive?: true): void;
 }

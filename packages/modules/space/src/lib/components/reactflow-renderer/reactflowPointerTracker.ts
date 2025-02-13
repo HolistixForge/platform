@@ -59,7 +59,7 @@ export class ReactflowPointerTracker extends PointerTracker {
   );
 
   public setPointerInactive() {
-    this.ga.setPointer(this._pointer.x, this._pointer.y);
+    this.ga.setPointer(this._pointer.x, this._pointer.y, true);
   }
 
   public onPaneMouseMove(event: React.MouseEvent) {

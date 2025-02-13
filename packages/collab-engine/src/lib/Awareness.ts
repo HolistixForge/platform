@@ -1,3 +1,5 @@
+import { TJsonObject } from '@monorepo/simple-types';
+
 import {
   _PositionAwareness,
   _AwarenessListenerArgs,
@@ -30,6 +32,8 @@ export abstract class Awareness {
   }
 
   abstract emitPositionAwareness(a: _PositionAwareness): void;
+
+  abstract emitSelectionAwareness(a: TJsonObject): void;
 
   addAwarenessListener(l: T_AwarenessListener) {
     this.awarenessListeners.push(l);

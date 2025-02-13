@@ -45,17 +45,13 @@ export const isNodeOpened = (status: TNodeViewStatus): boolean => {
 
 //
 
-export type TUserViewSelection = {
-  user: { username: string; color: string };
-  userId: number;
-  viewId: string;
-  nodes: string[];
-  edges: string[];
+export type TConnectorView = {
+  connectorName: string;
+  isOpened: boolean;
+  groupedEdgesCount: number;
+  type: 'source' | 'target';
 };
 
-export type TUserSelections = TUserViewSelection[];
-
-//
 //
 
 type TGraphViewParams = {
@@ -72,6 +68,11 @@ export type TGraphView = {
    * kept even if the nodes are not displayed to store user choices for future use
    * (save previous states for future display) */
   nodeViews: Array<TNodeView>;
+
+  connectorViews: Map<string, Array<TConnectorView>>;
+  /** the edges in the current extract */
+  edges: Array<TEdge>;
+
   /** the actual graph displayed */
   graph: {
     /** the subset of nodeViews currently displayed */
@@ -80,3 +81,19 @@ export type TGraphView = {
     edges: Array<TEdge>;
   };
 };
+
+//
+
+export const defaultGraphView = (): TGraphView => ({
+  params: {
+    maxRank: 2,
+    roots: [],
+  },
+  nodeViews: [],
+  graph: {
+    nodes: [],
+    edges: [],
+  },
+  connectorViews: new Map(),
+  edges: [],
+});

@@ -1,25 +1,34 @@
 import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
+import { TCoreSharedData, TGraphNode } from '@monorepo/core';
+
 import { TSpaceSharedData } from './space-shared-model';
-import { TSpaceEvent, TEventNewView } from './space-events';
-import { TGraphView } from './space-types';
+import { TSpaceEvent, TEventNewView, TEventSpaceAction } from './space-events';
+import { defaultGraphView, TGraphView } from './space-types';
+import { SpaceActionsReducer } from './components/apis/spaceActionsReducer';
 
 /**
  *
  */
 
-type Ra<T> = ReduceArgs<TSpaceSharedData, T, TSpaceEvent, undefined>;
+type Ra<T> = ReduceArgs<
+  TSpaceSharedData & TCoreSharedData,
+  T,
+  TSpaceEvent,
+  undefined
+>;
 
 /**
  *
  */
 
 export class SpaceReducer extends Reducer<
-  TSpaceSharedData,
+  TSpaceSharedData & TCoreSharedData,
   TSpaceEvent,
   TSpaceEvent,
   undefined
 > {
   //
+  spaceActionReducer: SpaceActionsReducer = new SpaceActionsReducer();
 
   reduce(g: Ra<TSpaceEvent>) {
     switch (g.event.type) {
@@ -27,12 +36,26 @@ export class SpaceReducer extends Reducer<
         return this._newView(g as Ra<TEventNewView>);
 
       case 'space:action':
-        console.log('TODO_DEM');
+        this._spaceAction(g);
         return Promise.resolve();
 
       default:
         return Promise.resolve();
     }
+  }
+
+  //
+
+  _spaceAction(g: Ra<TSpaceEvent>) {
+    const gv = g.sd.graphViews.get(g.event.viewId)!;
+    const gvc = structuredClone(gv);
+    const nodes = g.sd.nodes as unknown as Map<string, TGraphNode>;
+    this.spaceActionReducer.reduce(
+      (g.event as TEventSpaceAction).action,
+      gvc,
+      nodes
+    );
+    g.sd.graphViews.set(g.event.viewId, gvc);
   }
 
   //
@@ -52,17 +75,3 @@ export class SpaceReducer extends Reducer<
     return Promise.resolve();
   }
 }
-
-//
-
-export const defaultGraphView = (): TGraphView => ({
-  params: {
-    maxRank: 2,
-    roots: [],
-  },
-  nodeViews: [],
-  graph: {
-    nodes: [],
-    edges: [],
-  },
-});

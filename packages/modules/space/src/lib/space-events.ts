@@ -87,10 +87,10 @@ export type TEventNewView = {
   viewId: string;
 };
 
-export type TSpaceEvent =
-  | TEventNewView
-  | {
-      type: 'space:action';
-      viewId: string;
-      action: TSpaceActions;
-    };
+export type TEventSpaceAction = {
+  type: 'space:action';
+  viewId: string;
+  action: TSpaceActions;
+};
+
+export type TSpaceEvent = TEventNewView | TEventSpaceAction;

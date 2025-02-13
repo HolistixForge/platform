@@ -1,4 +1,11 @@
-export type { TPosition, TEdge, TEdgeEnd, TGraphNode } from './lib/core-types';
+export type {
+  TPosition,
+  TEdge,
+  TEdgeEnd,
+  TGraphNode,
+  TConnector,
+  TPin,
+} from './lib/core-types';
 
 export type { TCoreSharedData } from './lib/core-shared-model';
 export { Core_loadData } from './lib/core-shared-model';

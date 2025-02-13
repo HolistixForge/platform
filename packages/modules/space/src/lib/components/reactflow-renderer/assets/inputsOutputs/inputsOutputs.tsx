@@ -47,7 +47,7 @@ export const useConnector = (nodeId: string, connectorName: string) => {
 
   if (!c) throw new Error('oops');
 
-  const { isOpened, groupedEdgesCount, slots, type } = c;
+  const { isOpened, groupedEdgesCount, pins, type } = c;
 
   const openClose: () => void = useCallback(() => {
     /* the open close action display and hide the handles
@@ -102,7 +102,7 @@ export const useConnector = (nodeId: string, connectorName: string) => {
     groupedEdgesCount,
     type,
     isOpened,
-    slots,
+    pins,
   };
 };
 
@@ -161,14 +161,14 @@ export const InputsOutputs = ({
     groupedEdgesCount,
     type,
     isOpened,
-    slots,
+    pins,
   } = useConnector(nodeId, connectorName);
 
   /**
    * if it is a simple input
    */
 
-  if (slots === undefined) {
+  if (pins === undefined) {
     return (
       <div
         className={
@@ -272,17 +272,15 @@ export const InputsOutputs = ({
             }}
           />
           <ul>
-            {slots &&
-              slots.map((s) => (
+            {pins &&
+              pins.map((p) => (
                 <Slot
-                  key={s.id}
-                  name={s.name}
+                  key={p.pinName}
+                  name={p.pinName}
                   type={type}
                   position={type === 'target' ? Position.Top : Position.Bottom}
-                  id={s.id}
-                  isConnectable={
-                    s.isConnectable !== undefined ? s.isConnectable : true
-                  }
+                  id={p.pinName}
+                  isConnectable={!p.disabled}
                   onMouseOver={handleMouseOver}
                   onMouseLeave={handleMouseLeave}
                 />

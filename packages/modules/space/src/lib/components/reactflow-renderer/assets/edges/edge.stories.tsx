@@ -127,7 +127,7 @@ const StoryWrapper = () => {
 //
 
 const meta = {
-  title: 'Space/ReactFlow/Edges',
+  title: 'Modules/Space/Components/Edges',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

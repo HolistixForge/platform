@@ -1,18 +1,25 @@
-import { nodeViewDefaultStatus } from '../../../space-types';
-import { TConnector, TSpaceState } from '../../apis/spaceState';
+import { TEdge, TGraphNode, TPin } from '@monorepo/core';
+
+import { nodeViewDefaultStatus, TNodeView } from '../../../space-types';
 import { pinId } from '../../apis/types/edge';
 
-const makeSlots = (connectorName: string, count: number) => {
+//
+
+const makePins = (connectorName: string, count: number): TPin[] => {
   return Array.from({ length: count }, (_, index) => ({
     id: pinId({ connectorName, pinName: `slot-${index}` }),
-    name: `slot ${index}`,
+    pinName: `slot ${index}`,
   }));
 };
 
 //
 
-export const graph1: TSpaceState = {
-  nodes: [
+export const graph1: {
+  nodeViews: TNodeView[];
+  edges: TEdge[];
+  nodes: TGraphNode[];
+} = {
+  nodeViews: [
     {
       id: 'node-1',
       position: {
@@ -101,84 +108,74 @@ export const graph1: TSpaceState = {
     },
   ],
   //
-  connectors: new Map<string, TConnector[]>([
-    [
-      'node-1',
-      [
+  nodes: [
+    {
+      id: 'node-1',
+      name: 'node-1',
+      type: 'default',
+      root: false,
+      connectors: [
         {
           connectorName: 'outputs',
-          isOpened: true,
-          groupedEdgesCount: 0,
-          slots: makeSlots('outputs', 3),
-          type: 'source',
+          pins: makePins('outputs', 3),
         },
         {
           connectorName: 'inputs',
-          isOpened: false,
-          groupedEdgesCount: 0,
-          slots: makeSlots('inputs', 3),
-          type: 'target',
+          pins: makePins('inputs', 3),
         },
       ],
-    ],
-    [
-      'node-2',
-      [
+    },
+    {
+      id: 'node-2',
+      name: 'node-2',
+      type: 'default',
+      root: false,
+      connectors: [
         {
           connectorName: 'outputs',
-          isOpened: false,
-          groupedEdgesCount: 0,
-          slots: makeSlots('outputs', 3),
-          type: 'source',
+          pins: makePins('outputs', 3),
         },
         {
           connectorName: 'inputs',
-          isOpened: true,
-          groupedEdgesCount: 0,
-          slots: makeSlots('inputs', 3),
-          type: 'target',
+          pins: makePins('inputs', 3),
         },
       ],
-    ],
-    [
-      'node-3',
-      [
+    },
+
+    {
+      id: 'node-3',
+      name: 'node-3',
+      type: 'default',
+      root: false,
+      connectors: [
         {
           connectorName: 'outputs',
-          isOpened: false,
-          groupedEdgesCount: 0,
-          slots: makeSlots('outputs', 3),
-          type: 'source',
+          pins: makePins('outputs', 3),
         },
         {
           connectorName: 'inputs',
-          isOpened: true,
-          groupedEdgesCount: 0,
-          slots: makeSlots('inputs', 3),
-          type: 'target',
+          pins: makePins('inputs', 3),
         },
       ],
-    ],
-    [
-      'node-4',
-      [
+    },
+
+    {
+      id: 'node-4',
+      name: 'node-4',
+      type: 'default',
+      root: false,
+      connectors: [
         {
           connectorName: 'outputs',
-          isOpened: false,
-          groupedEdgesCount: 0,
-          slots: undefined,
-          type: 'source',
+          pins: [],
         },
         {
           connectorName: 'inputs',
-          isOpened: true,
-          groupedEdgesCount: 0,
-          slots: undefined,
-          type: 'target',
+          pins: [],
         },
       ],
-    ],
-  ]),
+    },
+  ],
 };
 
 //

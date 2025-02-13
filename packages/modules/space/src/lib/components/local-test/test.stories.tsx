@@ -61,7 +61,7 @@ const Demo = () => {
 //
 
 const meta = {
-  title: 'Space/Demo',
+  title: 'Modules/Space/Test Local',
   component: Demo,
   parameters: {
     layout: 'fullscreen',

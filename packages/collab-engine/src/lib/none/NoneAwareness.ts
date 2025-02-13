@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
+import { TJsonObject } from '@monorepo/simple-types';
+
 import { Awareness } from '../Awareness';
 
 import {
@@ -10,14 +11,15 @@ import {
 export class NoneAwareness extends Awareness {
   _fakeState = new Map<number, _AwarenessState>();
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  emitPositionAwareness(a: _PositionAwareness) {}
+  override emitPositionAwareness(a: _PositionAwareness) {}
 
-  getStates(): _AwarenessStates {
+  override emitSelectionAwareness(a: TJsonObject): void {}
+
+  override getStates(): _AwarenessStates {
     return this._fakeState;
   }
 
-  getMyId(): number {
+  override getMyId(): number {
     return 0;
   }
 }

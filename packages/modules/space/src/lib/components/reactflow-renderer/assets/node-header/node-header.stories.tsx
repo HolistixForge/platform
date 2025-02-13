@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { NodeToolbar } from './node-toolbar';
 import { useTestToolbarButtons } from './node-toolbar';
+import { NodeHeader } from './node-header';
 
 //
 //
@@ -15,14 +15,27 @@ const StoryWrapper = ({
   className: string;
 }) => {
   const { buttons } = useTestToolbarButtons(isOpened, isLocked);
-  return <NodeToolbar buttons={buttons} className={className} />;
+  return (
+    <div style={{ width: '400px' }}>
+      <NodeHeader
+        buttons={buttons}
+        className={className}
+        nodeType={'Story'}
+        isOpened={isOpened}
+        open={function (): void {
+          throw new Error('Function not implemented.');
+        }}
+        id={'story'}
+      />
+    </div>
+  );
 };
 
 //
 //
 
 const meta = {
-  title: 'Modules/Space/Components/Node Toolbar',
+  title: 'Modules/Space/Components/Node Header',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',
@@ -38,6 +51,5 @@ export const Normal: Story = {
   args: {
     isOpened: false,
     isLocked: false,
-    className: 'outside',
   },
 };

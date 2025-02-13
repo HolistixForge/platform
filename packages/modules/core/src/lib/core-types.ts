@@ -5,21 +5,25 @@ export type TPosition = {
   y: number;
 };
 
+export type TPin = {
+  pinName: string;
+  disabled?: boolean;
+  type?: 'in' | 'out' | 'inout';
+};
+
+export type TConnector = {
+  connectorName: string;
+  disabled?: boolean;
+  pins: TPin[];
+};
+
 export type TGraphNode = {
   id: string;
   name: string;
   type: string;
   root: boolean;
   data?: TJsonObject;
-  connectors: {
-    connectorName: string;
-    disabled?: boolean;
-    pins: {
-      pinName: string;
-      disabled?: boolean;
-      type?: 'in' | 'out' | 'inout';
-    }[];
-  }[];
+  connectors: TConnector[];
 };
 
 type EEdgeType =

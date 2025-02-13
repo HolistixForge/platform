@@ -1,4 +1,5 @@
-import { TEdge } from '@monorepo/core';
+import { TEdge, TGraphNode } from '@monorepo/core';
+
 import {
   TSACloseConnector,
   TSAOpenConnector,
@@ -9,79 +10,69 @@ import {
   TSAReduceNode,
   TSAExpandNode,
 } from '../../space-events';
-import { TSpaceState } from './spaceState';
+import { TGraphView } from '../../space-types';
 
 //
 
 export class SpaceActionsReducer {
-  public currentView: TSpaceState;
-
-  protected currentGraphExtract: TSpaceState = {
-    nodes: [],
-    edges: [],
-    connectors: new Map(),
-  };
-
-  constructor(cuge?: TSpaceState) {
-    if (cuge) this.currentGraphExtract = cuge;
-    this.currentView = structuredClone(this.currentGraphExtract);
-  }
-
-  //
-
-  public reduce(action: TSpaceActions): TSpaceState {
+  public reduce(
+    action: TSpaceActions,
+    gv: TGraphView,
+    nodes: Map<string, TGraphNode>
+  ) {
     console.log({ action });
 
     switch (action.type) {
       case 'close-connector':
-        this.openCloseConnector(action);
+        this.openCloseConnector(action, gv);
         break;
 
       case 'open-connector':
-        this.openCloseConnector(action);
+        this.openCloseConnector(action, gv);
         break;
 
       case 'move-node':
-        this.moveNode(action);
+        this.moveNode(action, gv);
         break;
 
       case 'highlight':
-        this.setEdgeHighlight(action, true);
+        this.setEdgeHighlight(action, gv, true);
         break;
 
       case 'unhighlight':
-        this.setEdgeHighlight(action, false);
+        this.setEdgeHighlight(action, gv, false);
         break;
 
       case 'reduce-node':
-        this.changeNodeMode(action, 'REDUCED');
+        this.changeNodeMode(action, gv, 'REDUCED');
         break;
 
       case 'expand-node':
-        this.changeNodeMode(action, 'EXPANDED');
+        this.changeNodeMode(action, gv, 'EXPANDED');
         break;
     }
-
-    return /*structuredClone*/ this.currentView;
   }
 
   //
 
-  private openCloseConnector(action: TSACloseConnector | TSAOpenConnector) {
-    const cs = this.currentView.connectors.get(action.nid);
+  private openCloseConnector(
+    action: TSACloseConnector | TSAOpenConnector,
+    gv: TGraphView
+  ) {
+    const cs = gv.connectorViews.get(action.nid);
     if (cs) {
       const c = cs.find((c) => c.connectorName === action.connectorName);
       if (c) {
         c.isOpened = action.type === 'close-connector' ? false : true;
-        this.resolveDrawnEdges();
+        this.resolveDrawnEdges(gv);
       }
     }
   }
 
   //
 
-  private moveNode(action: TSAMoveNode) {
-    const node = this.currentView.nodes.find((n) => n.id === action.nid);
+  private moveNode(action: TSAMoveNode, gv: TGraphView) {
+    const node = gv.graph.nodes.find((n) => n.id === action.nid);
     if (node) {
       node.position = action.position;
     }
@@ -91,9 +82,10 @@ export class SpaceActionsReducer {
 
   private setEdgeHighlight(
     action: TSAHighlightFromConnector | TSAUnhighlightFromConnector,
+    gv: TGraphView,
     highlighted: boolean
   ) {
-    this.currentView.edges.forEach((edge) => {
+    gv.graph.edges.forEach((edge) => {
       if (
         (edge.from.node === action.nid &&
           edge.from.connectorName === action.connectorName &&
@@ -113,9 +105,10 @@ export class SpaceActionsReducer {
 
   private changeNodeMode(
     action: TSAReduceNode | TSAExpandNode,
+    gv: TGraphView,
     mode: 'REDUCED' | 'EXPANDED'
   ) {
-    const node = this.currentView.nodes.find((n) => n.id === action.nid);
+    const node = gv.graph.nodes.find((n) => n.id === action.nid);
     if (node) {
       node.status.mode = mode;
     }
@@ -123,7 +116,7 @@ export class SpaceActionsReducer {
 
   //
 
-  private resolveDrawnEdges() {
+  private resolveDrawnEdges(gv: TGraphView) {
     const groupId = (
       fromNode: string,
       fromConnector: string,
@@ -139,12 +132,12 @@ export class SpaceActionsReducer {
     const edgesGroups: Map<string, TEdge> = new Map();
 
     // for all edges in the graph extract, add to current view while grouping if necessary
-    for (const edge of this.currentGraphExtract.edges) {
+    for (const edge of gv.edges) {
       // if one of the two edge connectors is closed in the current view...
-      const sourceConnector = this.currentView.connectors
+      const sourceConnector = gv.connectorViews
         .get(edge.from.node)
         ?.find((c) => c.connectorName === edge.from.connectorName);
-      const targetConnector = this.currentView.connectors
+      const targetConnector = gv.connectorViews
         .get(edge.to.node)
         ?.find((c) => c.connectorName === edge.to.connectorName);
 
@@ -183,15 +176,12 @@ export class SpaceActionsReducer {
       }
     }
 
-    this.currentView.edges = [
-      ...drawnEdges,
-      ...Array.from(edgesGroups.values()),
-    ];
+    gv.graph.edges = [...drawnEdges, ...Array.from(edgesGroups.values())];
 
     // update grouped count of all connectors in current view
-    this.currentView.connectors.forEach((connectors, nodeId) => {
+    gv.connectorViews.forEach((connectors, nodeId) => {
       connectors.forEach((c) => {
-        const edges = this.currentView.edges.filter(
+        const edges = gv.graph.edges.filter(
           (edge) =>
             (edge.from.node === nodeId &&
               edge.from.connectorName === c.connectorName) ||

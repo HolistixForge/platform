@@ -4,9 +4,9 @@ export type {
   _AwarenessState,
   _AwarenessStates,
   TAwarenessUser,
+  E_PositionReference,
+  AwarenessEventArgs,
 } from './lib/awareness-types';
-export { E_PositionReference } from './lib/awareness-types';
-export type { AwarenessEventArgs } from './lib/awareness-types';
 
 export { Awareness } from './lib/Awareness';
 

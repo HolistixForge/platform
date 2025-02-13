@@ -7,6 +7,8 @@
 - modules storybooks
 - notion module
 
+- DNS: https://chatgpt.com/share/67acc6e5-32e4-8011-a71b-e4d900e0f9e5
+
 - close tab for down resource
 - click on card go to settings if down
 
@@ -14,7 +16,7 @@
 
 - iframe app wrapping, live status, stoped message, refresh gateway
 - close reset retry websocket in frontend when project go down
-- remove k8s ?
+
 - use env for { "sshKeyName": "dev-antoine-key", "securityGroupId": "sg-058d2af5f284c993c" }
 - deploy cloud: storage = desired size + image size + image size uncompressed + os
 - TODO_GATEWAY: delete connected server ?

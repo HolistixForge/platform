@@ -1,10 +1,8 @@
+import { TJsonObject } from '@monorepo/simple-types';
+
 export type xyz = { x: number; y: number; z: number };
 
-export enum E_PositionReference {
-  OBJECT = 'OBJECT',
-  LAYER = 'LAYER',
-  WORLD = 'WORLD',
-}
+export type E_PositionReference = 'OBJECT' | 'LAYER' | 'WORLD';
 
 export type _PositionAwareness = {
   position: xyz;
@@ -21,8 +19,8 @@ export type TAwarenessUser = {
 
 export type _AwarenessState = {
   user?: TAwarenessUser;
-  objectSelected?: string;
   position?: _PositionAwareness;
+  selections?: TJsonObject;
 };
 
 export type AwarenessEventArgs = {

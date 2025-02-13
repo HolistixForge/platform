@@ -42,7 +42,7 @@ const SlotStory = (props: SlotProps) => {
 };
 
 const meta = {
-  title: 'Space/ReactFlow/Slot',
+  title: 'Modules/Space/Components/Pin',
   component: SlotStory,
   parameters: {
     layout: 'centered',

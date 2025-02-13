@@ -6,17 +6,14 @@ import {
   TCollaborativeChunk,
   TValidSharedData,
   SharedTypes,
-  useSharedData,
-  useDispatcher,
   Dispatcher,
-  SharedMap,
 } from '@monorepo/collab-engine';
 import { Logger } from '@monorepo/log';
 
-import { SpaceReducer, defaultGraphView } from '../../space-reducer';
+import { SpaceModule } from './main';
+import { SpaceReducer } from '../../space-reducer';
 import { Space_loadData, TSpaceSharedData } from '../../space-shared-model';
-import { TSpaceEvent } from '../../space-events';
-import { TGraphView } from '../../space-types';
+import { defaultGraphView, TGraphView } from '../../space-types';
 import { graph1 } from '../local-test/graphs-data/graph-1';
 
 //
@@ -27,10 +24,10 @@ Logger.setPriority(7);
 
 const loadStoryData = (sd: TSpaceSharedData) => {
   const graphViews = sd.graphViews;
-  const g: TGraphView = defaultGraphView();
-  g.graph.nodes = graph1.nodes;
-  g.graph.edges = graph1.edges;
-  graphViews.set('graph-1', g);
+  const gv: TGraphView = defaultGraphView();
+  gv.edges = graph1.edges;
+  gv.nodeViews = graph1.nodeViews;
+  graphViews.set('graph-1', gv);
 };
 
 //
@@ -66,27 +63,15 @@ const StoryWrapper = () => {
         color: '#ffa500',
       }}
     >
-      <Space />
+      <SpaceModule viewId={'graph-1'} />
     </CollaborativeContext>
   );
 };
 
 //
 
-const Space = () => {
-  const graphViews: SharedMap<TGraphView> = useSharedData<TSpaceSharedData>(
-    ['graphViews'],
-    (sd) => sd.graphViews
-  );
-  const dispatcher = useDispatcher<TSpaceEvent>();
-
-  return <div></div>;
-};
-
-//
-
 const meta = {
-  title: 'Modules/Space/Demo',
+  title: 'Modules/Space/Main',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',
