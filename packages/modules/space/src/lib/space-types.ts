@@ -52,6 +52,15 @@ export type TConnectorView = {
   type: 'source' | 'target';
 };
 
+export const connectorViewDefault = (
+  connectorName: string
+): TConnectorView => ({
+  connectorName,
+  isOpened: true,
+  groupedEdgesCount: 0,
+  type: connectorName === 'inputs' ? 'target' : 'source',
+});
+
 //
 
 type TGraphViewParams = {

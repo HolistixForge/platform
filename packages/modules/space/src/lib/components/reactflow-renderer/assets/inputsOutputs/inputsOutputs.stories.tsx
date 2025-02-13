@@ -37,42 +37,26 @@ type Story = StoryObj<typeof InputsOutputs>;
 
 export const Simple_Input: Story = {
   args: {
-    nodeId: 'node-1',
+    nodeId: 'node-4',
     connectorName: 'inputs',
   },
 };
 
 export const Simple_Ouput: Story = {
   args: {
-    nodeId: 'node-1',
+    nodeId: 'node-4',
     connectorName: 'outputs',
   },
 };
 
-export const Piano_Input_Open: Story = {
-  args: {
-    nodeId: 'node-1',
-    forceOpened: true,
-    connectorName: 'inputs',
-  },
-};
-
-export const Piano_Input_Closed: Story = {
+export const Piano_Input: Story = {
   args: {
     nodeId: 'node-1',
     connectorName: 'inputs',
   },
 };
 
-export const Piano_Ouput_Open: Story = {
-  args: {
-    nodeId: 'node-1',
-    forceOpened: true,
-    connectorName: 'outputs',
-  },
-};
-
-export const Piano_Ouput_Closed: Story = {
+export const Piano_Ouput: Story = {
   args: {
     nodeId: 'node-1',
     connectorName: 'outputs',

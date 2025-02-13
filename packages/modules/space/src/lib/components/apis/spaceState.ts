@@ -6,6 +6,7 @@ import {
   TConnectorView,
   TGraphView,
   defaultGraphView,
+  connectorViewDefault,
 } from '../../space-types';
 
 //
@@ -34,15 +35,17 @@ export class SpaceState extends Listenable {
     );
     if (!connector) return undefined;
 
-    const cv = this.state.connectorViews
+    let cv = this.state.connectorViews
       .get(nodeId)
       ?.find((cv) => cv.connectorName === connectorName);
-    if (!cv) return undefined;
+
+    if (!cv) cv = connectorViewDefault(connectorName);
+
     return { ...connector, ...cv };
   }
 
-  public setState(s: TGraphView, nodes: Map<string, TGraphNode>) {
-    this.state = s;
+  public setState(gv: TGraphView, nodes: Map<string, TGraphNode>) {
+    this.state = gv;
     this.nodes = nodes;
     this.notifyListeners();
   }

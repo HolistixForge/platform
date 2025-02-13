@@ -168,7 +168,7 @@ export const InputsOutputs = ({
    * if it is a simple input
    */
 
-  if (pins === undefined) {
+  if (pins === undefined || pins.length === 0) {
     return (
       <div
         className={

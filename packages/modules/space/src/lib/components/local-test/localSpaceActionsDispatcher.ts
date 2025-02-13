@@ -25,7 +25,7 @@ export class LocalSpaceActionsDispatcher extends SpaceActionsDispatcher {
     gv.edges = graph1.edges;
     gv.nodeViews = graph1.nodeViews;
 
-    this.ss.setState(gv, new Map());
+    this.ss.setState(gv, this.nodes);
 
     this.reducer = new SpaceActionsReducer();
   }

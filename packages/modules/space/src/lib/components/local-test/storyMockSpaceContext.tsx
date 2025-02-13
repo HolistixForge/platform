@@ -4,6 +4,7 @@ import { TNodeContext } from '../apis/types/node';
 import { DummySpaceAwareness } from './fakeSpaceAwareness';
 import { LocalSpaceActionsDispatcher } from './localSpaceActionsDispatcher';
 import { SpaceState } from '../apis/spaceState';
+import { useRegisterListener } from '../reactflow-renderer/avatarsRenderer';
 
 //
 
@@ -38,6 +39,50 @@ export const StoryMockSpaceContext = ({
 }) => {
   const context = useMemo(() => {
     const spaceState = new SpaceState();
+
+    /*
+    const gv = spaceState.getState();
+
+    gv.connectorViews.set('node-1', [
+      {
+        connectorName: 'inputs',
+        isOpened: true,
+        groupedEdgesCount: 0,
+        type: 'target',
+      },
+      {
+        connectorName: 'outputs',
+        isOpened: true,
+        groupedEdgesCount: 0,
+        type: 'source',
+      },
+    ]);
+
+    spaceState.setState(
+      gv,
+      new Map([
+        [
+          'node-1',
+          {
+            id: 'node-1',
+            name: 'node-1',
+            type: 'node',
+            root: true,
+            connectors: [
+              {
+                connectorName: 'inputs',
+                pins: [{ pinName: 'inputs-0' }],
+              },
+              {
+                connectorName: 'outputs',
+                pins: [{ pinName: 'outputs-0' }],
+              },
+            ],
+          },
+        ],
+      ])
+    );
+    */
     return {
       spaceAwareness: new DummySpaceAwareness(),
       spaceActionsDispatcher: new LocalSpaceActionsDispatcher(spaceState),
@@ -46,8 +91,10 @@ export const StoryMockSpaceContext = ({
     };
   }, []);
 
+  useRegisterListener(context.spaceState);
+
   return (
-    <SpaceContext value={context}>
+    <SpaceContext value={{ ...context }}>
       <div>
         <svg
           className="react-flow__background"

@@ -10,7 +10,7 @@ import {
   TSAReduceNode,
   TSAExpandNode,
 } from '../../space-events';
-import { TGraphView } from '../../space-types';
+import { connectorViewDefault, TGraphView } from '../../space-types';
 
 //
 
@@ -20,8 +20,6 @@ export class SpaceActionsReducer {
     gv: TGraphView,
     nodes: Map<string, TGraphNode>
   ) {
-    console.log({ action });
-
     switch (action.type) {
       case 'close-connector':
         this.openCloseConnector(action, gv);
@@ -59,14 +57,23 @@ export class SpaceActionsReducer {
     action: TSACloseConnector | TSAOpenConnector,
     gv: TGraphView
   ) {
-    const cs = gv.connectorViews.get(action.nid);
-    if (cs) {
-      const c = cs.find((c) => c.connectorName === action.connectorName);
-      if (c) {
-        c.isOpened = action.type === 'close-connector' ? false : true;
-        this.resolveDrawnEdges(gv);
-      }
+    let cs = gv.connectorViews.get(action.nid);
+
+    if (!cs) {
+      cs = [];
     }
+
+    let c = cs.find((c) => c.connectorName === action.connectorName);
+
+    if (!c) {
+      c = connectorViewDefault(action.connectorName);
+      cs.push(c);
+      gv.connectorViews.set(action.nid, cs);
+    }
+
+    c.isOpened = action.type === 'close-connector' ? false : true;
+
+    this.resolveDrawnEdges(gv);
   }
 
   //
@@ -96,7 +103,6 @@ export class SpaceActionsReducer {
           (action.pinName === undefined || edge.to.pinName === action.pinName))
       ) {
         edge.highlighted = highlighted;
-        console.log('found', edge);
       }
     });
   }
