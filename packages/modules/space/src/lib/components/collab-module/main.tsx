@@ -36,34 +36,29 @@ export const SpaceModule = ({ viewId }: { viewId: string }) => {
   }, []);
 
   return (
-    <div style={{ height: '100vh' }}>
-      <DemiurgeSpace
-        viewId={'view-story'}
-        nodeComponent={CustomStoryNode}
-        edgeComponent={CustomStoryEdge}
-        spaceState={logics.ss}
-        spaceActionsDispatcher={logics.sad}
-        currentUser={{ username: 'User-0', color: '#ffa500' }}
-        spaceAwareness={logics.ga}
-        pointerTracker={logics.pt}
-        avatarsStore={logics.as}
-        onContextMenu={function (
-          xy: TPosition,
-          clientPosition: TPosition
-        ): void {
-          alert('Function not implemented.');
-        }}
-        onContextMenuNewEdge={function (
-          from: TEdgeEnd,
-          xy: TPosition,
-          clientPosition: TPosition
-        ): void {
-          alert('Function not implemented.');
-        }}
-        onConnect={function (edge: TEdge): void {
-          alert('Function not implemented.');
-        }}
-      />
-    </div>
+    <DemiurgeSpace
+      viewId={'view-story'}
+      nodeComponent={CustomStoryNode}
+      edgeComponent={CustomStoryEdge}
+      spaceState={logics.ss}
+      spaceActionsDispatcher={logics.sad}
+      currentUser={{ username: 'User-0', color: '#ffa500' }}
+      spaceAwareness={logics.ga}
+      pointerTracker={logics.pt}
+      avatarsStore={logics.as}
+      onContextMenu={function (xy: TPosition, clientPosition: TPosition): void {
+        alert('Function not implemented.');
+      }}
+      onContextMenuNewEdge={function (
+        from: TEdgeEnd,
+        xy: TPosition,
+        clientPosition: TPosition
+      ): void {
+        alert('Function not implemented.');
+      }}
+      onConnect={function (edge: TEdge): void {
+        alert('Function not implemented.');
+      }}
+    />
   );
 };

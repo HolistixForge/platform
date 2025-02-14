@@ -5,6 +5,21 @@ import { SpaceActionsDispatcher } from '../apis/spaceActionsDispatcher';
 import { SpaceActionsReducer } from '../apis/spaceActionsReducer';
 import { SpaceState } from '../apis/spaceState';
 import { graph1 } from './graphs-data/graph-1';
+import { TGraphView } from '../../space-types';
+
+//
+
+export const loadStoryGraph = (
+  gv: TGraphView,
+  nodes: Map<string, TGraphNode>
+) => {
+  graph1.nodes.forEach((node) => nodes.set(node.id, node));
+
+  gv.edges = graph1.edges;
+  gv.nodeViews = graph1.nodeViews;
+  gv.graph.nodes = [...gv.nodeViews];
+  gv.graph.edges = [...gv.edges];
+};
 
 //
 
@@ -18,19 +33,14 @@ export class LocalSpaceActionsDispatcher extends SpaceActionsDispatcher {
 
     this.ss = ss;
     const gv = this.ss.getState();
-
     this.nodes = new Map();
-    graph1.nodes.forEach((node) => this.nodes.set(node.id, node));
-
-    gv.edges = graph1.edges;
-    gv.nodeViews = graph1.nodeViews;
-    gv.graph.nodes = graph1.nodeViews;
-    gv.graph.edges = [...gv.edges];
-
+    loadStoryGraph(gv, this.nodes);
     this.ss.setState(gv, this.nodes);
 
     this.reducer = new SpaceActionsReducer();
   }
+
+  //
 
   dispatch(action: TSpaceActions): void {
     console.log('Dispatching action:', action);
