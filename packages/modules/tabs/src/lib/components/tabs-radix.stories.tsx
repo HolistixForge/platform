@@ -88,7 +88,7 @@ const StoryWrapper = () => {
 //
 
 const meta = {
-  title: 'UI/TabsRadix',
+  title: 'Modules/Tabs/Components/Tabs',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',
