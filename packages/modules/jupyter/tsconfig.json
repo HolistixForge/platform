@@ -6,10 +6,10 @@
       "path": "../core"
     },
     {
-      "path": "../../collab-engine"
+      "path": "../../ui-toolkit"
     },
     {
-      "path": "../../ui-toolkit"
+      "path": "../../collab-engine"
     },
     {
       "path": "../servers"

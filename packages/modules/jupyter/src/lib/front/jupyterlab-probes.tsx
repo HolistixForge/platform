@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
-import { CodeEditorMonaco } from '@monorepo/ui-base';
-import { useJLsManager } from '../model/collab-model-chunk';
+
+import { useJLsManager } from '../jupyter-shared-model';
+import CodeEditorMonaco from '../components/code-editor-monaco/code-editor-monaco';
 
 //
 

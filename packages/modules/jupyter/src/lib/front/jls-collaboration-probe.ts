@@ -1,11 +1,12 @@
 import { Map as YMap, Text as YText, Doc as YDoc } from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
-import { TAwarenessUser, YjsAwareness } from '@monorepo/collaborative';
+import { MonacoBinding } from 'y-monaco';
+
+import { TAwarenessUser, YjsAwareness } from '@monorepo/collab-engine';
 import { buildUserCss, getYDoc } from '@monorepo/collab-engine';
 import { ApiFetch } from '@monorepo/api-fetch';
 import { log } from '@monorepo/log';
-import { MonacoBinding } from 'y-monaco';
-import { TG_Server } from '@monorepo/demiurge-types';
+import { TG_Server } from '@monorepo/servers';
 
 //
 
@@ -59,7 +60,6 @@ export class CollaborationProbe {
   _identity: ReturnType<typeof identity>;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private _session: any;
 
   private _rooms: Map<string, ConnectedRoom> = new Map();
   private _sessions: Map<string, JLSession> = new Map();

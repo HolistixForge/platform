@@ -123,11 +123,13 @@ export const hostedWithServicesStory = (): Story => ({
   last_activity: new Date(),
   httpServices: [
     {
+      host: 'xxxxx',
       port: 8888,
       name: 'jupyterlab',
       location: 'xxxxx/jupyterlab',
     },
     {
+      host: 'xxxxx',
       port: 8282,
       name: 'postgres-admin',
       location: 'xxxxx/pg',

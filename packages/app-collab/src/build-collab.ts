@@ -30,7 +30,6 @@ import {
   Space_loadData,
   TSpaceSharedData,
   SpaceReducer,
-  SelectionReducer,
   TSpaceEvent,
 } from '@monorepo/space';
 import {
@@ -100,10 +99,7 @@ const chunks: TCollaborativeChunk[] = [
   },
   {
     sharedData: (st: SharedTypes) => Space_loadData(st),
-    reducers: (sd: TValidSharedData) => [
-      new SelectionReducer(),
-      new SpaceReducer(),
-    ],
+    reducers: (sd: TValidSharedData) => [new SpaceReducer()],
   },
   {
     sharedData: (st: SharedTypes) => Chat_loadData(st),

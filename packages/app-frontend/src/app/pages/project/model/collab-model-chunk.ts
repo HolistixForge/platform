@@ -1,18 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
-
-import { GanymedeApi } from '@monorepo/frontend-data';
 import {
-  TAwarenessUser,
   TSharedDataHook,
   useDispatcher as useDispatcherCollab,
-  useExtraContext,
   useSharedData as useSharedDataCollab,
   SharedTypes,
   TCollaborativeChunk,
   TValidSharedData,
 } from '@monorepo/collab-engine';
-import { serverUrl } from '@monorepo/api-fetch';
-import { TServer } from '@monorepo/servers';
 import { Core_loadData, TCoreSharedData, TCoreEvent } from '@monorepo/core';
 import {
   TabPayload,
@@ -31,11 +24,9 @@ import {
   TDemiurgeNotebookEvent,
   TJupyterSharedData,
   Jupyter_loadData,
-  injectWidgetsScripts,
-  TDKID,
+  Jupyter_loadExtraContext,
 } from '@monorepo/jupyter';
-
-import { JLsManager, TKernelPack } from '../jl-integration/jls-manager';
+import { GanymedeApi } from '@monorepo/frontend-data';
 
 //
 
@@ -58,15 +49,9 @@ export const useDispatcher = useDispatcherCollab<AllEvents>;
 
 //
 
-export const getCollabChunks = ({
-  gatewayFQDN,
-  api,
-  user,
-}: {
-  gatewayFQDN: string;
-  api: GanymedeApi;
-  user: TAwarenessUser;
-}): TCollaborativeChunk[] => {
+export const getCollabChunks = (
+  ganymedeApi: GanymedeApi
+): TCollaborativeChunk[] => {
   //
   return [
     {
@@ -92,34 +77,26 @@ export const getCollabChunks = ({
     {
       sharedData: (st: SharedTypes) => Jupyter_loadData(st),
       reducers: (sd: TValidSharedData) => [],
-      extraContext: (sd: TValidSharedData) => {
-        const onNewServer = (server: TServer) => {
-          if (server.type === 'jupyter') {
-            const service = server.httpServices.find(
-              (srv) => srv.name === 'jupyterlab'
+      extraContext: (sd: TValidSharedData) =>
+        Jupyter_loadExtraContext(
+          sd as TJupyterSharedData & TServersSharedData,
+          async (server) => {
+            const oauth_client = server.oauth.find(
+              (o) => o.service_name === 'jupyterlab'
             );
-            if (service) {
-              injectWidgetsScripts(
-                serverUrl({
-                  host: gatewayFQDN,
-                  location: service.location,
-                })
-              );
-            }
+            if (!oauth_client) throw new Error('jupyterlab not mapped');
+
+            let v;
+            do {
+              v = ganymedeApi._ts.get({
+                client_id: oauth_client.client_id,
+              });
+              if (v.promise) await v.promise;
+            } while (!v.value);
+
+            return v.value.token.access_token;
           }
-          return Promise.resolve();
-        };
-
-        const jlsManager = new JLsManager(
-          sd as TJupyterSharedData,
-          api,
-          gatewayFQDN,
-          onNewServer,
-          user
-        );
-
-        return { jlsManager };
-      },
+        ),
     },
   ];
 };
@@ -130,36 +107,3 @@ export const useSharedData: TSharedDataHook<AllSharedData> =
   useSharedDataCollab<AllSharedData>;
 
 //
-
-export const useJLsManager = () =>
-  useExtraContext<{ jlsManager: JLsManager }>();
-
-//
-
-export const useKernelPack = (dkid: TDKID): TKernelPack => {
-  const { jlsManager } = useJLsManager();
-
-  const [, _update] = useState({});
-
-  const update = useCallback(() => _update({}), []);
-
-  const kernelPack = jlsManager.getKernelPack(dkid);
-
-  useEffect(() => {
-    jlsManager.addListener(dkid, update);
-    return () => {
-      jlsManager.removeListener(dkid, update);
-    };
-  }, [dkid, jlsManager, update]);
-
-  return (
-    kernelPack || {
-      project_server_id: -1,
-      dkid,
-      state: 'server-stopped',
-      progress: 0,
-      widgetManager: null,
-      listeners: [],
-    }
-  );
-};

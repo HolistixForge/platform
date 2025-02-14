@@ -15,6 +15,25 @@ export type TOnNewDriverCb = (s: TJupyterServerData) => Promise<void>;
 
 //
 
+export const jupyterlabIsReachable = async (s: TServer) => {
+  const service = s.httpServices.find((serv) => serv.name === 'jupyterlab');
+  if (!service) return false;
+  const url = serverUrl({
+    host: service.host,
+    location: `${service.location}/api`,
+    port: 8888,
+  });
+  try {
+    const response = await fetch(url);
+    if (response.status !== 200) return false;
+  } catch (error) {
+    return false;
+  }
+  return true;
+};
+
+//
+
 export class DriversStoreBackend {
   //
   _drivers: Map<string, JupyterlabDriver> = new Map();
@@ -68,23 +87,14 @@ export class DriversStoreBackend {
     const r = dkidToServer(this._jupyterServers, dkid);
     if (!r) throw new Error(`kernel [${dkid}] is unknown`);
 
-    const { server, kernel } = r;
+    const server = this._servers.get(`${r.server.project_server_id}`);
+    if (!server)
+      throw new Error(`server [${r.server.project_server_id}] is unknown`);
 
-    /*
+    const { server: jupyterServer, kernel } = r;
+
     if (!jupyterlabIsReachable(server))
-      throw new Error(`jupyterlab not ready on server [${server_name}]`);
-
-    TODO_: replace by an api call to check is alive
-
-    export const jupyterlabIsReachable = (s: TJupyterServerInfo) => {
-      const isCon = s.last_watchdog_at && secondAgo(s.last_watchdog_at) < 30;
-      if (!isCon) return false;
-      const service = s.httpServices.find((serv) => serv.name === 'jupyterlab');
-      if (!service) return false;
-      return true;
-    };
-
-    */
+      throw new Error(`jupyterlab not ready on server [${server.server_name}]`);
 
     /*
      * get the corresponding driver, (dedicated jupyterlab server driver)
@@ -96,7 +106,7 @@ export class DriversStoreBackend {
 
     let driver = this._drivers.get(KEY);
     if (!driver) {
-      await this._onNewDriver?.(server);
+      await this._onNewDriver?.(jupyterServer);
       driver = new JupyterlabDriver(
         this.getServerSetting(server.project_server_id, token)
       );
@@ -104,7 +114,7 @@ export class DriversStoreBackend {
     }
 
     return {
-      server: server as TJupyterServerData,
+      server: jupyterServer as TJupyterServerData,
       kernel: kernel as TJupyterKernelInfo,
       driver,
     };

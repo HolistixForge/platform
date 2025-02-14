@@ -53,6 +53,7 @@ type TExtraArgs = {
   authorizationHeader: string;
   jwt: TJwtServer | TJwtUser;
   ip: string;
+  gatewayFQDN: string;
 };
 
 type ReducedEvents = TServerEvents | TCollabNativeEvent;
@@ -460,6 +461,7 @@ export class ServersReducer extends Reducer<
           )
         ) {
           httpServices.push({
+            host: g.extraArgs.gatewayFQDN,
             name: g.event.name,
             port: g.event.port,
             location: `${psid}/${g.event.name}`,

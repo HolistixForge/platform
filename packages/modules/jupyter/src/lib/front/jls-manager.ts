@@ -1,16 +1,15 @@
-import { GanymedeApi } from '@monorepo/frontend-data';
 import { serverUrl } from '@monorepo/api-fetch';
-import {
-  JupyterlabDriver,
-  BrowserWidgetManager,
-  TDKID,
-  TJupyterSharedData,
-  TJKID,
-  TJupyterServerData,
-  dkidToServer,
-} from '@monorepo/jupyter';
+import { TServer, TServersSharedData } from '@monorepo/servers';
+
 import { CollaborationProbe } from './jls-collaboration-probe';
-import { TAwarenessUser } from '@monorepo/collab-engine';
+import { dkidToServer, TDKID, TJKID } from '../jupyter-types';
+import { BrowserWidgetManager } from './browser-widget-manager';
+import { JupyterlabDriver } from '../driver';
+import { TJupyterSharedData } from '../jupyter-shared-model';
+import { jupyterlabIsReachable } from '../ds-backend';
+import { injectWidgetsScripts } from './widgets-js-dependencies';
+
+//
 
 type TKernelState =
   | 'server-stopped'
@@ -51,7 +50,7 @@ export type TKernelPack = {
   listeners: (() => void)[];
 };
 
-export type TOnNewDriverCb = (s: TJupyterServerData) => Promise<void>;
+export type TOnNewDriverCb = (s: TServer) => Promise<void>;
 
 /**
  * JupyterLabs Manager
@@ -60,12 +59,8 @@ export type TOnNewDriverCb = (s: TJupyterServerData) => Promise<void>;
 export class JLsManager {
   _drivers: Map<number, Promise<JupyterlabDriver>> = new Map();
   _kernelPacks: Map<TDKID, TKernelPack> = new Map();
-  _sd: TJupyterSharedData;
-  _gatewayFQDN: string;
-  _onNewDriver: TOnNewDriverCb;
-  _ganymedeApi: GanymedeApi;
-
-  _user: TAwarenessUser;
+  _sd: TJupyterSharedData & TServersSharedData;
+  getToken: (s: TServer) => Promise<string>;
   _collaborationProbes: Map<number, CollaborationProbe | 'pending'> = new Map();
 
   /**
@@ -75,18 +70,31 @@ export class JLsManager {
    * @param onNewDriver
    */
   constructor(
-    sd: TJupyterSharedData,
-    api: GanymedeApi,
-    gatewayFQDN: string,
-    onNewDriver: TOnNewDriverCb,
-    user: TAwarenessUser
+    sd: TJupyterSharedData & TServersSharedData,
+    getToken: (s: TServer) => Promise<string>
   ) {
     this._sd = sd;
-    this._ganymedeApi = api;
-    this._gatewayFQDN = gatewayFQDN;
-    this._onNewDriver = onNewDriver;
+    this.getToken = getToken;
     this._sd.jupyterServers.observe(() => this._onChange());
-    this._user = user;
+  }
+
+  //
+
+  private _onNewDriver(server: TServer) {
+    if (server.type === 'jupyter') {
+      const service = server.httpServices.find(
+        (srv) => srv.name === 'jupyterlab'
+      );
+      if (service) {
+        injectWidgetsScripts(
+          serverUrl({
+            host: service.host,
+            location: service.location,
+          })
+        );
+      }
+    }
+    return Promise.resolve();
   }
 
   /**
@@ -94,14 +102,16 @@ export class JLsManager {
    */
   private _onChange() {
     // for each kernel Pack,
-    this._kernelPacks.forEach((kp) => this._updateKernelPack(kp));
+    this._kernelPacks.forEach(async (kp) => await this._updateKernelPack(kp));
 
     // for each server
-    this._sd.jupyterServers.forEach(async (server) => {
-      // we only consider jupyterlab server
+    this._sd.jupyterServers.forEach(async (jupyterServer) => {
+      const server = this._sd.projectServers.get(
+        `${jupyterServer.project_server_id}`
+      );
 
       // if running and ready
-      if (jupyterlabIsReachable(server)) {
+      if (server && (await jupyterlabIsReachable(server))) {
         // create probe if necessary
         /*
           TODO_JL_PROBE: uncomment
@@ -118,10 +128,10 @@ export class JLsManager {
       // else
       else {
         // delete driver and probe for stopped servers
-        if (this._drivers.get(server.project_server_id))
-          this._drivers.delete(server.project_server_id);
-        if (this._collaborationProbes.get(server.project_server_id))
-          this._collaborationProbes.delete(server.project_server_id);
+        if (this._drivers.get(jupyterServer.project_server_id))
+          this._drivers.delete(jupyterServer.project_server_id);
+        if (this._collaborationProbes.get(jupyterServer.project_server_id))
+          this._collaborationProbes.delete(jupyterServer.project_server_id);
       }
     });
   }
@@ -130,18 +140,22 @@ export class JLsManager {
    * sync kernel pack state with shared data
    * @param kp
    */
-  private _updateKernelPack(kp: TKernelPack) {
+  private async _updateKernelPack(kp: TKernelPack) {
     /**
      *  check if still exist, else delete
      *    - server still exist ?
      *    - kernel still exist ?
      */
-    const s = this._sd.jupyterServers.get(`${kp.project_server_id}`);
-    if (!s) {
+    const server = this._sd.projectServers.get(`${kp.project_server_id}`);
+    const jupyterServer = this._sd.jupyterServers.get(
+      `${kp.project_server_id}`
+    );
+
+    if (!server || !jupyterServer) {
       this._disposeKernelPack(kp);
       this._kernelPacks.delete(kp.dkid);
     } else {
-      const k = s.kernels.find((k) => k.dkid === kp.dkid);
+      const k = jupyterServer.kernels.find((k) => k.dkid === kp.dkid);
       if (!k) {
         this._disposeKernelPack(kp);
         this._kernelPacks.delete(kp.dkid);
@@ -149,7 +163,7 @@ export class JLsManager {
         /**
          * kernel still exist
          */
-        if (jupyterlabIsReachable(s)) {
+        if (await jupyterlabIsReachable(server)) {
           // server is started
           if (lessThan(kp.state, 'server-started')) {
             // server has just started
@@ -162,7 +176,7 @@ export class JLsManager {
               kp.jkid = k.jkid;
               this._setState(kp, 'kernel-started');
               // get driver
-              this._getDriver(s).then((driver) => {
+              this._getDriver(server).then((driver) => {
                 this._setState(kp, 'driver-loaded');
                 // connect kernel
                 driver
@@ -199,30 +213,16 @@ export class JLsManager {
   /**
    *
    */
-  getServerSetting = async (
-    server: TJupyterServerData,
-    websocket?: boolean
-  ) => {
-    const oauth_client = server.oauth.find(
-      (o) => o.service_name === 'jupyterlab'
-    );
-    if (!oauth_client) throw new Error('jupyterlab not mapped');
-
+  getServerSetting = async (server: TServer, websocket?: boolean) => {
     const service = server.httpServices.find((s) => s.name === 'jupyterlab');
     if (!service) throw new Error('jupyterlab not mapped');
 
-    let v;
-
-    do {
-      v = this._ganymedeApi._ts.get({ client_id: oauth_client.client_id });
-      if (v.promise) await v.promise;
-    } while (!v.value);
-    const token = v.value.token.access_token;
+    const token = await this.getToken(server);
 
     return {
       baseUrl: serverUrl({
         location: service.location,
-        host: this._gatewayFQDN,
+        host: service.host,
         websocket,
       }),
       token,
@@ -234,13 +234,13 @@ export class JLsManager {
    * @param project_server_id
    * @returns
    */
-  private _getDriver(server: TJupyterServerData): Promise<JupyterlabDriver> {
+  private _getDriver(server: TServer): Promise<JupyterlabDriver> {
     const p = this._drivers.get(server.project_server_id);
     if (!p) {
       const np = new Promise<JupyterlabDriver>((resolve, reject) => {
         this._onNewDriver(server).then(() => {
           this.getServerSetting(server).then((ss) => {
-            const driver = new JupyterlabDriver(server.project_server_id, ss);
+            const driver = new JupyterlabDriver(ss);
             resolve(driver);
           });
         });
@@ -281,10 +281,10 @@ export class JLsManager {
    * build a new kernel pack if necessary
    * @param dkid the demiurge kernel id
    */
-  getKernelPack(dkid: TDKID): TKernelPack | undefined {
+  async getKernelPack(dkid: TDKID): Promise<TKernelPack | undefined> {
     const p = this._kernelPacks.get(dkid);
     if (!p) {
-      const r = dkidToServer(this._sd.projectServers, dkid);
+      const r = dkidToServer(this._sd.jupyterServers as any, dkid);
       if (r === undefined) return undefined;
       const { server } = r;
 
@@ -296,7 +296,7 @@ export class JLsManager {
         widgetManager: null,
         listeners: [],
       };
-      this._updateKernelPack(np);
+      await this._updateKernelPack(np);
       this._kernelPacks.set(dkid, np);
       return np;
     } else return p;

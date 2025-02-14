@@ -56,6 +56,7 @@ export type TServerPublishedInfo = {
   /** publish to Shared States Server by project server themselves */
   ip?: string;
   httpServices: {
+    host: string;
     port: number;
     name: string;
     location: string;

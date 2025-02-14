@@ -149,11 +149,7 @@ export const Project = ({
 
   const collabChunks = useMemo(() => {
     if (project) {
-      return getCollabChunks({
-        api: ganymedeApi,
-        gatewayFQDN: project.gatewayFQDN,
-        user,
-      });
+      return getCollabChunks(ganymedeApi);
     }
     return null;
   }, [ganymedeApi, project, user]);
