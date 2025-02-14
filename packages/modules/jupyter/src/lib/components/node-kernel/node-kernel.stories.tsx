@@ -48,7 +48,7 @@ const StoryWrapper = (
 //
 
 const meta = {
-  title: 'Nodes/Kernel',
+  title: 'Modules/Jupyter/Components/Node Kernel',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

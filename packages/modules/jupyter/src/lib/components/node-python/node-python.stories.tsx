@@ -42,7 +42,7 @@ const NodeStory = (
 //
 
 const meta = {
-  title: 'Nodes/Python',
+  title: 'Modules/Jupyter/Components/Node Python',
   component: NodeStory,
   parameters: {
     layout: 'centered',

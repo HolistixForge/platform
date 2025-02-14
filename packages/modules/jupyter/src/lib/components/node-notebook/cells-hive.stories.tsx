@@ -19,14 +19,14 @@ const makeCell = (id: number) => {
 //
 
 const StoryWrapper = (
-  props: Pick<CellsHiveProps, 'columnsNumber'> & { cellsNumber: number },
+  props: Pick<CellsHiveProps, 'columnsNumber'> & { cellsNumber: number }
 ) => {
   const [cells, setCells] = useState<Cells>([]);
   useEffect(() => {
     setCells(
       Array(props.cellsNumber)
         .fill(1)
-        .map((_, i) => makeCell(i)),
+        .map((_, i) => makeCell(i))
     );
   }, [props.cellsNumber]);
 
@@ -58,7 +58,7 @@ const StoryWrapper = (
 //
 
 const meta = {
-  title: 'Nodes/Notebook/Asset/CellsHive',
+  title: 'Modules/Jupyter/Components/Cells Hive',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

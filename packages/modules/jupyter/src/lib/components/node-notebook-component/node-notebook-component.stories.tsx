@@ -48,7 +48,7 @@ const NodeStory = (
 //
 
 const meta = {
-  title: 'Nodes/Notebook/Component',
+  title: 'Modules/Jupyter/Components/Node Notebook Component',
   component: NodeStory,
   parameters: {
     layout: 'centered',

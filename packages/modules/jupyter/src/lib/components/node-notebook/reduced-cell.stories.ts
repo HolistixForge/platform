@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { ReducedCell } from './reduced-cell';
 
 const meta = {
-  title: 'Nodes/Notebook/Asset/ReducedCells',
+  title: 'Modules/Jupyter/Components/Reduced Cells',
   component: ReducedCell,
   parameters: {
     layout: 'centered',

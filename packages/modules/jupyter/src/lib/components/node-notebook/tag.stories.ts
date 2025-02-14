@@ -5,7 +5,7 @@ import { playAdd__hover } from '@monorepo/ui-base';
 import { Tag } from './tag';
 
 const meta = {
-  title: 'Nodes/Notebook/Asset/Tag',
+  title: 'Modules/Jupyter/Components/Tag',
   component: Tag,
   parameters: {
     layout: 'centered',

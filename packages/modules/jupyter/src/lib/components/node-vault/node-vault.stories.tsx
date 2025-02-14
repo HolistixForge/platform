@@ -40,7 +40,7 @@ const StoryWrapper = (
 };
 
 const meta = {
-  title: 'Nodes/Vault',
+  title: 'Modules/Jupyter/Components/Node Vault',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

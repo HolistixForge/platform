@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { ControlBar } from './control-bar';
 
 const meta = {
-  title: 'Nodes/Notebook/Asset/ControlBar',
+  title: 'Modules/Jupyter/Components/Control Bar',
   component: ControlBar,
   parameters: {
     layout: 'centered',

@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { HiveTag } from './hive-tag';
 
 const meta = {
-  title: 'Nodes/Notebook/Asset/HiveTag',
+  title: 'Modules/Jupyter/Components/Hive Tag',
   component: HiveTag,
   parameters: {
     layout: 'centered',

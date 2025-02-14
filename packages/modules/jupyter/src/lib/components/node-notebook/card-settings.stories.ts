@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { CardSettings } from './card-settings';
 
 const meta = {
-  title: 'Nodes/Notebook/Asset/CardSettings',
+  title: 'Modules/Jupyter/Components/Card Settings',
   component: CardSettings,
   parameters: {
     layout: 'centered',

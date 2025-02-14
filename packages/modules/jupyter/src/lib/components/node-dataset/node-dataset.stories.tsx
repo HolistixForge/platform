@@ -42,7 +42,7 @@ const StoryWrapper = (
 //
 
 const meta = {
-  title: 'Nodes/Dataset',
+  title: 'Modules/Jupyter/Components/Node Dataset',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

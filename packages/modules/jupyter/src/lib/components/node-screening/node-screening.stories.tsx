@@ -42,7 +42,7 @@ const StoryWrapper = (
 //
 
 const meta = {
-  title: 'Nodes/Screening',
+  title: 'Modules/Jupyter/Components/Node Screening',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

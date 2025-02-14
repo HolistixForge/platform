@@ -19,7 +19,7 @@ const StoryWrapper = ({
 };
 
 const meta = {
-  title: 'internals/MenuExpanded',
+  title: 'Modules/Jupyter/Components/MenuExpanded',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

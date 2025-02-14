@@ -21,7 +21,7 @@ const StoryWrapper = (props: CodeEditorMonacoProps) => {
 //
 
 const meta = {
-  title: 'internals/Code Editor',
+  title: 'Modules/Jupyter/Components/Code Editor',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { DisplayMenu } from './display-menu';
 
 const meta = {
-  title: 'Nodes/Notebook/Asset/DisplayMenu',
+  title: 'Modules/Jupyter/Components/Display Menu',
   component: DisplayMenu,
   parameters: {
     layout: 'centered',

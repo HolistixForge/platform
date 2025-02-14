@@ -65,7 +65,7 @@ const StoryWrapper = (
 //
 
 const meta = {
-  title: 'Nodes/Terminal',
+  title: 'Modules/Jupyter/Components/Node Terminal',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

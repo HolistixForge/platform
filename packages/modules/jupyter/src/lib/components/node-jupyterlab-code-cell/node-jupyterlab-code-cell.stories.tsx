@@ -64,7 +64,7 @@ const StoryWrapper = (
 //
 
 const meta = {
-  title: 'Nodes/Jupyter Lab Code Cell',
+  title: 'Modules/Jupyter/Components/Node Jupyter Lab Code Cell',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

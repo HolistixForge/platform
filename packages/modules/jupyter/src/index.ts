@@ -1,3 +1,5 @@
+import './lib/index.scss';
+
 export type { TDemiurgeNotebookEvent } from './lib/jupyter-events';
 
 export type { TJupyterSharedData } from './lib/jupyter-shared-model';
