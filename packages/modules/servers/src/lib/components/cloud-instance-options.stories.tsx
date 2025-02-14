@@ -40,7 +40,7 @@ const StoryWrapper = () => {
 //
 
 const meta = {
-  title: 'Forms/CloudInstanceOptions',
+  title: 'Modules/Servers/Forms/Cloud Instance Options',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

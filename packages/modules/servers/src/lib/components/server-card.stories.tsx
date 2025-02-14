@@ -31,7 +31,7 @@ const StoryWrapper = (
 //
 
 const meta = {
-  title: 'Mvp/Components/server-card',
+  title: 'Modules/Servers/Components/Server Card',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

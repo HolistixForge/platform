@@ -49,7 +49,7 @@ const StoryWrapper = () => {
 //
 
 const meta = {
-  title: 'Forms/DockerOptions',
+  title: 'Modules/Servers/Forms/Docker Options',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

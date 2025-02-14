@@ -67,7 +67,7 @@ const StoryWrapper = (
 //
 
 const meta = {
-  title: 'Nodes/Server',
+  title: 'Modules/Servers/Components/Node Server',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

@@ -44,7 +44,7 @@ const StoryWrapper = (
 //
 
 const meta = {
-  title: 'Nodes/Volume',
+  title: 'Modules/Servers/Components/Node Volume',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

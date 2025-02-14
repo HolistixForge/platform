@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { StatusLed } from './status-led';
 
 const meta = {
-  title: 'Mvp/Assets/warning',
+  title: 'Modules/Servers/Components/Led',
   component: StatusLed,
   parameters: {
     layout: 'centered',
