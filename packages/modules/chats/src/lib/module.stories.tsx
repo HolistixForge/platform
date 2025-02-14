@@ -68,6 +68,8 @@ const makeLoremIpsum = () => {
   return result.charAt(0).toUpperCase() + result.slice(1);
 };
 
+//
+
 const StoryWrapper = () => {
   const dispatcher = useMemo(() => {
     // fake users messages
@@ -170,7 +172,7 @@ const ChatsGrid = () => {
 //
 
 const meta = {
-  title: 'Module',
+  title: 'Module/Chats/Main',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

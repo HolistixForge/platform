@@ -31,7 +31,7 @@ const StoryWrapper = (
 //
 
 const meta = {
-  title: 'Nodes/Chat Anchor',
+  title: 'Module/Chats/Components/Chat Anchor',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',
@@ -57,7 +57,7 @@ type Story = StoryObj<typeof StoryWrapper>;
 
 export const Closed_Default: Story = {
   args: {
-    nodeId: 'node-1',
+    nodeId: 'node-4',
     status: 'default',
     showSideComment: true,
     isOpened: false,
@@ -68,7 +68,7 @@ export const Closed_Default: Story = {
 
 export const Closed_New: Story = {
   args: {
-    nodeId: 'node-1',
+    nodeId: 'node-4',
     status: 'new',
     showSideComment: true,
     isOpened: false,
@@ -79,7 +79,7 @@ export const Closed_New: Story = {
 
 export const Closed_Resolved: Story = {
   args: {
-    nodeId: 'node-1',
+    nodeId: 'node-4',
     status: 'resolved',
     showSideComment: true,
     isOpened: false,
@@ -90,7 +90,7 @@ export const Closed_Resolved: Story = {
 
 export const Opened_Default: Story = {
   args: {
-    nodeId: 'node-1',
+    nodeId: 'node-4',
     status: 'default',
     showSideComment: true,
     isOpened: true,
@@ -101,7 +101,7 @@ export const Opened_Default: Story = {
 
 export const Opened_New: Story = {
   args: {
-    nodeId: 'node-1',
+    nodeId: 'node-4',
     status: 'new',
     showSideComment: true,
     isOpened: true,
@@ -112,7 +112,7 @@ export const Opened_New: Story = {
 
 export const Opened_Resolved: Story = {
   args: {
-    nodeId: 'node-1',
+    nodeId: 'node-4',
     status: 'resolved',
     showSideComment: true,
     isOpened: true,

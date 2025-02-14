@@ -33,6 +33,7 @@ export class SpaceState extends Listenable {
     const connector = node.connectors.find(
       (c) => c.connectorName === connectorName
     );
+
     if (!connector) return undefined;
 
     let cv = this.state.connectorViews

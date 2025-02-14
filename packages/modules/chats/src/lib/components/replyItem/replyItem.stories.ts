@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { ReplyItem } from './replyItem';
 
 const meta = {
-  title: 'ChatBox/Components/ReplyItem',
+  title: 'Module/Chats/Components/Reply Item',
   component: ReplyItem,
   parameters: {
     layout: 'centered',

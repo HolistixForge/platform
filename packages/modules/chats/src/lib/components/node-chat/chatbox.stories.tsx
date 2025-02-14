@@ -48,7 +48,7 @@ const StoryWrapper = (
 //
 
 const meta = {
-  title: 'ChatBox',
+  title: 'Module/Chats/Components/Chat Box',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',
