@@ -24,6 +24,8 @@ export class LocalSpaceActionsDispatcher extends SpaceActionsDispatcher {
 
     gv.edges = graph1.edges;
     gv.nodeViews = graph1.nodeViews;
+    gv.graph.nodes = graph1.nodeViews;
+    gv.graph.edges = [...gv.edges];
 
     this.ss.setState(gv, this.nodes);
 

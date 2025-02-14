@@ -279,7 +279,7 @@ export const InputsOutputs = ({
                   name={p.pinName}
                   type={type}
                   position={type === 'target' ? Position.Top : Position.Bottom}
-                  id={p.pinName}
+                  id={p.id}
                   isConnectable={!p.disabled}
                   onMouseOver={handleMouseOver}
                   onMouseLeave={handleMouseLeave}

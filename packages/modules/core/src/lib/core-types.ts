@@ -6,6 +6,7 @@ export type TPosition = {
 };
 
 export type TPin = {
+  id: string;
   pinName: string;
   disabled?: boolean;
   type?: 'in' | 'out' | 'inout';
