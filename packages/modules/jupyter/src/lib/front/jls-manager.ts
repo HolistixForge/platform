@@ -219,14 +219,18 @@ export class JLsManager {
 
     const token = await this.getToken(server);
 
-    return {
+    const r = {
       baseUrl: serverUrl({
         location: service.location,
         host: service.host,
+        port: service.port,
+        ssl: service.secure,
         websocket,
       }),
       token,
     };
+
+    return r;
   };
 
   /**

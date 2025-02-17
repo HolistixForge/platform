@@ -14,17 +14,20 @@ import { TServer } from '@monorepo/servers';
 export type TOnNewDriverCb = (s: TJupyterServerData) => Promise<void>;
 
 //
-
 export const jupyterlabIsReachable = async (s: TServer) => {
   const service = s.httpServices.find((serv) => serv.name === 'jupyterlab');
   if (!service) return false;
   const url = serverUrl({
     host: service.host,
     location: `${service.location}/api`,
-    port: 8888,
+    port: service.port,
+    ssl: service.secure,
   });
   try {
-    const response = await fetch(url);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1000);
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
     if (response.status !== 200) return false;
   } catch (error) {
     return false;

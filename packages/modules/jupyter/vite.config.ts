@@ -55,7 +55,12 @@ export default defineConfig({
         '@jupyter-widgets',
       ],
       */
-      external: (id) => !id.startsWith('.') && !id.startsWith('/'),
+      external: (id) => {
+        return !id.startsWith('.') && !id.startsWith('/');
+      },
     },
+  },
+  define: {
+    __webpack_public_path__: '""',
   },
 });

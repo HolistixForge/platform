@@ -5,7 +5,7 @@ export type { TDemiurgeNotebookEvent } from './lib/jupyter-events';
 export type { TJupyterSharedData } from './lib/jupyter-shared-model';
 export {
   Jupyter_loadData,
-  Jupyter_loadExtraContext,
+  Jupyter_Load_Frontend_ExtraContext,
 } from './lib/jupyter-shared-model';
 
 export { JupyterReducer } from './lib/jupyter-reducer';

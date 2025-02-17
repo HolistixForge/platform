@@ -28,7 +28,7 @@ export const Jupyter_loadData = (st: SharedTypes): TJupyterSharedData => {
 
 //
 
-export const Jupyter_loadExtraContext = (
+export const Jupyter_Load_Frontend_ExtraContext = (
   sd: TJupyterSharedData & TServersSharedData,
   getToken: (s: TServer) => Promise<string>
 ): { jlsManager: JLsManager } => {

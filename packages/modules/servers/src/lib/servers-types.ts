@@ -60,6 +60,7 @@ export type TServerPublishedInfo = {
     port: number;
     name: string;
     location: string;
+    secure?: boolean;
   }[];
   /** last time server call api (network watchdog) */
   last_watchdog_at: string | null;
