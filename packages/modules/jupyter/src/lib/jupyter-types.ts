@@ -61,5 +61,6 @@ export const dkidToServer = (
 export type TCell = {
   cellId: string;
   busy: boolean;
-  output: IOutput[];
+  dkid: TDKID;
+  outputs: IOutput[];
 };

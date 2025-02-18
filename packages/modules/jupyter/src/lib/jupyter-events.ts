@@ -29,7 +29,7 @@ export type TEventClearNodeOutput = {
 };
 
 export type TEventKernelStarted = {
-  type: 'jupyter:kernel-started';
+  type: 'jupyter:_kernel-started_';
   dkid: TDKID;
   jkid: TJKID;
 };
@@ -56,6 +56,11 @@ export type TEventDeleteKernel = {
   dkid: TDKID;
 };
 
+export type TEventNewCell = {
+  type: 'jupyter:new-cell';
+  dkid: TDKID;
+};
+
 export type TDemiurgeNotebookEvent =
   | TEventExecutePythonNode
   | TEventPythonNodeOutput
@@ -64,4 +69,5 @@ export type TDemiurgeNotebookEvent =
   | TEventClearNodeOutput
   | TEventNewKernel
   | TEventStopKernel
-  | TEventDeleteKernel;
+  | TEventDeleteKernel
+  | TEventNewCell;

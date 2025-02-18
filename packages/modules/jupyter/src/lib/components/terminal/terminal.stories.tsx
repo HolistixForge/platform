@@ -8,14 +8,10 @@ import {
   TValidSharedData,
   SharedTypes,
   Dispatcher,
-  useDispatcher,
-  useSharedData,
-  SharedMap,
 } from '@monorepo/collab-engine';
 import {
   Servers_loadData,
   ServersReducer,
-  TServer,
   TServersSharedData,
 } from '@monorepo/servers';
 
@@ -26,7 +22,7 @@ import {
 } from '../../jupyter-shared-model';
 import { JupyterReducer } from '../../jupyter-reducer';
 import { JupyterTerminal } from './terminal';
-import { TEventNewServer } from '../../../../../servers/dist/lib/servers-events';
+import { useInjectServer } from './test-use-inject-server';
 
 //
 
@@ -57,7 +53,7 @@ const chunks: TCollaborativeChunk[] = [
 
 const StoryWrapper = () => {
   const dispatcher = useMemo(() => {
-    return new Dispatcher({});
+    return new Dispatcher();
   }, []);
 
   return (
@@ -79,53 +75,16 @@ const StoryWrapper = () => {
 };
 
 //
+
 const Terminals = () => {
-  const dispatcher = useDispatcher<TEventNewServer>();
-  const servers: SharedMap<TServer> = useSharedData<TServersSharedData>(
-    ['projectServers'],
-    (sd) => sd.projectServers
-  );
-
-  console.log(servers);
-
-  const arr = Array.from(servers.values());
-
-  const onNew = () => {
-    const hostname = '127.0.0.1';
-
-    /*
-     * Direct brutal injection of server data !
-     */
-
-    dispatcher._sharedTypes.transaction(async () => {
-      servers.set(`${arr.length}`, {
-        project_server_id: arr.length,
-        project_id: 0,
-        server_name: `server ${arr.length}`,
-        image_id: 0,
-        host_user_id: null,
-        oauth: [],
-        location: 'none',
-        httpServices: [
-          {
-            name: 'jupyterlab',
-            host: hostname,
-            port: 36666,
-            location: '',
-            secure: false,
-          },
-        ],
-        last_watchdog_at: null,
-        last_activity: null,
-        ec2_instance_state: null,
-        type: '',
-      });
-    });
-  };
+  const { servers } = useInjectServer();
 
   return (
     <>
-      <p>To test this story, first launch a jupyter docker container :</p>
+      <p>
+        To test this story, first launch a jupyter docker container, then
+        refresh :
+      </p>
       <p
         style={{
           fontFamily: 'monospace',
@@ -139,29 +98,7 @@ const Terminals = () => {
         start-notebook.sh --NotebookApp.allow_origin='*'
         --NotebookApp.token='My_Super_Test_Story' --debug
       </p>
-      <button
-        onClick={onNew}
-        style={{
-          backgroundColor: '#4CAF50',
-          border: 'none',
-          color: 'white',
-          padding: '12px 24px',
-          textAlign: 'center',
-          textDecoration: 'none',
-          display: 'inline-block',
-          fontSize: '16px',
-          margin: '4px 2px',
-          cursor: 'pointer',
-          borderRadius: '4px',
-          fontWeight: 'bold',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-          transition: 'background-color 0.3s',
-        }}
-        onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#45a049')}
-        onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#4CAF50')}
-      >
-        Load Terminal
-      </button>
+
       {Array.from(servers.values()).map((server) => (
         <JupyterTerminal
           key={server.project_server_id}

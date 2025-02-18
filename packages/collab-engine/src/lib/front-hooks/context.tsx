@@ -134,7 +134,7 @@ export const CollaborativeContext = ({
     const extraContext = {};
     const loadChunks = compileChunks(collabChunks, dispatcher, extraContext);
     const sharedData = loadChunks(sharedTypes);
-    dispatcher.bindData(sharedTypes, sharedData);
+    dispatcher.bindData(sharedTypes, sharedData, extraContext);
 
     setState({ built: true });
 

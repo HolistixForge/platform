@@ -8,6 +8,9 @@ export type TEventNewServer = {
     viewId: string;
     position: { x: number; y: number };
   };
+  result?: {
+    project_server_id: number;
+  };
 };
 
 export type TEventDeleteServer = {

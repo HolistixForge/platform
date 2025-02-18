@@ -28,7 +28,11 @@ export { TSSS_Server_to_TServerComponentProps } from './lib/servers-types';
 
 export { StatusLed } from './lib/components/status-led';
 
-export type { TServerEvents, TEventMountVolume } from './lib/servers-events';
+export type {
+  TServerEvents,
+  TEventMountVolume,
+  TEventNewServer,
+} from './lib/servers-events';
 
 export { ServerCard } from './lib/components/server-card';
 export { NodeServer } from './lib/components/node-server/node-server';

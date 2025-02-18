@@ -39,7 +39,6 @@ const definedThemes = new Map<string, TTheme>();
 //
 
 const CodeEditorMonaco = ({
-  id,
   code,
   onMount,
   onFocus,

@@ -27,6 +27,6 @@ export { dkidToServer } from './lib/jupyter-types';
 
 export { NodeTerminal } from './lib/components/node-terminal/node-terminal';
 export { KernelStateIndicator } from './lib/components/node-kernel/kernel-state-indicator';
-export { NodeJupyterlabCodeCell } from './lib/components/node-jupyterlab-code-cell/node-jupyterlab-code-cell';
+export { Cell, NodeCell } from './lib/components/code-cell/cell';
 export { NodeKernel } from './lib/components/node-kernel/node-kernel';
 export { JupyterTerminal } from './lib/components/terminal/terminal';

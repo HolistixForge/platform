@@ -3,7 +3,6 @@ import { lazy, Suspense } from 'react';
 const LazyCodeEditorMonaco = lazy(() => import('./code-editor-monaco'));
 
 export type CodeEditorMonacoProps = {
-  id: string;
   code: string;
   onMount?: (editor: any) => void;
   onFocus?: () => void;

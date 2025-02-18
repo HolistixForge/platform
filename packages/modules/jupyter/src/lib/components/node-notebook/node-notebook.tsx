@@ -158,7 +158,7 @@ export const NodeNotebook = ({
                     className="w-full h-full rounded-[4px] bg-white bg-opacity-10"
                     style={{ overflow: 'hidden' }}
                   >
-                    <CodeEditorMonaco id={'xxxx'} code={code} />
+                    <CodeEditorMonaco code={code} />
                   </div>
                 </div>
               ) : (
@@ -188,7 +188,7 @@ export const NodeNotebook = ({
                     className="w-full rounded-[4px] bg-white bg-opacity-10"
                     style={{ overflow: 'hidden' }}
                   >
-                    <CodeEditorMonaco id={'xxxx'} code={code} />
+                    <CodeEditorMonaco code={code} />
                   </div>
                 </>
               )}

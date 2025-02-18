@@ -17,15 +17,18 @@ export class Dispatcher<TE, Targs> {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   _sharedData: TValidSharedData = null!;
   _reducers: Array<ValidReducer<Targs>> = [];
-  _dispatcherExtraArgs: Partial<Targs>;
+  _dispatcherExtraArgs: Partial<Targs> = {};
 
-  constructor(args: Partial<Targs>) {
-    this._dispatcherExtraArgs = args;
-  }
+  constructor() {}
 
-  bindData(sharedTypes: SharedTypes, sharedData: TValidSharedData) {
+  bindData(
+    sharedTypes: SharedTypes,
+    sharedData: TValidSharedData,
+    extraArgs: Partial<Targs>
+  ) {
     this._sharedData = sharedData;
     this._sharedTypes = sharedTypes;
+    this._dispatcherExtraArgs = extraArgs;
   }
 
   async dispatch(event: TE, eventExtraArgs?: Partial<Targs>): Promise<void> {
@@ -72,7 +75,7 @@ export class BrowserDispatcher<TE> extends Dispatcher<
   _fetch: ApiFetch;
 
   constructor(fetch: ApiFetch) {
-    super({});
+    super();
     this._fetch = fetch;
   }
 

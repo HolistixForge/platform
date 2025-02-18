@@ -23,7 +23,6 @@ export const JupyterCollaborationProbes = ({
       <>
         <div style={{ width: '100%', height: '500px' }}>
           <CodeEditorMonaco
-            id={''}
             code={''}
             onMount={(editor) => {
               jlsManager.bindCellule(

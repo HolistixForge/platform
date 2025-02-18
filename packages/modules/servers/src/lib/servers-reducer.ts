@@ -50,10 +50,10 @@ import {
 
 type TExtraArgs = {
   toGanymede: <T>(r: TMyfetchRequest) => Promise<T>;
-  authorizationHeader: string;
-  jwt: TJwtServer | TJwtUser;
-  ip: string;
-  gatewayFQDN: string;
+  authorizationHeader: string; // used for all ganymede calls
+  jwt: TJwtServer | TJwtUser; // used for: map http service, server watchdog, server activity
+  ip: string; // used for: map http service, server watchdog
+  gatewayFQDN: string; // used for: map http service
 };
 
 type ReducedEvents = TServerEvents | TCollabNativeEvent;
@@ -175,6 +175,11 @@ export class ServersReducer extends Reducer<
         `${projectServer.project_server_id}`,
         projectServer
       );
+
+      // pass id to following reducers
+      g.event.result = {
+        project_server_id: projectServer.project_server_id,
+      };
 
       g.dispatcher.dispatch({
         type: 'core:new-node',

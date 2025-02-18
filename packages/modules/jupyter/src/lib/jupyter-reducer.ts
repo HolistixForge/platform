@@ -3,6 +3,7 @@ import { TMyfetchRequest, makeUuid } from '@monorepo/simple-types';
 import { NotFoundException } from '@monorepo/log';
 import { TServersSharedData, projectServerNodeId } from '@monorepo/servers';
 import { TEventDeleteNode, TEventNewNode } from '@monorepo/core';
+import { TEventNewServer } from '@monorepo/servers';
 
 import {
   TEventKernelStarted,
@@ -13,6 +14,7 @@ import {
   TEventExecutePythonNode,
   TEventPythonNodeOutput,
   TEventStartKernel,
+  TEventNewCell,
   TEventNewKernel,
 } from './jupyter-events';
 import { TDKID, dkidToServer } from './jupyter-types';
@@ -28,7 +30,7 @@ export type TExtraArgs = {
   authorizationHeader: string;
 };
 
-type ReducedEvents = TDemiurgeNotebookEvent;
+type ReducedEvents = TDemiurgeNotebookEvent | TEventNewServer;
 
 type DispatchedEvents =
   | TDemiurgeNotebookEvent
@@ -38,6 +40,10 @@ type DispatchedEvents =
 type UsedSharedData = TServersSharedData & TJupyterSharedData;
 
 type Ra<T> = ReduceArgs<UsedSharedData, T, DispatchedEvents, TExtraArgs>;
+
+//
+
+const JUPYTER_IMAGE_IDS = [2, 3];
 
 /**
  *
@@ -76,13 +82,17 @@ export class JupyterReducer extends Reducer<
 
   reduce(g: Ra<ReducedEvents>): Promise<void> {
     switch (g.event.type) {
+      case 'servers:new':
+        return this._newServer(g as Ra<TEventNewServer>);
+      case 'jupyter:new-cell':
+        return this._newCell(g as Ra<TEventNewCell>);
       case 'jupyter:execute-python-node':
         return this._execute(g as Ra<TEventExecutePythonNode>);
       case 'jupyter:python-node-output':
         return this._nodeOutput(g as Ra<TEventPythonNodeOutput>);
       case 'jupyter:start-kernel':
         return this._startKernel(g as Ra<TEventStartKernel>);
-      case 'jupyter:kernel-started':
+      case 'jupyter:_kernel-started_':
         return this._kernelStarted(g as Ra<TEventKernelStarted>);
       case 'jupyter:clear-node-output':
         return this._clearOutput(g as Ra<TEventClearNodeOutput>);
@@ -100,13 +110,33 @@ export class JupyterReducer extends Reducer<
 
   //
 
+  async _newServer(g: Ra<TEventNewServer>): Promise<void> {
+    const r = g.event.result;
+    if (r && JUPYTER_IMAGE_IDS.includes(g.event.imageId))
+      g.sd.jupyterServers.set(`${r.project_server_id}`, {
+        project_server_id: r.project_server_id,
+        kernels: [],
+      });
+  }
+
+  //
+
+  _newCell(g: Ra<TEventNewCell>): Promise<void> {
+    const dkid = g.event.dkid;
+    const cellId = makeUuid();
+    g.sd.cells.set(cellId, { dkid, cellId, busy: false, outputs: [] });
+    return Promise.resolve();
+  }
+
+  //
+
   async _execute(g: Ra<TEventExecutePythonNode>): Promise<void> {
     const cell = g.sd.cells.get(g.event.cellId);
     if (cell) {
       g.sd.cells.set(g.event.cellId, {
         ...cell,
         busy: true,
-        output: [],
+        outputs: [],
       });
 
       const { kernel, driver } = await this._getDriver(g);
@@ -139,7 +169,7 @@ export class JupyterReducer extends Reducer<
     if (cell)
       g.sd.cells.set(g.event.cellId, {
         ...cell,
-        output: g.event.output,
+        outputs: g.event.output,
         busy: false,
       });
     return Promise.resolve();
@@ -152,7 +182,7 @@ export class JupyterReducer extends Reducer<
     if (cell)
       g.sd.cells.set(g.event.cellId, {
         ...cell,
-        output: [],
+        outputs: [],
         busy: false,
       });
     return Promise.resolve();
@@ -161,13 +191,12 @@ export class JupyterReducer extends Reducer<
   //
 
   async _startKernel(g: Ra<TEventStartKernel>): Promise<void> {
-    const { server, kernel, driver } = await this._getDriver(g);
-    console.log('_startKernel', { server, kernel, driver });
+    const { kernel, driver } = await this._getDriver(g);
     if (kernel.jkid) throw new Error('kernel started yet');
     return driver.newKernel('python3').then((jkid) => {
       if (jkid)
         g.dispatcher.dispatch({
-          type: 'jupyter:kernel-started',
+          type: 'jupyter:_kernel-started_',
           dkid: g.event.dkid,
           jkid,
         });
