@@ -14,25 +14,39 @@ import { TServer } from '@monorepo/servers';
 export type TOnNewDriverCb = (s: TJupyterServerData) => Promise<void>;
 
 //
-export const jupyterlabIsReachable = async (s: TServer) => {
+
+const serviceUrl = (s: TServer) => {
   const service = s.httpServices.find((serv) => serv.name === 'jupyterlab');
   if (!service) return false;
-  const url = serverUrl({
-    host: service.host,
-    location: `${service.location}/api`,
+
+  const host = process.env.GATEWAY ? s.ip : service.host;
+  if (!host) return false;
+
+  return serverUrl({
+    host,
+    location: service.location,
     port: service.port,
     ssl: service.secure,
   });
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 1000);
-    const response = await fetch(url, { signal: controller.signal });
-    clearTimeout(timeoutId);
-    if (response.status !== 200) return false;
-  } catch (error) {
-    return false;
-  }
-  return true;
+};
+
+//
+
+export const jupyterlabIsReachable = async (s: TServer) => {
+  let r = false;
+  const url = serviceUrl(s);
+  if (url)
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1000);
+      const response = await fetch(`${url}api`, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (response.status === 200) r = true;
+    } catch (error) {
+      //
+    }
+  // console.log('jupyterlabIsReachable', url, r);
+  return r;
 };
 
 //
@@ -61,21 +75,13 @@ export class DriversStoreBackend {
 
   getServerSetting(psid: number, token: string): TServerSettings {
     const server = this._servers.get(`${psid}`);
-    if (server && server.ip) {
-      const service = server.httpServices.find(
-        (srv) => srv.name === 'jupyterlab'
-      );
-      if (service) {
-        const baseUrl = serverUrl({
-          host: server.ip,
-          location: service.location,
-          port: 8888,
-        });
-        return {
-          baseUrl,
-          token,
-        };
-      }
+    if (server) {
+      const url = serviceUrl(server);
+      if (!url) throw new Error('no such server or is down');
+      return {
+        baseUrl: url,
+        token,
+      };
     }
     throw new Error('no such server or is down');
   }

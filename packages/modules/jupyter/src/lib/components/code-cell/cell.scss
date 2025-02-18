@@ -1,14 +1,13 @@
-.node-jupyterlab-code-cell {
+.jupyterlab-code-cell {
   --jp-widgets-label-color: var(--color-code-output-text);
 
-  .node-wrapper-body.jupyterlab-code-cell {
-    background: var(--color-node-background);
-    width: 350px;
-    height: 200px;
-    position: relative;
+  background: var(--color-node-background);
+  width: 100%;
+  height: 100%;
+  position: relative;
 
-    .cell-output {
-      /*
+  .cell-output {
+    /*
         --fit-tx: 0px;
         --fit-ty: 0px;
         --fit-scale: 1;
@@ -19,15 +18,14 @@
           z-index: 10000;
         }
         */
-      width: calc(100% - 20px);
-      margin: 0 10px 5px 10px;
-      background-color: var(--c-gray-12);
-      color: var(--color-code-output-text);
-      border: solid 1px var(--c-gray-10);
-      padding: 0 5px;
-      border-radius: 4px;
-      box-sizing: border-box;
-    }
+    width: calc(100% - 20px);
+    margin: 0 10px 5px 10px;
+    background-color: var(--c-gray-12);
+    color: var(--color-code-output-text);
+    border: solid 1px var(--c-gray-10);
+    padding: 0 5px;
+    border-radius: 4px;
+    box-sizing: border-box;
   }
 
   &.busy {
@@ -68,16 +66,16 @@
       }
     }
   }
+}
 
-  /* python output */
-  .jp-RenderedText pre {
-    color: var(--color-code-output-text);
-  }
-  .jupyter-output-area-box {
-    border: solid 1px transparent;
-    .jupyter-output-area-box-debug {
-      font-size: 13px;
-      color: var(--color-debug);
-    }
+/* python output */
+.jp-RenderedText pre {
+  color: var(--color-code-output-text);
+}
+.jupyter-output-area-box {
+  border: solid 1px transparent;
+  .jupyter-output-area-box-debug {
+    font-size: 13px;
+    color: var(--color-debug);
   }
 }

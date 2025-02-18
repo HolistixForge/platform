@@ -27,6 +27,8 @@ import CodeEditorMonaco from '../code-editor-monaco/code-editor-monaco';
 import { BrowserWidgetManager } from '../../front/browser-widget-manager';
 import { KernelStateIndicator } from '../node-kernel/kernel-state-indicator';
 
+import './cell.scss';
+
 //
 
 export const useCellLogic = ({
@@ -141,7 +143,7 @@ const CellInternal = (props: ReturnType<typeof useCellLogic>) => {
   const { handleEditorMount } = props;
   return (
     <>
-      <div className="node-wrapper-body jupyterlab-code-cell">
+      <div className={`jupyterlab-code-cell ${props.cell.busy && 'busy'}`}>
         <CodeEditorMonaco code={''} onMount={handleEditorMount} />
       </div>
       <CellOutput {...props} />
@@ -245,9 +247,7 @@ export const NodeCell = ({ cellId }: { cellId: string }) => {
   });
 
   return (
-    <div
-      className={`common-node node-jupyterlab-code-cell ${cell.busy && 'busy'}`}
-    >
+    <div className={`common-node`}>
       <InputsAndOutputs id={id} />
       <NodeHeader
         nodeType="python"

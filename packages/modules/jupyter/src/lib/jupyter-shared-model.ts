@@ -51,13 +51,14 @@ export const useKernelPack = (dkid: TDKID): TKernelPack => {
   const { jlsManager } = useJLsManager();
 
   const [, _update] = useState({});
-
   const update = useCallback(() => _update({}), []);
 
-  jlsManager.getKernelPack(dkid).then((kp) => setKernelPack(kp));
+  jlsManager.getKernelPack(dkid).then((kp) => {
+    setKernelPack(kp);
+    jlsManager.addListener(dkid, update);
+  });
 
   useEffect(() => {
-    jlsManager.addListener(dkid, update);
     return () => {
       jlsManager.removeListener(dkid, update);
     };

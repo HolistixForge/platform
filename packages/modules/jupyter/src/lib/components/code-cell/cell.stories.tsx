@@ -14,8 +14,8 @@ import {
 import {
   Servers_loadData,
   ServersReducer,
-  TEventNewServer,
-  TServer,
+  TG_Server,
+  TServerEvents,
   TServersSharedData,
 } from '@monorepo/servers';
 import { TMyfetchRequest } from '@monorepo/simple-types';
@@ -37,13 +37,14 @@ Logger.setPriority(7);
 //
 
 const MOCK_PROJECT_ID = 0;
+const MOCK_PROJECT_SERVER_ID = 0;
 
 const chunks: TCollaborativeChunk[] = [
   {
     sharedData: (st: SharedTypes) => Servers_loadData(st),
-    reducers: (sd: TValidSharedData) => [new ServersReducer(sd as any)],
+    reducers: (sd: TValidSharedData) => [new ServersReducer(null as any)],
     extraContext: (sd: TValidSharedData) => {
-      let mock_servers: TServer[] = [];
+      let mock_servers: TG_Server[] = [];
       return {
         // a mock toGanymede that returns a new server id to allow servers:new-server to work
         toGanymede: async (req: TMyfetchRequest) => {
@@ -61,19 +62,6 @@ const chunks: TCollaborativeChunk[] = [
               host_user_id: null,
               oauth: [],
               location: 'none',
-              httpServices: [
-                {
-                  name: 'jupyterlab',
-                  host: '127.0.0.1',
-                  port: 36666,
-                  location: '',
-                  secure: false,
-                },
-              ],
-              last_watchdog_at: null,
-              last_activity: null,
-              ec2_instance_state: null,
-              type: '',
             });
             return {
               _0: {
@@ -93,20 +81,33 @@ const chunks: TCollaborativeChunk[] = [
 
           throw new Error('Not implemented');
         },
+
+        // mock jwt payload
+        jwt: {
+          project_server_id: MOCK_PROJECT_SERVER_ID,
+        },
+
+        // mock gatewayFQDN so that it ends to our test jupyter docker container
+        gatewayFQDN: '127.0.0.1',
       };
     },
   },
   {
     sharedData: (st: SharedTypes) => Jupyter_loadData(st),
     reducers: (sd: TValidSharedData) => [new JupyterReducer(sd as any)],
-    extraContext: (sd: TValidSharedData) =>
-      Jupyter_Load_Frontend_ExtraContext(
-        sd as TJupyterSharedData & TServersSharedData,
-        // mocked getToken callback
-        async (server) => {
-          return 'My_Super_Test_Story';
-        }
-      ),
+    extraContext: (sd: TValidSharedData) => {
+      return {
+        ...Jupyter_Load_Frontend_ExtraContext(
+          sd as TJupyterSharedData & TServersSharedData,
+          // mocked getToken callback
+          async (server) => {
+            return 'My_Super_Test_Story';
+          }
+        ),
+        // mock user jupyterlab token for JupyterReducer that run in backend in normal mode
+        authorizationHeader: 'My_Super_Test_Story',
+      };
+    },
   },
 ];
 
@@ -139,38 +140,62 @@ const StoryWrapper = () => {
 
 const Story = () => {
   useInjectServer();
-  const dispatcher = useDispatcher<TDemiurgeNotebookEvent | TEventNewServer>();
+  const dispatcher = useDispatcher<TDemiurgeNotebookEvent | TServerEvents>();
 
-  const sd: TJupyterSharedData = useSharedData<TJupyterSharedData>(
-    ['jupyterServers', 'cells'],
-    (sd) => sd
-  );
+  const sd: TJupyterSharedData & TServersSharedData =
+    useSharedData<TJupyterSharedData>(['jupyterServers', 'cells'], (sd) => sd);
 
-  const jupyter = sd.jupyterServers.get('0');
+  const server = sd.projectServers.get(`${MOCK_PROJECT_SERVER_ID}`);
+  const jupyter = sd.jupyterServers.get(`${MOCK_PROJECT_SERVER_ID}`);
+  const service = server?.httpServices.find((s) => s.name === 'jupyterlab');
   const kernel = jupyter?.kernels[0];
   const cell = Array.from(sd.cells.values()).filter(
     (c) => c.dkid === kernel?.dkid
   );
 
-  if (!sd.jupyterServers.get('0')) {
+  // step 1: create server
+  if (!jupyter) {
     dispatcher.dispatch({
       type: 'servers:new',
       serverName: 'story-server',
       imageId: 2, // Image id of jupyterlab minimal notebook docker image
     });
-  } else if (jupyter && !kernel) {
+  }
+  // step 2: map service
+  else if (jupyter && !service) {
+    dispatcher.dispatch({
+      type: 'server:map-http-service',
+      port: 36666,
+      name: 'jupyterlab',
+    });
+  }
+  // step 3: create kernel
+  else if (service && !kernel) {
     dispatcher.dispatch({
       type: 'jupyter:new-kernel',
       kernelName: 'story-kernel',
       project_server_id: 0,
     });
-  } else if (kernel && cell.length === 0) {
+  }
+  // step 4: start kernel
+  else if (kernel && !kernel.jkid) {
+    dispatcher.dispatch({
+      type: 'jupyter:start-kernel',
+      dkid: kernel.dkid,
+    });
+  }
+  // step 5: create cell
+  else if (kernel && cell.length === 0) {
     dispatcher.dispatch({ type: 'jupyter:new-cell', dkid: kernel.dkid });
   }
 
   console.log({ sd, jupyter, kernel, cell });
 
-  return cell.map((c) => <Cell key={c.cellId} cellId={c.cellId} />);
+  return cell.map((c) => (
+    <div key={c.cellId} style={{ width: '450px', height: '400px' }}>
+      <Cell cellId={c.cellId} />
+    </div>
+  ));
 };
 
 //

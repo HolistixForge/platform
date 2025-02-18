@@ -151,6 +151,10 @@ export class JLsManager {
       `${kp.project_server_id}`
     );
 
+    const log = (...args: any[]) => {};
+
+    log('updateKernelPack', { kp, server, jupyterServer });
+
     if (!server || !jupyterServer) {
       this._disposeKernelPack(kp);
       this._kernelPacks.delete(kp.dkid);
@@ -163,6 +167,9 @@ export class JLsManager {
         /**
          * kernel still exist
          */
+
+        log('go to jupyterlabIsReachable');
+
         if (await jupyterlabIsReachable(server)) {
           // server is started
           if (lessThan(kp.state, 'server-started')) {
@@ -170,6 +177,7 @@ export class JLsManager {
             this._setState(kp, 'server-started');
           }
           if (k.jkid) {
+            log('kernel is started');
             // kernel is started
             if (lessThan(kp.state, 'kernel-started')) {
               // kernel just started
@@ -177,16 +185,19 @@ export class JLsManager {
               this._setState(kp, 'kernel-started');
               // get driver
               this._getDriver(server).then((driver) => {
+                log('driver loaded', driver);
                 this._setState(kp, 'driver-loaded');
                 // connect kernel
                 driver
                   .connectKernel(k.jkid as TJKID)
                   .then((kernelConnection) => {
+                    log('kernel connected');
                     this._setState(kp, 'kernel-connected');
                     // instantiate widget manager
                     const bwm = new BrowserWidgetManager(kernelConnection);
                     kp.widgetManager = bwm;
                     bwm.loadFromKernelDone.then(() => {
+                      log('widget manager loaded');
                       this._setState(kp, 'widget-manager-loaded');
                     });
                   });

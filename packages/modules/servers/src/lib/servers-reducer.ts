@@ -6,7 +6,12 @@ import {
 } from '@monorepo/collab-engine';
 import { TJwtServer, TJwtUser } from '@monorepo/demiurge-types';
 import { TMyfetchRequest, secondAgo } from '@monorepo/simple-types';
-import { error, log } from '@monorepo/log';
+import {
+  error,
+  ForbiddenException,
+  log,
+  NotFoundException,
+} from '@monorepo/log';
 import {
   TCoreSharedData,
   TGraphNode,
@@ -454,31 +459,45 @@ export class ServersReducer extends Reducer<
 
   async _serverMapHttpService(g: Ra<TEventServerMapHttpService>) {
     const jwt = g.extraArgs.jwt as TJwtServer;
-    const psid = jwt.project_server_id;
-    if (psid) {
-      const s = g.sd.projectServers.get(`${psid}`);
-      if (s) {
-        const httpServices = [...s.httpServices];
-        if (
-          !httpServices.find(
-            (service) =>
-              service.name === g.event.name && service.port === g.event.port
-          )
-        ) {
-          httpServices.push({
-            host: g.extraArgs.gatewayFQDN,
-            name: g.event.name,
-            port: g.event.port,
-            location: `${psid}/${g.event.name}`,
-          });
-          g.sd.projectServers.set(`${psid}`, {
-            ...s,
-            httpServices,
-          });
+    const psid: number = parseInt(jwt.project_server_id);
 
-          await this._updateNginx(g.sd);
-        }
+    if (!Number.isInteger(psid) || psid < 0) throw new ForbiddenException();
+
+    const s = g.sd.projectServers.get(`${psid}`);
+    if (!s) throw new NotFoundException();
+
+    const httpServices = [...s.httpServices];
+
+    if (
+      !httpServices.find(
+        (service) =>
+          service.name === g.event.name && service.port === g.event.port
+      )
+    ) {
+      if (g.extraArgs.gatewayFQDN === '127.0.0.1') {
+        httpServices.push({
+          host: g.extraArgs.gatewayFQDN,
+          name: g.event.name,
+          port: g.event.port,
+          location: '',
+          secure: false,
+        });
+      } else {
+        httpServices.push({
+          host: g.extraArgs.gatewayFQDN,
+          name: g.event.name,
+          port: g.event.port,
+          location: `${psid}/${g.event.name}`,
+          secure: true,
+        });
       }
+
+      g.sd.projectServers.set(`${psid}`, {
+        ...s,
+        httpServices,
+      });
+
+      await this._updateNginx(g.sd);
     }
   }
 
@@ -497,7 +516,7 @@ export class ServersReducer extends Reducer<
         });
       }
     });
-    this.updateReverseProxy(locations);
+    this.updateReverseProxy?.(locations);
   }
 
   //
