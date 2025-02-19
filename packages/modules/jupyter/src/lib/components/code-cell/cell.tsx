@@ -150,7 +150,10 @@ const CellInternal = (props: ReturnType<typeof useCellLogic>) => {
   return (
     <>
       <NodeToolbar buttons={buttons} />
-      <div className={`jupyterlab-code-cell ${props.cell.busy && 'busy'}`}>
+      <div
+        className={`jupyterlab-code-cell ${props.cell.busy && 'busy'}`}
+        style={{ '--monaco-editor-height': '200px' } as React.CSSProperties}
+      >
         <CodeEditorMonaco code={''} onMount={handleEditorMount} />
       </div>
       <CellOutput {...props} />

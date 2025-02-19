@@ -75,6 +75,7 @@ const CodeEditorMonaco = ({
       const thisEditor: IStandaloneCodeEditor = monaco.editor.create(div, {
         language,
         theme: t.name,
+        automaticLayout: true, // Enable automatic layout adjustments
       });
 
       // Timeout used to be sure 'onBlur' will run before 'onFocus' when jumping from a code cell to another
@@ -92,16 +93,19 @@ const CodeEditorMonaco = ({
 
       thisEditor.getModel()?.setValue(code);
 
-      // editor.layout({ width: 300, height: 25 });
-      // setTimeout(() => editor.layout(), 500);
-
       editorRef.current = thisEditor;
 
       onMount && onMount(thisEditor);
     }
   };
 
-  return <div ref={mount} className="editor-mount-box"></div>;
+  return (
+    <div
+      ref={mount}
+      className="editor-mount-box"
+      style={{ width: '100%', height: 'var(--monaco-editor-height)' }}
+    ></div>
+  );
 };
 
 export default CodeEditorMonaco;
