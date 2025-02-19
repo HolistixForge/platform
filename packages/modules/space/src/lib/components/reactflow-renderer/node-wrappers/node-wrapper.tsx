@@ -54,7 +54,6 @@ export const NodeWrapper =
     const opened = isNodeOpened(viewStatus);
 
     const selectingUsers = spaceAwareness.getSelectedNodes()[id] || [];
-    console.log({ selectingUsers });
 
     // is this object selected on this view by current user ?
     const selected =

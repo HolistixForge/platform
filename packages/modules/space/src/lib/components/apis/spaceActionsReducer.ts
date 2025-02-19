@@ -252,7 +252,7 @@ export class SpaceActionsReducer {
     });
 
     // Update graph edges to only include connected edges within max depth
-    gv.graph.edges = Array.from(edgesToRender);
+    gv.edges = Array.from(edgesToRender);
 
     // Remove nodes that no longer exist in nodes map
     gv.graph.nodes = gv.graph.nodes.filter((node) =>
