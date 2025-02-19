@@ -15,8 +15,16 @@ import { Widget } from '@lumino/widgets';
 import { TServerSettings } from '@monorepo/jupyter';
 import { useSharedData } from '@monorepo/collab-engine';
 import { TServer, TServersSharedData } from '@monorepo/servers';
+import { TGraphNode } from '@monorepo/core';
+import {
+  DisablePanSelect,
+  InputsAndOutputs,
+  NodeHeader,
+  useMakeButton,
+  useNodeContext,
+} from '@monorepo/space';
 
-import { useJLsManager } from '../../jupyter-shared-model';
+import { TJupyterSharedData, useJLsManager } from '../../jupyter-shared-model';
 import { jupyterlabIsReachable } from '../../ds-backend';
 
 import '@jupyterlab/terminal/style/index';
@@ -47,7 +55,10 @@ const Xterm_Loading_Workaround = async () => {
 
 //
 
-const newTerminal = async (s: TServerSettings) => {
+const connectTerminal = async (
+  s: TServerSettings,
+  sessionModel: { name: string }
+) => {
   // At least in storybook. if we don't preload xterm, the terminal will not load
   // maybe vitejs need to see the dynamic imports,
   // the same dynamic import call from @jupyterlab/terminal/src/widget.ts does not work in firefox
@@ -57,7 +68,7 @@ const newTerminal = async (s: TServerSettings) => {
   const manager = new TerminalManager({
     serverSettings: settings,
   });
-  const session = await manager.startNew();
+  const session = await manager.connectTo({ model: sessionModel });
   const widget = new Terminal(session, { autoFit: false, theme: 'dark' });
   return widget;
 };
@@ -65,20 +76,20 @@ const newTerminal = async (s: TServerSettings) => {
 //
 //
 
-export const JupyterTerminal = ({
-  project_server_id,
-}: {
-  project_server_id: number;
-}) => {
+export const JupyterTerminal = ({ terminalId }: { terminalId: string }) => {
   //
   const [isReachable, setIsReachable] = useState<boolean | undefined>(
     undefined
   );
 
+  const terminal = useSharedData<TJupyterSharedData>(['terminals'], (sd) => {
+    return sd.terminals.get(terminalId);
+  });
+
   const server: TServer = useSharedData<TServersSharedData>(
     ['projectServers'],
     (sd) => {
-      return sd.projectServers.get(`${project_server_id}`);
+      return sd.projectServers.get(`${terminal.project_server_id}`);
     }
   );
 
@@ -96,9 +107,11 @@ export const JupyterTerminal = ({
       if (!yet.current && server) {
         yet.current = true;
         jlsManager.getServerSetting(server).then((ss) => {
-          newTerminal(ss).then((terminal) => {
-            if (ref.current) Widget.attach(terminal, ref.current);
-          });
+          connectTerminal(ss, terminal.jupyterTerminalSessionModel).then(
+            (terminal) => {
+              if (ref.current) Widget.attach(terminal, ref.current);
+            }
+          );
         });
       }
     }
@@ -111,6 +124,48 @@ export const JupyterTerminal = ({
         : isReachable
         ? null
         : 'Server is not reachable'}
+    </div>
+  );
+};
+
+//
+
+export const NodeTerminal = ({ node }: { node: TGraphNode }) => {
+  const { terminalId } = node.data! as {
+    project_server_id: number;
+    terminalId: string;
+  };
+
+  const { id, viewStatus, expand, reduce, isOpened, open, close } =
+    useNodeContext();
+
+  const isExpanded = viewStatus.mode === 'EXPANDED';
+  const buttons = useMakeButton({
+    isExpanded,
+    expand,
+    reduce,
+    isOpened,
+    open,
+    close,
+  });
+
+  return (
+    <div className={`common-node terminal-node`}>
+      <InputsAndOutputs id={id} bottom={false} />
+      <NodeHeader
+        nodeType="terminal"
+        id={id}
+        open={open}
+        isOpened={isOpened}
+        buttons={buttons}
+      />
+      {isOpened && (
+        <DisablePanSelect>
+          <div className="node-wrapper-body terminal">
+            <JupyterTerminal terminalId={terminalId} />
+          </div>
+        </DisablePanSelect>
+      )}
     </div>
   );
 };

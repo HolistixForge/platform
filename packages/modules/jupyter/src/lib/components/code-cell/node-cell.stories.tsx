@@ -13,6 +13,7 @@ import {
 } from '../module-stories-utils';
 import { NodeCell } from './cell';
 import { NodeKernel } from '../node-kernel/node-kernel';
+import { NodeTerminal } from '../terminal/terminal';
 
 //
 
@@ -33,6 +34,7 @@ const StoryWrapper = () => {
 const nodeTypes = {
   'jupyter-cell': NodeCell,
   'jupyter-kernel': NodeKernel,
+  'jupyter-terminal': NodeTerminal,
 };
 
 //
@@ -51,6 +53,7 @@ const Story = () => {
   const cell = Array.from(sd.cells.values()).filter(
     (c) => c.dkid === kernel?.dkid
   );
+  const terminal = Array.from(sd.terminals.values())[0];
 
   console.log(
     '##########',
@@ -92,15 +95,19 @@ const Story = () => {
   else if (kernel && cell.length === 0) {
     dispatcher.dispatch({ type: 'jupyter:new-cell', dkid: kernel.dkid });
   }
+  // step 6: create terminal
+  else if (cell && !terminal) {
+    dispatcher.dispatch({
+      type: 'jupyter:new-terminal',
+      project_server_id: STORY_PROJECT_SERVER_ID,
+    });
+  }
 
-  if (cell.length > 0)
-    return (
-      <div style={{ width: '100%', height: '80vh' }}>
-        <SpaceModule viewId={'story-view'} nodeTypes={nodeTypes} />
-      </div>
-    );
-
-  return null;
+  return (
+    <div style={{ width: '100%', height: '80vh' }}>
+      <SpaceModule viewId={'story-view'} nodeTypes={nodeTypes} />
+    </div>
+  );
 };
 
 //

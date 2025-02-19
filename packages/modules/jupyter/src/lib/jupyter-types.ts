@@ -64,3 +64,9 @@ export type TCell = {
   dkid: TDKID;
   outputs: IOutput[];
 };
+
+export type TTerminal = {
+  terminalId: string;
+  project_server_id: number;
+  jupyterTerminalSessionModel: { name: string };
+};

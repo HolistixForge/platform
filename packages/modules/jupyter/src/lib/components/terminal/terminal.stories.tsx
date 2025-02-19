@@ -33,13 +33,17 @@ const Terminals = () => {
 
   const sd: TJupyterSharedData & TServersSharedData = useSharedData<
     TJupyterSharedData & TServersSharedData
-  >(['projectServers', 'jupyterServers', 'cells'], (sd) => sd);
+  >(['projectServers', 'jupyterServers', 'cells', 'terminals'], (sd) => sd);
 
   const server = sd.projectServers.get(`${STORY_PROJECT_SERVER_ID}`);
   const jupyter = sd.jupyterServers.get(`${STORY_PROJECT_SERVER_ID}`);
   const service = server?.httpServices.find((s) => s.name === 'jupyterlab');
+  const terminal = Array.from(sd.terminals.values())[0];
 
-  console.log('##########', structuredClone({ server, jupyter, service }));
+  console.log(
+    '##########',
+    structuredClone({ server, jupyter, service, terminal })
+  );
 
   // step 1: create server
   if (!jupyter) {
@@ -57,9 +61,15 @@ const Terminals = () => {
       name: 'jupyterlab',
     });
   }
+  // step 3: create terminal
+  else if (service && !terminal) {
+    dispatcher.dispatch({
+      type: 'jupyter:new-terminal',
+      project_server_id: STORY_PROJECT_SERVER_ID,
+    });
+  }
 
-  if (service)
-    return <JupyterTerminal project_server_id={STORY_PROJECT_SERVER_ID} />;
+  if (terminal) return <JupyterTerminal terminalId={terminal.terminalId} />;
 
   return null;
 };

@@ -61,6 +61,11 @@ export type TEventNewCell = {
   dkid: TDKID;
 };
 
+export type TEventNewTerminal = {
+  type: 'jupyter:new-terminal';
+  project_server_id: number;
+};
+
 export type TDemiurgeNotebookEvent =
   | TEventExecutePythonNode
   | TEventPythonNodeOutput
@@ -70,4 +75,5 @@ export type TDemiurgeNotebookEvent =
   | TEventNewKernel
   | TEventStopKernel
   | TEventDeleteKernel
-  | TEventNewCell;
+  | TEventNewCell
+  | TEventNewTerminal;

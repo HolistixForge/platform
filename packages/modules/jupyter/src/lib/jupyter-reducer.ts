@@ -1,3 +1,5 @@
+import { ServerConnection, TerminalManager } from '@jupyterlab/services';
+
 import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
 import { TMyfetchRequest, makeUuid } from '@monorepo/simple-types';
 import { NotFoundException } from '@monorepo/log';
@@ -16,6 +18,7 @@ import {
   TEventStartKernel,
   TEventNewCell,
   TEventNewKernel,
+  TEventNewTerminal,
 } from './jupyter-events';
 import { TDKID, dkidToServer } from './jupyter-types';
 import { TJupyterSharedData } from './jupyter-shared-model';
@@ -102,6 +105,8 @@ export class JupyterReducer extends Reducer<
         return this._deleteKernel(g as Ra<TEventDeleteKernel>);
       case 'jupyter:stop-kernel':
         return this._stopKernel(g as Ra<TEventStopKernel>);
+      case 'jupyter:new-terminal':
+        return this._newTerminal(g as Ra<TEventNewTerminal>);
 
       default:
         return Promise.resolve();
@@ -334,6 +339,53 @@ export class JupyterReducer extends Reducer<
     g.dispatcher.dispatch({
       type: 'core:delete-node',
       id: this.makeKernelNodeId(kernel.dkid),
+    });
+  }
+
+  //
+
+  async _newTerminal(g: Ra<TEventNewTerminal>): Promise<void> {
+    const terminalId = makeUuid();
+
+    const ss = this._drivers.getServerSetting(
+      g.event.project_server_id,
+      g.extraArgs.authorizationHeader
+    );
+    const settings = ServerConnection.makeSettings(ss);
+    const manager = new TerminalManager({
+      serverSettings: settings,
+    });
+    const session = await manager.startNew();
+    console.log({ session: session.model });
+
+    // manager.connectTo({model: session.model});
+
+    g.sd.terminals.set(terminalId, {
+      terminalId,
+      project_server_id: g.event.project_server_id,
+      jupyterTerminalSessionModel: session.model as any,
+    });
+
+    g.dispatcher.dispatch({
+      type: 'core:new-node',
+      nodeData: {
+        id: terminalId,
+        name: `terminal ${terminalId}`,
+        type: 'jupyter-terminal',
+        root: false,
+        data: { terminalId },
+        connectors: [{ connectorName: 'inputs', pins: [] }],
+      },
+      edges: [
+        {
+          from: {
+            node: projectServerNodeId(g.event.project_server_id),
+            connectorName: 'outputs',
+          },
+          to: { node: terminalId, connectorName: 'inputs' },
+          type: 'referenced_by',
+        },
+      ],
     });
   }
 }
