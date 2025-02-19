@@ -12,6 +12,7 @@ import {
   STORY_PROJECT_SERVER_ID,
 } from '../module-stories-utils';
 import { NodeCell } from './cell';
+import { NodeKernel } from '../node-kernel/node-kernel';
 
 //
 
@@ -31,6 +32,7 @@ const StoryWrapper = () => {
 
 const nodeTypes = {
   'jupyter-cell': NodeCell,
+  'jupyter-kernel': NodeKernel,
 };
 
 //

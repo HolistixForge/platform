@@ -1,62 +1,90 @@
+import { useCallback } from 'react';
+
 import {
   InputsAndOutputs,
-  TNodeContext,
   DisablePanSelect,
   NodeHeader,
   useMakeButton,
+  useNodeContext,
 } from '@monorepo/space';
-import { ButtonBase, ButtonBaseProps } from '@monorepo/ui-base';
+import { ButtonBase, useAction } from '@monorepo/ui-base';
+import { TGraphNode } from '@monorepo/core';
+import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
 
-import {
-  KernelStateIndicator,
-  KernelStateIndicatorProps,
-} from './kernel-state-indicator';
-
-//
-
-export type NodeKernelProps = {
-  state: 'kernel-started' | 'kernel-stopped' | 'server-stopped';
-  kernelName: string;
-  kernelType: string;
-  startStopButton?: ButtonBaseProps;
-  onDelete: () => Promise<void>;
-} & Pick<
-  TNodeContext,
-  'id' | 'isOpened' | 'open' | 'close' | 'viewStatus' | 'expand' | 'reduce'
-> &
-  KernelStateIndicatorProps;
+import { KernelStateIndicator } from './kernel-state-indicator';
+import { TDKID, TJupyterServerData } from '../../jupyter-types';
+import { TJupyterSharedData, useKernelPack } from '../../jupyter-shared-model';
+import { greaterThan } from '../../front/jls-manager';
 
 //
-//
 
-export const NodeKernel = ({
-  id,
-  open,
-  close,
-  isOpened,
-  state,
-  kernelName,
-  kernelType,
-  StartProgress,
-  startState,
-  startStopButton,
-  onDelete,
-  viewStatus,
-  expand,
-  reduce,
-}: NodeKernelProps) => {
+export const NodeKernel = ({ node }: { node: TGraphNode }) => {
   //
 
+  const { id, viewStatus, expand, reduce, isOpened, open, close } =
+    useNodeContext();
+
   const isExpanded = viewStatus.mode === 'EXPANDED';
+
+  const dkid = node.data!.dkid as TDKID;
+
+  const kernelPack = useKernelPack(dkid);
+
+  const serverData: TJupyterServerData = useSharedData<TJupyterSharedData>(
+    ['jupyterServers'],
+    (sd) => {
+      return sd.jupyterServers.get(`${kernelPack.project_server_id}`);
+    }
+  );
+
+  const kernel = serverData?.kernels.find((k) => k.dkid === dkid);
+
+  const dispatcher = useDispatcher();
+
+  const handleDeleteKernel = useCallback(async () => {
+    await dispatcher.dispatch({
+      type: 'jupyter:delete-kernel',
+      dkid,
+    });
+  }, [dispatcher, dkid]);
+
+  const startButton = useAction(async () => {
+    await dispatcher.dispatch({
+      type: 'jupyter:start-kernel',
+      dkid,
+    });
+  }, [dispatcher, dkid]);
+
+  const stopButton = useAction(async () => {
+    dispatcher.dispatch({
+      type: 'jupyter:stop-kernel',
+      dkid,
+    });
+  }, [dispatcher, dkid]);
+
   const buttons = useMakeButton({
     isExpanded,
     expand,
     reduce,
-    onDelete,
+    onDelete: handleDeleteKernel,
     isOpened,
     open,
     close,
   });
+
+  //
+
+  let state: 'kernel-started' | 'kernel-stopped' | 'server-stopped' =
+    'server-stopped';
+  let startStopButton = undefined;
+
+  if (greaterThan(kernelPack.state, 'server-started')) {
+    state = 'kernel-started';
+    startStopButton = { ...stopButton, text: 'Stop' };
+  } else if (greaterThan(kernelPack.state, 'server-stopped')) {
+    state = 'kernel-stopped';
+    startStopButton = { ...startButton, text: 'Start' };
+  } else state = 'server-stopped';
 
   return (
     <div className={`common-node kernel-node`}>
@@ -72,12 +100,12 @@ export const NodeKernel = ({
         <DisablePanSelect>
           <div className="node-wrapper-body">
             <KernelStateIndicator
-              startState={startState}
-              StartProgress={StartProgress}
+              startState={kernelPack.state}
+              StartProgress={kernelPack.progress}
             />
             <div className="kernel-state-stopped">
               <p>
-                kernel <b>{kernelName}</b>: {kernelType}
+                kernel <b>{kernel?.kernelName}</b>: {kernel?.kernelType}
               </p>
               <span>
                 {state === 'kernel-started'
