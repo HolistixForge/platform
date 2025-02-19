@@ -61,8 +61,6 @@ export class CoreReducer extends Reducer<
     if (g.event.edges) {
       g.sd.edges.push(g.event.edges);
     }
-
-    this._dispatchUpdateAllGraphViews(g);
   }
 
   /**
@@ -78,8 +76,6 @@ export class CoreReducer extends Reducer<
 
     // delete node data
     g.sd.nodes.delete(id);
-
-    this._dispatchUpdateAllGraphViews(g);
   }
 
   /**
@@ -88,7 +84,6 @@ export class CoreReducer extends Reducer<
 
   _newEdge(g: Ra<TEventNewEdge>) {
     g.sd.edges.push([g.event.edge]);
-    this._dispatchUpdateAllGraphViews(g);
     return Promise.resolve();
   }
 
@@ -98,26 +93,6 @@ export class CoreReducer extends Reducer<
 
   _deleteEdge(g: Ra<TEventDeleteEdge>) {
     g.sd.edges.deleteMatching((e) => isEqual(g.event.edge, e));
-    this._dispatchUpdateAllGraphViews(g);
     return Promise.resolve();
-  }
-
-  /**
-   *
-   */
-
-  _dispatchUpdateAllGraphViews(g: Ra<any>) {
-    /*
-    g.sd.graphViews.forEach((gv, k) => {
-      g.dispatcher.dispatch({
-        type: 'space-action',
-        viewId: k,
-        action: {
-          type: 'update-graph-view',
-        },
-      });
-    });
-    */
-    console.log('TODO_DEM');
   }
 }

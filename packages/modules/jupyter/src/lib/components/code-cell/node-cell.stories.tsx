@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Logger } from '@monorepo/log';
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
 import { TServerEvents, TServersSharedData } from '@monorepo/servers';
+import { SpaceModule } from '@monorepo/space';
 
 import { TJupyterSharedData } from '../../jupyter-shared-model';
 import { TDemiurgeNotebookEvent } from '../../jupyter-events';
@@ -10,7 +11,7 @@ import {
   JupyterStoryCollabContext,
   STORY_PROJECT_SERVER_ID,
 } from '../module-stories-utils';
-import { Cell } from './cell';
+import { NodeCell } from './cell';
 
 //
 
@@ -24,6 +25,12 @@ const StoryWrapper = () => {
       <Story />
     </JupyterStoryCollabContext>
   );
+};
+
+//
+
+const nodeTypes = {
+  'jupyter-cell': NodeCell,
 };
 
 //
@@ -84,17 +91,20 @@ const Story = () => {
     dispatcher.dispatch({ type: 'jupyter:new-cell', dkid: kernel.dkid });
   }
 
-  return cell.map((c) => (
-    <div key={c.cellId} style={{ width: '450px', height: '400px' }}>
-      <Cell cellId={c.cellId} />
-    </div>
-  ));
+  if (cell.length > 0)
+    return (
+      <div style={{ width: '100%', height: '80vh' }}>
+        <SpaceModule viewId={'story-view'} nodeTypes={nodeTypes} />
+      </div>
+    );
+
+  return null;
 };
 
 //
 
 const meta = {
-  title: 'Modules/Jupyter/Cell',
+  title: 'Modules/Jupyter/Node Cell',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

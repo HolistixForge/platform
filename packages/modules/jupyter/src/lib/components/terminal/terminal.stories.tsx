@@ -1,28 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { useMemo } from 'react';
 
 import { Logger } from '@monorepo/log';
-import {
-  CollaborativeContext,
-  TCollaborativeChunk,
-  TValidSharedData,
-  SharedTypes,
-  Dispatcher,
-} from '@monorepo/collab-engine';
-import {
-  Servers_loadData,
-  ServersReducer,
-  TServersSharedData,
-} from '@monorepo/servers';
+import { TServerEvents, TServersSharedData } from '@monorepo/servers';
+import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
 
+import { TJupyterSharedData } from '../../jupyter-shared-model';
+import { TDemiurgeNotebookEvent } from '../../jupyter-events';
 import {
-  Jupyter_Load_Frontend_ExtraContext,
-  Jupyter_loadData,
-  TJupyterSharedData,
-} from '../../jupyter-shared-model';
-import { JupyterReducer } from '../../jupyter-reducer';
+  JupyterStoryCollabContext,
+  STORY_PROJECT_SERVER_ID,
+} from '../module-stories-utils';
 import { JupyterTerminal } from './terminal';
-import { useInjectServer } from './test-use-inject-server';
 
 //
 
@@ -30,83 +18,50 @@ Logger.setPriority(7);
 
 //
 
-const chunks: TCollaborativeChunk[] = [
-  {
-    sharedData: (st: SharedTypes) => Servers_loadData(st),
-    reducers: (sd: TValidSharedData) => [new ServersReducer(sd as any)],
-  },
-  {
-    sharedData: (st: SharedTypes) => Jupyter_loadData(st),
-    reducers: (sd: TValidSharedData) => [new JupyterReducer(sd as any)],
-    extraContext: (sd: TValidSharedData) =>
-      Jupyter_Load_Frontend_ExtraContext(
-        sd as TJupyterSharedData & TServersSharedData,
-        // getToken callback
-        async (server) => {
-          return 'My_Super_Test_Story';
-        }
-      ),
-  },
-];
-
-//
-
 const StoryWrapper = () => {
-  const dispatcher = useMemo(() => {
-    return new Dispatcher();
-  }, []);
-
   return (
-    <CollaborativeContext
-      id={'story'}
-      collabChunks={chunks}
-      config={{
-        type: 'none',
-      }}
-      dispatcher={dispatcher}
-      user={{
-        username: 'John Doe',
-        color: '#ffa500',
-      }}
-    >
+    <JupyterStoryCollabContext>
       <Terminals />
-    </CollaborativeContext>
+    </JupyterStoryCollabContext>
   );
 };
 
 //
 
 const Terminals = () => {
-  const { servers } = useInjectServer();
+  const dispatcher = useDispatcher<TDemiurgeNotebookEvent | TServerEvents>();
 
-  return (
-    <>
-      <p>
-        To test this story, first launch a jupyter docker container, then
-        refresh :
-      </p>
-      <p
-        style={{
-          fontFamily: 'monospace',
-          backgroundColor: '#2b2b2b',
-          color: '#e6e6e6',
-          padding: '8px',
-          borderRadius: '4px',
-        }}
-      >
-        $ docker run --rm -p 36666:8888 jupyter/minimal-notebook:latest
-        start-notebook.sh --NotebookApp.allow_origin='*'
-        --NotebookApp.token='My_Super_Test_Story' --debug
-      </p>
+  const sd: TJupyterSharedData & TServersSharedData = useSharedData<
+    TJupyterSharedData & TServersSharedData
+  >(['projectServers', 'jupyterServers', 'cells'], (sd) => sd);
 
-      {Array.from(servers.values()).map((server) => (
-        <JupyterTerminal
-          key={server.project_server_id}
-          project_server_id={server.project_server_id}
-        />
-      ))}
-    </>
-  );
+  const server = sd.projectServers.get(`${STORY_PROJECT_SERVER_ID}`);
+  const jupyter = sd.jupyterServers.get(`${STORY_PROJECT_SERVER_ID}`);
+  const service = server?.httpServices.find((s) => s.name === 'jupyterlab');
+
+  console.log('##########', structuredClone({ server, jupyter, service }));
+
+  // step 1: create server
+  if (!jupyter) {
+    dispatcher.dispatch({
+      type: 'servers:new',
+      serverName: 'story-server',
+      imageId: 2, // Image id of jupyterlab minimal notebook docker image
+    });
+  }
+  // step 2: map service
+  else if (jupyter && !service) {
+    dispatcher.dispatch({
+      type: 'server:map-http-service',
+      port: 36666,
+      name: 'jupyterlab',
+    });
+  }
+
+  if (service)
+    return <JupyterTerminal project_server_id={STORY_PROJECT_SERVER_ID} />;
+
+  return null;
 };
 
 //

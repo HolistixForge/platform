@@ -1,5 +1,5 @@
 import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
-import { TCoreSharedData, TGraphNode } from '@monorepo/core';
+import { TCoreEvent, TCoreSharedData, TEdge, TGraphNode } from '@monorepo/core';
 
 import { TSpaceSharedData } from './space-shared-model';
 import { TSpaceEvent, TEventNewView, TEventSpaceAction } from './space-events';
@@ -10,10 +10,12 @@ import { SpaceActionsReducer } from './components/apis/spaceActionsReducer';
  *
  */
 
+type ReducedEvents = TSpaceEvent | TCoreEvent;
+
 type Ra<T> = ReduceArgs<
   TSpaceSharedData & TCoreSharedData,
   T,
-  TSpaceEvent,
+  ReducedEvents,
   undefined
 >;
 
@@ -23,20 +25,28 @@ type Ra<T> = ReduceArgs<
 
 export class SpaceReducer extends Reducer<
   TSpaceSharedData & TCoreSharedData,
-  TSpaceEvent,
+  ReducedEvents,
   TSpaceEvent,
   undefined
 > {
   //
   spaceActionReducer: SpaceActionsReducer = new SpaceActionsReducer();
 
-  reduce(g: Ra<TSpaceEvent>) {
+  reduce(g: Ra<ReducedEvents>) {
     switch (g.event.type) {
       case 'space:new-view':
         return this._newView(g as Ra<TEventNewView>);
 
       case 'space:action':
-        this._spaceAction(g);
+        this._spaceAction(g as Ra<TSpaceEvent>);
+        return Promise.resolve();
+
+      case 'core:delete-edge':
+      case 'core:delete-node':
+      case 'core:new-edge':
+      case 'core:new-node':
+        this.updateAllGraphviews(g);
+
         return Promise.resolve();
 
       default:
@@ -53,7 +63,8 @@ export class SpaceReducer extends Reducer<
     this.spaceActionReducer.reduce(
       (g.event as TEventSpaceAction).action,
       gvc,
-      nodes
+      nodes,
+      g.sd.edges as unknown as TEdge[]
     );
     g.sd.graphViews.set(g.event.viewId, gvc);
   }
@@ -73,5 +84,19 @@ export class SpaceReducer extends Reducer<
     });
 
     return Promise.resolve();
+  }
+
+  //
+
+  updateAllGraphviews(g: Ra<ReducedEvents>) {
+    g.sd.graphViews.forEach((gv, k) => {
+      g.dispatcher.dispatch({
+        type: 'space:action',
+        viewId: k,
+        action: {
+          type: 'update-graph-view',
+        },
+      });
+    });
   }
 }

@@ -10,11 +10,12 @@ import {
   bindEditor,
   useSharedData,
 } from '@monorepo/collab-engine';
-import { TCoreEvent } from '@monorepo/core';
+import { TCoreEvent, TGraphNode } from '@monorepo/core';
 import {
   DisablePanSelect,
   InputsAndOutputs,
   NodeHeader,
+  NodeToolbar,
   useMakeButton,
   useNodeContext,
 } from '@monorepo/space';
@@ -141,8 +142,14 @@ export const Cell = ({ cellId }: { cellId: string }) => {
 
 const CellInternal = (props: ReturnType<typeof useCellLogic>) => {
   const { handleEditorMount } = props;
+  const buttons = useMakeButton({
+    onClear: props.handleClearOutput,
+    onPlay: props.handleExecute,
+  });
+
   return (
     <>
+      <NodeToolbar buttons={buttons} />
       <div className={`jupyterlab-code-cell ${props.cell.busy && 'busy'}`}>
         <CodeEditorMonaco code={''} onMount={handleEditorMount} />
       </div>
@@ -225,14 +232,17 @@ const CellOutput = (props: ReturnType<typeof useCellLogic>) => {
 
 //
 
-export const NodeCell = ({ cellId }: { cellId: string }) => {
+export const NodeCell = ({ node }: { node: TGraphNode }) => {
   //
   const { id, viewStatus, expand, reduce, isOpened, open, close, selected } =
     useNodeContext();
 
-  const cellLogic = useCellLogic({ cellId: id, selected });
+  const cellLogic = useCellLogic({
+    cellId: node.data!.cellId as string,
+    selected,
+  });
 
-  const { cell, handleClearOutput, handleExecute } = cellLogic;
+  const { handleClearOutput, handleExecute } = cellLogic;
 
   const isExpanded = viewStatus.mode === 'EXPANDED';
   const buttons = useMakeButton({

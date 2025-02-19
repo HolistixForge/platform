@@ -26,7 +26,7 @@ export type SpaceNodePayload = {
   viewId: string;
 };
 
-type SpaceNode = Omit<RfNode, 'data'> & { data: SpaceNodePayload };
+export type SpaceNode = Omit<RfNode, 'data'> & { data: SpaceNodePayload };
 
 //
 //

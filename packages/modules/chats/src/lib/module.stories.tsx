@@ -110,7 +110,7 @@ const StoryWrapper = () => {
       });
     }, 7000);
 
-    return new Dispatcher({});
+    return new Dispatcher();
   }, []);
 
   return (

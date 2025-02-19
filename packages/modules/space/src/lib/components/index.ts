@@ -11,9 +11,10 @@ export { useConnector } from './reactflow-renderer/assets/inputsOutputs/inputsOu
 export { StoryMockSpaceContext } from './local-test/storyMockSpaceContext';
 
 export type { TNodeContext } from './apis/types/node';
-export { useNodeContext } from './reactflow-renderer/node-wrappers/node-wrapper';
-
-export { NodeDefault } from './reactflow-renderer/node-default';
+export {
+  useNodeContext,
+  NodeWrapper,
+} from './reactflow-renderer/node-wrappers/node-wrapper';
 
 export { DemiurgeSpace } from './reactflow-renderer/main';
 

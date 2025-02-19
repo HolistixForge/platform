@@ -1,11 +1,21 @@
-import { useMakeButton, NodeHeader } from '..';
+import { TJsonObject } from '@monorepo/simple-types';
+
+import { useMakeButton, NodeHeader, DisablePanSelect } from '..';
 import { InputsAndOutputs } from '../reactflow-renderer/assets/inputsOutputs/inputsOutputs';
 import { useNodeContext } from '../reactflow-renderer/node-wrappers/node-wrapper';
 
-export const CustomStoryNode = () => {
-  const data = useNodeContext();
+//
 
-  const { close, expand, reduce, isOpened, viewStatus } = data;
+export const CustomStoryNode = ({
+  data,
+  type,
+}: {
+  data?: TJsonObject;
+  type?: string;
+}) => {
+  const nc = useNodeContext();
+
+  const { close, expand, reduce, isOpened, viewStatus } = nc;
 
   const isExpanded = viewStatus.mode === 'EXPANDED';
 
@@ -19,14 +29,25 @@ export const CustomStoryNode = () => {
   });
   return (
     <div style={{ width: isExpanded ? '250px' : '100px' }}>
-      <InputsAndOutputs id={data.id} />
+      <InputsAndOutputs id={nc.id} />
       <NodeHeader
-        nodeType={'test'}
-        id={data.id}
-        isOpened={data.isOpened}
-        open={data.open}
+        nodeType={type || 'default'}
+        id={nc.id}
+        isOpened={nc.isOpened}
+        open={nc.open}
         buttons={buttons}
       />
+      {isOpened && data && isExpanded && (
+        <DisablePanSelect>
+          <div className="node-wrapper-body">
+            <pre>{JSON.stringify(data, null, 2)}</pre>
+            {/*
+              <IncomingEdgeHandles />
+              <OutgoingEdgeHandles />
+              */}
+          </div>
+        </DisablePanSelect>
+      )}
     </div>
   );
 };

@@ -125,6 +125,34 @@ export class JupyterReducer extends Reducer<
     const dkid = g.event.dkid;
     const cellId = makeUuid();
     g.sd.cells.set(cellId, { dkid, cellId, busy: false, outputs: [] });
+
+    const id = makeUuid();
+
+    g.dispatcher.dispatch({
+      type: 'core:new-node',
+      nodeData: {
+        id,
+        name: `cell ${cellId}`,
+        type: 'jupyter-cell',
+        root: false,
+        data: { cellId },
+        connectors: [
+          { connectorName: 'inputs', pins: [] },
+          { connectorName: 'outputs', pins: [] },
+        ],
+      },
+      edges: [
+        {
+          from: {
+            node: this.makeKernelNodeId(dkid),
+            connectorName: 'outputs',
+          },
+          to: { node: id, connectorName: 'inputs' },
+          type: 'referenced_by',
+        },
+      ],
+    });
+
     return Promise.resolve();
   }
 

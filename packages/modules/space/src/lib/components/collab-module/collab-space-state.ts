@@ -27,8 +27,9 @@ export class CollabSpaceState extends SpaceState {
 
   private updateState() {
     const state = this.sd.graphViews.get(this.viewId);
+    if (!state) throw new Error(`No graphViews for viewId [${this.viewId}]`);
     const nodes = this.sd.nodes;
-    if (!state || !nodes) throw new Error('No state or nodes');
+    if (!nodes) throw new Error('No nodes');
     this.state = state;
     this.nodes = nodes as unknown as Map<string, TGraphNode>;
   }

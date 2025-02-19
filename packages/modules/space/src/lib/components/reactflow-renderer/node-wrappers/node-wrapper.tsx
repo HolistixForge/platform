@@ -1,21 +1,17 @@
-import { useDebugComponent } from '@monorepo/log';
 import { createContext, FC, useContext } from 'react';
 import { ReactFlowState, useStore } from 'reactflow';
+
+import { useDebugComponent } from '@monorepo/log';
+
 import { TNodeContext } from '../../apis/types/node';
 import { SelectionsAwareness } from './selection-awareness';
 import { useSpaceContext } from '../spaceContext';
 import { useRegisterListener } from '../avatarsRenderer';
 import { isNodeOpened, TNodeViewStatus } from '../../../space-types';
+import { SpaceNode } from '../to-rf-nodes';
 
 //
 //
-//
-
-type NodeWrapperProps = {
-  id: string;
-  data: any;
-};
-
 //
 
 const zoomSelector = (s: ReactFlowState) => {
@@ -33,7 +29,7 @@ const nodeContext = createContext<TNodeContext | null>(null);
 
 export const NodeWrapper =
   (NodeComponent: FC) =>
-  ({ id, data }: NodeWrapperProps) => {
+  ({ id, data }: SpaceNode) => {
     //
     const zoom = useStore(zoomSelector);
 

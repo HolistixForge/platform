@@ -1,4 +1,4 @@
-import { useNodeContext, NodeDefault } from '@monorepo/space';
+import { useNodeContext } from '@monorepo/space';
 import factory from '@monorepo/lazy-factory';
 
 import { useSharedData } from '../../../model/collab-model-chunk';
@@ -22,15 +22,6 @@ factory.setLibraries({
       `@monorepo/${'social-embeds'}`
     ).then((l) => l.default),
 });
-
-//
-//
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const DefaultNodeLogic = (props: any) => {
-  const useNodeValue = useNodeContext();
-  return <NodeDefault {...useNodeValue} {...props} />;
-};
 
 //
 //

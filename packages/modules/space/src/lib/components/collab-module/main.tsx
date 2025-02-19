@@ -1,6 +1,12 @@
-import { useMemo } from 'react';
+import { FC, useMemo } from 'react';
 
-import { TPosition, TEdgeEnd, TEdge } from '@monorepo/core';
+import {
+  TPosition,
+  TEdgeEnd,
+  TEdge,
+  TCoreSharedData,
+  TGraphNode,
+} from '@monorepo/core';
 import {
   useDispatcher,
   useAwareness,
@@ -12,15 +18,48 @@ import { ReactflowPointerTracker } from '../reactflow-renderer/reactflowPointerT
 import { HtmlAvatarStore } from '../reactflow-renderer/htmlAvatarStore';
 
 import { CustomStoryEdge } from '../local-test/edge';
-import { CustomStoryNode } from '../local-test/node';
 
 import { CollabSpaceState } from './collab-space-state';
 import { CollabSpaceAwareness } from './collab-space-awareness';
 import { CollabSpaceActionsDispatcher } from './collab-space-actions-dispatcher';
+import { useNodeContext } from '../reactflow-renderer/node-wrappers/node-wrapper';
+import { CustomStoryNode } from '../local-test/node';
 
 //
 
-export const SpaceModule = ({ viewId }: { viewId: string }) => {
+type TNodeTypes = { [key: string]: FC<{ node: TGraphNode }> };
+
+//
+
+const makeSpaceModuleNode = (nodeTypes: TNodeTypes) => {
+  return () => {
+    const nodeContext = useNodeContext();
+    const node: TGraphNode | undefined = useSharedData<TCoreSharedData>(
+      ['nodes'],
+      (sd) => sd.nodes.get(nodeContext.id)
+    );
+
+    if (node) {
+      const NodeComponent = nodeTypes[node.type];
+
+      if (NodeComponent) {
+        return <NodeComponent node={node} />;
+      }
+    }
+
+    return <CustomStoryNode data={node?.data} type={node?.type} />;
+  };
+};
+
+//
+
+export const SpaceModule = ({
+  viewId,
+  nodeTypes,
+}: {
+  viewId: string;
+  nodeTypes: TNodeTypes;
+}) => {
   const sd = useSharedData(['graphViews'], (sd) => sd);
   const collabDispatcher = useDispatcher();
   const { awareness } = useAwareness();
@@ -32,13 +71,15 @@ export const SpaceModule = ({ viewId }: { viewId: string }) => {
     const ss = new CollabSpaceState(viewId, sd);
     const sad = new CollabSpaceActionsDispatcher(viewId, collabDispatcher);
 
-    return { ga, pt, as, sad, ss };
+    const Node = makeSpaceModuleNode(nodeTypes);
+
+    return { ga, pt, as, sad, ss, Node };
   }, []);
 
   return (
     <DemiurgeSpace
       viewId={'view-story'}
-      nodeComponent={CustomStoryNode}
+      nodeComponent={logics.Node}
       edgeComponent={CustomStoryEdge}
       spaceState={logics.ss}
       spaceActionsDispatcher={logics.sad}

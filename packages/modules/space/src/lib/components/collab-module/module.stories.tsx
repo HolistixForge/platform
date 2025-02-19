@@ -27,7 +27,7 @@ const loadStoryData = (sd: TSpaceSharedData & TCoreSharedData) => {
   const graphViews = sd.graphViews;
   const gv: TGraphView = defaultGraphView();
 
-  loadStoryGraph(gv, sd.nodes as any);
+  loadStoryGraph(gv, sd.nodes as any, sd.edges as any);
 
   graphViews.set('graph-1', gv);
 };
@@ -57,7 +57,7 @@ const chunks: TCollaborativeChunk[] = [
 
 const StoryWrapper = () => {
   const dispatcher = useMemo(() => {
-    return new Dispatcher({});
+    return new Dispatcher();
   }, []);
 
   return (
@@ -74,7 +74,7 @@ const StoryWrapper = () => {
       }}
     >
       <div style={{ height: '100vh', width: '100vw' }}>
-        <SpaceModule viewId={'graph-1'} />
+        <SpaceModule viewId={'graph-1'} nodeTypes={{}} />
       </div>
     </CollaborativeContext>
   );

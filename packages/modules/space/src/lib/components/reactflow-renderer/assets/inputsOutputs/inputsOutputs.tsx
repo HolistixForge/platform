@@ -45,9 +45,14 @@ export const useConnector = (nodeId: string, connectorName: string) => {
 
   const c = spaceState.getConnector(nodeId, connectorName);
 
-  if (!c) throw new Error('oops');
+  // if (!c) throw new Error('oops');
 
-  const { isOpened, groupedEdgesCount, pins, type } = c;
+  const {
+    isOpened = false,
+    groupedEdgesCount = 0,
+    pins = [],
+    type = 'source',
+  } = c || {};
 
   const openClose: () => void = useCallback(() => {
     /* the open close action display and hide the handles
@@ -94,6 +99,7 @@ export const useConnector = (nodeId: string, connectorName: string) => {
   }, []);
 
   //
+  if (!c) return false;
 
   return {
     openClose,
@@ -154,6 +160,10 @@ export const InputsOutputs = ({
 }: InputsOutputsProps) => {
   //
 
+  const uc = useConnector(nodeId, connectorName);
+
+  if (!uc) return null;
+
   const {
     openClose,
     handleMouseOver,
@@ -162,7 +172,7 @@ export const InputsOutputs = ({
     type,
     isOpened,
     pins,
-  } = useConnector(nodeId, connectorName);
+  } = uc;
 
   /**
    * if it is a simple input

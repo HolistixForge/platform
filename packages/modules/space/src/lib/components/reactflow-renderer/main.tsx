@@ -78,7 +78,7 @@ export const DemiurgeSpace = ({
 
   const nodeTypes: NodeTypes = useMemo(
     () => ({
-      wrapper: NodeWrapper(nodeComponent),
+      wrapper: NodeWrapper(nodeComponent) as any,
     }),
     [nodeComponent]
   );

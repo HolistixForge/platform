@@ -1,4 +1,4 @@
-import { TGraphNode } from '@monorepo/core';
+import { TEdge, TGraphNode } from '@monorepo/core';
 
 import { TSpaceActions } from '../../space-events';
 import { SpaceActionsDispatcher } from '../apis/spaceActionsDispatcher';
@@ -11,10 +11,11 @@ import { TGraphView } from '../../space-types';
 
 export const loadStoryGraph = (
   gv: TGraphView,
-  nodes: Map<string, TGraphNode>
+  nodes: Map<string, TGraphNode>,
+  edges: Array<TEdge>
 ) => {
   graph1.nodes.forEach((node) => nodes.set(node.id, node));
-
+  graph1.edges.forEach((edge) => edges.push(edge));
   gv.edges = graph1.edges;
   gv.nodeViews = graph1.nodeViews;
   gv.graph.nodes = [...gv.nodeViews];
@@ -25,6 +26,7 @@ export const loadStoryGraph = (
 
 export class LocalSpaceActionsDispatcher extends SpaceActionsDispatcher {
   private nodes: Map<string, TGraphNode>;
+  private edges: Array<TEdge>;
   private ss: SpaceState;
   private reducer: SpaceActionsReducer;
 
@@ -34,7 +36,8 @@ export class LocalSpaceActionsDispatcher extends SpaceActionsDispatcher {
     this.ss = ss;
     const gv = this.ss.getState();
     this.nodes = new Map();
-    loadStoryGraph(gv, this.nodes);
+    this.edges = [];
+    loadStoryGraph(gv, this.nodes, this.edges);
     this.ss.setState(gv, this.nodes);
 
     this.reducer = new SpaceActionsReducer();
@@ -45,7 +48,7 @@ export class LocalSpaceActionsDispatcher extends SpaceActionsDispatcher {
   dispatch(action: TSpaceActions): void {
     console.log('Dispatching action:', action);
     const gv = this.ss.getState();
-    this.reducer.reduce(action, gv, this.nodes);
+    this.reducer.reduce(action, gv, this.nodes, this.edges);
     this.ss.setState(gv, this.nodes);
   }
 }
