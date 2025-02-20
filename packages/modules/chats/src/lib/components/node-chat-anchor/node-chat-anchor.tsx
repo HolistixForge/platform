@@ -1,9 +1,70 @@
 import { icons } from '@monorepo/ui-base';
-import { InputsAndOutputs } from '@monorepo/space';
+import { InputsAndOutputs, useNodeContext } from '@monorepo/space';
+import { TGraphNode, useNodeEdges } from '@monorepo/core';
+import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
+import { useCurrentUser } from '@monorepo/frontend-data';
+
+import { TChatSharedData } from '../../chats-shared-model';
+import { TChat } from '../../chats-types';
 
 import './node-chat-anchor.scss';
 
-export type NodeChatAnchorProps = {
+//
+
+export const NodeChatAnchor = ({ node }: { node: TGraphNode }) => {
+  const chatId = node.data!.chatId as string;
+
+  const chat: TChat = useSharedData<TChatSharedData>(['chats'], (sd) =>
+    sd.chats.get(chatId)
+  );
+
+  const dispatcher = useDispatcher();
+
+  const useNodeValue = useNodeContext();
+
+  const edges = useNodeEdges(node.id);
+
+  const { data: currentUserData, status: currentUserStatus } = useCurrentUser();
+
+  const chatNodeId = edges.length === 1 && edges[0].to.node;
+
+  // we want to open also the chat node
+  const handleOpen = () => {
+    useNodeValue.open();
+    chatNodeId &&
+      dispatcher.dispatch({
+        type: 'space:action',
+        action: { type: 'open-node', nid: chatNodeId },
+        viewId: useNodeValue.viewId,
+      });
+  };
+
+  let unread = 0;
+  if (chat && currentUserStatus === 'success' && currentUserData.user.user_id) {
+    const lastReadIndex = chat.lastRead[currentUserData.user.user_id];
+    if (lastReadIndex) {
+      unread = chat.messages.length - 1 - lastReadIndex;
+    }
+  }
+
+  if (chat)
+    return (
+      <NodeChatAnchorInternal
+        nodeId={node.id}
+        isOpened={useNodeValue.isOpened}
+        onOpen={handleOpen}
+        status="new"
+        showSideComment={!useNodeValue.isOpened}
+        unreadCount={unread}
+      />
+    );
+
+  return null;
+};
+
+//
+
+export type NodeChatAnchorInternalProps = {
   nodeId: string;
   isOpened: boolean;
   onOpen: () => void;
@@ -13,7 +74,7 @@ export type NodeChatAnchorProps = {
   unreadCount: number;
 };
 
-export const NodeChatAnchor = ({
+export const NodeChatAnchorInternal = ({
   nodeId,
   status,
   showSideComment,
@@ -21,7 +82,7 @@ export const NodeChatAnchor = ({
   onOpen,
   title,
   unreadCount,
-}: NodeChatAnchorProps) => {
+}: NodeChatAnchorInternalProps) => {
   return (
     <div className="comment-icon">
       <InputsAndOutputs id={nodeId} top={false} bottomDisabled={true} />

@@ -25,8 +25,6 @@ export {
   useTestToolbarButtons,
 } from './reactflow-renderer/assets/node-header/node-toolbar';
 
-export { getNodeEdges } from './apis/graph-utils';
-
 export {
   LabelEnd,
   LabelMiddle,

@@ -17,7 +17,6 @@ export {
   useTestToolbarButtons,
   useConnector,
   useNodeContext,
-  getNodeEdges,
   LabelEnd,
   LabelMiddle,
   LabelStart,

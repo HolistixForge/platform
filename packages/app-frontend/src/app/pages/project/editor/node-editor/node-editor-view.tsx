@@ -6,7 +6,8 @@ import { TDemiurgeNotebookEvent } from '@monorepo/jupyter';
 import { TEdge, TEdgeEnd, TPosition } from '@monorepo/core';
 import { TEventMountVolume, TServerEvents } from '@monorepo/servers';
 import { SpaceModule } from '@monorepo/space';
-
+import { NodeChatbox, NodeChatAnchor } from '@monorepo/chats';
+import { NodeCell, NodeKernel, NodeTerminal } from '@monorepo/jupyter';
 import { ContextMenuLogic } from './menus/context-menu-logic';
 import { SpaceContextMenu } from './menus/context-menu';
 import { NewEdgeContextMenu } from './menus/context-menu-new-edge';
@@ -18,11 +19,11 @@ import './node-editor.scss';
 //
 
 const nodeTypes = {
-  /*
-  python: JupyterlabCodeCellNodeLogic,
-  video: VideoNodeLogic,
-  chat: ChatNodeLogic,
-  */
+  chat: NodeChatbox,
+  'chat-anchor': NodeChatAnchor,
+  'jupyter-cell': NodeCell,
+  'jupyter-kernel': NodeKernel,
+  'jupyter-terminal': NodeTerminal,
 };
 
 //
@@ -151,11 +152,9 @@ export const NodeEditorView = ({ viewId }: { viewId: string }) => {
   };
 
   /*
-   *
-          onConnect={handleConnect}
-        onContextMenu={handleContextMenu}
-        onContextMenuNewEdge={handleNewEdgeToNewNode}
-         edgeComponent={CustomEdge}
+    onConnect={handleConnect}
+    onContextMenu={handleContextMenu}
+    onContextMenuNewEdge={handleNewEdgeToNewNode}
    */
 
   return (

@@ -8,7 +8,7 @@ export type {
 } from './lib/core-types';
 
 export type { TCoreSharedData } from './lib/core-shared-model';
-export { Core_loadData } from './lib/core-shared-model';
+export { Core_loadData, useNodeEdges } from './lib/core-shared-model';
 
 export { CoreReducer } from './lib/core-reducer';
 export { MetaReducer } from './lib/meta-reducer';

@@ -3,13 +3,16 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { useTestBoolean } from '@monorepo/ui-base';
 import { StoryMockSpaceContext } from '@monorepo/space';
 
-import { NodeChatAnchor, NodeChatAnchorProps } from './node-chat-anchor';
+import {
+  NodeChatAnchorInternal,
+  NodeChatAnchorInternalProps,
+} from './node-chat-anchor';
 
 //
 
 const StoryWrapper = (
   props: Pick<
-    NodeChatAnchorProps,
+    NodeChatAnchorInternalProps,
     | 'nodeId'
     | 'status'
     | 'showSideComment'
@@ -23,7 +26,7 @@ const StoryWrapper = (
 
   return (
     <StoryMockSpaceContext selected={props.selected} isOpened={isOpened}>
-      <NodeChatAnchor onOpen={open} {...props} isOpened={isOpened} />
+      <NodeChatAnchorInternal onOpen={open} {...props} isOpened={isOpened} />
     </StoryMockSpaceContext>
   );
 };
