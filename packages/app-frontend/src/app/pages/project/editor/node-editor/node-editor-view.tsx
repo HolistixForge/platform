@@ -1,22 +1,29 @@
 import { useCallback, useRef, useState } from 'react';
 
-import { DemiurgeSpace } from '@monorepo/space';
-
-import { NodeContent } from './nodes/node';
 import { FormErrors, useAction, DialogControlled } from '@monorepo/ui-base';
 import { MountVolumeForm, MountVolumeFormData } from '@monorepo/ui-views';
 import { TDemiurgeNotebookEvent } from '@monorepo/jupyter';
 import { TEdge, TEdgeEnd, TPosition } from '@monorepo/core';
 import { TEventMountVolume, TServerEvents } from '@monorepo/servers';
+import { SpaceModule } from '@monorepo/space';
 
 import { ContextMenuLogic } from './menus/context-menu-logic';
 import { SpaceContextMenu } from './menus/context-menu';
 import { NewEdgeContextMenu } from './menus/context-menu-new-edge';
 import { useDispatcher, useSharedData } from '../../model/collab-model-chunk';
 import { edgeToEvent } from './menus/edge-to-event';
-import { CustomEdge } from './edge';
 
 import './node-editor.scss';
+
+//
+
+const nodeTypes = {
+  /*
+  python: JupyterlabCodeCellNodeLogic,
+  video: VideoNodeLogic,
+  chat: ChatNodeLogic,
+  */
+};
 
 //
 
@@ -132,7 +139,7 @@ export const NodeEditorView = ({ viewId }: { viewId: string }) => {
   const handleConnect = (edge: TEdge) => {
     try {
       const event = edgeToEvent(edge, nodes);
-      if (event.type === 'mount-volume') {
+      if (event.type === 'servers:mount-volume') {
         partialEvent.current = event;
         vm_action.open();
       }
@@ -145,18 +152,15 @@ export const NodeEditorView = ({ viewId }: { viewId: string }) => {
 
   /*
    *
+          onConnect={handleConnect}
+        onContextMenu={handleContextMenu}
+        onContextMenuNewEdge={handleNewEdgeToNewNode}
+         edgeComponent={CustomEdge}
    */
 
   return (
     <div style={s}>
-      <DemiurgeSpace
-        viewId={viewId}
-        nodeComponent={NodeContent}
-        onConnect={handleConnect}
-        onContextMenu={handleContextMenu}
-        onContextMenuNewEdge={handleNewEdgeToNewNode}
-        edgeComponent={CustomEdge}
-      />
+      <SpaceModule viewId={viewId} nodeTypes={nodeTypes} />
       <ContextMenuLogic refCoordinates={rcc} viewId={viewId} from={from}>
         <SpaceContextMenu triggerRef={trPane} />
         <NewEdgeContextMenu triggerRef={trNewEdge} />

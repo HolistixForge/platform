@@ -29,4 +29,8 @@ export type EdgePayload = {
   type: 'simple' | 'group';
   id: string;
   edge: TEdge;
+  text?: string;
+  style?: 'straight' | 'default';
+  endText?: string;
+  startText?: string;
 };

@@ -36,9 +36,7 @@ export const startProjectCollab = async (project: TProjectConfig) => {
 //
 
 (async function main() {
-  dispatcher = new Dispatcher<TAllEvents, TJupyterExtraArgs>({
-    toGanymede,
-  });
+  dispatcher = new Dispatcher<TAllEvents, TJupyterExtraArgs>();
 
   const bindings: TStart[] = JSON.parse(CONFIG.SERVER_BIND);
 

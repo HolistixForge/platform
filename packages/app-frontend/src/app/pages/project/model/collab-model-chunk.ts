@@ -24,7 +24,7 @@ import {
   TDemiurgeNotebookEvent,
   TJupyterSharedData,
   Jupyter_loadData,
-  Jupyter_loadExtraContext,
+  Jupyter_Load_Frontend_ExtraContext,
 } from '@monorepo/jupyter';
 import { GanymedeApi } from '@monorepo/frontend-data';
 
@@ -78,7 +78,7 @@ export const getCollabChunks = (
       sharedData: (st: SharedTypes) => Jupyter_loadData(st),
       reducers: (sd: TValidSharedData) => [],
       extraContext: (sd: TValidSharedData) =>
-        Jupyter_loadExtraContext(
+        Jupyter_Load_Frontend_ExtraContext(
           sd as TJupyterSharedData & TServersSharedData,
           async (server) => {
             const oauth_client = server.oauth.find(

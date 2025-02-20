@@ -45,8 +45,10 @@ export const NodePython = ({
     close,
   });
 
-  const inCon = useConnector(nodeId, 'inputs');
-  const outCon = useConnector(nodeId, 'outputs');
+  const { isOpened: inConOpened = false } =
+    useConnector(nodeId, 'inputs') || {};
+  const { isOpened: outConOpened = false } =
+    useConnector(nodeId, 'outputs') || {};
 
   return (
     <div className="node-wrapper">
@@ -54,7 +56,7 @@ export const NodePython = ({
       {!isExpanded && (
         <div
           className={`node-menu node-hover-visible  ${
-            inCon.isOpened ? 'input-open-left' : ''
+            inConOpened ? 'input-open-left' : ''
           }`}
         >
           <NodeToolbar className="outside" buttons={buttons} />
@@ -65,7 +67,7 @@ export const NodePython = ({
       {!isExpanded && (
         <div
           className={`node-infos main-infos node-hover-visible  ${
-            inCon.isOpened ? 'input-open-right' : ''
+            inConOpened ? 'input-open-right' : ''
           }`}
         >
           <div className="head">
@@ -130,7 +132,7 @@ export const NodePython = ({
       {!isExpanded && (
         <div
           className={`node-bottom-right node-hover-visible  ${
-            outCon.isOpened ? 'output-open-right' : ''
+            outConOpened ? 'output-open-right' : ''
           }`}
         >
           <SelectFieldset
@@ -157,7 +159,7 @@ export const NodePython = ({
       {!isExpanded && (
         <div
           className={`node-bottom-left node-hover-visible  ${
-            outCon.isOpened ? 'output-open-left' : ''
+            outConOpened ? 'output-open-left' : ''
           }`}
         >
           <icons.Branch />

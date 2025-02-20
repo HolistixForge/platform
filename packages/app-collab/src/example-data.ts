@@ -152,6 +152,8 @@ export const loadExampleData = (
       ...nv,
       status: nodeViewDefaultStatus(),
     })),
+    edges: [],
+    connectorViews: new Map(),
     graph: {
       nodes: [],
       edges: [],
@@ -167,6 +169,8 @@ export const loadExampleData = (
       ...nv,
       status: nodeViewDefaultStatus(),
     })),
+    edges: [],
+    connectorViews: new Map(),
     graph: {
       nodes: [],
       edges: [],

@@ -44,14 +44,15 @@ export const NodeScreening = ({
     close,
   });
 
-  const inCon = useConnector(nodeId, 'inputs');
+  const { isOpened: inConOpened = false } =
+    useConnector(nodeId, 'inputs') || {};
 
   return (
     <div className="node-wrapper">
       {!isExpanded && (
         <div
           className={`node-menu node-hover-visible ${
-            inCon.isOpened ? 'input-open-left' : ''
+            inConOpened ? 'input-open-left' : ''
           }`}
         >
           <NodeToolbar className="outside" buttons={buttons} />

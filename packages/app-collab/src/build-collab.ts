@@ -162,11 +162,12 @@ export async function initProjectCollaboration(
 
   const yst = new YjsSharedTypes(ydoc);
 
-  const loadChunks = compileChunks(chunks, dispatcher, {});
+  const extraContext = {};
+  const loadChunks = compileChunks(chunks, dispatcher, extraContext);
 
   const sd = loadChunks(yst) as TSd;
 
-  dispatcher.bindData(yst, sd);
+  dispatcher.bindData(yst, sd, extraContext);
 
   ydoc.awareness.on('change', ({ removed }: { removed: number[] }) => {
     // console.log('AWARENESS CHANGES:', { added, updated, removed });

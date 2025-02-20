@@ -52,8 +52,10 @@ export const NodeNotebookComponent = ({
     close,
   });
 
-  const inCon = useConnector(nodeId, 'inputs');
-  const outCon = useConnector(nodeId, 'outputs');
+  const { isOpened: inConOpened = false } =
+    useConnector(nodeId, 'inputs') || {};
+  const { isOpened: outConOpened = false } =
+    useConnector(nodeId, 'outputs') || {};
 
   const [handleBarHeight, setHandleBarHeight] = useState<number>(0);
 
@@ -72,7 +74,7 @@ export const NodeNotebookComponent = ({
 
   useEffect(() => {
     getHandleBarHeight();
-  }, [inCon.isOpened, outCon.isOpened]);
+  }, [inConOpened, outConOpened]);
 
   return (
     <div className="node-wrapper node-reduced relative group h-auto">
@@ -80,7 +82,7 @@ export const NodeNotebookComponent = ({
       {!isExpanded && (
         <div
           className={`node-menu group-[.test-hover]:opacity-100 !-top-[80%] -translate-x-1/2 !left-1/2 node-hover-visible  ${
-            inCon.isOpened ? 'input-open-left' : ''
+            inConOpened ? 'input-open-left' : ''
           }`}
         >
           <NodeToolbar className="outside" buttons={buttons} />
@@ -91,7 +93,7 @@ export const NodeNotebookComponent = ({
       {!isExpanded && (
         <div
           className={`node-right !top-0 !left-[120%] node-hover-visible ${
-            outCon.isOpened ? '!-translate-y-10 !translate-x-8' : ''
+            outConOpened ? '!-translate-y-10 !translate-x-8' : ''
           } transition-transform`}
         >
           <div

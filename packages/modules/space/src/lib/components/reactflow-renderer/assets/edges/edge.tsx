@@ -39,13 +39,8 @@ export const LabelMiddle = ({ children, className }: LabelProps) => {
 //
 //
 
-type AnyLabel =
-  | ReturnType<typeof LabelStart>
-  | ReturnType<typeof LabelEnd>
-  | ReturnType<typeof LabelMiddle>;
-
 type Labels = {
-  children?: AnyLabel | AnyLabel[];
+  children?: ReactNode;
 };
 
 export const EdgeComponent: FC<

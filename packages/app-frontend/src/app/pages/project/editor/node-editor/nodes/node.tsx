@@ -2,12 +2,9 @@ import { useNodeContext } from '@monorepo/space';
 import factory from '@monorepo/lazy-factory';
 
 import { useSharedData } from '../../../model/collab-model-chunk';
-import { JupyterlabCodeCellNodeLogic } from './jupyterlab-code-cell';
 import { VideoNodeLogic } from './video';
-import { TerminalNodeLogic } from './terminal';
 import { ServerNodeLogic } from './server';
 import { VolumeNodeLogic } from './volume';
-import { KernelNodeLogic } from './kernel';
 import { ChatAnchorNodeLogic, ChatNodeLogic } from './chat';
 
 //
@@ -30,10 +27,6 @@ export const NodeContent = () => {
   //
   const { id } = useNodeContext();
   const node = useSharedData(['nodes'], (sd) => sd.nodes.get(id));
-
-  if (!node) {
-    return <DefaultNodeLogic />;
-  }
 
   switch (node.type) {
     case 'python':
