@@ -50,6 +50,7 @@ import {
   Jupyter_loadData,
   JupyterReducer,
 } from '@monorepo/jupyter';
+import { SocialsReducer } from '@monorepo/socials';
 
 import { log } from '@monorepo/log';
 import { loadCollaborationData } from './load-collab';
@@ -120,6 +121,9 @@ const chunks: TCollaborativeChunk[] = [
     reducers: (sd: TValidSharedData) => [
       new JupyterReducer(sd as TServersSharedData & TJupyterSharedData),
     ],
+  },
+  {
+    reducers: (sd: TValidSharedData) => [new SocialsReducer()],
   },
 ];
 

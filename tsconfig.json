@@ -83,6 +83,9 @@
     },
     {
       "path": "./packages/ui-base"
+    },
+    {
+      "path": "./packages/modules/socials"
     }
   ],
   "ts-node": {

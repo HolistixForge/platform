@@ -4,7 +4,7 @@ import { useTestBoolean } from '@monorepo/ui-base';
 import { sleep } from '@monorepo/simple-types';
 import { StoryMockSpaceContext, nodeViewDefaultStatus } from '@monorepo/space';
 
-import { NodeVideo, NodeVideoProps } from './node-video';
+import { NodeYoutubeInternal, NodeYoutubeInternalProps } from './node-video';
 
 //
 
@@ -31,7 +31,7 @@ const Youtube = ({ data }: { data: { videoId: string } }) => {
 //
 
 const StoryWrapper = (
-  props: Pick<NodeVideoProps, 'id' | 'youtubeId'> & {
+  props: Pick<NodeYoutubeInternalProps, 'id' | 'youtubeId'> & {
     expanded: boolean;
     selected: boolean;
   }
@@ -46,7 +46,7 @@ const StoryWrapper = (
 
   return (
     <StoryMockSpaceContext selected={props.selected} isOpened={isOpened}>
-      <NodeVideo
+      <NodeYoutubeInternal
         expand={expand}
         reduce={reduce}
         viewStatus={{

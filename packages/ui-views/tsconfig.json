@@ -3,19 +3,13 @@
   "include": [],
   "references": [
     {
-      "path": "../modules/space"
-    },
-    {
-      "path": "../simple-types"
-    },
-    {
       "path": "../demiurge-types"
     },
     {
-      "path": "../modules/servers"
+      "path": "../frontend-data"
     },
     {
-      "path": "../frontend-data"
+      "path": "../modules/servers"
     },
     {
       "path": "../ui-base"

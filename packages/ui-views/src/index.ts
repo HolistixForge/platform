@@ -28,5 +28,3 @@ export { Header } from './lib/mvp-ui-view/components/header';
 
 export { ResourceBar } from './lib/mvp-ui-view/components/resource-bar';
 export { ServerStack } from './lib/mvp-ui-view/components/server-stack';
-
-export { NodeVideo } from './lib/node-video/node-video';

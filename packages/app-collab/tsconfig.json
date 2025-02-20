@@ -16,6 +16,9 @@
       "path": "../log"
     },
     {
+      "path": "../modules/socials"
+    },
+    {
       "path": "../modules/jupyter"
     },
     {

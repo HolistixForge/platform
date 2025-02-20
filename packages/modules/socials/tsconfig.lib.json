@@ -1,7 +1,7 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "out-tsc/ui-views",
+    "outDir": "out-tsc/socials",
     "types": [
       "node",
       "@nx/react/typings/cssmodule.d.ts",
@@ -12,7 +12,7 @@
     "jsx": "react-jsx",
     "module": "esnext",
     "moduleResolution": "bundler",
-    "tsBuildInfoFile": "out-tsc/ui-views/tsconfig.lib.tsbuildinfo"
+    "tsBuildInfoFile": "out-tsc/socials/tsconfig.lib.tsbuildinfo"
   },
   "exclude": [
     "out-tsc",
@@ -30,25 +30,27 @@
     "src/**/*.test.ts",
     "eslint.config.js",
     "eslint.config.cjs",
-    "eslint.config.mjs",
-    "**/*.stories.ts",
-    "**/*.stories.js",
-    "**/*.stories.jsx",
-    "**/*.stories.tsx"
+    "eslint.config.mjs"
   ],
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "references": [
     {
-      "path": "../demiurge-types/tsconfig.lib.json"
+      "path": "../../collab-engine/tsconfig.lib.json"
     },
     {
-      "path": "../frontend-data/tsconfig.lib.json"
+      "path": "../../lazy-factory/tsconfig.lib.json"
     },
     {
-      "path": "../modules/servers/tsconfig.lib.json"
+      "path": "../core/tsconfig.lib.json"
     },
     {
-      "path": "../ui-base/tsconfig.lib.json"
+      "path": "../space/tsconfig.lib.json"
+    },
+    {
+      "path": "../../simple-types/tsconfig.lib.json"
+    },
+    {
+      "path": "../../ui-base/tsconfig.lib.json"
     }
   ]
 }

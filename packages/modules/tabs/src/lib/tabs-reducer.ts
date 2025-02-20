@@ -25,7 +25,7 @@ type TExtraArgs = {
   user_id: string;
 };
 
-export type Ra<T> = ReduceArgs<TTabsSharedData, T, undefined, TExtraArgs>;
+type Ra<T> = ReduceArgs<TTabsSharedData, T, undefined, TExtraArgs>;
 
 /**
  *

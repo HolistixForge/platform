@@ -13,6 +13,7 @@ import {
 import { SpaceModule } from '@monorepo/space';
 import { NodeChatbox, NodeChatAnchor } from '@monorepo/chats';
 import { NodeCell, NodeKernel, NodeTerminal } from '@monorepo/jupyter';
+import { NodeYoutube } from '@monorepo/socials';
 
 import { ContextMenuLogic } from './menus/context-menu-logic';
 import { SpaceContextMenu } from './menus/context-menu';
@@ -32,6 +33,7 @@ const nodeTypes = {
   'jupyter-cell': NodeCell,
   'jupyter-kernel': NodeKernel,
   'jupyter-terminal': NodeTerminal,
+  youtube: NodeYoutube,
 };
 
 //

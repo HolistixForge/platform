@@ -3,22 +3,25 @@
   "include": [],
   "references": [
     {
-      "path": "../modules/tabs"
-    },
-    {
       "path": "../api-fetch"
     },
     {
-      "path": "../lazy-factory"
+      "path": "../modules/tabs"
     },
     {
-      "path": "../simple-types"
+      "path": "../modules/socials"
     },
     {
       "path": "../modules/chats"
     },
     {
+      "path": "../modules/space"
+    },
+    {
       "path": "../modules/jupyter"
+    },
+    {
+      "path": "../simple-types"
     },
     {
       "path": "../collab-engine"
@@ -28,9 +31,6 @@
     },
     {
       "path": "../modules/servers"
-    },
-    {
-      "path": "../modules/space"
     },
     {
       "path": "../ui-views"

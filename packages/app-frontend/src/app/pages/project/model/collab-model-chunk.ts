@@ -56,27 +56,21 @@ export const getCollabChunks = (
   return [
     {
       sharedData: (st: SharedTypes) => Core_loadData(st),
-      reducers: (sd: TValidSharedData) => [],
     },
     {
       sharedData: (st: SharedTypes) => Space_loadData(st),
-      reducers: (sd: TValidSharedData) => [],
     },
     {
       sharedData: (st: SharedTypes) => Chat_loadData(st),
-      reducers: (sd: TValidSharedData) => [],
     },
     {
       sharedData: (st: SharedTypes) => Servers_loadData(st),
-      reducers: (sd: TValidSharedData) => [],
     },
     {
       sharedData: (st: SharedTypes) => Tabs_loadData(st),
-      reducers: (sd: TValidSharedData) => [],
     },
     {
       sharedData: (st: SharedTypes) => Jupyter_loadData(st),
-      reducers: (sd: TValidSharedData) => [],
       extraContext: (sd: TValidSharedData) =>
         Jupyter_Load_Frontend_ExtraContext(
           sd as TJupyterSharedData & TServersSharedData,
