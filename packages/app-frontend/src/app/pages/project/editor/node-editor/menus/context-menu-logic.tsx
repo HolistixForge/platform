@@ -23,7 +23,6 @@ import {
 import { useAction, DialogControlled } from '@monorepo/ui-base';
 import { useQueryServerImages } from '@monorepo/frontend-data';
 import { Dispatcher } from '@monorepo/collab-engine';
-import { makeUuid } from '@monorepo/simple-types';
 
 import {
   useDispatcher,
@@ -184,7 +183,7 @@ export const ContextMenuLogic = ({
       const server = sd.projectServers.get(
         `${originNodeData?.data?.project_server_id}`
       );
-      if (server && server.type === 'jupyter' && jupyterlabIsReachable(server))
+      if (server && server.type === 'jupyter')
         return dispatcher.dispatch({
           type: 'jupyter:new-kernel',
           kernelName: d.kernelName as string,
@@ -216,7 +215,8 @@ export const ContextMenuLogic = ({
   const y_action = useAction<NewYoutubeFormData>(
     (d) => {
       return dispatcher.dispatch({
-        type: 'core:new-node',
+        type: 'socials:new-youtube',
+        videoId: d.videoId,
         origin: {
           viewId: viewId,
           position: {
@@ -224,15 +224,6 @@ export const ContextMenuLogic = ({
             y: refCoordinates.current.y,
           },
         },
-        nodeData: {
-          id: makeUuid(),
-          name: 'youtube',
-          type: 'video',
-          root: true,
-          connectors: [],
-          data: { youtubeId: d.videoId },
-        },
-        edges: [],
       });
     },
     [dispatcher, refCoordinates, viewId],
@@ -250,9 +241,9 @@ export const ContextMenuLogic = ({
    */
 
   const onNewCodeCell = useCallback(() => {
-    const id = makeUuid();
     dispatcher.dispatch({
-      type: 'core:new-node',
+      type: 'jupyter:new-cell',
+      dkid: originNodeData!.data!.dkid as string,
       origin: {
         viewId: viewId,
         position: {
@@ -260,25 +251,6 @@ export const ContextMenuLogic = ({
           y: refCoordinates.current.y,
         },
       },
-      nodeData: {
-        id,
-        name: 'Cell',
-        root: false,
-        connectors: [],
-        type: 'python',
-        data: {
-          code: 'print("hello world !")',
-          dkid: originNodeData?.data?.dkid as string,
-        },
-      },
-      edges: [
-        {
-          type: 'wired_to',
-          from: from as TEdgeEnd,
-          to: { node: id, connectorName: 'inputs' },
-          data: { demiurge_type: 'terminal' },
-        },
-      ],
     });
   }, [dispatcher, from, originNodeData, refCoordinates, viewId]);
 
@@ -289,10 +261,9 @@ export const ContextMenuLogic = ({
    */
 
   const onNewTerminal = useCallback(() => {
-    const id = makeUuid();
-
     dispatcher.dispatch({
-      type: 'core:new-node',
+      type: 'jupyter:new-terminal',
+      project_server_id: originNodeData!.data!.project_server_id as number,
       origin: {
         viewId: viewId,
         position: {
@@ -300,25 +271,6 @@ export const ContextMenuLogic = ({
           y: refCoordinates.current.y,
         },
       },
-      nodeData: {
-        id,
-        name: 'Terminal',
-        root: false,
-        connectors: [],
-        type: 'terminal',
-        data: {
-          server_name: originNodeData?.data?.server_name as string,
-          project_server_id: originNodeData?.data?.project_server_id as string,
-        },
-      },
-      edges: [
-        {
-          type: 'wired_to',
-          from: from as TEdgeEnd,
-          to: { node: id, connectorName: 'inputs' },
-          data: { demiurge_type: 'terminal' },
-        },
-      ],
     });
   }, [dispatcher, from, originNodeData, refCoordinates, viewId]);
 
@@ -388,42 +340,34 @@ export const ContextMenuLogic = ({
           onClick: s_action.open,
           disabled: from !== undefined,
         },
-        /*
+
         {
           title: 'Kernel',
           onClick: k_action.open,
-          disabled:
-            originNodeData &&
-            originNodeData.type === 'server' &&
-            from &&
-            from.connector === undefined
-              ? false
-              : true,
+          disabled: !(
+            originNodeData?.type === 'server' &&
+            from?.connectorName === 'outputs'
+          ),
         },
         {
           title: 'Terminal',
           onClick: onNewTerminal,
-          disabled:
-            originNodeData &&
-            originNodeData.type === 'server' &&
-            from &&
-            from.connector === undefined
-              ? false
-              : true,
+          disabled: !(
+            originNodeData?.type === 'server' &&
+            from?.connectorName === 'outputs'
+          ),
         },
         {
           title: 'Code Cell',
           onClick: onNewCodeCell,
-          disabled:
-            originNodeData &&
-            (originNodeData.type === 'kernel' ||
-              originNodeData.type === 'python') &&
-            from &&
-            from.connector === undefined
-              ? false
-              : true,
+          disabled: !(
+            (originNodeData?.type === 'kernel' ||
+              originNodeData?.type === 'python') &&
+            from?.connectorName === 'outputs'
+          ),
         },
         { separator: true },
+        /*
         {
           title: 'Volume',
           onClick: v_action.open,
@@ -447,10 +391,10 @@ export const ContextMenuLogic = ({
   }, [
     s_action.open,
     from,
-    // k_action.open,
-    // originNodeData,
-    // onNewTerminal,
-    // onNewCodeCell,
+    k_action.open,
+    originNodeData,
+    onNewTerminal,
+    onNewCodeCell,
     // v_action.open,
     onNewChatBox,
     y_action.open,

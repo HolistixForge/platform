@@ -27,6 +27,7 @@ import {
   Jupyter_Load_Frontend_ExtraContext,
 } from '@monorepo/jupyter';
 import { GanymedeApi } from '@monorepo/frontend-data';
+import { TEventSocials } from '@monorepo/socials';
 
 //
 
@@ -43,7 +44,8 @@ type AllEvents =
   | TServerEvents
   | TDemiurgeNotebookEvent
   | TTabEvents<TabPayload>
-  | TChatEvent;
+  | TChatEvent
+  | TEventSocials;
 
 export const useDispatcher = useDispatcherCollab<AllEvents>;
 

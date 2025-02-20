@@ -59,11 +59,13 @@ export type TEventDeleteKernel = {
 export type TEventNewCell = {
   type: 'jupyter:new-cell';
   dkid: TDKID;
+  origin?: TEventOrigin;
 };
 
 export type TEventNewTerminal = {
   type: 'jupyter:new-terminal';
   project_server_id: number;
+  origin?: TEventOrigin;
 };
 
 export type TDemiurgeNotebookEvent =
