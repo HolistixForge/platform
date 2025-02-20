@@ -656,9 +656,6 @@
             "$ref": "#/components/parameters/headers_authorization"
           },
           {
-            "$ref": "#/components/parameters/project_id"
-          },
-          {
             "$ref": "#/components/parameters/project_server_id"
           }
         ],

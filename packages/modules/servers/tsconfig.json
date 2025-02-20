@@ -3,19 +3,22 @@
   "include": [],
   "references": [
     {
-      "path": "../core"
-    },
-    {
       "path": "../../log"
     },
     {
       "path": "../../demiurge-types"
     },
     {
+      "path": "../../simple-types"
+    },
+    {
+      "path": "../../frontend-data"
+    },
+    {
       "path": "../../collab-engine"
     },
     {
-      "path": "../../simple-types"
+      "path": "../core"
     },
     {
       "path": "../space"

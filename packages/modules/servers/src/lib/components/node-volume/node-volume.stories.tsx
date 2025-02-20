@@ -4,12 +4,15 @@ import { StoryMockSpaceContext, nodeViewDefaultStatus } from '@monorepo/space';
 import { sleep } from '@monorepo/simple-types';
 import { useTestBoolean } from '@monorepo/ui-base';
 
-import { NodeVolume, NodeVolumeProps } from './node-volume';
+import { NodeVolumeInternal, NodeVolumeInternalProps } from './node-volume';
 
 //
 
 const StoryWrapper = (
-  props: Pick<NodeVolumeProps, 'id' | 'volume_name' | 'volume_storage'> & {
+  props: Pick<
+    NodeVolumeInternalProps,
+    'id' | 'volume_name' | 'volume_storage'
+  > & {
     expanded: boolean;
     selected: boolean;
   }
@@ -24,7 +27,7 @@ const StoryWrapper = (
 
   return (
     <StoryMockSpaceContext selected={props.selected} isOpened={isOpened}>
-      <NodeVolume
+      <NodeVolumeInternal
         expand={expand}
         reduce={reduce}
         viewStatus={{

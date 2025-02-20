@@ -1,5 +1,3 @@
-import { CSSProperties } from 'react';
-
 import { useQueryServerImages } from '@monorepo/frontend-data';
 import { DialogControlled } from '@monorepo/ui-base';
 import { ResourceBar, ServerStack, NewServerForm } from '@monorepo/ui-views';
@@ -7,7 +5,6 @@ import { ServerCard } from '@monorepo/servers';
 
 import { ProjectSidebar } from '../sidebar';
 import { useDispatcher, useSharedData } from '../model/collab-model-chunk';
-import { useServerProps } from './node-editor/nodes/server';
 import { useNewServerAction } from './node-editor/menus/context-menu-logic';
 
 //
@@ -42,7 +39,7 @@ export const ResourcePage = () => {
         <div className="p-24">
           <ServerStack onNewServerClick={() => s_action.open()}>
             {array.map((psid) => (
-              <ServerCardLogic project_server_id={psid} />
+              <ServerCard project_server_id={psid} />
             ))}
           </ServerStack>
         </div>{' '}
@@ -62,23 +59,4 @@ export const ResourcePage = () => {
       </DialogControlled>
     </>
   );
-};
-
-//
-
-const ServerCardLogic = ({
-  project_server_id,
-}: {
-  project_server_id: number;
-}) => {
-  const props = useServerProps(project_server_id);
-
-  if (props)
-    return (
-      <div style={{ '--node-wrapper-header-height': '-8px' } as CSSProperties}>
-        <ServerCard {...props} />
-      </div>
-    );
-
-  return null;
 };

@@ -1,12 +1,9 @@
 import { TG_User } from '@monorepo/demiurge-types';
+import { TG_ServerImage } from '@monorepo/frontend-data';
 
 /** what is store in Database */
-export type TD_ServerImage = {
-  image_id: number;
-  image_name: string;
+export type TD_ServerImage = TG_ServerImage & {
   image_uri: string;
-  image_tag: string;
-  image_sha256: string | null;
   options: TServerImageOptions;
   user_available: boolean;
 };
@@ -19,12 +16,6 @@ export type TServerImageOptions = {
     accessTokenLifetime?: number;
   }[];
 };
-
-/** what is returned by Ganyemde API */
-export type TG_ServerImage = Pick<
-  TD_ServerImage,
-  'image_id' | 'image_name' | 'image_tag' | 'image_sha256'
->;
 
 /** what is store in Database */
 export type TD_Server = {
@@ -93,7 +84,6 @@ export type TServerComponentProps = Omit<
   /** Last time server was used by user or task (used for inactive project shutdown) */
   last_activity: Date | null;
   image: TG_ServerImage;
-  gatewayFQDN: string;
 };
 
 //
@@ -113,7 +103,6 @@ export type TServerComponentCallbacks = {
 
 export const TSSS_Server_to_TServerComponentProps = (
   server: TSSS_Server,
-  gatewayFQDN: string,
   host?: TG_User,
   images?: TG_ServerImage[]
 ): TServerComponentProps => {
@@ -126,7 +115,6 @@ export const TSSS_Server_to_TServerComponentProps = (
   return {
     ...server,
     image,
-    gatewayFQDN,
     last_watchdog_at: server.last_watchdog_at
       ? new Date(server.last_watchdog_at)
       : null,

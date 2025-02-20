@@ -24,7 +24,7 @@ import { TApi_Project, makeYjsDocId } from '@monorepo/demiurge-types';
 import { ApiFetch, serverUrl } from '@monorepo/api-fetch';
 import { TMyfetchRequest } from '@monorepo/simple-types';
 import { log } from '@monorepo/log';
-import { getCollabChunks } from '../../../model/collab-model-chunk';
+import { getCollabChunks } from './model/collab-model-chunk';
 
 //
 //
@@ -47,7 +47,7 @@ const projectContext = createContext<TProjectContext | null>(null);
 //
 //
 
-export const Project = ({
+export const ProjectContext = ({
   ownerId,
   projectName,
   children,

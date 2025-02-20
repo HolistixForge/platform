@@ -4,10 +4,16 @@ import { FormErrors, useAction, DialogControlled } from '@monorepo/ui-base';
 import { MountVolumeForm, MountVolumeFormData } from '@monorepo/ui-views';
 import { TDemiurgeNotebookEvent } from '@monorepo/jupyter';
 import { TEdge, TEdgeEnd, TPosition } from '@monorepo/core';
-import { TEventMountVolume, TServerEvents } from '@monorepo/servers';
+import {
+  TEventMountVolume,
+  TServerEvents,
+  NodeServer,
+  NodeVolume,
+} from '@monorepo/servers';
 import { SpaceModule } from '@monorepo/space';
 import { NodeChatbox, NodeChatAnchor } from '@monorepo/chats';
 import { NodeCell, NodeKernel, NodeTerminal } from '@monorepo/jupyter';
+
 import { ContextMenuLogic } from './menus/context-menu-logic';
 import { SpaceContextMenu } from './menus/context-menu';
 import { NewEdgeContextMenu } from './menus/context-menu-new-edge';
@@ -19,6 +25,8 @@ import './node-editor.scss';
 //
 
 const nodeTypes = {
+  server: NodeServer,
+  volume: NodeVolume,
   chat: NodeChatbox,
   'chat-anchor': NodeChatAnchor,
   'jupyter-cell': NodeCell,

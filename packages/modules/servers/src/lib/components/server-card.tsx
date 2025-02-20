@@ -38,6 +38,7 @@ import {
   CloudInstanceOptionsFormData,
 } from './cloud-instance-options';
 import { StatusLed } from './status-led';
+import { useServerProps } from './node-server/node-server';
 
 /**
  *
@@ -94,7 +95,7 @@ const isAlive = (
 //
 //
 
-export const ServerCard = ({
+export const ServerCardInternal = ({
   server_name,
   image,
   last_watchdog_at,
@@ -679,4 +680,23 @@ const CloudCircle = ({ on }: { on: boolean }) => {
       </div>
     </>
   );
+};
+
+//
+
+export const ServerCard = ({
+  project_server_id,
+}: {
+  project_server_id: number;
+}) => {
+  const props = useServerProps(project_server_id);
+
+  if (props)
+    return (
+      <div style={{ '--node-wrapper-header-height': '-8px' } as CSSProperties}>
+        <ServerCardInternal {...props} />
+      </div>
+    );
+
+  return null;
 };

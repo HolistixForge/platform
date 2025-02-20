@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { useTestBoolean } from '@monorepo/ui-base';
 import { TNodeContext, StoryMockSpaceContext } from '@monorepo/space';
 
-import { NodeServer } from './node-server';
+import { NodeServerInternal } from './node-server';
 import {
   newServerLocationNoneStory,
   cloudRunningStory,
@@ -42,7 +42,7 @@ const StoryWrapper = (
 
   return (
     <StoryMockSpaceContext selected={props.selected} isOpened={isOpened}>
-      <NodeServer
+      <NodeServerInternal
         expand={expand}
         reduce={reduce}
         viewStatus={{

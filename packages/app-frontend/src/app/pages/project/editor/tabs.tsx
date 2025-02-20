@@ -13,7 +13,7 @@ import { useCurrentUser } from '@monorepo/frontend-data';
 import { NodeEditorView } from './node-editor/node-editor-view';
 import { ResourcePage } from './resources-page';
 import { useDispatcher, useSharedData } from '../model/collab-model-chunk';
-import { useProject } from './node-editor/nodes/projects';
+import { useProject } from '../project-context';
 
 //
 

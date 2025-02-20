@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { randomGuy } from '@monorepo/ui-base';
 
-import { ServerCard } from './server-card';
+import { ServerCardInternal } from './server-card';
 import {
   newServerLocationNoneStory,
   cloudRunningStory,
@@ -25,7 +25,7 @@ const StoryWrapper = (
 ) => {
   const state = useMockServerBehaviours(props);
   console.log({ state });
-  return <ServerCard {...state} />;
+  return <ServerCardInternal {...state} />;
 };
 
 //

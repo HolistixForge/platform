@@ -20,7 +20,6 @@ export type {
   TEc2InstanceState,
   TServerImageOptions,
   TD_ServerImage,
-  TG_ServerImage,
   TServerComponentProps,
   TServerComponentCallbacks,
 } from './lib/servers-types';

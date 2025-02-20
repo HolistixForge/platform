@@ -35,9 +35,6 @@
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "references": [
     {
-      "path": "../modules/servers/tsconfig.lib.json"
-    },
-    {
       "path": "../demiurge-types/tsconfig.lib.json"
     },
     {

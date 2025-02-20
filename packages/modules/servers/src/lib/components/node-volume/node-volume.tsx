@@ -1,12 +1,21 @@
+import { useCallback } from 'react';
+
 import {
   InputsAndOutputs,
   TNodeContext,
   NodeHeader,
   DisablePanSelect,
   useMakeButton,
+  useNodeContext,
 } from '@monorepo/space';
+import { TGraphNode } from '@monorepo/core';
+import { useDispatcher } from '@monorepo/collab-engine';
 
-export type NodeVolumeProps = {
+import { TEventDeleteVolume } from '../../servers-events';
+
+//
+
+export type NodeVolumeInternalProps = {
   volume_name: string;
   volume_storage: number;
   onDelete: () => Promise<void>;
@@ -17,7 +26,7 @@ export type NodeVolumeProps = {
 
 //
 
-export const NodeVolume = ({
+export const NodeVolumeInternal = ({
   id,
   open,
   close,
@@ -28,7 +37,7 @@ export const NodeVolume = ({
   viewStatus,
   expand,
   reduce,
-}: NodeVolumeProps) => {
+}: NodeVolumeInternalProps) => {
   //
 
   const isExpanded = viewStatus.mode === 'EXPANDED';
@@ -70,5 +79,37 @@ export const NodeVolume = ({
         </DisablePanSelect>
       )}
     </div>
+  );
+};
+
+//
+
+//
+
+export const NodeVolume = ({ node }: { node: TGraphNode }) => {
+  const { volume_id, volume_name, volume_storage } = node.data! as {
+    volume_id: number;
+    volume_name: string;
+    volume_storage: number;
+  };
+  //
+  const useNodeValue = useNodeContext();
+
+  const dispatcher = useDispatcher<TEventDeleteVolume>();
+
+  const handleDeleteVolume = useCallback(async () => {
+    await dispatcher.dispatch({
+      type: 'servers:delete-volume',
+      volume_id,
+    });
+  }, [dispatcher, volume_id]);
+
+  return (
+    <NodeVolumeInternal
+      {...useNodeValue}
+      volume_name={volume_name}
+      volume_storage={volume_storage}
+      onDelete={handleDeleteVolume}
+    />
   );
 };

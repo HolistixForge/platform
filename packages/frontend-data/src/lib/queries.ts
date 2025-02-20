@@ -5,7 +5,6 @@ import {
   TCollaborator,
   TG_User,
 } from '@monorepo/demiurge-types';
-import { TG_ServerImage } from '@monorepo/servers';
 import { useApi } from './api-context';
 import {
   useQuery,
@@ -26,6 +25,14 @@ import { GanymedeApi } from './api-ganymede';
 
 //
 //
+
+/** what is returned by Ganyemde API */
+export type TG_ServerImage = {
+  image_id: number;
+  image_name: string;
+  image_tag: string;
+  image_sha256: string | null;
+};
 
 export const useQueryServerImages = () => {
   const { ganymedeApi } = useApi();
