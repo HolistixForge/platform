@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-import { useJLsManager } from '../jupyter-shared-model';
+import { useJLsManager } from '../jupyter-shared-model-front';
 import CodeEditorMonaco from '../components/code-editor-monaco/code-editor-monaco';
 
 //

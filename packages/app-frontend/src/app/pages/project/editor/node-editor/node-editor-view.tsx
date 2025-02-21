@@ -12,7 +12,7 @@ import {
 } from '@monorepo/servers';
 import { SpaceModule } from '@monorepo/space';
 import { NodeChatbox, NodeChatAnchor } from '@monorepo/chats';
-import { NodeCell, NodeKernel, NodeTerminal } from '@monorepo/jupyter';
+import { NodeCell, NodeKernel, NodeTerminal } from '@monorepo/jupyter/frontend';
 import { NodeYoutube } from '@monorepo/socials';
 
 import { ContextMenuLogic } from './menus/context-menu-logic';

@@ -12,7 +12,6 @@ import { ServerConnection, TerminalManager } from '@jupyterlab/services';
 import { Terminal } from '@jupyterlab/terminal';
 import { Widget } from '@lumino/widgets';
 
-import { TServerSettings } from '@monorepo/jupyter';
 import { useSharedData } from '@monorepo/collab-engine';
 import { TServer, TServersSharedData } from '@monorepo/servers';
 import { TGraphNode } from '@monorepo/core';
@@ -24,8 +23,10 @@ import {
   useNodeContext,
 } from '@monorepo/space';
 
-import { TJupyterSharedData, useJLsManager } from '../../jupyter-shared-model';
+import { TJupyterSharedData } from '../../jupyter-shared-model';
+import { useJLsManager } from '../../jupyter-shared-model-front';
 import { jupyterlabIsReachable } from '../../ds-backend';
+import { TServerSettings } from '../../jupyter-types';
 
 import '@jupyterlab/terminal/style/index';
 

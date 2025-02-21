@@ -24,8 +24,8 @@ import {
   TDemiurgeNotebookEvent,
   TJupyterSharedData,
   Jupyter_loadData,
-  Jupyter_Load_Frontend_ExtraContext,
 } from '@monorepo/jupyter';
+import { Jupyter_Load_Frontend_ExtraContext } from '@monorepo/jupyter/frontend';
 import { GanymedeApi } from '@monorepo/frontend-data';
 import { TEventSocials } from '@monorepo/socials';
 

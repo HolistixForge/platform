@@ -13,7 +13,8 @@ import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
 
 import { KernelStateIndicator } from './kernel-state-indicator';
 import { TDKID, TJupyterServerData } from '../../jupyter-types';
-import { TJupyterSharedData, useKernelPack } from '../../jupyter-shared-model';
+import { TJupyterSharedData } from '../../jupyter-shared-model';
+import { useKernelPack } from '../../jupyter-shared-model-front';
 import { greaterThan } from '../../front/jls-manager';
 
 //

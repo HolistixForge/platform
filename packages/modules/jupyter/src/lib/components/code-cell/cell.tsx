@@ -23,7 +23,8 @@ import { makeUuid } from '@monorepo/simple-types';
 
 import { TDemiurgeNotebookEvent } from '../../jupyter-events';
 import { IOutput, TCell } from '../../jupyter-types';
-import { TJupyterSharedData, useKernelPack } from '../../jupyter-shared-model';
+import { TJupyterSharedData } from '../../jupyter-shared-model';
+import { useKernelPack } from '../../jupyter-shared-model-front';
 import CodeEditorMonaco from '../code-editor-monaco/code-editor-monaco';
 import { BrowserWidgetManager } from '../../front/browser-widget-manager';
 import { KernelStateIndicator } from '../node-kernel/kernel-state-indicator';

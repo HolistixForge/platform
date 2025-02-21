@@ -17,11 +17,8 @@ import { TMyfetchRequest } from '@monorepo/simple-types';
 import { Core_loadData, CoreReducer } from '@monorepo/core';
 import { Space_loadData, SpaceReducer } from '@monorepo/space';
 
-import {
-  Jupyter_Load_Frontend_ExtraContext,
-  Jupyter_loadData,
-  TJupyterSharedData,
-} from '../jupyter-shared-model';
+import { Jupyter_loadData, TJupyterSharedData } from '../jupyter-shared-model';
+import { Jupyter_Load_Frontend_ExtraContext } from '../jupyter-shared-model-front';
 import { JupyterReducer } from '../jupyter-reducer';
 import { defaultGraphView } from '@monorepo/space';
 
