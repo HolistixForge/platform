@@ -1,8 +1,10 @@
 import { KernelManager, ServerConnection } from '@jupyterlab/services';
 import { IKernelConnection } from '@jupyterlab/services/lib/kernel/kernel';
+
+import { log } from '@monorepo/log';
+
 import { IOutput, TJKID, TKernelType, TServerSettings } from './jupyter-types';
 import { makeVirtualOutputArea } from './output-area';
-import { log } from '@monorepo/log';
 
 //
 //

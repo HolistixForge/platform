@@ -4,7 +4,6 @@
 : "${GW_ID:?GW_ID is not set}"
 : "${ENV_NAME:?ENV_NAME is not set}"
 : "${DOMAIN_NAME:?DOMAIN_NAME is not set}"
-: "${NFS_SERVER:?NFS_SERVER is not set}"
 : "${GATEWAY_TOKEN:?GATEWAY_TOKEN is not set}"
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -17,13 +16,25 @@ APP_COLLAB_PORT=$(get_app_port $GW_ID)
 
 IMAGE_NAME=gateway
 IMAGE_TAG=latest
-SCRIPTS_DIR="/home/dev/workspace/plearnt/docker-images/backend-images/gateway/app"
+SCRIPTS_DIR="/home/dev/workspace/monorepo/docker-images/backend-images/gateway/app"
 
-docker run --rm -it --name "gw" \
-    --privileged \
-    \
-    -e NFS_SERVER=${NFS_SERVER} \
-    \
+# Base docker run command
+DOCKER_CMD="docker run --rm -it --name gw --privileged"
+
+# Add volume mount or NFS server env var based on what's defined
+if [ -n "${WORKSPACE}" ]; then
+    DOCKER_CMD+=" \
+    -v ${WORKSPACE}:/home/dev/workspace:rw"
+elif [ -n "${NFS_SERVER}" ]; then
+    DOCKER_CMD+=" \
+    -e NFS_SERVER=${NFS_SERVER}"
+else
+    echo "Error: Either WORKSPACE or NFS_SERVER must be defined"
+    exit 1
+fi
+
+# Complete the docker run command
+DOCKER_CMD+=" \
     -e ENV_NAME=${ENV_NAME} \
     -e GATEWAY_TOKEN=${GATEWAY_TOKEN} \
     -e OPENVPN_PORT=${OPENVPN_PORT} \
@@ -33,4 +44,7 @@ docker run --rm -it --name "gw" \
     -p ${OPENVPN_PORT}:${OPENVPN_PORT}/udp \
     -p ${APP_COLLAB_PORT}:${APP_COLLAB_PORT} \
     \
-    "${IMAGE_NAME}:${IMAGE_TAG}"
+    \"${IMAGE_NAME}:${IMAGE_TAG}\""
+
+# Execute the docker run command
+eval "${DOCKER_CMD}"

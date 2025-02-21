@@ -13,8 +13,7 @@ main() {
     dev_mount_workspace
     dev_bind_nx_dirs
 
-    cd $PLEARNT 
-    # git config --global --add safe.directory $PLEARNT
+    cd $REPO_ROOT 
 
     if [[ -n "${SERVE_NX_APP}" ]]; then
         APP="${SERVE_NX_APP}"

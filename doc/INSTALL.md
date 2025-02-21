@@ -1,4 +1,4 @@
-# Development setup 
+# Development setup
 
 ## install
 
@@ -43,7 +43,7 @@ in the instance:
 install recent nodejs.
 see [dev-pod Dockerfile](../docker-images/backend-images/dev-pod/Dockerfile) as an example
 
-- run `$ npm install` in plearnt repo
+- run `$ npm install` in repo
 
 ## Install Docker
 
@@ -271,6 +271,9 @@ npx nx run app-frontend:build:production \
     && sudo chown -R www-data /var/www/app-frontend
 ```
 
+# Install gateway
+
+[gateway README](../docker-images/backend-images/gateway/README.md)
 
 # After reboot
 

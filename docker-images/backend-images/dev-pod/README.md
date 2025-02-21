@@ -19,7 +19,7 @@ docker run --rm -it --name "test-dev-pod" \
 
 # tag
 
-```shell 
+```shell
 docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
 ```
 
@@ -27,10 +27,4 @@ docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
 
 ```shell
 docker images --filter "dangling=true" -q | xargs docker rmi -f
-```
-
-# push in minikube
-
-```shell
-minikube image load "${IMAGE_NAME}:${IMAGE_TAG}"
 ```

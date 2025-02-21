@@ -3,31 +3,34 @@
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "${HERE}/common.sh"
 
-apt update && apt upgrade
+apt update
 
-# Add Docker's official GPG key:
-apt-get install ca-certificates curl
-install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-chmod a+r /etc/apt/keyrings/docker.asc
+# Install Docker if not already installed
+if ! command -v docker &> /dev/null; then
+  # Add Docker's official GPG key:
+  apt-get install ca-certificates curl
+  install -m 0755 -d /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  chmod a+r /etc/apt/keyrings/docker.asc
 
-# Add the repository to Apt sources:
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-  tee /etc/apt/sources.list.d/docker.list > /dev/null
-apt-get update
+  # Add the repository to Apt sources:
+  echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+    tee /etc/apt/sources.list.d/docker.list > /dev/null
+  apt-get update
+
+  apt install -y \
+  docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+fi
 
 # install stuffs
 apt install -y \
 nginx \
 certbot \
-python3-certbot-nginx \
-docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+python3-certbot-nginx
 
 # make nginx config
-
-rm -f /etc/nginx/sites-enabled/default
 
 # Check that environment variables are defined
 if [[ -z "$ENV_NAME" || -z "$DOMAIN_NAME" || -z "$GW_INSTANCE_ID" || -z "$GW_COUNT" ]]; then
@@ -36,7 +39,8 @@ if [[ -z "$ENV_NAME" || -z "$DOMAIN_NAME" || -z "$GW_INSTANCE_ID" || -z "$GW_COU
   exit 1
 fi
 
-
+# Build up list of domain names for certbot
+DOMAINS=""
 for (( COUNT=1; COUNT<=GW_COUNT; COUNT++ )); do
   PORT=$(get_app_port $COUNT)
   SERVER_NAME=gw-${GW_INSTANCE_ID}-${COUNT}.${ENV_NAME}.${DOMAIN_NAME}
@@ -66,19 +70,11 @@ server {
 }
 EOF
   ln -s "$SERVER_CONFIG" "/etc/nginx/sites-enabled/"
+  DOMAINS="${DOMAINS} --domain ${SERVER_NAME}"
 done
 
 systemctl start nginx
 systemctl enable nginx
-certbot --nginx --non-interactive --agree-tos --email admin@demiurge.co
+certbot --nginx --non-interactive --agree-tos --email admin@demiurge.co ${DOMAINS}
 
 exit 0
-
-# allow routing
-
-# sysctl_conf="/etc/sysctl.conf"
-# parameter="net.ipv4.ip_forward=1"
-# if ! grep -Fx "$parameter" "$sysctl_conf"; then
-#     echo "$parameter" | tee -a "$sysctl_conf" > /dev/null
-# fi
-# sysctl -p

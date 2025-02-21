@@ -1,24 +1,23 @@
 
-: "${NFS_SERVER:=host.minikube.internal}"
-: "${NFS_SOURCE:=/home/ubuntu/workspace}"
-
-###
-
-PLEARNT="$WORKSPACE/plearnt"
+REPO_ROOT="$WORKSPACE/monorepo"
 
 mount_points=(
-    "$PLEARNT/tmp"
-    "$PLEARNT/node_modules/.cache"
-    "$PLEARNT/.nx"
-    "$PLEARNT/dist"
+    "$REPO_ROOT/.nx"
+    #"$REPO_ROOT/dist"
 )
 
 dev_mount_workspace() {
-    echo "Mount $WORKSPACE... (${NFS_SERVER}:${NFS_SOURCE})"
-    mkdir -p /home/${DEV_USER}/workspace
-    sudo service rpcbind start
-    sudo service nfs-common start
-    sudo mount -t nfs -o rsize=8192,wsize=8192,timeo=14,intr ${NFS_SERVER}:${NFS_SOURCE} ${WORKSPACE}
+    if [ ! -d ${WORKSPACE} ]; then
+        if  [  -z "${NFS_SERVER}" ]; then
+            echo "Error: NFS_SERVER is not defined"
+            exit 1
+        fi
+        echo "Mount $WORKSPACE... (${NFS_SERVER}:${NFS_SOURCE})"
+        mkdir -p ${WORKSPACE}
+        sudo service rpcbind start
+        sudo service nfs-common start
+        sudo mount -t nfs -o rsize=8192,wsize=8192,timeo=14,intr ${NFS_SERVER}:${NFS_SOURCE} ${WORKSPACE}
+    fi
 }
 
 dev_bind_nx_dirs() {
@@ -27,7 +26,7 @@ dev_bind_nx_dirs() {
             sudo umount $mount_point
         fi
         echo "overwrite [$mount_point]"
-        SRC=$(mktemp -d "/tmp/plearnt_$(basename $mount_point)-XXXXXXXX")
+        SRC=$(mktemp -d "/tmp/monorepo_$(basename $mount_point)-XXXXXXXX")
         sudo chown "root:${DEV_USER}" "${SRC}"
         sudo chmod 775 "${SRC}"
         sudo mount --bind "${SRC}" $mount_point
