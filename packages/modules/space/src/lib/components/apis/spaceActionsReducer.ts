@@ -67,7 +67,7 @@ export class SpaceActionsReducer {
     action: TSACloseConnector | TSAOpenConnector,
     gv: TGraphView
   ) {
-    let cs = gv.connectorViews.get(action.nid);
+    let cs = gv.connectorViews[action.nid];
 
     if (!cs) {
       cs = [];
@@ -78,7 +78,7 @@ export class SpaceActionsReducer {
     if (!c) {
       c = connectorViewDefault(action.connectorName);
       cs.push(c);
-      gv.connectorViews.set(action.nid, cs);
+      gv.connectorViews[action.nid] = cs;
     }
 
     c.isOpened = action.type === 'close-connector' ? false : true;
@@ -150,12 +150,12 @@ export class SpaceActionsReducer {
     // for all edges in the graph extract, add to current view while grouping if necessary
     for (const edge of gv.edges) {
       // if one of the two edge connectors is closed in the current view...
-      const sourceConnector = gv.connectorViews
-        .get(edge.from.node)
-        ?.find((c) => c.connectorName === edge.from.connectorName);
-      const targetConnector = gv.connectorViews
-        .get(edge.to.node)
-        ?.find((c) => c.connectorName === edge.to.connectorName);
+      const sourceConnector = gv.connectorViews[edge.from.node]?.find(
+        (c) => c.connectorName === edge.from.connectorName
+      );
+      const targetConnector = gv.connectorViews[edge.to.node]?.find(
+        (c) => c.connectorName === edge.to.connectorName
+      );
 
       if (
         sourceConnector?.isOpened === false ||
@@ -195,8 +195,8 @@ export class SpaceActionsReducer {
     gv.graph.edges = [...drawnEdges, ...Array.from(edgesGroups.values())];
 
     // update grouped count of all connectors in current view
-    gv.connectorViews.forEach((connectors, nodeId) => {
-      connectors.forEach((c) => {
+    for (const [nodeId, connectors] of Object.entries(gv.connectorViews)) {
+      for (const c of connectors) {
         const edges = gv.graph.edges.filter(
           (edge) =>
             (edge.from.node === nodeId &&
@@ -208,8 +208,8 @@ export class SpaceActionsReducer {
           if (eg.group) return prev + eg.group.edges.length;
           else return prev;
         }, 0);
-      });
-    });
+      }
+    }
   }
 
   //

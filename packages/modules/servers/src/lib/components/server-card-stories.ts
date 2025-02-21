@@ -40,7 +40,6 @@ export const newServerLocationNoneStory = (): Story => ({
   last_activity: null,
   httpServices: [],
   location: 'none',
-  gatewayFQDN: '',
   ec2_instance_state: null,
   ...callbacks,
   oauth: [],

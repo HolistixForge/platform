@@ -78,7 +78,7 @@ export type TGraphView = {
    * (save previous states for future display) */
   nodeViews: Array<TNodeView>;
 
-  connectorViews: Map<string, Array<TConnectorView>>;
+  connectorViews: { [k: string]: Array<TConnectorView> };
   /** the edges in the current extract */
   edges: Array<TEdge>;
 
@@ -103,6 +103,6 @@ export const defaultGraphView = (): TGraphView => ({
     nodes: [],
     edges: [],
   },
-  connectorViews: new Map(),
+  connectorViews: {},
   edges: [],
 });

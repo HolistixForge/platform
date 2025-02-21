@@ -5,7 +5,7 @@ if [ -z "GATEWAY_DEV" ]; then
     echo TODO_GATEWAY
 else
     # dev
-    PGIDS=$(ps ax -o "pgid,cmd" | grep '[n]ode ./dist/packages/app-collab/main.js' | awk '{print $1}')
+    PGIDS=$(ps ax -o "pgid,cmd" | grep '[n]ode .*app-collab/main.js' | awk '{print $1}')
     echo "$PGIDS" | while read PGID; do
         if ! [ -z "${PGID}" ]; then
             echo "kill process PGID $PGID"

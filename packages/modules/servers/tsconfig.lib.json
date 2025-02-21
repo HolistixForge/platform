@@ -48,6 +48,9 @@
       "path": "../../simple-types/tsconfig.lib.json"
     },
     {
+      "path": "../tabs/tsconfig.lib.json"
+    },
+    {
       "path": "../../frontend-data/tsconfig.lib.json"
     },
     {

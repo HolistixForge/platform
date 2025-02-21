@@ -65,7 +65,7 @@ get_system_info() {
 }
 
 watchdog() {
-    PAYLOAD='{"event":{"type":"server-watchdog", "host_user_id": "'${HOST_USER_ID}'", "system": '$(get_system_info)'}}'
+    PAYLOAD='{"event":{"type":"server:watchdog", "host_user_id": "'${HOST_USER_ID}'", "system": '$(get_system_info)'}}'
     echo "--->$PAYLOAD<---"
     curl -X POST http://${GATEWAY_VPN_IP}/collab/event \
         -H "Authorization: ${TOKEN}" \

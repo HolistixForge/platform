@@ -710,10 +710,7 @@ export const makeServer = (
     name: s.server_name,
     type: 'server',
     root: true,
-    connectors: [
-      { connectorName: 'inputs', pins: [] },
-      { connectorName: 'outputs', pins: [] },
-    ],
+    connectors: [{ connectorName: 'outputs', pins: [] }],
     data: {
       project_server_id: s.project_server_id,
     },

@@ -55,7 +55,7 @@ export const TagsBar = ({ tags = [], addTag }: TagsBarProps) => {
         if (!checkOverflow(i)) {
           setVisibleTags((prev) => prev.slice(0, -1));
           setOtherTags(tags.slice(i));
-          setOtherTagsOpened(true);
+          //setOtherTagsOpened(true);
           break;
         }
       }

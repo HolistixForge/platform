@@ -32,23 +32,23 @@ export const EditorTabsSystemLogic = () => {
     title = 'New Tab',
     payload: TabPayload = { type: 'none' }
   ) => {
-    dispatcher.dispatch({ type: 'add-tab', path, title, payload });
+    dispatcher.dispatch({ type: 'tabs:add-tab', path, title, payload });
   };
 
   const onTabChange = (path: string[]) => {
-    dispatcher.dispatch({ type: 'active-tab-change', path });
+    dispatcher.dispatch({ type: 'tabs:active-tab-change', path });
   };
 
   const onTabDelete = (path: string[]) => {
-    dispatcher.dispatch({ type: 'delete-tab', path });
+    dispatcher.dispatch({ type: 'tabs:delete-tab', path });
   };
 
   const onTabRowAdd = (path: string[]) => {
-    dispatcher.dispatch({ type: 'convert-tab-to-group', path });
+    dispatcher.dispatch({ type: 'tabs:convert-tab-to-group', path });
   };
 
   const onTabRename = (path: string[], newName: string) => {
-    dispatcher.dispatch({ type: 'rename-tab', path, title: newName });
+    dispatcher.dispatch({ type: 'tabs:rename-tab', path, title: newName });
   };
 
   //

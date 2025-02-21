@@ -12,6 +12,9 @@
       "path": "../../simple-types"
     },
     {
+      "path": "../tabs"
+    },
+    {
       "path": "../../frontend-data"
     },
     {

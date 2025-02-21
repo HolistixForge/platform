@@ -2,16 +2,18 @@
 
 # exemple: $ watch -n 30 -c ./doc/monitoring.sh
 
+ENVIRONMENT=dev-002
+
 # List of services to monitor (URL and display name)
 declare -A services=(
     ["Google"]="https://www.google.com"
-    ["frontend"]="https://dev-001.demiurge.co"
-    ["frontend dev"]="https://frontend.dev-001.demiurge.co"
-    ["ganymede"]="https://ganymede.dev-001.demiurge.co/jupyterlab"
-    ["account"]="https://account.dev-001.demiurge.co/user"
-    ["gateway"]="https://gw2.dev-001.demiurge.co/collab/ping"
-    ["storybook"]="https://sb.dev-001.demiurge.co"
-    ["jaeger"]="https://jaeger.dev-001.demiurge.co"
+    ["frontend"]="https://${ENVIRONMENT}.demiurge.co"
+    ["frontend dev"]="https://frontend.${ENVIRONMENT}.demiurge.co"
+    ["ganymede"]="https://ganymede.${ENVIRONMENT}.demiurge.co/jupyterlab"
+    ["account"]="https://account.${ENVIRONMENT}.demiurge.co/user"
+    ["gateway"]="https://gw-1-1.${ENVIRONMENT}.demiurge.co/collab/ping"
+    ["storybook"]="https://sb.${ENVIRONMENT}.demiurge.co"
+    ["jaeger"]="https://jaeger.${ENVIRONMENT}.demiurge.co"
 )
 
 # Function to check the status of a URL with a timeout of 2 seconds

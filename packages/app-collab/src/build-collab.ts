@@ -111,6 +111,10 @@ const chunks: TCollaborativeChunk[] = [
     reducers: (sd: TValidSharedData) => [
       new ServersReducer(updateReverseProxy),
     ],
+    extraContext: (sd: TValidSharedData) => ({
+      toGanymede: toGanymede,
+      gatewayFQDN: CONFIG.GATEWAY_FQDN,
+    }),
   },
   {
     sharedData: (st: SharedTypes) => Tabs_loadData(st),

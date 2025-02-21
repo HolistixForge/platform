@@ -6,6 +6,7 @@ import {
   TNodeContext,
   useMakeButton,
   useNodeContext,
+  InputsAndOutputs,
 } from '@monorepo/space';
 import { TGraphNode } from '@monorepo/core';
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
@@ -15,6 +16,7 @@ import {
   useQueryServerImages,
   useQueryUser,
 } from '@monorepo/frontend-data';
+import { TTabEvents } from '@monorepo/tabs';
 
 import { ServerCardInternal } from '../server-card';
 import {
@@ -24,6 +26,7 @@ import {
   TSSS_Server_to_TServerComponentProps,
 } from '../../servers-types';
 import { TServersSharedData } from '../../servers-shared-model';
+import { TServerEvents } from '../../servers-events';
 
 //
 
@@ -45,7 +48,7 @@ export const useServerProps = (
 
   const { data: hostData } = useQueryUser(server?.host_user_id || null);
 
-  const dispatcher = useDispatcher();
+  const dispatcher = useDispatcher<TServerEvents | TTabEvents<any>>();
 
   const { ganymedeApi } = useApi();
 
@@ -66,6 +69,7 @@ export const useServerProps = (
       url: 'projects/{project_id}/server/{project_server_id}/cmd',
       method: 'GET',
       pathParameters: {
+        project_id: server.project_id,
         project_server_id,
       },
     }) as Promise<{ command: string }>);
@@ -135,7 +139,7 @@ export const useServerProps = (
         const service = server.httpServices.find((svc) => svc.name === name);
         if (service) {
           await dispatcher.dispatch({
-            type: 'add-tab',
+            type: 'tabs:add-tab',
             path: [],
             title: `${server.server_name}:${service.name}`,
             payload: {
@@ -232,7 +236,7 @@ export const NodeServerInternal = (
       className={`common-node server-node`}
       style={{ '--node-wrapper-header-height': '78px' } as CSSProperties}
     >
-      {/* <InputsAndOutputs id={id} /> */}
+      <InputsAndOutputs id={id} />
       <NodeHeader
         nodeType="server"
         id={id}

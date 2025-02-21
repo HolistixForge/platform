@@ -153,7 +153,7 @@ export const loadExampleData = (
       status: nodeViewDefaultStatus(),
     })),
     edges: [],
-    connectorViews: new Map(),
+    connectorViews: {},
     graph: {
       nodes: [],
       edges: [],
@@ -170,7 +170,7 @@ export const loadExampleData = (
       status: nodeViewDefaultStatus(),
     })),
     edges: [],
-    connectorViews: new Map(),
+    connectorViews: {},
     graph: {
       nodes: [],
       edges: [],
