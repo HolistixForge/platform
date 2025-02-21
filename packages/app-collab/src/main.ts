@@ -7,7 +7,7 @@ import {
   toGanymede,
 } from './build-collab';
 import { startEventsReducerServer } from './reducer-server';
-import { TStart, development } from '@monorepo/backend-engine';
+import { TStart } from '@monorepo/backend-engine';
 import { Dispatcher } from '@monorepo/collab-engine';
 import { TJupyterExtraArgs } from '@monorepo/jupyter';
 import {
@@ -44,8 +44,8 @@ export const startProjectCollab = async (project: TProjectConfig) => {
 
   if (!VPN) throw new Error('VPN config read failed');
 
-  // restart when development recompilation restart app
-  if (development(() => true) && PROJECT) startProjectCollab(PROJECT);
+  // restart project when recompilation restart app
+  if (PROJECT) startProjectCollab(PROJECT);
   else {
     // call "set gw ready" ganymede API endpoint
     // eslint-disable-next-line no-constant-condition
@@ -57,8 +57,8 @@ export const startProjectCollab = async (project: TProjectConfig) => {
           headers: { authorization: CONFIG.GATEWAY_TOKEN },
         });
         break;
-      } catch (e) {
-        log(6, 'GATEWAY', "can't set ready flag on Ganymede");
+      } catch (e: any) {
+        log(6, 'GATEWAY', `can't set ready flag on Ganymede [${e.message}]`);
         await sleep(5);
       }
     }

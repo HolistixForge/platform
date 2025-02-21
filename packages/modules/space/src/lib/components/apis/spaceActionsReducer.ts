@@ -219,8 +219,6 @@ export class SpaceActionsReducer {
     nodes: Readonly<Map<string, TGraphNode>>,
     edges: Readonly<Array<TEdge>>
   ) {
-    console.log(`updateGraphview`, { gv, nodes, edges });
-
     // Build set of nodes to render starting from root nodes
     const nodesToRender = new Set<string>();
     const edgesToRender = new Set<TEdge>();

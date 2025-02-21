@@ -5,7 +5,8 @@ USER root
 RUN apt update && apt install -y \
 openvpn \
 easy-rsa \
-nginx
+nginx \
+inotify-tools
 
 CMD env && ls -l \
     && /home/dev/main.sh \

@@ -1,4 +1,4 @@
-import { development } from '@monorepo/backend-engine';
+// import { development } from '@monorepo/backend-engine';
 import { log } from '@monorepo/log';
 import { TJson } from '@monorepo/simple-types';
 import * as fs from 'fs';
@@ -38,12 +38,8 @@ export let PROJECT: TProjectConfig | null = readJsonFileOrNull(
 );
 
 export const setProjectConfig = (project: TProjectConfig) => {
-  // Must not happen, app is killed and started again when project is shutted down
-  // if (PROJECT) throw new Error('NNNOOOOOOO');
   PROJECT = project;
-  development(() => {
-    writeJsonFile(DEV_PROJECT_CONFIG_FILE, project);
-  });
+  writeJsonFile(DEV_PROJECT_CONFIG_FILE, project);
 };
 
 //

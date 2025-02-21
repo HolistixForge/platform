@@ -1,3 +1,4 @@
+import { inSeconds } from '@monorepo/simple-types';
 import {
   SharedMap,
   SharedTypes,
@@ -5,6 +6,7 @@ import {
   useSharedData,
 } from '@monorepo/collab-engine';
 import { TGraphNode, TEdge, TProjectMeta } from './core-types';
+import { GATEWAY_INACIVITY_SHUTDOWN_DELAY } from './meta-reducer';
 
 export type TCoreSharedData = {
   meta: SharedMap<TProjectMeta>;
@@ -13,8 +15,18 @@ export type TCoreSharedData = {
 };
 
 export const Core_loadData = (st: SharedTypes): TCoreSharedData => {
+  const meta = st.getSharedMap<TProjectMeta>('demiurge-meta');
+  meta.set('meta', {
+    projectActivity: {
+      last_activity: new Date().toISOString(),
+      gateway_shutdown: inSeconds(
+        GATEWAY_INACIVITY_SHUTDOWN_DELAY,
+        new Date()
+      ).toISOString(),
+    },
+  });
   return {
-    meta: st.getSharedMap('demiurge-meta'),
+    meta,
     nodes: st.getSharedMap<TGraphNode>('demiurge-nodes'),
     edges: st.getSharedArray<TEdge>('demiurge-edges'),
   };

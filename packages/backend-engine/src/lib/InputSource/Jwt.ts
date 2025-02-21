@@ -100,7 +100,12 @@ export class Jwt extends InputSource {
     const payload: any = jwtPayload(authToken);
 
     if (
-      !['access_token', 'gateway_token', 'server_token'].includes(payload.type)
+      ![
+        'access_token',
+        'gateway_token',
+        'server_token',
+        'project_token',
+      ].includes(payload.type)
     )
       throw new ForbiddenException([
         { message: `invalid jwt token: not an access token` },

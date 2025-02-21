@@ -30,12 +30,7 @@ const initialTabsTree: TreeElement<TabPayload> = {
     },
     {
       title: 'node-editor-1',
-      payload: { type: 'node-editor', viewId: 'view-1' },
-      children: [],
-    },
-    {
-      title: 'node-editor-2',
-      payload: { type: 'node-editor', viewId: 'view-2' },
+      payload: { type: 'node-editor', viewId: DEFAULT_VIEW_1 },
       children: [],
     },
   ],

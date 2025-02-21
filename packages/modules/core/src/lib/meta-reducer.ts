@@ -9,7 +9,7 @@ import { TProjectMeta } from './core-types';
  *
  */
 
-const GATEWAY_INACIVITY_SHUTDOWN_DELAY = 3000; // secondes
+export const GATEWAY_INACIVITY_SHUTDOWN_DELAY = 3000; // secondes
 
 let shouldIBeDead = false;
 

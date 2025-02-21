@@ -13,7 +13,7 @@ import {
   TCommandConfig,
 } from '@monorepo/backend-engine';
 import { TJson } from '@monorepo/simple-types';
-import { NotFoundException } from '@monorepo/log';
+import { log, NotFoundException } from '@monorepo/log';
 import { Dispatcher } from '@monorepo/collab-engine';
 
 import { TAllEvents } from './build-collab';
@@ -62,6 +62,8 @@ class StartCollabCommand extends Command {
   async run(args: { config: TProjectConfig }): Promise<TCommandReturn> {
     //
     const { config } = args;
+
+    log(6, 'GATEWAY', 'StartCollabCommand', { config });
 
     if (config.GANYMEDE_API_TOKEN) {
       startProjectCollab(config);

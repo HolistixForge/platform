@@ -217,9 +217,10 @@ export const toGanymede = async <T>(request: TMyfetchRequest): Promise<T> => {
   request.url = `${ganymede_api}${request.url}`;
   request.pathParameters = {
     ...request.pathParameters,
-    project_id: PROJECT!.PROJECT_ID,
+    project_id: PROJECT?.PROJECT_ID || 'none',
   };
   const response = await myfetch(request);
+  log(6, 'GATEWAY', `${request.url} response: ${response.statusCode}`);
   if (response.statusCode !== 200)
     throw new ForwardException(request, response);
 
