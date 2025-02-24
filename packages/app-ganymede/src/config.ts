@@ -1,12 +1,12 @@
 const undefinedValues: string[] = [];
 
 const envVars = [
-  'GATEWAY_TOKEN',
-  'SERVER_BIND',
+  'FRONTEND_FQDN',
+  'ACCOUNT_FQDN',
   'GANYMEDE_FQDN',
-  'SCRIPTS_DIR',
-  'GATEWAY_FQDN',
-  'GATEWAY',
+  'ALLOWED_ORIGINS',
+  'GANYMEDE_SERVER_BIND',
+  'JUPYTER_HUB_VERSION',
 ] as const;
 
 type EnvVars = (typeof envVars)[number];

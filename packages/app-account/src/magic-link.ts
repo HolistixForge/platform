@@ -92,9 +92,9 @@ const mailContent = (user: MagicLinkUser, token: string) => {
   }</b></p>
   <p><b>If you did NOT request this operation, do NOT click on the link</b></p>
   <p>This link expires 10 minutes after your original verification request</p>
-  <p><a href="https://${CONFIG.APP_ACCOUNT_URL}${
-    CONFIG.CALLBACK_PATH
-  }?token=${token}">Validate operation</a></p>
+  <p><a href="https://${
+    CONFIG.APP_ACCOUNT_URL
+  }/magiclink/callback?token=${token}">Validate operation</a></p>
   `;
 };
 

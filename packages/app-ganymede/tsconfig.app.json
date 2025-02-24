@@ -8,10 +8,10 @@
     "resolveJsonModule": true
   },
   "files": [
-    "src/app/oas30.json",
-    "src/app/exec-pipes.json",
-    "src/app/data-connections.json",
-    "src/app/sql-api-pg.json"
+    "src/oas30.json",
+    "src/exec-pipes.json",
+    "src/data-connections.json",
+    "src/sql-api-pg.json"
   ],
   "include": ["src/**/*.ts"],
   "exclude": [

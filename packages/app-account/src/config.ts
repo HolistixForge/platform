@@ -1,11 +1,11 @@
 const undefinedValues: string[] = [];
-const CONFIG: { [k: string]: string } = {};
 
 const envVars = [
   'ACCOUNT_FQDN',
   'GANYMEDE_FQDN',
   'FRONTEND_FQDN',
   'JWT_PUBLIC_KEY',
+  'JWT_PRIVATE_KEY',
   'ALLOWED_ORIGINS',
   'ACCOUNT_SERVER_BIND',
   'PG_HOST',
@@ -22,7 +22,21 @@ const envVars = [
   'MAILING_USER',
   'MAILING_PASSWORD',
   'SESSION_COOKIE_KEY',
-];
+] as const;
+
+type EnvVars = (typeof envVars)[number];
+type ExtraKeys =
+  | 'APP_ACCOUNT_URL'
+  | 'APP_FRONTEND_URL'
+  | 'APP_FRONTEND_URL_DEV'
+  | 'LOGIN_PAGE_URL'
+  | 'MAGIC_LINK_FAILED_URL'
+  | 'MAGILINK_SECRET';
+
+const CONFIG: Record<EnvVars | ExtraKeys, string> = {} as Record<
+  EnvVars | ExtraKeys,
+  string
+>;
 
 envVars.forEach((varName) => {
   const value = process.env[varName];
