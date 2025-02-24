@@ -1,12 +1,8 @@
 ⚠️ Antoine's stuffs
 
-- compile app-frontend (dev, prod)
-- dev-002 local gateway ?
 - feature come back
 - PR quill
-- modules storybooks
 - notion module
-
 - DNS: https://chatgpt.com/share/67acc6e5-32e4-8011-a71b-e4d900e0f9e5
 
 - close tab for down resource
