@@ -1,9 +1,5 @@
 import { insertScriptsSynchronously } from '@monorepo/ui-toolkit';
 
-import $ from 'jquery';
-
-(window as any).jQuery = $;
-
 //
 //
 //
