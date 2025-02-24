@@ -71,7 +71,7 @@ start_all_services() {
     # Start backend services
     start_service "app-account" "node dist/packages/app-account/main.js"
     start_service "app-ganymede" "node dist/packages/app-ganymede/main.js"
-    
+    date > ./restart-app-inotify
     # Deploy frontend
     deploy_frontend
 }

@@ -12,16 +12,18 @@ else
 
     while true; do
         SERVER_BIND="[{\"host\": \"127.0.0.1\", \"port\": 8888}]" \
-            ACCOUNT_FQDN="${ACCOUNT_FQDN}" \
-            GANYMEDE_FQDN="${GANYMEDE_FQDN}" \
-            ALLOWED_ORIGINS="${ALLOWED_ORIGINS}" \
-            SCRIPTS_DIR="${SCRIPTS_DIR}" \
-            node --enable-source-maps ./dist/packages/app-collab/main.js 2>&1 | tee -a /tmp/gateway.log &
+        GATEWAY="true" \
+        GATEWAY_FQDN="${GATEWAY_FQDN}" \
+        ACCOUNT_FQDN="${ACCOUNT_FQDN}" \
+        GANYMEDE_FQDN="${GANYMEDE_FQDN}" \
+        ALLOWED_ORIGINS="${ALLOWED_ORIGINS}" \
+        SCRIPTS_DIR="${SCRIPTS_DIR}" \
+        node --enable-source-maps ./dist/packages/app-collab/main.js 2>&1 | tee -a /tmp/gateway.log &
         
         APP_PID=$!
         
         # Wait for changes to main.js
-        inotifywait -e modify ./dist/packages/app-collab/main.js
+        inotifywait -e modify ./restart-app-inotify
 
         echo "########## Restarting app-collab ##########"
         

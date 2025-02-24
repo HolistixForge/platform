@@ -49,3 +49,5 @@ test-output
 storybook-static
 
 .env
+
+restart-app-inotify
