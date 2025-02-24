@@ -28,6 +28,6 @@ export default defineConfig({
     },
   },
   define: {
-    __webpack_public_path__: '""', // Define it as an empty string
+    __webpack_public_path__: '""',
   },
 });
