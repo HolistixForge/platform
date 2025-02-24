@@ -1,12 +1,14 @@
-import { ChatMessage, ChatBoxProps } from './node-chatbox';
 import { useState } from 'react';
+
+import { sleep } from '@monorepo/simple-types';
+
 import { SimpleMessage } from '../discussionItem/discussionItem';
 import { ReplyMessage } from '../replyItem/replyItem';
-import { sleep } from '@monorepo/simple-types';
+import { ChatboxProps, ChatMessage } from './chatbox';
 
 //
 
-export const useTestChatBox = (_status: ChatBoxProps['status']) => {
+export const useTestChatBox = (_status: ChatboxProps['status']) => {
   const [status, setStatus] = useState(_status);
   const [messageList, setMessageList] = useState<ChatMessage[]>(testMessages);
   const [isWriting, setWriting] = useState(false);

@@ -1,7 +1,7 @@
 import { CSSProperties, useState } from 'react';
 
 import { Sidebar, randomGuy } from '@monorepo/ui-base';
-import { ServerCard, TServerComponentProps } from '@monorepo/servers';
+import { TServerComponentProps, ServerCardInternal } from '@monorepo/servers';
 
 import { Header } from '../components/header';
 import { ResourceBar } from '../components/resource-bar';
@@ -20,12 +20,12 @@ const makeFakeServer = (): TServerComponentProps => {
       image_tag: `tag-${id}`,
       image_sha256: null,
     },
-    gatewayFQDN: `${id}`,
     httpServices: [
       {
         port: 8888,
         name: 'jupyterlab',
         location: `/${id}/jupyterlab`,
+        host: 'localhost',
       },
     ],
     ip: `172.16.0.${Math.floor(Math.random() * 100)}`,
@@ -64,7 +64,7 @@ export const ServersCreateView = () => {
                   { '--node-wrapper-header-height': '-40px' } as CSSProperties
                 }
               >
-                <ServerCard
+                <ServerCardInternal
                   onCloud={function (
                     InstanceType: string,
                     storage: number

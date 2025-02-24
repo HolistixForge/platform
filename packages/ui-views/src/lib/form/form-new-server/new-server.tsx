@@ -1,6 +1,6 @@
 import * as Select from '@radix-ui/react-select';
 
-import { TG_ServerImage } from '@monorepo/servers';
+import { TG_ServerImage } from '@monorepo/frontend-data';
 import {
   ButtonBase,
   TAction,
