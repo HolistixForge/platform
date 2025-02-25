@@ -46,8 +46,8 @@ export class SocialsReducer extends Reducer<
       type: 'core:new-node',
       nodeData: {
         id,
-        name: `video`,
-        type: 'video',
+        name: 'youtube',
+        type: 'youtube',
         root: true,
         data: { videoId: g.event.videoId },
         connectors: [],

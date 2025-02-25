@@ -16,8 +16,10 @@ type ApiErrors = {
 export class ForwardException extends Exception {
   constructor(req: TMyfetchRequest, res: MyfetchResponse) {
     super([], res.statusCode);
-    this._errors = (res.json as ApiErrors).errors;
-    this._errors.push({ message: `from [${req.url}]` });
+    this._errors = (res.json as ApiErrors)?.errors || [];
+    this._errors.push({
+      message: `from [${req.url}], statusCode: ${res.statusCode}`,
+    });
   }
 }
 

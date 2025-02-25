@@ -88,12 +88,12 @@ export const SpaceModule = ({
 
   return (
     <DemiurgeSpace
-      viewId={'view-story'}
+      viewId={viewId}
       nodeComponent={logics.Node}
       edgeComponent={CustomStoryEdge}
       spaceState={logics.ss}
       spaceActionsDispatcher={logics.sad}
-      currentUser={{ username: 'User-0', color: '#ffa500' }}
+      currentUser={awareness._user || undefined}
       spaceAwareness={logics.ga}
       pointerTracker={logics.pt}
       avatarsStore={logics.as}

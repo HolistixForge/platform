@@ -14,6 +14,7 @@ import { TEventNewEdge, TEventNewNode } from '@monorepo/core';
 
 import { TSd, toGanymede } from './build-collab';
 import { PROJECT } from './project-config';
+import { error } from '@monorepo/log';
 
 //
 
@@ -153,7 +154,8 @@ export const loadCollaborationData = async (
       viewId: DEFAULT_VIEW_1,
     });
   } catch (err: any) {
-    console.log(err, JSON.stringify(err.toJson?.() || err.message, null, 4));
+    error('LOAD-COLLAB', err);
+    console.log(JSON.stringify(err.toJson?.() || err.message, null, 4));
     throw new Error('STOP');
   }
 

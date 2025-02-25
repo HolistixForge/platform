@@ -71,6 +71,7 @@ start_all_services() {
     # Start backend services
     start_service "app-account" "node dist/packages/app-account/main.js"
     start_service "app-ganymede" "node dist/packages/app-ganymede/main.js"
+    sleep 3 # wait for ganymede to start before restarting collab
     date > ./restart-app-inotify
     # Deploy frontend
     deploy_frontend

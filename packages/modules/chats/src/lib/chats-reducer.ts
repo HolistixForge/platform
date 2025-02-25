@@ -96,7 +96,6 @@ export class ChatReducer extends Reducer<
     const nc = newChat(g.st);
     g.sd.chats.set(nc.id, nc);
 
-    const chatId = makeUuid();
     const anchorNodeId = makeUuid();
     const chatNodeId = makeUuid();
 
@@ -105,10 +104,10 @@ export class ChatReducer extends Reducer<
       nodeData: {
         type: 'chat-anchor',
         id: anchorNodeId,
-        name: `Chat Anchor ${chatId}`,
+        name: `Chat Anchor ${nc.id}`,
         root: false,
         connectors: [{ connectorName: 'inputs', pins: [] }],
-        data: { chatId: chatId },
+        data: { chatId: nc.id },
       },
       edges: [],
     });
@@ -118,10 +117,10 @@ export class ChatReducer extends Reducer<
       nodeData: {
         type: 'chat',
         id: chatNodeId,
-        name: `Chat ${chatId}`,
+        name: `Chat ${nc.id}`,
         root: true,
         connectors: [{ connectorName: 'outputs', pins: [] }],
-        data: { chatId: chatId },
+        data: { chatId: nc.id },
       },
       edges: [
         {

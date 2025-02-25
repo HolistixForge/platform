@@ -1,5 +1,6 @@
 import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
 import { TCoreEvent, TCoreSharedData, TEdge, TGraphNode } from '@monorepo/core';
+import { error } from '@monorepo/log';
 
 import { TSpaceSharedData } from './space-shared-model';
 import { TSpaceEvent, TEventNewView, TEventSpaceAction } from './space-events';
@@ -58,6 +59,10 @@ export class SpaceReducer extends Reducer<
 
   _spaceAction(g: Ra<TSpaceEvent>) {
     const gv = g.sd.graphViews.get(g.event.viewId)!;
+    if (!gv) {
+      error('SPACE', `graphview ${g.event.viewId} not found`);
+      return;
+    }
     const gvc = structuredClone(gv);
     const nodes = g.sd.nodes as unknown as Map<string, TGraphNode>;
     this.spaceActionReducer.reduce(
