@@ -6,7 +6,7 @@ import { dkidToServer, TDKID, TJKID } from '../jupyter-types';
 import { BrowserWidgetManager } from './browser-widget-manager';
 import { JupyterlabDriver } from '../driver';
 import { TJupyterSharedData } from '../jupyter-shared-model';
-import { jupyterlabIsReachable } from '../ds-backend';
+import { jupyterlabIsReachable, serviceUrl } from '../ds-backend';
 import { injectWidgetsScripts } from './widgets-js-dependencies';
 
 //
@@ -230,14 +230,14 @@ export class JLsManager {
 
     const token = await this.getToken(server);
 
+    const url = serviceUrl(server, websocket);
+    if (!url)
+      throw new Error(
+        `no such server or is down [${server.project_server_id}, ${server.server_name}]`
+      );
+
     const r = {
-      baseUrl: serverUrl({
-        location: service.location,
-        host: service.host,
-        port: service.port,
-        ssl: service.secure,
-        websocket,
-      }),
+      baseUrl: url,
       token,
     };
 

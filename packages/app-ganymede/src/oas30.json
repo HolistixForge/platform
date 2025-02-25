@@ -1209,20 +1209,12 @@
         }
       }
     },
-    "/users": {
+    "/user-by-id": {
       "get": {
-        "summary": "search demiurge user by name or user_id",
+        "summary": "get demiurge user by user_id",
         "parameters": [
           {
             "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "name": "searched",
-            "in": "query",
-            "description": "the begining of a username to search for",
-            "schema": {
-              "$ref": "#/components/schemas/user/properties/username"
-            }
           },
           {
             "$ref": "#/components/parameters/user_id"
@@ -1259,7 +1251,60 @@
           "points": [
             {
               "selector": true,
-              "exec-pipe-id": "search-users"
+              "exec-pipe-id": "user-by-id"
+            }
+          ]
+        }
+      }
+    },
+    "/users-search": {
+      "get": {
+        "summary": "search demiurge user by name",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
+          {
+            "name": "searched",
+            "in": "query",
+            "description": "the begining of a username to search for",
+            "schema": {
+              "$ref": "#/components/schemas/user/properties/username"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "_0": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/user"
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        },
+        "x-backend-engine": {
+          "points": [
+            {
+              "selector": true,
+              "exec-pipe-id": "users-search"
             }
           ]
         }
@@ -1863,6 +1908,13 @@
               "none",
               "hosted"
             ]
+          },
+          "oauth": {
+            "title": "oauth",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
           }
         },
         "additionalProperties": false

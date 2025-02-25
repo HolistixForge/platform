@@ -99,9 +99,30 @@ export const JupyterTerminal = ({ terminalId }: { terminalId: string }) => {
   const ref = useRef<HTMLDivElement>(null);
   const yet = useRef<boolean>(false);
 
-  jupyterlabIsReachable(server).then((isReachable) =>
-    setIsReachable(isReachable)
-  );
+  //
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | undefined;
+
+    if (!isReachable) {
+      const checkReachable = () => {
+        jupyterlabIsReachable(server).then((isReachable) =>
+          setIsReachable(isReachable)
+        );
+      };
+
+      checkReachable();
+      interval = setInterval(checkReachable, 60000);
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [isReachable]);
+
+  //
 
   useEffect(() => {
     if (isReachable) {

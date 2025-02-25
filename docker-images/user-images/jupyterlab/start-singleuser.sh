@@ -58,4 +58,4 @@ JUPYTERHUB_API_TOKEN="${JUPYTERHUB_API_TOKEN}" \
     \
     --JupyterHubSingleUser.hub_activity_interval=60 \
     \
-    # --Application.log_level=DEBUG
+    --Application.log_level=DEBUG

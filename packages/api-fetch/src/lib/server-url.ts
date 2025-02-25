@@ -12,11 +12,15 @@ export const serverUrl = (a: {
   const { host, location, websocket, ssl, port } = a;
 
   let l = location;
-  if (!l.startsWith('/')) l = `/${l}`;
+  if (l !== '' && !l.startsWith('/')) l = `/${l}`;
 
   let protocol = 'http';
   if (websocket) protocol = 'ws';
   if (ssl === undefined || ssl === true) protocol = `${protocol}s`;
 
-  return `${protocol}://${host}:${port || ''}${l}`;
+  const r = `${protocol}://${host}:${port || ''}${l}`;
+
+  if (r.endsWith('/')) return r.slice(0, -1);
+
+  return r;
 };

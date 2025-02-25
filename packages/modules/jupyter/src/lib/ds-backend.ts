@@ -15,18 +15,25 @@ export type TOnNewDriverCb = (s: TJupyterServerData) => Promise<void>;
 
 //
 
-const serviceUrl = (s: TServer) => {
+export const serviceUrl = (s: TServer, websocket = false) => {
+  const isBackend = typeof window === 'undefined';
+
   const service = s.httpServices.find((serv) => serv.name === 'jupyterlab');
   if (!service) return false;
 
-  const host = process.env.GATEWAY ? s.ip : service.host;
+  const host = isBackend ? s.ip : service.host;
   if (!host) return false;
+
+  const port = isBackend ? service.port : undefined;
+
+  const ssl = isBackend ? false : service.secure;
 
   return serverUrl({
     host,
     location: service.location,
-    port: service.port,
-    ssl: service.secure,
+    port,
+    websocket,
+    ssl,
   });
 };
 
@@ -39,7 +46,7 @@ export const jupyterlabIsReachable = async (s: TServer) => {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 1000);
-      const response = await fetch(`${url}api`, { signal: controller.signal });
+      const response = await fetch(`${url}/api`, { signal: controller.signal });
       clearTimeout(timeoutId);
       if (response.status === 200) r = true;
     } catch (error) {
@@ -77,13 +84,16 @@ export class DriversStoreBackend {
     const server = this._servers.get(`${psid}`);
     if (server) {
       const url = serviceUrl(server);
-      if (!url) throw new Error('no such server or is down');
+      if (!url)
+        throw new Error(
+          `no such server or is down [${psid}, ${server.server_name}]`
+        );
       return {
         baseUrl: url,
         token,
       };
     }
-    throw new Error('no such server or is down');
+    throw new Error(`no such server or is down [${psid}]`);
   }
 
   //

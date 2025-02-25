@@ -159,10 +159,14 @@ export const ContextMenuLogic = ({
 
   const dispatcher = useDispatcher();
 
-  const sd = useSharedData(['nodes'], (sd) => sd);
+  const sd = useSharedData(['nodes', 'projectServers'], (sd) => sd);
 
   // get the origin node data
   const originNodeData = from && sd.nodes.get(from.node);
+
+  const originServerId = originNodeData?.data?.project_server_id as string;
+  const originServer =
+    originServerId && sd.projectServers.get(`${originServerId}`);
 
   /**
    *
@@ -261,18 +265,26 @@ export const ContextMenuLogic = ({
    */
 
   const onNewTerminal = useCallback(() => {
-    dispatcher.dispatch({
-      type: 'jupyter:new-terminal',
-      project_server_id: originNodeData!.data!.project_server_id as number,
-      origin: {
-        viewId: viewId,
-        position: {
-          x: refCoordinates.current.x,
-          y: refCoordinates.current.y,
+    const client_id =
+      originServer &&
+      originServer?.oauth.find((o) => o.service_name === 'jupyterlab')
+        ?.client_id;
+
+    if (client_id) {
+      dispatcher.dispatch({
+        type: 'jupyter:new-terminal',
+        project_server_id: originServer.project_server_id as number,
+        origin: {
+          viewId: viewId,
+          position: {
+            x: refCoordinates.current.x,
+            y: refCoordinates.current.y,
+          },
         },
-      },
-    });
-  }, [dispatcher, from, originNodeData, refCoordinates, viewId]);
+        client_id,
+      });
+    }
+  }, [dispatcher, from, originServer, refCoordinates, viewId]);
 
   /**
    *
@@ -373,8 +385,8 @@ export const ContextMenuLogic = ({
           onClick: v_action.open,
           disabled: from !== undefined,
         },
-        */
         { separator: true },
+        */
         {
           title: 'Chat Box',
           onClick: onNewChatBox,

@@ -6,7 +6,6 @@ const envVars = [
   'GANYMEDE_FQDN',
   'SCRIPTS_DIR',
   'GATEWAY_FQDN',
-  'GATEWAY',
 ] as const;
 
 type EnvVars = (typeof envVars)[number];
@@ -29,5 +28,7 @@ if (undefinedValues.length > 0) {
     )}`
   );
 }
+
+console.log('CONFIG', CONFIG);
 
 export { CONFIG };

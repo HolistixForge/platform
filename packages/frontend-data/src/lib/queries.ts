@@ -74,7 +74,7 @@ export const useQueryUser = (user_id: string | null) => {
     queryFn: () =>
       (
         ganymedeApi.fetch({
-          url: `users`,
+          url: `user-by-id`,
           method: 'GET',
           queryParameters: { user_id: user_id as string },
         }) as Promise<{
@@ -93,7 +93,7 @@ export const useQueriesUsers = (ids: string[]) => {
     queryFn: () =>
       (
         ganymedeApi.fetch({
-          url: `users`,
+          url: `user-by-id`,
           method: 'GET',
           queryParameters: { user_id },
         }) as Promise<{
@@ -116,7 +116,7 @@ export const useQueryUsersSearch = (token: string) => {
       token
         ? (
             ganymedeApi.fetch({
-              url: `users`,
+              url: `users-search`,
               method: 'GET',
               queryParameters: { searched: token },
             }) as Promise<{

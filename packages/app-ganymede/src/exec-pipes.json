@@ -147,7 +147,24 @@
         }
       ]
     },
-    "search-users": {
+    "user-by-id": {
+      "steps": [
+        {
+          "description": "get user",
+          "type": "sql-query",
+          "args": {
+            "connection": "pg-1",
+            "queryId": "func_users_search",
+            "args": [
+              "{query.user_id}",
+              null
+            ]
+          },
+          "graft": "."
+        }
+      ]
+    },
+    "users-search": {
       "steps": [
         {
           "description": "search through users",
@@ -156,7 +173,7 @@
             "connection": "pg-1",
             "queryId": "func_users_search",
             "args": [
-              "{query.user_id}",
+              null,
               "{query.searched}"
             ]
           },

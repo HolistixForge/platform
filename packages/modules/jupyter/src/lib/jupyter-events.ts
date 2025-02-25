@@ -66,6 +66,7 @@ export type TEventNewTerminal = {
   type: 'jupyter:new-terminal';
   project_server_id: number;
   origin?: TEventOrigin;
+  client_id: string; // force to pass specific jwt token (see GanymedeApi._getTokenKeyForRequest)
 };
 
 export type TDemiurgeNotebookEvent =

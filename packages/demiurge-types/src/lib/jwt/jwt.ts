@@ -27,7 +27,7 @@ export type TJwtGateway = {
 };
 
 /**
- * token givent to users
+ * token given to users
  */
 export type TJwtUser = {
   type: 'access_token' | 'refresh_token';

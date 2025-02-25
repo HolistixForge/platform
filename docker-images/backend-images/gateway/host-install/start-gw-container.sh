@@ -14,6 +14,8 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OPENVPN_PORT=$(get_vpn_port $GW_ID)
 APP_COLLAB_PORT=$(get_app_port $GW_ID)
 
+GATEWAY_FQDN=gw-${GW_INSTANCE_ID}-${GW_ID}.${ENV_NAME}.${DOMAIN_NAME}
+
 IMAGE_NAME=gateway
 IMAGE_TAG=latest
 SCRIPTS_DIR="/home/dev/workspace/monorepo/docker-images/backend-images/gateway/app"
@@ -37,6 +39,7 @@ fi
 DOCKER_CMD+=" \
     -e ENV_NAME=${ENV_NAME} \
     -e GATEWAY_TOKEN=${GATEWAY_TOKEN} \
+    -e GATEWAY_FQDN=${GATEWAY_FQDN} \
     -e OPENVPN_PORT=${OPENVPN_PORT} \
     -e APP_COLLAB_PORT=${APP_COLLAB_PORT} \
     -e SCRIPTS_DIR=${SCRIPTS_DIR} \

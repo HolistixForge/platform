@@ -88,11 +88,16 @@ display_menu() {
     echo -n "Enter your choice: "
 }
 
+# Create monitoring flag file
+echo "0" > /tmp/menu_monitoring_pause
+
 # Start monitoring in background
 (while true; do 
-    clear
-    ./tools/monitoring.sh
-    display_menu
+    if [ "$(cat /tmp/menu_monitoring_pause)" = "0" ]; then
+        clear
+        ./tools/monitoring.sh
+        display_menu
+    fi
     sleep 10
 done) &
 MONITOR_PID=$!
@@ -100,6 +105,7 @@ MONITOR_PID=$!
 # Cleanup function
 cleanup() {
     kill $MONITOR_PID 2>/dev/null
+    rm -f /tmp/menu_monitoring_pause
     exit
 }
 
@@ -109,6 +115,8 @@ trap cleanup INT
 # Main loop
 while true; do
     read -r choice
+
+    echo "1" > /tmp/menu_monitoring_pause
     
     case $choice in
         1)
@@ -116,6 +124,7 @@ while true; do
             build_all && start_all_services
             ;;
         2)
+            
             build_all
             ;;
         3)
@@ -135,5 +144,7 @@ while true; do
             echo -e "${RED}Invalid choice${NC}"
             ;;
     esac
-done
 
+    log "done"
+    echo "0" > /tmp/menu_monitoring_pause
+done

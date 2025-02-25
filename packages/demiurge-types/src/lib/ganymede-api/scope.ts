@@ -42,17 +42,15 @@ const SCOPE: TScope[] = [
 export const USER_SCOPE = SCOPE.filter((s) => s.user).map((s) => s.name);
 
 export const GATEWAY_PROJECT_SCOPE = SCOPE.filter((s) => s.gateway).map(
-  (s) => s.name,
+  (s) => s.name
 );
 
 export const GATEWAY_SCOPE = [{ name: 'ready' }, { name: 'stop' }];
 
 //
 
-export const makeProjectScopeString = (
-  project_id: number | string,
-  action?: string,
-) => `p:${project_id}${action ? `:${action}` : ''}`;
+export const makeProjectScopeString = (project_id: string, action?: string) =>
+  `p:${project_id}${action ? `:${action}` : ''}`;
 
 //
 

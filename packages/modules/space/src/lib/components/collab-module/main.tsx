@@ -56,9 +56,19 @@ const makeSpaceModuleNode = (nodeTypes: TNodeTypes) => {
 export const SpaceModule = ({
   viewId,
   nodeTypes,
+  onConnect,
+  onContextMenu,
+  onContextMenuNewEdge,
 }: {
   viewId: string;
   nodeTypes: TNodeTypes;
+  onConnect?: (edge: TEdge) => void;
+  onContextMenu?: (xy: TPosition, clientPosition: TPosition) => void;
+  onContextMenuNewEdge?: (
+    from: TEdgeEnd,
+    xy: TPosition,
+    clientPosition: TPosition
+  ) => void;
 }) => {
   const sd = useSharedData(['graphViews'], (sd) => sd);
   const collabDispatcher = useDispatcher();
@@ -87,19 +97,9 @@ export const SpaceModule = ({
       spaceAwareness={logics.ga}
       pointerTracker={logics.pt}
       avatarsStore={logics.as}
-      onContextMenu={function (xy: TPosition, clientPosition: TPosition): void {
-        alert('Function not implemented.');
-      }}
-      onContextMenuNewEdge={function (
-        from: TEdgeEnd,
-        xy: TPosition,
-        clientPosition: TPosition
-      ): void {
-        alert('Function not implemented.');
-      }}
-      onConnect={function (edge: TEdge): void {
-        alert('Function not implemented.');
-      }}
+      onContextMenu={onContextMenu || (() => {})}
+      onContextMenuNewEdge={onContextMenuNewEdge || (() => {})}
+      onConnect={onConnect || (() => {})}
     />
   );
 };

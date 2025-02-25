@@ -161,15 +161,15 @@ export const NodeEditorView = ({ viewId }: { viewId: string }) => {
     }
   };
 
-  /*
-    onConnect={handleConnect}
-    onContextMenu={handleContextMenu}
-    onContextMenuNewEdge={handleNewEdgeToNewNode}
-   */
-
   return (
     <div style={s}>
-      <SpaceModule viewId={viewId} nodeTypes={nodeTypes} />
+      <SpaceModule
+        viewId={viewId}
+        nodeTypes={nodeTypes}
+        onConnect={handleConnect}
+        onContextMenu={handleContextMenu}
+        onContextMenuNewEdge={handleNewEdgeToNewNode}
+      />
       <ContextMenuLogic refCoordinates={rcc} viewId={viewId} from={from}>
         <SpaceContextMenu triggerRef={trPane} />
         <NewEdgeContextMenu triggerRef={trNewEdge} />

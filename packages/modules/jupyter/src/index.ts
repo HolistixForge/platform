@@ -1,3 +1,7 @@
+import { PageConfig } from '@jupyterlab/coreutils';
+
+PageConfig.setOption('terminalsAvailable', 'true');
+
 export type { TDemiurgeNotebookEvent } from './lib/jupyter-events';
 
 export type { TJupyterSharedData } from './lib/jupyter-shared-model';

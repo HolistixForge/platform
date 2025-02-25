@@ -12,7 +12,6 @@ else
 
     while true; do
         SERVER_BIND="[{\"host\": \"127.0.0.1\", \"port\": 8888}]" \
-        GATEWAY="true" \
         GATEWAY_FQDN="${GATEWAY_FQDN}" \
         ACCOUNT_FQDN="${ACCOUNT_FQDN}" \
         GANYMEDE_FQDN="${GANYMEDE_FQDN}" \
