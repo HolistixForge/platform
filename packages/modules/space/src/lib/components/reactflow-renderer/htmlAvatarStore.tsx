@@ -110,8 +110,8 @@ export class HtmlAvatarStore extends AvatarStore {
         this.avatars.delete(k);
       }
     });
-    ups.forEach((up, key) => {
-      this.updateAvatar(key, up);
+    ups.forEach((up) => {
+      this.updateAvatar(up.key, up);
     });
     this.notifyListeners();
   }
