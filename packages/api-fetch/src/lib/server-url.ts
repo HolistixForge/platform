@@ -18,7 +18,7 @@ export const serverUrl = (a: {
   if (websocket) protocol = 'ws';
   if (ssl === undefined || ssl === true) protocol = `${protocol}s`;
 
-  const r = `${protocol}://${host}:${port || ''}${l}`;
+  const r = `${protocol}://${host}${port ? `:${port}` : ''}${l}`;
 
   if (r.endsWith('/')) return r.slice(0, -1);
 

@@ -1,7 +1,7 @@
 import { ServerConnection, TerminalManager } from '@jupyterlab/services';
 
 import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
-import { TMyfetchRequest, makeUuid } from '@monorepo/simple-types';
+import { TJsonArray, TMyfetchRequest, makeUuid } from '@monorepo/simple-types';
 import { NotFoundException } from '@monorepo/log';
 import { TServersSharedData, projectServerNodeId } from '@monorepo/servers';
 import { TEventDeleteNode, TEventNewNode } from '@monorepo/core';
@@ -204,7 +204,7 @@ export class JupyterReducer extends Reducer<
     if (cell)
       g.sd.cells.set(g.event.cellId, {
         ...cell,
-        outputs: g.event.output,
+        outputs: g.event.output as unknown as TJsonArray,
         busy: false,
       });
     return Promise.resolve();

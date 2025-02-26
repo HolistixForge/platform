@@ -1,6 +1,7 @@
-import { Listenable } from './listenable';
-import { TSelectingUsers } from '../../space-types';
 import { TPosition } from '@monorepo/core';
+import { Listenable } from '@monorepo/simple-types';
+
+import { TSelectingUsers } from '../../space-types';
 
 export type TUserPosition = {
   key: number;

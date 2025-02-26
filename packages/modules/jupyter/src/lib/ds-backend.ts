@@ -52,7 +52,13 @@ export const jupyterlabIsReachable = async (s: TServer) => {
     } catch (error) {
       //
     }
-  // console.log('jupyterlabIsReachable', url, r);
+  /*
+  console.log(
+    `jupyterlabIsReachable (${s.server_name})`,
+    url ? url : 'no jupyterlab service',
+    r
+  );
+  */
   return r;
 };
 

@@ -11,19 +11,21 @@ import ReactFlow, {
   Background,
   NodeChange,
 } from 'reactflow';
+import * as _ from 'lodash';
+
+import { useRegisterListener } from '@monorepo/simple-types';
+import { clientXY } from '@monorepo/ui-toolkit';
+import { TPosition, TEdge, TEdgeEnd } from '@monorepo/core';
 
 import { PointerTracker } from '../apis/pointerTracker';
-import { AvatarsRenderer, useRegisterListener } from './avatarsRenderer';
-import { clientXY } from '@monorepo/ui-toolkit';
+import { AvatarsRenderer } from './avatarsRenderer';
 import { SpaceContext } from './spaceContext';
-import * as _ from 'lodash';
 import { NodeWrapper } from './node-wrappers/node-wrapper';
 import { SpaceActionsDispatcher } from '../apis/spaceActionsDispatcher';
 import { SpaceState } from '../apis/spaceState';
 import { SpaceAwareness } from '../apis/spaceAwareness';
 import { HtmlAvatarStore } from './htmlAvatarStore';
 import { translateEdges, translateNodes } from './to-rf-nodes';
-import { TPosition, TEdge, TEdgeEnd } from '@monorepo/core';
 
 //
 //

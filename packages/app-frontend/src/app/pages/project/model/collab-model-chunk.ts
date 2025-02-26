@@ -76,6 +76,7 @@ export const getCollabChunks = (
       extraContext: (sd: TValidSharedData) =>
         Jupyter_Load_Frontend_ExtraContext(
           sd as TJupyterSharedData & TServersSharedData,
+          // getToken callback
           async (server) => {
             const oauth_client = server.oauth.find(
               (o) => o.service_name === 'jupyterlab'

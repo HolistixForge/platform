@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
-
 import { useExtraContext } from '@monorepo/collab-engine';
 import { TServer, TServersSharedData } from '@monorepo/servers';
+import { useRegisterListener } from '@monorepo/simple-types';
 
 import { TDKID } from './jupyter-types';
 import { JLsManager, TKernelPack } from './front/jls-manager';
@@ -26,33 +25,10 @@ export const useJLsManager = () =>
 //
 
 export const useKernelPack = (dkid: TDKID): TKernelPack => {
-  const [kernelPack, setKernelPack] = useState<TKernelPack | undefined>(
-    undefined
-  );
   const { jlsManager } = useJLsManager();
+  useRegisterListener(jlsManager, dkid);
 
-  const [, _update] = useState({});
-  const update = useCallback(() => _update({}), []);
+  const kernelPack = jlsManager.getKernelPack(dkid);
 
-  useEffect(() => {
-    jlsManager.getKernelPack(dkid).then((kp) => {
-      setKernelPack(kp);
-      jlsManager.addListener(dkid, update);
-    });
-
-    return () => {
-      jlsManager.removeListener(dkid, update);
-    };
-  }, [dkid, jlsManager, update]);
-
-  return (
-    kernelPack || {
-      project_server_id: -1,
-      dkid,
-      state: 'server-stopped',
-      progress: 0,
-      widgetManager: null,
-      listeners: [],
-    }
-  );
+  return kernelPack;
 };

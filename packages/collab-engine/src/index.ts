@@ -58,3 +58,5 @@ export type { TEditor } from './lib/front-hooks/bind-editor';
 export { getYDoc } from './lib/front-hooks/ydocs';
 
 export { buildUserCss } from './lib/front-hooks/YjsCssStylesheet';
+
+export { sharedDataToJson } from './lib/chunk';

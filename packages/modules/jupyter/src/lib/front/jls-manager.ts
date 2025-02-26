@@ -1,5 +1,6 @@
 import { serverUrl } from '@monorepo/api-fetch';
 import { TServer, TServersSharedData } from '@monorepo/servers';
+import { Listenable } from '@monorepo/simple-types';
 
 import { CollaborationProbe } from './jls-collaboration-probe';
 import { dkidToServer, TDKID, TJKID } from '../jupyter-types';
@@ -8,6 +9,7 @@ import { JupyterlabDriver } from '../driver';
 import { TJupyterSharedData } from '../jupyter-shared-model';
 import { jupyterlabIsReachable, serviceUrl } from '../ds-backend';
 import { injectWidgetsScripts } from './widgets-js-dependencies';
+import { sharedDataToJson } from '@monorepo/collab-engine';
 
 //
 
@@ -56,7 +58,7 @@ export type TOnNewDriverCb = (s: TServer) => Promise<void>;
  * JupyterLabs Manager
  */
 
-export class JLsManager {
+export class JLsManager extends Listenable {
   _drivers: Map<number, Promise<JupyterlabDriver>> = new Map();
   _kernelPacks: Map<TDKID, TKernelPack> = new Map();
   _sd: TJupyterSharedData & TServersSharedData;
@@ -73,8 +75,10 @@ export class JLsManager {
     sd: TJupyterSharedData & TServersSharedData,
     getToken: (s: TServer) => Promise<string>
   ) {
+    super();
     this._sd = sd;
     this.getToken = getToken;
+    this._sd.projectServers.observe(() => this._onChange());
     this._sd.jupyterServers.observe(() => this._onChange());
   }
 
@@ -128,10 +132,8 @@ export class JLsManager {
       // else
       else {
         // delete driver and probe for stopped servers
-        if (this._drivers.get(jupyterServer.project_server_id))
-          this._drivers.delete(jupyterServer.project_server_id);
-        if (this._collaborationProbes.get(jupyterServer.project_server_id))
-          this._collaborationProbes.delete(jupyterServer.project_server_id);
+        this._drivers.delete(jupyterServer.project_server_id);
+        this._collaborationProbes.delete(jupyterServer.project_server_id);
       }
     });
   }
@@ -296,13 +298,19 @@ export class JLsManager {
    * build a new kernel pack if necessary
    * @param dkid the demiurge kernel id
    */
-  async getKernelPack(dkid: TDKID): Promise<TKernelPack | undefined> {
+  getKernelPack(dkid: TDKID): TKernelPack {
     const p = this._kernelPacks.get(dkid);
     if (!p) {
       const r = dkidToServer(this._sd.jupyterServers as any, dkid);
-      if (r === undefined) return undefined;
-      const { server } = r;
+      if (r === undefined) {
+        console.log(
+          `no server for dkid [${dkid}]: Shared Data: `,
+          sharedDataToJson(this._sd)
+        );
+        throw new Error(`no server for dkid [${dkid}]`);
+      }
 
+      const { server } = r;
       const np: TKernelPack = {
         project_server_id: server.project_server_id,
         dkid,
@@ -311,7 +319,7 @@ export class JLsManager {
         widgetManager: null,
         listeners: [],
       };
-      await this._updateKernelPack(np);
+      /* await */ this._updateKernelPack(np);
       this._kernelPacks.set(dkid, np);
       return np;
     } else return p;
@@ -322,9 +330,8 @@ export class JLsManager {
    * @param dkid the demiurge kernel id
    * @param f  the callback to add
    */
-  addListener(dkid: TDKID, f: () => void) {
-    const p = this._kernelPacks.get(dkid);
-    if (!p) throw new Error(`no kernel pack for id [${dkid}]`);
+  override addListener(f: () => void, dkid: TDKID) {
+    const p = this.getKernelPack(dkid);
     p.listeners.push(f);
   }
 
@@ -333,9 +340,9 @@ export class JLsManager {
    * @param dkid the demiurge kernel id
    * @param f the callback to remove
    */
-  removeListener(dkid: TDKID, f: () => void) {
-    const p = this._kernelPacks.get(dkid);
-    if (p) p.listeners = p.listeners.filter((l) => Object.is(l, f));
+  override removeListener(f: () => void, dkid: TDKID) {
+    const p = this.getKernelPack(dkid);
+    p.listeners = p.listeners.filter((l) => Object.is(l, f));
   }
 
   /**

@@ -15,6 +15,8 @@ export type TEventExecutePythonNode = {
   cellId: string;
   dkid: TDKID;
   code: string;
+  /** not use directly but force to pass specific jwt token (see GanymedeApi._getTokenKeyForRequest) */
+  client_id: string;
 };
 
 export type TEventPythonNodeOutput = {
@@ -37,11 +39,15 @@ export type TEventKernelStarted = {
 export type TEventStartKernel = {
   type: 'jupyter:start-kernel';
   dkid: TDKID;
+  /** not use directly but force to pass specific jwt token (see GanymedeApi._getTokenKeyForRequest) */
+  client_id: string;
 };
 
 export type TEventStopKernel = {
   type: 'jupyter:stop-kernel';
   dkid: TDKID;
+  /** not use directly but force to pass specific jwt token (see GanymedeApi._getTokenKeyForRequest) */
+  client_id: string;
 };
 
 export type TEventNewKernel = {
@@ -54,6 +60,8 @@ export type TEventNewKernel = {
 export type TEventDeleteKernel = {
   type: 'jupyter:delete-kernel';
   dkid: TDKID;
+  /** not use directly but force to pass specific jwt token (see GanymedeApi._getTokenKeyForRequest) */
+  client_id: string;
 };
 
 export type TEventNewCell = {
@@ -66,7 +74,8 @@ export type TEventNewTerminal = {
   type: 'jupyter:new-terminal';
   project_server_id: number;
   origin?: TEventOrigin;
-  client_id: string; // force to pass specific jwt token (see GanymedeApi._getTokenKeyForRequest)
+  /** not use directly but force to pass specific jwt token (see GanymedeApi._getTokenKeyForRequest) */
+  client_id: string;
 };
 
 export type TDemiurgeNotebookEvent =

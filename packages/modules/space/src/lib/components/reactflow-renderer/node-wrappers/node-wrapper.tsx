@@ -2,11 +2,11 @@ import { createContext, FC, useContext } from 'react';
 import { ReactFlowState, useStore } from 'reactflow';
 
 import { useDebugComponent } from '@monorepo/log';
+import { useRegisterListener } from '@monorepo/simple-types';
 
 import { TNodeContext } from '../../apis/types/node';
 import { SelectionsAwareness } from './selection-awareness';
 import { useSpaceContext } from '../spaceContext';
-import { useRegisterListener } from '../avatarsRenderer';
 import { isNodeOpened, TNodeViewStatus } from '../../../space-types';
 import { SpaceNode } from '../to-rf-nodes';
 

@@ -1,10 +1,12 @@
 import { ReactNode, useMemo } from 'react';
+
+import { useRegisterListener } from '@monorepo/simple-types';
+
 import { SpaceContext } from '../reactflow-renderer/spaceContext';
 import { TNodeContext } from '../apis/types/node';
 import { DummySpaceAwareness } from './fakeSpaceAwareness';
 import { LocalSpaceActionsDispatcher } from './localSpaceActionsDispatcher';
 import { SpaceState } from '../apis/spaceState';
-import { useRegisterListener } from '../reactflow-renderer/avatarsRenderer';
 
 //
 

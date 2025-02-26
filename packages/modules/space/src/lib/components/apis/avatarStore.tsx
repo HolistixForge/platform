@@ -1,5 +1,7 @@
 import { ReactElement } from 'react';
-import { Listenable } from './listenable';
+
+import { Listenable } from '@monorepo/simple-types';
+
 import { SpaceAwareness } from './spaceAwareness';
 import { PointerTracker } from './pointerTracker';
 

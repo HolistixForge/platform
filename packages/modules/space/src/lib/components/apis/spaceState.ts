@@ -1,6 +1,6 @@
 import { TEdge, TConnector, TGraphNode } from '@monorepo/core';
+import { Listenable } from '@monorepo/simple-types';
 
-import { Listenable } from './listenable';
 import {
   TNodeView,
   TConnectorView,

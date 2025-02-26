@@ -20,6 +20,7 @@ import {
   useNodeContext,
 } from '@monorepo/space';
 import { makeUuid } from '@monorepo/simple-types';
+import { TServersSharedData, TServer } from '@monorepo/servers';
 
 import { TDemiurgeNotebookEvent } from '../../jupyter-events';
 import { IOutput, TCell } from '../../jupyter-types';
@@ -47,6 +48,19 @@ export const useCellLogic = ({
   const cell: TCell = useSharedData<TJupyterSharedData>(['cells'], (sd) =>
     sd.cells.get(cellId)
   );
+
+  const kernelPack = useKernelPack(cell.dkid);
+
+  const ps: TServer = useSharedData<TServersSharedData>(
+    ['projectServers'],
+    (sd) => {
+      return sd.projectServers.get(`${kernelPack.project_server_id}`);
+    }
+  );
+
+  const client_id = ps?.oauth.find(
+    (o) => o.service_name === 'jupyterlab'
+  )?.client_id;
 
   const dispatcher = useDispatcher<TDemiurgeNotebookEvent | TCoreEvent>();
 
@@ -85,12 +99,13 @@ export const useCellLogic = ({
 
   const handleExecute = () => {
     const code = editorRef.current?.getValue();
-    if (code) {
+    if (code && client_id) {
       dispatcher.dispatch({
         type: 'jupyter:execute-python-node',
         cellId,
         code,
         dkid: cell.dkid,
+        client_id,
       });
     }
   };
@@ -114,24 +129,7 @@ export const useCellLogic = ({
   };
 };
 
-/*
-
-  //
-
-  return (
-    <NodeJupyterlabCodeCell
-      {...useNodeValue}
-      code={code}
-      busy={busy}
-      onExecute={handleExecute}
-      onClearOutput={handleClearOutput}
-      onDelete={handleDeleteCell}
-      onEditorMount={handleEditorMount}
-    >
-      <JupyterlabCellOutput nid={id} dkid={dkid} />
-    </NodeJupyterlabCodeCell>
-  );
-*/
+//
 
 export const Cell = ({ cellId }: { cellId: string }) => {
   const props = useCellLogic({ cellId, selected: false });
@@ -199,7 +197,7 @@ const CellOutput = (props: ReturnType<typeof useCellLogic>) => {
   useEffect(() => {
     if (oa) {
       oa.model.clear();
-      const customOutput = uuidInject(outputs);
+      const customOutput = uuidInject(outputs as unknown as IOutput[]);
       oa.model.fromJSON(customOutput);
     }
   }, [oa, outputs, uuidInject]);

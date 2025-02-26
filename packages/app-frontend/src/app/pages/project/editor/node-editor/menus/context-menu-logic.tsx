@@ -377,8 +377,8 @@ export const ContextMenuLogic = ({
           title: 'Code Cell',
           onClick: onNewCodeCell,
           disabled: !(
-            (originNodeData?.type === 'kernel' ||
-              originNodeData?.type === 'python') &&
+            (originNodeData?.type === 'jupyter-kernel' ||
+              originNodeData?.type === 'jupyter-cell') &&
             from?.connectorName === 'outputs'
           ),
         },

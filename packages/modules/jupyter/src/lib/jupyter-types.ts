@@ -1,5 +1,6 @@
 import { ServerConnection } from '@jupyterlab/services';
 import * as nbformat from '@jupyterlab/nbformat';
+import { TJsonArray } from '@monorepo/simple-types';
 
 //
 
@@ -62,7 +63,7 @@ export type TCell = {
   cellId: string;
   busy: boolean;
   dkid: TDKID;
-  outputs: IOutput[];
+  outputs: TJsonArray;
 };
 
 export type TTerminal = {
