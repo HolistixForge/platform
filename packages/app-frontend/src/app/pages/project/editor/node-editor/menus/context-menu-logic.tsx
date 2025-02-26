@@ -111,8 +111,12 @@ export const useNewServerAction = (
     (d) => {
       return dispatcher.dispatch({
         type: 'servers:new',
-        serverName: d.serverName as string,
-        imageId: d.imageId as number,
+        from: {
+          new: {
+            serverName: d.serverName as string,
+            imageId: d.imageId as number,
+          },
+        },
         origin:
           viewId && refCoordinates
             ? {

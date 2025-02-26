@@ -52,8 +52,12 @@ const Story = () => {
   if (!jupyter) {
     dispatcher.dispatch({
       type: 'servers:new',
-      serverName: 'story-server',
-      imageId: 2, // Image id of jupyterlab minimal notebook docker image
+      from: {
+        new: {
+          serverName: 'story-server',
+          imageId: 2, // Image id of jupyterlab minimal notebook docker image
+        },
+      },
     });
   }
   // step 2: map service

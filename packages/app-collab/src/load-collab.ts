@@ -3,10 +3,9 @@ import {
   TApi_Mount,
   TG_Server,
   TApi_Volume,
-  TEc2InstanceState,
-  makeServer,
   makeVolume,
   makeMountEdge,
+  TEventNewServer,
 } from '@monorepo/servers';
 import { Dispatcher } from '@monorepo/collab-engine';
 import { TEventNewView } from '@monorepo/space';
@@ -46,7 +45,10 @@ const headers = () => ({ authorization: PROJECT!.GANYMEDE_API_TOKEN });
 
 export const loadCollaborationData = async (
   sd: TSd,
-  dispatcher: Dispatcher<TEventNewView | TEventNewNode | TEventNewEdge, {}>
+  dispatcher: Dispatcher<
+    TEventNewView | TEventNewNode | TEventNewEdge | TEventNewServer,
+    {}
+  >
 ) => {
   try {
     sd.tabs.set('unique', { tree: initialTabsTree, actives: {} });
@@ -66,31 +68,15 @@ export const loadCollaborationData = async (
       for (let i = 0; i < servers.length; i++) {
         const s = servers[i];
 
-        let state: TEc2InstanceState | undefined = undefined;
-
-        if (s.location === 'aws') {
-          const is = await toGanymede<{ state: TEc2InstanceState }>({
-            url: '/projects/{project_id}/server/{project_server_id}/instance-state',
-            method: 'GET',
-            headers: headers(),
-            pathParameters: {
+        dispatcher.dispatch(
+          {
+            type: 'servers:new',
+            from: {
               project_server_id: s.project_server_id,
             },
-          });
-          state = is.state;
-        }
-
-        const { node, projectServer } = makeServer(s, state);
-        sd.projectServers.set(
-          `${projectServer.project_server_id}`,
-          projectServer
+          },
+          { authorizationHeader: PROJECT!.GANYMEDE_API_TOKEN }
         );
-
-        dispatcher.dispatch({
-          type: 'core:new-node',
-          nodeData: node,
-          edges: [],
-        });
 
         /**
          * add incoming edges from volumes nodes

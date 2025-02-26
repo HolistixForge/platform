@@ -1,16 +1,19 @@
 import { TEventOrigin } from '@monorepo/core';
 
-import { ServerSystemInfo, TEc2InstanceState } from './servers-types';
+import { ServerSystemInfo, TEc2InstanceState, TServer } from './servers-types';
 
 //
 
 export type TEventNewServer = {
   type: 'servers:new';
-  serverName: string;
-  imageId: number;
+  from: {
+    new?: { serverName: string; imageId: number };
+    project_server_id?: number;
+  };
   origin?: TEventOrigin;
+  /** Do not provide this value, servers reducers will fill it for others subsequent reducers */
   result?: {
-    project_server_id: number;
+    server: TServer;
   };
 };
 

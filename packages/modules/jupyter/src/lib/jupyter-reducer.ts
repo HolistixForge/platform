@@ -117,11 +117,12 @@ export class JupyterReducer extends Reducer<
 
   async _newServer(g: Ra<TEventNewServer>): Promise<void> {
     const r = g.event.result;
-    if (r && JUPYTER_IMAGE_IDS.includes(g.event.imageId))
-      g.sd.jupyterServers.set(`${r.project_server_id}`, {
-        project_server_id: r.project_server_id,
+    if (r && JUPYTER_IMAGE_IDS.includes(r.server.image_id)) {
+      g.sd.jupyterServers.set(`${r.server.project_server_id}`, {
+        project_server_id: r.server.project_server_id,
         kernels: [],
       });
+    }
   }
 
   //

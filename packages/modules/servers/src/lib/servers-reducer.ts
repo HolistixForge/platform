@@ -156,44 +156,64 @@ export class ServersReducer extends Reducer<
   async _newServer(g: Ra<TEventNewServer>) {
     // call api endpoint to create a server
 
-    const r = await g.extraArgs.toGanymede<{
-      _0: { new_project_server_id: number };
-    }>({
-      url: '/projects/{project_id}/servers',
-      method: 'POST',
-      jsonBody: {
-        name: g.event.serverName,
-        imageId: g.event.imageId,
-      },
-      headers: { authorization: g.extraArgs.authorizationHeader },
-    });
+    let psid = g.event.from.project_server_id;
 
-    const newServer = await this._getUpToDateServerData(
-      g,
-      r._0.new_project_server_id
-    );
-
-    // create corresponding node in each view
-    if (newServer) {
-      const { node, projectServer } = makeServer(newServer);
-      g.sd.projectServers.set(
-        `${projectServer.project_server_id}`,
-        projectServer
-      );
-
-      // pass id to following reducers
-      g.event.result = {
-        project_server_id: projectServer.project_server_id,
-      };
-
-      g.dispatcher.dispatch({
-        type: 'core:new-node',
-        nodeData: node,
-        edges: [],
-        origin: g.event.origin,
+    if (g.event.from.new) {
+      const r = await g.extraArgs.toGanymede<{
+        _0: { new_project_server_id: number };
+      }>({
+        url: '/projects/{project_id}/servers',
+        method: 'POST',
+        jsonBody: {
+          name: g.event.from.new.serverName,
+          imageId: g.event.from.new.imageId,
+        },
+        headers: { authorization: g.extraArgs.authorizationHeader },
       });
+      psid = r._0.new_project_server_id;
     }
 
+    if (psid) {
+      const server = await this._getUpToDateServerData(g, psid);
+
+      if (server) {
+        let state: TEc2InstanceState | undefined = undefined;
+
+        if (server.location === 'aws') {
+          const is = await g.extraArgs.toGanymede<{ state: TEc2InstanceState }>(
+            {
+              url: '/projects/{project_id}/server/{project_server_id}/instance-state',
+              method: 'GET',
+              headers: { authorization: g.extraArgs.authorizationHeader },
+              pathParameters: {
+                project_server_id: server.project_server_id,
+              },
+            }
+          );
+          state = is.state;
+        }
+
+        // create corresponding node in each view
+
+        const { node, projectServer } = makeServer(server, state);
+        g.sd.projectServers.set(
+          `${projectServer.project_server_id}`,
+          projectServer
+        );
+
+        // pass id to following reducers
+        g.event.result = {
+          server: projectServer,
+        };
+
+        g.dispatcher.dispatch({
+          type: 'core:new-node',
+          nodeData: node,
+          edges: [],
+          origin: g.event.origin,
+        });
+      }
+    }
     return;
   }
 
