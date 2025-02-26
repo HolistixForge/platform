@@ -9,10 +9,12 @@ import {
   TSAUnhighlightFromConnector,
   TSAReduceNode,
   TSAExpandNode,
-  TSAUpdateGraphView,
+  TSACloseNode,
+  TSAOpenNode,
 } from '../../space-events';
 import {
   connectorViewDefault,
+  isNodeOpened,
   nodeViewDefaultStatus,
   TGraphView,
 } from '../../space-types';
@@ -55,9 +57,33 @@ export class SpaceActionsReducer {
         this.changeNodeMode(action, gv, 'EXPANDED');
         break;
 
-      case 'update-graph-view':
-        this.updateGraphview(action, gv, nodes, edges);
+      case 'close-node':
+        this.openCloseNode(action, gv, nodes, edges);
         break;
+
+      case 'open-node':
+        this.openCloseNode(action, gv, nodes, edges);
+        break;
+
+      case 'update-graph-view':
+        this.updateGraphview(gv, nodes, edges);
+        break;
+    }
+  }
+
+  //
+
+  private openCloseNode(
+    action: TSACloseNode | TSAOpenNode,
+    gv: TGraphView,
+    nodes: Readonly<Map<string, TGraphNode>>,
+    edges: Readonly<Array<TEdge>>
+  ) {
+    const node = gv.nodeViews.find((n) => n.id === action.nid);
+    if (node) {
+      node.status.forceOpened = action.type === 'open-node' ? true : false;
+      node.status.forceClosed = action.type === 'open-node' ? false : true;
+      this.updateGraphview(gv, nodes, edges);
     }
   }
 
@@ -89,7 +115,7 @@ export class SpaceActionsReducer {
   //
 
   private moveNode(action: TSAMoveNode, gv: TGraphView) {
-    const node = gv.graph.nodes.find((n) => n.id === action.nid);
+    const node = gv.nodeViews.find((n) => n.id === action.nid);
     if (node) {
       node.position = action.position;
     }
@@ -124,7 +150,7 @@ export class SpaceActionsReducer {
     gv: TGraphView,
     mode: 'REDUCED' | 'EXPANDED'
   ) {
-    const node = gv.graph.nodes.find((n) => n.id === action.nid);
+    const node = gv.nodeViews.find((n) => n.id === action.nid);
     if (node) {
       node.status.mode = mode;
     }
@@ -214,7 +240,6 @@ export class SpaceActionsReducer {
 
   //
   private updateGraphview(
-    action: TSAUpdateGraphView,
     gv: TGraphView,
     nodes: Readonly<Map<string, TGraphNode>>,
     edges: Readonly<Array<TEdge>>
@@ -229,17 +254,21 @@ export class SpaceActionsReducer {
 
       nodesToRender.add(nodeId);
 
-      // Find all edges connected to this node
-      edges.forEach((edge, edgeId) => {
-        if (edge.from.node === nodeId) {
-          edgesToRender.add(edge);
-          traverseFromNode(edge.to.node, currentDepth + 1);
-        }
-        if (edge.to.node === nodeId) {
-          edgesToRender.add(edge);
-          traverseFromNode(edge.from.node, currentDepth + 1);
-        }
-      });
+      const node = gv.nodeViews.find((n) => n.id === nodeId);
+
+      if (node && isNodeOpened(node.status)) {
+        // Find all edges connected to this node
+        edges.forEach((edge, edgeId) => {
+          if (edge.from.node === nodeId) {
+            edgesToRender.add(edge);
+            traverseFromNode(edge.to.node, currentDepth + 1);
+          }
+          if (edge.to.node === nodeId) {
+            edgesToRender.add(edge);
+            traverseFromNode(edge.from.node, currentDepth + 1);
+          }
+        });
+      }
     };
 
     // Start traversal from each root node
@@ -257,19 +286,21 @@ export class SpaceActionsReducer {
       nodesToRender.has(node.id)
     );
 
-    // Add all root nodes from nodes map to graph view
+    // build node views if necessary, then add to graph.nodes
     nodesToRender.forEach((nodeId) => {
-      const existingNode = gv.graph.nodes.find((n) => n.id === nodeId);
-      if (!existingNode) {
-        gv.graph.nodes.push({
+      let n = gv.nodeViews.find((n) => n.id === nodeId);
+      if (!n) {
+        n = {
           id: nodeId,
           position: {
             x: 0,
             y: 0,
           },
           status: nodeViewDefaultStatus(),
-        });
+        };
+        gv.nodeViews.push(n);
       }
+      gv.graph.nodes.push(n);
     });
 
     this.resolveDrawnEdges(gv);

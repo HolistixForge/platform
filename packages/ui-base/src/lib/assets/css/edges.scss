@@ -25,6 +25,13 @@ g.react-flow__edge {
       stroke: #ff0000; /* red */
       stroke-dasharray: 5;
     }
+    &.chat-anchor {
+      path {
+        stroke: var(--color-chat-new);
+        stroke-width: 2.5;
+        stroke-dasharray: 0;
+      }
+    }
   }
 
   &.next_in_sequence {

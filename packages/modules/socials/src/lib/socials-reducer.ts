@@ -53,6 +53,7 @@ export class SocialsReducer extends Reducer<
         connectors: [],
       },
       edges: [],
+      origin: g.event.origin,
     });
     return Promise.resolve();
   }

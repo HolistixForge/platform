@@ -105,11 +105,12 @@ export class ChatReducer extends Reducer<
         type: 'chat-anchor',
         id: anchorNodeId,
         name: `Chat Anchor ${nc.id}`,
-        root: false,
-        connectors: [{ connectorName: 'inputs', pins: [] }],
+        root: true,
+        connectors: [{ connectorName: 'outputs', pins: [] }],
         data: { chatId: nc.id },
       },
       edges: [],
+      origin: g.event.origin,
     });
 
     g.dispatcher.dispatch({
@@ -118,8 +119,8 @@ export class ChatReducer extends Reducer<
         type: 'chat',
         id: chatNodeId,
         name: `Chat ${nc.id}`,
-        root: true,
-        connectors: [{ connectorName: 'outputs', pins: [] }],
+        root: false,
+        connectors: [{ connectorName: 'inputs', pins: [] }],
         data: { chatId: nc.id },
       },
       edges: [
@@ -135,9 +136,19 @@ export class ChatReducer extends Reducer<
           type: 'referenced_by',
           data: {
             detailType: 'chat-anchor',
+            className: ['chat-anchor', 'straight'],
           },
         },
       ],
+      origin: g.event.origin
+        ? {
+            ...g.event.origin,
+            position: {
+              x: g.event.origin.position.x + 100,
+              y: g.event.origin.position.y + 100,
+            },
+          }
+        : undefined,
     });
 
     return Promise.resolve();

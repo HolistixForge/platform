@@ -1,3 +1,5 @@
+import { TJson } from '@monorepo/simple-types';
+
 import { SharedTypes, SharedArray, SharedMap } from '../SharedTypes';
 import { Doc, Array } from 'yjs';
 
@@ -29,14 +31,14 @@ export class YjsSharedTypes extends SharedTypes {
 
   //
 
-  getSharedMap<T>(name?: string): SharedMap<T> {
+  getSharedMap<T extends TJson>(name?: string): SharedMap<T> {
     const m = this._ydoc.getMap<T>(name);
     return m;
   }
 
   //
 
-  getSharedArray<T>(name?: string): SharedArray<T> {
+  getSharedArray<T extends TJson>(name?: string): SharedArray<T> {
     const a = this._ydoc.getArray<T>(name);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore

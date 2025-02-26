@@ -31,7 +31,6 @@ export type TNodeView = {
   id: string;
   position: TPosition;
   status: TNodeViewStatus;
-  standalone?: boolean;
 };
 
 //

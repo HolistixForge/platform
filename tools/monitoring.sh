@@ -10,11 +10,11 @@ ENVIRONMENT=dev-002
 # List of services to monitor (URL and display name)
 declare -A services=(
     ["frontend"]="https://${ENVIRONMENT}.demiurge.co"
-    ["frontend dev"]="https://frontend.${ENVIRONMENT}.demiurge.co"
+#    ["frontend dev"]="https://frontend.${ENVIRONMENT}.demiurge.co"
     ["ganymede"]="https://ganymede.${ENVIRONMENT}.demiurge.co/jupyterlab"
     ["account"]="https://account.${ENVIRONMENT}.demiurge.co/user"
     ["gateway-1"]="https://gw-1-1.${ENVIRONMENT}.demiurge.co/collab/ping"
-    ["storybook"]="https://sb.${ENVIRONMENT}.demiurge.co"
+ #   ["storybook"]="https://sb.${ENVIRONMENT}.demiurge.co"
     ["jaeger"]="https://jaeger.${ENVIRONMENT}.demiurge.co"
 )
 

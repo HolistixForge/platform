@@ -1,4 +1,8 @@
+import { TJson } from '@monorepo/simple-types';
+
 import { SharedTypes, SharedMap, SharedArray } from '../SharedTypes';
+
+//
 
 type TEvent = any;
 
@@ -17,7 +21,7 @@ class Observable<TO> {
 
 //
 
-class MyMap<T>
+class MyMap<T extends TJson>
   extends Observable<(event: TEvent) => void>
   implements SharedMap<T>
 {
@@ -26,6 +30,14 @@ class MyMap<T>
   constructor(sm: NoneSharedTypes) {
     super();
     this._sm = sm;
+  }
+
+  toJSON(): { [k: string]: T } {
+    const obj: { [k: string]: T } = {};
+    this._map.forEach((value, key) => {
+      obj[key] = JSON.parse(JSON.stringify(value));
+    });
+    return obj;
   }
 
   values(): IterableIterator<T> {
@@ -60,7 +72,7 @@ class MyMap<T>
 
 //
 
-class MyArray<T>
+class MyArray<T extends TJson>
   extends Observable<(event: TEvent) => void>
   implements SharedArray<T>
 {
@@ -71,6 +83,11 @@ class MyArray<T>
     super();
     this._sm = sm;
   }
+
+  toJSON(): T[] {
+    return JSON.parse(JSON.stringify(this._array));
+  }
+
   deleteMatching(f: (v: T) => boolean): void {
     for (let i = this._array.length - 1; i >= 0; i--) {
       const item = this._array[i];
@@ -133,12 +150,12 @@ export class NoneSharedTypes extends SharedTypes {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  getSharedMap<T>(name?: string): SharedMap<T> {
+  getSharedMap<T extends TJson>(name?: string): SharedMap<T> {
     return new MyMap<T>(this);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  getSharedArray<T>(name?: string): SharedArray<T> {
+  getSharedArray<T extends TJson>(name?: string): SharedArray<T> {
     return new MyArray<T>(this);
   }
 }

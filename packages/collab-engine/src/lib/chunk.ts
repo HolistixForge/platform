@@ -1,3 +1,5 @@
+import { TJson } from '@monorepo/simple-types';
+
 import { SharedArray, SharedMap, SharedTypes } from './SharedTypes';
 import { Dispatcher } from './dispatcher';
 import { Reducer } from './reducer';
@@ -7,6 +9,14 @@ import { Reducer } from './reducer';
 
 export type TValidSharedData = {
   [key: string]: SharedArray<any> | SharedMap<any>;
+};
+
+export const sharedDataToJson = (sharedData: TValidSharedData) => {
+  const dataCopy: { [k: string]: TJson } = {};
+  Object.entries(sharedData).forEach(([key, value]) => {
+    dataCopy[key] = value.toJSON();
+  });
+  return dataCopy;
 };
 
 //

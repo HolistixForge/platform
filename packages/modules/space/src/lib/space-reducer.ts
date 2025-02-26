@@ -1,10 +1,20 @@
 import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
-import { TCoreEvent, TCoreSharedData, TEdge, TGraphNode } from '@monorepo/core';
+import {
+  TCoreEvent,
+  TCoreSharedData,
+  TEdge,
+  TEventNewNode,
+  TGraphNode,
+} from '@monorepo/core';
 import { error } from '@monorepo/log';
 
 import { TSpaceSharedData } from './space-shared-model';
 import { TSpaceEvent, TEventNewView, TEventSpaceAction } from './space-events';
-import { defaultGraphView, TGraphView } from './space-types';
+import {
+  defaultGraphView,
+  nodeViewDefaultStatus,
+  TGraphView,
+} from './space-types';
 import { SpaceActionsReducer } from './components/apis/spaceActionsReducer';
 
 /**
@@ -36,18 +46,21 @@ export class SpaceReducer extends Reducer<
   reduce(g: Ra<ReducedEvents>) {
     switch (g.event.type) {
       case 'space:new-view':
-        return this._newView(g as Ra<TEventNewView>);
+        return this.newView(g as Ra<TEventNewView>);
 
       case 'space:action':
-        this._spaceAction(g as Ra<TSpaceEvent>);
+        this.spaceAction(g as Ra<TSpaceEvent>);
         return Promise.resolve();
 
       case 'core:delete-edge':
       case 'core:delete-node':
       case 'core:new-edge':
-      case 'core:new-node':
         this.updateAllGraphviews(g);
+        return Promise.resolve();
 
+      case 'core:new-node':
+        this.newNode(g as Ra<TEventNewNode>);
+        this.updateAllGraphviews(g);
         return Promise.resolve();
 
       default:
@@ -57,7 +70,22 @@ export class SpaceReducer extends Reducer<
 
   //
 
-  _spaceAction(g: Ra<TSpaceEvent>) {
+  newNode(g: Ra<TEventNewNode>) {
+    g.sd.graphViews.forEach((gv, k) => {
+      gv.nodeViews.push({
+        id: g.event.nodeData.id,
+        position:
+          g.event.origin?.viewId === k && g.event.origin?.position
+            ? g.event.origin?.position
+            : { x: 0, y: 0 },
+        status: nodeViewDefaultStatus(),
+      });
+    });
+  }
+
+  //
+
+  spaceAction(g: Ra<TSpaceEvent>) {
     const gv = g.sd.graphViews.get(g.event.viewId)!;
     if (!gv) {
       error('SPACE', `graphview ${g.event.viewId} not found`);
@@ -76,7 +104,7 @@ export class SpaceReducer extends Reducer<
 
   //
 
-  _newView(g: Ra<TEventNewView>) {
+  newView(g: Ra<TEventNewView>) {
     const nv: TGraphView = defaultGraphView();
     g.sd.graphViews.set(g.event.viewId, nv);
 

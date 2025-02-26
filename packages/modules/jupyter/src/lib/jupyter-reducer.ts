@@ -156,6 +156,7 @@ export class JupyterReducer extends Reducer<
           type: 'referenced_by',
         },
       ],
+      origin: g.event.origin,
     });
 
     return Promise.resolve();
@@ -321,6 +322,7 @@ export class JupyterReducer extends Reducer<
           type: 'referenced_by',
         },
       ],
+      origin: g.event.origin,
     });
   }
 
@@ -386,6 +388,7 @@ export class JupyterReducer extends Reducer<
           type: 'referenced_by',
         },
       ],
+      origin: g.event.origin,
     });
   }
 }

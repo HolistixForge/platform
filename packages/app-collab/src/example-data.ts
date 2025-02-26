@@ -6,51 +6,42 @@ import { TSd } from './build-collab';
 //
 //
 
-const nodesViews: Array<Pick<TNodeView, 'id' | 'position' | 'standalone'>> = [
+const nodesViews: Array<Pick<TNodeView, 'id' | 'position'>> = [
   {
     id: '1',
     position: { x: 377, y: -179 },
-    standalone: true,
   },
   {
     id: '2',
     position: { x: 175, y: 26 },
-    standalone: true,
   },
   {
     id: '3',
     position: { x: 542, y: 74 },
-    standalone: true,
   },
   {
     id: '4',
     position: { x: 131, y: 214 },
-    standalone: true,
   },
   {
     id: '5',
     position: { x: 612, y: 328 },
-    standalone: true,
   },
   {
     id: '6',
     position: { x: 456, y: 574 },
-    standalone: true,
   },
   {
     id: '7',
     position: { x: 150, y: 400 },
-    standalone: true,
   },
   {
     id: 'video-1',
     position: { x: 700, y: 700 },
-    standalone: true,
   },
   {
     id: 'terminal-1',
     position: { x: 700, y: 100 },
-    standalone: true,
   },
 ];
 

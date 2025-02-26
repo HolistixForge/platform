@@ -1,4 +1,7 @@
+import { useHotkeys } from 'react-hotkeys-hook';
+
 import { log } from '@monorepo/log';
+
 import {
   createContext,
   useContext,
@@ -27,6 +30,7 @@ import {
 import { TokenMethods, getYDoc } from './ydocs';
 import { buildUserCss } from './YjsCssStylesheet';
 import * as YWS from 'y-websocket';
+import { sharedDataToJson } from '../chunk';
 
 //
 //
@@ -140,6 +144,16 @@ export const CollaborativeContext = ({
 
     return { sharedTypes, awareness, sharedData, dispatcher, extraContext };
   }, [config, user, collabChunks, id]);
+
+  //
+
+  useHotkeys(
+    'ctrl+shift+d',
+    () => {
+      console.log('Shared Data Snapshot:', sharedDataToJson(v.sharedData));
+    },
+    [v.sharedData]
+  );
 
   //
   //

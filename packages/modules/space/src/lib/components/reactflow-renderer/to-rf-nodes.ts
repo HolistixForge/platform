@@ -58,13 +58,16 @@ export const translateNodes = (nodes: Array<TNodeView>, viewId: string) =>
 //
 //
 
-const edgeClassName = (e: TEdge) => {
+const edgeClassNames = (e: TEdge) => {
   const classNames = ['demiurge-space-edge', e.type];
   if (e.highlighted) {
     classNames.push('highlighted');
   }
   if (e.group) {
     classNames.push('edges-group');
+  }
+  if (e.data?.className) {
+    (e.data.className as string[]).forEach?.((c) => classNames.push(c));
   }
   return classNames;
 };
@@ -74,37 +77,33 @@ const edgeClassName = (e: TEdge) => {
 
 const translateEdge = (e: TEdge): RfEdge<EdgePayload> => {
   const id = edgeId(e);
+  const classNames = edgeClassNames(e);
+
+  const r: RfEdge<EdgePayload> = {
+    type: 'custom',
+    id,
+    label: id,
+    source: e.from.node,
+    target: e.to.node,
+    className: `${classNames.join(' ')}`,
+    data: {
+      type: 'group',
+      id,
+      edge: e,
+    },
+  };
+
   if (e.group) {
-    return {
-      type: 'custom',
-      id,
-      label: id,
-      source: e.from.node,
-      target: e.to.node,
-      className: `${edgeClassName(e).join(' ')}`,
-      data: {
-        type: 'group',
-        id,
-        edge: e,
-      },
-    };
+    r.data!.type = 'group';
   } else {
-    return {
-      type: 'custom',
-      id,
-      label: id,
-      source: e.from.node,
-      target: e.to.node,
-      sourceHandle: pinId(e.from),
-      targetHandle: pinId(e.to),
-      className: `${edgeClassName(e).join(' ')}`,
-      data: {
-        type: 'simple',
-        id,
-        edge: e,
-      },
-    };
+    r.sourceHandle = pinId(e.from);
+    r.targetHandle = pinId(e.to);
   }
+
+  if (classNames.includes('straight')) {
+    r.data!.style = 'straight';
+  }
+  return r;
 };
 
 //

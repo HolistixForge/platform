@@ -5,6 +5,7 @@
 - notion module
 - DNS: https://chatgpt.com/share/67acc6e5-32e4-8011-a71b-e4d900e0f9e5
 - node positioning
+- new node header
 
 - close tab for down resource
 - click on card go to settings if down
