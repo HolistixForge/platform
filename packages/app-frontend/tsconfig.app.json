@@ -33,7 +33,13 @@
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "references": [
     {
+      "path": "../simple-types/tsconfig.lib.json"
+    },
+    {
       "path": "../api-fetch/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/notion/tsconfig.lib.json"
     },
     {
       "path": "../modules/tabs/tsconfig.lib.json"
@@ -49,9 +55,6 @@
     },
     {
       "path": "../modules/jupyter/tsconfig.lib.json"
-    },
-    {
-      "path": "../simple-types/tsconfig.lib.json"
     },
     {
       "path": "../collab-engine/tsconfig.lib.json"

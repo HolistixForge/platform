@@ -51,6 +51,12 @@ import {
   JupyterReducer,
 } from '@monorepo/jupyter';
 import { SocialsReducer } from '@monorepo/socials';
+import {
+  TNotionEvent,
+  TNotionSharedData,
+  Notion_loadData,
+  NotionReducer,
+} from '@monorepo/notion';
 
 import { log } from '@monorepo/log';
 import { loadCollaborationData } from './load-collab';
@@ -127,6 +133,13 @@ const chunks: TCollaborativeChunk[] = [
     ],
   },
   {
+    sharedData: (st: SharedTypes) => Notion_loadData(st),
+    reducers: (sd: TValidSharedData) => [new NotionReducer()],
+    extraContext: (sd: TValidSharedData) => ({
+      notionApiKey: CONFIG.NOTION_API_KEY,
+    }),
+  },
+  {
     reducers: (sd: TValidSharedData) => [new SocialsReducer()],
   },
 ];
@@ -140,7 +153,8 @@ export type TSd = TCoreSharedData &
   TSpaceSharedData &
   TChatSharedData &
   TTabsSharedData &
-  TJupyterSharedData;
+  TJupyterSharedData &
+  TNotionSharedData;
 
 export type TAllEvents =
   | TCoreEvent
@@ -149,6 +163,7 @@ export type TAllEvents =
   | TServerEvents
   | TChatEvent
   | TTabEvents<TabPayload>
+  | TNotionEvent
   | TCollabNativeEvent;
 
 //

@@ -28,6 +28,7 @@ import {
 import { Jupyter_Load_Frontend_ExtraContext } from '@monorepo/jupyter/frontend';
 import { GanymedeApi } from '@monorepo/frontend-data';
 import { TEventSocials } from '@monorepo/socials';
+import { Notion_loadData } from '@monorepo/notion';
 
 //
 
@@ -94,6 +95,9 @@ export const getCollabChunks = (
             return v.value.token.access_token;
           }
         ),
+    },
+    {
+      sharedData: (st: SharedTypes) => Notion_loadData(st),
     },
   ];
 };

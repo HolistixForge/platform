@@ -5,6 +5,7 @@
 : "${ENV_NAME:?ENV_NAME is not set}"
 : "${DOMAIN_NAME:?DOMAIN_NAME is not set}"
 : "${GATEWAY_TOKEN:?GATEWAY_TOKEN is not set}"
+: "${NOTION_API_KEY:?NOTION_API_KEY is not set}"
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "${HERE}/common.sh"
@@ -43,6 +44,7 @@ DOCKER_CMD+=" \
     -e OPENVPN_PORT=${OPENVPN_PORT} \
     -e APP_COLLAB_PORT=${APP_COLLAB_PORT} \
     -e SCRIPTS_DIR=${SCRIPTS_DIR} \
+    -e NOTION_API_KEY=${NOTION_API_KEY} \
     \
     -p ${OPENVPN_PORT}:${OPENVPN_PORT}/udp \
     -p ${APP_COLLAB_PORT}:${APP_COLLAB_PORT} \

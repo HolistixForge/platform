@@ -3,7 +3,13 @@
   "include": [],
   "references": [
     {
+      "path": "../simple-types"
+    },
+    {
       "path": "../api-fetch"
+    },
+    {
+      "path": "../modules/notion"
     },
     {
       "path": "../modules/tabs"
@@ -19,9 +25,6 @@
     },
     {
       "path": "../modules/jupyter"
-    },
-    {
-      "path": "../simple-types"
     },
     {
       "path": "../collab-engine"

@@ -86,6 +86,9 @@
     },
     {
       "path": "./packages/modules/socials"
+    },
+    {
+      "path": "./packages/modules/notion"
     }
   ],
   "ts-node": {

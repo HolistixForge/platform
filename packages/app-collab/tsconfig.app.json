@@ -33,6 +33,9 @@
       "path": "../log/tsconfig.lib.json"
     },
     {
+      "path": "../modules/notion/tsconfig.lib.json"
+    },
+    {
       "path": "../modules/socials/tsconfig.lib.json"
     },
     {

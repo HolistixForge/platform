@@ -16,6 +16,9 @@
       "path": "../log"
     },
     {
+      "path": "../modules/notion"
+    },
+    {
       "path": "../modules/socials"
     },
     {

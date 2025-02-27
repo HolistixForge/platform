@@ -39,8 +39,21 @@ $ export PG_DATABASE=ganymede_db
 $ node ./dist/packages/app-ganymede-cmds/main.js add-gateway -h gw-1-1.dev-002.demiurge.co -gv 0.0.1
 
 # start gateway container mounting workspace through NFS
-$ GW_INSTANCE_ID=1 GW_ID=1 ENV_NAME=dev-001 DOMAIN_NAME=demiurge.co NFS_SERVER=ip-172-31-12-139.eu-west-3.compute.internal ./host-install/start-gw-container.sh
+$ GW_INSTANCE_ID=1 \
+  GW_ID=1 \
+  ENV_NAME=dev-001 \
+  DOMAIN_NAME=demiurge.co \
+  NFS_SERVER=ip-172-31-12-139.eu-west-3.compute.internal \
+  NOTION_API_KEY=XXXXX \
+  ./host-install/start-gw-container.sh
 
 # start gateway container mounting workspace through docker volume
-$ GW_INSTANCE_ID=1 GW_ID=1 ENV_NAME=dev-001 DOMAIN_NAME=demiurge.co WORKSPACE=/home/ubuntu/workspace GATEWAY_TOKEN=XXXXX ./host-install/start-gw-container.sh
+$ GW_INSTANCE_ID=1 \
+  GW_ID=1 \
+  ENV_NAME=dev-001 \
+  DOMAIN_NAME=demiurge.co \
+  WORKSPACE=/home/ubuntu/workspace \
+  GATEWAY_TOKEN=XXXXX \
+  NOTION_API_KEY=XXXXX \
+  ./host-install/start-gw-container.sh
 ```
