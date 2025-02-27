@@ -28,7 +28,7 @@ import {
 import { Jupyter_Load_Frontend_ExtraContext } from '@monorepo/jupyter/frontend';
 import { GanymedeApi } from '@monorepo/frontend-data';
 import { TEventSocials } from '@monorepo/socials';
-import { Notion_loadData } from '@monorepo/notion';
+import { Notion_loadData, TNotionEvent } from '@monorepo/notion';
 
 //
 
@@ -46,7 +46,8 @@ type AllEvents =
   | TDemiurgeNotebookEvent
   | TTabEvents<TabPayload>
   | TChatEvent
-  | TEventSocials;
+  | TEventSocials
+  | TNotionEvent;
 
 export const useDispatcher = useDispatcherCollab<AllEvents>;
 

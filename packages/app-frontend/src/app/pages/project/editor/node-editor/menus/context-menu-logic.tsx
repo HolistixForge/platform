@@ -23,6 +23,10 @@ import {
 import { useAction, DialogControlled } from '@monorepo/ui-base';
 import { useQueryServerImages } from '@monorepo/frontend-data';
 import { Dispatcher } from '@monorepo/collab-engine';
+import {
+  NewNotionDatabaseForm,
+  NewNotionDatabaseFormData,
+} from '@monorepo/notion';
 
 import {
   useDispatcher,
@@ -172,21 +176,13 @@ export const ContextMenuLogic = ({
   const originServer =
     originServerId && sd.projectServers.get(`${originServerId}`);
 
-  /**
-   *
-   * new server
-   *
-   */
+  //
 
-  const s_action = useNewServerAction(dispatcher, viewId, refCoordinates);
+  const server_action = useNewServerAction(dispatcher, viewId, refCoordinates);
 
-  /**
-   *
-   * new kernel
-   *
-   */
+  //
 
-  const k_action = useAction<NewKernelFormData>(
+  const kernel_action = useAction<NewKernelFormData>(
     (d) => {
       const server = sd.projectServers.get(
         `${originNodeData?.data?.project_server_id}`
@@ -214,13 +210,9 @@ export const ContextMenuLogic = ({
     }
   );
 
-  /**
-   *
-   * new youtube
-   *
-   */
+  //
 
-  const y_action = useAction<NewYoutubeFormData>(
+  const youtube_action = useAction<NewYoutubeFormData>(
     (d) => {
       return dispatcher.dispatch({
         type: 'socials:new-youtube',
@@ -242,11 +234,31 @@ export const ContextMenuLogic = ({
     }
   );
 
-  /**
-   *
-   * new code cell
-   *
-   */
+  //
+
+  const notion_action = useAction<NewNotionDatabaseFormData>(
+    (d) => {
+      return dispatcher.dispatch({
+        type: 'notion:init-database',
+        databaseId: d.databaseId,
+        origin: {
+          viewId: viewId,
+          position: {
+            x: refCoordinates.current.x,
+            y: refCoordinates.current.y,
+          },
+        },
+      });
+    },
+    [dispatcher, refCoordinates, viewId],
+    {
+      checkForm: (d, e) => {
+        if (!d.databaseId) e.databaseId = 'Please enter the databse Id';
+      },
+    }
+  );
+
+  //
 
   const onNewCodeCell = useCallback(() => {
     dispatcher.dispatch({
@@ -262,11 +274,7 @@ export const ContextMenuLogic = ({
     });
   }, [dispatcher, from, originNodeData, refCoordinates, viewId]);
 
-  /**
-   *
-   * new terminal
-   *
-   */
+  //
 
   const onNewTerminal = useCallback(() => {
     const client_id =
@@ -290,13 +298,9 @@ export const ContextMenuLogic = ({
     }
   }, [dispatcher, from, originServer, refCoordinates, viewId]);
 
-  /**
-   *
-   * new volume
-   *
-   */
+  //
 
-  const v_action = useAction<NewVolumeFormData>(
+  const volume_action = useAction<NewVolumeFormData>(
     (d) => {
       return dispatcher.dispatch({
         type: 'servers:new-volume',
@@ -323,11 +327,7 @@ export const ContextMenuLogic = ({
     }
   );
 
-  /**
-   *
-   * new terminal
-   *
-   */
+  //
 
   const onNewChatBox = useCallback(() => {
     dispatcher.dispatch({
@@ -342,11 +342,7 @@ export const ContextMenuLogic = ({
     });
   }, [dispatcher, refCoordinates, viewId]);
 
-  /**
-   *
-   * new text editor
-   *
-   */
+  //
 
   const onNewTextEditor = useCallback(() => {
     dispatcher.dispatch({
@@ -361,24 +357,20 @@ export const ContextMenuLogic = ({
     });
   }, [dispatcher, refCoordinates, viewId]);
 
-  /**
-   *
-   *
-   *
-   */
+  //
 
   const context = useMemo<TMenuContext>(() => {
     return {
       new: [
         {
           title: 'Server',
-          onClick: s_action.open,
+          onClick: server_action.open,
           disabled: from !== undefined,
         },
 
         {
           title: 'Kernel',
-          onClick: k_action.open,
+          onClick: kernel_action.open,
           disabled: !(
             originNodeData?.type === 'server' &&
             from?.connectorName === 'outputs'
@@ -417,27 +409,34 @@ export const ContextMenuLogic = ({
         },
         { separator: true },
         {
+          title: 'Notion Database',
+          onClick: notion_action.open,
+          disabled: false,
+        },
+        { separator: true },
+        {
           title: 'Text Editor',
           onClick: onNewTextEditor,
           disabled: false,
         },
         {
           title: 'Youtube Embedding',
-          onClick: y_action.open,
+          onClick: youtube_action.open,
           disabled: from !== undefined,
         },
       ],
     };
   }, [
-    s_action.open,
+    server_action.open,
     from,
-    k_action.open,
+    kernel_action.open,
     originNodeData,
     onNewTerminal,
     onNewCodeCell,
     // v_action.open,
     onNewChatBox,
-    y_action.open,
+    youtube_action.open,
+    notion_action.open,
     onNewTextEditor,
   ]);
 
@@ -454,40 +453,49 @@ export const ContextMenuLogic = ({
       <DialogControlled
         title="New server"
         description="Choose a name and select an image for your new server."
-        open={s_action.isOpened}
-        onOpenChange={s_action.close}
+        open={server_action.isOpened}
+        onOpenChange={server_action.close}
       >
         <NewServerForm
           images={status === 'success' ? data._0 : undefined}
-          action={s_action}
+          action={server_action}
         />
       </DialogControlled>
 
       <DialogControlled
         title="New Kernel"
         description="Choose a name for the new kernel."
-        open={k_action.isOpened}
-        onOpenChange={k_action.close}
+        open={kernel_action.isOpened}
+        onOpenChange={kernel_action.close}
       >
-        <NewKernelForm action={k_action} />
+        <NewKernelForm action={kernel_action} />
       </DialogControlled>
 
       <DialogControlled
         title="New Youtube video"
         description="Paste the video's id"
-        open={y_action.isOpened}
-        onOpenChange={y_action.close}
+        open={youtube_action.isOpened}
+        onOpenChange={youtube_action.close}
       >
-        <NewYoutubeForm action={y_action} />
+        <NewYoutubeForm action={youtube_action} />
       </DialogControlled>
 
       <DialogControlled
         title="New Volume"
         description="Choose a name and storage capacity for your new volume."
-        open={v_action.isOpened}
-        onOpenChange={v_action.close}
+        open={volume_action.isOpened}
+        onOpenChange={volume_action.close}
       >
-        <NewVolumeForm action={v_action} />
+        <NewVolumeForm action={volume_action} />
+      </DialogControlled>
+
+      <DialogControlled
+        title="New Notion Database"
+        description="Provide the Notion Database Id."
+        open={notion_action.isOpened}
+        onOpenChange={notion_action.close}
+      >
+        <NewNotionDatabaseForm action={notion_action} />
       </DialogControlled>
     </menuContext.Provider>
   );

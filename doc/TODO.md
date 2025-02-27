@@ -1,8 +1,7 @@
 ⚠️ Antoine's stuffs
 
-- feature come back: chat, kernel
-- PR quill
 - notion module
+- ubuntu image copy
 - DNS: https://chatgpt.com/share/67acc6e5-32e4-8011-a71b-e4d900e0f9e5
 - node positioning
 - new node header

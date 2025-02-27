@@ -12,6 +12,9 @@
       "path": "../space"
     },
     {
+      "path": "../../ui-base"
+    },
+    {
       "path": "./tsconfig.lib.json"
     },
     {
