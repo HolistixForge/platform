@@ -1,6 +1,7 @@
 import { Client } from '@notionhq/client';
 
 import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
+import { TEventNewNode } from '@monorepo/core';
 
 import {
   TEventCreatePage,
@@ -21,7 +22,7 @@ import { TNotionSharedData } from './notion-shared-model';
 
 //
 
-type Ra<T> = ReduceArgs<TNotionSharedData, T, never, TExtraArgs>;
+type Ra<T> = ReduceArgs<TNotionSharedData, T, TEventNewNode, TExtraArgs>;
 
 type TExtraArgs = {
   notionApiKey: string;
@@ -42,9 +43,11 @@ export class NotionReducer extends Reducer<
 
     switch (g.event.type) {
       case 'notion:init-database':
+        return this._initDatabase(g as Ra<TEventInitDatabase>, notion);
+
       case 'notion:sync-database':
         return this._fetchAndUpdateDatabase(
-          g as Ra<TEventSyncDatabase | TEventInitDatabase>,
+          g as Ra<TEventSyncDatabase>,
           notion
         );
 
@@ -60,6 +63,34 @@ export class NotionReducer extends Reducer<
       case 'notion:reorder-page':
         return this._reorderPage(g as Ra<TEventReorderPage>, notion);
     }
+  }
+
+  //
+
+  private async _initDatabase(g: Ra<TEventInitDatabase>, notion: Client) {
+    this._fetchAndUpdateDatabase(g, notion);
+    const { databaseId } = g.event;
+    g.dispatcher.dispatch({
+      type: 'core:new-node',
+      nodeData: {
+        id: databaseId,
+        name: `Notion Database ${databaseId}`,
+        root: true,
+        type: 'notion-database',
+        data: { databaseId },
+        connectors: [{ connectorName: 'outputs', pins: [] }],
+      },
+      edges: [],
+      origin: g.event.origin
+        ? {
+            ...g.event.origin,
+            position: {
+              x: g.event.origin.position.x + 100,
+              y: g.event.origin.position.y + 100,
+            },
+          }
+        : undefined,
+    });
   }
 
   //
