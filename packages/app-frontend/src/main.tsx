@@ -9,6 +9,7 @@ import '@monorepo/servers/style';
 import '@monorepo/space/style';
 import '@monorepo/tabs/style';
 import '@monorepo/chats/style';
+import '@monorepo/socials/style';
 
 import './index.scss';
 

@@ -175,6 +175,7 @@ export const Chatbox = ({
       className={`node-background chat-container ${
         general ? 'chat-general' : ''
       }`}
+      style={{ maxWidth: '450px' }}
     >
       <div className="chat-header">
         <div className="chat-infos">

@@ -1,5 +1,8 @@
 import { TG_User } from '@monorepo/demiurge-types';
 import { TG_ServerImage } from '@monorepo/frontend-data';
+import { serverUrl } from '@monorepo/api-fetch';
+
+//
 
 /** what is store in Database */
 export type TD_ServerImage = TG_ServerImage & {
@@ -75,7 +78,6 @@ export type TServerComponentProps = Omit<
   | 'last_activity'
   | 'last_watchdog_at'
   | 'project_id'
-  | 'project_server_id'
   | 'image_id'
 > & {
   host?: TG_User;
@@ -172,4 +174,34 @@ export type TApi_Mount = {
   volume_name: string;
   volume_storage: number;
   mount_point: string;
+};
+
+//
+
+//
+
+export const serviceUrl = (
+  s: Pick<TServer, 'ip' | 'httpServices'>,
+  serviceName: string,
+  websocket = false
+) => {
+  const isBackend = typeof window === 'undefined';
+
+  const service = s.httpServices.find((serv) => serv.name === serviceName);
+  if (!service) return false;
+
+  const host = isBackend ? s.ip : service.host;
+  if (!host) return false;
+
+  const port = isBackend ? service.port : undefined;
+
+  const ssl = isBackend ? false : service.secure;
+
+  return serverUrl({
+    host,
+    location: service.location,
+    port,
+    websocket,
+    ssl,
+  });
 };

@@ -6,9 +6,17 @@ export type TEventNewYoutube = {
   origin?: TEventOrigin;
 };
 
+export type TEventNewTextEditor = {
+  type: 'socials:new-text-editor';
+  origin?: TEventOrigin;
+};
+
 export type TEventDeleteYoutube = {
   type: 'socials:delete-youtube';
   nodeId: string;
 };
 
-export type TEventSocials = TEventNewYoutube | TEventDeleteYoutube;
+export type TEventSocials =
+  | TEventNewYoutube
+  | TEventDeleteYoutube
+  | TEventNewTextEditor;

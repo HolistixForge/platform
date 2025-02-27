@@ -344,6 +344,25 @@ export const ContextMenuLogic = ({
 
   /**
    *
+   * new text editor
+   *
+   */
+
+  const onNewTextEditor = useCallback(() => {
+    dispatcher.dispatch({
+      type: 'socials:new-text-editor',
+      origin: {
+        viewId: viewId,
+        position: {
+          x: refCoordinates.current.x,
+          y: refCoordinates.current.y,
+        },
+      },
+    });
+  }, [dispatcher, refCoordinates, viewId]);
+
+  /**
+   *
    *
    *
    */
@@ -398,6 +417,11 @@ export const ContextMenuLogic = ({
         },
         { separator: true },
         {
+          title: 'Text Editor',
+          onClick: onNewTextEditor,
+          disabled: false,
+        },
+        {
           title: 'Youtube Embedding',
           onClick: y_action.open,
           disabled: from !== undefined,
@@ -414,6 +438,7 @@ export const ContextMenuLogic = ({
     // v_action.open,
     onNewChatBox,
     y_action.open,
+    onNewTextEditor,
   ]);
 
   /**

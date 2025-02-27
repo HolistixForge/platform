@@ -1,5 +1,5 @@
 import { serverUrl } from '@monorepo/api-fetch';
-import { TServer, TServersSharedData } from '@monorepo/servers';
+import { TServer, TServersSharedData, serviceUrl } from '@monorepo/servers';
 import { Listenable } from '@monorepo/simple-types';
 
 import { CollaborationProbe } from './jls-collaboration-probe';
@@ -7,7 +7,7 @@ import { dkidToServer, TDKID, TJKID } from '../jupyter-types';
 import { BrowserWidgetManager } from './browser-widget-manager';
 import { JupyterlabDriver } from '../driver';
 import { TJupyterSharedData } from '../jupyter-shared-model';
-import { jupyterlabIsReachable, serviceUrl } from '../ds-backend';
+import { jupyterlabIsReachable } from '../ds-backend';
 import { injectWidgetsScripts } from './widgets-js-dependencies';
 import { sharedDataToJson } from '@monorepo/collab-engine';
 
@@ -232,7 +232,7 @@ export class JLsManager extends Listenable {
 
     const token = await this.getToken(server);
 
-    const url = serviceUrl(server, websocket);
+    const url = serviceUrl(server, 'jupyterlab', websocket);
     if (!url)
       throw new Error(
         `no such server or is down [${server.project_server_id}, ${server.server_name}]`

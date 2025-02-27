@@ -278,12 +278,8 @@
 }
 
 .text-host {
-  text-shadow:
-    0px 0px 102.06px #1f41ea,
-    0px 0px 58.32px #1f41ea,
-    0px 0px 34.02px #1f41ea,
-    0px 0px 17.01px #1f41ea,
-    0px 0px 4.86px #1f41ea,
+  text-shadow: 0px 0px 102.06px #1f41ea, 0px 0px 58.32px #1f41ea,
+    0px 0px 34.02px #1f41ea, 0px 0px 17.01px #1f41ea, 0px 0px 4.86px #1f41ea,
     0px 0px 2.43px #1f41ea;
   font-weight: 900;
   line-height: 14px;
@@ -299,12 +295,8 @@
 }
 
 .text-shadow-pink {
-  text-shadow:
-    0px 0px 204.12px #f72585,
-    0px 0px 116.64px #f72585,
-    0px 0px 68.04px #f72585,
-    0px 0px 34.02px #f72585,
-    0px 0px 9.72px #f72585,
+  text-shadow: 0px 0px 204.12px #f72585, 0px 0px 116.64px #f72585,
+    0px 0px 68.04px #f72585, 0px 0px 34.02px #f72585, 0px 0px 9.72px #f72585,
     0px 0px 4.86px #f72585;
 }
 
@@ -315,4 +307,12 @@
 * {
   scrollbar-width: none; /* Options: auto, thin, none */
   scrollbar-color: green orange; /* Thumb and track colors */
+}
+
+.opacity-on-hover {
+  opacity: 0;
+  transition: 0.4s;
+  &:hover {
+    opacity: 1;
+  }
 }

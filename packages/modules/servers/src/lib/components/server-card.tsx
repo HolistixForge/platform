@@ -4,6 +4,7 @@ import {
   GearIcon,
   InfoCircledIcon,
   TrashIcon,
+  OpenInNewWindowIcon,
 } from '@radix-ui/react-icons';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import * as Menubar from '@radix-ui/react-menubar';
@@ -29,6 +30,7 @@ import {
 
 import {
   ServerSystemInfo,
+  serviceUrl,
   TServerComponentCallbacks,
   TServerComponentProps,
 } from '../servers-types';
@@ -106,6 +108,7 @@ export const ServerCardInternal = ({
   system,
   location,
   ec2_instance_state,
+  project_server_id,
   onCopyCommand,
   onHost,
   onCloud,
@@ -158,7 +161,7 @@ export const ServerCardInternal = ({
 
       if (d.cpu > 0) options.push(`--cpus=${d.cpu}`);
 
-      if (d.storage > 0) options.push(`--storage-opt size=${d.storage}G`);
+      // TODO: not the good docker option: if (d.storage > 0) options.push(`--storage-opt size=${d.storage}G`);
 
       if (d.memory > 0) options.push(`--memory=${d.memory}m`);
 
@@ -302,6 +305,10 @@ export const ServerCardInternal = ({
 
   const firstServiceName = httpServices.length > 0 && httpServices[0].name;
 
+  const firstServiceUrl =
+    httpServices.length > 0 &&
+    serviceUrl({ httpServices, ip }, httpServices[0].name);
+
   //
 
   return (
@@ -417,8 +424,21 @@ export const ServerCardInternal = ({
                     sideOffset={5}
                     alignOffset={-3}
                   >
+                    <Menubar.Item
+                      className="MenubarItem"
+                      onClick={() =>
+                        firstServiceUrl &&
+                        window.open(firstServiceUrl, '_blank')
+                      }
+                    >
+                      Open in new Tab
+                      <div className="RightSlot">
+                        <OpenInNewWindowIcon />
+                      </div>
+                    </Menubar.Item>
+
                     <Menubar.Item className="MenubarItem">
-                      Settings{' '}
+                      Settings
                       <div className="RightSlot">
                         <GearIcon />
                       </div>

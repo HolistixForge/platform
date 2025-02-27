@@ -14,9 +14,11 @@
     0 2px 4px -1px rvar(--ca-black-8);
 }
 
+/*
 .react-flow__node-wrapper.selected {
   //
 }
+*/
 
 .react-flow__node-wrapper.node-closed {
   .common-node {
@@ -358,9 +360,8 @@
   box-sizing: border-box;
 }
 
-.kernel-node .node-wrapper-body,
-.server-node .node-wrapper-body,
-.default-node .node-wrapper-body {
+.node-quill .node-wrapper-body {
+  border-radius: var(--node-border-radius);
 }
 
 .server-node .server-state-started,

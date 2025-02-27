@@ -38,7 +38,7 @@ export class YjsAwareness extends Awareness {
       'change',
       ({ added, updated, removed }: AwarenessEventArgs, isLocal: string) => {
         // if not our own event
-        if (isLocal !== 'local' && isLocal !== 'window unload') {
+        if (isLocal !== 'window unload') {
           const states = this._provider.awareness.getStates();
 
           // if new collaborator

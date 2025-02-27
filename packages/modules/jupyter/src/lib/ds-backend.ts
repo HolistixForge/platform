@@ -1,3 +1,5 @@
+import { TServer, serviceUrl } from '@monorepo/servers';
+
 import {
   TDKID,
   TJupyterKernelInfo,
@@ -6,8 +8,6 @@ import {
   dkidToServer,
 } from './jupyter-types';
 import { JupyterlabDriver } from './driver';
-import { serverUrl } from '@monorepo/api-fetch';
-import { TServer } from '@monorepo/servers';
 
 //
 
@@ -15,33 +15,9 @@ export type TOnNewDriverCb = (s: TJupyterServerData) => Promise<void>;
 
 //
 
-export const serviceUrl = (s: TServer, websocket = false) => {
-  const isBackend = typeof window === 'undefined';
-
-  const service = s.httpServices.find((serv) => serv.name === 'jupyterlab');
-  if (!service) return false;
-
-  const host = isBackend ? s.ip : service.host;
-  if (!host) return false;
-
-  const port = isBackend ? service.port : undefined;
-
-  const ssl = isBackend ? false : service.secure;
-
-  return serverUrl({
-    host,
-    location: service.location,
-    port,
-    websocket,
-    ssl,
-  });
-};
-
-//
-
 export const jupyterlabIsReachable = async (s: TServer) => {
   let r = false;
-  const url = serviceUrl(s);
+  const url = serviceUrl(s, 'jupyterlab');
   if (url)
     try {
       const controller = new AbortController();
@@ -89,7 +65,7 @@ export class DriversStoreBackend {
   getServerSetting(psid: number, token: string): TServerSettings {
     const server = this._servers.get(`${psid}`);
     if (server) {
-      const url = serviceUrl(server);
+      const url = serviceUrl(server, 'jupyterlab');
       if (!url)
         throw new Error(
           `no such server or is down [${psid}, ${server.server_name}]`

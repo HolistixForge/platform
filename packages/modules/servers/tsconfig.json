@@ -3,6 +3,9 @@
   "include": [],
   "references": [
     {
+      "path": "../../api-fetch"
+    },
+    {
       "path": "../../log"
     },
     {

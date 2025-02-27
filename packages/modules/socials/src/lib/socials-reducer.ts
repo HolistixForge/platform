@@ -6,6 +6,7 @@ import {
   TEventSocials,
   TEventNewYoutube,
   TEventDeleteYoutube,
+  TEventNewTextEditor,
 } from './socials-events';
 
 //
@@ -32,9 +33,32 @@ export class SocialsReducer extends Reducer<
       case 'socials:delete-youtube':
         return this._deleteYoutube(g as Ra<TEventDeleteYoutube>);
 
+      case 'socials:new-text-editor':
+        return this._newTextEditor(g as Ra<TEventNewTextEditor>);
+
       default:
         return Promise.resolve();
     }
+  }
+
+  //
+
+  _newTextEditor(g: Ra<TEventNewTextEditor>): Promise<void> {
+    const id = makeUuid();
+
+    g.dispatcher.dispatch({
+      type: 'core:new-node',
+      nodeData: {
+        id,
+        name: 'text-editor',
+        type: 'text-editor',
+        root: true,
+        connectors: [],
+      },
+      edges: [],
+      origin: g.event.origin,
+    });
+    return Promise.resolve();
   }
 
   //

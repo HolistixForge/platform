@@ -39,6 +39,9 @@
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "references": [
     {
+      "path": "../../api-fetch/tsconfig.lib.json"
+    },
+    {
       "path": "../../log/tsconfig.lib.json"
     },
     {

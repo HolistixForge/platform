@@ -1,0 +1,21 @@
+.node-quill {
+  .ql-snow {
+    .ql-picker {
+      color: white;
+    }
+
+    .ql-stroke {
+      stroke: white;
+    }
+
+    &.ql-toolbar {
+      border: none;
+
+      border-bottom: solid 1px #ccc;
+    }
+
+    &.ql-container {
+      border: none;
+    }
+  }
+}

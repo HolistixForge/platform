@@ -23,7 +23,10 @@ export type {
   TServerComponentProps,
   TServerComponentCallbacks,
 } from './lib/servers-types';
-export { TSSS_Server_to_TServerComponentProps } from './lib/servers-types';
+export {
+  TSSS_Server_to_TServerComponentProps,
+  serviceUrl,
+} from './lib/servers-types';
 
 export { StatusLed } from './lib/components/status-led';
 
