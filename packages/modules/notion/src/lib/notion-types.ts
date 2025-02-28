@@ -8,7 +8,7 @@ export type TNotionProperty = {
   id: string;
   type: 'title' | 'rich_text' | 'number' | 'select' | 'status';
   name: string;
-  value?: string | number | TNotionStatus;
+  value?: string | number | TNotionStatus | null;
 };
 
 export type TNotionPage = {

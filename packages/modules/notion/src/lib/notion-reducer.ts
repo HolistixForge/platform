@@ -46,10 +46,8 @@ export class NotionReducer extends Reducer<
         return this._initDatabase(g as Ra<TEventInitDatabase>, notion);
 
       case 'notion:sync-database':
-        return this._fetchAndUpdateDatabase(
-          g as Ra<TEventSyncDatabase>,
-          notion
-        );
+        await this._fetchAndUpdateDatabase(g as Ra<TEventSyncDatabase>, notion);
+        return;
 
       case 'notion:update-page':
         return this._updatePage(g as Ra<TEventUpdatePage>, notion);
@@ -68,7 +66,9 @@ export class NotionReducer extends Reducer<
   //
 
   private async _initDatabase(g: Ra<TEventInitDatabase>, notion: Client) {
-    this._fetchAndUpdateDatabase(g, notion);
+    const isOk = await this._fetchAndUpdateDatabase(g, notion);
+    if (!isOk) return;
+
     const { databaseId } = g.event;
     g.dispatcher.dispatch({
       type: 'core:new-node',
@@ -98,7 +98,7 @@ export class NotionReducer extends Reducer<
   private async _fetchAndUpdateDatabase(
     g: Ra<TEventSyncDatabase | TEventInitDatabase>,
     notion: Client
-  ): Promise<void> {
+  ): Promise<boolean> {
     const { databaseId } = g.event;
 
     try {
@@ -113,20 +113,25 @@ export class NotionReducer extends Reducer<
         sorts: [{ property: 'order', direction: 'ascending' }],
       });
 
-      const database: TNotionDatabase = {
-        id: databaseId,
-        title: (dbResponse as any).title?.[0]?.plain_text || 'Untitled',
-        properties: this._transformProperties(dbResponse.properties),
-        pages: pagesResponse.results.map(this._transformPage),
-        lastSync: new Date().toISOString(),
-      };
+      if (!dbResponse || !pagesResponse) {
+        return false;
+      }
+
+      const database = this.transformDatabaseResponse(
+        dbResponse,
+        pagesResponse
+      );
 
       g.sd.notionDatabases.set(databaseId, database);
     } catch (error) {
       console.error('Failed to fetch and update database:', error);
       throw error;
     }
+
+    return true;
   }
+
+  //
 
   private async _updatePage(
     g: Ra<TEventUpdatePage>,
@@ -328,7 +333,7 @@ export class NotionReducer extends Reducer<
 
   private _extractPropertyValue(
     property: any
-  ): string | number | TNotionStatus {
+  ): string | number | TNotionStatus | null {
     switch (property.type) {
       case 'title':
         return property.title[0]?.plain_text || '';
@@ -339,13 +344,40 @@ export class NotionReducer extends Reducer<
       case 'select':
         return property.select?.name || '';
       case 'status':
-        return {
-          id: property.status.id,
-          name: property.status.name,
-          color: property.status.color,
-        };
+        return property.status
+          ? {
+              id: property.status.id,
+              name: property.status.name,
+              color: property.status.color,
+            }
+          : null;
       default:
         return '';
     }
+  }
+
+  //
+
+  transformDatabaseResponse(
+    dbResponse: any,
+    pagesResponse: any
+  ): TNotionDatabase {
+    const databaseId = dbResponse.id;
+    const properties = this._transformProperties(dbResponse.properties);
+    const pages = pagesResponse.results.map((page: any) => {
+      if (page) {
+        const tp = this._transformPage(page);
+        return tp;
+      }
+      return null;
+    });
+
+    return {
+      id: databaseId,
+      title: dbResponse.title?.[0]?.plain_text || 'Untitled',
+      properties,
+      pages,
+      lastSync: new Date().toISOString(),
+    };
   }
 }

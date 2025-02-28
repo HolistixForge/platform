@@ -57,7 +57,7 @@
           "development": {},
           "production": {
             "esbuildOptions": {
-              "sourcemap": false,
+              "sourcemap": true,
               "outExtension": {
                 ".js": ".js"
               }
