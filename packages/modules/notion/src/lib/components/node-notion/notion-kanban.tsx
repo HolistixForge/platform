@@ -1,9 +1,11 @@
+import { DragEvent } from 'react';
+
 import {
   TNotionDatabase,
   TNotionPage,
   TNotionProperty,
 } from '../../notion-types';
-import { DragEvent } from 'react';
+import { TEventLoadPageNode } from '../../notion-events';
 
 import './notion-kanban.scss';
 
@@ -51,13 +53,11 @@ export const NotionKanban = ({
 
 const TaskItem = ({ page }: { page: TNotionPage }) => {
   const handleDragStart = (e: DragEvent<HTMLDivElement>) => {
-    e.dataTransfer.setData(
-      'application/json',
-      JSON.stringify({
-        type: 'task_reference',
-        taskId: page.id,
-      })
-    );
+    const event: TEventLoadPageNode = {
+      type: 'notion:load-page-node',
+      pageId: page.id,
+    };
+    e.dataTransfer.setData('application/json', JSON.stringify(event));
     e.currentTarget.classList.add('dragging');
   };
 

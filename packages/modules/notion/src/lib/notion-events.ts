@@ -38,10 +38,17 @@ export type TEventSyncDatabase = {
   databaseId: string;
 };
 
+export type TEventLoadPageNode = {
+  type: 'notion:load-page-node';
+  pageId: string;
+  origin?: TEventOrigin;
+};
+
 export type TNotionEvent =
   | TEventInitDatabase
   | TEventUpdatePage
   | TEventCreatePage
   | TEventDeletePage
   | TEventReorderPage
-  | TEventSyncDatabase;
+  | TEventSyncDatabase
+  | TEventLoadPageNode;

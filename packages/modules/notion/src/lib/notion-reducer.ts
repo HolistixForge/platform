@@ -7,6 +7,7 @@ import {
   TEventCreatePage,
   TEventDeletePage,
   TEventInitDatabase,
+  TEventLoadPageNode,
   TEventReorderPage,
   TEventSyncDatabase,
   TEventUpdatePage,
@@ -60,7 +61,53 @@ export class NotionReducer extends Reducer<
 
       case 'notion:reorder-page':
         return this._reorderPage(g as Ra<TEventReorderPage>, notion);
+
+      case 'notion:load-page-node':
+        return this._loadPageNode(g as Ra<TEventLoadPageNode>);
     }
+  }
+
+  //
+
+  private async _loadPageNode(g: Ra<TEventLoadPageNode>): Promise<void> {
+    const database = Array.from(g.sd.notionDatabases.values()).find((d) =>
+      d.pages.find((p) => p.id === g.event.pageId)
+    );
+
+    if (!database) return;
+
+    const nodeId = g.event.pageId;
+
+    g.dispatcher.dispatch({
+      type: 'core:new-node',
+      nodeData: {
+        id: nodeId,
+        name: `Notion Page ${g.event.pageId}`,
+        root: false,
+        type: 'notion-page',
+        data: { pageId: g.event.pageId },
+        connectors: [{ connectorName: 'inputs', pins: [] }],
+      },
+      edges: [
+        {
+          from: {
+            node: database.id,
+            connectorName: 'outputs',
+          },
+          to: { node: nodeId, connectorName: 'inputs' },
+          type: 'composed_of',
+        },
+      ],
+      origin: g.event.origin
+        ? {
+            ...g.event.origin,
+            position: {
+              x: g.event.origin.position.x + 100,
+              y: g.event.origin.position.y + 100,
+            },
+          }
+        : undefined,
+    });
   }
 
   //

@@ -1,5 +1,6 @@
 import {
   DisablePanSelect,
+  InputsAndOutputs,
   NodeHeader,
   useMakeButton,
   useNodeContext,
@@ -28,6 +29,7 @@ export const NodeNotion = ({ node }: { node: TGraphNode }) => {
 
   return (
     <div className="node-notion">
+      <InputsAndOutputs id={useNodeValue.id} />
       <NodeHeader
         buttons={buttons}
         nodeType="notion"

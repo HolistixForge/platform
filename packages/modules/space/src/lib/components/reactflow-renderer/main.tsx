@@ -49,6 +49,7 @@ type DemiurgeSpaceProps = {
     clientPosition: TPosition
   ) => void;
   onConnect: (edge: TEdge) => void;
+  onDrop?: ({ data, position }: { data: any; position: TPosition }) => void;
 };
 
 /**
@@ -69,6 +70,7 @@ export const DemiurgeSpace = ({
   onContextMenu,
   onContextMenuNewEdge,
   onConnect,
+  onDrop,
 }: DemiurgeSpaceProps) => {
   //
 
@@ -191,6 +193,33 @@ export const DemiurgeSpace = ({
     [avatarsStore]
   );
 
+  //
+
+  const handleDragOver = useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      const targetIsPane = (event as any).target.classList.contains(
+        'react-flow__pane'
+      );
+      if (targetIsPane) event.dataTransfer.dropEffect = 'move';
+      else event.dataTransfer.dropEffect = 'none';
+    },
+    []
+  );
+
+  const handleDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const pclient = clientXY(event);
+    const p = pointerTracker.fromMouseEvent(pclient);
+    try {
+      const jsonData = event.dataTransfer.getData('application/json');
+      const data = JSON.parse(jsonData);
+      onDrop?.({ data, position: p });
+    } catch (err) {
+      console.error('Drop error:', err);
+    }
+  }, []);
+
   /**
    * capture the pointer coordinates in the canvas when user right click on background
    */
@@ -244,6 +273,9 @@ export const DemiurgeSpace = ({
             pointerTracker
           )}
           onMove={_onMove}
+          //
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
         >
           <MiniMap />
           <Controls />

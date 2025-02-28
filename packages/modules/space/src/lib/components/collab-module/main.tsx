@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 
 import {
   TPosition,
@@ -86,6 +86,14 @@ export const SpaceModule = ({
     return { ga, pt, as, sad, ss, Node };
   }, []);
 
+  const onDrop = useCallback(
+    ({ data, position }: { data: any; position: TPosition }) => {
+      console.log({ data, position });
+      collabDispatcher.dispatch({ ...data, origin: { position, viewId } });
+    },
+    []
+  );
+
   return (
     <DemiurgeSpace
       viewId={viewId}
@@ -100,6 +108,7 @@ export const SpaceModule = ({
       onContextMenu={onContextMenu || (() => {})}
       onContextMenuNewEdge={onContextMenuNewEdge || (() => {})}
       onConnect={onConnect || (() => {})}
+      onDrop={onDrop}
     />
   );
 };
