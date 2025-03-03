@@ -15,7 +15,7 @@ export type {
 
 export { fullUri, serialize } from './lib/my-fetch';
 
-export { makeUuid, makeShortUuid } from './lib/uuid';
+export { makeUuid, makeShortUuid, isUuid, toUuid } from './lib/uuid';
 
 export { secondAgo, inSeconds, isPassed, sleep, ONE_YEAR_MS } from './lib/date';
 

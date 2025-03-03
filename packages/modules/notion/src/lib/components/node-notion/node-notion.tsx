@@ -9,7 +9,7 @@ import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
 import { TGraphNode } from '@monorepo/core';
 
 import { TNotionSharedData } from '../../notion-shared-model';
-import { NotionKanban } from './notion-kanban';
+import { NotionKanban } from './notion-database';
 import { TNotionEvent } from '../../notion-events';
 
 import './node-notion.scss';
@@ -32,7 +32,7 @@ export const NodeNotion = ({ node }: { node: TGraphNode }) => {
       <InputsAndOutputs id={useNodeValue.id} />
       <NodeHeader
         buttons={buttons}
-        nodeType="notion"
+        nodeType="notion-database"
         id={useNodeValue.id}
         isOpened={useNodeValue.isOpened}
         open={useNodeValue.open}

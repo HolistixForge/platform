@@ -4,10 +4,12 @@ import {
   TNotionDatabase,
   TNotionPage,
   TNotionProperty,
+  TNotionStatus,
+  TNotionTitle,
 } from '../../notion-types';
 import { TEventLoadPageNode } from '../../notion-events';
 
-import './notion-kanban.scss';
+import './notion-database.scss';
 
 //
 
@@ -41,7 +43,7 @@ export const NotionKanban = ({
         Base de données Notion
       </h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {database.pages.map((page) => (
+        {database?.pages?.map((page) => (
           <TaskItem key={page.id} page={page} />
         ))}
       </div>
@@ -65,11 +67,8 @@ const TaskItem = ({ page }: { page: TNotionPage }) => {
     e.currentTarget.classList.remove('dragging');
   };
 
-  const title = page.title;
-  const status = (page.properties.Status?.value as any) || {
-    name: 'No status',
-    color: 'default',
-  };
+  const title = page.properties.Name as TNotionTitle;
+  const status = page.properties.Status as TNotionStatus | undefined;
 
   return (
     <div
@@ -78,9 +77,11 @@ const TaskItem = ({ page }: { page: TNotionPage }) => {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="task-title">{title}</div>
+      <div className="task-title">{title.title[0].text.content}</div>
       <div className="task-meta">
-        <span className={`task-status ${status.color}`}>{status.name}</span>
+        <span className={`task-status ${status?.status?.color}`}>
+          {status?.status?.name}
+        </span>
       </div>
     </div>
   );

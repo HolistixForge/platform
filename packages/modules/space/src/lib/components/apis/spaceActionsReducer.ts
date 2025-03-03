@@ -18,6 +18,7 @@ import {
   nodeViewDefaultStatus,
   TGraphView,
 } from '../../space-types';
+// import { edgeId } from './types/edge';
 
 //
 
@@ -248,17 +249,45 @@ export class SpaceActionsReducer {
     const nodesToRender = new Set<string>();
     const edgesToRender = new Set<TEdge>();
 
+    /*
+    console.log(
+      'updateGraphview',
+      '\nnodes:\n',
+      Array.from(nodes.values())
+        .map((n) => n.id)
+        .join(',\n'),
+      '\nedges:\n',
+      edges.map((e) => edgeId(e)).join(',\n')
+    );
+    */
+
     // Helper function to traverse graph up to max depth
     const traverseFromNode = (nodeId: string, currentDepth: number) => {
       if (currentDepth > gv.params.maxRank) return;
 
-      nodesToRender.add(nodeId);
-
       const node = gv.nodeViews.find((n) => n.id === nodeId);
 
-      if (node && isNodeOpened(node.status)) {
+      const isOpened = node && isNodeOpened(node?.status);
+
+      const nodeEdges = Array.from(edges).filter((e) => {
+        console.log({ nodeId, from: e.from.node, to: e.to.node });
+        return e.from.node === nodeId || e.to.node === nodeId;
+      });
+
+      nodesToRender.add(nodeId);
+      /*
+      console.log('###### traverseFromNode', {
+        nodeId,
+        currentDepth,
+        maxRank: gv.params.maxRank,
+        isOpened,
+        nodeEdges,
+      });
+      */
+
+      if (isOpened) {
         // Find all edges connected to this node
-        edges.forEach((edge, edgeId) => {
+        nodeEdges.forEach((edge) => {
           if (edge.from.node === nodeId) {
             edgesToRender.add(edge);
             traverseFromNode(edge.to.node, currentDepth + 1);
@@ -270,6 +299,8 @@ export class SpaceActionsReducer {
         });
       }
     };
+
+    //
 
     // Start traversal from each root node
     nodes.forEach((node) => {

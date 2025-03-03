@@ -5,9 +5,11 @@
 
   .header-row-1 {
     display: flex;
+    align-items: center;
+    gap: 8px;
 
     .header-left {
-      flex: 1 0 100px;
+      flex: 0 0 auto;
 
       .node-type {
         display: inline-block;
@@ -41,16 +43,18 @@
         }
       }
     }
-  }
 
-  .header-row-2 {
-    margin-top: 5px;
     .node-id {
+      flex: 1;
+      min-width: 0;
       font-style: normal;
       font-weight: 700;
       font-size: 14px;
       line-height: 16px;
       color: var(--c-white-1);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
 }
@@ -63,17 +67,13 @@
     left: 25px;
 
     .header-row-1 {
-      display: none;
-    }
-
-    .header-row-2 {
-      margin-top: 0;
-      width: fit-content;
+      .header-left {
+        display: none;
+      }
 
       .node-id {
         width: fit-content;
-        display: inline-block;
-        white-space: nowrap;
+        min-width: auto;
       }
     }
   }

@@ -1,6 +1,5 @@
 .node-notion {
-  width: 100%;
-  height: 100%;
+  max-width: 300px;
   background: var(--color-background);
   border-radius: var(--node-border-radius);
   overflow: hidden;

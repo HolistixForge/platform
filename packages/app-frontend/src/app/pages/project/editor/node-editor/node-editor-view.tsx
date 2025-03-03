@@ -14,7 +14,7 @@ import { SpaceModule } from '@monorepo/space';
 import { NodeChatbox, NodeChatAnchor } from '@monorepo/chats';
 import { NodeCell, NodeKernel, NodeTerminal } from '@monorepo/jupyter/frontend';
 import { NodeYoutube, NodeTextEditor } from '@monorepo/socials';
-import { NodeNotion } from '@monorepo/notion';
+import { NodeNotion, NodeNotionTask } from '@monorepo/notion';
 
 import { ContextMenuLogic } from './menus/context-menu-logic';
 import { SpaceContextMenu } from './menus/context-menu';
@@ -37,6 +37,7 @@ const nodeTypes = {
   youtube: NodeYoutube,
   'text-editor': NodeTextEditor,
   'notion-database': NodeNotion,
+  'notion-page': NodeNotionTask,
 };
 
 //

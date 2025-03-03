@@ -2,6 +2,7 @@ import { Client } from '@notionhq/client';
 
 import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
 import { TEventNewNode } from '@monorepo/core';
+import { toUuid } from '@monorepo/simple-types';
 
 import {
   TEventCreatePage,
@@ -13,12 +14,7 @@ import {
   TEventUpdatePage,
   TNotionEvent,
 } from './notion-events';
-import {
-  TNotionDatabase,
-  TNotionPage,
-  TNotionProperty,
-  TNotionStatus,
-} from './notion-types';
+
 import { TNotionSharedData } from './notion-shared-model';
 
 //
@@ -69,6 +65,16 @@ export class NotionReducer extends Reducer<
 
   //
 
+  databaseId(databaseId: string) {
+    return `notion-database:${databaseId}`;
+  }
+
+  pageId(pageId: string) {
+    return `notion-page:${pageId}`;
+  }
+
+  //
+
   private async _loadPageNode(g: Ra<TEventLoadPageNode>): Promise<void> {
     const database = Array.from(g.sd.notionDatabases.values()).find((d) =>
       d.pages.find((p) => p.id === g.event.pageId)
@@ -76,7 +82,7 @@ export class NotionReducer extends Reducer<
 
     if (!database) return;
 
-    const nodeId = g.event.pageId;
+    const nodeId = this.pageId(g.event.pageId);
 
     g.dispatcher.dispatch({
       type: 'core:new-node',
@@ -91,7 +97,7 @@ export class NotionReducer extends Reducer<
       edges: [
         {
           from: {
-            node: database.id,
+            node: this.databaseId(database.id),
             connectorName: 'outputs',
           },
           to: { node: nodeId, connectorName: 'inputs' },
@@ -117,10 +123,11 @@ export class NotionReducer extends Reducer<
     if (!isOk) return;
 
     const { databaseId } = g.event;
+
     g.dispatcher.dispatch({
       type: 'core:new-node',
       nodeData: {
-        id: databaseId,
+        id: this.databaseId(databaseId),
         name: `Notion Database ${databaseId}`,
         root: true,
         type: 'notion-database',
@@ -143,10 +150,15 @@ export class NotionReducer extends Reducer<
   //
 
   private async _fetchAndUpdateDatabase(
-    g: Ra<TEventSyncDatabase | TEventInitDatabase>,
+    g: Ra<{ databaseId: string }>,
     notion: Client
   ): Promise<boolean> {
-    const { databaseId } = g.event;
+    let { databaseId } = g.event;
+
+    const r = toUuid(databaseId);
+    if (!r) return false;
+    databaseId = r;
+    g.event.databaseId = r;
 
     try {
       // Fetch database metadata
@@ -164,12 +176,9 @@ export class NotionReducer extends Reducer<
         return false;
       }
 
-      const database = this.transformDatabaseResponse(
-        dbResponse,
-        pagesResponse
-      );
+      const database = { ...dbResponse, pages: pagesResponse.results };
 
-      g.sd.notionDatabases.set(databaseId, database);
+      g.sd.notionDatabases.set(databaseId, database as any);
     } catch (error) {
       console.error('Failed to fetch and update database:', error);
       throw error;
@@ -184,28 +193,17 @@ export class NotionReducer extends Reducer<
     g: Ra<TEventUpdatePage>,
     notion: Client
   ): Promise<void> {
-    const { databaseId, pageId, properties } = g.event;
+    const { pageId } = g.event;
 
     try {
       // Update the page in Notion
       await notion.pages.update({
         page_id: pageId,
-        properties: this._transformPropertiesToNotion(properties),
+        properties: {},
       });
 
-      // Update local state
-      const database = g.sd.notionDatabases.get(databaseId);
-      if (database) {
-        const pageIndex = database.pages.findIndex((p) => p.id === pageId);
-        if (pageIndex >= 0) {
-          database.pages[pageIndex] = {
-            ...database.pages[pageIndex],
-            properties,
-            lastModified: new Date().toISOString(),
-          };
-          g.sd.notionDatabases.set(databaseId, database);
-        }
-      }
+      // refetch all
+      this._fetchAndUpdateDatabase(g, notion);
     } catch (error) {
       console.error('Failed to update page:', error);
       throw error;
@@ -216,27 +214,17 @@ export class NotionReducer extends Reducer<
     g: Ra<TEventCreatePage>,
     notion: Client
   ): Promise<void> {
-    const { databaseId, properties } = g.event;
+    const { databaseId } = g.event;
 
     try {
       // Create page in Notion
-      const response = await notion.pages.create({
+      await notion.pages.create({
         parent: { database_id: databaseId },
-        properties: this._transformPropertiesToNotion(properties),
+        properties: {},
       });
 
-      // Update local state
-      const database = g.sd.notionDatabases.get(databaseId);
-      if (database) {
-        const newPage: TNotionPage = {
-          id: response.id,
-          title: (properties.Name?.value as string) || 'Untitled',
-          properties,
-          lastModified: new Date().toISOString(),
-        };
-        database.pages.push(newPage);
-        g.sd.notionDatabases.set(databaseId, database);
-      }
+      // refetch all
+      this._fetchAndUpdateDatabase(g, notion);
     } catch (error) {
       console.error('Failed to create page:', error);
       throw error;
@@ -290,141 +278,11 @@ export class NotionReducer extends Reducer<
         },
       });
 
-      // Update local state
-      const page = database.pages[currentIndex];
-      database.pages.splice(currentIndex, 1);
-      database.pages.splice(newPosition, 0, {
-        ...page,
-        order: newPosition,
-        lastModified: new Date().toISOString(),
-      });
-
-      // Update order numbers for affected pages
-      database.pages.forEach((p, i) => {
-        p.order = i;
-      });
-
-      g.sd.notionDatabases.set(databaseId, database);
+      // refetch all
+      this._fetchAndUpdateDatabase(g, notion);
     } catch (error) {
       console.error('Failed to reorder page:', error);
       throw error;
     }
-  }
-
-  // Helper methods for data transformation
-  private _transformProperties(
-    notionProperties: any
-  ): Record<string, TNotionProperty> {
-    const properties: Record<string, TNotionProperty> = {};
-
-    for (const [key, prop] of Object.entries(notionProperties)) {
-      const property = prop as any;
-      properties[key] = {
-        id: property.id,
-        type: property.type,
-        name: key,
-        value: this._extractPropertyValue(property),
-      };
-    }
-
-    return properties;
-  }
-
-  private _transformPage(notionPage: any): TNotionPage {
-    return {
-      id: notionPage.id,
-      title: notionPage.properties.Name?.title[0]?.plain_text || 'Untitled',
-      properties: this._transformProperties(notionPage.properties),
-      order: notionPage.properties.order?.number,
-      lastModified: notionPage.last_edited_time,
-    };
-  }
-
-  private _transformPropertiesToNotion(
-    properties: Record<string, TNotionProperty>
-  ): any {
-    const notionProperties: any = {};
-
-    for (const [key, prop] of Object.entries(properties)) {
-      switch (prop.type) {
-        case 'title':
-          notionProperties[key] = {
-            title: [{ text: { content: prop.value as string } }],
-          };
-          break;
-        case 'rich_text':
-          notionProperties[key] = {
-            rich_text: [{ text: { content: prop.value as string } }],
-          };
-          break;
-        case 'number':
-          notionProperties[key] = {
-            number: prop.value as number,
-          };
-          break;
-        case 'select':
-          notionProperties[key] = {
-            select: { name: prop.value as string },
-          };
-          break;
-        case 'status':
-          notionProperties[key] = {
-            status: { name: (prop.value as TNotionStatus).name },
-          };
-          break;
-      }
-    }
-
-    return notionProperties;
-  }
-
-  private _extractPropertyValue(
-    property: any
-  ): string | number | TNotionStatus | null {
-    switch (property.type) {
-      case 'title':
-        return property.title[0]?.plain_text || '';
-      case 'rich_text':
-        return property.rich_text[0]?.plain_text || '';
-      case 'number':
-        return property.number || 0;
-      case 'select':
-        return property.select?.name || '';
-      case 'status':
-        return property.status
-          ? {
-              id: property.status.id,
-              name: property.status.name,
-              color: property.status.color,
-            }
-          : null;
-      default:
-        return '';
-    }
-  }
-
-  //
-
-  transformDatabaseResponse(
-    dbResponse: any,
-    pagesResponse: any
-  ): TNotionDatabase {
-    const databaseId = dbResponse.id;
-    const properties = this._transformProperties(dbResponse.properties);
-    const pages = pagesResponse.results.map((page: any) => {
-      if (page) {
-        const tp = this._transformPage(page);
-        return tp;
-      }
-      return null;
-    });
-
-    return {
-      id: databaseId,
-      title: dbResponse.title?.[0]?.plain_text || 'Untitled',
-      properties,
-      pages,
-      lastSync: new Date().toISOString(),
-    };
   }
 }

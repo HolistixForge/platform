@@ -24,13 +24,13 @@ export const NodeHeader = ({
         <div className="header-left">
           <span className={`node-type node-type-${nodeType}`}>{nodeType}</span>
         </div>
-        <NodeToolbar buttons={buttons} />
-      </div>
-
-      <div className="header-row-2">
-        <span className="node-id" onClick={!isOpened ? open : undefined}>
+        <span
+          className="node-id ellipsis"
+          onClick={!isOpened ? open : undefined}
+        >
           Node [{id}]
         </span>
+        <NodeToolbar buttons={buttons} />
       </div>
     </div>
   );
