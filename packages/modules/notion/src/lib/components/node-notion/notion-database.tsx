@@ -79,7 +79,7 @@ const TaskItem = ({ page }: { page: TNotionPage }) => {
     >
       <div className="task-title">{title.title[0].text.content}</div>
       <div className="task-meta">
-        <span className={`task-status ${status?.status?.color}`}>
+        <span className={`task-status bg-${status?.status?.color}`}>
           {status?.status?.name}
         </span>
       </div>

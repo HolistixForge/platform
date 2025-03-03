@@ -47,30 +47,33 @@
     padding: 2px 6px;
     border-radius: 3px;
     color: #ffffff;
+  }
+}
 
-    &.blue {
-      background: #4dabf7;
-    }
-    &.green {
-      background: #51cf66;
-    }
-    &.red {
-      background: #ff6b6b;
-    }
-    &.yellow {
-      background: #ffd43b;
-    }
-    &.orange {
-      background: #ff922b;
-    }
-    &.purple {
-      background: #cc5de8;
-    }
-    &.pink {
-      background: #f783ac;
-    }
-    &.default {
-      background: #868e96;
-    }
+.notion-kanban,
+.node-notion {
+  .bg-blue {
+    background: #4dabf7;
+  }
+  .bg-green {
+    background: #51cf66;
+  }
+  .bg-red {
+    background: #ff6b6b;
+  }
+  .bg-yellow {
+    background: #ffd43b;
+  }
+  .bg-orange {
+    background: #ff922b;
+  }
+  .bg-purple {
+    background: #cc5de8;
+  }
+  .bg-pink {
+    background: #f783ac;
+  }
+  .bg-default {
+    background: #868e96;
   }
 }

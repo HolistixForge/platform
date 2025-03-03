@@ -87,7 +87,19 @@ export const NotionPropertyRenderer = ({
         </div>
       );
 
+    case 'unique_id':
+      return (
+        <div className="node-notion-unique-id">
+          {property.unique_id.prefix}-{property.unique_id.number}
+        </div>
+      );
+
     default:
-      return <div>Unsupported property type: {property.type}</div>;
+      return (
+        <div>
+          Unsupported property type: {property.type}
+          <pre>{JSON.stringify(property, null, 2)}</pre>
+        </div>
+      );
   }
 };

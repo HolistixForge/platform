@@ -65,6 +65,15 @@ export const NodeNotionTask = ({ node }: { node: TGraphNode }) => {
   const status = page.properties.Status as TNotionStatus | undefined;
   const pl = page.properties['Priority Level'] as TNotionSelect | undefined;
 
+  /*
+  console.log({
+    title,
+    status,
+    pl,
+    priorities: database.properties['Priority Level'],
+  });
+  */
+
   return (
     <div className="node-notion">
       <InputsAndOutputs id={useNodeValue.id} />
@@ -90,7 +99,7 @@ export const NodeNotionTask = ({ node }: { node: TGraphNode }) => {
             />
 
             <select
-              className="node-notion-status"
+              className={`node-notion-status bg-${status?.status?.color}`}
               value={status?.status?.name || 'Not started'}
               onChange={(e) =>
                 handlePropertyUpdate('Status', {
@@ -100,14 +109,6 @@ export const NodeNotionTask = ({ node }: { node: TGraphNode }) => {
                   },
                 })
               }
-              style={{
-                backgroundColor: getColorForOption(
-                  status?.status?.color || 'default'
-                ),
-                color: getTextColorForOption(
-                  status?.status?.color || 'default'
-                ),
-              }}
             >
               <option value="Not started">Not Started</option>
               <option value="In progress">In Progress</option>
@@ -115,13 +116,7 @@ export const NodeNotionTask = ({ node }: { node: TGraphNode }) => {
             </select>
 
             {pl?.select && (
-              <div
-                className="node-notion-priority"
-                style={{
-                  backgroundColor: getColorForOption(pl.select.color),
-                  color: getTextColorForOption(pl.select.color),
-                }}
-              >
+              <div className={`node-notion-priority bg-${pl.select.color}`}>
                 {pl.select.name}
               </div>
             )}
@@ -129,7 +124,7 @@ export const NodeNotionTask = ({ node }: { node: TGraphNode }) => {
             <div className="node-notion-properties">
               {Object.entries(page.properties).map(([key, prop]) => {
                 if (
-                  key === 'title' ||
+                  key === 'Name' ||
                   key === 'Status' ||
                   key === 'Priority Level'
                 )
@@ -151,27 +146,4 @@ export const NodeNotionTask = ({ node }: { node: TGraphNode }) => {
       </DisablePanSelect>
     </div>
   );
-};
-
-//
-
-const getColorForOption = (color: string): string => {
-  const colorMap: Record<string, string> = {
-    default: '#37352F',
-    gray: '#787774',
-    brown: '#9F6B53',
-    orange: '#D9730D',
-    yellow: '#CB912F',
-    green: '#448361',
-    blue: '#337EA9',
-    purple: '#9065B0',
-    pink: '#C14C8A',
-    red: '#D44C47',
-  };
-  return colorMap[color] || colorMap.default;
-};
-
-const getTextColorForOption = (color: string): string => {
-  const darkColors = ['default', 'gray', 'brown'];
-  return darkColors.includes(color) ? '#ffffff' : '#ffffff';
 };
