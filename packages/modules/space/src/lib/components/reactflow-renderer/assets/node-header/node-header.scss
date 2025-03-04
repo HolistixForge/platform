@@ -1,61 +1,69 @@
-.node-wrapper-header {
-  padding: 12px 10px;
-  border-radius: var(--node-border-radius);
-  margin-bottom: 1.5px;
+.node-wrapper {
+  .node-wrapper-header {
+    padding: 12px 10px;
+    border-radius: var(--node-border-radius);
+    margin-bottom: 1.5px;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
 
-  .header-row-1 {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    .header-row-1 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
 
-    .header-left {
-      flex: 0 0 auto;
+      .header-left {
+        flex: 0 0 auto;
 
-      .node-type {
-        display: inline-block;
-        height: 20px;
-        font-style: normal;
-        font-weight: 500;
-        font-size: 10px;
-        background: var(--c-gray-10);
-        border-radius: 4px;
-        color: var(--c-white-1);
-        line-height: 20px;
-        text-transform: uppercase;
-        vertical-align: top;
-        padding: 0 6px;
+        .node-type {
+          display: inline-block;
+          height: 20px;
+          font-style: normal;
+          font-weight: 500;
+          font-size: 10px;
+          background: var(--c-gray-10);
+          border-radius: 4px;
+          color: var(--c-white-1);
+          line-height: 20px;
+          text-transform: uppercase;
+          vertical-align: top;
+          padding: 0 6px;
 
-        &.node-type-kernel,
-        &.node-type-python {
-          background: var(--color-kernel);
-        }
-        &.node-type-video {
-          background: var(--color-youtube);
-        }
-        &.node-type-terminal {
-          background: var(--c-black-6);
-        }
-        &.node-type-server {
-          background: var(--c-orange-2);
-        }
-        &.node-type-volume {
-          background: var(--color-volume);
+          &.node-type-kernel,
+          &.node-type-python {
+            background: var(--color-kernel);
+          }
+          &.node-type-video {
+            background: var(--color-youtube);
+          }
+          &.node-type-terminal {
+            background: var(--c-black-6);
+          }
+          &.node-type-server {
+            background: var(--c-orange-2);
+          }
+          &.node-type-volume {
+            background: var(--color-volume);
+          }
         }
       }
-    }
 
-    .node-id {
-      flex: 1;
-      min-width: 0;
-      font-style: normal;
-      font-weight: 700;
-      font-size: 14px;
-      line-height: 16px;
-      color: var(--c-white-1);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      .node-id {
+        flex: 1;
+        min-width: 0;
+        font-style: normal;
+        font-weight: 700;
+        font-size: 14px;
+        line-height: 16px;
+        color: var(--c-white-1);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
     }
+  }
+
+  &:hover .node-wrapper-header {
+    opacity: 1;
   }
 }
 

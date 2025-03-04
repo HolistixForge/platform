@@ -20,6 +20,10 @@ export class DummySpaceAwareness extends SpaceAwareness {
   setPointer(x: number, y: number): void {
     // Do nothing
   }
+
+  getCurrentUserId(): number {
+    return 0;
+  }
 }
 
 //
@@ -125,5 +129,9 @@ export class FakeSpaceAwareness extends SpaceAwareness {
 
   setPointer(x: number, y: number): void {
     // Do nothing
+  }
+
+  getCurrentUserId(): number {
+    return 0;
   }
 }

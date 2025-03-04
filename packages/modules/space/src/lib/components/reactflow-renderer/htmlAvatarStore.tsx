@@ -53,15 +53,18 @@ export class HtmlAvatarStore extends AvatarStore {
   //
 
   private updateAvatar(k: number, u: TUserPosition) {
-    let a = this.avatars.get(k);
-    if (!a) {
-      this.instanciateAvatar(k, u);
-      a = this.avatars.get(k);
-    }
-    if (a) {
-      a.state = u;
-      if (a.springApi) {
-        a.springApi.start(() => this.toSpring(u));
+    // do not process ou own pointer movement
+    if (k !== this.ga.getCurrentUserId()) {
+      let a = this.avatars.get(k);
+      if (!a) {
+        this.instanciateAvatar(k, u);
+        a = this.avatars.get(k);
+      }
+      if (a) {
+        a.state = u;
+        if (a.springApi) {
+          a.springApi.start(() => this.toSpring(u));
+        }
       }
     }
   }

@@ -4,6 +4,7 @@ import {
   TNotionDatabase,
   TNotionPage,
   TNotionProperty,
+  TNotionSelect,
   TNotionStatus,
   TNotionTitle,
 } from '../../notion-types';
@@ -40,7 +41,7 @@ export const NotionKanban = ({
         className="notion-h2"
         style={{ display: 'inline', lineHeight: '30px', marginBottom: '12px' }}
       >
-        Base de données Notion
+        {database.title[0].text.content}
       </h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {database?.pages?.map((page) => (
@@ -69,6 +70,7 @@ const TaskItem = ({ page }: { page: TNotionPage }) => {
 
   const title = page.properties.Name as TNotionTitle;
   const status = page.properties.Status as TNotionStatus | undefined;
+  const pl = page.properties['Priority Level'] as TNotionSelect | undefined;
 
   return (
     <div
@@ -77,11 +79,22 @@ const TaskItem = ({ page }: { page: TNotionPage }) => {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="task-title">{title.title[0].text.content}</div>
-      <div className="task-meta">
-        <span className={`task-status bg-${status?.status?.color}`}>
-          {status?.status?.name}
-        </span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="task-title ellipsis">{title.title[0].text.content}</div>
+        <div className="task-meta">
+          <span className={`task-status bg-${status?.status?.color}`}>
+            {status?.status?.name}
+          </span>
+
+          {pl?.select && (
+            <div
+              className={`node-notion-priority bg-${pl.select.color}`}
+              style={{ margin: 0 }}
+            >
+              {pl.select.name}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -96,6 +109,8 @@ const Logo = () => (
       display: 'inline',
       lineHeight: '30px',
       marginRight: '12px',
+      position: 'relative',
+      top: '-5px'
     }}
     viewBox="0 0 15 15"
     fill="none"

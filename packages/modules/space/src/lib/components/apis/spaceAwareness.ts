@@ -18,4 +18,5 @@ export abstract class SpaceAwareness extends Listenable {
   abstract getSelectedNodes(): { [k: string]: TSelectingUsers };
   abstract selectNode(nid: string): void;
   abstract setPointer(x: number, y: number, inactive?: true): void;
+  abstract getCurrentUserId(): number;
 }

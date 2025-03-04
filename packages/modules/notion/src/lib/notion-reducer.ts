@@ -1,6 +1,6 @@
 import { Client } from '@notionhq/client';
 
-import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
+import { ReduceArgs, Reducer, TEventPeriodic } from '@monorepo/collab-engine';
 import { TEventNewNode } from '@monorepo/core';
 import { toUuid } from '@monorepo/simple-types';
 
@@ -31,11 +31,13 @@ export class NotionReducer extends Reducer<
   never,
   TExtraArgs
 > {
+  private lastSync: Date = new Date(0); // Initialize to epoch
+
   private getNotionClient(apiKey: string) {
     return new Client({ auth: apiKey });
   }
 
-  async reduce(g: Ra<TNotionEvent>): Promise<void> {
+  async reduce(g: Ra<TNotionEvent | TEventPeriodic>): Promise<void> {
     const notion = this.getNotionClient(g.extraArgs.notionApiKey);
 
     switch (g.event.type) {
@@ -60,6 +62,9 @@ export class NotionReducer extends Reducer<
 
       case 'notion:load-page-node':
         return this._loadPageNode(g as Ra<TEventLoadPageNode>);
+
+      case 'periodic':
+        return this._periodic(g as Ra<TEventPeriodic>);
     }
   }
 
@@ -95,6 +100,7 @@ export class NotionReducer extends Reducer<
         connectors: [{ connectorName: 'inputs', pins: [] }],
       },
       edges: [
+        /*
         {
           from: {
             node: this.databaseId(database.id),
@@ -103,6 +109,7 @@ export class NotionReducer extends Reducer<
           to: { node: nodeId, connectorName: 'inputs' },
           type: 'composed_of',
         },
+        */
       ],
       origin: g.event.origin
         ? {
@@ -185,6 +192,24 @@ export class NotionReducer extends Reducer<
     }
 
     return true;
+  }
+
+  //
+
+  private async _periodic(g: Ra<TEventPeriodic>): Promise<void> {
+    const now = new Date();
+    const timeSinceLastSync = now.getTime() - this.lastSync.getTime();
+
+    // Only sync if more than 1 minute has passed
+    if (timeSinceLastSync >= 60000) {
+      g.sd.notionDatabases.forEach((database) => {
+        this._fetchAndUpdateDatabase(
+          { ...g, event: { databaseId: database.id } },
+          this.getNotionClient(g.extraArgs.notionApiKey)
+        );
+      });
+      this.lastSync = now;
+    }
   }
 
   //

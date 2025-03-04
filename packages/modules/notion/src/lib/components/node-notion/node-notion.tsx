@@ -1,6 +1,5 @@
 import {
   DisablePanSelect,
-  InputsAndOutputs,
   NodeHeader,
   useMakeButton,
   useNodeContext,
@@ -13,6 +12,8 @@ import { NotionKanban } from './notion-database';
 import { TNotionEvent } from '../../notion-events';
 
 import './node-notion.scss';
+
+//
 
 export const NodeNotion = ({ node }: { node: TGraphNode }) => {
   const databaseId = node.data!.databaseId as string;
@@ -29,7 +30,6 @@ export const NodeNotion = ({ node }: { node: TGraphNode }) => {
 
   return (
     <div className="node-notion">
-      <InputsAndOutputs id={useNodeValue.id} />
       <NodeHeader
         buttons={buttons}
         nodeType="notion-database"

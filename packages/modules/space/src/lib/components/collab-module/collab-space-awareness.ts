@@ -35,6 +35,12 @@ export class CollabSpaceAwareness extends SpaceAwareness {
 
   //
 
+  getCurrentUserId(): number {
+    return this.awareness.getMyId();
+  }
+
+  //
+
   getPointersUpdates(): TUserPosition[] {
     return Array.from(this.states.keys())
       .map((k) => {
