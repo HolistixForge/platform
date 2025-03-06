@@ -1,12 +1,14 @@
-import { TNotionProperty } from '../../notion-types';
+import { TNotionProperty, TNotionDatabase } from '../../notion-types';
 
 interface NotionPropertyRendererProps {
   property: TNotionProperty;
+  database: TNotionDatabase;
   onUpdate: (value: any) => void;
 }
 
 export const NotionPropertyRenderer = ({
   property,
+  database,
   onUpdate,
 }: NotionPropertyRendererProps) => {
   switch (property.type) {
@@ -14,8 +16,8 @@ export const NotionPropertyRenderer = ({
       return (
         <input
           type="text"
-          value={property.rich_text[0]?.plain_text || ''}
-          onChange={(e) =>
+          defaultValue={property.rich_text[0]?.plain_text || ''}
+          onBlur={(e) =>
             onUpdate({
               type: 'rich_text',
               rich_text: [{ text: { content: e.target.value } }],
@@ -29,8 +31,8 @@ export const NotionPropertyRenderer = ({
       return (
         <input
           type="number"
-          value={property.number || ''}
-          onChange={(e) =>
+          defaultValue={property.number || ''}
+          onBlur={(e) =>
             onUpdate({
               type: 'number',
               number: parseFloat(e.target.value),
@@ -40,7 +42,16 @@ export const NotionPropertyRenderer = ({
         />
       );
 
-    case 'select':
+    case 'select': {
+      const propertyDef =
+        database.properties[
+          Object.keys(database.properties).find(
+            (key) => database.properties[key].id === property.id
+          )!
+        ];
+      const options =
+        propertyDef.type === 'select' ? propertyDef.select.options : [];
+
       return (
         <select
           value={property.select?.name || ''}
@@ -55,11 +66,25 @@ export const NotionPropertyRenderer = ({
           className="node-notion-select"
         >
           <option value="">Select an option...</option>
-          {/* You'll need to add options based on available select options */}
+          {options.map((option) => (
+            <option key={option.id} value={option.name}>
+              {option.name}
+            </option>
+          ))}
         </select>
       );
+    }
 
-    case 'status':
+    case 'status': {
+      const propertyDef =
+        database.properties[
+          Object.keys(database.properties).find(
+            (key) => database.properties[key].id === property.id
+          )!
+        ];
+      const options =
+        propertyDef.type === 'status' ? propertyDef.status.options : [];
+
       return (
         <select
           value={property.status?.name || ''}
@@ -74,11 +99,14 @@ export const NotionPropertyRenderer = ({
           className="node-notion-select"
         >
           <option value="">Select status...</option>
-          <option value="Not started">Not Started</option>
-          <option value="In progress">In Progress</option>
-          <option value="Done">Done</option>
+          {options.map((option) => (
+            <option key={option.id} value={option.name}>
+              {option.name}
+            </option>
+          ))}
         </select>
       );
+    }
 
     case 'relation':
       return (

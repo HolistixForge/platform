@@ -64,6 +64,16 @@ export const NodeNotionTask = ({ node }: { node: TGraphNode }) => {
   const status = page.properties.Status as TNotionStatus | undefined;
   const pl = page.properties['Priority Level'] as TNotionSelect | undefined;
 
+  const statusOptions =
+    database?.properties.Status?.type === 'status'
+      ? database.properties.Status.status.options
+      : [];
+
+  const priorityOptions =
+    database?.properties['Priority Level']?.type === 'select'
+      ? database.properties['Priority Level'].select.options
+      : [];
+
   /*
   console.log({
     title,
@@ -74,7 +84,7 @@ export const NodeNotionTask = ({ node }: { node: TGraphNode }) => {
   */
 
   return (
-    <div className="node-notion">
+    <div className="node-notion-task">
       <NodeHeader
         buttons={buttons}
         nodeType="notion-task"
@@ -84,11 +94,12 @@ export const NodeNotionTask = ({ node }: { node: TGraphNode }) => {
       />
       <DisablePanSelect>
         {page && database && (
-          <div className="node-notion-content">
+          <div className="node-background node-notion-task-content">
             <input
-              className="node-notion-title"
-              value={title.title[0].text.content}
-              onChange={(e) =>
+              className="node-notion-task-title"
+              style={{ fontSize: '16px' }}
+              defaultValue={title.title[0].text.content}
+              onBlur={(e) =>
                 handlePropertyUpdate('title', {
                   type: 'title',
                   title: [{ text: { content: e.target.value } }],
@@ -97,8 +108,8 @@ export const NodeNotionTask = ({ node }: { node: TGraphNode }) => {
             />
 
             <select
-              className={`node-notion-status bg-${status?.status?.color}`}
-              value={status?.status?.name || 'Not started'}
+              className={`node-notion-task-status bg-${status?.status?.color}`}
+              value={status?.status?.name || 'No Status'}
               onChange={(e) =>
                 handlePropertyUpdate('Status', {
                   type: 'status',
@@ -108,18 +119,41 @@ export const NodeNotionTask = ({ node }: { node: TGraphNode }) => {
                 })
               }
             >
-              <option value="Not started">Not Started</option>
-              <option value="In progress">In Progress</option>
-              <option value="Done">Done</option>
+              <option value="">Select status...</option>
+              {statusOptions.map((option) => (
+                <option key={option.id} value={option.name}>
+                  {option.name}
+                </option>
+              ))}
+              <option value="No Status" disabled>
+                No Status
+              </option>
             </select>
 
-            {pl?.select && (
-              <div className={`node-notion-priority bg-${pl.select.color}`}>
-                {pl.select.name}
-              </div>
-            )}
+            <select
+              className={`node-notion-task-status bg-${pl?.select?.color}`}
+              value={pl?.select?.name || 'No Priority'}
+              onChange={(e) =>
+                handlePropertyUpdate('Priority Level', {
+                  type: 'select',
+                  select: {
+                    name: e.target.value,
+                  },
+                })
+              }
+            >
+              <option value="">Select priority...</option>
+              {priorityOptions.map((option) => (
+                <option key={option.id} value={option.name}>
+                  {option.name}
+                </option>
+              ))}
+              <option value="No Priority" disabled>
+                No Priority
+              </option>
+            </select>
 
-            <div className="node-notion-properties">
+            <div className="node-notion-task-properties">
               {Object.entries(page.properties).map(([key, prop]) => {
                 if (
                   key === 'Name' ||
@@ -129,10 +163,13 @@ export const NodeNotionTask = ({ node }: { node: TGraphNode }) => {
                   return null;
 
                 return (
-                  <div key={key} className="node-notion-property">
-                    <span className="node-notion-property-label">{key}</span>
+                  <div key={key} className="node-notion-task-property">
+                    <span className="node-notion-task-property-label">
+                      {key}
+                    </span>
                     <NotionPropertyRenderer
                       property={prop}
+                      database={database}
                       onUpdate={(value) => handlePropertyUpdate(key, value)}
                     />
                   </div>

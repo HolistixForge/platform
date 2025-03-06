@@ -1,7 +1,7 @@
 import { Client } from '@notionhq/client';
 
 import { ReduceArgs, Reducer, TEventPeriodic } from '@monorepo/collab-engine';
-import { TEventNewNode } from '@monorepo/core';
+import { TEventDeleteNode, TEventNewNode } from '@monorepo/core';
 import { toUuid } from '@monorepo/simple-types';
 
 import {
@@ -19,7 +19,12 @@ import { TNotionSharedData } from './notion-shared-model';
 
 //
 
-type Ra<T> = ReduceArgs<TNotionSharedData, T, TEventNewNode, TExtraArgs>;
+type Ra<T> = ReduceArgs<
+  TNotionSharedData,
+  T,
+  TEventNewNode | TEventDeleteNode,
+  TExtraArgs
+>;
 
 type TExtraArgs = {
   notionApiKey: string;
@@ -100,7 +105,6 @@ export class NotionReducer extends Reducer<
         connectors: [{ connectorName: 'inputs', pins: [] }],
       },
       edges: [
-        /*
         {
           from: {
             node: this.databaseId(database.id),
@@ -109,17 +113,8 @@ export class NotionReducer extends Reducer<
           to: { node: nodeId, connectorName: 'inputs' },
           type: 'composed_of',
         },
-        */
       ],
-      origin: g.event.origin
-        ? {
-            ...g.event.origin,
-            position: {
-              x: g.event.origin.position.x + 100,
-              y: g.event.origin.position.y + 100,
-            },
-          }
-        : undefined,
+      origin: g.event.origin,
     });
   }
 
@@ -183,8 +178,27 @@ export class NotionReducer extends Reducer<
         return false;
       }
 
-      const database = { ...dbResponse, pages: pagesResponse.results };
+      // Get the existing database to compare with new pages
+      const existingDatabase = g.sd.notionDatabases.get(databaseId);
+      const newPages = pagesResponse.results;
 
+      // If we had existing pages, check for deleted ones
+      if (existingDatabase) {
+        const newPageIds = new Set(newPages.map((page) => page.id));
+        const deletedPages = existingDatabase.pages.filter(
+          (oldPage) => !newPageIds.has(oldPage.id)
+        );
+
+        // Dispatch delete node events for each deleted page
+        deletedPages.forEach((deletedPage) => {
+          g.dispatcher.dispatch({
+            type: 'core:delete-node',
+            id: this.pageId(deletedPage.id),
+          });
+        });
+      }
+
+      const database = { ...dbResponse, pages: newPages };
       g.sd.notionDatabases.set(databaseId, database as any);
     } catch (error) {
       console.error('Failed to fetch and update database:', error);
@@ -224,10 +238,10 @@ export class NotionReducer extends Reducer<
       // Update the page in Notion
       await notion.pages.update({
         page_id: pageId,
-        properties: {},
+        properties: g.event.properties,
       });
 
-      // refetch all
+      // refetch all asynchronously
       this._fetchAndUpdateDatabase(g, notion);
     } catch (error) {
       console.error('Failed to update page:', error);

@@ -1,10 +1,11 @@
-.node-notion {
+.node-notion-task {
+  max-width: 250px;
   &-content {
     padding: 8px;
-    background: #363636;
+    border-radius: var(--node-border-radius);
+    max-width: 250px;
   }
 
-  &-title,
   input,
   select {
     display: inline-block;
@@ -13,15 +14,10 @@
     font-size: 12px;
     border: 1px solid #404040;
     color: #ffffff;
-    background-color: #363636;
+    background-color: rgba(54, 54, 54, 0.1);
     cursor: pointer;
-    width: 100%;
     margin-bottom: 8px;
-
-    &:focus {
-      outline: none;
-      border-color: #4dabf7;
-    }
+    outline: none;
 
     option {
       background-color: #2d2d2d;
@@ -30,8 +26,11 @@
     }
   }
 
+  input {
+    width: 100%;
+  }
+
   &-title {
-    font-size: 16px;
     font-weight: 600;
   }
 
@@ -53,10 +52,7 @@
   }
 
   &-property {
-    display: flex;
     align-items: center;
-    background: #404040;
-    padding: 6px 10px;
     border-radius: 3px;
     transition: background-color 0.2s ease;
 
@@ -65,6 +61,7 @@
     }
 
     &-label {
+      display: block;
       color: #adb5bd;
       margin-right: 8px;
       font-size: 11px;

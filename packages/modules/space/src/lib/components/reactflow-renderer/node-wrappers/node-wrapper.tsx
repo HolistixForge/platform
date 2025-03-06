@@ -80,9 +80,13 @@ export const NodeWrapper =
 
     return (
       <nodeContext.Provider value={contextValue}>
-        <div className="node-wrapper">
+        <div
+          className={`node-wrapper ${opened ? 'node-opened' : 'node-closed'}`}
+        >
           <SelectionsAwareness selectingUsers={selectingUsers}>
-            <NodeComponent />
+            <div style={{ position: 'relative' }}>
+              <NodeComponent />
+            </div>
           </SelectionsAwareness>
         </div>
         <NodeStatusDebugOverlay {...viewStatus} zoom={zoom} />

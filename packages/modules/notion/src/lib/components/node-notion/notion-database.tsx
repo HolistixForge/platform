@@ -35,14 +35,20 @@ export const NotionKanban = ({
   onReorderPage,
 }: NotionKanbanProps) => {
   return (
-    <div className="notion-kanban w-full">
-      <Logo />
-      <h2
-        className="notion-h2"
-        style={{ display: 'inline', lineHeight: '30px', marginBottom: '12px' }}
-      >
-        {database.title[0].text.content}
-      </h2>
+    <div className="node-background notion-kanban w-full">
+      <div className="notion-kanban-header">
+        <Logo />
+        <h2
+          className="notion-h2"
+          style={{
+            display: 'inline',
+            lineHeight: '40px',
+            marginBottom: '12px',
+          }}
+        >
+          {database.title[0].text.content}
+        </h2>
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {database?.pages?.map((page) => (
           <TaskItem key={page.id} page={page} />
@@ -88,7 +94,7 @@ const TaskItem = ({ page }: { page: TNotionPage }) => {
 
           {pl?.select && (
             <div
-              className={`node-notion-priority bg-${pl.select.color}`}
+              className={`task-status bg-${pl.select.color}`}
               style={{ margin: 0 }}
             >
               {pl.select.name}
@@ -105,12 +111,12 @@ const TaskItem = ({ page }: { page: TNotionPage }) => {
 const Logo = () => (
   <svg
     style={{
-      width: '30px',
+      width: '25px',
       display: 'inline',
-      lineHeight: '30px',
+      lineHeight: '40px',
       marginRight: '12px',
       position: 'relative',
-      top: '-5px'
+      top: '-5px',
     }}
     viewBox="0 0 15 15"
     fill="none"

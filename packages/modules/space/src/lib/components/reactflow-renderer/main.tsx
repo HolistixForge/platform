@@ -43,6 +43,8 @@ type DemiurgeSpaceProps = {
   currentUser: { username: string; color: string } | undefined;
   //
   onContextMenu: (xy: TPosition, clientPosition: TPosition) => void;
+  onPaneClick?: (xy: TPosition, clientPosition: TPosition) => void;
+  //
   onContextMenuNewEdge: (
     from: TEdgeEnd,
     xy: TPosition,
@@ -71,6 +73,7 @@ export const DemiurgeSpace = ({
   onContextMenuNewEdge,
   onConnect,
   onDrop,
+  onPaneClick,
 }: DemiurgeSpaceProps) => {
   //
 
@@ -233,6 +236,21 @@ export const DemiurgeSpace = ({
     [onContextMenu]
   );
 
+  //
+
+  const handlePaneClick = useCallback(
+    // Handle left click on pane here
+    (event: React.MouseEvent) => {
+      const pclient = clientXY(event);
+      const p = pointerTracker.fromMouseEvent(pclient);
+      onPaneClick?.(p, pclient);
+      event.preventDefault();
+    },
+    [onPaneClick]
+  );
+
+  //
+
   const context = useMemo(
     () => ({
       spaceAwareness,
@@ -251,7 +269,6 @@ export const DemiurgeSpace = ({
     <div
       style={{ width: '100%', height: '100%', position: 'relative' }}
       ref={pointerTracker.bindReactFlowParentDiv.bind(pointerTracker)}
-      onContextMenu={handleContextMenu}
     >
       <SpaceContext value={context}>
         <ReactFlow
@@ -276,6 +293,9 @@ export const DemiurgeSpace = ({
           //
           onDragOver={handleDragOver}
           onDrop={handleDrop}
+          //
+          onPaneClick={handlePaneClick}
+          onContextMenu={handleContextMenu}
         >
           <MiniMap />
           <Controls />

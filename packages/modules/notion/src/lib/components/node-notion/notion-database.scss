@@ -2,7 +2,12 @@
   width: 100%;
   height: 100%;
   padding: 20px;
-  background: #2d2d2d;
+  border-radius: var(--node-border-radius);
+
+  &-header {
+    border-bottom: 1px solid #fff;
+    margin-bottom: 10px;
+  }
 
   .notion-h2 {
     margin: 0;
@@ -13,7 +18,7 @@
 
   .task-item {
     padding: 12px;
-    background: #363636;
+    background: rgba(54, 54, 54, 0.1);
     border-radius: 6px;
     cursor: grab;
     user-select: none;
@@ -53,7 +58,7 @@
 }
 
 .notion-kanban,
-.node-notion {
+.node-notion-task {
   .bg-blue {
     background: #4dabf7;
   }
@@ -75,6 +80,7 @@
   .bg-pink {
     background: #f783ac;
   }
+  .bg-gray,
   .bg-default {
     background: #868e96;
   }

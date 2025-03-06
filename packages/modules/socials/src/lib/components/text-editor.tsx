@@ -17,6 +17,29 @@ let quillScript: any = undefined;
 
 //
 
+const toolbarOptions = [
+  ['bold', 'italic', 'underline', 'strike'], // toggled buttons
+  ['blockquote', 'code-block'],
+  ['link', 'image', 'video', 'formula'],
+
+  [{ header: 1 }, { header: 2 }], // custom button values
+  [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
+  [{ script: 'sub' }, { script: 'super' }], // superscript/subscript
+  [{ indent: '-1' }, { indent: '+1' }], // outdent/indent
+  [{ direction: 'rtl' }], // text direction
+
+  [{ size: ['small', false, 'large', 'huge'] }], // custom dropdown
+  [{ header: [1, 2, 3, 4, 5, 6, false] }],
+
+  [{ color: [] }, { background: [] }], // dropdown with defaults from theme
+  [{ font: [] }],
+  [{ align: [] }],
+
+  ['clean'], // remove formatting button
+];
+
+//
+
 export type NodeTextEditorInternalProps = {} & TNodeContext;
 
 //
@@ -61,9 +84,30 @@ export const NodeTextEditorInternal = ({
     if (!hasLoadedQuillRef.current) {
       hasLoadedQuillRef.current = true;
       quillScript.onload = () => {
-        new (window as any).Quill('#editor', {
+        const quill = new (window as any).Quill('#editor', {
           theme: 'snow',
-          placeholder: 'Compose an epic...',
+          placeholder: '<h2>Compose an epic...</h2>',
+          modules: {
+            toolbar: toolbarOptions,
+          },
+        });
+
+        // Add change handler
+        quill.on('text-change', function () {
+          const text = quill.root.innerHTML;
+          const deltas = quill.getContents();
+          console.log('Editor content changed:', {
+            text,
+            deltas: JSON.stringify(deltas),
+          });
+        });
+
+        quill.setContents({
+          ops: [
+            { insert: 'Hello World!' },
+            { attributes: { header: 1 }, insert: '\n' },
+            { insert: '\nCompose a beautiful Documentation...\n' },
+          ],
         });
       };
     }
@@ -71,18 +115,13 @@ export const NodeTextEditorInternal = ({
 
   return (
     <div className={`common-node node-quill`}>
-      <div
-        className="opacity-on-hover"
-        style={{ opacity: selected ? 1 : undefined }}
-      >
-        <NodeHeader
-          nodeType="Text Editor"
-          id={id}
-          isOpened={isOpened}
-          open={open}
-          buttons={buttons}
-        />
-      </div>
+      <NodeHeader
+        nodeType="Text Editor"
+        id={id}
+        isOpened={isOpened}
+        open={open}
+        buttons={buttons}
+      />
 
       <DisablePanSelect>
         <div
