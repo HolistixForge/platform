@@ -64,11 +64,11 @@ export class YjsAwareness extends Awareness {
     this._provider.awareness.setLocalStateField('user', this._user);
   }
 
-  getBindingObjects(celluleId: string, code: string) {
-    let ytext = this._editorBindings.get(celluleId);
+  getBindingObjects(editorId: string, code: string) {
+    let ytext = this._editorBindings.get(editorId);
     if (!ytext) {
       ytext = new Text(code);
-      this._editorBindings.set(celluleId, ytext);
+      this._editorBindings.set(editorId, ytext);
     }
     return { ytext, providerAwareness: this._provider.awareness };
   }

@@ -24,7 +24,7 @@ export const useJLsManager = () =>
 
 //
 
-export const useKernelPack = (dkid: TDKID): TKernelPack => {
+export const useKernelPack = (dkid: TDKID): TKernelPack | false => {
   const { jlsManager } = useJLsManager();
   useRegisterListener(jlsManager, dkid);
 

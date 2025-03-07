@@ -298,7 +298,7 @@ export class JLsManager extends Listenable {
    * build a new kernel pack if necessary
    * @param dkid the demiurge kernel id
    */
-  getKernelPack(dkid: TDKID): TKernelPack {
+  getKernelPack(dkid: TDKID): TKernelPack | false {
     const p = this._kernelPacks.get(dkid);
     if (!p) {
       const r = dkidToServer(this._sd.jupyterServers as any, dkid);
@@ -307,7 +307,7 @@ export class JLsManager extends Listenable {
           `no server for dkid [${dkid}]: Shared Data: `,
           sharedDataToJson(this._sd)
         );
-        throw new Error(`no server for dkid [${dkid}]`);
+        return false;
       }
 
       const { server } = r;
@@ -332,7 +332,7 @@ export class JLsManager extends Listenable {
    */
   override addListener(f: () => void, dkid: TDKID) {
     const p = this.getKernelPack(dkid);
-    p.listeners.push(f);
+    if (p) p.listeners.push(f);
   }
 
   /**
@@ -342,7 +342,7 @@ export class JLsManager extends Listenable {
    */
   override removeListener(f: () => void, dkid: TDKID) {
     const p = this.getKernelPack(dkid);
-    p.listeners = p.listeners.filter((l) => Object.is(l, f));
+    if (p) p.listeners = p.listeners.filter((l) => Object.is(l, f));
   }
 
   /**

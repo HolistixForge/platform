@@ -22,7 +22,7 @@ IMAGE_TAG=latest
 SCRIPTS_DIR="/home/dev/workspace/monorepo/docker-images/backend-images/gateway/app"
 
 # Base docker run command
-DOCKER_CMD="docker run --rm -it --name gw --privileged"
+DOCKER_CMD="docker run --rm -it --name gw-${GW_INSTANCE_ID}-${GW_ID} --privileged"
 
 # Add volume mount or NFS server env var based on what's defined
 if [ -n "${WORKSPACE}" ]; then

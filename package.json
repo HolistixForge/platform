@@ -135,6 +135,7 @@
     "passport-local": "^1.0.0",
     "passport-magic-link": "^2.1.1",
     "pg": "^8.13.1",
+    "quill-cursors": "^4.0.4",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-hotkeys-hook": "^4.6.1",
@@ -146,6 +147,7 @@
     "ts-essentials": "^10.0.4",
     "ws": "^8.18.0",
     "y-monaco": "^0.1.6",
+    "y-quill": "^1.0.0",
     "y-websocket": "^2.1.0",
     "yjs": "^13.6.23"
   }

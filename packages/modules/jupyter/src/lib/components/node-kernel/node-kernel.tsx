@@ -36,6 +36,7 @@ export const NodeKernel = ({ node }: { node: TGraphNode }) => {
   const s: { ps: TServer; js: TJupyterServerData } = useSharedData<
     TServersSharedData & TJupyterSharedData
   >(['jupyterServers', 'projectServers'], (sd) => {
+    if (!kernelPack) return false;
     return {
       js: sd.jupyterServers.get(`${kernelPack.project_server_id}`),
       ps: sd.projectServers.get(`${kernelPack.project_server_id}`),
@@ -95,13 +96,15 @@ export const NodeKernel = ({ node }: { node: TGraphNode }) => {
     'server-stopped';
   let startStopButton = undefined;
 
-  if (greaterThan(kernelPack.state, 'server-started')) {
+  if (kernelPack && greaterThan(kernelPack.state, 'server-started')) {
     state = 'kernel-started';
     startStopButton = { ...stopButton, text: 'Stop' };
-  } else if (greaterThan(kernelPack.state, 'server-stopped')) {
+  } else if (kernelPack && greaterThan(kernelPack.state, 'server-stopped')) {
     state = 'kernel-stopped';
     startStopButton = { ...startButton, text: 'Start' };
   } else state = 'server-stopped';
+
+  if (!kernelPack) return <>Not Found</>;
 
   return (
     <div className={`common-node kernel-node`}>

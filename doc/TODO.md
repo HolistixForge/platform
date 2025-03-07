@@ -1,7 +1,7 @@
 ⚠️ Antoine's stuffs
 
 selected node zindex
-quill options and hide toolbar
+quill save content in shared data
 
 - ubuntu image copy
 

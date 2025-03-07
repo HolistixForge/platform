@@ -54,11 +54,12 @@ export const useCellLogic = ({
   const ps: TServer = useSharedData<TServersSharedData>(
     ['projectServers'],
     (sd) => {
+      if (!kernelPack) return false;
       return sd.projectServers.get(`${kernelPack.project_server_id}`);
     }
   );
 
-  const client_id = ps?.oauth.find(
+  const client_id = ps?.oauth?.find(
     (o) => o.service_name === 'jupyterlab'
   )?.client_id;
 
@@ -81,7 +82,7 @@ export const useCellLogic = ({
   const handleEditorMount = useCallback(
     (editor: TEditor) => {
       editorRef.current = editor;
-      awareness && bindEditor(awareness, cellId, editor, '');
+      awareness && bindEditor(awareness, 'monaco', cellId, editor, '');
     },
     [awareness, cellId]
   );
@@ -174,8 +175,12 @@ const CellOutput = (props: ReturnType<typeof useCellLogic>) => {
   // if kernel readyness is true, or change from false to true,
   // create a new outputArea.
   // else reset to null to render a information message
+
+  const state = kernelPack ? kernelPack.state : 'not-found';
+  const widgetManager = kernelPack ? kernelPack.widgetManager : null;
+
   useEffect(() => {
-    if (kernelPack.state === 'widget-manager-loaded') {
+    if (kernelPack && kernelPack.state === 'widget-manager-loaded') {
       const newOA = (
         kernelPack.widgetManager as BrowserWidgetManager
       ).createOutputArea();
@@ -189,7 +194,7 @@ const CellOutput = (props: ReturnType<typeof useCellLogic>) => {
         return null;
       });
     }
-  }, [kernelPack.state, kernelPack.widgetManager]);
+  }, [state, widgetManager]);
 
   //
 
@@ -216,6 +221,8 @@ const CellOutput = (props: ReturnType<typeof useCellLogic>) => {
   );
 
   //
+
+  if (!kernelPack) return <>Not Found</>;
 
   return (
     <div>

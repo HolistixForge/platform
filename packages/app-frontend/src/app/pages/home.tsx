@@ -132,7 +132,9 @@ const ProjectsListItem = ({
   const { data, status } = useQueryUser(project.owner_id);
   return (
     <Table.Row className="border-t border-slate-700 hover:bg-slate-800/50">
-      <Table.Cell className="py-4 px-6">{project.name}</Table.Cell>
+      <Table.Cell className="py-4 px-6" style={{ color: 'var(--c-white-1)' }}>
+        {project.name}
+      </Table.Cell>
       <Table.Cell className="py-4 px-6">
         {status === 'success' ? (
           <UserInline color="var(--c-white-1)" {...data} />

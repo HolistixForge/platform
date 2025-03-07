@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
+import QuillCursors from 'quill-cursors';
 
+import { useAwareness, bindEditor } from '@monorepo/collab-engine';
 import { TGraphNode } from '@monorepo/core';
 import { useNodeContext } from '@monorepo/space';
 import {
@@ -51,7 +53,9 @@ export const NodeTextEditorInternal = ({
   id,
   selected,
 }: NodeTextEditorInternalProps) => {
-  //
+  const { awareness } = useAwareness();
+  const quillInstanceRef = useRef<any>(null);
+  const hasLoadedQuillRef = useRef(false);
 
   const isExpanded = viewStatus.mode === 'EXPANDED';
   const buttons = useMakeButton({
@@ -62,8 +66,6 @@ export const NodeTextEditorInternal = ({
     open,
     close,
   });
-
-  const hasLoadedQuillRef = useRef(false);
 
   useEffect(() => {
     if (!quillScript) {
@@ -84,23 +86,26 @@ export const NodeTextEditorInternal = ({
     if (!hasLoadedQuillRef.current) {
       hasLoadedQuillRef.current = true;
       quillScript.onload = () => {
-        const quill = new (window as any).Quill('#editor', {
+        const Quill = (window as any).Quill;
+        Quill.register('modules/cursors', QuillCursors);
+
+        const quill = new Quill('#editor', {
           theme: 'snow',
           placeholder: '<h2>Compose an epic...</h2>',
           modules: {
+            cursors: true,
             toolbar: toolbarOptions,
+            history: {
+              userOnly: true,
+            },
           },
         });
 
-        // Add change handler
-        quill.on('text-change', function () {
-          const text = quill.root.innerHTML;
-          const deltas = quill.getContents();
-          console.log('Editor content changed:', {
-            text,
-            deltas: JSON.stringify(deltas),
-          });
-        });
+        quillInstanceRef.current = quill;
+
+        if (awareness) {
+          bindEditor(awareness, 'quill', id, quill, 'Hello World!');
+        }
 
         quill.setContents({
           ops: [
@@ -111,7 +116,7 @@ export const NodeTextEditorInternal = ({
         });
       };
     }
-  }, []);
+  }, [awareness, id]);
 
   return (
     <div className={`common-node node-quill`}>
@@ -125,9 +130,7 @@ export const NodeTextEditorInternal = ({
 
       <DisablePanSelect>
         <div
-          className={`node-wrapper-body node-wrapper-quill ${
-            selected ? 'node-background' : ''
-          }`}
+          className={`node-wrapper-body ${selected ? 'node-background' : ''}`}
         >
           <div id="editor" style={{ width: '400px' }}></div>
         </div>
