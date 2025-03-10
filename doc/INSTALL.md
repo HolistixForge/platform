@@ -273,6 +273,11 @@ npx nx run app-frontend:build:production \
 
 # Install gateway
 
+```shell
+# TODO persistence, for now, allow gateway to store state here
+chmod 777 ./data
+```
+
 [gateway README](../docker-images/backend-images/gateway/README.md)
 
 # After reboot

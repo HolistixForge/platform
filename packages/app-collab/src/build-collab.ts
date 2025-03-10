@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as Y from 'yjs';
 const u = require('y-websocket/bin/utils');
 // import { EventSourcePolyfill } from 'event-source-polyfill';
 
@@ -70,21 +71,58 @@ import { runScript } from './run-script';
 //
 //
 
+const STORAGE_PATH = './data';
+
+let ydoc: Y.Doc;
+
+const filePath = (suffix: string) => {
+  return `${STORAGE_PATH}/${PROJECT?.PROJECT_ID}-${suffix}.json`;
+};
+
+const loadDoc = () => {
+  const docId = PROJECT!.YJS_DOC_ID;
+  log(6, 'YJS', `Creating Yjs doc: [${docId}]`);
+  ydoc = u.getYDoc(docId);
+
+  try {
+    const data = fs.readFileSync(filePath('yjs-db'), 'utf-8');
+    Y.applyUpdate(ydoc, Buffer.from(JSON.parse(data)));
+    return true;
+  } catch (err) {
+    console.error('failed to load project data', err);
+    return false;
+  }
+};
+
+const saveDoc = (saved: TJsonObject) => {
+  try {
+    const savedFile = JSON.stringify(saved);
+    fs.writeFileSync(filePath('saved'), savedFile);
+
+    const db = JSON.stringify([...Y.encodeStateAsUpdate(ydoc)]);
+    fs.writeFileSync(filePath('yjs-db'), db);
+  } catch (err) {
+    console.error('failed to save project data', err);
+  }
+};
+
+// Send signal with: kill -USR1 <pid>
+process.on('SIGUSR1', () => {
+  log(6, 'SIGNAL', 'Received SIGUSR1, saving doc state');
+  const saved: TJsonObject = {};
+  // TODO: get reducers to save state
+  saveDoc(saved);
+});
+
+//
+
 const gatewayStopNotify = async (saved: TJsonObject) => {
-  toGanymede({
+  await toGanymede({
     url: '/gateway-stop',
     method: 'POST',
     headers: { authorization: CONFIG.GATEWAY_TOKEN },
   });
-
-  // saved json file
-  try {
-    const savedFile = JSON.stringify(saved);
-    fs.writeFileSync(`./data/${PROJECT?.PROJECT_ID}.json`, savedFile);
-  } catch (err) {
-    console.error('failed to save project data', err);
-  }
-
+  saveDoc(saved);
   runScript('reset-gateway');
 };
 
@@ -179,9 +217,7 @@ export type TAllEvents =
 export async function initProjectCollaboration(
   dispatcher: Dispatcher<TAllEvents, {}>
 ) {
-  const docId = PROJECT!.YJS_DOC_ID;
-  log(6, 'YJS', `Creating Yjs doc: [${docId}]`);
-  const ydoc = u.getYDoc(docId);
+  const loadedFromFile = loadDoc();
 
   const yst = new YjsSharedTypes(ydoc);
 
@@ -192,21 +228,21 @@ export async function initProjectCollaboration(
 
   dispatcher.bindData(yst, sd, extraContext);
 
-  ydoc.awareness.on('change', ({ removed }: { removed: number[] }) => {
+  (ydoc as any).awareness.on('change', ({ removed }: { removed: number[] }) => {
     // console.log('AWARENESS CHANGES:', { added, updated, removed });
     removed.forEach((userId) => {
       dispatcher.dispatch({
         type: 'user-leave',
         userId: userId,
-        awarenessState: ydoc.awareness.getStates().get(userId),
+        awarenessState: (ydoc as any).awareness.getStates().get(userId),
       });
     });
   });
 
   // load
-  await loadCollaborationData(sd, dispatcher);
+  if (!loadedFromFile) await loadCollaborationData(sd, dispatcher);
 
-  const interval = 15000;
+  const interval = 5000;
   setInterval(() => {
     try {
       dispatcher.dispatch({ type: 'periodic', interval, date: new Date() });

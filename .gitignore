@@ -51,3 +51,5 @@ storybook-static
 .env
 
 restart-app-inotify
+
+data/*

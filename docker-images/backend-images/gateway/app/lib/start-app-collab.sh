@@ -27,6 +27,8 @@ else
         echo "########## Restarting app-collab ##########"
         
         # Kill the previous instance
+        kill -USR1 $APP_PID # let's save project state
+        sleep 3
         kill $APP_PID
         wait $APP_PID 2>/dev/null
     done

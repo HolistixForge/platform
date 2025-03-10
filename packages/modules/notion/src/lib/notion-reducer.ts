@@ -215,7 +215,7 @@ export class NotionReducer extends Reducer<
     const timeSinceLastSync = now.getTime() - this.lastSync.getTime();
 
     // Only sync if more than 1 minute has passed
-    if (timeSinceLastSync >= 60000) {
+    if (timeSinceLastSync >= 5000) {
       g.sd.notionDatabases.forEach((database) => {
         this._fetchAndUpdateDatabase(
           { ...g, event: { databaseId: database.id } },
