@@ -1,6 +1,5 @@
-import { Doc } from 'yjs';
+import * as fs from 'fs';
 const u = require('y-websocket/bin/utils');
-import { WebsocketProvider } from 'y-websocket';
 // import { EventSourcePolyfill } from 'event-source-polyfill';
 
 import {
@@ -60,11 +59,10 @@ import {
 
 import { log } from '@monorepo/log';
 import { loadCollaborationData } from './load-collab';
-import { TMyfetchRequest } from '@monorepo/simple-types';
+import { TJsonObject, TMyfetchRequest } from '@monorepo/simple-types';
 import { ForwardException, myfetch } from '@monorepo/backend-engine';
 
 import { CONFIG } from './config';
-
 import { PROJECT } from './project-config';
 import { runScript } from './run-script';
 
@@ -72,12 +70,21 @@ import { runScript } from './run-script';
 //
 //
 
-const gatewayStopNotify = async () => {
+const gatewayStopNotify = async (saved: TJsonObject) => {
   toGanymede({
     url: '/gateway-stop',
     method: 'POST',
     headers: { authorization: CONFIG.GATEWAY_TOKEN },
   });
+
+  // saved json file
+  try {
+    const savedFile = JSON.stringify(saved);
+    fs.writeFileSync(`./data/${PROJECT?.PROJECT_ID}.json`, savedFile);
+  } catch (err) {
+    console.error('failed to save project data', err);
+  }
+
   runScript('reset-gateway');
 };
 
@@ -169,19 +176,12 @@ export type TAllEvents =
 //
 //
 
-type WSSharedDoc = Doc & {
-  awareness: WebsocketProvider['awareness'];
-};
-
-//
-//
-
 export async function initProjectCollaboration(
   dispatcher: Dispatcher<TAllEvents, {}>
 ) {
   const docId = PROJECT!.YJS_DOC_ID;
   log(6, 'YJS', `Creating Yjs doc: [${docId}]`);
-  const ydoc: WSSharedDoc = u.getYDoc(docId);
+  const ydoc = u.getYDoc(docId);
 
   const yst = new YjsSharedTypes(ydoc);
 

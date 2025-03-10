@@ -1,7 +1,16 @@
 ⚠️ Antoine's stuffs
 
+cursor quill on a front only import path
+multiple quill bug (div id, node id, quill script load)
+
+persistence
+
+- on node restart (fs.writeFile(FILE_PATH, JSON.stringify([...Y.encodeStateAsUpdate(ydoc)]));)
+- on signal,
+- shut down button
+- on gateway change (reducer json load and save)
+
 selected node zindex
-quill save content in shared data
 
 - ubuntu image copy
 

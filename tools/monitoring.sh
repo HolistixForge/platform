@@ -13,7 +13,8 @@ declare -A services=(
 #    ["frontend dev"]="https://frontend.${ENVIRONMENT}.demiurge.co"
     ["ganymede"]="https://ganymede.${ENVIRONMENT}.demiurge.co/jupyterlab"
     ["account"]="https://account.${ENVIRONMENT}.demiurge.co/user"
-    ["gateway-1"]="https://gw-1-1.${ENVIRONMENT}.demiurge.co/collab/ping"
+    ["gateway-1-1"]="https://gw-1-1.${ENVIRONMENT}.demiurge.co/collab/ping"
+    ["gateway-1-2"]="https://gw-1-2.${ENVIRONMENT}.demiurge.co/collab/ping"
  #   ["storybook"]="https://sb.${ENVIRONMENT}.demiurge.co"
     ["jaeger"]="https://jaeger.${ENVIRONMENT}.demiurge.co"
 )

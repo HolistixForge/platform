@@ -1,6 +1,7 @@
 import { ReduceArgs, Reducer, SharedMap } from '@monorepo/collab-engine';
 import { log } from '@monorepo/log';
 import { inSeconds, isPassed } from '@monorepo/simple-types';
+import { TJsonObject } from '@monorepo/simple-types';
 
 import { TCoreSharedData } from './core-shared-model';
 import { TProjectMeta } from './core-types';
@@ -9,7 +10,7 @@ import { TProjectMeta } from './core-types';
  *
  */
 
-export const GATEWAY_INACIVITY_SHUTDOWN_DELAY = 3000; // secondes
+export const GATEWAY_INACIVITY_SHUTDOWN_DELAY = 300; // secondes
 
 let shouldIBeDead = false;
 
@@ -36,9 +37,9 @@ export class MetaReducer extends Reducer<
 > {
   //
 
-  gatewayStopNotify: () => Promise<void>;
+  gatewayStopNotify: (saved: TJsonObject) => Promise<void>;
 
-  constructor(gatewayStopNotify: () => Promise<void>) {
+  constructor(gatewayStopNotify: (saved: TJsonObject) => Promise<void>) {
     super();
     this.gatewayStopNotify = gatewayStopNotify;
   }
@@ -57,8 +58,13 @@ export class MetaReducer extends Reducer<
         if (isPassed(gateway_shutdown)) {
           if (shouldIBeDead === false) {
             log(6, 'GATEWAY', 'shutdown');
-            // call ganymede "gateway stop" api endpoint
-            this.gatewayStopNotify();
+
+            const saved: TJsonObject = {};
+            g.dispatcher._reducers.forEach((r) => {
+              r.save(g.sd, saved);
+            });
+
+            this.gatewayStopNotify(saved);
             shouldIBeDead = true;
           } else {
             log(6, 'GATEWAY', 'shutdown failed process still alive');
