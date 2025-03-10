@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
+import Quill from 'quill';
 import QuillCursors from 'quill-cursors';
 
 import { useAwareness, bindEditor } from '@monorepo/collab-engine';
@@ -10,12 +11,10 @@ import {
   NodeHeader,
   useMakeButton,
 } from '@monorepo/space';
+import { makeUuid } from '@monorepo/simple-types';
 
+import 'quill/dist/quill.snow.css';
 import './text-editor.scss';
-
-//
-
-let quillScript: any = undefined;
 
 //
 
@@ -42,9 +41,14 @@ const toolbarOptions = [
 
 //
 
+Quill.register('modules/cursors', QuillCursors);
+
+//
+
 export type NodeTextEditorInternalProps = {} & TNodeContext;
 
 //
+
 export const NodeTextEditorInternal = ({
   viewStatus,
   expand,
@@ -56,6 +60,7 @@ export const NodeTextEditorInternal = ({
   const { awareness } = useAwareness();
   const quillInstanceRef = useRef<any>(null);
   const hasLoadedQuillRef = useRef(false);
+  const editorId = useMemo(() => `editor-${makeUuid()}`, []);
 
   const isExpanded = viewStatus.mode === 'EXPANDED';
   const buttons = useMakeButton({
@@ -68,55 +73,28 @@ export const NodeTextEditorInternal = ({
   });
 
   useEffect(() => {
-    if (!quillScript) {
-      quillScript = document.createElement('script');
-      quillScript.src =
-        'https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js';
-      document.body.appendChild(quillScript);
-
-      const link = document.createElement('link');
-      link.href =
-        'https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css';
-      link.rel = 'stylesheet';
-      if (!document.querySelector(`link[href="${link.href}"]`)) {
-        document.head.appendChild(link);
-      }
-    }
-
     if (!hasLoadedQuillRef.current) {
       hasLoadedQuillRef.current = true;
-      quillScript.onload = () => {
-        const Quill = (window as any).Quill;
-        Quill.register('modules/cursors', QuillCursors);
 
-        const quill = new Quill('#editor', {
-          theme: 'snow',
-          placeholder: '<h2>Compose an epic...</h2>',
-          modules: {
-            cursors: true,
-            toolbar: toolbarOptions,
-            history: {
-              userOnly: true,
-            },
+      const quill = new Quill(`#${editorId}`, {
+        theme: 'snow',
+        placeholder: '<h2>Compose an epic...</h2>',
+        modules: {
+          cursors: true,
+          toolbar: toolbarOptions,
+          history: {
+            userOnly: true,
           },
-        });
+        },
+      });
 
-        quillInstanceRef.current = quill;
+      quillInstanceRef.current = quill;
 
-        if (awareness) {
-          bindEditor(awareness, 'quill', id, quill, 'Hello World!');
-        }
-
-        quill.setContents({
-          ops: [
-            { insert: 'Hello World!' },
-            { attributes: { header: 1 }, insert: '\n' },
-            { insert: '\nCompose a beautiful Documentation...\n' },
-          ],
-        });
-      };
+      if (awareness) {
+        bindEditor(awareness, 'quill', id, quill, 'Hello World !');
+      }
     }
-  }, [awareness, id]);
+  }, [awareness, id, editorId]);
 
   return (
     <div className={`common-node node-quill`}>
@@ -132,7 +110,7 @@ export const NodeTextEditorInternal = ({
         <div
           className={`node-wrapper-body ${selected ? 'node-background' : ''}`}
         >
-          <div id="editor" style={{ width: '400px' }}></div>
+          <div id={editorId} style={{ width: '400px' }}></div>
         </div>
       </DisablePanSelect>
     </div>

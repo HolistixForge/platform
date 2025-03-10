@@ -53,7 +53,6 @@ export type {
 export type { TokenMethods } from './lib/front-hooks/ydocs';
 
 export { bindEditor } from './lib/front-hooks/bind-editor';
-export type { TEditor } from './lib/front-hooks/bind-editor';
 
 export { getYDoc } from './lib/front-hooks/ydocs';
 

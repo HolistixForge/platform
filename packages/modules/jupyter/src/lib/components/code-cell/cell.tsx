@@ -6,7 +6,6 @@ import { Widget } from '@lumino/widgets';
 import {
   useAwareness,
   useDispatcher,
-  TEditor,
   bindEditor,
   useSharedData,
 } from '@monorepo/collab-engine';
@@ -65,7 +64,7 @@ export const useCellLogic = ({
 
   const dispatcher = useDispatcher<TDemiurgeNotebookEvent | TCoreEvent>();
 
-  const editorRef = useRef<TEditor | null>(null);
+  const editorRef = useRef<any>(null);
 
   //
   /*
@@ -80,7 +79,7 @@ export const useCellLogic = ({
   //
 
   const handleEditorMount = useCallback(
-    (editor: TEditor) => {
+    (editor: any) => {
       editorRef.current = editor;
       awareness && bindEditor(awareness, 'monaco', cellId, editor, '');
     },

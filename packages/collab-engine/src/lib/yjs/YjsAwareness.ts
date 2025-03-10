@@ -1,7 +1,7 @@
 import { Doc, Map, Text } from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 
-import { TJsonObject } from '@monorepo/simple-types';
+import { TJsonObject, sleep } from '@monorepo/simple-types';
 
 import { Awareness } from '../Awareness';
 import {
@@ -30,7 +30,7 @@ export class YjsAwareness extends Awareness {
     super();
     this._ydoc = ydoc;
     this._provider = provider;
-    this._editorBindings = this._ydoc.getMap('__cellules__');
+    this._editorBindings = this._ydoc.getMap('editors');
     this._buildUserCss = buildUserCss;
 
     // TODO: lot of debouncing !!!! using delta
@@ -64,12 +64,33 @@ export class YjsAwareness extends Awareness {
     this._provider.awareness.setLocalStateField('user', this._user);
   }
 
-  getBindingObjects(editorId: string, code: string) {
+  async getBindingObjects(editorId: string, code: string) {
     let ytext = this._editorBindings.get(editorId);
+
     if (!ytext) {
-      ytext = new Text(code);
-      this._editorBindings.set(editorId, ytext);
+      const myClientId = this._provider.awareness.clientID;
+      const states = this._provider.awareness.getStates();
+      const clientIds = Array.from(states.keys()).sort((a, b) => a - b);
+      const myPosition = clientIds.indexOf(myClientId);
+
+      const BASE_DELAY = 0.5;
+      const MAX_DELAY = 3;
+      const waitTime = Math.min(myPosition * BASE_DELAY, MAX_DELAY);
+
+      console.log(
+        `Client ${myClientId} is position ${myPosition} of ${clientIds.length}, waiting ${waitTime}s`
+      );
+
+      await sleep(waitTime);
+
+      ytext = this._editorBindings.get(editorId);
+      if (!ytext) {
+        console.log(`Creating new text for ${editorId}`);
+        ytext = new Text(code);
+        this._editorBindings.set(editorId, ytext);
+      }
     }
+
     return { ytext, providerAwareness: this._provider.awareness };
   }
 

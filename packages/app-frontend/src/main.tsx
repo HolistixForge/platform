@@ -11,7 +11,7 @@ import '@monorepo/space/style';
 import '@monorepo/tabs/style';
 import '@monorepo/chats/style';
 import '@monorepo/socials/style';
-
+import '@monorepo/jupyter/style';
 import './index.scss';
 
 const root = ReactDOM.createRoot(
