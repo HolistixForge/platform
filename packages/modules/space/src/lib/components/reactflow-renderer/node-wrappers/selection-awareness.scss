@@ -11,3 +11,11 @@
   width: 150px;
   top: 0;
 }
+
+.full-height {
+  height: 100%;
+}
+
+.full-height-wo-header {
+  height: calc(100% - 42px);
+}

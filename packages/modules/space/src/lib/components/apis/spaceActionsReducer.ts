@@ -11,6 +11,7 @@ import {
   TSAExpandNode,
   TSACloseNode,
   TSAOpenNode,
+  TSAResizeNode,
 } from '../../space-events';
 import {
   connectorViewDefault,
@@ -18,7 +19,6 @@ import {
   nodeViewDefaultStatus,
   TGraphView,
 } from '../../space-types';
-// import { edgeId } from './types/edge';
 
 //
 
@@ -39,7 +39,7 @@ export class SpaceActionsReducer {
         break;
 
       case 'move-node':
-        this.moveNode(action, gv);
+        this.moveNode(action, gv, nodes, edges);
         break;
 
       case 'highlight':
@@ -64,6 +64,10 @@ export class SpaceActionsReducer {
 
       case 'open-node':
         this.openCloseNode(action, gv, nodes, edges);
+        break;
+
+      case 'resize-node':
+        this.resizeNode(action, gv, nodes, edges);
         break;
 
       case 'update-graph-view':
@@ -115,10 +119,16 @@ export class SpaceActionsReducer {
 
   //
 
-  private moveNode(action: TSAMoveNode, gv: TGraphView) {
+  private moveNode(
+    action: TSAMoveNode,
+    gv: TGraphView,
+    nodes: Readonly<Map<string, TGraphNode>>,
+    edges: Readonly<Array<TEdge>>
+  ) {
     const node = gv.nodeViews.find((n) => n.id === action.nid);
     if (node) {
       node.position = action.position;
+      this.updateGraphview(gv, nodes, edges);
     }
   }
 
@@ -154,6 +164,21 @@ export class SpaceActionsReducer {
     const node = gv.nodeViews.find((n) => n.id === action.nid);
     if (node) {
       node.status.mode = mode;
+    }
+  }
+
+  //
+
+  private resizeNode(
+    action: TSAResizeNode,
+    gv: TGraphView,
+    nodes: Readonly<Map<string, TGraphNode>>,
+    edges: Readonly<Array<TEdge>>
+  ) {
+    const node = gv.nodeViews.find((n) => n.id === action.nid);
+    if (node) {
+      node.size = action.size;
+      this.updateGraphview(gv, nodes, edges);
     }
   }
 

@@ -9,7 +9,12 @@ import {
 import { error } from '@monorepo/log';
 
 import { TSpaceSharedData } from './space-shared-model';
-import { TSpaceEvent, TEventNewView, TEventSpaceAction } from './space-events';
+import {
+  TSpaceEvent,
+  TEventNewView,
+  TEventSpaceAction,
+  TEventNewGroup,
+} from './space-events';
 import {
   defaultGraphView,
   nodeViewDefaultStatus,
@@ -49,7 +54,11 @@ export class SpaceReducer extends Reducer<
         return this.newView(g as Ra<TEventNewView>);
 
       case 'space:action':
-        this.spaceAction(g as Ra<TSpaceEvent>);
+        this.spaceAction(g as Ra<TEventSpaceAction>);
+        return Promise.resolve();
+
+      case 'space:new-group':
+        this.newGroup(g as Ra<TEventNewGroup>);
         return Promise.resolve();
 
       case 'core:delete-edge':
@@ -70,6 +79,24 @@ export class SpaceReducer extends Reducer<
 
   //
 
+  newGroup(g: Ra<TEventNewGroup>) {
+    g.dispatcher.dispatch({
+      type: 'core:new-node',
+      nodeData: {
+        name: `group ${g.event.title}`,
+        root: true,
+        connectors: [],
+        id: g.event.groupId,
+        type: 'group',
+        data: { title: g.event.title },
+      },
+      edges: [],
+      origin: g.event.origin,
+    });
+  }
+
+  //
+
   newNode(g: Ra<TEventNewNode>) {
     g.sd.graphViews.forEach((gv, k) => {
       gv.nodeViews.push({
@@ -85,7 +112,7 @@ export class SpaceReducer extends Reducer<
 
   //
 
-  spaceAction(g: Ra<TSpaceEvent>) {
+  spaceAction(g: Ra<TEventSpaceAction>) {
     const gv = g.sd.graphViews.get(g.event.viewId)!;
     if (!gv) {
       error('SPACE', `graphview ${g.event.viewId} not found`);
@@ -94,7 +121,7 @@ export class SpaceReducer extends Reducer<
     const gvc = structuredClone(gv);
     const nodes = g.sd.nodes as unknown as Map<string, TGraphNode>;
     this.spaceActionReducer.reduce(
-      (g.event as TEventSpaceAction).action,
+      g.event.action,
       gvc,
       nodes,
       g.sd.edges as unknown as TEdge[]

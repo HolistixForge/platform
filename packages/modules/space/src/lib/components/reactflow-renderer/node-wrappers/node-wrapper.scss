@@ -1,0 +1,7 @@
+.resize-handle-container {
+  display: none;
+}
+
+.node-wrapper:has(.node-resizable) .resize-handle-container {
+  display: block;
+}

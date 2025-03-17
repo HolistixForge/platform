@@ -1,4 +1,4 @@
-import { TPosition } from '@monorepo/core';
+import { TEventOrigin, TPosition } from '@monorepo/core';
 
 export type TSAMoveNode = {
   type: 'move-node';
@@ -62,6 +62,7 @@ export type TSAPopNode = {
 export type TSAResizeNode = {
   type: 'resize-node';
   nid: string;
+  size: { width: number; height: number };
 };
 
 export type TSAUpdateGraphView = {
@@ -87,10 +88,17 @@ export type TEventNewView = {
   viewId: string;
 };
 
+export type TEventNewGroup = {
+  type: 'space:new-group';
+  origin?: TEventOrigin;
+  groupId: string;
+  title: string;
+};
+
 export type TEventSpaceAction = {
   type: 'space:action';
   viewId: string;
   action: TSpaceActions;
 };
 
-export type TSpaceEvent = TEventNewView | TEventSpaceAction;
+export type TSpaceEvent = TEventNewView | TEventSpaceAction | TEventNewGroup;

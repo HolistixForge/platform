@@ -27,6 +27,7 @@ import {
   NewNotionDatabaseForm,
   NewNotionDatabaseFormData,
 } from '@monorepo/notion';
+import { makeUuid } from '@monorepo/simple-types';
 
 import {
   useDispatcher,
@@ -359,9 +360,33 @@ export const ContextMenuLogic = ({
 
   //
 
+  const onNewGroup = useCallback(() => {
+    dispatcher.dispatch({
+      type: 'space:new-group',
+      groupId: makeUuid(),
+      title: 'New Group',
+      origin: {
+        viewId: viewId,
+        position: {
+          x: refCoordinates.current.x,
+          y: refCoordinates.current.y,
+        },
+      },
+    });
+  }, [dispatcher, refCoordinates, viewId]);
+
+  //
+
   const context = useMemo<TMenuContext>(() => {
     return {
       new: [
+        {
+          title: 'Group',
+          onClick: onNewGroup,
+          disabled: false,
+        },
+        { separator: true },
+
         {
           title: 'Server',
           onClick: server_action.open,

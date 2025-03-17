@@ -10,7 +10,7 @@ import {
   NodeServer,
   NodeVolume,
 } from '@monorepo/servers';
-import { SpaceModule } from '@monorepo/space';
+import { SpaceModule, Group } from '@monorepo/space';
 import { NodeChatbox, NodeChatAnchor } from '@monorepo/chats';
 import { NodeCell, NodeKernel, NodeTerminal } from '@monorepo/jupyter/frontend';
 import { NodeYoutube, NodeTextEditor } from '@monorepo/socials/frontend';
@@ -38,6 +38,7 @@ const nodeTypes = {
   'text-editor': NodeTextEditor,
   'notion-database': NodeNotion,
   'notion-page': NodeNotionTask,
+  group: Group,
 };
 
 //

@@ -21,8 +21,7 @@ const statusToClassName = (status: TNodeViewStatus) => {
 //
 
 export type SpaceNodePayload = {
-  id: string;
-  viewStatus: TNodeViewStatus;
+  nv: TNodeView;
   viewId: string;
 };
 
@@ -34,14 +33,14 @@ export type SpaceNode = Omit<RfNode, 'data'> & { data: SpaceNodePayload };
 const translateNode = (nw: TNodeView, viewId: string): SpaceNode => {
   const s = nw.status || nodeViewDefaultStatus();
   const data = {
-    id: nw.id,
-    viewStatus: s,
     viewId,
+    nv: nw,
   };
   return {
     id: nw.id,
     type: 'wrapper',
     position: nw.position,
+    parentId: nw.parentId,
     data,
     className: statusToClassName(s),
     draggable: true,

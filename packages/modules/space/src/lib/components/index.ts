@@ -31,3 +31,5 @@ export {
   EdgeComponent,
   LabelStart,
 } from './reactflow-renderer/assets/edges/edge';
+
+export { Group } from './group/group';

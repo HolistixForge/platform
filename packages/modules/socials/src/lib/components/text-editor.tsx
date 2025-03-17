@@ -97,7 +97,7 @@ export const NodeTextEditorInternal = ({
   }, [awareness, id, editorId]);
 
   return (
-    <div className={`common-node node-quill`}>
+    <div className={`common-node node-quill full-height node-resizable`}>
       <NodeHeader
         nodeType="Text Editor"
         id={id}
@@ -106,9 +106,11 @@ export const NodeTextEditorInternal = ({
         buttons={buttons}
       />
 
-      <DisablePanSelect>
+      <DisablePanSelect fullHeight>
         <div
-          className={`node-wrapper-body ${selected ? 'node-background' : ''}`}
+          className={`node-wrapper-body full-height ${
+            selected ? 'node-background' : ''
+          }`}
         >
           <div id={editorId} style={{ width: '400px' }}></div>
         </div>

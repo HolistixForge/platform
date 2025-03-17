@@ -29,7 +29,9 @@ export const nodeViewDefaultStatus = (): TNodeViewStatus => ({
 
 export type TNodeView = {
   id: string;
+  parentId?: string;
   position: TPosition;
+  size?: { width: number; height: number };
   status: TNodeViewStatus;
 };
 

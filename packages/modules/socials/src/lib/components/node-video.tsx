@@ -58,7 +58,7 @@ export const NodeYoutubeInternal = ({
   });
 
   return (
-    <div className={`common-node video-node`}>
+    <div className={`common-node video-node full-height node-resizable`}>
       <NodeHeader
         nodeType="video"
         id={id}
@@ -67,8 +67,8 @@ export const NodeYoutubeInternal = ({
         buttons={buttons}
       />
       {isOpened && (
-        <DisablePanSelect>
-          <div className="node-wrapper-body video">
+        <DisablePanSelect fullHeight>
+          <div className="node-wrapper-body full-height video">
             <Suspense fallback={<span> Loading Component... </span>}>
               <Youtube data={{ videoId: youtubeId }} />
             </Suspense>

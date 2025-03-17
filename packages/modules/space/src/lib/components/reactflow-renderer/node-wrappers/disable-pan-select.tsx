@@ -6,8 +6,20 @@ import { ReactNode } from 'react';
  * @param param0
  * @returns
  */
-export const DisablePanSelect = ({ children }: { children: ReactNode }) => {
+export const DisablePanSelect = ({
+  children,
+  fullHeight,
+}: {
+  children: ReactNode;
+  fullHeight?: boolean;
+}) => {
   return (
-    <div className="disable-pan-select nodrag nospan nowheel">{children}</div>
+    <div
+      className={`disable-pan-select nodrag nospan nowheel ${
+        fullHeight ? 'full-height-wo-header' : ''
+      }`}
+    >
+      {children}
+    </div>
   );
 };

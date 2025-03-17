@@ -21,6 +21,7 @@ export {
   LabelMiddle,
   LabelStart,
   EdgeComponent,
+  Group,
 } from './lib/components';
 
 export type { TNodeContext } from './lib/components';
@@ -31,6 +32,10 @@ export { nodeViewDefaultStatus, defaultGraphView } from './lib/space-types';
 
 export type { TNodeView } from './lib/space-types';
 
-export type { TSpaceEvent, TEventNewView } from './lib/space-events';
+export type {
+  TSpaceEvent,
+  TEventNewView,
+  TEventNewGroup,
+} from './lib/space-events';
 
 export { SpaceModule } from './lib/components/collab-module/main';
