@@ -16,7 +16,6 @@ import {
 import {
   connectorViewDefault,
   isNodeOpened,
-  nodeViewDefaultStatus,
   TGraphView,
 } from '../../space-types';
 
@@ -128,6 +127,32 @@ export class SpaceActionsReducer {
     const node = gv.nodeViews.find((n) => n.id === action.nid);
     if (node) {
       node.position = action.position;
+
+      const groups = gv.graph.nodes.filter((n) => n.type === 'group');
+      console.log({ nodes: gv.graph.nodes.length, groups });
+
+      // Check if node is within any group boundaries
+      groups.forEach((group) => {
+        console.log({ group });
+        if (group.size && group.position) {
+          const isWithinX =
+            node.position.x >= group.position.x &&
+            node.position.x <= group.position.x + group.size.width;
+          const isWithinY =
+            node.position.y >= group.position.y &&
+            node.position.y <= group.position.y + group.size.height;
+
+          console.log({ node, isWithinX, isWithinY });
+
+          if (isWithinX && isWithinY) {
+            node.parentId = group.id;
+          } else if (node.parentId === group.id) {
+            // Remove parentId if node moved outside its current group
+            delete node.parentId;
+          }
+        }
+      });
+
       this.updateGraphview(gv, nodes, edges);
     }
   }
@@ -295,7 +320,7 @@ export class SpaceActionsReducer {
       const isOpened = node && isNodeOpened(node?.status);
 
       const nodeEdges = Array.from(edges).filter((e) => {
-        console.log({ nodeId, from: e.from.node, to: e.to.node });
+        // console.log({ nodeId, from: e.from.node, to: e.to.node });
         return e.from.node === nodeId || e.to.node === nodeId;
       });
 
@@ -338,24 +363,12 @@ export class SpaceActionsReducer {
     gv.edges = Array.from(edgesToRender);
 
     // Remove nodes that no longer exist in nodes map
-    gv.graph.nodes = gv.graph.nodes.filter((node) =>
-      nodesToRender.has(node.id)
-    );
+    gv.graph.nodes = [];
 
     // build node views if necessary, then add to graph.nodes
     nodesToRender.forEach((nodeId) => {
       let n = gv.nodeViews.find((n) => n.id === nodeId);
-      if (!n) {
-        n = {
-          id: nodeId,
-          position: {
-            x: 0,
-            y: 0,
-          },
-          status: nodeViewDefaultStatus(),
-        };
-        gv.nodeViews.push(n);
-      }
+      if (!n) throw new Error(`node ${nodeId} not found`);
       gv.graph.nodes.push(n);
     });
 

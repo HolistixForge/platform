@@ -262,8 +262,6 @@ const StartProjectBox = ({
         <p className="text-lg">
           The project is not started.
           <br /> Press start to continue.
-          <br /> Existing and running servers will reconnect to the project
-          within one minute
         </p>
       </div>
       <div className="flex items-center gap-2 text-slate-400 mt-5">

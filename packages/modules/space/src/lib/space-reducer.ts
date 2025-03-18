@@ -101,6 +101,7 @@ export class SpaceReducer extends Reducer<
     g.sd.graphViews.forEach((gv, k) => {
       gv.nodeViews.push({
         id: g.event.nodeData.id,
+        type: g.event.nodeData.type,
         position:
           g.event.origin?.viewId === k && g.event.origin?.position
             ? g.event.origin?.position

@@ -18,7 +18,7 @@ export const Group = ({ node }: { node: TGraphNode }) => {
   });
 
   return (
-    <div className={`node-group full-height`}>
+    <div className={`node-group full-height node-resizable`}>
       <NodeHeader
         nodeType="Group"
         id={id}
