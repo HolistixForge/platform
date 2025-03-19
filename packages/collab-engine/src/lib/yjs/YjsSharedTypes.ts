@@ -43,6 +43,7 @@ export class YjsSharedTypes extends SharedTypes {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     a.deleteMatching = (f) => yarrayDeleteMatching(a, f);
+    (a as any).filter = (f: any) => a.toArray().filter(f);
     return a as unknown as SharedArray<T>;
   }
 }

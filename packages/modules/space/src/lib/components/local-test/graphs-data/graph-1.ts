@@ -22,6 +22,7 @@ export const graph1: {
   nodeViews: [
     {
       id: 'node-1',
+      type: 'default',
       position: {
         x: 200,
         y: 200,
@@ -30,6 +31,7 @@ export const graph1: {
     },
     {
       id: 'node-2',
+      type: 'default',
       position: {
         x: 400,
         y: 700,
@@ -38,6 +40,7 @@ export const graph1: {
     },
     {
       id: 'node-3',
+      type: 'default',
       position: {
         x: 600,
         y: 300,
@@ -46,9 +49,19 @@ export const graph1: {
     },
     {
       id: 'node-4',
+      type: 'default',
       position: {
         x: 800,
         y: 600,
+      },
+      status: nodeViewDefaultStatus(),
+    },
+    {
+      id: 'node-5',
+      type: 'group',
+      position: {
+        x: 1000,
+        y: 800,
       },
       status: nodeViewDefaultStatus(),
     },
@@ -113,7 +126,7 @@ export const graph1: {
       id: 'node-1',
       name: 'node-1',
       type: 'default',
-      root: false,
+      root: true,
       connectors: [
         {
           connectorName: 'outputs',
@@ -164,6 +177,7 @@ export const graph1: {
       name: 'node-4',
       type: 'default',
       root: false,
+      data: { example: 'hello' },
       connectors: [
         {
           connectorName: 'outputs',
@@ -174,6 +188,17 @@ export const graph1: {
           pins: [],
         },
       ],
+    },
+
+    {
+      id: 'node-5',
+      name: 'node-5',
+      type: 'group',
+      root: true,
+      connectors: [],
+      data: {
+        title: 'Group 1',
+      },
     },
   ],
 };

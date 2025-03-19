@@ -16,6 +16,7 @@ import { SpaceReducer } from '../../space-reducer';
 import { Space_loadData, TSpaceSharedData } from '../../space-shared-model';
 import { defaultGraphView, TGraphView } from '../../space-types';
 import { loadStoryGraph } from '../local-test/localSpaceActionsDispatcher';
+import { Group } from '../group/group';
 
 //
 
@@ -55,6 +56,12 @@ const chunks: TCollaborativeChunk[] = [
 
 //
 
+const nodeTypes = {
+  group: Group,
+};
+
+//
+
 const StoryWrapper = () => {
   const dispatcher = useMemo(() => {
     return new Dispatcher();
@@ -74,7 +81,7 @@ const StoryWrapper = () => {
       }}
     >
       <div style={{ height: '100vh', width: '100vw' }}>
-        <SpaceModule viewId={'graph-1'} nodeTypes={{}} />
+        <SpaceModule viewId={'graph-1'} nodeTypes={nodeTypes} />
       </div>
     </CollaborativeContext>
   );

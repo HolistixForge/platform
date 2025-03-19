@@ -11,6 +11,7 @@ export interface SharedArray<T extends TJson> {
   get: (index: number) => T;
 
   map: (f: (v: T, k: number) => any) => Array<any>;
+  filter: (predicate: (value: T, index: number) => boolean) => T[];
 
   observe: (event: any) => void;
 

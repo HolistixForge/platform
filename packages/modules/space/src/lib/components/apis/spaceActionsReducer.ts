@@ -118,41 +118,108 @@ export class SpaceActionsReducer {
 
   //
 
+  private getAbsolutePosition(
+    position: { x: number; y: number },
+    parentId: string | undefined,
+    gv: TGraphView
+  ) {
+    let absolutePosition = { ...position };
+    let currentParentId = parentId;
+
+    while (currentParentId) {
+      const currentParent = gv.nodeViews.find((n) => n.id === currentParentId);
+      if (currentParent?.position) {
+        absolutePosition.x += currentParent.position.x;
+        absolutePosition.y += currentParent.position.y;
+        currentParentId = currentParent.parentId;
+      } else {
+        break;
+      }
+    }
+
+    return absolutePosition;
+  }
+
+  //
+
   private moveNode(
     action: TSAMoveNode,
     gv: TGraphView,
     nodes: Readonly<Map<string, TGraphNode>>,
     edges: Readonly<Array<TEdge>>
   ) {
+    // get node view object from id
     const node = gv.nodeViews.find((n) => n.id === action.nid);
     if (node) {
-      node.position = action.position;
+      // get absolute position of node by traversing up the parentId chain
+      const absolutePosition = action.position;
 
-      const groups = gv.graph.nodes.filter((n) => n.type === 'group');
-      console.log({ nodes: gv.graph.nodes.length, groups });
+      // get all displayed groups (except the node itself)
+      const groups = gv.graph.nodes.filter(
+        (n) => n.type === 'group' && n.id !== action.nid
+      );
 
-      // Check if node is within any group boundaries
+      // make a map of all groups absolute positions and sizes
+      const candidatesGroups = new Map<
+        string,
+        {
+          id: string;
+          absPosition: { x: number; y: number };
+          area: number;
+        }
+      >();
+
       groups.forEach((group) => {
-        console.log({ group });
-        if (group.size && group.position) {
-          const isWithinX =
-            node.position.x >= group.position.x &&
-            node.position.x <= group.position.x + group.size.width;
-          const isWithinY =
-            node.position.y >= group.position.y &&
-            node.position.y <= group.position.y + group.size.height;
+        if (!group.position) return;
+        const groupAbsolutePos = this.getAbsolutePosition(
+          group.position,
+          group.parentId,
+          gv
+        );
 
-          console.log({ node, isWithinX, isWithinY });
-
-          if (isWithinX && isWithinY) {
-            node.parentId = group.id;
-          } else if (node.parentId === group.id) {
-            // Remove parentId if node moved outside its current group
-            delete node.parentId;
-          }
+        // if node is inside this group, add it to the map
+        if (
+          group.size &&
+          absolutePosition.x >= groupAbsolutePos.x &&
+          absolutePosition.x <= groupAbsolutePos.x + group.size.width &&
+          absolutePosition.y >= groupAbsolutePos.y &&
+          absolutePosition.y <= groupAbsolutePos.y + group.size.height
+        ) {
+          candidatesGroups.set(group.id, {
+            id: group.id,
+            absPosition: groupAbsolutePos,
+            area: group.size.width * group.size.height,
+          });
         }
       });
 
+      // Find the smallest group by area that contains the node
+      let targetGroup = undefined;
+      if (candidatesGroups.size > 0) {
+        // Find the smallest group by area that contains the node
+        targetGroup = Array.from(candidatesGroups.values()).reduce(
+          (smallest, current) => {
+            return current.area < smallest.area ? current : smallest;
+          }
+        );
+      }
+
+      // if the node is within a group, set the node parentId to the group id
+      // and set the node position to the relative position to the group
+      if (targetGroup) {
+        node.parentId = targetGroup.id;
+        node.position = {
+          x: absolutePosition.x - targetGroup.absPosition.x,
+          y: absolutePosition.y - targetGroup.absPosition.y,
+        };
+      } else {
+        // if the node is not within any group, set the node parentId to undefined
+        // and set the node position to the absolute position
+        delete node.parentId;
+        node.position = absolutePosition;
+      }
+
+      // update the graphview
       this.updateGraphview(gv, nodes, edges);
     }
   }
@@ -319,8 +386,8 @@ export class SpaceActionsReducer {
 
       const isOpened = node && isNodeOpened(node?.status);
 
-      const nodeEdges = Array.from(edges).filter((e) => {
-        // console.log({ nodeId, from: e.from.node, to: e.to.node });
+      const nodeEdges = edges.filter((e) => {
+        //console.log({ nodeId, from: e.from.node, to: e.to.node });
         return e.from.node === nodeId || e.to.node === nodeId;
       });
 

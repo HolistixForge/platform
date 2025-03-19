@@ -84,6 +84,10 @@ class MyArray<T extends TJson>
     this._sm = sm;
   }
 
+  filter(predicate: (value: T, index: number) => boolean): T[] {
+    return this._array.filter(predicate);
+  }
+
   toJSON(): T[] {
     return JSON.parse(JSON.stringify(this._array));
   }
