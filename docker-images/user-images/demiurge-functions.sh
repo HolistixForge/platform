@@ -76,7 +76,11 @@ watchdog() {
 
 reset_nginx() {
     if [ -f /usr/local/bin/services.conf ]; then
-        CONF="/etc/nginx/http.d/default.conf"
+        if [ -f /etc/os-release ] && grep -q "ID=alpine" /etc/os-release; then
+            CONF="/etc/nginx/http.d/default.conf"
+        else
+            CONF="/etc/nginx/sites-available/default"
+        fi
 
         # Create the nginx configuration file with server blocks for each service
         cat >$CONF <<'EOF'
