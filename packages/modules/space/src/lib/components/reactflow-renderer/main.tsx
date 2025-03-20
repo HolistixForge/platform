@@ -273,6 +273,7 @@ export const DemiurgeSpace = ({
     >
       <SpaceContext value={context}>
         <ReactFlow
+          defaultViewport={{ x: 0, y: 0, zoom: 0.5 }}
           // todo_ factorise with flow story
           nodes={translateNodes(spaceState.getNodes(), viewId)}
           edges={translateEdges(spaceState.getEdges())}
