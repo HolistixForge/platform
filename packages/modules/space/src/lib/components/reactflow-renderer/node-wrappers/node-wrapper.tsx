@@ -91,6 +91,8 @@ export const NodeWrapper =
       const startSize = nodeRef.current
         ? nodeRef.current.getBoundingClientRect()
         : { width: 0, height: 0 };
+      startSize.width = startSize.width / zoom;
+      startSize.height = startSize.height / zoom;
 
       let newSize = { width: startSize.width, height: startSize.height };
 
