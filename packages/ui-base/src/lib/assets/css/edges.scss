@@ -22,8 +22,8 @@ g.react-flow__edge {
 
   &.referenced_by {
     path {
-      stroke: #ff0000; /* red */
-      stroke-dasharray: 5;
+      stroke: var(--c-alt-blue-2);
+      stroke-dasharray: 0;
     }
     &.chat-anchor {
       path {

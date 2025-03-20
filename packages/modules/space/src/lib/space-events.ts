@@ -95,10 +95,25 @@ export type TEventNewGroup = {
   title: string;
 };
 
+export type TEventGroupPropertyChange = {
+  type: 'space:group-property-change';
+  groupId: string;
+  properties: {
+    title?: string;
+    borderColor?: string;
+    fillColor?: string;
+    fillOpacity?: number;
+  };
+};
+
 export type TEventSpaceAction = {
   type: 'space:action';
   viewId: string;
   action: TSpaceActions;
 };
 
-export type TSpaceEvent = TEventNewView | TEventSpaceAction | TEventNewGroup;
+export type TSpaceEvent =
+  | TEventNewView
+  | TEventSpaceAction
+  | TEventNewGroup
+  | TEventGroupPropertyChange;

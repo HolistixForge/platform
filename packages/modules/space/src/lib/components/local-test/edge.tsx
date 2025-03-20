@@ -19,7 +19,7 @@ export const CustomStoryEdge: FC<EdgeProps<EdgePayload>> = (props) => {
   const debug = useDebugComponent();
 
   const {
-    edge,
+    // edge,
     text = '',
     style = 'default',
     endText,
@@ -30,11 +30,11 @@ export const CustomStoryEdge: FC<EdgeProps<EdgePayload>> = (props) => {
     <EdgeComponent {...props} type={style}>
       {startText && <LabelStart>{startText}</LabelStart>}
 
-      {debug && <LabelMiddle className="debug-edge-label">{text}</LabelMiddle>}
+      {debug && <LabelMiddle>{text}</LabelMiddle>}
 
       {endText && <LabelEnd>{endText}</LabelEnd>}
 
-      <LabelMiddle className="debug-edge-label">{edge.type}</LabelMiddle>
+      {/* <LabelMiddle className="debug-edge-label">{edge.type}</LabelMiddle> */}
     </EdgeComponent>
   );
 };

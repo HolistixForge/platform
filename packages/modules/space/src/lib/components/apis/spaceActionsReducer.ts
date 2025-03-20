@@ -16,6 +16,7 @@ import {
 import {
   connectorViewDefault,
   isNodeOpened,
+  nodeViewDefaultStatus,
   TGraphView,
 } from '../../space-types';
 
@@ -435,7 +436,18 @@ export class SpaceActionsReducer {
     // build node views if necessary, then add to graph.nodes
     nodesToRender.forEach((nodeId) => {
       let n = gv.nodeViews.find((n) => n.id === nodeId);
-      if (!n) throw new Error(`node ${nodeId} not found`);
+      if (!n) {
+        n = {
+          id: nodeId,
+          type: nodes.get(nodeId)?.type || 'unknown',
+          position: {
+            x: 0,
+            y: 0,
+          },
+          status: nodeViewDefaultStatus(),
+        };
+        gv.nodeViews.push(n);
+      }
       gv.graph.nodes.push(n);
     });
 

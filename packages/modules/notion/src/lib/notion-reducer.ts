@@ -202,7 +202,7 @@ export class NotionReducer extends Reducer<
       g.sd.notionDatabases.set(databaseId, database as any);
     } catch (error) {
       console.error('Failed to fetch and update database:', error);
-      throw error;
+      return false;
     }
 
     return true;

@@ -144,8 +144,6 @@ export const NodeWrapper =
           style={{
             ...size,
             position: 'relative',
-            minWidth: '100px',
-            minHeight: '50px',
           }}
         >
           <SelectionsAwareness selectingUsers={selectingUsers}>

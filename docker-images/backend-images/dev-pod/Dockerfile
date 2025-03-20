@@ -2,7 +2,7 @@ FROM ubuntu:24.04
 
 RUN apt update && apt install sudo curl nfs-common inetutils-ping -y
 
-# install node 20
+# install node
 
 RUN apt-get update && apt-get install -y ca-certificates curl gnupg
 RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg

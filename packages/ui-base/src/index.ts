@@ -78,3 +78,6 @@ export { copyToClipboard } from './lib/utils/copy-to-clipboard';
 
 export type { Tag, TagsBarProps } from './lib/tags/tags';
 export { TagsBar } from './lib/tags/tags';
+
+export type { ColorValue } from './lib/form/form-fields/color-picker';
+export { ColorPicker } from './lib/form/form-fields/color-picker';

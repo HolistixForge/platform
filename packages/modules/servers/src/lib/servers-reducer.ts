@@ -703,6 +703,10 @@ const serverInitialInfo = (image_id: number) => {
       return {
         type: 'pgadmin',
       };
+    case 5:
+      return {
+        type: 'ubuntu',
+      };
   }
   throw new UserException('server image unknown');
 };

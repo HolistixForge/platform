@@ -14,6 +14,7 @@ import {
   TEventNewView,
   TEventSpaceAction,
   TEventNewGroup,
+  TEventGroupPropertyChange,
 } from './space-events';
 import {
   defaultGraphView,
@@ -61,6 +62,10 @@ export class SpaceReducer extends Reducer<
         this.newGroup(g as Ra<TEventNewGroup>);
         return Promise.resolve();
 
+      case 'space:group-property-change':
+        this.groupPropertyChange(g as Ra<TEventGroupPropertyChange>);
+        return Promise.resolve();
+
       case 'core:delete-edge':
       case 'core:delete-node':
       case 'core:new-edge':
@@ -93,6 +98,21 @@ export class SpaceReducer extends Reducer<
       edges: [],
       origin: g.event.origin,
     });
+  }
+
+  //
+
+  groupPropertyChange(g: Ra<TEventGroupPropertyChange>) {
+    const node = g.sd.nodes.get(g.event.groupId);
+    if (!node) {
+      error('SPACE', `node ${g.event.groupId} not found`);
+      return;
+    }
+    node.data = {
+      ...node.data,
+      ...g.event.properties,
+    };
+    g.sd.nodes.set(g.event.groupId, node);
   }
 
   //

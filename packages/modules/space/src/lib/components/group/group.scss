@@ -1,0 +1,39 @@
+.node-group {
+  .group-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .group-border {
+    flex: 1;
+    border: 1.5px solid var(--group-border-color, var(--c-pink-51));
+    width: 100%;
+    border-radius: var(--node-border-radius);
+    background-color: var(--group-fill-color, transparent);
+  }
+
+  .group-title {
+    flex: 0 0 30px;
+    line-height: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    &-buttons {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+  }
+  &:hover {
+    .group-title-buttons {
+      opacity: 1;
+    }
+  }
+}
+
+.group-title h2:focus {
+  outline: none;
+}

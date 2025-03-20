@@ -40,7 +40,7 @@ export const ServerStack = ({
       style={{ gridTemplateColumns: `repeat(${columns}, minmax(400px, 1fr))` }}
     >
       <div
-        className="w-[400px] h-[230px] flex items-center justify-center border-dashed border rounded-[8px] border-white/40 cursor-pointer"
+        className="w-[400px] h-[202px] flex items-center justify-center border-dashed border rounded-[8px] border-white/40 cursor-pointer"
         onClick={onNewServerClick}
       >
         <p className="text-[12px] font-bold leading-[28px] text-white">
