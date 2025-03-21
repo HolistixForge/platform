@@ -2,12 +2,18 @@ import { useCallback, useRef } from 'react';
 
 import { TGraphNode } from '@monorepo/core';
 import { useDispatcher } from '@monorepo/collab-engine';
-import { addAlphaToHexColor, ColorPicker, ColorValue } from '@monorepo/ui-base';
+import {
+  addAlphaToHexColor,
+  ColorPicker,
+  ColorValue,
+  ButtonBase,
+} from '@monorepo/ui-base';
 
 import { NodeHeader } from '../reactflow-renderer/assets/node-header/node-header';
 import { useMakeButton } from '../reactflow-renderer/assets/node-header/node-toolbar';
 import { useNodeContext } from '../reactflow-renderer/node-wrappers/node-wrapper';
 import { TEventGroupPropertyChange } from '../../space-events';
+import { DisablePanSelect } from '../reactflow-renderer/node-wrappers/disable-pan-select';
 
 import './group.scss';
 
@@ -17,6 +23,7 @@ export const Group = ({ node }: { node: TGraphNode }) => {
   const { id, expand, reduce, isOpened, open, close, viewStatus } =
     useNodeContext();
   const groupRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const dispatcher = useDispatcher<TEventGroupPropertyChange>();
 
@@ -25,11 +32,13 @@ export const Group = ({ node }: { node: TGraphNode }) => {
     borderColor = 'var(--c-pink-51)',
     fillColor = 'transparent',
     fillOpacity = 0,
+    svgBackground,
   } = node.data as {
     title: string;
     borderColor: string;
     fillColor: string;
     fillOpacity: number;
+    svgBackground?: string;
   };
 
   const isExpanded = viewStatus.mode === 'EXPANDED';
@@ -81,6 +90,35 @@ export const Group = ({ node }: { node: TGraphNode }) => {
     [dispatcher, id, title]
   );
 
+  const handleSvgFileSelect = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file && file.type === 'image/svg+xml') {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const svgContent = e.target?.result as string;
+          // Clean up SVG content by removing everything before the <svg tag
+          const cleanSvgContent = svgContent.substring(
+            svgContent.indexOf('<svg')
+          );
+          dispatcher.dispatch({
+            type: 'space:group-property-change',
+            groupId: id,
+            properties: {
+              svgBackground: cleanSvgContent,
+            },
+          });
+        };
+        reader.readAsText(file);
+      }
+    },
+    [dispatcher, id]
+  );
+
+  const handleUploadClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
   return (
     <div
       ref={groupRef}
@@ -92,6 +130,9 @@ export const Group = ({ node }: { node: TGraphNode }) => {
             fillColor,
             fillOpacity / 100
           ),
+          '--group-background-svg': svgBackground
+            ? `url("data:image/svg+xml,${encodeURIComponent(svgBackground)}")`
+            : 'none',
         } as React.CSSProperties
       }
     >
@@ -102,32 +143,47 @@ export const Group = ({ node }: { node: TGraphNode }) => {
         open={open}
         buttons={buttons}
       />
-      <div className="group-content full-height-wo-header">
-        <div className="group-title">
-          <h2
-            contentEditable
-            suppressContentEditableWarning
-            onBlur={handleTitleBlur}
-          >
-            {title}
-          </h2>
-          <div className="group-title-buttons">
-            <ColorPicker
-              initialColor={borderColor}
-              buttonTitle="Border Color"
-              onChange={handleBorderColorChange}
-            />
-            <ColorPicker
-              withTransparency
-              initialColor={fillColor}
-              initialOpacity={fillOpacity}
-              buttonTitle="Fill Color"
-              onChange={handleFillColorChange}
-            />
+      <DisablePanSelect fullHeight>
+        <div className="group-content full-height">
+          <div className="group-title">
+            <h2
+              contentEditable
+              suppressContentEditableWarning
+              onBlur={handleTitleBlur}
+            >
+              {title}
+            </h2>
+            <div className="group-title-buttons">
+              <ColorPicker
+                initialColor={borderColor}
+                buttonTitle="Border Color"
+                onChange={handleBorderColorChange}
+              />
+              <ColorPicker
+                withTransparency
+                initialColor={fillColor}
+                initialOpacity={fillOpacity}
+                buttonTitle="Fill Color"
+                onChange={handleFillColorChange}
+              />
+              <ButtonBase
+                callback={handleUploadClick}
+                text="Upload SVG"
+                tooltip="Upload SVG Background"
+                style={{ border: 'none' }}
+              />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".svg,image/svg+xml"
+                style={{ display: 'none' }}
+                onChange={handleSvgFileSelect}
+              />
+            </div>
           </div>
+          <div className="group-border"></div>
         </div>
-        <div className="group-border"></div>
-      </div>
+      </DisablePanSelect>
     </div>
   );
 };

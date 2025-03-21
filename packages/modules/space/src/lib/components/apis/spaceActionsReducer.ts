@@ -143,6 +143,18 @@ export class SpaceActionsReducer {
 
   //
 
+  private getChildren(nid: string, gv: TGraphView, childs: Set<string>) {
+    for (const node of gv.nodeViews) {
+      if (node.parentId === nid) {
+        childs.add(node.id);
+        this.getChildren(node.id, gv, childs);
+      }
+    }
+    return childs;
+  }
+
+  //
+
   private moveNode(
     action: TSAMoveNode,
     gv: TGraphView,
@@ -192,6 +204,14 @@ export class SpaceActionsReducer {
             area: group.size.width * group.size.height,
           });
         }
+      });
+
+      // we must remove any group that is a child of this node.
+      // so we must build a map of all this node's childs and grandchilds and so on recursively
+      const childs = new Set<string>();
+      this.getChildren(action.nid, gv, childs);
+      childs.forEach((c) => {
+        candidatesGroups.delete(c);
       });
 
       // Find the smallest group by area that contains the node

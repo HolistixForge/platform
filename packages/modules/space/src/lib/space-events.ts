@@ -103,6 +103,7 @@ export type TEventGroupPropertyChange = {
     borderColor?: string;
     fillColor?: string;
     fillOpacity?: number;
+    svgBackground?: string;
   };
 };
 

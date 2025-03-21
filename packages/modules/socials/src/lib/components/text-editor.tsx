@@ -112,7 +112,7 @@ export const NodeTextEditorInternal = ({
             selected ? 'node-background' : ''
           }`}
         >
-          <div id={editorId} style={{ width: '400px' }}></div>
+          <div id={editorId}></div>
         </div>
       </DisablePanSelect>
     </div>
