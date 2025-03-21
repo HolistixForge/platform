@@ -17,7 +17,7 @@ import {
   setProjectConfig,
 } from './project-config';
 import { log } from '@monorepo/log';
-import { sleep } from '@monorepo/simple-types';
+import { makeUuid, sleep } from '@monorepo/simple-types';
 import { CONFIG } from './config';
 
 //
@@ -25,12 +25,15 @@ import { CONFIG } from './config';
 let dispatcher: Dispatcher<TAllEvents, TJupyterExtraArgs>;
 let servers: (http.Server | https.Server)[];
 
-///
+//
+
+export let ROOM_ID = '';
 
 export const startProjectCollab = async (project: TProjectConfig) => {
   setProjectConfig(project);
+  ROOM_ID = makeUuid();
   await initProjectCollaboration(dispatcher);
-  graftYjsWebsocket(servers, PROJECT!.YJS_DOC_ID);
+  graftYjsWebsocket(servers, ROOM_ID);
 };
 
 //

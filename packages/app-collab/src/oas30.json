@@ -130,6 +130,37 @@
         }
       }
     },
+    "/collab/room-id": {
+      "get": {
+        "summary": "get room id",
+        "responses": {
+          "200": {
+            "description": "room id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        },
+        "x-backend-engine": {
+          "points": [
+            {
+              "selector": true,
+              "exec-pipe-id": "room-id"
+            }
+          ]
+        }
+      }
+    },
     "/collab/vpn": {
       "get": {
         "summary": "",

@@ -30,7 +30,6 @@ const readJsonFileOrNull = (filename: string) => {
 export type TProjectConfig = {
   GANYMEDE_API_TOKEN: string;
   PROJECT_ID: string;
-  YJS_DOC_ID: string;
 };
 
 export let PROJECT: TProjectConfig | null = readJsonFileOrNull(

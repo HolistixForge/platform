@@ -13,8 +13,6 @@ export type {
   TApi_Authorization,
 } from './lib/ganymede-api/types';
 
-export { makeYjsDocId } from './lib/yjs/doc-id';
-
 export {
   USER_SCOPE,
   GATEWAY_SCOPE,

@@ -1,4 +1,11 @@
-import { ReactNode, useMemo, useState, createContext, useContext } from 'react';
+import {
+  ReactNode,
+  useMemo,
+  useState,
+  createContext,
+  useContext,
+  useEffect,
+} from 'react';
 import { InfoCircledIcon } from '@radix-ui/react-icons';
 import {
   ButtonBase,
@@ -17,7 +24,6 @@ import {
   BrowserDispatcher,
   CollaborativeContext,
 } from '@monorepo/collab-engine';
-import { makeYjsDocId } from '@monorepo/demiurge-types';
 import { ApiFetch, serverUrl } from '@monorepo/api-fetch';
 import { TMyfetchRequest } from '@monorepo/simple-types';
 import { log } from '@monorepo/log';
@@ -55,6 +61,8 @@ const useProjectUser = () => {
   }, [currentUserData, currentUserStatus]);
 };
 
+//
+
 const useProjectState = (
   ownerId: string,
   projectName: string,
@@ -66,45 +74,16 @@ const useProjectState = (
   );
   const { data: currentUserData } = useCurrentUser();
   const [connectionErrorCount, setConnectionErrorCount] = useState(0);
+  const [roomId, setRoomId] = useState<string | null | Error>(null);
 
   const onCollabError = () => {
-    setConnectionErrorCount((prev) => {
-      const newCount = prev + 1;
-      return newCount;
-    });
+    setConnectionErrorCount((prev) => prev + 1);
   };
 
-  const state = useMemo((): ProjectState => {
-    if (projectStatus === 'pending') {
-      return { status: 'loading' };
-    }
-
-    if (projectStatus === 'error') {
-      return { status: 'error', error: 'Failed to get project data' };
-    }
-
-    if (connectionErrorCount > 0) {
-      return {
-        status: 'error',
-        error: `Connection error. Attempting to reconnect...`,
-      };
-    }
-
-    const { gateway_hostname, project_id } = projectData._0;
-
-    if (!gateway_hostname) {
-      return { status: 'not_started', project_id };
-    }
-
-    try {
-      const get = (): string => {
-        const v = ganymedeApi._ts.get({ project_id });
-        return v.value?.token.access_token || '';
-      };
-      const refresh = () => {
-        // Token refresh logic here if needed
-      };
-
+  // Setup collab configuration and API
+  const collabSetup = useMemo(() => {
+    if (projectStatus === 'success' && projectData._0.gateway_hostname) {
+      const { gateway_hostname, project_id } = projectData._0;
       const location = `/collab`;
       const collabConfig = {
         type: 'yjs' as const,
@@ -113,7 +92,14 @@ const useProjectState = (
           location,
           websocket: true,
         }),
-        token: { get, refresh },
+        token: {
+          get: () =>
+            ganymedeApi._ts.get({ project_id })?.value?.token.access_token ||
+            '',
+          refresh: () => {
+            /* Token refresh logic here if needed */
+          },
+        },
       };
 
       const reducer_server = serverUrl({
@@ -122,13 +108,88 @@ const useProjectState = (
       });
 
       const eventApi = new EventApi(ganymedeApi, reducer_server, project_id);
-      const dispatcher = new BrowserDispatcher(eventApi);
 
+      return {
+        collabConfig,
+        reducer_server,
+        eventApi,
+        project_id,
+      };
+    }
+    return null;
+  }, [projectStatus, projectData, ganymedeApi]);
+
+  // Fetch room ID if not already fetched
+  useEffect(() => {
+    const fetchRoomId = async () => {
+      if (collabSetup) {
+        try {
+          const id = await collabSetup.eventApi.fetch({
+            url: 'room-id',
+            method: 'GET',
+          });
+          if (typeof id === 'string' && id !== '') {
+            setRoomId(id);
+          } else {
+            setRoomId(new Error('Failed to fetch room ID'));
+          }
+        } catch (error) {
+          setRoomId(error as Error);
+        }
+      }
+    };
+
+    if (!roomId && collabSetup) {
+      fetchRoomId();
+    }
+  }, [collabSetup, roomId]);
+
+  // Calculate final state
+  const state = useMemo((): ProjectState => {
+    // Initial loading state - waiting for project data
+    if (projectStatus === 'pending') {
+      return { status: 'loading', progress: 20 };
+    }
+
+    // Handle project data fetch error
+    if (projectStatus === 'error') {
+      return { status: 'error', error: 'Failed to get project data' };
+    }
+
+    // Handle connection errors
+    if (connectionErrorCount > 0) {
+      return {
+        status: 'error',
+        error: `Connection error. Attempting to reconnect...`,
+      };
+    }
+
+    // Check if project is started
+    if (!collabSetup) {
+      if (projectStatus === 'success' && !projectData._0.gateway_hostname) {
+        return { status: 'not_started', project_id: projectData._0.project_id };
+      }
+      // Loading project setup
+      return { status: 'loading', progress: 40 };
+    }
+
+    // Wait for room ID
+    if (!roomId) {
+      return { status: 'loading', progress: 60 };
+    }
+
+    if (roomId instanceof Error) {
+      console.error('Failed to fetch room ID:', roomId);
+      return { status: 'error', error: 'failed to get collaborative space id' };
+    }
+
+    try {
+      const dispatcher = new BrowserDispatcher(collabSetup.eventApi);
       const data: ProjectData = {
         project: projectData._0,
-        collabConfig,
-        gatewayFQDN: gateway_hostname,
-        yjsDocId: makeYjsDocId({ project_id }),
+        collabConfig: collabSetup.collabConfig,
+        gatewayFQDN: projectData._0.gateway_hostname as string,
+        yjsDocId: roomId,
         dispatcher,
         isOwner: projectData._0.owner_id === currentUserData?.user.user_id,
       };
@@ -136,22 +197,25 @@ const useProjectState = (
       return { status: 'ready', data };
     } catch (err) {
       const e = standardizeError(err);
-      const unhelpfullErrorMessage = 'Failed to initialize project';
+      const unhelpfulErrorMessage = 'Failed to initialize project';
       return {
         status: 'error',
-        error: e ? e.global || unhelpfullErrorMessage : unhelpfullErrorMessage,
+        error: e ? e.global || unhelpfulErrorMessage : unhelpfulErrorMessage,
       };
     }
   }, [
-    connectionErrorCount,
-    currentUserData?.user.user_id,
-    ganymedeApi,
-    projectData,
     projectStatus,
+    projectData,
+    connectionErrorCount,
+    collabSetup,
+    roomId,
+    currentUserData?.user.user_id,
   ]);
 
   return [state, onCollabError];
 };
+
+//
 
 const StartProjectBox = ({
   project_id,
@@ -185,6 +249,8 @@ const StartProjectBox = ({
   );
 };
 
+//
+
 export const ProjectContext = ({
   ownerId,
   projectName,
@@ -213,7 +279,12 @@ export const ProjectContext = ({
 
   switch (projectState.status) {
     case 'loading':
-      return <ProjectLoading message="Loading project data..." progress={30} />;
+      return (
+        <ProjectLoading
+          message="Loading project..."
+          progress={projectState.progress}
+        />
+      );
 
     case 'error':
       return <ProjectError message={projectState.error} />;
@@ -232,7 +303,7 @@ export const ProjectContext = ({
         return (
           <ProjectLoading
             message="Initializing collaboration..."
-            progress={60}
+            progress={80}
           />
         );
       }

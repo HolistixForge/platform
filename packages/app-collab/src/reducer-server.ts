@@ -18,7 +18,7 @@ import { Dispatcher } from '@monorepo/collab-engine';
 
 import { TAllEvents } from './build-collab';
 import { TProjectConfig, VPN } from './project-config';
-import { startProjectCollab } from './main';
+import { ROOM_ID, startProjectCollab } from './main';
 
 //
 
@@ -102,6 +102,15 @@ class SendVPNConfigCommand extends Command {
 //
 //
 
+class RoomIdCommand extends Command {
+  async run(): Promise<TCommandReturn> {
+    return { data: ROOM_ID };
+  }
+}
+
+//
+//
+
 export const startEventsReducerServer = async (
   dispatcher: Dispatcher<TAllEvents, any>,
   reducerServerBind: TStart[]
@@ -114,6 +123,8 @@ export const startEventsReducerServer = async (
         return new StartCollabCommand(config);
       case 'send-vpn-config':
         return new SendVPNConfigCommand(config);
+      case 'room-id':
+        return new RoomIdCommand(config);
     }
 
     return null;

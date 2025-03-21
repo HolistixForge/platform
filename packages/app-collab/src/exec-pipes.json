@@ -54,6 +54,15 @@
           "graft": "."
         }
       ]
+    },
+    "room-id": {
+      "steps": [
+        {
+          "type": "room-id",
+          "args": {},
+          "graft": "."
+        }
+      ]
     }
   }
 }

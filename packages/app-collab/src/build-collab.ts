@@ -80,7 +80,7 @@ const filePath = (suffix: string) => {
 };
 
 const loadDoc = () => {
-  const docId = PROJECT!.YJS_DOC_ID;
+  const docId = PROJECT!.PROJECT_ID;
   log(6, 'YJS', `Creating Yjs doc: [${docId}]`);
   ydoc = u.getYDoc(docId);
 

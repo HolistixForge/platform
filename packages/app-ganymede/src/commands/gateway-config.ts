@@ -7,7 +7,6 @@ import {
 import {
   GATEWAY_PROJECT_SCOPE,
   makeProjectScopeString,
-  makeYjsDocId,
   TJwtProject,
 } from '@monorepo/demiurge-types';
 import { ONE_YEAR_MS } from '@monorepo/simple-types';
@@ -34,10 +33,7 @@ export class GatewayConfig extends Command {
             payload,
             `${ONE_YEAR_MS}` // TODO: adjust expiration ?
           ),
-
           PROJECT_ID: args.project_id,
-
-          YJS_DOC_ID: makeYjsDocId({ project_id: args.project_id }),
         },
       };
     } else throw new ConfigException('no project_id');
