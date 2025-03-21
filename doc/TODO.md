@@ -1,15 +1,13 @@
 ⚠️ Antoine's stuffs
 
-persistence
+persistence and sync
 
-- on node restart (fs.writeFile(FILE_PATH, JSON.stringify([...Y.encodeStateAsUpdate(ydoc)]));)
-- on signal,
+- change room id on each gateway startup (create a api endpoint to get it): avoid browser pushing bad/old data
+- save load json file and not yjs db, add timestamp to get nrut force versioning and back up
 - shut down button
-- on gateway change (reducer json load and save)
+- editor binding bug
 
 selected node zindex
-
-- ubuntu image copy
 
 - DNS: https://chatgpt.com/share/67acc6e5-32e4-8011-a71b-e4d900e0f9e5
 - node positioning
