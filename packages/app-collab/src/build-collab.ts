@@ -106,6 +106,17 @@ const saveDoc = (saved: TJsonObject) => {
   }
 };
 
+//
+// save doc :
+//  - every 2 minutes
+//  - on SIGUSR1
+//  - on exit
+//
+
+setInterval(() => {
+  if (PROJECT?.PROJECT_ID) saveDoc({});
+}, 120 * 1000);
+
 // Send signal with: kill -USR1 <pid>
 process.on('SIGUSR1', () => {
   log(6, 'SIGNAL', 'Received SIGUSR1, saving doc state');
