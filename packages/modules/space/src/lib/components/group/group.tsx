@@ -13,7 +13,7 @@ import { NodeHeader } from '../reactflow-renderer/assets/node-header/node-header
 import { useMakeButton } from '../reactflow-renderer/assets/node-header/node-toolbar';
 import { useNodeContext } from '../reactflow-renderer/node-wrappers/node-wrapper';
 import { TEventGroupPropertyChange } from '../../space-events';
-import { DisablePanSelect } from '../reactflow-renderer/node-wrappers/disable-pan-select';
+import { DisableZoomDragPan } from '../reactflow-renderer/node-wrappers/disable-zoom-drag-pan';
 
 import './group.scss';
 
@@ -143,7 +143,7 @@ export const Group = ({ node }: { node: TGraphNode }) => {
         open={open}
         buttons={buttons}
       />
-      <DisablePanSelect fullHeight>
+      <DisableZoomDragPan fullHeight noDrag>
         <div className="group-content full-height">
           <div className="group-title">
             <h2
@@ -183,7 +183,7 @@ export const Group = ({ node }: { node: TGraphNode }) => {
           </div>
           <div className="group-border"></div>
         </div>
-      </DisablePanSelect>
+      </DisableZoomDragPan>
     </div>
   );
 };

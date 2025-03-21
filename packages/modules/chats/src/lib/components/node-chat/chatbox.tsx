@@ -9,7 +9,7 @@ import {
   ButtonIconProps,
   useAction,
 } from '@monorepo/ui-base';
-import { DisablePanSelect, NodeToolbar } from '@monorepo/space';
+import { DisableZoomDragPan, NodeToolbar } from '@monorepo/space';
 
 import {
   DiscussionItem,
@@ -218,7 +218,7 @@ export const Chatbox = ({
       </div>
       <hr />
 
-      <DisablePanSelect>
+      <DisableZoomDragPan noZoom noDrag>
         <div className="chat-flex-zones">
           <div ref={chatBodyRef} className="chat-body" onScroll={handleScroll}>
             {messageList.map((message, index) => (
@@ -289,7 +289,7 @@ export const Chatbox = ({
             )}
           </div>
         </div>
-      </DisablePanSelect>
+      </DisableZoomDragPan>
     </div>
   );
 };

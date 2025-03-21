@@ -9,7 +9,7 @@ import {
   useAction,
 } from '@monorepo/ui-base';
 
-import { DisablePanSelect } from '../../node-wrappers/disable-pan-select';
+import { DisableZoomDragPan } from '../../node-wrappers/disable-zoom-drag-pan';
 import './node-toolbar.scss';
 
 export type NodeToolbarProps = {
@@ -24,7 +24,7 @@ export const NodeToolbar = ({
   dropDown = true,
 }: NodeToolbarProps) => {
   return (
-    <DisablePanSelect>
+    <DisableZoomDragPan noDrag>
       <div
         className={`node-toolbar h-[28px] flex items-center ${className || ''}`}
       >
@@ -33,7 +33,7 @@ export const NodeToolbar = ({
         ))}
         {dropDown && <ButtonIcon Icon={icons.Settings} />}
       </div>
-    </DisablePanSelect>
+    </DisableZoomDragPan>
   );
 };
 

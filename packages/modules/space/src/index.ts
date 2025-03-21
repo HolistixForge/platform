@@ -7,7 +7,7 @@ export { Space_loadData } from './lib/space-shared-model';
 export { SpaceReducer } from './lib/space-reducer';
 
 export {
-  DisablePanSelect,
+  DisableZoomDragPan,
   NodeToolbar,
   InputsAndOutputs,
   Outputs,

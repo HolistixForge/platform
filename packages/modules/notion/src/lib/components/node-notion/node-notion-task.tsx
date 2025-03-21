@@ -1,5 +1,5 @@
 import {
-  DisablePanSelect,
+  DisableZoomDragPan,
   NodeHeader,
   useMakeButton,
   useNodeContext,
@@ -92,7 +92,7 @@ export const NodeNotionTask = ({ node }: { node: TGraphNode }) => {
         isOpened={useNodeValue.isOpened}
         open={useNodeValue.open}
       />
-      <DisablePanSelect>
+      <DisableZoomDragPan noDrag>
         {page && database && (
           <div className="node-background node-notion-task-content">
             <input
@@ -178,7 +178,7 @@ export const NodeNotionTask = ({ node }: { node: TGraphNode }) => {
             </div>
           </div>
         )}
-      </DisablePanSelect>
+      </DisableZoomDragPan>
     </div>
   );
 };

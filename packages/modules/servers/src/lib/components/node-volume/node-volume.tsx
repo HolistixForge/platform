@@ -4,7 +4,7 @@ import {
   InputsAndOutputs,
   TNodeContext,
   NodeHeader,
-  DisablePanSelect,
+  DisableZoomDragPan,
   useMakeButton,
   useNodeContext,
 } from '@monorepo/space';
@@ -62,7 +62,7 @@ export const NodeVolumeInternal = ({
         buttons={buttons}
       />
       {isOpened && (
-        <DisablePanSelect>
+        <DisableZoomDragPan noDrag>
           <div
             className="node-wrapper-body"
             style={{
@@ -76,7 +76,7 @@ export const NodeVolumeInternal = ({
               {volume_name} [{volume_storage} Gi]
             </span>
           </div>
-        </DisablePanSelect>
+        </DisableZoomDragPan>
       )}
     </div>
   );

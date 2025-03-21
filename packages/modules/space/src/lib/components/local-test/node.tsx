@@ -1,6 +1,6 @@
 import { TJsonObject } from '@monorepo/simple-types';
 
-import { useMakeButton, NodeHeader, DisablePanSelect } from '..';
+import { useMakeButton, NodeHeader, DisableZoomDragPan } from '..';
 import { InputsAndOutputs } from '../reactflow-renderer/assets/inputsOutputs/inputsOutputs';
 import { useNodeContext } from '../reactflow-renderer/node-wrappers/node-wrapper';
 
@@ -38,7 +38,7 @@ export const CustomStoryNode = ({
         buttons={buttons}
       />
       {isOpened && data && isExpanded && (
-        <DisablePanSelect>
+        <DisableZoomDragPan noDrag>
           <div className="node-wrapper-body">
             <pre>{JSON.stringify(data, null, 2)}</pre>
             {/*
@@ -46,7 +46,7 @@ export const CustomStoryNode = ({
               <OutgoingEdgeHandles />
               */}
           </div>
-        </DisablePanSelect>
+        </DisableZoomDragPan>
       )}
     </div>
   );

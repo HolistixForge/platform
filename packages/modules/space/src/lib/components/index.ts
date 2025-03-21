@@ -4,7 +4,7 @@ export {
   Outputs,
 } from './reactflow-renderer/assets/inputsOutputs/inputsOutputs';
 
-export { DisablePanSelect } from './reactflow-renderer/node-wrappers/disable-pan-select';
+export { DisableZoomDragPan } from './reactflow-renderer/node-wrappers/disable-zoom-drag-pan';
 
 export { useConnector } from './reactflow-renderer/assets/inputsOutputs/inputsOutputs';
 

@@ -16,7 +16,7 @@ import { useSharedData } from '@monorepo/collab-engine';
 import { TServer, TServersSharedData } from '@monorepo/servers';
 import { TGraphNode } from '@monorepo/core';
 import {
-  DisablePanSelect,
+  DisableZoomDragPan,
   InputsAndOutputs,
   NodeHeader,
   useMakeButton,
@@ -182,11 +182,11 @@ export const NodeTerminal = ({ node }: { node: TGraphNode }) => {
         buttons={buttons}
       />
       {isOpened && (
-        <DisablePanSelect>
+        <DisableZoomDragPan noZoom noDrag>
           <div className="node-wrapper-body terminal">
             <JupyterTerminal terminalId={terminalId} />
           </div>
-        </DisablePanSelect>
+        </DisableZoomDragPan>
       )}
     </div>
   );

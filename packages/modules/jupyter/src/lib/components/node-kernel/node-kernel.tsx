@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 
 import {
   InputsAndOutputs,
-  DisablePanSelect,
+  DisableZoomDragPan,
   NodeHeader,
   useMakeButton,
   useNodeContext,
@@ -117,7 +117,7 @@ export const NodeKernel = ({ node }: { node: TGraphNode }) => {
         buttons={buttons}
       />
       {isOpened && (
-        <DisablePanSelect>
+        <DisableZoomDragPan noDrag>
           <div className="node-wrapper-body">
             <KernelStateIndicator
               startState={kernelPack.state}
@@ -143,7 +143,7 @@ export const NodeKernel = ({ node }: { node: TGraphNode }) => {
               )}
             </div>
           </div>
-        </DisablePanSelect>
+        </DisableZoomDragPan>
       )}
     </div>
   );

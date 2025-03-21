@@ -9,7 +9,7 @@ import { SelectionsAwareness } from './selection-awareness';
 import { useSpaceContext } from '../spaceContext';
 import { isNodeOpened, TNodeViewStatus } from '../../../space-types';
 import { SpaceNode } from '../to-rf-nodes';
-import { DisablePanSelect } from './disable-pan-select';
+import { DisableZoomDragPan } from './disable-zoom-drag-pan';
 
 import './node-wrapper.scss';
 
@@ -155,7 +155,7 @@ export const NodeWrapper =
           </SelectionsAwareness>
 
           <div className="resize-handle-container">
-            <DisablePanSelect>
+            <DisableZoomDragPan noDrag>
               <div
                 className="resize-handle"
                 style={{
@@ -171,7 +171,7 @@ export const NodeWrapper =
                 }}
                 onMouseDown={handleResizeStart}
               />
-            </DisablePanSelect>
+            </DisableZoomDragPan>
           </div>
         </div>
         <NodeStatusDebugOverlay {...nv.status} zoom={zoom} />

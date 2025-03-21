@@ -5,7 +5,7 @@ import { useNodeContext } from '@monorepo/space';
 import { useFactory } from '@monorepo/lazy-factory';
 import { useDispatcher } from '@monorepo/collab-engine';
 import {
-  DisablePanSelect,
+  DisableZoomDragPan,
   TNodeContext,
   NodeHeader,
   useMakeButton,
@@ -67,13 +67,13 @@ export const NodeYoutubeInternal = ({
         buttons={buttons}
       />
       {isOpened && (
-        <DisablePanSelect fullHeight>
+        <DisableZoomDragPan fullHeight noDrag>
           <div className="node-wrapper-body full-height video">
             <Suspense fallback={<span> Loading Component... </span>}>
               <Youtube data={{ videoId: youtubeId }} />
             </Suspense>
           </div>
-        </DisablePanSelect>
+        </DisableZoomDragPan>
       )}
     </div>
   );

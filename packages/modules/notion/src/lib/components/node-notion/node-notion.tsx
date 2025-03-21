@@ -1,5 +1,5 @@
 import {
-  DisablePanSelect,
+  DisableZoomDragPan,
   NodeHeader,
   useMakeButton,
   useNodeContext,
@@ -37,7 +37,7 @@ export const NodeNotion = ({ node }: { node: TGraphNode }) => {
         isOpened={useNodeValue.isOpened}
         open={useNodeValue.open}
       />
-      <DisablePanSelect>
+      <DisableZoomDragPan noZoom noDrag>
         <NotionKanban
           database={database}
           onUpdatePage={(pageId, properties) => {
@@ -71,7 +71,7 @@ export const NodeNotion = ({ node }: { node: TGraphNode }) => {
             });
           }}
         />
-      </DisablePanSelect>
+      </DisableZoomDragPan>
     </div>
   );
 };

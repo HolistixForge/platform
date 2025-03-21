@@ -6,7 +6,7 @@ import { useAwareness, bindEditor } from '@monorepo/collab-engine';
 import { TGraphNode } from '@monorepo/core';
 import { useNodeContext } from '@monorepo/space';
 import {
-  DisablePanSelect,
+  DisableZoomDragPan,
   TNodeContext,
   NodeHeader,
   useMakeButton,
@@ -106,7 +106,7 @@ export const NodeTextEditorInternal = ({
         buttons={buttons}
       />
 
-      <DisablePanSelect fullHeight>
+      <DisableZoomDragPan fullHeight noDrag>
         <div
           className={`node-wrapper-body full-height ${
             selected ? 'node-background' : ''
@@ -114,7 +114,7 @@ export const NodeTextEditorInternal = ({
         >
           <div id={editorId}></div>
         </div>
-      </DisablePanSelect>
+      </DisableZoomDragPan>
     </div>
   );
 };

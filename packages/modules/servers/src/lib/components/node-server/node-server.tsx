@@ -2,7 +2,7 @@ import { CSSProperties, useCallback } from 'react';
 
 import {
   NodeHeader,
-  DisablePanSelect,
+  DisableZoomDragPan,
   TNodeContext,
   useMakeButton,
   useNodeContext,
@@ -245,11 +245,11 @@ export const NodeServerInternal = (
         buttons={buttons}
       />
       {isOpened && (
-        <DisablePanSelect>
+        <DisableZoomDragPan noDrag>
           <div className="node-wrapper-body server">
             <ServerCardInternal {...otherProps} onDelete={onDelete} />
           </div>
-        </DisablePanSelect>
+        </DisableZoomDragPan>
       )}
     </div>
   );

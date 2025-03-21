@@ -11,7 +11,7 @@ import {
 } from '@monorepo/collab-engine';
 import { TCoreEvent, TGraphNode } from '@monorepo/core';
 import {
-  DisablePanSelect,
+  DisableZoomDragPan,
   InputsAndOutputs,
   NodeHeader,
   NodeToolbar,
@@ -275,9 +275,9 @@ export const NodeCell = ({ node }: { node: TGraphNode }) => {
         buttons={buttons}
       />
       {isOpened && (
-        <DisablePanSelect>
+        <DisableZoomDragPan noDrag>
           <CellInternal {...cellLogic} />
-        </DisablePanSelect>
+        </DisableZoomDragPan>
       )}
     </div>
   );
