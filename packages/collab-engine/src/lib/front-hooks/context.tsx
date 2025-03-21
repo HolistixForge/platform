@@ -32,6 +32,8 @@ import { buildUserCss } from './YjsCssStylesheet';
 import * as YWS from 'y-websocket';
 import { sharedDataToJson } from '../chunk';
 
+import './context.scss';
+
 //
 //
 //
@@ -67,6 +69,7 @@ type CollaborativeContextProps = {
   config: TCollabConfig;
   dispatcher: Dispatcher<any, any>;
   user: TAwarenessUser;
+  onError?: () => void;
 };
 
 //
@@ -75,6 +78,11 @@ type TState = {
   built: boolean;
   synced: boolean;
   error: null | Error;
+};
+
+type TConnectionError = {
+  timestamp: number;
+  error: Event;
 };
 
 //
@@ -87,6 +95,7 @@ export const CollaborativeContext = ({
   config,
   user,
   dispatcher,
+  onError,
 }: CollaborativeContextProps) => {
   //
   const [state, _setState] = useState<TState>({
@@ -94,6 +103,35 @@ export const CollaborativeContext = ({
     built: false,
     synced: false,
   });
+
+  const [connectionErrors, setConnectionErrors] = useState<TConnectionError[]>(
+    []
+  );
+
+  const addError = useCallback(
+    (error: Event) => {
+      setConnectionErrors((prev) => {
+        const now = Date.now();
+        // Filter errors from last 20 seconds and add new error
+        const recentErrors = [
+          ...prev.filter((e) => now - e.timestamp < 20000),
+          { timestamp: now, error },
+        ];
+
+        // If we have 5 or more errors in the last 20 seconds, trigger onError callback
+        if (recentErrors.length >= 4 && onError) {
+          onError();
+        }
+
+        return recentErrors;
+      });
+    },
+    [onError]
+  );
+
+  const resetErrors = useCallback(() => {
+    setConnectionErrors([]);
+  }, []);
 
   //
 
@@ -120,6 +158,25 @@ export const CollaborativeContext = ({
         {}, // no query parameters
         config.token
       );
+
+      provider.on('connection-error', (event: Event) => {
+        log(
+          7,
+          'COLLAB',
+          `provider.connection-error: ${config.ws_server} : ${id}`,
+          event
+        );
+        addError(event);
+      });
+
+      provider.on('sync', (state: boolean) => {
+        log(7, 'COLLAB', `provider.sync: ${config.ws_server} : ${id}`, state);
+        setState({ synced: state });
+        if (state) {
+          resetErrors();
+        }
+      });
+
       syncedPromise?.then((synced) => setState({ synced }));
 
       sharedTypes = new YjsSharedTypes(ydoc);
@@ -143,7 +200,7 @@ export const CollaborativeContext = ({
     setState({ built: true });
 
     return { sharedTypes, awareness, sharedData, dispatcher, extraContext };
-  }, [config, user, collabChunks, id]);
+  }, [config, user, collabChunks, id, addError, resetErrors]);
 
   //
 
@@ -179,6 +236,18 @@ export const CollaborativeContext = ({
     return (
       <collaborationContext.Provider value={v}>
         {children}
+        {connectionErrors.length > 0 && (
+          <div className="collab-error-overlay">
+            <div className="error-content">
+              <div className="error-title">Connection Error</div>
+              <div className="error-message">Waiting for reconnection...</div>
+              <div className="error-count">
+                {connectionErrors.length} error
+                {connectionErrors.length > 1 ? 's' : ''} in the last 20 seconds
+              </div>
+            </div>
+          </div>
+        )}
       </collaborationContext.Provider>
     );
 };

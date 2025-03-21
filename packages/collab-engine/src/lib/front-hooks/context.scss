@@ -1,0 +1,39 @@
+.collab-error-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  backdrop-filter: blur(4px);
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .error-content {
+    background-color: var(--color-background);
+    border-radius: 8px;
+    padding: 24px;
+    max-width: 400px;
+    text-align: center;
+
+    .error-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--color-error);
+    }
+
+    .error-message {
+      font-size: 14px;
+      color: var(--color-text);
+      margin-bottom: 8px;
+    }
+
+    .error-count {
+      font-size: 12px;
+      color: var(--color-text-muted);
+    }
+  }
+}

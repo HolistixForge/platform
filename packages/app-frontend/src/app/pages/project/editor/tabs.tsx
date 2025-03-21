@@ -109,9 +109,11 @@ const Panel: FC<PanelProps & TabPayload> = (props) => {
         service_name={props.service_name}
       />
     );
+  } else if (props.type === 'group') {
+    return <div></div>;
   }
   //
-  else return <span>Unknown Tab Content</span>;
+  else return <span>Unknown Tab Content {props.type}</span>;
 };
 
 //
