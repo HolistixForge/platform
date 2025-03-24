@@ -66,6 +66,7 @@ import { ForwardException, myfetch } from '@monorepo/backend-engine';
 import { CONFIG } from './config';
 import { PROJECT } from './project-config';
 import { runScript } from './run-script';
+import { ROOM_ID } from './main';
 
 //
 //
@@ -80,9 +81,8 @@ const filePath = (suffix: string) => {
 };
 
 const loadDoc = () => {
-  const docId = PROJECT!.PROJECT_ID;
-  log(6, 'YJS', `Creating Yjs doc: [${docId}]`);
-  ydoc = u.getYDoc(docId);
+  log(6, 'YJS', `Creating Yjs doc: [${ROOM_ID}]`);
+  ydoc = u.getYDoc(ROOM_ID);
 
   try {
     const data = fs.readFileSync(filePath('yjs-db'), 'utf-8');

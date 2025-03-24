@@ -68,21 +68,26 @@ const useProjectState = (
   projectName: string,
   ganymedeApi: GanymedeApi
 ): [ProjectState, () => void] => {
-  const { status: projectStatus, data: projectData } = useQueryProjectByName(
-    ownerId,
-    projectName
-  );
+  const {
+    status: projectStatus,
+    data: projectData,
+    refetch: refetchProject,
+  } = useQueryProjectByName(ownerId, projectName);
   const { data: currentUserData } = useCurrentUser();
-  const [connectionErrorCount, setConnectionErrorCount] = useState(0);
   const [roomId, setRoomId] = useState<string | null | Error>(null);
 
   const onCollabError = () => {
-    setConnectionErrorCount((prev) => prev + 1);
+    // may be collab stoped or restarted, room id changed
+    log(7, 'COLLAB', 'onCollabError');
+    refetchProject();
+    setRoomId(null);
   };
 
   // Setup collab configuration and API
   const collabSetup = useMemo(() => {
     if (projectStatus === 'success' && projectData._0.gateway_hostname) {
+      setRoomId(null);
+
       const { gateway_hostname, project_id } = projectData._0;
       const location = `/collab`;
       const collabConfig = {
@@ -123,18 +128,42 @@ const useProjectState = (
   useEffect(() => {
     const fetchRoomId = async () => {
       if (collabSetup) {
-        try {
-          const id = await collabSetup.eventApi.fetch({
-            url: 'room-id',
-            method: 'GET',
-          });
-          if (typeof id === 'string' && id !== '') {
-            setRoomId(id);
-          } else {
-            setRoomId(new Error('Failed to fetch room ID'));
+        let attempts = 0;
+        const maxAttempts = 3;
+        const delay = 3000; // 3 seconds
+
+        const tryFetch = async () => {
+          try {
+            const id = await collabSetup.eventApi.fetch({
+              url: 'room-id',
+              method: 'GET',
+            });
+
+            if (typeof id === 'string' && id !== '') {
+              setRoomId(id);
+              return true;
+            } else {
+              log(7, 'COLLAB', 'fetch room id invalid', id);
+            }
+            return false;
+          } catch (error) {
+            log(7, 'COLLAB', 'fetch room id error', error);
+            return false;
           }
-        } catch (error) {
-          setRoomId(error as Error);
+        };
+
+        while (attempts < maxAttempts) {
+          const success = await tryFetch();
+          if (success) break;
+
+          attempts++;
+          if (attempts < maxAttempts) {
+            await new Promise((resolve) => setTimeout(resolve, delay));
+          }
+        }
+
+        if (attempts === maxAttempts) {
+          setRoomId(new Error('Failed to fetch room ID after 3 attempts'));
         }
       }
     };
@@ -154,14 +183,6 @@ const useProjectState = (
     // Handle project data fetch error
     if (projectStatus === 'error') {
       return { status: 'error', error: 'Failed to get project data' };
-    }
-
-    // Handle connection errors
-    if (connectionErrorCount > 0) {
-      return {
-        status: 'error',
-        error: `Connection error. Attempting to reconnect...`,
-      };
     }
 
     // Check if project is started
@@ -206,7 +227,6 @@ const useProjectState = (
   }, [
     projectStatus,
     projectData,
-    connectionErrorCount,
     collabSetup,
     roomId,
     currentUserData?.user.user_id,

@@ -149,15 +149,20 @@ export const CollaborativeContext = ({
 
     let sharedTypes: SharedTypes;
     let awareness: Awareness;
+    let provider: YWS.WebsocketProvider | undefined;
+    let ydoc: any;
 
     if (config.type === 'yjs') {
-      const { ydoc, provider, syncedPromise } = getYDoc(
+      const result = getYDoc(
         id, // store uid
         id, // roomId
         config.ws_server, // server url
         {}, // no query parameters
         config.token
       );
+
+      ydoc = result.ydoc;
+      provider = result.provider;
 
       provider.on('connection-error', (event: Event) => {
         log(
@@ -169,6 +174,18 @@ export const CollaborativeContext = ({
         addError(event);
       });
 
+      provider.on('connection-close', (event: CloseEvent | null) => {
+        log(
+          7,
+          'COLLAB',
+          `provider.connection-close: ${config.ws_server} : ${id}`,
+          event
+        );
+        if (event?.code === 3003) {
+          addError(event);
+        }
+      });
+
       provider.on('sync', (state: boolean) => {
         log(7, 'COLLAB', `provider.sync: ${config.ws_server} : ${id}`, state);
         setState({ synced: state });
@@ -177,14 +194,10 @@ export const CollaborativeContext = ({
         }
       });
 
-      syncedPromise?.then((synced) => setState({ synced }));
+      result.syncedPromise?.then((synced) => setState({ synced }));
 
       sharedTypes = new YjsSharedTypes(ydoc);
-      awareness = new YjsAwareness(
-        ydoc,
-        provider as YWS.WebsocketProvider,
-        buildUserCss
-      );
+      awareness = new YjsAwareness(ydoc, provider, buildUserCss);
     } else {
       sharedTypes = new NoneSharedTypes();
       awareness = new NoneAwareness();
@@ -199,8 +212,38 @@ export const CollaborativeContext = ({
 
     setState({ built: true });
 
-    return { sharedTypes, awareness, sharedData, dispatcher, extraContext };
+    // Return cleanup function
+    return {
+      sharedTypes,
+      awareness,
+      sharedData,
+      dispatcher,
+      extraContext,
+      cleanup: () => {
+        if (provider) {
+          provider.disconnect();
+          provider.destroy();
+        }
+        if (awareness instanceof YjsAwareness) {
+          // Remove all awareness listeners by destroying the awareness instance
+          provider?.awareness?.destroy();
+        }
+        if (ydoc) {
+          ydoc.destroy();
+        }
+      },
+    };
   }, [config, user, collabChunks, id, addError, resetErrors]);
+
+  // Add useEffect for cleanup
+  useEffect(() => {
+    return () => {
+      if (v.cleanup) {
+        log(7, 'COLLAB', 'cleanup');
+        v.cleanup();
+      }
+    };
+  }, []);
 
   //
 

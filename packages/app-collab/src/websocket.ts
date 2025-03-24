@@ -19,7 +19,7 @@ type MyJwtPayload = { type: string; scope: string[]; exp: number };
 
 export function graftYjsWebsocket(
   servers: (http.Server | https.Server)[],
-  docId: string
+  roomId: string
 ) {
   //
 
@@ -56,8 +56,27 @@ export function graftYjsWebsocket(
 
         log(6, 'WS_CONNECTION', `connection: url: ${req.url}`);
 
+        // Extract UUID from URL path
+        const urlPath = req.url?.split('?')[0]; // Get path without query params
+        const match = urlPath?.match(/\/collab\/([^/]+)/);
+        const uuid = match?.[1];
+
+        if (!uuid) {
+          log(6, 'WS_CONNECTION', 'Invalid URL format - missing room id UUID');
+          ws.close(3003, 'invalid_url');
+          return;
+        }
+
+        if (uuid !== roomId) {
+          log(6, 'WS_CONNECTION', 'Invalid room id', { uuid, roomId });
+          ws.close(3003, 'invalid_room_id');
+          return;
+        }
+
+        log(6, 'WS_CONNECTION', `room id UUID: ${uuid}`);
+
         // setup Yjs
-        u.setupWSConnection(ws, req, { docName: docId, gc: false });
+        u.setupWSConnection(ws, req, { docName: roomId, gc: false });
       }
     );
 

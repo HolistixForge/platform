@@ -5,14 +5,7 @@ import { useCallback } from 'react';
 export const GatewayCountdown = () => {
   const meta = useSharedData(['meta'], (sd) => sd.meta.get('meta'));
 
-  const cb = useCallback(() => {
-    setTimeout(
-      // eslint-disable-next-line no-restricted-globals
-      () => location.reload(),
-      /* TODO: periodic event period + 1000 */
-      16000
-    ); // Refresh the page
-  }, []);
+  const cb = useCallback(() => {}, []);
 
   if (!meta) return null;
   const { gateway_shutdown } = meta.projectActivity;
