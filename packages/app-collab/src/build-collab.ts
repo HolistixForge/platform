@@ -11,6 +11,7 @@ import {
   TValidSharedData,
   YjsSharedTypes,
   compileChunks,
+  YjsSharedEditor,
 } from '@monorepo/collab-engine';
 import {
   Core_loadData,
@@ -231,13 +232,14 @@ export async function initProjectCollaboration(
   const loadedFromFile = loadDoc();
 
   const yst = new YjsSharedTypes(ydoc);
+  const yse = new YjsSharedEditor(ydoc.getMap('editors'));
 
   const extraContext = {};
   const loadChunks = compileChunks(chunks, dispatcher, extraContext);
 
   const sd = loadChunks(yst) as TSd;
 
-  dispatcher.bindData(yst, sd, extraContext);
+  dispatcher.bindData(yst, yse, sd, extraContext);
 
   (ydoc as any).awareness.on('change', ({ removed }: { removed: number[] }) => {
     // console.log('AWARENESS CHANGES:', { added, updated, removed });

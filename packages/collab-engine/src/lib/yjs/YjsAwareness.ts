@@ -1,7 +1,7 @@
-import { Doc, Map, Text } from 'yjs';
+import { Doc } from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 
-import { TJsonObject, sleep } from '@monorepo/simple-types';
+import { TJsonObject } from '@monorepo/simple-types';
 
 import { Awareness } from '../Awareness';
 import {
@@ -17,8 +17,7 @@ import {
 export class YjsAwareness extends Awareness {
   _ydoc: Doc;
   _provider: WebsocketProvider;
-  // ytext, monaco editor collaborative bindings
-  _editorBindings: Map<Text>;
+
   _userName: string | null = null;
   _buildUserCss?: (key: number, color: string | undefined) => void;
 
@@ -30,7 +29,7 @@ export class YjsAwareness extends Awareness {
     super();
     this._ydoc = ydoc;
     this._provider = provider;
-    this._editorBindings = this._ydoc.getMap('editors');
+
     this._buildUserCss = buildUserCss;
 
     // TODO: lot of debouncing !!!! using delta
@@ -62,36 +61,6 @@ export class YjsAwareness extends Awareness {
     super.setUser(user);
     this._buildUserCss?.(this._provider.awareness.clientID, user.color);
     this._provider.awareness.setLocalStateField('user', this._user);
-  }
-
-  async getBindingObjects(editorId: string, code: string) {
-    let ytext = this._editorBindings.get(editorId);
-
-    if (!ytext) {
-      const myClientId = this._provider.awareness.clientID;
-      const states = this._provider.awareness.getStates();
-      const clientIds = Array.from(states.keys()).sort((a, b) => a - b);
-      const myPosition = clientIds.indexOf(myClientId);
-
-      const BASE_DELAY = 0.5;
-      const MAX_DELAY = 3;
-      const waitTime = Math.min(myPosition * BASE_DELAY, MAX_DELAY);
-
-      console.log(
-        `Client ${myClientId} is position ${myPosition} of ${clientIds.length}, waiting ${waitTime}s`
-      );
-
-      await sleep(waitTime);
-
-      ytext = this._editorBindings.get(editorId);
-      if (!ytext) {
-        console.log(`Creating new text for ${editorId}`);
-        ytext = new Text(code);
-        this._editorBindings.set(editorId, ytext);
-      }
-    }
-
-    return { ytext, providerAwareness: this._provider.awareness };
   }
 
   override emitPositionAwareness(a: _PositionAwareness) {

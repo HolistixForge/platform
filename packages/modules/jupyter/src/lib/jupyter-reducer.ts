@@ -127,12 +127,14 @@ export class JupyterReducer extends Reducer<
 
   //
 
-  _newCell(g: Ra<TEventNewCell>): Promise<void> {
+  async _newCell(g: Ra<TEventNewCell>): Promise<void> {
     const dkid = g.event.dkid;
     const cellId = makeUuid();
     g.sd.cells.set(cellId, { dkid, cellId, busy: false, outputs: [] });
 
     const id = makeUuid();
+
+    await g.sharedEditor.createEditor(cellId, '');
 
     g.dispatcher.dispatch({
       type: 'core:new-node',
@@ -159,8 +161,6 @@ export class JupyterReducer extends Reducer<
       ],
       origin: g.event.origin,
     });
-
-    return Promise.resolve();
   }
 
   //

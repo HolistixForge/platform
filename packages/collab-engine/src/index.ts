@@ -12,7 +12,7 @@ export { Awareness } from './lib/Awareness';
 
 export { YjsAwareness } from './lib/yjs/YjsAwareness';
 export { YjsSharedTypes } from './lib/yjs/YjsSharedTypes';
-
+export { YjsSharedEditor } from './lib/yjs/YjsSharedEditor';
 export { NoneSharedTypes } from './lib/none/NoneSharedTypes';
 export { NoneAwareness } from './lib/none/NoneAwareness';
 
@@ -42,6 +42,7 @@ export {
   useSharedData,
   useDispatcher,
   useExtraContext,
+  useBindEditor,
 } from './lib/front-hooks/context';
 export type {
   TSharedDataHook,
@@ -51,8 +52,6 @@ export type {
 } from './lib/front-hooks/context';
 
 export type { TokenMethods } from './lib/front-hooks/ydocs';
-
-export { bindEditor } from './lib/front-hooks/bind-editor';
 
 export { getYDoc } from './lib/front-hooks/ydocs';
 

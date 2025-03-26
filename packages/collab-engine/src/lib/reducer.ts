@@ -2,6 +2,7 @@ import { Dispatcher } from './dispatcher';
 import { SharedTypes } from './SharedTypes';
 import { TValidSharedData } from './chunk';
 import { TJsonObject } from '@monorepo/simple-types';
+import { SharedEditor } from './SharedEditor';
 
 //
 
@@ -13,6 +14,7 @@ export type ReduceArgs<TSd extends TValidSharedData, TRe, TDe, TArgs> = {
   st: SharedTypes;
   event: TRe;
   dispatcher: Dispatcher<TDe, TArgs>;
+  sharedEditor: SharedEditor;
   extraArgs: TArgs;
 };
 

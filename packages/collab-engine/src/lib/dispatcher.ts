@@ -4,6 +4,7 @@ import { SharedTypes } from './SharedTypes';
 import { TValidSharedData } from './chunk';
 import { ApiFetch } from '@monorepo/api-fetch';
 import { TJson } from '@monorepo/simple-types';
+import { SharedEditor } from './SharedEditor';
 
 //
 
@@ -18,15 +19,18 @@ export class Dispatcher<TE, Targs> {
   _sharedData: TValidSharedData = null!;
   _reducers: Array<ValidReducer<Targs>> = [];
   _dispatcherExtraArgs: Partial<Targs> = {};
+  _yjsSharedEditor: SharedEditor | undefined;
 
   constructor() {}
 
   bindData(
     sharedTypes: SharedTypes,
+    yse: SharedEditor,
     sharedData: TValidSharedData,
     extraArgs: Partial<Targs>
   ) {
     this._sharedData = sharedData;
+    this._yjsSharedEditor = yse;
     this._sharedTypes = sharedTypes;
     this._dispatcherExtraArgs = extraArgs;
   }
@@ -41,6 +45,7 @@ export class Dispatcher<TE, Targs> {
             st: this._sharedTypes,
             event,
             dispatcher: this,
+            sharedEditor: this._yjsSharedEditor!,
             extraArgs: {
               ...this._dispatcherExtraArgs,
               ...eventExtraArgs,

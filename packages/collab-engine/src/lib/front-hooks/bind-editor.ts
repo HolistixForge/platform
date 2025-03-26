@@ -1,31 +1,37 @@
-import { Awareness, YjsAwareness } from '../../index';
+import { Awareness } from '../Awareness';
+import { SharedEditor } from '../SharedEditor';
+import { YjsAwareness } from '../yjs/YjsAwareness';
+import { YjsBindingData } from '../yjs/YjsSharedEditor';
 
 //
 
 export const bindEditor = async (
   awareness: Awareness,
-  type: 'monaco' | 'quill',
-  celluleId: string,
-  editor: any,
-  code: string
+  sharedEditor: SharedEditor,
+  editorType: string,
+  editorId: string,
+  editorObject: any
 ) => {
-  if ((awareness as YjsAwareness).getBindingObjects) {
-    const { ytext, providerAwareness } = await (
-      awareness as YjsAwareness
-    ).getBindingObjects(celluleId, code);
-
-    if (type === 'monaco') {
+  const bindingObject = await sharedEditor.getBindingObjects(editorId);
+  if (bindingObject) {
+    //
+    if (editorType === 'monaco' && bindingObject.type === 'yjs') {
       const { MonacoBinding } = await import('y-monaco');
-
       new MonacoBinding(
-        ytext!,
-        editor.getModel() as any,
-        new Set([editor]),
-        providerAwareness
+        (bindingObject as YjsBindingData).ytext,
+        editorObject.getModel() as any,
+        new Set([editorObject]),
+        (awareness as YjsAwareness)._provider.awareness
       );
-    } else if (type === 'quill') {
+    }
+    //
+    else if (editorType === 'quill' && bindingObject.type === 'yjs') {
       const { QuillBinding } = await import('y-quill');
-      new QuillBinding(ytext!, editor, providerAwareness);
+      new QuillBinding(
+        (bindingObject as YjsBindingData).ytext,
+        editorObject,
+        (awareness as YjsAwareness)._provider.awareness
+      );
     }
   }
 };

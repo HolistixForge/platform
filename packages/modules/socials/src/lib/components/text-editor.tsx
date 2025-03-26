@@ -2,7 +2,7 @@ import { useEffect, useRef, useMemo } from 'react';
 import Quill from 'quill';
 import QuillCursors from 'quill-cursors';
 
-import { useAwareness, bindEditor } from '@monorepo/collab-engine';
+import { useAwareness, useBindEditor } from '@monorepo/collab-engine';
 import { TGraphNode } from '@monorepo/core';
 import { useNodeContext } from '@monorepo/space';
 import {
@@ -72,6 +72,8 @@ export const NodeTextEditorInternal = ({
     close,
   });
 
+  const bindEditor = useBindEditor();
+
   useEffect(() => {
     if (!hasLoadedQuillRef.current) {
       hasLoadedQuillRef.current = true;
@@ -91,7 +93,7 @@ export const NodeTextEditorInternal = ({
       quillInstanceRef.current = quill;
 
       if (awareness) {
-        bindEditor(awareness, 'quill', id, quill, 'Hello World !');
+        bindEditor('quill', id, quill);
       }
     }
   }, [awareness, id, editorId]);

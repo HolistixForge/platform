@@ -31,6 +31,9 @@ import { TokenMethods, getYDoc } from './ydocs';
 import { buildUserCss } from './YjsCssStylesheet';
 import * as YWS from 'y-websocket';
 import { sharedDataToJson } from '../chunk';
+import { NoneSharedEditor, SharedEditor } from '../SharedEditor';
+import { YjsSharedEditor } from '../yjs/YjsSharedEditor';
+import { bindEditor } from './bind-editor';
 
 import './context.scss';
 
@@ -53,7 +56,7 @@ type TCollaborationContext = {
   sharedData: TValidSharedData;
   awareness: Awareness;
   dispatcher: Dispatcher<any, Record<string, never>>;
-
+  sharedEditor: SharedEditor;
   extraContext: any;
 };
 
@@ -151,6 +154,7 @@ export const CollaborativeContext = ({
     let awareness: Awareness;
     let provider: YWS.WebsocketProvider | undefined;
     let ydoc: any;
+    let sharedEditor: SharedEditor | undefined;
 
     if (config.type === 'yjs') {
       const result = getYDoc(
@@ -197,9 +201,11 @@ export const CollaborativeContext = ({
       result.syncedPromise?.then((synced) => setState({ synced }));
 
       sharedTypes = new YjsSharedTypes(ydoc);
+      sharedEditor = new YjsSharedEditor(ydoc.getMap('editors'));
       awareness = new YjsAwareness(ydoc, provider, buildUserCss);
     } else {
       sharedTypes = new NoneSharedTypes();
+      sharedEditor = new NoneSharedEditor();
       awareness = new NoneAwareness();
       setState({ synced: true });
     }
@@ -208,7 +214,7 @@ export const CollaborativeContext = ({
     const extraContext = {};
     const loadChunks = compileChunks(collabChunks, dispatcher, extraContext);
     const sharedData = loadChunks(sharedTypes);
-    dispatcher.bindData(sharedTypes, sharedData, extraContext);
+    dispatcher.bindData(sharedTypes, sharedEditor, sharedData, extraContext);
 
     setState({ built: true });
 
@@ -217,6 +223,7 @@ export const CollaborativeContext = ({
       sharedTypes,
       awareness,
       sharedData,
+      sharedEditor,
       dispatcher,
       extraContext,
       cleanup: () => {
@@ -396,4 +403,20 @@ export const useExtraContext = <T,>() => {
     collaborationContext
   ) as TCollaborationContext;
   return extraContext as T;
+};
+
+//
+//
+
+export const useBindEditor = () => {
+  const { awareness, sharedEditor } = useContext(
+    collaborationContext
+  ) as TCollaborationContext;
+
+  return useCallback(
+    (editorType: string, editorId: string, editorObject: any) => {
+      bindEditor(awareness, sharedEditor, editorType, editorId, editorObject);
+    },
+    [awareness, sharedEditor]
+  );
 };

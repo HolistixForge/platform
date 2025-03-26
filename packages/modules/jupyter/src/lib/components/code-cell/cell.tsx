@@ -6,7 +6,7 @@ import { Widget } from '@lumino/widgets';
 import {
   useAwareness,
   useDispatcher,
-  bindEditor,
+  useBindEditor,
   useSharedData,
 } from '@monorepo/collab-engine';
 import { TCoreEvent, TGraphNode } from '@monorepo/core';
@@ -78,10 +78,12 @@ export const useCellLogic = ({
 
   //
 
+  const bindEditor = useBindEditor();
+
   const handleEditorMount = useCallback(
     (editor: any) => {
       editorRef.current = editor;
-      awareness && bindEditor(awareness, 'monaco', cellId, editor, '');
+      awareness && bindEditor('monaco', cellId, editor);
     },
     [awareness, cellId]
   );

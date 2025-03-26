@@ -43,8 +43,10 @@ export class SocialsReducer extends Reducer<
 
   //
 
-  _newTextEditor(g: Ra<TEventNewTextEditor>): Promise<void> {
+  async _newTextEditor(g: Ra<TEventNewTextEditor>): Promise<void> {
     const id = makeUuid();
+
+    await g.sharedEditor.createEditor(id, 'Start to write your text here...');
 
     g.dispatcher.dispatch({
       type: 'core:new-node',
@@ -58,7 +60,6 @@ export class SocialsReducer extends Reducer<
       edges: [],
       origin: g.event.origin,
     });
-    return Promise.resolve();
   }
 
   //
