@@ -1,11 +1,14 @@
 ⚠️ Antoine's stuffs
 
+edge, shape
+control component for header redesign (quill, group), editable title with numerotation that remain whne header hidden
+chats
+dns
+
 persistence and sync
 
-- change room id on each gateway startup (create a api endpoint to get it): avoid browser pushing bad/old data: refresh browser on collab error, check collab context rebuild
 - save load json file and not yjs db, add timestamp to get brut force versioning and back up
 - shut down button
-- editor binding bug
 
 selected node zindex
 

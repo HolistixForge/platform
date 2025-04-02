@@ -4,7 +4,7 @@ import {
   SelectFieldset,
   SelectItem,
 } from '@monorepo/ui-base';
-import { NodeToolbar } from '@monorepo/space';
+import { NodeMainToolbar } from '@monorepo/space';
 
 import './menuExpanded.scss';
 
@@ -28,7 +28,7 @@ export const MenuExpanded = ({
   return (
     <div className="menu-expanded">
       <div className="header">
-        <NodeToolbar buttons={toolbarButtons} />
+        <NodeMainToolbar buttons={toolbarButtons} />
 
         <div className="wrapper-menu">
           <div className="node-info">

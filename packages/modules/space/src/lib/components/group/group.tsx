@@ -10,7 +10,7 @@ import {
 } from '@monorepo/ui-base';
 
 import { NodeHeader } from '../reactflow-renderer/assets/node-header/node-header';
-import { useMakeButton } from '../reactflow-renderer/assets/node-header/node-toolbar';
+import { useMakeButton } from '../reactflow-renderer/assets/node-header/node-main-toolbar';
 import { useNodeContext } from '../reactflow-renderer/node-wrappers/node-wrapper';
 import { TEventGroupPropertyChange } from '../../space-events';
 import { DisableZoomDragPan } from '../reactflow-renderer/node-wrappers/disable-zoom-drag-pan';

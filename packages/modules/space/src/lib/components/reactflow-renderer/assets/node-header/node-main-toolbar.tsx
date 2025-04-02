@@ -10,19 +10,20 @@ import {
 } from '@monorepo/ui-base';
 
 import { DisableZoomDragPan } from '../../node-wrappers/disable-zoom-drag-pan';
-import './node-toolbar.scss';
 
-export type NodeToolbarProps = {
+import './node-main-toolbar.scss';
+
+export type NodeMainToolbarProps = {
   buttons: ButtonIconProps[];
   className?: string;
   dropDown?: boolean;
 };
 
-export const NodeToolbar = ({
+export const NodeMainToolbar = ({
   buttons,
   className,
   dropDown = true,
-}: NodeToolbarProps) => {
+}: NodeMainToolbarProps) => {
   return (
     <DisableZoomDragPan noDrag>
       <div

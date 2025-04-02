@@ -14,7 +14,7 @@ import {
   DisableZoomDragPan,
   InputsAndOutputs,
   NodeHeader,
-  NodeToolbar,
+  NodeMainToolbar,
   useMakeButton,
   useNodeContext,
 } from '@monorepo/space';
@@ -150,7 +150,7 @@ const CellInternal = (props: ReturnType<typeof useCellLogic>) => {
 
   return (
     <>
-      <NodeToolbar buttons={buttons} />
+      <NodeMainToolbar buttons={buttons} />
       <div
         className={`jupyterlab-code-cell ${props.cell.busy && 'busy'}`}
         style={{ '--monaco-editor-height': '200px' } as React.CSSProperties}

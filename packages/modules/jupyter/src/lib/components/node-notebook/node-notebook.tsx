@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import { icons } from '@monorepo/ui-base';
 import {
-  NodeToolbar,
+  NodeMainToolbar,
   useMakeButton,
   Inputs,
   Outputs,
@@ -95,7 +95,7 @@ export const NodeNotebook = ({
       )}
 
       <div className="absolute group-hover:opacity-100 -top-10 left-0 opacity-0 transition-opacity h-[40px]  group-[.testhover]:opacity-100">
-        <NodeToolbar buttons={buttons} />
+        <NodeMainToolbar buttons={buttons} />
       </div>
 
       {/* input left */}

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { NodeToolbar } from './node-toolbar';
+import { NodeMainToolbar } from './node-toolbar';
 import { useTestToolbarButtons } from './node-toolbar';
 
 //
@@ -15,7 +15,7 @@ const StoryWrapper = ({
   className: string;
 }) => {
   const { buttons } = useTestToolbarButtons(isOpened, isLocked);
-  return <NodeToolbar buttons={buttons} className={className} />;
+  return <NodeMainToolbar buttons={buttons} className={className} />;
 };
 
 //

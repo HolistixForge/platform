@@ -4,7 +4,7 @@ import {
   Outputs,
   TNodeContext,
   useConnector,
-  NodeToolbar,
+  NodeMainToolbar,
   useMakeButton,
 } from '@monorepo/space';
 
@@ -59,7 +59,7 @@ export const NodePython = ({
             inConOpened ? 'input-open-left' : ''
           }`}
         >
-          <NodeToolbar className="outside" buttons={buttons} />
+          <NodeMainToolbar className="outside" buttons={buttons} />
         </div>
       )}
 

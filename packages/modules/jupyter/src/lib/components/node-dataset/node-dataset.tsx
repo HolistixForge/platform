@@ -1,6 +1,6 @@
 import { icons } from '@monorepo/ui-base';
 import {
-  NodeToolbar,
+  NodeMainToolbar,
   useMakeButton,
   TNodeContext,
   Outputs,
@@ -45,7 +45,7 @@ export const NodeDataset = ({
     <div className="node-wrapper">
       {!isExpanded && (
         <div className={`node-menu node-hover-visible menu-dataset`}>
-          <NodeToolbar className="outside" buttons={buttons} />
+          <NodeMainToolbar className="outside" buttons={buttons} />
         </div>
       )}
 

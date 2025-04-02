@@ -8,7 +8,7 @@ export { SpaceReducer } from './lib/space-reducer';
 
 export {
   DisableZoomDragPan,
-  NodeToolbar,
+  NodeMainToolbar,
   InputsAndOutputs,
   Outputs,
   Inputs,

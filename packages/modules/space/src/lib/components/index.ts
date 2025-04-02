@@ -21,9 +21,9 @@ export { DemiurgeSpace } from './reactflow-renderer/main';
 export { NodeHeader } from './reactflow-renderer/assets/node-header/node-header';
 export {
   useMakeButton,
-  NodeToolbar,
+  NodeMainToolbar,
   useTestToolbarButtons,
-} from './reactflow-renderer/assets/node-header/node-toolbar';
+} from './reactflow-renderer/assets/node-header/node-main-toolbar';
 
 export {
   LabelEnd,

@@ -1,4 +1,6 @@
-import { NodeToolbar, NodeToolbarProps } from './node-toolbar';
+import { NodeToolbar } from 'reactflow';
+
+import { NodeMainToolbar, NodeMainToolbarProps } from './node-main-toolbar';
 import { TNodeContext } from '../../../apis/types/node';
 
 import './node-header.scss';
@@ -6,7 +8,7 @@ import './node-header.scss';
 type NodeHeaderProps = {
   nodeType: string;
 } & Pick<TNodeContext, 'id' | 'isOpened' | 'open'> &
-  NodeToolbarProps;
+  NodeMainToolbarProps;
 
 //
 //
@@ -19,7 +21,7 @@ export const NodeHeader = ({
   open,
 }: NodeHeaderProps) => {
   return (
-    <div className="node-wrapper-header node-background">
+    <NodeToolbar>
       <div className="header-row-1">
         <div className="header-left">
           <span className={`node-type node-type-${nodeType}`}>{nodeType}</span>
@@ -30,8 +32,8 @@ export const NodeHeader = ({
         >
           Node [{id}]
         </span>
-        <NodeToolbar buttons={buttons} />
+        <NodeMainToolbar buttons={buttons} />
       </div>
-    </div>
+    </NodeToolbar>
   );
 };

@@ -1,5 +1,5 @@
 import { icons, SelectFieldset, SelectItem } from '@monorepo/ui-base';
-import { NodeToolbar, useMakeButton } from '@monorepo/space';
+import { NodeMainToolbar, useMakeButton } from '@monorepo/space';
 
 type CardSettingsProps = {
   status: 'success' | 'error' | 'warning';
@@ -19,7 +19,7 @@ export const CardSettings = ({ status }: CardSettingsProps) => {
   return (
     <div className="w-[220px] -bg--c-blue-gray-1 p-[10px] rounded-[4px] flex flex-col gap-[20px]">
       <div className="flex items-center justify-between gap-3">
-        <NodeToolbar buttons={buttons} />
+        <NodeMainToolbar buttons={buttons} />
         <div className="flex items-center gap-[6px]">
           <icons.NoteBookIcon />
           <span className="uppercase text-white -bg--c-orange-3 rounded-[2px] text-[10px] p-[2px] leading-[14px]">

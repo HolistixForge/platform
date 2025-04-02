@@ -9,7 +9,7 @@ import {
   ButtonIconProps,
   useAction,
 } from '@monorepo/ui-base';
-import { DisableZoomDragPan, NodeToolbar } from '@monorepo/space';
+import { DisableZoomDragPan, NodeMainToolbar } from '@monorepo/space';
 
 import {
   DiscussionItem,
@@ -213,7 +213,7 @@ export const Chatbox = ({
           />
         )}
         <div className="toolbar-box">
-          <NodeToolbar buttons={buttons} />
+          <NodeMainToolbar buttons={buttons} />
         </div>
       </div>
       <hr />
