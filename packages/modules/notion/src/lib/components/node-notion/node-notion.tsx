@@ -36,6 +36,7 @@ export const NodeNotion = ({ node }: { node: TGraphNode }) => {
         id={useNodeValue.id}
         isOpened={useNodeValue.isOpened}
         open={useNodeValue.open}
+        visible={useNodeValue.selected}
       />
       <DisableZoomDragPan noZoom noDrag>
         <NotionKanban

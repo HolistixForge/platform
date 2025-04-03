@@ -26,9 +26,7 @@ export const NodeMainToolbar = ({
 }: NodeMainToolbarProps) => {
   return (
     <DisableZoomDragPan noDrag>
-      <div
-        className={`node-toolbar h-[28px] flex items-center ${className || ''}`}
-      >
+      <div className={`node-toolbar flex items-center ${className || ''}`}>
         {buttons.map((b, k) => (
           <ButtonIcon key={k} {...b} />
         ))}

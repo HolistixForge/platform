@@ -1,8 +1,8 @@
 .color-button {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   border-radius: 4px;
-  border: 1px solid var(--c-gray-30);
+  border: 1px solid #ccc;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -11,7 +11,7 @@
   background: none;
 
   &:hover {
-    border-color: var(--c-gray-50);
+    border-color: #ddd;
   }
 }
 

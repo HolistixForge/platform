@@ -20,7 +20,7 @@ import './group.scss';
 //
 
 export const Group = ({ node }: { node: TGraphNode }) => {
-  const { id, expand, reduce, isOpened, open, close, viewStatus } =
+  const { id, expand, reduce, isOpened, open, close, viewStatus, selected } =
     useNodeContext();
   const groupRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -29,8 +29,8 @@ export const Group = ({ node }: { node: TGraphNode }) => {
 
   const {
     title = 'Group Name',
-    borderColor = 'var(--c-pink-51)',
-    fillColor = 'transparent',
+    borderColor = '#672aa4',
+    fillColor = '#672aa4',
     fillOpacity = 0,
     svgBackground,
   } = node.data as {
@@ -142,7 +142,36 @@ export const Group = ({ node }: { node: TGraphNode }) => {
         isOpened={isOpened}
         open={open}
         buttons={buttons}
-      />
+        visible={selected}
+      >
+        <div className="group-title-buttons">
+          <ColorPicker
+            initialColor={borderColor}
+            buttonTitle="Border Color"
+            onChange={handleBorderColorChange}
+          />
+          <ColorPicker
+            withTransparency
+            initialColor={fillColor}
+            initialOpacity={fillOpacity}
+            buttonTitle="Fill Color"
+            onChange={handleFillColorChange}
+          />
+          <ButtonBase
+            callback={handleUploadClick}
+            text="Upload SVG"
+            tooltip="Upload SVG Background"
+            style={{ border: 'none', height: '20px', fontSize: '12px' }}
+          />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".svg,image/svg+xml"
+            style={{ display: 'none' }}
+            onChange={handleSvgFileSelect}
+          />
+        </div>
+      </NodeHeader>
       <DisableZoomDragPan fullHeight noDrag>
         <div className="group-content full-height">
           <div className="group-title">
@@ -153,33 +182,6 @@ export const Group = ({ node }: { node: TGraphNode }) => {
             >
               {title}
             </h2>
-            <div className="group-title-buttons">
-              <ColorPicker
-                initialColor={borderColor}
-                buttonTitle="Border Color"
-                onChange={handleBorderColorChange}
-              />
-              <ColorPicker
-                withTransparency
-                initialColor={fillColor}
-                initialOpacity={fillOpacity}
-                buttonTitle="Fill Color"
-                onChange={handleFillColorChange}
-              />
-              <ButtonBase
-                callback={handleUploadClick}
-                text="Upload SVG"
-                tooltip="Upload SVG Background"
-                style={{ border: 'none' }}
-              />
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".svg,image/svg+xml"
-                style={{ display: 'none' }}
-                onChange={handleSvgFileSelect}
-              />
-            </div>
           </div>
           <div className="group-border"></div>
         </div>

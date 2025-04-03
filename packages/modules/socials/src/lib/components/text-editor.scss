@@ -1,62 +1,62 @@
-.node-quill {
-  .ql-snow {
-    &.ql-toolbar {
-      border: none;
-      border-bottom: solid 1px #ccc;
-      opacity: 0;
-      transition: opacity 0.3s ease-in-out;
-      .ql-picker {
+.ql-snow {
+  &.ql-toolbar {
+    border: none;
+
+    transition: opacity 0.3s ease-in-out;
+    .ql-picker {
+      color: white;
+
+      &.ql-size {
+        border: solid 1px #fff;
+      }
+      &.ql-size .ql-picker-label::before,
+      &.ql-size .ql-picker-item::before {
+        content: attr(data-value) !important;
+      }
+    }
+
+    .ql-stroke {
+      stroke: white;
+    }
+
+    .ql-picker-options {
+      background-color: #2a2a2a;
+
+      .ql-picker-item {
         color: white;
-
-        &.ql-size {
-          border: solid 1px #fff;
-        }
-        &.ql-size .ql-picker-label::before,
-        &.ql-size .ql-picker-item::before {
-          content: attr(data-value) !important;
-        }
       }
+    }
 
-      .ql-stroke {
-        stroke: white;
-      }
-
+    .ql-color-picker {
       .ql-picker-options {
-        background-color: #2a2a2a;
-
-        .ql-picker-item {
-          color: white;
-        }
-      }
-
-      .ql-color-picker {
-        .ql-picker-options {
-          padding: 5px;
-        }
-      }
-
-      button:hover,
-      button:focus,
-      button.ql-active,
-      .ql-picker-label:hover,
-      .ql-picker-label.ql-active,
-      .ql-picker-item:hover,
-      .ql-picker-item.ql-selected {
-        color: #ccc;
-        .ql-stroke {
-          stroke: #ccc;
-        }
+        padding: 5px;
       }
     }
 
-    &.ql-container {
-      border: none;
+    button:hover,
+    button:focus,
+    button.ql-active,
+    .ql-picker-label:hover,
+    .ql-picker-label.ql-active,
+    .ql-picker-item:hover,
+    .ql-picker-item.ql-selected {
+      color: #ccc;
+      .ql-stroke {
+        stroke: #ccc;
+      }
     }
   }
 
-  .ql-editor * {
-    color: white;
+  &.ql-container {
+    border: none;
   }
+}
+
+.ql-editor * {
+  color: white;
+}
+.ql-editor.ql-blank::before {
+  color: #bbb;
 }
 
 .node-quill:hover {

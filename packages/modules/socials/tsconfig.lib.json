@@ -30,10 +30,17 @@
     "src/**/*.test.ts",
     "eslint.config.js",
     "eslint.config.cjs",
-    "eslint.config.mjs"
+    "eslint.config.mjs",
+    "**/*.stories.ts",
+    "**/*.stories.js",
+    "**/*.stories.jsx",
+    "**/*.stories.tsx"
   ],
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "references": [
+    {
+      "path": "../../log/tsconfig.lib.json"
+    },
     {
       "path": "../../collab-engine/tsconfig.lib.json"
     },
@@ -44,10 +51,10 @@
       "path": "../core/tsconfig.lib.json"
     },
     {
-      "path": "../space/tsconfig.lib.json"
+      "path": "../../simple-types/tsconfig.lib.json"
     },
     {
-      "path": "../../simple-types/tsconfig.lib.json"
+      "path": "../space/tsconfig.lib.json"
     },
     {
       "path": "../../ui-base/tsconfig.lib.json"

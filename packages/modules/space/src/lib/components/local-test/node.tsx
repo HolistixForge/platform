@@ -15,7 +15,7 @@ export const CustomStoryNode = ({
 }) => {
   const nc = useNodeContext();
 
-  const { close, expand, reduce, isOpened, viewStatus } = nc;
+  const { close, expand, reduce, isOpened, viewStatus, selected } = nc;
 
   const isExpanded = viewStatus.mode === 'EXPANDED';
 
@@ -27,6 +27,7 @@ export const CustomStoryNode = ({
     open,
     close,
   });
+
   return (
     <div style={{ width: isExpanded ? '250px' : '100px' }}>
       <InputsAndOutputs id={nc.id} />
@@ -36,17 +37,16 @@ export const CustomStoryNode = ({
         isOpened={nc.isOpened}
         open={nc.open}
         buttons={buttons}
+        visible={selected}
       />
-      {isOpened && data && isExpanded && (
-        <DisableZoomDragPan noDrag>
-          <div className="node-wrapper-body">
-            <pre>{JSON.stringify(data, null, 2)}</pre>
-            {/*
+      {isOpened && isExpanded && (
+        <div className="node-wrapper-body node-background">
+          <pre>{JSON.stringify(data || {}, null, 2)}</pre>
+          {/*
               <IncomingEdgeHandles />
               <OutgoingEdgeHandles />
               */}
-          </div>
-        </DisableZoomDragPan>
+        </div>
       )}
     </div>
   );

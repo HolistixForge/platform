@@ -158,7 +158,7 @@ export const NodeTerminal = ({ node }: { node: TGraphNode }) => {
     terminalId: string;
   };
 
-  const { id, viewStatus, expand, reduce, isOpened, open, close } =
+  const { id, viewStatus, expand, reduce, isOpened, open, close, selected } =
     useNodeContext();
 
   const isExpanded = viewStatus.mode === 'EXPANDED';
@@ -180,6 +180,7 @@ export const NodeTerminal = ({ node }: { node: TGraphNode }) => {
         open={open}
         isOpened={isOpened}
         buttons={buttons}
+        visible={selected}
       />
       {isOpened && (
         <DisableZoomDragPan noZoom noDrag>

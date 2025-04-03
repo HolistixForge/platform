@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, useCallback } from 'react';
 import Quill from 'quill';
 import QuillCursors from 'quill-cursors';
 
@@ -17,7 +17,7 @@ import 'quill/dist/quill.snow.css';
 import './text-editor.scss';
 
 //
-
+/*
 const toolbarOptions = [
   ['bold', 'italic', 'underline', 'strike'], // toggled buttons
   ['blockquote', 'code-block'],
@@ -38,7 +38,7 @@ const toolbarOptions = [
 
   ['clean'], // remove formatting button
 ];
-
+*/
 //
 
 Quill.register('modules/cursors', QuillCursors);
@@ -62,6 +62,43 @@ export const NodeTextEditorInternal = ({
   const hasLoadedQuillRef = useRef(false);
   const editorId = useMemo(() => `editor-${makeUuid()}`, []);
 
+  //
+
+  const toolbarDiv = useMemo(() => {
+    const d = document.createElement('div');
+    d.innerHTML = `<span class="ql-formats">
+          <select class="ql-font"></select>
+          <select class="ql-size"></select>
+        </span>
+        <span class="ql-formats">
+          <button class="ql-bold"></button>
+          <button class="ql-italic"></button>
+          <button class="ql-underline"></button>
+          <button class="ql-strike"></button>
+        </span>
+        <span class="ql-formats">
+          <select class="ql-color"></select>
+          <select class="ql-background"></select>
+        </span>
+        <span class="ql-formats">
+          <button class="ql-list" value="ordered"></button>
+          <button class="ql-list" value="bullet"></button>
+          <select class="ql-align"></select>
+        </span>
+        <span class="ql-formats">
+          <button class="ql-link"></button>
+          <button class="ql-image"></button>
+          <button class="ql-video"></button>
+        </span>
+        <span class="ql-formats">
+          <button class="ql-clean"></button>
+        </span>`;
+    d.setAttribute('class', 'quill-toolbar');
+    return d;
+  }, []);
+
+  //
+
   const isExpanded = viewStatus.mode === 'EXPANDED';
   const buttons = useMakeButton({
     isExpanded,
@@ -74,16 +111,23 @@ export const NodeTextEditorInternal = ({
 
   const bindEditor = useBindEditor();
 
+  //
+
   useEffect(() => {
     if (!hasLoadedQuillRef.current) {
       hasLoadedQuillRef.current = true;
 
       const quill = new Quill(`#${editorId}`, {
         theme: 'snow',
-        placeholder: '<h2>Compose an epic...</h2>',
+        placeholder: 'Compose an epic story here...',
         modules: {
           cursors: true,
-          toolbar: toolbarOptions,
+          toolbar: {
+            container: toolbarDiv, // `#${toolbarId}`,
+            handlers: {
+              // Add any custom handlers here if needed
+            },
+          },
           history: {
             userOnly: true,
           },
@@ -98,6 +142,16 @@ export const NodeTextEditorInternal = ({
     }
   }, [awareness, id, editorId]);
 
+  //
+
+  const bindToolbar = useCallback((el: HTMLDivElement) => {
+    if (el) {
+      el.appendChild(toolbarDiv);
+    }
+  }, []);
+
+  //
+
   return (
     <div className={`common-node node-quill full-height node-resizable`}>
       <NodeHeader
@@ -106,7 +160,10 @@ export const NodeTextEditorInternal = ({
         isOpened={isOpened}
         open={open}
         buttons={buttons}
-      />
+        visible={selected}
+      >
+        <div ref={bindToolbar}></div>
+      </NodeHeader>
 
       <DisableZoomDragPan fullHeight noDrag>
         <div

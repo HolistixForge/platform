@@ -22,6 +22,7 @@ export class CollabSpaceAwareness extends SpaceAwareness {
   viewId: string;
   awareness: Awareness;
   states: _AwarenessStates = new Map();
+  selectedNodes: string[] = [];
 
   constructor(viewId: string, awareness: Awareness) {
     super();
@@ -78,9 +79,19 @@ export class CollabSpaceAwareness extends SpaceAwareness {
 
   //
 
-  selectNode(nid: string): void {
+  clearNodeSelection(): void {
+    this.selectedNodes = [];
+    this.awareness.emitSelectionAwareness({});
+  }
+
+  //
+
+  selectNode(nid: string, selected: boolean): void {
+    this.selectedNodes = this.selectedNodes.filter((n) => n !== nid);
+    if (selected) this.selectedNodes.push(nid);
+
     const o: SpaceSelection = {
-      space: { nodes: [nid], viewId: this.viewId },
+      space: { nodes: this.selectedNodes, viewId: this.viewId },
     };
 
     this.awareness.emitSelectionAwareness(o);

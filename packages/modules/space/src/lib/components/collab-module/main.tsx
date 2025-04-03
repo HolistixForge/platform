@@ -94,13 +94,6 @@ export const SpaceModule = ({
     []
   );
 
-  const onPaneClick = useCallback(
-    (xy: TPosition, clientPosition: TPosition) => {
-      logics.ga.selectNode('none');
-    },
-    []
-  );
-
   return (
     <DemiurgeSpace
       viewId={viewId}
@@ -116,7 +109,6 @@ export const SpaceModule = ({
       onContextMenuNewEdge={onContextMenuNewEdge || (() => {})}
       onConnect={onConnect || (() => {})}
       onDrop={onDrop}
-      onPaneClick={onPaneClick}
     />
   );
 };

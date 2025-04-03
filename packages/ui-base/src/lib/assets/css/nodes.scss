@@ -33,6 +33,8 @@
   box-sizing: border-box;
   border: dashed 1.5px rgba(255, 255, 255, 0);
   border-radius: var(--node-border-radius);
+  position: relative;
+
   &.has-selection {
     border-color: rgba(255, 255, 255, 0.2);
   }

@@ -21,7 +21,7 @@ export const DisableZoomDragPan = ({
 }) => {
   const classNames = [
     'disable-zoom-drag-pan',
-    fullHeight ? 'full-height-wo-header' : '',
+    fullHeight ? 'full-height' : '',
     noZoom ? 'nowheel' : '',
     noDrag ? 'nodrag' : '',
     nopan ? 'nopan' : '',

@@ -1,6 +1,8 @@
 import * as Popover from '@radix-ui/react-popover';
 import * as Slider from '@radix-ui/react-slider';
 import { useCallback, useState, useRef } from 'react';
+import { addAlphaToHexColor } from '../../css-utils/css-utils';
+
 import './color-picker.scss';
 
 const COLORS = [
@@ -102,8 +104,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
         <button
           className="color-button"
           style={{
-            backgroundColor: color,
-            opacity: opacity / 100,
+            backgroundColor: addAlphaToHexColor(color, opacity / 100),
           }}
           title={buttonTitle}
         />

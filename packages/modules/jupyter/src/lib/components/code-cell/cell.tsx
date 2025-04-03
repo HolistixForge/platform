@@ -275,6 +275,7 @@ export const NodeCell = ({ node }: { node: TGraphNode }) => {
         isOpened={isOpened}
         open={open}
         buttons={buttons}
+        visible={selected}
       />
       {isOpened && (
         <DisableZoomDragPan noDrag>

@@ -149,7 +149,10 @@ export const NodeWrapper =
           }}
         >
           <SelectionsAwareness selectingUsers={selectingUsers}>
-            <div style={{ position: 'relative', height: '100%' }}>
+            <div
+              style={{ position: 'relative', height: '100%' }}
+              onClick={() => spaceAwareness.selectNode(id, true)}
+            >
               <NodeComponent />
             </div>
           </SelectionsAwareness>

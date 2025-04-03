@@ -43,6 +43,10 @@ export abstract class Awareness {
     this.awarenessListeners = this.awarenessListeners.filter((l2) => l1 !== l2);
   }
 
+  callListeners(args: _AwarenessListenerArgs) {
+    this.awarenessListeners.forEach((l) => l(args, this));
+  }
+
   abstract getStates(): _AwarenessStates;
 
   abstract getMyId(): number;

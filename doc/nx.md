@@ -170,6 +170,8 @@ npm install --save-dev @nx/storybook
 npx nx g @nx/react:storybook-configuration {LIB_NAME}
 ```
 
+add nodePolyfills in vite.config.ts
+
 ## tailwind
 
 ```

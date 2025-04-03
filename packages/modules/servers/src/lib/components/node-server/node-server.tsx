@@ -203,7 +203,14 @@ export const NodeServerInternal = (
     TServerComponentCallbacks &
     Pick<
       TNodeContext,
-      'id' | 'isOpened' | 'open' | 'close' | 'viewStatus' | 'expand' | 'reduce'
+      | 'id'
+      | 'isOpened'
+      | 'open'
+      | 'close'
+      | 'viewStatus'
+      | 'expand'
+      | 'reduce'
+      | 'selected'
     >
 ) => {
   //
@@ -216,6 +223,7 @@ export const NodeServerInternal = (
     viewStatus,
     expand,
     reduce,
+    selected,
     onDelete,
     ...otherProps
   } = props;
@@ -243,6 +251,7 @@ export const NodeServerInternal = (
         isOpened={isOpened}
         open={open}
         buttons={buttons}
+        visible={selected}
       />
       {isOpened && (
         <DisableZoomDragPan noDrag>

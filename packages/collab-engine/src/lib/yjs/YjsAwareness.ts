@@ -49,9 +49,7 @@ export class YjsAwareness extends Awareness {
             );
           }
 
-          this.awarenessListeners.forEach((l) =>
-            l({ states, added, updated, removed }, this)
-          );
+          this.callListeners({ states, added, updated, removed });
         }
       }
     );

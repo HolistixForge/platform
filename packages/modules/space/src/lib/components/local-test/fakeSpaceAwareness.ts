@@ -13,7 +13,7 @@ export class DummySpaceAwareness extends SpaceAwareness {
     return {};
   }
 
-  selectNode(nid: string): void {
+  selectNode(nid: string, selected: boolean): void {
     // Do nothing
   }
 
@@ -23,6 +23,10 @@ export class DummySpaceAwareness extends SpaceAwareness {
 
   getCurrentUserId(): number {
     return 0;
+  }
+
+  clearNodeSelection(): void {
+    // Do nothing
   }
 }
 
@@ -78,7 +82,7 @@ export class FakeSpaceAwareness extends SpaceAwareness {
 
   private randomlyUpdateUserPositions() {
     this.userPositions.forEach((userPosition) => {
-      if (Math.random() > 0.5) {
+      if (userPosition.key !== 0 && Math.random() > 0.5) {
         userPosition.position = generateRandomPosition();
         userPosition.inactive = Math.random() > 0.5;
       }
@@ -87,7 +91,7 @@ export class FakeSpaceAwareness extends SpaceAwareness {
 
   private randomlySelectNodes() {
     this.users.forEach((u, n) => {
-      if (Math.random() > 0.5) {
+      if (n !== 0 && Math.random() > 0.5) {
         const nodeId = `node-${Math.floor(Math.random() * 10) + 1}`;
         this.addNodeSelection(nodeId, n);
       }
@@ -123,8 +127,25 @@ export class FakeSpaceAwareness extends SpaceAwareness {
     });
   }
 
-  selectNode(nid: string): void {
-    this.addNodeSelection(nid, 0);
+  selectNode(nid: string, selected: boolean): void {
+    if (selected) {
+      this.selections[nid].push({
+        user: this.users[0],
+        viewId: `view-story`,
+      });
+    } else {
+      this.selections[nid] = this.selections[nid].filter(
+        (selection) => selection.user.username !== this.users[0].username
+      );
+    }
+  }
+
+  clearNodeSelection(): void {
+    Object.keys(this.selections).forEach((key) => {
+      this.selections[key] = this.selections[key].filter(
+        (selection) => selection.user.username !== this.users[0].username
+      );
+    });
   }
 
   setPointer(x: number, y: number): void {

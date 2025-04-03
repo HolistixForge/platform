@@ -91,6 +91,7 @@ export const NodeNotionTask = ({ node }: { node: TGraphNode }) => {
         id={useNodeValue.id}
         isOpened={useNodeValue.isOpened}
         open={useNodeValue.open}
+        visible={useNodeValue.selected}
       />
       <DisableZoomDragPan noDrag>
         {page && database && (

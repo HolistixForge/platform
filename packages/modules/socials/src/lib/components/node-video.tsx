@@ -27,7 +27,14 @@ export type NodeYoutubeInternalProps = {
   onDelete: () => Promise<void>;
 } & Pick<
   TNodeContext,
-  'id' | 'isOpened' | 'open' | 'close' | 'viewStatus' | 'expand' | 'reduce'
+  | 'id'
+  | 'isOpened'
+  | 'open'
+  | 'close'
+  | 'viewStatus'
+  | 'expand'
+  | 'reduce'
+  | 'selected'
 >;
 
 //
@@ -43,6 +50,7 @@ export const NodeYoutubeInternal = ({
   viewStatus,
   expand,
   reduce,
+  selected,
 }: NodeYoutubeInternalProps) => {
   //
 
@@ -65,6 +73,7 @@ export const NodeYoutubeInternal = ({
         open={open}
         isOpened={false}
         buttons={buttons}
+        visible={selected}
       />
       {isOpened && (
         <DisableZoomDragPan fullHeight noDrag>

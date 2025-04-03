@@ -9,11 +9,26 @@ import {
 } from '../awareness-types';
 
 export class NoneAwareness extends Awareness {
-  _fakeState = new Map<number, _AwarenessState>();
+  _fakeState: _AwarenessStates = new Map<number, _AwarenessState>();
 
   override emitPositionAwareness(a: _PositionAwareness) {}
 
-  override emitSelectionAwareness(a: TJsonObject): void {}
+  override emitSelectionAwareness(a: TJsonObject): void {
+    // console.log('emitSelectionAwareness', a);
+    this._fakeState.set(0, {
+      user: {
+        username: 'John Doe',
+        color: '#ffa500',
+      },
+      selections: a,
+    });
+    this.callListeners({
+      states: this._fakeState,
+      added: [],
+      updated: [0],
+      removed: [],
+    });
+  }
 
   override getStates(): _AwarenessStates {
     return this._fakeState;

@@ -21,7 +21,14 @@ export type NodeVolumeInternalProps = {
   onDelete: () => Promise<void>;
 } & Pick<
   TNodeContext,
-  'id' | 'isOpened' | 'open' | 'close' | 'viewStatus' | 'expand' | 'reduce'
+  | 'id'
+  | 'isOpened'
+  | 'open'
+  | 'close'
+  | 'viewStatus'
+  | 'expand'
+  | 'reduce'
+  | 'selected'
 >;
 
 //
@@ -37,6 +44,7 @@ export const NodeVolumeInternal = ({
   viewStatus,
   expand,
   reduce,
+  selected,
 }: NodeVolumeInternalProps) => {
   //
 
@@ -60,6 +68,7 @@ export const NodeVolumeInternal = ({
         isOpened={isOpened}
         open={open}
         buttons={buttons}
+        visible={selected}
       />
       {isOpened && (
         <DisableZoomDragPan noDrag>

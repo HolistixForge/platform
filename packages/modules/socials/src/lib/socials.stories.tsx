@@ -11,12 +11,14 @@ import {
 import { Logger } from '@monorepo/log';
 import { Core_loadData, CoreReducer, TCoreSharedData } from '@monorepo/core';
 
-import { SpaceModule } from './main';
-import { SpaceReducer } from '../../space-reducer';
-import { Space_loadData, TSpaceSharedData } from '../../space-shared-model';
-import { defaultGraphView, TGraphView } from '../../space-types';
-import { loadStoryGraph } from '../local-test/localSpaceActionsDispatcher';
-import { Group } from '../group/group';
+import {
+  SpaceModule,
+  SpaceReducer,
+  Space_loadData,
+  TSpaceSharedData,
+  defaultGraphView,
+} from '@monorepo/space';
+import { NodeTextEditor, NodeYoutube } from '../frontend';
 
 //
 
@@ -26,9 +28,48 @@ Logger.setPriority(7);
 
 const loadStoryData = (sd: TSpaceSharedData & TCoreSharedData) => {
   const graphViews = sd.graphViews;
-  const gv: TGraphView = defaultGraphView();
+  const gv = defaultGraphView();
 
-  loadStoryGraph(gv, sd.nodes as any, sd.edges as any);
+  sd.nodes.set('node-1', {
+    id: 'node-1',
+    type: 'youtube',
+    data: {
+      youtubeId: 'P8JEm4d6Wu4',
+    },
+    name: 'Node 1',
+    root: true,
+    connectors: [],
+  });
+
+  sd.nodes.set('node-2', {
+    id: 'node-2',
+    type: 'text-editor',
+    data: {},
+    name: 'Node 2',
+    root: true,
+    connectors: [],
+  });
+
+  gv.graph.nodes.push({
+    id: 'node-2',
+    type: 'text-editor',
+    position: {
+      x: 0,
+      y: 0,
+    },
+    size: {
+      width: 400,
+      height: 300,
+    },
+    status: {
+      mode: 'EXPANDED',
+      forceOpened: true,
+      forceClosed: false,
+      isFiltered: false,
+      rank: 0,
+      maxRank: 0,
+    },
+  });
 
   graphViews.set('graph-1', gv);
 };
@@ -56,7 +97,8 @@ const chunks: TCollaborativeChunk[] = [
 //
 
 const nodeTypes = {
-  group: Group,
+  youtube: NodeYoutube,
+  'text-editor': NodeTextEditor,
 };
 
 //
@@ -89,7 +131,7 @@ const StoryWrapper = () => {
 //
 
 const meta = {
-  title: 'Modules/Space/Main',
+  title: 'Modules/Socials/Main',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { useTestToolbarButtons } from './node-toolbar';
+import { useTestToolbarButtons } from './node-main-toolbar';
 import { NodeHeader } from './node-header';
 
 //
@@ -26,6 +26,7 @@ const StoryWrapper = ({
           throw new Error('Function not implemented.');
         }}
         id={'story'}
+        visible={true}
       />
     </div>
   );

@@ -9,7 +9,6 @@ import ReactFlow, {
   Connection,
   EdgeProps,
   Background,
-  NodeChange,
 } from 'reactflow';
 import * as _ from 'lodash';
 
@@ -127,14 +126,6 @@ export const DemiurgeSpace = ({
   //
   //
 
-  const onSelectionChange = useCallback((changes: NodeChange[]) => {
-    changes.forEach((change) => {
-      if (change.type === 'select') {
-        if (change.selected) spaceAwareness.selectNode(change.id);
-      }
-    });
-  }, []);
-
   /** we store the connector from wich an edge is draw to attach new node when
    * user will mouseup. */
 
@@ -242,12 +233,13 @@ export const DemiurgeSpace = ({
   const handlePaneClick = useCallback(
     // Handle left click on pane here
     (event: React.MouseEvent) => {
+      spaceAwareness.clearNodeSelection();
       const pclient = clientXY(event);
       const p = pointerTracker.fromMouseEvent(pclient);
       onPaneClick?.(p, pclient);
       event.preventDefault();
     },
-    [onPaneClick]
+    [onPaneClick, spaceAwareness]
   );
 
   //
@@ -274,7 +266,7 @@ export const DemiurgeSpace = ({
       <SpaceContext value={context}>
         <ReactFlow
           defaultViewport={{ x: 0, y: 0, zoom: 0.5 }}
-          maxZoom={2}
+          maxZoom={1}
           minZoom={0.05}
           // todo_ factorise with flow story
           nodes={translateNodes(spaceState.getNodes(), viewId)}
@@ -287,7 +279,6 @@ export const DemiurgeSpace = ({
           onConnectEnd={onConnectEnd}
           onConnectStart={onConnectStart}
           onNodeDrag={onNodeDrag}
-          onNodesChange={onSelectionChange}
           //
           onPaneMouseMove={pointerTracker.onPaneMouseMove.bind(pointerTracker)}
           onPaneMouseLeave={pointerTracker.setPointerInactive.bind(
