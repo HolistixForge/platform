@@ -50,6 +50,7 @@ type DemiurgeSpaceProps = {
     xy: TPosition,
     clientPosition: TPosition
   ) => void;
+  onConnect?: (edge: TEdge) => void;
   onDrop?: ({ data, position }: { data: any; position: TPosition }) => void;
 };
 
@@ -70,6 +71,7 @@ export const DemiurgeSpace = ({
   currentUser,
   onContextMenu,
   onContextMenuNewEdge,
+  onConnect,
   onDrop,
   onPaneClick,
 }: DemiurgeSpaceProps) => {
@@ -104,23 +106,23 @@ export const DemiurgeSpace = ({
   /**
    * just convert react flow type to our's
    */
-  const _onConnect = useCallback((c: Connection) => {
-    const e: TEdge = {
-      from: {
-        node: c.source as string,
-        connectorName: c.sourceHandle || '',
-      },
-      to: {
-        node: c.target as string,
-        connectorName: c.targetHandle || '',
-      },
-      type: '_unknown_',
-    };
-    spaceActionsDispatcher.dispatch({
-      type: 'create-edge',
-      edge: e,
-    });
-  }, []);
+  const _onConnect = useCallback(
+    (c: Connection) => {
+      const e: TEdge = {
+        from: {
+          node: c.source as string,
+          connectorName: c.sourceHandle || 'outputs',
+        },
+        to: {
+          node: c.target as string,
+          connectorName: c.targetHandle || 'inputs',
+        },
+        type: '_unknown_',
+      };
+      onConnect?.(e);
+    },
+    [onConnect]
+  );
 
   //
   //

@@ -56,13 +56,11 @@ const makeSpaceModuleNode = (nodeTypes: TNodeTypes) => {
 export const SpaceModule = ({
   viewId,
   nodeTypes,
-  onConnect,
   onContextMenu,
   onContextMenuNewEdge,
 }: {
   viewId: string;
   nodeTypes: TNodeTypes;
-  onConnect?: (edge: TEdge) => void;
   onContextMenu?: (xy: TPosition, clientPosition: TPosition) => void;
   onContextMenuNewEdge?: (
     from: TEdgeEnd,
@@ -94,6 +92,14 @@ export const SpaceModule = ({
     []
   );
 
+  const onConnect = useCallback((edge: TEdge) => {
+    console.log({ edge });
+    collabDispatcher.dispatch({
+      type: 'core:new-edge',
+      edge,
+    });
+  }, []);
+
   return (
     <DemiurgeSpace
       viewId={viewId}
@@ -108,6 +114,7 @@ export const SpaceModule = ({
       onContextMenu={onContextMenu || (() => {})}
       onContextMenuNewEdge={onContextMenuNewEdge || (() => {})}
       onDrop={onDrop}
+      onConnect={onConnect}
     />
   );
 };

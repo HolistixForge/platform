@@ -14,6 +14,7 @@ import { useMakeButton } from '../reactflow-renderer/assets/node-header/node-mai
 import { useNodeContext } from '../reactflow-renderer/node-wrappers/node-wrapper';
 import { TEventGroupPropertyChange } from '../../space-events';
 import { DisableZoomDragPan } from '../reactflow-renderer/node-wrappers/disable-zoom-drag-pan';
+import { InputsAndOutputs } from '../reactflow-renderer/assets/inputsOutputs/inputsOutputs';
 
 import './group.scss';
 
@@ -136,6 +137,7 @@ export const Group = ({ node }: { node: TGraphNode }) => {
         } as React.CSSProperties
       }
     >
+      <InputsAndOutputs id={id} invisible />
       <NodeHeader
         nodeType="Group"
         id={id}

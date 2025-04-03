@@ -51,6 +51,10 @@ export type TConnectorView = {
   connectorName: string;
   isOpened: boolean;
   groupedEdgesCount: number;
+  edges: Array<TEdge>;
+  incomingEdges: Array<TEdge>;
+  outgoingEdges: Array<TEdge>;
+  noPinEdges: Array<TEdge>;
   type: 'source' | 'target';
 };
 
@@ -60,6 +64,10 @@ export const connectorViewDefault = (
   connectorName,
   isOpened: true,
   groupedEdgesCount: 0,
+  edges: [],
+  incomingEdges: [],
+  outgoingEdges: [],
+  noPinEdges: [],
   type: connectorName === 'inputs' ? 'target' : 'source',
 });
 

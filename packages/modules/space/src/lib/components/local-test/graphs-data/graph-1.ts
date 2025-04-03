@@ -195,7 +195,16 @@ export const graph1: {
       name: 'node-5',
       type: 'group',
       root: true,
-      connectors: [],
+      connectors: [
+        {
+          connectorName: 'outputs',
+          pins: [],
+        },
+        {
+          connectorName: 'inputs',
+          pins: [],
+        },
+      ],
       data: {
         title: 'Group 1',
       },

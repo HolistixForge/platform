@@ -15,6 +15,7 @@ type InputsProps = {
   nodeId: string;
   forceOpened?: boolean;
   disabled?: boolean;
+  invisible?: boolean;
 };
 
 /** one connector */
@@ -50,6 +51,7 @@ export const useConnector = (nodeId: string, connectorName: string) => {
   const {
     isOpened = false,
     groupedEdgesCount = 0,
+    noPinEdges = [],
     pins = [],
     type = 'source',
   } = c || {};
@@ -106,6 +108,7 @@ export const useConnector = (nodeId: string, connectorName: string) => {
     handleMouseOver,
     handleMouseLeave,
     groupedEdgesCount,
+    noPinEdges,
     type,
     isOpened,
     pins,
@@ -169,6 +172,7 @@ export const InputsOutputs = ({
     handleMouseOver,
     handleMouseLeave,
     groupedEdgesCount,
+    noPinEdges,
     type,
     isOpened,
     pins,
@@ -213,7 +217,8 @@ export const InputsOutputs = ({
   const renderOpened = isOpened || forceOpened;
 
   /** wether the handles bar must be displayed or just the grouped edges handle */
-  const groupsHandleVisible = groupedEdgesCount > 0 || !renderOpened;
+  const groupsHandleVisible =
+    groupedEdgesCount > 0 || noPinEdges.length > 0 || !renderOpened;
 
   if (!renderOpened)
     return (
@@ -310,14 +315,34 @@ export const InputsOutputs = ({
  *
  */
 
-export const Inputs = (props: InputsProps) => (
-  <InputsOutputs connectorName="inputs" {...props} />
-);
+export const Inputs = (props: InputsProps) => {
+  if (props.invisible)
+    return (
+      <Handle
+        type="target"
+        position={Position.Top}
+        id={'inputs'}
+        className="invisible-handle"
+        isConnectable={false}
+      />
+    );
 
-export const Outputs = (props: InputsProps) => (
-  <InputsOutputs connectorName="outputs" {...props} />
-);
+  return <InputsOutputs connectorName="inputs" {...props} />;
+};
 
+export const Outputs = (props: InputsProps) => {
+  if (props.invisible)
+    return (
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id={'outputs'}
+        className="invisible-handle"
+        isConnectable={false}
+      />
+    );
+  return <InputsOutputs connectorName="outputs" {...props} />;
+};
 //
 
 export const InputsAndOutputs = ({
@@ -326,17 +351,23 @@ export const InputsAndOutputs = ({
   bottom = true,
   topDisabled = false,
   bottomDisabled = false,
+  invisible = false,
 }: {
   id: string;
   top?: boolean;
   bottom?: boolean;
   topDisabled?: boolean;
   bottomDisabled?: boolean;
+  invisible?: boolean;
 }) => {
   return (
     <>
-      {top && <Inputs nodeId={id} disabled={topDisabled} />}
-      {bottom && <Outputs nodeId={id} disabled={bottomDisabled} />}
+      {top && (
+        <Inputs nodeId={id} disabled={topDisabled} invisible={invisible} />
+      )}
+      {bottom && (
+        <Outputs nodeId={id} disabled={bottomDisabled} invisible={invisible} />
+      )}
     </>
   );
 };

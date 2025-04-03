@@ -90,10 +90,13 @@ export class SpaceReducer extends Reducer<
       nodeData: {
         name: `group ${g.event.title}`,
         root: true,
-        connectors: [],
         id: g.event.groupId,
         type: 'group',
         data: { title: g.event.title },
+        connectors: [
+          { connectorName: 'inputs', pins: [] },
+          { connectorName: 'outputs', pins: [] },
+        ],
       },
       edges: [],
       origin: g.event.origin,

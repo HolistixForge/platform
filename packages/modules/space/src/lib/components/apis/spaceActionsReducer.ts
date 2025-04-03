@@ -94,26 +94,32 @@ export class SpaceActionsReducer {
 
   //
 
+  private getConnectorView(
+    gv: TGraphView,
+    nodeId: string,
+    connectorName: string
+  ) {
+    let cs = gv.connectorViews[nodeId];
+    if (!cs) {
+      cs = [];
+      gv.connectorViews[nodeId] = cs;
+    }
+    let c = cs.find((c) => c.connectorName === connectorName);
+    if (!c) {
+      c = connectorViewDefault(connectorName);
+      cs.push(c);
+    }
+    return c;
+  }
+
+  //
+
   private openCloseConnector(
     action: TSACloseConnector | TSAOpenConnector,
     gv: TGraphView
   ) {
-    let cs = gv.connectorViews[action.nid];
-
-    if (!cs) {
-      cs = [];
-    }
-
-    let c = cs.find((c) => c.connectorName === action.connectorName);
-
-    if (!c) {
-      c = connectorViewDefault(action.connectorName);
-      cs.push(c);
-      gv.connectorViews[action.nid] = cs;
-    }
-
+    const c = this.getConnectorView(gv, action.nid, action.connectorName);
     c.isOpened = action.type === 'close-connector' ? false : true;
-
     this.resolveDrawnEdges(gv);
   }
 
@@ -359,22 +365,53 @@ export class SpaceActionsReducer {
 
     gv.graph.edges = [...drawnEdges, ...Array.from(edgesGroups.values())];
 
-    // update grouped count of all connectors in current view
-    for (const [nodeId, connectors] of Object.entries(gv.connectorViews)) {
-      for (const c of connectors) {
-        const edges = gv.graph.edges.filter(
-          (edge) =>
-            (edge.from.node === nodeId &&
-              edge.from.connectorName === c.connectorName) ||
-            (edge.to.node === nodeId &&
-              edge.to.connectorName === c.connectorName)
-        );
-        c.groupedEdgesCount = edges.reduce((prev, eg) => {
-          if (eg.group) return prev + eg.group.edges.length;
-          else return prev;
-        }, 0);
-      }
-    }
+    // build a map of all connectors with edges rendered
+    const allConnectorsHavingEdgesRendered = new Map<
+      string,
+      { nid: string; cn: string }
+    >();
+
+    gv.graph.edges.forEach((edge) => {
+      const fromKey = `${edge.from.node}-${edge.from.connectorName}`;
+      const toKey = `${edge.to.node}-${edge.to.connectorName}`;
+
+      allConnectorsHavingEdgesRendered.set(fromKey, {
+        nid: edge.from.node,
+        cn: edge.from.connectorName,
+      });
+      allConnectorsHavingEdgesRendered.set(toKey, {
+        nid: edge.to.node,
+        cn: edge.to.connectorName,
+      });
+    });
+
+    // update edges and grouped count ... for all those connectors views
+    allConnectorsHavingEdgesRendered.forEach((con) => {
+      const c = this.getConnectorView(gv, con.nid, con.cn);
+      const incomingEdges = gv.graph.edges.filter(
+        (edge) => edge.to.node === con.nid && edge.to.connectorName === con.cn
+      );
+
+      const outgoingEdges = gv.graph.edges.filter(
+        (edge) =>
+          edge.from.node === con.nid && edge.from.connectorName === con.cn
+      );
+
+      const edges = [...incomingEdges, ...outgoingEdges];
+
+      c.incomingEdges = incomingEdges;
+      c.outgoingEdges = outgoingEdges;
+      c.edges = edges;
+      c.noPinEdges = [
+        ...incomingEdges.filter((e) => e.to.pinName === undefined),
+        ...outgoingEdges.filter((e) => e.from.pinName === undefined),
+      ];
+
+      c.groupedEdgesCount = edges.reduce((prev, eg) => {
+        if (eg.group) return prev + eg.group.edges.length;
+        else return prev;
+      }, 0);
+    });
   }
 
   //
