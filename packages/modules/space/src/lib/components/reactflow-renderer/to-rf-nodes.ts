@@ -4,7 +4,7 @@ import {
   TNodeView,
   TNodeViewStatus,
 } from '../../space-types';
-import { Edge as RfEdge, Node as RfNode } from 'reactflow';
+import { Edge as RfEdge, Node as RfNode } from '@xyflow/react';
 import { edgeId, EdgePayload, pinId } from '../apis/types/edge';
 import { TEdge } from '@monorepo/core';
 
@@ -101,7 +101,7 @@ const translateEdge = (e: TEdge): RfEdge<EdgePayload> => {
   }
 
   if (classNames.includes('straight')) {
-    r.data!.style = 'straight';
+    r.data!.edgeStyle = 'straight';
   }
   return r;
 };

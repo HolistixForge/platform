@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { NodeMainToolbar } from './node-toolbar';
-import { useTestToolbarButtons } from './node-toolbar';
+import { NodeMainToolbar } from './node-main-toolbar';
+import { useTestToolbarButtons } from './node-main-toolbar';
 
 //
 //

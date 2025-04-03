@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { icons } from './icons';
 import { Slot } from '../slot/Slot';
-import { Handle, Position, useUpdateNodeInternals } from 'reactflow';
+import { Handle, Position, useUpdateNodeInternals } from '@xyflow/react';
 import { useSpaceContext } from '../../spaceContext';
 import { fromPinId } from '../../../apis/types/edge';
 

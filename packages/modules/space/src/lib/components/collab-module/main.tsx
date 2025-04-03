@@ -107,7 +107,6 @@ export const SpaceModule = ({
       avatarsStore={logics.as}
       onContextMenu={onContextMenu || (() => {})}
       onContextMenuNewEdge={onContextMenuNewEdge || (() => {})}
-      onConnect={onConnect || (() => {})}
       onDrop={onDrop}
     />
   );

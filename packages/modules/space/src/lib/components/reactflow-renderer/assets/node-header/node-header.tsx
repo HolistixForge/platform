@@ -1,4 +1,4 @@
-import { NodeToolbar } from 'reactflow';
+import { NodeToolbar } from '@xyflow/react';
 import { ReactNode } from 'react';
 
 import { NodeMainToolbar, NodeMainToolbarProps } from './node-main-toolbar';

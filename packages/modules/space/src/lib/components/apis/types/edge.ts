@@ -1,7 +1,7 @@
 import { TEdge, TEdgeEnd } from '@monorepo/core';
 
 export const pinId = (ee: { connectorName: string; pinName?: string }) =>
-  `${ee.connectorName}::${ee.pinName}`;
+  ee.pinName ? `${ee.connectorName}::${ee.pinName}` : ee.connectorName;
 
 export const fromPinId = (id: string) => {
   const [connectorName, pinName] = id.split('::');
@@ -30,7 +30,7 @@ export type EdgePayload = {
   id: string;
   edge: TEdge;
   text?: string;
-  style?: 'straight' | 'default';
+  edgeStyle?: 'straight' | 'default';
   endText?: string;
   startText?: string;
 };

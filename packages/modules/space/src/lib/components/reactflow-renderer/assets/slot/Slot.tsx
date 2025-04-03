@@ -1,5 +1,5 @@
 import React from 'react';
-import { Handle, HandleType, Position } from 'reactflow';
+import { Handle, HandleType, Position } from '@xyflow/react';
 
 import './slot.css';
 

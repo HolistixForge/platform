@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode } from 'react';
-import { ReactFlowProvider } from 'reactflow';
+import { ReactFlowProvider } from '@xyflow/react';
 import { SpaceState } from '../apis/spaceState';
 import { SpaceActionsDispatcher } from '../apis/spaceActionsDispatcher';
 import { SpaceAwareness } from '../apis/spaceAwareness';

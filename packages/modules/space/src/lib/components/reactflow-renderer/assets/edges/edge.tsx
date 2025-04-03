@@ -4,7 +4,7 @@ import {
   EdgeProps,
   getBezierPath,
   getStraightPath,
-} from 'reactflow';
+} from '@xyflow/react';
 
 type LabelProps = {
   children: ReactNode;

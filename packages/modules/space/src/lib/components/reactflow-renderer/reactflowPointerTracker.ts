@@ -1,4 +1,4 @@
-import { Viewport } from 'reactflow';
+import { Viewport } from '@xyflow/react';
 import * as _ from 'lodash';
 import { SpaceAwareness } from '../apis/spaceAwareness';
 import { PointerTracker } from '../apis/pointerTracker';

@@ -1,4 +1,4 @@
-import { Viewport } from 'reactflow';
+import { Viewport } from '@xyflow/react';
 import * as _ from 'lodash';
 import { TPosition } from '@monorepo/core';
 

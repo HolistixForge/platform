@@ -5,3 +5,30 @@
 .node-wrapper:has(.node-resizable) .resize-handle-container {
   display: block;
 }
+
+.easy-connect-handle-box,
+.easy-connect-handle {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.easy-connect-handle-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(103, 42, 164, 0.25);
+  backdrop-filter: blur(4px);
+  font-size: 14px;
+}
+
+.easy-connect-handle {
+  border-radius: 0;
+  background-color: transparent;
+  border: none;
+  transform: none;
+}

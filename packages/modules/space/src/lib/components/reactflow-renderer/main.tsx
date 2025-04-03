@@ -1,5 +1,6 @@
 import React, { useCallback, useRef, useMemo, FC } from 'react';
-import ReactFlow, {
+import {
+  ReactFlow,
   MiniMap,
   Controls,
   Node,
@@ -9,7 +10,7 @@ import ReactFlow, {
   Connection,
   EdgeProps,
   Background,
-} from 'reactflow';
+} from '@xyflow/react';
 import * as _ from 'lodash';
 
 import { useRegisterListener } from '@monorepo/simple-types';
@@ -49,7 +50,6 @@ type DemiurgeSpaceProps = {
     xy: TPosition,
     clientPosition: TPosition
   ) => void;
-  onConnect: (edge: TEdge) => void;
   onDrop?: ({ data, position }: { data: any; position: TPosition }) => void;
 };
 
@@ -70,7 +70,6 @@ export const DemiurgeSpace = ({
   currentUser,
   onContextMenu,
   onContextMenuNewEdge,
-  onConnect,
   onDrop,
   onPaneClick,
 }: DemiurgeSpaceProps) => {
@@ -105,23 +104,23 @@ export const DemiurgeSpace = ({
   /**
    * just convert react flow type to our's
    */
-  const _onConnect = useCallback(
-    (c: Connection) => {
-      const e: TEdge = {
-        from: {
-          node: c.source as string,
-          connectorName: c.sourceHandle || '',
-        },
-        to: {
-          node: c.target as string,
-          connectorName: c.targetHandle || '',
-        },
-        type: '_unknown_',
-      };
-      onConnect(e);
-    },
-    [onConnect]
-  );
+  const _onConnect = useCallback((c: Connection) => {
+    const e: TEdge = {
+      from: {
+        node: c.source as string,
+        connectorName: c.sourceHandle || '',
+      },
+      to: {
+        node: c.target as string,
+        connectorName: c.targetHandle || '',
+      },
+      type: '_unknown_',
+    };
+    spaceActionsDispatcher.dispatch({
+      type: 'create-edge',
+      edge: e,
+    });
+  }, []);
 
   //
   //
@@ -165,7 +164,8 @@ export const DemiurgeSpace = ({
     _.debounce(
       (event: React.MouseEvent, node: Node, nodes: Node[]) => {
         // always send an absolute position
-        const { x, y } = node.positionAbsolute || node.position;
+        const { x, y } =
+          (node as any) /* todo: exists ? */.positionAbsolute || node.position;
         spaceActionsDispatcher.dispatch({
           type: 'move-node',
           nid: node.id,

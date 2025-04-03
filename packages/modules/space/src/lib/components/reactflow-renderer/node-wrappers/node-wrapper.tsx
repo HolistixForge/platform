@@ -1,5 +1,19 @@
-import { createContext, FC, useContext, MouseEvent, useRef } from 'react';
-import { ReactFlowState, useStore } from 'reactflow';
+import {
+  createContext,
+  FC,
+  useContext,
+  MouseEvent,
+  useRef,
+  useState,
+} from 'react';
+import {
+  ReactFlowState,
+  useStore,
+  useConnection,
+  Handle,
+  Position,
+} from '@xyflow/react';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 import { useDebugComponent } from '@monorepo/log';
 import { useRegisterListener } from '@monorepo/simple-types';
@@ -35,7 +49,7 @@ export const NodeWrapper =
   ({ id, data }: SpaceNode) => {
     //
     const zoom = useStore(zoomSelector);
-
+    const [isCtrlPressed, setIsCtrlPressed] = useState(false);
     const nodeRef = useRef<HTMLDivElement>(null);
 
     const {
@@ -45,6 +59,17 @@ export const NodeWrapper =
     } = useSpaceContext();
 
     useRegisterListener(spaceAwareness);
+
+    useHotkeys('ctrl', () => setIsCtrlPressed(true), { keydown: true });
+    useHotkeys('ctrl', () => setIsCtrlPressed(false), { keyup: true });
+
+    const connection = useConnection();
+
+    const isTarget = connection.inProgress && connection.fromNode.id !== id;
+
+    const label = isTarget ? 'Drop here' : 'Drag to connect';
+
+    //
 
     const { nv, viewId } = data;
 
@@ -138,6 +163,8 @@ export const NodeWrapper =
         }
       : undefined;
 
+    //
+
     return (
       <nodeContext.Provider value={contextValue}>
         <div
@@ -154,6 +181,29 @@ export const NodeWrapper =
               onClick={() => spaceAwareness.selectNode(id, true)}
             >
               <NodeComponent />
+              {isCtrlPressed && (
+                <div className="easy-connect-handle-box">
+                  {/* If handles are conditionally rendered and not present initially, you need to update the node internals https://reactflow.dev/docs/api/hooks/use-update-node-internals/ */}
+                  {/* In this case we don't need to use useUpdateNodeInternals, since !isConnecting is true at the beginning and all handles are rendered initially. */}
+                  {!connection.inProgress && (
+                    <Handle
+                      className="easy-connect-handle"
+                      position={Position.Right}
+                      type="source"
+                    />
+                  )}
+                  {/* We want to disable the target handle, if the connection was started from this node */}
+                  {(!connection.inProgress || isTarget) && (
+                    <Handle
+                      className="easy-connect-handle"
+                      position={Position.Left}
+                      type="target"
+                      isConnectableStart={false}
+                    />
+                  )}
+                  {label}
+                </div>
+              )}
             </div>
           </SelectionsAwareness>
 

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import ReactFlow, {
+import {
+  ReactFlow,
   Background,
   Edge,
   EdgeProps,
@@ -7,9 +8,9 @@ import ReactFlow, {
   Node,
   NodeProps,
   Position,
-} from 'reactflow';
+} from '@xyflow/react';
 
-import 'reactflow/dist/style.css';
+import '@xyflow/react/dist/style.css';
 
 import { EdgeComponent, LabelEnd, LabelMiddle, LabelStart } from './edge';
 
