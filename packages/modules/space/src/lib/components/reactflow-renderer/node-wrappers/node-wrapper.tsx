@@ -44,12 +44,54 @@ const nodeContext = createContext<TNodeContext | null>(null);
 //
 //
 
+const EasyConnect: FC<{ id: string }> = ({ id }) => {
+  const [isCtrlPressed, setIsCtrlPressed] = useState(false);
+  const connection = useConnection();
+
+  useHotkeys('ctrl', () => setIsCtrlPressed(true), { keydown: true });
+  useHotkeys('ctrl', () => setIsCtrlPressed(false), { keyup: true });
+
+  const isTarget = connection.inProgress && connection.fromNode.id !== id;
+  const label = isTarget ? 'Drop here' : 'Drag to connect';
+
+  return (
+    <div
+      className={`easy-connect-handle-box ${
+        isCtrlPressed ? 'easy-connect-active' : ''
+      }`}
+    >
+      {!connection.inProgress && (
+        <Handle
+          className="easy-connect-handle"
+          position={Position.Right}
+          type="source"
+          id="easy-connect-source"
+          isConnectable={isCtrlPressed}
+        />
+      )}
+      {(!connection.inProgress || isTarget) && (
+        <Handle
+          className="easy-connect-handle"
+          position={Position.Left}
+          type="target"
+          isConnectableStart={false}
+          id="easy-connect-target"
+          isConnectable={isCtrlPressed}
+        />
+      )}
+      {label}
+    </div>
+  );
+};
+
+//
+//
+
 export const NodeWrapper =
   (NodeComponent: FC) =>
   ({ id, data }: SpaceNode) => {
     //
     const zoom = useStore(zoomSelector);
-    const [isCtrlPressed, setIsCtrlPressed] = useState(false);
     const nodeRef = useRef<HTMLDivElement>(null);
 
     const {
@@ -59,15 +101,6 @@ export const NodeWrapper =
     } = useSpaceContext();
 
     useRegisterListener(spaceAwareness);
-
-    useHotkeys('ctrl', () => setIsCtrlPressed(true), { keydown: true });
-    useHotkeys('ctrl', () => setIsCtrlPressed(false), { keyup: true });
-
-    const connection = useConnection();
-
-    const isTarget = connection.inProgress && connection.fromNode.id !== id;
-
-    const label = isTarget ? 'Drop here' : 'Drag to connect';
 
     //
 
@@ -181,29 +214,7 @@ export const NodeWrapper =
               onClick={() => spaceAwareness.selectNode(id, true)}
             >
               <NodeComponent />
-              {isCtrlPressed && (
-                <div className="easy-connect-handle-box">
-                  {/* If handles are conditionally rendered and not present initially, you need to update the node internals https://reactflow.dev/docs/api/hooks/use-update-node-internals/ */}
-                  {/* In this case we don't need to use useUpdateNodeInternals, since !isConnecting is true at the beginning and all handles are rendered initially. */}
-                  {!connection.inProgress && (
-                    <Handle
-                      className="easy-connect-handle"
-                      position={Position.Right}
-                      type="source"
-                    />
-                  )}
-                  {/* We want to disable the target handle, if the connection was started from this node */}
-                  {(!connection.inProgress || isTarget) && (
-                    <Handle
-                      className="easy-connect-handle"
-                      position={Position.Left}
-                      type="target"
-                      isConnectableStart={false}
-                    />
-                  )}
-                  {label}
-                </div>
-              )}
+              <EasyConnect id={id} />
             </div>
           </SelectionsAwareness>
 

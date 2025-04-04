@@ -1,7 +1,7 @@
 ⚠️ Antoine's stuffs
 
-edge, shape
-control component for header redesign (quill, group), editable title with numerotation that remain whne header hidden
+shape
+header: editable title with numerotation that remain when header hidden
 chats
 dns
 

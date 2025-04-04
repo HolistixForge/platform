@@ -136,7 +136,8 @@ export class ChatReducer extends Reducer<
           type: 'referenced_by',
           data: {
             detailType: 'chat-anchor',
-            className: ['chat-anchor', 'straight'],
+            className: ['chat-anchor'],
+            edgeShape: 'straight',
           },
         },
       ],

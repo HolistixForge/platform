@@ -25,12 +25,13 @@ export const edgeId = (e: TEdge) => {
 
 //
 
+export type EdgeShape = 'straight' | 'bezier' | 'square';
+
 export type EdgePayload = {
   type: 'simple' | 'group';
   id: string;
   edge: TEdge;
   text?: string;
-  edgeStyle?: 'straight' | 'default';
   endText?: string;
   startText?: string;
 };

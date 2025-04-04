@@ -10,6 +10,7 @@ import {
   LabelStart,
 } from '../reactflow-renderer/assets/edges/edge';
 import { EdgePayload } from '../apis/types/edge';
+import { FloatingEdge } from '../reactflow-renderer/assets/edges/floating-edge';
 
 //
 //
@@ -18,16 +19,14 @@ import { EdgePayload } from '../apis/types/edge';
 export const CustomStoryEdge: FC<EdgeProps> = (props) => {
   const debug = useDebugComponent();
 
-  const {
-    // edge,
-    text = '',
-    edgeStyle = 'default',
-    endText,
-    startText,
-  } = props.data as EdgePayload;
+  const { edge, text = '', endText, startText } = props.data as EdgePayload;
+
+  if (edge.type === 'easy-connect') {
+    return <FloatingEdge {...props} />;
+  }
 
   return (
-    <EdgeComponent {...(props as any)} type={edgeStyle}>
+    <EdgeComponent {...props}>
       {startText && <LabelStart>{startText}</LabelStart>}
 
       {debug && <LabelMiddle>{text}</LabelMiddle>}

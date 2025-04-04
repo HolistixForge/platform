@@ -83,6 +83,14 @@ g.react-flow__edge {
     }
   }
 
+  &.easy-connect {
+    path {
+      stroke: var(--c-alt-blue-2);
+      stroke-width: 3;
+      stroke-dasharray: 5 3;
+    }
+  }
+
   &:hover path.react-flow__edge-path,
   &.testhover path.react-flow__edge-path {
     stroke-width: 4px;

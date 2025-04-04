@@ -13,13 +13,10 @@ import {
 import '@xyflow/react/dist/style.css';
 
 import { EdgeComponent, LabelEnd, LabelMiddle, LabelStart } from './edge';
+import { EdgeShape } from '../../../apis/types/edge';
 
 //
 type NData = { id: string };
-
-const nodes: Node<NData>[] = [];
-
-const edges: Edge[] = [];
 
 //
 //
@@ -27,7 +24,7 @@ const edges: Edge[] = [];
 
 const GAP = 120;
 
-const edgeStyles: string[][] = [
+const edgeSemanticTypes: string[][] = [
   ['_unknown_'],
   ['_unknown_', 'edges-group'],
   ['_unknown_', 'testhover'],
@@ -40,42 +37,50 @@ const edgeStyles: string[][] = [
   ['tested_by'],
   ['wired_to'],
   ['depends_on'],
+  ['easy-connect'],
 ];
 
-for (let index = 0; index < edgeStyles.length; index++) {
-  const className = edgeStyles[index].join(' ');
-  const sid = `node-source-${index}`;
-  const tid = `node-target-${index}`;
+const makeNodesAndEdges = (edgeShape: EdgeShape) => {
+  const nodes: Node<NData>[] = [];
 
-  nodes.push({
-    id: sid,
-    position: { x: index * GAP + 50, y: 50 },
-    data: { id: sid },
-    type: 'custom',
-  });
+  const edges: Edge[] = [];
 
-  nodes.push({
-    id: tid,
-    position: { x: index * GAP + GAP, y: 350 },
-    data: { id: tid },
-    type: 'custom',
-  });
+  for (let index = 0; index < edgeSemanticTypes.length; index++) {
+    const className = edgeSemanticTypes[index].join(' ');
+    const sid = `node-source-${index}`;
+    const tid = `node-target-${index}`;
 
-  edges.push({
-    id: `${sid}:${tid}`,
-    source: sid,
-    target: tid,
-    type: 'custom',
-    data: { className },
-    className,
-  });
-}
+    nodes.push({
+      id: sid,
+      position: { x: index * GAP + 50, y: 50 },
+      data: { id: sid },
+      type: 'custom',
+    });
+
+    nodes.push({
+      id: tid,
+      position: { x: index * GAP + GAP, y: 350 },
+      data: { id: tid },
+      type: 'custom',
+    });
+
+    edges.push({
+      id: `${sid}:${tid}`,
+      source: sid,
+      target: tid,
+      type: 'custom',
+      data: { className, edge: { data: { edgeShape } } },
+      className,
+    });
+  }
+  return { nodes, edges };
+};
 
 //
 //
 //
 
-const CustomNode = ({ id }: NodeProps<NData>) => {
+const CustomNode = ({ id }: NodeProps) => {
   return (
     <div
       style={{
@@ -95,11 +100,10 @@ const nodeTypes = {
   custom: CustomNode,
 };
 
-const CustomEdge = (props: EdgeProps<{ className: string }>) => {
-  const straight = props.data?.className.includes('chat-anchor');
+const CustomEdge = (props: EdgeProps) => {
   return (
-    <EdgeComponent {...props} type={straight ? 'straight' : 'default'}>
-      <LabelMiddle>{props.data?.className}</LabelMiddle>
+    <EdgeComponent {...props}>
+      <LabelMiddle>{props.data!.className as string}</LabelMiddle>
       <LabelStart>Label Start</LabelStart>
       <LabelEnd>Label End</LabelEnd>
     </EdgeComponent>
@@ -110,7 +114,9 @@ const edgeTypes = {
   custom: CustomEdge,
 };
 
-const StoryWrapper = () => {
+const StoryWrapper = ({ edgeShape }: { edgeShape: EdgeShape }) => {
+  const { nodes, edges } = makeNodesAndEdges(edgeShape);
+
   return (
     <div style={{ width: 'calc(100vw - 50px)', height: 'calc(100vh - 50px)' }}>
       <ReactFlow
@@ -139,7 +145,10 @@ const meta = {
     },
   },
   argTypes: {
-    data: { control: 'object' },
+    edgeShape: {
+      control: 'select',
+      options: ['bezier', 'square', 'straight'],
+    },
   },
 } satisfies Meta<typeof StoryWrapper>;
 

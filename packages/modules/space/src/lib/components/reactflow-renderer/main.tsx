@@ -15,7 +15,7 @@ import * as _ from 'lodash';
 
 import { useRegisterListener } from '@monorepo/simple-types';
 import { clientXY } from '@monorepo/ui-toolkit';
-import { TPosition, TEdge, TEdgeEnd } from '@monorepo/core';
+import { TPosition, TEdge, TEdgeEnd, EEdgeType } from '@monorepo/core';
 
 import { PointerTracker } from '../apis/pointerTracker';
 import { AvatarsRenderer } from './avatarsRenderer';
@@ -108,6 +108,13 @@ export const DemiurgeSpace = ({
    */
   const _onConnect = useCallback(
     (c: Connection) => {
+      let type: EEdgeType = '_unknown_';
+      if (
+        c.sourceHandle === 'easy-connect-source' ||
+        c.targetHandle === 'easy-connect-target'
+      ) {
+        type = 'easy-connect';
+      }
       const e: TEdge = {
         from: {
           node: c.source as string,
@@ -117,7 +124,8 @@ export const DemiurgeSpace = ({
           node: c.target as string,
           connectorName: c.targetHandle || 'inputs',
         },
-        type: '_unknown_',
+        type,
+        data: { edgeShape: type === 'easy-connect' ? 'square' : 'bezier' },
       };
       onConnect?.(e);
     },

@@ -100,9 +100,6 @@ const translateEdge = (e: TEdge): RfEdge<EdgePayload> => {
     r.targetHandle = pinId(e.to);
   }
 
-  if (classNames.includes('straight')) {
-    r.data!.edgeStyle = 'straight';
-  }
   return r;
 };
 

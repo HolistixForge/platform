@@ -21,14 +21,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(103, 42, 164, 0.25);
-  backdrop-filter: blur(4px);
   font-size: 14px;
-}
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
 
-.easy-connect-handle {
-  border-radius: 0;
-  background-color: transparent;
-  border: none;
-  transform: none;
+  .react-flow__handle {
+    &.easy-connect-handle {
+      border-radius: 0;
+      background-color: transparent;
+      border: none;
+      transform: none;
+    }
+  }
+
+  &.easy-connect-active {
+    opacity: 1;
+    background-color: rgba(103, 42, 164, 0.25);
+    backdrop-filter: blur(4px);
+  }
 }

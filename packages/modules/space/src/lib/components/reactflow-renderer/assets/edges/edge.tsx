@@ -1,10 +1,7 @@
 import { Children, FC, ReactNode, isValidElement } from 'react';
-import {
-  EdgeLabelRenderer,
-  EdgeProps,
-  getBezierPath,
-  getStraightPath,
-} from '@xyflow/react';
+import { EdgeLabelRenderer, EdgeProps } from '@xyflow/react';
+import { EdgeShape } from '../../../apis/types/edge';
+import { calculateEdgePath } from './edge-path-utils';
 
 type LabelProps = {
   children: ReactNode;
@@ -43,9 +40,7 @@ type Labels = {
   children?: ReactNode;
 };
 
-export const EdgeComponent: FC<
-  EdgeProps & Labels & { type?: 'straight' | 'default' }
-> = ({
+export const EdgeComponent: FC<EdgeProps & Labels> = ({
   id,
   sourceX,
   sourceY,
@@ -54,31 +49,19 @@ export const EdgeComponent: FC<
   sourcePosition,
   targetPosition,
   children,
-  type = 'default',
+  data,
 }) => {
-  let path: string;
-  let labelX: number;
-  let labelY: number;
+  const edgeShape = (data as any)?.edge?.data?.edgeShape as EdgeShape;
 
-  if (type === 'default') {
-    const b = getBezierPath({
-      sourceX,
-      sourceY,
-      sourcePosition,
-      targetX,
-      targetY,
-      targetPosition,
-    });
-    [path, labelX, labelY] = b;
-  } else if (type === 'straight') {
-    const s = getStraightPath({
-      sourceX: sourceX,
-      sourceY: sourceY,
-      targetX,
-      targetY,
-    });
-    [path, labelX, labelY] = s;
-  } else throw new Error('oops');
+  const [path, labelX, labelY] = calculateEdgePath({
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition,
+    edgeShape,
+  });
 
   const _children = Children.toArray(children);
 

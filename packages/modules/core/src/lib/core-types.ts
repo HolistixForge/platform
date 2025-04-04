@@ -27,7 +27,7 @@ export type TGraphNode = {
   connectors: TConnector[];
 };
 
-type EEdgeType =
+export type EEdgeType =
   | '_unknown_'
   | 'grouped_edges'
   | 'referenced_by'
@@ -37,7 +37,8 @@ type EEdgeType =
   | 'satisfied_by'
   | 'tested_by'
   | 'wired_to'
-  | 'depends_on';
+  | 'depends_on'
+  | 'easy-connect';
 
 //
 
