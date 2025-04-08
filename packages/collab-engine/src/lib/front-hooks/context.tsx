@@ -34,6 +34,7 @@ import { sharedDataToJson } from '../chunk';
 import { NoneSharedEditor, SharedEditor } from '../SharedEditor';
 import { YjsSharedEditor } from '../yjs/YjsSharedEditor';
 import { bindEditor } from './bind-editor';
+import { EDITORS_YTEXT_YMAP_KEY } from '../yjs/YjsSharedEditor';
 
 import './context.scss';
 
@@ -201,7 +202,7 @@ export const CollaborativeContext = ({
       result.syncedPromise?.then((synced) => setState({ synced }));
 
       sharedTypes = new YjsSharedTypes(ydoc);
-      sharedEditor = new YjsSharedEditor(ydoc.getMap('editors'));
+      sharedEditor = new YjsSharedEditor(ydoc.getMap(EDITORS_YTEXT_YMAP_KEY));
       awareness = new YjsAwareness(ydoc, provider, buildUserCss);
     } else {
       sharedTypes = new NoneSharedTypes();

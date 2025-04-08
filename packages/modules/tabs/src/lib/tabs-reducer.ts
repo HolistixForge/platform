@@ -1,4 +1,6 @@
 import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
+import { TEventLoad } from '@monorepo/core';
+
 import {
   TEventActiveTabChange,
   TEventAddTab,
@@ -33,13 +35,13 @@ type Ra<T> = ReduceArgs<TTabsSharedData, T, undefined, TExtraArgs>;
 
 export class TabsReducer extends Reducer<
   TTabsSharedData,
-  TTabEvents<TabPayload>,
+  TTabEvents<TabPayload> | TEventLoad,
   undefined,
   TExtraArgs
 > {
   //
 
-  reduce(g: Ra<TTabEvents<TabPayload>>): Promise<void> {
+  reduce(g: Ra<TTabEvents<TabPayload> | TEventLoad>): Promise<void> {
     switch (g.event.type) {
       case 'tabs:active-tab-change':
         return this._activeTabChange(g as Ra<TEventActiveTabChange>);
@@ -51,10 +53,28 @@ export class TabsReducer extends Reducer<
         return this._renameTab(g as Ra<TEventRenameTab>);
       case 'tabs:convert-tab-to-group':
         return this._convertTabToGroup(g as Ra<TEventConvertTabToGroup>);
+      case 'core:load':
+        return this._load(g as Ra<TEventLoad>);
 
       default:
         return Promise.resolve();
     }
+  }
+
+  //
+
+  _load(g: Ra<TEventLoad>) {
+    if (!g.sd.tabs.get('unique')) {
+      g.sd.tabs.set('unique', {
+        tree: {
+          payload: { type: 'group' },
+          title: 'root',
+          children: [],
+        },
+        actives: {},
+      });
+    }
+    return Promise.resolve();
   }
 
   //

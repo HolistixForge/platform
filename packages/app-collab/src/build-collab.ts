@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as path from 'path';
 import * as Y from 'yjs';
 const u = require('y-websocket/bin/utils');
 // import { EventSourcePolyfill } from 'event-source-polyfill';
@@ -12,6 +13,9 @@ import {
   YjsSharedTypes,
   compileChunks,
   YjsSharedEditor,
+  EDITORS_YTEXT_YMAP_KEY,
+  getAllSharedDataAsJSON,
+  setAllSharedDataFromJSON,
 } from '@monorepo/collab-engine';
 import {
   Core_loadData,
@@ -60,8 +64,7 @@ import {
 } from '@monorepo/notion';
 
 import { log } from '@monorepo/log';
-import { loadCollaborationData } from './load-collab';
-import { TJsonObject, TMyfetchRequest } from '@monorepo/simple-types';
+import { TMyfetchRequest } from '@monorepo/simple-types';
 import { ForwardException, myfetch } from '@monorepo/backend-engine';
 
 import { CONFIG } from './config';
@@ -77,33 +80,93 @@ const STORAGE_PATH = './data';
 
 let ydoc: Y.Doc;
 
-const filePath = (suffix: string) => {
-  return `${STORAGE_PATH}/${PROJECT?.PROJECT_ID}-${suffix}.json`;
+const getProjectStoragePath = () => {
+  if (!PROJECT?.PROJECT_ID) return null;
+  // Take first part of UUID (before first dash) as folder name
+  const folderName = PROJECT.PROJECT_ID.split('-')[0];
+  return path.join(STORAGE_PATH, folderName);
 };
 
-const loadDoc = () => {
-  log(6, 'YJS', `Creating Yjs doc: [${ROOM_ID}]`);
-  ydoc = u.getYDoc(ROOM_ID);
+const ensureStorageDirectory = () => {
+  const storagePath = getProjectStoragePath();
+  if (!storagePath) return false;
 
   try {
-    const data = fs.readFileSync(filePath('yjs-db'), 'utf-8');
-    Y.applyUpdate(ydoc, Buffer.from(JSON.parse(data)));
+    if (!fs.existsSync(STORAGE_PATH)) {
+      fs.mkdirSync(STORAGE_PATH);
+    }
+    if (!fs.existsSync(storagePath)) {
+      fs.mkdirSync(storagePath);
+    }
     return true;
   } catch (err) {
-    console.error('failed to load project data', err);
+    console.error('Failed to create storage directory:', err);
     return false;
   }
 };
 
-const saveDoc = (saved: TJsonObject) => {
-  try {
-    const savedFile = JSON.stringify(saved);
-    fs.writeFileSync(filePath('saved'), savedFile);
+const getLatestSavedFile = () => {
+  const storagePath = getProjectStoragePath();
+  if (!storagePath) return null;
 
-    const db = JSON.stringify([...Y.encodeStateAsUpdate(ydoc)]);
-    fs.writeFileSync(filePath('yjs-db'), db);
+  try {
+    const files = fs
+      .readdirSync(storagePath)
+      .filter((file) => file.endsWith('.json'))
+      .map((file) => ({
+        name: file,
+        path: path.join(storagePath, file),
+        timestamp: parseInt(file.replace('.json', '')),
+      }))
+      .sort((a, b) => b.timestamp - a.timestamp);
+
+    return files.length > 0 ? files[0].path : null;
   } catch (err) {
-    console.error('failed to save project data', err);
+    console.error('Failed to list saved files:', err);
+    return null;
+  }
+};
+
+const loadDoc = () => {
+  let success = false;
+  try {
+    const latestFile = getLatestSavedFile();
+    if (!latestFile) {
+      console.log('No saved data found');
+      return false;
+    }
+
+    const savedData = fs.readFileSync(latestFile, 'utf-8');
+    const jsonData = JSON.parse(savedData);
+    setAllSharedDataFromJSON(ydoc, jsonData);
+    console.log(`Loaded data from ${latestFile}`);
+    success = true;
+  } catch (err) {
+    console.error('Failed to load saved shared data:', err);
+  }
+  return success;
+};
+
+const saveDoc = () => {
+  try {
+    if (!ensureStorageDirectory()) {
+      console.error('Failed to ensure storage directory exists');
+      return;
+    }
+
+    const storagePath = getProjectStoragePath();
+    if (!storagePath) {
+      console.error('No project ID available for saving');
+      return;
+    }
+
+    const timestamp = Date.now();
+    const filename = path.join(storagePath, `${timestamp}.json`);
+    const savedFile = JSON.stringify(getAllSharedDataAsJSON(ydoc));
+    fs.writeFileSync(filename, savedFile);
+    console.log(`Saved project data to ${filename}`);
+  } catch (err) {
+    console.error('Failed to save project data:', err);
   }
 };
 
@@ -115,26 +178,24 @@ const saveDoc = (saved: TJsonObject) => {
 //
 
 setInterval(() => {
-  if (PROJECT?.PROJECT_ID) saveDoc({});
+  if (PROJECT?.PROJECT_ID) saveDoc();
 }, 120 * 1000);
 
 // Send signal with: kill -USR1 <pid>
 process.on('SIGUSR1', () => {
   log(6, 'SIGNAL', 'Received SIGUSR1, saving doc state');
-  const saved: TJsonObject = {};
-  // TODO: get reducers to save state
-  saveDoc(saved);
+  saveDoc();
 });
 
 //
 
-const gatewayStopNotify = async (saved: TJsonObject) => {
+const gatewayStopNotify = async () => {
   await toGanymede({
     url: '/gateway-stop',
     method: 'POST',
     headers: { authorization: CONFIG.GATEWAY_TOKEN },
   });
-  saveDoc(saved);
+  saveDoc();
   runScript('reset-gateway');
 };
 
@@ -229,17 +290,57 @@ export type TAllEvents =
 export async function initProjectCollaboration(
   dispatcher: Dispatcher<TAllEvents, {}>
 ) {
-  const loadedFromFile = loadDoc();
+  // create Y document
+  ydoc = u.getYDoc(ROOM_ID);
 
   const yst = new YjsSharedTypes(ydoc);
-  const yse = new YjsSharedEditor(ydoc.getMap('editors'));
+  const yse = new YjsSharedEditor(ydoc.getMap(EDITORS_YTEXT_YMAP_KEY));
 
   const extraContext = {};
   const loadChunks = compileChunks(chunks, dispatcher, extraContext);
-
   const sd = loadChunks(yst) as TSd;
 
+  // load data from saved file
+  const loaded = loadDoc();
+  const isNew = !loaded;
+
+  // attach data to dispatcher
   dispatcher.bindData(yst, yse, sd, extraContext);
+
+  // let every reducers update data from up to date data (API calls ...)
+  await dispatcher.dispatch({ type: 'core:load' });
+
+  //
+  // new project initialization
+  //
+
+  const DEFAULT_VIEW_1 = 'view-1';
+
+  if (isNew) {
+    console.log('new project initialization');
+    await dispatcher.dispatch({
+      type: 'space:new-view',
+      viewId: DEFAULT_VIEW_1,
+    });
+    await dispatcher.dispatch({
+      type: 'tabs:add-tab',
+      path: [],
+      title: 'node-editor-1',
+      payload: { type: 'node-editor', viewId: DEFAULT_VIEW_1 },
+    });
+    await dispatcher.dispatch({
+      type: 'tabs:add-tab',
+      path: [],
+      title: 'resources grid',
+      payload: { type: 'resources-grid' },
+    });
+  }
+
+  //
+  //
+  //
+
+  //
 
   (ydoc as any).awareness.on('change', ({ removed }: { removed: number[] }) => {
     // console.log('AWARENESS CHANGES:', { added, updated, removed });
@@ -251,9 +352,6 @@ export async function initProjectCollaboration(
       });
     });
   });
-
-  // load
-  if (!loadedFromFile) await loadCollaborationData(sd, dispatcher);
 
   const interval = 5000;
   setInterval(() => {
@@ -277,11 +375,16 @@ export async function initProjectCollaboration(
 const ganymede_api = `https://${CONFIG.GANYMEDE_FQDN}`;
 
 /**
- * call Ganymede API endpoint from collab
+ * call Ganymede API endpoint from collab, use passed token or project token or default gateway token
  * @returns
  */
 
 export const toGanymede = async <T>(request: TMyfetchRequest): Promise<T> => {
+  if (!request.headers?.authorization)
+    request.headers = {
+      ...request.headers,
+      authorization: PROJECT?.GANYMEDE_API_TOKEN || CONFIG.GATEWAY_TOKEN,
+    };
   request.url = `${ganymede_api}${request.url}`;
   request.pathParameters = {
     ...request.pathParameters,

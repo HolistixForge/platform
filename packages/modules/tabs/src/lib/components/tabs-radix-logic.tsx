@@ -29,9 +29,9 @@ export const TabsRadixLogic = <
 }: TabsRadixLogicProps<T>) => {
   //
 
-  const [active, setActive] = useState<string[]>([
-    initialTree.children[0].title,
-  ]);
+  const [active, setActive] = useState<string[]>(
+    initialTree.children[0] ? [initialTree.children[0].title] : []
+  );
 
   const tree = useMemo(() => {
     const t = new ReadWriteTree<T>(initialTree);

@@ -61,7 +61,8 @@ export const EditorTabsSystemLogic = () => {
       sdTabs.actives[data.user.user_id]
     )
       active = sdTabs.actives[data.user.user_id];
-    else active = [sdTabs.tree.children[0].title];
+    else
+      active = sdTabs.tree.children[0] ? [sdTabs.tree.children[0].title] : [];
   }
 
   const tree = sdTabs?.tree || {

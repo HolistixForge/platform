@@ -21,4 +21,5 @@ export type {
   TEventNewNode,
   TEventOrigin,
   TCoreEvent,
+  TEventLoad,
 } from './lib/core-events';

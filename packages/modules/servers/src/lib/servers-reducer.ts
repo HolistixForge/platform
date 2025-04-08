@@ -20,6 +20,7 @@ import {
   TEventNewEdge,
   TEventNewNode,
   TEdge,
+  TEventLoad,
 } from '@monorepo/core';
 import { UserException } from '@monorepo/log';
 
@@ -61,14 +62,15 @@ type TExtraArgs = {
   gatewayFQDN: string; // used for: map http service
 };
 
-type ReducedEvents = TServerEvents | TCollabNativeEvent;
+type ReducedEvents = TServerEvents | TCollabNativeEvent | TEventLoad;
 
 type DispatchedEvents =
   | TEventUpdateInstanceState
   | TEventNewNode
   | TEventDeleteNode
   | TEventNewEdge
-  | TEventDeleteEdge;
+  | TEventDeleteEdge
+  | TEventNewServer;
 
 type UsedSharedData = TCoreSharedData & TServersSharedData;
 
@@ -95,6 +97,9 @@ export class ServersReducer extends Reducer<
 
   reduce(g: Ra<ReducedEvents>): Promise<void> {
     switch (g.event.type) {
+      case 'core:load':
+        return this._load(g as Ra<TEventLoad>);
+
       case 'servers:new':
         return this._newServer(g as Ra<TEventNewServer>);
       case 'servers:delete':
@@ -138,17 +143,57 @@ export class ServersReducer extends Reducer<
 
   async _getUpToDateServerData(g: Ra<{}>, psid: number) {
     // get all project's servers and find the new one's data
-
     const r2 = await g.extraArgs.toGanymede<{ _0: TG_Server[] }>({
       url: '/projects/{project_id}/servers',
       method: 'GET',
-      headers: { authorization: g.extraArgs.authorizationHeader },
     });
 
     const servers = r2._0;
 
     const newServer = servers.find((s) => s.project_server_id === psid);
     return newServer;
+  }
+
+  //
+
+  async _load(g: Ra<TEventLoad>) {
+    // copy sd.projectServers keys to an array
+    const psids = Array.from(g.sd.projectServers.values()).map(
+      (s) => s.project_server_id
+    );
+
+    // empty sd.projectServers
+    psids.forEach((psid) => g.sd.projectServers.delete(`${psid}`));
+
+    // get server list from API
+    const r = await g.extraArgs.toGanymede<{ _0: TG_Server[] }>({
+      url: '/projects/{project_id}/servers',
+      method: 'GET',
+      headers: { authorization: g.extraArgs.authorizationHeader },
+    });
+    const servers = r._0;
+
+    // for all previous servers that are not in the list, delete associated resources if any
+    // cells, kernels, terminals.
+    for (const psid of psids) {
+      const s = servers.find((s) => s.project_server_id === psid);
+      if (!s) {
+        /* TODO_: delete associated resources if any
+        g.dispatcher.dispatch({
+          type: 'servers:delete',
+        });
+        */
+      }
+    }
+    // for each server, dispatch a new server event
+    servers.forEach((s) =>
+      g.dispatcher.dispatch({
+        type: 'servers:new',
+        from: {
+          project_server_id: s.project_server_id,
+        },
+      })
+    );
   }
 
   //
@@ -184,7 +229,6 @@ export class ServersReducer extends Reducer<
             {
               url: '/projects/{project_id}/server/{project_server_id}/instance-state',
               method: 'GET',
-              headers: { authorization: g.extraArgs.authorizationHeader },
               pathParameters: {
                 project_server_id: server.project_server_id,
               },

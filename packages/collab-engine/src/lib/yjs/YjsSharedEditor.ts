@@ -4,6 +4,8 @@ import { SharedEditor, BindingData } from '../SharedEditor';
 
 //
 
+export const EDITORS_YTEXT_YMAP_KEY = 'editors';
+
 export type YjsBindingData = BindingData & {
   type: 'yjs';
   ytext: Text;

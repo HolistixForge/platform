@@ -13,6 +13,11 @@ export { Awareness } from './lib/Awareness';
 export { YjsAwareness } from './lib/yjs/YjsAwareness';
 export { YjsSharedTypes } from './lib/yjs/YjsSharedTypes';
 export { YjsSharedEditor } from './lib/yjs/YjsSharedEditor';
+export {
+  getAllSharedDataAsJSON,
+  setAllSharedDataFromJSON,
+} from './lib/yjs/load-save';
+
 export { NoneSharedTypes } from './lib/none/NoneSharedTypes';
 export { NoneAwareness } from './lib/none/NoneAwareness';
 
@@ -58,3 +63,5 @@ export { getYDoc } from './lib/front-hooks/ydocs';
 export { buildUserCss } from './lib/front-hooks/YjsCssStylesheet';
 
 export { sharedDataToJson } from './lib/chunk';
+
+export { EDITORS_YTEXT_YMAP_KEY } from './lib/yjs/YjsSharedEditor';

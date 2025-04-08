@@ -27,8 +27,13 @@ export type TEventDeleteEdge = {
   edge: TEdge;
 };
 
+export type TEventLoad = {
+  type: 'core:load';
+};
+
 export type TCoreEvent =
   | TEventNewNode
   | TEventDeleteNode
   | TEventNewEdge
-  | TEventDeleteEdge;
+  | TEventDeleteEdge
+  | TEventLoad;

@@ -37,9 +37,9 @@ export class MetaReducer extends Reducer<
 > {
   //
 
-  gatewayStopNotify: (saved: TJsonObject) => Promise<void>;
+  gatewayStopNotify: () => Promise<void>;
 
-  constructor(gatewayStopNotify: (saved: TJsonObject) => Promise<void>) {
+  constructor(gatewayStopNotify: () => Promise<void>) {
     super();
     this.gatewayStopNotify = gatewayStopNotify;
   }
@@ -59,12 +59,7 @@ export class MetaReducer extends Reducer<
           if (shouldIBeDead === false) {
             log(6, 'GATEWAY', 'shutdown');
 
-            const saved: TJsonObject = {};
-            g.dispatcher._reducers.forEach((r) => {
-              r.save(g.sd, saved);
-            });
-
-            this.gatewayStopNotify(saved);
+            this.gatewayStopNotify();
             shouldIBeDead = true;
           } else {
             log(6, 'GATEWAY', 'shutdown failed process still alive');
