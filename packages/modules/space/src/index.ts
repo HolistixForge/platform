@@ -22,6 +22,7 @@ export {
   LabelStart,
   EdgeComponent,
   Group,
+  Shape,
 } from './lib/components';
 
 export type { TNodeContext } from './lib/components';
@@ -36,6 +37,10 @@ export type {
   TSpaceEvent,
   TEventNewView,
   TEventNewGroup,
+  TEventNewShape,
+  TEventShapePropertyChange,
 } from './lib/space-events';
+
+export { SHAPE_TYPES } from './lib/space-events';
 
 export { SpaceModule } from './lib/components/collab-module/main';

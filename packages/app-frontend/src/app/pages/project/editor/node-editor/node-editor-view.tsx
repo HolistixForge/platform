@@ -10,7 +10,7 @@ import {
   NodeServer,
   NodeVolume,
 } from '@monorepo/servers';
-import { SpaceModule, Group } from '@monorepo/space';
+import { SpaceModule, Group, Shape } from '@monorepo/space';
 import { NodeChatbox, NodeChatAnchor } from '@monorepo/chats';
 import { NodeCell, NodeKernel, NodeTerminal } from '@monorepo/jupyter/frontend';
 import { NodeYoutube, NodeTextEditor } from '@monorepo/socials/frontend';
@@ -39,6 +39,7 @@ const nodeTypes = {
   'notion-database': NodeNotion,
   'notion-page': NodeNotionTask,
   group: Group,
+  shape: Shape,
 };
 
 //
@@ -148,7 +149,7 @@ export const NodeEditorView = ({ viewId }: { viewId: string }) => {
   );
 
   /**
-   * callback when user draw an edge between two existing nodes.
+   * TODO_: callback when user draw an edge between two existing nodes.
    * convert into the revelant event and open a form if necessary
    * to complete data.
    */
@@ -159,7 +160,6 @@ export const NodeEditorView = ({ viewId }: { viewId: string }) => {
         partialEvent.current = event;
         vm_action.open();
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       error_action.callback(error);
       error_action.open();
@@ -171,7 +171,6 @@ export const NodeEditorView = ({ viewId }: { viewId: string }) => {
       <SpaceModule
         viewId={viewId}
         nodeTypes={nodeTypes}
-        onConnect={handleConnect}
         onContextMenu={handleContextMenu}
         onContextMenuNewEdge={handleNewEdgeToNewNode}
       />

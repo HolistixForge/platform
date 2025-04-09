@@ -15,6 +15,8 @@ import {
   TEventSpaceAction,
   TEventNewGroup,
   TEventGroupPropertyChange,
+  TEventShapePropertyChange,
+  TEventNewShape,
 } from './space-events';
 import {
   defaultGraphView,
@@ -62,8 +64,16 @@ export class SpaceReducer extends Reducer<
         this.newGroup(g as Ra<TEventNewGroup>);
         return Promise.resolve();
 
+      case 'space:new-shape':
+        this.newShape(g as Ra<TEventNewShape>);
+        return Promise.resolve();
+
       case 'space:group-property-change':
         this.groupPropertyChange(g as Ra<TEventGroupPropertyChange>);
+        return Promise.resolve();
+
+      case 'space:shape-property-change':
+        this.shapePropertyChange(g as Ra<TEventShapePropertyChange>);
         return Promise.resolve();
 
       case 'core:delete-edge':
@@ -80,6 +90,32 @@ export class SpaceReducer extends Reducer<
       default:
         return Promise.resolve();
     }
+  }
+
+  //
+
+  newShape(g: Ra<TEventNewShape>) {
+    g.dispatcher.dispatch({
+      type: 'core:new-node',
+      nodeData: {
+        name: `shape ${g.event.shapeId}`,
+        root: true,
+        id: g.event.shapeId,
+        type: 'shape',
+        data: {
+          shapeType: g.event.shapeType,
+          borderColor: '#672aa4',
+          fillColor: '#672aa4',
+          fillOpacity: 0,
+        },
+        connectors: [
+          { connectorName: 'inputs', pins: [] },
+          { connectorName: 'outputs', pins: [] },
+        ],
+      },
+      edges: [],
+      origin: g.event.origin,
+    });
   }
 
   //
@@ -116,6 +152,21 @@ export class SpaceReducer extends Reducer<
       ...g.event.properties,
     };
     g.sd.nodes.set(g.event.groupId, node);
+  }
+
+  //
+
+  shapePropertyChange(g: Ra<TEventShapePropertyChange>) {
+    const node = g.sd.nodes.get(g.event.shapeId);
+    if (!node) {
+      error('SPACE', `node ${g.event.shapeId} not found`);
+      return;
+    }
+    node.data = {
+      ...node.data,
+      ...g.event.properties,
+    };
+    g.sd.nodes.set(g.event.shapeId, node);
   }
 
   //

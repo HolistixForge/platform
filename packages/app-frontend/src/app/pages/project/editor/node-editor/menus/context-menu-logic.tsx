@@ -28,6 +28,7 @@ import {
   NewNotionDatabaseFormData,
 } from '@monorepo/notion';
 import { makeUuid } from '@monorepo/simple-types';
+import { SHAPE_TYPES, TEventNewShape } from '@monorepo/space';
 
 import {
   useDispatcher,
@@ -377,12 +378,35 @@ export const ContextMenuLogic = ({
 
   //
 
+  const onNewShape = useCallback(() => {
+    const event: TEventNewShape = {
+      type: 'space:new-shape',
+      shapeId: makeUuid(),
+      shapeType: SHAPE_TYPES.CIRCLE, // Default to circle
+      origin: {
+        viewId: viewId,
+        position: {
+          x: refCoordinates.current.x,
+          y: refCoordinates.current.y,
+        },
+      },
+    };
+    dispatcher.dispatch(event);
+  }, [dispatcher, refCoordinates, viewId]);
+
+  //
+
   const context = useMemo<TMenuContext>(() => {
     return {
       new: [
         {
           title: 'Group',
           onClick: onNewGroup,
+          disabled: false,
+        },
+        {
+          title: 'Shape',
+          onClick: onNewShape,
           disabled: false,
         },
         { separator: true },
@@ -463,6 +487,8 @@ export const ContextMenuLogic = ({
     youtube_action.open,
     notion_action.open,
     onNewTextEditor,
+    onNewGroup,
+    onNewShape,
   ]);
 
   /**

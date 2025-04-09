@@ -33,3 +33,9 @@ export {
 } from './reactflow-renderer/assets/edges/edge';
 
 export { Group } from './group/group';
+export { Shape } from './shape/shape';
+export { SHAPE_TYPES } from '../space-events';
+export type {
+  TEventNewShape,
+  TEventShapePropertyChange,
+} from '../space-events';

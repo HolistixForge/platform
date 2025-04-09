@@ -25,12 +25,14 @@
   }
 }
 
-.group-title-buttons {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
+.react-flow__node-toolbar {
+  .group-title-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
 
-.group-title h2:focus {
-  outline: none;
+  .group-title h2:focus {
+    outline: none;
+  }
 }

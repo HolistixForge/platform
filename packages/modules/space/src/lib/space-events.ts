@@ -107,6 +107,41 @@ export type TEventGroupPropertyChange = {
   };
 };
 
+// Shape types available
+export const SHAPE_TYPES = {
+  CIRCLE: 'circle',
+  DIAMOND: 'diamond',
+  HEXAGON: 'hexagon',
+  SQUARE: 'square',
+  PLUS: 'plus',
+  PARALLELOGRAM: 'parallelogram',
+  CYLINDER: 'cylinder',
+  ARROW_RECTANGLE: 'arrow-rectangle',
+  ROUND_RECTANGLE: 'round-rectangle',
+  TRIANGLE: 'triangle',
+} as const;
+
+export type TShapeType = (typeof SHAPE_TYPES)[keyof typeof SHAPE_TYPES];
+
+// Event type for shape property changes
+export type TEventShapePropertyChange = {
+  type: 'space:shape-property-change';
+  shapeId: string;
+  properties: {
+    shapeType?: TShapeType;
+    borderColor?: string;
+    fillColor?: string;
+    fillOpacity?: number;
+  };
+};
+
+export type TEventNewShape = {
+  type: 'space:new-shape';
+  origin?: TEventOrigin;
+  shapeId: string;
+  shapeType: TShapeType;
+};
+
 export type TEventSpaceAction = {
   type: 'space:action';
   viewId: string;
@@ -117,4 +152,6 @@ export type TSpaceEvent =
   | TEventNewView
   | TEventSpaceAction
   | TEventNewGroup
-  | TEventGroupPropertyChange;
+  | TEventGroupPropertyChange
+  | TEventShapePropertyChange
+  | TEventNewShape;
