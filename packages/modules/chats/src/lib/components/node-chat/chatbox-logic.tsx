@@ -43,7 +43,7 @@ export const ChatboxLogic = ({
       const u = usersInfo.get(m.user_id);
 
       let replied = undefined;
-      if (m.replyIndex) {
+      if (m.replyIndex !== undefined && m.replyIndex !== null) {
         const mr = chat.messages[m.replyIndex];
         const ur = usersInfo.get(mr.user_id);
 
