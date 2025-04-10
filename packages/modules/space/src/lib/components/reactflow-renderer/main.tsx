@@ -174,16 +174,28 @@ export const DemiurgeSpace = ({
     _.debounce(
       (event: React.MouseEvent, node: Node, nodes: Node[]) => {
         // send an absolute, or relative position if in a group
-        const { x, y } = node.position;
         spaceActionsDispatcher.dispatch({
           type: 'move-node',
           nid: node.id,
-          position: { x, y },
+          position: node.position,
         });
       },
       250,
       { maxWait: 250 }
     ),
+    []
+  );
+
+  const onNodeDragStop = useCallback(
+    (event: React.MouseEvent, node: Node, nodes: Node[]) => {
+      // send an absolute, or relative position if in a group
+      spaceActionsDispatcher.dispatch({
+        type: 'move-node',
+        nid: node.id,
+        position: node.position,
+        stop: true,
+      });
+    },
     []
   );
 
@@ -288,6 +300,7 @@ export const DemiurgeSpace = ({
           onConnectEnd={onConnectEnd}
           onConnectStart={onConnectStart}
           onNodeDrag={onNodeDrag}
+          onNodeDragStop={onNodeDragStop}
           //
           onPaneMouseMove={pointerTracker.onPaneMouseMove.bind(pointerTracker)}
           onPaneMouseLeave={pointerTracker.setPointerInactive.bind(

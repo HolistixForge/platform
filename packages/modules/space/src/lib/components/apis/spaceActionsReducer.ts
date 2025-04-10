@@ -176,77 +176,88 @@ export class SpaceActionsReducer {
         gv
       );
 
-      // get all displayed groups (except the node itself)
-      const groups = gv.graph.nodes.filter(
-        (n) => n.type === 'group' && n.id !== action.nid
-      );
-
-      // make a map of all groups absolute positions and sizes
-      const candidatesGroups = new Map<
-        string,
-        {
-          id: string;
-          absPosition: { x: number; y: number };
-          area: number;
-        }
-      >();
-
-      groups.forEach((group) => {
-        if (!group.position) return;
-        const groupAbsolutePos = this.getAbsolutePosition(
-          group.position,
-          group.parentId,
-          gv
-        );
-
-        // if node is inside this group, add it to the map
-        if (
-          group.size &&
-          absolutePosition.x >= groupAbsolutePos.x &&
-          absolutePosition.x <= groupAbsolutePos.x + group.size.width &&
-          absolutePosition.y >= groupAbsolutePos.y &&
-          absolutePosition.y <= groupAbsolutePos.y + group.size.height
-        ) {
-          candidatesGroups.set(group.id, {
-            id: group.id,
-            absPosition: groupAbsolutePos,
-            area: group.size.width * group.size.height,
-          });
-        }
-      });
-
-      // we must remove any group that is a child of this node.
-      // so we must build a map of all this node's childs and grandchilds and so on recursively
-      const childs = new Set<string>();
-      this.getChildren(action.nid, gv, childs);
-      childs.forEach((c) => {
-        candidatesGroups.delete(c);
-      });
-
-      // Find the smallest group by area that contains the node
-      let targetGroup = undefined;
-      if (candidatesGroups.size > 0) {
-        // Find the smallest group by area that contains the node
-        targetGroup = Array.from(candidatesGroups.values()).reduce(
-          (smallest, current) => {
-            return current.area < smallest.area ? current : smallest;
-          }
-        );
-      }
-
-      // if the node is within a group, set the node parentId to the group id
-      // and set the node position to the relative position to the group
-      if (targetGroup) {
-        node.parentId = targetGroup.id;
-        node.position = {
-          x: absolutePosition.x - targetGroup.absPosition.x,
-          y: absolutePosition.y - targetGroup.absPosition.y,
-        };
-      } else {
-        // if the node is not within any group, set the node parentId to undefined
-        // and set the node position to the absolute position
+      if (!action.stop) {
+        // while moving, we just update the node position
         delete node.parentId;
         node.position = absolutePosition;
+      }
+
+      // when the mouse is released, we need to check if the node is within a group
+      // and if so, set the node parentId to the group id
+      // and set the node position to the relative position to the group
+      else {
+        // get all displayed groups (except the node itself)
+        const groups = gv.graph.nodes.filter(
+          (n) => n.type === 'group' && n.id !== action.nid
+        );
+
+        // make a map of all groups absolute positions and sizes
+        const candidatesGroups = new Map<
+          string,
+          {
+            id: string;
+            absPosition: { x: number; y: number };
+            area: number;
+          }
+        >();
+
+        groups.forEach((group) => {
+          if (!group.position) return;
+          const groupAbsolutePos = this.getAbsolutePosition(
+            group.position,
+            group.parentId,
+            gv
+          );
+
+          // if node is inside this group, add it to the map
+          if (
+            group.size &&
+            absolutePosition.x >= groupAbsolutePos.x &&
+            absolutePosition.x <= groupAbsolutePos.x + group.size.width &&
+            absolutePosition.y >= groupAbsolutePos.y &&
+            absolutePosition.y <= groupAbsolutePos.y + group.size.height
+          ) {
+            candidatesGroups.set(group.id, {
+              id: group.id,
+              absPosition: groupAbsolutePos,
+              area: group.size.width * group.size.height,
+            });
+          }
+        });
+
+        // we must remove any group that is a child of this node.
+        // so we must build a map of all this node's childs and grandchilds and so on recursively
+        const childs = new Set<string>();
+        this.getChildren(action.nid, gv, childs);
+        childs.forEach((c) => {
+          candidatesGroups.delete(c);
+        });
+
+        // Find the smallest group by area that contains the node
+        let targetGroup = undefined;
+        if (candidatesGroups.size > 0) {
+          // Find the smallest group by area that contains the node
+          targetGroup = Array.from(candidatesGroups.values()).reduce(
+            (smallest, current) => {
+              return current.area < smallest.area ? current : smallest;
+            }
+          );
+        }
+
+        // if the node is within a group, set the node parentId to the group id
+        // and set the node position to the relative position to the group
+        if (targetGroup) {
+          node.parentId = targetGroup.id;
+          node.position = {
+            x: absolutePosition.x - targetGroup.absPosition.x,
+            y: absolutePosition.y - targetGroup.absPosition.y,
+          };
+        } else {
+          // if the node is not within any group, set the node parentId to undefined
+          // and set the node position to the absolute position
+          delete node.parentId;
+          node.position = absolutePosition;
+        }
       }
 
       // update the graphview

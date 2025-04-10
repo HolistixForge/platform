@@ -4,6 +4,7 @@ export type TSAMoveNode = {
   type: 'move-node';
   nid: string;
   position: TPosition;
+  stop?: boolean;
 };
 
 export type TSAReduceNode = {
