@@ -24,6 +24,7 @@
   font-size: 14px;
   opacity: 0;
   transition: opacity 0.2s ease-in-out;
+  pointer-events: none;
 
   .react-flow__handle {
     &.easy-connect-handle {
@@ -38,5 +39,6 @@
     opacity: 1;
     background-color: rgba(103, 42, 164, 0.25);
     backdrop-filter: blur(4px);
+    pointer-events: auto;
   }
 }

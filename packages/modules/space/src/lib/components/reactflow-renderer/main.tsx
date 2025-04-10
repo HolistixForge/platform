@@ -173,9 +173,8 @@ export const DemiurgeSpace = ({
   const onNodeDrag = useCallback(
     _.debounce(
       (event: React.MouseEvent, node: Node, nodes: Node[]) => {
-        // always send an absolute position
-        const { x, y } =
-          (node as any) /* todo: exists ? */.positionAbsolute || node.position;
+        // send an absolute, or relative position if in a group
+        const { x, y } = node.position;
         spaceActionsDispatcher.dispatch({
           type: 'move-node',
           nid: node.id,

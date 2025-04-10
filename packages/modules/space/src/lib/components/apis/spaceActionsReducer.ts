@@ -170,8 +170,11 @@ export class SpaceActionsReducer {
     // get node view object from id
     const node = gv.nodeViews.find((n) => n.id === action.nid);
     if (node) {
-      // get absolute position of node by traversing up the parentId chain
-      const absolutePosition = action.position;
+      const absolutePosition = this.getAbsolutePosition(
+        action.position,
+        node.parentId,
+        gv
+      );
 
       // get all displayed groups (except the node itself)
       const groups = gv.graph.nodes.filter(

@@ -48,8 +48,8 @@ const EasyConnect: FC<{ id: string }> = ({ id }) => {
   const [isCtrlPressed, setIsCtrlPressed] = useState(false);
   const connection = useConnection();
 
-  useHotkeys('ctrl', () => setIsCtrlPressed(true), { keydown: true });
-  useHotkeys('ctrl', () => setIsCtrlPressed(false), { keyup: true });
+  useHotkeys(['ctrl', 'meta'], () => setIsCtrlPressed(true), { keydown: true });
+  useHotkeys(['ctrl', 'meta'], () => setIsCtrlPressed(false), { keyup: true });
 
   const isTarget = connection.inProgress && connection.fromNode.id !== id;
   const label = isTarget ? 'Drop here' : 'Drag to connect';
