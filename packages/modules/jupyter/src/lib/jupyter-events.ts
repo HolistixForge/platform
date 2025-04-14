@@ -70,12 +70,22 @@ export type TEventNewCell = {
   origin?: TEventOrigin;
 };
 
+export type TEventDeleteCell = {
+  type: 'jupyter:delete-cell';
+  cellId: string;
+};
+
 export type TEventNewTerminal = {
   type: 'jupyter:new-terminal';
   project_server_id: number;
   origin?: TEventOrigin;
   /** not use directly but force to pass specific jwt token (see GanymedeApi._getTokenKeyForRequest) */
   client_id: string;
+};
+
+export type TEventDeleteTerminal = {
+  type: 'jupyter:delete-terminal';
+  terminalId: string;
 };
 
 export type TDemiurgeNotebookEvent =
@@ -88,4 +98,6 @@ export type TDemiurgeNotebookEvent =
   | TEventStopKernel
   | TEventDeleteKernel
   | TEventNewCell
-  | TEventNewTerminal;
+  | TEventDeleteCell
+  | TEventNewTerminal
+  | TEventDeleteTerminal;

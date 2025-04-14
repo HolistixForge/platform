@@ -20,6 +20,8 @@ export type TEventNewServer = {
 export type TEventDeleteServer = {
   type: 'servers:delete';
   project_server_id: number;
+  /** not use directly but force to pass specific jwt token (see GanymedeApi._getTokenKeyForRequest) */
+  client_id: string;
 };
 
 export type TEventHostServer = {

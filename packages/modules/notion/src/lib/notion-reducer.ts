@@ -7,6 +7,8 @@ import { toUuid } from '@monorepo/simple-types';
 import {
   TEventCreatePage,
   TEventDeletePage,
+  TEventDeletePageNode,
+  TEventDeleteDatabaseNode,
   TEventInitDatabase,
   TEventLoadPageNode,
   TEventReorderPage,
@@ -67,6 +69,12 @@ export class NotionReducer extends Reducer<
 
       case 'notion:load-page-node':
         return this._loadPageNode(g as Ra<TEventLoadPageNode>);
+
+      case 'notion:delete-page-node':
+        return this._deletePageNode(g as Ra<TEventDeletePageNode>);
+
+      case 'notion:delete-database-node':
+        return this._deleteDatabaseNode(g as Ra<TEventDeleteDatabaseNode>);
 
       case 'periodic':
         return this._periodic(g as Ra<TEventPeriodic>);
@@ -323,5 +331,42 @@ export class NotionReducer extends Reducer<
       console.error('Failed to reorder page:', error);
       throw error;
     }
+  }
+
+  private async _deletePageNode(g: Ra<TEventDeletePageNode>): Promise<void> {
+    const { pageId } = g.event;
+    const nodeId = this.pageId(pageId);
+
+    g.dispatcher.dispatch({
+      type: 'core:delete-node',
+      id: nodeId,
+    });
+  }
+
+  private async _deleteDatabaseNode(
+    g: Ra<TEventDeleteDatabaseNode>
+  ): Promise<void> {
+    const { databaseId } = g.event;
+    const nodeId = this.databaseId(databaseId);
+
+    // First, delete all page nodes associated with this database
+    const database = g.sd.notionDatabases.get(databaseId);
+    if (database) {
+      database.pages.forEach((page) => {
+        g.dispatcher.dispatch({
+          type: 'core:delete-node',
+          id: this.pageId(page.id),
+        });
+      });
+    }
+
+    // Then delete the database node itself
+    g.dispatcher.dispatch({
+      type: 'core:delete-node',
+      id: nodeId,
+    });
+
+    // Remove from shared data
+    g.sd.notionDatabases.delete(databaseId);
   }
 }

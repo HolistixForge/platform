@@ -7,12 +7,12 @@
  * </script>
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { ServerConnection, TerminalManager } from '@jupyterlab/services';
 import { Terminal } from '@jupyterlab/terminal';
 import { Widget } from '@lumino/widgets';
 
-import { useSharedData } from '@monorepo/collab-engine';
+import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
 import { TServer, TServersSharedData } from '@monorepo/servers';
 import { TGraphNode } from '@monorepo/core';
 import {
@@ -27,6 +27,7 @@ import { TJupyterSharedData } from '../../jupyter-shared-model';
 import { useJLsManager } from '../../jupyter-shared-model-front';
 import { jupyterlabIsReachable } from '../../ds-backend';
 import { TServerSettings } from '../../jupyter-types';
+import { TDemiurgeNotebookEvent } from '../../jupyter-events';
 
 import '@jupyterlab/terminal/style/index';
 
@@ -161,6 +162,15 @@ export const NodeTerminal = ({ node }: { node: TGraphNode }) => {
   const { id, viewStatus, expand, reduce, isOpened, open, close, selected } =
     useNodeContext();
 
+  const dispatcher = useDispatcher<TDemiurgeNotebookEvent>();
+
+  const handleDeleteTerminal = useCallback(async () => {
+    await dispatcher.dispatch({
+      type: 'jupyter:delete-terminal',
+      terminalId,
+    });
+  }, [dispatcher, terminalId]);
+
   const isExpanded = viewStatus.mode === 'EXPANDED';
   const buttons = useMakeButton({
     isExpanded,
@@ -169,6 +179,7 @@ export const NodeTerminal = ({ node }: { node: TGraphNode }) => {
     isOpened,
     open,
     close,
+    onDelete: handleDeleteTerminal,
   });
 
   return (

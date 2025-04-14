@@ -1,6 +1,11 @@
 import { ReduceArgs, Reducer, SharedTypes } from '@monorepo/collab-engine';
 import { makeUuid } from '@monorepo/simple-types';
-import { TEventNewEdge, TEventNewNode } from '@monorepo/core';
+import {
+  TCoreSharedData,
+  TEventDeleteNode,
+  TEventNewEdge,
+  TEventNewNode,
+} from '@monorepo/core';
 
 import {
   TChatEvent,
@@ -10,6 +15,7 @@ import {
   TEventNewMessage,
   TEventUserHasRead,
   TEventNewChat,
+  TEventDeleteChat,
 } from './chats-events';
 import { TChatSharedData } from './chats-shared-model';
 import { TChat } from './chats-types';
@@ -22,9 +28,14 @@ type TExtraArgs = {
   user_id: string;
 };
 
-type DispatchedEvents = TEventNewNode | TEventNewEdge;
+type DispatchedEvents = TEventNewNode | TEventNewEdge | TEventDeleteNode;
 
-type Ra<T> = ReduceArgs<TChatSharedData, T, DispatchedEvents, TExtraArgs>;
+type Ra<T> = ReduceArgs<
+  TChatSharedData & TCoreSharedData,
+  T,
+  DispatchedEvents,
+  TExtraArgs
+>;
 
 /**
  *
@@ -57,6 +68,9 @@ export class ChatReducer extends Reducer<
 
       case 'chats:delete-message':
         return this._deleteMessage(g as Ra<TEventDeleteMessage>);
+
+      case 'chats:delete':
+        return this._deleteChat(g as Ra<TEventDeleteChat>);
 
       default:
         return Promise.resolve();
@@ -190,6 +204,27 @@ export class ChatReducer extends Reducer<
       const m = chat.messages[g.event.index];
       if (m.user_id === g.extraArgs.user_id) m.content = '[deleted]';
     });
+    return Promise.resolve();
+  }
+
+  //
+
+  _deleteChat(g: Ra<TEventDeleteChat>): Promise<void> {
+    const chat = g.sd.chats.get(g.event.chatId);
+    if (chat) {
+      g.sd.nodes.forEach((node) => {
+        if (
+          (node.type === 'chat' || node.type === 'chat-anchor') &&
+          node.data?.chatId === g.event.chatId
+        ) {
+          g.dispatcher.dispatch({
+            type: 'core:delete-node',
+            id: node.id,
+          });
+        }
+      });
+      g.sd.chats.delete(g.event.chatId);
+    }
     return Promise.resolve();
   }
 }

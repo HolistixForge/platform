@@ -1,14 +1,7 @@
 ⚠️ Antoine's stuffs
 
-shape
-header: editable title with numerotation that remain when header hidden
-chats
 dns
-
-persistence and sync
-
-- save load json file and not yjs db, add timestamp to get brut force versioning and back up
-- shut down button
+shut down button
 
 selected node zindex
 

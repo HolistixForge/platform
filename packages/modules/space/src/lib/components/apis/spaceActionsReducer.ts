@@ -19,6 +19,7 @@ import {
   nodeViewDefaultStatus,
   TGraphView,
 } from '../../space-types';
+import { getAbsolutePosition } from '../../utils/position-utils';
 
 //
 
@@ -125,30 +126,6 @@ export class SpaceActionsReducer {
 
   //
 
-  private getAbsolutePosition(
-    position: { x: number; y: number },
-    parentId: string | undefined,
-    gv: TGraphView
-  ) {
-    let absolutePosition = { ...position };
-    let currentParentId = parentId;
-
-    while (currentParentId) {
-      const currentParent = gv.nodeViews.find((n) => n.id === currentParentId);
-      if (currentParent?.position) {
-        absolutePosition.x += currentParent.position.x;
-        absolutePosition.y += currentParent.position.y;
-        currentParentId = currentParent.parentId;
-      } else {
-        break;
-      }
-    }
-
-    return absolutePosition;
-  }
-
-  //
-
   private getChildren(nid: string, gv: TGraphView, childs: Set<string>) {
     for (const node of gv.nodeViews) {
       if (node.parentId === nid) {
@@ -170,7 +147,7 @@ export class SpaceActionsReducer {
     // get node view object from id
     const node = gv.nodeViews.find((n) => n.id === action.nid);
     if (node) {
-      const absolutePosition = this.getAbsolutePosition(
+      const absolutePosition = getAbsolutePosition(
         action.position,
         node.parentId,
         gv
@@ -203,7 +180,7 @@ export class SpaceActionsReducer {
 
         groups.forEach((group) => {
           if (!group.position) return;
-          const groupAbsolutePos = this.getAbsolutePosition(
+          const groupAbsolutePos = getAbsolutePosition(
             group.position,
             group.parentId,
             gv

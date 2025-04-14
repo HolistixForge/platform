@@ -34,6 +34,7 @@ export type {
   TServerEvents,
   TEventMountVolume,
   TEventNewServer,
+  TEventDeleteServer,
 } from './lib/servers-events';
 
 export { ServerCard, ServerCardInternal } from './lib/components/server-card';

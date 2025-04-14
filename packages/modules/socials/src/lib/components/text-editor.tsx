@@ -2,7 +2,11 @@ import { useEffect, useRef, useMemo, useCallback } from 'react';
 import Quill from 'quill';
 import QuillCursors from 'quill-cursors';
 
-import { useAwareness, useBindEditor } from '@monorepo/collab-engine';
+import {
+  useAwareness,
+  useBindEditor,
+  useDispatcher,
+} from '@monorepo/collab-engine';
 import { TGraphNode } from '@monorepo/core';
 import { useNodeContext } from '@monorepo/space';
 import {
@@ -12,6 +16,8 @@ import {
   useMakeButton,
 } from '@monorepo/space';
 import { makeUuid } from '@monorepo/simple-types';
+
+import { TEventSocials } from '../socials-events';
 
 import 'quill/dist/quill.snow.css';
 import './text-editor.scss';
@@ -45,7 +51,9 @@ Quill.register('modules/cursors', QuillCursors);
 
 //
 
-export type NodeTextEditorInternalProps = {} & TNodeContext;
+export type NodeTextEditorInternalProps = {
+  onDelete: () => Promise<void>;
+} & TNodeContext;
 
 //
 
@@ -56,6 +64,7 @@ export const NodeTextEditorInternal = ({
   isOpened,
   id,
   selected,
+  onDelete,
 }: NodeTextEditorInternalProps) => {
   const { awareness } = useAwareness();
   const quillInstanceRef = useRef<any>(null);
@@ -107,6 +116,7 @@ export const NodeTextEditorInternal = ({
     isOpened,
     open,
     close,
+    onDelete,
   });
 
   const bindEditor = useBindEditor();
@@ -183,7 +193,15 @@ export const NodeTextEditorInternal = ({
 export const NodeTextEditor = ({ node }: { node: TGraphNode }) => {
   const useNodeValue = useNodeContext();
 
-  //
+  const dispatcher = useDispatcher<TEventSocials>();
 
-  return <NodeTextEditorInternal {...useNodeValue} />;
+  const handleDelete = useCallback(async () => {
+    await dispatcher.dispatch({
+      type: 'socials:delete-text-editor',
+      nodeId: node.id,
+    });
+  }, [dispatcher, node.id]);
+
+  //
+  return <NodeTextEditorInternal {...useNodeValue} onDelete={handleDelete} />;
 };

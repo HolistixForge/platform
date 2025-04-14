@@ -6,6 +6,7 @@ import {
 } from '@monorepo/space';
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
 import { TGraphNode } from '@monorepo/core';
+import { useCallback } from 'react';
 
 import { TNotionSharedData } from '../../notion-shared-model';
 import { NotionKanban } from './notion-database';
@@ -24,7 +25,17 @@ export const NodeNotion = ({ node }: { node: TGraphNode }) => {
     sd.notionDatabases.get(databaseId)
   );
 
-  const buttons = useMakeButton(useNodeValue);
+  const handleDeleteDatabase = useCallback(async () => {
+    await dispatcher.dispatch({
+      type: 'notion:delete-database-node',
+      databaseId,
+    });
+  }, [dispatcher, databaseId]);
+
+  const buttons = useMakeButton({
+    ...useNodeValue,
+    onDelete: handleDeleteDatabase,
+  });
 
   if (!database) return <div>Database not found</div>;
 

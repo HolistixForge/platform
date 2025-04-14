@@ -60,7 +60,7 @@ export const NodeKernel = ({ node }: { node: TGraphNode }) => {
         dkid,
         client_id,
       }));
-  }, [dispatcher, dkid]);
+  }, [dispatcher, dkid, client_id]);
 
   const startButton = useAction(async () => {
     client_id &&
@@ -69,7 +69,7 @@ export const NodeKernel = ({ node }: { node: TGraphNode }) => {
         dkid,
         client_id,
       }));
-  }, [dispatcher, dkid]);
+  }, [dispatcher, dkid, client_id]);
 
   const stopButton = useAction(async () => {
     client_id &&
@@ -78,7 +78,7 @@ export const NodeKernel = ({ node }: { node: TGraphNode }) => {
         dkid,
         client_id,
       });
-  }, [dispatcher, dkid]);
+  }, [dispatcher, dkid, client_id]);
 
   const buttons = useMakeButton({
     isExpanded,

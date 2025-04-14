@@ -39,6 +39,16 @@ export const NodeChatAnchor = ({ node }: { node: TGraphNode }) => {
       });
   };
 
+  const handleClose = () => {
+    useNodeValue.close();
+    chatNodeId &&
+      dispatcher.dispatch({
+        type: 'space:action',
+        action: { type: 'close-node', nid: chatNodeId },
+        viewId: useNodeValue.viewId,
+      });
+  };
+
   let unread = 0;
   if (chat && currentUserStatus === 'success' && currentUserData.user.user_id) {
     const lastReadIndex = chat.lastRead[currentUserData.user.user_id];
@@ -53,6 +63,7 @@ export const NodeChatAnchor = ({ node }: { node: TGraphNode }) => {
         nodeId={node.id}
         isOpened={useNodeValue.isOpened}
         onOpen={handleOpen}
+        onClose={handleClose}
         status="new"
         showSideComment={!useNodeValue.isOpened}
         unreadCount={unread}
@@ -68,6 +79,7 @@ export type NodeChatAnchorInternalProps = {
   nodeId: string;
   isOpened: boolean;
   onOpen: () => void;
+  onClose: () => void;
   status?: 'default' | 'resolved' | 'new';
   showSideComment?: boolean;
   title?: string;
@@ -80,6 +92,7 @@ export const NodeChatAnchorInternal = ({
   showSideComment,
   isOpened,
   onOpen,
+  onClose,
   title,
   unreadCount,
 }: NodeChatAnchorInternalProps) => {
@@ -106,7 +119,7 @@ export const NodeChatAnchorInternal = ({
           )}
         </div>
       ) : (
-        <div className="comment-round" />
+        <div className="comment-round" onClick={onClose} />
       )}
 
       {showSideComment && title && (

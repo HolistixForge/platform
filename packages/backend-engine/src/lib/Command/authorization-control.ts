@@ -33,11 +33,9 @@ export class AuthorizationControl extends Command {
 
     if (!scope) throw new ForbiddenException([{ message: 'no scope found' }]);
 
-    console.log(scope);
-
     if (!scope.includes(action))
       throw new ForbiddenException([
-        { message: `insufficient scope: need [${action}]` },
+        { message: `insufficient scope: need [${action}], has [${scope}]` },
       ]);
 
     return Promise.resolve({});

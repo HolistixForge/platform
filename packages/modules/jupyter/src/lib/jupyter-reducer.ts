@@ -4,8 +4,12 @@ import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
 import { TJsonArray, TMyfetchRequest, makeUuid } from '@monorepo/simple-types';
 import { NotFoundException } from '@monorepo/log';
 import { TServersSharedData, projectServerNodeId } from '@monorepo/servers';
-import { TEventDeleteNode, TEventNewNode } from '@monorepo/core';
-import { TEventNewServer } from '@monorepo/servers';
+import {
+  TEventDeleteNode,
+  TEventNewNode,
+  TCoreSharedData,
+} from '@monorepo/core';
+import { TEventNewServer, TEventDeleteServer } from '@monorepo/servers';
 
 import {
   TEventKernelStarted,
@@ -19,6 +23,8 @@ import {
   TEventNewCell,
   TEventNewKernel,
   TEventNewTerminal,
+  TEventDeleteCell,
+  TEventDeleteTerminal,
 } from './jupyter-events';
 import { TDKID, dkidToServer } from './jupyter-types';
 import { TJupyterSharedData } from './jupyter-shared-model';
@@ -33,14 +39,17 @@ export type TExtraArgs = {
   authorizationHeader: string;
 };
 
-type ReducedEvents = TDemiurgeNotebookEvent | TEventNewServer;
+type ReducedEvents =
+  | TDemiurgeNotebookEvent
+  | TEventNewServer
+  | TEventDeleteServer;
 
 type DispatchedEvents =
   | TDemiurgeNotebookEvent
   | TEventNewNode
   | TEventDeleteNode;
 
-type UsedSharedData = TServersSharedData & TJupyterSharedData;
+type UsedSharedData = TServersSharedData & TJupyterSharedData & TCoreSharedData;
 
 type Ra<T> = ReduceArgs<UsedSharedData, T, DispatchedEvents, TExtraArgs>;
 
@@ -87,8 +96,12 @@ export class JupyterReducer extends Reducer<
     switch (g.event.type) {
       case 'servers:new':
         return this._newServer(g as Ra<TEventNewServer>);
+      case 'servers:delete':
+        return this._deleteServer(g as Ra<TEventDeleteServer>);
       case 'jupyter:new-cell':
         return this._newCell(g as Ra<TEventNewCell>);
+      case 'jupyter:delete-cell':
+        return this._deleteCell(g as Ra<TEventDeleteCell>);
       case 'jupyter:execute-python-node':
         return this._execute(g as Ra<TEventExecutePythonNode>);
       case 'jupyter:python-node-output':
@@ -107,6 +120,8 @@ export class JupyterReducer extends Reducer<
         return this._stopKernel(g as Ra<TEventStopKernel>);
       case 'jupyter:new-terminal':
         return this._newTerminal(g as Ra<TEventNewTerminal>);
+      case 'jupyter:delete-terminal':
+        return this._deleteTerminal(g as Ra<TEventDeleteTerminal>);
 
       default:
         return Promise.resolve();
@@ -164,6 +179,30 @@ export class JupyterReducer extends Reducer<
       ],
       origin: g.event.origin,
     });
+  }
+
+  //
+
+  async _deleteCell(g: Ra<TEventDeleteCell>): Promise<void> {
+    const cellId = g.event.cellId;
+    const cell = g.sd.cells.get(cellId);
+
+    if (cell) {
+      // Delete node from graph
+      g.sd.nodes.forEach((node, id) => {
+        if (node.type === 'jupyter-cell' && node.data?.cellId === cellId) {
+          g.dispatcher.dispatch({
+            type: 'core:delete-node',
+            id,
+          });
+        }
+      });
+
+      g.sharedEditor.deleteEditor(cellId);
+
+      // Delete cell from shared data
+      g.sd.cells.delete(cellId);
+    }
   }
 
   //
@@ -331,9 +370,19 @@ export class JupyterReducer extends Reducer<
   }
 
   /**
-   * TODO: orphan code cells
+   * Delete kernel and all associated cells
    */
   async _deleteKernel(g: Ra<TEventDeleteKernel>) {
+    // Find and delete all cells associated with this kernel
+    for (const cell of g.sd.cells.values()) {
+      if (cell.dkid === g.event.dkid) {
+        await g.dispatcher.dispatch({
+          type: 'jupyter:delete-cell',
+          cellId: cell.cellId,
+        });
+      }
+    }
+
     const { server, kernel, driver } = await this._getDriver(g);
     const index = server.kernels.findIndex((k) => k.dkid === g.event.dkid);
     if (index !== -1) {
@@ -342,6 +391,7 @@ export class JupyterReducer extends Reducer<
       g.sd.jupyterServers.set(`${server.project_server_id}`, server);
     }
 
+    // Delete kernel node
     g.dispatcher.dispatch({
       type: 'core:delete-node',
       id: this.makeKernelNodeId(kernel.dkid),
@@ -394,5 +444,62 @@ export class JupyterReducer extends Reducer<
       ],
       origin: g.event.origin,
     });
+  }
+
+  /**
+   * Delete terminal
+   */
+  async _deleteTerminal(g: Ra<TEventDeleteTerminal>): Promise<void> {
+    const terminalId = g.event.terminalId;
+    const terminal = g.sd.terminals.get(terminalId);
+
+    if (terminal) {
+      // Delete terminal from shared data
+      g.sd.terminals.delete(terminalId);
+
+      // todo: dispose terminal in jupyter
+
+      // Delete node from graph
+      g.dispatcher.dispatch({
+        type: 'core:delete-node',
+        id: terminalId,
+      });
+    }
+  }
+
+  /**
+   * Delete all kernels and terminals associated with a server when the server is deleted
+   */
+  async _deleteServer(g: Ra<TEventDeleteServer>): Promise<void> {
+    const projectServerId = g.event.project_server_id;
+    const jupyterServer = g.sd.jupyterServers.get(`${projectServerId}`);
+
+    if (jupyterServer) {
+      // Delete all kernels associated with this server
+      for (const kernel of jupyterServer.kernels) {
+        await g.dispatcher.dispatch(
+          {
+            type: 'jupyter:delete-kernel',
+            dkid: kernel.dkid,
+            client_id: '_unused_',
+          },
+          // must contain authorizationHeader, must be jupyter server specific JWT token
+          // so dispatch must have set property client_id
+          g.extraArgs
+        );
+      }
+
+      // Remove the server from jupyterServers
+      g.sd.jupyterServers.delete(`${projectServerId}`);
+
+      for (const terminal of g.sd.terminals.values()) {
+        if (terminal.project_server_id === projectServerId) {
+          await g.dispatcher.dispatch({
+            type: 'jupyter:delete-terminal',
+            terminalId: terminal.terminalId,
+          });
+        }
+      }
+    }
   }
 }

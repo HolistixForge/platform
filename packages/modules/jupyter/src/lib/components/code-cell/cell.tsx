@@ -67,14 +67,13 @@ export const useCellLogic = ({
   const editorRef = useRef<any>(null);
 
   //
-  /*
+
   const handleDeleteCell = useCallback(async () => {
     await dispatcher.dispatch({
-      type: 'core:delete-node',
-      id,
+      type: 'jupyter:delete-cell',
+      cellId,
     });
-  }, [dispatcher, id]);
-  */
+  }, [dispatcher, cellId]);
 
   //
 
@@ -128,6 +127,7 @@ export const useCellLogic = ({
     handleEditorMount,
     handleClearOutput,
     handleExecute,
+    handleDeleteCell,
   };
 };
 
@@ -252,7 +252,7 @@ export const NodeCell = ({ node }: { node: TGraphNode }) => {
     selected,
   });
 
-  const { handleClearOutput, handleExecute } = cellLogic;
+  const { handleClearOutput, handleExecute, handleDeleteCell } = cellLogic;
 
   const isExpanded = viewStatus.mode === 'EXPANDED';
   const buttons = useMakeButton({
@@ -264,6 +264,7 @@ export const NodeCell = ({ node }: { node: TGraphNode }) => {
     close,
     onClear: handleClearOutput,
     onPlay: handleExecute,
+    onDelete: handleDeleteCell,
   });
 
   return (

@@ -128,6 +128,7 @@ export const useServerProps = (
       await dispatcher.dispatch({
         type: 'servers:delete',
         project_server_id: server.project_server_id,
+        client_id: server.oauth[0].client_id,
       });
   }, [dispatcher, server]);
 

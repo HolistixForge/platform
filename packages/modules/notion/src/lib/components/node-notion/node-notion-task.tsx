@@ -8,7 +8,7 @@ import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
 import { TGraphNode } from '@monorepo/core';
 import { TNotionSharedData } from '../../notion-shared-model';
 import { useCallback } from 'react';
-import { TEventUpdatePage } from '../../notion-events';
+import { TEventUpdatePage, TNotionEvent } from '../../notion-events';
 
 import './node-notion-task.scss';
 import {
@@ -24,7 +24,7 @@ import { NotionPropertyRenderer } from './notion-property-renderer';
 
 export const NodeNotionTask = ({ node }: { node: TGraphNode }) => {
   const pageId = node.data!.pageId as string;
-  const dispatcher = useDispatcher<TEventUpdatePage>();
+  const dispatcher = useDispatcher<TNotionEvent>();
 
   //const [isEditing, setIsEditing] = useState(false);
 
@@ -40,7 +40,18 @@ export const NodeNotionTask = ({ node }: { node: TGraphNode }) => {
   const { database, page } = o;
 
   const useNodeValue = useNodeContext();
-  const buttons = useMakeButton(useNodeValue);
+
+  const handleDeletePage = useCallback(async () => {
+    await dispatcher.dispatch({
+      type: 'notion:delete-page-node',
+      pageId,
+    });
+  }, [dispatcher, pageId]);
+
+  const buttons = useMakeButton({
+    ...useNodeValue,
+    onDelete: handleDeletePage,
+  });
 
   const handlePropertyUpdate = useCallback(
     async (key: string, value: any) => {

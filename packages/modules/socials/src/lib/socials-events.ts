@@ -11,6 +11,11 @@ export type TEventNewTextEditor = {
   origin?: TEventOrigin;
 };
 
+export type TEventDeleteTextEditor = {
+  type: 'socials:delete-text-editor';
+  nodeId: string;
+};
+
 export type TEventDeleteYoutube = {
   type: 'socials:delete-youtube';
   nodeId: string;
@@ -19,4 +24,5 @@ export type TEventDeleteYoutube = {
 export type TEventSocials =
   | TEventNewYoutube
   | TEventDeleteYoutube
-  | TEventNewTextEditor;
+  | TEventNewTextEditor
+  | TEventDeleteTextEditor;

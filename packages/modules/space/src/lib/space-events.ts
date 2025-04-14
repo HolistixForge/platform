@@ -149,10 +149,22 @@ export type TEventSpaceAction = {
   action: TSpaceActions;
 };
 
+export type TEventDeleteShape = {
+  type: 'space:delete-shape';
+  shapeId: string;
+};
+
+export type TEventDeleteGroup = {
+  type: 'space:delete-group';
+  groupId: string;
+};
+
 export type TSpaceEvent =
   | TEventNewView
   | TEventSpaceAction
   | TEventNewGroup
   | TEventGroupPropertyChange
   | TEventShapePropertyChange
-  | TEventNewShape;
+  | TEventNewShape
+  | TEventDeleteShape
+  | TEventDeleteGroup;

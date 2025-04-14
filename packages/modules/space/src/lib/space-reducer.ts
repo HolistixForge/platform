@@ -17,6 +17,8 @@ import {
   TEventGroupPropertyChange,
   TEventShapePropertyChange,
   TEventNewShape,
+  TEventDeleteShape,
+  TEventDeleteGroup,
 } from './space-events';
 import {
   defaultGraphView,
@@ -24,6 +26,7 @@ import {
   TGraphView,
 } from './space-types';
 import { SpaceActionsReducer } from './components/apis/spaceActionsReducer';
+import { getAbsolutePosition } from './utils/position-utils';
 
 /**
  *
@@ -74,6 +77,14 @@ export class SpaceReducer extends Reducer<
 
       case 'space:shape-property-change':
         this.shapePropertyChange(g as Ra<TEventShapePropertyChange>);
+        return Promise.resolve();
+
+      case 'space:delete-shape':
+        this.deleteShape(g as Ra<TEventDeleteShape>);
+        return Promise.resolve();
+
+      case 'space:delete-group':
+        this.deleteGroup(g as Ra<TEventDeleteGroup>);
         return Promise.resolve();
 
       case 'core:delete-edge':
@@ -232,6 +243,47 @@ export class SpaceReducer extends Reducer<
           type: 'update-graph-view',
         },
       });
+    });
+  }
+
+  deleteShape(g: Ra<TEventDeleteShape>) {
+    g.dispatcher.dispatch({
+      type: 'core:delete-node',
+      id: g.event.shapeId,
+    });
+  }
+
+  deleteGroup(g: Ra<TEventDeleteGroup>) {
+    const { groupId } = g.event;
+
+    // Before deleting the group, detach all child nodes and set their positions to absolute
+    g.sd.graphViews.forEach((gv, viewId) => {
+      // Find all nodes where parentId matches the group being deleted
+      const childNodes = gv.nodeViews.filter(
+        (node) => node.parentId === groupId
+      );
+
+      // For each child node, calculate absolute position and remove parentId
+      childNodes.forEach((childNode) => {
+        if (childNode.position) {
+          // Calculate absolute position considering all parent groups
+          const absolutePosition = getAbsolutePosition(
+            childNode.position,
+            groupId,
+            gv
+          );
+
+          // Update node position to absolute and remove parent reference
+          childNode.position = absolutePosition;
+          delete childNode.parentId;
+        }
+      });
+    });
+
+    // Then delete the group node
+    g.dispatcher.dispatch({
+      type: 'core:delete-node',
+      id: groupId,
     });
   }
 }

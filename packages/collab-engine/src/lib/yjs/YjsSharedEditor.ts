@@ -39,4 +39,8 @@ export class YjsSharedEditor extends SharedEditor {
       this._editorBindings.set(editorId, ytext);
     }
   }
+
+  async deleteEditor(editorId: string): Promise<void> {
+    this._editorBindings.delete(editorId);
+  }
 }

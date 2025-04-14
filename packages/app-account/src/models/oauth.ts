@@ -414,6 +414,12 @@ export const model: AuthorizationCodeModel &
             if (userProjectScope.includes(s)) {
               vs.push(serverAccessScope(client.id));
             }
+
+            // check user own scope 'server:delete' on project 'project_id'
+            const s2 = makeProjectScopeString(project_id, 'server:delete');
+            if (userProjectScope.includes(s2)) {
+              vs.push(s2);
+            }
           }
         }
       }

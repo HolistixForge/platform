@@ -1,6 +1,6 @@
 import { FC, Suspense, useCallback } from 'react';
 
-import { TEventDeleteNode, TGraphNode } from '@monorepo/core';
+import { TGraphNode } from '@monorepo/core';
 import { useNodeContext } from '@monorepo/space';
 import { useFactory } from '@monorepo/lazy-factory';
 import { useDispatcher } from '@monorepo/collab-engine';
@@ -12,6 +12,10 @@ import {
 } from '@monorepo/space';
 
 import factory from '@monorepo/lazy-factory';
+
+import { TEventSocials } from '../socials-events';
+
+import './node-video.scss';
 
 // TODO: compile error if import path is not calculated,
 // does it still lazy load ?
@@ -81,6 +85,7 @@ export const NodeYoutubeInternal = ({
             <Suspense fallback={<span> Loading Component... </span>}>
               <Youtube data={{ videoId: youtubeId }} />
             </Suspense>
+            <div className="select-handle">Select</div>
           </div>
         </DisableZoomDragPan>
       )}
@@ -99,12 +104,12 @@ export const NodeYoutube = ({ node }: { node: TGraphNode }) => {
 
   const { Component: Youtube } = useFactory('socials:youtube', ['DOM'], null);
 
-  const dispatcher = useDispatcher<TEventDeleteNode>();
+  const dispatcher = useDispatcher<TEventSocials>();
 
   const handleDelete = useCallback(async () => {
     await dispatcher.dispatch({
-      type: 'core:delete-node',
-      id,
+      type: 'socials:delete-youtube',
+      nodeId: id,
     });
   }, [dispatcher, id]);
 

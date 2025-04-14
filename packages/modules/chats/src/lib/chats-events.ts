@@ -42,10 +42,16 @@ export type TEventNewChat = {
   origin?: TEventOrigin;
 };
 
+export type TEventDeleteChat = {
+  type: 'chats:delete';
+  chatId: string;
+};
+
 export type TChatEvent =
   | TEventNewMessage
   | TEventDeleteMessage
   | TEventIsWriting
   | TEventUserHasRead
   | TEventChatResolve
-  | TEventNewChat;
+  | TEventNewChat
+  | TEventDeleteChat;

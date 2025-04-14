@@ -44,6 +44,16 @@ export type TEventLoadPageNode = {
   origin?: TEventOrigin;
 };
 
+export type TEventDeletePageNode = {
+  type: 'notion:delete-page-node';
+  pageId: string;
+};
+
+export type TEventDeleteDatabaseNode = {
+  type: 'notion:delete-database-node';
+  databaseId: string;
+};
+
 export type TNotionEvent =
   | TEventInitDatabase
   | TEventUpdatePage
@@ -51,4 +61,6 @@ export type TNotionEvent =
   | TEventDeletePage
   | TEventReorderPage
   | TEventSyncDatabase
-  | TEventLoadPageNode;
+  | TEventLoadPageNode
+  | TEventDeletePageNode
+  | TEventDeleteDatabaseNode;

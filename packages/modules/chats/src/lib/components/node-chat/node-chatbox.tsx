@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import {
   InputsAndOutputs,
+  TSpaceEvent,
   useMakeButton,
   useNodeContext,
 } from '@monorepo/space';
@@ -16,7 +17,7 @@ import {
 import { ChatboxLogic } from './chatbox-logic';
 import { TChatSharedData } from '../../chats-shared-model';
 import { TChat } from '../../chats-types';
-
+import { TChatEvent } from '../../chats-events';
 //
 
 export const NodeChatbox = ({ node }: { node: TGraphNode }) => {
@@ -26,7 +27,7 @@ export const NodeChatbox = ({ node }: { node: TGraphNode }) => {
     sd.chats.get(chatId)
   );
 
-  const dispatcher = useDispatcher();
+  const dispatcher = useDispatcher<TChatEvent | TSpaceEvent>();
 
   const useNodeValue = useNodeContext();
 
@@ -115,11 +116,19 @@ export const NodeChatbox = ({ node }: { node: TGraphNode }) => {
       });
   };
 
+  const handleDelete = () => {
+    return dispatcher.dispatch({
+      type: 'chats:delete',
+      chatId,
+    });
+  };
+
   // chat node reduce button is special :
   // reduce button actually close the chat node anchor, so the node disapears
   const buttons = useMakeButton({
     isExpanded: true,
     reduce: handleClose,
+    onDelete: handleDelete,
   });
 
   return (

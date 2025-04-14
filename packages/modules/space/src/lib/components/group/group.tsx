@@ -12,7 +12,10 @@ import {
 import { NodeHeader } from '../reactflow-renderer/assets/node-header/node-header';
 import { useMakeButton } from '../reactflow-renderer/assets/node-header/node-main-toolbar';
 import { useNodeContext } from '../reactflow-renderer/node-wrappers/node-wrapper';
-import { TEventGroupPropertyChange } from '../../space-events';
+import {
+  TEventGroupPropertyChange,
+  TEventDeleteGroup,
+} from '../../space-events';
 import { DisableZoomDragPan } from '../reactflow-renderer/node-wrappers/disable-zoom-drag-pan';
 import { InputsAndOutputs } from '../reactflow-renderer/assets/inputsOutputs/inputsOutputs';
 
@@ -26,7 +29,16 @@ export const Group = ({ node }: { node: TGraphNode }) => {
   const groupRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const dispatcher = useDispatcher<TEventGroupPropertyChange>();
+  const dispatcher = useDispatcher<
+    TEventGroupPropertyChange | TEventDeleteGroup
+  >();
+
+  const handleDeleteGroup = useCallback(async () => {
+    await dispatcher.dispatch({
+      type: 'space:delete-group',
+      groupId: id,
+    });
+  }, [dispatcher, id]);
 
   const {
     title = 'Group Name',
@@ -50,6 +62,7 @@ export const Group = ({ node }: { node: TGraphNode }) => {
     isOpened,
     open,
     close,
+    onDelete: handleDeleteGroup,
   });
 
   const handleBorderColorChange = useCallback((color: ColorValue) => {

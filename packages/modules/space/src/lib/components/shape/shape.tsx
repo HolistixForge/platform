@@ -13,11 +13,11 @@ import { NodeHeader } from '../reactflow-renderer/assets/node-header/node-header
 import { useMakeButton } from '../reactflow-renderer/assets/node-header/node-main-toolbar';
 import { useNodeContext } from '../reactflow-renderer/node-wrappers/node-wrapper';
 import { DisableZoomDragPan } from '../reactflow-renderer/node-wrappers/disable-zoom-drag-pan';
-import { InputsAndOutputs } from '../reactflow-renderer/assets/inputsOutputs/inputsOutputs';
 import {
   SHAPE_TYPES,
   TShapeType,
   TEventShapePropertyChange,
+  TEventDeleteShape,
 } from '../../space-events';
 
 import './shape.scss';
@@ -76,7 +76,16 @@ export const Shape = ({ node }: { node: TGraphNode }) => {
   const { id, expand, reduce, isOpened, open, close, viewStatus, selected } =
     useNodeValue;
 
-  const dispatcher = useDispatcher<TEventShapePropertyChange>();
+  const dispatcher = useDispatcher<
+    TEventShapePropertyChange | TEventDeleteShape
+  >();
+
+  const handleDeleteShape = useCallback(async () => {
+    await dispatcher.dispatch({
+      type: 'space:delete-shape',
+      shapeId: id,
+    });
+  }, [dispatcher, id]);
 
   const isExpanded = viewStatus.mode === 'EXPANDED';
   const buttons = useMakeButton({
@@ -86,6 +95,7 @@ export const Shape = ({ node }: { node: TGraphNode }) => {
     isOpened,
     open,
     close,
+    onDelete: handleDeleteShape,
   });
 
   const handleShapeTypeChange = useCallback(

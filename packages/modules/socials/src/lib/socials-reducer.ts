@@ -7,6 +7,7 @@ import {
   TEventNewYoutube,
   TEventDeleteYoutube,
   TEventNewTextEditor,
+  TEventDeleteTextEditor,
 } from './socials-events';
 
 //
@@ -36,6 +37,9 @@ export class SocialsReducer extends Reducer<
       case 'socials:new-text-editor':
         return this._newTextEditor(g as Ra<TEventNewTextEditor>);
 
+      case 'socials:delete-text-editor':
+        return this._deleteTextEditor(g as Ra<TEventDeleteTextEditor>);
+
       default:
         return Promise.resolve();
     }
@@ -59,6 +63,17 @@ export class SocialsReducer extends Reducer<
       },
       edges: [],
       origin: g.event.origin,
+    });
+  }
+
+  //
+
+  async _deleteTextEditor(g: Ra<TEventDeleteTextEditor>): Promise<void> {
+    await g.sharedEditor.deleteEditor(g.event.nodeId);
+
+    g.dispatcher.dispatch({
+      type: 'core:delete-node',
+      id: g.event.nodeId,
     });
   }
 
