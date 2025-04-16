@@ -45,6 +45,17 @@ export type TSAUnhighlightFromConnector = {
 
 //
 
+export type TSAFilterOutNode = {
+  type: 'filter-out-node';
+  nid: string;
+};
+
+export type TSAUnfilterOutNode = {
+  type: 'unfilter-out-node';
+  nid: string;
+  position?: TPosition;
+};
+
 export type TSAOpenNode = {
   type: 'open-node';
   nid: string;
@@ -82,7 +93,9 @@ export type TSpaceActions =
   | TSAUnhighlightFromConnector
   | TSAResizeNode
   | TSAPopNode
-  | TSAUpdateGraphView;
+  | TSAUpdateGraphView
+  | TSAFilterOutNode
+  | TSAUnfilterOutNode;
 
 export type TEventNewView = {
   type: 'space:new-view';

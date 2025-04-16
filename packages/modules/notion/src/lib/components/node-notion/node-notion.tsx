@@ -33,7 +33,7 @@ export const NodeNotion = ({ node }: { node: TGraphNode }) => {
   }, [dispatcher, databaseId]);
 
   const buttons = useMakeButton({
-    ...useNodeValue,
+    filterOut: useNodeValue.filterOut,
     onDelete: handleDeleteDatabase,
   });
 

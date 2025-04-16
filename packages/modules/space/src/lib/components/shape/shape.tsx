@@ -73,8 +73,17 @@ export const Shape = ({ node }: { node: TGraphNode }) => {
   };
 
   const useNodeValue = useNodeContext();
-  const { id, expand, reduce, isOpened, open, close, viewStatus, selected } =
-    useNodeValue;
+  const {
+    id,
+    expand,
+    reduce,
+    isOpened,
+    open,
+    close,
+    viewStatus,
+    selected,
+    filterOut,
+  } = useNodeValue;
 
   const dispatcher = useDispatcher<
     TEventShapePropertyChange | TEventDeleteShape
@@ -96,6 +105,7 @@ export const Shape = ({ node }: { node: TGraphNode }) => {
     open,
     close,
     onDelete: handleDeleteShape,
+    filterOut,
   });
 
   const handleShapeTypeChange = useCallback(

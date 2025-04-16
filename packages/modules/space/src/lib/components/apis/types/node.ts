@@ -10,6 +10,7 @@ export type TNodeContext = {
   close: () => void;
   reduce: () => void;
   expand: () => void;
+  filterOut: () => void;
   selectingUsers: TSelectingUsers;
   /** is this object selected on this view by current user ? */
   selected: boolean;

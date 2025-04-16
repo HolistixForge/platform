@@ -39,6 +39,7 @@ export type NodeYoutubeInternalProps = {
   | 'expand'
   | 'reduce'
   | 'selected'
+  | 'filterOut'
 >;
 
 //
@@ -55,6 +56,7 @@ export const NodeYoutubeInternal = ({
   expand,
   reduce,
   selected,
+  filterOut,
 }: NodeYoutubeInternalProps) => {
   //
 
@@ -67,6 +69,7 @@ export const NodeYoutubeInternal = ({
     isOpened,
     open,
     close,
+    filterOut,
   });
 
   return (

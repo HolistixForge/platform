@@ -12,6 +12,8 @@ import {
   TSACloseNode,
   TSAOpenNode,
   TSAResizeNode,
+  TSAFilterOutNode,
+  TSAUnfilterOutNode,
 } from '../../space-events';
 import {
   connectorViewDefault,
@@ -74,6 +76,14 @@ export class SpaceActionsReducer {
       case 'update-graph-view':
         this.updateGraphview(gv, nodes, edges);
         break;
+
+      case 'filter-out-node':
+        this.filterOutNode(action, gv, nodes, edges);
+        break;
+
+      case 'unfilter-out-node':
+        this.unfilterOutNode(action, gv, nodes, edges);
+        break;
     }
   }
 
@@ -91,6 +101,34 @@ export class SpaceActionsReducer {
       node.status.forceClosed = action.type === 'open-node' ? false : true;
       this.updateGraphview(gv, nodes, edges);
     }
+  }
+
+  //
+
+  private unfilterOutNode(
+    action: TSAUnfilterOutNode,
+    gv: TGraphView,
+    nodes: Readonly<Map<string, TGraphNode>>,
+    edges: Readonly<Array<TEdge>>
+  ) {
+    if (!gv.params.filterOutNodes) gv.params.filterOutNodes = [];
+    gv.params.filterOutNodes = gv.params.filterOutNodes.filter(
+      (nid) => nid !== action.nid
+    );
+    this.updateGraphview(gv, nodes, edges);
+  }
+
+  //
+
+  private filterOutNode(
+    action: TSAFilterOutNode,
+    gv: TGraphView,
+    nodes: Readonly<Map<string, TGraphNode>>,
+    edges: Readonly<Array<TEdge>>
+  ) {
+    if (!gv.params.filterOutNodes) gv.params.filterOutNodes = [];
+    gv.params.filterOutNodes.push(action.nid);
+    this.updateGraphview(gv, nodes, edges);
   }
 
   //
@@ -440,8 +478,10 @@ export class SpaceActionsReducer {
         return e.from.node === nodeId || e.to.node === nodeId;
       });
 
-      nodesToRender.add(nodeId);
-      /*
+      if (!gv.params.filterOutNodes?.includes(nodeId)) {
+        nodesToRender.add(nodeId);
+
+        /*
       console.log('###### traverseFromNode', {
         nodeId,
         currentDepth,
@@ -451,18 +491,19 @@ export class SpaceActionsReducer {
       });
       */
 
-      if (isOpened) {
-        // Find all edges connected to this node
-        nodeEdges.forEach((edge) => {
-          if (edge.from.node === nodeId) {
-            edgesToRender.add(edge);
-            traverseFromNode(edge.to.node, currentDepth + 1);
-          }
-          if (edge.to.node === nodeId) {
-            edgesToRender.add(edge);
-            traverseFromNode(edge.from.node, currentDepth + 1);
-          }
-        });
+        if (isOpened) {
+          // Find all edges connected to this node
+          nodeEdges.forEach((edge) => {
+            if (edge.from.node === nodeId) {
+              edgesToRender.add(edge);
+              traverseFromNode(edge.to.node, currentDepth + 1);
+            }
+            if (edge.to.node === nodeId) {
+              edgesToRender.add(edge);
+              traverseFromNode(edge.from.node, currentDepth + 1);
+            }
+          });
+        }
       }
     };
 

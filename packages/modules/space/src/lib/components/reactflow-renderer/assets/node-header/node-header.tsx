@@ -38,7 +38,7 @@ export const NodeHeader = ({
             className="node-id ellipsis"
             onClick={!isOpened ? open : undefined}
           >
-            Node [{id}]
+            {id.length > 25 ? id.slice(0, 25) + '...' : id}
           </span>
           <NodeMainToolbar buttons={buttons} />
         </div>

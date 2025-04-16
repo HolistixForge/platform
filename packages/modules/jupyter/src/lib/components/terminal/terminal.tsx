@@ -159,8 +159,17 @@ export const NodeTerminal = ({ node }: { node: TGraphNode }) => {
     terminalId: string;
   };
 
-  const { id, viewStatus, expand, reduce, isOpened, open, close, selected } =
-    useNodeContext();
+  const {
+    id,
+    viewStatus,
+    expand,
+    reduce,
+    isOpened,
+    open,
+    close,
+    selected,
+    filterOut,
+  } = useNodeContext();
 
   const dispatcher = useDispatcher<TDemiurgeNotebookEvent>();
 
@@ -180,6 +189,7 @@ export const NodeTerminal = ({ node }: { node: TGraphNode }) => {
     open,
     close,
     onDelete: handleDeleteTerminal,
+    filterOut,
   });
 
   return (

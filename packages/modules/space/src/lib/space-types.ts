@@ -78,6 +78,8 @@ type TGraphViewParams = {
   maxRank: number;
   /** the nodes id from wich the displayed graph is calculated */
   roots: string[];
+  /** the nodes id to filter out */
+  filterOutNodes?: string[];
 };
 
 export type TGraphView = {
@@ -107,6 +109,7 @@ export const defaultGraphView = (): TGraphView => ({
   params: {
     maxRank: 2,
     roots: [],
+    filterOutNodes: [],
   },
   nodeViews: [],
   graph: {

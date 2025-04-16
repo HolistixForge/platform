@@ -244,8 +244,17 @@ const CellOutput = (props: ReturnType<typeof useCellLogic>) => {
 
 export const NodeCell = ({ node }: { node: TGraphNode }) => {
   //
-  const { id, viewStatus, expand, reduce, isOpened, open, close, selected } =
-    useNodeContext();
+  const {
+    id,
+    viewStatus,
+    expand,
+    reduce,
+    isOpened,
+    open,
+    close,
+    selected,
+    filterOut,
+  } = useNodeContext();
 
   const cellLogic = useCellLogic({
     cellId: node.data!.cellId as string,
@@ -265,10 +274,11 @@ export const NodeCell = ({ node }: { node: TGraphNode }) => {
     onClear: handleClearOutput,
     onPlay: handleExecute,
     onDelete: handleDeleteCell,
+    filterOut,
   });
 
   return (
-    <div className={`common-node`}>
+    <div className={`common-node node-resizable`}>
       <InputsAndOutputs id={id} />
       <NodeHeader
         nodeType="python"

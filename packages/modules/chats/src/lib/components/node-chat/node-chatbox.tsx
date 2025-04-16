@@ -116,6 +116,15 @@ export const NodeChatbox = ({ node }: { node: TGraphNode }) => {
       });
   };
 
+  const handleFilterOut = () => {
+    anchorNodeId &&
+      dispatcher.dispatch({
+        type: 'space:action',
+        action: { type: 'filter-out-node', nid: anchorNodeId },
+        viewId: useNodeValue.viewId,
+      });
+  };
+
   const handleDelete = () => {
     return dispatcher.dispatch({
       type: 'chats:delete',
@@ -129,6 +138,7 @@ export const NodeChatbox = ({ node }: { node: TGraphNode }) => {
     isExpanded: true,
     reduce: handleClose,
     onDelete: handleDelete,
+    filterOut: handleFilterOut,
   });
 
   return (

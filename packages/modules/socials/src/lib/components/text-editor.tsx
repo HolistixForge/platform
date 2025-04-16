@@ -65,6 +65,7 @@ export const NodeTextEditorInternal = ({
   id,
   selected,
   onDelete,
+  filterOut,
 }: NodeTextEditorInternalProps) => {
   const { awareness } = useAwareness();
   const quillInstanceRef = useRef<any>(null);
@@ -117,6 +118,7 @@ export const NodeTextEditorInternal = ({
     open,
     close,
     onDelete,
+    filterOut,
   });
 
   const bindEditor = useBindEditor();

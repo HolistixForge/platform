@@ -49,7 +49,6 @@ export const NodeNotionTask = ({ node }: { node: TGraphNode }) => {
   }, [dispatcher, pageId]);
 
   const buttons = useMakeButton({
-    ...useNodeValue,
     onDelete: handleDeletePage,
   });
 

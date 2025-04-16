@@ -211,6 +211,7 @@ export const NodeServerInternal = (
       | 'viewStatus'
       | 'expand'
       | 'reduce'
+      | 'filterOut'
       | 'selected'
     >
 ) => {
@@ -224,6 +225,7 @@ export const NodeServerInternal = (
     viewStatus,
     expand,
     reduce,
+    filterOut,
     selected,
     onDelete,
     ...otherProps
@@ -232,12 +234,9 @@ export const NodeServerInternal = (
   const isExpanded = viewStatus.mode === 'EXPANDED';
   const buttons = useMakeButton({
     isExpanded,
-    expand,
-    reduce,
     onDelete,
     isOpened,
-    open,
-    close,
+    filterOut,
   });
 
   return (

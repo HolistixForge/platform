@@ -24,8 +24,17 @@ import { TDemiurgeNotebookEvent } from '../../jupyter-events';
 export const NodeKernel = ({ node }: { node: TGraphNode }) => {
   //
 
-  const { id, viewStatus, expand, reduce, isOpened, open, close, selected } =
-    useNodeContext();
+  const {
+    id,
+    viewStatus,
+    expand,
+    reduce,
+    isOpened,
+    open,
+    close,
+    selected,
+    filterOut,
+  } = useNodeContext();
 
   const isExpanded = viewStatus.mode === 'EXPANDED';
 
@@ -88,6 +97,7 @@ export const NodeKernel = ({ node }: { node: TGraphNode }) => {
     isOpened,
     open,
     close,
+    filterOut,
   });
 
   //

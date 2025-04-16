@@ -24,8 +24,17 @@ import './group.scss';
 //
 
 export const Group = ({ node }: { node: TGraphNode }) => {
-  const { id, expand, reduce, isOpened, open, close, viewStatus, selected } =
-    useNodeContext();
+  const {
+    id,
+    expand,
+    reduce,
+    isOpened,
+    open,
+    close,
+    viewStatus,
+    selected,
+    filterOut,
+  } = useNodeContext();
   const groupRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -63,6 +72,7 @@ export const Group = ({ node }: { node: TGraphNode }) => {
     open,
     close,
     onDelete: handleDeleteGroup,
+    filterOut,
   });
 
   const handleBorderColorChange = useCallback((color: ColorValue) => {

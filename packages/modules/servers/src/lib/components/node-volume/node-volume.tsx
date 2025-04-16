@@ -29,6 +29,7 @@ export type NodeVolumeInternalProps = {
   | 'expand'
   | 'reduce'
   | 'selected'
+  | 'filterOut'
 >;
 
 //
@@ -45,6 +46,7 @@ export const NodeVolumeInternal = ({
   expand,
   reduce,
   selected,
+  filterOut,
 }: NodeVolumeInternalProps) => {
   //
 
@@ -57,6 +59,7 @@ export const NodeVolumeInternal = ({
     isOpened,
     open,
     close,
+    filterOut,
   });
 
   return (

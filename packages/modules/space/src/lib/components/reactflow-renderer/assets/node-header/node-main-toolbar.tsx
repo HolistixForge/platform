@@ -8,6 +8,7 @@ import {
   ButtonIconProps,
   useAction,
 } from '@monorepo/ui-base';
+import { icons as icons2 } from '../inputsOutputs/icons';
 
 import { DisableZoomDragPan } from '../../node-wrappers/disable-zoom-drag-pan';
 
@@ -48,6 +49,7 @@ type UseMakeButton = {
   isExpanded?: boolean;
   expand?: () => void;
   reduce?: () => void;
+  filterOut?: () => void;
   //
   isLocked?: boolean;
   onLock?: () => void;
@@ -67,6 +69,7 @@ export const useMakeButton = ({
   isExpanded,
   expand,
   reduce,
+  filterOut,
   //
   isLocked,
   onLock,
@@ -146,6 +149,12 @@ export const useMakeButton = ({
         });
     }
   }
+
+  if (filterOut)
+    buttons.push({
+      Icon: icons2.EyeSlash,
+      callback: filterOut,
+    });
 
   return buttons;
 };

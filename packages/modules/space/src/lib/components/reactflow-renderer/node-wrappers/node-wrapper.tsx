@@ -114,6 +114,8 @@ export const NodeWrapper =
 
     const expand = () => sad.dispatch({ type: 'expand-node', nid: id });
 
+    const filterOut = () => sad.dispatch({ type: 'filter-out-node', nid: id });
+
     const opened = isNodeOpened(nv.status);
 
     const selectingUsers = spaceAwareness.getSelectedNodes()[id] || [];
@@ -139,6 +141,7 @@ export const NodeWrapper =
       expand,
       selectingUsers,
       selected,
+      filterOut,
     };
 
     const handleResizeStart = (e: MouseEvent) => {

@@ -45,11 +45,14 @@ type TMenuEntry = {
   title: string;
   onClick: () => void;
   disabled: boolean;
+  hiddenNodes?: { id: string; name: string }[];
 };
 type TSeparator = { separator: true };
 
 type TMenuContext = {
   new: (TMenuEntry | TSeparator)[];
+  viewId: string;
+  position: TPosition;
 };
 
 const menuContext = createContext<TMenuContext | null>(null);
@@ -59,7 +62,7 @@ const menuContext = createContext<TMenuContext | null>(null);
  */
 export const ContextMenuNew = () => {
   const context = useContext(menuContext) as TMenuContext;
-
+  const dispatcher = useDispatcher();
   return (
     <ContextMenu.Sub>
       <ContextMenu.SubTrigger className="ContextMenuSubTrigger">
@@ -85,14 +88,67 @@ export const ContextMenuNew = () => {
             else {
               menuEntry = menuEntry as TMenuEntry;
               return (
-                <ContextMenu.Item
-                  key={k}
-                  className="ContextMenuItem"
-                  onClick={menuEntry.disabled ? undefined : menuEntry.onClick}
-                  disabled={menuEntry.disabled}
-                >
-                  {menuEntry.title}
-                </ContextMenu.Item>
+                <ContextMenu.Sub>
+                  <ContextMenu.SubTrigger className="ContextMenuSubTrigger">
+                    {menuEntry.title}
+                    <div className="RightSlot">
+                      <ChevronRightIcon />
+                    </div>
+                  </ContextMenu.SubTrigger>
+                  <ContextMenu.Portal>
+                    <ContextMenu.SubContent
+                      className="ContextMenuSubContent"
+                      sideOffset={2}
+                      alignOffset={-5}
+                    >
+                      <ContextMenu.Item
+                        key={k}
+                        className="ContextMenuItem"
+                        onClick={
+                          menuEntry.disabled ? undefined : menuEntry.onClick
+                        }
+                        disabled={menuEntry.disabled}
+                      >
+                        New...
+                      </ContextMenu.Item>
+                      <ContextMenu.Separator
+                        key={k}
+                        className="ContextMenuSeparator"
+                      />
+                      {menuEntry.hiddenNodes &&
+                        menuEntry.hiddenNodes.map((node) => {
+                          return (
+                            <ContextMenu.Item
+                              key={node.id}
+                              className="ContextMenuItem"
+                              onClick={async () => {
+                                await dispatcher.dispatch({
+                                  type: 'space:action',
+                                  viewId: context.viewId,
+                                  action: {
+                                    type: 'unfilter-out-node',
+                                    nid: node.id,
+                                    position: context.position,
+                                  },
+                                });
+                                await dispatcher.dispatch({
+                                  type: 'space:action',
+                                  viewId: context.viewId,
+                                  action: {
+                                    type: 'move-node',
+                                    nid: node.id,
+                                    position: context.position,
+                                  },
+                                });
+                              }}
+                            >
+                              {node.name}
+                            </ContextMenu.Item>
+                          );
+                        })}
+                    </ContextMenu.SubContent>
+                  </ContextMenu.Portal>
+                </ContextMenu.Sub>
               );
             }
           })}
@@ -169,7 +225,13 @@ export const ContextMenuLogic = ({
 
   const dispatcher = useDispatcher();
 
-  const sd = useSharedData(['nodes', 'projectServers'], (sd) => sd);
+  const sd = useSharedData(
+    ['nodes', 'projectServers', 'graphViews'],
+    (sd) => sd
+  );
+
+  const gv = sd.graphViews.get(viewId);
+  const filterOutNodes = gv?.params.filterOutNodes?.map((n) => sd.nodes.get(n));
 
   // get the origin node data
   const originNodeData = from && sd.nodes.get(from.node);
@@ -396,18 +458,30 @@ export const ContextMenuLogic = ({
 
   //
 
+  const getHiddenNodesByType = (type: string) => {
+    return filterOutNodes
+      ?.filter((n) => n?.type === type)
+      .map((n) => ({ id: n?.id as string, name: n?.name as string }));
+  };
+
+  //
+
   const context = useMemo<TMenuContext>(() => {
     return {
+      viewId: viewId,
+      position: refCoordinates.current,
       new: [
         {
           title: 'Group',
           onClick: onNewGroup,
           disabled: false,
+          hiddenNodes: getHiddenNodesByType('group'),
         },
         {
           title: 'Shape',
           onClick: onNewShape,
           disabled: false,
+          hiddenNodes: getHiddenNodesByType('shape'),
         },
         { separator: true },
 
@@ -415,6 +489,7 @@ export const ContextMenuLogic = ({
           title: 'Server',
           onClick: server_action.open,
           disabled: from !== undefined,
+          hiddenNodes: getHiddenNodesByType('server'),
         },
 
         {
@@ -424,6 +499,7 @@ export const ContextMenuLogic = ({
             originNodeData?.type === 'server' &&
             from?.connectorName === 'outputs'
           ),
+          hiddenNodes: getHiddenNodesByType('jupyter-kernel'),
         },
         {
           title: 'Terminal',
@@ -432,6 +508,7 @@ export const ContextMenuLogic = ({
             originNodeData?.type === 'server' &&
             from?.connectorName === 'outputs'
           ),
+          hiddenNodes: getHiddenNodesByType('jupyter-terminal'),
         },
         {
           title: 'Code Cell',
@@ -441,6 +518,7 @@ export const ContextMenuLogic = ({
               originNodeData?.type === 'jupyter-cell') &&
             from?.connectorName === 'outputs'
           ),
+          hiddenNodes: getHiddenNodesByType('jupyter-cell'),
         },
         { separator: true },
         /*
@@ -455,27 +533,34 @@ export const ContextMenuLogic = ({
           title: 'Chat Box',
           onClick: onNewChatBox,
           disabled: false,
+          hiddenNodes: getHiddenNodesByType('chat-anchor'),
         },
         { separator: true },
         {
           title: 'Notion Database',
           onClick: notion_action.open,
           disabled: false,
+          hiddenNodes: getHiddenNodesByType('notion-database'),
         },
         { separator: true },
         {
           title: 'Text Editor',
           onClick: onNewTextEditor,
           disabled: false,
+          hiddenNodes: getHiddenNodesByType('text-editor'),
         },
         {
           title: 'Youtube Embedding',
           onClick: youtube_action.open,
           disabled: from !== undefined,
+          hiddenNodes: getHiddenNodesByType('youtube'),
         },
       ],
     };
   }, [
+    filterOutNodes,
+    refCoordinates.current.x,
+    refCoordinates.current.y,
     server_action.open,
     from,
     kernel_action.open,
