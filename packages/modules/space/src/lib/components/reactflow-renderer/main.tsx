@@ -10,6 +10,7 @@ import {
   Connection,
   EdgeProps,
   Background,
+  FinalConnectionState,
 } from '@xyflow/react';
 import * as _ from 'lodash';
 
@@ -151,12 +152,11 @@ export const DemiurgeSpace = ({
   //
   //
 
-  /** if user stop edge draw above nothing, we create a new edge */
+  /** if user stop edge draw above nothing, we open the context menu */
   const onConnectEnd = useCallback(
-    (event: MouseEvent | TouchEvent) => {
-      const targetIsPane = (event as any).target.classList.contains(
-        'react-flow__pane'
-      );
+    (event: MouseEvent | TouchEvent, connectionState: FinalConnectionState) => {
+      console.log('onConnectEnd', event, connectionState);
+      const targetIsPane = connectionState.toNode === null;
 
       if (targetIsPane && connectingNodeId.current) {
         const pclient = clientXY(event);
