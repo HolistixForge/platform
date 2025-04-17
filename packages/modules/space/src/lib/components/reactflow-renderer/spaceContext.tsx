@@ -11,6 +11,7 @@ export type TSpaceContext = {
   spaceAwareness: SpaceAwareness;
   spaceState: SpaceState;
   currentUser?: { username: string; color: string };
+  moveNodeMode: boolean;
 };
 
 //

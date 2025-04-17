@@ -87,6 +87,19 @@ const EasyConnect: FC<{ id: string }> = ({ id }) => {
 //
 //
 
+const MoveNodeMode = ({ moveNodeMode }: { moveNodeMode: boolean }) => {
+  return (
+    moveNodeMode && (
+      <div className="move-node-mode">
+        <div style={{ width: '100%', height: '100%' }}>Move node mode</div>
+      </div>
+    )
+  );
+};
+
+//
+//
+
 export const NodeWrapper =
   (NodeComponent: FC) =>
   ({ id, data }: SpaceNode) => {
@@ -98,6 +111,7 @@ export const NodeWrapper =
       spaceActionsDispatcher: sad,
       spaceAwareness,
       currentUser,
+      moveNodeMode,
     } = useSpaceContext();
 
     useRegisterListener(spaceAwareness);
@@ -218,6 +232,7 @@ export const NodeWrapper =
             >
               <NodeComponent />
               <EasyConnect id={id} />
+              <MoveNodeMode moveNodeMode={moveNodeMode} />
             </div>
           </SelectionsAwareness>
 

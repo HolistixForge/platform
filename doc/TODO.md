@@ -1,5 +1,11 @@
 ⚠️ Antoine's stuffs
 
+move node :
+
+- event sequence (uuid and counter), skip event after a newer has been process
+- node position css transition
+- decoreler le rendu local et shared state, avec une surchage locale des propriétés de position
+
 dns
 shut down button
 

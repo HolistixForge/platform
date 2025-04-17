@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useMemo, FC } from 'react';
+import React, { useCallback, useRef, useMemo, FC, useState } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -13,6 +13,7 @@ import {
   FinalConnectionState,
 } from '@xyflow/react';
 import * as _ from 'lodash';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 import { useRegisterListener } from '@monorepo/simple-types';
 import { clientXY } from '@monorepo/ui-toolkit';
@@ -77,6 +78,19 @@ export const DemiurgeSpace = ({
   onPaneClick,
 }: DemiurgeSpaceProps) => {
   //
+  // State to track whether we're in pan-only mode
+  const [moveNodeMode, setMoveNodeMode] = useState(false);
+
+  // Toggle pan-only mode with Shift+Z
+  useHotkeys(
+    'shift+z',
+    () => {
+      setMoveNodeMode((prevMode) => !prevMode);
+    },
+    {
+      preventDefault: true, // Prevent any default browser behavior
+    }
+  );
 
   useRegisterListener(spaceState);
 
@@ -180,8 +194,8 @@ export const DemiurgeSpace = ({
           position: node.position,
         });
       },
-      250,
-      { maxWait: 250 }
+      33,
+      { maxWait: 33 }
     ),
     []
   );
@@ -271,8 +285,9 @@ export const DemiurgeSpace = ({
       spaceActionsDispatcher,
       spaceState,
       currentUser,
+      moveNodeMode,
     }),
-    []
+    [moveNodeMode]
   );
 
   /**
@@ -317,6 +332,24 @@ export const DemiurgeSpace = ({
           <MiniMap />
           <Controls />
           <Background />
+          {/* Indicator when in pan-only mode */}
+          {moveNodeMode && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '10px',
+                left: '10px',
+                padding: '5px 10px',
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                color: 'white',
+                borderRadius: '4px',
+                fontSize: '12px',
+                zIndex: 5,
+              }}
+            >
+              Move Node Mode Active (Shift+Z to toggle)
+            </div>
+          )}
         </ReactFlow>
       </SpaceContext>
       <AvatarsRenderer avatarsStore={avatarsStore} />

@@ -6,6 +6,7 @@
   display: block;
 }
 
+.move-node-mode,
 .easy-connect-handle-box,
 .easy-connect-handle {
   width: 100%;
@@ -15,6 +16,12 @@
   left: 0;
   right: 0;
   bottom: 0;
+}
+
+.move-node-mode {
+  background-color: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(2px);
+  pointer-events: auto;
 }
 
 .easy-connect-handle-box {
