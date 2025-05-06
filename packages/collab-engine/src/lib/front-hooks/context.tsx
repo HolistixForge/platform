@@ -47,7 +47,7 @@ export type TYjsCollabConfig = {
   ws_server: string;
   token: TokenMethods;
 };
-export type TNoneCollabConfig = { type: 'none' };
+export type TNoneCollabConfig = { type: 'none'; simulateUsers?: boolean };
 export type TCollabConfig = TNoneCollabConfig | TYjsCollabConfig;
 
 //
@@ -207,7 +207,7 @@ export const CollaborativeContext = ({
     } else {
       sharedTypes = new NoneSharedTypes();
       sharedEditor = new NoneSharedEditor();
-      awareness = new NoneAwareness();
+      awareness = new NoneAwareness(config.simulateUsers);
       setState({ synced: true });
     }
     awareness.setUser(user);

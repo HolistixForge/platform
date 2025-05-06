@@ -26,6 +26,10 @@ Logger.setPriority(7);
 
 //
 
+const STORY_VIEW_ID = 'story';
+
+//
+
 const loadStoryData = (sd: TSpaceSharedData & TCoreSharedData) => {
   const graphViews = sd.graphViews;
   const gv = defaultGraphView();
@@ -71,7 +75,7 @@ const loadStoryData = (sd: TSpaceSharedData & TCoreSharedData) => {
     },
   });
 
-  graphViews.set('graph-1', gv);
+  graphViews.set(STORY_VIEW_ID, gv);
 };
 
 //
@@ -122,7 +126,7 @@ const StoryWrapper = () => {
       }}
     >
       <div style={{ height: '100vh', width: '100vw' }}>
-        <SpaceModule viewId={'graph-1'} nodeTypes={nodeTypes} />
+        <SpaceModule viewId={STORY_VIEW_ID} nodeTypes={nodeTypes} />
       </div>
     </CollaborativeContext>
   );

@@ -8,7 +8,7 @@ export { DisableZoomDragPan } from './reactflow-renderer/node-wrappers/disable-z
 
 export { useConnector } from './reactflow-renderer/assets/inputsOutputs/inputsOutputs';
 
-export { StoryMockSpaceContext } from './local-test/storyMockSpaceContext';
+export { StoryMockSpaceContext } from './stories/storyMockSpaceContext';
 
 export type { TNodeContext } from './apis/types/node';
 export {

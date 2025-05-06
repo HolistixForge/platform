@@ -17,13 +17,12 @@ import { DemiurgeSpace } from '../reactflow-renderer/main';
 import { ReactflowPointerTracker } from '../reactflow-renderer/reactflowPointerTracker';
 import { HtmlAvatarStore } from '../reactflow-renderer/htmlAvatarStore';
 
-import { CustomStoryEdge } from '../local-test/edge';
+import { CustomStoryEdge } from '../reactflow-renderer/edge';
 
 import { CollabSpaceState } from './collab-space-state';
 import { CollabSpaceAwareness } from './collab-space-awareness';
-import { CollabSpaceActionsDispatcher } from './collab-space-actions-dispatcher';
 import { useNodeContext } from '../reactflow-renderer/node-wrappers/node-wrapper';
-import { CustomStoryNode } from '../local-test/node';
+import { CustomStoryNode } from '../reactflow-renderer/node';
 
 //
 
@@ -77,11 +76,10 @@ export const SpaceModule = ({
     const pt = new ReactflowPointerTracker(ga);
     const as = new HtmlAvatarStore(pt, ga);
     const ss = new CollabSpaceState(viewId, sd);
-    const sad = new CollabSpaceActionsDispatcher(viewId, collabDispatcher);
 
     const Node = makeSpaceModuleNode(nodeTypes);
 
-    return { ga, pt, as, sad, ss, Node };
+    return { ga, pt, as, ss, Node };
   }, []);
 
   const onDrop = useCallback(
@@ -106,7 +104,6 @@ export const SpaceModule = ({
       nodeComponent={logics.Node}
       edgeComponent={CustomStoryEdge}
       spaceState={logics.ss}
-      spaceActionsDispatcher={logics.sad}
       currentUser={awareness._user || undefined}
       spaceAwareness={logics.ga}
       pointerTracker={logics.pt}

@@ -18,17 +18,17 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import { useRegisterListener } from '@monorepo/simple-types';
 import { clientXY } from '@monorepo/ui-toolkit';
 import { TPosition, TEdge, TEdgeEnd, EEdgeType } from '@monorepo/core';
+import { useDispatcher } from '@monorepo/collab-engine';
 
 import { PointerTracker } from '../apis/pointerTracker';
 import { AvatarsRenderer } from './avatarsRenderer';
 import { SpaceContext } from './spaceContext';
 import { NodeWrapper } from './node-wrappers/node-wrapper';
-import { SpaceActionsDispatcher } from '../apis/spaceActionsDispatcher';
 import { SpaceState } from '../apis/spaceState';
 import { SpaceAwareness } from '../apis/spaceAwareness';
 import { HtmlAvatarStore } from './htmlAvatarStore';
 import { translateEdges, translateNodes } from './to-rf-nodes';
-
+import { TSpaceEvent } from '../../space-events';
 //
 //
 
@@ -38,7 +38,6 @@ type DemiurgeSpaceProps = {
   nodeComponent: FC;
   edgeComponent: FC<EdgeProps>;
   spaceState: SpaceState;
-  spaceActionsDispatcher: SpaceActionsDispatcher;
   spaceAwareness: SpaceAwareness;
   pointerTracker: PointerTracker;
   avatarsStore: HtmlAvatarStore;
@@ -66,7 +65,6 @@ export const DemiurgeSpace = ({
   nodeComponent,
   edgeComponent,
   spaceState,
-  spaceActionsDispatcher,
   spaceAwareness,
   pointerTracker,
   avatarsStore,
@@ -93,6 +91,8 @@ export const DemiurgeSpace = ({
   );
 
   useRegisterListener(spaceState);
+
+  const dispatcher = useDispatcher<TSpaceEvent>();
 
   //
   // ***************  ***************
@@ -188,8 +188,9 @@ export const DemiurgeSpace = ({
     _.debounce(
       (event: React.MouseEvent, node: Node, nodes: Node[]) => {
         // send an absolute, or relative position if in a group
-        spaceActionsDispatcher.dispatch({
-          type: 'move-node',
+        dispatcher.dispatch({
+          type: 'space:move-node',
+          viewId,
           nid: node.id,
           position: node.position,
         });
@@ -203,8 +204,9 @@ export const DemiurgeSpace = ({
   const onNodeDragStop = useCallback(
     (event: React.MouseEvent, node: Node, nodes: Node[]) => {
       // send an absolute, or relative position if in a group
-      spaceActionsDispatcher.dispatch({
-        type: 'move-node',
+      dispatcher.dispatch({
+        type: 'space:move-node',
+        viewId,
         nid: node.id,
         position: node.position,
         stop: true,
@@ -282,10 +284,10 @@ export const DemiurgeSpace = ({
   const context = useMemo(
     () => ({
       spaceAwareness,
-      spaceActionsDispatcher,
       spaceState,
       currentUser,
       moveNodeMode,
+      viewId,
     }),
     [moveNodeMode]
   );

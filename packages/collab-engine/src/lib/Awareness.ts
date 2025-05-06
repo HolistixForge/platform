@@ -27,7 +27,10 @@ export abstract class Awareness {
     this._user = user;
   }
 
-  getUser(): TAwarenessUser | null {
+  getUser(): TAwarenessUser {
+    if (!this._user) {
+      throw new Error('User not set');
+    }
     return this._user;
   }
 

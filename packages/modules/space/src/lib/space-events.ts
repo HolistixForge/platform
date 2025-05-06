@@ -1,43 +1,50 @@
 import { TEventOrigin, TPosition } from '@monorepo/core';
 
-export type TSAMoveNode = {
-  type: 'move-node';
+export type TEventMoveNode = {
+  type: 'space:move-node';
+  viewId: string;
   nid: string;
   position: TPosition;
   stop?: boolean;
 };
 
-export type TSAReduceNode = {
-  type: 'reduce-node';
+export type TEventReduceNode = {
+  type: 'space:reduce-node';
+  viewId: string;
   nid: string;
 };
 
-export type TSAExpandNode = {
-  type: 'expand-node';
+export type TEventExpandNode = {
+  type: 'space:expand-node';
+  viewId: string;
   nid: string;
 };
 
-export type TSACloseConnector = {
-  type: 'close-connector';
-  nid: string;
-  connectorName: string;
-};
-
-export type TSAOpenConnector = {
-  type: 'open-connector';
+export type TEventCloseConnector = {
+  type: 'space:close-connector';
+  viewId: string;
   nid: string;
   connectorName: string;
 };
 
-export type TSAHighlightFromConnector = {
-  type: 'highlight';
+export type TEventOpenConnector = {
+  type: 'space:open-connector';
+  viewId: string;
+  nid: string;
+  connectorName: string;
+};
+
+export type TEventHighlightFromConnector = {
+  type: 'space:highlight';
+  viewId: string;
   nid: string;
   connectorName: string;
   pinName?: string;
 };
 
-export type TSAUnhighlightFromConnector = {
-  type: 'unhighlight';
+export type TEventUnhighlightFromConnector = {
+  type: 'space:unhighlight';
+  viewId: string;
   nid: string;
   connectorName: string;
   pinName?: string;
@@ -45,57 +52,48 @@ export type TSAUnhighlightFromConnector = {
 
 //
 
-export type TSAFilterOutNode = {
-  type: 'filter-out-node';
+export type TEventFilterOutNode = {
+  type: 'space:filter-out-node';
+  viewId: string;
   nid: string;
 };
 
-export type TSAUnfilterOutNode = {
-  type: 'unfilter-out-node';
+export type TEventUnfilterOutNode = {
+  type: 'space:unfilter-out-node';
+  viewId: string;
   nid: string;
   position?: TPosition;
 };
 
-export type TSAOpenNode = {
-  type: 'open-node';
+export type TEventOpenNode = {
+  type: 'space:open-node';
+  viewId: string;
   nid: string;
 };
 
-export type TSACloseNode = {
-  type: 'close-node';
+export type TEventCloseNode = {
+  type: 'space:close-node';
+  viewId: string;
   nid: string;
 };
 
-export type TSAPopNode = {
-  type: 'pop-node';
+export type TEventPopNode = {
+  type: 'space:pop-node';
+  viewId: string;
   nid: string;
 };
 
-export type TSAResizeNode = {
-  type: 'resize-node';
+export type TEventResizeNode = {
+  type: 'space:resize-node';
+  viewId: string;
   nid: string;
   size: { width: number; height: number };
 };
 
-export type TSAUpdateGraphView = {
-  type: 'update-graph-view';
+export type TEventUpdateGraphView = {
+  type: 'space:update-graph-view';
+  viewId: string;
 };
-
-export type TSpaceActions =
-  | TSAOpenNode
-  | TSACloseNode
-  | TSAMoveNode
-  | TSAExpandNode
-  | TSAReduceNode
-  | TSACloseConnector
-  | TSAOpenConnector
-  | TSAHighlightFromConnector
-  | TSAUnhighlightFromConnector
-  | TSAResizeNode
-  | TSAPopNode
-  | TSAUpdateGraphView
-  | TSAFilterOutNode
-  | TSAUnfilterOutNode;
 
 export type TEventNewView = {
   type: 'space:new-view';
@@ -156,12 +154,6 @@ export type TEventNewShape = {
   shapeType: TShapeType;
 };
 
-export type TEventSpaceAction = {
-  type: 'space:action';
-  viewId: string;
-  action: TSpaceActions;
-};
-
 export type TEventDeleteShape = {
   type: 'space:delete-shape';
   shapeId: string;
@@ -174,7 +166,20 @@ export type TEventDeleteGroup = {
 
 export type TSpaceEvent =
   | TEventNewView
-  | TEventSpaceAction
+  | TEventMoveNode
+  | TEventReduceNode
+  | TEventExpandNode
+  | TEventCloseConnector
+  | TEventOpenConnector
+  | TEventHighlightFromConnector
+  | TEventUnhighlightFromConnector
+  | TEventResizeNode
+  | TEventPopNode
+  | TEventUpdateGraphView
+  | TEventFilterOutNode
+  | TEventUnfilterOutNode
+  | TEventOpenNode
+  | TEventCloseNode
   | TEventNewGroup
   | TEventGroupPropertyChange
   | TEventShapePropertyChange

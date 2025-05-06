@@ -18,7 +18,6 @@ export class YjsAwareness extends Awareness {
   _ydoc: Doc;
   _provider: WebsocketProvider;
 
-  _userName: string | null = null;
   _buildUserCss?: (key: number, color: string | undefined) => void;
 
   constructor(

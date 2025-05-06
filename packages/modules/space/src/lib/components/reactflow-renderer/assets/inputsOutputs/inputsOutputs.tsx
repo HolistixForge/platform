@@ -1,9 +1,13 @@
 import { useCallback } from 'react';
+import { Handle, Position, useUpdateNodeInternals } from '@xyflow/react';
+
+import { useDispatcher } from '@monorepo/collab-engine';
+
 import { icons } from './icons';
 import { Slot } from '../slot/Slot';
-import { Handle, Position, useUpdateNodeInternals } from '@xyflow/react';
 import { useSpaceContext } from '../../spaceContext';
 import { fromPinId } from '../../../apis/types/edge';
+import { TSpaceEvent } from '../../../../space-events';
 
 import './inputsOutputs.css';
 
@@ -40,7 +44,8 @@ const getHandleFromEvent = (event: React.MouseEvent) => {
  */
 
 export const useConnector = (nodeId: string, connectorName: string) => {
-  const { spaceActionsDispatcher, spaceState } = useSpaceContext();
+  const { spaceState, viewId } = useSpaceContext();
+  const dispatcher = useDispatcher<TSpaceEvent>();
 
   const updateNodeInternals = useUpdateNodeInternals();
 
@@ -60,10 +65,11 @@ export const useConnector = (nodeId: string, connectorName: string) => {
     /* the open close action display and hide the handles
      * so updateNodeInternals() is called to force reactFlow to update
      * internal state of handlers position   */
-    spaceActionsDispatcher.dispatch({
-      type: isOpened ? 'close-connector' : 'open-connector',
+    dispatcher.dispatch({
+      type: isOpened ? 'space:close-connector' : 'space:open-connector',
       nid: nodeId,
       connectorName,
+      viewId,
     });
     setTimeout(() => {
       // TODO_: edges readraw is delayed and it's ugly
@@ -76,11 +82,12 @@ export const useConnector = (nodeId: string, connectorName: string) => {
   const handleMouseOver = useCallback((event: React.MouseEvent) => {
     const h = getHandleFromEvent(event);
     const { connectorName, pinName } = fromPinId(h.handleId);
-    spaceActionsDispatcher.dispatch({
-      type: 'highlight',
+    dispatcher.dispatch({
+      type: 'space:highlight',
       nid: nodeId,
       connectorName,
       pinName,
+      viewId,
     });
   }, []);
 
@@ -92,11 +99,12 @@ export const useConnector = (nodeId: string, connectorName: string) => {
 
     const h = getHandleFromEvent(event);
     const { connectorName, pinName } = fromPinId(h.handleId);
-    spaceActionsDispatcher.dispatch({
-      type: 'unhighlight',
+    dispatcher.dispatch({
+      type: 'space:unhighlight',
       nid: nodeId,
       connectorName,
       pinName,
+      viewId,
     });
   }, []);
 

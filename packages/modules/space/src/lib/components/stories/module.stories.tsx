@@ -9,29 +9,16 @@ import {
   Dispatcher,
 } from '@monorepo/collab-engine';
 import { Logger } from '@monorepo/log';
-import { Core_loadData, CoreReducer, TCoreSharedData } from '@monorepo/core';
+import { Core_loadData, CoreReducer } from '@monorepo/core';
 
-import { SpaceModule } from './main';
+import { SpaceModule } from '../collab-module/main';
 import { SpaceReducer } from '../../space-reducer';
-import { Space_loadData, TSpaceSharedData } from '../../space-shared-model';
-import { defaultGraphView, TGraphView } from '../../space-types';
-import { loadStoryGraph } from '../local-test/localSpaceActionsDispatcher';
+import { Space_loadData } from '../../space-shared-model';
 import { Group } from '../group/group';
-
+import { loadStoryData, STORY_VIEW_ID } from './graphs-data/loader';
 //
 
 Logger.setPriority(7);
-
-//
-
-const loadStoryData = (sd: TSpaceSharedData & TCoreSharedData) => {
-  const graphViews = sd.graphViews;
-  const gv: TGraphView = defaultGraphView();
-
-  loadStoryGraph(gv, sd.nodes as any, sd.edges as any);
-
-  graphViews.set('graph-1', gv);
-};
 
 //
 
@@ -72,6 +59,7 @@ const StoryWrapper = () => {
       collabChunks={chunks}
       config={{
         type: 'none',
+        simulateUsers: true,
       }}
       dispatcher={dispatcher}
       user={{
@@ -80,7 +68,7 @@ const StoryWrapper = () => {
       }}
     >
       <div style={{ height: '100vh', width: '100vw' }}>
-        <SpaceModule viewId={'graph-1'} nodeTypes={nodeTypes} />
+        <SpaceModule viewId={STORY_VIEW_ID} nodeTypes={nodeTypes} />
       </div>
     </CollaborativeContext>
   );

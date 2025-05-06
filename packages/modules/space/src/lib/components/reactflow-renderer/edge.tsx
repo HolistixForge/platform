@@ -8,9 +8,9 @@ import {
   LabelEnd,
   LabelMiddle,
   LabelStart,
-} from '../reactflow-renderer/assets/edges/edge';
+} from './assets/edges/edge';
 import { EdgePayload } from '../apis/types/edge';
-import { FloatingEdge } from '../reactflow-renderer/assets/edges/floating-edge';
+import { FloatingEdge } from './assets/edges/floating-edge';
 
 //
 //

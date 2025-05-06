@@ -17,6 +17,7 @@ import { useHotkeys } from 'react-hotkeys-hook';
 
 import { useDebugComponent } from '@monorepo/log';
 import { useRegisterListener } from '@monorepo/simple-types';
+import { useDispatcher } from '@monorepo/collab-engine';
 
 import { TNodeContext } from '../../apis/types/node';
 import { SelectionsAwareness } from './selection-awareness';
@@ -24,6 +25,7 @@ import { useSpaceContext } from '../spaceContext';
 import { isNodeOpened, TNodeViewStatus } from '../../../space-types';
 import { SpaceNode } from '../to-rf-nodes';
 import { DisableZoomDragPan } from './disable-zoom-drag-pan';
+import { TSpaceEvent } from '../../../space-events';
 
 import './node-wrapper.scss';
 
@@ -107,28 +109,31 @@ export const NodeWrapper =
     const zoom = useStore(zoomSelector);
     const nodeRef = useRef<HTMLDivElement>(null);
 
-    const {
-      spaceActionsDispatcher: sad,
-      spaceAwareness,
-      currentUser,
-      moveNodeMode,
-    } = useSpaceContext();
+    const dispatcher = useDispatcher<TSpaceEvent>();
+
+    const { spaceAwareness, currentUser, moveNodeMode, viewId } =
+      useSpaceContext();
 
     useRegisterListener(spaceAwareness);
 
     //
 
-    const { nv, viewId } = data;
+    const { nv } = data;
 
-    const close = () => sad.dispatch({ type: 'close-node', nid: id });
+    const close = () =>
+      dispatcher.dispatch({ type: 'space:close-node', nid: id, viewId });
 
-    const open = () => sad.dispatch({ type: 'open-node', nid: id });
+    const open = () =>
+      dispatcher.dispatch({ type: 'space:open-node', nid: id, viewId });
 
-    const reduce = () => sad.dispatch({ type: 'reduce-node', nid: id });
+    const reduce = () =>
+      dispatcher.dispatch({ type: 'space:reduce-node', nid: id, viewId });
 
-    const expand = () => sad.dispatch({ type: 'expand-node', nid: id });
+    const expand = () =>
+      dispatcher.dispatch({ type: 'space:expand-node', nid: id, viewId });
 
-    const filterOut = () => sad.dispatch({ type: 'filter-out-node', nid: id });
+    const filterOut = () =>
+      dispatcher.dispatch({ type: 'space:filter-out-node', nid: id, viewId });
 
     const opened = isNodeOpened(nv.status);
 
@@ -190,10 +195,11 @@ export const NodeWrapper =
       const handleResizeEnd = () => {
         nodeRef.current && (nodeRef.current.style.border = `none`);
 
-        sad.dispatch({
-          type: 'resize-node',
+        dispatcher.dispatch({
+          type: 'space:resize-node',
           nid: id,
           size: newSize,
+          viewId,
         });
 
         document.removeEventListener('mousemove', handleResizeMove);

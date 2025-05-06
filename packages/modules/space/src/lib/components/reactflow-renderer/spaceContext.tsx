@@ -1,17 +1,16 @@
 import { createContext, useContext, ReactNode } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
 import { SpaceState } from '../apis/spaceState';
-import { SpaceActionsDispatcher } from '../apis/spaceActionsDispatcher';
 import { SpaceAwareness } from '../apis/spaceAwareness';
 
 //
 
 export type TSpaceContext = {
-  spaceActionsDispatcher: SpaceActionsDispatcher;
   spaceAwareness: SpaceAwareness;
   spaceState: SpaceState;
   currentUser?: { username: string; color: string };
   moveNodeMode: boolean;
+  viewId: string;
 };
 
 //
