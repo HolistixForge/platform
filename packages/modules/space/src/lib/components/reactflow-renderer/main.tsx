@@ -18,7 +18,7 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import { useRegisterListener } from '@monorepo/simple-types';
 import { clientXY } from '@monorepo/ui-toolkit';
 import { TPosition, TEdge, TEdgeEnd, EEdgeType } from '@monorepo/core';
-import { useDispatcher } from '@monorepo/collab-engine';
+import { useDispatcher, Sequence } from '@monorepo/collab-engine';
 
 import { PointerTracker } from '../apis/pointerTracker';
 import { AvatarsRenderer } from './avatarsRenderer';
@@ -93,6 +93,7 @@ export const DemiurgeSpace = ({
   useRegisterListener(spaceState);
 
   const dispatcher = useDispatcher<TSpaceEvent>();
+  const dragSequenceRef = useRef<Sequence<TSpaceEvent> | null>(null);
 
   //
   // ***************  ***************
@@ -185,32 +186,34 @@ export const DemiurgeSpace = ({
   //
 
   const onNodeDrag = useCallback(
-    _.debounce(
-      (event: React.MouseEvent, node: Node, nodes: Node[]) => {
-        // send an absolute, or relative position if in a group
-        dispatcher.dispatch({
-          type: 'space:move-node',
-          viewId,
-          nid: node.id,
-          position: node.position,
-        });
-      },
-      33,
-      { maxWait: 33 }
-    ),
+    (event: React.MouseEvent, node: Node, nodes: Node[]) => {
+      // Create sequence if it doesn't exist
+      if (!dragSequenceRef.current) {
+        dragSequenceRef.current = dispatcher.createSequence();
+      }
+      dragSequenceRef.current.dispatch({
+        type: 'space:move-node',
+        viewId,
+        nid: node.id,
+        position: node.position,
+      });
+    },
     []
   );
 
   const onNodeDragStop = useCallback(
     (event: React.MouseEvent, node: Node, nodes: Node[]) => {
-      // send an absolute, or relative position if in a group
-      dispatcher.dispatch({
-        type: 'space:move-node',
-        viewId,
-        nid: node.id,
-        position: node.position,
-        stop: true,
-      });
+      if (dragSequenceRef.current) {
+        // Send final position
+        dragSequenceRef.current.dispatch({
+          type: 'space:move-node',
+          viewId,
+          nid: node.id,
+          position: node.position,
+          stop: true,
+        });
+        dragSequenceRef.current = null;
+      }
     },
     []
   );

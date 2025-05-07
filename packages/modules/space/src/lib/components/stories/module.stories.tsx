@@ -6,7 +6,7 @@ import {
   TCollaborativeChunk,
   TValidSharedData,
   SharedTypes,
-  Dispatcher,
+  JitterDispatcher,
 } from '@monorepo/collab-engine';
 import { Logger } from '@monorepo/log';
 import { Core_loadData, CoreReducer } from '@monorepo/core';
@@ -50,7 +50,7 @@ const nodeTypes = {
 
 const StoryWrapper = () => {
   const dispatcher = useMemo(() => {
-    return new Dispatcher();
+    return new JitterDispatcher();
   }, []);
 
   return (

@@ -30,7 +30,12 @@ export type { TValidSharedData, TCollaborativeChunk } from './lib/chunk';
 export { Reducer } from './lib/reducer';
 export type { ReduceArgs } from './lib/reducer';
 
-export { Dispatcher, BrowserDispatcher } from './lib/dispatcher';
+export {
+  Dispatcher,
+  BrowserDispatcher,
+  JitterDispatcher,
+} from './lib/dispatcher';
+export type { Sequence } from './lib/dispatcher';
 
 export type {
   TEventUserLeave,
