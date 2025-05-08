@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { useTestBoolean } from '@monorepo/ui-base';
-import { TNodeContext, StoryMockSpaceContext } from '@monorepo/space';
+import { TNodeContext, MockSpace } from '@monorepo/space';
 
 import { NodeServerInternal } from './node-server';
 import {
@@ -41,7 +41,7 @@ const StoryWrapper = (
   const state = useMockServerBehaviours(props);
 
   return (
-    <StoryMockSpaceContext selected={props.selected} isOpened={isOpened}>
+    <MockSpace selected={props.selected} isOpened={isOpened}>
       <NodeServerInternal
         expand={expand}
         reduce={reduce}
@@ -60,7 +60,7 @@ const StoryWrapper = (
         id={props.id}
         {...state}
       />
-    </StoryMockSpaceContext>
+    </MockSpace>
   );
 };
 

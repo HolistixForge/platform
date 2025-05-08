@@ -1,7 +1,3 @@
-import { useHotkeys } from 'react-hotkeys-hook';
-
-import { log } from '@monorepo/log';
-
 import {
   createContext,
   useContext,
@@ -12,9 +8,15 @@ import {
   ReactNode,
   DependencyList,
 } from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
+import * as YWS from 'y-websocket';
+
+import { log } from '@monorepo/log';
+import { TJsonObject } from '@monorepo/simple-types';
+
 import {
   TValidSharedData,
-  Dispatcher,
+  FrontendDispatcher,
   TAwarenessUser,
   TCollaborativeChunk,
   TCollabNativeEvent,
@@ -29,12 +31,12 @@ import {
 } from '../../index';
 import { TokenMethods, getYDoc } from './ydocs';
 import { buildUserCss } from './YjsCssStylesheet';
-import * as YWS from 'y-websocket';
 import { sharedDataToJson } from '../chunk';
 import { NoneSharedEditor, SharedEditor } from '../SharedEditor';
 import { YjsSharedEditor } from '../yjs/YjsSharedEditor';
 import { bindEditor } from './bind-editor';
 import { EDITORS_YTEXT_YMAP_KEY } from '../yjs/YjsSharedEditor';
+import { FrontendEventSequence } from '../frontendEventSequence';
 
 import './context.scss';
 
@@ -52,13 +54,15 @@ export type TCollabConfig = TNoneCollabConfig | TYjsCollabConfig;
 
 //
 
-type TCollaborationContext = {
+export type TCollaborationContext = {
   sharedTypes: SharedTypes;
   sharedData: TValidSharedData;
+  localDataOverrides: Map<string, TJsonObject>;
   awareness: Awareness;
-  dispatcher: Dispatcher<any, Record<string, never>>;
+  dispatcher: FrontendDispatcher<any>;
   sharedEditor: SharedEditor;
   extraContext: any;
+  cleanup: () => void;
 };
 
 //
@@ -71,7 +75,7 @@ type CollaborativeContextProps = {
   id: string;
   collabChunks: TCollaborativeChunk[];
   config: TCollabConfig;
-  dispatcher: Dispatcher<any, any>;
+  dispatcher: FrontendDispatcher<any>;
   user: TAwarenessUser;
   onError?: () => void;
 };
@@ -92,15 +96,14 @@ type TConnectionError = {
 //
 //
 
-export const CollaborativeContext = ({
-  children,
+export const useCollaborativeContextInternal = ({
   id,
   collabChunks,
   config,
   user,
   dispatcher,
   onError,
-}: CollaborativeContextProps) => {
+}: Omit<CollaborativeContextProps, 'children'>) => {
   //
   const [state, _setState] = useState<TState>({
     error: null,
@@ -148,7 +151,7 @@ export const CollaborativeContext = ({
 
   //
 
-  const v = useMemo(() => {
+  const context = useMemo<TCollaborationContext>(() => {
     log(7, 'COLLAB_INIT', 'collab context');
 
     let sharedTypes: SharedTypes;
@@ -213,9 +216,10 @@ export const CollaborativeContext = ({
     awareness.setUser(user);
 
     const extraContext = {};
-    const loadChunks = compileChunks(collabChunks, dispatcher, extraContext);
+    const loadChunks = compileChunks(collabChunks, extraContext);
     const sharedData = loadChunks(sharedTypes);
-    dispatcher.bindData(sharedTypes, sharedEditor, sharedData, extraContext);
+
+    const localDataOverrides = new Map<string, TJsonObject>();
 
     setState({ built: true });
 
@@ -224,6 +228,7 @@ export const CollaborativeContext = ({
       sharedTypes,
       awareness,
       sharedData,
+      localDataOverrides,
       sharedEditor,
       dispatcher,
       extraContext,
@@ -246,9 +251,9 @@ export const CollaborativeContext = ({
   // Add useEffect for cleanup
   useEffect(() => {
     return () => {
-      if (v.cleanup) {
+      if (context.cleanup) {
         log(7, 'COLLAB', 'cleanup');
-        v.cleanup();
+        context.cleanup();
       }
     };
   }, []);
@@ -258,17 +263,38 @@ export const CollaborativeContext = ({
   useHotkeys(
     'ctrl+shift+d',
     () => {
-      console.log('Shared Data Snapshot:', sharedDataToJson(v.sharedData));
+      console.log(
+        'Shared Data Snapshot:',
+        sharedDataToJson(context.sharedData)
+      );
     },
-    [v.sharedData]
+    [context.sharedData]
   );
 
-  //
-  //
+  return {
+    state,
+    context,
+    connectionErrors,
+  };
+};
 
+//
+//
+
+export const CollaborativeContextInternal = ({
+  state,
+  context,
+  connectionErrors,
+  children,
+}: {
+  state: TState;
+  context: TCollaborationContext;
+  connectionErrors: TConnectionError[];
+  children: ReactNode;
+}) => {
   log(7, 'COLLAB_INIT', 'CollaborativeContext update', {
     state: state,
-    context: v,
+    context,
   });
 
   if (!state.built)
@@ -285,7 +311,7 @@ export const CollaborativeContext = ({
     );
   else
     return (
-      <collaborationContext.Provider value={v}>
+      <collaborationContext.Provider value={context}>
         {children}
         {connectionErrors.length > 0 && (
           <div className="collab-error-overlay">
@@ -301,6 +327,23 @@ export const CollaborativeContext = ({
         )}
       </collaborationContext.Provider>
     );
+};
+
+//
+//
+
+export const CollaborativeContext = (props: CollaborativeContextProps) => {
+  const { state, context, connectionErrors } =
+    useCollaborativeContextInternal(props);
+  return (
+    <CollaborativeContextInternal
+      state={state}
+      context={context}
+      connectionErrors={connectionErrors}
+    >
+      {props.children}
+    </CollaborativeContextInternal>
+  );
 };
 
 //
@@ -390,10 +433,28 @@ export const useDispatcher = <TE,>() => {
   const { dispatcher } = useContext(
     collaborationContext
   ) as TCollaborationContext;
-  return dispatcher as Dispatcher<
-    TE | TCollabNativeEvent,
-    Record<string, never>
-  >;
+  return dispatcher as FrontendDispatcher<TE | TCollabNativeEvent>;
+};
+
+//
+//
+
+export const useEventSequence = <TE,>() => {
+  const { dispatcher, localDataOverrides } = useContext(
+    collaborationContext
+  ) as TCollaborationContext;
+  const createEventSequence = useCallback(
+    (localReduce: (event: any) => TJsonObject) => {
+      return new FrontendEventSequence(
+        dispatcher,
+        localReduce,
+        localDataOverrides
+      );
+    },
+    [dispatcher, localDataOverrides]
+  );
+
+  return { createEventSequence };
 };
 
 //

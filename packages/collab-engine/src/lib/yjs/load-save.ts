@@ -6,7 +6,7 @@ import { EDITORS_YTEXT_YMAP_KEY } from './YjsSharedEditor';
 export function getAllSharedDataAsJSON(doc: Y.Doc): Record<string, any> {
   const result: Record<string, any> = {};
   doc.share.forEach((type, name) => {
-    console.log({ name, type });
+    // console.log({ name, type });
     // Only serialize known Yjs types
     if (name !== EDITORS_YTEXT_YMAP_KEY) {
       if ('toJSON' in type && typeof type.toJSON === 'function') {

@@ -18,7 +18,10 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import { useRegisterListener } from '@monorepo/simple-types';
 import { clientXY } from '@monorepo/ui-toolkit';
 import { TPosition, TEdge, TEdgeEnd, EEdgeType } from '@monorepo/core';
-import { useDispatcher, Sequence } from '@monorepo/collab-engine';
+import {
+  useEventSequence,
+  FrontendEventSequence,
+} from '@monorepo/collab-engine';
 
 import { PointerTracker } from '../apis/pointerTracker';
 import { AvatarsRenderer } from './avatarsRenderer';
@@ -92,8 +95,9 @@ export const DemiurgeSpace = ({
 
   useRegisterListener(spaceState);
 
-  const dispatcher = useDispatcher<TSpaceEvent>();
-  const dragSequenceRef = useRef<Sequence<TSpaceEvent> | null>(null);
+  const { createEventSequence } = useEventSequence<TSpaceEvent>();
+  const moveNodeEventSequenceRef =
+    useRef<FrontendEventSequence<TSpaceEvent> | null>(null);
 
   //
   // ***************  ***************
@@ -187,11 +191,25 @@ export const DemiurgeSpace = ({
 
   const onNodeDrag = useCallback(
     (event: React.MouseEvent, node: Node, nodes: Node[]) => {
+      const n = spaceState.getNodes().find((n) => n.id === node.id);
+      if (!n) return;
       // Create sequence if it doesn't exist
-      if (!dragSequenceRef.current) {
-        dragSequenceRef.current = dispatcher.createSequence();
+      if (!moveNodeEventSequenceRef.current) {
+        moveNodeEventSequenceRef.current = createEventSequence((event) => ({
+          // define the local state override applied to shared state locally during the sequence life
+          // ...
+        }));
+        // define the revert state in case of error during the sequence
+        moveNodeEventSequenceRef.current.dispatch({
+          type: 'space:move-node',
+          viewId,
+          nid: node.id,
+          position: n.position,
+          sequenceRevertPoint: true,
+        });
       }
-      dragSequenceRef.current.dispatch({
+      // start moving the node
+      moveNodeEventSequenceRef.current.dispatch({
         type: 'space:move-node',
         viewId,
         nid: node.id,
@@ -203,16 +221,19 @@ export const DemiurgeSpace = ({
 
   const onNodeDragStop = useCallback(
     (event: React.MouseEvent, node: Node, nodes: Node[]) => {
-      if (dragSequenceRef.current) {
+      if (moveNodeEventSequenceRef.current) {
         // Send final position
-        dragSequenceRef.current.dispatch({
+        moveNodeEventSequenceRef.current.dispatch({
           type: 'space:move-node',
           viewId,
           nid: node.id,
           position: node.position,
           stop: true,
+          sequenceEnd: true,
         });
-        dragSequenceRef.current = null;
+        // cleanup the sequence, delete the local state override
+        moveNodeEventSequenceRef.current.cleanup();
+        moveNodeEventSequenceRef.current = null;
       }
     },
     []

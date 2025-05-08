@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { useTestBoolean } from '@monorepo/ui-base';
 import { sleep } from '@monorepo/simple-types';
-import { StoryMockSpaceContext, nodeViewDefaultStatus } from '@monorepo/space';
+import { MockSpace, nodeViewDefaultStatus } from '@monorepo/space';
 
 import { NodeKernel, NodeKernelProps } from './node-kernel';
 
@@ -26,7 +26,7 @@ const StoryWrapper = (
   } = useTestBoolean(props.expanded);
 
   return (
-    <StoryMockSpaceContext selected={props.selected} isOpened={isOpened}>
+    <MockSpace selected={props.selected} isOpened={isOpened}>
       <NodeKernel
         expand={expand}
         reduce={reduce}
@@ -41,7 +41,7 @@ const StoryWrapper = (
         close={close}
         {...props}
       />
-    </StoryMockSpaceContext>
+    </MockSpace>
   );
 };
 

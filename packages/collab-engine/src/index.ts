@@ -30,12 +30,10 @@ export type { TValidSharedData, TCollaborativeChunk } from './lib/chunk';
 export { Reducer } from './lib/reducer';
 export type { ReduceArgs } from './lib/reducer';
 
-export {
-  Dispatcher,
-  BrowserDispatcher,
-  JitterDispatcher,
-} from './lib/dispatcher';
-export type { Sequence } from './lib/dispatcher';
+export { BackendEventProcessor } from './lib/backendEventProcessor';
+
+export { FrontendDispatcher, JitterDispatcher } from './lib/frontendDispatcher';
+export type { FrontendEventSequence } from './lib/frontendEventSequence';
 
 export type {
   TEventUserLeave,
@@ -53,12 +51,14 @@ export {
   useDispatcher,
   useExtraContext,
   useBindEditor,
+  useEventSequence,
 } from './lib/front-hooks/context';
 export type {
   TSharedDataHook,
   TCollabConfig,
   TYjsCollabConfig,
   TNoneCollabConfig,
+  TCollaborationContext,
 } from './lib/front-hooks/context';
 
 export type { TokenMethods } from './lib/front-hooks/ydocs';
@@ -70,3 +70,5 @@ export { buildUserCss } from './lib/front-hooks/YjsCssStylesheet';
 export { sharedDataToJson } from './lib/chunk';
 
 export { EDITORS_YTEXT_YMAP_KEY } from './lib/yjs/YjsSharedEditor';
+
+export { MockCollaborativeContext } from './lib/front-hooks/mockCollaborativeContext';

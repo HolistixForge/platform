@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { playAdd__hover, useTestBoolean } from '@monorepo/ui-base';
-import { StoryMockSpaceContext, nodeViewDefaultStatus } from '@monorepo/space';
+import { MockSpace, nodeViewDefaultStatus } from '@monorepo/space';
 
 import { NodeNotebookProps } from './node-notebook';
 import { NodeNotebook } from './node-notebook';
@@ -26,7 +26,7 @@ const NodeStory = (
   } = useTestBoolean(props.expanded);
 
   return (
-    <StoryMockSpaceContext selected={props.selected} isOpened={isOpened}>
+    <MockSpace selected={props.selected} isOpened={isOpened}>
       <NodeNotebook
         {...props}
         expand={expand}
@@ -39,7 +39,7 @@ const NodeStory = (
         open={open}
         close={close}
       />
-    </StoryMockSpaceContext>
+    </MockSpace>
   );
 };
 

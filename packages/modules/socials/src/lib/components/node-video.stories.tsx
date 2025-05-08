@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { useTestBoolean } from '@monorepo/ui-base';
 import { sleep } from '@monorepo/simple-types';
-import { StoryMockSpaceContext, nodeViewDefaultStatus } from '@monorepo/space';
+import { MockSpace, nodeViewDefaultStatus } from '@monorepo/space';
 
 import { NodeYoutubeInternal, NodeYoutubeInternalProps } from './node-video';
 
@@ -45,7 +45,7 @@ const StoryWrapper = (
   } = useTestBoolean(props.expanded);
 
   return (
-    <StoryMockSpaceContext selected={props.selected} isOpened={isOpened}>
+    <MockSpace selected={props.selected} isOpened={isOpened}>
       <NodeYoutubeInternal
         expand={expand}
         reduce={reduce}
@@ -60,7 +60,7 @@ const StoryWrapper = (
         close={close}
         {...props}
       />
-    </StoryMockSpaceContext>
+    </MockSpace>
   );
 };
 

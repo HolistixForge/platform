@@ -1,15 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { useMemo } from 'react';
+import { useCallback } from 'react';
 
 import {
-  CollaborativeContext,
   TCollaborativeChunk,
   TValidSharedData,
   SharedTypes,
   useSharedData,
   useDispatcher,
-  Dispatcher,
   SharedMap,
+  MockCollaborativeContext,
+  TCollaborationContext,
 } from '@monorepo/collab-engine';
 import { randomGuys } from '@monorepo/ui-base';
 import { Logger } from '@monorepo/log';
@@ -72,10 +72,11 @@ const makeLoremIpsum = () => {
 //
 
 const StoryWrapper = () => {
-  const dispatcher = useMemo(() => {
+  const cb = useCallback((context: TCollaborationContext) => {
+    const { dispatcher, sharedData } = context;
     // fake users messages
     setInterval(() => {
-      const chats = dispatcher._sharedData.chats as SharedMap<TChat>;
+      const chats = sharedData.chats as SharedMap<TChat>;
       chats.forEach((c) => {
         const randomGuy =
           randomGuys[Math.floor(Math.random() * randomGuys.length)];
@@ -109,25 +110,12 @@ const StoryWrapper = () => {
         }, 2000);
       });
     }, 7000);
-
-    return new Dispatcher();
   }, []);
 
   return (
-    <CollaborativeContext
-      id={'story'}
-      collabChunks={chunks}
-      config={{
-        type: 'none',
-      }}
-      dispatcher={dispatcher}
-      user={{
-        username: 'John Doe',
-        color: '#ffa500',
-      }}
-    >
+    <MockCollaborativeContext collabChunks={chunks} callback={cb}>
       <ChatsGrid />
-    </CollaborativeContext>
+    </MockCollaborativeContext>
   );
 };
 

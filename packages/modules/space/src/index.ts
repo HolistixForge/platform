@@ -23,12 +23,10 @@ export {
   EdgeComponent,
   Group,
   Shape,
+  MockSpace,
 } from './lib/components';
 
 export type { TNodeContext } from './lib/components';
-
-export { StoryMockSpaceContext } from './lib/components/stories/storyMockSpaceContext';
-
 export { nodeViewDefaultStatus, defaultGraphView } from './lib/space-types';
 
 export type { TNodeView } from './lib/space-types';

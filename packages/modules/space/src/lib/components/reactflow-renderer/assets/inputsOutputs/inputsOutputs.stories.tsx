@@ -1,16 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { InputsOutputs, InputsOutputsProps } from './inputsOutputs';
-import { StoryMockSpaceContext } from '../../../stories/storyMockSpaceContext';
+import { MockSpace } from '../../../stories/mockSpace';
 
 //
 
 const InputStory = (props: InputsOutputsProps) => {
   return (
-    <StoryMockSpaceContext>
+    <MockSpace>
       <div style={{ position: 'relative' }}>
         <InputsOutputs {...props} />
       </div>
-    </StoryMockSpaceContext>
+    </MockSpace>
   );
 };
 

@@ -624,7 +624,7 @@ export class SpaceReducer extends Reducer<
   //
 
   newShape(g: Ra<TEventNewShape>) {
-    g.dispatcher.dispatch({
+    g.dispatcher.process({
       type: 'core:new-node',
       nodeData: {
         name: `shape ${g.event.shapeId}`,
@@ -650,7 +650,7 @@ export class SpaceReducer extends Reducer<
   //
 
   newGroup(g: Ra<TEventNewGroup>) {
-    g.dispatcher.dispatch({
+    g.dispatcher.process({
       type: 'core:new-node',
       nodeData: {
         name: `group ${g.event.title}`,
@@ -720,7 +720,7 @@ export class SpaceReducer extends Reducer<
     const nv: TGraphView = defaultGraphView();
     g.sd.graphViews.set(g.event.viewId, nv);
 
-    g.dispatcher.dispatch({
+    g.dispatcher.process({
       type: 'space:update-graph-view',
       viewId: g.event.viewId,
     });
@@ -732,7 +732,7 @@ export class SpaceReducer extends Reducer<
 
   updateAllGraphviews(g: Ra<ReducedEvents>) {
     g.sd.graphViews.forEach((gv, k) => {
-      g.dispatcher.dispatch({
+      g.dispatcher.process({
         type: 'space:update-graph-view',
         viewId: k,
       });
@@ -740,7 +740,7 @@ export class SpaceReducer extends Reducer<
   }
 
   deleteShape(g: Ra<TEventDeleteShape>) {
-    g.dispatcher.dispatch({
+    g.dispatcher.process({
       type: 'core:delete-node',
       id: g.event.shapeId,
     });
@@ -774,7 +774,7 @@ export class SpaceReducer extends Reducer<
     });
 
     // Then delete the group node
-    g.dispatcher.dispatch({
+    g.dispatcher.process({
       type: 'core:delete-node',
       id: groupId,
     });

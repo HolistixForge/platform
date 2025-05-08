@@ -1,12 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { useMemo } from 'react';
 
 import {
-  CollaborativeContext,
   TCollaborativeChunk,
   TValidSharedData,
   SharedTypes,
-  JitterDispatcher,
+  MockCollaborativeContext,
 } from '@monorepo/collab-engine';
 import { Logger } from '@monorepo/log';
 import { Core_loadData, CoreReducer } from '@monorepo/core';
@@ -49,28 +47,12 @@ const nodeTypes = {
 //
 
 const StoryWrapper = () => {
-  const dispatcher = useMemo(() => {
-    return new JitterDispatcher();
-  }, []);
-
   return (
-    <CollaborativeContext
-      id={'story'}
-      collabChunks={chunks}
-      config={{
-        type: 'none',
-        simulateUsers: true,
-      }}
-      dispatcher={dispatcher}
-      user={{
-        username: 'John Doe',
-        color: '#ffa500',
-      }}
-    >
+    <MockCollaborativeContext collabChunks={chunks}>
       <div style={{ height: '100vh', width: '100vw' }}>
         <SpaceModule viewId={STORY_VIEW_ID} nodeTypes={nodeTypes} />
       </div>
-    </CollaborativeContext>
+    </MockCollaborativeContext>
   );
 };
 

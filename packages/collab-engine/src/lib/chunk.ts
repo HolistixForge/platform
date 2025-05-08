@@ -1,7 +1,7 @@
 import { TJson } from '@monorepo/simple-types';
 
 import { SharedArray, SharedMap, SharedTypes } from './SharedTypes';
-import { Dispatcher } from './dispatcher';
+import { BackendEventProcessor } from './backendEventProcessor';
 import { Reducer } from './reducer';
 
 //
@@ -36,10 +36,8 @@ export type TCollaborativeChunk = {
 //
 export const compileChunks = (
   cc: TCollaborativeChunk[],
-
-  dispatcher: Dispatcher<any, any>,
-
-  extraContext: any
+  extraContext: any,
+  bep?: BackendEventProcessor<any, any>
 ) => {
   return (st: SharedTypes) => {
     let allSharedData: TValidSharedData = {};
@@ -49,7 +47,7 @@ export const compileChunks = (
       Object.assign(allSharedData, sharedData);
 
       const reducers = chunk.reducers?.(allSharedData) || [];
-      reducers.forEach((r) => dispatcher.addReducer(r));
+      reducers.forEach((r) => bep?.addReducer(r));
 
       const addContext = chunk.extraContext?.(allSharedData) || {};
       Object.assign(extraContext, addContext);
