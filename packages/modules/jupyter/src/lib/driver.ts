@@ -97,7 +97,7 @@ export class JupyterlabDriver {
     const shellFuture = kernel.requestExecute({ code });
     virtualOutputArea.future = shellFuture;
     return shellFuture.done.then(() => {
-      return virtualOutputArea.model.toJSON();
+      return virtualOutputArea.model.toJSON() as any;
     });
   };
 

@@ -1,11 +1,8 @@
-import { useMemo } from 'react';
-
 import {
   TCollaborativeChunk,
   TValidSharedData,
   SharedTypes,
-  Dispatcher,
-  CollaborativeContext,
+  MockCollaborativeContext,
 } from '@monorepo/collab-engine';
 import {
   Servers_loadData,
@@ -119,23 +116,8 @@ export const JupyterStoryCollabContext = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const dispatcher = useMemo(() => {
-    return new Dispatcher();
-  }, []);
-
   return (
-    <CollaborativeContext
-      id={'story'}
-      collabChunks={chunks}
-      config={{
-        type: 'none',
-      }}
-      dispatcher={dispatcher}
-      user={{
-        username: 'John Doe',
-        color: '#ffa500',
-      }}
-    >
+    <MockCollaborativeContext collabChunks={chunks}>
       <p>
         To test this story, first launch a jupyter docker container, then
         refresh :
@@ -155,6 +137,6 @@ export const JupyterStoryCollabContext = ({
         --NotebookApp.token='My_Super_Test_Story' --debug
       </p>
       {children}
-    </CollaborativeContext>
+    </MockCollaborativeContext>
   );
 };

@@ -203,8 +203,10 @@ const CellOutput = (props: ReturnType<typeof useCellLogic>) => {
   useEffect(() => {
     if (oa) {
       oa.model.clear();
-      const customOutput = uuidInject(outputs as unknown as IOutput[]);
-      oa.model.fromJSON(customOutput);
+      const customOutput: IOutput[] = uuidInject(
+        outputs as unknown as IOutput[]
+      );
+      oa.model.fromJSON(customOutput as any);
     }
   }, [oa, outputs, uuidInject]);
 
@@ -310,7 +312,7 @@ export const NodeCell = ({ node }: { node: TGraphNode }) => {
 const uuidInjecter = () => {
   const id = makeUuid();
   return {
-    uuidInject: (output: IOutput[]) => {
+    uuidInject: (output: IOutput[]): IOutput[] => {
       return output.map((o) => ({
         ...o,
         // injected uid for use by js-renderer

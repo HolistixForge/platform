@@ -1,10 +1,9 @@
 import { ServerConnection } from '@jupyterlab/services';
-import * as nbformat from '@jupyterlab/nbformat';
-import { TJsonArray } from '@monorepo/simple-types';
+import { TJsonArray, TJsonObject } from '@monorepo/simple-types';
 
 //
 
-export type IOutput = nbformat.IOutput;
+export type IOutput = TJsonObject;
 
 export type TDKID = string;
 
