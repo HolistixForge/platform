@@ -64,8 +64,9 @@ export const MockCollaborativeContext = ({
         username: 'John Doe',
         color: '#ffa500',
       },
+      bep,
     };
-  }, [collabChunks, dispatcher]);
+  }, [collabChunks, dispatcher, bep]);
 
   const { context, state, connectionErrors } = useCollaborativeContextInternal(
     config as any

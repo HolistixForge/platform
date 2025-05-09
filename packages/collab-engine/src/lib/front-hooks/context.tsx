@@ -28,6 +28,7 @@ import {
   YjsAwareness,
   NoneAwareness,
   _AwarenessListenerArgs,
+  BackendEventProcessor,
 } from '../../index';
 import { TokenMethods, getYDoc } from './ydocs';
 import { buildUserCss } from './YjsCssStylesheet';
@@ -77,6 +78,8 @@ type CollaborativeContextProps = {
   config: TCollabConfig;
   dispatcher: FrontendDispatcher<any>;
   user: TAwarenessUser;
+  /** ONLY USE THIS IF YOU ARE USING A MOCK COLLABORATIVE CONTEXT */
+  bep?: BackendEventProcessor<any, any>;
   onError?: () => void;
 };
 
@@ -103,6 +106,7 @@ export const useCollaborativeContextInternal = ({
   user,
   dispatcher,
   onError,
+  bep,
 }: Omit<CollaborativeContextProps, 'children'>) => {
   //
   const [state, _setState] = useState<TState>({
@@ -216,7 +220,7 @@ export const useCollaborativeContextInternal = ({
     awareness.setUser(user);
 
     const extraContext = {};
-    const loadChunks = compileChunks(collabChunks, extraContext);
+    const loadChunks = compileChunks(collabChunks, extraContext, bep);
     const sharedData = loadChunks(sharedTypes);
 
     const localDataOverrides = new Map<string, TJsonObject>();

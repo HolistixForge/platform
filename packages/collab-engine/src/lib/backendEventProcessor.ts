@@ -2,7 +2,7 @@ import { log } from '@monorepo/log';
 import { Reducer } from './reducer';
 import { SharedTypes } from './SharedTypes';
 import { TValidSharedData } from './chunk';
-import { TJsonObject } from '@monorepo/simple-types';
+import { TJsonWithDate } from '@monorepo/simple-types';
 import { SharedEditor } from './SharedEditor';
 import { BackendEventSequence, SequenceEvent } from './backendEventSequence';
 
@@ -10,10 +10,10 @@ type ValidReducer<Targs> = Reducer<TValidSharedData, any, any, Partial<Targs>>;
 
 //
 
-export class BackendEventProcessor<TE extends TJsonObject, Targs> {
+export class BackendEventProcessor<TE extends TJsonWithDate, Targs> {
   _sharedTypes: SharedTypes = null!;
   _sharedData: TValidSharedData = null!;
-  _reducers: Array<ValidReducer<Targs>> = null!;
+  _reducers: Array<ValidReducer<Targs>> = [];
   _dispatcherExtraArgs: Partial<Targs> = null!;
   _yjsSharedEditor: SharedEditor | undefined;
   // TODO: remove old sequence context from map
@@ -36,12 +36,7 @@ export class BackendEventProcessor<TE extends TJsonObject, Targs> {
   //
 
   sanity() {
-    if (
-      !this._sharedTypes ||
-      !this._sharedData ||
-      !this._yjsSharedEditor ||
-      !this._reducers
-    ) {
+    if (!this._sharedTypes || !this._sharedData || !this._yjsSharedEditor) {
       throw new Error('BackendEventProcessor not bound');
     }
   }

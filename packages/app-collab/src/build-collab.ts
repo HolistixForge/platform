@@ -5,7 +5,7 @@ const u = require('y-websocket/bin/utils');
 // import { EventSourcePolyfill } from 'event-source-polyfill';
 
 import {
-  Dispatcher,
+  BackendEventProcessor,
   SharedTypes,
   TCollabNativeEvent,
   TCollaborativeChunk,
@@ -288,7 +288,7 @@ export type TAllEvents =
 //
 
 export async function initProjectCollaboration(
-  dispatcher: Dispatcher<TAllEvents, {}>
+  bep: BackendEventProcessor<TAllEvents, {}>
 ) {
   // create Y document
   ydoc = u.getYDoc(ROOM_ID);
@@ -297,7 +297,7 @@ export async function initProjectCollaboration(
   const yse = new YjsSharedEditor(ydoc.getMap(EDITORS_YTEXT_YMAP_KEY));
 
   const extraContext = {};
-  const loadChunks = compileChunks(chunks, dispatcher, extraContext);
+  const loadChunks = compileChunks(chunks, extraContext, bep);
   const sd = loadChunks(yst) as TSd;
 
   // load data from saved file
@@ -305,10 +305,10 @@ export async function initProjectCollaboration(
   const isNew = !loaded;
 
   // attach data to dispatcher
-  dispatcher.bindData(yst, yse, sd, extraContext);
+  bep.bindData(yst, yse, sd, extraContext);
 
   // let every reducers update data from up to date data (API calls ...)
-  await dispatcher.dispatch({ type: 'core:load' });
+  await bep.process({ type: 'core:load' });
 
   //
   // new project initialization
@@ -318,17 +318,17 @@ export async function initProjectCollaboration(
 
   if (isNew) {
     console.log('new project initialization');
-    await dispatcher.dispatch({
+    await bep.process({
       type: 'space:new-view',
       viewId: DEFAULT_VIEW_1,
     });
-    await dispatcher.dispatch({
+    await bep.process({
       type: 'tabs:add-tab',
       path: [],
       title: 'node-editor-1',
       payload: { type: 'node-editor', viewId: DEFAULT_VIEW_1 },
     });
-    await dispatcher.dispatch({
+    await bep.process({
       type: 'tabs:add-tab',
       path: [],
       title: 'resources grid',
@@ -345,7 +345,7 @@ export async function initProjectCollaboration(
   (ydoc as any).awareness.on('change', ({ removed }: { removed: number[] }) => {
     // console.log('AWARENESS CHANGES:', { added, updated, removed });
     removed.forEach((userId) => {
-      dispatcher.dispatch({
+      bep.process({
         type: 'user-leave',
         userId: userId,
         awarenessState: (ydoc as any).awareness.getStates().get(userId),
@@ -356,13 +356,13 @@ export async function initProjectCollaboration(
   const interval = 5000;
   setInterval(() => {
     try {
-      dispatcher.dispatch({ type: 'periodic', interval, date: new Date() });
+      bep.process({ type: 'periodic', interval, date: new Date() });
     } catch (err) {
       console.log(err);
     }
   }, interval);
 
-  return { dispatcher };
+  return { bep };
 }
 
 /*

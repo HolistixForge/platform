@@ -8,7 +8,7 @@ import {
 } from './build-collab';
 import { startEventsReducerServer } from './reducer-server';
 import { TStart } from '@monorepo/backend-engine';
-import { Dispatcher } from '@monorepo/collab-engine';
+import { BackendEventProcessor } from '@monorepo/collab-engine';
 import { TJupyterExtraArgs } from '@monorepo/jupyter';
 import {
   PROJECT,
@@ -22,7 +22,7 @@ import { CONFIG } from './config';
 
 //
 
-let dispatcher: Dispatcher<TAllEvents, TJupyterExtraArgs>;
+let bep: BackendEventProcessor<TAllEvents, TJupyterExtraArgs>;
 let servers: (http.Server | https.Server)[];
 
 //
@@ -32,18 +32,18 @@ export let ROOM_ID = '';
 export const startProjectCollab = async (project: TProjectConfig) => {
   setProjectConfig(project);
   ROOM_ID = makeUuid();
-  await initProjectCollaboration(dispatcher);
+  await initProjectCollaboration(bep);
   graftYjsWebsocket(servers, ROOM_ID);
 };
 
 //
 
 (async function main() {
-  dispatcher = new Dispatcher<TAllEvents, TJupyterExtraArgs>();
+  bep = new BackendEventProcessor<TAllEvents, TJupyterExtraArgs>();
 
   const bindings: TStart[] = JSON.parse(CONFIG.SERVER_BIND);
 
-  servers = await startEventsReducerServer(dispatcher, bindings);
+  servers = await startEventsReducerServer(bep, bindings);
 
   if (!VPN) throw new Error('VPN config read failed');
 
