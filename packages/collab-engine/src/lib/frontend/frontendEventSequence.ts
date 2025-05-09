@@ -1,35 +1,41 @@
 import { makeUuid, TJsonObject } from '@monorepo/simple-types';
 import { FrontendDispatcher } from './frontendDispatcher';
-import { SequenceEvent } from './backendEventSequence';
+import { SequenceEvent } from '../backendEventSequence';
+import { LocalOverrider } from './localOverrider';
+//
+
+export type LocalReduceFunction = (sdc: any, event: any) => void;
 
 //
 
 export class FrontendEventSequence<T extends TJsonObject> {
-  counter: number = 0;
-  sequenceId: string;
-  localReduce: (event: any) => TJsonObject;
-  dispatcher: FrontendDispatcher<T>;
-  _hasError: boolean = false;
-  _localOverrides: Map<string, TJsonObject>;
+  public localReduce: LocalReduceFunction;
+  public done: boolean = false;
+
+  private counter: number = 0;
+  private sequenceId: string;
+  private dispatcher: FrontendDispatcher<T>;
+  private hasError: boolean = false;
+  private localOverrider: LocalOverrider;
 
   constructor(
     dispatcher: FrontendDispatcher<T>,
-    localReduce: (event: any) => TJsonObject,
-    localOverrides: Map<string, TJsonObject>
+    localReduce: LocalReduceFunction,
+    localOverrider: LocalOverrider
   ) {
     this.localReduce = localReduce;
     this.sequenceId = makeUuid();
     this.dispatcher = dispatcher;
-    this._localOverrides = localOverrides;
+    this.localOverrider = localOverrider;
   }
 
   async dispatch(
     event: T & Pick<SequenceEvent, 'sequenceRevertPoint' | 'sequenceEnd'>
   ) {
-    if (this._hasError) return;
+    if (this.hasError) return;
 
-    const localOverride = this.localReduce(event);
-    this._localOverrides.set(this.sequenceId, localOverride);
+    this.localOverrider.apply(this.localReduce, event);
+
     this.counter++;
 
     try {
@@ -39,12 +45,12 @@ export class FrontendEventSequence<T extends TJsonObject> {
         sequenceCounter: this.counter,
       });
     } catch (error) {
-      this._hasError = true;
+      this.hasError = true;
       throw error;
     }
   }
 
   cleanup() {
-    this._localOverrides.delete(this.sequenceId);
+    this.done = true;
   }
 }

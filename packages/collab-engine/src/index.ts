@@ -32,8 +32,11 @@ export type { ReduceArgs } from './lib/reducer';
 
 export { BackendEventProcessor } from './lib/backendEventProcessor';
 
-export { FrontendDispatcher, JitterDispatcher } from './lib/frontendDispatcher';
-export type { FrontendEventSequence } from './lib/frontendEventSequence';
+export {
+  FrontendDispatcher,
+  JitterDispatcher,
+} from './lib/frontend/frontendDispatcher';
+export type { FrontendEventSequence } from './lib/frontend/frontendEventSequence';
 
 export type {
   TEventUserLeave,
@@ -52,23 +55,23 @@ export {
   useExtraContext,
   useBindEditor,
   useEventSequence,
-} from './lib/front-hooks/context';
+} from './lib/frontend/context';
 export type {
   TSharedDataHook,
   TCollabConfig,
   TYjsCollabConfig,
   TNoneCollabConfig,
   TCollaborationContext,
-} from './lib/front-hooks/context';
+} from './lib/frontend/context';
 
-export type { TokenMethods } from './lib/front-hooks/ydocs';
+export type { TokenMethods } from './lib/frontend/ydocs';
 
-export { getYDoc } from './lib/front-hooks/ydocs';
+export { getYDoc } from './lib/frontend/ydocs';
 
-export { buildUserCss } from './lib/front-hooks/YjsCssStylesheet';
+export { buildUserCss } from './lib/frontend/YjsCssStylesheet';
 
 export { sharedDataToJson } from './lib/chunk';
 
 export { EDITORS_YTEXT_YMAP_KEY } from './lib/yjs/YjsSharedEditor';
 
-export { MockCollaborativeContext } from './lib/front-hooks/mockCollaborativeContext';
+export { MockCollaborativeContext } from './lib/frontend/mockCollaborativeContext';

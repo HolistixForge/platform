@@ -32,6 +32,7 @@ import { SpaceAwareness } from '../apis/spaceAwareness';
 import { HtmlAvatarStore } from './htmlAvatarStore';
 import { translateEdges, translateNodes } from './to-rf-nodes';
 import { TSpaceEvent } from '../../space-events';
+import { getAbsolutePosition } from '../../utils/position-utils';
 //
 //
 
@@ -195,10 +196,21 @@ export const DemiurgeSpace = ({
       if (!n) return;
       // Create sequence if it doesn't exist
       if (!moveNodeEventSequenceRef.current) {
-        moveNodeEventSequenceRef.current = createEventSequence((event) => ({
-          // define the local state override applied to shared state locally during the sequence life
-          // ...
-        }));
+        moveNodeEventSequenceRef.current = createEventSequence({
+          localReduce: (sdc, event) => {
+            // define the local state override applied to shared state locally during the sequence life
+            const gv = sdc.graphViews[viewId];
+            const node = gv.nodeViews.find((n: any) => n.id === node.id);
+            if (node) {
+              node.position = getAbsolutePosition(
+                event.position,
+                node.parentId,
+                gv
+              );
+              node.parentId = undefined;
+            }
+          },
+        });
         // define the revert state in case of error during the sequence
         moveNodeEventSequenceRef.current.dispatch({
           type: 'space:move-node',

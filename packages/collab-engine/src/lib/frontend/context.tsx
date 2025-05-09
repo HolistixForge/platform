@@ -12,7 +12,6 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import * as YWS from 'y-websocket';
 
 import { log } from '@monorepo/log';
-import { TJsonObject } from '@monorepo/simple-types';
 
 import {
   TValidSharedData,
@@ -37,7 +36,11 @@ import { NoneSharedEditor, SharedEditor } from '../SharedEditor';
 import { YjsSharedEditor } from '../yjs/YjsSharedEditor';
 import { bindEditor } from './bind-editor';
 import { EDITORS_YTEXT_YMAP_KEY } from '../yjs/YjsSharedEditor';
-import { FrontendEventSequence } from '../frontendEventSequence';
+import {
+  FrontendEventSequence,
+  LocalReduceFunction,
+} from './frontendEventSequence';
+import { LocalOverrider } from './localOverrider';
 
 import './context.scss';
 
@@ -58,7 +61,7 @@ export type TCollabConfig = TNoneCollabConfig | TYjsCollabConfig;
 export type TCollaborationContext = {
   sharedTypes: SharedTypes;
   sharedData: TValidSharedData;
-  localDataOverrides: Map<string, TJsonObject>;
+  localOverrider: LocalOverrider;
   awareness: Awareness;
   dispatcher: FrontendDispatcher<any>;
   sharedEditor: SharedEditor;
@@ -222,8 +225,7 @@ export const useCollaborativeContextInternal = ({
     const extraContext = {};
     const loadChunks = compileChunks(collabChunks, extraContext, bep);
     const sharedData = loadChunks(sharedTypes);
-
-    const localDataOverrides = new Map<string, TJsonObject>();
+    const localOverrider = new LocalOverrider(sharedData);
 
     setState({ built: true });
 
@@ -232,7 +234,7 @@ export const useCollaborativeContextInternal = ({
       sharedTypes,
       awareness,
       sharedData,
-      localDataOverrides,
+      localOverrider,
       sharedEditor,
       dispatcher,
       extraContext,
@@ -444,18 +446,15 @@ export const useDispatcher = <TE,>() => {
 //
 
 export const useEventSequence = <TE,>() => {
-  const { dispatcher, localDataOverrides } = useContext(
+  const { dispatcher, localOverrider } = useContext(
     collaborationContext
   ) as TCollaborationContext;
+
   const createEventSequence = useCallback(
-    (localReduce: (event: any) => TJsonObject) => {
-      return new FrontendEventSequence(
-        dispatcher,
-        localReduce,
-        localDataOverrides
-      );
+    ({ localReduce }: { localReduce: LocalReduceFunction }) => {
+      return new FrontendEventSequence(dispatcher, localReduce, localOverrider);
     },
-    [dispatcher, localDataOverrides]
+    [dispatcher, localOverrider]
   );
 
   return { createEventSequence };
