@@ -154,7 +154,7 @@ export class JupyterReducer extends Reducer<
 
     await g.sharedEditor.createEditor(cellId, '');
 
-    g.dispatcher.process({
+    g.bep.process({
       type: 'core:new-node',
       nodeData: {
         id,
@@ -191,7 +191,7 @@ export class JupyterReducer extends Reducer<
       // Delete node from graph
       g.sd.nodes.forEach((node, id) => {
         if (node.type === 'jupyter-cell' && node.data?.cellId === cellId) {
-          g.dispatcher.process({
+          g.bep.process({
             type: 'core:delete-node',
             id,
           });
@@ -222,7 +222,7 @@ export class JupyterReducer extends Reducer<
         return driver
           .execute(kernel.jkid, g.event.code)
           .then((output) => {
-            g.dispatcher.process({
+            g.bep.process({
               type: 'jupyter:python-node-output',
               cellId: g.event.cellId,
               output,
@@ -272,7 +272,7 @@ export class JupyterReducer extends Reducer<
     if (kernel.jkid) throw new Error('kernel started yet');
     return driver.newKernel('python3').then((jkid) => {
       if (jkid)
-        g.dispatcher.process({
+        g.bep.process({
           type: 'jupyter:_kernel-started_',
           dkid: g.event.dkid,
           jkid,
@@ -342,7 +342,7 @@ export class JupyterReducer extends Reducer<
     // add new node representing the kernel and link to project server node
     const id = this.makeKernelNodeId(dkid);
 
-    g.dispatcher.process({
+    g.bep.process({
       type: 'core:new-node',
       nodeData: {
         id,
@@ -376,7 +376,7 @@ export class JupyterReducer extends Reducer<
     // Find and delete all cells associated with this kernel
     for (const cell of g.sd.cells.values()) {
       if (cell.dkid === g.event.dkid) {
-        await g.dispatcher.process({
+        await g.bep.process({
           type: 'jupyter:delete-cell',
           cellId: cell.cellId,
         });
@@ -392,7 +392,7 @@ export class JupyterReducer extends Reducer<
     }
 
     // Delete kernel node
-    g.dispatcher.process({
+    g.bep.process({
       type: 'core:delete-node',
       id: this.makeKernelNodeId(kernel.dkid),
     });
@@ -422,7 +422,7 @@ export class JupyterReducer extends Reducer<
       jupyterTerminalSessionModel: session.model as any,
     });
 
-    g.dispatcher.process({
+    g.bep.process({
       type: 'core:new-node',
       nodeData: {
         id: terminalId,
@@ -460,7 +460,7 @@ export class JupyterReducer extends Reducer<
       // todo: dispose terminal in jupyter
 
       // Delete node from graph
-      g.dispatcher.process({
+      g.bep.process({
         type: 'core:delete-node',
         id: terminalId,
       });
@@ -477,7 +477,7 @@ export class JupyterReducer extends Reducer<
     if (jupyterServer) {
       // Delete all kernels associated with this server
       for (const kernel of jupyterServer.kernels) {
-        await g.dispatcher.process(
+        await g.bep.process(
           {
             type: 'jupyter:delete-kernel',
             dkid: kernel.dkid,
@@ -494,7 +494,7 @@ export class JupyterReducer extends Reducer<
 
       for (const terminal of g.sd.terminals.values()) {
         if (terminal.project_server_id === projectServerId) {
-          await g.dispatcher.process({
+          await g.bep.process({
             type: 'jupyter:delete-terminal',
             terminalId: terminal.terminalId,
           });

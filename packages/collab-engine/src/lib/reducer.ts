@@ -20,7 +20,7 @@ export type ReduceArgs<
   st: SharedTypes;
   event: TRe;
   sequence?: BackendEventSequence<SequenceEvent>;
-  dispatcher: BackendEventProcessor<TDe, TArgs>;
+  bep: BackendEventProcessor<TDe, TArgs>;
   sharedEditor: SharedEditor;
   extraArgs: TArgs;
 };

@@ -14,7 +14,7 @@ import {
 } from '@monorepo/backend-engine';
 import { TJson } from '@monorepo/simple-types';
 import { log, NotFoundException } from '@monorepo/log';
-import { Dispatcher } from '@monorepo/collab-engine';
+import { BackendEventProcessor } from '@monorepo/collab-engine';
 
 import { TAllEvents } from './build-collab';
 import { TProjectConfig, VPN } from './project-config';
@@ -27,11 +27,14 @@ import oas from './oas30.json';
 import execPipesDefinition from './exec-pipes.json';
 
 class ReduceEventCommand extends Command {
-  _dispatcher: Dispatcher<TAllEvents, any>;
+  _bep: BackendEventProcessor<TAllEvents, any>;
 
-  constructor(config: TCommandConfig, d: Dispatcher<TAllEvents, any>) {
+  constructor(
+    config: TCommandConfig,
+    d: BackendEventProcessor<TAllEvents, any>
+  ) {
     super(config);
-    this._dispatcher = d;
+    this._bep = d;
   }
 
   async run(args: {
@@ -41,9 +44,9 @@ class ReduceEventCommand extends Command {
     jwt: TJson;
     ip: string;
   }): Promise<TCommandReturn> {
-    if (this._dispatcher._sharedTypes) {
+    if (this._bep._sharedTypes) {
       const { event, authorizationHeader, user_id, jwt, ip } = args;
-      await this._dispatcher.dispatch(event, {
+      await this._bep.process(event, {
         authorizationHeader,
         jwt,
         ip,
@@ -112,7 +115,7 @@ class RoomIdCommand extends Command {
 //
 
 export const startEventsReducerServer = async (
-  dispatcher: Dispatcher<TAllEvents, any>,
+  dispatcher: BackendEventProcessor<TAllEvents, any>,
   reducerServerBind: TStart[]
 ) => {
   CommandFactory.setCustomCommand((type: string, config) => {

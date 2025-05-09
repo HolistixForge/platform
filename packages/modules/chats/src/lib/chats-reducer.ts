@@ -113,7 +113,7 @@ export class ChatReducer extends Reducer<
     const anchorNodeId = makeUuid();
     const chatNodeId = makeUuid();
 
-    g.dispatcher.dispatch({
+    g.bep.process({
       type: 'core:new-node',
       nodeData: {
         type: 'chat-anchor',
@@ -127,7 +127,7 @@ export class ChatReducer extends Reducer<
       origin: g.event.origin,
     });
 
-    g.dispatcher.dispatch({
+    g.bep.process({
       type: 'core:new-node',
       nodeData: {
         type: 'chat',
@@ -217,7 +217,7 @@ export class ChatReducer extends Reducer<
           (node.type === 'chat' || node.type === 'chat-anchor') &&
           node.data?.chatId === g.event.chatId
         ) {
-          g.dispatcher.dispatch({
+          g.bep.process({
             type: 'core:delete-node',
             id: node.id,
           });

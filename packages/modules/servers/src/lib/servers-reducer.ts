@@ -179,7 +179,7 @@ export class ServersReducer extends Reducer<
       const s = servers.find((s) => s.project_server_id === psid);
       if (!s) {
         /* TODO_: delete associated resources if any
-        g.dispatcher.dispatch({
+        g.bep.process({
           type: 'servers:delete',
         });
         */
@@ -187,7 +187,7 @@ export class ServersReducer extends Reducer<
     }
     // for each server, dispatch a new server event
     servers.forEach((s) =>
-      g.dispatcher.dispatch({
+      g.bep.process({
         type: 'servers:new',
         from: {
           project_server_id: s.project_server_id,
@@ -250,7 +250,7 @@ export class ServersReducer extends Reducer<
           server: projectServer,
         };
 
-        g.dispatcher.dispatch({
+        g.bep.process({
           type: 'core:new-node',
           nodeData: node,
           edges: [],
@@ -367,7 +367,7 @@ export class ServersReducer extends Reducer<
       attempts++;
 
       if (state) {
-        g.dispatcher.dispatch({
+        g.bep.process({
           type: 'servers:_update-instance-state',
           project_server_id,
           state,
@@ -619,7 +619,7 @@ export class ServersReducer extends Reducer<
     g.sd.projectServers.delete(`${pid}`);
     const id = projectServerNodeId(pid);
 
-    g.dispatcher.dispatch({ type: 'core:delete-node', id });
+    g.bep.process({ type: 'core:delete-node', id });
   }
 
   //
@@ -647,7 +647,7 @@ export class ServersReducer extends Reducer<
 
     if (newVolume) {
       const node = makeVolume(newVolume);
-      g.dispatcher.dispatch({
+      g.bep.process({
         type: 'core:new-node',
         nodeData: node,
         origin: g.event.origin,
@@ -676,7 +676,7 @@ export class ServersReducer extends Reducer<
 
     const edge = makeMountEdge(g.event);
 
-    g.dispatcher.dispatch({ type: 'core:new-edge', edge });
+    g.bep.process({ type: 'core:new-edge', edge });
   }
 
   /**
@@ -700,7 +700,7 @@ export class ServersReducer extends Reducer<
     // we make the exact edge to match for deletion
     const match = makeMountEdge(g.event);
 
-    g.dispatcher.dispatch({ type: 'core:delete-edge', edge: match });
+    g.bep.process({ type: 'core:delete-edge', edge: match });
   }
 
   /**
@@ -717,7 +717,7 @@ export class ServersReducer extends Reducer<
       headers: { authorization: g.extraArgs.authorizationHeader },
     });
 
-    g.dispatcher.dispatch({
+    g.bep.process({
       type: 'core:delete-node',
       id: projectVolumeNodeId(g.event.volume_id),
     });

@@ -14,7 +14,7 @@ type ReducedEvents = TCoreEvent;
 
 type UsedSharedData = TCoreSharedData;
 
-type Ra<T> = ReduceArgs<UsedSharedData, T, undefined, undefined>;
+type Ra<T> = ReduceArgs<UsedSharedData, T, Record<string, never>, undefined>;
 
 /**
  *
@@ -23,7 +23,7 @@ type Ra<T> = ReduceArgs<UsedSharedData, T, undefined, undefined>;
 export class CoreReducer extends Reducer<
   UsedSharedData,
   ReducedEvents,
-  undefined,
+  Record<string, never>,
   undefined
 > {
   //

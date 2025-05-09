@@ -91,7 +91,7 @@ export class BackendEventProcessor<TE extends TJsonWithDate, Targs> {
             st: this._sharedTypes,
             event,
             sequence,
-            dispatcher: this,
+            bep: this,
             sharedEditor: this._yjsSharedEditor!,
             extraArgs: {
               ...this._dispatcherExtraArgs,

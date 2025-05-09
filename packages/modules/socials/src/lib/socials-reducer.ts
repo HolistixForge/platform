@@ -52,7 +52,7 @@ export class SocialsReducer extends Reducer<
 
     await g.sharedEditor.createEditor(id, 'Start to write your text here...');
 
-    g.dispatcher.dispatch({
+    g.bep.process({
       type: 'core:new-node',
       nodeData: {
         id,
@@ -71,7 +71,7 @@ export class SocialsReducer extends Reducer<
   async _deleteTextEditor(g: Ra<TEventDeleteTextEditor>): Promise<void> {
     await g.sharedEditor.deleteEditor(g.event.nodeId);
 
-    g.dispatcher.dispatch({
+    g.bep.process({
       type: 'core:delete-node',
       id: g.event.nodeId,
     });
@@ -82,7 +82,7 @@ export class SocialsReducer extends Reducer<
   _newYoutube(g: Ra<TEventNewYoutube>): Promise<void> {
     const id = makeUuid();
 
-    g.dispatcher.dispatch({
+    g.bep.process({
       type: 'core:new-node',
       nodeData: {
         id,
@@ -101,7 +101,7 @@ export class SocialsReducer extends Reducer<
   //
 
   _deleteYoutube(g: Ra<TEventDeleteYoutube>): Promise<void> {
-    g.dispatcher.dispatch({
+    g.bep.process({
       type: 'core:delete-node',
       id: g.event.nodeId,
     });

@@ -21,7 +21,7 @@ import {
   useQueryProjectByName,
 } from '@monorepo/frontend-data';
 import {
-  BrowserDispatcher,
+  FrontendDispatcher,
   CollaborativeContext,
 } from '@monorepo/collab-engine';
 import { ApiFetch, serverUrl } from '@monorepo/api-fetch';
@@ -205,7 +205,7 @@ const useProjectState = (
     }
 
     try {
-      const dispatcher = new BrowserDispatcher(collabSetup.eventApi);
+      const dispatcher = new FrontendDispatcher(collabSetup.eventApi);
       const data: ProjectData = {
         project: projectData._0,
         collabConfig: collabSetup.collabConfig,

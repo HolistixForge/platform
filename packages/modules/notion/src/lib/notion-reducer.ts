@@ -102,7 +102,7 @@ export class NotionReducer extends Reducer<
 
     const nodeId = this.pageId(g.event.pageId);
 
-    g.dispatcher.dispatch({
+    g.bep.process({
       type: 'core:new-node',
       nodeData: {
         id: nodeId,
@@ -134,7 +134,7 @@ export class NotionReducer extends Reducer<
 
     const { databaseId } = g.event;
 
-    g.dispatcher.dispatch({
+    g.bep.process({
       type: 'core:new-node',
       nodeData: {
         id: this.databaseId(databaseId),
@@ -199,7 +199,7 @@ export class NotionReducer extends Reducer<
 
         // Dispatch delete node events for each deleted page
         deletedPages.forEach((deletedPage) => {
-          g.dispatcher.dispatch({
+          g.bep.process({
             type: 'core:delete-node',
             id: this.pageId(deletedPage.id),
           });
@@ -337,7 +337,7 @@ export class NotionReducer extends Reducer<
     const { pageId } = g.event;
     const nodeId = this.pageId(pageId);
 
-    g.dispatcher.dispatch({
+    g.bep.process({
       type: 'core:delete-node',
       id: nodeId,
     });
@@ -353,7 +353,7 @@ export class NotionReducer extends Reducer<
     const database = g.sd.notionDatabases.get(databaseId);
     if (database) {
       database.pages.forEach((page) => {
-        g.dispatcher.dispatch({
+        g.bep.process({
           type: 'core:delete-node',
           id: this.pageId(page.id),
         });
@@ -361,7 +361,7 @@ export class NotionReducer extends Reducer<
     }
 
     // Then delete the database node itself
-    g.dispatcher.dispatch({
+    g.bep.process({
       type: 'core:delete-node',
       id: nodeId,
     });

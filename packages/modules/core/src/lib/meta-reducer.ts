@@ -18,7 +18,12 @@ let shouldIBeDead = false;
 
 type ReducedEvents = { type: string };
 
-type Ra<T> = ReduceArgs<TCoreSharedData, T, undefined, Record<string, never>>;
+type Ra<T> = ReduceArgs<
+  TCoreSharedData,
+  T,
+  Record<string, never>,
+  Record<string, never>
+>;
 
 // TODO_DEM: timer and events system
 const eventFilter = [
@@ -32,7 +37,7 @@ const eventFilter = [
 export class MetaReducer extends Reducer<
   TCoreSharedData,
   ReducedEvents,
-  undefined,
+  Record<string, never>,
   Record<string, never>
 > {
   //
