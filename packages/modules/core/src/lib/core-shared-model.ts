@@ -39,6 +39,6 @@ export const getNodeEdges = (edges: Array<TEdge>, nid: string) =>
 
 export const useNodeEdges = (id: string) => {
   const { edges } = useSharedData<TCoreSharedData>(['edges'], (sd) => sd);
-  const nodeEdges = getNodeEdges(edges.toArray() || [], id);
+  const nodeEdges = getNodeEdges(edges || [], id);
   return nodeEdges;
 };
