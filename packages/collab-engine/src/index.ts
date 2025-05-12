@@ -55,6 +55,7 @@ export {
   useExtraContext,
   useBindEditor,
   useEventSequence,
+  useShareDataManager,
 } from './lib/frontend/context';
 export type {
   TSharedDataHook,
@@ -63,6 +64,8 @@ export type {
   TNoneCollabConfig,
   TCollaborationContext,
 } from './lib/frontend/context';
+
+export type { SharedDataManager } from './lib/frontend/localOverrider';
 
 export type { TokenMethods } from './lib/frontend/ydocs';
 

@@ -2,6 +2,7 @@ import { makeUuid, TJsonObject } from '@monorepo/simple-types';
 import { FrontendDispatcher } from './frontendDispatcher';
 import { SequenceEvent } from '../backendEventSequence';
 import { LocalOverrider } from './localOverrider';
+import { TValidSharedData } from '../chunk';
 //
 
 export type LocalReduceFunction = (sdc: any, event: any) => void;
@@ -16,12 +17,12 @@ export class FrontendEventSequence<T extends TJsonObject> {
   private sequenceId: string;
   private dispatcher: FrontendDispatcher<T>;
   private hasError: boolean = false;
-  private localOverrider: LocalOverrider;
+  private localOverrider: LocalOverrider<TValidSharedData>;
 
   constructor(
     dispatcher: FrontendDispatcher<T>,
     localReduce: LocalReduceFunction,
-    localOverrider: LocalOverrider
+    localOverrider: LocalOverrider<TValidSharedData>
   ) {
     this.localReduce = localReduce;
     this.sequenceId = makeUuid();

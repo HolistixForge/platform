@@ -11,6 +11,7 @@ import {
   useDispatcher,
   useAwareness,
   useSharedData,
+  useShareDataManager,
 } from '@monorepo/collab-engine';
 
 import { DemiurgeSpace } from '../reactflow-renderer/main';
@@ -23,6 +24,7 @@ import { CollabSpaceState } from './collab-space-state';
 import { CollabSpaceAwareness } from './collab-space-awareness';
 import { useNodeContext } from '../reactflow-renderer/node-wrappers/node-wrapper';
 import { CustomStoryNode } from '../reactflow-renderer/node';
+import { TSpaceSharedData } from '../../space-shared-model';
 
 //
 
@@ -67,7 +69,8 @@ export const SpaceModule = ({
     clientPosition: TPosition
   ) => void;
 }) => {
-  const sd = useSharedData(['graphViews'], (sd) => sd);
+  //
+  const sdm = useShareDataManager<TSpaceSharedData & TCoreSharedData>();
   const collabDispatcher = useDispatcher();
   const { awareness } = useAwareness();
 
@@ -75,7 +78,7 @@ export const SpaceModule = ({
     const ga = new CollabSpaceAwareness(viewId, awareness);
     const pt = new ReactflowPointerTracker(ga);
     const as = new HtmlAvatarStore(pt, ga);
-    const ss = new CollabSpaceState(viewId, sd);
+    const ss = new CollabSpaceState(viewId, sdm);
 
     const Node = makeSpaceModuleNode(nodeTypes);
 

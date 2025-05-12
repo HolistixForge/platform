@@ -40,7 +40,11 @@ import {
   FrontendEventSequence,
   LocalReduceFunction,
 } from './frontendEventSequence';
-import { LocalOverrider } from './localOverrider';
+import {
+  LocalOverrider,
+  SharedDataManager,
+  TValidSharedDataToCopy,
+} from './localOverrider';
 
 import './context.scss';
 
@@ -61,7 +65,7 @@ export type TCollabConfig = TNoneCollabConfig | TYjsCollabConfig;
 export type TCollaborationContext = {
   sharedTypes: SharedTypes;
   sharedData: TValidSharedData;
-  localOverrider: LocalOverrider;
+  localOverrider: LocalOverrider<TValidSharedData>;
   awareness: Awareness;
   dispatcher: FrontendDispatcher<any>;
   sharedEditor: SharedEditor;
@@ -403,10 +407,10 @@ export type TSharedDataHook<TShDt> = <U>(
 
 export const useSharedData = <TSharedData extends TValidSharedData>(
   observe: Array<keyof TSharedData>,
-
-  f: (data: TSharedData) => any
+  f: (data: TValidSharedDataToCopy<TSharedData>) => any
 ): ReturnType<typeof f> => {
-  const { sharedData } = useContext(
+  //
+  const { localOverrider } = useContext(
     collaborationContext
   ) as TCollaborationContext;
 
@@ -415,21 +419,27 @@ export const useSharedData = <TSharedData extends TValidSharedData>(
   const updateComponent = useCallback(() => refresh({}), []);
 
   useEffect(() => {
-    observe.forEach((key) => {
-      if ((sharedData as TSharedData)[key]) {
-        sharedData[key].observe(updateComponent);
-      }
-    });
+    localOverrider.observe(observe as string[], updateComponent);
     return () => {
-      observe.forEach((key) => {
-        if ((sharedData as TSharedData)[key]) {
-          sharedData[key].unobserve(updateComponent);
-        }
-      });
+      localOverrider.unobserve(observe as string[], updateComponent);
     };
-  }, [sharedData, observe, updateComponent]);
+  }, [localOverrider, observe, updateComponent]);
 
-  return f(sharedData as TSharedData);
+  return f(localOverrider.getData() as any);
+};
+
+//
+//
+
+export const useShareDataManager = <
+  TSharedData extends TValidSharedData
+>(): SharedDataManager<TSharedData> => {
+  //
+  const { localOverrider } = useContext(
+    collaborationContext
+  ) as TCollaborationContext;
+
+  return localOverrider as SharedDataManager<TSharedData>;
 };
 
 //

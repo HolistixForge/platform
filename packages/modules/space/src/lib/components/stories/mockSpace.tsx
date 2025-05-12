@@ -5,15 +5,15 @@ import {
   TCollaborativeChunk,
   TValidSharedData,
   useAwareness,
-  useSharedData,
   MockCollaborativeContext,
+  useShareDataManager,
 } from '@monorepo/collab-engine';
-import { CoreReducer, Core_loadData } from '@monorepo/core';
+import { CoreReducer, Core_loadData, TCoreSharedData } from '@monorepo/core';
 
 import { SpaceContext } from '../reactflow-renderer/spaceContext';
 import { TNodeContext } from '../apis/types/node';
 import { SpaceReducer } from '../../space-reducer';
-import { Space_loadData } from '../../space-shared-model';
+import { Space_loadData, TSpaceSharedData } from '../../space-shared-model';
 import { CollabSpaceAwareness } from '../collab-module/collab-space-awareness';
 import { CollabSpaceState } from '../collab-module/collab-space-state';
 import { loadStoryData, STORY_VIEW_ID } from './graphs-data/loader';
@@ -70,12 +70,12 @@ export const MockSpace = ({
 
 const MockSpaceContext = ({ children }: { children: ReactNode }) => {
   const { awareness } = useAwareness();
-  const sd = useSharedData(['graphViews'], (sd) => sd);
+  const sdm = useShareDataManager<TSpaceSharedData & TCoreSharedData>();
 
   const context = useMemo(() => {
     return {
       spaceAwareness: new CollabSpaceAwareness(STORY_VIEW_ID, awareness),
-      spaceState: new CollabSpaceState(STORY_VIEW_ID, sd),
+      spaceState: new CollabSpaceState(STORY_VIEW_ID, sdm),
       currentUser: { username: 'toto', color: '#ffa500' },
       moveNodeMode: false,
       viewId: STORY_VIEW_ID,

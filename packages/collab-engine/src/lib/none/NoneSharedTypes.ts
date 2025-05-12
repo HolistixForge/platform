@@ -26,6 +26,7 @@ class MyMap<T extends TJson>
   implements SharedMap<T>
 {
   _sm: NoneSharedTypes;
+  _map: Map<string, T> = new Map<string, T>();
 
   constructor(sm: NoneSharedTypes) {
     super();
@@ -48,8 +49,6 @@ class MyMap<T extends TJson>
     this._map.delete(k);
   }
 
-  _map: Map<string, T> = new Map<string, T>();
-
   set(k: string, o: T): void {
     this._map.set(k, o);
     this._sm.flagChange(this._observer);
@@ -67,6 +66,10 @@ class MyMap<T extends TJson>
   forEach(f: (v: T, k: string) => void): void {
     const keys: Array<string> = Array.from(this._map.keys());
     keys.forEach((k) => f(this._map.get(k) as T, k));
+  }
+
+  copy(): Map<string, T> {
+    return this._map;
   }
 }
 
@@ -129,6 +132,10 @@ class MyArray<T extends TJson>
 
   forEach(f: (v: T, k: number) => void): void {
     return this._array.forEach(f);
+  }
+
+  copy(): Array<T> {
+    return this._array;
   }
 }
 

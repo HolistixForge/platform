@@ -20,6 +20,7 @@ export interface SharedArray<T extends TJson> {
   delete: (index: number, length?: number) => void;
   deleteMatching: (f: (v: T) => boolean) => void;
   toJSON: () => Array<T>;
+  copy: () => Array<T>;
 }
 
 //
@@ -34,6 +35,7 @@ export interface SharedMap<T extends TJson> {
   forEach: (f: (v: T, k: string) => void) => void;
   values(): IterableIterator<T>;
   toJSON: () => { [k: string]: T };
+  copy: () => Map<string, T>;
 }
 
 //

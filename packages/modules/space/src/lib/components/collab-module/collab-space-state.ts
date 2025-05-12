@@ -1,55 +1,48 @@
-import { TCoreSharedData, TEdge, TConnector, TGraphNode } from '@monorepo/core';
+import { TCoreSharedData, TGraphNode } from '@monorepo/core';
+import { SharedDataManager } from '@monorepo/collab-engine';
 
 import { TSpaceSharedData } from '../../space-shared-model';
 import { SpaceState } from '../apis/spaceState';
-import { TNodeView, TConnectorView, TGraphView } from '../../space-types';
+import { TGraphView } from '../../space-types';
 
 //
 
 export class CollabSpaceState extends SpaceState {
-  sd: TSpaceSharedData & TCoreSharedData;
+  sdm: SharedDataManager<TSpaceSharedData & TCoreSharedData>;
   viewId: string;
 
-  constructor(viewId: string, sd: TSpaceSharedData & TCoreSharedData) {
+  constructor(
+    viewId: string,
+    sdm: SharedDataManager<TSpaceSharedData & TCoreSharedData>
+  ) {
     super();
-    this.sd = sd;
+    this.sdm = sdm;
     this.viewId = viewId;
-    this.sd.graphViews.observe(() => {
+
+    this.sdm.observe(['graphViews'], () => {
+      this.updateState();
       this.notifyListeners();
     });
-    this.sd.nodes.observe(() => {
+
+    this.sdm.observe(['nodes'], () => {
+      this.updateNodes();
       this.notifyListeners();
     });
-    this.sd.edges.observe(() => {
-      this.notifyListeners();
-    });
+
+    this.updateState();
+    this.updateNodes();
   }
 
   private updateState() {
-    const state = this.sd.graphViews.get(this.viewId);
+    const state = this.sdm.getData().graphViews.get(this.viewId);
     if (!state) throw new Error(`No graphViews for viewId [${this.viewId}]`);
-    const nodes = this.sd.nodes;
-    if (!nodes) throw new Error('No nodes');
     this.state = state;
-    this.nodes = nodes as unknown as Map<string, TGraphNode>;
   }
 
-  override getNodes(): TNodeView[] {
-    this.updateState();
-    return super.getNodes();
-  }
-
-  override getEdges(): TEdge[] {
-    this.updateState();
-    return super.getEdges();
-  }
-
-  override getConnector(
-    nodeId: string,
-    connectorName: string
-  ): (TConnector & TConnectorView) | undefined {
-    this.updateState();
-    return super.getConnector(nodeId, connectorName);
+  private updateNodes() {
+    const nodes = this.sdm.getData().nodes;
+    if (!nodes) throw new Error('No nodes');
+    this.nodes = nodes;
   }
 
   override setState(s: TGraphView, nodes: Map<string, TGraphNode>) {

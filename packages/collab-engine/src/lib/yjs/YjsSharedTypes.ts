@@ -32,18 +32,34 @@ export class YjsSharedTypes extends SharedTypes {
   //
 
   getSharedMap<T extends TJson>(name?: string): SharedMap<T> {
-    const m = this._ydoc.getMap<T>(name);
+    const m = this._ydoc.getMap<T>(name) as unknown as SharedMap<T>;
+
+    m.copy = () => {
+      const copy = new Map<string, T>();
+      m.forEach((value, key) => {
+        copy.set(key, value);
+      });
+      return copy;
+    };
+
     return m;
   }
 
   //
 
   getSharedArray<T extends TJson>(name?: string): SharedArray<T> {
-    const a = this._ydoc.getArray<T>(name);
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    a.deleteMatching = (f) => yarrayDeleteMatching(a, f);
-    (a as any).filter = (f: any) => a.toArray().filter(f);
+    const a: SharedArray<T> = this._ydoc.getArray<T>(
+      name
+    ) as unknown as SharedArray<T>;
+
+    a.deleteMatching = (f) => yarrayDeleteMatching(a as unknown as Array<T>, f);
+
+    a.filter = (f: any) => a.toArray().filter(f);
+
+    a.copy = () => {
+      return a.toArray();
+    };
+
     return a as unknown as SharedArray<T>;
   }
 }
