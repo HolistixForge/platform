@@ -1,6 +1,6 @@
 import { TJson } from '@monorepo/simple-types';
 import { TValidSharedData } from '../chunk';
-import { LocalReduceFunction } from './frontendEventSequence';
+import { FrontendEventSequence } from './frontendEventSequence';
 import { SharedMap, SharedArray } from '../SharedTypes';
 
 //
@@ -40,6 +40,9 @@ export class LocalOverrider<
 
   private sharedDataCopy: TSharedDataCopy = {};
 
+  private frontendEventSequences: Map<string, FrontendEventSequence<any>[]> =
+    new Map();
+
   constructor(sharedData: TValidSharedData) {
     super();
     this.sharedData = sharedData;
@@ -50,9 +53,36 @@ export class LocalOverrider<
     }
   }
 
-  apply(localReduce: LocalReduceFunction, event: any) {
-    console.log('APPLY', { sharedData: this.sharedData, event });
+  //
+
+  public registerFrontendEventSequence(sequence: FrontendEventSequence<any>) {
+    sequence.localReduceUpdateKeys.forEach((key) => {
+      const sequences = this.frontendEventSequences.get(key as string) || [];
+      sequences.push(sequence);
+      this.frontendEventSequences.set(key as string, sequences);
+    });
   }
+
+  public unregisterFrontendEventSequence(sequence: FrontendEventSequence<any>) {
+    sequence.localReduceUpdateKeys.forEach((key) => {
+      const sequences = this.frontendEventSequences.get(key as string) || [];
+      this.frontendEventSequences.set(
+        key as string,
+        sequences.filter((s) => s !== sequence)
+      );
+    });
+  }
+
+  apply(sequence: FrontendEventSequence<any>) {
+    if (!sequence.lastEvent) return;
+    console.log('APPLY', { event: sequence.lastEvent });
+    sequence.localReduce(this.sharedDataCopy, sequence.lastEvent);
+    sequence.localReduceUpdateKeys.forEach((key) =>
+      this.callKeyObservers(key as string)
+    );
+  }
+
+  //
 
   observe(keys: Array<keyof TSharedData>, observer: () => void) {
     keys.forEach((key) => {
@@ -67,9 +97,18 @@ export class LocalOverrider<
     });
   }
 
+  private callKeyObservers(key: string) {
+    this.observers[key]?.forEach((observer) => observer());
+  }
+
+  //
+
   private update(key: string) {
     this.sharedDataCopy[key] = this.sharedData[key].copy();
-    this.observers[key]?.forEach((observer) => observer());
+    this.frontendEventSequences.get(key)?.forEach((sequence) => {
+      this.apply(sequence);
+    });
+    this.callKeyObservers(key);
   }
 
   getData(): TValidSharedDataToCopy<TSharedData> {

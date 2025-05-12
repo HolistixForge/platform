@@ -33,6 +33,8 @@ import { HtmlAvatarStore } from './htmlAvatarStore';
 import { translateEdges, translateNodes } from './to-rf-nodes';
 import { TSpaceEvent } from '../../space-events';
 import { getAbsolutePosition } from '../../utils/position-utils';
+import { TSpaceSharedData } from '../../space-shared-model';
+
 //
 //
 
@@ -96,7 +98,10 @@ export const DemiurgeSpace = ({
 
   useRegisterListener(spaceState);
 
-  const { createEventSequence } = useEventSequence<TSpaceEvent>();
+  const { createEventSequence } = useEventSequence<
+    TSpaceEvent,
+    TSpaceSharedData
+  >();
   const moveNodeEventSequenceRef =
     useRef<FrontendEventSequence<TSpaceEvent> | null>(null);
 
@@ -197,17 +202,18 @@ export const DemiurgeSpace = ({
       // Create sequence if it doesn't exist
       if (!moveNodeEventSequenceRef.current) {
         moveNodeEventSequenceRef.current = createEventSequence({
+          localReduceUpdateKeys: ['graphViews'],
           localReduce: (sdc, event) => {
             // define the local state override applied to shared state locally during the sequence life
-            const gv = sdc.graphViews[viewId];
-            const node = gv.nodeViews.find((n: any) => n.id === node.id);
-            if (node) {
-              node.position = getAbsolutePosition(
+            const gv = sdc.graphViews.get(viewId);
+            const draggedNode = gv.nodeViews.find((n: any) => n.id === node.id);
+            if (draggedNode) {
+              draggedNode.position = getAbsolutePosition(
                 event.position,
-                node.parentId,
+                draggedNode.parentId,
                 gv
               );
-              node.parentId = undefined;
+              draggedNode.parentId = undefined;
             }
           },
         });

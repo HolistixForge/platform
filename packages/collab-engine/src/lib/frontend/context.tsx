@@ -12,6 +12,7 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import * as YWS from 'y-websocket';
 
 import { log } from '@monorepo/log';
+import { TJsonObject } from '@monorepo/simple-types';
 
 import {
   TValidSharedData,
@@ -455,14 +456,28 @@ export const useDispatcher = <TE,>() => {
 //
 //
 
-export const useEventSequence = <TE,>() => {
+export const useEventSequence = <
+  TEvents extends TJsonObject,
+  TSharedData extends TValidSharedData
+>() => {
   const { dispatcher, localOverrider } = useContext(
     collaborationContext
   ) as TCollaborationContext;
 
   const createEventSequence = useCallback(
-    ({ localReduce }: { localReduce: LocalReduceFunction }) => {
-      return new FrontendEventSequence(dispatcher, localReduce, localOverrider);
+    ({
+      localReduce,
+      localReduceUpdateKeys,
+    }: {
+      localReduce: LocalReduceFunction;
+      localReduceUpdateKeys: Array<keyof TSharedData>;
+    }) => {
+      return new FrontendEventSequence<TEvents>(
+        dispatcher,
+        localReduce,
+        localOverrider,
+        localReduceUpdateKeys as string[]
+      );
     },
     [dispatcher, localOverrider]
   );

@@ -12,6 +12,8 @@ export type LocalReduceFunction = (sdc: any, event: any) => void;
 export class FrontendEventSequence<T extends TJsonObject> {
   public localReduce: LocalReduceFunction;
   public done: boolean = false;
+  public localReduceUpdateKeys: string[];
+  public lastEvent: T | undefined;
 
   private counter: number = 0;
   private sequenceId: string;
@@ -22,12 +24,15 @@ export class FrontendEventSequence<T extends TJsonObject> {
   constructor(
     dispatcher: FrontendDispatcher<T>,
     localReduce: LocalReduceFunction,
-    localOverrider: LocalOverrider<TValidSharedData>
+    localOverrider: LocalOverrider<TValidSharedData>,
+    localReduceUpdateKeys: string[]
   ) {
     this.localReduce = localReduce;
     this.sequenceId = makeUuid();
     this.dispatcher = dispatcher;
     this.localOverrider = localOverrider;
+    this.localReduceUpdateKeys = localReduceUpdateKeys;
+    this.localOverrider.registerFrontendEventSequence(this);
   }
 
   async dispatch(
@@ -35,7 +40,9 @@ export class FrontendEventSequence<T extends TJsonObject> {
   ) {
     if (this.hasError) return;
 
-    this.localOverrider.apply(this.localReduce, event);
+    this.lastEvent = event;
+
+    this.localOverrider.apply(this);
 
     this.counter++;
 
@@ -53,5 +60,6 @@ export class FrontendEventSequence<T extends TJsonObject> {
 
   cleanup() {
     this.done = true;
+    this.localOverrider.unregisterFrontendEventSequence(this);
   }
 }
