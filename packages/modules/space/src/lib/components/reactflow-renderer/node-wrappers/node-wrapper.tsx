@@ -114,7 +114,7 @@ export const NodeWrapper =
     const { spaceAwareness, currentUser, moveNodeMode, viewId } =
       useSpaceContext();
 
-    useRegisterListener(spaceAwareness);
+    useRegisterListener(spaceAwareness, 'NodeWrapper, spaceAwareness');
 
     //
 

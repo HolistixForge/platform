@@ -96,7 +96,7 @@ export const DemiurgeSpace = ({
     }
   );
 
-  useRegisterListener(spaceState);
+  useRegisterListener(spaceState, 'DemiurgeSpace', viewId);
 
   const { createEventSequence } = useEventSequence<
     TSpaceEvent,
@@ -206,7 +206,10 @@ export const DemiurgeSpace = ({
           localReduce: (sdc, event) => {
             // define the local state override applied to shared state locally during the sequence life
             const gv = sdc.graphViews.get(viewId);
-            const draggedNode = gv.nodeViews.find((n: any) => n.id === node.id);
+            const draggedNode = gv.graph.nodes.find(
+              (n: any) => n.id === node.id
+            );
+
             if (draggedNode) {
               draggedNode.position = getAbsolutePosition(
                 event.position,

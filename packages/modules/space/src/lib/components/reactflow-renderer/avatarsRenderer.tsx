@@ -7,7 +7,7 @@ export const AvatarsRenderer = ({
 }: {
   avatarsStore: AvatarStore;
 }) => {
-  useRegisterListener(avatarsStore);
+  useRegisterListener(avatarsStore, 'AvatarsRenderer, avatarsStore');
   return (
     <div className="avtars-renderer">{avatarsStore.getAvatarsElements()}</div>
   );

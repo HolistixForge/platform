@@ -75,7 +75,6 @@ export class LocalOverrider<
 
   apply(sequence: FrontendEventSequence<any>) {
     if (!sequence.lastEvent) return;
-    console.log('APPLY', { event: sequence.lastEvent });
     sequence.localReduce(this.sharedDataCopy, sequence.lastEvent);
     sequence.localReduceUpdateKeys.forEach((key) =>
       this.callKeyObservers(key as string)
