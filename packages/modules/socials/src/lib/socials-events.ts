@@ -21,8 +21,21 @@ export type TEventDeleteYoutube = {
   nodeId: string;
 };
 
+export type TEventNewIframe = {
+  type: 'socials:new-iframe';
+  src: string;
+  origin?: TEventOrigin;
+};
+
+export type TEventDeleteIframe = {
+  type: 'socials:delete-iframe';
+  nodeId: string;
+};
+
 export type TEventSocials =
   | TEventNewYoutube
   | TEventDeleteYoutube
   | TEventNewTextEditor
-  | TEventDeleteTextEditor;
+  | TEventDeleteTextEditor
+  | TEventNewIframe
+  | TEventDeleteIframe;

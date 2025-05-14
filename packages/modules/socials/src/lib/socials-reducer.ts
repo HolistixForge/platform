@@ -8,6 +8,8 @@ import {
   TEventDeleteYoutube,
   TEventNewTextEditor,
   TEventDeleteTextEditor,
+  TEventNewIframe,
+  TEventDeleteIframe,
 } from './socials-events';
 
 //
@@ -39,6 +41,12 @@ export class SocialsReducer extends Reducer<
 
       case 'socials:delete-text-editor':
         return this._deleteTextEditor(g as Ra<TEventDeleteTextEditor>);
+
+      case 'socials:new-iframe':
+        return this._newIframe(g as Ra<TEventNewIframe>);
+
+      case 'socials:delete-iframe':
+        return this._deleteIframe(g as Ra<TEventDeleteIframe>);
 
       default:
         return Promise.resolve();
@@ -101,6 +109,37 @@ export class SocialsReducer extends Reducer<
   //
 
   _deleteYoutube(g: Ra<TEventDeleteYoutube>): Promise<void> {
+    g.bep.process({
+      type: 'core:delete-node',
+      id: g.event.nodeId,
+    });
+    return Promise.resolve();
+  }
+
+  //
+
+  _newIframe(g: Ra<TEventNewIframe>): Promise<void> {
+    const id = makeUuid();
+
+    g.bep.process({
+      type: 'core:new-node',
+      nodeData: {
+        id,
+        name: 'iframe',
+        type: 'iframe',
+        root: true,
+        data: { src: g.event.src },
+        connectors: [],
+      },
+      edges: [],
+      origin: g.event.origin,
+    });
+    return Promise.resolve();
+  }
+
+  //
+
+  _deleteIframe(g: Ra<TEventDeleteIframe>): Promise<void> {
     g.bep.process({
       type: 'core:delete-node',
       id: g.event.nodeId,

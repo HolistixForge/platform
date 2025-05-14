@@ -146,7 +146,7 @@ export const JupyterTerminal = ({ terminalId }: { terminalId: string }) => {
         ? 'Reaching for server...'
         : isReachable
         ? null
-        : 'Server is not reachable'}
+        : 'Server is not reachable, will try again in 60 seconds'}
     </div>
   );
 };

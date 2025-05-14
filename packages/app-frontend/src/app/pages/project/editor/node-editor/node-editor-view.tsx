@@ -13,7 +13,11 @@ import {
 import { SpaceModule, Group, Shape } from '@monorepo/space';
 import { NodeChatbox, NodeChatAnchor } from '@monorepo/chats';
 import { NodeCell, NodeKernel, NodeTerminal } from '@monorepo/jupyter/frontend';
-import { NodeYoutube, NodeTextEditor } from '@monorepo/socials/frontend';
+import {
+  NodeYoutube,
+  NodeTextEditor,
+  NodeIframe,
+} from '@monorepo/socials/frontend';
 import { NodeNotion, NodeNotionTask } from '@monorepo/notion';
 
 import { ContextMenuLogic } from './menus/context-menu-logic';
@@ -40,6 +44,7 @@ const nodeTypes = {
   'notion-page': NodeNotionTask,
   group: Group,
   shape: Shape,
+  iframe: NodeIframe,
 };
 
 //

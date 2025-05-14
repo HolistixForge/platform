@@ -22,18 +22,19 @@ import {
 } from '@monorepo/ui-views';
 import { useAction, DialogControlled } from '@monorepo/ui-base';
 import { useQueryServerImages } from '@monorepo/frontend-data';
-import { Dispatcher } from '@monorepo/collab-engine';
 import {
   NewNotionDatabaseForm,
   NewNotionDatabaseFormData,
 } from '@monorepo/notion';
 import { makeUuid } from '@monorepo/simple-types';
 import { SHAPE_TYPES, TEventNewShape } from '@monorepo/space';
+import { NewIframeForm, NewIframeFormData } from '@monorepo/socials/frontend';
 
 import {
   useDispatcher,
   useSharedData,
 } from '../../../model/collab-model-chunk';
+import { FrontendDispatcher } from '@monorepo/collab-engine';
 
 /**
  *
@@ -123,22 +124,16 @@ export const ContextMenuNew = () => {
                               className="ContextMenuItem"
                               onClick={async () => {
                                 await dispatcher.dispatch({
-                                  type: 'space:action',
+                                  type: 'space:unfilter-out-node',
                                   viewId: context.viewId,
-                                  action: {
-                                    type: 'unfilter-out-node',
-                                    nid: node.id,
-                                    position: context.position,
-                                  },
+                                  nid: node.id,
+                                  position: context.position,
                                 });
                                 await dispatcher.dispatch({
-                                  type: 'space:action',
+                                  type: 'space:move-node',
                                   viewId: context.viewId,
-                                  action: {
-                                    type: 'move-node',
-                                    nid: node.id,
-                                    position: context.position,
-                                  },
+                                  nid: node.id,
+                                  position: context.position,
                                 });
                               }}
                             >
@@ -165,7 +160,7 @@ export const ContextMenuNew = () => {
  */
 
 export const useNewServerAction = (
-  dispatcher: Dispatcher<TServerEvents, Record<string, never>>,
+  dispatcher: FrontendDispatcher<TServerEvents>,
   viewId?: string,
   refCoordinates?: React.MutableRefObject<TPosition>
 ) => {
@@ -318,6 +313,30 @@ export const ContextMenuLogic = ({
     {
       checkForm: (d, e) => {
         if (!d.databaseId) e.databaseId = 'Please enter the databse Id';
+      },
+    }
+  );
+
+  //
+
+  const iframe_action = useAction<NewIframeFormData>(
+    (d) => {
+      return dispatcher.dispatch({
+        type: 'socials:new-iframe',
+        src: d.src,
+        origin: {
+          viewId: viewId,
+          position: {
+            x: refCoordinates.current.x,
+            y: refCoordinates.current.y,
+          },
+        },
+      });
+    },
+    [dispatcher, refCoordinates, viewId],
+    {
+      checkForm: (d, e) => {
+        if (!d.src) e.src = 'Please enter the iframe source URL';
       },
     }
   );
@@ -555,6 +574,12 @@ export const ContextMenuLogic = ({
           disabled: from !== undefined,
           hiddenNodes: getHiddenNodesByType('youtube'),
         },
+        {
+          title: 'Iframe',
+          onClick: iframe_action.open,
+          disabled: from !== undefined,
+          hiddenNodes: getHiddenNodesByType('iframe'),
+        },
       ],
     };
   }, [
@@ -574,6 +599,7 @@ export const ContextMenuLogic = ({
     onNewTextEditor,
     onNewGroup,
     onNewShape,
+    iframe_action.open,
   ]);
 
   /**
@@ -632,6 +658,15 @@ export const ContextMenuLogic = ({
         onOpenChange={notion_action.close}
       >
         <NewNotionDatabaseForm action={notion_action} />
+      </DialogControlled>
+
+      <DialogControlled
+        title="New Iframe"
+        description="Enter the URL to embed in the iframe"
+        open={iframe_action.isOpened}
+        onOpenChange={iframe_action.close}
+      >
+        <NewIframeForm action={iframe_action} />
       </DialogControlled>
     </menuContext.Provider>
   );
