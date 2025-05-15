@@ -1,10 +1,14 @@
 ⚠️ Antoine's stuffs
 
-move node :
+drawing mode:
 
-- event sequence (uuid and counter), skip event after a newer has been process
-- node position css transition
-- decoreler le rendu local et shared state, avec une surchage locale des propriétés de position
+- check pointer awareness in drawing mode.
+- default zoom not applyed
+- sync through shared state
+
+event sequence:
+
+- fallback logics: add a reset point or function if not exists when sequenceRevertPoint is set
 
 dns
 shut down button

@@ -17,6 +17,7 @@ import { Space_loadData, TSpaceSharedData } from '../../space-shared-model';
 import { CollabSpaceAwareness } from '../collab-module/collab-space-awareness';
 import { CollabSpaceState } from '../collab-module/collab-space-state';
 import { loadStoryData, STORY_VIEW_ID } from './graphs-data/loader';
+import { WhiteboardMode } from '../reactflow-renderer/demiurge-space';
 
 //
 
@@ -77,7 +78,7 @@ const MockSpaceContext = ({ children }: { children: ReactNode }) => {
       spaceAwareness: new CollabSpaceAwareness(STORY_VIEW_ID, awareness),
       spaceState: new CollabSpaceState(STORY_VIEW_ID, sdm),
       currentUser: { username: 'toto', color: '#ffa500' },
-      moveNodeMode: false,
+      mode: 'default' as WhiteboardMode,
       viewId: STORY_VIEW_ID,
     };
   }, []);

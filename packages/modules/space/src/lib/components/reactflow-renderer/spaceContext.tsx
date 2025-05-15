@@ -2,6 +2,7 @@ import { createContext, useContext, ReactNode } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
 import { SpaceState } from '../apis/spaceState';
 import { SpaceAwareness } from '../apis/spaceAwareness';
+import { WhiteboardMode } from './demiurge-space';
 
 //
 
@@ -9,7 +10,7 @@ export type TSpaceContext = {
   spaceAwareness: SpaceAwareness;
   spaceState: SpaceState;
   currentUser?: { username: string; color: string };
-  moveNodeMode: boolean;
+  mode: WhiteboardMode;
   viewId: string;
 };
 

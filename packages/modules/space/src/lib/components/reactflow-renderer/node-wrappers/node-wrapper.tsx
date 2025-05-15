@@ -111,8 +111,7 @@ export const NodeWrapper =
 
     const dispatcher = useDispatcher<TSpaceEvent>();
 
-    const { spaceAwareness, currentUser, moveNodeMode, viewId } =
-      useSpaceContext();
+    const { spaceAwareness, currentUser, mode, viewId } = useSpaceContext();
 
     useRegisterListener(spaceAwareness, 'NodeWrapper, spaceAwareness');
 
@@ -238,7 +237,7 @@ export const NodeWrapper =
             >
               <NodeComponent />
               <EasyConnect id={id} />
-              <MoveNodeMode moveNodeMode={moveNodeMode} />
+              <MoveNodeMode moveNodeMode={mode === 'move-node'} />
             </div>
           </SelectionsAwareness>
 

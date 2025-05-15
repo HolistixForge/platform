@@ -24,8 +24,8 @@ export const graph1: {
       id: 'node-1',
       type: 'default',
       position: {
-        x: 200,
-        y: 200,
+        x: 0,
+        y: 0,
       },
       status: nodeViewDefaultStatus(),
     },

@@ -14,7 +14,7 @@ import {
   useShareDataManager,
 } from '@monorepo/collab-engine';
 
-import { DemiurgeSpace } from '../reactflow-renderer/main';
+import { DemiurgeSpace } from '../reactflow-renderer/demiurge-space';
 import { ReactflowPointerTracker } from '../reactflow-renderer/reactflowPointerTracker';
 import { HtmlAvatarStore } from '../reactflow-renderer/htmlAvatarStore';
 
@@ -104,17 +104,19 @@ export const SpaceModule = ({
   return (
     <DemiurgeSpace
       viewId={viewId}
-      nodeComponent={logics.Node}
-      edgeComponent={CustomStoryEdge}
       spaceState={logics.ss}
       currentUser={awareness._user || undefined}
       spaceAwareness={logics.ga}
       pointerTracker={logics.pt}
       avatarsStore={logics.as}
-      onContextMenu={onContextMenu || (() => {})}
-      onContextMenuNewEdge={onContextMenuNewEdge || (() => {})}
-      onDrop={onDrop}
-      onConnect={onConnect}
+      reactflow={{
+        nodeComponent: logics.Node,
+        edgeComponent: CustomStoryEdge,
+        onContextMenu: onContextMenu || (() => {}),
+        onContextMenuNewEdge: onContextMenuNewEdge || (() => {}),
+        onDrop: onDrop,
+        onConnect: onConnect,
+      }}
     />
   );
 };

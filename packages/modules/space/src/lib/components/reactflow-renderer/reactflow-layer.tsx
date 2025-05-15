@@ -1,20 +1,27 @@
-import React, { useCallback, useRef, useMemo, FC, useState } from 'react';
+import React, {
+  useCallback,
+  useRef,
+  useMemo,
+  FC,
+  useEffect,
+  forwardRef,
+} from 'react';
 import {
   ReactFlow,
   MiniMap,
   Controls,
   Node,
-  Viewport,
+  Viewport as ReactFlowViewport,
   EdgeTypes,
   NodeTypes,
   Connection,
   EdgeProps,
   Background,
   FinalConnectionState,
+  ReactFlowInstance,
+  useReactFlow,
 } from '@xyflow/react';
 import * as _ from 'lodash';
-import { useHotkeys } from 'react-hotkeys-hook';
-
 import { useRegisterListener } from '@monorepo/simple-types';
 import { clientXY } from '@monorepo/ui-toolkit';
 import { TPosition, TEdge, TEdgeEnd, EEdgeType } from '@monorepo/core';
@@ -24,8 +31,7 @@ import {
 } from '@monorepo/collab-engine';
 
 import { PointerTracker } from '../apis/pointerTracker';
-import { AvatarsRenderer } from './avatarsRenderer';
-import { SpaceContext } from './spaceContext';
+
 import { NodeWrapper } from './node-wrappers/node-wrapper';
 import { SpaceState } from '../apis/spaceState';
 import { SpaceAwareness } from '../apis/spaceAwareness';
@@ -34,31 +40,41 @@ import { translateEdges, translateNodes } from './to-rf-nodes';
 import { TSpaceEvent } from '../../space-events';
 import { getAbsolutePosition } from '../../utils/position-utils';
 import { TSpaceSharedData } from '../../space-shared-model';
+import { Viewport, INITIAL_VIEWPORT } from './demiurge-space';
+//
+//
+
+const toReactFlowViewport = (viewport: Viewport) => {
+  return {
+    x: viewport.absoluteX * viewport.zoom,
+    y: viewport.absoluteY * viewport.zoom,
+    zoom: viewport.zoom,
+  };
+};
 
 //
 //
 
-type DemiurgeSpaceProps = {
+export type ReactflowLayerProps = {
   viewId: string;
-  //
   nodeComponent: FC;
   edgeComponent: FC<EdgeProps>;
   spaceState: SpaceState;
   spaceAwareness: SpaceAwareness;
   pointerTracker: PointerTracker;
   avatarsStore: HtmlAvatarStore;
-  currentUser: { username: string; color: string } | undefined;
-  //
   onContextMenu: (xy: TPosition, clientPosition: TPosition) => void;
-  onPaneClick?: (xy: TPosition, clientPosition: TPosition) => void;
-  //
   onContextMenuNewEdge: (
     from: TEdgeEnd,
     xy: TPosition,
     clientPosition: TPosition
   ) => void;
-  onConnect?: (edge: TEdge) => void;
-  onDrop?: ({ data, position }: { data: any; position: TPosition }) => void;
+  onConnect: (edge: TEdge) => void;
+  onDrop: ({ data, position }: { data: any; position: TPosition }) => void;
+  onViewportChange: (viewport: Viewport) => void;
+  registerViewportChangeCallback: (
+    callback: (viewport: Viewport) => void
+  ) => void;
 };
 
 /**
@@ -66,7 +82,7 @@ type DemiurgeSpaceProps = {
  *
  */
 
-export const DemiurgeSpace = ({
+export const ReactflowLayer = ({
   viewId,
   nodeComponent,
   edgeComponent,
@@ -74,27 +90,14 @@ export const DemiurgeSpace = ({
   spaceAwareness,
   pointerTracker,
   avatarsStore,
-  currentUser,
+  onViewportChange,
+  registerViewportChangeCallback,
   onContextMenu,
   onContextMenuNewEdge,
   onConnect,
   onDrop,
-  onPaneClick,
-}: DemiurgeSpaceProps) => {
-  //
-  // State to track whether we're in pan-only mode
-  const [moveNodeMode, setMoveNodeMode] = useState(false);
-
-  // Toggle pan-only mode with Shift+Z
-  useHotkeys(
-    'shift+z',
-    () => {
-      setMoveNodeMode((prevMode) => !prevMode);
-    },
-    {
-      preventDefault: true, // Prevent any default browser behavior
-    }
-  );
+}: ReactflowLayerProps) => {
+  const reactflowRef = useRef<ReactFlowInstance | null>(null);
 
   useRegisterListener(spaceState, 'DemiurgeSpace', viewId);
 
@@ -263,12 +266,28 @@ export const DemiurgeSpace = ({
   //
 
   const _onMove = useCallback(
-    (event: any, viewport: Viewport) => {
+    (event: any, viewport: ReactFlowViewport) => {
       pointerTracker.onMove(event, viewport);
       avatarsStore.updateAllAvatars();
+      onViewportChange({
+        absoluteX: viewport.x / viewport.zoom,
+        absoluteY: viewport.y / viewport.zoom,
+        zoom: viewport.zoom,
+      });
     },
-    [avatarsStore]
+    [avatarsStore, onViewportChange]
   );
+
+  const setViewport = useCallback((viewport: Viewport) => {
+    if (reactflowRef.current) {
+      const vp = toReactFlowViewport(viewport);
+      reactflowRef.current.setViewport(vp);
+    }
+  }, []);
+
+  useEffect(() => {
+    registerViewportChangeCallback(setViewport);
+  }, []);
 
   //
 
@@ -316,90 +335,59 @@ export const DemiurgeSpace = ({
     // Handle left click on pane here
     (event: React.MouseEvent) => {
       spaceAwareness.clearNodeSelection();
-      const pclient = clientXY(event);
-      const p = pointerTracker.fromMouseEvent(pclient);
-      onPaneClick?.(p, pclient);
+      // const pclient = clientXY(event);
+      // const p = pointerTracker.fromMouseEvent(pclient);
       event.preventDefault();
     },
-    [onPaneClick, spaceAwareness]
+    [spaceAwareness]
   );
 
   //
-
-  const context = useMemo(
-    () => ({
-      spaceAwareness,
-      spaceState,
-      currentUser,
-      moveNodeMode,
-      viewId,
-    }),
-    [moveNodeMode]
-  );
 
   /**
    * render
    */
 
   return (
-    <div
-      style={{ width: '100%', height: '100%', position: 'relative' }}
-      ref={pointerTracker.bindReactFlowParentDiv.bind(pointerTracker)}
+    <ReactFlow
+      defaultViewport={toReactFlowViewport(INITIAL_VIEWPORT)}
+      maxZoom={1}
+      minZoom={0.05}
+      nodes={translateNodes(spaceState.getNodes(), viewId)}
+      edges={translateEdges(spaceState.getEdges())}
+      nodeTypes={nodeTypes}
+      edgeTypes={edgeTypes}
+      onConnect={_onConnect}
+      onConnectEnd={onConnectEnd}
+      onConnectStart={onConnectStart}
+      onNodeDrag={onNodeDrag}
+      onNodeDragStop={onNodeDragStop}
+      onPaneMouseMove={pointerTracker.onPaneMouseMove.bind(pointerTracker)}
+      onPaneMouseLeave={pointerTracker.setPointerInactive.bind(pointerTracker)}
+      onMove={_onMove}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      onPaneClick={handlePaneClick}
+      onContextMenu={handleContextMenu}
     >
-      <SpaceContext value={context}>
-        <ReactFlow
-          defaultViewport={{ x: 0, y: 0, zoom: 0.5 }}
-          maxZoom={1}
-          minZoom={0.05}
-          // todo_ factorise with flow story
-          nodes={translateNodes(spaceState.getNodes(), viewId)}
-          edges={translateEdges(spaceState.getEdges())}
-          //
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
-          //
-          onConnect={_onConnect}
-          onConnectEnd={onConnectEnd}
-          onConnectStart={onConnectStart}
-          onNodeDrag={onNodeDrag}
-          onNodeDragStop={onNodeDragStop}
-          //
-          onPaneMouseMove={pointerTracker.onPaneMouseMove.bind(pointerTracker)}
-          onPaneMouseLeave={pointerTracker.setPointerInactive.bind(
-            pointerTracker
-          )}
-          onMove={_onMove}
-          //
-          onDragOver={handleDragOver}
-          onDrop={handleDrop}
-          //
-          onPaneClick={handlePaneClick}
-          onContextMenu={handleContextMenu}
-        >
-          <MiniMap />
-          <Controls />
-          <Background />
-          {/* Indicator when in pan-only mode */}
-          {moveNodeMode && (
-            <div
-              style={{
-                position: 'absolute',
-                top: '10px',
-                left: '10px',
-                padding: '5px 10px',
-                backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                color: 'white',
-                borderRadius: '4px',
-                fontSize: '12px',
-                zIndex: 5,
-              }}
-            >
-              Move Node Mode Active (Shift+Z to toggle)
-            </div>
-          )}
-        </ReactFlow>
-      </SpaceContext>
-      <AvatarsRenderer avatarsStore={avatarsStore} />
-    </div>
+      <MiniMap />
+      <Controls />
+      <Background />
+      <ReactflowInstanceSetter ref={reactflowRef} />
+    </ReactFlow>
   );
 };
+
+//
+//
+//
+
+const ReactflowInstanceSetter = forwardRef<ReactFlowInstance, {}>(({}, ref) => {
+  const reactflowInstance = useReactFlow();
+  useEffect(() => {
+    if (ref && 'current' in ref) {
+      ref.current = reactflowInstance;
+    }
+  }, [reactflowInstance]);
+  return null;
+});
