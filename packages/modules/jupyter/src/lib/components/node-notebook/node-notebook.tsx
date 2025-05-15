@@ -7,7 +7,7 @@ import {
   Inputs,
   Outputs,
   TNodeContext,
-} from '@monorepo/space';
+} from '@monorepo/space/frontend';
 
 import { DisplayMenu } from './display-menu';
 import { Tag } from './tag';

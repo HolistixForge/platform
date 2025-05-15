@@ -10,7 +10,7 @@ import {
   NodeServer,
   NodeVolume,
 } from '@monorepo/servers';
-import { SpaceModule, Group, Shape } from '@monorepo/space';
+import { SpaceModule, Group, Shape } from '@monorepo/space/frontend';
 import { NodeChatbox, NodeChatAnchor } from '@monorepo/chats';
 import { NodeCell, NodeKernel, NodeTerminal } from '@monorepo/jupyter/frontend';
 import {

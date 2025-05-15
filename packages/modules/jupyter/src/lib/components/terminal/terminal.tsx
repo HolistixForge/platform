@@ -21,7 +21,7 @@ import {
   NodeHeader,
   useMakeButton,
   useNodeContext,
-} from '@monorepo/space';
+} from '@monorepo/space/frontend';
 
 import { TJupyterSharedData } from '../../jupyter-shared-model';
 import { useJLsManager } from '../../jupyter-shared-model-front';

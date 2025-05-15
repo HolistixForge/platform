@@ -1,5 +1,5 @@
 import { icons } from '@monorepo/ui-base';
-import { InputsAndOutputs, useNodeContext } from '@monorepo/space';
+import { InputsAndOutputs, useNodeContext } from '@monorepo/space/frontend';
 import { TGraphNode, useNodeEdges } from '@monorepo/core';
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
 import { useCurrentUser } from '@monorepo/frontend-data';
@@ -33,8 +33,8 @@ export const NodeChatAnchor = ({ node }: { node: TGraphNode }) => {
     useNodeValue.open();
     chatNodeId &&
       dispatcher.dispatch({
-        type: 'space:action',
-        action: { type: 'open-node', nid: chatNodeId },
+        type: 'space:open-node',
+        nid: chatNodeId,
         viewId: useNodeValue.viewId,
       });
   };
@@ -43,8 +43,8 @@ export const NodeChatAnchor = ({ node }: { node: TGraphNode }) => {
     useNodeValue.close();
     chatNodeId &&
       dispatcher.dispatch({
-        type: 'space:action',
-        action: { type: 'close-node', nid: chatNodeId },
+        type: 'space:close-node',
+        nid: chatNodeId,
         viewId: useNodeValue.viewId,
       });
   };

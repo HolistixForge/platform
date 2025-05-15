@@ -4,7 +4,7 @@ import {
   SelectFieldset,
   SelectItem,
 } from '@monorepo/ui-base';
-import { NodeMainToolbar } from '@monorepo/space';
+import { NodeMainToolbar } from '@monorepo/space/frontend';
 
 import './menuExpanded.scss';
 

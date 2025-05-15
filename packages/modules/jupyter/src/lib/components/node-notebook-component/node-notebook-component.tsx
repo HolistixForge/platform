@@ -8,7 +8,7 @@ import {
   useConnector,
   NodeMainToolbar,
   useMakeButton,
-} from '@monorepo/space';
+} from '@monorepo/space/frontend';
 
 import { CellsHive, CellsHiveProps } from '../node-notebook/cells-hive';
 import { NodeNotebook } from '../node-notebook/node-notebook';

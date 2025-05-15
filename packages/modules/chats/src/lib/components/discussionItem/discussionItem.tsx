@@ -1,7 +1,7 @@
 import { TrashIcon } from '@radix-ui/react-icons';
 
 import { icons, Datetime, UserAvatar, UserUsername } from '@monorepo/ui-base';
-import { NodeMainToolbar } from '@monorepo/space';
+import { NodeMainToolbar } from '@monorepo/space/frontend';
 
 import './discussionItem.scss';
 

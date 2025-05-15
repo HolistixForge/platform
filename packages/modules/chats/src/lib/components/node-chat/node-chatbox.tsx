@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 
+import { TSpaceEvent } from '@monorepo/space';
+
 import {
   InputsAndOutputs,
-  TSpaceEvent,
   useMakeButton,
   useNodeContext,
-} from '@monorepo/space';
+} from '@monorepo/space/frontend';
+
 import { TGraphNode, useNodeEdges } from '@monorepo/core';
 import { useCurrentUser, useQueriesUsers } from '@monorepo/frontend-data';
 import {
@@ -110,8 +112,8 @@ export const NodeChatbox = ({ node }: { node: TGraphNode }) => {
   const handleClose = () => {
     anchorNodeId &&
       dispatcher.dispatch({
-        type: 'space:action',
-        action: { type: 'close-node', nid: anchorNodeId },
+        type: 'space:close-node',
+        nid: anchorNodeId,
         viewId: useNodeValue.viewId,
       });
   };
@@ -119,8 +121,8 @@ export const NodeChatbox = ({ node }: { node: TGraphNode }) => {
   const handleFilterOut = () => {
     anchorNodeId &&
       dispatcher.dispatch({
-        type: 'space:action',
-        action: { type: 'filter-out-node', nid: anchorNodeId },
+        type: 'space:filter-out-node',
+        nid: anchorNodeId,
         viewId: useNodeValue.viewId,
       });
   };

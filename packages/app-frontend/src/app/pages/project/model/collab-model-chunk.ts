@@ -1,10 +1,10 @@
 import {
-  TSharedDataHook,
   useDispatcher as useDispatcherCollab,
   useSharedData as useSharedDataCollab,
   SharedTypes,
   TCollaborativeChunk,
   TValidSharedData,
+  TValidSharedDataToCopy,
 } from '@monorepo/collab-engine';
 import { Core_loadData, TCoreSharedData, TCoreEvent } from '@monorepo/core';
 import {
@@ -32,7 +32,7 @@ import { Notion_loadData, TNotionEvent } from '@monorepo/notion';
 
 //
 
-type AllSharedData = TCoreSharedData &
+export type AllSharedData = TCoreSharedData &
   TTabsSharedData &
   TSpaceSharedData &
   TServersSharedData &
@@ -105,7 +105,9 @@ export const getCollabChunks = (
 
 //
 
-export const useSharedData: TSharedDataHook<AllSharedData> =
-  useSharedDataCollab<AllSharedData>;
+export const useSharedData: (
+  deps: (keyof AllSharedData)[],
+  f: (data: TValidSharedDataToCopy<AllSharedData>) => any
+) => ReturnType<typeof f> = useSharedDataCollab<AllSharedData>;
 
 //

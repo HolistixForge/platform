@@ -7,7 +7,7 @@ import {
   DisableZoomDragPan,
   useMakeButton,
   useNodeContext,
-} from '@monorepo/space';
+} from '@monorepo/space/frontend';
 import { TGraphNode } from '@monorepo/core';
 import { useDispatcher } from '@monorepo/collab-engine';
 

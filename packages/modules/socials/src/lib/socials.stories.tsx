@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { useMemo } from 'react';
 
 import {
   MockCollaborativeContext,
@@ -9,14 +8,14 @@ import {
 } from '@monorepo/collab-engine';
 import { Logger } from '@monorepo/log';
 import { Core_loadData, CoreReducer, TCoreSharedData } from '@monorepo/core';
-
 import {
-  SpaceModule,
   SpaceReducer,
   Space_loadData,
   TSpaceSharedData,
   defaultGraphView,
 } from '@monorepo/space';
+import { SpaceModule } from '@monorepo/space/frontend';
+
 import { NodeTextEditor, NodeYoutube } from '../frontend';
 
 //

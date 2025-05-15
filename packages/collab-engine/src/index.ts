@@ -58,7 +58,6 @@ export {
   useShareDataManager,
 } from './lib/frontend/context';
 export type {
-  TSharedDataHook,
   TCollabConfig,
   TYjsCollabConfig,
   TNoneCollabConfig,
@@ -78,3 +77,5 @@ export { sharedDataToJson } from './lib/chunk';
 export { EDITORS_YTEXT_YMAP_KEY } from './lib/yjs/YjsSharedEditor';
 
 export { MockCollaborativeContext } from './lib/frontend/mockCollaborativeContext';
+
+export type { TValidSharedDataToCopy } from './lib/frontend/localOverrider';

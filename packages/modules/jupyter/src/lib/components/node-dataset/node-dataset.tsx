@@ -4,7 +4,7 @@ import {
   useMakeButton,
   TNodeContext,
   Outputs,
-} from '@monorepo/space';
+} from '@monorepo/space/frontend';
 
 import { MenuExpanded } from '../menuExpanded/menuExpanded';
 

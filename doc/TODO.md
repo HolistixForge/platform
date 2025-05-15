@@ -1,9 +1,10 @@
 ⚠️ Antoine's stuffs
 
+from '@monorepo/space
+
 drawing mode:
 
 - check pointer awareness in drawing mode.
-- default zoom not applyed
 - sync through shared state
 
 event sequence:

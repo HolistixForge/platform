@@ -398,14 +398,6 @@ export function useAwarenessListenData(
 //
 //
 
-export type TSharedDataHook<TShDt> = <U>(
-  observe: Array<keyof TShDt>,
-  f: (data: TShDt) => U
-) => U;
-
-//
-//
-
 export const useSharedData = <TSharedData extends TValidSharedData>(
   observe: Array<keyof TSharedData>,
   f: (data: TValidSharedDataToCopy<TSharedData>) => any

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { useTestBoolean } from '@monorepo/ui-base';
-import { MockSpace } from '@monorepo/space';
+import { MockSpace } from '@monorepo/space/frontend';
 
 import {
   NodeChatAnchorInternal,
@@ -26,7 +26,12 @@ const StoryWrapper = (
 
   return (
     <MockSpace selected={props.selected} isOpened={isOpened}>
-      <NodeChatAnchorInternal onOpen={open} {...props} isOpened={isOpened} />
+      <NodeChatAnchorInternal
+        onOpen={open}
+        {...props}
+        isOpened={isOpened}
+        onClose={() => {}}
+      />
     </MockSpace>
   );
 };

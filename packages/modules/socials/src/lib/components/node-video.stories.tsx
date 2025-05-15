@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { useTestBoolean } from '@monorepo/ui-base';
 import { sleep } from '@monorepo/simple-types';
-import { MockSpace, nodeViewDefaultStatus } from '@monorepo/space';
+import { MockSpace } from '@monorepo/space/frontend';
+import { nodeViewDefaultStatus } from '@monorepo/space';
 
 import { NodeYoutubeInternal, NodeYoutubeInternalProps } from './node-video';
 
@@ -31,7 +32,7 @@ const Youtube = ({ data }: { data: { videoId: string } }) => {
 //
 
 const StoryWrapper = (
-  props: Pick<NodeYoutubeInternalProps, 'id' | 'youtubeId'> & {
+  props: Pick<NodeYoutubeInternalProps, 'id' | 'youtubeId' | 'filterOut'> & {
     expanded: boolean;
     selected: boolean;
   }

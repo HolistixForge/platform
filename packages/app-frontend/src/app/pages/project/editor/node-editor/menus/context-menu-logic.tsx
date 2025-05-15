@@ -33,8 +33,12 @@ import { NewIframeForm, NewIframeFormData } from '@monorepo/socials/frontend';
 import {
   useDispatcher,
   useSharedData,
+  AllSharedData,
 } from '../../../model/collab-model-chunk';
-import { FrontendDispatcher } from '@monorepo/collab-engine';
+import {
+  FrontendDispatcher,
+  TValidSharedDataToCopy,
+} from '@monorepo/collab-engine';
 
 /**
  *
@@ -220,7 +224,7 @@ export const ContextMenuLogic = ({
 
   const dispatcher = useDispatcher();
 
-  const sd = useSharedData(
+  const sd: TValidSharedDataToCopy<AllSharedData> = useSharedData(
     ['nodes', 'projectServers', 'graphViews'],
     (sd) => sd
   );

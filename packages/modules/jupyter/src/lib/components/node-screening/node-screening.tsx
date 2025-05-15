@@ -6,7 +6,7 @@ import {
   useConnector,
   NodeMainToolbar,
   useMakeButton,
-} from '@monorepo/space';
+} from '@monorepo/space/frontend';
 
 import { MenuExpanded } from '../menuExpanded/menuExpanded';
 import { NodeInputsOutputsGrid } from '../node-vault/node-vault';

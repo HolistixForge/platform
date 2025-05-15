@@ -17,7 +17,7 @@ import {
   NodeMainToolbar,
   useMakeButton,
   useNodeContext,
-} from '@monorepo/space';
+} from '@monorepo/space/frontend';
 import { makeUuid } from '@monorepo/simple-types';
 import { TServersSharedData, TServer } from '@monorepo/servers';
 

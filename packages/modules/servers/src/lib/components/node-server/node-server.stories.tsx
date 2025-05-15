@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { useTestBoolean } from '@monorepo/ui-base';
-import { TNodeContext, MockSpace } from '@monorepo/space';
+import { TNodeContext, MockSpace } from '@monorepo/space/frontend';
 
 import { NodeServerInternal } from './node-server';
 import {
@@ -25,7 +25,7 @@ import { useMockServerBehaviours } from '../server-card-mock';
 const StoryWrapper = (
   props: TServerComponentProps &
     TServerComponentCallbacks &
-    Pick<TNodeContext, 'id'> & {
+    Pick<TNodeContext, 'id' | 'filterOut'> & {
       expanded: boolean;
       selected: boolean;
     }
@@ -43,6 +43,8 @@ const StoryWrapper = (
   return (
     <MockSpace selected={props.selected} isOpened={isOpened}>
       <NodeServerInternal
+        filterOut={props.filterOut}
+        selected={props.selected}
         expand={expand}
         reduce={reduce}
         viewStatus={{

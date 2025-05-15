@@ -9,7 +9,7 @@ import {
   ButtonIconProps,
   useAction,
 } from '@monorepo/ui-base';
-import { DisableZoomDragPan, NodeMainToolbar } from '@monorepo/space';
+import { DisableZoomDragPan, NodeMainToolbar } from '@monorepo/space/frontend';
 
 import {
   DiscussionItem,

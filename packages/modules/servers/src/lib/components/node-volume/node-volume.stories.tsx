@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { MockSpace, nodeViewDefaultStatus } from '@monorepo/space';
+import { nodeViewDefaultStatus } from '@monorepo/space';
+import { MockSpace } from '@monorepo/space/frontend';
 import { sleep } from '@monorepo/simple-types';
 import { useTestBoolean } from '@monorepo/ui-base';
 
@@ -11,7 +12,7 @@ import { NodeVolumeInternal, NodeVolumeInternalProps } from './node-volume';
 const StoryWrapper = (
   props: Pick<
     NodeVolumeInternalProps,
-    'id' | 'volume_name' | 'volume_storage'
+    'id' | 'volume_name' | 'volume_storage' | 'filterOut'
   > & {
     expanded: boolean;
     selected: boolean;

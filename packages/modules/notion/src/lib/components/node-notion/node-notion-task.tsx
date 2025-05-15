@@ -3,7 +3,7 @@ import {
   NodeHeader,
   useMakeButton,
   useNodeContext,
-} from '@monorepo/space';
+} from '@monorepo/space/frontend';
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
 import { TGraphNode } from '@monorepo/core';
 import { TNotionSharedData } from '../../notion-shared-model';

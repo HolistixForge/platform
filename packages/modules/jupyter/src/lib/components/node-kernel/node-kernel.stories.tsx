@@ -2,21 +2,14 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { useTestBoolean } from '@monorepo/ui-base';
 import { sleep } from '@monorepo/simple-types';
-import { MockSpace, nodeViewDefaultStatus } from '@monorepo/space';
+import { nodeViewDefaultStatus } from '@monorepo/space';
+import { MockSpace } from '@monorepo/space/frontend';
 
-import { NodeKernel, NodeKernelProps } from './node-kernel';
+import { NodeKernel } from './node-kernel';
 
 //
 
-const StoryWrapper = (
-  props: Pick<
-    NodeKernelProps,
-    'id' | 'state' | 'kernelName' | 'kernelType' | 'StartProgress'
-  > & {
-    expanded: boolean;
-    selected: boolean;
-  }
-) => {
+const StoryWrapper = (props: { expanded: boolean; selected: boolean }) => {
   //
   const { is: isOpened, set: open, unset: close } = useTestBoolean(true);
   const {

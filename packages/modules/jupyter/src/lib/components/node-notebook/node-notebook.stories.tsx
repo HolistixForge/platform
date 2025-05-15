@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { playAdd__hover, useTestBoolean } from '@monorepo/ui-base';
-import { MockSpace, nodeViewDefaultStatus } from '@monorepo/space';
+import { nodeViewDefaultStatus } from '@monorepo/space';
+import { MockSpace } from '@monorepo/space/frontend';
 
 import { NodeNotebookProps } from './node-notebook';
 import { NodeNotebook } from './node-notebook';

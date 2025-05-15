@@ -1,5 +1,5 @@
 import { icons, SelectFieldset, SelectItem } from '@monorepo/ui-base';
-import { NodeMainToolbar, useMakeButton } from '@monorepo/space';
+import { NodeMainToolbar, useMakeButton } from '@monorepo/space/frontend';
 
 type CardSettingsProps = {
   status: 'success' | 'error' | 'warning';

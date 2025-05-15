@@ -8,13 +8,13 @@ import {
   useDispatcher,
 } from '@monorepo/collab-engine';
 import { TGraphNode } from '@monorepo/core';
-import { useNodeContext } from '@monorepo/space';
 import {
+  useNodeContext,
   DisableZoomDragPan,
   TNodeContext,
   NodeHeader,
   useMakeButton,
-} from '@monorepo/space';
+} from '@monorepo/space/frontend';
 import { makeUuid } from '@monorepo/simple-types';
 
 import { TEventSocials } from '../socials-events';

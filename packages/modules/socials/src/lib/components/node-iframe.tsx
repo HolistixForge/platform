@@ -1,14 +1,14 @@
 import { Suspense, useCallback } from 'react';
 
 import { TGraphNode } from '@monorepo/core';
-import { useNodeContext } from '@monorepo/space';
 import { useDispatcher } from '@monorepo/collab-engine';
 import {
   DisableZoomDragPan,
   TNodeContext,
   NodeHeader,
   useMakeButton,
-} from '@monorepo/space';
+  useNodeContext,
+} from '@monorepo/space/frontend';
 
 import { TEventSocials } from '../socials-events';
 

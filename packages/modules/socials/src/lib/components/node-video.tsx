@@ -1,7 +1,6 @@
 import { FC, Suspense, useCallback } from 'react';
 
 import { TGraphNode } from '@monorepo/core';
-import { useNodeContext } from '@monorepo/space';
 import { useFactory } from '@monorepo/lazy-factory';
 import { useDispatcher } from '@monorepo/collab-engine';
 import {
@@ -9,7 +8,8 @@ import {
   TNodeContext,
   NodeHeader,
   useMakeButton,
-} from '@monorepo/space';
+  useNodeContext,
+} from '@monorepo/space/frontend';
 
 import factory from '@monorepo/lazy-factory';
 

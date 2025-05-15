@@ -7,7 +7,7 @@ import {
   useMakeButton,
   useNodeContext,
   InputsAndOutputs,
-} from '@monorepo/space';
+} from '@monorepo/space/frontend';
 import { TGraphNode } from '@monorepo/core';
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
 import {

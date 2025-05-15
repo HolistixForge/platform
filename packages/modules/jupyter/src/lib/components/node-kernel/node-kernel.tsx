@@ -6,7 +6,7 @@ import {
   NodeHeader,
   useMakeButton,
   useNodeContext,
-} from '@monorepo/space';
+} from '@monorepo/space/frontend';
 import { ButtonBase, useAction } from '@monorepo/ui-base';
 import { TGraphNode } from '@monorepo/core';
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
