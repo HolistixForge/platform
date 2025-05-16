@@ -1,3 +1,22 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.demiurge-space {
+  &.default {
+    .FixedSideContainer.FixedSideContainer_side_top {
+      display: none;
+    }
+    .layer-ui__wrapper__footer.App-menu.App-menu_bottom {
+      display: none;
+    }
+  }
+  &.drawing {
+    .react-flow__panel.react-flow__controls.vertical.bottom.left {
+      display: none;
+    }
+    .react-flow__panel.react-flow__minimap.bottom.right {
+      display: none;
+    }
+  }
+}
