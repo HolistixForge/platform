@@ -3,13 +3,17 @@ import { ServerConnection, TerminalManager } from '@jupyterlab/services';
 import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
 import { TJsonArray, TMyfetchRequest, makeUuid } from '@monorepo/simple-types';
 import { NotFoundException } from '@monorepo/log';
-import { TServersSharedData, projectServerNodeId } from '@monorepo/servers';
+import {
+  TServersSharedData,
+  projectServerNodeId,
+  TEventNewServer,
+  TEventDeleteServer,
+} from '@monorepo/servers';
 import {
   TEventDeleteNode,
   TEventNewNode,
   TCoreSharedData,
 } from '@monorepo/core';
-import { TEventNewServer, TEventDeleteServer } from '@monorepo/servers';
 
 import {
   TEventKernelStarted,

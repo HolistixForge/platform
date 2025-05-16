@@ -14,9 +14,9 @@ export const edgeToEvent = (
     case 'volume':
       if (n2.type === 'server')
         return {
-          type: 'mount-volume',
-          project_server_id: n2.data.project_server_id,
-          volume_id: n1.data.volume_id,
+          type: 'servers:mount-volume',
+          project_server_id: n2.data!.project_server_id as number,
+          volume_id: n1.data!.volume_id as number,
         };
       break;
 

@@ -4,21 +4,17 @@ import { FormErrors, useAction, DialogControlled } from '@monorepo/ui-base';
 import { MountVolumeForm, MountVolumeFormData } from '@monorepo/ui-views';
 import { TDemiurgeNotebookEvent } from '@monorepo/jupyter';
 import { TEdge, TEdgeEnd, TPosition } from '@monorepo/core';
-import {
-  TEventMountVolume,
-  TServerEvents,
-  NodeServer,
-  NodeVolume,
-} from '@monorepo/servers';
+import { TEventMountVolume, TServerEvents } from '@monorepo/servers';
+import { NodeServer, NodeVolume } from '@monorepo/servers/frontend';
 import { SpaceModule, Group, Shape } from '@monorepo/space/frontend';
-import { NodeChatbox, NodeChatAnchor } from '@monorepo/chats';
+import { NodeChatbox, NodeChatAnchor } from '@monorepo/chats/frontend';
 import { NodeCell, NodeKernel, NodeTerminal } from '@monorepo/jupyter/frontend';
 import {
   NodeYoutube,
   NodeTextEditor,
   NodeIframe,
 } from '@monorepo/socials/frontend';
-import { NodeNotion, NodeNotionTask } from '@monorepo/notion';
+import { NodeNotion, NodeNotionTask } from '@monorepo/notion/frontend';
 
 import { ContextMenuLogic } from './menus/context-menu-logic';
 import { SpaceContextMenu } from './menus/context-menu';

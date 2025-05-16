@@ -81,6 +81,7 @@ const Story = () => {
     dispatcher.dispatch({
       type: 'jupyter:start-kernel',
       dkid: kernel.dkid,
+      client_id: 'not used in story',
     });
   }
   // step 5: create cell

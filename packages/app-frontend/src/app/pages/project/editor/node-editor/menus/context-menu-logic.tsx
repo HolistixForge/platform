@@ -25,7 +25,7 @@ import { useQueryServerImages } from '@monorepo/frontend-data';
 import {
   NewNotionDatabaseForm,
   NewNotionDatabaseFormData,
-} from '@monorepo/notion';
+} from '@monorepo/notion/frontend';
 import { makeUuid } from '@monorepo/simple-types';
 import { SHAPE_TYPES, TEventNewShape } from '@monorepo/space';
 import { NewIframeForm, NewIframeFormData } from '@monorepo/socials/frontend';

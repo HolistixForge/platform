@@ -1,7 +1,8 @@
 import { useQueryServerImages } from '@monorepo/frontend-data';
 import { DialogControlled } from '@monorepo/ui-base';
 import { ResourceBar, ServerStack, NewServerForm } from '@monorepo/ui-views';
-import { ServerCard } from '@monorepo/servers';
+import { ServerCard } from '@monorepo/servers/frontend';
+import { TServer } from '@monorepo/servers';
 
 import { ProjectSidebar } from '../sidebar';
 import { useDispatcher, useSharedData } from '../model/collab-model-chunk';
@@ -10,7 +11,7 @@ import { useNewServerAction } from './node-editor/menus/context-menu-logic';
 //
 
 export const ResourcePage = () => {
-  const projectServers = useSharedData(
+  const projectServers: Map<string, TServer> = useSharedData(
     ['projectServers'],
     (sd) => sd.projectServers
   );

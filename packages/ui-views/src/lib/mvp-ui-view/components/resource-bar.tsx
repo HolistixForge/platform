@@ -1,5 +1,5 @@
 import { UserAvatar, randomGuy, ResourceButtons } from '@monorepo/ui-base';
-import { StatusLed } from '@monorepo/servers';
+import { StatusLed } from '@monorepo/servers/frontend';
 
 import { Tabs } from './tabs';
 

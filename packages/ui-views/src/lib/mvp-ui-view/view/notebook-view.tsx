@@ -7,7 +7,7 @@ import { ResourceBar } from '../components/resource-bar';
 import { ResourceDescription } from '../components/resource-description';
 import { SummaryAccesses } from '../components/summary-accesses';
 import { menuItems } from './access-role';
-import { awsInstanceTypes } from '@monorepo/servers';
+import { awsInstanceTypes } from '@monorepo/servers/frontend';
 
 //
 

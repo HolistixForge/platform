@@ -1,7 +1,8 @@
 import { CSSProperties, useState } from 'react';
 
 import { Sidebar, randomGuy } from '@monorepo/ui-base';
-import { TServerComponentProps, ServerCardInternal } from '@monorepo/servers';
+import { ServerCardInternal } from '@monorepo/servers/frontend';
+import { TServerComponentProps } from '@monorepo/servers';
 
 import { Header } from '../components/header';
 import { ResourceBar } from '../components/resource-bar';
@@ -13,6 +14,7 @@ import { menuItems } from './access-role';
 const makeFakeServer = (): TServerComponentProps => {
   const id = Math.floor(Math.random() * 100000);
   return {
+    project_server_id: id,
     server_name: `server-${id}`,
     image: {
       image_id: 0,

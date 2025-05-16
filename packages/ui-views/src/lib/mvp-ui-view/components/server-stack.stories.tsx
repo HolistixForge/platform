@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { ServerCard } from '@monorepo/servers';
+import { ServerCard } from '@monorepo/servers/frontend';
 
 import { ServerStack } from './server-stack';
 
