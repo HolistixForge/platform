@@ -5,7 +5,7 @@ import {
   TNodeViewStatus,
 } from '../../space-types';
 import { Edge as RfEdge, Node as RfNode } from '@xyflow/react';
-import { edgeId, EdgePayload, pinId } from '../apis/types/edge';
+import { edgeId, ReactflowEdgePayload, pinId } from '../apis/types/edge';
 import { TEdge } from '@monorepo/core';
 
 //
@@ -58,44 +58,25 @@ export const translateNodes = (nodes: Array<TNodeView>, viewId: string) =>
 //
 //
 
-const edgeClassNames = (e: TEdge) => {
-  const classNames = ['demiurge-space-edge', e.type];
-  if (e.highlighted) {
-    classNames.push('highlighted');
-  }
-  if (e.group) {
-    classNames.push('edges-group');
-  }
-  if (e.data?.className) {
-    (e.data.className as string[]).forEach?.((c) => classNames.push(c));
-  }
-  return classNames;
-};
-
-//
-//
-
-const translateEdge = (e: TEdge): RfEdge<EdgePayload> => {
+const translateEdge = (e: TEdge): RfEdge<ReactflowEdgePayload> => {
   const id = edgeId(e);
-  const classNames = edgeClassNames(e);
 
-  const r: RfEdge<EdgePayload> = {
+  const r: RfEdge<ReactflowEdgePayload> = {
     type: 'custom',
     id,
     label: id,
     source: e.from.node,
     target: e.to.node,
-    className: `${classNames.join(' ')}`,
     data: {
-      type: 'group',
       id,
       edge: e,
     },
+    // force reactflow to generate markers def and pass corresponding id to our custom edge component
+    markerEnd: (e as any).renderProps?.markerEnd,
+    markerStart: (e as any).renderProps?.markerStart,
   };
 
-  if (e.group) {
-    r.data!.type = 'group';
-  } else {
+  if (!e.group) {
     r.sourceHandle = pinId(e.from);
     r.targetHandle = pinId(e.to);
   }

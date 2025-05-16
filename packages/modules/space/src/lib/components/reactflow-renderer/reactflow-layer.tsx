@@ -24,7 +24,7 @@ import {
 import * as _ from 'lodash';
 import { useRegisterListener } from '@monorepo/simple-types';
 import { clientXY } from '@monorepo/ui-toolkit';
-import { TPosition, TEdge, TEdgeEnd, EEdgeType } from '@monorepo/core';
+import { TPosition, TEdge, TEdgeEnd, EEdgeSemanticType } from '@monorepo/core';
 import {
   useEventSequence,
   FrontendEventSequence,
@@ -137,12 +137,12 @@ export const ReactflowLayer = ({
    */
   const _onConnect = useCallback(
     (c: Connection) => {
-      let type: EEdgeType = '_unknown_';
+      let semanticType: EEdgeSemanticType = '_unknown_';
       if (
         c.sourceHandle === 'easy-connect-source' ||
         c.targetHandle === 'easy-connect-target'
       ) {
-        type = 'easy-connect';
+        semanticType = 'easy-connect';
       }
       const e: TEdge = {
         from: {
@@ -153,8 +153,7 @@ export const ReactflowLayer = ({
           node: c.target as string,
           connectorName: c.targetHandle || 'inputs',
         },
-        type,
-        data: { edgeShape: type === 'easy-connect' ? 'square' : 'bezier' },
+        semanticType,
       };
       onConnect?.(e);
     },

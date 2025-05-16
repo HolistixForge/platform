@@ -3,7 +3,6 @@
 drawing mode:
 
 - check pointer awareness in drawing mode.
-- remove default menus
 - sync through shared state
 
 event sequence:

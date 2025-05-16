@@ -27,7 +27,7 @@ export type TGraphNode = {
   connectors: TConnector[];
 };
 
-export type EEdgeType =
+export type EEdgeSemanticType =
   | '_unknown_'
   | 'grouped_edges'
   | 'referenced_by'
@@ -38,6 +38,7 @@ export type EEdgeType =
   | 'tested_by'
   | 'wired_to'
   | 'depends_on'
+  //
   | 'easy-connect';
 
 //
@@ -52,10 +53,9 @@ export type TEdgeEnd = {
 export type TEdge = {
   from: TEdgeEnd;
   to: TEdgeEnd;
-  type: EEdgeType;
+  semanticType: EEdgeSemanticType;
   group?: { edges: TEdge[] };
   highlighted?: boolean;
-  data?: TJsonObject;
 };
 
 export type TProjectMeta = {

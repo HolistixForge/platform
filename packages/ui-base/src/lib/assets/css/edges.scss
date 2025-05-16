@@ -1,109 +1,79 @@
-/**
- *
- * Edges
- * TODO: menage and story of all edges possible (matrix: group, type, semantic, hilighted)
- *
- */
-
-g.react-flow__edge {
+path.react-flow__edge-path {
   //
-  path {
-    transition: color 0.2s;
-    stroke: var(--c-pink-3);
-    stroke-width: 1.5px;
-  }
+
+  transition: color 0.2s;
+  stroke: var(--c-pink-3);
+  stroke-width: 1.5px;
 
   &._unknown_ {
-    path {
-      stroke: #7e004c; /* black */
-      stroke-width: 3;
-    }
+    stroke: #7e004c; /* black */
+    stroke-width: 3;
   }
 
   &.referenced_by {
-    path {
-      stroke: var(--c-alt-blue-2);
-      stroke-dasharray: 0;
-    }
+    stroke: var(--c-alt-blue-2);
+    stroke-dasharray: 0;
     &.chat-anchor {
-      path {
-        stroke: var(--color-chat-new);
-        stroke-width: 2.5;
-        stroke-dasharray: 0;
-      }
+      stroke: var(--color-chat-new);
+      stroke-width: 2.5;
+      stroke-dasharray: 0;
     }
   }
 
   &.next_in_sequence {
-    path {
-      stroke: #00ff00; /* green */
-      stroke-width: 2;
-    }
+    stroke: #00ff00; /* green */
+    stroke-width: 2;
   }
 
   &.owned_by {
-    path {
-      stroke: #0000ff; /* blue */
-      stroke-width: 2;
-    }
+    stroke: #0000ff; /* blue */
+    stroke-width: 2;
   }
 
   &.composed_of {
-    path {
-      stroke: #ffff00; /* yellow */
-      stroke-width: 2;
-    }
+    stroke: #ffff00; /* yellow */
+    stroke-width: 2;
   }
 
   &.satisfied_by {
-    path {
-      stroke: #ff00ff; /* magenta */
-      stroke-width: 2;
-    }
+    stroke: #ff00ff; /* magenta */
+    stroke-width: 2;
   }
 
   &.tested_by {
-    path {
-      stroke: #00ffff; /* cyan */
-      stroke-width: 2;
-    }
+    stroke: #00ffff; /* cyan */
+    stroke-width: 2;
   }
 
   &.wired_to {
-    path {
-      stroke: #ffa500; /* orange */
-      stroke-width: 2;
-    }
+    stroke: #ffa500; /* orange */
+    stroke-width: 2;
   }
 
   &.depends_on {
-    path {
-      stroke: #800080; /* purple */
-      stroke-width: 2;
-    }
+    stroke: #800080; /* purple */
+    stroke-width: 2;
   }
 
   &.easy-connect {
-    path {
-      stroke: var(--c-alt-blue-2);
-      stroke-width: 3;
-      stroke-dasharray: 5 3;
-    }
+    stroke: var(--c-alt-blue-2);
+    stroke-width: 3;
+    stroke-dasharray: 5 3;
   }
 
-  &:hover path.react-flow__edge-path,
-  &.testhover path.react-flow__edge-path {
+  &:hover,
+  &.testhover {
     stroke-width: 4px;
   }
 
-  &.edges-group path.react-flow__edge-path {
+  &.edges-group {
     stroke-width: 4px;
-    &.highlighted path.react-flow__edge-path {
+    &.highlighted {
       filter: drop-shadow(0 0 3px #fff);
     }
   }
 
-  &.highlighted path.react-flow__edge-path {
+  &.highlighted {
     stroke-width: 4px;
     filter: drop-shadow(0 0 3px #fff);
   }

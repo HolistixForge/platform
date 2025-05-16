@@ -1,7 +1,12 @@
 import { Children, FC, ReactNode, isValidElement } from 'react';
-import { EdgeLabelRenderer, EdgeProps } from '@xyflow/react';
-import { EdgeShape } from '../../../apis/types/edge';
+import { EdgeLabelRenderer, EdgeProps, useInternalNode } from '@xyflow/react';
+import {
+  ReactflowEdgePayload,
+  TEdgeRenderProps,
+} from '../../../apis/types/edge';
 import { calculateEdgePath } from './edge-path-utils';
+import { getFloatingEdgeParams } from './edge-utils';
+import { TEdge } from '@monorepo/core';
 
 type LabelProps = {
   children: ReactNode;
@@ -42,26 +47,63 @@ type Labels = {
 
 export const EdgeComponent: FC<EdgeProps & Labels> = ({
   id,
+  source,
+  target,
   sourceX,
   sourceY,
   targetX,
   targetY,
   sourcePosition,
   targetPosition,
+  markerEnd,
+  markerStart,
   children,
   data,
 }) => {
-  const edgeShape = (data as any)?.edge?.data?.edgeShape as EdgeShape;
+  const sourceNode = useInternalNode(source);
+  const targetNode = useInternalNode(target);
 
-  const [path, labelX, labelY] = calculateEdgePath({
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    sourcePosition,
-    targetPosition,
-    edgeShape,
-  });
+  const payload: ReactflowEdgePayload = data as ReactflowEdgePayload;
+
+  const demiurgeEdge: TEdge & {
+    renderProps?: TEdgeRenderProps;
+  } = payload?.edge;
+
+  const semanticType = demiurgeEdge.semanticType;
+
+  const {
+    edgeShape = 'bezier',
+    style,
+    className,
+  } = demiurgeEdge.renderProps || {};
+
+  let calculatedPath: ReturnType<typeof calculateEdgePath>;
+
+  const isEasyConnect = semanticType === 'easy-connect';
+
+  if (isEasyConnect && sourceNode && targetNode) {
+    const { sx, sy, tx, ty } = getFloatingEdgeParams(sourceNode, targetNode);
+    calculatedPath = calculateEdgePath({
+      sourceX: sx,
+      sourceY: sy,
+      targetX: tx,
+      targetY: ty,
+      edgeShape,
+    });
+  } else
+    calculatedPath = calculateEdgePath({
+      sourceX: sourceX,
+      sourceY: sourceY,
+      targetX: targetX,
+      targetY: targetY,
+      sourcePosition,
+      targetPosition,
+      edgeShape,
+    });
+
+  const [path, labelX, labelY] = calculatedPath;
+
+  // Labels
 
   const _children = Children.toArray(children);
 
@@ -85,9 +127,34 @@ export const EdgeComponent: FC<EdgeProps & Labels> = ({
     (child) => isValidElement(child) && (child.type as any) === LabelMiddle
   );
 
+  //
+
+  const allClassNames = [
+    'react-flow__edge',
+    'demiurge-space-edge',
+    demiurgeEdge.semanticType,
+    ...(className || []),
+  ];
+
+  if (demiurgeEdge.highlighted) {
+    allClassNames.push('highlighted');
+  }
+  if (demiurgeEdge.group) {
+    allClassNames.push('edges-group');
+  }
+
+  //
+
   return (
     <>
-      <path id={id} className="react-flow__edge-path" d={path} />
+      <path
+        id={id}
+        className={`react-flow__edge-path ${allClassNames?.join(' ')}`}
+        d={path}
+        style={style}
+        markerStart={markerStart}
+        markerEnd={markerEnd}
+      />
       <EdgeLabelRenderer>
         {fromLabels.length > 0 && (
           <EdgeLabel x={eslx} y={esly}>

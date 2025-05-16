@@ -5,7 +5,7 @@ export type {
   TGraphNode,
   TConnector,
   TPin,
-  EEdgeType,
+  EEdgeSemanticType,
 } from './lib/core-types';
 
 export type { TCoreSharedData } from './lib/core-shared-model';

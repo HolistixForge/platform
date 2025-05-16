@@ -1,7 +1,8 @@
 import { TEdge, TGraphNode, TPin } from '@monorepo/core';
 
 import { nodeViewDefaultStatus, TNodeView } from '../../../space-types';
-import { pinId } from '../../apis/types/edge';
+import { pinId, TEdgeRenderProps } from '../../apis/types/edge';
+import { MarkerType } from '@xyflow/react';
 
 //
 
@@ -16,7 +17,7 @@ const makePins = (connectorName: string, count: number): TPin[] => {
 
 export const graph1: {
   nodeViews: TNodeView[];
-  edges: TEdge[];
+  edges: (TEdge & { renderProps?: TEdgeRenderProps })[];
   nodes: TGraphNode[];
 } = {
   nodeViews: [
@@ -79,7 +80,15 @@ export const graph1: {
         connectorName: 'inputs',
         pinName: 'slot-1',
       },
-      type: 'satisfied_by',
+      semanticType: 'satisfied_by',
+      renderProps: {
+        edgeShape: 'square',
+        style: {
+          stroke: 'red',
+          strokeWidth: 5,
+          strokeDasharray: '10 5',
+        },
+      },
     },
     {
       from: {
@@ -92,7 +101,20 @@ export const graph1: {
         connectorName: 'inputs',
         pinName: 'slot-2',
       },
-      type: 'composed_of',
+      semanticType: 'composed_of',
+      renderProps: {
+        edgeShape: 'straight',
+        style: {
+          strokeDasharray: '5 5',
+        },
+        markerStart: {
+          type: MarkerType.ArrowClosed,
+          width: 15,
+          height: 15,
+          color: '#FFA500',
+          orient: 'auto-start-reverse',
+        },
+      },
     },
     {
       from: {
@@ -105,7 +127,8 @@ export const graph1: {
         connectorName: 'inputs',
         pinName: 'slot-2',
       },
-      type: 'depends_on',
+      semanticType: 'depends_on',
+      renderProps: {},
     },
     {
       from: {
@@ -117,7 +140,22 @@ export const graph1: {
         node: 'node-4',
         connectorName: 'inputs',
       },
-      type: 'referenced_by',
+      semanticType: 'referenced_by',
+      renderProps: {
+        markerEnd: {
+          type: MarkerType.Arrow,
+          width: 25,
+          height: 25,
+          color: 'var(--c-alt-blue-2)',
+        },
+        markerStart: {
+          type: MarkerType.Arrow,
+          width: 25,
+          height: 25,
+          color: 'var(--c-alt-blue-2)',
+          orient: 'auto-start-reverse',
+        },
+      },
     },
   ],
   //

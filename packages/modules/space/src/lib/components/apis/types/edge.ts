@@ -1,4 +1,5 @@
 import { TEdge, TEdgeEnd } from '@monorepo/core';
+import { EdgeMarker } from '@xyflow/react';
 
 export const pinId = (ee: { connectorName: string; pinName?: string }) =>
   ee.pinName ? `${ee.connectorName}::${ee.pinName}` : ee.connectorName;
@@ -27,11 +28,25 @@ export const edgeId = (e: TEdge) => {
 
 export type EdgeShape = 'straight' | 'bezier' | 'square';
 
-export type EdgePayload = {
-  type: 'simple' | 'group';
+export type ReactflowEdgePayload = {
   id: string;
-  edge: TEdge;
+  edge: TEdge & {
+    renderProps?: TEdgeRenderProps;
+  };
   text?: string;
   endText?: string;
   startText?: string;
+};
+
+export type TEdgeRenderProps = {
+  edgeShape?: EdgeShape;
+  markerStart?: EdgeMarker;
+  markerEnd?: EdgeMarker;
+  /**
+   * stroke
+   * stroke-width
+   * stroke-dasharray
+   */
+  style?: React.CSSProperties;
+  className?: string[];
 };

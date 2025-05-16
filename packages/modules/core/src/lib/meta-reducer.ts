@@ -1,7 +1,6 @@
 import { ReduceArgs, Reducer, SharedMap } from '@monorepo/collab-engine';
 import { log } from '@monorepo/log';
 import { inSeconds, isPassed } from '@monorepo/simple-types';
-import { TJsonObject } from '@monorepo/simple-types';
 
 import { TCoreSharedData } from './core-shared-model';
 import { TProjectMeta } from './core-types';
