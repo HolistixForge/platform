@@ -12,8 +12,10 @@ import {
 
 import '@xyflow/react/dist/style.css';
 
+import { EEdgeSemanticType, TEdge } from '@monorepo/core';
+
 import { EdgeComponent, LabelEnd, LabelMiddle, LabelStart } from './edge';
-import { EdgeShape } from '../../../apis/types/edge';
+import { EdgeShape, TEdgeRenderProps } from '../../../apis/types/edge';
 
 //
 type NData = { id: string };
@@ -46,7 +48,7 @@ const makeNodesAndEdges = (edgeShape: EdgeShape) => {
   const edges: Edge[] = [];
 
   for (let index = 0; index < edgeSemanticTypes.length; index++) {
-    const className = edgeSemanticTypes[index].join(' ');
+    const className = edgeSemanticTypes[index];
     const sid = `node-source-${index}`;
     const tid = `node-target-${index}`;
 
@@ -64,13 +66,19 @@ const makeNodesAndEdges = (edgeShape: EdgeShape) => {
       type: 'custom',
     });
 
+    const edge: TEdge & { renderProps?: TEdgeRenderProps } = {
+      semanticType: className[0] as EEdgeSemanticType,
+      renderProps: { edgeShape, className },
+      from: { node: sid, connectorName: 'outputs' },
+      to: { node: tid, connectorName: 'inputs' },
+    };
+
     edges.push({
       id: `${sid}:${tid}`,
       source: sid,
       target: tid,
       type: 'custom',
-      data: { className, edge: { data: { edgeShape } } },
-      className,
+      data: { edge },
     });
   }
   return { nodes, edges };
@@ -103,7 +111,7 @@ const nodeTypes = {
 const CustomEdge = (props: EdgeProps) => {
   return (
     <EdgeComponent {...props}>
-      <LabelMiddle>{props.data!.className as string}</LabelMiddle>
+      <LabelMiddle>{(props.data as any).edge.semanticType}</LabelMiddle>
       <LabelStart>Label Start</LabelStart>
       <LabelEnd>Label End</LabelEnd>
     </EdgeComponent>

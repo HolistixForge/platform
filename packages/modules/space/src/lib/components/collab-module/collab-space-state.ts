@@ -29,6 +29,10 @@ export class CollabSpaceState extends SpaceState {
       this.notifyListeners();
     });
 
+    this.sdm.observe(['edges'], () => {
+      this.notifyListeners();
+    });
+
     this.updateState();
     this.updateNodes();
   }

@@ -7,6 +7,7 @@ import {
   TGraphNode,
 } from '@monorepo/core';
 import { error } from '@monorepo/log';
+import { TJsonObject } from '@monorepo/simple-types';
 
 import { TSpaceSharedData } from './space-shared-model';
 import {
@@ -31,6 +32,7 @@ import {
   TEventOpenNode,
   TEventCloseNode,
   TEventUpdateGraphView,
+  TEventEdgePropertyChange,
 } from './space-events';
 import {
   defaultGraphView,
@@ -40,6 +42,7 @@ import {
   isNodeOpened,
 } from './space-types';
 import { getAbsolutePosition } from './utils/position-utils';
+import { edgeId } from './components/apis/types/edge';
 
 /**
  *
@@ -236,6 +239,10 @@ export class SpaceReducer extends Reducer<
       case 'core:new-node':
         this.newNode(g as Ra<TEventNewNode>);
         this.updateAllGraphviews(g);
+        return Promise.resolve();
+
+      case 'space:edge-property-change':
+        this.edgePropertyChange(g as Ra<TEventEdgePropertyChange>);
         return Promise.resolve();
 
       default:
@@ -497,7 +504,7 @@ export class SpaceReducer extends Reducer<
               ...edge.to,
               pinName: undefined,
             },
-            type: 'grouped_edges',
+            semanticType: 'grouped_edges',
           };
           edgesGroups.set(id, newGroupEdge);
         } else {
@@ -696,6 +703,27 @@ export class SpaceReducer extends Reducer<
       ...g.event.properties,
     };
     g.sd.nodes.set(g.event.shapeId, node);
+  }
+
+  //
+
+  edgePropertyChange(g: Ra<TEventEdgePropertyChange>) {
+    let edge;
+    let i;
+    for (i = 0; i < g.sd.edges.length; i++) {
+      if (edgeId(g.sd.edges.get(i)) === g.event.edgeId) {
+        edge = g.sd.edges.get(i);
+        break;
+      }
+    }
+    if (!edge) {
+      error('SPACE', `edge ${g.event.edgeId} not found`);
+      return;
+    }
+
+    (edge as any).renderProps = g.event.properties.renderProps as TJsonObject;
+    g.sd.edges.delete(i);
+    g.sd.edges.push([edge]);
   }
 
   //

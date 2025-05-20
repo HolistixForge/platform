@@ -1,5 +1,4 @@
 .node-toolbar {
-  background: var(--c-blue-gray-1);
   flex: 0 0 120px;
   text-align: right;
 
@@ -17,7 +16,7 @@
     vertical-align: middle;
 
     &:hover {
-      background: var(--color-button-blue);
+      background: var(--c-pink-4);
       &.red {
         background: var(--c-red-4);
       }

@@ -47,6 +47,6 @@ export type TEdgeRenderProps = {
    * stroke-width
    * stroke-dasharray
    */
-  style?: React.CSSProperties;
+  style?: { [key: string]: string };
   className?: string[];
 };

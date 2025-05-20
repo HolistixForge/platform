@@ -106,6 +106,7 @@ class MyArray<T extends TJson>
 
   delete(index: number, length?: number): void {
     this._array.splice(index, length);
+    this._sm.flagChange(this._observer);
   }
 
   push(o: T[]): number {

@@ -1,0 +1,47 @@
+.edge-menu-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: var(--node-border-radius);
+
+  .edge-menu-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .edge-menu-label {
+    min-width: 45px;
+    font-weight: 600;
+    font-size: 12px;
+  }
+
+  // For grouping marker controls
+  .edge-menu-marker-fields {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .Label {
+    font-size: 12px;
+    width: initial;
+    min-width: 60px;
+    text-align: left;
+  }
+
+  .Fieldset {
+    width: auto;
+    margin-bottom: 0;
+    gap: 0;
+  }
+
+  .Input,
+  .SelectTrigger {
+    --form-input-height: 24px;
+  }
+}

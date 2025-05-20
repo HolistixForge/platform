@@ -61,11 +61,6 @@ path.react-flow__edge-path {
     stroke-dasharray: 5 3;
   }
 
-  &:hover,
-  &.testhover {
-    stroke-width: 4px;
-  }
-
   &.edges-group {
     stroke-width: 4px;
     &.highlighted {

@@ -27,7 +27,7 @@ export const NodeHeader = ({
 }: NodeHeaderProps) => {
   return (
     <NodeToolbar isVisible={visible} offset={30}>
-      <div className="node-wrapper-header node-background">
+      <div className="node-wrapper-header node-header-background">
         <div className="header-row-1">
           <div className="header-left">
             <span className={`node-type node-type-${nodeType}`}>

@@ -248,6 +248,18 @@
   }
 }
 
+.node-header-background {
+  background: var(--c-pink-6);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--c-pink-4);
+
+  &:hover {
+    background: var(--c-pink-5);
+  }
+}
+
 .resource-bar-gradient {
   background: linear-gradient(
     270deg,

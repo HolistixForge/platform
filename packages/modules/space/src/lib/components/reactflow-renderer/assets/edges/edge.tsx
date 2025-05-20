@@ -1,12 +1,34 @@
-import { Children, FC, ReactNode, isValidElement } from 'react';
-import { EdgeLabelRenderer, EdgeProps, useInternalNode } from '@xyflow/react';
+import {
+  Children,
+  FC,
+  ReactNode,
+  isValidElement,
+  useState,
+  useCallback,
+  useEffect,
+} from 'react';
+import {
+  EdgeLabelRenderer,
+  EdgeProps,
+  ReactFlowState,
+  useInternalNode,
+  useStore,
+  useViewport,
+} from '@xyflow/react';
+
+import { TEdge } from '@monorepo/core';
+import { useDispatcher } from '@monorepo/collab-engine';
+
 import {
   ReactflowEdgePayload,
   TEdgeRenderProps,
 } from '../../../apis/types/edge';
 import { calculateEdgePath } from './edge-path-utils';
 import { getFloatingEdgeParams } from './edge-utils';
-import { TEdge } from '@monorepo/core';
+import { EdgeMenu } from './edge-menu';
+import { TEventEdgePropertyChange } from '../../../../space-events';
+
+//
 
 type LabelProps = {
   children: ReactNode;
@@ -41,6 +63,13 @@ export const LabelMiddle = ({ children, className }: LabelProps) => {
 //
 //
 
+const paneSelector = (state: ReactFlowState) =>
+  state.domNode?.querySelector('.react-flow__pane');
+
+const global = window as any;
+
+//
+
 type Labels = {
   children?: ReactNode;
 };
@@ -62,6 +91,35 @@ export const EdgeComponent: FC<EdgeProps & Labels> = ({
 }) => {
   const sourceNode = useInternalNode(source);
   const targetNode = useInternalNode(target);
+  const viewport = useViewport();
+
+  const [_, update] = useState({});
+  const pane = useStore(paneSelector);
+
+  const dispatcher = useDispatcher<TEventEdgePropertyChange>();
+  const handleRenderPropsChange = useCallback(
+    (rp: TEdgeRenderProps) => {
+      dispatcher.dispatch({
+        type: 'space:edge-property-change',
+        edgeId: id,
+        properties: { renderProps: rp },
+      });
+    },
+    [dispatcher, id]
+  );
+
+  useEffect(() => {
+    const closeMenu = () => {
+      global.edgeMenuActive = null;
+      update({});
+    };
+    pane?.addEventListener('click', closeMenu);
+    return () => {
+      pane?.removeEventListener('click', closeMenu);
+    };
+  }, []);
+
+  //
 
   const payload: ReactflowEdgePayload = data as ReactflowEdgePayload;
 
@@ -129,6 +187,8 @@ export const EdgeComponent: FC<EdgeProps & Labels> = ({
 
   //
 
+  const [hovered, setHovered] = useState(false);
+
   const allClassNames = [
     'react-flow__edge',
     'demiurge-space-edge',
@@ -136,7 +196,7 @@ export const EdgeComponent: FC<EdgeProps & Labels> = ({
     ...(className || []),
   ];
 
-  if (demiurgeEdge.highlighted) {
+  if (demiurgeEdge.highlighted || hovered) {
     allClassNames.push('highlighted');
   }
   if (demiurgeEdge.group) {
@@ -147,11 +207,28 @@ export const EdgeComponent: FC<EdgeProps & Labels> = ({
 
   return (
     <>
+      {/* Interaction path for pointer events */}
+      <path
+        d={path}
+        stroke="transparent"
+        strokeWidth={15}
+        fill="none"
+        style={{ cursor: 'pointer' }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        onClick={() => {
+          console.log('onClick');
+          global.edgeMenuActive = id;
+          update({});
+        }}
+        className="edge-interaction-path"
+      />
+      {/* Visible path, pointer-events: none so only interaction path handles events */}
       <path
         id={id}
         className={`react-flow__edge-path ${allClassNames?.join(' ')}`}
         d={path}
-        style={style}
+        style={{ ...style, pointerEvents: 'none' }}
         markerStart={markerStart}
         markerEnd={markerEnd}
       />
@@ -174,6 +251,16 @@ export const EdgeComponent: FC<EdgeProps & Labels> = ({
           </EdgeLabel>
         )}
       </EdgeLabelRenderer>
+      {global.edgeMenuActive === id && (
+        <EdgeMenu
+          position={[
+            ((sourceX + targetX) / 2) * viewport.zoom + viewport.x,
+            ((sourceY + targetY) / 2) * viewport.zoom + viewport.y,
+          ]}
+          renderProps={demiurgeEdge.renderProps || {}}
+          setRenderProps={handleRenderPropsChange}
+        />
+      )}
     </>
   );
 };

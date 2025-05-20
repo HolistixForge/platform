@@ -1,4 +1,5 @@
 import { TEventOrigin, TPosition } from '@monorepo/core';
+import { TEdgeRenderProps } from './components/apis/types/edge';
 
 export type TEventMoveNode = {
   type: 'space:move-node';
@@ -164,6 +165,14 @@ export type TEventDeleteGroup = {
   groupId: string;
 };
 
+export type TEventEdgePropertyChange = {
+  type: 'space:edge-property-change';
+  edgeId: string;
+  properties: {
+    renderProps?: TEdgeRenderProps;
+  };
+};
+
 export type TSpaceEvent =
   | TEventNewView
   | TEventMoveNode
@@ -185,4 +194,5 @@ export type TSpaceEvent =
   | TEventShapePropertyChange
   | TEventNewShape
   | TEventDeleteShape
-  | TEventDeleteGroup;
+  | TEventDeleteGroup
+  | TEventEdgePropertyChange;
