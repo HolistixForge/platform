@@ -10,14 +10,11 @@ import {
 import {
   EdgeLabelRenderer,
   EdgeProps,
-  ReactFlowState,
   useInternalNode,
-  useStore,
   useViewport,
 } from '@xyflow/react';
 
 import { TEdge } from '@monorepo/core';
-import { useDispatcher } from '@monorepo/collab-engine';
 
 import {
   ReactflowEdgePayload,
@@ -25,8 +22,7 @@ import {
 } from '../../../apis/types/edge';
 import { calculateEdgePath } from './edge-path-utils';
 import { getFloatingEdgeParams } from './edge-utils';
-import { EdgeMenu } from './edge-menu';
-import { TEventEdgePropertyChange } from '../../../../space-events';
+import { useSpaceContext } from '../../spaceContext';
 
 //
 
@@ -63,13 +59,6 @@ export const LabelMiddle = ({ children, className }: LabelProps) => {
 //
 //
 
-const paneSelector = (state: ReactFlowState) =>
-  state.domNode?.querySelector('.react-flow__pane');
-
-const global = window as any;
-
-//
-
 type Labels = {
   children?: ReactNode;
 };
@@ -93,31 +82,24 @@ export const EdgeComponent: FC<EdgeProps & Labels> = ({
   const targetNode = useInternalNode(target);
   const viewport = useViewport();
 
-  const [_, update] = useState({});
-  const pane = useStore(paneSelector);
+  const { setEdgeMenu, edgeMenu } = useSpaceContext();
 
-  const dispatcher = useDispatcher<TEventEdgePropertyChange>();
-  const handleRenderPropsChange = useCallback(
-    (rp: TEdgeRenderProps) => {
-      dispatcher.dispatch({
-        type: 'space:edge-property-change',
-        edgeId: id,
-        properties: { renderProps: rp },
-      });
-    },
-    [dispatcher, id]
-  );
+  const handleSetEdgeMenu = useCallback(() => {
+    const v = {
+      edgeId: id,
+      x: ((sourceX + targetX) / 2) * viewport.zoom + viewport.x,
+      y: ((sourceY + targetY) / 2) * viewport.zoom + viewport.y,
+    };
+    if (edgeMenu?.edgeId !== id || edgeMenu?.x !== v.x || edgeMenu?.y !== v.y) {
+      setEdgeMenu(v);
+    }
+  }, [edgeMenu, setEdgeMenu, id, sourceX, targetX, sourceY, targetY, viewport]);
 
   useEffect(() => {
-    const closeMenu = () => {
-      global.edgeMenuActive = null;
-      update({});
-    };
-    pane?.addEventListener('click', closeMenu);
-    return () => {
-      pane?.removeEventListener('click', closeMenu);
-    };
-  }, []);
+    if (edgeMenu && edgeMenu.edgeId === id) {
+      handleSetEdgeMenu();
+    }
+  }, [edgeMenu, handleSetEdgeMenu]);
 
   //
 
@@ -216,11 +198,7 @@ export const EdgeComponent: FC<EdgeProps & Labels> = ({
         style={{ cursor: 'pointer' }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        onClick={() => {
-          console.log('onClick');
-          global.edgeMenuActive = id;
-          update({});
-        }}
+        onClick={handleSetEdgeMenu}
         className="edge-interaction-path"
       />
       {/* Visible path, pointer-events: none so only interaction path handles events */}
@@ -251,16 +229,6 @@ export const EdgeComponent: FC<EdgeProps & Labels> = ({
           </EdgeLabel>
         )}
       </EdgeLabelRenderer>
-      {global.edgeMenuActive === id && (
-        <EdgeMenu
-          position={[
-            ((sourceX + targetX) / 2) * viewport.zoom + viewport.x,
-            ((sourceY + targetY) / 2) * viewport.zoom + viewport.y,
-          ]}
-          renderProps={demiurgeEdge.renderProps || {}}
-          setRenderProps={handleRenderPropsChange}
-        />
-      )}
     </>
   );
 };

@@ -9,6 +9,10 @@ import { ReactflowLayer, ReactflowLayerProps } from './reactflow-layer';
 import { SpaceContext } from './spaceContext';
 import { SpaceState } from '../apis/spaceState';
 import { SpaceAwareness } from '../apis/spaceAwareness';
+import { EdgeMenu } from './assets/edges/edge-menu';
+import { TEdgeRenderProps } from '../apis/types/edge';
+import { useDispatcher } from '@monorepo/collab-engine';
+import { TEventEdgePropertyChange } from '../../space-events';
 
 //
 
@@ -106,6 +110,42 @@ export const DemiurgeSpace = ({
     []
   );
 
+  //
+
+  const [edgeMenu, _setEdgeMenu] = useState<{
+    edgeId: string;
+    x: number;
+    y: number;
+  } | null>(null);
+
+  const setEdgeMenu = useCallback(
+    ({ edgeId, x, y }: { edgeId: string; x: number; y: number }) => {
+      _setEdgeMenu({ edgeId, x, y });
+    },
+    []
+  );
+
+  const dispatcher = useDispatcher<TEventEdgePropertyChange>();
+
+  const handleRenderPropsChange = useCallback(
+    (rp: TEdgeRenderProps) => {
+      if (edgeMenu) {
+        dispatcher.dispatch({
+          type: 'space:edge-property-change',
+          edgeId: edgeMenu?.edgeId,
+          properties: { renderProps: rp },
+        });
+      }
+    },
+    [dispatcher, edgeMenu]
+  );
+
+  const resetEdgeMenu = useCallback(() => {
+    _setEdgeMenu(null);
+  }, [setEdgeMenu]);
+
+  //
+
   const context = useMemo(
     () => ({
       spaceAwareness,
@@ -113,8 +153,11 @@ export const DemiurgeSpace = ({
       currentUser,
       mode,
       viewId,
+      edgeMenu,
+      setEdgeMenu,
+      resetEdgeMenu,
     }),
-    [mode]
+    [mode, edgeMenu, setEdgeMenu, resetEdgeMenu]
   );
 
   return (
@@ -148,6 +191,13 @@ export const DemiurgeSpace = ({
           onViewportChange={onViewportChange}
           registerViewportChangeCallback={registerViewportChangeCallback}
         />
+        {edgeMenu && (
+          <EdgeMenu
+            eid={edgeMenu.edgeId}
+            position={[edgeMenu.x, edgeMenu.y]}
+            setRenderProps={handleRenderPropsChange}
+          />
+        )}
         <AvatarsRenderer avatarsStore={avatarsStore} />
         <ModeIndicator mode={mode} />
       </div>

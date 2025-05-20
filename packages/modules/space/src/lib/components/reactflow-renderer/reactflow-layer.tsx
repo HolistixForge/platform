@@ -41,6 +41,7 @@ import { TSpaceEvent } from '../../space-events';
 import { getAbsolutePosition } from '../../utils/position-utils';
 import { TSpaceSharedData } from '../../space-shared-model';
 import { Viewport, INITIAL_VIEWPORT } from './demiurge-space';
+import { useSpaceContext } from './spaceContext';
 //
 //
 
@@ -330,6 +331,8 @@ export const ReactflowLayer = ({
 
   //
 
+  const { resetEdgeMenu } = useSpaceContext();
+
   const handlePaneClick = useCallback(
     // Handle left click on pane here
     (event: React.MouseEvent) => {
@@ -337,8 +340,9 @@ export const ReactflowLayer = ({
       // const pclient = clientXY(event);
       // const p = pointerTracker.fromMouseEvent(pclient);
       event.preventDefault();
+      resetEdgeMenu();
     },
-    [spaceAwareness]
+    [spaceAwareness, resetEdgeMenu]
   );
 
   //

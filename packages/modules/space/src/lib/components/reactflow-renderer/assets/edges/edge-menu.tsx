@@ -1,11 +1,11 @@
-import { ReactFlowState, useStore } from '@xyflow/react';
-import { CSSProperties, ReactNode, useCallback } from 'react';
-import { createPortal } from 'react-dom';
+import { CSSProperties, useCallback } from 'react';
 
 import { ColorPicker } from '@monorepo/ui-base';
 import { SelectFieldset, SelectItem, SliderFieldset } from '@monorepo/ui-base';
+import { useSharedData } from '@monorepo/collab-engine';
+import { TCoreSharedData } from '@monorepo/core';
 
-import { TEdgeRenderProps } from '../../../apis/types/edge';
+import { edgeId, TEdgeRenderProps } from '../../../apis/types/edge';
 
 import './edge-menu.scss';
 
@@ -49,7 +49,7 @@ const MarkerEditor = ({
       <fieldset className={`Fieldset`}>
         <label className="Label">Color</label>
         <ColorPicker
-          initialColor={markerProps?.color || '#672aa4'}
+          initialColor={markerProps?.color || '#000000'}
           buttonTitle={`${label} Color`}
           onChange={onColorChange}
         />
@@ -87,38 +87,37 @@ const MarkerEditor = ({
 //
 
 export const EdgeMenu = ({
+  eid,
   position,
-  renderProps,
   setRenderProps,
 }: {
+  eid: string;
   position: [number, number];
-  renderProps: TEdgeRenderProps;
   setRenderProps: (props: TEdgeRenderProps) => void;
 }) => {
+  //
+
   const wrapperStyle: CSSProperties = {
+    top: 0,
+    left: 0,
     transform: `translate(${position[0]}px, ${position[1]}px) translate(-50%, -50%)`,
     position: 'absolute',
     width: 'fit-content',
-    zIndex: 1000,
   };
+
+  const renderProps: TEdgeRenderProps = useSharedData<TCoreSharedData>(
+    ['edges'],
+    (sd) => {
+      const edge = sd.edges.find((e) => edgeId(e) === eid);
+      const renderProps = (edge as any)?.renderProps;
+      return renderProps || {};
+    }
+  );
 
   // Handlers
   const handleShapeChange = useCallback(
     (v: string) => {
       setRenderProps({ ...renderProps, edgeShape: v as any });
-    },
-    [renderProps, setRenderProps]
-  );
-
-  const handleStrokeWidthChangeFieldset = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setRenderProps({
-        ...renderProps,
-        style: {
-          ...renderProps.style,
-          strokeWidth: `${Number(e.target.value)}`,
-        },
-      });
     },
     [renderProps, setRenderProps]
   );
@@ -165,108 +164,87 @@ export const EdgeMenu = ({
   );
 
   return (
-    <EdgeToolbarPortal>
-      <div
-        className="edge-menu-wrapper node-header-background"
-        style={wrapperStyle}
-      >
-        {/* Edge controls row */}
-        <div className="edge-menu-row">
-          <span className="edge-menu-label">Edge</span>
-          <fieldset className={`Fieldset`}>
-            <label className="Label">Color</label>
-            <ColorPicker
-              initialColor={renderProps.style?.stroke || '#672aa4'}
-              buttonTitle="Pick Edge Color"
-              onChange={handleStrokeColorChange}
-            />
-          </fieldset>
-          <SelectFieldset
-            name="edge-shape"
-            value={renderProps.edgeShape || ''}
-            onChange={handleShapeChange}
-            placeholder="Shape"
-            label="Shape"
-            className="small"
-          >
-            {EDGE_SHAPES.map((s) => (
-              <SelectItem key={s.value} value={s.value}>
-                {s.label}
-              </SelectItem>
-            ))}
-          </SelectFieldset>
-          <SliderFieldset
-            name="edge-thickness"
-            value={Number(renderProps.style?.strokeWidth ?? 1)}
-            onChange={(v: number) =>
-              setRenderProps({
-                ...renderProps,
-                style: {
-                  ...renderProps.style,
-                  strokeWidth: `${v}`,
-                },
-              })
-            }
-            label="Thickness"
-            required={false}
-            min={1}
-            max={10}
-            step={1}
-            sliderWidth={sliderWidth}
+    <div
+      className="edge-menu-wrapper node-header-background"
+      style={wrapperStyle}
+    >
+      {/* Edge controls row */}
+      <div className="edge-menu-row">
+        <span className="edge-menu-label">Edge</span>
+        <fieldset className={`Fieldset`}>
+          <label className="Label">Color</label>
+          <ColorPicker
+            initialColor={renderProps.style?.stroke || '#000000'}
+            buttonTitle="Pick Edge Color"
+            onChange={handleStrokeColorChange}
           />
-          <SelectFieldset
-            name="edge-dash"
-            value={String(renderProps.style?.strokeDasharray || '')}
-            onChange={handleDashStyleChange}
-            placeholder="Dashed"
-            label="Dashed"
-            className="small"
-          >
-            {DASH_STYLES.map((s) => (
-              <SelectItem key={s.value} value={s.value}>
-                {s.label}
-              </SelectItem>
-            ))}
-          </SelectFieldset>
-        </div>
-        {/* Marker Start row */}
-        <MarkerEditor
-          label="Marker Start"
-          markerProps={renderProps.markerStart}
-          onChange={(field, value) =>
-            handleMarkerChange('markerStart', field, value)
+        </fieldset>
+        <SelectFieldset
+          name="edge-shape"
+          value={renderProps.edgeShape || ''}
+          onChange={handleShapeChange}
+          placeholder="Shape"
+          label="Shape"
+          className="small"
+        >
+          {EDGE_SHAPES.map((s) => (
+            <SelectItem key={s.value} value={s.value}>
+              {s.label}
+            </SelectItem>
+          ))}
+        </SelectFieldset>
+        <SliderFieldset
+          name="edge-thickness"
+          value={Number(renderProps.style?.strokeWidth ?? 1)}
+          onChange={(v: number) =>
+            setRenderProps({
+              ...renderProps,
+              style: {
+                ...renderProps.style,
+                strokeWidth: `${v}`,
+              },
+            })
           }
-          onColorChange={(color) =>
-            handleMarkerColorChange('markerStart', color)
-          }
+          label="Thickness"
+          required={false}
+          min={1}
+          max={10}
+          step={1}
+          sliderWidth={sliderWidth}
         />
-        {/* Marker End row */}
-        <MarkerEditor
-          label="Marker End"
-          markerProps={renderProps.markerEnd}
-          onChange={(field, value) =>
-            handleMarkerChange('markerEnd', field, value)
-          }
-          onColorChange={(color) => handleMarkerColorChange('markerEnd', color)}
-        />
+        <SelectFieldset
+          name="edge-dash"
+          value={String(renderProps.style?.strokeDasharray || '')}
+          onChange={handleDashStyleChange}
+          placeholder="Dashed"
+          label="Dashed"
+          className="small"
+        >
+          {DASH_STYLES.map((s) => (
+            <SelectItem key={s.value} value={s.value}>
+              {s.label}
+            </SelectItem>
+          ))}
+        </SelectFieldset>
       </div>
-    </EdgeToolbarPortal>
+      {/* Marker Start row */}
+      <MarkerEditor
+        label="Marker Start"
+        markerProps={renderProps.markerStart}
+        onChange={(field, value) =>
+          handleMarkerChange('markerStart', field, value)
+        }
+        onColorChange={(color) => handleMarkerColorChange('markerStart', color)}
+      />
+      {/* Marker End row */}
+      <MarkerEditor
+        label="Marker End"
+        markerProps={renderProps.markerEnd}
+        onChange={(field, value) =>
+          handleMarkerChange('markerEnd', field, value)
+        }
+        onColorChange={(color) => handleMarkerColorChange('markerEnd', color)}
+      />
+    </div>
   );
 };
-
-//
-
-const selector = (state: ReactFlowState) =>
-  state.domNode?.querySelector('.react-flow__renderer');
-
-//
-
-export function EdgeToolbarPortal({ children }: { children: ReactNode }) {
-  const wrapperRef = useStore(selector);
-
-  if (!wrapperRef) {
-    return null;
-  }
-
-  return createPortal(children, wrapperRef);
-}

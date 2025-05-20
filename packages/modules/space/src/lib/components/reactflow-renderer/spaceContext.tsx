@@ -12,6 +12,13 @@ export type TSpaceContext = {
   currentUser?: { username: string; color: string };
   mode: WhiteboardMode;
   viewId: string;
+  edgeMenu: {
+    edgeId: string;
+    x: number;
+    y: number;
+  } | null;
+  setEdgeMenu: (edgeMenu: { edgeId: string; x: number; y: number }) => void;
+  resetEdgeMenu: () => void;
 };
 
 //
