@@ -40,6 +40,10 @@
     gap: 0;
   }
 
+  .SliderValue {
+    min-width: 0px;
+  }
+
   .Input,
   .SelectTrigger {
     --form-input-height: 24px;

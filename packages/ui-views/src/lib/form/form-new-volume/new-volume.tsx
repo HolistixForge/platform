@@ -1,11 +1,10 @@
-import * as Slider from '@radix-ui/react-slider';
-
 import {
   ButtonBase,
   TAction,
   FormError,
   FormErrors,
   TextFieldset,
+  SliderFieldset,
 } from '@monorepo/ui-base';
 
 /**
@@ -36,28 +35,16 @@ export const NewVolumeForm = ({
         placeholder="Volume name"
       />
       <FormError errors={action.errors} id="imageId" />
-      <fieldset className="Fieldset">
-        <label className="Label" htmlFor="storage">
-          Storage (Gi)
-        </label>
-        <Slider.Root
-          style={{ width: '230px', maxWidth: '230px' }}
-          className="SliderRoot"
-          defaultValue={[1]}
-          onValueChange={(v: number[]) => {
-            action.handleChange({ storage: v[0] });
-          }}
-          min={1}
-          max={20}
-          step={1}
-        >
-          <Slider.Track className="SliderTrack">
-            <Slider.Range className="SliderRange" />
-          </Slider.Track>
-          <Slider.Thumb className="SliderThumb" />
-        </Slider.Root>
-        <span className="SliderValue">{action.formData.storage} Gi</span>
-      </fieldset>
+      <SliderFieldset
+        label="Storage (Gi)"
+        name="storage"
+        value={action.formData.storage}
+        onChange={(v: number) => action.handleChange({ storage: v })}
+        min={1}
+        max={20}
+        step={1}
+        valueSuffix="Gi"
+      />
       <FormErrors errors={action.errors} />
       <div
         style={{ display: 'flex', marginTop: 25, justifyContent: 'flex-end' }}

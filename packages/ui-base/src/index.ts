@@ -43,6 +43,7 @@ export {
   SelectItem,
 } from './lib/form/form-fields/select-fieldset';
 export { TotpFieldset } from './lib/form/form-fields/totp-fieldset';
+export { SliderFieldset } from './lib/form/form-fields/slider-fieldset';
 
 //
 

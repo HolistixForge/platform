@@ -3,7 +3,7 @@ import { CSSProperties, ReactNode, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 
 import { ColorPicker } from '@monorepo/ui-base';
-import { SelectFieldset, SelectItem, TextFieldset } from '@monorepo/ui-base';
+import { SelectFieldset, SelectItem, SliderFieldset } from '@monorepo/ui-base';
 
 import { TEdgeRenderProps } from '../../../apis/types/edge';
 
@@ -21,6 +21,8 @@ const DASH_STYLES = [
   { label: 'Dotted', value: '2,2' },
   { label: 'Dash-dot', value: '6,2,2,2' },
 ];
+
+const sliderWidth = '100px';
 
 // MarkerEditor: reusable component for marker start/end
 type MarkerEditorProps = {
@@ -52,38 +54,29 @@ const MarkerEditor = ({
           onChange={onColorChange}
         />
       </fieldset>
-      <TextFieldset
+      <SliderFieldset
         name={`${label.toLowerCase().replace(/ /g, '-')}-width`}
-        value={String(markerProps?.width ?? 10)}
-        onChange={(e) => onChange('width', Number(e.target.value))}
-        type="number"
-        placeholder="Width"
+        value={markerProps?.width ?? 10}
+        onChange={(v: number) => {
+          onChange('width', v);
+        }}
         label="Width"
         required={false}
         min={1}
         max={30}
+        step={1}
+        sliderWidth={sliderWidth}
       />
-      <TextFieldset
-        name={`${label.toLowerCase().replace(/ /g, '-')}-height`}
-        value={String(markerProps?.height ?? 10)}
-        onChange={(e) => onChange('height', Number(e.target.value))}
-        type="number"
-        placeholder="Height"
-        label="Height"
-        required={false}
-        min={1}
-        max={30}
-      />
-      <TextFieldset
+      <SliderFieldset
         name={`${label.toLowerCase().replace(/ /g, '-')}-stroke-width`}
-        value={String(markerProps?.strokeWidth ?? 1)}
-        onChange={(e) => onChange('strokeWidth', Number(e.target.value))}
-        type="number"
-        placeholder="Thickness"
+        value={markerProps?.strokeWidth ?? 1}
+        onChange={(v: number) => onChange('strokeWidth', v)}
         label="Thickness"
         required={false}
         min={1}
         max={10}
+        step={1}
+        sliderWidth={sliderWidth}
       />
     </div>
   );
@@ -202,16 +195,24 @@ export const EdgeMenu = ({
               </SelectItem>
             ))}
           </SelectFieldset>
-          <TextFieldset
+          <SliderFieldset
             name="edge-thickness"
-            value={String(renderProps.style?.strokeWidth ?? 1)}
-            onChange={handleStrokeWidthChangeFieldset}
-            type="number"
-            placeholder="Thickness"
+            value={Number(renderProps.style?.strokeWidth ?? 1)}
+            onChange={(v: number) =>
+              setRenderProps({
+                ...renderProps,
+                style: {
+                  ...renderProps.style,
+                  strokeWidth: `${v}`,
+                },
+              })
+            }
             label="Thickness"
             required={false}
             min={1}
             max={10}
+            step={1}
+            sliderWidth={sliderWidth}
           />
           <SelectFieldset
             name="edge-dash"
