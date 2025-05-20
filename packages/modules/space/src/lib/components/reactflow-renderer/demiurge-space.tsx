@@ -10,9 +10,14 @@ import { SpaceContext } from './spaceContext';
 import { SpaceState } from '../apis/spaceState';
 import { SpaceAwareness } from '../apis/spaceAwareness';
 import { EdgeMenu } from './assets/edges/edge-menu';
-import { TEdgeRenderProps } from '../apis/types/edge';
-import { useDispatcher } from '@monorepo/collab-engine';
+import { edgeId, TEdgeRenderProps } from '../apis/types/edge';
+import {
+  useDispatcher,
+  useEventSequence,
+  FrontendEventSequence,
+} from '@monorepo/collab-engine';
 import { TEventEdgePropertyChange } from '../../space-events';
+import { TCoreSharedData, TEdge } from '@monorepo/core';
 
 //
 
@@ -127,12 +132,50 @@ export const DemiurgeSpace = ({
 
   const dispatcher = useDispatcher<TEventEdgePropertyChange>();
 
+  // Event sequence for edge renderProps change
+  const { createEventSequence } = useEventSequence<
+    TEventEdgePropertyChange,
+    TCoreSharedData
+  >();
+  const renderPropsChangeEventSequenceRef =
+    useRef<FrontendEventSequence<TEventEdgePropertyChange> | null>(null);
+
+  // Manage event sequence lifecycle based on edgeMenu
+  const prevEdgeIdRef = useRef<string | null>(null);
+  if (edgeMenu?.edgeId !== prevEdgeIdRef.current) {
+    // Clean up previous sequence if edgeId changed or edgeMenu is null
+    if (renderPropsChangeEventSequenceRef.current) {
+      renderPropsChangeEventSequenceRef.current.cleanup();
+      renderPropsChangeEventSequenceRef.current = null;
+    }
+    if (edgeMenu?.edgeId) {
+      // Create new sequence for this edgeId
+      renderPropsChangeEventSequenceRef.current = createEventSequence({
+        localReduceUpdateKeys: ['edges'],
+        localReduce: (sdc, event) => {
+          const e = sdc.edges.find((e: TEdge) => edgeId(e) === event.edgeId);
+          if (e) {
+            e.renderProps = event.properties.renderProps;
+          }
+        },
+      });
+    }
+    prevEdgeIdRef.current = edgeMenu?.edgeId ?? null;
+  }
+
   const handleRenderPropsChange = useCallback(
     (rp: TEdgeRenderProps) => {
-      if (edgeMenu) {
+      if (edgeMenu && renderPropsChangeEventSequenceRef.current) {
+        renderPropsChangeEventSequenceRef.current.dispatch({
+          type: 'space:edge-property-change',
+          edgeId: edgeMenu.edgeId,
+          properties: { renderProps: rp },
+        });
+      } else if (edgeMenu) {
+        // fallback if sequence is not available
         dispatcher.dispatch({
           type: 'space:edge-property-change',
-          edgeId: edgeMenu?.edgeId,
+          edgeId: edgeMenu.edgeId,
           properties: { renderProps: rp },
         });
       }
