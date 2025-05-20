@@ -1,11 +1,5 @@
 ⚠️ Antoine's stuffs
 
-edge styles:
-
-- event sequence
-- arrow type
-- enable / disable markers
-
 drawing mode:
 
 - check pointer awareness in drawing mode.

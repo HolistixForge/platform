@@ -32,6 +32,7 @@ type MarkerEditorProps = {
     width?: number;
     height?: number;
     strokeWidth?: number;
+    type?: string;
   };
   onChange: (field: string, value: any) => void;
   onColorChange: (color: any) => void;
@@ -46,6 +47,18 @@ const MarkerEditor = ({
   return (
     <div className="edge-menu-row">
       <span className="edge-menu-label">{label}</span>
+      <SelectFieldset
+        name={`${label.toLowerCase().replace(/ /g, '-')}-type`}
+        value={markerProps?.type || 'none'}
+        onChange={(v: string) => onChange('type', v)}
+        placeholder="Type"
+        label="Type"
+        className="small"
+      >
+        <SelectItem value="none">None</SelectItem>
+        <SelectItem value="arrow">Arrow</SelectItem>
+        <SelectItem value="arrowclosed">Arrow Closed</SelectItem>
+      </SelectFieldset>
       <fieldset className={`Fieldset`}>
         <label className="Label">Color</label>
         <ColorPicker
