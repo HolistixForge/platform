@@ -1,4 +1,4 @@
-import { CSSProperties, useCallback } from 'react';
+import { CSSProperties } from 'react';
 
 import { ColorPicker } from '@monorepo/ui-base';
 import { SelectFieldset, SelectItem, SliderFieldset } from '@monorepo/ui-base';
@@ -22,78 +22,31 @@ const DASH_STYLES = [
   { label: 'Dash-dot', value: '6,2,2,2' },
 ];
 
-const sliderWidth = '100px';
+const sliderWidth = '80px';
 
 // MarkerEditor: reusable component for marker start/end
-type MarkerEditorProps = {
-  label: string;
-  markerProps?: {
-    color?: string;
-    width?: number;
-    height?: number;
-    strokeWidth?: number;
-    type?: string;
-  };
-  onChange: (field: string, value: any) => void;
-  onColorChange: (color: any) => void;
-};
+// type MarkerEditorProps = {
+//   label: string;
+//   markerProps?: {
+//     color?: string;
+//     width?: number;
+//     height?: number;
+//     strokeWidth?: number;
+//     type?: string;
+//   };
+//   onChange: (field: string, value: any) => void;
+// };
 
-const MarkerEditor = ({
-  label,
-  markerProps,
-  onChange,
-  onColorChange,
-}: MarkerEditorProps) => {
-  return (
-    <div className="edge-menu-row">
-      <span className="edge-menu-label">{label}</span>
-      <SelectFieldset
-        name={`${label.toLowerCase().replace(/ /g, '-')}-type`}
-        value={markerProps?.type || 'none'}
-        onChange={(v: string) => onChange('type', v)}
-        placeholder="Type"
-        label="Type"
-        className="small"
-      >
-        <SelectItem value="none">None</SelectItem>
-        <SelectItem value="arrow">Arrow</SelectItem>
-        <SelectItem value="arrowclosed">Arrow Closed</SelectItem>
-      </SelectFieldset>
-      <fieldset className={`Fieldset`}>
-        <label className="Label">Color</label>
-        <ColorPicker
-          initialColor={markerProps?.color || '#000000'}
-          buttonTitle={`${label} Color`}
-          onChange={onColorChange}
-        />
-      </fieldset>
-      <SliderFieldset
-        name={`${label.toLowerCase().replace(/ /g, '-')}-width`}
-        value={markerProps?.width ?? 10}
-        onChange={(v: number) => {
-          onChange('width', v);
-        }}
-        label="Width"
-        required={false}
-        min={1}
-        max={30}
-        step={1}
-        sliderWidth={sliderWidth}
-      />
-      <SliderFieldset
-        name={`${label.toLowerCase().replace(/ /g, '-')}-stroke-width`}
-        value={markerProps?.strokeWidth ?? 1}
-        onChange={(v: number) => onChange('strokeWidth', v)}
-        label="Thickness"
-        required={false}
-        min={1}
-        max={10}
-        step={1}
-        sliderWidth={sliderWidth}
-      />
-    </div>
-  );
-};
+// const MarkerEditor = ({ label, markerProps, onChange }: MarkerEditorProps) => {
+//   return (
+//     <div className="edge-menu-row">
+//       <span className="edge-menu-label">{label}</span>
+//       <SelectFieldset ... />
+//       <SliderFieldset ... />
+//       <SliderFieldset ... />
+//     </div>
+//   );
+// };
 
 //
 //
@@ -127,55 +80,6 @@ export const EdgeMenu = ({
     }
   );
 
-  // Handlers
-  const handleShapeChange = useCallback(
-    (v: string) => {
-      setRenderProps({ ...renderProps, edgeShape: v as any });
-    },
-    [renderProps, setRenderProps]
-  );
-
-  const handleStrokeColorChange = useCallback(
-    (color: any) => {
-      setRenderProps({
-        ...renderProps,
-        style: { ...renderProps.style, stroke: color.hex },
-      });
-    },
-    [renderProps, setRenderProps]
-  );
-
-  const handleDashStyleChange = useCallback(
-    (v: string) => {
-      setRenderProps({
-        ...renderProps,
-        style: { ...renderProps.style, strokeDasharray: v },
-      });
-    },
-    [renderProps, setRenderProps]
-  );
-
-  // Marker handlers
-  const handleMarkerChange = useCallback(
-    (key: 'markerStart' | 'markerEnd', field: string, value: any) => {
-      setRenderProps({
-        ...renderProps,
-        [key]: { ...renderProps[key], [field]: value },
-      });
-    },
-    [renderProps, setRenderProps]
-  );
-
-  const handleMarkerColorChange = useCallback(
-    (key: 'markerStart' | 'markerEnd', color: any) => {
-      setRenderProps({
-        ...renderProps,
-        [key]: { ...renderProps[key], color: color.hex },
-      });
-    },
-    [renderProps, setRenderProps]
-  );
-
   return (
     <div
       className="edge-menu-wrapper node-header-background"
@@ -187,15 +91,28 @@ export const EdgeMenu = ({
         <fieldset className={`Fieldset`}>
           <label className="Label">Color</label>
           <ColorPicker
-            initialColor={renderProps.style?.stroke || '#000000'}
+            initialColor={renderProps.style?.stroke || '#ffffff'}
             buttonTitle="Pick Edge Color"
-            onChange={handleStrokeColorChange}
+            onChange={(color: any) => {
+              setRenderProps({
+                ...renderProps,
+                style: { ...renderProps.style, stroke: color.hex },
+                markerStart: renderProps.markerStart
+                  ? { ...renderProps.markerStart, color: color.hex }
+                  : undefined,
+                markerEnd: renderProps.markerEnd
+                  ? { ...renderProps.markerEnd, color: color.hex }
+                  : undefined,
+              });
+            }}
           />
         </fieldset>
         <SelectFieldset
           name="edge-shape"
           value={renderProps.edgeShape || ''}
-          onChange={handleShapeChange}
+          onChange={(v: string) => {
+            setRenderProps({ ...renderProps, edgeShape: v as any });
+          }}
           placeholder="Shape"
           label="Shape"
           className="small"
@@ -221,14 +138,19 @@ export const EdgeMenu = ({
           label="Thickness"
           required={false}
           min={1}
-          max={10}
+          max={100}
           step={1}
           sliderWidth={sliderWidth}
         />
         <SelectFieldset
           name="edge-dash"
           value={String(renderProps.style?.strokeDasharray || '')}
-          onChange={handleDashStyleChange}
+          onChange={(v: string) => {
+            setRenderProps({
+              ...renderProps,
+              style: { ...renderProps.style, strokeDasharray: v },
+            });
+          }}
           placeholder="Dashed"
           label="Dashed"
           className="small"
@@ -240,24 +162,100 @@ export const EdgeMenu = ({
           ))}
         </SelectFieldset>
       </div>
-      {/* Marker Start row */}
-      <MarkerEditor
-        label="Marker Start"
-        markerProps={renderProps.markerStart}
-        onChange={(field, value) =>
-          handleMarkerChange('markerStart', field, value)
-        }
-        onColorChange={(color) => handleMarkerColorChange('markerStart', color)}
-      />
-      {/* Marker End row */}
-      <MarkerEditor
-        label="Marker End"
-        markerProps={renderProps.markerEnd}
-        onChange={(field, value) =>
-          handleMarkerChange('markerEnd', field, value)
-        }
-        onColorChange={(color) => handleMarkerColorChange('markerEnd', color)}
-      />
+      {/* Marker controls row (shared width/thickness, separate type) */}
+      <div className="edge-menu-row">
+        <span className="edge-menu-label">Markers</span>
+        {/* Marker Start Type */}
+        <SelectFieldset
+          name="marker-start-type"
+          value={renderProps.markerStart?.type || 'none'}
+          onChange={(v: string) =>
+            setRenderProps({
+              ...renderProps,
+              markerStart: renderProps.markerStart
+                ? { ...renderProps.markerStart, type: v as any }
+                : undefined,
+            })
+          }
+          placeholder="Start Type"
+          label="Start Type"
+          className="small"
+        >
+          <SelectItem value="none">None</SelectItem>
+          <SelectItem value="arrow">Arrow</SelectItem>
+          <SelectItem value="arrowclosed">Arrow Closed</SelectItem>
+        </SelectFieldset>
+        {/* Marker End Type */}
+        <SelectFieldset
+          name="marker-end-type"
+          value={renderProps.markerEnd?.type || 'none'}
+          onChange={(v: string) =>
+            setRenderProps({
+              ...renderProps,
+              markerEnd: renderProps.markerEnd
+                ? { ...renderProps.markerEnd, type: v as any }
+                : undefined,
+            })
+          }
+          placeholder="End Type"
+          label="End Type"
+          className="small"
+        >
+          <SelectItem value="none">None</SelectItem>
+          <SelectItem value="arrow">Arrow</SelectItem>
+          <SelectItem value="arrowclosed">Arrow Closed</SelectItem>
+        </SelectFieldset>
+        {/* Shared Width */}
+        <SliderFieldset
+          name="marker-width"
+          value={
+            renderProps.markerStart?.width ?? renderProps.markerEnd?.width ?? 10
+          }
+          onChange={(v: number) =>
+            setRenderProps({
+              ...renderProps,
+              markerStart: renderProps.markerStart
+                ? { ...renderProps.markerStart, width: v }
+                : undefined,
+              markerEnd: renderProps.markerEnd
+                ? { ...renderProps.markerEnd, width: v }
+                : undefined,
+            })
+          }
+          label="Width"
+          required={false}
+          min={1}
+          max={30}
+          step={1}
+          sliderWidth={sliderWidth}
+        />
+        {/* Shared Thickness */}
+        <SliderFieldset
+          name="marker-thickness"
+          value={
+            renderProps.markerStart?.strokeWidth ??
+            renderProps.markerEnd?.strokeWidth ??
+            1
+          }
+          onChange={(v: number) =>
+            setRenderProps({
+              ...renderProps,
+              markerStart: renderProps.markerStart
+                ? { ...renderProps.markerStart, strokeWidth: v }
+                : undefined,
+              markerEnd: renderProps.markerEnd
+                ? { ...renderProps.markerEnd, strokeWidth: v }
+                : undefined,
+            })
+          }
+          label="Thickness"
+          required={false}
+          min={1}
+          max={10}
+          step={1}
+          sliderWidth={sliderWidth}
+        />
+      </div>
     </div>
   );
 };

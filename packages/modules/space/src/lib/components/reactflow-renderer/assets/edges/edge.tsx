@@ -193,9 +193,13 @@ export const EdgeComponent: FC<EdgeProps & Labels> = ({
       <path
         d={path}
         stroke="transparent"
-        strokeWidth={15}
+        style={{
+          cursor: 'pointer',
+          strokeWidth: style?.strokeWidth
+            ? `calc(${style?.strokeWidth}px + 15px)`
+            : '20px',
+        }}
         fill="none"
-        style={{ cursor: 'pointer' }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         onClick={handleSetEdgeMenu}
