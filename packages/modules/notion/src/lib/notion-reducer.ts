@@ -119,7 +119,7 @@ export class NotionReducer extends Reducer<
             connectorName: 'outputs',
           },
           to: { node: nodeId, connectorName: 'inputs' },
-          type: 'composed_of',
+          semanticType: 'composed_of',
         },
       ],
       origin: g.event.origin,

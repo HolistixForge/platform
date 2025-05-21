@@ -242,8 +242,10 @@ export class SpaceReducer extends Reducer<
         return Promise.resolve();
 
       case 'space:edge-property-change':
-        this.edgePropertyChange(g as Ra<TEventEdgePropertyChange>);
-        return Promise.resolve();
+        return (async () => {
+          await this.edgePropertyChange(g as Ra<TEventEdgePropertyChange>);
+          this.updateAllGraphviews(g);
+        })();
 
       default:
         return Promise.resolve();
@@ -708,22 +710,25 @@ export class SpaceReducer extends Reducer<
   //
 
   edgePropertyChange(g: Ra<TEventEdgePropertyChange>) {
-    let edge;
-    let i;
-    for (i = 0; i < g.sd.edges.length; i++) {
-      if (edgeId(g.sd.edges.get(i)) === g.event.edgeId) {
-        edge = g.sd.edges.get(i);
-        break;
+    return g.st.transaction(async () => {
+      let edge;
+      let i;
+      for (i = 0; i < g.sd.edges.length; i++) {
+        if (edgeId(g.sd.edges.get(i)) === g.event.edgeId) {
+          edge = g.sd.edges.get(i);
+          break;
+        }
       }
-    }
-    if (!edge) {
-      error('SPACE', `edge ${g.event.edgeId} not found`);
-      return;
-    }
+      if (!edge) {
+        error('SPACE', `edge ${g.event.edgeId} not found`);
+        return;
+      }
 
-    (edge as any).renderProps = g.event.properties.renderProps as TJsonObject;
-    g.sd.edges.delete(i);
-    g.sd.edges.push([edge]);
+      (edge as any).renderProps = g.event.properties.renderProps as TJsonObject;
+
+      g.sd.edges.delete(i);
+      g.sd.edges.push([edge]);
+    });
   }
 
   //

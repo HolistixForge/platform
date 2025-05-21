@@ -823,10 +823,7 @@ export const makeMountEdge = (a: {
         mount_point: a.mount_point,
       },
     },
-    type: 'wired_to',
-    data: {
-      demiurge_type: 'mount',
-    },
+    semanticType: 'wired_to',
   };
   return edge;
 };

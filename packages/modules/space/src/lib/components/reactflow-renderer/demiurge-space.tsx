@@ -17,7 +17,8 @@ import {
   FrontendEventSequence,
 } from '@monorepo/collab-engine';
 import { TEventEdgePropertyChange } from '../../space-events';
-import { TCoreSharedData, TEdge } from '@monorepo/core';
+import { TSpaceSharedData } from '../../space-shared-model';
+import { TGraphView } from '../../space-types';
 
 //
 
@@ -135,7 +136,7 @@ export const DemiurgeSpace = ({
   // Event sequence for edge renderProps change
   const { createEventSequence } = useEventSequence<
     TEventEdgePropertyChange,
-    TCoreSharedData
+    TSpaceSharedData
   >();
   const renderPropsChangeEventSequenceRef =
     useRef<FrontendEventSequence<TEventEdgePropertyChange> | null>(null);
@@ -151,11 +152,12 @@ export const DemiurgeSpace = ({
     if (edgeMenu?.edgeId) {
       // Create new sequence for this edgeId
       renderPropsChangeEventSequenceRef.current = createEventSequence({
-        localReduceUpdateKeys: ['edges'],
+        localReduceUpdateKeys: ['graphViews'],
         localReduce: (sdc, event) => {
-          const e = sdc.edges.find((e: TEdge) => edgeId(e) === event.edgeId);
+          const gv: TGraphView = sdc.graphViews.get(viewId);
+          const e = gv.graph.edges.find((e) => edgeId(e) === event.edgeId);
           if (e) {
-            e.renderProps = event.properties.renderProps;
+            (e as any).renderProps = event.properties.renderProps;
           }
         },
       });
@@ -167,13 +169,6 @@ export const DemiurgeSpace = ({
     (rp: TEdgeRenderProps) => {
       if (edgeMenu && renderPropsChangeEventSequenceRef.current) {
         renderPropsChangeEventSequenceRef.current.dispatch({
-          type: 'space:edge-property-change',
-          edgeId: edgeMenu.edgeId,
-          properties: { renderProps: rp },
-        });
-      } else if (edgeMenu) {
-        // fallback if sequence is not available
-        dispatcher.dispatch({
           type: 'space:edge-property-change',
           edgeId: edgeMenu.edgeId,
           properties: { renderProps: rp },

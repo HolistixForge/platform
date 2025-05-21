@@ -1,4 +1,4 @@
-import { Suspense, useCallback } from 'react';
+import { Suspense, useCallback, memo } from 'react';
 
 import { TGraphNode } from '@monorepo/core';
 import { useDispatcher } from '@monorepo/collab-engine';
@@ -69,13 +69,7 @@ export const NodeIframeInternal = ({
         <DisableZoomDragPan fullHeight noDrag>
           <div className="node-wrapper-body full-height iframe">
             <Suspense fallback={<span>Loading iframe...</span>}>
-              <iframe
-                src={src}
-                title="Embedded content"
-                className="iframe-content"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
+              <MemoizedIframe src={src} />
             </Suspense>
             <div className="select-handle">Select</div>
           </div>
@@ -84,6 +78,19 @@ export const NodeIframeInternal = ({
     </div>
   );
 };
+
+const MemoizedIframe = memo(
+  ({ src }: { src: string }) => (
+    <iframe
+      src={src}
+      title="Embedded content"
+      className="iframe-content"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowFullScreen
+    />
+  ),
+  (prevProps, nextProps) => prevProps.src === nextProps.src
+);
 
 export const NodeIframe = ({ node }: { node: TGraphNode }) => {
   const src = node.data!.src as string;

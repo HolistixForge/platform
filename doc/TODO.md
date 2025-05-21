@@ -1,5 +1,11 @@
 ⚠️ Antoine's stuffs
 
+ls -tp | tail -n +11 | sudo xargs -d '\n' rm --
+
+edge editor:
+
+- edge renderProps should be in graphviews
+
 drawing mode:
 
 - check pointer awareness in drawing mode.

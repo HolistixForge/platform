@@ -1,3 +1,4 @@
+import { TJsonObject } from '@monorepo/simple-types';
 import { TEdge, TGraphNode, TPosition } from './core-types';
 
 export type TEventOrigin = {
@@ -8,7 +9,7 @@ export type TEventOrigin = {
 export type TEventNewNode = {
   type: 'core:new-node';
   nodeData: TGraphNode;
-  edges: TEdge[];
+  edges: (TEdge & TJsonObject)[];
   origin?: TEventOrigin;
 };
 
@@ -19,7 +20,7 @@ export type TEventDeleteNode = {
 
 export type TEventNewEdge = {
   type: 'core:new-edge';
-  edge: TEdge;
+  edge: TEdge & TJsonObject;
 };
 
 export type TEventDeleteEdge = {

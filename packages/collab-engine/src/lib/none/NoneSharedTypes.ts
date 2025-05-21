@@ -69,7 +69,7 @@ class MyMap<T extends TJson>
   }
 
   copy(): Map<string, T> {
-    return this._map;
+    return structuredClone(this._map);
   }
 }
 
@@ -136,7 +136,7 @@ class MyArray<T extends TJson>
   }
 
   copy(): Array<T> {
-    return this._array;
+    return structuredClone(this._array);
   }
 }
 

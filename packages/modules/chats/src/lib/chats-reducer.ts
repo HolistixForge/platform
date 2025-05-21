@@ -147,9 +147,8 @@ export class ChatReducer extends Reducer<
             node: chatNodeId,
             connectorName: 'inputs',
           },
-          type: 'referenced_by',
-          data: {
-            detailType: 'chat-anchor',
+          semanticType: 'referenced_by',
+          renderProps: {
             className: ['chat-anchor'],
             edgeShape: 'straight',
           },
