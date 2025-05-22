@@ -210,6 +210,7 @@ export const DemiurgeSpace = ({
         }}
       >
         <ExcalidrawLayer
+          viewId={viewId}
           mode={mode}
           onViewportChange={onViewportChange}
           registerViewportChangeCallback={registerViewportChangeCallback}

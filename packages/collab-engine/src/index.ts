@@ -56,6 +56,7 @@ export {
   useBindEditor,
   useEventSequence,
   useShareDataManager,
+  useSharedDataDirect,
 } from './lib/frontend/context';
 export type {
   TCollabConfig,

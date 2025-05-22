@@ -1,11 +1,18 @@
-import { useEffect, useCallback, useRef } from 'react';
-import {
-  convertToExcalidrawElements,
-  Excalidraw,
-} from '@excalidraw/excalidraw';
+import { useEffect, useCallback, useRef, useState } from 'react';
+import { Excalidraw } from '@excalidraw/excalidraw';
 import { INITIAL_VIEWPORT, Viewport, WhiteboardMode } from './demiurge-space';
 
 import '@excalidraw/excalidraw/index.css';
+import { OrderedExcalidrawElement } from '@excalidraw/excalidraw/element/types';
+import { AppState, Collaborator, SocketId } from '@excalidraw/excalidraw/types';
+import { BinaryFiles } from '@excalidraw/excalidraw/types';
+import {
+  useAwarenessListenData,
+  useSharedDataDirect,
+} from '@monorepo/collab-engine';
+import { TSpaceSharedData } from '../../space-shared-model';
+import { TJsonObject } from '@monorepo/simple-types';
+import debounce from 'lodash/debounce';
 
 //
 
@@ -30,6 +37,7 @@ const makeAppState = (mode: WhiteboardMode) => {
 //
 
 interface ExcalidrawLayerProps {
+  viewId: string;
   mode: WhiteboardMode;
   onViewportChange?: (viewport: Viewport) => void;
   registerViewportChangeCallback: (
@@ -39,12 +47,30 @@ interface ExcalidrawLayerProps {
 
 //
 
+// Simple fast hash function for objects/arrays
+function simpleHash(obj: any): string {
+  const str = JSON.stringify(obj);
+  let hash = 0,
+    i,
+    chr;
+  if (str.length === 0) return hash.toString();
+  for (i = 0; i < str.length; i++) {
+    chr = str.charCodeAt(i);
+    hash = (hash << 5) - hash + chr;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return hash.toString();
+}
+
 export const ExcalidrawLayer = ({
+  viewId,
   mode,
   onViewportChange,
   registerViewportChangeCallback,
 }: ExcalidrawLayerProps) => {
   //
+
+  // viewport sync
 
   const ref = useRef<any>(null);
 
@@ -65,22 +91,6 @@ export const ExcalidrawLayer = ({
     registerViewportChangeCallback(setViewport);
   }, []);
 
-  //
-  useEffect(() => {
-    if (ref && 'current' in ref && ref.current) {
-      // Update Excalidraw state based on drawing mode
-      console.log('change mode', mode);
-      ref.current.updateScene({
-        appState: {
-          ...ref.current.getAppState(),
-          ...makeAppState(mode),
-        },
-      });
-    }
-  }, [mode]);
-
-  //
-
   const handleScrollChange = (
     scrollX: number,
     scrollY: number,
@@ -95,20 +105,122 @@ export const ExcalidrawLayer = ({
     }
   };
 
-  const elements = convertToExcalidrawElements([
-    /*
-    {
-      type: 'rectangle',
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 100,
-      strokeColor: '#ff2222',
-      backgroundColor: '#ff2222',
-      fillStyle: 'hachure',
+  // collaborative
+
+  const [collaborators, setCollaborators] = useState<
+    Map<SocketId, Collaborator>
+  >(new Map());
+
+  useAwarenessListenData(({ states }) => {
+    // prepare a map of all connected users's color
+    const collabs: Map<SocketId, Collaborator> = new Map();
+    // Compare keys between states and existing collaborators
+    const stateKeys = Array.from(states.keys())
+      .map((n) => `${n}`)
+      .sort()
+      .join(',');
+    const collabKeys = Array.from(collaborators.keys()).sort().join(',');
+
+    // Skip update if keys are identical
+    if (stateKeys === collabKeys) {
+      return;
+    }
+    states.forEach((a, k) => {
+      if (a.user)
+        collabs.set(`${k}` as any, {
+          username: a.user.username,
+          color: { background: a.user.color, stroke: a.user.color },
+        });
+    });
+    setCollaborators(collabs);
+  }, []);
+
+  //
+
+  const sharedData = useSharedDataDirect<TSpaceSharedData>();
+
+  // Store last applied hash to avoid unnecessary updates and infinite loops
+  const lastHashRef = useRef<string | null>(null);
+
+  // Debounced function for setting drawing data
+  const debouncedSetDrawing = useRef(
+    debounce(
+      (elements: any, hash: string) => {
+        sharedData.drawing.set(viewId, { elements, hash });
+      },
+      250,
+      { maxWait: 250 }
+    )
+  ).current;
+
+  useEffect(() => {
+    // On mount, ensure drawing entry exists
+    const d = sharedData.drawing.get(viewId);
+    if (!d) {
+      const elements: TJsonObject[] = [];
+      const hash = simpleHash(elements);
+      sharedData.drawing.set(viewId, {
+        elements,
+        hash,
+      });
+      lastHashRef.current = hash;
+    } else {
+      lastHashRef.current = d.hash as string;
+    }
+    // Observe remote changes
+    sharedData.drawing.observe(() => {
+      const me = sharedData.drawing.get(viewId);
+      if (me && me.hash !== lastHashRef.current) {
+        lastHashRef.current = me.hash as string;
+        if (ref && 'current' in ref && ref.current) {
+          ref.current.updateScene({
+            elements: structuredClone(me.elements) || [],
+          });
+        }
+      }
+    });
+  }, [sharedData]);
+
+  //
+
+  const handleChange = useCallback(
+    (
+      elements: readonly OrderedExcalidrawElement[],
+      appState: AppState,
+      files: BinaryFiles
+    ) => {
+      const newHash = simpleHash(elements);
+      if (newHash === lastHashRef.current) {
+        return; // No actual change
+      }
+      lastHashRef.current = newHash as string;
+      debouncedSetDrawing(elements as any, newHash);
     },
-    */
-  ]);
+    [sharedData, viewId]
+  );
+
+  // mode switch, collaborators update, content update
+
+  useEffect(() => {
+    if (ref && 'current' in ref && ref.current) {
+      ref.current.updateScene({
+        appState: {
+          ...ref.current.getAppState(),
+          ...makeAppState(mode),
+          collaborators,
+        },
+      });
+    }
+  }, [mode, collaborators]);
+
+  // Cancel debounce on unmount
+  useEffect(() => {
+    return () => {
+      debouncedSetDrawing.cancel();
+    };
+  }, [debouncedSetDrawing]);
+
+  //
 
   return (
     <div
@@ -133,8 +245,12 @@ export const ExcalidrawLayer = ({
             ...makeAppState(mode),
             ...toExcalidrawViewport(INITIAL_VIEWPORT),
           },
-          elements,
+          elements:
+            (structuredClone(
+              sharedData.drawing.get(viewId)?.elements
+            ) as any) || [],
         }}
+        onChange={handleChange}
         UIOptions={{
           canvasActions: {
             loadScene: false,

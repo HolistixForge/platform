@@ -1,5 +1,29 @@
 ⚠️ Antoine's stuffs
 
+collab-engine:
+
+- granularite
+- event sequence with fallback
+- local or server reduction, (why if transaction works!)
+- YJS handle send, send, send, send -> update -> apply old value problem ! optmistic UI work out of the box
+- keep distant reduction for server events, and anything with intermediate api or process
+- look for elegant react YJS hooks solution with fine granularity
+- need for local override ?
+- API
+  use collaborators
+  use Awareness
+  use Data
+
+gw-1-3 et 4
+
+quill:
+
+- save formats
+
+perf:
+
+- indice: iframes blink on pan when edge menu open
+
 ls -tp | tail -n +11 | sudo xargs -d '\n' rm --
 
 edge editor:

@@ -422,6 +422,15 @@ export const useSharedData = <TSharedData extends TValidSharedData>(
 };
 
 //
+
+export const useSharedDataDirect = <TSharedData extends TValidSharedData>() => {
+  const { sharedData } = useContext(
+    collaborationContext
+  ) as TCollaborationContext;
+  return sharedData as TSharedData;
+};
+
+//
 //
 
 export const useShareDataManager = <
