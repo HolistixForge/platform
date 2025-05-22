@@ -3,7 +3,7 @@ import { SpaceAwareness, TUserPosition } from '../apis/spaceAwareness';
 import { SpringRef as SpringRefWeb } from '@react-spring/web';
 import { Avatar } from './avatar';
 import { AvatarStore } from '../apis/avatarStore';
-import { PointerTracker } from '../apis/pointerTracker';
+import { PointerTracker } from './PointerTracker';
 
 //
 

@@ -1,5 +1,9 @@
 ⚠️ Antoine's stuffs
 
+pointer:
+
+- remove spring ?
+
 collab-engine:
 
 - granularite
@@ -13,6 +17,7 @@ collab-engine:
   use collaborators
   use Awareness
   use Data
+- use Yjs type in story, with mock of other users
 
 gw-1-3 et 4
 
@@ -29,11 +34,6 @@ ls -tp | tail -n +11 | sudo xargs -d '\n' rm --
 edge editor:
 
 - edge renderProps should be in graphviews
-
-drawing mode:
-
-- check pointer awareness in drawing mode.
-- sync through shared state
 
 event sequence:
 

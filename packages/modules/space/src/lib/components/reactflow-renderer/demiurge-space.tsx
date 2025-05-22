@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 
 import { ExcalidrawLayer } from './excalidraw-layer';
-import { PointerTracker } from '../apis/pointerTracker';
+import { PointerTracker } from './PointerTracker';
 import { HtmlAvatarStore } from './htmlAvatarStore';
 import { AvatarsRenderer } from './avatarsRenderer';
 import { ReactflowLayer, ReactflowLayerProps } from './reactflow-layer';
@@ -103,6 +103,8 @@ export const DemiurgeSpace = ({
       newViewport.zoom !== lastViewportRef.current.zoom
     ) {
       lastViewportRef.current = newViewport;
+      pointerTracker.onMove(newViewport);
+      avatarsStore.updateAllAvatars();
       viewportChangeCallbacks.current.forEach((callback) => {
         callback(newViewport);
       });
@@ -203,11 +205,13 @@ export const DemiurgeSpace = ({
       <div
         className={`demiurge-space ${mode}`}
         style={{ width: '100%', height: '100%', position: 'relative' }}
-        ref={pointerTracker.bindReactFlowParentDiv.bind(pointerTracker)}
+        ref={pointerTracker.bindDiv.bind(pointerTracker)}
         onWheelCapture={(e) => {
           // Stop Excalidraw scroll wich pane toward bottom instead of zooming
           mode === 'drawing' && e.stopPropagation();
         }}
+        onMouseMove={pointerTracker.onPaneMouseMove.bind(pointerTracker)}
+        onMouseLeave={pointerTracker.setPointerInactive.bind(pointerTracker)}
       >
         <ExcalidrawLayer
           viewId={viewId}

@@ -27,7 +27,7 @@ type UserAvatarProps = {
 export const Avatar = ({ name, color, setApi, toSpring }: UserAvatarProps) => {
   const [style, api] = useSpring(() => ({
     ...toSpring(undefined),
-    config: { mass: 5, tension: 500, friction: 150 },
+    config: { duration: 0 }, // Immediate update with no animation
   }));
 
   //

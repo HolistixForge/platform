@@ -30,8 +30,7 @@ import {
   FrontendEventSequence,
 } from '@monorepo/collab-engine';
 
-import { PointerTracker } from '../apis/pointerTracker';
-
+import { PointerTracker } from './PointerTracker';
 import { NodeWrapper } from './node-wrappers/node-wrapper';
 import { SpaceState } from '../apis/spaceState';
 import { SpaceAwareness } from '../apis/spaceAwareness';
@@ -265,10 +264,11 @@ export const ReactflowLayer = ({
 
   //
 
+  /**
+   * This event handler is called while the user is either panning or zooming the viewport.
+   */
   const _onMove = useCallback(
     (event: any, viewport: ReactFlowViewport) => {
-      pointerTracker.onMove(event, viewport);
-      avatarsStore.updateAllAvatars();
       onViewportChange({
         absoluteX: viewport.x / viewport.zoom,
         absoluteY: viewport.y / viewport.zoom,
@@ -365,8 +365,6 @@ export const ReactflowLayer = ({
       onConnectStart={onConnectStart}
       onNodeDrag={onNodeDrag}
       onNodeDragStop={onNodeDragStop}
-      onPaneMouseMove={pointerTracker.onPaneMouseMove.bind(pointerTracker)}
-      onPaneMouseLeave={pointerTracker.setPointerInactive.bind(pointerTracker)}
       onMove={_onMove}
       onDragOver={handleDragOver}
       onDrop={handleDrop}

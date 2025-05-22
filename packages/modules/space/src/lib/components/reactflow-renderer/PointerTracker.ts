@@ -1,61 +1,69 @@
-import { Viewport } from '@xyflow/react';
 import * as _ from 'lodash';
 import { SpaceAwareness } from '../apis/spaceAwareness';
-import { PointerTracker } from '../apis/pointerTracker';
 import { TPosition } from '@monorepo/core';
+import { Viewport } from './demiurge-space';
 
 //
 
-export class ReactflowPointerTracker extends PointerTracker {
-  private _viewport = { x: 0, y: 0, zoom: 1 };
+export class PointerTracker {
+  private _viewport: Viewport = { absoluteX: 0, absoluteY: 0, zoom: 1 };
+  /** absolute position of current user pointer */
   private _pointer: TPosition = { x: 0, y: 0 };
   private ga: SpaceAwareness;
-  private reactFlowParentDiv: HTMLDivElement | null = null;
+  private div: HTMLDivElement | null = null;
 
   constructor(ga: SpaceAwareness) {
-    super();
     this.ga = ga;
   }
 
-  public bindReactFlowParentDiv(div: HTMLDivElement) {
-    this.reactFlowParentDiv = div;
+  public bindDiv(div: HTMLDivElement) {
+    this.div = div;
   }
 
-  private getReactflowPaneBox() {
-    const a =
-      this.reactFlowParentDiv?.getElementsByClassName('react-flow__pane');
-    if (a && a.length === 1)
-      return (a[0] as HTMLDivElement).getBoundingClientRect();
+  private getDivBox() {
+    if (this.div) return this.div.getBoundingClientRect();
     else return undefined;
   }
 
   private fromLocalPane(p: TPosition) {
     return {
-      x: (p.x - this._viewport.x) / this._viewport.zoom,
-      y: (p.y - this._viewport.y) / this._viewport.zoom,
+      x: p.x / this._viewport.zoom - this._viewport.absoluteX,
+      y: p.y / this._viewport.zoom - this._viewport.absoluteY,
     };
   }
 
   public toLocalPane(p: TPosition) {
     return {
-      x: p.x * this._viewport.zoom + this._viewport.x,
-      y: p.y * this._viewport.zoom + this._viewport.y,
+      x: (p.x + this._viewport.absoluteX) * this._viewport.zoom,
+      y: (p.y + this._viewport.absoluteY) * this._viewport.zoom,
     };
   }
 
   public fromMouseEvent(p: TPosition): TPosition {
-    const b = this.getReactflowPaneBox();
-    if (b) return this.fromLocalPane({ x: p.x - b.left, y: p.y - b.top });
-    else return p;
+    const b = this.getDivBox();
+    if (b) {
+      const local = { x: p.x - b.left, y: p.y - b.top };
+      const absolute = this.fromLocalPane(local);
+      /*
+      console.log('fromMouseEvent: ', {
+        event: p,
+        box: { left: b.left, top: b.top },
+        local,
+        viewport: this._viewport,
+        absolute,
+      });
+      */
+      return absolute;
+    } else throw new Error('PointerTracker: no div bound');
   }
 
   private track = _.debounce(
     () => {
-      const { x, y } = this.fromLocalPane(this._pointer);
+      const { x, y } = this._pointer;
       this.ga.setPointer(x, y);
     },
-    250,
-    { maxWait: 250 }
+    50,
+    { maxWait: 50 }
   );
 
   public setPointerInactive() {
@@ -64,26 +72,21 @@ export class ReactflowPointerTracker extends PointerTracker {
 
   public onPaneMouseMove(event: React.MouseEvent) {
     if (event) {
-      const b = this.getReactflowPaneBox();
-      if (b) {
-        this._pointer = {
-          x: event.clientX - b.left,
-          y: event.clientY - b.top,
-        };
-        this.track();
-      }
+      this._pointer = this.fromMouseEvent({
+        x: event.clientX,
+        y: event.clientY,
+      });
+      this.track();
     }
   }
 
-  public onMove(event: MouseEvent | any, viewport: Viewport) {
-    this.onPaneMouseMove(event);
+  public onMove(viewport: Viewport) {
     this._viewport = viewport;
-    this.track();
   }
 
   public isPositionVisible(p: TPosition) {
     const MARGE = 40;
-    const b = this.getReactflowPaneBox();
+    const b = this.getDivBox();
     if (b) {
       let out = false;
 

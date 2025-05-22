@@ -15,7 +15,7 @@ import {
 } from '@monorepo/collab-engine';
 
 import { DemiurgeSpace } from '../reactflow-renderer/demiurge-space';
-import { ReactflowPointerTracker } from '../reactflow-renderer/reactflowPointerTracker';
+import { PointerTracker } from '../reactflow-renderer/PointerTracker';
 import { HtmlAvatarStore } from '../reactflow-renderer/htmlAvatarStore';
 
 import { CustomStoryEdge } from '../reactflow-renderer/edge';
@@ -76,7 +76,7 @@ export const SpaceModule = ({
 
   const logics = useMemo(() => {
     const ga = new CollabSpaceAwareness(viewId, awareness);
-    const pt = new ReactflowPointerTracker(ga);
+    const pt = new PointerTracker(ga);
     const as = new HtmlAvatarStore(pt, ga);
     const ss = new CollabSpaceState(viewId, sdm);
 

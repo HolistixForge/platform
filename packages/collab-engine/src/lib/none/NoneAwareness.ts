@@ -63,17 +63,23 @@ export class NoneAwareness extends Awareness {
   }
 
   private _startRandomUpdates() {
+    const doit = () => {
+      this._randomlyUpdateUserPositions();
+      this._randomlySelectNodes();
+      this.callListeners({
+        states: this._fakeState,
+        added: [],
+        updated: Array.from(this._fakeState.keys()),
+        removed: [],
+      });
+    };
+
+    doit();
+
     const updateInterval = () => {
-      const interval = Math.random() * (20000 - 2000) + 2000;
+      const interval = Math.random() * (6000 - 2000) + 2000;
       this._simulationInterval = setTimeout(() => {
-        this._randomlyUpdateUserPositions();
-        this._randomlySelectNodes();
-        this.callListeners({
-          states: this._fakeState,
-          added: [],
-          updated: Array.from(this._fakeState.keys()),
-          removed: [],
-        });
+        doit();
         updateInterval();
       }, interval);
     };
@@ -82,7 +88,14 @@ export class NoneAwareness extends Awareness {
 
   private _randomlyUpdateUserPositions() {
     this._fakeState.forEach((state, key) => {
-      if (key !== 0 && Math.random() > 0.5) {
+      // always have a user at 0,0 to test toLocalPane()
+      if (key === 1) {
+        state.position = {
+          position: { x: 0, y: 0, z: 0 },
+          reference: 'LAYER',
+          inactive: false,
+        };
+      } else if (key !== 0 && Math.random() > 0.5) {
         state.position = {
           position: generateRandomPosition(),
           reference: 'LAYER',
