@@ -19,7 +19,8 @@ export function getAllSharedDataAsJSON(doc: Y.Doc): Record<string, any> {
   const editors = doc.getMap(EDITORS_YTEXT_YMAP_KEY);
   result.editors = {};
   editors.forEach((value, key) => {
-    result.editors[key] = (value as Y.Text).toString();
+    // Save as Delta, not string, to keep formatting for quill
+    result.editors[key] = (value as Y.Text).toDelta();
   });
   return result;
 }
@@ -61,7 +62,12 @@ export function setAllSharedDataFromJSON(
   const editorsData = data.editors;
   if (editorsData) {
     Object.entries(editorsData).forEach(([key, value]) => {
-      editors.set(key, new Y.Text(value as string));
+      if (typeof value === 'string') editors.set(key, new Y.Text(value));
+      else {
+        const ytext = new Y.Text();
+        ytext.applyDelta(value as any); // value is the Delta array
+        editors.set(key, ytext);
+      }
     });
   }
 }

@@ -20,10 +20,6 @@ collab-engine:
 - use Yjs type in story, with mock of other users
 - PERMISSIONS management
 
-quill:
-
-- save formats
-
 perf:
 
 - indice: iframes blink on pan when edge menu open
@@ -32,7 +28,7 @@ ls -tp | tail -n +11 | sudo xargs -d '\n' rm --
 
 edge editor:
 
-- edge renderProps should be in graphviews
+- edge renderProps should be in graphviews, group style too
 
 event sequence:
 
@@ -59,7 +55,6 @@ selected node zindex
 - TODO_GATEWAY: delete connected server ?
 - resource detail page
 - share link ? user/resource association
-- kind of remanence
 - gateway disk image, auto resize gateway pool
 - fine grained access control
 - terminal, live users, granted users

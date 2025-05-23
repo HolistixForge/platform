@@ -4,12 +4,17 @@
 
 .demiurge-space {
   &.default {
+    .layer-ui__wrapper {
+      display: none;
+    }
+    /*
     .FixedSideContainer.FixedSideContainer_side_top {
       display: none;
     }
     .layer-ui__wrapper__footer.App-menu.App-menu_bottom {
       display: none;
     }
+      */
   }
   &.drawing {
     .react-flow__panel.react-flow__controls.vertical.bottom.left {
