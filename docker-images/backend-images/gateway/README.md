@@ -21,10 +21,24 @@
 
 5. Install
 
-```shell
-# install docker, nginx, certbot, setup nginx config
-$ sudo ENV_NAME=dev-001 DOMAIN_NAME=demiurge.co GW_INSTANCE_ID=1 GW_COUNT=2 ./host-install/install.sh
+export all env var so that you don't need to set them for each command and to not mistake values
 
+```shell
+export ENV_NAME=dev-001
+export GW_INSTANCE_ID=1
+export ...
+```
+
+If you add gw instances to an existant server, run this to increase GW_COUNT and create nginx configs
+
+```shell
+# install docker, nginx, certbot, AND setup nginx config
+$ sudo ENV_NAME=dev-001 DOMAIN_NAME=demiurge.co GW_INSTANCE_ID=1 GW_COUNT=2 ./host-install/install.sh
+```
+
+Then get a token for each gw to add and start it
+
+```shell
 # get a token with app-ganymede-cmd app
 $ npx nx run app-ganymede-cmds:build
 $ export JWT_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----
@@ -37,6 +51,8 @@ $ export PG_USER=test
 $ export PG_PASSWORD=test
 $ export PG_DATABASE=ganymede_db
 $ node ./dist/packages/app-ganymede-cmds/main.js add-gateway -h gw-1-1.dev-002.demiurge.co -gv 0.0.1
+
+# copy the token value for next command
 
 # start gateway container mounting workspace through NFS
 $ GW_INSTANCE_ID=1 \

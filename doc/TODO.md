@@ -18,8 +18,7 @@ collab-engine:
   use Awareness
   use Data
 - use Yjs type in story, with mock of other users
-
-gw-1-3 et 4
+- PERMISSIONS management
 
 quill:
 
