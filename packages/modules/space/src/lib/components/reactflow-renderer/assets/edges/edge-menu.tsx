@@ -97,12 +97,16 @@ export const EdgeMenu = ({
               setRenderProps({
                 ...renderProps,
                 style: { ...renderProps.style, stroke: color.hex },
-                markerStart: renderProps.markerStart
-                  ? { ...renderProps.markerStart, color: color.hex }
-                  : undefined,
-                markerEnd: renderProps.markerEnd
-                  ? { ...renderProps.markerEnd, color: color.hex }
-                  : undefined,
+                markerStart: {
+                  type: 'none' as any,
+                  ...renderProps.markerStart,
+                  color: color.hex,
+                },
+                markerEnd: {
+                  type: 'none' as any,
+                  ...renderProps.markerEnd,
+                  color: color.hex,
+                },
               });
             }}
           />
@@ -172,9 +176,7 @@ export const EdgeMenu = ({
           onChange={(v: string) =>
             setRenderProps({
               ...renderProps,
-              markerStart: renderProps.markerStart
-                ? { ...renderProps.markerStart, type: v as any }
-                : undefined,
+              markerStart: { ...renderProps.markerStart, type: v as any },
             })
           }
           placeholder="Start Type"
@@ -192,9 +194,7 @@ export const EdgeMenu = ({
           onChange={(v: string) =>
             setRenderProps({
               ...renderProps,
-              markerEnd: renderProps.markerEnd
-                ? { ...renderProps.markerEnd, type: v as any }
-                : undefined,
+              markerEnd: { ...renderProps.markerEnd, type: v as any },
             })
           }
           placeholder="End Type"
@@ -214,12 +214,16 @@ export const EdgeMenu = ({
           onChange={(v: number) =>
             setRenderProps({
               ...renderProps,
-              markerStart: renderProps.markerStart
-                ? { ...renderProps.markerStart, width: v }
-                : undefined,
-              markerEnd: renderProps.markerEnd
-                ? { ...renderProps.markerEnd, width: v }
-                : undefined,
+              markerStart: {
+                type: 'none' as any,
+                ...renderProps.markerStart,
+                width: v,
+              },
+              markerEnd: {
+                type: 'none' as any,
+                ...renderProps.markerEnd,
+                width: v,
+              },
             })
           }
           label="Width"
@@ -240,12 +244,16 @@ export const EdgeMenu = ({
           onChange={(v: number) =>
             setRenderProps({
               ...renderProps,
-              markerStart: renderProps.markerStart
-                ? { ...renderProps.markerStart, strokeWidth: v }
-                : undefined,
-              markerEnd: renderProps.markerEnd
-                ? { ...renderProps.markerEnd, strokeWidth: v }
-                : undefined,
+              markerStart: {
+                type: 'none' as any,
+                ...renderProps.markerStart,
+                strokeWidth: v,
+              },
+              markerEnd: {
+                type: 'none' as any,
+                ...renderProps.markerEnd,
+                strokeWidth: v,
+              },
             })
           }
           label="Thickness"
