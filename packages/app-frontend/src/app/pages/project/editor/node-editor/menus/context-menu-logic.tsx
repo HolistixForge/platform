@@ -29,6 +29,10 @@ import {
 import { makeUuid } from '@monorepo/simple-types';
 import { SHAPE_TYPES, TEventNewShape } from '@monorepo/space';
 import { NewIframeForm, NewIframeFormData } from '@monorepo/socials/frontend';
+import {
+  NewNodeUserForm,
+  NewNodeUserFormData,
+} from '@monorepo/socials/frontend';
 
 import {
   useDispatcher,
@@ -347,6 +351,30 @@ export const ContextMenuLogic = ({
 
   //
 
+  const nodeUser_action = useAction<NewNodeUserFormData>(
+    (d) => {
+      return dispatcher.dispatch({
+        type: 'socials:new-node-user',
+        userId: d.userId,
+        origin: {
+          viewId: viewId,
+          position: {
+            x: refCoordinates.current.x,
+            y: refCoordinates.current.y,
+          },
+        },
+      });
+    },
+    [dispatcher, refCoordinates, viewId],
+    {
+      checkForm: (d, e) => {
+        if (!d.userId) e.userId = 'Please select a user';
+      },
+    }
+  );
+
+  //
+
   const onNewCodeCell = useCallback(() => {
     dispatcher.dispatch({
       type: 'jupyter:new-cell',
@@ -573,6 +601,12 @@ export const ContextMenuLogic = ({
           hiddenNodes: getHiddenNodesByType('text-editor'),
         },
         {
+          title: 'User Node',
+          onClick: nodeUser_action.open,
+          disabled: false,
+          hiddenNodes: getHiddenNodesByType('node-user'),
+        },
+        {
           title: 'Youtube Embedding',
           onClick: youtube_action.open,
           disabled: from !== undefined,
@@ -604,6 +638,7 @@ export const ContextMenuLogic = ({
     onNewGroup,
     onNewShape,
     iframe_action.open,
+    nodeUser_action.open,
   ]);
 
   /**
@@ -671,6 +706,15 @@ export const ContextMenuLogic = ({
         onOpenChange={iframe_action.close}
       >
         <NewIframeForm action={iframe_action} />
+      </DialogControlled>
+
+      <DialogControlled
+        title="Add User Node"
+        description="Search and select a user to add as a node."
+        open={nodeUser_action.isOpened}
+        onOpenChange={nodeUser_action.close}
+      >
+        <NewNodeUserForm action={nodeUser_action} />
       </DialogControlled>
     </menuContext.Provider>
   );

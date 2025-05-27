@@ -32,10 +32,23 @@ export type TEventDeleteIframe = {
   nodeId: string;
 };
 
+export type TEventNewNodeUser = {
+  type: 'socials:new-node-user';
+  userId: string;
+  origin?: TEventOrigin;
+};
+
+export type TEventDeleteNodeUser = {
+  type: 'socials:delete-node-user';
+  nodeId: string;
+};
+
 export type TEventSocials =
   | TEventNewYoutube
   | TEventDeleteYoutube
   | TEventNewTextEditor
   | TEventDeleteTextEditor
   | TEventNewIframe
-  | TEventDeleteIframe;
+  | TEventDeleteIframe
+  | TEventNewNodeUser
+  | TEventDeleteNodeUser;

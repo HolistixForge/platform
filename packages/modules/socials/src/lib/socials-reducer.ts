@@ -10,6 +10,8 @@ import {
   TEventDeleteTextEditor,
   TEventNewIframe,
   TEventDeleteIframe,
+  TEventNewNodeUser,
+  TEventDeleteNodeUser,
 } from './socials-events';
 
 //
@@ -47,6 +49,12 @@ export class SocialsReducer extends Reducer<
 
       case 'socials:delete-iframe':
         return this._deleteIframe(g as Ra<TEventDeleteIframe>);
+
+      case 'socials:new-node-user':
+        return this._newNodeUser(g as Ra<TEventNewNodeUser>);
+
+      case 'socials:delete-node-user':
+        return this._deleteNodeUser(g as Ra<TEventDeleteNodeUser>);
 
       default:
         return Promise.resolve();
@@ -140,6 +148,33 @@ export class SocialsReducer extends Reducer<
   //
 
   _deleteIframe(g: Ra<TEventDeleteIframe>): Promise<void> {
+    g.bep.process({
+      type: 'core:delete-node',
+      id: g.event.nodeId,
+    });
+    return Promise.resolve();
+  }
+
+  _newNodeUser(g: Ra<TEventNewNodeUser>): Promise<void> {
+    const id = makeUuid();
+
+    g.bep.process({
+      type: 'core:new-node',
+      nodeData: {
+        id,
+        name: 'ID Card',
+        type: 'node-user',
+        root: true,
+        data: { userId: g.event.userId },
+        connectors: [],
+      },
+      edges: [],
+      origin: g.event.origin,
+    });
+    return Promise.resolve();
+  }
+
+  _deleteNodeUser(g: Ra<TEventDeleteNodeUser>): Promise<void> {
     g.bep.process({
       type: 'core:delete-node',
       id: g.event.nodeId,

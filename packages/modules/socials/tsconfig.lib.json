@@ -42,16 +42,22 @@
       "path": "../../log/tsconfig.lib.json"
     },
     {
-      "path": "../../collab-engine/tsconfig.lib.json"
+      "path": "../../simple-types/tsconfig.lib.json"
     },
     {
       "path": "../../lazy-factory/tsconfig.lib.json"
     },
     {
+      "path": "../../collab-engine/tsconfig.lib.json"
+    },
+    {
+      "path": "../../frontend-data/tsconfig.lib.json"
+    },
+    {
       "path": "../core/tsconfig.lib.json"
     },
     {
-      "path": "../../simple-types/tsconfig.lib.json"
+      "path": "../../demiurge-types/tsconfig.lib.json"
     },
     {
       "path": "../space/tsconfig.lib.json"

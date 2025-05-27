@@ -13,6 +13,7 @@ import {
   NodeYoutube,
   NodeTextEditor,
   NodeIframe,
+  NodeIdCard,
 } from '@monorepo/socials/frontend';
 import { NodeNotion, NodeNotionTask } from '@monorepo/notion/frontend';
 
@@ -41,6 +42,7 @@ const nodeTypes = {
   group: Group,
   shape: Shape,
   iframe: NodeIframe,
+  'node-user': NodeIdCard,
 };
 
 //

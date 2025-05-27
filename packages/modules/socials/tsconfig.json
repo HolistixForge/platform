@@ -6,16 +6,22 @@
       "path": "../../log"
     },
     {
-      "path": "../../collab-engine"
+      "path": "../../simple-types"
     },
     {
       "path": "../../lazy-factory"
     },
     {
+      "path": "../../collab-engine"
+    },
+    {
+      "path": "../../frontend-data"
+    },
+    {
       "path": "../core"
     },
     {
-      "path": "../../simple-types"
+      "path": "../../demiurge-types"
     },
     {
       "path": "../space"

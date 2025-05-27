@@ -17,6 +17,7 @@ export type {
   UsersScopesLogicProps,
   UsersScopesProps,
 } from './lib/users-scopes/users-scopes';
+export { UserListItem } from './lib/users-scopes/users-scopes';
 
 export { WrapperCssCoordinates } from './lib/css-utils/wrapper-css-coordinates';
 export {

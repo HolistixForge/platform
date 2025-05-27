@@ -1,0 +1,52 @@
+.id-card-container {
+  position: relative;
+  width: 250px;
+  height: 395px;
+  padding: 40px 28px 0 17px;
+
+  .id-card {
+    // position: relative;
+    // z-index: 1000;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 25px;
+    height: 340px;
+    background-color: var(--c-pink-6);
+    box-shadow: 0 0 2px 0 rgba(255, 255, 255, 0.5);
+  }
+
+  .photo-section {
+    --avatar-width: 150px;
+
+    .AvatarRoot {
+      margin-right: 0;
+      border: 7px solid white;
+    }
+  }
+
+  .info-section {
+    max-width: 100%;
+    margin-top: 20px;
+
+    .username {
+      background-color: #ffffff;
+      border-radius: 4px;
+      padding: 6px 10px;
+      display: block;
+      max-width: 100%;
+      font-size: 22px;
+      font-weight: 525;
+      //text-shadow: 0 0 7px rgba(255, 255, 255, 1);
+      margin: 0;
+
+      svg.user-type {
+        width: 30px;
+        height: 30px;
+        margin-right: 10px;
+      }
+    }
+  }
+}
