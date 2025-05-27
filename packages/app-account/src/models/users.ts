@@ -10,7 +10,7 @@ import { CurrentUserDetails } from '@monorepo/demiurge-types';
 //
 
 const registerUser = async (u: {
-  type: 'local' | 'github' | 'gitlab';
+  type: 'local' | 'github' | 'gitlab' | 'linkedin' | 'discord';
   username: string;
   email: string;
   picture: string | null;
@@ -192,6 +192,85 @@ export const gitlabFindOrCreate = async (
     username,
     picture: gitlabProfile._json.avatar_url,
     email: gitlabProfile._json.email,
+    firstname: null,
+    lastname: null,
+    hash: null,
+    salt: null,
+  });
+
+  return { id: user_id, username };
+};
+
+//
+
+export type TLinkedinReturnedProfile = {
+  id: string;
+  displayName: string;
+  givenName: string;
+  familyName: string;
+  email: string;
+  picture: string;
+};
+
+export const linkedinFindOrCreate = async (
+  linkedinProfile: TLinkedinReturnedProfile,
+  token: string
+): Promise<UserSerializedInfo> => {
+  const provider_id = `linkedin:${linkedinProfile.id}`;
+  const u = await userGetByProviderId(provider_id);
+  if (u) return u;
+
+  const email = linkedinProfile.email || 'unknown';
+  const username = `linkedin:${
+    linkedinProfile.displayName || linkedinProfile.id
+  }`;
+  const picture = linkedinProfile.picture || null;
+
+  const user_id = await registerUser({
+    type: 'linkedin',
+    provider_id,
+    username,
+    picture,
+    email,
+    firstname: null,
+    lastname: null,
+    hash: null,
+    salt: null,
+  });
+
+  return { id: user_id, username };
+};
+
+//
+
+export type TDiscordReturnedProfile = {
+  id: string;
+  username: string;
+  discriminator: string;
+  avatar: string | null;
+  email?: string;
+};
+
+export const discordFindOrCreate = async (
+  discordProfile: TDiscordReturnedProfile,
+  token: string
+): Promise<UserSerializedInfo> => {
+  const provider_id = `discord:${discordProfile.id}`;
+  const u = await userGetByProviderId(provider_id);
+  if (u) return u;
+
+  const email = discordProfile.email || 'unknown';
+  const username = `discord:${discordProfile.username}#${discordProfile.discriminator}`;
+  const picture = discordProfile.avatar
+    ? `https://cdn.discordapp.com/avatars/${discordProfile.id}/${discordProfile.avatar}.png`
+    : null;
+
+  const user_id = await registerUser({
+    type: 'discord',
+    provider_id,
+    username,
+    picture,
+    email,
     firstname: null,
     lastname: null,
     hash: null,

@@ -14,6 +14,8 @@ export const LoginPage = () => {
     <LoginFormLogic
       githubLoginUrl={`https://${accountFQDN}/github`}
       gitLabLoginUrl={`https://${accountFQDN}/gitlab`}
+      linkedinLoginUrl={`https://${accountFQDN}/linkedin`}
+      discordLoginUrl={`https://${accountFQDN}/discord`}
     />
   );
 };

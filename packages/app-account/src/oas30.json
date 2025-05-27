@@ -21,8 +21,12 @@
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" },
-          "5XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -42,8 +46,12 @@
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" },
-          "5XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -75,15 +83,25 @@
                     "$ref": "#/components/schemas/user/properties/lastname"
                   }
                 },
-                "required": ["email", "password", "username"]
+                "required": [
+                  "email",
+                  "password",
+                  "username"
+                ]
               }
             }
           }
         },
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" },
-          "4XX": { "$ref": "#/components/responses/errors" },
-          "5XX": { "$ref": "#/components/responses/errors" }
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -106,15 +124,24 @@
                     "type": "string"
                   }
                 },
-                "required": ["email", "password"]
+                "required": [
+                  "email",
+                  "password"
+                ]
               }
             }
           }
         },
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" },
-          "4XX": { "$ref": "#/components/responses/errors" },
-          "5XX": { "$ref": "#/components/responses/errors" }
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -124,9 +151,15 @@
         "description": "",
         "parameters": [],
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" },
-          "4XX": { "$ref": "#/components/responses/errors" },
-          "5XX": { "$ref": "#/components/responses/errors" }
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -146,15 +179,23 @@
                     "$ref": "#/components/schemas/user/properties/password"
                   }
                 },
-                "required": ["password"]
+                "required": [
+                  "password"
+                ]
               }
             }
           }
         },
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" },
-          "4XX": { "$ref": "#/components/responses/errors" },
-          "5XX": { "$ref": "#/components/responses/errors" }
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -162,9 +203,15 @@
       "get": {
         "summary": "authenticate with github",
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" },
-          "4XX": { "$ref": "#/components/responses/errors" },
-          "5XX": { "$ref": "#/components/responses/errors" }
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -184,9 +231,15 @@
           }
         ],
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" },
-          "4XX": { "$ref": "#/components/responses/errors" },
-          "5XX": { "$ref": "#/components/responses/errors" }
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -194,9 +247,15 @@
       "get": {
         "summary": "authenticate with gitlab",
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" },
-          "4XX": { "$ref": "#/components/responses/errors" },
-          "5XX": { "$ref": "#/components/responses/errors" }
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -216,9 +275,15 @@
           }
         ],
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" },
-          "4XX": { "$ref": "#/components/responses/errors" },
-          "5XX": { "$ref": "#/components/responses/errors" }
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -247,8 +312,12 @@
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" },
-          "5XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -268,15 +337,23 @@
                     "type": "string"
                   }
                 },
-                "required": ["code"]
+                "required": [
+                  "code"
+                ]
               }
             }
           }
         },
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" },
-          "4XX": { "$ref": "#/components/responses/errors" },
-          "5XX": { "$ref": "#/components/responses/errors" }
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -297,18 +374,29 @@
                   },
                   "context": {
                     "type": "string",
-                    "enum": ["reset-password", "validate-email"]
+                    "enum": [
+                      "reset-password",
+                      "validate-email"
+                    ]
                   }
                 },
-                "required": ["email"]
+                "required": [
+                  "email"
+                ]
               }
             }
           }
         },
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" },
-          "4XX": { "$ref": "#/components/responses/errors" },
-          "5XX": { "$ref": "#/components/responses/errors" }
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -328,9 +416,15 @@
           }
         ],
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" },
-          "4XX": { "$ref": "#/components/responses/errors" },
-          "5XX": { "$ref": "#/components/responses/errors" }
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -338,11 +432,21 @@
       "get": {
         "summary": "OAuth authorize",
         "parameters": [
-          { "$ref": "#/components/parameters/redirect_uri" },
-          { "$ref": "#/components/parameters/state" },
-          { "$ref": "#/components/parameters/client_id" },
-          { "$ref": "#/components/parameters/response_type" },
-          { "$ref": "#/components/parameters/scope" }
+          {
+            "$ref": "#/components/parameters/redirect_uri"
+          },
+          {
+            "$ref": "#/components/parameters/state"
+          },
+          {
+            "$ref": "#/components/parameters/client_id"
+          },
+          {
+            "$ref": "#/components/parameters/response_type"
+          },
+          {
+            "$ref": "#/components/parameters/scope"
+          }
         ],
         "responses": {
           "302": {
@@ -355,18 +459,32 @@
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" },
-          "5XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       },
       "post": {
         "summary": "OAuth authorize",
         "parameters": [
-          { "$ref": "#/components/parameters/redirect_uri" },
-          { "$ref": "#/components/parameters/state" },
-          { "$ref": "#/components/parameters/client_id" },
-          { "$ref": "#/components/parameters/response_type" },
-          { "$ref": "#/components/parameters/scope" }
+          {
+            "$ref": "#/components/parameters/redirect_uri"
+          },
+          {
+            "$ref": "#/components/parameters/state"
+          },
+          {
+            "$ref": "#/components/parameters/client_id"
+          },
+          {
+            "$ref": "#/components/parameters/response_type"
+          },
+          {
+            "$ref": "#/components/parameters/scope"
+          }
         ],
         "responses": {
           "200": {
@@ -395,17 +513,27 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "location": { "type": "string" },
-                    "redirect": { "type": "string" },
-                    "client_id": { "type": "string" },
-                    "redirect_uri": { "type": "string" }
+                    "location": {
+                      "type": "string"
+                    },
+                    "redirect": {
+                      "type": "string"
+                    },
+                    "client_id": {
+                      "type": "string"
+                    },
+                    "redirect_uri": {
+                      "type": "string"
+                    }
                   },
                   "additionalProperties": false
                 }
               }
             }
           },
-          "5XX": { "$ref": "#/components/responses/errors" }
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -422,7 +550,10 @@
                 "properties": {
                   "grant_type": {
                     "type": "string",
-                    "enum": ["authorization_code", "refresh_token"],
+                    "enum": [
+                      "authorization_code",
+                      "refresh_token"
+                    ],
                     "example": "authorization_code"
                   },
                   "client_id": {
@@ -450,7 +581,9 @@
                     "type": "string"
                   }
                 },
-                "required": ["grant_type"]
+                "required": [
+                  "grant_type"
+                ]
               }
             }
           }
@@ -468,8 +601,12 @@
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" },
-          "5XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -495,9 +632,104 @@
           }
         }
       }
+    },
+    "/linkedin": {
+      "get": {
+        "summary": "authenticate with linkedin",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        }
+      }
+    },
+    "/linkedin/callback": {
+      "get": {
+        "summary": "authenticate with linkedin",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "description": "the code to be exchanged for a token.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "AQX1..."
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        }
+      }
+    },
+    "/discord": {
+      "get": {
+        "summary": "authenticate with discord",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        }
+      }
+    },
+    "/discord/callback": {
+      "get": {
+        "summary": "authenticate with discord",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "description": "the code to be exchanged for a token.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "discord_code_example"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        }
+      }
     }
   },
-
   "components": {
     "responses": {
       "empty": {
@@ -638,7 +870,9 @@
         "required": true,
         "schema": {
           "type": "string",
-          "enum": ["code"],
+          "enum": [
+            "code"
+          ],
           "example": "code"
         }
       },

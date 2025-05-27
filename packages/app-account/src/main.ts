@@ -21,6 +21,8 @@ import { setupGitlabRoutes } from './gitlab';
 import { setupTOTPRoutes } from './totp';
 import { setupMagicLinkRoutes } from './magic-link';
 import { setupOauthRoutes } from './oauth';
+import { setupLinkedinRoutes } from './linkedin';
+import { setupDiscordRoutes } from './discord';
 
 //
 
@@ -105,6 +107,8 @@ app.use(passport.session());
 export const router = express.Router();
 setupGithubRoutes(router);
 setupGitlabRoutes(router);
+setupLinkedinRoutes(router);
+setupDiscordRoutes(router);
 setupLocalRoutes(router);
 setupTOTPRoutes(router);
 setupMagicLinkRoutes(router);

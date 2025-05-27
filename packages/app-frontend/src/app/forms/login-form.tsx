@@ -11,9 +11,13 @@ import { useNavigate } from 'react-router-dom';
 export const LoginFormLogic = ({
   githubLoginUrl,
   gitLabLoginUrl,
+  linkedinLoginUrl,
+  discordLoginUrl,
 }: {
   githubLoginUrl: string;
   gitLabLoginUrl: string;
+  linkedinLoginUrl: string;
+  discordLoginUrl: string;
 }) => {
   const login = useMutationLogin();
 
@@ -30,6 +34,8 @@ export const LoginFormLogic = ({
         action={action}
         gitLabLoginUrl={gitLabLoginUrl}
         githubLoginUrl={githubLoginUrl}
+        linkedinLoginUrl={linkedinLoginUrl}
+        discordLoginUrl={discordLoginUrl}
       />
     </div>
   );
