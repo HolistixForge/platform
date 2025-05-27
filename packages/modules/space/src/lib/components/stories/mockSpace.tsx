@@ -10,7 +10,10 @@ import {
 } from '@monorepo/collab-engine';
 import { CoreReducer, Core_loadData, TCoreSharedData } from '@monorepo/core';
 
-import { SpaceContext } from '../reactflow-renderer/spaceContext';
+import {
+  SpaceContext,
+  TSpaceContext,
+} from '../reactflow-renderer/spaceContext';
 import { TNodeContext } from '../apis/types/node';
 import { SpaceReducer } from '../../space-reducer';
 import { Space_loadData, TSpaceSharedData } from '../../space-shared-model';
@@ -73,13 +76,16 @@ const MockSpaceContext = ({ children }: { children: ReactNode }) => {
   const { awareness } = useAwareness();
   const sdm = useShareDataManager<TSpaceSharedData & TCoreSharedData>();
 
-  const context = useMemo(() => {
+  const context: TSpaceContext = useMemo(() => {
     return {
       spaceAwareness: new CollabSpaceAwareness(STORY_VIEW_ID, awareness),
       spaceState: new CollabSpaceState(STORY_VIEW_ID, sdm),
       currentUser: { username: 'toto', color: '#ffa500' },
       mode: 'default' as WhiteboardMode,
       viewId: STORY_VIEW_ID,
+      edgeMenu: null,
+      setEdgeMenu: () => {},
+      resetEdgeMenu: () => {},
     };
   }, []);
 

@@ -16,7 +16,7 @@ import {
 } from '@monorepo/space';
 import { SpaceModule } from '@monorepo/space/frontend';
 
-import { NodeTextEditor, NodeYoutube } from '../frontend';
+import { NodeIframe, NodeTextEditor, NodeYoutube } from '../frontend';
 
 //
 
@@ -52,12 +52,67 @@ const loadStoryData = (sd: TSpaceSharedData & TCoreSharedData) => {
     connectors: [],
   });
 
+  sd.nodes.set('node-3', {
+    id: 'node-3',
+    type: 'iframe',
+    data: {
+      src: 'https://www.holistix.so',
+    },
+    name: 'Node 3',
+    root: true,
+    connectors: [],
+  });
+
+  //
+
   gv.graph.nodes.push({
     id: 'node-2',
     type: 'text-editor',
     position: {
       x: 0,
       y: 0,
+    },
+    size: {
+      width: 400,
+      height: 300,
+    },
+    status: {
+      mode: 'EXPANDED',
+      forceOpened: true,
+      forceClosed: false,
+      isFiltered: false,
+      rank: 0,
+      maxRank: 0,
+    },
+  });
+
+  gv.graph.nodes.push({
+    id: 'node-1',
+    type: 'youtube',
+    position: {
+      x: 500,
+      y: 500,
+    },
+    size: {
+      width: 400,
+      height: 300,
+    },
+    status: {
+      mode: 'EXPANDED',
+      forceOpened: true,
+      forceClosed: false,
+      isFiltered: false,
+      rank: 0,
+      maxRank: 0,
+    },
+  });
+
+  gv.graph.nodes.push({
+    id: 'node-3',
+    type: 'iframe',
+    position: {
+      x: -100,
+      y: 600,
     },
     size: {
       width: 400,
@@ -101,6 +156,7 @@ const chunks: TCollaborativeChunk[] = [
 const nodeTypes = {
   youtube: NodeYoutube,
   'text-editor': NodeTextEditor,
+  iframe: NodeIframe,
 };
 
 //

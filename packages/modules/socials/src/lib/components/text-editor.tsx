@@ -78,7 +78,15 @@ export const NodeTextEditorInternal = ({
     const d = document.createElement('div');
     d.innerHTML = `<span class="ql-formats">
           <select class="ql-font"></select>
-          <select class="ql-size"></select>
+          <select class="ql-header">
+            <option value="1">Heading 1</option>
+            <option value="2">Heading 2</option>
+            <option value="3">Heading 3</option>
+            <option value="4">Heading 4</option>
+            <option value="5">Heading 5</option>
+            <option value="6">Heading 6</option>
+            <option value="">Normal</option>
+          </select>
         </span>
         <span class="ql-formats">
           <button class="ql-bold"></button>
