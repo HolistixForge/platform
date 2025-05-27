@@ -49,6 +49,14 @@
     color: var(--color-background);
   }
 
+  &.linkedin {
+    fill: var(--user-color);
+  }
+
+  &.discord {
+    fill: var(--user-color);
+  }
+
   &.local {
     font-weight: bold;
   }

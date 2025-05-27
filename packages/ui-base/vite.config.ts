@@ -2,6 +2,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import * as path from 'path';
 
 export default defineConfig({
@@ -13,6 +14,7 @@ export default defineConfig({
       entryRoot: 'src',
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
     }),
+    nodePolyfills(),
   ],
   // Uncomment this if you are using workers.
   // worker: {

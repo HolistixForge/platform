@@ -51,3 +51,17 @@ export const Gitlab: Story = {
     color: 'green',
   },
 };
+
+export const LinkedIn: Story = {
+  args: {
+    username: 'linkedin:duconLajoie42',
+    color: 'purple',
+  },
+};
+
+export const Discord: Story = {
+  args: {
+    username: 'discord:duconLajoie42',
+    color: 'orange',
+  },
+};

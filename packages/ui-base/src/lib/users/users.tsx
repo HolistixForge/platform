@@ -112,6 +112,12 @@ export const UserUsername = ({
         <GitHubLogoIcon className="user-type github" />
       )}
       {user_type === 'gitlab' && <icons.Gitlab className="user-type gitlab" />}
+      {user_type === 'linkedin' && (
+        <icons.LinkedIn className="user-type linkedin" />
+      )}
+      {user_type === 'discord' && (
+        <icons.Discord className="user-type discord" />
+      )}
       {user_type === 'local' && <span className="user-type local">@</span>}
       {un}
     </span>
