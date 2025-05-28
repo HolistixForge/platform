@@ -19,10 +19,14 @@ collab-engine:
   use Data
 - use Yjs type in story, with mock of other users
 - PERMISSIONS management
+- geographic permission
+- permission and complexe non atomic process => decided to handle everything backend => latency, out of order => event sequences
+- shift to normal use for majority of event ? => permission (content, spatial), fallback, ?
 
 perf:
 
 - indice: iframes blink on pan when edge menu open
+- useAwarenessListenData: update on every users mouse move !
 
 ls -tp | tail -n +11 | sudo xargs -d '\n' rm --
 

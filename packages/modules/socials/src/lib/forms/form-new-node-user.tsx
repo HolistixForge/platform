@@ -44,7 +44,16 @@ export const NewNodeUserForm = ({
         placeholder="Type a username..."
       />
       <FormErrors errors={action.errors} />
-      <div style={{ maxHeight: 250, overflowY: 'auto', marginTop: 10 }}>
+      <div
+        style={
+          {
+            maxHeight: 250,
+            overflowY: 'auto',
+            marginTop: 10,
+            '--avatar-width': '30px',
+          } as any
+        }
+      >
         {isFetching && <div>Loading...</div>}
         {users.map((user: TF_User) => (
           <UserListItem

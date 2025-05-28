@@ -135,7 +135,7 @@ const ProjectsListItem = ({
       <Table.Cell className="py-4 px-6" style={{ color: 'var(--c-white-1)' }}>
         {project.name}
       </Table.Cell>
-      <Table.Cell className="py-4 px-6">
+      <Table.Cell className="py-4 px-6 ellipsis">
         {status === 'success' ? (
           <UserInline color="var(--c-white-1)" {...data} />
         ) : (

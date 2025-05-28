@@ -4,8 +4,16 @@ import { IDCard } from './node-id-card';
 import { randomGuy } from '@monorepo/ui-base';
 import { TG_User } from '@monorepo/demiurge-types';
 
-const IDCardStory = ({ user, color }: { user: TG_User; color: string }) => {
-  return <IDCard user={user} color={color} />;
+const IDCardStory = ({
+  user,
+  color,
+  lanyard,
+}: {
+  user: TG_User;
+  color: string;
+  lanyard: boolean;
+}) => {
+  return <IDCard user={user} color={color} lanyard={lanyard} />;
 };
 
 const meta = {
@@ -27,5 +35,6 @@ export const Normal: Story = {
   args: {
     user: u,
     color: u.color,
+    lanyard: false,
   },
 };
