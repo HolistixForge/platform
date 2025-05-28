@@ -144,7 +144,7 @@ export const NodeChatbox = ({ node }: { node: TGraphNode }) => {
   });
 
   return (
-    <div className="common-node chat-node">
+    <div className="common-node chat-node node-resizable">
       <InputsAndOutputs id={node.id} bottom={false} topDisabled={true} />
       <ChatboxLogic
         userId={
