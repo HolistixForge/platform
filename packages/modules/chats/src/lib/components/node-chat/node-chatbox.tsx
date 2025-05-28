@@ -11,7 +11,7 @@ import {
 import { TGraphNode, useNodeEdges } from '@monorepo/core';
 import { useCurrentUser, useQueriesUsers } from '@monorepo/frontend-data';
 import {
-  useAwarenessListenData,
+  useAwarenessUserList,
   useDispatcher,
   useSharedData,
 } from '@monorepo/collab-engine';
@@ -41,16 +41,11 @@ export const NodeChatbox = ({ node }: { node: TGraphNode }) => {
   // maintain a map of user's colors
   //
 
-  const [colors, setColors] = useState<{ [k: string]: string }>({});
-
-  useAwarenessListenData(({ states }) => {
-    // prepare a map of all connected users's color
-    const cs: { [k: string]: string } = {};
-    states.forEach((a) => {
-      if (a.user) cs[a.user.username] = a.user.color;
-    });
-    setColors(cs);
-  }, []);
+  const users = useAwarenessUserList();
+  const colors = users.reduce((acc, u) => {
+    acc[u.username] = u.color;
+    return acc;
+  }, {} as { [k: string]: string });
 
   //
   //

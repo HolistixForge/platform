@@ -53,4 +53,27 @@ export abstract class Awareness {
   abstract getStates(): _AwarenessStates;
 
   abstract getMyId(): number;
+
+  // --- User List Listener Support ---
+  private userListListeners: Array<(users: TAwarenessUser[]) => void> = [];
+
+  addUserListListener(listener: (users: TAwarenessUser[]) => void) {
+    this.userListListeners.push(listener);
+  }
+
+  removeUserListListener(listener: (users: TAwarenessUser[]) => void) {
+    this.userListListeners = this.userListListeners.filter(
+      (l) => l !== listener
+    );
+  }
+
+  protected callUserListListeners(users: TAwarenessUser[]) {
+    this.userListListeners.forEach((l) => l(users));
+  }
+
+  /**
+   * Returns the current list of users (with username/color),
+   * sorted or deduped as appropriate for the app.
+   */
+  abstract getUserList(): TAwarenessUser[];
 }

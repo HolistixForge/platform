@@ -368,16 +368,18 @@ export const useAwareness = () => {
   return { awareness };
 };
 
+//
+//
+//
+
 export function useAwarenessListenData(
   callback: (a: _AwarenessListenerArgs, awareness: Awareness) => void,
   deps: DependencyList
 ): void {
   //
-
   const { awareness } = useContext(
     collaborationContext
   ) as TCollaborationContext;
-
   //
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const cb = useCallback(callback, [...deps]);
@@ -392,6 +394,33 @@ export function useAwarenessListenData(
       awareness.removeAwarenessListener(cb);
     };
   }, [awareness, cb]);
+}
+
+//
+//
+//
+
+/**
+ * useAwarenessUserList: subscribes to the list of active users (username/color),
+ * and only updates when the user list changes (not on pointer/selection changes).
+ */
+export function useAwarenessUserList(): TAwarenessUser[] {
+  const { awareness } = useContext(
+    collaborationContext
+  ) as TCollaborationContext;
+  const [users, setUsers] = useState<TAwarenessUser[]>(() =>
+    awareness.getUserList()
+  );
+  useEffect(() => {
+    const listener = (newUsers: TAwarenessUser[]) => setUsers(newUsers);
+    awareness.addUserListListener(listener);
+    // Set initial value in case it changed before effect
+    setUsers(awareness.getUserList());
+    return () => {
+      awareness.removeUserListListener(listener);
+    };
+  }, [awareness]);
+  return users;
 }
 
 //

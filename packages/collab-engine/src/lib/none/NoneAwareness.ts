@@ -30,6 +30,7 @@ export class NoneAwareness extends Awareness {
 
     if (this._simulationEnabled) {
       this._setupSimulation();
+      this.callUserListListeners(this.getUserList());
     }
   }
 
@@ -150,6 +151,14 @@ export class NoneAwareness extends Awareness {
 
   override getMyId(): number {
     return 0;
+  }
+
+  override getUserList(): TAwarenessUser[] {
+    const users = [
+      this._fakeState.get(0)?.user,
+      ...this._simulationUsers.slice(1),
+    ].filter(Boolean) as TAwarenessUser[];
+    return users;
   }
 
   // Cleanup method to stop simulation

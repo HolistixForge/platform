@@ -1,10 +1,10 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 
 import { TGraphNode } from '@monorepo/core';
 import { useQueryUser } from '@monorepo/frontend-data';
 import { UserAvatar, UserUsername } from '@monorepo/ui-base';
 import { TG_User } from '@monorepo/demiurge-types';
-import { useAwarenessListenData, useDispatcher } from '@monorepo/collab-engine';
+import { useDispatcher, useAwarenessUserList } from '@monorepo/collab-engine';
 import {
   NodeHeader,
   useMakeButton,
@@ -47,18 +47,11 @@ export const NodeIdCard = ({ node }: { node: TGraphNode }) => {
 
   const { data: user } = useQueryUser(userId);
 
-  const [color, setColor] = useState<string>('var(--c-gray-9)');
-
-  useAwarenessListenData(
-    ({ states }) => {
-      setColor('var(--c-gray-9)');
-      states.forEach((a) => {
-        if (a.user && a.user.username === user?.username)
-          setColor(a.user.color);
-      });
-    },
-    [user]
-  );
+  const users = useAwarenessUserList();
+  const color = user
+    ? users.find((u) => u.username === user.username)?.color ||
+      'var(--c-gray-9)'
+    : 'var(--c-gray-9)';
 
   const { id, selected, open, isOpened } = useNodeContext();
 

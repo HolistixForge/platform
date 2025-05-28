@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef, useState } from 'react';
+import { useEffect, useCallback, useRef, useMemo } from 'react';
 import { Excalidraw } from '@excalidraw/excalidraw';
 import { INITIAL_VIEWPORT, Viewport, WhiteboardMode } from './demiurge-space';
 
@@ -7,7 +7,7 @@ import { OrderedExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 import { AppState, Collaborator, SocketId } from '@excalidraw/excalidraw/types';
 import { BinaryFiles } from '@excalidraw/excalidraw/types';
 import {
-  useAwarenessListenData,
+  useAwarenessUserList,
   useSharedDataDirect,
 } from '@monorepo/collab-engine';
 import { TSpaceSharedData } from '../../space-shared-model';
@@ -107,33 +107,18 @@ export const ExcalidrawLayer = ({
 
   // collaborative
 
-  const [collaborators, setCollaborators] = useState<
-    Map<SocketId, Collaborator>
-  >(new Map());
-
-  useAwarenessListenData(({ states }) => {
-    // prepare a map of all connected users's color
-    const collabs: Map<SocketId, Collaborator> = new Map();
-    // Compare keys between states and existing collaborators
-    const stateKeys = Array.from(states.keys())
-      .map((n) => `${n}`)
-      .sort()
-      .join(',');
-    const collabKeys = Array.from(collaborators.keys()).sort().join(',');
-
-    // Skip update if keys are identical
-    if (stateKeys === collabKeys) {
-      return;
-    }
-    states.forEach((a, k) => {
-      if (a.user)
-        collabs.set(`${k}` as any, {
-          username: a.user.username,
-          color: { background: a.user.color, stroke: a.user.color },
-        });
+  const users = useAwarenessUserList();
+  // Build collaborators map from user list (using username as key)
+  const collaborators = useMemo(() => {
+    const map = new Map<SocketId, Collaborator>();
+    users.forEach((u) => {
+      map.set(u.username as any, {
+        username: u.username,
+        color: { background: u.color, stroke: u.color },
+      });
     });
-    setCollaborators(collabs);
-  }, []);
+    return map;
+  }, [users]);
 
   //
 

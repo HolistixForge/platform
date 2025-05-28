@@ -50,6 +50,7 @@ export {
   CollaborativeContext,
   useAwareness,
   useAwarenessListenData,
+  useAwarenessUserList,
   useSharedData,
   useDispatcher,
   useExtraContext,
