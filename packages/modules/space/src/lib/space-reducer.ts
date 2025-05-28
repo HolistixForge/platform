@@ -279,6 +279,17 @@ export class SpaceReducer extends Reducer<
     gv.params.filterOutNodes = gv.params.filterOutNodes.filter(
       (nid) => nid !== action.nid
     );
+
+    if (action.position) {
+      const node = gv.nodeViews.find((n) => n.id === action.nid);
+      if (!node) {
+        error('SPACE', `Node ${action.nid} not found in graph view`);
+        return;
+      }
+      delete node.parentId;
+      node.position = action.position;
+    }
+
     this.updateGraphview(gv, nodes, edges);
   }
 

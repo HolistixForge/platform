@@ -61,7 +61,7 @@ type TSeparator = { separator: true };
 type TMenuContext = {
   new: (TMenuEntry | TSeparator)[];
   viewId: string;
-  position: TPosition;
+  position: React.MutableRefObject<TPosition>;
 };
 
 const menuContext = createContext<TMenuContext | null>(null);
@@ -135,13 +135,7 @@ export const ContextMenuNew = () => {
                                   type: 'space:unfilter-out-node',
                                   viewId: context.viewId,
                                   nid: node.id,
-                                  position: context.position,
-                                });
-                                await dispatcher.dispatch({
-                                  type: 'space:move-node',
-                                  viewId: context.viewId,
-                                  nid: node.id,
-                                  position: context.position,
+                                  position: context.position.current,
                                 });
                               }}
                             >
@@ -520,7 +514,7 @@ export const ContextMenuLogic = ({
   const context = useMemo<TMenuContext>(() => {
     return {
       viewId: viewId,
-      position: refCoordinates.current,
+      position: refCoordinates,
       new: [
         {
           title: 'Group',
