@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
-import { SpaceAwareness } from '../apis/spaceAwareness';
 import { TPosition } from '@monorepo/core';
 import { Viewport } from './demiurge-space';
+import { Awareness } from '@monorepo/collab-engine';
 
 //
 
@@ -9,11 +9,13 @@ export class PointerTracker {
   private _viewport: Viewport = { absoluteX: 0, absoluteY: 0, zoom: 1 };
   /** absolute position of current user pointer */
   private _pointer: TPosition = { x: 0, y: 0 };
-  private ga: SpaceAwareness;
+  private awareness: Awareness;
   private div: HTMLDivElement | null = null;
+  private viewId: string;
 
-  constructor(ga: SpaceAwareness) {
-    this.ga = ga;
+  constructor(viewId: string, awareness: Awareness) {
+    this.viewId = viewId;
+    this.awareness = awareness;
   }
 
   public bindDiv(div: HTMLDivElement) {
@@ -60,14 +62,23 @@ export class PointerTracker {
   private track = _.debounce(
     () => {
       const { x, y } = this._pointer;
-      this.ga.setPointer(x, y);
+      this.awareness.emitPositionAwareness({
+        referenceId: this.viewId,
+        position: { x, y, z: 0 },
+        reference: 'LAYER',
+      });
     },
     50,
     { maxWait: 50 }
   );
 
   public setPointerInactive() {
-    this.ga.setPointer(this._pointer.x, this._pointer.y, true);
+    this.awareness.emitPositionAwareness({
+      referenceId: this.viewId,
+      position: { x: this._pointer.x, y: this._pointer.y, z: 0 },
+      reference: 'LAYER',
+      inactive: true,
+    });
   }
 
   public onPaneMouseMove(event: React.MouseEvent) {

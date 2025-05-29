@@ -1,8 +1,6 @@
 import { Doc } from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 
-import { TJsonObject } from '@monorepo/simple-types';
-
 import { Awareness } from '../Awareness';
 import {
   AwarenessEventArgs,
@@ -20,9 +18,6 @@ export class YjsAwareness extends Awareness {
 
   _buildUserCss?: (key: number, color: string | undefined) => void;
 
-  // Cache the last user list for change detection
-  private _lastUserList: TAwarenessUser[] = [];
-
   constructor(
     ydoc: Doc,
     provider: WebsocketProvider,
@@ -34,10 +29,8 @@ export class YjsAwareness extends Awareness {
 
     this._buildUserCss = buildUserCss;
 
-    // Initialize the user list cache
-    this._lastUserList = this._extractUserList(
-      this._provider.awareness.getStates()
-    );
+    // Initialize the caches
+    this._updateCachesAndNotify(this._provider.awareness.getStates());
 
     // TODO: lot of debouncing !!!! using delta
     this._provider.awareness.on(
@@ -56,51 +49,11 @@ export class YjsAwareness extends Awareness {
             );
           }
 
-          this.callListeners({ states, added, updated, removed });
-
-          // --- User List Change Detection ---
-          const newUserList = this._extractUserList(states);
-          if (!this._userListEquals(this._lastUserList, newUserList)) {
-            this._lastUserList = newUserList;
-            this.callUserListListeners(this._lastUserList);
-          }
+          // Update caches and notify listeners as needed
+          this._updateCachesAndNotify(states);
         }
       }
     );
-  }
-
-  /**
-   * Extracts the user list from awareness states.
-   */
-  private _extractUserList(states: _AwarenessStates): TAwarenessUser[] {
-    // Only include users with a defined username (and color)
-    const users: TAwarenessUser[] = [];
-    states.forEach((v: _AwarenessState) => {
-      if (v.user && v.user.username && v.user.color) {
-        users.push({ ...v.user });
-      }
-    });
-    // Optionally sort by username for stable order
-    users.sort((a, b) => a.username.localeCompare(b.username));
-    return users;
-  }
-
-  /**
-   * Compares two user lists for equality (shallow compare on username/color).
-   */
-  private _userListEquals(a: TAwarenessUser[], b: TAwarenessUser[]): boolean {
-    if (a.length !== b.length) return false;
-    for (let i = 0; i < a.length; i++) {
-      if (a[i].username !== b[i].username || a[i].color !== b[i].color) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  override getUserList(): TAwarenessUser[] {
-    // Return the cached user list
-    return this._lastUserList;
   }
 
   override setUser(user: TAwarenessUser) {
@@ -113,8 +66,17 @@ export class YjsAwareness extends Awareness {
     this._provider.awareness.setLocalStateField('position', a);
   }
 
-  override emitSelectionAwareness(a: TJsonObject): void {
-    this._provider.awareness.setLocalStateField('selections', a);
+  override emitSelectionAwareness(a: {
+    nodes: string[];
+    viewId: string;
+  }): void {
+    const o: {
+      space?: {
+        nodes: string[];
+        viewId: string;
+      };
+    } = { space: a };
+    this._provider.awareness.setLocalStateField('selections', o);
   }
 
   override getStates(): _AwarenessStates {

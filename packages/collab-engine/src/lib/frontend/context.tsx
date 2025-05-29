@@ -6,7 +6,6 @@ import {
   useCallback,
   useEffect,
   ReactNode,
-  DependencyList,
 } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import * as YWS from 'y-websocket';
@@ -372,34 +371,6 @@ export const useAwareness = () => {
 //
 //
 
-export function useAwarenessListenData(
-  callback: (a: _AwarenessListenerArgs, awareness: Awareness) => void,
-  deps: DependencyList
-): void {
-  //
-  const { awareness } = useContext(
-    collaborationContext
-  ) as TCollaborationContext;
-  //
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const cb = useCallback(callback, [...deps]);
-
-  useEffect(() => {
-    awareness.addAwarenessListener(cb);
-    cb(
-      { states: awareness.getStates(), added: [], updated: [], removed: [] },
-      awareness
-    );
-    return () => {
-      awareness.removeAwarenessListener(cb);
-    };
-  }, [awareness, cb]);
-}
-
-//
-//
-//
-
 /**
  * useAwarenessUserList: subscribes to the list of active users (username/color),
  * and only updates when the user list changes (not on pointer/selection changes).
@@ -412,15 +383,40 @@ export function useAwarenessUserList(): TAwarenessUser[] {
     awareness.getUserList()
   );
   useEffect(() => {
-    const listener = (newUsers: TAwarenessUser[]) => setUsers(newUsers);
+    const listener = () => setUsers(awareness.getUserList());
     awareness.addUserListListener(listener);
-    // Set initial value in case it changed before effect
     setUsers(awareness.getUserList());
     return () => {
       awareness.removeUserListListener(listener);
     };
   }, [awareness]);
   return users;
+}
+
+//
+//
+//
+
+/**
+ * useAwarenessSelections: subscribes to selection tracking changes.
+ * Returns an object mapping nodeId to selecting users array.
+ */
+export function useAwarenessSelections(): { [nodeId: string]: any[] } {
+  const { awareness } = useContext(
+    collaborationContext
+  ) as TCollaborationContext;
+  const [selections, setSelections] = useState<{ [nodeId: string]: any[] }>(
+    () => awareness.getSelectionTracking()
+  );
+  useEffect(() => {
+    const listener = () => setSelections(awareness.getSelectionTracking());
+    awareness.addSelectionListener(listener);
+    setSelections(awareness.getSelectionTracking());
+    return () => {
+      awareness.removeSelectionListener(listener);
+    };
+  }, [awareness]);
+  return selections;
 }
 
 //

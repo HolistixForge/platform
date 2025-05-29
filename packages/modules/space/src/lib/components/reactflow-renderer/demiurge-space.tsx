@@ -8,7 +8,6 @@ import { AvatarsRenderer } from './avatarsRenderer';
 import { ReactflowLayer, ReactflowLayerProps } from './reactflow-layer';
 import { SpaceContext } from './spaceContext';
 import { SpaceState } from '../apis/spaceState';
-import { SpaceAwareness } from '../apis/spaceAwareness';
 import { EdgeMenu } from './assets/edges/edge-menu';
 import { edgeId, TEdgeRenderProps } from '../apis/types/edge';
 import {
@@ -44,7 +43,6 @@ export const DemiurgeSpace = ({
   pointerTracker,
   avatarsStore,
   spaceState,
-  spaceAwareness,
   currentUser,
   viewId,
   reactflow,
@@ -52,7 +50,6 @@ export const DemiurgeSpace = ({
   pointerTracker: PointerTracker;
   avatarsStore: HtmlAvatarStore;
   spaceState: SpaceState;
-  spaceAwareness: SpaceAwareness;
   currentUser: { username: string; color: string } | undefined;
   viewId: string;
   reactflow: Pick<
@@ -188,7 +185,6 @@ export const DemiurgeSpace = ({
 
   const context = useMemo(
     () => ({
-      spaceAwareness,
       spaceState,
       currentUser,
       mode,
@@ -224,7 +220,6 @@ export const DemiurgeSpace = ({
           nodeComponent={reactflow.nodeComponent}
           edgeComponent={reactflow.edgeComponent}
           spaceState={spaceState}
-          spaceAwareness={spaceAwareness}
           pointerTracker={pointerTracker}
           avatarsStore={avatarsStore}
           onContextMenu={reactflow.onContextMenu}

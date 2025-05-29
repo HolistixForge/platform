@@ -26,7 +26,7 @@ collab-engine:
 perf:
 
 - indice: iframes blink on pan when edge menu open
-- useAwarenessListenData: update on every users mouse move !
+- ONZOOM
 
 ls -tp | tail -n +11 | sudo xargs -d '\n' rm --
 

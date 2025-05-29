@@ -1,9 +1,9 @@
 import { ReactElement } from 'react';
-import { SpaceAwareness, TUserPosition } from '../apis/spaceAwareness';
 import { SpringRef as SpringRefWeb } from '@react-spring/web';
 import { Avatar } from './avatar';
 import { AvatarStore } from '../apis/avatarStore';
 import { PointerTracker } from './PointerTracker';
+import { Awareness, TUserPosition } from '@monorepo/collab-engine';
 
 //
 
@@ -16,8 +16,8 @@ type TAvatarInfo = {
 export class HtmlAvatarStore extends AvatarStore {
   private avatars: Map<number, TAvatarInfo>;
 
-  constructor(pt: PointerTracker, ga: SpaceAwareness) {
-    super(pt, ga);
+  constructor(viewId: string, pt: PointerTracker, awareness: Awareness) {
+    super(viewId, pt, awareness);
     this.avatars = new Map<number, TAvatarInfo>();
     this.processUpdates();
   }
@@ -53,8 +53,8 @@ export class HtmlAvatarStore extends AvatarStore {
   //
 
   private updateAvatar(k: number, u: TUserPosition) {
-    // do not process ou own pointer movement
-    if (k !== this.ga.getCurrentUserId()) {
+    // do not process our own pointer movement
+    if (k !== this.awareness.getMyId()) {
       let a = this.avatars.get(k);
       if (!a) {
         this.instanciateAvatar(k, u);
@@ -106,16 +106,18 @@ export class HtmlAvatarStore extends AvatarStore {
   //
 
   protected override processUpdates() {
-    const ups = this.ga.getPointersUpdates();
-    const keys = ups.map((up) => up.key);
+    const ups = this.awareness.getPointerTracking(this.viewId);
+
     this.avatars.forEach((_, k) => {
-      if (!keys.includes(k)) {
+      if (!ups.get(k)) {
         this.avatars.delete(k);
       }
     });
+
     ups.forEach((up) => {
       this.updateAvatar(up.key, up);
     });
+
     this.notifyListeners();
   }
 

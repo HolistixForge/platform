@@ -1,19 +1,21 @@
 import { ReactElement } from 'react';
 
 import { Listenable } from '@monorepo/simple-types';
+import { Awareness } from '@monorepo/collab-engine';
 
-import { SpaceAwareness } from './spaceAwareness';
-import { PointerTracker } from './pointerTracker';
+import { PointerTracker } from '../reactflow-renderer/PointerTracker';
 
 export class AvatarStore extends Listenable {
   protected pointerTracker: PointerTracker;
-  protected ga: SpaceAwareness;
+  protected awareness: Awareness;
+  protected viewId: string;
 
-  constructor(pt: PointerTracker, ga: SpaceAwareness) {
+  constructor(viewId: string, pt: PointerTracker, awareness: Awareness) {
     super();
+    this.viewId = viewId;
     this.pointerTracker = pt;
-    this.ga = ga;
-    this.ga.addListener(() => {
+    this.awareness = awareness;
+    this.awareness.addPointerListener(() => {
       this.processUpdates();
     });
   }

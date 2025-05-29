@@ -16,8 +16,12 @@ import {
 import { useHotkeys } from 'react-hotkeys-hook';
 
 import { useDebugComponent } from '@monorepo/log';
-import { useRegisterListener } from '@monorepo/simple-types';
-import { useDispatcher } from '@monorepo/collab-engine';
+
+import {
+  useDispatcher,
+  useAwarenessSelections,
+  useAwareness,
+} from '@monorepo/collab-engine';
 
 import { TNodeContext } from '../../apis/types/node';
 import { SelectionsAwareness } from './selection-awareness';
@@ -111,9 +115,9 @@ export const NodeWrapper =
 
     const dispatcher = useDispatcher<TSpaceEvent>();
 
-    const { spaceAwareness, currentUser, mode, viewId } = useSpaceContext();
+    const { currentUser, mode, viewId } = useSpaceContext();
 
-    useRegisterListener(spaceAwareness, 'NodeWrapper, spaceAwareness');
+    const { awareness } = useAwareness();
 
     //
 
@@ -136,7 +140,8 @@ export const NodeWrapper =
 
     const opened = isNodeOpened(nv.status);
 
-    const selectingUsers = spaceAwareness.getSelectedNodes()[id] || [];
+    const selections = useAwarenessSelections();
+    const selectingUsers = selections[id] || [];
 
     // is this object selected on this view by current user ?
     const selected =
@@ -220,6 +225,8 @@ export const NodeWrapper =
 
     //
 
+    console.log('########## node wrapper render', id);
+
     return (
       <nodeContext.Provider value={contextValue}>
         <div
@@ -233,7 +240,12 @@ export const NodeWrapper =
           <SelectionsAwareness selectingUsers={selectingUsers}>
             <div
               style={{ position: 'relative', height: '100%' }}
-              onClick={() => spaceAwareness.selectNode(id, true)}
+              onClick={() =>
+                awareness.emitSelectionAwareness({
+                  nodes: [id],
+                  viewId,
+                })
+              }
             >
               <NodeComponent />
               <EasyConnect id={id} />

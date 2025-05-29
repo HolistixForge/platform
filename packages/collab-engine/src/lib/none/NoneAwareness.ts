@@ -1,5 +1,3 @@
-import { TJsonObject } from '@monorepo/simple-types';
-
 import { Awareness } from '../Awareness';
 
 import {
@@ -30,7 +28,16 @@ export class NoneAwareness extends Awareness {
 
     if (this._simulationEnabled) {
       this._setupSimulation();
-      this.callUserListListeners(this.getUserList());
+
+      this._lastPointerTracking = this._extractPointerTracking(this._fakeState);
+      this._lastSelectionTracking = this._extractSelectionTracking(
+        this._fakeState
+      );
+      this._lastUserList = this._extractUserList(this._fakeState);
+
+      this.callUserListListeners();
+      this.callPointerListeners();
+      this.callSelectionListeners(this._lastSelectionTracking);
     }
   }
 
@@ -67,12 +74,15 @@ export class NoneAwareness extends Awareness {
     const doit = () => {
       this._randomlyUpdateUserPositions();
       this._randomlySelectNodes();
-      this.callListeners({
-        states: this._fakeState,
-        added: [],
-        updated: Array.from(this._fakeState.keys()),
-        removed: [],
-      });
+
+      // Update and notify pointer and selection listeners if changed
+      const newPointers = this._extractPointerTracking(this._fakeState);
+      this._lastPointerTracking = newPointers;
+      this.callPointerListeners();
+
+      const newSelections = this._extractSelectionTracking(this._fakeState);
+      this._lastSelectionTracking = newSelections;
+      this.callSelectionListeners(this._lastSelectionTracking);
     };
 
     doit();
@@ -133,16 +143,18 @@ export class NoneAwareness extends Awareness {
 
   override emitPositionAwareness(a: _PositionAwareness) {}
 
-  override emitSelectionAwareness(a: TJsonObject): void {
+  override emitSelectionAwareness(a: {
+    nodes: string[];
+    viewId: string;
+  }): void {
     const state = this._fakeState.get(0)!;
     state.selections = a;
     this._fakeState.set(0, state);
-    this.callListeners({
-      states: this._fakeState,
-      added: [],
-      updated: [0],
-      removed: [],
-    });
+
+    // Update and notify pointer and selection listeners if changed
+    const newSelections = this._extractSelectionTracking(this._fakeState);
+    this._lastSelectionTracking = newSelections;
+    this.callSelectionListeners(this._lastSelectionTracking);
   }
 
   override getStates(): _AwarenessStates {

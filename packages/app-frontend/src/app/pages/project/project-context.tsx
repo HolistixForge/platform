@@ -5,6 +5,8 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
+  useCallback,
 } from 'react';
 import { InfoCircledIcon } from '@radix-ui/react-icons';
 import {
@@ -44,21 +46,25 @@ const projectContext = createContext<ProjectData | null>(null);
 
 const useProjectUser = () => {
   const { data: currentUserData, status: currentUserStatus } = useCurrentUser();
+  const userRef = useRef<ProjectUser | null>(null);
 
-  return useMemo<ProjectUser>(() => {
-    const username =
-      currentUserStatus === 'success' && currentUserData.user.user_id
-        ? currentUserData.user.username
-        : 'anonymous';
+  const username =
+    currentUserStatus === 'success' && currentUserData.user.user_id
+      ? currentUserData.user.username
+      : 'anonymous';
 
-    return {
+  // Only update the ref if username changes
+  if (!userRef.current || userRef.current.username !== username) {
+    userRef.current = {
       username,
       color:
         username === 'anonymous'
           ? 'var(--c-gray-6)'
           : paletteRandomColor(username),
     };
-  }, [currentUserData, currentUserStatus]);
+  }
+
+  return userRef.current;
 };
 
 //
@@ -68,20 +74,23 @@ const useProjectState = (
   projectName: string,
   ganymedeApi: GanymedeApi
 ): [ProjectState, () => void] => {
+  //
   const {
     status: projectStatus,
     data: projectData,
     refetch: refetchProject,
   } = useQueryProjectByName(ownerId, projectName);
+
   const { data: currentUserData } = useCurrentUser();
+
   const [roomId, setRoomId] = useState<string | null | Error>(null);
 
-  const onCollabError = () => {
+  const onCollabError = useCallback(() => {
     // may be collab stoped or restarted, room id changed
     log(7, 'COLLAB', 'onCollabError');
     refetchProject();
     setRoomId(null);
-  };
+  }, [refetchProject]);
 
   // Setup collab configuration and API
   const collabSetup = useMemo(() => {

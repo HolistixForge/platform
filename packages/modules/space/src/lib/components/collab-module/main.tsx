@@ -21,7 +21,6 @@ import { HtmlAvatarStore } from '../reactflow-renderer/htmlAvatarStore';
 import { CustomStoryEdge } from '../reactflow-renderer/edge';
 
 import { CollabSpaceState } from './collab-space-state';
-import { CollabSpaceAwareness } from './collab-space-awareness';
 import { useNodeContext } from '../reactflow-renderer/node-wrappers/node-wrapper';
 import { CustomStoryNode } from '../reactflow-renderer/node';
 import { TSpaceSharedData } from '../../space-shared-model';
@@ -75,14 +74,13 @@ export const SpaceModule = ({
   const { awareness } = useAwareness();
 
   const logics = useMemo(() => {
-    const ga = new CollabSpaceAwareness(viewId, awareness);
-    const pt = new PointerTracker(ga);
-    const as = new HtmlAvatarStore(pt, ga);
+    const pt = new PointerTracker(viewId, awareness);
+    const as = new HtmlAvatarStore(viewId, pt, awareness);
     const ss = new CollabSpaceState(viewId, sdm);
 
     const Node = makeSpaceModuleNode(nodeTypes);
 
-    return { ga, pt, as, ss, Node };
+    return { pt, as, ss, Node };
   }, []);
 
   const onDrop = useCallback(
@@ -106,7 +104,6 @@ export const SpaceModule = ({
       viewId={viewId}
       spaceState={logics.ss}
       currentUser={awareness._user || undefined}
-      spaceAwareness={logics.ga}
       pointerTracker={logics.pt}
       avatarsStore={logics.as}
       reactflow={{

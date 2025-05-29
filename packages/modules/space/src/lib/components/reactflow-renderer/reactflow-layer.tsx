@@ -28,12 +28,12 @@ import { TPosition, TEdge, TEdgeEnd, EEdgeSemanticType } from '@monorepo/core';
 import {
   useEventSequence,
   FrontendEventSequence,
+  useAwareness,
 } from '@monorepo/collab-engine';
 
 import { PointerTracker } from './PointerTracker';
 import { NodeWrapper } from './node-wrappers/node-wrapper';
 import { SpaceState } from '../apis/spaceState';
-import { SpaceAwareness } from '../apis/spaceAwareness';
 import { HtmlAvatarStore } from './htmlAvatarStore';
 import { translateEdges, translateNodes } from './to-rf-nodes';
 import { TSpaceEvent } from '../../space-events';
@@ -60,7 +60,6 @@ export type ReactflowLayerProps = {
   nodeComponent: FC;
   edgeComponent: FC<EdgeProps>;
   spaceState: SpaceState;
-  spaceAwareness: SpaceAwareness;
   pointerTracker: PointerTracker;
   avatarsStore: HtmlAvatarStore;
   onContextMenu: (xy: TPosition, clientPosition: TPosition) => void;
@@ -87,7 +86,6 @@ export const ReactflowLayer = ({
   nodeComponent,
   edgeComponent,
   spaceState,
-  spaceAwareness,
   pointerTracker,
   avatarsStore,
   onViewportChange,
@@ -331,18 +329,25 @@ export const ReactflowLayer = ({
 
   //
 
+  const { awareness } = useAwareness();
+
+  //
+
   const { resetEdgeMenu } = useSpaceContext();
 
   const handlePaneClick = useCallback(
     // Handle left click on pane here
     (event: React.MouseEvent) => {
-      spaceAwareness.clearNodeSelection();
+      awareness.emitSelectionAwareness({
+        nodes: [],
+        viewId,
+      });
       // const pclient = clientXY(event);
       // const p = pointerTracker.fromMouseEvent(pclient);
       event.preventDefault();
       resetEdgeMenu();
     },
-    [spaceAwareness, resetEdgeMenu]
+    [awareness, resetEdgeMenu]
   );
 
   //

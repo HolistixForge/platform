@@ -4,7 +4,6 @@ import {
   SharedTypes,
   TCollaborativeChunk,
   TValidSharedData,
-  useAwareness,
   MockCollaborativeContext,
   useShareDataManager,
 } from '@monorepo/collab-engine';
@@ -17,7 +16,6 @@ import {
 import { TNodeContext } from '../apis/types/node';
 import { SpaceReducer } from '../../space-reducer';
 import { Space_loadData, TSpaceSharedData } from '../../space-shared-model';
-import { CollabSpaceAwareness } from '../collab-module/collab-space-awareness';
 import { CollabSpaceState } from '../collab-module/collab-space-state';
 import { loadStoryData, STORY_VIEW_ID } from './graphs-data/loader';
 import { WhiteboardMode } from '../reactflow-renderer/demiurge-space';
@@ -73,12 +71,10 @@ export const MockSpace = ({
 //
 
 const MockSpaceContext = ({ children }: { children: ReactNode }) => {
-  const { awareness } = useAwareness();
   const sdm = useShareDataManager<TSpaceSharedData & TCoreSharedData>();
 
   const context: TSpaceContext = useMemo(() => {
     return {
-      spaceAwareness: new CollabSpaceAwareness(STORY_VIEW_ID, awareness),
       spaceState: new CollabSpaceState(STORY_VIEW_ID, sdm),
       currentUser: { username: 'toto', color: '#ffa500' },
       mode: 'default' as WhiteboardMode,

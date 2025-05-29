@@ -9,6 +9,7 @@ export type {
 } from './lib/awareness-types';
 
 export { Awareness } from './lib/Awareness';
+export type { TUserPosition } from './lib/Awareness';
 
 export { YjsAwareness } from './lib/yjs/YjsAwareness';
 export { YjsSharedTypes } from './lib/yjs/YjsSharedTypes';
@@ -49,8 +50,8 @@ export type {
 export {
   CollaborativeContext,
   useAwareness,
-  useAwarenessListenData,
   useAwarenessUserList,
+  useAwarenessSelections,
   useSharedData,
   useDispatcher,
   useExtraContext,
