@@ -83,9 +83,10 @@ const MemoizedIframe = memo(
   ({ src }: { src: string }) => (
     <iframe
       src={src}
+      loading="lazy"
       title="Embedded content"
       className="iframe-content"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allow="clipboard-write; encrypted-media;"
       allowFullScreen
     />
   ),
