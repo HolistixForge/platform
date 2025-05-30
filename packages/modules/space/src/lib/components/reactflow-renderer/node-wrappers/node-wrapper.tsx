@@ -225,7 +225,7 @@ export const NodeWrapper =
 
     //
 
-    console.log('########## node wrapper render', id);
+    // console.log('########## node wrapper render', id);
 
     return (
       <nodeContext.Provider value={contextValue}>
