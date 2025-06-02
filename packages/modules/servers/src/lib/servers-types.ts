@@ -193,7 +193,12 @@ export const serviceUrl = (
   const host = isBackend ? s.ip : service.host;
   if (!host) return false;
 
-  const port = isBackend ? service.port : undefined;
+  const port =
+    isBackend ||
+    // for jupyter stories with a local jupyterlab container
+    (service.host === '127.0.0.1' && service.secure === false)
+      ? service.port
+      : undefined;
 
   const ssl = isBackend ? false : service.secure;
 

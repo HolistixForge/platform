@@ -34,6 +34,7 @@ const callbacks: TServerComponentCallbacks = {
 };
 
 export const newServerLocationNoneStory = (): Story => ({
+  project_server_id: 1,
   server_name: 'My Super Server',
   image,
   last_watchdog_at: null,

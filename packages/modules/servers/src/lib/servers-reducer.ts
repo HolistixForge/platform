@@ -218,7 +218,7 @@ export class ServersReducer extends Reducer<
       psid = r._0.new_project_server_id;
     }
 
-    if (psid) {
+    if (typeof psid === 'number' && !isNaN(psid)) {
       const server = await this._getUpToDateServerData(g, psid);
 
       if (server) {
@@ -538,6 +538,7 @@ export class ServersReducer extends Reducer<
           service.name === g.event.name && service.port === g.event.port
       )
     ) {
+      // for jupyter stories with a local jupyterlab container
       if (g.extraArgs.gatewayFQDN === '127.0.0.1') {
         httpServices.push({
           host: g.extraArgs.gatewayFQDN,
