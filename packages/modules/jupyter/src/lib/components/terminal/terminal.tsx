@@ -11,6 +11,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { ServerConnection, TerminalManager } from '@jupyterlab/services';
 import { Terminal } from '@jupyterlab/terminal';
 import { Widget } from '@lumino/widgets';
+import { MessageLoop } from '@lumino/messaging';
 
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
 import { TServer, TServersSharedData } from '@monorepo/servers';
@@ -71,7 +72,7 @@ const connectTerminal = async (
     serverSettings: settings,
   });
   const session = await manager.connectTo({ model: sessionModel });
-  const widget = new Terminal(session, { autoFit: false, theme: 'dark' });
+  const widget = new Terminal(session, { autoFit: true, theme: 'dark' });
   return widget;
 };
 
@@ -99,6 +100,7 @@ export const JupyterTerminal = ({ terminalId }: { terminalId: string }) => {
 
   const ref = useRef<HTMLDivElement>(null);
   const yet = useRef<boolean>(false);
+  const terminalWidgetRef = useRef<any>(null); // Store the Terminal widget instance
 
   //
 
@@ -131,8 +133,11 @@ export const JupyterTerminal = ({ terminalId }: { terminalId: string }) => {
         yet.current = true;
         jlsManager.getServerSetting(server).then((ss) => {
           connectTerminal(ss, terminal.jupyterTerminalSessionModel).then(
-            (terminal) => {
-              if (ref.current) Widget.attach(terminal, ref.current);
+            (terminalWidget) => {
+              terminalWidgetRef.current = terminalWidget;
+              terminalWidget.node.style.width = '100%';
+              terminalWidget.node.style.height = '100%';
+              if (ref.current) Widget.attach(terminalWidget, ref.current);
             }
           );
         });
@@ -140,8 +145,27 @@ export const JupyterTerminal = ({ terminalId }: { terminalId: string }) => {
     }
   }, [server, jlsManager, isReachable]);
 
+  // ResizeObserver to auto-fit terminal on container resize
+  useEffect(() => {
+    if (!ref.current) return;
+    const observer = new window.ResizeObserver(() => {
+      if (terminalWidgetRef.current) {
+        MessageLoop.sendMessage(
+          terminalWidgetRef.current,
+          Widget.Msg.FitRequest
+        );
+      }
+    });
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div ref={ref} className="terminal-container">
+    <div
+      ref={ref}
+      className="terminal-container"
+      style={{ width: '100%', height: '100%' }}
+    >
       {isReachable === undefined
         ? 'Reaching for server...'
         : isReachable
@@ -193,7 +217,7 @@ export const NodeTerminal = ({ node }: { node: TGraphNode }) => {
   });
 
   return (
-    <div className={`common-node terminal-node`}>
+    <div className={`common-node terminal-node node-resizable`}>
       <InputsAndOutputs id={id} bottom={false} />
       <NodeHeader
         nodeType="terminal"
@@ -204,8 +228,11 @@ export const NodeTerminal = ({ node }: { node: TGraphNode }) => {
         visible={selected}
       />
       {isOpened && (
-        <DisableZoomDragPan noZoom noDrag>
-          <div className="node-wrapper-body terminal">
+        <DisableZoomDragPan noZoom noDrag fullHeight>
+          <div
+            className="node-wrapper-body terminal"
+            style={{ height: '100%' }}
+          >
             <JupyterTerminal terminalId={terminalId} />
           </div>
         </DisableZoomDragPan>

@@ -74,7 +74,17 @@ const Terminals = () => {
     });
   }
 
-  if (terminal) return <JupyterTerminal terminalId={terminal.terminalId} />;
+  if (terminal)
+    return (
+      <div
+        style={{
+          height: '50vh',
+          width: '80vw',
+        }}
+      >
+        <JupyterTerminal terminalId={terminal.terminalId} />
+      </div>
+    );
 
   return null;
 };

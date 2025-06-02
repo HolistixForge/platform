@@ -121,25 +121,27 @@ export const JupyterStoryCollabContext = ({
 }) => {
   return (
     <MockCollaborativeContext collabChunks={chunks}>
-      <p>
-        To test this story, first launch a jupyter docker container, then
-        refresh :
-      </p>
-      <p
-        style={{
-          fontFamily: 'monospace',
-          backgroundColor: '#2b2b2b',
-          color: '#e6e6e6',
-          padding: '8px',
-          borderRadius: '4px',
-          margin: '20px 0',
-        }}
-      >
-        $ docker run --rm -p 36666:8888 jupyter/minimal-notebook:latest
-        start-notebook.sh --NotebookApp.allow_origin='*'
-        --NotebookApp.token='My_Super_Test_Story' --debug
-      </p>
-      {children}
+      <div style={{ width: '80vw', height: '800px' }}>
+        <p>
+          To test this story, first launch a jupyter docker container, then
+          refresh :
+        </p>
+        <p
+          style={{
+            fontFamily: 'monospace',
+            backgroundColor: '#2b2b2b',
+            color: '#e6e6e6',
+            padding: '8px',
+            borderRadius: '4px',
+            margin: '20px 0',
+          }}
+        >
+          $ docker run --rm -p 36666:8888 jupyter/minimal-notebook:latest
+          start-notebook.sh --NotebookApp.allow_origin='*'
+          --NotebookApp.token='My_Super_Test_Story' --debug
+        </p>
+        {children}
+      </div>
     </MockCollaborativeContext>
   );
 };
