@@ -15,7 +15,9 @@ export type LocalReduceFunction = (sdc: any, event: any) => void;
 export class FrontendEventSequence<T extends TJsonObject> {
   public localReduce: LocalReduceFunction;
   public localReduceUpdateKeys: string[];
-  public lastEvent: T | undefined;
+  public lastEvent:
+    | (T & Pick<SequenceEvent, 'sequenceRevertPoint' | 'sequenceEnd'>)
+    | undefined;
 
   private counter: number = 0;
   private sequenceId: string;

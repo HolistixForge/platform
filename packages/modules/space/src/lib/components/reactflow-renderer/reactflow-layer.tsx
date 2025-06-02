@@ -211,9 +211,16 @@ export const ReactflowLayer = ({
             );
 
             if (draggedNode) {
+              // if action is done and node has a group id, return.
+              if (!moveNodeEventSequenceRef.current && draggedNode.parentId)
+                // the very last overide, (backend have computed group) draggedNode.parentId will be the group id,
+                // and event.position will still be absolute.
+                // do nothing.
+                return;
+
               draggedNode.position = getAbsolutePosition(
                 event.position,
-                draggedNode.parentId, // the very last overide, (backend have computed group) this will be the group id, and event.position will still be absolute !
+                draggedNode.parentId,
                 gv
               );
               draggedNode.parentId = undefined;
