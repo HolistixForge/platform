@@ -1,13 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { useNotImplemented, randomGuy } from '@monorepo/ui-base';
+import { useNotImplemented, randomGuy, randomGuys } from '@monorepo/ui-base';
 
 import { Header, HeaderProps } from './header';
 
 //
 
 const StoryWrapper = (
-  props: Pick<HeaderProps, 'hasNotifications' | 'host' | 'share' | 'user'>
+  props: Pick<
+    HeaderProps,
+    'hasNotifications' | 'host' | 'share' | 'user' | 'otherUsers'
+  >
 ) => {
   const ni = useNotImplemented();
   return (
@@ -52,6 +55,17 @@ export const LoggedIn: Story = {
     host: true,
     share: true,
     user: randomGuy(),
+    otherUsers: randomGuys,
+  },
+};
+
+export const OneOtherUser: Story = {
+  args: {
+    hasNotifications: true,
+    host: true,
+    share: true,
+    user: randomGuy(),
+    otherUsers: [randomGuy()],
   },
 };
 

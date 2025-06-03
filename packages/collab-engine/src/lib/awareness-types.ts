@@ -15,6 +15,7 @@ export type _PositionAwareness = {
 export type TAwarenessUser = {
   username: string;
   color: string;
+  user_id: string;
 };
 
 export type _AwarenessState = {

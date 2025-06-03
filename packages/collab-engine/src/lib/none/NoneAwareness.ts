@@ -44,6 +44,7 @@ export class NoneAwareness extends Awareness {
   private _setupSimulation() {
     // Create 7 simulated users
     this._simulationUsers = Array.from({ length: 7 }, (_, index) => ({
+      user_id: `user-${index}`,
       username: `User-${index}`,
       color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
     }));

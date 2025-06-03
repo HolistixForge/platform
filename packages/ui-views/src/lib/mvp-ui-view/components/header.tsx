@@ -6,10 +6,10 @@ import {
   TAction,
   useNotImplemented,
   UserAvatar,
-  randomGuy,
   ResourceButtons,
   ButtonBase,
   ButtonIcon,
+  UserBubble,
 } from '@monorepo/ui-base';
 import { TF_User } from '@monorepo/demiurge-types';
 
@@ -18,6 +18,7 @@ import { TF_User } from '@monorepo/demiurge-types';
 export type HeaderProps = {
   hasNotifications?: boolean;
   user?: TF_User;
+  otherUsers?: TF_User[];
   logoutAction?: TAction;
   share?: boolean;
   host?: boolean;
@@ -28,12 +29,13 @@ export const Header = ({
   host,
   share,
   user,
+  otherUsers,
   logoutAction,
 }: HeaderProps) => {
   const NiAction = useNotImplemented();
 
   return (
-    <nav className="w-full h-[46px] flex justify-between items-center bg-[#1D1D42] px-6 relative">
+    <nav className="app-header w-full h-[46px] flex justify-between items-center bg-[#1D1D42] px-6 relative">
       <div className="flex items-center gap-4">
         <p className="text-white text-[16px]">Menu</p>
         <div className="rounded-[10px] bg-white/20 w-[2px] h-[28px]" />
@@ -49,7 +51,7 @@ export const Header = ({
       </div>
 
       <div className="flex items-center gap-[30px]">
-        <div className="flex items-center gap-[30px]">
+        {/*<div className="flex items-center gap-[30px]">
           <div>
             <ButtonIcon
               Icon={icons.SimpleChevron}
@@ -67,7 +69,7 @@ export const Header = ({
               iconHeight="14px"
             />
           </div>
-        </div>
+        </div>*/}
         <div className="flex items-center bg-white/5 h-[28px] rounded-[4px] py-1 px-3 gap-[20px] w-[365px]">
           <ButtonIcon
             Icon={icons.Search}
@@ -115,8 +117,13 @@ export const Header = ({
 
         <div className="flex items-center gap-[10px]">
           <div className="flex items-center">
-            <UserAvatar {...randomGuy()} size="small" removeMarginRight />
-            <UserAvatar {...randomGuy()} size="small" removeMarginRight />
+            <UserBubble
+              users={otherUsers || []}
+              direction="horizontal"
+              live={false}
+              size="small"
+              maxUsers={5}
+            />
           </div>
 
           <div className="rounded-[10px] bg-white/20 w-[2px] h-[28px]" />

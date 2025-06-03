@@ -6,6 +6,7 @@ export interface UserBubbleProps {
   size: 'small' | 'large';
   live: boolean;
   users: TF_User[];
+  maxUsers?: number;
 }
 
 export const UserBubble = ({
@@ -13,12 +14,14 @@ export const UserBubble = ({
   direction,
   live,
   size,
+  maxUsers = 3,
 }: UserBubbleProps) => {
   const sz = size === 'small' ? 38 : 48;
 
-  const displayedUsers = users.length <= 3 ? users : users.slice(0, 2);
+  const displayedUsers =
+    users.length <= maxUsers ? users : users.slice(0, maxUsers - 1);
 
-  const displayPlusN = users.length > 3;
+  const displayPlusN = users.length > maxUsers;
 
   const total = displayedUsers.length + (displayPlusN ? 1 : 0);
 
@@ -56,8 +59,8 @@ export const UserBubble = ({
           style={{
             transform: `${
               direction === 'horizontal'
-                ? `translateX(${(index + 1) * shift}px)`
-                : `translateY(${index * shift}px)`
+                ? `translateX(${(index + (displayPlusN ? 1 : 0)) * shift}px)`
+                : `translateY(${(index + (displayPlusN ? 1 : 0)) * shift}px)`
             }`,
             zIndex: direction === 'horizontal' ? 100 - index * 10 : index * 10,
           }}

@@ -1,12 +1,18 @@
 import { useNavigate } from 'react-router-dom';
-import { useCurrentUser, useMutationLogout } from '@monorepo/frontend-data';
+import {
+  useCurrentUser,
+  useMutationLogout,
+  useQueriesUsers,
+} from '@monorepo/frontend-data';
 import { useAction } from '@monorepo/ui-base';
 import { Header } from '@monorepo/ui-views';
+import { useAwarenessUserList } from '@monorepo/collab-engine';
+import { TF_User, TG_User } from '@monorepo/demiurge-types';
 
 //
 
 export const HeaderLogic = () => {
-  const { data, status } = useCurrentUser();
+  const { data: me, status: meStatus } = useCurrentUser();
 
   const logout = useMutationLogout();
 
@@ -16,10 +22,28 @@ export const HeaderLogic = () => {
     return logout.mutateAsync().then(() => navigate('/'));
   }, [logout, navigate]);
 
-  if (status === 'success')
+  const users = useAwarenessUserList();
+
+  // queries for each needed user
+  const usersQueries = useQueriesUsers(users.map((u) => u.user_id));
+
+  const otherUsers: TF_User[] = usersQueries
+    .filter(
+      (u) =>
+        u.status === 'success' &&
+        u.data.user_id &&
+        u.data.user_id !== me?.user.user_id
+    )
+    .map((u) => ({
+      ...(u.data as TG_User),
+      color: users.find((u2) => u2.user_id === u.data?.user_id)?.color,
+    }));
+
+  if (meStatus === 'success')
     return (
       <Header
-        user={data.user.user_id ? data.user : undefined}
+        user={me.user.user_id ? me.user : undefined}
+        otherUsers={otherUsers}
         logoutAction={logoutAction}
         host
         share

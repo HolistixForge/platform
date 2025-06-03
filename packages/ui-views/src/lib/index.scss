@@ -1,3 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.app-header {
+  .AvatarRoot {
+    border: solid 1.5px var(--c-pink-2);
+  }
+}

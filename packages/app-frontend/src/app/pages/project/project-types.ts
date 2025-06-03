@@ -1,6 +1,6 @@
 import { TApi_Project } from '@monorepo/demiurge-types';
-import { TYjsCollabConfig } from '@monorepo/collab-engine';
-import { Dispatcher } from '@monorepo/collab-engine';
+import { FrontendDispatcher, TYjsCollabConfig } from '@monorepo/collab-engine';
+import { TJsonObject } from '@monorepo/simple-types';
 
 export type ProjectState =
   | {
@@ -24,7 +24,7 @@ export type ProjectData = {
   project: TApi_Project;
   collabConfig: TYjsCollabConfig;
   yjsDocId: string;
-  dispatcher: Dispatcher<any, any>;
+  dispatcher: FrontendDispatcher<TJsonObject>;
   gatewayFQDN: string;
   isOwner: boolean;
 };
@@ -32,4 +32,5 @@ export type ProjectData = {
 export type ProjectUser = {
   username: string;
   color: string;
+  user_id: string;
 };

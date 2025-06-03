@@ -61,6 +61,7 @@ const useProjectUser = () => {
         username === 'anonymous'
           ? 'var(--c-gray-6)'
           : paletteRandomColor(username),
+      user_id: currentUserData?.user.user_id || 'anonymous',
     };
   }
 
