@@ -27,7 +27,11 @@ import {
 import { TJupyterSharedData } from '../../jupyter-shared-model';
 import { useJLsManager } from '../../jupyter-shared-model-front';
 import { jupyterlabIsReachable } from '../../ds-backend';
-import { TServerSettings } from '../../jupyter-types';
+import {
+  TServerSettings,
+  TTerminalNodeDataPayload,
+  Terminal as MyTerminal,
+} from '../../jupyter-types';
 import { TDemiurgeNotebookEvent } from '../../jupyter-events';
 
 import '@jupyterlab/terminal/style/index';
@@ -79,20 +83,29 @@ const connectTerminal = async (
 //
 //
 
-export const JupyterTerminal = ({ terminalId }: { terminalId: string }) => {
+export const JupyterTerminal = ({
+  terminalId,
+  projectServerId,
+}: {
+  terminalId: string;
+  projectServerId: number;
+}) => {
   //
   const [isReachable, setIsReachable] = useState<boolean | undefined>(
     undefined
   );
 
-  const terminal = useSharedData<TJupyterSharedData>(['terminals'], (sd) => {
-    return sd.terminals.get(terminalId);
-  });
+  const terminal: MyTerminal = useSharedData<TJupyterSharedData>(
+    ['jupyterServers'],
+    (sd) => {
+      return sd.jupyterServers.get(`${projectServerId}`)?.terminals[terminalId];
+    }
+  );
 
   const server: TServer = useSharedData<TServersSharedData>(
     ['projectServers'],
     (sd) => {
-      return sd.projectServers.get(`${terminal.project_server_id}`);
+      return sd.projectServers.get(`${projectServerId}`);
     }
   );
 
@@ -132,14 +145,12 @@ export const JupyterTerminal = ({ terminalId }: { terminalId: string }) => {
       if (!yet.current && server) {
         yet.current = true;
         jlsManager.getServerSetting(server).then((ss) => {
-          connectTerminal(ss, terminal.jupyterTerminalSessionModel).then(
-            (terminalWidget) => {
-              terminalWidgetRef.current = terminalWidget;
-              terminalWidget.node.style.width = '100%';
-              terminalWidget.node.style.height = '100%';
-              if (ref.current) Widget.attach(terminalWidget, ref.current);
-            }
-          );
+          connectTerminal(ss, terminal.sessionModel).then((terminalWidget) => {
+            terminalWidgetRef.current = terminalWidget;
+            terminalWidget.node.style.width = '100%';
+            terminalWidget.node.style.height = '100%';
+            if (ref.current) Widget.attach(terminalWidget, ref.current);
+          });
         });
       }
     }
@@ -177,11 +188,12 @@ export const JupyterTerminal = ({ terminalId }: { terminalId: string }) => {
 
 //
 
-export const NodeTerminal = ({ node }: { node: TGraphNode }) => {
-  const { terminalId } = node.data! as {
-    project_server_id: number;
-    terminalId: string;
-  };
+export const NodeTerminal = ({
+  node,
+}: {
+  node: TGraphNode<TTerminalNodeDataPayload>;
+}) => {
+  const { terminal_id, project_server_id } = node.data!;
 
   const {
     id,
@@ -199,10 +211,10 @@ export const NodeTerminal = ({ node }: { node: TGraphNode }) => {
 
   const handleDeleteTerminal = useCallback(async () => {
     await dispatcher.dispatch({
-      type: 'jupyter:delete-terminal',
-      terminalId,
+      type: 'jupyter:delete-terminal-node',
+      nodeId: id,
     });
-  }, [dispatcher, terminalId]);
+  }, [dispatcher, id]);
 
   const isExpanded = viewStatus.mode === 'EXPANDED';
   const buttons = useMakeButton({
@@ -233,7 +245,10 @@ export const NodeTerminal = ({ node }: { node: TGraphNode }) => {
             className="node-wrapper-body terminal"
             style={{ height: '100%' }}
           >
-            <JupyterTerminal terminalId={terminalId} />
+            <JupyterTerminal
+              terminalId={terminal_id}
+              projectServerId={project_server_id}
+            />
           </div>
         </DisableZoomDragPan>
       )}

@@ -2,7 +2,6 @@ import { useExtraContext } from '@monorepo/collab-engine';
 import { TServer, TServersSharedData } from '@monorepo/servers';
 import { useRegisterListener } from '@monorepo/simple-types';
 
-import { TDKID } from './jupyter-types';
 import { JLsManager, TKernelPack } from './front/jls-manager';
 import { TJupyterSharedData } from './jupyter-shared-model';
 
@@ -24,11 +23,14 @@ export const useJLsManager = () =>
 
 //
 
-export const useKernelPack = (dkid: TDKID): TKernelPack | false => {
+export const useKernelPack = (
+  project_server_id: number,
+  kernel_id: string
+): TKernelPack | false => {
   const { jlsManager } = useJLsManager();
-  useRegisterListener(jlsManager, dkid);
+  useRegisterListener(jlsManager, kernel_id);
 
-  const kernelPack = jlsManager.getKernelPack(dkid);
+  const kernelPack = jlsManager.getKernelPack(project_server_id, kernel_id);
 
   return kernelPack;
 };

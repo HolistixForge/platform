@@ -18,12 +18,12 @@ export type TConnector = {
   pins: TPin[];
 };
 
-export type TGraphNode = {
+export type TGraphNode<TData = TJsonObject> = {
   id: string;
   name: string;
   type: string;
   root: boolean;
-  data?: TJsonObject;
+  data?: TData;
   connectors: TConnector[];
 };
 
