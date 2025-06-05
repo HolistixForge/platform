@@ -22,6 +22,32 @@ export const HeaderLogic = () => {
     return logout.mutateAsync().then(() => navigate('/'));
   }, [logout, navigate]);
 
+  if (meStatus === 'success')
+    return (
+      <Header
+        user={me.user.user_id ? me.user : undefined}
+        logoutAction={logoutAction}
+        host
+        share
+        hasNotifications
+      />
+    );
+  return null;
+};
+
+//
+
+export const HeaderLogicProject = () => {
+  const { data: me, status: meStatus } = useCurrentUser();
+
+  const logout = useMutationLogout();
+
+  const navigate = useNavigate();
+
+  const logoutAction = useAction(() => {
+    return logout.mutateAsync().then(() => navigate('/'));
+  }, [logout, navigate]);
+
   const users = useAwarenessUserList();
 
   // queries for each needed user

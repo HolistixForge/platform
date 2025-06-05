@@ -1,5 +1,5 @@
 import { Outlet, useParams } from 'react-router-dom';
-import { HeaderLogic } from '../../header/header-logic';
+import { HeaderLogicProject } from '../../header/header-logic';
 import { ProjectContext } from './project-context';
 import { GatewayCountdown } from './gateway-countdown';
 
@@ -8,7 +8,7 @@ export const ProjectRoot = () => {
   if (owner && project_name)
     return (
       <ProjectContext ownerId={owner} projectName={project_name}>
-        <HeaderLogic />
+        <HeaderLogicProject />
         <GatewayCountdown />
         <Outlet />
       </ProjectContext>
