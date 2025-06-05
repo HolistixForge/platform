@@ -5,6 +5,7 @@ import {
   TCollaborativeChunk,
   TValidSharedData,
   TValidSharedDataToCopy,
+  FrontendDispatcher,
 } from '@monorepo/collab-engine';
 import { Core_loadData, TCoreSharedData, TCoreEvent } from '@monorepo/core';
 import {
@@ -29,6 +30,7 @@ import { Jupyter_Load_Frontend_ExtraContext } from '@monorepo/jupyter/frontend';
 import { GanymedeApi } from '@monorepo/frontend-data';
 import { TEventSocials } from '@monorepo/socials';
 import { Notion_loadData, TNotionEvent } from '@monorepo/notion';
+import { TJsonObject } from '@monorepo/simple-types';
 
 //
 
@@ -54,7 +56,8 @@ export const useDispatcher = useDispatcherCollab<AllEvents>;
 //
 
 export const getCollabChunks = (
-  ganymedeApi: GanymedeApi
+  ganymedeApi: GanymedeApi,
+  dispatcher: FrontendDispatcher<TJsonObject>
 ): TCollaborativeChunk[] => {
   //
   return [
@@ -78,6 +81,7 @@ export const getCollabChunks = (
       extraContext: (sd: TValidSharedData) =>
         Jupyter_Load_Frontend_ExtraContext(
           sd as TJupyterSharedData & TServersSharedData,
+          dispatcher,
           // getToken callback
           async (server) => {
             const oauth_client = server.oauth.find(

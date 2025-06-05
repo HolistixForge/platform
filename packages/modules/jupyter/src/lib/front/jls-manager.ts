@@ -1,10 +1,12 @@
 import { serverUrl } from '@monorepo/api-fetch';
 import { TServer, TServersSharedData, serviceUrl } from '@monorepo/servers';
 import { Listenable } from '@monorepo/simple-types';
+import { FrontendDispatcher } from '@monorepo/collab-engine';
 
 import { BrowserWidgetManager } from './browser-widget-manager';
 import { JupyterlabDriver } from '../driver';
 import { TJupyterSharedData } from '../jupyter-shared-model';
+import { TDemiurgeNotebookEvent } from '../jupyter-events';
 import { jupyterlabIsReachable } from '../ds-backend';
 import { injectWidgetsScripts } from './widgets-js-dependencies';
 
@@ -62,7 +64,10 @@ export type TOnNewDriverCb = (s: TServer) => Promise<void>;
 export class JLsManager extends Listenable {
   _drivers: Map<number, Promise<JupyterlabDriver>> = new Map();
   _kernelPacks: Map<string, TKernelPack> = new Map();
+
   _sd: TJupyterSharedData & TServersSharedData;
+  _dispatcher: FrontendDispatcher<TDemiurgeNotebookEvent>;
+
   getToken: (s: TServer) => Promise<string>;
 
   /**
@@ -73,10 +78,12 @@ export class JLsManager extends Listenable {
    */
   constructor(
     sd: TJupyterSharedData & TServersSharedData,
+    dispatcher: FrontendDispatcher<TDemiurgeNotebookEvent>,
     getToken: (s: TServer) => Promise<string>
   ) {
     super();
     this._sd = sd;
+    this._dispatcher = dispatcher;
     this.getToken = getToken;
     this._sd.projectServers.observe(() => this._onChange());
     this._sd.jupyterServers.observe(() => this._onChange());
@@ -186,6 +193,18 @@ export class JLsManager extends Listenable {
         this._onNewDriver(server).then(() => {
           this.getServerSetting(server).then((ss) => {
             const driver = new JupyterlabDriver(ss);
+            driver.subscribeResourceListener(() => {
+              const resources = {
+                kernels: driver.getKernels(),
+                terminals: driver.getTerminals(),
+              };
+              // send new resource to backend, that it will push back through shared state
+              // that will trig _onChange() and update kernel packs and UI
+              this._dispatcher.dispatch({
+                type: 'jupyter:resources-changed',
+                resources,
+              });
+            });
             resolve(driver);
           });
         });

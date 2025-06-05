@@ -1,18 +1,20 @@
-import { useExtraContext } from '@monorepo/collab-engine';
+import { FrontendDispatcher, useExtraContext } from '@monorepo/collab-engine';
 import { TServer, TServersSharedData } from '@monorepo/servers';
 import { useRegisterListener } from '@monorepo/simple-types';
 
 import { JLsManager, TKernelPack } from './front/jls-manager';
 import { TJupyterSharedData } from './jupyter-shared-model';
+import { TDemiurgeNotebookEvent } from './jupyter-events';
 
 //
 
 export const Jupyter_Load_Frontend_ExtraContext = (
   sd: TJupyterSharedData & TServersSharedData,
+  dispatcher: FrontendDispatcher<TDemiurgeNotebookEvent>,
   getToken: (s: TServer) => Promise<string>
 ): { jlsManager: JLsManager } => {
   return {
-    jlsManager: new JLsManager(sd, getToken),
+    jlsManager: new JLsManager(sd, dispatcher, getToken),
   };
 };
 

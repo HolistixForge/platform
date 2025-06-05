@@ -3,39 +3,27 @@ import { IKernelConnection } from '@jupyterlab/services/lib/kernel/kernel';
 
 import { log } from '@monorepo/log';
 
-import { IOutput, TKernelType, TServerSettings } from './jupyter-types';
+import {
+  IOutput,
+  TKernelType,
+  TServerSettings,
+  Kernel,
+  Terminal,
+} from './jupyter-types';
 import { makeVirtualOutputArea } from './output-area';
 
 //
 //
 
-export type KernelResource = {
-  id: string;
-  name: string;
-  last_activity: string;
-  execution_state: string;
-  connections: number;
-};
+type ResourceListener = (kernels: Kernel[], terminals: Terminal[]) => void;
 
-export type TerminalResource = {
-  name: string;
-  last_activity: string;
-};
-
-type ResourceListener = (
-  kernels: KernelResource[],
-  terminals: TerminalResource[]
-) => void;
-
-function shallowEqualKernelResources(
-  a: KernelResource[],
-  b: KernelResource[]
-): boolean {
+function shallowEqualKernels(a: Kernel[], b: Kernel[]): boolean {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) {
     if (
-      a[i].id !== b[i].id ||
+      a[i].kernel_id !== b[i].kernel_id ||
       a[i].name !== b[i].name ||
+      a[i].type !== b[i].type ||
       a[i].last_activity !== b[i].last_activity ||
       a[i].execution_state !== b[i].execution_state ||
       a[i].connections !== b[i].connections
@@ -46,13 +34,13 @@ function shallowEqualKernelResources(
   return true;
 }
 
-function shallowEqualTerminalResources(
-  a: TerminalResource[],
-  b: TerminalResource[]
-): boolean {
+function shallowEqualTerminals(a: Terminal[], b: Terminal[]): boolean {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) {
-    if (a[i].name !== b[i].name || a[i].last_activity !== b[i].last_activity) {
+    if (
+      a[i].terminal_id !== b[i].terminal_id ||
+      a[i].last_activity !== b[i].last_activity
+    ) {
       return false;
     }
   }
@@ -65,8 +53,8 @@ export class JupyterlabDriver {
   kernelConnections: Map<string, IKernelConnection> = new Map();
   _ss: ServerConnection.ISettings;
 
-  private kernelResources: KernelResource[] = [];
-  private terminalResources: TerminalResource[] = [];
+  private kernelResources: Kernel[] = [];
+  private terminalResources: Terminal[] = [];
   private resourceListeners: Set<ResourceListener> = new Set();
   private pollingInterval: number = 10000; // 10 seconds
   private pollingTimer: any = null;
@@ -198,8 +186,8 @@ export class JupyterlabDriver {
     }
   };
 
-  getKernelResources = () => this.kernelResources;
-  getTerminalResources = () => this.terminalResources;
+  getKernels = () => this.kernelResources;
+  getTerminals = () => this.terminalResources;
 
   private notifyResourceListeners = () => {
     for (const listener of this.resourceListeners) {
@@ -212,9 +200,10 @@ export class JupyterlabDriver {
       // Poll kernels
       await this.km.refreshRunning();
       const kernelModels = Array.from(await this.km.running());
-      const newKernelResources = kernelModels.map((k: any) => ({
-        id: k.id,
+      const newKernels: Kernel[] = kernelModels.map((k: any) => ({
+        kernel_id: k.id,
         name: k.name,
+        type: k.type,
         last_activity: k.last_activity,
         execution_state: k.execution_state || '',
         connections: k.connections || 0,
@@ -224,22 +213,23 @@ export class JupyterlabDriver {
         '/api/terminals'
       );
       const terminals = await terminalModels.json();
-      const newTerminalResources = terminals.map((t: any) => ({
-        name: t.name,
+      const newTerminals: Terminal[] = terminals.map((t: any) => ({
+        terminal_id: t.name,
+        sessionModel: { name: t.name },
         last_activity: t.last_activity,
       }));
       // Only update and notify if changed
-      const kernelsChanged = !shallowEqualKernelResources(
+      const kernelsChanged = !shallowEqualKernels(
         this.kernelResources,
-        newKernelResources
+        newKernels
       );
-      const terminalsChanged = !shallowEqualTerminalResources(
+      const terminalsChanged = !shallowEqualTerminals(
         this.terminalResources,
-        newTerminalResources
+        newTerminals
       );
       if (kernelsChanged || terminalsChanged) {
-        this.kernelResources = newKernelResources;
-        this.terminalResources = newTerminalResources;
+        this.kernelResources = newKernels;
+        this.terminalResources = newTerminals;
         this.notifyResourceListeners();
       }
     } catch (error) {

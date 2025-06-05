@@ -4,6 +4,7 @@ import {
   JitterDispatcher,
   TCollaborativeChunk,
   BackendEventProcessor,
+  FrontendDispatcher,
 } from '@monorepo/collab-engine';
 import { TJson, TJsonObject, TMyfetchRequest } from '@monorepo/simple-types';
 import { ApiFetch } from '@monorepo/api-fetch';
@@ -37,11 +38,13 @@ class FakeApiFetch extends ApiFetch {
 
 export const MockCollaborativeContext = ({
   children,
-  collabChunks,
+  getCollabChunks,
   callback,
 }: {
   children: ReactNode;
-  collabChunks: TCollaborativeChunk[];
+  getCollabChunks: (
+    dispatcher: FrontendDispatcher<TJsonObject>
+  ) => TCollaborativeChunk[];
   callback?: (context: TCollaborationContext) => void;
 }) => {
   const { dispatcher, bep } = useMemo(() => {
@@ -55,6 +58,7 @@ export const MockCollaborativeContext = ({
   }, []);
 
   const config = useMemo(() => {
+    const collabChunks = getCollabChunks(dispatcher);
     return {
       collabChunks,
       id: 'story',
@@ -66,7 +70,7 @@ export const MockCollaborativeContext = ({
       },
       bep,
     };
-  }, [collabChunks, dispatcher, bep]);
+  }, [getCollabChunks, dispatcher, bep]);
 
   const { context, state, connectionErrors } = useCollaborativeContextInternal(
     config as any

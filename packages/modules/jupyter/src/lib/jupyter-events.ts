@@ -1,6 +1,6 @@
 // TODO_DEM: move in plugin/jupyter
 import { TEventOrigin } from '@monorepo/core';
-import { IOutput } from './jupyter-types';
+import { IOutput, Kernel, Terminal } from './jupyter-types';
 
 export type FormFieldsOnly<T extends TDemiurgeNotebookEvent> = Partial<
   Omit<T, 'viewId' | 'position' | 'type'>
@@ -80,6 +80,14 @@ export type TEventDeleteTerminalNode = {
   nodeId: string;
 };
 
+export type TEventJupyterResourcesChanged = {
+  type: 'jupyter:resources-changed';
+  resources: {
+    kernels: Kernel[];
+    terminals: Terminal[];
+  };
+};
+
 export type TDemiurgeNotebookEvent =
   | TEventExecutePythonNode
   | TEventPythonNodeOutput
@@ -93,4 +101,5 @@ export type TDemiurgeNotebookEvent =
   | TEventNewTerminal
   | TEventNewTerminalNode
   | TEventDeleteTerminal
-  | TEventDeleteTerminalNode;
+  | TEventDeleteTerminalNode
+  | TEventJupyterResourcesChanged;
