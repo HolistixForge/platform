@@ -3,25 +3,28 @@
   "include": [],
   "references": [
     {
-      "path": "../core"
-    },
-    {
       "path": "../../ui-toolkit"
-    },
-    {
-      "path": "../../collab-engine"
-    },
-    {
-      "path": "../servers"
     },
     {
       "path": "../../api-fetch"
     },
     {
+      "path": "../../simple-types"
+    },
+    {
+      "path": "../core"
+    },
+    {
+      "path": "../servers"
+    },
+    {
+      "path": "../../collab-engine"
+    },
+    {
       "path": "../../log"
     },
     {
-      "path": "../../simple-types"
+      "path": "../module"
     },
     {
       "path": "../space"

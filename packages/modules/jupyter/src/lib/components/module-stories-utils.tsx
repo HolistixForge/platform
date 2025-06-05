@@ -5,12 +5,7 @@ import {
   MockCollaborativeContext,
   FrontendDispatcher,
 } from '@monorepo/collab-engine';
-import {
-  Servers_loadData,
-  ServersReducer,
-  TG_Server,
-  TServersSharedData,
-} from '@monorepo/servers';
+import { Servers_loadData, ServersReducer, TG_Server } from '@monorepo/servers';
 import { TMyfetchRequest } from '@monorepo/simple-types';
 import { Core_loadData, CoreReducer } from '@monorepo/core';
 import {
@@ -19,7 +14,7 @@ import {
   defaultGraphView,
 } from '@monorepo/space';
 
-import { Jupyter_loadData, TJupyterSharedData } from '../jupyter-shared-model';
+import { Jupyter_loadData } from '../jupyter-shared-model';
 import { Jupyter_Load_Frontend_ExtraContext } from '../jupyter-shared-model-front';
 import { TDemiurgeNotebookEvent } from '../jupyter-events';
 import { JupyterReducer } from '../jupyter-reducer';
@@ -37,21 +32,24 @@ const getChunks = (
 ): TCollaborativeChunk[] => {
   return [
     {
-      sharedData: (st: SharedTypes) => Core_loadData(st),
-      reducers: (sd: TValidSharedData) => [new CoreReducer()],
+      name: 'core',
+      loadSharedData: (st: SharedTypes) => Core_loadData(st),
+      loadReducers: (sd: TValidSharedData) => [new CoreReducer()],
     },
     {
-      sharedData: (st: SharedTypes) => {
+      name: 'space',
+      loadSharedData: (st: SharedTypes) => {
         const sd = Space_loadData(st);
         sd.graphViews.set('story-view', defaultGraphView());
         return sd;
       },
-      reducers: (sd: TValidSharedData) => [new SpaceReducer()],
+      loadReducers: (sd: TValidSharedData) => [new SpaceReducer()],
     },
     {
-      sharedData: (st: SharedTypes) => Servers_loadData(st),
-      reducers: (sd: TValidSharedData) => [new ServersReducer(null as any)],
-      extraContext: (sd: TValidSharedData) => {
+      name: 'servers',
+      loadSharedData: (st: SharedTypes) => Servers_loadData(st),
+      loadReducers: (sd: TValidSharedData) => [new ServersReducer(null as any)],
+      loadExtraContext: () => {
         let mock_servers: TG_Server[] = [];
         return {
           // a mock toGanymede that returns a new server id to allow servers:new-server to work
@@ -101,18 +99,12 @@ const getChunks = (
       },
     },
     {
-      sharedData: (st: SharedTypes) => Jupyter_loadData(st),
-      reducers: (sd: TValidSharedData) => [new JupyterReducer(sd as any)],
-      extraContext: (sd: TValidSharedData) => {
+      name: 'jupyter',
+      loadSharedData: (st: SharedTypes) => Jupyter_loadData(st),
+      loadReducers: (sd: TValidSharedData) => [new JupyterReducer(sd as any)],
+      loadExtraContext: (args) => {
         return {
-          ...Jupyter_Load_Frontend_ExtraContext(
-            sd as TJupyterSharedData & TServersSharedData,
-            dispatcher,
-            // mocked getToken callback
-            async (server) => {
-              return 'My_Super_Test_Story';
-            }
-          ),
+          ...Jupyter_Load_Frontend_ExtraContext(args),
           // mock user jupyterlab token for JupyterReducer that run in backend in normal mode
           authorizationHeader: 'My_Super_Test_Story',
         };

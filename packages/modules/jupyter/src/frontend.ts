@@ -1,7 +1,27 @@
+import { ModuleFrontend } from '@monorepo/module/frontend';
+
+import { NodeTerminal } from './lib/components/terminal/terminal';
+import { NodeCell } from './lib/components/code-cell/cell';
+import { NodeKernel } from './lib/components/node-kernel/node-kernel';
+
+import { Jupyter_Load_Frontend_ExtraContext } from './lib/jupyter-shared-model-front';
+import { Jupyter_loadData } from './lib/jupyter-shared-model';
+
 import './lib/index.scss';
 
-export { Jupyter_Load_Frontend_ExtraContext } from './lib/jupyter-shared-model-front';
+//
 
-export { NodeTerminal } from './lib/components/terminal/terminal';
-export { NodeCell } from './lib/components/code-cell/cell';
-export { NodeKernel } from './lib/components/node-kernel/node-kernel';
+export const module: ModuleFrontend = {
+  collabChunk: {
+    name: 'jupyter',
+    loadSharedData: Jupyter_loadData,
+    loadExtraContext: Jupyter_Load_Frontend_ExtraContext,
+    deps: ['core', 'servers'],
+  },
+  spaceMenuEntries: [],
+  nodes: {
+    terminal: NodeTerminal,
+    cell: NodeCell,
+    kernel: NodeKernel,
+  },
+};

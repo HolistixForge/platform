@@ -1,4 +1,8 @@
-import { FrontendDispatcher, useExtraContext } from '@monorepo/collab-engine';
+import {
+  FrontendDispatcher,
+  TValidSharedData,
+  useExtraContext,
+} from '@monorepo/collab-engine';
 import { TServer, TServersSharedData } from '@monorepo/servers';
 import { useRegisterListener } from '@monorepo/simple-types';
 
@@ -7,14 +11,36 @@ import { TJupyterSharedData } from './jupyter-shared-model';
 import { TDemiurgeNotebookEvent } from './jupyter-events';
 
 //
+type TServerExtraContext = {
+  server: {
+    getToken: (s: TServer) => Promise<string>;
+  };
+};
 
-export const Jupyter_Load_Frontend_ExtraContext = (
-  sd: TJupyterSharedData & TServersSharedData,
-  dispatcher: FrontendDispatcher<TDemiurgeNotebookEvent>,
-  getToken: (s: TServer) => Promise<string>
-): { jlsManager: JLsManager } => {
+export type TJupyterExtraContext = {
+  jupyter: {
+    jlsManager: JLsManager;
+  };
+};
+
+export const Jupyter_Load_Frontend_ExtraContext = ({
+  sharedData,
+  dispatcher,
+  extraContext,
+}: {
+  sharedData: TValidSharedData;
+  dispatcher?: FrontendDispatcher<TDemiurgeNotebookEvent>;
+  extraContext: object;
+}): { jupyter: { jlsManager: JLsManager } } => {
+  if (!dispatcher) throw new Error('dispatcher is required');
   return {
-    jlsManager: new JLsManager(sd, dispatcher, getToken),
+    jupyter: {
+      jlsManager: new JLsManager(
+        sharedData as TJupyterSharedData & TServersSharedData,
+        dispatcher,
+        (extraContext as TServerExtraContext).server.getToken
+      ),
+    },
   };
 };
 

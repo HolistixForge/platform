@@ -3,6 +3,12 @@
   "include": [],
   "references": [
     {
+      "path": "../../collab-engine"
+    },
+    {
+      "path": "../core"
+    },
+    {
       "path": "./tsconfig.lib.json"
     },
     {

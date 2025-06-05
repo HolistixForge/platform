@@ -216,49 +216,49 @@ const updateReverseProxy = async (
 
 const chunks: TCollaborativeChunk[] = [
   {
-    sharedData: (st: SharedTypes) => Core_loadData(st),
-    reducers: (sd: TValidSharedData) => [
+    loadSharedData: (st: SharedTypes) => Core_loadData(st),
+    loadReducers: (sd: TValidSharedData) => [
       new CoreReducer(),
       new MetaReducer(gatewayStopNotify),
     ],
   },
   {
-    sharedData: (st: SharedTypes) => Space_loadData(st),
-    reducers: (sd: TValidSharedData) => [new SpaceReducer()],
+    loadSharedData: (st: SharedTypes) => Space_loadData(st),
+    loadReducers: (sd: TValidSharedData) => [new SpaceReducer()],
   },
   {
-    sharedData: (st: SharedTypes) => Chat_loadData(st),
-    reducers: (sd: TValidSharedData) => [new ChatReducer()],
+    loadSharedData: (st: SharedTypes) => Chat_loadData(st),
+    loadReducers: (sd: TValidSharedData) => [new ChatReducer()],
   },
   {
-    sharedData: (st: SharedTypes) => Servers_loadData(st),
-    reducers: (sd: TValidSharedData) => [
+    loadSharedData: (st: SharedTypes) => Servers_loadData(st),
+    loadReducers: (sd: TValidSharedData) => [
       new ServersReducer(updateReverseProxy),
     ],
-    extraContext: (sd: TValidSharedData) => ({
+    loadExtraContext: () => ({
       toGanymede: toGanymede,
       gatewayFQDN: CONFIG.GATEWAY_FQDN,
     }),
   },
   {
-    sharedData: (st: SharedTypes) => Tabs_loadData(st),
-    reducers: (sd: TValidSharedData) => [new TabsReducer()],
+    loadSharedData: (st: SharedTypes) => Tabs_loadData(st),
+    loadReducers: (sd: TValidSharedData) => [new TabsReducer()],
   },
   {
-    sharedData: (st: SharedTypes) => Jupyter_loadData(st),
-    reducers: (sd: TValidSharedData) => [
+    loadSharedData: (st: SharedTypes) => Jupyter_loadData(st),
+    loadReducers: (sd: TValidSharedData) => [
       new JupyterReducer(sd as TServersSharedData & TJupyterSharedData),
     ],
   },
   {
-    sharedData: (st: SharedTypes) => Notion_loadData(st),
-    reducers: (sd: TValidSharedData) => [new NotionReducer()],
-    extraContext: (sd: TValidSharedData) => ({
+    loadSharedData: (st: SharedTypes) => Notion_loadData(st),
+    loadReducers: (sd: TValidSharedData) => [new NotionReducer()],
+    loadExtraContext: () => ({
       notionApiKey: CONFIG.NOTION_API_KEY,
     }),
   },
   {
-    reducers: (sd: TValidSharedData) => [new SocialsReducer()],
+    loadReducers: (sd: TValidSharedData) => [new SocialsReducer()],
   },
 ];
 
@@ -296,16 +296,14 @@ export async function initProjectCollaboration(
   const yst = new YjsSharedTypes(ydoc);
   const yse = new YjsSharedEditor(ydoc.getMap(EDITORS_YTEXT_YMAP_KEY));
 
-  const extraContext = {};
-  const loadChunks = compileChunks(chunks, extraContext, bep);
-  const sd = loadChunks(yst) as TSd;
+  const { sharedData, extraContext } = compileChunks(chunks, yst, { bep });
 
   // load data from saved file
   const loaded = loadDoc();
   const isNew = !loaded;
 
   // attach data to dispatcher
-  bep.bindData(yst, yse, sd, extraContext);
+  bep.bindData(yst, yse, sharedData, extraContext);
 
   // let every reducers update data from up to date data (API calls ...)
   await bep.process({ type: 'core:load' });
