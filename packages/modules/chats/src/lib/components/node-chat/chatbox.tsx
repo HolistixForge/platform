@@ -175,6 +175,11 @@ export const Chatbox = ({
       className={`node-background chat-container ${
         general ? 'chat-general' : ''
       }`}
+      style={
+        (window as any).chatColor
+          ? { backgroundColor: (window as any).chatColor }
+          : undefined
+      }
     >
       <div className="chat-header">
         <div className="chat-infos">

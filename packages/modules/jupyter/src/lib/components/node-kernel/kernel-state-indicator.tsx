@@ -1,18 +1,18 @@
+import { stateToLabel, stateToProgress } from '../../front/jls-manager';
 import './kernel-state-indicator.scss';
 
 export type KernelStateIndicatorProps = {
-  StartProgress: number;
-  startState: string;
+  state: number;
 };
 
-export const KernelStateIndicator = ({
-  StartProgress,
-  startState,
-}: KernelStateIndicatorProps) => {
+export const KernelStateIndicator = ({ state }: KernelStateIndicatorProps) => {
   return (
     <div className="kernel-ready-progress-bar">
-      <div className="progress" style={{ width: `${StartProgress}%` }}></div>
-      <span>{startState}</span>
+      <div
+        className="progress"
+        style={{ width: `${stateToProgress(state)}%` }}
+      ></div>
+      <span>{stateToLabel(state)}</span>
     </div>
   );
 };

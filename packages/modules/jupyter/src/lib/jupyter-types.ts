@@ -5,11 +5,36 @@ import { TJsonArray, TJsonObject } from '@monorepo/simple-types';
 
 export type IOutput = TJsonObject;
 
-export type TDKID = string;
-
-export type TJKID = string;
-
 export type TKernelType = 'python3';
+
+export type Kernel = {
+  kernel_id: string;
+  name: string;
+  type: TKernelType;
+  last_activity?: string;
+  execution_state?: string;
+  connections?: number;
+};
+
+export type Terminal = {
+  terminal_id: string;
+  sessionModel: { name: string };
+  last_activity?: string;
+};
+
+export type Cell = {
+  cell_id: string;
+  busy: boolean;
+  kernel_id: string;
+  outputs: TJsonArray;
+};
+
+export type TJupyterServerData = {
+  project_server_id: number;
+  kernels: Record<string, Kernel>;
+  terminals: Record<string, Terminal>;
+  cells: Record<string, Cell>;
+};
 
 export type TServerSettings = {
   baseUrl: ServerConnection.ISettings['baseUrl'];
@@ -18,55 +43,17 @@ export type TServerSettings = {
 
 //
 
-export type TJupyterKernelInfo = {
-  dkid: TDKID;
-  jkid?: TJKID;
-  kernelName: string;
-  kernelType: TKernelType;
-};
-
-export type TJupyterServerData = {
+export type TKernelNodeDataPayload = {
   project_server_id: number;
-  kernels: Array<TJupyterKernelInfo>;
+  kernel_id: string;
 };
 
-/**
- * little helper function that go through servers Map to find which one
- * has a kernel with the given 'demiurge kernel id'
- */
-
-export const dkidToServer = (
-  jupyterServers: Map<string, TJupyterServerData>,
-  dkid: TDKID
-): { server: TJupyterServerData; kernel: TJupyterKernelInfo } | undefined => {
-  //
-  let server: TJupyterServerData | null = null;
-  let kernel: TJupyterKernelInfo | null = null;
-
-  jupyterServers.forEach((s) => {
-    const k = s.kernels.find((k) => k.dkid === dkid);
-    if (k) {
-      server = s;
-      kernel = k;
-    }
-  });
-
-  if (!server || !kernel) return undefined;
-
-  return { server, kernel };
-};
-
-//
-
-export type TCell = {
-  cellId: string;
-  busy: boolean;
-  dkid: TDKID;
-  outputs: TJsonArray;
-};
-
-export type TTerminal = {
-  terminalId: string;
+export type TTerminalNodeDataPayload = {
   project_server_id: number;
-  jupyterTerminalSessionModel: { name: string };
+  terminal_id: string;
+};
+
+export type TCellNodeDataPayload = {
+  project_server_id: number;
+  cell_id: string;
 };

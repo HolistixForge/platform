@@ -3,7 +3,6 @@ import {
   useSharedData as useSharedDataCollab,
   SharedTypes,
   TCollaborativeChunk,
-  TValidSharedData,
   TValidSharedDataToCopy,
 } from '@monorepo/collab-engine';
 import { Core_loadData, TCoreSharedData, TCoreEvent } from '@monorepo/core';
@@ -19,14 +18,10 @@ import {
   TServerEvents,
   Servers_loadData,
   TServersSharedData,
+  TServer,
 } from '@monorepo/servers';
-import {
-  TDemiurgeNotebookEvent,
-  TJupyterSharedData,
-  Jupyter_loadData,
-} from '@monorepo/jupyter';
-import { Jupyter_Load_Frontend_ExtraContext } from '@monorepo/jupyter/frontend';
-import { GanymedeApi } from '@monorepo/frontend-data';
+import { TDemiurgeNotebookEvent, TJupyterSharedData } from '@monorepo/jupyter';
+import { module as jupyterModule } from '@monorepo/jupyter/frontend';
 import { TEventSocials } from '@monorepo/socials';
 import { Notion_loadData, TNotionEvent } from '@monorepo/notion';
 
@@ -52,53 +47,52 @@ type AllEvents =
 export const useDispatcher = useDispatcherCollab<AllEvents>;
 
 //
+/*
+const getToken = async (server: TServer, serviceName: string) => {
+  const oauth_client = server.oauth.find(
+    (o) => o.service_name === 'jupyterlab'
+  );
+  if (!oauth_client) throw new Error('jupyterlab not mapped');
 
-export const getCollabChunks = (
-  ganymedeApi: GanymedeApi
-): TCollaborativeChunk[] => {
+  let v;
+  do {
+    v = ganymedeApi._ts.get({
+      client_id: oauth_client.client_id,
+    });
+    if (v.promise) await v.promise;
+  } while (!v.value);
+
+  return v.value.token.access_token;
+};
+*/
+
+export const getCollabChunks = (): TCollaborativeChunk[] => {
   //
   return [
     {
-      sharedData: (st: SharedTypes) => Core_loadData(st),
+      name: 'core',
+      loadSharedData: (st: SharedTypes) => Core_loadData(st),
     },
     {
-      sharedData: (st: SharedTypes) => Space_loadData(st),
+      name: 'space',
+      loadSharedData: (st: SharedTypes) => Space_loadData(st),
     },
     {
-      sharedData: (st: SharedTypes) => Chat_loadData(st),
+      name: 'chats',
+      loadSharedData: (st: SharedTypes) => Chat_loadData(st),
     },
     {
-      sharedData: (st: SharedTypes) => Servers_loadData(st),
+      name: 'servers',
+      loadSharedData: (st: SharedTypes) => Servers_loadData(st),
     },
     {
-      sharedData: (st: SharedTypes) => Tabs_loadData(st),
+      name: 'tabs',
+      loadSharedData: (st: SharedTypes) => Tabs_loadData(st),
     },
+    jupyterModule.collabChunk,
     {
-      sharedData: (st: SharedTypes) => Jupyter_loadData(st),
-      extraContext: (sd: TValidSharedData) =>
-        Jupyter_Load_Frontend_ExtraContext(
-          sd as TJupyterSharedData & TServersSharedData,
-          // getToken callback
-          async (server) => {
-            const oauth_client = server.oauth.find(
-              (o) => o.service_name === 'jupyterlab'
-            );
-            if (!oauth_client) throw new Error('jupyterlab not mapped');
-
-            let v;
-            do {
-              v = ganymedeApi._ts.get({
-                client_id: oauth_client.client_id,
-              });
-              if (v.promise) await v.promise;
-            } while (!v.value);
-
-            return v.value.token.access_token;
-          }
-        ),
-    },
-    {
-      sharedData: (st: SharedTypes) => Notion_loadData(st),
+      name: 'notion',
+      loadSharedData: (st: SharedTypes) => Notion_loadData(st),
     },
   ];
 };

@@ -16,23 +16,26 @@ import {
 } from '@monorepo/core';
 
 import {
-  TEventKernelStarted,
-  TEventStopKernel,
-  TEventDeleteKernel,
   TDemiurgeNotebookEvent,
   TEventClearNodeOutput,
   TEventExecutePythonNode,
   TEventPythonNodeOutput,
-  TEventStartKernel,
   TEventNewCell,
-  TEventNewKernel,
   TEventNewTerminal,
   TEventDeleteCell,
   TEventDeleteTerminal,
+  TEventNewKernelNode,
+  TEventNewTerminalNode,
+  TEventDeleteKernelNode,
+  TEventDeleteTerminalNode,
 } from './jupyter-events';
-import { TDKID, dkidToServer } from './jupyter-types';
 import { TJupyterSharedData } from './jupyter-shared-model';
 import { DriversStoreBackend } from './ds-backend';
+import {
+  TCellNodeDataPayload,
+  TKernelNodeDataPayload,
+  TTerminalNodeDataPayload,
+} from './jupyter-types';
 
 /**
  *
@@ -83,18 +86,37 @@ export class JupyterReducer extends Reducer<
     );
   }
 
-  //
-
-  private async _getDriver(g: Ra<{ dkid: TDKID }>) {
-    return await this._drivers.getDriver(
-      g.event.dkid,
-      g.extraArgs.authorizationHeader
-    );
+  private async _getDriver(project_server_id: number, token: string) {
+    return await this._drivers.getDriver(project_server_id, token);
   }
 
   //
-  //
-  //
+
+  // Helper to find the server containing a given kernel/cell/terminal id
+  private findServerByKernelId(
+    jupyterServers: Iterable<any>,
+    kernelId: string
+  ) {
+    for (const server of jupyterServers) {
+      if (server.kernels && server.kernels[kernelId]) return server;
+    }
+    return undefined;
+  }
+  private findServerByCellId(jupyterServers: Iterable<any>, cellId: string) {
+    for (const server of jupyterServers) {
+      if (server.cells && server.cells[cellId]) return server;
+    }
+    return undefined;
+  }
+  private findServerByTerminalId(
+    jupyterServers: Iterable<any>,
+    terminalId: string
+  ) {
+    for (const server of jupyterServers) {
+      if (server.terminals && server.terminals[terminalId]) return server;
+    }
+    return undefined;
+  }
 
   reduce(g: Ra<ReducedEvents>): Promise<void> {
     switch (g.event.type) {
@@ -102,6 +124,7 @@ export class JupyterReducer extends Reducer<
         return this._newServer(g as Ra<TEventNewServer>);
       case 'servers:delete':
         return this._deleteServer(g as Ra<TEventDeleteServer>);
+      // cells
       case 'jupyter:new-cell':
         return this._newCell(g as Ra<TEventNewCell>);
       case 'jupyter:delete-cell':
@@ -110,62 +133,77 @@ export class JupyterReducer extends Reducer<
         return this._execute(g as Ra<TEventExecutePythonNode>);
       case 'jupyter:python-node-output':
         return this._nodeOutput(g as Ra<TEventPythonNodeOutput>);
-      case 'jupyter:start-kernel':
-        return this._startKernel(g as Ra<TEventStartKernel>);
-      case 'jupyter:_kernel-started_':
-        return this._kernelStarted(g as Ra<TEventKernelStarted>);
       case 'jupyter:clear-node-output':
         return this._clearOutput(g as Ra<TEventClearNodeOutput>);
-      case 'jupyter:new-kernel':
-        return this._newKernel(g as Ra<TEventNewKernel>);
-      case 'jupyter:delete-kernel':
-        return this._deleteKernel(g as Ra<TEventDeleteKernel>);
-      case 'jupyter:stop-kernel':
-        return this._stopKernel(g as Ra<TEventStopKernel>);
+      // terminal
       case 'jupyter:new-terminal':
         return this._newTerminal(g as Ra<TEventNewTerminal>);
+      case 'jupyter:new-terminal-node':
+        return this._newTerminalNode(g as Ra<TEventNewTerminalNode>);
       case 'jupyter:delete-terminal':
         return this._deleteTerminal(g as Ra<TEventDeleteTerminal>);
-
+      case 'jupyter:delete-terminal-node':
+        return this._deleteTerminalNode(g as Ra<TEventDeleteTerminalNode>);
+      // kernel
+      case 'jupyter:new-kernel-node':
+        return this._newKernelNode(g as Ra<TEventNewKernelNode>);
+      case 'jupyter:delete-kernel-node':
+        return this._deleteKernelNode(g as Ra<TEventDeleteKernelNode>);
+      //
       default:
         return Promise.resolve();
     }
   }
 
-  //
-
   async _newServer(g: Ra<TEventNewServer>): Promise<void> {
     const r = g.event.result;
     if (r && JUPYTER_IMAGE_IDS.includes(r.server.image_id)) {
-      // if exists, do nothing, do not override kernels
       if (g.sd.jupyterServers.get(`${r.server.project_server_id}`)) return;
-
       g.sd.jupyterServers.set(`${r.server.project_server_id}`, {
         project_server_id: r.server.project_server_id,
-        kernels: [],
+        kernels: {},
+        cells: {},
+        terminals: {},
       });
     }
   }
 
-  //
+  makeKernelNodeId(id: string) {
+    return `kernel:${id}`;
+  }
 
   async _newCell(g: Ra<TEventNewCell>): Promise<void> {
-    const dkid = g.event.dkid;
-    const cellId = makeUuid();
-    g.sd.cells.set(cellId, { dkid, cellId, busy: false, outputs: [] });
+    // TODO: TEventNewCell should include kernelId for the new model
+    const kid = g.event.kernel_id;
+    if (!kid) throw new Error('kernelId is required for new cell');
+    const server = this.findServerByKernelId(
+      Array.from(g.sd.jupyterServers.values()),
+      kid
+    );
+    if (!server)
+      throw new NotFoundException([
+        { message: `No server for kernelId [${kid}]` },
+      ]);
+
+    const cell_id = makeUuid();
 
     const id = makeUuid();
 
-    await g.sharedEditor.createEditor(cellId, '');
+    await g.sharedEditor.createEditor(cell_id, '');
+
+    const data: TCellNodeDataPayload = {
+      project_server_id: server.project_server_id,
+      cell_id,
+    };
 
     g.bep.process({
       type: 'core:new-node',
       nodeData: {
         id,
-        name: `cell ${cellId}`,
+        name: `cell ${cell_id}`,
         type: 'jupyter-cell',
         root: false,
-        data: { cellId },
+        data,
         connectors: [
           { connectorName: 'inputs', pins: [] },
           { connectorName: 'outputs', pins: [] },
@@ -174,7 +212,7 @@ export class JupyterReducer extends Reducer<
       edges: [
         {
           from: {
-            node: this.makeKernelNodeId(dkid),
+            node: this.makeKernelNodeId(kid),
             connectorName: 'outputs',
           },
           to: { node: id, connectorName: 'inputs' },
@@ -183,18 +221,31 @@ export class JupyterReducer extends Reducer<
       ],
       origin: g.event.origin,
     });
+
+    server.cells[cell_id] = {
+      id: cell_id,
+      kernelId: kid,
+      busy: false,
+      outputs: [],
+    };
+    // Optionally: create editor, add node, etc.
+    // ...
   }
 
-  //
-
   async _deleteCell(g: Ra<TEventDeleteCell>): Promise<void> {
-    const cellId = g.event.cellId;
-    const cell = g.sd.cells.get(cellId);
-
-    if (cell) {
+    const cellId = g.event.cell_id;
+    const server = this.findServerByCellId(
+      Array.from(g.sd.jupyterServers.values()),
+      cellId
+    );
+    if (server && server.cells[cellId]) {
+      delete server.cells[cellId];
       // Delete node from graph
       g.sd.nodes.forEach((node, id) => {
-        if (node.type === 'jupyter-cell' && node.data?.cellId === cellId) {
+        if (
+          node.type === 'jupyter-cell' &&
+          (node.data as TCellNodeDataPayload).cell_id === cellId
+        ) {
           g.bep.process({
             type: 'core:delete-node',
             id,
@@ -203,237 +254,137 @@ export class JupyterReducer extends Reducer<
       });
 
       g.sharedEditor.deleteEditor(cellId);
-
-      // Delete cell from shared data
-      g.sd.cells.delete(cellId);
+      g.sd.jupyterServers.set(`${server.project_server_id}`, server);
     }
   }
 
-  //
-
   async _execute(g: Ra<TEventExecutePythonNode>): Promise<void> {
-    const cell = g.sd.cells.get(g.event.cellId);
+    const { cell_id, code } = g.event;
+    const server = this.findServerByCellId(
+      Array.from(g.sd.jupyterServers.values()),
+      cell_id
+    );
+    if (!server) return;
+    const cell = server.cells[cell_id];
     if (cell) {
-      g.sd.cells.set(g.event.cellId, {
-        ...cell,
-        busy: true,
-        outputs: [],
-      });
+      const driver = await this._getDriver(
+        server.project_server_id,
+        g.extraArgs.authorizationHeader
+      );
 
-      const { kernel, driver } = await this._getDriver(g);
+      const kernel = server.kernels[cell.kernel_id];
 
-      if (kernel.jkid) {
+      if (kernel.id) {
         return driver
-          .execute(kernel.jkid, g.event.code)
+          .execute(kernel.id, code)
           .then((output) => {
             g.bep.process({
               type: 'jupyter:python-node-output',
-              cellId: g.event.cellId,
+              cell_id: g.event.cell_id,
               output,
             });
           })
           .catch((e) => {
-            g.sd.cells.set(g.event.cellId, {
-              ...cell,
-              busy: false,
-            });
+            cell.outputs = [];
+            g.sd.jupyterServers.set(`${server.project_server_id}`, server);
             throw e;
           });
       }
+
+      cell.busy = true;
+      cell.outputs = [];
+      g.sd.jupyterServers.set(`${server.project_server_id}`, server);
     }
   }
-
-  //
 
   _nodeOutput(g: Ra<TEventPythonNodeOutput>): Promise<void> {
-    const cell = g.sd.cells.get(g.event.cellId);
-    if (cell)
-      g.sd.cells.set(g.event.cellId, {
-        ...cell,
-        outputs: g.event.output as unknown as TJsonArray,
-        busy: false,
-      });
+    const { cell_id, output } = g.event;
+    const server = this.findServerByCellId(
+      Array.from(g.sd.jupyterServers.values()),
+      cell_id
+    );
+    if (server && server.cells[cell_id]) {
+      server.cells[cell_id].outputs = output as unknown as TJsonArray;
+      server.cells[cell_id].busy = false;
+    }
+    g.sd.jupyterServers.set(`${server.project_server_id}`, server);
     return Promise.resolve();
   }
-
-  //
 
   _clearOutput(g: Ra<TEventClearNodeOutput>): Promise<void> {
-    const cell = g.sd.cells.get(g.event.cellId);
-    if (cell)
-      g.sd.cells.set(g.event.cellId, {
-        ...cell,
-        outputs: [],
-        busy: false,
-      });
-    return Promise.resolve();
-  }
-
-  //
-
-  async _startKernel(g: Ra<TEventStartKernel>): Promise<void> {
-    const { kernel, driver } = await this._getDriver(g);
-    if (kernel.jkid) throw new Error('kernel started yet');
-    return driver.newKernel('python3').then((jkid) => {
-      if (jkid)
-        g.bep.process({
-          type: 'jupyter:_kernel-started_',
-          dkid: g.event.dkid,
-          jkid,
-        });
-    });
-  }
-
-  /**
-   * set kernel's jkid property
-   * @param g
-   * @returns
-   */
-
-  _kernelStarted(g: Ra<TEventKernelStarted>): Promise<void> {
-    const r = dkidToServer(g.sd.jupyterServers as any, g.event.dkid);
-    if (r) {
-      const { server, kernel } = r;
-      kernel.jkid = g.event.jkid;
-      g.sd.jupyterServers.set(`${server.project_server_id}`, server);
+    const { cell_id } = g.event;
+    const server = this.findServerByCellId(
+      Array.from(g.sd.jupyterServers.values()),
+      cell_id
+    );
+    if (server && server.cells[cell_id]) {
+      server.cells[cell_id].outputs = [];
+      server.cells[cell_id].busy = false;
     }
-    return Promise.resolve();
-  }
-
-  /**
-   * dispose kernel connection and set kernel's jkid property to undefined
-   * @param g
-   */
-
-  async _stopKernel(g: Ra<TEventStopKernel>): Promise<void> {
-    const { server, kernel, driver } = await this._getDriver(g);
-    console.log('_stopKernel', { server, kernel, driver });
-    if (!kernel.jkid) throw new Error('kernel not started');
-    await driver.stopKernel(kernel.jkid);
-    kernel.jkid = undefined;
     g.sd.jupyterServers.set(`${server.project_server_id}`, server);
-  }
-
-  /**
-   *
-   */
-
-  //
-
-  makeKernelNodeId(dkid: string) {
-    return `kernel:${dkid}`;
-  }
-
-  //
-
-  async _newKernel(g: Ra<TEventNewKernel>) {
-    // add kernel to project server
-    const js = g.sd.jupyterServers.get(`${g.event.project_server_id}`);
-    if (!js)
-      throw new NotFoundException([
-        { message: `No such project server [${g.event.project_server_id}]` },
-      ]);
-    const dkid = makeUuid();
-    js.kernels = [
-      ...js.kernels,
-      {
-        dkid,
-        kernelName: g.event.kernelName,
-        kernelType: 'python3',
-      },
-    ];
-    g.sd.jupyterServers.set(`${g.event.project_server_id}`, js);
-    // add new node representing the kernel and link to project server node
-    const id = this.makeKernelNodeId(dkid);
-
-    g.bep.process({
-      type: 'core:new-node',
-      nodeData: {
-        id,
-        name: `kernel ${dkid}`,
-        type: 'jupyter-kernel',
-        root: false,
-        data: { dkid },
-        connectors: [
-          { connectorName: 'inputs', pins: [] },
-          { connectorName: 'outputs', pins: [] },
-        ],
-      },
-      edges: [
-        {
-          from: {
-            node: projectServerNodeId(g.event.project_server_id),
-            connectorName: 'outputs',
-          },
-          to: { node: id, connectorName: 'inputs' },
-          semanticType: 'referenced_by',
-        },
-      ],
-      origin: g.event.origin,
-    });
-  }
-
-  /**
-   * Delete kernel and all associated cells
-   */
-  async _deleteKernel(g: Ra<TEventDeleteKernel>) {
-    // Find and delete all cells associated with this kernel
-    for (const cell of g.sd.cells.values()) {
-      if (cell.dkid === g.event.dkid) {
-        await g.bep.process({
-          type: 'jupyter:delete-cell',
-          cellId: cell.cellId,
-        });
-      }
-    }
-
-    const { server, kernel, driver } = await this._getDriver(g);
-    const index = server.kernels.findIndex((k) => k.dkid === g.event.dkid);
-    if (index !== -1) {
-      if (kernel.jkid) driver.stopKernel(kernel.jkid);
-      server.kernels.splice(index, 1);
-      g.sd.jupyterServers.set(`${server.project_server_id}`, server);
-    }
-
-    // Delete kernel node
-    g.bep.process({
-      type: 'core:delete-node',
-      id: this.makeKernelNodeId(kernel.dkid),
-    });
+    return Promise.resolve();
   }
 
   //
 
   async _newTerminal(g: Ra<TEventNewTerminal>): Promise<void> {
-    const terminalId = makeUuid();
+    const server = g.sd.jupyterServers.get(`${g.event.project_server_id}`);
+    if (!server)
+      throw new NotFoundException([
+        { message: `No such project server [${g.event.project_server_id}]` },
+      ]);
 
     const ss = this._drivers.getServerSetting(
       g.event.project_server_id,
       g.extraArgs.authorizationHeader
     );
+
     const settings = ServerConnection.makeSettings(ss);
     const manager = new TerminalManager({
       serverSettings: settings,
     });
     const session = await manager.startNew();
-    console.log({ session: session.model });
+
+    const terminal_id = session.model as unknown as string;
 
     // manager.connectTo({model: session.model});
 
-    g.sd.terminals.set(terminalId, {
-      terminalId,
+    server.terminals[terminal_id] = {
+      terminal_id,
+      sessionModel: { name: terminal_id },
+    };
+
+    g.sd.jupyterServers.set(`${server.project_server_id}`, server);
+
+    await g.bep.process({
+      type: 'jupyter:new-terminal-node',
       project_server_id: g.event.project_server_id,
-      jupyterTerminalSessionModel: session.model as any,
+      origin: g.event.origin,
+      client_id: g.extraArgs.authorizationHeader,
+      terminal_id: terminal_id,
     });
+  }
+
+  //
+
+  async _newTerminalNode(g: Ra<TEventNewTerminalNode>): Promise<void> {
+    const { terminal_id } = g.event;
+
+    const nodeId = makeUuid();
+
+    const data: TTerminalNodeDataPayload = {
+      project_server_id: g.event.project_server_id,
+      terminal_id,
+    };
 
     g.bep.process({
       type: 'core:new-node',
       nodeData: {
-        id: terminalId,
-        name: `terminal ${terminalId}`,
+        id: nodeId,
+        name: `terminal ${terminal_id}`,
         type: 'jupyter-terminal',
         root: false,
-        data: { terminalId },
+        data,
         connectors: [{ connectorName: 'inputs', pins: [] }],
       },
       edges: [
@@ -442,7 +393,7 @@ export class JupyterReducer extends Reducer<
             node: projectServerNodeId(g.event.project_server_id),
             connectorName: 'outputs',
           },
-          to: { node: terminalId, connectorName: 'inputs' },
+          to: { node: nodeId, connectorName: 'inputs' },
           semanticType: 'referenced_by',
         },
       ],
@@ -450,60 +401,112 @@ export class JupyterReducer extends Reducer<
     });
   }
 
-  /**
-   * Delete terminal
-   */
+  //
+
   async _deleteTerminal(g: Ra<TEventDeleteTerminal>): Promise<void> {
-    const terminalId = g.event.terminalId;
-    const terminal = g.sd.terminals.get(terminalId);
+    const { terminal_id } = g.event;
 
-    if (terminal) {
-      // Delete terminal from shared data
-      g.sd.terminals.delete(terminalId);
-
-      // todo: dispose terminal in jupyter
-
-      // Delete node from graph
-      g.bep.process({
-        type: 'core:delete-node',
-        id: terminalId,
+    const server = this.findServerByTerminalId(
+      Array.from(g.sd.jupyterServers.values()),
+      terminal_id
+    );
+    if (server && server.terminals[terminal_id]) {
+      g.sd.nodes.forEach((node, id) => {
+        if (
+          node.type === 'jupyter-terminal' &&
+          (node.data as TTerminalNodeDataPayload).terminal_id === terminal_id
+        ) {
+          g.bep.process({
+            type: 'core:delete-node',
+            id,
+          });
+        }
       });
+
+      delete server.terminals[terminal_id];
+      g.sd.jupyterServers.set(`${server.project_server_id}`, server);
     }
   }
 
-  /**
-   * Delete all kernels and terminals associated with a server when the server is deleted
-   */
+  async _deleteTerminalNode(g: Ra<TEventDeleteTerminalNode>): Promise<void> {
+    g.bep.process({
+      type: 'core:delete-node',
+      id: g.event.nodeId,
+    });
+  }
+
   async _deleteServer(g: Ra<TEventDeleteServer>): Promise<void> {
     const projectServerId = g.event.project_server_id;
     const jupyterServer = g.sd.jupyterServers.get(`${projectServerId}`);
 
     if (jupyterServer) {
       // Delete all kernels associated with this server
-      for (const kernel of jupyterServer.kernels) {
-        await g.bep.process(
-          {
-            type: 'jupyter:delete-kernel',
-            dkid: kernel.dkid,
-            client_id: '_unused_',
-          },
-          // must contain authorizationHeader, must be jupyter server specific JWT token
-          // so dispatch must have set property client_id
-          g.extraArgs
-        );
+      for (const kernel in jupyterServer.kernels) {
+        await g.bep.process({
+          type: 'jupyter:delete-kernel-node',
+          nodeId: this.makeKernelNodeId(kernel),
+        });
+      }
+
+      for (const terminal in jupyterServer.terminals) {
+        await g.bep.process({
+          type: 'jupyter:delete-terminal',
+          terminal_id: terminal,
+        });
+      }
+
+      for (const cell in jupyterServer.cells) {
+        await g.bep.process({
+          type: 'jupyter:delete-cell',
+          cell_id: cell,
+        });
       }
 
       // Remove the server from jupyterServers
       g.sd.jupyterServers.delete(`${projectServerId}`);
-
-      for (const terminal of g.sd.terminals.values()) {
-        if (terminal.project_server_id === projectServerId) {
-          await g.bep.process({
-            type: 'jupyter:delete-terminal',
-            terminalId: terminal.terminalId,
-          });
-        }
-      }
     }
+  }
+
+  async _newKernelNode(g: Ra<TEventNewKernelNode>): Promise<void> {
+    const { project_server_id, kernel_id, origin } = g.event;
+    const nodeId = this.makeKernelNodeId(kernel_id);
+
+    const data: TKernelNodeDataPayload = {
+      project_server_id,
+      kernel_id,
+    };
+
+    g.bep.process({
+      type: 'core:new-node',
+      nodeData: {
+        id: nodeId,
+        name: `kernel ${kernel_id}`,
+        type: 'jupyter-kernel',
+        root: false,
+        data,
+        connectors: [
+          { connectorName: 'inputs', pins: [] },
+          { connectorName: 'outputs', pins: [] },
+        ],
+      },
+      edges: [
+        {
+          from: {
+            node: projectServerNodeId(project_server_id),
+            connectorName: 'outputs',
+          },
+          to: { node: nodeId, connectorName: 'inputs' },
+          semanticType: 'referenced_by',
+        },
+      ],
+      origin,
+    });
+  }
+
+  async _deleteKernelNode(g: Ra<TEventDeleteKernelNode>): Promise<void> {
+    g.bep.process({
+      type: 'core:delete-node',
+      id: g.event.nodeId,
+    });
   }
 }

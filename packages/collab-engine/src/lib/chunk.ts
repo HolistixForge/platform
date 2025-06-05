@@ -3,6 +3,7 @@ import { TJson } from '@monorepo/simple-types';
 import { SharedArray, SharedMap, SharedTypes } from './SharedTypes';
 import { BackendEventProcessor } from './backendEventProcessor';
 import { Reducer } from './reducer';
+import { FrontendDispatcher } from './frontend/frontendDispatcher';
 
 //
 //
@@ -23,35 +24,62 @@ export const sharedDataToJson = (sharedData: TValidSharedData) => {
 //
 
 export type TCollaborativeChunk = {
-  sharedData?: (st: SharedTypes) => TValidSharedData;
+  name: string;
 
-  reducers?: (
+  loadSharedData?: (st: SharedTypes) => TValidSharedData;
+
+  loadReducers?: (
     sharedData: TValidSharedData
   ) => Readonly<Reducer<TValidSharedData, any, any, any>[]>;
 
-  extraContext?: (sharedData: TValidSharedData) => object;
+  loadExtraContext?: (a: {
+    sharedData: TValidSharedData;
+    extraContext: object;
+    dispatcher?: FrontendDispatcher<any>;
+    bep?: BackendEventProcessor<any, any>;
+  }) => object;
+
+  deps?: string[];
 };
 
 //
 //
 export const compileChunks = (
-  cc: TCollaborativeChunk[],
-  extraContext: any,
-  bep?: BackendEventProcessor<any, any>
+  chunks: TCollaborativeChunk[],
+  sharedTypes: SharedTypes,
+  o: {
+    dispatcher?: FrontendDispatcher<any>;
+    bep?: BackendEventProcessor<any, any>;
+  }
 ) => {
-  return (st: SharedTypes) => {
-    let allSharedData: TValidSharedData = {};
+  let allSharedData: TValidSharedData = {};
+  const extraContext = {};
 
-    cc.forEach((chunk) => {
-      const sharedData = chunk.sharedData?.(st) || {};
-      Object.assign(allSharedData, sharedData);
+  const deps = new Set<string>();
 
-      const reducers = chunk.reducers?.(allSharedData) || [];
-      reducers.forEach((r) => bep?.addReducer(r));
+  chunks.forEach((chunk) => {
+    if (chunk.deps) {
+      chunk.deps.forEach((d) => {
+        if (!deps.has(d)) throw new Error(`Chunk ${d} is not loaded`);
+      });
+    }
 
-      const addContext = chunk.extraContext?.(allSharedData) || {};
-      Object.assign(extraContext, addContext);
-    });
-    return allSharedData;
-  };
+    const sharedData = chunk.loadSharedData?.(sharedTypes) || {};
+    Object.assign(allSharedData, sharedData);
+
+    const reducers = chunk.loadReducers?.(allSharedData) || [];
+    reducers.forEach((r) => o.bep?.addReducer(r));
+
+    const addContext =
+      chunk.loadExtraContext?.({
+        sharedData: allSharedData,
+        extraContext,
+        ...o,
+      }) || {};
+    Object.assign(extraContext, addContext);
+
+    deps.add(chunk.name);
+  });
+
+  return { sharedData: allSharedData, extraContext };
 };

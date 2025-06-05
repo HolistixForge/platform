@@ -1,0 +1,19 @@
+{
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../../collab-engine"
+    },
+    {
+      "path": "../core"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ],
+  "extends": "../../../tsconfig.base.json"
+}

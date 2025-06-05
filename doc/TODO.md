@@ -1,5 +1,16 @@
 ⚠️ Antoine's stuffs
 
+select username, s.user_id, created, last_access
+from sessions s left join users u on (s.user_id = u.user_id)
+where s.user_id = '91b1147b-845b-429e-bac3-2ac5b1a2c3ba' OR s.user_id = 'e4615ca5-636d-4f0d-b457-ff575a858f37'
+order by last_access desc;
+
+select username, s.user_id, created, last_access
+from sessions s left join users u on (s.user_id = u.user_id)
+order by last_access desc;
+
+Daily backup
+
 pointer:
 
 - remove spring ?

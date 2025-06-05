@@ -22,7 +22,7 @@ import { makeUuid } from '@monorepo/simple-types';
 import { TServersSharedData, TServer } from '@monorepo/servers';
 
 import { TDemiurgeNotebookEvent } from '../../jupyter-events';
-import { IOutput, TCell } from '../../jupyter-types';
+import { IOutput, Cell, TCellNodeDataPayload } from '../../jupyter-types';
 import { TJupyterSharedData } from '../../jupyter-shared-model';
 import { useKernelPack } from '../../jupyter-shared-model-front';
 import CodeEditorMonaco from '../code-editor-monaco/code-editor-monaco';
@@ -34,9 +34,11 @@ import './cell.scss';
 //
 
 export const useCellLogic = ({
+  projectServerId,
   cellId,
   selected,
 }: {
+  projectServerId: number;
   cellId: string;
   selected: boolean;
 }) => {
@@ -44,18 +46,14 @@ export const useCellLogic = ({
 
   const { awareness } = useAwareness();
 
-  const cell: TCell = useSharedData<TJupyterSharedData>(['cells'], (sd) =>
-    sd.cells.get(cellId)
+  const cell: Cell = useSharedData<TJupyterSharedData>(
+    ['jupyterServers'],
+    (sd) => sd.jupyterServers.get(`${projectServerId}`)?.cells[cellId]
   );
-
-  const kernelPack = useKernelPack(cell.dkid);
 
   const ps: TServer = useSharedData<TServersSharedData>(
     ['projectServers'],
-    (sd) => {
-      if (!kernelPack) return false;
-      return sd.projectServers.get(`${kernelPack.project_server_id}`);
-    }
+    (sd) => sd.projectServers.get(`${projectServerId}`)
   );
 
   const client_id = ps?.oauth?.find(
@@ -71,7 +69,7 @@ export const useCellLogic = ({
   const handleDeleteCell = useCallback(async () => {
     await dispatcher.dispatch({
       type: 'jupyter:delete-cell',
-      cellId,
+      cell_id: cellId,
     });
   }, [dispatcher, cellId]);
 
@@ -92,7 +90,7 @@ export const useCellLogic = ({
   const handleClearOutput = () => {
     dispatcher.dispatch({
       type: 'jupyter:clear-node-output',
-      cellId,
+      cell_id: cellId,
     });
   };
 
@@ -103,9 +101,9 @@ export const useCellLogic = ({
     if (code && client_id) {
       dispatcher.dispatch({
         type: 'jupyter:execute-python-node',
-        cellId,
+        cell_id: cellId,
         code,
-        dkid: cell.dkid,
+        kernel_id: cell.kernel_id,
         client_id,
       });
     }
@@ -123,6 +121,7 @@ export const useCellLogic = ({
   );
 
   return {
+    projectServerId,
     cell,
     handleEditorMount,
     handleClearOutput,
@@ -133,9 +132,14 @@ export const useCellLogic = ({
 
 //
 
-export const Cell = ({ cellId }: { cellId: string }) => {
-  const props = useCellLogic({ cellId, selected: false });
-
+export const CellStory = ({
+  cellId,
+  projectServerId,
+}: {
+  cellId: string;
+  projectServerId: number;
+}) => {
+  const props = useCellLogic({ cellId, projectServerId, selected: false });
   return <CellInternal {...props} />;
 };
 
@@ -167,24 +171,17 @@ const CellInternal = (props: ReturnType<typeof useCellLogic>) => {
 const CellOutput = (props: ReturnType<typeof useCellLogic>) => {
   const { outputs } = props.cell;
 
-  const kernelPack = useKernelPack(props.cell.dkid);
+  const kernelPack = useKernelPack(props.projectServerId, props.cell.kernel_id);
 
   const { uuid, uuidInject } = useMemo(() => uuidInjecter(), []);
 
   const [oa, setOa] = useState<OutputArea | null>(null);
 
-  // if kernel readyness is true, or change from false to true,
-  // create a new outputArea.
-  // else reset to null to render a information message
-
-  const state = kernelPack ? kernelPack.state : 'not-found';
   const widgetManager = kernelPack ? kernelPack.widgetManager : null;
 
   useEffect(() => {
-    if (kernelPack && kernelPack.state === 'widget-manager-loaded') {
-      const newOA = (
-        kernelPack.widgetManager as BrowserWidgetManager
-      ).createOutputArea();
+    if (widgetManager) {
+      const newOA = (widgetManager as BrowserWidgetManager).createOutputArea();
       setOa((prev) => {
         prev?.dispose();
         return newOA;
@@ -195,7 +192,7 @@ const CellOutput = (props: ReturnType<typeof useCellLogic>) => {
         return null;
       });
     }
-  }, [state, widgetManager]);
+  }, [widgetManager]);
 
   //
 
@@ -229,10 +226,7 @@ const CellOutput = (props: ReturnType<typeof useCellLogic>) => {
 
   return (
     <div>
-      <KernelStateIndicator
-        StartProgress={kernelPack.progress}
-        startState={kernelPack.state}
-      />
+      <KernelStateIndicator state={kernelPack.state} />
       {oa && (
         <div id={uuid} className="jupyter-output-area-box">
           <div className="cell-output" ref={handleDivMount} />
@@ -244,7 +238,11 @@ const CellOutput = (props: ReturnType<typeof useCellLogic>) => {
 
 //
 
-export const NodeCell = ({ node }: { node: TGraphNode }) => {
+export const NodeCell = ({
+  node,
+}: {
+  node: TGraphNode<TCellNodeDataPayload>;
+}) => {
   //
   const {
     id,
@@ -259,7 +257,8 @@ export const NodeCell = ({ node }: { node: TGraphNode }) => {
   } = useNodeContext();
 
   const cellLogic = useCellLogic({
-    cellId: node.data!.cellId as string,
+    cellId: node.data!.cell_id as string,
+    projectServerId: node.data!.project_server_id,
     selected,
   });
 

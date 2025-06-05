@@ -226,9 +226,12 @@ export const useCollaborativeContextInternal = ({
     }
     awareness.setUser(user);
 
-    const extraContext = {};
-    const loadChunks = compileChunks(collabChunks, extraContext, bep);
-    const sharedData = loadChunks(sharedTypes);
+    const { sharedData, extraContext } = compileChunks(
+      collabChunks,
+      sharedTypes,
+      { dispatcher, bep }
+    );
+
     const localOverrider = new LocalOverrider(sharedData);
 
     setState({ built: true });

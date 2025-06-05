@@ -1,12 +1,6 @@
 import { TServer, serviceUrl } from '@monorepo/servers';
 
-import {
-  TDKID,
-  TJupyterKernelInfo,
-  TJupyterServerData,
-  TServerSettings,
-  dkidToServer,
-} from './jupyter-types';
+import { TJupyterServerData, TServerSettings } from './jupyter-types';
 import { JupyterlabDriver } from './driver';
 
 //
@@ -21,7 +15,7 @@ export const jupyterlabIsReachable = async (s: TServer) => {
   if (url)
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 1000);
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
       const response = await fetch(`${url}/api`, { signal: controller.signal });
       clearTimeout(timeoutId);
       if (response.status === 200) r = true;
@@ -81,18 +75,13 @@ export class DriversStoreBackend {
   //
   //
 
-  async getDriver(dkid: TDKID, token: string) {
+  async getDriver(project_server_id: number, token: string) {
     /*
      * get server and kernel information from share data by dkid
      */
-    const r = dkidToServer(this._jupyterServers, dkid);
-    if (!r) throw new Error(`kernel [${dkid}] is unknown`);
 
-    const server = this._servers.get(`${r.server.project_server_id}`);
-    if (!server)
-      throw new Error(`server [${r.server.project_server_id}] is unknown`);
-
-    const { server: jupyterServer, kernel } = r;
+    const server = this._servers.get(`${project_server_id}`);
+    if (!server) throw new Error(`server [${project_server_id}] is unknown`);
 
     if (!jupyterlabIsReachable(server))
       throw new Error(`jupyterlab not ready on server [${server.server_name}]`);
@@ -102,6 +91,10 @@ export class DriversStoreBackend {
      * by 'server id' (and 'token' if provided: only backend cause one driver per user)
      * or build it if it doesn't exist yet
      */
+
+    const jupyterServer = this._jupyterServers.get(`${project_server_id}`);
+    if (!jupyterServer)
+      throw new Error(`server [${project_server_id}] is unknown`);
 
     const KEY = token;
 
@@ -114,26 +107,6 @@ export class DriversStoreBackend {
       this._drivers.set(KEY, driver);
     }
 
-    return {
-      server: jupyterServer as TJupyterServerData,
-      kernel: kernel as TJupyterKernelInfo,
-      driver,
-    };
+    return driver;
   }
-
-  /**
-   * delete all drivers (for all users) for this project_server_id
-   * @param project_server_id
-   */
-
-  /*
-  TODO_: delete (LRU ? or ? ...)
-  async deleteDrivers(project_server_id: number) {
-    const keys = this._drivers.entries();
-    for (const [key, driver] of keys) {
-      if (driver.project_server_id === project_server_id)
-        this._drivers.delete(key);
-    }
-  }
-  */
 }

@@ -3,13 +3,9 @@ import {
   TValidSharedData,
   SharedTypes,
   MockCollaborativeContext,
+  FrontendDispatcher,
 } from '@monorepo/collab-engine';
-import {
-  Servers_loadData,
-  ServersReducer,
-  TG_Server,
-  TServersSharedData,
-} from '@monorepo/servers';
+import { Servers_loadData, ServersReducer, TG_Server } from '@monorepo/servers';
 import { TMyfetchRequest } from '@monorepo/simple-types';
 import { Core_loadData, CoreReducer } from '@monorepo/core';
 import {
@@ -18,8 +14,9 @@ import {
   defaultGraphView,
 } from '@monorepo/space';
 
-import { Jupyter_loadData, TJupyterSharedData } from '../jupyter-shared-model';
+import { Jupyter_loadData } from '../jupyter-shared-model';
 import { Jupyter_Load_Frontend_ExtraContext } from '../jupyter-shared-model-front';
+import { TDemiurgeNotebookEvent } from '../jupyter-events';
 import { JupyterReducer } from '../jupyter-reducer';
 
 //
@@ -28,89 +25,93 @@ export const STORY_PROJECT_ID = 0;
 
 export const STORY_PROJECT_SERVER_ID = 0;
 
-const chunks: TCollaborativeChunk[] = [
-  {
-    sharedData: (st: SharedTypes) => Core_loadData(st),
-    reducers: (sd: TValidSharedData) => [new CoreReducer()],
-  },
-  {
-    sharedData: (st: SharedTypes) => {
-      const sd = Space_loadData(st);
-      sd.graphViews.set('story-view', defaultGraphView());
-      return sd;
+//
+
+const getChunks = (
+  dispatcher: FrontendDispatcher<TDemiurgeNotebookEvent>
+): TCollaborativeChunk[] => {
+  return [
+    {
+      name: 'core',
+      loadSharedData: (st: SharedTypes) => Core_loadData(st),
+      loadReducers: (sd: TValidSharedData) => [new CoreReducer()],
     },
-    reducers: (sd: TValidSharedData) => [new SpaceReducer()],
-  },
-  {
-    sharedData: (st: SharedTypes) => Servers_loadData(st),
-    reducers: (sd: TValidSharedData) => [new ServersReducer(null as any)],
-    extraContext: (sd: TValidSharedData) => {
-      let mock_servers: TG_Server[] = [];
-      return {
-        // a mock toGanymede that returns a new server id to allow servers:new-server to work
-        toGanymede: async (req: TMyfetchRequest) => {
-          console.log({ req });
-          if (
-            req.method === 'POST' &&
-            req.url === `/projects/{project_id}/servers`
-          ) {
-            const psid = mock_servers.length;
-            mock_servers.push({
-              project_server_id: psid,
-              server_name: (req.jsonBody as any)?.name || 'story-server',
-              image_id: (req.jsonBody as any)?.imageId || 2,
-              project_id: STORY_PROJECT_ID,
-              host_user_id: null,
-              oauth: [],
-              location: 'none',
-            });
-            return {
-              _0: {
-                new_project_server_id: psid,
-              },
-            };
-          }
-
-          if (
-            req.method === 'GET' &&
-            req.url === `/projects/{project_id}/servers`
-          ) {
-            return {
-              _0: mock_servers,
-            };
-          }
-
-          throw new Error('Not implemented');
-        },
-
-        // mock jwt payload
-        jwt: {
-          project_server_id: STORY_PROJECT_SERVER_ID,
-        },
-
-        // mock gatewayFQDN so that it ends to our test jupyter docker container
-        gatewayFQDN: '127.0.0.1',
-      };
+    {
+      name: 'space',
+      loadSharedData: (st: SharedTypes) => {
+        const sd = Space_loadData(st);
+        sd.graphViews.set('story-view', defaultGraphView());
+        return sd;
+      },
+      loadReducers: (sd: TValidSharedData) => [new SpaceReducer()],
     },
-  },
-  {
-    sharedData: (st: SharedTypes) => Jupyter_loadData(st),
-    reducers: (sd: TValidSharedData) => [new JupyterReducer(sd as any)],
-    extraContext: (sd: TValidSharedData) => {
-      return {
-        ...Jupyter_Load_Frontend_ExtraContext(
-          sd as TJupyterSharedData & TServersSharedData,
-          // mocked getToken callback
-          async (server) => {
-            return 'My_Super_Test_Story';
-          }
-        ),
-        // mock user jupyterlab token for JupyterReducer that run in backend in normal mode
-        authorizationHeader: 'My_Super_Test_Story',
-      };
+    {
+      name: 'servers',
+      loadSharedData: (st: SharedTypes) => Servers_loadData(st),
+      loadReducers: (sd: TValidSharedData) => [new ServersReducer(null as any)],
+      loadExtraContext: () => {
+        let mock_servers: TG_Server[] = [];
+        return {
+          // a mock toGanymede that returns a new server id to allow servers:new-server to work
+          toGanymede: async (req: TMyfetchRequest) => {
+            console.log({ req });
+            if (
+              req.method === 'POST' &&
+              req.url === `/projects/{project_id}/servers`
+            ) {
+              const psid = mock_servers.length;
+              mock_servers.push({
+                project_server_id: psid,
+                server_name: (req.jsonBody as any)?.name || 'story-server',
+                image_id: (req.jsonBody as any)?.imageId || 2,
+                project_id: STORY_PROJECT_ID,
+                host_user_id: null,
+                oauth: [],
+                location: 'none',
+              });
+              return {
+                _0: {
+                  new_project_server_id: psid,
+                },
+              };
+            }
+
+            if (
+              req.method === 'GET' &&
+              req.url === `/projects/{project_id}/servers`
+            ) {
+              return {
+                _0: mock_servers,
+              };
+            }
+
+            throw new Error('Not implemented');
+          },
+
+          // mock jwt payload
+          jwt: {
+            project_server_id: STORY_PROJECT_SERVER_ID,
+          },
+
+          // mock gatewayFQDN so that it ends to our test jupyter docker container
+          gatewayFQDN: '127.0.0.1',
+        };
+      },
     },
-  },
-];
+    {
+      name: 'jupyter',
+      loadSharedData: (st: SharedTypes) => Jupyter_loadData(st),
+      loadReducers: (sd: TValidSharedData) => [new JupyterReducer(sd as any)],
+      loadExtraContext: (args) => {
+        return {
+          ...Jupyter_Load_Frontend_ExtraContext(args),
+          // mock user jupyterlab token for JupyterReducer that run in backend in normal mode
+          authorizationHeader: 'My_Super_Test_Story',
+        };
+      },
+    },
+  ];
+};
 
 //
 
@@ -120,7 +121,7 @@ export const JupyterStoryCollabContext = ({
   children: React.ReactNode;
 }) => {
   return (
-    <MockCollaborativeContext collabChunks={chunks}>
+    <MockCollaborativeContext getCollabChunks={getChunks}>
       <div style={{ width: '80vw', height: '800px' }}>
         <p>
           To test this story, first launch a jupyter docker container, then

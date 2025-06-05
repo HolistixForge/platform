@@ -1,13 +1,11 @@
 import { SharedMap, SharedTypes } from '@monorepo/collab-engine';
 
-import { TJupyterServerData, TCell, TTerminal } from './jupyter-types';
+import { TJupyterServerData } from './jupyter-types';
 
 //
 
 export type TJupyterSharedData = {
   jupyterServers: SharedMap<TJupyterServerData>;
-  cells: SharedMap<TCell>;
-  terminals: SharedMap<TTerminal>;
 };
 
 //
@@ -15,7 +13,5 @@ export type TJupyterSharedData = {
 export const Jupyter_loadData = (st: SharedTypes): TJupyterSharedData => {
   return {
     jupyterServers: st.getSharedMap('plugin-jupyter-servers'),
-    cells: st.getSharedMap('plugin-jupyter-cells'),
-    terminals: st.getSharedMap('plugin-jupyter-terminals'),
   };
 };

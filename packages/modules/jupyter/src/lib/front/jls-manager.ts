@@ -1,53 +1,56 @@
 import { serverUrl } from '@monorepo/api-fetch';
 import { TServer, TServersSharedData, serviceUrl } from '@monorepo/servers';
 import { Listenable } from '@monorepo/simple-types';
+import { FrontendDispatcher } from '@monorepo/collab-engine';
 
-import { CollaborationProbe } from './jls-collaboration-probe';
-import { dkidToServer, TDKID, TJKID } from '../jupyter-types';
 import { BrowserWidgetManager } from './browser-widget-manager';
 import { JupyterlabDriver } from '../driver';
 import { TJupyterSharedData } from '../jupyter-shared-model';
+import { TDemiurgeNotebookEvent } from '../jupyter-events';
 import { jupyterlabIsReachable } from '../ds-backend';
 import { injectWidgetsScripts } from './widgets-js-dependencies';
-import { sharedDataToJson } from '@monorepo/collab-engine';
 
 //
 
-type TKernelState =
-  | 'server-stopped'
-  | 'server-started'
-  | 'kernel-started'
-  | 'driver-loaded'
-  | 'kernel-connected'
-  | 'widget-manager-loaded';
+const SERVER_DOES_NOT_EXIST = 0;
+const KERNEL_DOES_NOT_EXIST = 1;
+const UNREACHABLE = 2;
+const DRIVER_LOADING = 3;
+const CONNECTING_KERNEL = 4;
+const WIDGET_MANAGER_LOADING = 5;
+const READY = 6;
 
-type TKSProgress = { [key in TKernelState]: number };
-
-const ksProgress: TKSProgress = {
-  'server-stopped': 0,
-  'server-started': 15,
-  'kernel-started': 40,
-  'driver-loaded': 75,
-  'kernel-connected': 85,
-  'widget-manager-loaded': 100,
+export const stateToProgress = (state: number) => {
+  return Math.ceil((state / READY) * 100);
 };
 
-export const lessThan = (s1: TKernelState, s2: TKernelState) =>
-  ksProgress[s1] < ksProgress[s2];
+export const stateToLabel = (state: number) => {
+  switch (state) {
+    case READY:
+      return 'Ready';
+    case DRIVER_LOADING:
+      return 'Driver Loading';
+    case CONNECTING_KERNEL:
+      return 'Connecting Kernel';
+    case WIDGET_MANAGER_LOADING:
+      return 'Widget Manager Loading';
+    case SERVER_DOES_NOT_EXIST:
+      return 'Server Does Not Exist';
+    case KERNEL_DOES_NOT_EXIST:
+      return 'Kernel Does Not Exist';
+    case UNREACHABLE:
+      return 'Unreachable';
+    default:
+      return 'Unknown';
+  }
+};
 
-export const greaterThan = (s1: TKernelState, s2: TKernelState) =>
-  ksProgress[s1] > ksProgress[s2];
-
-/**
- *
- */
+//
 
 export type TKernelPack = {
   project_server_id: number;
-  dkid: TDKID;
-  state: TKernelState;
-  progress: number;
-  jkid?: TJKID;
+  kernel_id: string;
+  state: number;
   widgetManager: BrowserWidgetManager | null;
   listeners: (() => void)[];
 };
@@ -60,10 +63,12 @@ export type TOnNewDriverCb = (s: TServer) => Promise<void>;
 
 export class JLsManager extends Listenable {
   _drivers: Map<number, Promise<JupyterlabDriver>> = new Map();
-  _kernelPacks: Map<TDKID, TKernelPack> = new Map();
+  _kernelPacks: Map<string, TKernelPack> = new Map();
+
   _sd: TJupyterSharedData & TServersSharedData;
+  _dispatcher: FrontendDispatcher<TDemiurgeNotebookEvent>;
+
   getToken: (s: TServer) => Promise<string>;
-  _collaborationProbes: Map<number, CollaborationProbe | 'pending'> = new Map();
 
   /**
    *
@@ -73,13 +78,70 @@ export class JLsManager extends Listenable {
    */
   constructor(
     sd: TJupyterSharedData & TServersSharedData,
+    dispatcher: FrontendDispatcher<TDemiurgeNotebookEvent>,
     getToken: (s: TServer) => Promise<string>
   ) {
     super();
     this._sd = sd;
+    this._dispatcher = dispatcher;
     this.getToken = getToken;
     this._sd.projectServers.observe(() => this._onChange());
     this._sd.jupyterServers.observe(() => this._onChange());
+  }
+
+  /**
+   * when shared data change
+   */
+  private _onChange() {
+    this._kernelPacks.forEach((kp) => this._updateKernelPack(kp));
+  }
+
+  //
+
+  private async _updateKernelPack(kp: TKernelPack) {
+    const server = this._sd.projectServers.get(`${kp.project_server_id}`);
+    const jupyterServer = this._sd.jupyterServers.get(
+      `${kp.project_server_id}`
+    );
+
+    if (!server || !jupyterServer) {
+      this._changeKernelPackState(kp, SERVER_DOES_NOT_EXIST);
+      return;
+    }
+
+    const kernel = jupyterServer.kernels[kp.kernel_id];
+    if (!kernel) {
+      this._changeKernelPackState(kp, KERNEL_DOES_NOT_EXIST);
+      return;
+    }
+
+    if (!(await jupyterlabIsReachable(server))) {
+      this._changeKernelPackState(kp, UNREACHABLE);
+      return;
+    }
+
+    // was previously unreachable
+    if (kp.state <= UNREACHABLE) {
+      this._changeKernelPackState(kp, DRIVER_LOADING);
+      // get driver
+      this._getDriver(server).then((driver) => {
+        if (kp.widgetManager) {
+          this._changeKernelPackState(kp, READY);
+        } else {
+          this._changeKernelPackState(kp, CONNECTING_KERNEL);
+          // connect kernel
+          driver.connectKernel(kernel.kernel_id).then((kernelConnection) => {
+            this._changeKernelPackState(kp, WIDGET_MANAGER_LOADING);
+            // instantiate widget manager
+            const bwm = new BrowserWidgetManager(kernelConnection);
+            kp.widgetManager = bwm;
+            bwm.loadFromKernelDone.then(() => {
+              this._changeKernelPackState(kp, READY);
+            });
+          });
+        }
+      });
+    }
   }
 
   //
@@ -100,132 +162,8 @@ export class JLsManager extends Listenable {
     }
     return Promise.resolve();
   }
+  //
 
-  /**
-   * when shared data change
-   */
-  private _onChange() {
-    // for each kernel Pack,
-    this._kernelPacks.forEach(async (kp) => await this._updateKernelPack(kp));
-
-    // for each server
-    this._sd.jupyterServers.forEach(async (jupyterServer) => {
-      const server = this._sd.projectServers.get(
-        `${jupyterServer.project_server_id}`
-      );
-
-      // if running and ready
-      if (server && (await jupyterlabIsReachable(server))) {
-        // create probe if necessary
-        /*
-          TODO_JL_PROBE: uncomment
-          if (!this._collaborationProbes.get(server.project_server_id)) {
-            this._collaborationProbes.set(server.project_server_id, 'pending');
-            const ss = await this.getServerSetting(server);
-            this._collaborationProbes.set(
-              server.project_server_id,
-              new CollaborationProbe(server, ss, this._user)
-            );
-          }
-          */
-      }
-      // else
-      else {
-        // delete driver and probe for stopped servers
-        this._drivers.delete(jupyterServer.project_server_id);
-        this._collaborationProbes.delete(jupyterServer.project_server_id);
-      }
-    });
-  }
-
-  /**
-   * sync kernel pack state with shared data
-   * @param kp
-   */
-  private async _updateKernelPack(kp: TKernelPack) {
-    /**
-     *  check if still exist, else delete
-     *    - server still exist ?
-     *    - kernel still exist ?
-     */
-    const server = this._sd.projectServers.get(`${kp.project_server_id}`);
-    const jupyterServer = this._sd.jupyterServers.get(
-      `${kp.project_server_id}`
-    );
-
-    const log = (...args: any[]) => {};
-
-    log('updateKernelPack', { kp, server, jupyterServer });
-
-    if (!server || !jupyterServer) {
-      this._disposeKernelPack(kp);
-      this._kernelPacks.delete(kp.dkid);
-    } else {
-      const k = jupyterServer.kernels.find((k) => k.dkid === kp.dkid);
-      if (!k) {
-        this._disposeKernelPack(kp);
-        this._kernelPacks.delete(kp.dkid);
-      } else {
-        /**
-         * kernel still exist
-         */
-
-        log('go to jupyterlabIsReachable');
-
-        if (await jupyterlabIsReachable(server)) {
-          // server is started
-          if (lessThan(kp.state, 'server-started')) {
-            // server has just started
-            this._setState(kp, 'server-started');
-          }
-          if (k.jkid) {
-            log('kernel is started');
-            // kernel is started
-            if (lessThan(kp.state, 'kernel-started')) {
-              // kernel just started
-              kp.jkid = k.jkid;
-              this._setState(kp, 'kernel-started');
-              // get driver
-              this._getDriver(server).then((driver) => {
-                log('driver loaded', driver);
-                this._setState(kp, 'driver-loaded');
-                // connect kernel
-                driver
-                  .connectKernel(k.jkid as TJKID)
-                  .then((kernelConnection) => {
-                    log('kernel connected');
-                    this._setState(kp, 'kernel-connected');
-                    // instantiate widget manager
-                    const bwm = new BrowserWidgetManager(kernelConnection);
-                    kp.widgetManager = bwm;
-                    bwm.loadFromKernelDone.then(() => {
-                      log('widget manager loaded');
-                      this._setState(kp, 'widget-manager-loaded');
-                    });
-                  });
-              });
-            }
-          } else {
-            // kernel is stopped
-            if (greaterThan(kp.state, 'server-started')) {
-              // kernel just stopped
-              this._setState(kp, 'server-started');
-            }
-          }
-        } else {
-          // server is stopped
-          if (greaterThan(kp.state, 'server-stopped')) {
-            // server just stopped
-            this._setState(kp, 'server-stopped');
-          }
-        }
-      }
-    }
-  }
-
-  /**
-   *
-   */
   getServerSetting = async (server: TServer, websocket?: boolean) => {
     const service = server.httpServices.find((s) => s.name === 'jupyterlab');
     if (!service) throw new Error('jupyterlab not mapped');
@@ -246,11 +184,8 @@ export class JLsManager extends Listenable {
     return r;
   };
 
-  /**
-   *
-   * @param project_server_id
-   * @returns
-   */
+  //
+
   private _getDriver(server: TServer): Promise<JupyterlabDriver> {
     const p = this._drivers.get(server.project_server_id);
     if (!p) {
@@ -258,6 +193,18 @@ export class JLsManager extends Listenable {
         this._onNewDriver(server).then(() => {
           this.getServerSetting(server).then((ss) => {
             const driver = new JupyterlabDriver(ss);
+            driver.subscribeResourceListener(() => {
+              const resources = {
+                kernels: driver.getKernels(),
+                terminals: driver.getTerminals(),
+              };
+              // send new resource to backend, that it will push back through shared state
+              // that will trig _onChange() and update kernel packs and UI
+              this._dispatcher.dispatch({
+                type: 'jupyter:resources-changed',
+                resources,
+              });
+            });
             resolve(driver);
           });
         });
@@ -268,104 +215,48 @@ export class JLsManager extends Listenable {
     return p;
   }
 
-  /**
-   * set a kernel pack a new state and call listener
-   * @param kp
-   * @param s
-   */
-  private _setState(kp: TKernelPack, s: TKernelState) {
+  //
+
+  private _changeKernelPackState(kp: TKernelPack, s: number) {
     kp.state = s;
-    kp.progress = ksProgress[s];
-    if (lessThan(s, 'kernel-started')) {
-      kp.widgetManager?.disconnect();
-      kp.widgetManager?.kernel.dispose();
-      kp.widgetManager = null;
-      kp.jkid = undefined;
-    }
     kp.listeners.forEach((f) => f());
   }
 
-  /**
-   * free ressource in a kernel pack to be deleted
-   * @param kp the kernel pack to free
-   */
-  private _disposeKernelPack(kp: TKernelPack) {
-    console.error('?');
-  }
+  //
 
-  /**
-   * return the kernel pack for demiurge kernel id 'dkid'
-   * build a new kernel pack if necessary
-   * @param dkid the demiurge kernel id
-   */
-  getKernelPack(dkid: TDKID): TKernelPack | false {
-    const p = this._kernelPacks.get(dkid);
-    if (!p) {
-      const r = dkidToServer(this._sd.jupyterServers as any, dkid);
-      if (r === undefined) {
-        console.log(
-          `no server for dkid [${dkid}]: Shared Data: `,
-          sharedDataToJson(this._sd)
-        );
-        return false;
-      }
+  getKernelPack(
+    project_server_id: number,
+    kernel_id: string
+  ): TKernelPack | false {
+    const pack = this._kernelPacks.get(kernel_id);
 
-      const { server } = r;
-      const np: TKernelPack = {
-        project_server_id: server.project_server_id,
-        dkid,
-        state: 'server-stopped',
-        progress: 0,
+    if (!pack) {
+      const newPack: TKernelPack = {
+        project_server_id,
+        kernel_id,
+        state: SERVER_DOES_NOT_EXIST,
         widgetManager: null,
         listeners: [],
       };
-      /* await */ this._updateKernelPack(np);
-      this._kernelPacks.set(dkid, np);
-      return np;
-    } else return p;
+
+      this._updateKernelPack(newPack);
+
+      this._kernelPacks.set(kernel_id, newPack);
+      return newPack;
+    } else return pack;
   }
 
-  /**
-   * add a listener to be called ach time the pack state change
-   * @param dkid the demiurge kernel id
-   * @param f  the callback to add
-   */
-  override addListener(f: () => void, dkid: TDKID) {
-    const p = this.getKernelPack(dkid);
+  //
+
+  override addListener(f: () => void, dkid: string) {
+    const p = this._kernelPacks.get(dkid);
     if (p) p.listeners.push(f);
   }
 
-  /**
-   * remove a previously added listener
-   * @param dkid the demiurge kernel id
-   * @param f the callback to remove
-   */
-  override removeListener(f: () => void, dkid: TDKID) {
-    const p = this.getKernelPack(dkid);
-    if (p) p.listeners = p.listeners.filter((l) => Object.is(l, f));
-  }
+  //
 
-  /**
-   *
-   * @param project_server_id
-   * @param notebook
-   * @param cellule
-   */
-  bindCellule(
-    project_server_id: number,
-    notebook: string,
-    cellule: number,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    editor: any
-  ) {
-    let probe = this._collaborationProbes.get(project_server_id);
-    if (!probe || probe === 'pending') {
-      console.log(
-        `No probe for server [${project_server_id}], server does not exists or not started ?`
-      );
-      return;
-    }
-    probe = probe as CollaborationProbe;
-    probe.bindCellule(notebook, cellule, editor);
+  override removeListener(f: () => void, dkid: string) {
+    const p = this._kernelPacks.get(dkid);
+    if (p) p.listeners = p.listeners.filter((l) => Object.is(l, f));
   }
 }
