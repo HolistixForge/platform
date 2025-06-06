@@ -38,10 +38,13 @@
       "path": "../../log/tsconfig.lib.json"
     },
     {
+      "path": "../../collab-engine/tsconfig.lib.json"
+    },
+    {
       "path": "../../simple-types/tsconfig.lib.json"
     },
     {
-      "path": "../../collab-engine/tsconfig.lib.json"
+      "path": "../module/tsconfig.lib.json"
     }
   ]
 }

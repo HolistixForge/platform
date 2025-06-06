@@ -5,7 +5,8 @@ import {
   SharedArray,
   useSharedData,
 } from '@monorepo/collab-engine';
-import { TGraphNode, TEdge, TProjectMeta } from './core-types';
+import { TGraphNode } from '@monorepo/module';
+import { TEdge, TProjectMeta } from './core-types';
 import { GATEWAY_INACIVITY_SHUTDOWN_DELAY } from './meta-reducer';
 
 export type TCoreSharedData = {

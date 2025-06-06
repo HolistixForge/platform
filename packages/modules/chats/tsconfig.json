@@ -18,6 +18,9 @@
       "path": "../core"
     },
     {
+      "path": "../module"
+    },
+    {
       "path": "../space"
     },
     {

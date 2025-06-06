@@ -9,7 +9,8 @@ import {
   useBindEditor,
   useSharedData,
 } from '@monorepo/collab-engine';
-import { TCoreEvent, TGraphNode } from '@monorepo/core';
+import { TGraphNode } from '@monorepo/module';
+import { TCoreEvent } from '@monorepo/core';
 import {
   DisableZoomDragPan,
   InputsAndOutputs,

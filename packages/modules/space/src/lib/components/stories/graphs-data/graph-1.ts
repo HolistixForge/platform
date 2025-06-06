@@ -1,4 +1,5 @@
-import { TEdge, TGraphNode, TPin } from '@monorepo/core';
+import { TEdge } from '@monorepo/core';
+import { TGraphNode, TPin } from '@monorepo/module';
 
 import { nodeViewDefaultStatus, TNodeView } from '../../../space-types';
 import { pinId, TEdgeRenderProps } from '../../apis/types/edge';

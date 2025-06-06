@@ -1,4 +1,5 @@
-import { TCoreSharedData, TGraphNode } from '@monorepo/core';
+import { TCoreSharedData } from '@monorepo/core';
+import { TGraphNode } from '@monorepo/module';
 import { SharedDataManager } from '@monorepo/collab-engine';
 
 import { TSpaceSharedData } from '../../space-shared-model';

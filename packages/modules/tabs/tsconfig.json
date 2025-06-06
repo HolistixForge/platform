@@ -9,6 +9,9 @@
       "path": "../../collab-engine"
     },
     {
+      "path": "../module"
+    },
+    {
       "path": "../../ui-base"
     },
     {

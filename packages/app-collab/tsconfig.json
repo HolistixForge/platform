@@ -7,6 +7,12 @@
       "path": "../demiurge-types"
     },
     {
+      "path": "../modules/socials"
+    },
+    {
+      "path": "../modules/module"
+    },
+    {
       "path": "../backend-engine"
     },
     {
@@ -17,9 +23,6 @@
     },
     {
       "path": "../modules/notion"
-    },
-    {
-      "path": "../modules/socials"
     },
     {
       "path": "../modules/jupyter"

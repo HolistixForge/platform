@@ -18,6 +18,9 @@
       "path": "../../ui-base"
     },
     {
+      "path": "../module"
+    },
+    {
       "path": "./tsconfig.lib.json"
     },
     {

@@ -48,6 +48,9 @@
     },
     {
       "path": "../../ui-base/tsconfig.lib.json"
+    },
+    {
+      "path": "../module/tsconfig.lib.json"
     }
   ]
 }

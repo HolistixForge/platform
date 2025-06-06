@@ -5,7 +5,7 @@ import {
   useNodeContext,
 } from '@monorepo/space/frontend';
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
-import { TGraphNode } from '@monorepo/core';
+import { TGraphNode } from '@monorepo/module';
 import { useCallback } from 'react';
 
 import { TNotionSharedData } from '../../notion-shared-model';

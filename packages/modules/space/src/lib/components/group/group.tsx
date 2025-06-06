@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react';
 
-import { TGraphNode } from '@monorepo/core';
+import { TGraphNode } from '@monorepo/module';
 import { useDispatcher } from '@monorepo/collab-engine';
 import {
   addAlphaToHexColor,

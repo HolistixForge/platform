@@ -1,11 +1,26 @@
-export { NodeYoutube } from './lib/components/node-video';
+import { NodeYoutube } from './lib/components/node-video';
+import { NodeTextEditor } from './lib/components/text-editor';
+import { NodeIdCard } from './lib/components/node-id-card';
+import { NodeIframe } from './lib/components/node-iframe';
+import { ModuleFrontend } from '@monorepo/module/frontend';
 
-export { NodeTextEditor } from './lib/components/text-editor';
+export const moduleFrontend: ModuleFrontend = {
+  collabChunk: {
+    name: 'socials',
+    loadSharedData: () => ({}),
+    deps: [],
+  },
+  spaceMenuEntries: [],
+  nodes: {
+    youtube: NodeYoutube,
+    'text-editor': NodeTextEditor,
+    'node-user': NodeIdCard,
+    iframe: NodeIframe,
+  },
+};
 
-export { NodeIdCard } from './lib/components/node-id-card';
-
-export { NodeIframe } from './lib/components/node-iframe';
 export { NewIframeForm } from './lib/forms/form-new-iframe';
 export type { NewIframeFormData } from './lib/forms/form-new-iframe';
+
 export { NewNodeUserForm } from './lib/forms/form-new-node-user';
 export type { NewNodeUserFormData } from './lib/forms/form-new-node-user';

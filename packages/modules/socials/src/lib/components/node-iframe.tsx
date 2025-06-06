@@ -1,6 +1,6 @@
 import { Suspense, useCallback, memo } from 'react';
 
-import { TGraphNode } from '@monorepo/core';
+import { TGraphNode } from '@monorepo/module';
 import { useDispatcher } from '@monorepo/collab-engine';
 import {
   DisableZoomDragPan,

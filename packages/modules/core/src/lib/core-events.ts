@@ -1,5 +1,6 @@
 import { TJsonObject } from '@monorepo/simple-types';
-import { TEdge, TGraphNode, TPosition } from './core-types';
+import { TGraphNode } from '@monorepo/module';
+import { TEdge, TPosition } from './core-types';
 
 export type TEventOrigin = {
   viewId: string;

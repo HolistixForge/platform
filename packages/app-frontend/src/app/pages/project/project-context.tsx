@@ -30,7 +30,7 @@ import { ApiFetch, serverUrl } from '@monorepo/api-fetch';
 import { TMyfetchRequest } from '@monorepo/simple-types';
 import { log } from '@monorepo/log';
 
-import { getCollabChunks } from './model/collab-model-chunk';
+import { collabChunks } from './model/collab-model-chunk';
 import { ProjectState, ProjectData, ProjectUser } from './project-types';
 import { ProjectLoading, ProjectError } from './project-loading';
 
@@ -298,12 +298,16 @@ export const ProjectContext = ({
   );
   const user = useProjectUser();
 
+  /*
   const collabChunks = useMemo(() => {
     if (projectState.status === 'ready') {
-      return getCollabChunks(ganymedeApi);
+      return collabChunks;
     }
     return null;
   }, [ganymedeApi, projectState]);
+  */
+
+  // TODO_MODULE: inject 'authentication' module that define extracontext getToken
 
   log(7, 'COLLABORATIVE_CONTEXT', 'update', { projectState, user });
 

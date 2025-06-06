@@ -7,7 +7,7 @@ import {
   MockCollaborativeContext,
   useShareDataManager,
 } from '@monorepo/collab-engine';
-import { CoreReducer, Core_loadData, TCoreSharedData } from '@monorepo/core';
+import { TCoreSharedData } from '@monorepo/core';
 
 import {
   SpaceContext,
@@ -23,6 +23,7 @@ import { WhiteboardMode } from '../reactflow-renderer/demiurge-space';
 //
 
 const chunks: TCollaborativeChunk[] = [
+  /*
   {
     sharedData: (st: SharedTypes) => Core_loadData(st),
     reducers: (sd: TValidSharedData) => [new CoreReducer()],
@@ -38,6 +39,7 @@ const chunks: TCollaborativeChunk[] = [
       return {};
     },
   },
+  */
 ];
 
 //
@@ -54,7 +56,7 @@ export const MockSpace = ({
   //
 
   return (
-    <MockCollaborativeContext collabChunks={chunks}>
+    <MockCollaborativeContext getCollabChunks={() => chunks}>
       <MockSpaceContext>
         <MockSpaceBackground />
         <MockReactFlowNodeWrapper

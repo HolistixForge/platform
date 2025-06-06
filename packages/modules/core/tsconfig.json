@@ -6,10 +6,13 @@
       "path": "../../log"
     },
     {
+      "path": "../../collab-engine"
+    },
+    {
       "path": "../../simple-types"
     },
     {
-      "path": "../../collab-engine"
+      "path": "../module"
     },
     {
       "path": "./tsconfig.lib.json"

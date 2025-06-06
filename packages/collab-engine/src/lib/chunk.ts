@@ -53,14 +53,12 @@ export const compileChunks = (
   }
 ) => {
   let allSharedData: TValidSharedData = {};
-  const extraContext = {};
-
-  const deps = new Set<string>();
+  const extraContext: Record<string, any> = {};
 
   chunks.forEach((chunk) => {
     if (chunk.deps) {
       chunk.deps.forEach((d) => {
-        if (!deps.has(d)) throw new Error(`Chunk ${d} is not loaded`);
+        if (!extraContext[d]) throw new Error(`Chunk ${d} is not loaded`);
       });
     }
 
@@ -70,15 +68,12 @@ export const compileChunks = (
     const reducers = chunk.loadReducers?.(allSharedData) || [];
     reducers.forEach((r) => o.bep?.addReducer(r));
 
-    const addContext =
-      chunk.loadExtraContext?.({
-        sharedData: allSharedData,
-        extraContext,
-        ...o,
-      }) || {};
+    const addContext = chunk.loadExtraContext?.({
+      sharedData: allSharedData,
+      extraContext,
+      ...o,
+    }) || { [chunk.name]: {} };
     Object.assign(extraContext, addContext);
-
-    deps.add(chunk.name);
   });
 
   return { sharedData: allSharedData, extraContext };

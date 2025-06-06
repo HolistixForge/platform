@@ -3,25 +3,28 @@
   "include": [],
   "references": [
     {
-      "path": "../../collab-engine"
+      "path": "../../ui-toolkit"
     },
     {
       "path": "../../log"
     },
     {
-      "path": "../../ui-toolkit"
+      "path": "../../demiurge-types"
+    },
+    {
+      "path": "../core"
+    },
+    {
+      "path": "../../collab-engine"
     },
     {
       "path": "../../simple-types"
     },
     {
-      "path": "../../demiurge-types"
+      "path": "../module"
     },
     {
       "path": "../../ui-base"
-    },
-    {
-      "path": "../core"
     },
     {
       "path": "./tsconfig.lib.json"

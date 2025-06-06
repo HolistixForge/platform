@@ -11,7 +11,7 @@ import './lib/index.scss';
 
 //
 
-export const module: ModuleFrontend = {
+export const moduleFrontend: ModuleFrontend = {
   collabChunk: {
     name: 'jupyter',
     loadSharedData: Jupyter_loadData,

@@ -24,6 +24,12 @@
       "path": "../demiurge-types/tsconfig.lib.json"
     },
     {
+      "path": "../modules/socials/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/module/tsconfig.lib.json"
+    },
+    {
       "path": "../backend-engine/tsconfig.lib.json"
     },
     {
@@ -34,9 +40,6 @@
     },
     {
       "path": "../modules/notion/tsconfig.lib.json"
-    },
-    {
-      "path": "../modules/socials/tsconfig.lib.json"
     },
     {
       "path": "../modules/jupyter/tsconfig.lib.json"

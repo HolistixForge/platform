@@ -8,7 +8,7 @@ import {
   useMakeButton,
   useNodeContext,
 } from '@monorepo/space/frontend';
-import { TGraphNode } from '@monorepo/core';
+import { TGraphNode } from '@monorepo/module';
 import { useDispatcher } from '@monorepo/collab-engine';
 
 import { TEventDeleteVolume } from '../../servers-events';

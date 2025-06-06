@@ -1,12 +1,7 @@
 import { FC, useCallback, useMemo } from 'react';
 
-import {
-  TPosition,
-  TEdgeEnd,
-  TEdge,
-  TCoreSharedData,
-  TGraphNode,
-} from '@monorepo/core';
+import { TPosition, TEdgeEnd, TEdge, TCoreSharedData } from '@monorepo/core';
+import { TGraphNode } from '@monorepo/module';
 import {
   useDispatcher,
   useAwareness,

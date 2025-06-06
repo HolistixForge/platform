@@ -6,10 +6,8 @@ const u = require('y-websocket/bin/utils');
 
 import {
   BackendEventProcessor,
-  SharedTypes,
   TCollabNativeEvent,
   TCollaborativeChunk,
-  TValidSharedData,
   YjsSharedTypes,
   compileChunks,
   YjsSharedEditor,
@@ -17,50 +15,14 @@ import {
   getAllSharedDataAsJSON,
   setAllSharedDataFromJSON,
 } from '@monorepo/collab-engine';
-import {
-  Core_loadData,
-  TCoreSharedData,
-  CoreReducer,
-  MetaReducer,
-  TCoreEvent,
-} from '@monorepo/core';
-import {
-  TabPayload,
-  TTabEvents,
-  Tabs_loadData,
-  TTabsSharedData,
-  TabsReducer,
-} from '@monorepo/tabs';
-import {
-  Space_loadData,
-  TSpaceSharedData,
-  SpaceReducer,
-  TSpaceEvent,
-} from '@monorepo/space';
-import {
-  TChatEvent,
-  Chat_loadData,
-  TChatSharedData,
-  ChatReducer,
-} from '@monorepo/chats';
-import {
-  TServerEvents,
-  Servers_loadData,
-  TServersSharedData,
-  ServersReducer,
-} from '@monorepo/servers';
-import {
-  TDemiurgeNotebookEvent,
-  TJupyterSharedData,
-  module as jupyterModule,
-} from '@monorepo/jupyter';
-import { SocialsReducer } from '@monorepo/socials';
-import {
-  TNotionEvent,
-  TNotionSharedData,
-  Notion_loadData,
-  NotionReducer,
-} from '@monorepo/notion';
+import { TCoreSharedData, TCoreEvent } from '@monorepo/core';
+import { TabPayload, TTabEvents, TTabsSharedData } from '@monorepo/tabs';
+import { TSpaceSharedData, TSpaceEvent } from '@monorepo/space';
+import { TChatEvent, TChatSharedData } from '@monorepo/chats';
+import { TServerEvents, TServersSharedData } from '@monorepo/servers';
+import { TDemiurgeNotebookEvent, TJupyterSharedData } from '@monorepo/jupyter';
+
+import { TNotionEvent, TNotionSharedData } from '@monorepo/notion';
 
 import { log } from '@monorepo/log';
 import { TMyfetchRequest } from '@monorepo/simple-types';
@@ -68,8 +30,9 @@ import { ForwardException, myfetch } from '@monorepo/backend-engine';
 
 import { CONFIG } from './config';
 import { PROJECT } from './project-config';
-import { runScript } from './run-script';
+//import { runScript } from './run-script';
 import { ROOM_ID } from './main';
+import { modules } from './modules';
 
 //
 //
@@ -186,7 +149,7 @@ process.on('SIGUSR1', () => {
   saveDoc();
 });
 
-//
+/*
 
 const gatewayStopNotify = async () => {
   await toGanymede({
@@ -209,59 +172,13 @@ const updateReverseProxy = async (
   runScript('update-nginx-locations', config);
 };
 
-//
+*/
 //
 //
 
-const chunks: TCollaborativeChunk[] = [
-  {
-    name: 'core',
-    loadSharedData: (st: SharedTypes) => Core_loadData(st),
-    loadReducers: (sd: TValidSharedData) => [
-      new CoreReducer(),
-      new MetaReducer(gatewayStopNotify),
-    ],
-  },
-  {
-    name: 'space',
-    loadSharedData: (st: SharedTypes) => Space_loadData(st),
-    loadReducers: (sd: TValidSharedData) => [new SpaceReducer()],
-  },
-  {
-    name: 'chats',
-    loadSharedData: (st: SharedTypes) => Chat_loadData(st),
-    loadReducers: (sd: TValidSharedData) => [new ChatReducer()],
-  },
-  {
-    name: 'servers',
-    loadSharedData: (st: SharedTypes) => Servers_loadData(st),
-    loadReducers: (sd: TValidSharedData) => [
-      new ServersReducer(updateReverseProxy),
-    ],
-    loadExtraContext: () => ({
-      toGanymede: toGanymede,
-      gatewayFQDN: CONFIG.GATEWAY_FQDN,
-    }),
-  },
-  {
-    name: 'tabs',
-    loadSharedData: (st: SharedTypes) => Tabs_loadData(st),
-    loadReducers: (sd: TValidSharedData) => [new TabsReducer()],
-  },
-  jupyterModule.collabChunk,
-  {
-    name: 'notion',
-    loadSharedData: (st: SharedTypes) => Notion_loadData(st),
-    loadReducers: (sd: TValidSharedData) => [new NotionReducer()],
-    loadExtraContext: () => ({
-      notionApiKey: CONFIG.NOTION_API_KEY,
-    }),
-  },
-  {
-    name: 'socials',
-    loadReducers: (sd: TValidSharedData) => [new SocialsReducer()],
-  },
-];
+const chunks: TCollaborativeChunk[] = modules.map(
+  (module) => module.collabChunk
+);
 
 //
 //

@@ -5,43 +5,22 @@ import { MountVolumeForm, MountVolumeFormData } from '@monorepo/ui-views';
 import { TDemiurgeNotebookEvent } from '@monorepo/jupyter';
 import { TEdge, TEdgeEnd, TPosition } from '@monorepo/core';
 import { TEventMountVolume, TServerEvents } from '@monorepo/servers';
-import { NodeServer, NodeVolume } from '@monorepo/servers/frontend';
-import { SpaceModule, Group, Shape } from '@monorepo/space/frontend';
-import { NodeChatbox, NodeChatAnchor } from '@monorepo/chats/frontend';
-import { module as jupyterModule } from '@monorepo/jupyter/frontend';
-import {
-  NodeYoutube,
-  NodeTextEditor,
-  NodeIframe,
-  NodeIdCard,
-} from '@monorepo/socials/frontend';
-import { NodeNotion, NodeNotionTask } from '@monorepo/notion/frontend';
+import { SpaceModule } from '@monorepo/space/frontend';
 
 import { ContextMenuLogic } from './menus/context-menu-logic';
 import { SpaceContextMenu } from './menus/context-menu';
 import { NewEdgeContextMenu } from './menus/context-menu-new-edge';
 import { useDispatcher, useSharedData } from '../../model/collab-model-chunk';
 import { edgeToEvent } from './menus/edge-to-event';
+import { modules } from '../../model/modules';
 
 import './node-editor.scss';
 
 //
 
-const nodeTypes = {
-  server: NodeServer,
-  volume: NodeVolume,
-  chat: NodeChatbox,
-  'chat-anchor': NodeChatAnchor,
-  ...jupyterModule.nodes,
-  youtube: NodeYoutube,
-  'text-editor': NodeTextEditor,
-  'notion-database': NodeNotion,
-  'notion-page': NodeNotionTask,
-  group: Group,
-  shape: Shape,
-  iframe: NodeIframe,
-  'node-user': NodeIdCard,
-};
+const nodeTypes = modules.reduce((acc, module) => {
+  return { ...acc, ...module.nodes };
+}, {});
 
 //
 

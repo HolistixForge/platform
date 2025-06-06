@@ -3,37 +3,40 @@
   "include": [],
   "references": [
     {
-      "path": "../simple-types"
-    },
-    {
       "path": "../api-fetch"
     },
     {
-      "path": "../modules/notion"
+      "path": "../modules/module"
     },
     {
       "path": "../modules/tabs"
     },
     {
-      "path": "../modules/socials"
-    },
-    {
       "path": "../modules/chats"
-    },
-    {
-      "path": "../modules/space"
     },
     {
       "path": "../modules/jupyter"
     },
     {
-      "path": "../collab-engine"
+      "path": "../modules/socials"
+    },
+    {
+      "path": "../modules/space"
+    },
+    {
+      "path": "../simple-types"
+    },
+    {
+      "path": "../modules/notion"
     },
     {
       "path": "../modules/core"
     },
     {
       "path": "../modules/servers"
+    },
+    {
+      "path": "../collab-engine"
     },
     {
       "path": "../ui-views"

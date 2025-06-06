@@ -7,7 +7,7 @@ import {
   useBindEditor,
   useDispatcher,
 } from '@monorepo/collab-engine';
-import { TGraphNode } from '@monorepo/core';
+import { TGraphNode } from '@monorepo/module';
 import {
   useNodeContext,
   DisableZoomDragPan,

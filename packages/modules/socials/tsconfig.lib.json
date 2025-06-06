@@ -60,6 +60,9 @@
       "path": "../../demiurge-types/tsconfig.lib.json"
     },
     {
+      "path": "../module/tsconfig.lib.json"
+    },
+    {
       "path": "../space/tsconfig.lib.json"
     },
     {

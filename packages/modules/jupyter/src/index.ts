@@ -11,7 +11,7 @@ import { JupyterReducer } from './lib/jupyter-reducer';
 
 PageConfig.setOption('terminalsAvailable', 'true');
 
-export const module: ModuleBackend = {
+export const moduleBackend: ModuleBackend = {
   collabChunk: {
     name: 'jupyter',
     loadSharedData: Jupyter_loadData,

@@ -14,7 +14,6 @@ import {
 } from '@monorepo/log';
 import {
   TCoreSharedData,
-  TGraphNode,
   TEventDeleteEdge,
   TEventDeleteNode,
   TEventNewEdge,
@@ -22,6 +21,7 @@ import {
   TEdge,
   TEventLoad,
 } from '@monorepo/core';
+import { TGraphNode } from '@monorepo/module';
 import { UserException } from '@monorepo/log';
 
 import { TServersSharedData } from './servers-shared-model';

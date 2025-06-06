@@ -6,7 +6,7 @@ import {
   SelectFieldset,
   SelectItem,
 } from '@monorepo/ui-base';
-import { TGraphNode } from '@monorepo/core';
+import { TGraphNode } from '@monorepo/module';
 import { useDispatcher } from '@monorepo/collab-engine';
 
 import { NodeHeader } from '../reactflow-renderer/assets/node-header/node-header';

@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { TGraphNode } from '@monorepo/core';
+import { TGraphNode } from '.';
 import { TCollaborativeChunk } from '@monorepo/collab-engine';
 
 //

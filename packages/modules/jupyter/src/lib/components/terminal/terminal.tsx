@@ -15,7 +15,7 @@ import { MessageLoop } from '@lumino/messaging';
 
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
 import { TServer, TServersSharedData } from '@monorepo/servers';
-import { TGraphNode } from '@monorepo/core';
+import { TGraphNode } from '@monorepo/module';
 import {
   DisableZoomDragPan,
   InputsAndOutputs,

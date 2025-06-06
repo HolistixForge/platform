@@ -1,4 +1,7 @@
 import './lib/index.scss';
+import { Space_loadData } from './lib/space-shared-model';
+import { Group, Shape } from './lib/components';
+import { ModuleFrontend } from '@monorepo/module/frontend';
 
 export {
   DisableZoomDragPan,
@@ -15,11 +18,22 @@ export {
   LabelMiddle,
   LabelStart,
   EdgeComponent,
-  Group,
-  Shape,
   MockSpace,
 } from './lib/components';
 
 export type { TNodeContext } from './lib/components';
 
 export { SpaceModule } from './lib/components/collab-module/main';
+
+export const moduleFrontend: ModuleFrontend = {
+  collabChunk: {
+    name: 'space',
+    loadSharedData: Space_loadData,
+    deps: ['core'],
+  },
+  spaceMenuEntries: [],
+  nodes: {
+    group: Group,
+    shape: Shape,
+  },
+};

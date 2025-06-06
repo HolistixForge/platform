@@ -1,8 +1,23 @@
+import { Servers_loadData } from './lib/servers-shared-model';
+import { ServersReducer } from './lib/servers-reducer';
+import type { ModuleBackend } from '@monorepo/module';
+
+export const moduleBackend: ModuleBackend = {
+  collabChunk: {
+    name: 'servers',
+    loadSharedData: Servers_loadData,
+    loadReducers: (sd) => [
+      new ServersReducer(() => {
+        throw new Error('updateReverseProxy not implemented');
+      }),
+    ],
+    deps: ['gateway', 'ganymede'], // updateReverseProxy, toGanymede, gatewayFQDN
+  },
+};
+
 export type { TServersSharedData } from './lib/servers-shared-model';
-export { Servers_loadData } from './lib/servers-shared-model';
 
 export {
-  ServersReducer,
   projectServerNodeId,
   makeServer,
   makeVolume,

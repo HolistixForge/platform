@@ -1,6 +1,6 @@
 import { FC, Suspense, useCallback } from 'react';
 
-import { TGraphNode } from '@monorepo/core';
+import { TGraphNode } from '@monorepo/module';
 import { useFactory } from '@monorepo/lazy-factory';
 import { useDispatcher } from '@monorepo/collab-engine';
 import {
