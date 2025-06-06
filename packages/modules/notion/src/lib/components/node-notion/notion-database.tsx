@@ -86,7 +86,9 @@ const TaskItem = ({ page }: { page: TNotionPage }) => {
       onDragEnd={handleDragEnd}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <div className="task-title ellipsis">{title.title[0].text.content}</div>
+        <div className="task-title ellipsis">
+          {title?.title?.[0]?.text?.content}
+        </div>
         <div className="task-meta">
           <span className={`task-status bg-${status?.status?.color}`}>
             {status?.status?.name}

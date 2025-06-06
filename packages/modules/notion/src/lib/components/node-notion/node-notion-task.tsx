@@ -109,7 +109,7 @@ export const NodeNotionTask = ({ node }: { node: TGraphNode }) => {
             <input
               className="node-notion-task-title"
               style={{ fontSize: '16px' }}
-              defaultValue={title.title[0].text.content}
+              defaultValue={title?.title?.[0]?.text?.content}
               onBlur={(e) =>
                 handlePropertyUpdate('title', {
                   type: 'title',
