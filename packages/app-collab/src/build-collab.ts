@@ -52,8 +52,7 @@ import {
 import {
   TDemiurgeNotebookEvent,
   TJupyterSharedData,
-  Jupyter_loadData,
-  JupyterReducer,
+  module as jupyterModule,
 } from '@monorepo/jupyter';
 import { SocialsReducer } from '@monorepo/socials';
 import {
@@ -216,6 +215,7 @@ const updateReverseProxy = async (
 
 const chunks: TCollaborativeChunk[] = [
   {
+    name: 'core',
     loadSharedData: (st: SharedTypes) => Core_loadData(st),
     loadReducers: (sd: TValidSharedData) => [
       new CoreReducer(),
@@ -223,14 +223,17 @@ const chunks: TCollaborativeChunk[] = [
     ],
   },
   {
+    name: 'space',
     loadSharedData: (st: SharedTypes) => Space_loadData(st),
     loadReducers: (sd: TValidSharedData) => [new SpaceReducer()],
   },
   {
+    name: 'chats',
     loadSharedData: (st: SharedTypes) => Chat_loadData(st),
     loadReducers: (sd: TValidSharedData) => [new ChatReducer()],
   },
   {
+    name: 'servers',
     loadSharedData: (st: SharedTypes) => Servers_loadData(st),
     loadReducers: (sd: TValidSharedData) => [
       new ServersReducer(updateReverseProxy),
@@ -241,16 +244,13 @@ const chunks: TCollaborativeChunk[] = [
     }),
   },
   {
+    name: 'tabs',
     loadSharedData: (st: SharedTypes) => Tabs_loadData(st),
     loadReducers: (sd: TValidSharedData) => [new TabsReducer()],
   },
+  jupyterModule.collabChunk,
   {
-    loadSharedData: (st: SharedTypes) => Jupyter_loadData(st),
-    loadReducers: (sd: TValidSharedData) => [
-      new JupyterReducer(sd as TServersSharedData & TJupyterSharedData),
-    ],
-  },
-  {
+    name: 'notion',
     loadSharedData: (st: SharedTypes) => Notion_loadData(st),
     loadReducers: (sd: TValidSharedData) => [new NotionReducer()],
     loadExtraContext: () => ({
@@ -258,6 +258,7 @@ const chunks: TCollaborativeChunk[] = [
     }),
   },
   {
+    name: 'socials',
     loadReducers: (sd: TValidSharedData) => [new SocialsReducer()],
   },
 ];

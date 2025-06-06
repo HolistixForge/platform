@@ -8,7 +8,7 @@ import { TEventMountVolume, TServerEvents } from '@monorepo/servers';
 import { NodeServer, NodeVolume } from '@monorepo/servers/frontend';
 import { SpaceModule, Group, Shape } from '@monorepo/space/frontend';
 import { NodeChatbox, NodeChatAnchor } from '@monorepo/chats/frontend';
-import { NodeCell, NodeKernel, NodeTerminal } from '@monorepo/jupyter/frontend';
+import { module as jupyterModule } from '@monorepo/jupyter/frontend';
 import {
   NodeYoutube,
   NodeTextEditor,
@@ -32,9 +32,7 @@ const nodeTypes = {
   volume: NodeVolume,
   chat: NodeChatbox,
   'chat-anchor': NodeChatAnchor,
-  'jupyter-cell': NodeCell,
-  'jupyter-kernel': NodeKernel,
-  'jupyter-terminal': NodeTerminal,
+  ...jupyterModule.nodes,
   youtube: NodeYoutube,
   'text-editor': NodeTextEditor,
   'notion-database': NodeNotion,

@@ -16,12 +16,12 @@ export const module: ModuleFrontend = {
     name: 'jupyter',
     loadSharedData: Jupyter_loadData,
     loadExtraContext: Jupyter_Load_Frontend_ExtraContext,
-    deps: ['core', 'servers'],
+    deps: ['servers'],
   },
   spaceMenuEntries: [],
   nodes: {
-    terminal: NodeTerminal,
-    cell: NodeCell,
-    kernel: NodeKernel,
+    'jupyter-cell': NodeCell,
+    'jupyter-kernel': NodeKernel,
+    'jupyter-terminal': NodeTerminal,
   },
 };
