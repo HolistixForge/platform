@@ -23,7 +23,6 @@ const StoryWrapper = () => {
               image_tag: `tag-${index}`,
               image_sha256: null,
             },
-            gatewayFQDN: `${index}`,
             httpServices: [
               {
                 port: 8888,

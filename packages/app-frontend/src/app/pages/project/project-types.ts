@@ -25,7 +25,6 @@ export type ProjectData = {
   collabConfig: TYjsCollabConfig;
   yjsDocId: string;
   dispatcher: FrontendDispatcher<TJsonObject>;
-  gatewayFQDN: string;
   isOwner: boolean;
 };
 

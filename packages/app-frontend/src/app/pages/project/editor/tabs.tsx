@@ -9,11 +9,11 @@ import {
   TabPayload,
 } from '@monorepo/tabs';
 import { useCurrentUser } from '@monorepo/frontend-data';
+import { serviceUrl } from '@monorepo/servers';
 
 import { NodeEditorView } from './node-editor/node-editor-view';
 import { ResourcePage } from './resources-page';
 import { useDispatcher, useSharedData } from '../model/collab-model-chunk';
-import { useProject } from '../project-context';
 
 //
 
@@ -123,25 +123,15 @@ const ProjectServerUIView = (props: {
   project_server_id: number;
   service_name: string;
 }) => {
-  const { gatewayFQDN } = useProject();
-
   const server = useSharedData(['projectServers'], (sd) =>
     sd.projectServers.get(`${props.project_server_id}`)
   );
 
-  const service = server?.httpServices.find(
-    (svc) => svc.name === props.service_name
-  );
+  const url = serviceUrl(server, props.service_name);
 
-  if (service)
+  if (url)
     return (
-      <>
-        <iframe
-          style={{ width: '100%', height: '100%' }}
-          src={`https://${gatewayFQDN}/${service.location}`}
-        ></iframe>
-      </>
+      <iframe style={{ width: '100%', height: '100%' }} src={url}></iframe>
     );
-
   return null;
 };

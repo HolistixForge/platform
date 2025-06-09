@@ -76,7 +76,6 @@ const meta = {
     controls: {
       exclude: [
         'image',
-        'gatewayFQDN',
         'onCloudStart',
         'onCloudStop',
         'onCloudDelete',

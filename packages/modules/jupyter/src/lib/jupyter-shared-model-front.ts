@@ -3,7 +3,8 @@ import {
   TValidSharedData,
   useExtraContext,
 } from '@monorepo/collab-engine';
-import { TServer, TServersSharedData } from '@monorepo/servers';
+import { TServersSharedData } from '@monorepo/servers';
+import { TServersExtraContext } from '@monorepo/servers/frontend';
 import { useRegisterListener } from '@monorepo/simple-types';
 
 import { JLsManager, TKernelPack } from './front/jls-manager';
@@ -11,11 +12,6 @@ import { TJupyterSharedData } from './jupyter-shared-model';
 import { TDemiurgeNotebookEvent } from './jupyter-events';
 
 //
-type TServerExtraContext = {
-  server: {
-    getToken: (s: TServer) => Promise<string>;
-  };
-};
 
 export type TJupyterExtraContext = {
   jupyter: {
@@ -38,7 +34,7 @@ export const Jupyter_Load_Frontend_ExtraContext = ({
       jlsManager: new JLsManager(
         sharedData as TJupyterSharedData & TServersSharedData,
         dispatcher,
-        (extraContext as TServerExtraContext).server.getToken
+        (extraContext as TServersExtraContext).servers.getToken
       ),
     },
   };
@@ -47,7 +43,7 @@ export const Jupyter_Load_Frontend_ExtraContext = ({
 //
 
 export const useJLsManager = () =>
-  useExtraContext<{ jlsManager: JLsManager }>();
+  useExtraContext<{ jupyter: { jlsManager: JLsManager } }>();
 
 //
 
@@ -55,10 +51,13 @@ export const useKernelPack = (
   project_server_id: number,
   kernel_id: string
 ): TKernelPack | false => {
-  const { jlsManager } = useJLsManager();
-  useRegisterListener(jlsManager, kernel_id);
+  const { jupyter } = useJLsManager();
+  useRegisterListener(jupyter.jlsManager, kernel_id);
 
-  const kernelPack = jlsManager.getKernelPack(project_server_id, kernel_id);
+  const kernelPack = jupyter.jlsManager.getKernelPack(
+    project_server_id,
+    kernel_id
+  );
 
   return kernelPack;
 };

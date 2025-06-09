@@ -6,12 +6,11 @@ export const moduleBackend: ModuleBackend = {
   collabChunk: {
     name: 'servers',
     loadSharedData: Servers_loadData,
-    loadReducers: (sd) => [
-      new ServersReducer(() => {
-        throw new Error('updateReverseProxy not implemented');
-      }),
+    loadReducers: (sd) => [new ServersReducer()],
+    deps: [
+      'gateway', // updateReverseProxy, gatewayFQDN
+      'ganymede', // toGanymede
     ],
-    deps: ['gateway', 'ganymede'], // updateReverseProxy, toGanymede, gatewayFQDN
   },
 };
 
@@ -22,6 +21,8 @@ export {
   makeServer,
   makeVolume,
   makeMountEdge,
+  type TGanymedeExtraContext,
+  type TGatewayExtraContext,
 } from './lib/servers-reducer';
 
 export type {

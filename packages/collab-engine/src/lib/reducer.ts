@@ -14,7 +14,8 @@ export type ReduceArgs<
   TSd extends TValidSharedData,
   TRe,
   TDe extends TJsonObject,
-  TArgs
+  TArgs,
+  TEc
 > = {
   sd: TSd;
   st: SharedTypes;
@@ -23,6 +24,7 @@ export type ReduceArgs<
   bep: BackendEventProcessor<TDe, TArgs>;
   sharedEditor: SharedEditor;
   extraArgs: TArgs;
+  extraContext: TEc;
 };
 
 /**
@@ -32,7 +34,8 @@ export abstract class Reducer<
   TSd extends TValidSharedData,
   TRe,
   TDe extends TJsonObject,
-  TArgs
+  TArgs,
+  TEc
 > {
-  abstract reduce(g: ReduceArgs<TSd, TRe, TDe, TArgs>): Promise<void>;
+  abstract reduce(g: ReduceArgs<TSd, TRe, TDe, TArgs, TEc>): Promise<void>;
 }

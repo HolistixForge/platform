@@ -68,18 +68,12 @@ export class JLsManager extends Listenable {
   _sd: TJupyterSharedData & TServersSharedData;
   _dispatcher: FrontendDispatcher<TDemiurgeNotebookEvent>;
 
-  getToken: (s: TServer) => Promise<string>;
+  getToken: (s: TServer, serviceName: string) => Promise<string>;
 
-  /**
-   *
-   * @param sd
-   * @param gatewayFQDN
-   * @param onNewDriver
-   */
   constructor(
     sd: TJupyterSharedData & TServersSharedData,
     dispatcher: FrontendDispatcher<TDemiurgeNotebookEvent>,
-    getToken: (s: TServer) => Promise<string>
+    getToken: (s: TServer, serviceName: string) => Promise<string>
   ) {
     super();
     this._sd = sd;
@@ -165,10 +159,7 @@ export class JLsManager extends Listenable {
   //
 
   getServerSetting = async (server: TServer, websocket?: boolean) => {
-    const service = server.httpServices.find((s) => s.name === 'jupyterlab');
-    if (!service) throw new Error('jupyterlab not mapped');
-
-    const token = await this.getToken(server);
+    const token = await this.getToken(server, 'jupyterlab');
 
     const url = serviceUrl(server, 'jupyterlab', websocket);
     if (!url)

@@ -219,7 +219,6 @@ const useProjectState = (
       const data: ProjectData = {
         project: projectData._0,
         collabConfig: collabSetup.collabConfig,
-        gatewayFQDN: projectData._0.gateway_hostname as string,
         yjsDocId: roomId,
         dispatcher,
         isOwner: projectData._0.owner_id === currentUserData?.user.user_id,

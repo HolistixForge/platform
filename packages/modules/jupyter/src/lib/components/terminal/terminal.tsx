@@ -109,7 +109,7 @@ export const JupyterTerminal = ({
     }
   );
 
-  const { jlsManager } = useJLsManager();
+  const { jupyter } = useJLsManager();
 
   const ref = useRef<HTMLDivElement>(null);
   const yet = useRef<boolean>(false);
@@ -144,7 +144,7 @@ export const JupyterTerminal = ({
     if (isReachable) {
       if (!yet.current && server) {
         yet.current = true;
-        jlsManager.getServerSetting(server).then((ss) => {
+        jupyter.jlsManager.getServerSetting(server).then((ss) => {
           connectTerminal(ss, terminal.sessionModel).then((terminalWidget) => {
             terminalWidgetRef.current = terminalWidget;
             terminalWidget.node.style.width = '100%';
@@ -154,7 +154,7 @@ export const JupyterTerminal = ({
         });
       }
     }
-  }, [server, jlsManager, isReachable]);
+  }, [server, jupyter.jlsManager, isReachable]);
 
   // ResizeObserver to auto-fit terminal on container resize
   useEffect(() => {

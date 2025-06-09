@@ -6,7 +6,13 @@ import { TJsonWithDate } from '@monorepo/simple-types';
 import { SharedEditor } from './SharedEditor';
 import { BackendEventSequence, SequenceEvent } from './backendEventSequence';
 
-type ValidReducer<Targs> = Reducer<TValidSharedData, any, any, Partial<Targs>>;
+type ValidReducer<Targs> = Reducer<
+  TValidSharedData,
+  any,
+  any,
+  Partial<Targs>,
+  any
+>;
 
 //
 
@@ -16,6 +22,7 @@ export class BackendEventProcessor<TE extends TJsonWithDate, Targs> {
   _reducers: Array<ValidReducer<Targs>> = [];
   _dispatcherExtraArgs: Partial<Targs> = null!;
   _yjsSharedEditor: SharedEditor | undefined;
+  _extraContext: any = null!;
   // TODO: remove old sequence context from map
   _eventSequences: Map<string, BackendEventSequence<SequenceEvent>> = new Map();
 
@@ -25,12 +32,14 @@ export class BackendEventProcessor<TE extends TJsonWithDate, Targs> {
     sharedTypes: SharedTypes,
     yse: SharedEditor,
     sharedData: TValidSharedData,
-    extraArgs: Partial<Targs>
+    extraArgs: Partial<Targs>,
+    extraContext: any
   ) {
     this._sharedData = sharedData;
     this._yjsSharedEditor = yse;
     this._sharedTypes = sharedTypes;
     this._dispatcherExtraArgs = extraArgs;
+    this._extraContext = extraContext;
   }
 
   //
@@ -97,6 +106,7 @@ export class BackendEventProcessor<TE extends TJsonWithDate, Targs> {
               ...this._dispatcherExtraArgs,
               ...eventExtraArgs,
             },
+            extraContext: this._extraContext,
           });
         }
       });

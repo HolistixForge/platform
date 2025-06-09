@@ -10,7 +10,7 @@ import {
   JupyterStoryCollabContext,
   STORY_PROJECT_SERVER_ID,
 } from '../../stories/module-stories-utils';
-import { Cell } from './cell';
+import { CellStory } from './cell';
 
 //
 
@@ -33,19 +33,17 @@ const Story = () => {
 
   const sd: TJupyterSharedData & TServersSharedData = useSharedData<
     TJupyterSharedData & TServersSharedData
-  >(['projectServers', 'jupyterServers', 'cells'], (sd) => sd);
+  >(['projectServers', 'jupyterServers'], (sd) => sd);
 
   const server = sd.projectServers.get(`${STORY_PROJECT_SERVER_ID}`);
   const jupyter = sd.jupyterServers.get(`${STORY_PROJECT_SERVER_ID}`);
   const service = server?.httpServices.find((s) => s.name === 'jupyterlab');
   const kernel = jupyter?.kernels[0];
-  const cell = Array.from(sd.cells.values()).filter(
-    (c) => c.dkid === kernel?.dkid
-  );
+  const cellId = Object.keys(jupyter?.cells || {})[0] || undefined;
 
   console.log(
-    '##########',
-    structuredClone({ server, jupyter, service, kernel, cell })
+    '########## ##########',
+    structuredClone({ server, jupyter, service, kernel, cellId })
   );
 
   // step 1: create server
@@ -68,32 +66,24 @@ const Story = () => {
       name: 'jupyterlab',
     });
   }
-  // step 3: create kernel
-  else if (service && !kernel) {
-    dispatcher.dispatch({
-      type: 'jupyter:new-kernel',
-      kernelName: 'story-kernel',
-      project_server_id: 0,
-    });
-  }
-  // step 4: start kernel
-  else if (kernel && !kernel.jkid) {
-    dispatcher.dispatch({
-      type: 'jupyter:start-kernel',
-      dkid: kernel.dkid,
-      client_id: 'not used in story',
-    });
-  }
+
   // step 5: create cell
-  else if (kernel && cell.length === 0) {
-    dispatcher.dispatch({ type: 'jupyter:new-cell', dkid: kernel.dkid });
+  else if (kernel && !cellId) {
+    dispatcher.dispatch({
+      type: 'jupyter:new-cell',
+      kernel_id: kernel.kernel_id,
+    });
   }
 
-  return cell.map((c) => (
-    <div key={c.cellId} style={{ width: '450px', height: '400px' }}>
-      <Cell cellId={c.cellId} />
-    </div>
-  ));
+  if (cellId) {
+    return (
+      <div style={{ width: '450px', height: '400px' }}>
+        <CellStory projectServerId={STORY_PROJECT_SERVER_ID} cellId={cellId} />
+      </div>
+    );
+  }
+
+  return null;
 };
 
 //

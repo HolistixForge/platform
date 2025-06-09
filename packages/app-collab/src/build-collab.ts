@@ -30,7 +30,6 @@ import { ForwardException, myfetch } from '@monorepo/backend-engine';
 
 import { CONFIG } from './config';
 import { PROJECT } from './project-config';
-//import { runScript } from './run-script';
 import { ROOM_ID } from './main';
 import { modules } from './modules';
 
@@ -161,17 +160,6 @@ const gatewayStopNotify = async () => {
   runScript('reset-gateway');
 };
 
-//
-
-const updateReverseProxy = async (
-  services: { location: string; ip: string; port: number }[]
-) => {
-  const config = services
-    .map((s) => `${s.location} ${s.ip} ${s.port}\n`)
-    .join('');
-  runScript('update-nginx-locations', config);
-};
-
 */
 //
 //
@@ -221,7 +209,7 @@ export async function initProjectCollaboration(
   const isNew = !loaded;
 
   // attach data to dispatcher
-  bep.bindData(yst, yse, sharedData, extraContext);
+  bep.bindData(yst, yse, sharedData, {}, extraContext);
 
   // let every reducers update data from up to date data (API calls ...)
   await bep.process({ type: 'core:load' });

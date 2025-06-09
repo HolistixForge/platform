@@ -38,10 +38,11 @@ const Terminals = () => {
   const server = sd.projectServers.get(`${STORY_PROJECT_SERVER_ID}`);
   const jupyter = sd.jupyterServers.get(`${STORY_PROJECT_SERVER_ID}`);
   const service = server?.httpServices.find((s) => s.name === 'jupyterlab');
-  const terminal = jupyter?.terminals[0];
+  const terminal_id = Object.keys(jupyter?.terminals || {})[0] || undefined;
+  const terminal = terminal_id ? jupyter?.terminals[terminal_id] : undefined;
 
   console.log(
-    '##########',
+    '########## ##########',
     structuredClone({ server, jupyter, service, terminal })
   );
 

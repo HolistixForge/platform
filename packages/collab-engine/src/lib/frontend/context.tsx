@@ -219,7 +219,7 @@ export const useCollaborativeContextInternal = ({
       sharedEditor = new YjsSharedEditor(ydoc.getMap(EDITORS_YTEXT_YMAP_KEY));
       awareness = new YjsAwareness(ydoc, provider, buildUserCss);
     } else {
-      sharedTypes = new NoneSharedTypes();
+      sharedTypes = new NoneSharedTypes(id);
       sharedEditor = new NoneSharedEditor();
       awareness = new NoneAwareness(config.simulateUsers);
       setState({ synced: true });

@@ -1,7 +1,7 @@
 import { ServerConnection, TerminalManager } from '@jupyterlab/services';
 
 import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
-import { TJsonArray, TMyfetchRequest, makeUuid } from '@monorepo/simple-types';
+import { TJsonArray, makeUuid } from '@monorepo/simple-types';
 import { NotFoundException } from '@monorepo/log';
 import {
   TServersSharedData,
@@ -42,7 +42,6 @@ import {
  */
 
 export type TExtraArgs = {
-  toGanymede: <T>(r: TMyfetchRequest) => Promise<T>;
   authorizationHeader: string;
 };
 
@@ -58,7 +57,7 @@ type DispatchedEvents =
 
 type UsedSharedData = TServersSharedData & TJupyterSharedData & TCoreSharedData;
 
-type Ra<T> = ReduceArgs<UsedSharedData, T, DispatchedEvents, TExtraArgs>;
+type Ra<T> = ReduceArgs<UsedSharedData, T, DispatchedEvents, TExtraArgs, {}>;
 
 //
 
@@ -72,7 +71,8 @@ export class JupyterReducer extends Reducer<
   UsedSharedData,
   ReducedEvents,
   DispatchedEvents,
-  TExtraArgs
+  TExtraArgs,
+  {}
 > {
   //
 
@@ -345,7 +345,7 @@ export class JupyterReducer extends Reducer<
     });
     const session = await manager.startNew();
 
-    const terminal_id = session.model as unknown as string;
+    const terminal_id = session.model.name as unknown as string;
 
     // manager.connectTo({model: session.model});
 

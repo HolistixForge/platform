@@ -143,7 +143,15 @@ class MyArray<T extends TJson>
 //
 
 export class NoneSharedTypes extends SharedTypes {
+  private static _sharedMaps: Map<string, SharedMap<any>> = new Map();
+  private static _sharedArrays: Map<string, SharedArray<any>> = new Map();
   _changes: Array<(e: TEvent) => void> = [];
+  id: string;
+
+  constructor(id: string) {
+    super();
+    this.id = id;
+  }
 
   flagChange(obs: Array<(e: TEvent) => void>) {
     obs.forEach((f) => {
@@ -153,21 +161,31 @@ export class NoneSharedTypes extends SharedTypes {
 
   async transaction(f: () => Promise<void>): Promise<void> {
     await f();
-
-    if (this._changes) {
-      this._changes.forEach((o) => o({}));
-    }
-
+    this._changes.forEach((o) => o({}));
     this._changes = [];
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getSharedMap<T extends TJson>(name?: string): SharedMap<T> {
-    return new MyMap<T>(this);
+    const key = `${this.id}::${name || 'default'}`;
+    let map = NoneSharedTypes._sharedMaps.get(key) as SharedMap<T>;
+
+    if (!map) {
+      map = new MyMap<T>(this);
+      NoneSharedTypes._sharedMaps.set(key, map);
+    }
+
+    return map;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getSharedArray<T extends TJson>(name?: string): SharedArray<T> {
-    return new MyArray<T>(this);
+    const key = `${this.id}::${name || 'default'}`;
+    let array = NoneSharedTypes._sharedArrays.get(key) as SharedArray<T>;
+
+    if (!array) {
+      array = new MyArray<T>(this);
+      NoneSharedTypes._sharedArrays.set(key, array);
+    }
+
+    return array;
   }
 }

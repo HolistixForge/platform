@@ -10,6 +10,28 @@ import { moduleFrontend as notion } from '@monorepo/notion/frontend';
 import { moduleFrontend as socials } from '@monorepo/socials/frontend';
 
 export const modules: ModuleFrontend[] = [
+  {
+    collabChunk: {
+      name: 'authentication',
+      loadExtraContext: () => ({
+        authentication: {
+          /*
+          let v;
+          do {
+            v = ganymedeApi._ts.get({
+              client_id: oauth_client.client_id,
+            });
+            if (v.promise) await v.promise;
+          } while (!v.value);
+
+          return v.value.token.access_token;
+        */
+        },
+      }),
+    },
+    nodes: {},
+    spaceMenuEntries: [],
+  },
   core,
   space,
   chats,

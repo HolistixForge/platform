@@ -30,7 +30,7 @@ export type TCollaborativeChunk = {
 
   loadReducers?: (
     sharedData: TValidSharedData
-  ) => Readonly<Reducer<TValidSharedData, any, any, any>[]>;
+  ) => Readonly<Reducer<TValidSharedData, any, any, any, any>[]>;
 
   loadExtraContext?: (a: {
     sharedData: TValidSharedData;
@@ -58,7 +58,8 @@ export const compileChunks = (
   chunks.forEach((chunk) => {
     if (chunk.deps) {
       chunk.deps.forEach((d) => {
-        if (!extraContext[d]) throw new Error(`Chunk ${d} is not loaded`);
+        if (!extraContext[d])
+          throw new Error(`Chunk ${d} is not loaded (deps of ${chunk.name})`);
       });
     }
 
