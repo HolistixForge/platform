@@ -9,7 +9,7 @@ import { TDemiurgeNotebookEvent } from '../../jupyter-events';
 import {
   JupyterStoryCollabContext,
   STORY_PROJECT_SERVER_ID,
-} from '../module-stories-utils';
+} from '../../stories/module-stories-utils';
 import { JupyterTerminal } from './terminal';
 
 //
@@ -33,12 +33,12 @@ const Terminals = () => {
 
   const sd: TJupyterSharedData & TServersSharedData = useSharedData<
     TJupyterSharedData & TServersSharedData
-  >(['projectServers', 'jupyterServers', 'cells', 'terminals'], (sd) => sd);
+  >(['projectServers', 'jupyterServers'], (sd) => sd);
 
   const server = sd.projectServers.get(`${STORY_PROJECT_SERVER_ID}`);
   const jupyter = sd.jupyterServers.get(`${STORY_PROJECT_SERVER_ID}`);
   const service = server?.httpServices.find((s) => s.name === 'jupyterlab');
-  const terminal = Array.from(sd.terminals.values())[0];
+  const terminal = jupyter?.terminals[0];
 
   console.log(
     '##########',
@@ -82,7 +82,10 @@ const Terminals = () => {
           width: '80vw',
         }}
       >
-        <JupyterTerminal terminalId={terminal.terminalId} />
+        <JupyterTerminal
+          terminalId={terminal.terminal_id}
+          projectServerId={STORY_PROJECT_SERVER_ID}
+        />
       </div>
     );
 

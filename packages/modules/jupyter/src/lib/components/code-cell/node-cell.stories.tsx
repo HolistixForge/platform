@@ -10,10 +10,8 @@ import { TDemiurgeNotebookEvent } from '../../jupyter-events';
 import {
   JupyterStoryCollabContext,
   STORY_PROJECT_SERVER_ID,
-} from '../module-stories-utils';
-import { NodeCell } from './cell';
-import { NodeKernel } from '../node-kernel/node-kernel';
-import { NodeTerminal } from '../terminal/terminal';
+} from '../../stories/module-stories-utils';
+import { moduleFrontend } from '../../../frontend';
 
 //
 
@@ -31,12 +29,6 @@ const StoryWrapper = () => {
 
 //
 
-const nodeTypes = {
-  'jupyter-cell': NodeCell,
-  'jupyter-kernel': NodeKernel,
-  'jupyter-terminal': NodeTerminal,
-};
-
 //
 
 const Story = () => {
@@ -44,16 +36,16 @@ const Story = () => {
 
   const sd: TJupyterSharedData & TServersSharedData = useSharedData<
     TJupyterSharedData & TServersSharedData
-  >(['projectServers', 'jupyterServers', 'cells'], (sd) => sd);
+  >(['projectServers', 'jupyterServers'], (sd) => sd);
 
   const server = sd.projectServers.get(`${STORY_PROJECT_SERVER_ID}`);
   const jupyter = sd.jupyterServers.get(`${STORY_PROJECT_SERVER_ID}`);
   const service = server?.httpServices.find((s) => s.name === 'jupyterlab');
   const kernel = jupyter?.kernels[0];
-  const cell = Array.from(sd.cells.values()).filter(
-    (c) => c.dkid === kernel?.dkid
+  const cell = Object.keys(jupyter?.cells || {}).find(
+    (c) => jupyter?.cells[c].kernel_id === kernel?.kernel_id
   );
-  const terminal = Array.from(sd.terminals.values())[0];
+  const terminal = jupyter?.terminals[0];
 
   console.log(
     '##########',
@@ -83,22 +75,18 @@ const Story = () => {
   // step 3: create kernel
   else if (service && !kernel) {
     dispatcher.dispatch({
-      type: 'jupyter:new-kernel',
-      kernelName: 'story-kernel',
+      type: 'jupyter:new-kernel-node',
+      kernel_id: '0',
       project_server_id: 0,
     });
   }
-  // step 4: start kernel
-  else if (kernel && !kernel.jkid) {
-    dispatcher.dispatch({
-      type: 'jupyter:start-kernel',
-      dkid: kernel.dkid,
-      client_id: 'not needed here in storybook',
-    });
-  }
+
   // step 5: create cell
-  else if (kernel && cell.length === 0) {
-    dispatcher.dispatch({ type: 'jupyter:new-cell', dkid: kernel.dkid });
+  else if (kernel && !cell) {
+    dispatcher.dispatch({
+      type: 'jupyter:new-cell',
+      kernel_id: kernel.kernel_id,
+    });
   }
   // step 6: create terminal
   else if (cell && !terminal) {
@@ -111,7 +99,7 @@ const Story = () => {
 
   return (
     <div style={{ width: '100%', height: '80vh' }}>
-      <SpaceModule viewId={'story-view'} nodeTypes={nodeTypes} />
+      <SpaceModule viewId={'story-view'} nodeTypes={moduleFrontend.nodes} />
     </div>
   );
 };

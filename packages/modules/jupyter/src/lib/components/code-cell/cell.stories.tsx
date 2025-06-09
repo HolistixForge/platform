@@ -9,7 +9,7 @@ import { TDemiurgeNotebookEvent } from '../../jupyter-events';
 import {
   JupyterStoryCollabContext,
   STORY_PROJECT_SERVER_ID,
-} from '../module-stories-utils';
+} from '../../stories/module-stories-utils';
 import { Cell } from './cell';
 
 //
