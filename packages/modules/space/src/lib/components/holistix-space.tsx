@@ -90,6 +90,28 @@ export type HolistixSpaceProps = {
 
 //
 
+//
+
+const useOpenRadixContextMenu = () => {
+  const triggerRef = useRef<HTMLSpanElement>(null);
+
+  const open = useCallback((clientPosition: TPosition) => {
+    triggerRef.current?.dispatchEvent(
+      new MouseEvent('contextmenu', {
+        bubbles: true,
+        clientX: clientPosition.x,
+        clientY: clientPosition.y,
+      })
+    );
+  }, []);
+
+  return { triggerRef, open };
+};
+
+//
+//
+//
+
 export const HolistixSpace = ({ viewId, nodeTypes }: HolistixSpaceProps) => {
   //
   const sdm = useShareDataManager<TSpaceSharedData & TCoreSharedData>();
@@ -107,6 +129,44 @@ export const HolistixSpace = ({ viewId, nodeTypes }: HolistixSpaceProps) => {
 
     return { pt, as, ss, Node };
   }, []);
+
+  /**
+   * Contextual menu logics
+   */
+
+  // right click coordinates
+  const rcc = useRef<TPosition>({ x: 0, y: 0 });
+
+  // new edge's origin handle
+  const [from, setFrom] = useState<TEdgeEnd | undefined>(undefined);
+
+  const { triggerRef: ContextualMenuTriggerRef, open: openContextualMenu } =
+    useOpenRadixContextMenu();
+
+  // capture the pointer coordinates in the canvas when user right click
+  const handleContextualMenu = useCallback(
+    (xy: TPosition, clientPosition: TPosition) => {
+      rcc.current = xy;
+      setFrom(undefined);
+      openContextualMenu(clientPosition);
+    },
+    [openContextualMenu]
+  );
+
+  // callback when user draw an edge and end not to another connector.
+  // Open a menu to propose creation of a new node.
+  const handleContextualMenuNewEdge = useCallback(
+    (from: TEdgeEnd, xy: TPosition, clientPosition: TPosition) => {
+      rcc.current = xy;
+      setFrom(from);
+      openContextualMenu(clientPosition);
+    },
+    [openContextualMenu]
+  );
+
+  /**
+   *
+   */
 
   const onDrop = useCallback(
     ({ data, position }: { data: any; position: TPosition }) => {
@@ -256,19 +316,9 @@ export const HolistixSpace = ({ viewId, nodeTypes }: HolistixSpaceProps) => {
     [mode, edgeMenu, setEdgeMenu, resetEdgeMenu]
   );
 
-  const handleContextualMenu = useCallback(
-    (xy: TPosition, clientPosition: TPosition) => {
-      console.log({ xy, clientPosition });
-    },
-    []
-  );
-
-  const handleContextualMenuNewEdge = useCallback(
-    (from: TEdgeEnd, xy: TPosition, clientPosition: TPosition) => {
-      console.log({ from, xy, clientPosition });
-    },
-    []
-  );
+  /**
+   *
+   */
 
   return (
     <SpaceContext value={context}>
@@ -311,7 +361,7 @@ export const HolistixSpace = ({ viewId, nodeTypes }: HolistixSpaceProps) => {
             setRenderProps={handleRenderPropsChange}
           />
         )}
-        <ContextualMenu triggerRef={null} />
+        <ContextualMenu triggerRef={ContextualMenuTriggerRef} />
         <ModeIndicator mode={mode} />
       </div>
     </SpaceContext>
