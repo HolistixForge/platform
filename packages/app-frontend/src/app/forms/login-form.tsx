@@ -13,11 +13,13 @@ export const LoginFormLogic = ({
   gitLabLoginUrl,
   linkedinLoginUrl,
   discordLoginUrl,
+  local = true,
 }: {
-  githubLoginUrl: string;
-  gitLabLoginUrl: string;
-  linkedinLoginUrl: string;
-  discordLoginUrl: string;
+  githubLoginUrl?: string;
+  gitLabLoginUrl?: string;
+  linkedinLoginUrl?: string;
+  discordLoginUrl?: string;
+  local?: boolean;
 }) => {
   const login = useMutationLogin();
 
@@ -31,7 +33,7 @@ export const LoginFormLogic = ({
   return (
     <div>
       <LoginForm
-        action={action}
+        action={local ? action : undefined}
         gitLabLoginUrl={gitLabLoginUrl}
         githubLoginUrl={githubLoginUrl}
         linkedinLoginUrl={linkedinLoginUrl}

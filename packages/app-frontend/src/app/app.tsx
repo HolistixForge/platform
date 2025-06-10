@@ -8,6 +8,7 @@ import {
   AccountSettingsPage,
   EnforceUserAccountReady,
   ForgotPasswordPage,
+  LoginLinkedinPage,
   LoginPage,
   SignupPage,
   SimpleMessagePage,
@@ -50,6 +51,10 @@ export function App() {
 
               <Route path="/account/signup" element={<SignupPage />} />
               <Route path="/account/login" element={<LoginPage />} />
+              <Route
+                path="/account/login-linkedin"
+                element={<LoginLinkedinPage />}
+              />
               <Route
                 path="/account/settings"
                 element={<AccountSettingsPage />}

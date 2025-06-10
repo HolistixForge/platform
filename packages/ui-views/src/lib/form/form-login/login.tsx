@@ -17,11 +17,11 @@ import './login.scss';
 //
 
 export type LoginFormProps = {
-  action: TAction<LoginFormData>;
-  githubLoginUrl: string;
-  gitLabLoginUrl: string;
-  linkedinLoginUrl: string;
-  discordLoginUrl: string;
+  action?: TAction<LoginFormData>;
+  githubLoginUrl?: string;
+  gitLabLoginUrl?: string;
+  linkedinLoginUrl?: string;
+  discordLoginUrl?: string;
 };
 
 export const LoginForm = ({
@@ -38,92 +38,107 @@ export const LoginForm = ({
       <h1>Login</h1>
 
       <div className="providers">
-        <a href={githubLoginUrl}>
-          <div>
-            <GitHubLogoIcon className="provider-logo" />
-          </div>
-          <div>
-            <span>
-              <b>GitHub</b>
-            </span>
-          </div>
-        </a>
+        {githubLoginUrl && (
+          <a href={githubLoginUrl}>
+            <div>
+              <GitHubLogoIcon className="provider-logo" />
+            </div>
+            <div>
+              <span>
+                <b>GitHub</b>
+              </span>
+            </div>
+          </a>
+        )}
 
-        <a href={gitLabLoginUrl}>
-          <div>
-            <icons.Gitlab className="provider-logo gitlab" />
-          </div>
-          <div>
-            <span>
-              <b>GitLab</b>
-            </span>
-          </div>
-        </a>
+        {gitLabLoginUrl && (
+          <a href={gitLabLoginUrl}>
+            <div>
+              <icons.Gitlab className="provider-logo gitlab" />
+            </div>
+            <div>
+              <span>
+                <b>GitLab</b>
+              </span>
+            </div>
+          </a>
+        )}
 
-        <a href={linkedinLoginUrl}>
-          <div>
-            <icons.LinkedIn className="provider-logo linkedin" />
-          </div>
-          <div>
-            <span>
-              <b>LinkedIn</b>
-            </span>
-          </div>
-        </a>
+        {linkedinLoginUrl && (
+          <a href={linkedinLoginUrl}>
+            <div>
+              <icons.LinkedIn className="provider-logo linkedin" />
+            </div>
+            <div>
+              <span>
+                <b>LinkedIn</b>
+              </span>
+            </div>
+          </a>
+        )}
 
-        <a href={discordLoginUrl}>
-          <div>
-            <icons.Discord className="provider-logo discord" />
-          </div>
-          <div>
-            <span>
-              <b>Discord</b>
-            </span>
-          </div>
-        </a>
+        {discordLoginUrl && (
+          <a href={discordLoginUrl}>
+            <div>
+              <icons.Discord className="provider-logo discord" />
+            </div>
+            <div>
+              <span>
+                <b>Discord</b>
+              </span>
+            </div>
+          </a>
+        )}
       </div>
 
-      <div className="login-form">
-        {['email', 'password'].map((field) => (
-          <div key={field}>
-            <FormError errors={action.errors} id={field} />
-            <TextFieldset
-              label={field}
-              name={field}
-              onChange={action.handleInputChange}
-              value={(action.formData as any)[field]}
-              placeholder={field}
-              type={
-                field === 'password'
-                  ? 'password'
-                  : field === 'email'
-                  ? 'email'
-                  : 'text'
-              }
-            />
+      {action && (
+        <>
+          <div className="login-form">
+            {['email', 'password'].map((field) => (
+              <div key={field}>
+                <FormError errors={action.errors} id={field} />
+                <TextFieldset
+                  label={field}
+                  name={field}
+                  onChange={action.handleInputChange}
+                  value={(action.formData as any)[field]}
+                  placeholder={field}
+                  type={
+                    field === 'password'
+                      ? 'password'
+                      : field === 'email'
+                      ? 'email'
+                      : 'text'
+                  }
+                />
+              </div>
+            ))}
+
+            <FormErrors errors={action.errors} />
+            <div
+              style={{
+                display: 'flex',
+                marginTop: 25,
+                justifyContent: 'flex-end',
+              }}
+            >
+              <ButtonBase
+                className="submit"
+                callback={() => action.callback(action.formData)}
+                text="Login"
+                loading={action.loading}
+              />
+            </div>
+
+            <Link to="/account/forgot-password">
+              <div className="">Forgot password?</div>
+            </Link>
           </div>
-        ))}
-
-        <FormErrors errors={action.errors} />
-        <div
-          style={{ display: 'flex', marginTop: 25, justifyContent: 'flex-end' }}
-        >
-          <ButtonBase
-            className="submit"
-            callback={() => action.callback(action.formData)}
-            text="Login"
-            loading={action.loading}
-          />
-        </div>
-
-        <Link to="/account/forgot-password">
-          <div className="">Forgot password?</div>
-        </Link>
-      </div>
-
-      <Link to="/account/signup">
-        <div className="signup-link">Create account</div>
-      </Link>
+          <Link to="/account/signup">
+            <div className="signup-link">Create account</div>
+          </Link>
+        </>
+      )}
     </div>
   );
 };
