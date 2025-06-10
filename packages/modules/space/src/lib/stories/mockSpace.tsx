@@ -1,9 +1,6 @@
 import { ReactNode, useMemo } from 'react';
 
 import {
-  SharedTypes,
-  TCollaborativeChunk,
-  TValidSharedData,
   MockCollaborativeContext,
   useShareDataManager,
 } from '@monorepo/collab-engine';
@@ -12,35 +9,12 @@ import { TCoreSharedData } from '@monorepo/core';
 import {
   SpaceContext,
   TSpaceContext,
-} from '../reactflow-renderer/spaceContext';
-import { TNodeContext } from '../apis/types/node';
-import { SpaceReducer } from '../../space-reducer';
-import { Space_loadData, TSpaceSharedData } from '../../space-shared-model';
-import { CollabSpaceState } from '../collab-module/collab-space-state';
-import { loadStoryData, STORY_VIEW_ID } from './graphs-data/loader';
-import { WhiteboardMode } from '../reactflow-renderer/demiurge-space';
-
-//
-
-const chunks: TCollaborativeChunk[] = [
-  /*
-  {
-    sharedData: (st: SharedTypes) => Core_loadData(st),
-    reducers: (sd: TValidSharedData) => [new CoreReducer()],
-  },
-  {
-    sharedData: (st: SharedTypes) => {
-      const sd = Space_loadData(st);
-      return sd;
-    },
-    reducers: (sd: TValidSharedData) => [new SpaceReducer()],
-    extraContext: (sd: TValidSharedData) => {
-      loadStoryData(sd as any);
-      return {};
-    },
-  },
-  */
-];
+} from '../components/reactflow-renderer/spaceContext';
+import { TNodeContext } from '../components/apis/types/node';
+import { TSpaceSharedData } from '../space-shared-model';
+import { CollabSpaceState } from '../components/collab-module/collab-space-state';
+import { STORY_VIEW_ID } from './story-space';
+import { WhiteboardMode } from '../components/reactflow-renderer/demiurge-space';
 
 //
 
@@ -56,7 +30,11 @@ export const MockSpace = ({
   //
 
   return (
-    <MockCollaborativeContext getCollabChunks={() => chunks}>
+    <MockCollaborativeContext
+      frontChunks={[]}
+      backChunks={[]}
+      getRequestContext={() => ({})}
+    >
       <MockSpaceContext>
         <MockSpaceBackground />
         <MockReactFlowNodeWrapper

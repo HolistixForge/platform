@@ -1,8 +1,8 @@
 import { TEdge } from '@monorepo/core';
 import { TGraphNode, TPin } from '@monorepo/module';
 
-import { nodeViewDefaultStatus, TNodeView } from '../../../space-types';
-import { pinId, TEdgeRenderProps } from '../../apis/types/edge';
+import { nodeViewDefaultStatus, TNodeView } from '../../space-types';
+import { pinId, TEdgeRenderProps } from '../../components/apis/types/edge';
 import { MarkerType } from '@xyflow/react';
 
 //

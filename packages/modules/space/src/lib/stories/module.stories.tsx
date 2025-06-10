@@ -9,11 +9,12 @@ import {
 import { Logger } from '@monorepo/log';
 import { Core_loadData, CoreReducer } from '@monorepo/core';
 
-import { SpaceModule } from '../collab-module/main';
-import { SpaceReducer } from '../../space-reducer';
-import { Space_loadData } from '../../space-shared-model';
-import { Group } from '../group/group';
-import { loadStoryData, STORY_VIEW_ID } from './graphs-data/loader';
+import { SpaceModule } from '../components/collab-module/main';
+import { SpaceReducer } from '../space-reducer';
+import { Space_loadData } from '../space-shared-model';
+import { Group } from '../components/group/group';
+import { loadStoryData } from './graphs-data/loader';
+import { STORY_VIEW_ID } from './story-space';
 //
 
 Logger.setPriority(7);

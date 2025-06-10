@@ -7,7 +7,7 @@ import { ApiFetch } from '@monorepo/api-fetch';
 //
 //
 
-type TApiContext = {
+export type TApiContext = {
   ganymedeApi: GanymedeApi;
   accountApi: ApiFetch;
   accountFQDN: string;
@@ -15,7 +15,7 @@ type TApiContext = {
   queryClient: QueryClient;
 };
 
-const apiContext = createContext<TApiContext | null>(null);
+export const apiContext = createContext<TApiContext | null>(null);
 
 //
 //

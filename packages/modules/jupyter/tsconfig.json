@@ -3,6 +3,9 @@
   "include": [],
   "references": [
     {
+      "path": "../../frontend-data"
+    },
+    {
       "path": "../../ui-toolkit"
     },
     {
@@ -15,13 +18,13 @@
       "path": "../core"
     },
     {
-      "path": "../servers"
+      "path": "../../log"
     },
     {
       "path": "../../collab-engine"
     },
     {
-      "path": "../../log"
+      "path": "../servers"
     },
     {
       "path": "../module"

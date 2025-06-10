@@ -6,7 +6,6 @@ import { TServerEvents, TServersSharedData } from '@monorepo/servers';
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
 import { ButtonBase, SelectFieldset, SelectItem } from '@monorepo/ui-base';
 
-import { TJupyterSharedData } from '../../jupyter-shared-model';
 import { TDemiurgeNotebookEvent } from '../../jupyter-events';
 import {
   JupyterStoryCollabContext,
@@ -14,6 +13,7 @@ import {
 } from '../../stories/module-stories-utils';
 import { JupyterTerminal } from './terminal';
 import { useJLsManager } from '../../jupyter-shared-model-front';
+import { TJupyterSharedData } from '../../jupyter-shared-model';
 
 //
 
@@ -33,42 +33,17 @@ const StoryWrapper = () => {
 
 const Terminals = () => {
   const dispatcher = useDispatcher<TDemiurgeNotebookEvent | TServerEvents>();
-
-  const sd: TJupyterSharedData & TServersSharedData = useSharedData<
-    TJupyterSharedData & TServersSharedData
-  >(['projectServers', 'jupyterServers'], (sd) => sd);
-
   const { jupyter: jmc } = useJLsManager();
 
-  const server = sd.projectServers.get(`${STORY_PROJECT_SERVER_ID}`);
-  const jupyter = sd.jupyterServers.get(`${STORY_PROJECT_SERVER_ID}`);
-  const service = server?.httpServices.find((s) => s.name === 'jupyterlab');
-
-  console.log(
-    '########## ##########',
-    structuredClone({ server, jupyter, service })
+  const sd = useSharedData<TServersSharedData & TJupyterSharedData>(
+    ['projectServers', 'jupyterServers'],
+    (sd) => sd
   );
-
-  // step 1: create server
-  if (!jupyter) {
-    dispatcher.dispatch({
-      type: 'servers:new',
-      from: {
-        new: {
-          serverName: 'story-server',
-          imageId: 2, // Image id of jupyterlab minimal notebook docker image
-        },
-      },
-    });
-  }
-  // step 2: map service
-  else if (jupyter && !service) {
-    dispatcher.dispatch({
-      type: 'server:map-http-service',
-      port: 36666,
-      name: 'jupyterlab',
-    });
-  }
+  const server = sd.projectServers.get(STORY_PROJECT_SERVER_ID.toString());
+  const jupyter = sd.jupyterServers.get(STORY_PROJECT_SERVER_ID.toString());
+  const service = server?.httpServices.find(
+    (s: { name: string }) => s.name === 'jupyterlab'
+  );
 
   useEffect(() => {
     if (server && service && jupyter) {
@@ -88,8 +63,6 @@ const Terminals = () => {
       client_id: 'not needed here in storybook',
     });
   };
-
-  //
 
   return (
     <div>

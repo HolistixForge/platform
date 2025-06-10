@@ -1,6 +1,13 @@
-import { MockCollaborativeContext } from '@monorepo/collab-engine';
-import { TJsonObject } from '@monorepo/simple-types';
-import { TMyfetchRequest } from '@monorepo/simple-types';
+import { useCallback, useEffect, useState } from 'react';
+
+import {
+  MockCollaborativeContext,
+  useSharedData,
+  useDispatcher,
+} from '@monorepo/collab-engine';
+import { TJsonObject, TMyfetchRequest } from '@monorepo/simple-types';
+import { TServersSharedData, TServerEvents } from '@monorepo/servers';
+import { TCoreSharedData } from '@monorepo/core';
 
 //
 
@@ -14,16 +21,25 @@ import {
 } from '@monorepo/servers';
 //
 import { moduleFrontend as coreFrontend } from '@monorepo/core';
-import { moduleFrontend as spaceFrontend } from '@monorepo/space/frontend';
+import {
+  moduleFrontend as spaceFrontend,
+  STORY_VIEW_ID,
+} from '@monorepo/space/frontend';
 import {
   moduleFrontend as serversFrontend,
   TAuthenticationExtraContext,
 } from '@monorepo/servers/frontend';
+import { ModuleFrontend } from '@monorepo/module/frontend';
 
 //
 
-import { moduleBackend as jupyterBackend } from '../../';
+import {
+  moduleBackend as jupyterBackend,
+  TDemiurgeNotebookEvent,
+} from '../../';
 import { moduleFrontend as jupyterFrontend } from '../../frontend';
+
+import { TJupyterSharedData } from '../../lib/jupyter-shared-model';
 
 //
 
@@ -106,7 +122,7 @@ const modulesBackend = [
 
 //
 
-const modulesFrontend = [
+export const modulesFrontend: ModuleFrontend[] = [
   {
     collabChunk: {
       name: 'authentication',
@@ -119,6 +135,8 @@ const modulesFrontend = [
         },
       }),
     },
+    nodes: {},
+    spaceMenuEntries: [],
   },
   coreFrontend,
   spaceFrontend,
@@ -157,6 +175,22 @@ export const JupyterStoryCollabContext = ({
       backChunks={modulesBackend.map((m) => m.collabChunk)}
       getRequestContext={getRequestContext}
     >
+      <JupyterStoryInit>{children}</JupyterStoryInit>
+    </MockCollaborativeContext>
+  );
+};
+
+//
+
+export const JupyterStoryInit = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
+  const { isLoading, error } = useInitStoryJupyterServer();
+
+  if (isLoading) {
+    return (
       <div style={{ width: '80vw', height: '800px' }}>
         <p>
           To test this story, first launch a jupyter docker container, then
@@ -178,8 +212,87 @@ export const JupyterStoryCollabContext = ({
         </p>
         {children}
       </div>
-    </MockCollaborativeContext>
-  );
+    );
+  }
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
+
+  return <>{children}</>;
 };
 
-// sd.graphViews.set('story-view', defaultGraphView());
+//
+
+interface UseInitStoryJupyterServerResult {
+  isLoading: boolean;
+  error: Error | null;
+}
+
+export const useInitStoryJupyterServer =
+  (): UseInitStoryJupyterServerResult => {
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+    const sd = useSharedData<
+      TServersSharedData & TJupyterSharedData & TCoreSharedData
+    >(['projectServers', 'jupyterServers'], (sd) => sd);
+    const dispatcher = useDispatcher<TServerEvents | TDemiurgeNotebookEvent>();
+
+    const server = sd.projectServers.get(STORY_PROJECT_SERVER_ID.toString());
+    const jupyter = sd.jupyterServers.get(STORY_PROJECT_SERVER_ID.toString());
+    const service = server?.httpServices.find(
+      (s: { name: string }) => s.name === 'jupyterlab'
+    );
+
+    const initializeServer = useCallback(async () => {
+      console.log('initializeServer', { server, jupyter, service });
+      try {
+        // Step 1: Create server if it doesn't exist
+        if (!jupyter) {
+          await dispatcher.dispatch({
+            type: 'servers:new',
+            from: {
+              new: {
+                serverName: 'story-server',
+                imageId: 2, // Image id of jupyterlab minimal notebook docker image
+              },
+            },
+            origin: {
+              viewId: STORY_VIEW_ID,
+              position: {
+                x: 200,
+                y: 200,
+              },
+            },
+          });
+        }
+        // Step 2: Map service if server exists but service doesn't
+        else if (jupyter && !service) {
+          await dispatcher.dispatch({
+            type: 'server:map-http-service',
+            port: 36666,
+            name: 'jupyterlab',
+          });
+        }
+
+        // Only set loading to false if we have a service
+        if (service) {
+          setIsLoading(false);
+        }
+      } catch (err) {
+        setError(
+          err instanceof Error ? err : new Error('Failed to initialize server')
+        );
+        setIsLoading(false);
+      }
+    }, [jupyter, service, dispatcher]);
+
+    useEffect(() => {
+      initializeServer();
+    }, [initializeServer]);
+
+    return {
+      isLoading,
+      error,
+    };
+  };

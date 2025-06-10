@@ -160,7 +160,7 @@ export const useServerProps = (
     return {
       onHost,
       onCopyCommand:
-        // define onCopyCommand only if user is the host, so that other users do not have the ebutton displayed
+        // define onCopyCommand only if user is the host, so that other users do not have the button displayed
         hostData?.user_id !== undefined &&
         currentUserData?.user.user_id === hostData?.user_id
           ? onCopyCommand

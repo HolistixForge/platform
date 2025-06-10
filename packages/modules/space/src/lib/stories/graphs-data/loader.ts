@@ -2,13 +2,12 @@ import { TCoreSharedData } from '@monorepo/core';
 import { TGraphNode } from '@monorepo/module';
 import { TEdge } from '@monorepo/core';
 
-import { defaultGraphView, TGraphView } from '../../../space-types';
+import { defaultGraphView, TGraphView } from '../../space-types';
 import { graph1 } from './graph-1';
-import { TSpaceSharedData } from '../../../space-shared-model';
+import { TSpaceSharedData } from '../../space-shared-model';
+import { STORY_VIEW_ID } from '../story-space';
 
 //
-
-export const STORY_VIEW_ID = 'story';
 
 //
 

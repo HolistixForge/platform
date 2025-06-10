@@ -54,6 +54,7 @@ type Ra<T> = ReduceArgs<
   TSpaceSharedData & TCoreSharedData,
   T,
   ReducedEvents,
+  undefined,
   undefined
 >;
 
@@ -65,6 +66,7 @@ export class SpaceReducer extends Reducer<
   TSpaceSharedData & TCoreSharedData,
   ReducedEvents,
   TSpaceEvent,
+  undefined,
   undefined
 > {
   private executeGraphViewAction<T extends { viewId: string }>(

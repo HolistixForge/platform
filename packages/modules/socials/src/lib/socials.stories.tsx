@@ -13,6 +13,7 @@ import {
   Space_loadData,
   TSpaceSharedData,
   defaultGraphView,
+  STORY_VIEW_ID,
 } from '@monorepo/space';
 import { SpaceModule } from '@monorepo/space/frontend';
 
@@ -21,10 +22,6 @@ import { NodeIframe, NodeTextEditor, NodeYoutube } from '../frontend';
 //
 
 Logger.setPriority(7);
-
-//
-
-const STORY_VIEW_ID = 'story';
 
 //
 

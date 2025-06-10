@@ -48,12 +48,7 @@ const makeSpaceModuleNode = (nodeTypes: TNodeTypes) => {
 
 //
 
-export const SpaceModule = ({
-  viewId,
-  nodeTypes,
-  onContextMenu,
-  onContextMenuNewEdge,
-}: {
+export type SpaceModuleProps = {
   viewId: string;
   nodeTypes: TNodeTypes;
   onContextMenu?: (xy: TPosition, clientPosition: TPosition) => void;
@@ -62,7 +57,16 @@ export const SpaceModule = ({
     xy: TPosition,
     clientPosition: TPosition
   ) => void;
-}) => {
+};
+
+//
+
+export const SpaceModule = ({
+  viewId,
+  nodeTypes,
+  onContextMenu,
+  onContextMenuNewEdge,
+}: SpaceModuleProps) => {
   //
   const sdm = useShareDataManager<TSpaceSharedData & TCoreSharedData>();
   const collabDispatcher = useDispatcher();

@@ -37,3 +37,7 @@ export const moduleFrontend: ModuleFrontend = {
     shape: Shape,
   },
 };
+
+//
+
+export { STORY_VIEW_ID, StorySpace } from './lib/stories/story-space';
