@@ -1,5 +1,8 @@
 import { MockCollaborativeContext } from '@monorepo/collab-engine';
 import { TJsonObject } from '@monorepo/simple-types';
+import { TMyfetchRequest } from '@monorepo/simple-types';
+
+//
 
 import { moduleBackend as coreBackend } from '@monorepo/core';
 import { moduleBackend as spaceBackend } from '@monorepo/space';
@@ -9,17 +12,24 @@ import {
   TGanymedeExtraContext,
   TGatewayExtraContext,
 } from '@monorepo/servers';
-import { moduleBackend as jupyterBackend } from '@monorepo/jupyter';
-
+//
 import { moduleFrontend as coreFrontend } from '@monorepo/core';
 import { moduleFrontend as spaceFrontend } from '@monorepo/space/frontend';
-import { moduleFrontend as serversFrontend } from '@monorepo/servers/frontend';
-import { moduleFrontend as jupyterFrontend } from '@monorepo/jupyter/frontend';
-import { TMyfetchRequest } from '@monorepo/simple-types';
+import {
+  moduleFrontend as serversFrontend,
+  TAuthenticationExtraContext,
+} from '@monorepo/servers/frontend';
+
+//
+
+import { moduleBackend as jupyterBackend } from '../../';
+import { moduleFrontend as jupyterFrontend } from '../../frontend';
 
 //
 
 const STORY_TOKEN = 'My_Super_Test_Story';
+
+const STORY_JUPYTERLAB_CLIENT_ID = 'jupyterlab-story';
 
 export const STORY_PROJECT_ID = 0;
 
@@ -58,7 +68,12 @@ const modulesBackend = [
                 image_id: (req.jsonBody as any)?.imageId || 2,
                 project_id: STORY_PROJECT_ID,
                 host_user_id: null,
-                oauth: [],
+                oauth: [
+                  {
+                    service_name: 'jupyterlab',
+                    client_id: STORY_JUPYTERLAB_CLIENT_ID,
+                  },
+                ],
                 location: 'none',
               });
               return {
@@ -95,7 +110,14 @@ const modulesFrontend = [
   {
     collabChunk: {
       name: 'authentication',
-      loadExtraContext: () => ({ authentication: {} }),
+      loadExtraContext: (): TAuthenticationExtraContext => ({
+        authentication: {
+          getToken: async (clientId: string) => {
+            if (clientId === STORY_JUPYTERLAB_CLIENT_ID) return STORY_TOKEN;
+            throw new Error('Not implemented');
+          },
+        },
+      }),
     },
   },
   coreFrontend,

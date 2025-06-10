@@ -208,16 +208,26 @@ export class JupyterlabDriver {
         execution_state: k.execution_state || '',
         connections: k.connections || 0,
       }));
+
       // Poll terminals
-      const terminalModels = await this.km.serverSettings.fetch(
-        '/api/terminals'
+      let newTerminals: Terminal[] = [];
+
+      const terminalModels = await fetch(
+        `${this.km.serverSettings.baseUrl}api/terminals`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.km.serverSettings.token}`,
+          },
+        }
       );
+
       const terminals = await terminalModels.json();
-      const newTerminals: Terminal[] = terminals.map((t: any) => ({
+      newTerminals = terminals.map((t: any) => ({
         terminal_id: t.name,
         sessionModel: { name: t.name },
         last_activity: t.last_activity,
       }));
+
       // Only update and notify if changed
       const kernelsChanged = !shallowEqualKernels(
         this.kernelResources,
@@ -234,7 +244,7 @@ export class JupyterlabDriver {
       }
     } catch (error) {
       // Optionally log or handle polling errors
-      // console.error('Polling Jupyter resources failed:', error);
+      console.error('Polling Jupyter resources failed:', error);
     }
   };
 }

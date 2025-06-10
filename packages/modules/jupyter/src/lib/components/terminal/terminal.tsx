@@ -51,13 +51,17 @@ const Xterm_Loading_Workaround = async () => {
     }
   }
   const supportWebGL = hasWebGLContext();
-  const [xterm_, fitAddon_, renderer_, weblinksAddon_] = await Promise.all([
-    import('@xterm/xterm'),
-    import('@xterm/addon-fit'),
-    supportWebGL ? import('@xterm/addon-webgl') : import('@xterm/addon-canvas'),
-    import('@xterm/addon-web-links'),
-  ]);
-  console.log({ xterm_, fitAddon_, renderer_, weblinksAddon_ });
+  /* const [xterm_, fitAddon_, renderer_, weblinksAddon_] = */ await Promise.all(
+    [
+      import('@xterm/xterm'),
+      import('@xterm/addon-fit'),
+      supportWebGL
+        ? import('@xterm/addon-webgl')
+        : import('@xterm/addon-canvas'),
+      import('@xterm/addon-web-links'),
+    ]
+  );
+  // console.log({ xterm_, fitAddon_, renderer_, weblinksAddon_ });
 };
 
 //
@@ -112,7 +116,6 @@ export const JupyterTerminal = ({
   const { jupyter } = useJLsManager();
 
   const ref = useRef<HTMLDivElement>(null);
-  const yet = useRef<boolean>(false);
   const terminalWidgetRef = useRef<any>(null); // Store the Terminal widget instance
 
   //
@@ -142,10 +145,12 @@ export const JupyterTerminal = ({
 
   useEffect(() => {
     if (isReachable) {
-      if (!yet.current && server) {
-        yet.current = true;
+      if (server) {
         jupyter.jlsManager.getServerSetting(server).then((ss) => {
           connectTerminal(ss, terminal.sessionModel).then((terminalWidget) => {
+            if (terminalWidgetRef.current) {
+              terminalWidgetRef.current.dispose();
+            }
             terminalWidgetRef.current = terminalWidget;
             terminalWidget.node.style.width = '100%';
             terminalWidget.node.style.height = '100%';
@@ -154,7 +159,7 @@ export const JupyterTerminal = ({
         });
       }
     }
-  }, [server, jupyter.jlsManager, isReachable]);
+  }, [server, jupyter.jlsManager, terminalId, isReachable]);
 
   // ResizeObserver to auto-fit terminal on container resize
   useEffect(() => {

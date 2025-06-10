@@ -19,7 +19,7 @@ export type TServersExtraContext = {
   };
 };
 
-type TAuthenticationExtraContext = {
+export type TAuthenticationExtraContext = {
   authentication: {
     getToken: (clientId: string) => Promise<string>;
   };

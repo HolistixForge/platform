@@ -158,7 +158,7 @@ export class JLsManager extends Listenable {
   }
   //
 
-  getServerSetting = async (server: TServer, websocket?: boolean) => {
+  public async getServerSetting(server: TServer, websocket?: boolean) {
     const token = await this.getToken(server, 'jupyterlab');
 
     const url = serviceUrl(server, 'jupyterlab', websocket);
@@ -173,7 +173,7 @@ export class JLsManager extends Listenable {
     };
 
     return r;
-  };
+  }
 
   //
 
@@ -193,6 +193,7 @@ export class JLsManager extends Listenable {
               // that will trig _onChange() and update kernel packs and UI
               this._dispatcher.dispatch({
                 type: 'jupyter:resources-changed',
+                project_server_id: server.project_server_id,
                 resources,
               });
             });
@@ -208,6 +209,13 @@ export class JLsManager extends Listenable {
 
   //
 
+  // just ensure a driver is created, it will start polling resources
+  public startPollingResources(server: TServer) {
+    this._getDriver(server);
+  }
+
+  //
+
   private _changeKernelPackState(kp: TKernelPack, s: number) {
     kp.state = s;
     kp.listeners.forEach((f) => f());
@@ -215,7 +223,7 @@ export class JLsManager extends Listenable {
 
   //
 
-  getKernelPack(
+  public getKernelPack(
     project_server_id: number,
     kernel_id: string
   ): TKernelPack | false {

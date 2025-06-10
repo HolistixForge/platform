@@ -28,11 +28,14 @@ import {
   TEventNewTerminalNode,
   TEventDeleteKernelNode,
   TEventDeleteTerminalNode,
+  TEventJupyterResourcesChanged,
 } from './jupyter-events';
 import { TJupyterSharedData } from './jupyter-shared-model';
 import { DriversStoreBackend } from './ds-backend';
 import {
   TCellNodeDataPayload,
+  Terminal,
+  Kernel,
   TKernelNodeDataPayload,
   TTerminalNodeDataPayload,
 } from './jupyter-types';
@@ -135,6 +138,9 @@ export class JupyterReducer extends Reducer<
         return this._nodeOutput(g as Ra<TEventPythonNodeOutput>);
       case 'jupyter:clear-node-output':
         return this._clearOutput(g as Ra<TEventClearNodeOutput>);
+      //
+      case 'jupyter:resources-changed':
+        return this._resourcesChanged(g as Ra<TEventJupyterResourcesChanged>);
       // terminal
       case 'jupyter:new-terminal':
         return this._newTerminal(g as Ra<TEventNewTerminal>);
@@ -166,6 +172,29 @@ export class JupyterReducer extends Reducer<
         terminals: {},
       });
     }
+  }
+
+  async _resourcesChanged(g: Ra<TEventJupyterResourcesChanged>): Promise<void> {
+    const { resources } = g.event;
+    const { kernels, terminals } = resources;
+    const server = g.sd.jupyterServers.get(`${g.event.project_server_id}`);
+    if (!server) return;
+
+    const newKernels = kernels.reduce((acc, kernel) => {
+      acc[kernel.kernel_id] = kernel;
+      return acc;
+    }, {} as Record<string, Kernel>);
+
+    server.kernels = newKernels;
+
+    const newTerminals = terminals.reduce((acc, terminal) => {
+      acc[terminal.terminal_id] = terminal;
+      return acc;
+    }, {} as Record<string, Terminal>);
+
+    server.terminals = newTerminals;
+
+    g.sd.jupyterServers.set(`${server.project_server_id}`, server);
   }
 
   makeKernelNodeId(id: string) {
