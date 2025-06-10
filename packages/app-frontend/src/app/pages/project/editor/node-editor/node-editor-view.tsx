@@ -5,7 +5,7 @@ import { MountVolumeForm, MountVolumeFormData } from '@monorepo/ui-views';
 import { TDemiurgeNotebookEvent } from '@monorepo/jupyter';
 import { TEdge, TEdgeEnd, TPosition } from '@monorepo/core';
 import { TEventMountVolume, TServerEvents } from '@monorepo/servers';
-import { SpaceModule } from '@monorepo/space/frontend';
+import { HolistixSpace } from '@monorepo/space/frontend';
 
 import { ContextMenuLogic } from './menus/context-menu-logic';
 import { SpaceContextMenu } from './menus/context-menu';
@@ -148,12 +148,7 @@ export const NodeEditorView = ({ viewId }: { viewId: string }) => {
 
   return (
     <div style={s}>
-      <SpaceModule
-        viewId={viewId}
-        nodeTypes={nodeTypes}
-        onContextMenu={handleContextMenu}
-        onContextMenuNewEdge={handleNewEdgeToNewNode}
-      />
+      <HolistixSpace viewId={viewId} nodeTypes={nodeTypes} />
       <ContextMenuLogic refCoordinates={rcc} viewId={viewId} from={from}>
         <SpaceContextMenu triggerRef={trPane} />
         <NewEdgeContextMenu triggerRef={trNewEdge} />

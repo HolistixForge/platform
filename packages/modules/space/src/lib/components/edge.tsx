@@ -9,7 +9,7 @@ import {
   LabelMiddle,
   LabelStart,
 } from './assets/edges/edge';
-import { ReactflowEdgePayload } from '../apis/types/edge';
+import { ReactflowEdgePayload } from './apis/types/edge';
 
 //
 //

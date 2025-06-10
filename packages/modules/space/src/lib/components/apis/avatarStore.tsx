@@ -3,7 +3,7 @@ import { ReactElement } from 'react';
 import { Listenable } from '@monorepo/simple-types';
 import { Awareness } from '@monorepo/collab-engine';
 
-import { PointerTracker } from '../reactflow-renderer/PointerTracker';
+import { PointerTracker } from '../PointerTracker';
 
 export class AvatarStore extends Listenable {
   protected pointerTracker: PointerTracker;

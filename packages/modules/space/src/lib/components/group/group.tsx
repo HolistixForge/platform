@@ -9,15 +9,15 @@ import {
   ButtonBase,
 } from '@monorepo/ui-base';
 
-import { NodeHeader } from '../reactflow-renderer/assets/node-header/node-header';
-import { useMakeButton } from '../reactflow-renderer/assets/node-header/node-main-toolbar';
-import { useNodeContext } from '../reactflow-renderer/node-wrappers/node-wrapper';
+import { NodeHeader } from '../assets/node-header/node-header';
+import { useMakeButton } from '../assets/node-header/node-main-toolbar';
+import { useNodeContext } from '../node-wrappers/node-wrapper';
 import {
   TEventGroupPropertyChange,
   TEventDeleteGroup,
 } from '../../space-events';
-import { DisableZoomDragPan } from '../reactflow-renderer/node-wrappers/disable-zoom-drag-pan';
-import { InputsAndOutputs } from '../reactflow-renderer/assets/inputsOutputs/inputsOutputs';
+import { DisableZoomDragPan } from '../node-wrappers/disable-zoom-drag-pan';
+import { InputsAndOutputs } from '../assets/inputsOutputs/inputsOutputs';
 
 import './group.scss';
 

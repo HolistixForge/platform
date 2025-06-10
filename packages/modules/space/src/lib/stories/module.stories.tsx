@@ -9,7 +9,7 @@ import {
 import { Logger } from '@monorepo/log';
 import { Core_loadData, CoreReducer } from '@monorepo/core';
 
-import { SpaceModule } from '../components/collab-module/main';
+import { HolistixSpace } from '../components/holistix-space';
 import { SpaceReducer } from '../space-reducer';
 import { Space_loadData } from '../space-shared-model';
 import { Group } from '../components/group/group';
@@ -51,7 +51,7 @@ const StoryWrapper = () => {
   return (
     <MockCollaborativeContext collabChunks={chunks}>
       <div style={{ height: '100vh', width: '100vw' }}>
-        <SpaceModule viewId={STORY_VIEW_ID} nodeTypes={nodeTypes} />
+        <HolistixSpace viewId={STORY_VIEW_ID} nodeTypes={nodeTypes} />
       </div>
     </MockCollaborativeContext>
   );

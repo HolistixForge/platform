@@ -33,13 +33,13 @@ import {
 
 import { PointerTracker } from './PointerTracker';
 import { NodeWrapper } from './node-wrappers/node-wrapper';
-import { SpaceState } from '../apis/spaceState';
+import { SpaceState } from './apis/spaceState';
 import { HtmlAvatarStore } from './htmlAvatarStore';
 import { translateEdges, translateNodes } from './to-rf-nodes';
-import { TSpaceEvent } from '../../space-events';
-import { getAbsolutePosition } from '../../utils/position-utils';
-import { TSpaceSharedData } from '../../space-shared-model';
-import { Viewport, INITIAL_VIEWPORT } from '../collab-module/main';
+import { TSpaceEvent } from '../space-events';
+import { getAbsolutePosition } from '../utils/position-utils';
+import { TSpaceSharedData } from '../space-shared-model';
+import { Viewport, INITIAL_VIEWPORT } from './holistix-space';
 import { useSpaceContext } from './spaceContext';
 //
 //

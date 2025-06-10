@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Logger } from '@monorepo/log';
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
 import { TServerEvents, TServersSharedData } from '@monorepo/servers';
-import { SpaceModule } from '@monorepo/space/frontend';
+import { HolistixSpace } from '@monorepo/space/frontend';
 
 import { TJupyterSharedData } from '../../jupyter-shared-model';
 import { TDemiurgeNotebookEvent } from '../../jupyter-events';
@@ -99,7 +99,7 @@ const Story = () => {
 
   return (
     <div style={{ width: '100%', height: '80vh' }}>
-      <SpaceModule viewId={'story-view'} nodeTypes={moduleFrontend.nodes} />
+      <HolistixSpace viewId={'story-view'} nodeTypes={moduleFrontend.nodes} />
     </div>
   );
 };

@@ -23,13 +23,13 @@ import {
   useAwareness,
 } from '@monorepo/collab-engine';
 
-import { TNodeContext } from '../../apis/types/node';
+import { TNodeContext } from '../apis/types/node';
 import { SelectionsAwareness } from './selection-awareness';
 import { useSpaceContext } from '../spaceContext';
-import { isNodeOpened, TNodeViewStatus } from '../../../space-types';
+import { isNodeOpened, TNodeViewStatus } from '../../space-types';
 import { SpaceNode } from '../to-rf-nodes';
 import { DisableZoomDragPan } from './disable-zoom-drag-pan';
-import { TSpaceEvent } from '../../../space-events';
+import { TSpaceEvent } from '../../space-events';
 
 import './node-wrapper.scss';
 

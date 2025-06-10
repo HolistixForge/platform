@@ -5,7 +5,7 @@ import { SelectFieldset, SelectItem, SliderFieldset } from '@monorepo/ui-base';
 import { useSharedData } from '@monorepo/collab-engine';
 import { TCoreSharedData } from '@monorepo/core';
 
-import { edgeId, TEdgeRenderProps } from '../../../apis/types/edge';
+import { edgeId, TEdgeRenderProps } from '../../apis/types/edge';
 
 import './edge-menu.scss';
 

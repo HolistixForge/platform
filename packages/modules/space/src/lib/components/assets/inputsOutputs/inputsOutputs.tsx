@@ -6,8 +6,8 @@ import { useDispatcher } from '@monorepo/collab-engine';
 import { icons } from './icons';
 import { Slot } from '../slot/Slot';
 import { useSpaceContext } from '../../spaceContext';
-import { fromPinId } from '../../../apis/types/edge';
-import { TSpaceEvent } from '../../../../space-events';
+import { fromPinId } from '../../apis/types/edge';
+import { TSpaceEvent } from '../../../space-events';
 
 import './inputsOutputs.css';
 

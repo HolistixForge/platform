@@ -18,22 +18,22 @@ import {
   FrontendEventSequence,
 } from '@monorepo/collab-engine';
 
-import { PointerTracker } from '../reactflow-renderer/PointerTracker';
-import { HtmlAvatarStore } from '../reactflow-renderer/htmlAvatarStore';
+import { PointerTracker } from './PointerTracker';
+import { HtmlAvatarStore } from './htmlAvatarStore';
 import { CollabSpaceState } from './collab-space-state';
-import { useNodeContext } from '../reactflow-renderer/node-wrappers/node-wrapper';
-import { CustomStoryNode } from '../reactflow-renderer/node';
-import { TSpaceSharedData } from '../../space-shared-model';
-import { TEventEdgePropertyChange } from '../../space-events';
-import { TGraphView } from '../../space-types';
-import { ContextualMenu } from '../reactflow-renderer/contextual-menu';
-import { edgeId, TEdgeRenderProps } from '../apis/types/edge';
-import { SpaceContext } from '../reactflow-renderer/spaceContext';
-import { AvatarsRenderer } from '../reactflow-renderer/avatarsRenderer';
-import { ReactflowLayer } from '../reactflow-renderer/reactflow-layer';
-import { ExcalidrawLayer } from '../reactflow-renderer/excalidraw-layer';
-import { EdgeMenu } from '../reactflow-renderer/assets/edges/edge-menu';
-import { CustomStoryEdge } from '../reactflow-renderer/edge';
+import { useNodeContext } from './node-wrappers/node-wrapper';
+import { CustomStoryNode } from './node';
+import { TSpaceSharedData } from '../space-shared-model';
+import { TEventEdgePropertyChange } from '../space-events';
+import { TGraphView } from '../space-types';
+import { ContextualMenu } from './contextual-menu';
+import { edgeId, TEdgeRenderProps } from './apis/types/edge';
+import { SpaceContext } from './spaceContext';
+import { AvatarsRenderer } from './avatarsRenderer';
+import { ReactflowLayer } from './reactflow-layer';
+import { ExcalidrawLayer } from './excalidraw-layer';
+import { EdgeMenu } from './assets/edges/edge-menu';
+import { CustomStoryEdge } from './edge';
 
 //
 
@@ -61,7 +61,7 @@ export const INITIAL_VIEWPORT: Viewport = {
 
 //
 
-const makeSpaceModuleNode = (nodeTypes: TNodeTypes) => {
+const makeSpaceNode = (nodeTypes: TNodeTypes) => {
   return () => {
     const nodeContext = useNodeContext();
     const node: TGraphNode | undefined = useSharedData<TCoreSharedData>(
@@ -83,14 +83,14 @@ const makeSpaceModuleNode = (nodeTypes: TNodeTypes) => {
 
 //
 
-export type SpaceModuleProps = {
+export type HolistixSpaceProps = {
   viewId: string;
   nodeTypes: TNodeTypes;
 };
 
 //
 
-export const SpaceModule = ({ viewId, nodeTypes }: SpaceModuleProps) => {
+export const HolistixSpace = ({ viewId, nodeTypes }: HolistixSpaceProps) => {
   //
   const sdm = useShareDataManager<TSpaceSharedData & TCoreSharedData>();
 
@@ -103,7 +103,7 @@ export const SpaceModule = ({ viewId, nodeTypes }: SpaceModuleProps) => {
     const as = new HtmlAvatarStore(viewId, pt, awareness);
     const ss = new CollabSpaceState(viewId, sdm);
 
-    const Node = makeSpaceModuleNode(nodeTypes);
+    const Node = makeSpaceNode(nodeTypes);
 
     return { pt, as, ss, Node };
   }, []);

@@ -15,7 +15,7 @@ import {
   defaultGraphView,
   STORY_VIEW_ID,
 } from '@monorepo/space';
-import { SpaceModule } from '@monorepo/space/frontend';
+import { HolistixSpace } from '@monorepo/space/frontend';
 
 import { NodeIframe, NodeTextEditor, NodeYoutube } from '../frontend';
 
@@ -162,7 +162,7 @@ const StoryWrapper = () => {
   return (
     <MockCollaborativeContext collabChunks={chunks}>
       <div style={{ height: '100vh', width: '100vw' }}>
-        <SpaceModule viewId={STORY_VIEW_ID} nodeTypes={nodeTypes} />
+        <HolistixSpace viewId={STORY_VIEW_ID} nodeTypes={nodeTypes} />
       </div>
     </MockCollaborativeContext>
   );

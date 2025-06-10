@@ -1,4 +1,4 @@
-import { TNodeContext } from '../../apis/types/node';
+import { TNodeContext } from '../apis/types/node';
 import { UserUsername } from '@monorepo/ui-base';
 
 import './selection-awareness.scss';

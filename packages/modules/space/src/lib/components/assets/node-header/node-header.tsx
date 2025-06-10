@@ -2,7 +2,7 @@ import { NodeToolbar } from '@xyflow/react';
 import { ReactNode } from 'react';
 
 import { NodeMainToolbar, NodeMainToolbarProps } from './node-main-toolbar';
-import { TNodeContext } from '../../../apis/types/node';
+import { TNodeContext } from '../../apis/types/node';
 
 import './node-header.scss';
 

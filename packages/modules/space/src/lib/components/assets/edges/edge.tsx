@@ -16,10 +16,7 @@ import {
 
 import { TEdge } from '@monorepo/core';
 
-import {
-  ReactflowEdgePayload,
-  TEdgeRenderProps,
-} from '../../../apis/types/edge';
+import { ReactflowEdgePayload, TEdgeRenderProps } from '../../apis/types/edge';
 import { calculateEdgePath } from './edge-path-utils';
 import { getFloatingEdgeParams } from './edge-utils';
 import { useSpaceContext } from '../../spaceContext';

@@ -9,10 +9,10 @@ import {
 import { TGraphNode } from '@monorepo/module';
 import { useDispatcher } from '@monorepo/collab-engine';
 
-import { NodeHeader } from '../reactflow-renderer/assets/node-header/node-header';
-import { useMakeButton } from '../reactflow-renderer/assets/node-header/node-main-toolbar';
-import { useNodeContext } from '../reactflow-renderer/node-wrappers/node-wrapper';
-import { DisableZoomDragPan } from '../reactflow-renderer/node-wrappers/disable-zoom-drag-pan';
+import { NodeHeader } from '../assets/node-header/node-header';
+import { useMakeButton } from '../assets/node-header/node-main-toolbar';
+import { useNodeContext } from '../node-wrappers/node-wrapper';
+import { DisableZoomDragPan } from '../node-wrappers/disable-zoom-drag-pan';
 import {
   SHAPE_TYPES,
   TShapeType,

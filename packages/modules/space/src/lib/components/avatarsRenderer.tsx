@@ -1,4 +1,4 @@
-import { AvatarStore } from '../apis/avatarStore';
+import { AvatarStore } from './apis/avatarStore';
 import { useRegisterListener } from '@monorepo/simple-types';
 //
 

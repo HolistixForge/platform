@@ -1,10 +1,6 @@
 import { useEffect, useCallback, useRef, useMemo } from 'react';
 import { Excalidraw } from '@excalidraw/excalidraw';
-import {
-  INITIAL_VIEWPORT,
-  Viewport,
-  WhiteboardMode,
-} from '../collab-module/main';
+import { INITIAL_VIEWPORT, Viewport, WhiteboardMode } from './holistix-space';
 
 import '@excalidraw/excalidraw/index.css';
 import { OrderedExcalidrawElement } from '@excalidraw/excalidraw/element/types';
@@ -14,7 +10,7 @@ import {
   useAwarenessUserList,
   useSharedDataDirect,
 } from '@monorepo/collab-engine';
-import { TSpaceSharedData } from '../../space-shared-model';
+import { TSpaceSharedData } from '../space-shared-model';
 import { TJsonObject } from '@monorepo/simple-types';
 import debounce from 'lodash/debounce';
 

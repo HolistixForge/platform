@@ -1,8 +1,9 @@
 import { TJsonObject } from '@monorepo/simple-types';
 
-import { useMakeButton, NodeHeader } from '..';
 import { InputsAndOutputs } from './assets/inputsOutputs/inputsOutputs';
 import { useNodeContext } from './node-wrappers/node-wrapper';
+import { useMakeButton } from './assets/node-header/node-main-toolbar';
+import { NodeHeader } from './assets/node-header/node-header';
 
 //
 

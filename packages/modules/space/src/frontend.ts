@@ -1,29 +1,33 @@
-import './lib/index.scss';
+import { Group } from './lib/components/group/group';
+import { Shape } from './lib/components/shape/shape';
 import { Space_loadData } from './lib/space-shared-model';
-import { Group, Shape } from './lib/components';
 import { ModuleFrontend } from '@monorepo/module/frontend';
+import './lib/index.scss';
 
 export {
-  DisableZoomDragPan,
-  NodeMainToolbar,
   InputsAndOutputs,
   Outputs,
   Inputs,
-  useMakeButton,
-  NodeHeader,
-  useTestToolbarButtons,
-  useConnector,
-  useNodeContext,
+} from './lib/components/assets/inputsOutputs/inputsOutputs';
+export { EdgeComponent } from './lib/components/assets/edges/edge';
+export { DisableZoomDragPan } from './lib/components/node-wrappers/disable-zoom-drag-pan';
+export { NodeMainToolbar } from './lib/components/assets/node-header/node-main-toolbar';
+export { NodeHeader } from './lib/components/assets/node-header/node-header';
+export { useMakeButton } from './lib/components/assets/node-header/node-main-toolbar';
+export { useTestToolbarButtons } from './lib/components/assets/node-header/node-main-toolbar';
+export { useConnector } from './lib/components/assets/inputsOutputs/inputsOutputs';
+export { useNodeContext } from './lib/components/node-wrappers/node-wrapper';
+export {
   LabelEnd,
   LabelMiddle,
   LabelStart,
-  EdgeComponent,
-  MockSpace,
-} from './lib/components';
+} from './lib/components/assets/edges/edge';
 
-export type { TNodeContext } from './lib/components';
+export type { TNodeContext } from './lib/components/apis/types/node';
 
-export { SpaceModule } from './lib/components/collab-module/main';
+export { HolistixSpace } from './lib/components/holistix-space';
+
+//
 
 export const moduleFrontend: ModuleFrontend = {
   collabChunk: {
@@ -38,6 +42,8 @@ export const moduleFrontend: ModuleFrontend = {
   },
 };
 
-//
+// Stories utils
+
+export { MockSpace } from './lib/stories/mockSpace';
 
 export { STORY_VIEW_ID, StorySpace } from './lib/stories/story-space';

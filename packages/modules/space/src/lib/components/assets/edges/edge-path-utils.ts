@@ -3,7 +3,7 @@ import {
   getStraightPath,
   getSmoothStepPath,
 } from '@xyflow/react';
-import { EdgeShape } from '../../../apis/types/edge';
+import { EdgeShape } from '../../apis/types/edge';
 
 type EdgePathParams = {
   sourceX: number;
