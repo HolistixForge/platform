@@ -14,7 +14,7 @@ import { TNodeContext } from '../components/apis/types/node';
 import { TSpaceSharedData } from '../space-shared-model';
 import { CollabSpaceState } from '../components/collab-module/collab-space-state';
 import { STORY_VIEW_ID } from './story-space';
-import { WhiteboardMode } from '../components/reactflow-renderer/demiurge-space';
+import { WhiteboardMode } from '../components/collab-module/main';
 
 //
 

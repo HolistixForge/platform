@@ -1,6 +1,10 @@
 import { useEffect, useCallback, useRef, useMemo } from 'react';
 import { Excalidraw } from '@excalidraw/excalidraw';
-import { INITIAL_VIEWPORT, Viewport, WhiteboardMode } from './demiurge-space';
+import {
+  INITIAL_VIEWPORT,
+  Viewport,
+  WhiteboardMode,
+} from '../collab-module/main';
 
 import '@excalidraw/excalidraw/index.css';
 import { OrderedExcalidrawElement } from '@excalidraw/excalidraw/element/types';

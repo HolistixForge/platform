@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { TPosition } from '@monorepo/core';
-import { Viewport } from './demiurge-space';
+import { Viewport } from '../collab-module/main';
 import { Awareness } from '@monorepo/collab-engine';
 
 //

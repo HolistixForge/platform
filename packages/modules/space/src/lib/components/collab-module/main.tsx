@@ -1,28 +1,63 @@
-import { FC, useCallback, useMemo } from 'react';
+import { FC, useCallback, useMemo, useRef, useState } from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
 
-import { TPosition, TEdgeEnd, TEdge, TCoreSharedData } from '@monorepo/core';
+import {
+  TPosition,
+  TEdge,
+  TCoreSharedData,
+  TEventNewEdge,
+  TEdgeEnd,
+} from '@monorepo/core';
 import { TGraphNode } from '@monorepo/module';
 import {
   useDispatcher,
   useAwareness,
   useSharedData,
   useShareDataManager,
+  useEventSequence,
+  FrontendEventSequence,
 } from '@monorepo/collab-engine';
 
-import { DemiurgeSpace } from '../reactflow-renderer/demiurge-space';
 import { PointerTracker } from '../reactflow-renderer/PointerTracker';
 import { HtmlAvatarStore } from '../reactflow-renderer/htmlAvatarStore';
-
-import { CustomStoryEdge } from '../reactflow-renderer/edge';
-
 import { CollabSpaceState } from './collab-space-state';
 import { useNodeContext } from '../reactflow-renderer/node-wrappers/node-wrapper';
 import { CustomStoryNode } from '../reactflow-renderer/node';
 import { TSpaceSharedData } from '../../space-shared-model';
+import { TEventEdgePropertyChange } from '../../space-events';
+import { TGraphView } from '../../space-types';
+import { ContextualMenu } from '../reactflow-renderer/contextual-menu';
+import { edgeId, TEdgeRenderProps } from '../apis/types/edge';
+import { SpaceContext } from '../reactflow-renderer/spaceContext';
+import { AvatarsRenderer } from '../reactflow-renderer/avatarsRenderer';
+import { ReactflowLayer } from '../reactflow-renderer/reactflow-layer';
+import { ExcalidrawLayer } from '../reactflow-renderer/excalidraw-layer';
+import { EdgeMenu } from '../reactflow-renderer/assets/edges/edge-menu';
+import { CustomStoryEdge } from '../reactflow-renderer/edge';
 
 //
 
 type TNodeTypes = { [key: string]: FC<{ node: TGraphNode }> };
+
+//
+
+export type WhiteboardMode = 'default' | 'move-node' | 'drawing';
+
+//
+
+export type Viewport = {
+  absoluteX: number;
+  absoluteY: number;
+  zoom: number;
+};
+
+//
+
+export const INITIAL_VIEWPORT: Viewport = {
+  absoluteX: 0,
+  absoluteY: 0,
+  zoom: 0.5,
+};
 
 //
 
@@ -51,25 +86,16 @@ const makeSpaceModuleNode = (nodeTypes: TNodeTypes) => {
 export type SpaceModuleProps = {
   viewId: string;
   nodeTypes: TNodeTypes;
-  onContextMenu?: (xy: TPosition, clientPosition: TPosition) => void;
-  onContextMenuNewEdge?: (
-    from: TEdgeEnd,
-    xy: TPosition,
-    clientPosition: TPosition
-  ) => void;
 };
 
 //
 
-export const SpaceModule = ({
-  viewId,
-  nodeTypes,
-  onContextMenu,
-  onContextMenuNewEdge,
-}: SpaceModuleProps) => {
+export const SpaceModule = ({ viewId, nodeTypes }: SpaceModuleProps) => {
   //
   const sdm = useShareDataManager<TSpaceSharedData & TCoreSharedData>();
-  const collabDispatcher = useDispatcher();
+
+  const dispatcher = useDispatcher<TEventEdgePropertyChange | TEventNewEdge>();
+
   const { awareness } = useAwareness();
 
   const logics = useMemo(() => {
@@ -85,34 +111,238 @@ export const SpaceModule = ({
   const onDrop = useCallback(
     ({ data, position }: { data: any; position: TPosition }) => {
       console.log({ data, position });
-      collabDispatcher.dispatch({ ...data, origin: { position, viewId } });
+      dispatcher.dispatch({ ...data, origin: { position, viewId } });
     },
     []
   );
 
   const onConnect = useCallback((edge: TEdge) => {
     console.log({ edge });
-    collabDispatcher.dispatch({
+    dispatcher.dispatch({
       type: 'core:new-edge',
       edge,
     });
   }, []);
 
+  // Modes state
+  const [mode, setMode] = useState<WhiteboardMode>('default');
+
+  // Viewport state
+  const lastViewportRef = useRef<Viewport>(INITIAL_VIEWPORT);
+
+  const viewportChangeCallbacks = useRef<((viewport: Viewport) => void)[]>([]);
+
+  // Toggle pan-only mode with Shift+Z
+  useHotkeys(
+    'shift+z',
+    () => {
+      setMode(mode === 'move-node' ? 'default' : 'move-node');
+    },
+    {
+      preventDefault: true,
+    }
+  );
+
+  // Toggle drawing mode with Shift+D
+  useHotkeys(
+    'shift+d',
+    () => {
+      setMode(mode === 'drawing' ? 'default' : 'drawing');
+    },
+    {
+      preventDefault: true,
+    }
+  );
+
+  // Viewport synchronization logic
+  const onViewportChange = useCallback((newViewport: Viewport) => {
+    if (
+      newViewport.absoluteX !== lastViewportRef.current.absoluteX ||
+      newViewport.absoluteY !== lastViewportRef.current.absoluteY ||
+      newViewport.zoom !== lastViewportRef.current.zoom
+    ) {
+      lastViewportRef.current = newViewport;
+      logics.pt.onMove(newViewport);
+      logics.as.updateAllAvatars();
+      viewportChangeCallbacks.current.forEach((callback) => {
+        callback(newViewport);
+      });
+    }
+  }, []);
+
+  const registerViewportChangeCallback = useCallback(
+    (callback: (viewport: Viewport) => void) => {
+      viewportChangeCallbacks.current.push(callback);
+    },
+    []
+  );
+
+  //
+
+  const [edgeMenu, _setEdgeMenu] = useState<{
+    edgeId: string;
+    x: number;
+    y: number;
+  } | null>(null);
+
+  const setEdgeMenu = useCallback(
+    ({ edgeId, x, y }: { edgeId: string; x: number; y: number }) => {
+      _setEdgeMenu({ edgeId, x, y });
+    },
+    []
+  );
+
+  // Event sequence for edge renderProps change
+  const { createEventSequence } = useEventSequence<
+    TEventEdgePropertyChange,
+    TSpaceSharedData
+  >();
+  const renderPropsChangeEventSequenceRef =
+    useRef<FrontendEventSequence<TEventEdgePropertyChange> | null>(null);
+
+  // Manage event sequence lifecycle based on edgeMenu
+  const prevEdgeIdRef = useRef<string | null>(null);
+  if (edgeMenu?.edgeId !== prevEdgeIdRef.current) {
+    // Clean up previous sequence if edgeId changed or edgeMenu is null
+    if (renderPropsChangeEventSequenceRef.current) {
+      renderPropsChangeEventSequenceRef.current.cleanup();
+      renderPropsChangeEventSequenceRef.current = null;
+    }
+    if (edgeMenu?.edgeId) {
+      // Create new sequence for this edgeId
+      renderPropsChangeEventSequenceRef.current = createEventSequence({
+        localReduceUpdateKeys: ['graphViews'],
+        localReduce: (sdc, event) => {
+          const gv: TGraphView = sdc.graphViews.get(viewId);
+          const e = gv.graph.edges.find((e) => edgeId(e) === event.edgeId);
+          if (e) {
+            (e as any).renderProps = event.properties.renderProps;
+          }
+        },
+      });
+    }
+    prevEdgeIdRef.current = edgeMenu?.edgeId ?? null;
+  }
+
+  const handleRenderPropsChange = useCallback(
+    (rp: TEdgeRenderProps) => {
+      if (edgeMenu && renderPropsChangeEventSequenceRef.current) {
+        renderPropsChangeEventSequenceRef.current.dispatch({
+          type: 'space:edge-property-change',
+          edgeId: edgeMenu.edgeId,
+          properties: { renderProps: rp },
+        });
+      }
+    },
+    [dispatcher, edgeMenu]
+  );
+
+  const resetEdgeMenu = useCallback(() => {
+    _setEdgeMenu(null);
+  }, [setEdgeMenu]);
+
+  //
+
+  const context = useMemo(
+    () => ({
+      spaceState: logics.ss,
+      currentUser: awareness._user || undefined,
+      mode,
+      viewId,
+      edgeMenu,
+      setEdgeMenu,
+      resetEdgeMenu,
+    }),
+    [mode, edgeMenu, setEdgeMenu, resetEdgeMenu]
+  );
+
+  const handleContextualMenu = useCallback(
+    (xy: TPosition, clientPosition: TPosition) => {
+      console.log({ xy, clientPosition });
+    },
+    []
+  );
+
+  const handleContextualMenuNewEdge = useCallback(
+    (from: TEdgeEnd, xy: TPosition, clientPosition: TPosition) => {
+      console.log({ from, xy, clientPosition });
+    },
+    []
+  );
+
   return (
-    <DemiurgeSpace
-      viewId={viewId}
-      spaceState={logics.ss}
-      currentUser={awareness._user || undefined}
-      pointerTracker={logics.pt}
-      avatarsStore={logics.as}
-      reactflow={{
-        nodeComponent: logics.Node,
-        edgeComponent: CustomStoryEdge,
-        onContextMenu: onContextMenu || (() => {}),
-        onContextMenuNewEdge: onContextMenuNewEdge || (() => {}),
-        onDrop: onDrop,
-        onConnect: onConnect,
+    <SpaceContext value={context}>
+      <div
+        className={`demiurge-space ${mode}`}
+        style={{ width: '100%', height: '100%', position: 'relative' }}
+        ref={logics.pt.bindDiv.bind(logics.pt)}
+        onWheelCapture={(e) => {
+          // Stop Excalidraw scroll wich pane toward bottom instead of zooming
+          mode === 'drawing' && e.stopPropagation();
+        }}
+        onMouseMove={logics.pt.onPaneMouseMove.bind(logics.pt)}
+        onMouseLeave={logics.pt.setPointerInactive.bind(logics.pt)}
+      >
+        <ExcalidrawLayer
+          viewId={viewId}
+          mode={mode}
+          onViewportChange={onViewportChange}
+          registerViewportChangeCallback={registerViewportChangeCallback}
+        />
+        <ReactflowLayer
+          viewId={viewId}
+          nodeComponent={logics.Node}
+          edgeComponent={CustomStoryEdge}
+          spaceState={logics.ss}
+          pointerTracker={logics.pt}
+          avatarsStore={logics.as}
+          onContextMenu={handleContextualMenu}
+          onContextMenuNewEdge={handleContextualMenuNewEdge}
+          onConnect={onConnect}
+          onDrop={onDrop}
+          onViewportChange={onViewportChange}
+          registerViewportChangeCallback={registerViewportChangeCallback}
+        />
+        <AvatarsRenderer avatarsStore={logics.as} />
+        {edgeMenu && (
+          <EdgeMenu
+            eid={edgeMenu.edgeId}
+            position={[edgeMenu.x, edgeMenu.y]}
+            setRenderProps={handleRenderPropsChange}
+          />
+        )}
+        <ContextualMenu triggerRef={null} />
+        <ModeIndicator mode={mode} />
+      </div>
+    </SpaceContext>
+  );
+};
+
+//
+//
+//
+
+export const ModeIndicator = ({ mode }: { mode: WhiteboardMode }) => {
+  if (mode === 'default') {
+    return null;
+  }
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        top: '10px',
+        left: '10px',
+        padding: '5px 10px',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        color: 'white',
+        borderRadius: '4px',
+        fontSize: '12px',
+        zIndex: 5,
       }}
-    />
+    >
+      {mode === 'move-node'
+        ? 'Move Node Mode Active (Shift+Z to toggle)'
+        : 'Drawing Mode Active (Shift+D to toggle)'}
+    </div>
   );
 };

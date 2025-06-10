@@ -39,7 +39,7 @@ import { translateEdges, translateNodes } from './to-rf-nodes';
 import { TSpaceEvent } from '../../space-events';
 import { getAbsolutePosition } from '../../utils/position-utils';
 import { TSpaceSharedData } from '../../space-shared-model';
-import { Viewport, INITIAL_VIEWPORT } from './demiurge-space';
+import { Viewport, INITIAL_VIEWPORT } from '../collab-module/main';
 import { useSpaceContext } from './spaceContext';
 //
 //

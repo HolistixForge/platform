@@ -16,8 +16,6 @@ export {
   NodeWrapper,
 } from './reactflow-renderer/node-wrappers/node-wrapper';
 
-export { DemiurgeSpace } from './reactflow-renderer/demiurge-space';
-
 export { NodeHeader } from './reactflow-renderer/assets/node-header/node-header';
 export {
   useMakeButton,
