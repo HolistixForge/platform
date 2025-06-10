@@ -1,5 +1,5 @@
 import * as Tooltip from '@radix-ui/react-tooltip';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, useLocation } from 'react-router-dom';
 
 import { DebugComponentKeyboardShortcut } from '@monorepo/log';
 import { ApiContext } from '@monorepo/frontend-data';
@@ -17,6 +17,7 @@ import { HomePage } from './pages/home';
 import { ProjectRoot } from './pages/project/project-root';
 import { ProjectAuthorizationsPage } from './pages/project/authorizations';
 import { EditorPage } from './pages/project/editor/editor-page';
+import { MobileBlockOverlay } from './MobileBlockOverlay';
 
 //
 
@@ -25,8 +26,11 @@ import '@radix-ui/themes/styles.css';
 //
 
 export function App() {
+  const location = useLocation();
+  const hideMobileBlock = location.pathname === '/account/login-linkedin';
   return (
     <>
+      <MobileBlockOverlay hide={hideMobileBlock} />
       <Tooltip.Provider>
         <DebugComponentKeyboardShortcut />
 

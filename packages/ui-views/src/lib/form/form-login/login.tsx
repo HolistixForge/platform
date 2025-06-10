@@ -34,7 +34,14 @@ export const LoginForm = ({
   //
 
   return (
-    <div style={{ width: '450px', margin: '50px auto', textAlign: 'center' }}>
+    <div
+      style={{
+        width: '450px',
+        maxWidth: '100vw',
+        margin: '50px auto',
+        textAlign: 'center',
+      }}
+    >
       <h1>Login</h1>
 
       <div className="providers">
@@ -159,7 +166,14 @@ export const SendMagicLinkForm = ({
 }: SendMagicLinkFormProps) => {
   //
   return (
-    <div style={{ width: '450px', margin: '50px auto', textAlign: 'center' }}>
+    <div
+      style={{
+        width: '450px',
+        maxWidth: '100vw',
+        margin: '50px auto',
+        textAlign: 'center',
+      }}
+    >
       <h1>{title}</h1>
 
       <div className="login-form">

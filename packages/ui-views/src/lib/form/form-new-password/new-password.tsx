@@ -14,7 +14,14 @@ export type NewPasswordFormProps = {
 };
 export const NewPasswordForm = ({ action }: NewPasswordFormProps) => {
   return (
-    <div style={{ width: '450px', margin: '50px auto', textAlign: 'center' }}>
+    <div
+      style={{
+        width: '450px',
+        maxWidth: '100vw',
+        margin: '50px auto',
+        textAlign: 'center',
+      }}
+    >
       <h1>New Password</h1>
 
       <div className="login-form">
