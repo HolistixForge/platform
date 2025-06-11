@@ -1,0 +1,19 @@
+.header-search {
+  width: 365px;
+}
+
+@media (max-width: 640px) {
+  .not-bellow-640 {
+    display: none !important;
+  }
+
+  .header-search {
+    width: 185px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .header-search {
+    width: 260px;
+  }
+}

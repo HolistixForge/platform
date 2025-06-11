@@ -7,7 +7,13 @@ function getCookie(name: string) {
     ?.split('=')[1];
 }
 
-export function MobileBlockOverlay({ hide }: { hide?: boolean }) {
+export function MobileBlockOverlay({
+  hide,
+  disabled,
+}: {
+  hide?: boolean;
+  disabled?: boolean;
+}) {
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
@@ -16,7 +22,7 @@ export function MobileBlockOverlay({ hide }: { hide?: boolean }) {
     }
   }, []);
 
-  if (hide || dismissed) return null;
+  if (hide || dismissed || disabled) return null;
 
   const handleOk = () => {
     document.cookie = 'mobileOverlayDismissed=true; path=/; max-age=31536000'; // 1 year

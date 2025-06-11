@@ -3,10 +3,20 @@
 @tailwind utilities;
 
 .demiurge-space {
-  &.default {
+  &.default,
+  &.move-node {
+    // remove excalidraw controls
     .layer-ui__wrapper {
       display: none;
     }
+
+    // remove minimap on small screens
+    @media (max-width: 640px) {
+      .react-flow__panel.react-flow__minimap.bottom.right {
+        display: none !important;
+      }
+    }
+
     /*
     .FixedSideContainer.FixedSideContainer_side_top {
       display: none;
@@ -17,11 +27,17 @@
       */
   }
   &.drawing {
+    // remove reactflow controls
     .react-flow__panel.react-flow__controls.vertical.bottom.left {
       display: none;
     }
     .react-flow__panel.react-flow__minimap.bottom.right {
       display: none;
     }
+  }
+
+  // remove excalidraw bottom bar on small screens
+  .App-bottom-bar {
+    display: none;
   }
 }

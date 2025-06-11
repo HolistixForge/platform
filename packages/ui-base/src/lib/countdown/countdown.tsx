@@ -4,6 +4,10 @@ interface CountdownProps {
   onComplete: () => void;
 }
 
+import './countdown.scss';
+
+//
+
 const calculateTimeLeft = (targetDate: Date) => {
   const difference = +new Date(targetDate) - +new Date();
   let timeLeft = { minutes: 0, seconds: 0 };
@@ -44,7 +48,7 @@ export const Countdown: React.FC<CountdownProps> = ({
   const formatTime = (time: number) => (time < 10 ? `0${time}` : time);
 
   return (
-    <div className="countdown">
+    <div className="countdown" style={{ opacity: 0.25 }}>
       {formatTime(timeLeft.minutes)}:{formatTime(timeLeft.seconds)}
     </div>
   );

@@ -56,3 +56,9 @@ aside ul li svg {
 aside ul li svg.active {
   opacity: 1;
 }
+
+@media (max-width: 1000px) {
+  aside {
+    display: none !important;
+  }
+}

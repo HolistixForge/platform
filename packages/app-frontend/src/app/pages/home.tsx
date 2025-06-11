@@ -63,23 +63,23 @@ const ProjectsList = () => {
     return (
       <>
         <div
-          className="projects-list w-[900px] mx-auto mt-16"
+          className="projects-list w-[350px] sm:w-[900px] mx-auto mt-16"
           style={{ '--avatar-width': '30px' } as React.CSSProperties}
         >
           <h2 className="text-2xl font-semibold mb-8">My Organizations</h2>
           <Table.Root className="table-fixed border border-slate-700 rounded-md overflow-hidden">
-            <Table.Header className="-bg--c-alt-blue-4">
+            <Table.Header className="w-[350px] sm:w-[900px] -bg--c-alt-blue-4">
               <Table.Row>
-                <Table.ColumnHeaderCell className="py-4 px-6 w-[35%]">
+                <Table.ColumnHeaderCell className="py-4 px-6 w-[33%] sm:w-[35%]">
                   Name
                 </Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell className="py-4 px-6 w-[25%]">
+                <Table.ColumnHeaderCell className="py-4 px-6 w-[0%] sm:w-[25%] hidden sm:table-cell">
                   Owner
                 </Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell className="py-4 px-6 w-[25%]">
+                <Table.ColumnHeaderCell className="py-4 px-6 w-[33%] sm:w-[25%]">
                   Link
                 </Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell className="py-4 px-6 w-[15%]">
+                <Table.ColumnHeaderCell className="py-4 px-6 w-[33%] sm:w-[15%] hidden sm:table-cell">
                   Actions
                 </Table.ColumnHeaderCell>
               </Table.Row>
@@ -98,13 +98,13 @@ const ProjectsList = () => {
                     <span>New Project</span>
                   </button>
                 </Table.Cell>
-                <Table.Cell className="py-4 px-6">
+                <Table.Cell className="py-4 px-6 hidden sm:table-cell">
                   <div className="h-4 w-20 bg-slate-700/50 rounded"></div>
                 </Table.Cell>
                 <Table.Cell className="py-4 px-6">
                   <div className="h-4 w-20 bg-slate-700/50 rounded mx-auto"></div>
                 </Table.Cell>
-                <Table.Cell className="py-4 px-6">
+                <Table.Cell className="py-4 px-6 hidden sm:table-cell">
                   <div className="h-4 w-12 bg-slate-700/50 rounded mx-auto"></div>
                 </Table.Cell>
               </Table.Row>
@@ -135,7 +135,7 @@ const ProjectsListItem = ({
       <Table.Cell className="py-4 px-6" style={{ color: 'var(--c-white-1)' }}>
         {project.name}
       </Table.Cell>
-      <Table.Cell className="py-4 px-6 ellipsis">
+      <Table.Cell className="py-4 px-6 ellipsis hidden sm:table-cell">
         {status === 'success' ? (
           <UserInline color="var(--c-white-1)" {...data} />
         ) : (
@@ -152,7 +152,7 @@ const ProjectsListItem = ({
           Open Project
         </a>
       </Table.Cell>
-      <Table.Cell className="py-4 px-6 text-center">
+      <Table.Cell className="py-4 px-6 text-center hidden sm:table-cell">
         <DeleteProjectFormLogic project_id={project.project_id} />
       </Table.Cell>
     </Table.Row>

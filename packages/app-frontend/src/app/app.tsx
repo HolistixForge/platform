@@ -30,7 +30,7 @@ export function App() {
   const hideMobileBlock = location.pathname === '/account/login-linkedin';
   return (
     <>
-      <MobileBlockOverlay hide={hideMobileBlock} />
+      <MobileBlockOverlay disabled hide={hideMobileBlock} />
       <Tooltip.Provider>
         <DebugComponentKeyboardShortcut />
 
