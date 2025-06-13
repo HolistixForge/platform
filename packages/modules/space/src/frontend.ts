@@ -35,7 +35,7 @@ export const moduleFrontend: ModuleFrontend = {
     loadSharedData: Space_loadData,
     deps: ['core'],
   },
-  spaceMenuEntries: [],
+  spaceMenuEntries: () => [],
   nodes: {
     group: Group,
     shape: Shape,

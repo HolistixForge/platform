@@ -12,9 +12,6 @@ export { NewPasswordForm } from './lib/form/form-new-password/new-password';
 
 export { NewProjectForm } from './lib/form/form-new-project/new-project';
 
-export { NewKernelForm } from './lib/form/form-new-kernel/new-kernel';
-export type { NewKernelFormData } from './lib/form/form-new-kernel/new-kernel';
-
 export { NewServerForm } from './lib/form/form-new-server/new-server';
 export type { NewServerFormData } from './lib/form/form-new-server/new-server';
 

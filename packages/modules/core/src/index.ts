@@ -24,7 +24,7 @@ export const moduleFrontend: ModuleFrontend = {
     loadSharedData: Core_loadData,
     deps: [],
   },
-  spaceMenuEntries: [],
+  spaceMenuEntries: () => [],
   nodes: {},
 };
 

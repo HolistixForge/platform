@@ -23,7 +23,8 @@
     "src/**/*.stories.tsx",
     "src/**/*.stories.mdx",
     ".storybook/*.js",
-    ".storybook/*.ts"
+    ".storybook/*.ts",
+    "../modules/jupyter/src/lib/form/new-kernel.stories.tsx"
   ],
   "references": [
     {

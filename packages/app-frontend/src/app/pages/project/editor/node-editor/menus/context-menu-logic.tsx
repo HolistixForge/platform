@@ -11,8 +11,6 @@ import { ChevronRightIcon } from '@radix-ui/react-icons';
 import { TServerEvents } from '@monorepo/servers';
 import { TPosition, TEdgeEnd } from '@monorepo/core';
 import {
-  NewKernelForm,
-  NewKernelFormData,
   NewServerForm,
   NewServerFormData,
   NewYoutubeForm,
@@ -242,7 +240,7 @@ export const ContextMenuLogic = ({
   const server_action = useNewServerAction(dispatcher, viewId, refCoordinates);
 
   //
-
+  /*
   const kernel_action = useAction<NewKernelFormData>(
     (d) => {
       const server = sd.projectServers.get(
@@ -270,7 +268,7 @@ export const ContextMenuLogic = ({
       },
     }
   );
-
+*/
   //
 
   const youtube_action = useAction<NewYoutubeFormData>(
@@ -372,7 +370,7 @@ export const ContextMenuLogic = ({
   const onNewCodeCell = useCallback(() => {
     dispatcher.dispatch({
       type: 'jupyter:new-cell',
-      dkid: originNodeData!.data!.dkid as string,
+      kernel_id: originNodeData!.data!.dkid as string,
       origin: {
         viewId: viewId,
         position: {
@@ -536,7 +534,7 @@ export const ContextMenuLogic = ({
           disabled: from !== undefined,
           hiddenNodes: getHiddenNodesByType('server'),
         },
-
+        /*
         {
           title: 'Kernel',
           onClick: kernel_action.open,
@@ -546,6 +544,7 @@ export const ContextMenuLogic = ({
           ),
           hiddenNodes: getHiddenNodesByType('jupyter-kernel'),
         },
+        */
         {
           title: 'Terminal',
           onClick: onNewTerminal,
@@ -620,7 +619,7 @@ export const ContextMenuLogic = ({
     refCoordinates.current.y,
     server_action.open,
     from,
-    kernel_action.open,
+    // kernel_action.open,
     originNodeData,
     onNewTerminal,
     onNewCodeCell,
@@ -657,14 +656,14 @@ export const ContextMenuLogic = ({
         />
       </DialogControlled>
 
-      <DialogControlled
+      {/*<DialogControlled
         title="New Kernel"
         description="Choose a name for the new kernel."
         open={kernel_action.isOpened}
         onOpenChange={kernel_action.close}
       >
         <NewKernelForm action={kernel_action} />
-      </DialogControlled>
+      </DialogControlled>*/}
 
       <DialogControlled
         title="New Youtube video"

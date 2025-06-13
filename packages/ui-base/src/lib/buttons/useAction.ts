@@ -158,6 +158,7 @@ export function useAction<TCallbackArg = MouseEvent<HTMLElement>>(
     closeOnSuccess?: boolean;
     successMessage?: ReactNode;
     tooltip?: ReactNode;
+    startOpened?: boolean;
   }
 ): TAction<TCallbackArg> {
   //
@@ -167,7 +168,7 @@ export function useAction<TCallbackArg = MouseEvent<HTMLElement>>(
   const [state, dispatch] = useReducer(reducer<TCallbackArg>, {
     errors: {},
     loading: false,
-    isOpened: false,
+    isOpened: options?.startOpened || false,
     disabled: false,
     formData: (options?.values ? options.values : {}) as TCallbackArg,
     rearm,

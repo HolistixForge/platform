@@ -136,7 +136,7 @@ export const modulesFrontend: ModuleFrontend[] = [
       }),
     },
     nodes: {},
-    spaceMenuEntries: [],
+    spaceMenuEntries: () => [],
   },
   coreFrontend,
   spaceFrontend,

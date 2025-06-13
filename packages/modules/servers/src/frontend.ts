@@ -44,7 +44,7 @@ export const moduleFrontend: ModuleFrontend = {
     }),
     deps: ['authentication'],
   },
-  spaceMenuEntries: [],
+  spaceMenuEntries: () => [],
   nodes: {
     server: NodeServer,
     volume: NodeVolume,

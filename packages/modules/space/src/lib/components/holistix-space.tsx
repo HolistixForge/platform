@@ -1,4 +1,4 @@
-import { FC, useCallback, useMemo, useRef, useState } from 'react';
+import { FC, ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 
 import {
@@ -9,6 +9,7 @@ import {
   TEdgeEnd,
 } from '@monorepo/core';
 import { TGraphNode } from '@monorepo/module';
+import { TSpaceMenuEntries } from '@monorepo/module/frontend';
 import {
   useDispatcher,
   useAwareness,
@@ -86,6 +87,7 @@ const makeSpaceNode = (nodeTypes: TNodeTypes) => {
 export type HolistixSpaceProps = {
   viewId: string;
   nodeTypes: TNodeTypes;
+  spaceMenuEntries: TSpaceMenuEntries;
 };
 
 //
@@ -112,7 +114,11 @@ const useOpenRadixContextMenu = () => {
 //
 //
 
-export const HolistixSpace = ({ viewId, nodeTypes }: HolistixSpaceProps) => {
+export const HolistixSpace = ({
+  viewId,
+  nodeTypes,
+  spaceMenuEntries,
+}: HolistixSpaceProps) => {
   //
   const sdm = useShareDataManager<TSpaceSharedData & TCoreSharedData>();
 
@@ -316,6 +322,10 @@ export const HolistixSpace = ({ viewId, nodeTypes }: HolistixSpaceProps) => {
     [mode, edgeMenu, setEdgeMenu, resetEdgeMenu]
   );
 
+  const [renderForm, setRenderForm] = useState<ReactNode | null>(null);
+
+  console.log({ renderForm });
+
   /**
    *
    */
@@ -361,7 +371,17 @@ export const HolistixSpace = ({ viewId, nodeTypes }: HolistixSpaceProps) => {
             setRenderProps={handleRenderPropsChange}
           />
         )}
-        <ContextualMenu triggerRef={ContextualMenuTriggerRef} />
+        <ContextualMenu
+          triggerRef={ContextualMenuTriggerRef}
+          entries={spaceMenuEntries({
+            viewId,
+            from,
+            sd: sdm.getData(),
+            position: () => rcc.current,
+            renderForm: setRenderForm,
+          })}
+        />
+        {renderForm}
         <ModeIndicator mode={mode} />
       </div>
     </SpaceContext>

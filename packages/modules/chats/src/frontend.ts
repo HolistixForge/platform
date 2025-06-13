@@ -10,7 +10,7 @@ export const moduleFrontend: ModuleFrontend = {
     loadSharedData: Chat_loadData,
     deps: [],
   },
-  spaceMenuEntries: [],
+  spaceMenuEntries: () => [],
   nodes: {
     chat: NodeChatbox,
     'chat-anchor': NodeChatAnchor,

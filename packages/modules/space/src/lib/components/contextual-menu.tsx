@@ -1,17 +1,16 @@
-import { useState } from 'react';
-
+import { TSpaceMenuEntry } from '@monorepo/module/frontend';
 import * as ContextMenu from '@radix-ui/react-context-menu';
-import { DotFilledIcon, CheckIcon } from '@radix-ui/react-icons';
+import { ChevronRightIcon } from '@radix-ui/react-icons';
+
+//
 
 export const ContextualMenu = ({
   triggerRef,
+  entries,
 }: {
   triggerRef: React.Ref<HTMLSpanElement>;
+  entries: TSpaceMenuEntry[];
 }) => {
-  const [bookmarksChecked, setBookmarksChecked] = useState(true);
-  const [urlsChecked, setUrlsChecked] = useState(false);
-  const [person, setPerson] = useState('pedro');
-
   return (
     <ContextMenu.Root>
       <ContextMenu.Trigger ref={triggerRef} className="ContextMenuTrigger" />
@@ -23,63 +22,64 @@ export const ContextualMenu = ({
           sideOffset={5}
           align="end"
         >
-          // exemples:
-          <ContextMenu.Item className="ContextMenuItem">
-            Back <div className="RightSlot">⌘+[</div>
-          </ContextMenu.Item>
-          <ContextMenu.Item className="ContextMenuItem" disabled>
-            Foward <div className="RightSlot">⌘+]</div>
-          </ContextMenu.Item>
-          <ContextMenu.Item className="ContextMenuItem">
-            Reload <div className="RightSlot">⌘+R</div>
-          </ContextMenu.Item>
-          <ContextMenu.Separator className="ContextMenuSeparator" />
-          <ContextMenu.CheckboxItem
-            className="ContextMenuCheckboxItem"
-            checked={bookmarksChecked}
-            onCheckedChange={setBookmarksChecked}
-          >
-            <ContextMenu.ItemIndicator className="ContextMenuItemIndicator">
-              <CheckIcon />
-            </ContextMenu.ItemIndicator>
-            Show Bookmarks <div className="RightSlot">⌘+B</div>
-          </ContextMenu.CheckboxItem>
-          <ContextMenu.CheckboxItem
-            className="ContextMenuCheckboxItem"
-            checked={urlsChecked}
-            onCheckedChange={setUrlsChecked}
-          >
-            <ContextMenu.ItemIndicator className="ContextMenuItemIndicator">
-              <CheckIcon />
-            </ContextMenu.ItemIndicator>
-            Show Full URLs
-          </ContextMenu.CheckboxItem>
-          <ContextMenu.Separator className="ContextMenuSeparator" />
-          <ContextMenu.Label className="ContextMenuLabel">
-            People
-          </ContextMenu.Label>
-          <ContextMenu.RadioGroup value={person} onValueChange={setPerson}>
-            <ContextMenu.RadioItem
-              className="ContextMenuRadioItem"
-              value="pedro"
-            >
-              <ContextMenu.ItemIndicator className="ContextMenuItemIndicator">
-                <DotFilledIcon />
-              </ContextMenu.ItemIndicator>
-              Pedro Duarte
-            </ContextMenu.RadioItem>
-            <ContextMenu.RadioItem
-              className="ContextMenuRadioItem"
-              value="colm"
-            >
-              <ContextMenu.ItemIndicator className="ContextMenuItemIndicator">
-                <DotFilledIcon />
-              </ContextMenu.ItemIndicator>
-              Colm Tuite
-            </ContextMenu.RadioItem>
-          </ContextMenu.RadioGroup>
+          <ContextualMenuGenerator entries={entries} />
         </ContextMenu.Content>
       </ContextMenu.Portal>
     </ContextMenu.Root>
   );
+};
+
+//
+
+const ContextualMenuGenerator = ({
+  entries,
+}: {
+  entries: TSpaceMenuEntry[];
+}) => {
+  return entries.map((entry, k) => {
+    switch (entry.type) {
+      case 'item':
+        return (
+          <ContextMenu.Item
+            className="ContextMenuItem"
+            key={entry.label}
+            onClick={entry.onClick}
+            disabled={entry.disabled}
+          >
+            {entry.label}
+            {entry.Form && <entry.Form />}
+          </ContextMenu.Item>
+        );
+      case 'separator':
+        return (
+          <ContextMenu.Separator className="ContextMenuSeparator" key={k} />
+        );
+      case 'label':
+        return (
+          <ContextMenu.Label className="ContextMenuLabel" key={entry.label}>
+            {entry.label}
+          </ContextMenu.Label>
+        );
+      case 'sub-menu':
+        return (
+          <ContextMenu.Sub key={entry.label}>
+            <ContextMenu.SubTrigger className="ContextMenuSubTrigger">
+              {entry.label}
+              <div className="RightSlot">
+                <ChevronRightIcon />
+              </div>
+            </ContextMenu.SubTrigger>
+            <ContextMenu.Portal>
+              <ContextMenu.SubContent
+                className="ContextMenuSubContent"
+                sideOffset={2}
+                alignOffset={-5}
+              >
+                <ContextualMenuGenerator entries={entry.entries} />
+              </ContextMenu.SubContent>
+            </ContextMenu.Portal>
+          </ContextMenu.Sub>
+        );
+    }
+  });
 };

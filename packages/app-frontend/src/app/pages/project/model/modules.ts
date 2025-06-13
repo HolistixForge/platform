@@ -30,7 +30,7 @@ export const modules: ModuleFrontend[] = [
       }),
     },
     nodes: {},
-    spaceMenuEntries: [],
+    spaceMenuEntries: () => [],
   },
   core,
   space,

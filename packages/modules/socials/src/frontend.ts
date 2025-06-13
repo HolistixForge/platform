@@ -10,7 +10,7 @@ export const moduleFrontend: ModuleFrontend = {
     loadSharedData: () => ({}),
     deps: [],
   },
-  spaceMenuEntries: [],
+  spaceMenuEntries: () => [],
   nodes: {
     youtube: NodeYoutube,
     'text-editor': NodeTextEditor,

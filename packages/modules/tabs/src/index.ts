@@ -17,7 +17,7 @@ export const moduleFrontend: ModuleFrontend = {
     loadSharedData: Tabs_loadData,
     deps: [],
   },
-  spaceMenuEntries: [],
+  spaceMenuEntries: () => [],
   nodes: {},
 };
 

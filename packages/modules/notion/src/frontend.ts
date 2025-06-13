@@ -9,7 +9,7 @@ export const moduleFrontend: ModuleFrontend = {
     loadSharedData: Notion_loadData,
     deps: [],
   },
-  spaceMenuEntries: [],
+  spaceMenuEntries: () => [],
   nodes: {
     'notion-database': NodeNotion,
     'notion-page': NodeNotionTask,
