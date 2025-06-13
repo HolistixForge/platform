@@ -72,7 +72,7 @@ export const Header = ({
             />
           </div>
         </div>*/}
-        <div className="header-search flex items-center bg-white/5 h-[28px] rounded-[4px] py-1 px-3 gap-[20px]">
+        <div className="header-search not-bellow-640 flex items-center bg-white/5 h-[28px] rounded-[4px] py-1 px-3 gap-[20px]">
           <ButtonIcon
             Icon={icons.Search}
             {...NiAction}
@@ -117,7 +117,7 @@ export const Header = ({
           )}
         </div>
 
-        <div className="flex items-center gap-[10px]">
+        <div className="flex other-users-container items-center gap-[10px]">
           <div className="flex items-center">
             <UserBubble
               users={otherUsers || []}

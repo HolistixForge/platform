@@ -13,3 +13,5 @@ export type { TreeElement } from './lib/tree';
 
 export { TabsRadix } from './lib/components/tabs-radix';
 export type { PanelProps } from './lib/components/tabs-radix';
+
+export type { TTabsTree } from './lib/tabs-types';

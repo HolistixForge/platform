@@ -237,7 +237,12 @@ export const DemiurgeSpace = ({
           />
         )}
         <AvatarsRenderer avatarsStore={avatarsStore} />
-        <ModeIndicator mode={mode} onModeChange={setMode} />
+        <ModeIndicator
+          mode={mode}
+          onModeChange={setMode}
+          onContextMenu={reactflow.onContextMenu}
+          lastViewportRef={lastViewportRef}
+        />
       </div>
     </SpaceContext>
   );
@@ -248,10 +253,13 @@ export const DemiurgeSpace = ({
 export const ModeIndicator = ({
   mode,
   onModeChange,
+  onContextMenu,
+  lastViewportRef,
 }: {
   mode: WhiteboardMode;
   onModeChange: (mode: WhiteboardMode) => void;
-}) => {
+  lastViewportRef: React.MutableRefObject<Viewport>;
+} & Pick<ReactflowLayerProps, 'onContextMenu'>) => {
   const modes: { key: WhiteboardMode; label: string }[] = [
     { key: 'default', label: 'Normal' },
     { key: 'drawing', label: 'Drawing' },
@@ -293,6 +301,47 @@ export const ModeIndicator = ({
           {m.label}
         </button>
       ))}
+
+      <button
+        onClick={() => {
+          const obj = {
+            ww: window.innerWidth,
+            wh: window.innerHeight,
+            zoom: lastViewportRef.current.zoom,
+            absX: lastViewportRef.current.absoluteX,
+            absY: lastViewportRef.current.absoluteY,
+            resX:
+              -lastViewportRef.current.absoluteX +
+              window.innerWidth / 2 / lastViewportRef.current.zoom,
+            resY:
+              -lastViewportRef.current.absoluteY +
+              window.innerHeight / 2 / lastViewportRef.current.zoom,
+          };
+
+          onContextMenu(
+            {
+              x: obj.resX,
+              y: obj.resY,
+            },
+            { x: window.innerWidth / 2, y: window.innerHeight / 2 }
+          );
+        }}
+        style={{
+          background: 'transparent',
+          color: '#fff',
+          border: 'none',
+          padding: '0px 10px',
+          fontWeight: 'normal',
+          cursor: 'pointer',
+          outline: 'none',
+          transition: 'background 0.2s, color 0.2s',
+          fontSize: '10px',
+          height: '30px',
+          borderLeft: '1px solid rgba(255, 255, 255, 0.2)',
+        }}
+      >
+        +
+      </button>
     </div>
   );
 };

@@ -2,19 +2,21 @@ import { useQueryServerImages } from '@monorepo/frontend-data';
 import { DialogControlled } from '@monorepo/ui-base';
 import { ResourceBar, ServerStack, NewServerForm } from '@monorepo/ui-views';
 import { ServerCard } from '@monorepo/servers/frontend';
-import { TServer } from '@monorepo/servers';
+import { TServer, TServersSharedData } from '@monorepo/servers';
+import { useSharedData } from '@monorepo/collab-engine';
 
 import { ProjectSidebar } from '../sidebar';
-import { useDispatcher, useSharedData } from '../model/collab-model-chunk';
+import { useDispatcher } from '../model/collab-model-chunk';
 import { useNewServerAction } from './node-editor/menus/context-menu-logic';
 
 //
 
 export const ResourcePage = () => {
-  const projectServers: Map<string, TServer> = useSharedData(
-    ['projectServers'],
-    (sd) => sd.projectServers
-  );
+  const projectServers: Map<string, TServer> =
+    useSharedData<TServersSharedData>(
+      ['projectServers'],
+      (sd) => sd.projectServers
+    );
 
   const dispatcher = useDispatcher();
 
@@ -32,7 +34,7 @@ export const ResourcePage = () => {
         style={{
           height: '100%',
           position: 'relative',
-          maxHeight: 'calc(100vh - 76px)',
+          maxHeight: 'calc(100dvh - 76px)',
           overflowY: 'auto',
         }}
       >

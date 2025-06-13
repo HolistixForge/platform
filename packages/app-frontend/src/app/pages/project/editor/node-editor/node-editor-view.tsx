@@ -3,7 +3,7 @@ import { useCallback, useRef, useState } from 'react';
 import { FormErrors, useAction, DialogControlled } from '@monorepo/ui-base';
 import { MountVolumeForm, MountVolumeFormData } from '@monorepo/ui-views';
 import { TDemiurgeNotebookEvent } from '@monorepo/jupyter';
-import { TEdge, TEdgeEnd, TPosition } from '@monorepo/core';
+import { TCoreSharedData, TEdge, TEdgeEnd, TPosition } from '@monorepo/core';
 import { TEventMountVolume, TServerEvents } from '@monorepo/servers';
 import { NodeServer, NodeVolume } from '@monorepo/servers/frontend';
 import { SpaceModule, Group, Shape } from '@monorepo/space/frontend';
@@ -16,11 +16,12 @@ import {
   NodeIdCard,
 } from '@monorepo/socials/frontend';
 import { NodeNotion, NodeNotionTask } from '@monorepo/notion/frontend';
+import { useSharedData } from '@monorepo/collab-engine';
 
 import { ContextMenuLogic } from './menus/context-menu-logic';
 import { SpaceContextMenu } from './menus/context-menu';
 import { NewEdgeContextMenu } from './menus/context-menu-new-edge';
-import { useDispatcher, useSharedData } from '../../model/collab-model-chunk';
+import { useDispatcher } from '../../model/collab-model-chunk';
 import { edgeToEvent } from './menus/edge-to-event';
 
 import './node-editor.scss';
@@ -76,7 +77,7 @@ const useOpenRadixContextMenu = () => {
  *
  */
 export const NodeEditorView = ({ viewId }: { viewId: string }) => {
-  const nodes = useSharedData(['nodes'], (sd) => sd.nodes);
+  const nodes = useSharedData<TCoreSharedData>(['nodes'], (sd) => sd.nodes);
 
   const dispatcher = useDispatcher();
 

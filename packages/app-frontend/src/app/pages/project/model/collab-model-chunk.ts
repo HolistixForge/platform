@@ -102,12 +102,3 @@ export const getCollabChunks = (
     },
   ];
 };
-
-//
-
-export const useSharedData: (
-  deps: (keyof AllSharedData)[],
-  f: (data: TValidSharedDataToCopy<AllSharedData>) => any
-) => ReturnType<typeof f> = useSharedDataCollab<AllSharedData>;
-
-//

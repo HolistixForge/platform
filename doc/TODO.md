@@ -1,5 +1,12 @@
 ⚠️ Antoine's stuffs
 
+tab bar responsive
+
+niveau 1 : niveau abstraction / hierarchie
+niveau 2 : tab bar
+niveau 3 : feature bar
+niveau 4 : dans un tab : choisir vue space | grid | document
+
 pointer:
 
 - remove spring ?
