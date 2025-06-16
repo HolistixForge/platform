@@ -75,6 +75,7 @@ watchdog() {
 }
 
 reset_nginx() {
+    local rewrite_url=$1
     if [ -f /usr/local/bin/services.conf ]; then
         if [ -f /etc/os-release ] && grep -q "ID=alpine" /etc/os-release; then
             CONF="/etc/nginx/http.d/default.conf"
@@ -101,7 +102,13 @@ server {
     }
 
     location ${LOCATION}/ {
+        ${rewrite_url:+rewrite ^${LOCATION}/(.*)$ /\$1 break;}  # Remove location prefix if rewrite_url is set
         proxy_pass http://127.0.0.1:${PORT_TO};
+
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection upgrade;
+
         proxy_set_header X-Script-Name ${LOCATION};
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -126,6 +133,7 @@ EOF
 }
 
 vpn_loop() {
+    local rewrite_url=$1
     DIR=$(mktemp -d "/tmp/vpn-XXXXXXXX")
     cd "$DIR"
     while true; do
@@ -135,7 +143,7 @@ vpn_loop() {
             rm -f "${GW_FILE}"
             get_gateway
             start_vpn
-            reset_nginx
+            reset_nginx "$rewrite_url"
             continue
         else
             echo "report"

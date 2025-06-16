@@ -1,5 +1,7 @@
 ⚠️ Antoine's stuffs
 
+N8N: SAML based authentication ?
+
 tab bar responsive
 
 niveau 1 : niveau abstraction / hierarchie
