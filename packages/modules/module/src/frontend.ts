@@ -4,6 +4,7 @@ import {
   TCollaborativeChunk,
   TValidSharedDataToCopy,
   TValidSharedData,
+  FrontendDispatcher,
 } from '@monorepo/collab-engine';
 
 //
@@ -40,6 +41,7 @@ export type TSpaceMenuEntries = (a: {
   sd: TValidSharedDataToCopy<TValidSharedData>;
   position: () => { x: number; y: number };
   renderForm: (form: ReactNode) => void;
+  dispatcher: FrontendDispatcher<any>;
 }) => TSpaceMenuEntry[];
 
 //

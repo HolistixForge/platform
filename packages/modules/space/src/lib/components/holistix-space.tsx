@@ -377,6 +377,7 @@ export const HolistixSpace = ({
             sd: sdm.getData(),
             position: () => rcc.current,
             renderForm: setRenderForm,
+            dispatcher,
           })}
         />
         {renderForm}

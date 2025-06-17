@@ -365,7 +365,7 @@ export const ContextMenuLogic = ({
     }
   );
 
-  //
+  /*
 
   const onNewCodeCell = useCallback(() => {
     dispatcher.dispatch({
@@ -381,7 +381,7 @@ export const ContextMenuLogic = ({
     });
   }, [dispatcher, from, originNodeData, refCoordinates, viewId]);
 
-  //
+  */
 
   const onNewTerminal = useCallback(() => {
     const client_id =
@@ -554,6 +554,7 @@ export const ContextMenuLogic = ({
           ),
           hiddenNodes: getHiddenNodesByType('jupyter-terminal'),
         },
+        /*
         {
           title: 'Code Cell',
           onClick: onNewCodeCell,
@@ -564,6 +565,7 @@ export const ContextMenuLogic = ({
           ),
           hiddenNodes: getHiddenNodesByType('jupyter-cell'),
         },
+        */
         { separator: true },
         /*
         {
@@ -622,7 +624,7 @@ export const ContextMenuLogic = ({
     // kernel_action.open,
     originNodeData,
     onNewTerminal,
-    onNewCodeCell,
+    // onNewCodeCell,
     // v_action.open,
     onNewChatBox,
     youtube_action.open,

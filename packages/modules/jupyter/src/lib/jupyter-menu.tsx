@@ -3,6 +3,7 @@ import { TCoreSharedData } from '@monorepo/core';
 import { TSpaceMenuEntries } from '@monorepo/module/frontend';
 import { TJupyterSharedData } from './jupyter-shared-model';
 import { NewKernelForm } from './form/new-kernel';
+import { TKernelNodeDataPayload } from './jupyter-types';
 
 //
 
@@ -12,6 +13,7 @@ export const spaceMenuEntrie: TSpaceMenuEntries = ({
   sd,
   position,
   renderForm,
+  dispatcher,
 }) => {
   const tsd = sd as TValidSharedDataToCopy<
     TJupyterSharedData & TCoreSharedData
@@ -41,13 +43,22 @@ export const spaceMenuEntrie: TSpaceMenuEntries = ({
               />
             );
           },
-          disabled: !jupyter,
+          disabled: !(jupyter && node?.type === 'server'),
         },
         {
           type: 'item',
           label: 'New Cell',
-          onClick: () => {},
-          disabled: node?.type !== 'jupyter-cell',
+          onClick: () => {
+            dispatcher.dispatch({
+              type: 'jupyter:new-cell',
+              kernel_id: (node!.data as TKernelNodeDataPayload).kernel_id,
+              origin: {
+                viewId: viewId,
+                position: position(),
+              },
+            });
+          },
+          disabled: node?.type !== 'jupyter-kernel',
         },
       ],
     },

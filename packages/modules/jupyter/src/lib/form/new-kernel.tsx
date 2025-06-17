@@ -113,7 +113,8 @@ export const NewKernelForm = ({
       >
         {Object.keys(jupyter?.kernels || {}).map((k) => (
           <SelectItem key={k} value={k}>
-            {k}
+            {k.substring(0, 8)}{' '}
+            <b>{jupyter!.kernels[k].notebooks.map((n) => n.path).join(', ')}</b>
           </SelectItem>
         ))}
       </SelectFieldset>
