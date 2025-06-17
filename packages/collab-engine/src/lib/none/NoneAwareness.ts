@@ -149,7 +149,12 @@ export class NoneAwareness extends Awareness {
     viewId: string;
   }): void {
     const state = this._fakeState.get(0)!;
-    state.selections = a;
+    state.selections = {
+      space: {
+        nodes: a.nodes,
+        viewId: a.viewId,
+      },
+    };
     this._fakeState.set(0, state);
 
     // Update and notify pointer and selection listeners if changed
