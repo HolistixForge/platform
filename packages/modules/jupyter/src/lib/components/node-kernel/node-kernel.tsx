@@ -107,7 +107,8 @@ export const NodeKernel = ({
             <div className="node-background rounded-[8px] col-span-1 flex flex-col p-5 w-[400px]">
               <div>
                 <p>
-                  kernel <b>{kernel?.name}</b>
+                  kernel <b>{kernel?.kernel_id.substring(0, 8)}</b>{' '}
+                  {kernel?.name}
                 </p>
                 <KernelStateIndicator state={kernelPack.state} />
                 <p>{kernel?.execution_state}</p>

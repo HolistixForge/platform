@@ -104,9 +104,13 @@ export class JupyterlabDriver {
   //
   //
 
-  getKernel = (kid: string): IKernelConnection => {
-    const kernel = this.kernelConnections.get(kid);
-    if (!kernel) throw new Error(`No such kernel, kid: [${kid}]`);
+  getKernel = async (kid: string): Promise<IKernelConnection> => {
+    let kernel = this.kernelConnections.get(kid);
+    if (!kernel) {
+      await this.connectKernel(kid);
+      kernel = this.kernelConnections.get(kid);
+      if (!kernel) throw new Error(`No such kernel, kid: [${kid}]`);
+    }
     return kernel;
   };
 
@@ -116,7 +120,7 @@ export class JupyterlabDriver {
   execute = async (kid: string, code: string): Promise<IOutput[]> => {
     log(7, 'JUPYTERLAB', '_execute', kid);
     const virtualOutputArea = makeVirtualOutputArea();
-    const kernel = this.getKernel(kid);
+    const kernel = await this.getKernel(kid);
     const shellFuture = kernel.requestExecute({ code });
     virtualOutputArea.future = shellFuture;
     return shellFuture.done.then(() => {

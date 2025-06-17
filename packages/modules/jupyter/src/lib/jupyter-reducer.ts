@@ -38,6 +38,7 @@ import {
   Kernel,
   TKernelNodeDataPayload,
   TTerminalNodeDataPayload,
+  TJupyterServerData,
 } from './jupyter-types';
 
 /**
@@ -205,7 +206,7 @@ export class JupyterReducer extends Reducer<
     // TODO: TEventNewCell should include kernelId for the new model
     const kid = g.event.kernel_id;
     if (!kid) throw new Error('kernelId is required for new cell');
-    const server = this.findServerByKernelId(
+    const server: TJupyterServerData | undefined = this.findServerByKernelId(
       Array.from(g.sd.jupyterServers.values()),
       kid
     );
@@ -252,13 +253,13 @@ export class JupyterReducer extends Reducer<
     });
 
     server.cells[cell_id] = {
-      id: cell_id,
-      kernelId: kid,
+      cell_id,
+      kernel_id: kid,
       busy: false,
       outputs: [],
     };
-    // Optionally: create editor, add node, etc.
-    // ...
+
+    g.sd.jupyterServers.set(`${server.project_server_id}`, server);
   }
 
   async _deleteCell(g: Ra<TEventDeleteCell>): Promise<void> {
@@ -289,7 +290,7 @@ export class JupyterReducer extends Reducer<
 
   async _execute(g: Ra<TEventExecutePythonNode>): Promise<void> {
     const { cell_id, code } = g.event;
-    const server = this.findServerByCellId(
+    const server: TJupyterServerData | undefined = this.findServerByCellId(
       Array.from(g.sd.jupyterServers.values()),
       cell_id
     );
@@ -303,9 +304,9 @@ export class JupyterReducer extends Reducer<
 
       const kernel = server.kernels[cell.kernel_id];
 
-      if (kernel.id) {
+      if (kernel.kernel_id) {
         return driver
-          .execute(kernel.id, code)
+          .execute(kernel.kernel_id, code)
           .then((output) => {
             g.bep.process({
               type: 'jupyter:python-node-output',

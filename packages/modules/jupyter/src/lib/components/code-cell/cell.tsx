@@ -23,7 +23,12 @@ import { makeUuid } from '@monorepo/simple-types';
 import { TServersSharedData, TServer } from '@monorepo/servers';
 
 import { TDemiurgeNotebookEvent } from '../../jupyter-events';
-import { IOutput, Cell, TCellNodeDataPayload } from '../../jupyter-types';
+import {
+  IOutput,
+  Cell,
+  TCellNodeDataPayload,
+  TJupyterServerData,
+} from '../../jupyter-types';
 import { TJupyterSharedData } from '../../jupyter-shared-model';
 import { useKernelPack } from '../../jupyter-shared-model-front';
 import CodeEditorMonaco from '../code-editor-monaco/code-editor-monaco';
@@ -47,12 +52,14 @@ export const useCellLogic = ({
 
   const { awareness } = useAwareness();
 
-  const cell: Cell = useSharedData<TJupyterSharedData>(
-    ['jupyterServers'],
-    (sd) => sd.jupyterServers.get(`${projectServerId}`)?.cells[cellId]
-  );
+  const jupyter: TJupyterServerData | undefined =
+    useSharedData<TJupyterSharedData>(['jupyterServers'], (sd) =>
+      sd.jupyterServers.get(`${projectServerId}`)
+    );
 
-  const ps: TServer = useSharedData<TServersSharedData>(
+  const cell = jupyter?.cells[cellId];
+
+  const ps: TServer | undefined = useSharedData<TServersSharedData>(
     ['projectServers'],
     (sd) => sd.projectServers.get(`${projectServerId}`)
   );
@@ -99,7 +106,7 @@ export const useCellLogic = ({
 
   const handleExecute = () => {
     const code = editorRef.current?.getValue();
-    if (code && client_id) {
+    if (code && client_id && cell) {
       dispatcher.dispatch({
         type: 'jupyter:execute-python-node',
         cell_id: cellId,
@@ -153,23 +160,30 @@ const CellInternal = (props: ReturnType<typeof useCellLogic>) => {
     onPlay: props.handleExecute,
   });
 
+  if (!props.cell) return <div>Not Found</div>;
+
   return (
     <>
       <NodeMainToolbar buttons={buttons} />
       <div
         className={`jupyterlab-code-cell ${props.cell.busy && 'busy'}`}
-        style={{ '--monaco-editor-height': '200px' } as React.CSSProperties}
+        style={
+          {
+            minWidth: '300px',
+            '--monaco-editor-height': '200px',
+          } as React.CSSProperties
+        }
       >
         <CodeEditorMonaco code={''} onMount={handleEditorMount} />
       </div>
-      <CellOutput {...props} />
+      <CellOutput cell={props.cell} projectServerId={props.projectServerId} />
     </>
   );
 };
 
 //
 
-const CellOutput = (props: ReturnType<typeof useCellLogic>) => {
+const CellOutput = (props: { cell: Cell; projectServerId: number }) => {
   const { outputs } = props.cell;
 
   const kernelPack = useKernelPack(props.projectServerId, props.cell.kernel_id);
