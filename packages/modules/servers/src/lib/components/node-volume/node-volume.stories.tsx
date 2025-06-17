@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { nodeViewDefaultStatus } from '@monorepo/space';
-import { MockSpace } from '@monorepo/space/frontend';
+import { MockSpace } from '@monorepo/space/stories';
 import { sleep } from '@monorepo/simple-types';
 import { useTestBoolean } from '@monorepo/ui-base';
 

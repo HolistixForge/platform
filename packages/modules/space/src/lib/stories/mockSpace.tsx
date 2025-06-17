@@ -2,9 +2,15 @@ import { ReactNode, useMemo } from 'react';
 
 import {
   MockCollaborativeContext,
+  TCollaborationContext,
+  TCollaborativeChunk,
   useShareDataManager,
 } from '@monorepo/collab-engine';
-import { TCoreSharedData } from '@monorepo/core';
+import {
+  TCoreSharedData,
+  moduleBackend as coreBackend,
+  moduleFrontend as coreFrontend,
+} from '@monorepo/core';
 
 import { SpaceContext, TSpaceContext } from '../components/spaceContext';
 import { TNodeContext } from '../components/apis/types/node';
@@ -13,24 +19,43 @@ import { CollabSpaceState } from '../components/collab-space-state';
 import { STORY_VIEW_ID } from './story-space';
 import { WhiteboardMode } from '../components/holistix-space';
 
+import { moduleBackend as spaceBackend } from '../../';
+import { moduleFrontend as spaceFrontend } from '../../frontend';
+
 //
+
+const frontChunks: TCollaborativeChunk[] = [
+  coreFrontend.collabChunk,
+  spaceFrontend.collabChunk,
+];
+
+const backChunks: TCollaborativeChunk[] = [
+  {
+    name: 'gateway',
+  },
+  coreBackend.collabChunk,
+  spaceBackend.collabChunk,
+];
 
 export const MockSpace = ({
   children,
   selected,
   isOpened = true,
+  callback,
 }: {
   children: ReactNode;
   selected?: boolean;
   isOpened?: boolean;
+  callback?: (context: TCollaborationContext) => void;
 }) => {
   //
 
   return (
     <MockCollaborativeContext
-      frontChunks={[]}
-      backChunks={[]}
+      frontChunks={frontChunks}
+      backChunks={backChunks}
       getRequestContext={() => ({})}
+      callback={callback}
     >
       <MockSpaceContext>
         <MockSpaceBackground />

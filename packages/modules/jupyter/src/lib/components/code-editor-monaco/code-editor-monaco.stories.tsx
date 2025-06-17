@@ -12,7 +12,15 @@ import {
 
 const StoryWrapper = (props: CodeEditorMonacoProps) => {
   return (
-    <div style={{ width: '400px', height: '300px' }}>
+    <div
+      style={
+        {
+          width: '400px',
+          height: '300px',
+          '--monaco-editor-height': '200px',
+        } as React.CSSProperties
+      }
+    >
       <CodeEditorMonaco {...props} />
     </div>
   );
@@ -50,7 +58,6 @@ const th = (): editor.IStandaloneThemeData => ({
 
 export const Normal: Story = {
   args: {
-    id: '1012482',
     code: 'print("Hello World !")',
     theme: {
       name: 'nimp',

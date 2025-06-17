@@ -34,6 +34,7 @@ export default defineConfig({
       entry: {
         index: 'src/index.ts',
         frontend: 'src/frontend.ts',
+        stories: 'src/stories.ts',
       },
       name: 'space',
       fileName: (format, entryName) => `${entryName}.js`,

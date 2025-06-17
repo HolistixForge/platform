@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { Logger } from '@monorepo/log';
-import { StorySpace } from '@monorepo/space/frontend';
+import { StorySpace } from '@monorepo/space/stories';
 import { StoryApiContext } from '@monorepo/frontend-data';
 import { TSpaceMenuEntries, TSpaceMenuEntry } from '@monorepo/module/frontend';
 

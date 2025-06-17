@@ -21,10 +21,8 @@ import {
 } from '@monorepo/servers';
 //
 import { moduleFrontend as coreFrontend } from '@monorepo/core';
-import {
-  moduleFrontend as spaceFrontend,
-  STORY_VIEW_ID,
-} from '@monorepo/space/frontend';
+import { moduleFrontend as spaceFrontend } from '@monorepo/space/frontend';
+import { STORY_VIEW_ID } from '@monorepo/space/stories';
 import {
   moduleFrontend as serversFrontend,
   TAuthenticationExtraContext,

@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useMemo } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 
 import {
   JitterDispatcher,
@@ -102,8 +102,11 @@ export const MockCollaborativeContext = ({
     config as any
   );
 
+  const [ready, setReady] = useState(callback ? false : true);
+
   useEffect(() => {
     callback?.(context);
+    setReady(true);
   }, [callback, context]);
 
   return (
@@ -112,7 +115,7 @@ export const MockCollaborativeContext = ({
       context={context}
       connectionErrors={connectionErrors}
     >
-      {children}
+      {ready ? children : <div>Loading...</div>}
     </CollaborativeContextInternal>
   );
 };

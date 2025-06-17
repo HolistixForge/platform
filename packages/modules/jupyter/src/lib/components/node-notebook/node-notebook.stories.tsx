@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { playAdd__hover, useTestBoolean } from '@monorepo/ui-base';
 import { nodeViewDefaultStatus } from '@monorepo/space';
-import { MockSpace } from '@monorepo/space/frontend';
+import { MockSpace } from '@monorepo/space/stories';
 
 import { NodeNotebookProps } from './node-notebook';
 import { NodeNotebook } from './node-notebook';

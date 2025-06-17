@@ -13,8 +13,8 @@ import {
   Space_loadData,
   TSpaceSharedData,
   defaultGraphView,
-  STORY_VIEW_ID,
 } from '@monorepo/space';
+import { STORY_VIEW_ID } from '@monorepo/space/stories';
 import { HolistixSpace } from '@monorepo/space/frontend';
 
 import { NodeIframe, NodeTextEditor, NodeYoutube } from '../frontend';

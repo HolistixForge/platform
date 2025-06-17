@@ -40,8 +40,9 @@ export class CollabSpaceState extends SpaceState {
 
   private updateState() {
     const state = this.sdm.getData().graphViews.get(this.viewId);
-    if (!state) throw new Error(`No graphViews for viewId [${this.viewId}]`);
-    this.state = state;
+    if (state)
+      // throw new Error(`No graphViews for viewId [${this.viewId}]`);
+      this.state = state;
   }
 
   private updateNodes() {

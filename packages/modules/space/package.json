@@ -19,6 +19,11 @@
       "import": "./dist/frontend.js",
       "default": "./dist/frontend.js"
     },
+    "./stories": {
+      "types": "./dist/stories.d.ts",
+      "import": "./dist/stories.js",
+      "default": "./dist/stories.js"
+    },
     "./style": "./dist/style.css"
   },
   "types": "./dist/index.d.ts",

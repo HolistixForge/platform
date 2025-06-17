@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { useTestBoolean } from '@monorepo/ui-base';
-import { MockSpace } from '@monorepo/space/frontend';
+import { MockSpace } from '@monorepo/space/stories';
 
 import {
   NodeChatAnchorInternal,
