@@ -4,20 +4,24 @@ import {
   ButtonBase,
   FormError,
   FormErrors,
-  TextFieldset,
   useAction,
   DialogControlled,
+  SelectFieldset,
+  SelectItem,
 } from '@monorepo/ui-base';
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
-import { TServersSharedData } from '@monorepo/servers';
 import { TPosition } from '@monorepo/core';
 import { TEventNewKernelNode } from '../jupyter-events';
+import { TJupyterSharedData } from '../jupyter-shared-model';
+import { TJupyterServerData } from '../jupyter-types';
+import { useJLsManager } from '../jupyter-shared-model-front';
+import { TServer, TServersSharedData } from '@monorepo/servers';
 
 /**
  *
  */
 
-type NewKernelFormData = { kernelName: string };
+type NewKernelFormData = { kernel_id: string };
 
 /**
  *
@@ -38,16 +42,34 @@ export const NewKernelForm = ({
 
   const dispatcher = useDispatcher<TEventNewKernelNode>();
 
-  const sd = useSharedData<TServersSharedData>(['projectServers'], (sd) => sd);
+  const { jupyter: jmc } = useJLsManager();
+
+  const sd = useSharedData<TServersSharedData & TJupyterSharedData>(
+    ['projectServers', 'jupyterServers'],
+    (sd) => sd
+  );
+
+  const server: TServer | undefined = sd.projectServers.get(
+    project_server_id.toString()
+  );
+
+  const jupyter: TJupyterServerData | undefined = sd.jupyterServers.get(
+    project_server_id.toString()
+  );
+
+  useEffect(() => {
+    if (jupyter && server) {
+      jmc.jlsManager.startPollingResources(server);
+    }
+  }, [jupyter, jmc, server]);
 
   const action = useAction<NewKernelFormData>(
     (d) => {
-      const server = sd.projectServers.get(`${project_server_id}`);
-      if (server && server.type === 'jupyter') {
+      if (jupyter) {
         return dispatcher.dispatch({
           type: 'jupyter:new-kernel-node',
-          kernel_id: d.kernelName as string,
-          project_server_id: server.project_server_id,
+          kernel_id: d.kernel_id as string,
+          project_server_id: project_server_id,
           origin: {
             viewId: viewId,
             position,
@@ -55,11 +77,11 @@ export const NewKernelForm = ({
         });
       } else throw new Error('No such server');
     },
-    [dispatcher, position, project_server_id, sd.projectServers, viewId],
+    [dispatcher, position, project_server_id, jupyter, viewId],
     {
       startOpened: true,
       checkForm: (d, e) => {
-        if (!d.kernelName) e.kernelName = 'Please enter a kernel name';
+        if (!d.kernel_id) e.kernel_id = 'Please enter a kernel name';
       },
     }
   );
@@ -81,14 +103,20 @@ export const NewKernelForm = ({
       open={action.isOpened}
       onOpenChange={action.close}
     >
-      <FormError errors={action.errors} id="kernelName" />
-      <TextFieldset
-        label="Kernel Name"
-        name="kernelName"
-        onChange={action.handleInputChange}
-        value={action.formData.kernelName}
-        placeholder="Kernel Name"
-      />
+      <FormError errors={action.errors} id="kernel_id" />
+
+      <SelectFieldset
+        name="kernel_id"
+        value={action.formData.kernel_id}
+        onChange={(v) => action.handleChange({ kernel_id: v })}
+        placeholder="Kernel Id"
+      >
+        {Object.keys(jupyter?.kernels || {}).map((k) => (
+          <SelectItem key={k} value={k}>
+            {k}
+          </SelectItem>
+        ))}
+      </SelectFieldset>
 
       <FormErrors errors={action.errors} />
       <div

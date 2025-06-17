@@ -324,8 +324,6 @@ export const HolistixSpace = ({
 
   const [renderForm, setRenderForm] = useState<ReactNode | null>(null);
 
-  console.log({ renderForm });
-
   /**
    *
    */

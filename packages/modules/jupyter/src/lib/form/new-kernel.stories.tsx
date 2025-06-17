@@ -1,25 +1,21 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { useAction, DialogControlled } from '@monorepo/ui-base';
+import { JupyterStoryCollabContext } from '../stories/module-stories-utils';
 
-import { NewKernelForm, NewKernelFormData } from './new-kernel';
+import { NewKernelForm } from './new-kernel';
 
 //
 
 const StoryWrapper = () => {
-  const action = useAction<NewKernelFormData>((d) => {
-    console.log(d);
-    return Promise.resolve();
-  }, []);
   return (
-    <DialogControlled
-      title="New Kernel"
-      description="Choose a name for the new kernel."
-      open={true}
-      onOpenChange={() => null}
-    >
-      <NewKernelForm action={action} />
-    </DialogControlled>
+    <JupyterStoryCollabContext>
+      <NewKernelForm
+        project_server_id={1}
+        position={{ x: 0, y: 0 }}
+        viewId={''}
+        closeForm={() => null}
+      />
+    </JupyterStoryCollabContext>
   );
 };
 

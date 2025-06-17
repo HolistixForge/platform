@@ -10,6 +10,7 @@ import {
 import { TGraphNode } from '@monorepo/module';
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
 import { TServersSharedData, TServer } from '@monorepo/servers';
+import { Datetime } from '@monorepo/ui-base';
 
 import { KernelStateIndicator } from './kernel-state-indicator';
 import {
@@ -87,7 +88,7 @@ export const NodeKernel = ({
 
   //
 
-  if (!kernelPack) return <>Not Found</>;
+  if (!kernelPack || !kernel) return <>Not Found</>;
 
   return (
     <div className={`common-node kernel-node`}>
@@ -103,12 +104,41 @@ export const NodeKernel = ({
       {isOpened && (
         <DisableZoomDragPan noDrag>
           <div className="node-wrapper-body">
-            <KernelStateIndicator state={kernelPack.state} />
-            <div className="kernel-state-stopped">
-              <p>
-                kernel <b>{kernel?.name}</b>: {kernel?.type}
-              </p>
-              <span>{kernel?.execution_state}</span>
+            <div className="node-background rounded-[8px] col-span-1 flex flex-col p-5 w-[400px]">
+              <div>
+                <p>
+                  kernel <b>{kernel?.name}</b>
+                </p>
+                <KernelStateIndicator state={kernelPack.state} />
+                <p>{kernel?.execution_state}</p>
+                <p>
+                  Last activity:&nbsp;
+                  {kernel.last_activity ? (
+                    <Datetime
+                      value={kernel.last_activity}
+                      formats={['ago']}
+                      hoverFormats={['long']}
+                    />
+                  ) : (
+                    'unknown'
+                  )}
+                </p>
+                {kernel.notebooks && kernel.notebooks.length > 0 && (
+                  <div className="mt-4">
+                    <p className="font-semibold mb-2">Connected Notebooks:</p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      {kernel.notebooks.map((notebook: any) => (
+                        <li key={notebook.path} className="text-sm">
+                          {notebook.name}
+                          <span className="text-gray-500 text-xs ml-2">
+                            ({notebook.path})
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </DisableZoomDragPan>

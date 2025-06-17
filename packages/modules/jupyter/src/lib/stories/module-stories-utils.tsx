@@ -51,6 +51,9 @@ export const STORY_PROJECT_ID = 0;
 
 export const STORY_PROJECT_SERVER_ID = 0;
 
+const STORY_JUPYTER_PORT = 36666;
+const STORY_JUPYTER_IP = '127.0.0.1';
+
 //
 
 let mock_servers: TG_Server[] = [];
@@ -62,7 +65,7 @@ const modulesBackend = [
       loadExtraContext: (): TGatewayExtraContext => ({
         gateway: {
           updateReverseProxy: async () => {},
-          gatewayFQDN: '127.0.0.1',
+          gatewayFQDN: STORY_JUPYTER_IP,
         },
       }),
     },
@@ -189,7 +192,9 @@ export const JupyterStoryInit = ({
 }) => {
   const { isLoading, error } = useInitStoryJupyterServer();
 
-  if (isLoading) {
+  console.log('JupyterStoryInit', { isLoading, error });
+
+  if (isLoading || error) {
     return (
       <div style={{ width: '80vw', height: '800px' }}>
         <p>
@@ -206,17 +211,14 @@ export const JupyterStoryInit = ({
             margin: '20px 0',
           }}
         >
-          $ docker run --rm -p 36666:8888 jupyter/minimal-notebook:latest
-          start-notebook.sh --NotebookApp.allow_origin='*'
-          --NotebookApp.token='${STORY_TOKEN}' --debug
+          $ docker run --rm -p {STORY_JUPYTER_PORT}:8888
+          jupyter/minimal-notebook:latest start-notebook.sh
+          --NotebookApp.allow_origin='*' --NotebookApp.token='{STORY_TOKEN}'
+          --debug
         </p>
-        {children}
+        {error && <div style={{ color: 'red' }}>Error: {error.message}</div>}
       </div>
     );
-  }
-
-  if (error) {
-    return <div>Error: {error.message}</div>;
   }
 
   return <>{children}</>;
@@ -244,11 +246,34 @@ export const useInitStoryJupyterServer =
       (s: { name: string }) => s.name === 'jupyterlab'
     );
 
+    const [running, setRunning] = useState<boolean | null>(null);
+
+    useEffect(() => {
+      fetch(`http://${STORY_JUPYTER_IP}:${STORY_JUPYTER_PORT}/api`).then(
+        (r) => {
+          if (r.status === 200) {
+            console.log('Jupyter server is running');
+            setRunning(true);
+          } else {
+            setRunning(false);
+          }
+        }
+      );
+    }, []);
+
     const initializeServer = useCallback(async () => {
       console.log('initializeServer', { server, jupyter, service });
       try {
+        if (running === null) {
+          return;
+        } else if (running === false) {
+          setError(new Error('Jupyter server is not running'));
+          setIsLoading(false);
+          return;
+        }
+
         // Step 1: Create server if it doesn't exist
-        if (!jupyter) {
+        else if (!jupyter) {
           await dispatcher.dispatch({
             type: 'servers:new',
             from: {
@@ -270,22 +295,23 @@ export const useInitStoryJupyterServer =
         else if (jupyter && !service) {
           await dispatcher.dispatch({
             type: 'server:map-http-service',
-            port: 36666,
+            port: STORY_JUPYTER_PORT,
             name: 'jupyterlab',
           });
         }
 
         // Only set loading to false if we have a service
-        if (service) {
-          setIsLoading(false);
+        else if (service) {
+          console.log('Jupyter server is initialized');
+          isLoading && setIsLoading(false);
         }
       } catch (err) {
         setError(
           err instanceof Error ? err : new Error('Failed to initialize server')
         );
-        setIsLoading(false);
+        isLoading && setIsLoading(false);
       }
-    }, [jupyter, service, dispatcher]);
+    }, [isLoading, jupyter, service, dispatcher, running]);
 
     useEffect(() => {
       initializeServer();

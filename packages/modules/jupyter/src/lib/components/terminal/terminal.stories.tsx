@@ -14,6 +14,7 @@ import {
 import { JupyterTerminal } from './terminal';
 import { useJLsManager } from '../../jupyter-shared-model-front';
 import { TJupyterSharedData } from '../../jupyter-shared-model';
+import { TJupyterServerData } from '../../jupyter-types';
 
 //
 
@@ -40,7 +41,9 @@ const Terminals = () => {
     (sd) => sd
   );
   const server = sd.projectServers.get(STORY_PROJECT_SERVER_ID.toString());
-  const jupyter = sd.jupyterServers.get(STORY_PROJECT_SERVER_ID.toString());
+  const jupyter: TJupyterServerData | undefined = sd.jupyterServers.get(
+    STORY_PROJECT_SERVER_ID.toString()
+  );
   const service = server?.httpServices.find(
     (s: { name: string }) => s.name === 'jupyterlab'
   );

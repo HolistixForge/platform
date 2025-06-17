@@ -14,6 +14,10 @@ export type Kernel = {
   last_activity?: string;
   execution_state?: string;
   connections?: number;
+  notebooks: {
+    path: string;
+    name: string;
+  }[];
 };
 
 export type Terminal = {

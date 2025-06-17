@@ -367,16 +367,6 @@
   border-radius: var(--node-border-radius);
 }
 
-.server-node .server-state-started,
-.server-node .server-state-stopped,
-.kernel-node .kernel-state-started,
-.kernel-node .kernel-state-stopped {
-  margin: 10px;
-  padding: 10px;
-  border-radius: 5px;
-  background-color: var(--ca-white-2);
-}
-
 //---------------- Debug components
 
 .debug-edge-label,

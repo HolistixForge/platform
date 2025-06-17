@@ -1,5 +1,6 @@
 import { KernelManager, ServerConnection } from '@jupyterlab/services';
 import { IKernelConnection } from '@jupyterlab/services/lib/kernel/kernel';
+import isEqual from 'lodash/isEqual';
 
 import { log } from '@monorepo/log';
 
@@ -17,34 +18,12 @@ import { makeVirtualOutputArea } from './output-area';
 
 type ResourceListener = (kernels: Kernel[], terminals: Terminal[]) => void;
 
-function shallowEqualKernels(a: Kernel[], b: Kernel[]): boolean {
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) {
-    if (
-      a[i].kernel_id !== b[i].kernel_id ||
-      a[i].name !== b[i].name ||
-      a[i].type !== b[i].type ||
-      a[i].last_activity !== b[i].last_activity ||
-      a[i].execution_state !== b[i].execution_state ||
-      a[i].connections !== b[i].connections
-    ) {
-      return false;
-    }
-  }
-  return true;
+function deepEqualKernels(a: Kernel[], b: Kernel[]): boolean {
+  return isEqual(a, b);
 }
 
-function shallowEqualTerminals(a: Terminal[], b: Terminal[]): boolean {
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) {
-    if (
-      a[i].terminal_id !== b[i].terminal_id ||
-      a[i].last_activity !== b[i].last_activity
-    ) {
-      return false;
-    }
-  }
-  return true;
+function deepEqualTerminals(a: Terminal[], b: Terminal[]): boolean {
+  return isEqual(a, b);
 }
 
 export class JupyterlabDriver {
@@ -207,6 +186,7 @@ export class JupyterlabDriver {
         last_activity: k.last_activity,
         execution_state: k.execution_state || '',
         connections: k.connections || 0,
+        notebooks: [], // Initialize empty notebooks array
       }));
 
       // Poll terminals
@@ -228,12 +208,38 @@ export class JupyterlabDriver {
         last_activity: t.last_activity,
       }));
 
+      // Fetch sessions to get notebook-kernel associations
+      const sessionsResponse = await fetch(
+        `${this.km.serverSettings.baseUrl}api/sessions`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.km.serverSettings.token}`,
+          },
+        }
+      );
+      const sessions = await sessionsResponse.json();
+
+      // Associate notebooks with kernels based on sessions data
+      for (const session of sessions) {
+        if (session.type === 'notebook' && session.kernel) {
+          const kernel = newKernels.find(
+            (k) => k.kernel_id === session.kernel.id
+          );
+          if (kernel) {
+            kernel.notebooks.push({
+              path: session.path,
+              name: session.name,
+            });
+          }
+        }
+      }
+
       // Only update and notify if changed
-      const kernelsChanged = !shallowEqualKernels(
+      const kernelsChanged = !deepEqualKernels(
         this.kernelResources,
         newKernels
       );
-      const terminalsChanged = !shallowEqualTerminals(
+      const terminalsChanged = !deepEqualTerminals(
         this.terminalResources,
         newTerminals
       );
