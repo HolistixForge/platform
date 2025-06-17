@@ -19,7 +19,7 @@ import {
 } from '../../jupyter-types';
 import { TJupyterSharedData } from '../../jupyter-shared-model';
 import { useKernelPack } from '../../jupyter-shared-model-front';
-import { TDemiurgeNotebookEvent } from '../../jupyter-events';
+import { TJupyterEvent } from '../../jupyter-events';
 
 //
 
@@ -65,7 +65,7 @@ export const NodeKernel = ({
 
   // console.log({ kernelPack, js: s.js, ps: s.ps, kernel, client_id });
 
-  const dispatcher = useDispatcher<TDemiurgeNotebookEvent>();
+  const dispatcher = useDispatcher<TJupyterEvent>();
 
   const handleDeleteKernel = useCallback(async () => {
     client_id &&

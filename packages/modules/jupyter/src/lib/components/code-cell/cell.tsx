@@ -22,7 +22,7 @@ import {
 import { makeUuid } from '@monorepo/simple-types';
 import { TServersSharedData, TServer } from '@monorepo/servers';
 
-import { TDemiurgeNotebookEvent } from '../../jupyter-events';
+import { TJupyterEvent } from '../../jupyter-events';
 import {
   IOutput,
   Cell,
@@ -68,7 +68,7 @@ export const useCellLogic = ({
     (o) => o.service_name === 'jupyterlab'
   )?.client_id;
 
-  const dispatcher = useDispatcher<TDemiurgeNotebookEvent | TCoreEvent>();
+  const dispatcher = useDispatcher<TJupyterEvent | TCoreEvent>();
 
   const editorRef = useRef<any>(null);
 

@@ -31,10 +31,7 @@ import { ModuleFrontend } from '@monorepo/module/frontend';
 
 //
 
-import {
-  moduleBackend as jupyterBackend,
-  TDemiurgeNotebookEvent,
-} from '../../';
+import { moduleBackend as jupyterBackend, TJupyterEvent } from '../../';
 import { moduleFrontend as jupyterFrontend } from '../../frontend';
 
 import { TJupyterSharedData } from '../../lib/jupyter-shared-model';
@@ -236,7 +233,7 @@ export const useInitStoryJupyterServer =
     const sd = useSharedData<
       TServersSharedData & TJupyterSharedData & TCoreSharedData
     >(['projectServers', 'jupyterServers'], (sd) => sd);
-    const dispatcher = useDispatcher<TServerEvents | TDemiurgeNotebookEvent>();
+    const dispatcher = useDispatcher<TServerEvents | TJupyterEvent>();
 
     const server = sd.projectServers.get(STORY_PROJECT_SERVER_ID.toString());
     const jupyter = sd.jupyterServers.get(STORY_PROJECT_SERVER_ID.toString());

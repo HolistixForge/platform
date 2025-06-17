@@ -23,5 +23,5 @@ export const moduleBackend: ModuleBackend = {
 };
 
 export type { TExtraArgs as TJupyterExtraArgs } from './lib/jupyter-reducer';
-export type { TDemiurgeNotebookEvent } from './lib/jupyter-events';
+export type { TJupyterEvent } from './lib/jupyter-events';
 export type { TJupyterSharedData } from './lib/jupyter-shared-model';

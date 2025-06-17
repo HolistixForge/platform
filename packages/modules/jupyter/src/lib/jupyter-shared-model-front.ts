@@ -9,7 +9,7 @@ import { useRegisterListener } from '@monorepo/simple-types';
 
 import { JLsManager, TKernelPack } from './front/jls-manager';
 import { TJupyterSharedData } from './jupyter-shared-model';
-import { TDemiurgeNotebookEvent } from './jupyter-events';
+import { TJupyterEvent } from './jupyter-events';
 
 //
 
@@ -25,7 +25,7 @@ export const Jupyter_Load_Frontend_ExtraContext = ({
   extraContext,
 }: {
   sharedData: TValidSharedData;
-  dispatcher?: FrontendDispatcher<TDemiurgeNotebookEvent>;
+  dispatcher?: FrontendDispatcher<TJupyterEvent>;
   extraContext: object;
 }): { jupyter: { jlsManager: JLsManager } } => {
   if (!dispatcher) throw new Error('dispatcher is required');

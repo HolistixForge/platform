@@ -8,7 +8,7 @@ import { TJupyterSharedData } from './jupyter-shared-model';
 import { NewKernelForm } from './form/new-kernel';
 import { NewTerminalForm } from './form/new-terminal';
 import { TKernelNodeDataPayload } from './jupyter-types';
-import { TDemiurgeNotebookEvent } from './jupyter-events';
+import { TJupyterEvent } from './jupyter-events';
 
 //
 
@@ -28,7 +28,7 @@ export const spaceMenuEntrie: TSpaceMenuEntries = ({
   const project_server_id = node?.data?.project_server_id as number;
   const jupyter = tsd.jupyterServers.get(`${project_server_id}`);
 
-  const d = dispatcher as FrontendDispatcher<TDemiurgeNotebookEvent>;
+  const d = dispatcher as FrontendDispatcher<TJupyterEvent>;
 
   return [
     {

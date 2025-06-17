@@ -32,7 +32,7 @@ import {
   TTerminalNodeDataPayload,
   Terminal as MyTerminal,
 } from '../../jupyter-types';
-import { TDemiurgeNotebookEvent } from '../../jupyter-events';
+import { TJupyterEvent } from '../../jupyter-events';
 
 import '@jupyterlab/terminal/style/index';
 
@@ -212,7 +212,7 @@ export const NodeTerminal = ({
     filterOut,
   } = useNodeContext();
 
-  const dispatcher = useDispatcher<TDemiurgeNotebookEvent>();
+  const dispatcher = useDispatcher<TJupyterEvent>();
 
   const handleDeleteTerminal = useCallback(async () => {
     await dispatcher.dispatch({

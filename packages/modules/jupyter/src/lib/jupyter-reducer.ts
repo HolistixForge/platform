@@ -16,7 +16,7 @@ import {
 } from '@monorepo/core';
 
 import {
-  TDemiurgeNotebookEvent,
+  TJupyterEvent,
   TEventClearNodeOutput,
   TEventExecutePythonNode,
   TEventPythonNodeOutput,
@@ -49,15 +49,9 @@ export type TExtraArgs = {
   authorizationHeader: string;
 };
 
-type ReducedEvents =
-  | TDemiurgeNotebookEvent
-  | TEventNewServer
-  | TEventDeleteServer;
+type ReducedEvents = TJupyterEvent | TEventNewServer | TEventDeleteServer;
 
-type DispatchedEvents =
-  | TDemiurgeNotebookEvent
-  | TEventNewNode
-  | TEventDeleteNode;
+type DispatchedEvents = TJupyterEvent | TEventNewNode | TEventDeleteNode;
 
 type UsedSharedData = TServersSharedData & TJupyterSharedData & TCoreSharedData;
 

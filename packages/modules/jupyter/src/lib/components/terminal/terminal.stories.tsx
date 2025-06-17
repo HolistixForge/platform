@@ -6,7 +6,7 @@ import { TServerEvents, TServersSharedData } from '@monorepo/servers';
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
 import { ButtonBase, SelectFieldset, SelectItem } from '@monorepo/ui-base';
 
-import { TDemiurgeNotebookEvent } from '../../jupyter-events';
+import { TJupyterEvent } from '../../jupyter-events';
 import {
   JupyterStoryCollabContext,
   STORY_PROJECT_SERVER_ID,
@@ -33,7 +33,7 @@ const StoryWrapper = () => {
 //
 
 const Terminals = () => {
-  const dispatcher = useDispatcher<TDemiurgeNotebookEvent | TServerEvents>();
+  const dispatcher = useDispatcher<TJupyterEvent | TServerEvents>();
   const { jupyter: jmc } = useJLsManager();
 
   const sd = useSharedData<TServersSharedData & TJupyterSharedData>(

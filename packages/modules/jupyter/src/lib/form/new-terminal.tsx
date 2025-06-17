@@ -11,7 +11,7 @@ import {
 } from '@monorepo/ui-base';
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
 import { TPosition } from '@monorepo/core';
-import { TDemiurgeNotebookEvent } from '../jupyter-events';
+import { TJupyterEvent } from '../jupyter-events';
 import { TJupyterSharedData } from '../jupyter-shared-model';
 import { TJupyterServerData } from '../jupyter-types';
 import { useJLsManager } from '../jupyter-shared-model-front';
@@ -30,7 +30,7 @@ export const NewTerminalForm = ({
   viewId: string;
   closeForm: () => void;
 }) => {
-  const dispatcher = useDispatcher<TDemiurgeNotebookEvent>();
+  const dispatcher = useDispatcher<TJupyterEvent>();
   const { jupyter: jmc } = useJLsManager();
 
   const sd = useSharedData<TServersSharedData & TJupyterSharedData>(

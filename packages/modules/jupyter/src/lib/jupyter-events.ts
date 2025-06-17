@@ -2,7 +2,7 @@
 import { TEventOrigin } from '@monorepo/core';
 import { IOutput, Kernel, Terminal } from './jupyter-types';
 
-export type FormFieldsOnly<T extends TDemiurgeNotebookEvent> = Partial<
+export type FormFieldsOnly<T extends TJupyterEvent> = Partial<
   Omit<T, 'viewId' | 'position' | 'type'>
 >;
 
@@ -89,7 +89,7 @@ export type TEventJupyterResourcesChanged = {
   };
 };
 
-export type TDemiurgeNotebookEvent =
+export type TJupyterEvent =
   | TEventExecutePythonNode
   | TEventPythonNodeOutput
   | TEventClearNodeOutput

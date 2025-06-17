@@ -6,7 +6,7 @@ import { FrontendDispatcher } from '@monorepo/collab-engine';
 import { BrowserWidgetManager } from './browser-widget-manager';
 import { JupyterlabDriver } from '../driver';
 import { TJupyterSharedData } from '../jupyter-shared-model';
-import { TDemiurgeNotebookEvent } from '../jupyter-events';
+import { TJupyterEvent } from '../jupyter-events';
 import { jupyterlabIsReachable } from '../ds-backend';
 import { injectWidgetsScripts } from './widgets-js-dependencies';
 
@@ -66,13 +66,13 @@ export class JLsManager extends Listenable {
   _kernelPacks: Map<string, TKernelPack> = new Map();
 
   _sd: TJupyterSharedData & TServersSharedData;
-  _dispatcher: FrontendDispatcher<TDemiurgeNotebookEvent>;
+  _dispatcher: FrontendDispatcher<TJupyterEvent>;
 
   getToken: (s: TServer, serviceName: string) => Promise<string>;
 
   constructor(
     sd: TJupyterSharedData & TServersSharedData,
-    dispatcher: FrontendDispatcher<TDemiurgeNotebookEvent>,
+    dispatcher: FrontendDispatcher<TJupyterEvent>,
     getToken: (s: TServer, serviceName: string) => Promise<string>
   ) {
     super();

@@ -20,7 +20,7 @@ import { TabPayload, TTabEvents, TTabsSharedData } from '@monorepo/tabs';
 import { TSpaceSharedData, TSpaceEvent } from '@monorepo/space';
 import { TChatEvent, TChatSharedData } from '@monorepo/chats';
 import { TServerEvents, TServersSharedData } from '@monorepo/servers';
-import { TDemiurgeNotebookEvent, TJupyterSharedData } from '@monorepo/jupyter';
+import { TJupyterEvent, TJupyterSharedData } from '@monorepo/jupyter';
 
 import { TNotionEvent, TNotionSharedData } from '@monorepo/notion';
 
@@ -182,7 +182,7 @@ export type TSd = TCoreSharedData &
 
 export type TAllEvents =
   | TCoreEvent
-  | TDemiurgeNotebookEvent
+  | TJupyterEvent
   | TSpaceEvent
   | TServerEvents
   | TChatEvent
