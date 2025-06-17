@@ -2,14 +2,14 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { JupyterStoryCollabContext } from '../stories/module-stories-utils';
 
-import { NewKernelForm } from './new-kernel';
+import { NewTerminalForm } from './new-terminal';
 
 //
 
 const StoryWrapper = () => {
   return (
     <JupyterStoryCollabContext>
-      <NewKernelForm
+      <NewTerminalForm
         project_server_id={1}
         position={{ x: 0, y: 0 }}
         viewId={''}
@@ -22,7 +22,7 @@ const StoryWrapper = () => {
 //
 
 const meta = {
-  title: 'Modules/Jupyter/Forms/NewKernel',
+  title: 'Modules/Jupyter/Forms/NewTerminal',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

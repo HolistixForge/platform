@@ -1,9 +1,14 @@
-import { TValidSharedDataToCopy } from '@monorepo/collab-engine';
+import {
+  TValidSharedDataToCopy,
+  FrontendDispatcher,
+} from '@monorepo/collab-engine';
 import { TCoreSharedData } from '@monorepo/core';
 import { TSpaceMenuEntries } from '@monorepo/module/frontend';
 import { TJupyterSharedData } from './jupyter-shared-model';
 import { NewKernelForm } from './form/new-kernel';
+import { NewTerminalForm } from './form/new-terminal';
 import { TKernelNodeDataPayload } from './jupyter-types';
+import { TDemiurgeNotebookEvent } from './jupyter-events';
 
 //
 
@@ -22,6 +27,8 @@ export const spaceMenuEntrie: TSpaceMenuEntries = ({
   const node = from && tsd.nodes.get(from?.node);
   const project_server_id = node?.data?.project_server_id as number;
   const jupyter = tsd.jupyterServers.get(`${project_server_id}`);
+
+  const d = dispatcher as FrontendDispatcher<TDemiurgeNotebookEvent>;
 
   return [
     {
@@ -49,7 +56,7 @@ export const spaceMenuEntrie: TSpaceMenuEntries = ({
           type: 'item',
           label: 'New Cell',
           onClick: () => {
-            dispatcher.dispatch({
+            d.dispatch({
               type: 'jupyter:new-cell',
               kernel_id: (node!.data as TKernelNodeDataPayload).kernel_id,
               origin: {
@@ -59,6 +66,23 @@ export const spaceMenuEntrie: TSpaceMenuEntries = ({
             });
           },
           disabled: node?.type !== 'jupyter-kernel',
+        },
+        {
+          type: 'item',
+          label: 'New Terminal',
+          onClick: () => {
+            renderForm(
+              <NewTerminalForm
+                project_server_id={project_server_id}
+                viewId={viewId}
+                position={position()}
+                closeForm={() => {
+                  renderForm(null);
+                }}
+              />
+            );
+          },
+          disabled: !(jupyter && node?.type === 'server'),
         },
       ],
     },
