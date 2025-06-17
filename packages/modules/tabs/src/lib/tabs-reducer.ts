@@ -27,7 +27,13 @@ type TExtraArgs = {
   user_id: string;
 };
 
-type Ra<T> = ReduceArgs<TTabsSharedData, T, Record<string, never>, TExtraArgs>;
+type Ra<T> = ReduceArgs<
+  TTabsSharedData,
+  T,
+  Record<string, never>,
+  TExtraArgs,
+  undefined
+>;
 
 /**
  *
@@ -37,7 +43,8 @@ export class TabsReducer extends Reducer<
   TTabsSharedData,
   TTabEvents<TabPayload> | TEventLoad,
   Record<string, never>,
-  TExtraArgs
+  TExtraArgs,
+  undefined
 > {
   //
 
