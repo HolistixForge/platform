@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { nodeViewDefaultStatus } from '@monorepo/space';
-import { MockSpace } from '@monorepo/space/stories';
+import { StoryNode, STORY_NODE_ID } from '@monorepo/space/stories';
 import { sleep } from '@monorepo/simple-types';
 import { useTestBoolean } from '@monorepo/ui-base';
 
@@ -27,7 +27,7 @@ const StoryWrapper = (
   } = useTestBoolean(props.expanded);
 
   return (
-    <MockSpace selected={props.selected} isOpened={isOpened}>
+    <StoryNode selected={props.selected} isOpened={isOpened}>
       <NodeVolumeInternal
         expand={expand}
         reduce={reduce}
@@ -41,7 +41,7 @@ const StoryWrapper = (
         close={close}
         {...props}
       />
-    </MockSpace>
+    </StoryNode>
   );
 };
 
@@ -67,7 +67,7 @@ type Story = StoryObj<typeof StoryWrapper>;
 
 export const Primary: Story = {
   args: {
-    id: 'node-1',
+    id: STORY_NODE_ID,
     volume_name: 'My Volume 1',
     volume_storage: 42,
     selected: true,

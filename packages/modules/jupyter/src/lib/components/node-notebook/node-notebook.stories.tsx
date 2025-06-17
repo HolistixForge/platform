@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { playAdd__hover, useTestBoolean } from '@monorepo/ui-base';
 import { nodeViewDefaultStatus } from '@monorepo/space';
-import { MockSpace } from '@monorepo/space/stories';
+import { StoryNode, STORY_NODE_ID } from '@monorepo/space/stories';
 
 import { NodeNotebookProps } from './node-notebook';
 import { NodeNotebook } from './node-notebook';
@@ -27,7 +27,7 @@ const NodeStory = (
   } = useTestBoolean(props.expanded);
 
   return (
-    <MockSpace selected={props.selected} isOpened={isOpened}>
+    <StoryNode selected={props.selected} isOpened={isOpened}>
       <NodeNotebook
         {...props}
         expand={expand}
@@ -40,7 +40,7 @@ const NodeStory = (
         open={open}
         close={close}
       />
-    </MockSpace>
+    </StoryNode>
   );
 };
 
@@ -91,7 +91,7 @@ export const SpreadNormal: Story = {
     arrow: 'bottom',
     status: 'success',
     titleFixed: false,
-    id: 'node-1',
+    id: STORY_NODE_ID,
     nodeInfos: true,
     selected: false,
     expanded: true,
@@ -107,7 +107,7 @@ export const SpreadTitle: Story = {
   },
   args: {
     titleFixed: true,
-    id: 'node-1',
+    id: STORY_NODE_ID,
     nodeInfos: true,
     selected: false,
     arrow: 'bottom',
@@ -124,7 +124,7 @@ export const SpreadHover: Story = {
     },
   },
   args: {
-    id: 'node-1',
+    id: STORY_NODE_ID,
     nodeInfos: true,
     selected: false,
     expanded: true,

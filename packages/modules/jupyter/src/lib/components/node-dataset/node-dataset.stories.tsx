@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { playAdd__hover, useTestBoolean } from '@monorepo/ui-base';
 import { nodeViewDefaultStatus } from '@monorepo/space';
-import { MockSpace } from '@monorepo/space/stories';
+import { StoryNode, STORY_NODE_ID } from '@monorepo/space/stories';
 
 import { NodeDataset, NodeDatasetProps } from './node-dataset';
 
@@ -23,7 +23,7 @@ const StoryWrapper = (
   } = useTestBoolean(props.expanded);
 
   return (
-    <MockSpace selected={props.selected} isOpened={isOpened}>
+    <StoryNode selected={props.selected} isOpened={isOpened}>
       <NodeDataset
         {...props}
         isOpened={isOpened}
@@ -36,7 +36,7 @@ const StoryWrapper = (
           mode: isExpanded ? 'EXPANDED' : 'REDUCED',
         }}
       />
-    </MockSpace>
+    </StoryNode>
   );
 };
 
@@ -62,7 +62,7 @@ type Story = StoryObj<typeof StoryWrapper>;
 
 export const Closed: Story = {
   args: {
-    id: 'node-1',
+    id: STORY_NODE_ID,
     color: 'var(--c-alt-blue-2)',
     expanded: false,
     selected: true,
@@ -71,7 +71,7 @@ export const Closed: Story = {
 
 export const Closed_Hover: Story = {
   args: {
-    id: 'node-1',
+    id: STORY_NODE_ID,
     color: 'var(--c-alt-blue-2)',
     expanded: false,
     selected: true,
@@ -81,7 +81,7 @@ export const Closed_Hover: Story = {
 
 export const Open: Story = {
   args: {
-    id: 'node-1',
+    id: STORY_NODE_ID,
     color: 'var(--c-alt-blue-2)',
     expanded: true,
     selected: true,

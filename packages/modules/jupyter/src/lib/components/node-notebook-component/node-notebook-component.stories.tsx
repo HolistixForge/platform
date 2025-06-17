@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { playAdd__hover, useTestBoolean } from '@monorepo/ui-base';
 import { nodeViewDefaultStatus } from '@monorepo/space';
-import { MockSpace } from '@monorepo/space/stories';
+import { StoryNode, STORY_NODE_ID } from '@monorepo/space/stories';
 
 import {
   NodeNotebookComponent,
@@ -29,7 +29,7 @@ const NodeStory = (
   } = useTestBoolean(props.expanded);
 
   return (
-    <MockSpace selected={props.selected} isOpened={isOpened}>
+    <StoryNode selected={props.selected} isOpened={isOpened}>
       <NodeNotebookComponent
         {...props}
         expand={expand}
@@ -42,7 +42,7 @@ const NodeStory = (
         open={open}
         close={close}
       />
-    </MockSpace>
+    </StoryNode>
   );
 };
 
@@ -82,7 +82,7 @@ type Story = StoryObj<typeof NodeStory>;
 
 export const ReducedNormal: Story = {
   args: {
-    id: 'node-1',
+    id: STORY_NODE_ID,
     color: 'var(--c-red-4)',
     status: 'success',
     selected: false,
@@ -98,7 +98,7 @@ export const ReducedHover: Story = {
     },
   },
   args: {
-    id: 'node-1',
+    id: STORY_NODE_ID,
     color: 'var(--c-red-4)',
     status: 'success',
     selected: false,
@@ -114,7 +114,7 @@ export const ReducedOpen: Story = {
     },
   },
   args: {
-    id: 'node-1',
+    id: STORY_NODE_ID,
     color: 'var(--c-red-4)',
     status: 'success',
     notebookOpened: true,

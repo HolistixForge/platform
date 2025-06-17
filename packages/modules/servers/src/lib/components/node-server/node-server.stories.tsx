@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { useTestBoolean } from '@monorepo/ui-base';
-import { TNodeContext, MockSpace } from '@monorepo/space/frontend';
+import { TNodeContext } from '@monorepo/space/frontend';
+import { StoryNode, STORY_NODE_ID } from '@monorepo/space/stories';
 
 import { NodeServerInternal } from './node-server';
 import {
@@ -41,7 +42,7 @@ const StoryWrapper = (
   const state = useMockServerBehaviours(props);
 
   return (
-    <MockSpace selected={props.selected} isOpened={isOpened}>
+    <StoryNode selected={props.selected} isOpened={isOpened}>
       <NodeServerInternal
         filterOut={props.filterOut}
         selected={props.selected}
@@ -62,7 +63,7 @@ const StoryWrapper = (
         id={props.id}
         {...state}
       />
-    </MockSpace>
+    </StoryNode>
   );
 };
 
@@ -185,7 +186,7 @@ type Story = StoryObj<typeof StoryWrapper>;
 
 export const NewServerLocationNone: Story = {
   args: {
-    id: 'node-1',
+    id: STORY_NODE_ID,
     selected: true,
     expanded: true,
     ...newServerLocationNoneStory(),
@@ -196,7 +197,7 @@ export const NewServerLocationNone: Story = {
 
 export const CloudRunning: Story = {
   args: {
-    id: 'node-1',
+    id: STORY_NODE_ID,
     selected: true,
     expanded: true,
     ...cloudRunningStory(),
@@ -207,7 +208,7 @@ export const CloudRunning: Story = {
 
 export const CloudStopped: Story = {
   args: {
-    id: 'node-1',
+    id: STORY_NODE_ID,
     selected: true,
     expanded: true,
     ...cloudStoppedStory(),
@@ -218,7 +219,7 @@ export const CloudStopped: Story = {
 
 export const CloudRunningRecentActivity: Story = {
   args: {
-    id: 'node-1',
+    id: STORY_NODE_ID,
     selected: true,
     expanded: true,
     ...recentActivityStory(),
@@ -229,7 +230,7 @@ export const CloudRunningRecentActivity: Story = {
 
 export const HostedNotAliveCurrentUserHosting: Story = {
   args: {
-    id: 'node-1',
+    id: STORY_NODE_ID,
     selected: true,
     expanded: true,
     ...hostedNotAliveCurrentUserHosting(),
@@ -240,7 +241,7 @@ export const HostedNotAliveCurrentUserHosting: Story = {
 
 export const HostedNotAliveCurrentUserNotHosting: Story = {
   args: {
-    id: 'node-1',
+    id: STORY_NODE_ID,
     selected: true,
     expanded: true,
     ...hostedNotAliveCurrentUserNotHosting(),
@@ -251,7 +252,7 @@ export const HostedNotAliveCurrentUserNotHosting: Story = {
 
 export const HostedWithServices: Story = {
   args: {
-    id: 'node-1',
+    id: STORY_NODE_ID,
     selected: true,
     expanded: true,
     ...hostedWithServicesStory(),
