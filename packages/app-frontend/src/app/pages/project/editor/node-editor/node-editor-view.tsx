@@ -1,8 +1,6 @@
 import { HolistixSpace } from '@monorepo/space/frontend';
+import { TSpaceMenuEntries, TSpaceMenuEntry } from '@monorepo/module/frontend';
 
-import { ContextMenuLogic } from './menus/context-menu-logic';
-import { SpaceContextMenu } from './menus/context-menu';
-import { NewEdgeContextMenu } from './menus/context-menu-new-edge';
 import { modules } from '../../model/modules';
 
 import './node-editor.scss';
@@ -13,6 +11,12 @@ const nodeTypes = modules.reduce((acc, module) => {
   return { ...acc, ...module.nodes };
 }, {});
 
+const spaceMenuEntries: TSpaceMenuEntries = (args) => {
+  return modules.reduce((acc, module) => {
+    return [...acc, ...module.spaceMenuEntries(args)];
+  }, [] as TSpaceMenuEntry[]);
+};
+
 /**
  *
  */
@@ -21,7 +25,11 @@ export const NodeEditorView = ({ viewId }: { viewId: string }) => {
 
   return (
     <div style={{ height: '100%', backgroundColor: 'var(--color-background)' }}>
-      <HolistixSpace viewId={viewId} nodeTypes={nodeTypes} />
+      <HolistixSpace
+        viewId={viewId}
+        nodeTypes={nodeTypes}
+        spaceMenuEntries={spaceMenuEntries}
+      />
     </div>
   );
 };

@@ -24,8 +24,8 @@ import {
   NewNotionDatabaseForm,
   NewNotionDatabaseFormData,
 } from '@monorepo/notion/frontend';
-import { makeUuid } from '@monorepo/simple-types';
-import { SHAPE_TYPES, TEventNewShape } from '@monorepo/space';
+// import { makeUuid } from '@monorepo/simple-types';
+// import { SHAPE_TYPES, TEventNewShape } from '@monorepo/space';
 import { NewIframeForm, NewIframeFormData } from '@monorepo/socials/frontend';
 import {
   NewNodeUserForm,
@@ -231,9 +231,9 @@ export const ContextMenuLogic = ({
   // get the origin node data
   const originNodeData = from && sd.nodes.get(from.node);
 
-  const originServerId = originNodeData?.data?.project_server_id as string;
-  const originServer =
-    originServerId && sd.projectServers.get(`${originServerId}`);
+  // const originServerId = originNodeData?.data?.project_server_id as string;
+  // const originServer =
+  //   originServerId && sd.projectServers.get(`${originServerId}`);
 
   //
 
@@ -381,7 +381,7 @@ export const ContextMenuLogic = ({
     });
   }, [dispatcher, from, originNodeData, refCoordinates, viewId]);
 
-  */
+  //
 
   const onNewTerminal = useCallback(() => {
     const client_id =
@@ -404,7 +404,7 @@ export const ContextMenuLogic = ({
       });
     }
   }, [dispatcher, from, originServer, refCoordinates, viewId]);
-
+  */
   //
 
   const volume_action = useAction<NewVolumeFormData>(
@@ -464,7 +464,7 @@ export const ContextMenuLogic = ({
     });
   }, [dispatcher, refCoordinates, viewId]);
 
-  //
+  /*
 
   const onNewGroup = useCallback(() => {
     dispatcher.dispatch({
@@ -499,7 +499,7 @@ export const ContextMenuLogic = ({
     dispatcher.dispatch(event);
   }, [dispatcher, refCoordinates, viewId]);
 
-  //
+  */
 
   const getHiddenNodesByType = (type: string) => {
     return filterOutNodes
@@ -514,6 +514,7 @@ export const ContextMenuLogic = ({
       viewId: viewId,
       position: refCoordinates,
       new: [
+        /*
         {
           title: 'Group',
           onClick: onNewGroup,
@@ -526,6 +527,7 @@ export const ContextMenuLogic = ({
           disabled: false,
           hiddenNodes: getHiddenNodesByType('shape'),
         },
+        */
         { separator: true },
 
         {
@@ -544,7 +546,7 @@ export const ContextMenuLogic = ({
           ),
           hiddenNodes: getHiddenNodesByType('jupyter-kernel'),
         },
-        */
+        
         {
           title: 'Terminal',
           onClick: onNewTerminal,
@@ -554,7 +556,7 @@ export const ContextMenuLogic = ({
           ),
           hiddenNodes: getHiddenNodesByType('jupyter-terminal'),
         },
-        /*
+        
         {
           title: 'Code Cell',
           onClick: onNewCodeCell,
@@ -623,15 +625,15 @@ export const ContextMenuLogic = ({
     from,
     // kernel_action.open,
     originNodeData,
-    onNewTerminal,
+    // onNewTerminal,
     // onNewCodeCell,
     // v_action.open,
     onNewChatBox,
     youtube_action.open,
     notion_action.open,
     onNewTextEditor,
-    onNewGroup,
-    onNewShape,
+    // onNewGroup,
+    // onNewShape,
     iframe_action.open,
     nodeUser_action.open,
   ]);

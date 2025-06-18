@@ -2,16 +2,15 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { MockCollaborativeContext } from '@monorepo/collab-engine';
 import { Logger } from '@monorepo/log';
-
-import { HolistixSpace } from '../../components/holistix-space';
-import { Group } from '../../components/group/group';
-import { STORY_VIEW_ID } from '../story-holistix-space';
-import { loadStoryData } from './loader';
-
+import { TSpaceMenuEntries, TSpaceMenuEntry } from '@monorepo/module/frontend';
 import {
   moduleBackend as coreBackend,
   moduleFrontend as coreFrontend,
 } from '@monorepo/core';
+
+import { HolistixSpace } from '../../components/holistix-space';
+import { STORY_VIEW_ID } from '../story-holistix-space';
+import { loadStoryData } from './loader';
 import { moduleBackend as spaceBackend } from '../../..';
 import { moduleFrontend as spaceFrontend } from '../../../frontend';
 
@@ -27,11 +26,15 @@ const modulesBackend = [
 
 const modulesFrontend = [coreFrontend, spaceFrontend];
 
-//
-
-const nodeTypes = {
-  group: Group,
+const spaceMenuEntries: TSpaceMenuEntries = (args) => {
+  return modulesFrontend.reduce((acc, module) => {
+    return [...acc, ...module.spaceMenuEntries(args)];
+  }, [] as TSpaceMenuEntry[]);
 };
+
+const nodeTypes = modulesFrontend.reduce((acc, module) => {
+  return { ...acc, ...module.nodes };
+}, {});
 
 //
 
@@ -55,7 +58,7 @@ const StoryWrapper = () => {
         <HolistixSpace
           viewId={STORY_VIEW_ID}
           nodeTypes={nodeTypes}
-          spaceMenuEntries={() => []}
+          spaceMenuEntries={spaceMenuEntries}
         />
       </div>
     </MockCollaborativeContext>

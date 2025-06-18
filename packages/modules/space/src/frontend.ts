@@ -27,6 +27,8 @@ export type { TNodeContext } from './lib/components/apis/types/node';
 
 export { HolistixSpace } from './lib/components/holistix-space';
 
+import { spaceMenuEntries } from './lib/space-menu';
+
 //
 
 export const moduleFrontend: ModuleFrontend = {
@@ -35,7 +37,7 @@ export const moduleFrontend: ModuleFrontend = {
     loadSharedData: Space_loadData,
     deps: ['core'],
   },
-  spaceMenuEntries: () => [],
+  spaceMenuEntries,
   nodes: {
     group: Group,
     shape: Shape,
