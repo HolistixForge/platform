@@ -5,13 +5,13 @@ import { TEdge } from '@monorepo/core';
 import { defaultGraphView, TGraphView } from '../../space-types';
 import { graph1 } from './graph-1';
 import { TSpaceSharedData } from '../../space-shared-model';
-import { STORY_VIEW_ID } from '../story-space';
+import { STORY_VIEW_ID } from '../story-holistix-space';
 
 //
 
 //
 
-export const loadStoryGraph = (
+const loadStoryGraph = (
   gv: TGraphView,
   nodes: Map<string, TGraphNode>,
   edges: Array<TEdge>

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { useTestBoolean } from '@monorepo/ui-base';
-import { MockSpace } from '@monorepo/space/stories';
+import { StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss } from '@monorepo/space/stories';
 
 import {
   NodeChatAnchorInternal,
@@ -13,26 +13,28 @@ import {
 const StoryWrapper = (
   props: Pick<
     NodeChatAnchorInternalProps,
-    | 'nodeId'
-    | 'status'
-    | 'showSideComment'
-    | 'isOpened'
-    | 'title'
-    | 'unreadCount'
+    'status' | 'showSideComment' | 'isOpened' | 'title' | 'unreadCount'
   > & { selected: boolean }
 ) => {
   //
   const { is: isOpened, set: open } = useTestBoolean(props.isOpened);
 
+  const nodeId = 'whatever';
+
   return (
-    <MockSpace selected={props.selected} isOpened={isOpened}>
+    <StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss
+      nodeId={nodeId}
+      selected={props.selected}
+      isOpened={isOpened}
+    >
       <NodeChatAnchorInternal
+        nodeId={nodeId}
         onOpen={open}
         {...props}
         isOpened={isOpened}
         onClose={() => {}}
       />
-    </MockSpace>
+    </StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss>
   );
 };
 
@@ -65,7 +67,6 @@ type Story = StoryObj<typeof StoryWrapper>;
 
 export const Closed_Default: Story = {
   args: {
-    nodeId: 'node-4',
     status: 'default',
     showSideComment: true,
     isOpened: false,
@@ -76,7 +77,6 @@ export const Closed_Default: Story = {
 
 export const Closed_New: Story = {
   args: {
-    nodeId: 'node-4',
     status: 'new',
     showSideComment: true,
     isOpened: false,
@@ -87,7 +87,6 @@ export const Closed_New: Story = {
 
 export const Closed_Resolved: Story = {
   args: {
-    nodeId: 'node-4',
     status: 'resolved',
     showSideComment: true,
     isOpened: false,
@@ -98,7 +97,6 @@ export const Closed_Resolved: Story = {
 
 export const Opened_Default: Story = {
   args: {
-    nodeId: 'node-4',
     status: 'default',
     showSideComment: true,
     isOpened: true,
@@ -109,7 +107,6 @@ export const Opened_Default: Story = {
 
 export const Opened_New: Story = {
   args: {
-    nodeId: 'node-4',
     status: 'new',
     showSideComment: true,
     isOpened: true,
@@ -120,7 +117,6 @@ export const Opened_New: Story = {
 
 export const Opened_Resolved: Story = {
   args: {
-    nodeId: 'node-4',
     status: 'resolved',
     showSideComment: true,
     isOpened: true,

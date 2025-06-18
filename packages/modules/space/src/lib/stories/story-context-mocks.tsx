@@ -16,10 +16,10 @@ import { SpaceContext, TSpaceContext } from '../components/spaceContext';
 import { TNodeContext } from '../components/apis/types/node';
 import { TSpaceSharedData } from '../space-shared-model';
 import { CollabSpaceState } from '../components/collab-space-state';
-import { STORY_VIEW_ID } from './story-space';
+import { STORY_VIEW_ID } from './story-holistix-space';
 import { WhiteboardMode } from '../components/holistix-space';
 
-import { moduleBackend as spaceBackend } from '../../';
+import { moduleBackend as spaceBackend } from '../..';
 import { moduleFrontend as spaceFrontend } from '../../frontend';
 
 //
@@ -37,15 +37,13 @@ const backChunks: TCollaborativeChunk[] = [
   spaceBackend.collabChunk,
 ];
 
-export const MockSpace = ({
+//
+
+export const StoryMock_CollaborativeContext_SpaceContext = ({
   children,
-  selected,
-  isOpened = true,
   callback,
 }: {
   children: ReactNode;
-  selected?: boolean;
-  isOpened?: boolean;
   callback?: (context: TCollaborationContext) => void;
 }) => {
   //
@@ -57,22 +55,88 @@ export const MockSpace = ({
       getRequestContext={() => ({})}
       callback={callback}
     >
-      <MockSpaceContext>
-        <MockSpaceBackground />
-        <MockReactFlowNodeWrapper
-          selected={selected || false}
-          isOpened={isOpened}
-        >
-          {children}
-        </MockReactFlowNodeWrapper>
-      </MockSpaceContext>
+      <StoryMockSpaceContext>{children}</StoryMockSpaceContext>
     </MockCollaborativeContext>
   );
 };
 
 //
 
-const MockSpaceContext = ({ children }: { children: ReactNode }) => {
+export const StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss = ({
+  children,
+  selected,
+  isOpened = true,
+  nodeId = 'whatever',
+  inputs,
+  outputs,
+}: {
+  children: ReactNode;
+  selected?: boolean;
+  isOpened?: boolean;
+  nodeId?: string;
+  inputs?: number;
+  outputs?: number;
+}) => {
+  //
+
+  return (
+    <StoryMock_CollaborativeContext_SpaceContext
+      callback={({ sharedData, dispatcher, sharedTypes }) => {
+        sharedTypes.transaction(async () => {
+          const connectors = [];
+
+          if (inputs !== undefined) {
+            connectors.push({
+              connectorName: 'inputs',
+              pins: Array.from({ length: inputs }, (_, i) => ({
+                id: `input-${i + 1}`,
+                pinName: `input-${i + 1}`,
+              })),
+            });
+          }
+
+          if (outputs !== undefined) {
+            connectors.push({
+              connectorName: 'outputs',
+              pins: Array.from({ length: outputs }, (_, i) => ({
+                id: `output-${i + 1}`,
+                pinName: `output-${i + 1}`,
+              })),
+            });
+          }
+
+          (sharedData as TCoreSharedData).nodes.set(nodeId, {
+            root: true,
+            id: nodeId,
+            name: nodeId,
+            type: 'whatever',
+            connectors,
+          });
+        });
+
+        dispatcher.dispatch({
+          type: 'space:new-view',
+          viewId: STORY_VIEW_ID,
+        });
+      }}
+    >
+      <StoryMockSpaceContext>
+        <MockSpaceBackground />
+        <MockReactFlowNodeCSS selected={selected || false} isOpened={isOpened}>
+          {children}
+        </MockReactFlowNodeCSS>
+      </StoryMockSpaceContext>
+    </StoryMock_CollaborativeContext_SpaceContext>
+  );
+};
+
+//
+
+export const StoryMockSpaceContext = ({
+  children,
+}: {
+  children: ReactNode;
+}) => {
   const sdm = useShareDataManager<TSpaceSharedData & TCoreSharedData>();
 
   const context: TSpaceContext = useMemo(() => {
@@ -94,7 +158,7 @@ const MockSpaceContext = ({ children }: { children: ReactNode }) => {
 
 //
 
-export const MockSpaceBackground = () => (
+const MockSpaceBackground = () => (
   <svg
     className="react-flow__background"
     style={{
@@ -129,7 +193,7 @@ export const MockSpaceBackground = () => (
 
 //
 
-export const MockReactFlowNodeWrapper = ({
+const MockReactFlowNodeCSS = ({
   children,
   selected,
   isOpened,

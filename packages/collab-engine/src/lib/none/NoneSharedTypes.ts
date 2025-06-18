@@ -25,12 +25,11 @@ class MyMap<T extends TJson>
   extends Observable<(event: TEvent) => void>
   implements SharedMap<T>
 {
-  _sm: NoneSharedTypes;
+  _nsts: NoneSharedTypes[] = [];
   _map: Map<string, T> = new Map<string, T>();
 
-  constructor(sm: NoneSharedTypes) {
-    super();
-    this._sm = sm;
+  registerNoneSharedTypeListener(nst: NoneSharedTypes) {
+    this._nsts.push(nst);
   }
 
   toJSON(): { [k: string]: T } {
@@ -51,7 +50,7 @@ class MyMap<T extends TJson>
 
   set(k: string, o: T): void {
     this._map.set(k, o);
-    this._sm.flagChange(this._observer);
+    this._nsts.forEach((nst) => nst.flagChange(this._observer));
   }
 
   get(k: string): T {
@@ -80,11 +79,10 @@ class MyArray<T extends TJson>
   implements SharedArray<T>
 {
   _array: Array<T> = [];
-  _sm: NoneSharedTypes;
+  _nsts: NoneSharedTypes[] = [];
 
-  constructor(sm: NoneSharedTypes) {
-    super();
-    this._sm = sm;
+  registerNoneSharedTypeListener(nst: NoneSharedTypes) {
+    this._nsts.push(nst);
   }
 
   filter(predicate: (value: T, index: number) => boolean): T[] {
@@ -106,12 +104,12 @@ class MyArray<T extends TJson>
 
   delete(index: number, length?: number): void {
     this._array.splice(index, length);
-    this._sm.flagChange(this._observer);
+    this._nsts.forEach((nst) => nst.flagChange(this._observer));
   }
 
   push(o: T[]): number {
     this._array = this._array.concat(o);
-    this._sm.flagChange(this._observer);
+    this._nsts.forEach((nst) => nst.flagChange(this._observer));
     return this._array.length - 1;
   }
 
@@ -143,8 +141,8 @@ class MyArray<T extends TJson>
 //
 
 export class NoneSharedTypes extends SharedTypes {
-  private static _sharedMaps: Map<string, SharedMap<any>> = new Map();
-  private static _sharedArrays: Map<string, SharedArray<any>> = new Map();
+  private static _sharedMaps: Map<string, MyMap<any>> = new Map();
+  private static _sharedArrays: Map<string, MyArray<any>> = new Map();
   _changes: Array<(e: TEvent) => void> = [];
   id: string;
 
@@ -167,11 +165,14 @@ export class NoneSharedTypes extends SharedTypes {
 
   getSharedMap<T extends TJson>(name?: string): SharedMap<T> {
     const key = `${this.id}::${name || 'default'}`;
-    let map = NoneSharedTypes._sharedMaps.get(key) as SharedMap<T>;
+    let map = NoneSharedTypes._sharedMaps.get(key);
 
     if (!map) {
-      map = new MyMap<T>(this);
+      map = new MyMap<T>();
+      map.registerNoneSharedTypeListener(this);
       NoneSharedTypes._sharedMaps.set(key, map);
+    } else {
+      map.registerNoneSharedTypeListener(this);
     }
 
     return map;
@@ -179,11 +180,14 @@ export class NoneSharedTypes extends SharedTypes {
 
   getSharedArray<T extends TJson>(name?: string): SharedArray<T> {
     const key = `${this.id}::${name || 'default'}`;
-    let array = NoneSharedTypes._sharedArrays.get(key) as SharedArray<T>;
+    let array = NoneSharedTypes._sharedArrays.get(key);
 
     if (!array) {
-      array = new MyArray<T>(this);
+      array = new MyArray<T>();
+      array.registerNoneSharedTypeListener(this);
       NoneSharedTypes._sharedArrays.set(key, array);
+    } else {
+      array.registerNoneSharedTypeListener(this);
     }
 
     return array;

@@ -11,8 +11,6 @@ getRequestContext => getRequestExports
 
 gatewayStopNotify
 
-MockSpace
-
 //
 
 select username, s.user_id, created, last_access

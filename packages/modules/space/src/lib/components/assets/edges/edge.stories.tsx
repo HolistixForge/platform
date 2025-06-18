@@ -15,7 +15,8 @@ import '@xyflow/react/dist/style.css';
 import { EEdgeSemanticType, TEdge } from '@monorepo/core';
 
 import { EdgeComponent, LabelEnd, LabelMiddle, LabelStart } from './edge';
-import { EdgeShape, TEdgeRenderProps } from '../../../apis/types/edge';
+import { EdgeShape, TEdgeRenderProps } from '../../apis/types/edge';
+import { StoryMock_CollaborativeContext_SpaceContext } from '../../../stories/story-context-mocks';
 
 //
 type NData = { id: string };
@@ -127,14 +128,16 @@ const StoryWrapper = ({ edgeShape }: { edgeShape: EdgeShape }) => {
 
   return (
     <div style={{ width: 'calc(100vw - 50px)', height: 'calc(100vh - 50px)' }}>
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        edgeTypes={edgeTypes}
-        nodeTypes={nodeTypes}
-      >
-        <Background />
-      </ReactFlow>
+      <StoryMock_CollaborativeContext_SpaceContext>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          edgeTypes={edgeTypes}
+          nodeTypes={nodeTypes}
+        >
+          <Background />
+        </ReactFlow>
+      </StoryMock_CollaborativeContext_SpaceContext>
     </div>
   );
 };

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { useTestBoolean } from '@monorepo/ui-base';
 import { TNodeContext } from '@monorepo/space/frontend';
-import { StoryNode, STORY_NODE_ID } from '@monorepo/space/stories';
+import { StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss } from '@monorepo/space/stories';
 
 import { NodeServerInternal } from './node-server';
 import {
@@ -42,7 +42,11 @@ const StoryWrapper = (
   const state = useMockServerBehaviours(props);
 
   return (
-    <StoryNode selected={props.selected} isOpened={isOpened}>
+    <StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss
+      selected={props.selected}
+      isOpened={isOpened}
+      outputs={0}
+    >
       <NodeServerInternal
         filterOut={props.filterOut}
         selected={props.selected}
@@ -63,7 +67,7 @@ const StoryWrapper = (
         id={props.id}
         {...state}
       />
-    </StoryNode>
+    </StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss>
   );
 };
 
@@ -186,7 +190,6 @@ type Story = StoryObj<typeof StoryWrapper>;
 
 export const NewServerLocationNone: Story = {
   args: {
-    id: STORY_NODE_ID,
     selected: true,
     expanded: true,
     ...newServerLocationNoneStory(),
@@ -197,7 +200,6 @@ export const NewServerLocationNone: Story = {
 
 export const CloudRunning: Story = {
   args: {
-    id: STORY_NODE_ID,
     selected: true,
     expanded: true,
     ...cloudRunningStory(),
@@ -208,7 +210,6 @@ export const CloudRunning: Story = {
 
 export const CloudStopped: Story = {
   args: {
-    id: STORY_NODE_ID,
     selected: true,
     expanded: true,
     ...cloudStoppedStory(),
@@ -219,7 +220,6 @@ export const CloudStopped: Story = {
 
 export const CloudRunningRecentActivity: Story = {
   args: {
-    id: STORY_NODE_ID,
     selected: true,
     expanded: true,
     ...recentActivityStory(),
@@ -230,7 +230,6 @@ export const CloudRunningRecentActivity: Story = {
 
 export const HostedNotAliveCurrentUserHosting: Story = {
   args: {
-    id: STORY_NODE_ID,
     selected: true,
     expanded: true,
     ...hostedNotAliveCurrentUserHosting(),
@@ -241,7 +240,6 @@ export const HostedNotAliveCurrentUserHosting: Story = {
 
 export const HostedNotAliveCurrentUserNotHosting: Story = {
   args: {
-    id: STORY_NODE_ID,
     selected: true,
     expanded: true,
     ...hostedNotAliveCurrentUserNotHosting(),
@@ -252,7 +250,6 @@ export const HostedNotAliveCurrentUserNotHosting: Story = {
 
 export const HostedWithServices: Story = {
   args: {
-    id: STORY_NODE_ID,
     selected: true,
     expanded: true,
     ...hostedWithServicesStory(),

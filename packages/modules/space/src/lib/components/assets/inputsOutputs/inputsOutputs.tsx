@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { Handle, Position, useUpdateNodeInternals } from '@xyflow/react';
 
 import { useDispatcher } from '@monorepo/collab-engine';
+import { useRegisterListener } from '@monorepo/simple-types';
 
 import { icons } from './icons';
 import { Slot } from '../slot/Slot';
@@ -45,6 +46,14 @@ const getHandleFromEvent = (event: React.MouseEvent) => {
 
 export const useConnector = (nodeId: string, connectorName: string) => {
   const { spaceState, viewId } = useSpaceContext();
+
+  // TODO_CONNECTOR: needed to update the connector if sharedData.nodes (TGraphNode) conectors changed
+  // but it is too compute intensive, would need to use a more specific listeners
+  // only on 'nodes' and not on 'graphViews', 'edges'
+  // TODO_SPACE_STATE: what the point of CollabSpaceState, SpaceState anyway ?
+
+  // useRegisterListener(spaceState, 'useConnector');
+
   const dispatcher = useDispatcher<TSpaceEvent>();
 
   const updateNodeInternals = useUpdateNodeInternals();

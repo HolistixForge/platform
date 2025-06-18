@@ -88,6 +88,7 @@ export class LocalOverrider<
       if (!this.observers[key]) this.observers[key] = [];
       this.observers[key].push(observer);
     });
+    // observer();
   }
 
   unobserve(keys: Array<keyof TSharedData>, observer: () => void) {

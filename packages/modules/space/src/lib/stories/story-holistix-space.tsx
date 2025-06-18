@@ -12,7 +12,12 @@ import { TSpaceSharedData } from '../space-shared-model';
 
 export const STORY_VIEW_ID = 'space-story';
 
-export const StorySpace = (props: Omit<HolistixSpaceProps, 'viewId'>) => {
+//
+
+/** HolistixSpace but initialise a view with id {STORY_VIEW_ID} */
+export const StoryHolistixSpace = (
+  props: Omit<HolistixSpaceProps, 'viewId'>
+) => {
   const dispatcher = useDispatcher();
 
   const view = useSharedData<TSpaceSharedData>(['graphViews'], (sd) =>

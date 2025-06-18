@@ -105,6 +105,7 @@ export const MockCollaborativeContext = ({
   const [ready, setReady] = useState(callback ? false : true);
 
   useEffect(() => {
+    console.log('MockCollaborativeContext: run callback', context);
     callback?.(context);
     setReady(true);
   }, [callback, context]);

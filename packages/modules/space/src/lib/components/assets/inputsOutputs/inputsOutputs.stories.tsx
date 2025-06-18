@@ -1,16 +1,30 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { InputsOutputs, InputsOutputsProps } from './inputsOutputs';
-import { MockSpace } from '../../../stories/mockSpace';
+import { InputsOutputs } from './inputsOutputs';
+import { StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss } from '../../../stories/story-context-mocks';
 
 //
 
-const InputStory = (props: InputsOutputsProps) => {
+const StoryWrapper = (props: {
+  connectorName: 'inputs' | 'outputs';
+  pinCount?: number;
+}) => {
+  const nodeId = 'whatever';
+
   return (
-    <MockSpace>
+    <StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss
+      nodeId={nodeId}
+      inputs={props.pinCount}
+      outputs={props.pinCount}
+    >
+      <p style={{ height: '100px' }}>
+        This story does show the correct pin count sometimes. it is due to an
+        identified missing refresh/update of data. look for TODO_CONNECTOR in
+        the code
+      </p>
       <div style={{ position: 'relative' }}>
-        <InputsOutputs {...props} />
+        <InputsOutputs nodeId={nodeId} {...props} />
       </div>
-    </MockSpace>
+    </StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss>
   );
 };
 
@@ -18,12 +32,12 @@ const InputStory = (props: InputsOutputsProps) => {
 
 const meta = {
   title: 'Modules/Space/Components/Inputs Outputs',
-  component: InputStory,
+  component: StoryWrapper,
   parameters: {
     layout: 'centered',
   },
   argTypes: {},
-} satisfies Meta<typeof InputsOutputs>;
+} satisfies Meta<typeof StoryWrapper>;
 
 //
 
@@ -31,34 +45,34 @@ export default meta;
 
 //
 
-type Story = StoryObj<typeof InputsOutputs>;
+type Story = StoryObj<typeof StoryWrapper>;
 
 //
 
 export const Simple_Input: Story = {
   args: {
-    nodeId: 'node-4',
     connectorName: 'inputs',
+    pinCount: 0,
   },
 };
 
 export const Simple_Ouput: Story = {
   args: {
-    nodeId: 'node-4',
     connectorName: 'outputs',
+    pinCount: 0,
   },
 };
 
 export const Piano_Input: Story = {
   args: {
-    nodeId: 'node-1',
     connectorName: 'inputs',
+    pinCount: 4,
   },
 };
 
 export const Piano_Ouput: Story = {
   args: {
-    nodeId: 'node-1',
     connectorName: 'outputs',
+    pinCount: 4,
   },
 };

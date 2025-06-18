@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { playAdd__hover, useTestBoolean } from '@monorepo/ui-base';
 import { nodeViewDefaultStatus } from '@monorepo/space';
-import { StoryNode, STORY_NODE_ID } from '@monorepo/space/stories';
+import { StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss } from '@monorepo/space/stories';
 
 import { NodeVault, NodeVaultProps } from './node-vault';
 
@@ -23,7 +23,12 @@ const StoryWrapper = (
   } = useTestBoolean(props.expanded);
 
   return (
-    <StoryNode selected={props.selected} isOpened={isOpened}>
+    <StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss
+      inputs={6}
+      outputs={7}
+      selected={props.selected}
+      isOpened={isOpened}
+    >
       <NodeVault
         {...props}
         expand={expand}
@@ -36,7 +41,7 @@ const StoryWrapper = (
         open={open}
         close={close}
       />
-    </StoryNode>
+    </StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss>
   );
 };
 
@@ -71,7 +76,6 @@ type Story = StoryObj<typeof StoryWrapper>;
 
 export const Closed: Story = {
   args: {
-    id: STORY_NODE_ID,
     color: 'var(--c-red-4)',
     inputs: 6,
     outputs: 7,
@@ -82,7 +86,6 @@ export const Closed: Story = {
 
 export const Closed_Hover: Story = {
   args: {
-    id: STORY_NODE_ID,
     color: 'var(--c-red-4)',
     inputs: 6,
     outputs: 7,
@@ -94,7 +97,6 @@ export const Closed_Hover: Story = {
 
 export const Opened: Story = {
   args: {
-    id: STORY_NODE_ID,
     color: 'var(--c-red-4)',
     inputs: 6,
     outputs: 7,

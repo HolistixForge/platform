@@ -1,7 +1,8 @@
 // Stories utils
 
-export { MockSpace } from './lib/stories/mockSpace';
+export { StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss } from './lib/stories/story-context-mocks';
 
-export { STORY_VIEW_ID, StorySpace } from './lib/stories/story-space';
-
-export { StoryNode, STORY_NODE_ID } from './lib/stories/story-node';
+export {
+  STORY_VIEW_ID,
+  StoryHolistixSpace,
+} from './lib/stories/story-holistix-space';

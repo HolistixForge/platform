@@ -3,17 +3,17 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { MockCollaborativeContext } from '@monorepo/collab-engine';
 import { Logger } from '@monorepo/log';
 
-import { HolistixSpace } from '../components/holistix-space';
-import { Group } from '../components/group/group';
-import { STORY_VIEW_ID } from './story-space';
-import { loadStoryData } from './graphs-data/loader';
+import { HolistixSpace } from '../../components/holistix-space';
+import { Group } from '../../components/group/group';
+import { STORY_VIEW_ID } from '../story-holistix-space';
+import { loadStoryData } from './loader';
 
 import {
   moduleBackend as coreBackend,
   moduleFrontend as coreFrontend,
 } from '@monorepo/core';
-import { moduleBackend as spaceBackend } from '../../';
-import { moduleFrontend as spaceFrontend } from '../../frontend';
+import { moduleBackend as spaceBackend } from '../../..';
+import { moduleFrontend as spaceFrontend } from '../../../frontend';
 
 //
 
@@ -44,9 +44,11 @@ const StoryWrapper = () => {
         console.log('getRequestContext', e);
         return {};
       }}
-      callback={({ sharedData }) => {
-        console.log('callback', sharedData);
-        loadStoryData(sharedData as any);
+      callback={({ sharedData, sharedTypes }) => {
+        sharedTypes.transaction(async () => {
+          console.log('callback', sharedData);
+          loadStoryData(sharedData as any);
+        });
       }}
     >
       <div style={{ height: '100vh', width: '100vw' }}>
