@@ -20,6 +20,17 @@ export const LoginPage = () => {
   );
 };
 
+export const LoginLinkedinPage = () => {
+  const { accountFQDN } = useApi();
+
+  return (
+    <LoginFormLogic
+      local={false}
+      linkedinLoginUrl={`https://${accountFQDN}/linkedin`}
+    />
+  );
+};
+
 export const ForgotPasswordPage = () => {
   return (
     <SendMagicLinkFormLogic

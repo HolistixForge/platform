@@ -33,7 +33,7 @@ export const TotpSetupForm = ({
   return (
     <div
       className="twofa-setup"
-      style={{ width: '450px', margin: '50px auto' }}
+      style={{ width: '450px', maxWidth: '100vw', margin: '50px auto' }}
     >
       <h1>Two-Factor Authentication (2FA) with TOTP</h1>
 
@@ -88,7 +88,7 @@ export type TotpLoginFormProps = {
 
 export const TotpLoginForm = ({ action }: TotpLoginFormProps) => {
   return (
-    <div style={{ width: '450px', margin: '50px auto' }}>
+    <div style={{ width: '450px', maxWidth: '100vw', margin: '50px auto' }}>
       <FormError errors={action.errors} id={'code'} />
       <TotpFieldset
         label="Code"

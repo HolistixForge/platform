@@ -1,9 +1,15 @@
-import { Countdown } from '@monorepo/ui-base';
-import { useSharedData } from './model/collab-model-chunk';
 import { useCallback } from 'react';
 
+import { Countdown } from '@monorepo/ui-base';
+import { useSharedData } from '@monorepo/collab-engine';
+import { TCoreSharedData, TProjectMeta } from '@monorepo/core';
+
+//
+
 export const GatewayCountdown = () => {
-  const meta = useSharedData(['meta'], (sd) => sd.meta.get('meta'));
+  const meta: TProjectMeta = useSharedData<TCoreSharedData>(['meta'], (sd) =>
+    sd.meta.get('meta')
+  );
 
   const cb = useCallback(() => {}, []);
 

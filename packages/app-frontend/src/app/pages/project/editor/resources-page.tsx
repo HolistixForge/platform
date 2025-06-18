@@ -2,19 +2,21 @@ import { useState } from 'react';
 
 import { ResourceBar, ServerStack } from '@monorepo/ui-views';
 import { ServerCard } from '@monorepo/servers/frontend';
-import { TServer } from '@monorepo/servers';
+
+import { TServer, TServersSharedData } from '@monorepo/servers';
 import { NewServerForm } from '@monorepo/servers/frontend';
+import { useSharedData } from '@monorepo/collab-engine';
 
 import { ProjectSidebar } from '../sidebar';
-import { useSharedData } from '../model/collab-model-chunk';
 
 //
 
 export const ResourcePage = () => {
-  const projectServers: Map<string, TServer> = useSharedData(
-    ['projectServers'],
-    (sd) => sd.projectServers
-  );
+  const projectServers: Map<string, TServer> =
+    useSharedData<TServersSharedData>(
+      ['projectServers'],
+      (sd) => sd.projectServers
+    );
 
   const [displayNewServerForm, setDisplayNewServerForm] = useState(false);
 
@@ -28,7 +30,7 @@ export const ResourcePage = () => {
         style={{
           height: '100%',
           position: 'relative',
-          maxHeight: 'calc(100vh - 76px)',
+          maxHeight: 'calc(100dvh - 76px)',
           overflowY: 'auto',
         }}
       >

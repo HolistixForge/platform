@@ -367,7 +367,7 @@ export const ReactflowLayer = ({
     <ReactFlow
       defaultViewport={toReactFlowViewport(INITIAL_VIEWPORT)}
       maxZoom={1}
-      minZoom={0.05}
+      minZoom={0.001}
       nodes={translateNodes(spaceState.getNodes(), viewId)}
       edges={translateEdges(spaceState.getEdges())}
       nodeTypes={nodeTypes}

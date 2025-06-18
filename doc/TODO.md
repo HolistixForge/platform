@@ -1,11 +1,7 @@
 ⚠️ Antoine's stuffs
 
-Ctrl F : MockColl...
-Ctrl F : extracontext
-Ctrl F : extraArgs
-
-extraArgs => requestExports
-extraContext => modulesExports
+Ctrl F : extracontext => modulesExports
+Ctrl F : extraArgs => requestExports
 getRequestContext => getRequestExports
 \*CollabContext =>
 
@@ -20,20 +16,19 @@ servers module exports: register images
 TODO_CONNECTOR
 TODO_SPACE_STATE
 
-//
-
-select username, s.user_id, created, last_access
-from sessions s left join users u on (s.user_id = u.user_id)
-where s.user_id = '91b1147b-845b-429e-bac3-2ac5b1a2c3ba' OR s.user_id = 'e4615ca5-636d-4f0d-b457-ff575a858f37'
-order by last_access desc;
-
-select username, s.user_id, created, last_access
-from sessions s left join users u on (s.user_id = u.user_id)
-order by last_access desc;
-
 Daily backup
 
-pointer:
+N8N: SAML based authentication ?
+
+tab bar responsive
+
+UI hierarchie level:
+niveau 1 : niveau abstraction / hierarchie
+niveau 2 : tab bar
+niveau 3 : feature bar
+niveau 4 : dans un tab : choisir vue space | grid | document
+
+collabs pointer:
 
 - remove spring ?
 

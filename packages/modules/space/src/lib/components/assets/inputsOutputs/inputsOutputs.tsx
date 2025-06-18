@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Handle, Position, useUpdateNodeInternals } from '@xyflow/react';
 
 import { useDispatcher } from '@monorepo/collab-engine';
@@ -60,6 +60,8 @@ export const useConnector = (nodeId: string, connectorName: string) => {
 
   const c = spaceState.getConnector(nodeId, connectorName);
 
+  const [isHovered, setIsHovered] = useState(false);
+
   // if (!c) throw new Error('oops');
 
   const {
@@ -88,34 +90,44 @@ export const useConnector = (nodeId: string, connectorName: string) => {
 
   //
 
-  const handleMouseOver = useCallback((event: React.MouseEvent) => {
-    const h = getHandleFromEvent(event);
-    const { connectorName, pinName } = fromPinId(h.handleId);
-    dispatcher.dispatch({
-      type: 'space:highlight',
-      nid: nodeId,
-      connectorName,
-      pinName,
-      viewId,
-    });
-  }, []);
+  const handleMouseOver = useCallback(
+    (event: React.MouseEvent) => {
+      if (isHovered) return;
+      setIsHovered(true);
+      const h = getHandleFromEvent(event);
+      const { connectorName, pinName } = fromPinId(h.handleId);
+      dispatcher.dispatch({
+        type: 'space:highlight',
+        nid: nodeId,
+        connectorName,
+        pinName,
+        viewId,
+      });
+    },
+    [isHovered]
+  );
 
   //
 
-  const handleMouseLeave = useCallback((event: React.MouseEvent) => {
-    // if handle not been clicked, remove highlight by passing a non
-    // existing {nodeId, handleId} so no edges will match
+  const handleMouseLeave = useCallback(
+    (event: React.MouseEvent) => {
+      if (!isHovered) return;
+      setIsHovered(false);
+      // if handle not been clicked, remove highlight by passing a non
+      // existing {nodeId, handleId} so no edges will match
 
-    const h = getHandleFromEvent(event);
-    const { connectorName, pinName } = fromPinId(h.handleId);
-    dispatcher.dispatch({
-      type: 'space:unhighlight',
-      nid: nodeId,
-      connectorName,
-      pinName,
-      viewId,
-    });
-  }, []);
+      const h = getHandleFromEvent(event);
+      const { connectorName, pinName } = fromPinId(h.handleId);
+      dispatcher.dispatch({
+        type: 'space:unhighlight',
+        nid: nodeId,
+        connectorName,
+        pinName,
+        viewId,
+      });
+    },
+    [isHovered]
+  );
 
   //
   if (!c) return false;
@@ -154,7 +166,7 @@ const GroupHandle = ({
 }) => {
   return (
     <div className="edges-count">
-      <span>{count}</span>
+      <span style={{ pointerEvents: 'none' }}>{count}</span>
       <Handle
         type={type}
         position={connectorName === 'inputs' ? Position.Top : Position.Bottom}

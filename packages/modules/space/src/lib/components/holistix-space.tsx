@@ -381,7 +381,13 @@ export const HolistixSpace = ({
           })}
         />
         {renderForm}
-        <ModeIndicator mode={mode} />
+
+        <ModeIndicator
+          mode={mode}
+          onModeChange={setMode}
+          onContextMenu={handleContextualMenu}
+          lastViewportRef={lastViewportRef}
+        />
       </div>
     </SpaceContext>
   );
@@ -391,27 +397,99 @@ export const HolistixSpace = ({
 //
 //
 
-export const ModeIndicator = ({ mode }: { mode: WhiteboardMode }) => {
-  if (mode === 'default') {
-    return null;
-  }
+export const ModeIndicator = ({
+  mode,
+  onModeChange,
+  onContextMenu,
+  lastViewportRef,
+}: {
+  mode: WhiteboardMode;
+  onModeChange: (mode: WhiteboardMode) => void;
+  lastViewportRef: React.MutableRefObject<Viewport>;
+  onContextMenu: (xy: TPosition, clientPosition: TPosition) => void;
+}) => {
+  const modes: { key: WhiteboardMode; label: string }[] = [
+    { key: 'default', label: 'Normal' },
+    { key: 'drawing', label: 'Drawing' },
+    { key: 'move-node', label: 'Move Node' },
+  ];
+
   return (
     <div
       style={{
         position: 'absolute',
-        top: '10px',
-        left: '10px',
-        padding: '5px 10px',
+        bottom: '10px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        display: 'flex',
+        gap: '8px',
         backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        color: 'white',
-        borderRadius: '4px',
-        fontSize: '12px',
+        borderRadius: '5px',
         zIndex: 5,
+        overflow: 'hidden',
       }}
     >
-      {mode === 'move-node'
-        ? 'Move Node Mode Active (Shift+Z to toggle)'
-        : 'Drawing Mode Active (Shift+D to toggle)'}
+      {modes.map((m) => (
+        <button
+          key={m.key}
+          onClick={() => onModeChange(m.key)}
+          style={{
+            background: mode === m.key ? '#fff' : 'transparent',
+            color: mode === m.key ? '#222' : '#fff',
+            border: 'none',
+            padding: '0px 10px',
+            fontWeight: mode === m.key ? 'bold' : 'normal',
+            cursor: 'pointer',
+            outline: 'none',
+            transition: 'background 0.2s, color 0.2s',
+            fontSize: '10px',
+            height: '30px',
+          }}
+        >
+          {m.label}
+        </button>
+      ))}
+
+      <button
+        onClick={() => {
+          const obj = {
+            ww: window.innerWidth,
+            wh: window.innerHeight,
+            zoom: lastViewportRef.current.zoom,
+            absX: lastViewportRef.current.absoluteX,
+            absY: lastViewportRef.current.absoluteY,
+            resX:
+              -lastViewportRef.current.absoluteX +
+              window.innerWidth / 2 / lastViewportRef.current.zoom,
+            resY:
+              -lastViewportRef.current.absoluteY +
+              window.innerHeight / 2 / lastViewportRef.current.zoom,
+          };
+
+          onContextMenu(
+            {
+              x: obj.resX,
+              y: obj.resY,
+            },
+            { x: window.innerWidth / 2, y: window.innerHeight / 2 }
+          );
+        }}
+        style={{
+          background: 'transparent',
+          color: '#fff',
+          border: 'none',
+          padding: '0px 10px',
+          fontWeight: 'normal',
+          cursor: 'pointer',
+          outline: 'none',
+          transition: 'background 0.2s, color 0.2s',
+          fontSize: '10px',
+          height: '30px',
+          borderLeft: '1px solid rgba(255, 255, 255, 0.2)',
+        }}
+      >
+        +
+      </button>
     </div>
   );
 };

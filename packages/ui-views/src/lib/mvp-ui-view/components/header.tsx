@@ -13,6 +13,8 @@ import {
 } from '@monorepo/ui-base';
 import { TF_User } from '@monorepo/demiurge-types';
 
+import './header.scss';
+
 //
 
 export type HeaderProps = {
@@ -36,7 +38,7 @@ export const Header = ({
 
   return (
     <nav className="app-header w-full h-[46px] flex justify-between items-center bg-[#1D1D42] px-6 relative">
-      <div className="flex items-center gap-4">
+      <div className="not-bellow-640 flex items-center gap-4">
         <p className="text-white text-[16px]">Menu</p>
         <div className="rounded-[10px] bg-white/20 w-[2px] h-[28px]" />
         <ButtonIcon Icon={icons.Save} {...NiAction} actionOriginId="save" />
@@ -70,7 +72,7 @@ export const Header = ({
             />
           </div>
         </div>*/}
-        <div className="flex items-center bg-white/5 h-[28px] rounded-[4px] py-1 px-3 gap-[20px] w-[365px]">
+        <div className="header-search not-bellow-640 flex items-center bg-white/5 h-[28px] rounded-[4px] py-1 px-3 gap-[20px]">
           <ButtonIcon
             Icon={icons.Search}
             {...NiAction}
@@ -93,7 +95,7 @@ export const Header = ({
       </div>
 
       <div className="flex items-center gap-[30px]">
-        <div className="flex items-center gap-5">
+        <div className="not-bellow-640 flex items-center gap-5">
           {host && (
             <ResourceButtons
               type={'host'}
@@ -115,7 +117,7 @@ export const Header = ({
           )}
         </div>
 
-        <div className="flex items-center gap-[10px]">
+        <div className="flex other-users-container items-center gap-[10px]">
           <div className="flex items-center">
             <UserBubble
               users={otherUsers || []}
@@ -126,11 +128,14 @@ export const Header = ({
             />
           </div>
 
-          <div className="rounded-[10px] bg-white/20 w-[2px] h-[28px]" />
+          <div className="not-bellow-640 rounded-[10px] bg-white/20 w-[2px] h-[28px]" />
 
           {user?.username ? (
             <>
-              <div style={{ '--avatar-width': '38px' } as React.CSSProperties}>
+              <div
+                className="not-bellow-640"
+                style={{ '--avatar-width': '38px' } as React.CSSProperties}
+              >
                 <UserAvatar
                   user_id="xxx"
                   username={user.username}
@@ -144,13 +149,13 @@ export const Header = ({
 
               {logoutAction && (
                 <ButtonBase
-                  className="small logout"
+                  className="small logout not-bellow-640"
                   text="Logout"
                   {...logoutAction}
                 />
               )}
 
-              <div className="flex items-center gap-[5px]">
+              <div className="not-bellow-640 flex items-center gap-[5px]">
                 <Link to="/account/settings">
                   <ButtonIcon Icon={icons.GearWheel} />
                 </Link>

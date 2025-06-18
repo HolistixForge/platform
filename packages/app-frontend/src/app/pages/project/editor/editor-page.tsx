@@ -7,7 +7,7 @@ export const EditorPage = () => {
   return (
     <div
       style={{
-        height: 'calc(100vh - var(--header-height))',
+        height: 'calc(100dvh - var(--header-height))',
         overflow: 'hidden',
       }}
     >

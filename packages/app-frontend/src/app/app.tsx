@@ -1,5 +1,5 @@
 import * as Tooltip from '@radix-ui/react-tooltip';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, useLocation } from 'react-router-dom';
 
 import { DebugComponentKeyboardShortcut } from '@monorepo/log';
 import { ApiContext } from '@monorepo/frontend-data';
@@ -8,6 +8,7 @@ import {
   AccountSettingsPage,
   EnforceUserAccountReady,
   ForgotPasswordPage,
+  LoginLinkedinPage,
   LoginPage,
   SignupPage,
   SimpleMessagePage,
@@ -16,6 +17,7 @@ import { HomePage } from './pages/home';
 import { ProjectRoot } from './pages/project/project-root';
 import { ProjectAuthorizationsPage } from './pages/project/authorizations';
 import { EditorPage } from './pages/project/editor/editor-page';
+import { MobileBlockOverlay } from './MobileBlockOverlay';
 
 //
 
@@ -24,8 +26,11 @@ import '@radix-ui/themes/styles.css';
 //
 
 export function App() {
+  const location = useLocation();
+  const hideMobileBlock = location.pathname === '/account/login-linkedin';
   return (
     <>
+      <MobileBlockOverlay disabled hide={hideMobileBlock} />
       <Tooltip.Provider>
         <DebugComponentKeyboardShortcut />
 
@@ -50,6 +55,10 @@ export function App() {
 
               <Route path="/account/signup" element={<SignupPage />} />
               <Route path="/account/login" element={<LoginPage />} />
+              <Route
+                path="/account/login-linkedin"
+                element={<LoginLinkedinPage />}
+              />
               <Route
                 path="/account/settings"
                 element={<AccountSettingsPage />}

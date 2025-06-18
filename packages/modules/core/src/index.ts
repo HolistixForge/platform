@@ -33,6 +33,7 @@ export type {
   TEdge,
   TEdgeEnd,
   EEdgeSemanticType,
+  TProjectMeta,
 } from './lib/core-types';
 
 export type { TCoreSharedData } from './lib/core-shared-model';

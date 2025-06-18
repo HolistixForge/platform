@@ -23,10 +23,10 @@ import {
 
 import {
   useDispatcher,
-  useSharedData,
   AllSharedData,
 } from '../../../model/collab-model-chunk';
-import { TValidSharedDataToCopy } from '@monorepo/collab-engine';
+
+import { TValidSharedDataToCopy, useSharedData } from '@monorepo/collab-engine';
 
 /**
  *
@@ -164,10 +164,11 @@ export const ContextMenuLogic = ({
 
   const dispatcher = useDispatcher();
 
-  const sd: TValidSharedDataToCopy<AllSharedData> = useSharedData(
-    ['nodes', 'projectServers', 'graphViews'],
-    (sd) => sd
-  );
+  const sd: TValidSharedDataToCopy<AllSharedData> =
+    useSharedData<AllSharedData>(
+      ['nodes', 'projectServers', 'graphViews'],
+      (sd) => sd
+    );
 
   const gv = sd.graphViews.get(viewId);
   const filterOutNodes = gv?.params.filterOutNodes?.map((n) => sd.nodes.get(n));

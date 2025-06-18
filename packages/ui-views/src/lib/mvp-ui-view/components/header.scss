@@ -1,0 +1,36 @@
+.header-search {
+  width: 365px;
+}
+
+@media (max-width: 640px) {
+  .not-bellow-640 {
+    display: none !important;
+  }
+
+  .header-search {
+    width: 185px;
+  }
+
+  :root {
+    --header-height: 0px !important;
+  }
+
+  .app-header {
+    height: 0 !important;
+    position: absolute;
+    z-index: 1000000;
+    pointer-events: none;
+    background: none;
+  }
+
+  .other-users-container {
+    height: 46px;
+    transform: translateY(50%);
+  }
+}
+
+@media (max-width: 1000px) {
+  .header-search {
+    width: 260px;
+  }
+}

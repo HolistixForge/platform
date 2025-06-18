@@ -769,6 +769,10 @@ const serverInitialInfo = (image_id: number) => {
       return {
         type: 'ubuntu',
       };
+    case 6:
+      return {
+        type: 'n8n'
+      }
   }
   throw new UserException('server image unknown');
 };

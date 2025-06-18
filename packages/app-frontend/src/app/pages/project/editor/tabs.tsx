@@ -7,19 +7,25 @@ import {
   ReadOnlyTree,
   TabPath,
   TabPayload,
+  TTabsSharedData,
+  TTabsTree,
 } from '@monorepo/tabs';
 import { useCurrentUser } from '@monorepo/frontend-data';
+import { useSharedData } from '@monorepo/collab-engine';
 import { serviceUrl } from '@monorepo/servers';
 
+import { useDispatcher } from '../model/collab-model-chunk';
+import { TServer, TServersSharedData } from '@monorepo/servers';
 import { NodeEditorView } from './node-editor/node-editor-view';
 import { ResourcePage } from './resources-page';
-import { useDispatcher, useSharedData } from '../model/collab-model-chunk';
 
 //
 
 export const EditorTabsSystemLogic = () => {
   //
-  const sdTabs = useSharedData(['tabs'], (d) => d.tabs.get('unique'));
+  const sdTabs: TTabsTree = useSharedData<TTabsSharedData>(['tabs'], (d) =>
+    d.tabs.get('unique')
+  );
 
   const dispatcher = useDispatcher();
 
@@ -40,7 +46,9 @@ export const EditorTabsSystemLogic = () => {
   };
 
   const onTabDelete = (path: string[]) => {
-    dispatcher.dispatch({ type: 'tabs:delete-tab', path });
+    // TODO: confirm before deleting
+    if (path[0] !== 'node-editor-1' && path[0] !== 'resources-grid')
+      dispatcher.dispatch({ type: 'tabs:delete-tab', path });
   };
 
   const onTabRowAdd = (path: string[]) => {
@@ -48,7 +56,7 @@ export const EditorTabsSystemLogic = () => {
   };
 
   const onTabRename = (path: string[], newName: string) => {
-    dispatcher.dispatch({ type: 'tabs:rename-tab', path, title: newName });
+    // dispatcher.dispatch({ type: 'tabs:rename-tab', path, title: newName });
   };
 
   //
@@ -123,8 +131,9 @@ const ProjectServerUIView = (props: {
   project_server_id: number;
   service_name: string;
 }) => {
-  const server = useSharedData(['projectServers'], (sd) =>
-    sd.projectServers.get(`${props.project_server_id}`)
+  const server: TServer = useSharedData<TServersSharedData>(
+    ['projectServers'],
+    (sd) => sd.projectServers.get(`${props.project_server_id}`)
   );
 
   const url = serviceUrl(server, props.service_name);

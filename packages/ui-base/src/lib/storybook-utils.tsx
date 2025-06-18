@@ -45,7 +45,7 @@ export const useNotImplemented = () => {
     () => {
       return new Promise<void>((resolve, reject) => {
         setTimeout(() => {
-          reject(new Error('Not implemented'));
+          reject(new Error('Permission denied'));
         }, 1000);
       });
     },
