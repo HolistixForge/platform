@@ -1,15 +1,21 @@
 import * as Select from '@radix-ui/react-select';
 
-import { TG_ServerImage } from '@monorepo/frontend-data';
+import { useQueryServerImages } from '@monorepo/frontend-data';
 import {
   ButtonBase,
-  TAction,
   FormError,
   FormErrors,
   SelectFieldset,
   SelectItem,
   TextFieldset,
+  useAction,
+  DialogControlled,
 } from '@monorepo/ui-base';
+import { useDispatcher } from '@monorepo/collab-engine';
+
+import { TServerEvents } from '../servers-events';
+import { TPosition } from '@monorepo/core';
+import { useEffect } from 'react';
 
 /**
  *
@@ -25,16 +31,67 @@ export type NewServerFormData = {
  */
 
 export const NewServerForm = ({
-  images,
-  action,
+  viewId,
+  position,
+  closeForm,
 }: {
-  images?: TG_ServerImage[];
-  action: TAction<NewServerFormData>;
+  position?: TPosition;
+  viewId?: string;
+  closeForm: () => void;
 }) => {
   //
 
+  const { status, data: images } = useQueryServerImages();
+
+  const dispatcher = useDispatcher<TServerEvents>();
+
+  const action = useAction<NewServerFormData>(
+    (d) => {
+      return dispatcher.dispatch({
+        type: 'servers:new',
+        from: {
+          new: {
+            serverName: d.serverName as string,
+            imageId: d.imageId as number,
+          },
+        },
+        origin:
+          viewId && position
+            ? {
+                viewId: viewId,
+                position,
+              }
+            : undefined,
+      });
+    },
+    [dispatcher, position, viewId],
+    {
+      startOpened: true,
+      checkForm: (d, e) => {
+        if (d.imageId === undefined) e.imageId = 'Please select a server image';
+        if (!d.serverName)
+          e.serverName = 'Please choose a name for the new server';
+      },
+    }
+  );
+
+  //
+
+  useEffect(() => {
+    if (!action.isOpened) {
+      closeForm();
+    }
+  }, [action.isOpened]);
+
+  //
+
   return (
-    <>
+    <DialogControlled
+      title="New Server"
+      description="Choose a name and select an image for your new server."
+      open={action.isOpened}
+      onOpenChange={action.close}
+    >
       <FormError errors={action.errors} id="serverName" />
       <TextFieldset
         label="Name"
@@ -55,8 +112,9 @@ export const NewServerForm = ({
       >
         <Select.Group>
           <Select.Label className="SelectLabel">Images</Select.Label>
-          {images &&
-            images.map((i) => (
+          {status === 'success' &&
+            images &&
+            images._0.map((i) => (
               <SelectItem
                 key={i.image_id}
                 value={`${i.image_id}`}
@@ -79,6 +137,6 @@ export const NewServerForm = ({
           loading={action.loading}
         />
       </div>
-    </>
+    </DialogControlled>
   );
 };

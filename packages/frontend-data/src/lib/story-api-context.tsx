@@ -20,8 +20,23 @@ class FakeApiFetch extends ApiFetch {
 //
 
 class FakeGanymedeApi extends GanymedeApi {
+  ganymedeApiMock?: (r: TMyfetchRequest) => Promise<TJson>;
+
+  constructor(
+    ganymedeFQDN: string,
+    frontendFQDN: string,
+    accountApi: ApiFetch,
+    ganymedeApiMock?: (r: TMyfetchRequest) => Promise<TJson>
+  ) {
+    super(ganymedeFQDN, frontendFQDN, accountApi);
+    this.ganymedeApiMock = ganymedeApiMock;
+  }
+
   override async fetch(r: TMyfetchRequest, host?: string): Promise<TJson> {
     console.warn('Story Api Context: ganymedeApi: fetch', r, host);
+    if (this.ganymedeApiMock) {
+      return this.ganymedeApiMock(r);
+    }
     throw new Error('Not implemented');
   }
 }
@@ -30,8 +45,10 @@ class FakeGanymedeApi extends GanymedeApi {
 
 export const StoryApiContext = ({
   children,
+  ganymedeApiMock,
 }: {
   children: React.ReactNode;
+  ganymedeApiMock?: (r: TMyfetchRequest) => Promise<TJson>;
 }) => {
   const v: TApiContext = useMemo(() => {
     const accountFQDN = 'http://account-story-mock';
@@ -41,7 +58,8 @@ export const StoryApiContext = ({
     const ganymedeApi = new FakeGanymedeApi(
       ganymedeFQDN,
       frontendFQDN,
-      accountApi
+      accountApi,
+      ganymedeApiMock
     );
     const queryClient = new QueryClient();
 

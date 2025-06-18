@@ -12,7 +12,7 @@ import { NodeVolumeInternal, NodeVolumeInternalProps } from './node-volume';
 const StoryWrapper = (
   props: Pick<
     NodeVolumeInternalProps,
-    'id' | 'volume_name' | 'volume_storage' | 'filterOut'
+    'volume_name' | 'volume_storage' | 'filterOut'
   > & {
     expanded: boolean;
     selected: boolean;
@@ -34,6 +34,7 @@ const StoryWrapper = (
       outputs={0}
     >
       <NodeVolumeInternal
+        id="efa52136"
         expand={expand}
         reduce={reduce}
         viewStatus={{

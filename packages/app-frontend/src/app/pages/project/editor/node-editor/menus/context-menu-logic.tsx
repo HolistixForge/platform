@@ -8,24 +8,13 @@ import React, {
 import * as ContextMenu from '@radix-ui/react-context-menu';
 import { ChevronRightIcon } from '@radix-ui/react-icons';
 
-import { TServerEvents } from '@monorepo/servers';
 import { TPosition, TEdgeEnd } from '@monorepo/core';
-import {
-  NewServerForm,
-  NewServerFormData,
-  NewYoutubeForm,
-  NewYoutubeFormData,
-  NewVolumeForm,
-  NewVolumeFormData,
-} from '@monorepo/ui-views';
+import { NewYoutubeForm, NewYoutubeFormData } from '@monorepo/ui-views';
 import { useAction, DialogControlled } from '@monorepo/ui-base';
-import { useQueryServerImages } from '@monorepo/frontend-data';
 import {
   NewNotionDatabaseForm,
   NewNotionDatabaseFormData,
 } from '@monorepo/notion/frontend';
-// import { makeUuid } from '@monorepo/simple-types';
-// import { SHAPE_TYPES, TEventNewShape } from '@monorepo/space';
 import { NewIframeForm, NewIframeFormData } from '@monorepo/socials/frontend';
 import {
   NewNodeUserForm,
@@ -37,10 +26,7 @@ import {
   useSharedData,
   AllSharedData,
 } from '../../../model/collab-model-chunk';
-import {
-  FrontendDispatcher,
-  TValidSharedDataToCopy,
-} from '@monorepo/collab-engine';
+import { TValidSharedDataToCopy } from '@monorepo/collab-engine';
 
 /**
  *
@@ -159,46 +145,6 @@ export const ContextMenuNew = () => {
  *
  */
 
-export const useNewServerAction = (
-  dispatcher: FrontendDispatcher<TServerEvents>,
-  viewId?: string,
-  refCoordinates?: React.MutableRefObject<TPosition>
-) => {
-  const s_action = useAction<NewServerFormData>(
-    (d) => {
-      return dispatcher.dispatch({
-        type: 'servers:new',
-        from: {
-          new: {
-            serverName: d.serverName as string,
-            imageId: d.imageId as number,
-          },
-        },
-        origin:
-          viewId && refCoordinates
-            ? {
-                viewId: viewId,
-                position: {
-                  x: refCoordinates.current.x,
-                  y: refCoordinates.current.y,
-                },
-              }
-            : undefined,
-      });
-    },
-    [dispatcher, refCoordinates, viewId],
-    {
-      checkForm: (d, e) => {
-        if (d.imageId === undefined) e.imageId = 'Please select a server image';
-        if (!d.serverName)
-          e.serverName = 'Please choose a name for the new server';
-      },
-    }
-  );
-
-  return s_action;
-};
-
 //
 
 export const ContextMenuLogic = ({
@@ -213,8 +159,6 @@ export const ContextMenuLogic = ({
   children: ReactNode;
 }) => {
   //
-
-  const { status, data } = useQueryServerImages();
 
   //
 
@@ -231,44 +175,6 @@ export const ContextMenuLogic = ({
   // get the origin node data
   const originNodeData = from && sd.nodes.get(from.node);
 
-  // const originServerId = originNodeData?.data?.project_server_id as string;
-  // const originServer =
-  //   originServerId && sd.projectServers.get(`${originServerId}`);
-
-  //
-
-  const server_action = useNewServerAction(dispatcher, viewId, refCoordinates);
-
-  //
-  /*
-  const kernel_action = useAction<NewKernelFormData>(
-    (d) => {
-      const server = sd.projectServers.get(
-        `${originNodeData?.data?.project_server_id}`
-      );
-      if (server && server.type === 'jupyter')
-        return dispatcher.dispatch({
-          type: 'jupyter:new-kernel',
-          kernelName: d.kernelName as string,
-          project_server_id: server.project_server_id,
-          origin: {
-            viewId: viewId,
-            position: {
-              x: refCoordinates.current.x,
-              y: refCoordinates.current.y,
-            },
-          },
-        });
-      else throw new Error('No such server');
-    },
-    [dispatcher, originNodeData, refCoordinates, sd.projectServers, viewId],
-    {
-      checkForm: (d, e) => {
-        if (!d.kernelName) e.kernelName = 'Please enter a kernel name';
-      },
-    }
-  );
-*/
   //
 
   const youtube_action = useAction<NewYoutubeFormData>(
@@ -365,77 +271,6 @@ export const ContextMenuLogic = ({
     }
   );
 
-  /*
-
-  const onNewCodeCell = useCallback(() => {
-    dispatcher.dispatch({
-      type: 'jupyter:new-cell',
-      kernel_id: originNodeData!.data!.dkid as string,
-      origin: {
-        viewId: viewId,
-        position: {
-          x: refCoordinates.current.x,
-          y: refCoordinates.current.y,
-        },
-      },
-    });
-  }, [dispatcher, from, originNodeData, refCoordinates, viewId]);
-
-  //
-
-  const onNewTerminal = useCallback(() => {
-    const client_id =
-      originServer &&
-      originServer?.oauth.find((o) => o.service_name === 'jupyterlab')
-        ?.client_id;
-
-    if (client_id) {
-      dispatcher.dispatch({
-        type: 'jupyter:new-terminal',
-        project_server_id: originServer.project_server_id as number,
-        origin: {
-          viewId: viewId,
-          position: {
-            x: refCoordinates.current.x,
-            y: refCoordinates.current.y,
-          },
-        },
-        client_id,
-      });
-    }
-  }, [dispatcher, from, originServer, refCoordinates, viewId]);
-  */
-  //
-
-  const volume_action = useAction<NewVolumeFormData>(
-    (d) => {
-      return dispatcher.dispatch({
-        type: 'servers:new-volume',
-        name: d.name as string,
-        storage: d.storage as number,
-        origin: {
-          viewId: viewId,
-          position: {
-            x: refCoordinates.current.x,
-            y: refCoordinates.current.y,
-          },
-        },
-      });
-    },
-    [dispatcher, refCoordinates, viewId],
-    {
-      checkForm: (d, e) => {
-        if (d.storage === undefined || d.storage < 0)
-          e.storage = 'storage capacity must be greater than 0 Gi';
-        else if (d.storage > 20)
-          e.storage = 'storage capacity must be less than 20 Gi';
-        if (!d.name) e.name = 'Please choose a name for the new volume';
-      },
-    }
-  );
-
-  //
-
   const onNewChatBox = useCallback(() => {
     dispatcher.dispatch({
       type: 'chats:new-chat',
@@ -464,43 +299,6 @@ export const ContextMenuLogic = ({
     });
   }, [dispatcher, refCoordinates, viewId]);
 
-  /*
-
-  const onNewGroup = useCallback(() => {
-    dispatcher.dispatch({
-      type: 'space:new-group',
-      groupId: makeUuid(),
-      title: 'New Group',
-      origin: {
-        viewId: viewId,
-        position: {
-          x: refCoordinates.current.x,
-          y: refCoordinates.current.y,
-        },
-      },
-    });
-  }, [dispatcher, refCoordinates, viewId]);
-
-  //
-
-  const onNewShape = useCallback(() => {
-    const event: TEventNewShape = {
-      type: 'space:new-shape',
-      shapeId: makeUuid(),
-      shapeType: SHAPE_TYPES.CIRCLE, // Default to circle
-      origin: {
-        viewId: viewId,
-        position: {
-          x: refCoordinates.current.x,
-          y: refCoordinates.current.y,
-        },
-      },
-    };
-    dispatcher.dispatch(event);
-  }, [dispatcher, refCoordinates, viewId]);
-
-  */
-
   const getHiddenNodesByType = (type: string) => {
     return filterOutNodes
       ?.filter((n) => n?.type === type)
@@ -514,69 +312,6 @@ export const ContextMenuLogic = ({
       viewId: viewId,
       position: refCoordinates,
       new: [
-        /*
-        {
-          title: 'Group',
-          onClick: onNewGroup,
-          disabled: false,
-          hiddenNodes: getHiddenNodesByType('group'),
-        },
-        {
-          title: 'Shape',
-          onClick: onNewShape,
-          disabled: false,
-          hiddenNodes: getHiddenNodesByType('shape'),
-        },
-        */
-        { separator: true },
-
-        {
-          title: 'Server',
-          onClick: server_action.open,
-          disabled: from !== undefined,
-          hiddenNodes: getHiddenNodesByType('server'),
-        },
-        /*
-        {
-          title: 'Kernel',
-          onClick: kernel_action.open,
-          disabled: !(
-            originNodeData?.type === 'server' &&
-            from?.connectorName === 'outputs'
-          ),
-          hiddenNodes: getHiddenNodesByType('jupyter-kernel'),
-        },
-        
-        {
-          title: 'Terminal',
-          onClick: onNewTerminal,
-          disabled: !(
-            originNodeData?.type === 'server' &&
-            from?.connectorName === 'outputs'
-          ),
-          hiddenNodes: getHiddenNodesByType('jupyter-terminal'),
-        },
-        
-        {
-          title: 'Code Cell',
-          onClick: onNewCodeCell,
-          disabled: !(
-            (originNodeData?.type === 'jupyter-kernel' ||
-              originNodeData?.type === 'jupyter-cell') &&
-            from?.connectorName === 'outputs'
-          ),
-          hiddenNodes: getHiddenNodesByType('jupyter-cell'),
-        },
-        */
-        { separator: true },
-        /*
-        {
-          title: 'Volume',
-          onClick: v_action.open,
-          disabled: from !== undefined,
-        },
-        { separator: true },
-        */
         {
           title: 'Chat Box',
           onClick: onNewChatBox,
@@ -621,19 +356,12 @@ export const ContextMenuLogic = ({
     filterOutNodes,
     refCoordinates.current.x,
     refCoordinates.current.y,
-    server_action.open,
     from,
-    // kernel_action.open,
     originNodeData,
-    // onNewTerminal,
-    // onNewCodeCell,
-    // v_action.open,
     onNewChatBox,
     youtube_action.open,
     notion_action.open,
     onNewTextEditor,
-    // onNewGroup,
-    // onNewShape,
     iframe_action.open,
     nodeUser_action.open,
   ]);
@@ -649,42 +377,12 @@ export const ContextMenuLogic = ({
       {children}
 
       <DialogControlled
-        title="New server"
-        description="Choose a name and select an image for your new server."
-        open={server_action.isOpened}
-        onOpenChange={server_action.close}
-      >
-        <NewServerForm
-          images={status === 'success' ? data._0 : undefined}
-          action={server_action}
-        />
-      </DialogControlled>
-
-      {/*<DialogControlled
-        title="New Kernel"
-        description="Choose a name for the new kernel."
-        open={kernel_action.isOpened}
-        onOpenChange={kernel_action.close}
-      >
-        <NewKernelForm action={kernel_action} />
-      </DialogControlled>*/}
-
-      <DialogControlled
         title="New Youtube video"
         description="Paste the video's id"
         open={youtube_action.isOpened}
         onOpenChange={youtube_action.close}
       >
         <NewYoutubeForm action={youtube_action} />
-      </DialogControlled>
-
-      <DialogControlled
-        title="New Volume"
-        description="Choose a name and storage capacity for your new volume."
-        open={volume_action.isOpened}
-        onOpenChange={volume_action.close}
-      >
-        <NewVolumeForm action={volume_action} />
       </DialogControlled>
 
       <DialogControlled

@@ -4,12 +4,12 @@ import { NodeServer } from './lib/components/node-server/node-server';
 import { NodeVolume } from './lib/components/node-volume/node-volume';
 import { ModuleFrontend } from '@monorepo/module/frontend';
 import { TServer } from './lib/servers-types';
+import { serversMenuEntries } from './lib/servers-menu';
 
 export { StatusLed } from './lib/components/status-led';
-
+export { NewServerForm } from './lib/form/new-server';
 export { ServerCard, ServerCardInternal } from './lib/components/server-card';
-
-export { awsInstanceTypes } from './lib/components/cloud-instance-options';
+export { awsInstanceTypes } from './lib/form/cloud-instance-options';
 
 //
 
@@ -44,7 +44,7 @@ export const moduleFrontend: ModuleFrontend = {
     }),
     deps: ['authentication'],
   },
-  spaceMenuEntries: () => [],
+  spaceMenuEntries: serversMenuEntries,
   nodes: {
     server: NodeServer,
     volume: NodeVolume,

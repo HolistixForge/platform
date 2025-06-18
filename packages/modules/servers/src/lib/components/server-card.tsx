@@ -34,11 +34,14 @@ import {
   TServerComponentCallbacks,
   TServerComponentProps,
 } from '../servers-types';
-import { DockerOptionsForm, DockerOptionsFormData } from './docker-options';
+import {
+  DockerOptionsForm,
+  DockerOptionsFormData,
+} from '../form/docker-options';
 import {
   CloudInstanceOptionsForm,
   CloudInstanceOptionsFormData,
-} from './cloud-instance-options';
+} from '../form/cloud-instance-options';
 import { StatusLed } from './status-led';
 import { useServerProps } from './node-server/node-server';
 

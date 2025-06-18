@@ -1,12 +1,12 @@
-import { useQueryServerImages } from '@monorepo/frontend-data';
-import { DialogControlled } from '@monorepo/ui-base';
-import { ResourceBar, ServerStack, NewServerForm } from '@monorepo/ui-views';
+import { useState } from 'react';
+
+import { ResourceBar, ServerStack } from '@monorepo/ui-views';
 import { ServerCard } from '@monorepo/servers/frontend';
 import { TServer } from '@monorepo/servers';
+import { NewServerForm } from '@monorepo/servers/frontend';
 
 import { ProjectSidebar } from '../sidebar';
-import { useDispatcher, useSharedData } from '../model/collab-model-chunk';
-import { useNewServerAction } from './node-editor/menus/context-menu-logic';
+import { useSharedData } from '../model/collab-model-chunk';
 
 //
 
@@ -16,11 +16,7 @@ export const ResourcePage = () => {
     (sd) => sd.projectServers
   );
 
-  const dispatcher = useDispatcher();
-
-  const s_action = useNewServerAction(dispatcher);
-
-  const { status, data } = useQueryServerImages();
+  const [displayNewServerForm, setDisplayNewServerForm] = useState(false);
 
   const array: number[] = [];
 
@@ -38,7 +34,7 @@ export const ResourcePage = () => {
       >
         <ResourceBar title="Resources" />
         <div className="p-24">
-          <ServerStack onNewServerClick={() => s_action.open()}>
+          <ServerStack onNewServerClick={() => setDisplayNewServerForm(true)}>
             {array.map((psid) => (
               <ServerCard project_server_id={psid} />
             ))}
@@ -47,17 +43,9 @@ export const ResourcePage = () => {
       </div>
       <ProjectSidebar active="project-main" />
 
-      <DialogControlled
-        title="New server"
-        description="Choose a name and select an image for your new server."
-        open={s_action.isOpened}
-        onOpenChange={s_action.close}
-      >
-        <NewServerForm
-          images={status === 'success' ? data._0 : undefined}
-          action={s_action}
-        />
-      </DialogControlled>
+      {displayNewServerForm && (
+        <NewServerForm closeForm={() => setDisplayNewServerForm(false)} />
+      )}
     </>
   );
 };

@@ -36,7 +36,7 @@
     "**/*.stories.jsx",
     "**/*.stories.tsx"
   ],
-  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx", "../modules/jupyter/src/lib/form/new-kernel.tsx", "../modules/jupyter/src/lib/form/new-kernel.stories.tsx"],
+  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "references": [
     {
       "path": "../demiurge-types/tsconfig.lib.json"

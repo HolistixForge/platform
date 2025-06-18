@@ -26,7 +26,7 @@ import { useMockServerBehaviours } from '../server-card-mock';
 const StoryWrapper = (
   props: TServerComponentProps &
     TServerComponentCallbacks &
-    Pick<TNodeContext, 'id' | 'filterOut'> & {
+    Pick<TNodeContext, 'filterOut'> & {
       expanded: boolean;
       selected: boolean;
     }
@@ -48,6 +48,7 @@ const StoryWrapper = (
       outputs={0}
     >
       <NodeServerInternal
+        id="efa52136"
         filterOut={props.filterOut}
         selected={props.selected}
         expand={expand}
@@ -64,7 +65,6 @@ const StoryWrapper = (
         isOpened={isOpened}
         open={open}
         close={close}
-        id={props.id}
         {...state}
       />
     </StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss>
