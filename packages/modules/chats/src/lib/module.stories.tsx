@@ -3,8 +3,6 @@ import { useCallback } from 'react';
 
 import {
   TCollaborativeChunk,
-  TValidSharedData,
-  SharedTypes,
   useSharedData,
   useDispatcher,
   SharedMap,
@@ -14,11 +12,12 @@ import {
 import { randomGuys } from '@monorepo/ui-base';
 import { Logger } from '@monorepo/log';
 
-import { ChatReducer } from './chats-reducer';
-import { Chat_loadData, TChatSharedData } from './chats-shared-model';
+import { TChatSharedData } from './chats-shared-model';
 import { TChatEvent } from './chats-events';
 import { TChat } from './chats-types';
 import { ChatboxLogic } from './components/node-chat/chatbox-logic';
+import { moduleFrontend } from '../frontend';
+import { moduleBackend } from '../';
 
 //
 
@@ -26,12 +25,9 @@ Logger.setPriority(7);
 
 //
 
-const chunks: TCollaborativeChunk[] = [
-  {
-    sharedData: (st: SharedTypes) => Chat_loadData(st),
-    reducers: (sd: TValidSharedData) => [new ChatReducer()],
-  },
-];
+const frontendChunks: TCollaborativeChunk[] = [moduleFrontend.collabChunk];
+
+const backendChunks: TCollaborativeChunk[] = [moduleBackend.collabChunk];
 
 //
 
@@ -113,7 +109,12 @@ const StoryWrapper = () => {
   }, []);
 
   return (
-    <MockCollaborativeContext collabChunks={chunks} callback={cb}>
+    <MockCollaborativeContext
+      frontChunks={frontendChunks}
+      backChunks={backendChunks}
+      callback={cb}
+      getRequestContext={() => ({})}
+    >
       <ChatsGrid />
     </MockCollaborativeContext>
   );

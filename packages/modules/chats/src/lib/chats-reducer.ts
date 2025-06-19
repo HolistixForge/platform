@@ -34,7 +34,8 @@ type Ra<T> = ReduceArgs<
   TChatSharedData & TCoreSharedData,
   T,
   DispatchedEvents,
-  TExtraArgs
+  TExtraArgs,
+  undefined
 >;
 
 /**
@@ -45,7 +46,7 @@ export class ChatReducer extends Reducer<
   TChatSharedData,
   TChatEvent,
   DispatchedEvents,
-  TExtraArgs
+  TExtraArgs, undefined
 > {
   //
 
@@ -156,12 +157,12 @@ export class ChatReducer extends Reducer<
       ],
       origin: g.event.origin
         ? {
-            ...g.event.origin,
-            position: {
-              x: g.event.origin.position.x + 100,
-              y: g.event.origin.position.y + 100,
-            },
-          }
+          ...g.event.origin,
+          position: {
+            x: g.event.origin.position.x + 100,
+            y: g.event.origin.position.y + 100,
+          },
+        }
         : undefined,
     });
 

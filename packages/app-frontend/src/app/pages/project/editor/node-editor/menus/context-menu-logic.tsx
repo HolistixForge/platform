@@ -272,19 +272,6 @@ export const ContextMenuLogic = ({
     }
   );
 
-  const onNewChatBox = useCallback(() => {
-    dispatcher.dispatch({
-      type: 'chats:new-chat',
-      origin: {
-        viewId: viewId,
-        position: {
-          x: refCoordinates.current.x,
-          y: refCoordinates.current.y,
-        },
-      },
-    });
-  }, [dispatcher, refCoordinates, viewId]);
-
   //
 
   const onNewTextEditor = useCallback(() => {
@@ -313,13 +300,6 @@ export const ContextMenuLogic = ({
       viewId: viewId,
       position: refCoordinates,
       new: [
-        {
-          title: 'Chat Box',
-          onClick: onNewChatBox,
-          disabled: false,
-          hiddenNodes: getHiddenNodesByType('chat-anchor'),
-        },
-        { separator: true },
         {
           title: 'Notion Database',
           onClick: notion_action.open,
@@ -359,7 +339,6 @@ export const ContextMenuLogic = ({
     refCoordinates.current.y,
     from,
     originNodeData,
-    onNewChatBox,
     youtube_action.open,
     notion_action.open,
     onNewTextEditor,

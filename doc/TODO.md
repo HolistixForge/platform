@@ -7,7 +7,6 @@ getRequestContext => getRequestExports
 
 gatewayStopNotify
 
-chats
 notion
 socials
 

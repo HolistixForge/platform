@@ -10,7 +10,28 @@ export const moduleFrontend: ModuleFrontend = {
     loadSharedData: Chat_loadData,
     deps: [],
   },
-  spaceMenuEntries: () => [],
+  spaceMenuEntries: ({ dispatcher, from, position, viewId }) => [
+    {
+      type: 'sub-menu',
+      label: 'Chats',
+      entries: [
+        {
+          type: 'item',
+          label: 'New Chat',
+          onClick: () => {
+            dispatcher.dispatch({
+              type: 'chats:new-chat',
+              origin: {
+                viewId: viewId,
+                position: position(),
+              },
+            });
+          },
+          disabled: from !== undefined,
+        }
+      ]
+    }
+  ],
   nodes: {
     chat: NodeChatbox,
     'chat-anchor': NodeChatAnchor,
