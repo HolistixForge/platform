@@ -2,6 +2,9 @@ import { Notion_loadData } from './lib/notion-shared-model';
 import { NodeNotion } from './lib/components/node-notion/node-notion';
 import { NodeNotionTask } from './lib/components/node-notion/node-notion-task';
 import { ModuleFrontend } from '@monorepo/module/frontend';
+import { notionMenuEntries } from './lib/notion-menu';
+
+//
 
 export const moduleFrontend: ModuleFrontend = {
   collabChunk: {
@@ -9,12 +12,9 @@ export const moduleFrontend: ModuleFrontend = {
     loadSharedData: Notion_loadData,
     deps: [],
   },
-  spaceMenuEntries: () => [],
+  spaceMenuEntries: notionMenuEntries,
   nodes: {
     'notion-database': NodeNotion,
     'notion-page': NodeNotionTask,
   },
 };
-
-export { NewNotionDatabaseForm } from './lib/components/forms/new-database';
-export type { NewNotionDatabaseFormData } from './lib/components/forms/new-database';

@@ -21,51 +21,60 @@ import { TNotionSharedData } from './notion-shared-model';
 
 //
 
+type TDepsModulesExports = {
+  config: {
+    NOTION_API_KEY: string;
+  }
+}
+
 type Ra<T> = ReduceArgs<
   TNotionSharedData,
   T,
   TEventNewNode | TEventDeleteNode,
-  TExtraArgs
+  undefined,
+  TDepsModulesExports
 >;
 
-type TExtraArgs = {
-  notionApiKey: string;
-};
 
 export class NotionReducer extends Reducer<
   TNotionSharedData,
   TNotionEvent,
   never,
-  TExtraArgs
+  undefined,
+  TDepsModulesExports
 > {
   private lastSync: Date = new Date(0); // Initialize to epoch
 
-  private getNotionClient(apiKey: string) {
-    return new Client({ auth: apiKey });
+  private client: Client | null = null;
+
+  private getNotionClient(g: Ra<{}>) {
+    if (!this.client) {
+      this.client = new Client({ auth: g.extraContext.config.NOTION_API_KEY });
+    }
+    return this.client;
   }
 
   async reduce(g: Ra<TNotionEvent | TEventPeriodic>): Promise<void> {
-    const notion = this.getNotionClient(g.extraArgs.notionApiKey);
 
     switch (g.event.type) {
       case 'notion:init-database':
-        return this._initDatabase(g as Ra<TEventInitDatabase>, notion);
+        return this._initDatabase(g as Ra<TEventInitDatabase>);
 
       case 'notion:sync-database':
-        await this._fetchAndUpdateDatabase(g as Ra<TEventSyncDatabase>, notion);
+        await this._fetchAndUpdateDatabase(g as Ra<TEventSyncDatabase>);
         return;
 
       case 'notion:update-page':
-        return this._updatePage(g as Ra<TEventUpdatePage>, notion);
+        return this._updatePage(g as Ra<TEventUpdatePage>);
 
       case 'notion:create-page':
-        return this._createPage(g as Ra<TEventCreatePage>, notion);
+        return this._createPage(g as Ra<TEventCreatePage>);
 
       case 'notion:delete-page':
-        return this._deletePage(g as Ra<TEventDeletePage>, notion);
+        return this._deletePage(g as Ra<TEventDeletePage>);
 
       case 'notion:reorder-page':
-        return this._reorderPage(g as Ra<TEventReorderPage>, notion);
+        return this._reorderPage(g as Ra<TEventReorderPage>);
 
       case 'notion:load-page-node':
         return this._loadPageNode(g as Ra<TEventLoadPageNode>);
@@ -128,8 +137,8 @@ export class NotionReducer extends Reducer<
 
   //
 
-  private async _initDatabase(g: Ra<TEventInitDatabase>, notion: Client) {
-    const isOk = await this._fetchAndUpdateDatabase(g, notion);
+  private async _initDatabase(g: Ra<TEventInitDatabase>) {
+    const isOk = await this._fetchAndUpdateDatabase(g);
     if (!isOk) return;
 
     const { databaseId } = g.event;
@@ -147,12 +156,12 @@ export class NotionReducer extends Reducer<
       edges: [],
       origin: g.event.origin
         ? {
-            ...g.event.origin,
-            position: {
-              x: g.event.origin.position.x + 100,
-              y: g.event.origin.position.y + 100,
-            },
-          }
+          ...g.event.origin,
+          position: {
+            x: g.event.origin.position.x + 100,
+            y: g.event.origin.position.y + 100,
+          },
+        }
         : undefined,
     });
   }
@@ -161,8 +170,8 @@ export class NotionReducer extends Reducer<
 
   private async _fetchAndUpdateDatabase(
     g: Ra<{ databaseId: string }>,
-    notion: Client
   ): Promise<boolean> {
+
     let { databaseId } = g.event;
 
     const r = toUuid(databaseId);
@@ -171,6 +180,7 @@ export class NotionReducer extends Reducer<
     g.event.databaseId = r;
 
     try {
+      const notion = this.getNotionClient(g);
       // Fetch database metadata
       const dbResponse = await notion.databases.retrieve({
         database_id: databaseId,
@@ -227,7 +237,6 @@ export class NotionReducer extends Reducer<
       g.sd.notionDatabases.forEach((database) => {
         this._fetchAndUpdateDatabase(
           { ...g, event: { databaseId: database.id } },
-          this.getNotionClient(g.extraArgs.notionApiKey)
         );
       });
       this.lastSync = now;
@@ -238,11 +247,11 @@ export class NotionReducer extends Reducer<
 
   private async _updatePage(
     g: Ra<TEventUpdatePage>,
-    notion: Client
   ): Promise<void> {
     const { pageId } = g.event;
 
     try {
+      const notion = this.getNotionClient(g);
       // Update the page in Notion
       await notion.pages.update({
         page_id: pageId,
@@ -250,7 +259,7 @@ export class NotionReducer extends Reducer<
       });
 
       // refetch all asynchronously
-      this._fetchAndUpdateDatabase(g, notion);
+      this._fetchAndUpdateDatabase(g);
     } catch (error) {
       console.error('Failed to update page:', error);
       throw error;
@@ -259,11 +268,12 @@ export class NotionReducer extends Reducer<
 
   private async _createPage(
     g: Ra<TEventCreatePage>,
-    notion: Client
   ): Promise<void> {
     const { databaseId } = g.event;
 
     try {
+      const notion = this.getNotionClient(g);
+
       // Create page in Notion
       await notion.pages.create({
         parent: { database_id: databaseId },
@@ -271,7 +281,7 @@ export class NotionReducer extends Reducer<
       });
 
       // refetch all
-      this._fetchAndUpdateDatabase(g, notion);
+      this._fetchAndUpdateDatabase(g);
     } catch (error) {
       console.error('Failed to create page:', error);
       throw error;
@@ -280,11 +290,11 @@ export class NotionReducer extends Reducer<
 
   private async _deletePage(
     g: Ra<TEventDeletePage>,
-    notion: Client
   ): Promise<void> {
     const { databaseId, pageId } = g.event;
 
     try {
+      const notion = this.getNotionClient(g);
       // Archive the page in Notion (Notion doesn't support true deletion)
       await notion.pages.update({
         page_id: pageId,
@@ -305,11 +315,11 @@ export class NotionReducer extends Reducer<
 
   private async _reorderPage(
     g: Ra<TEventReorderPage>,
-    notion: Client
   ): Promise<void> {
     const { databaseId, pageId, newPosition } = g.event;
 
     try {
+      const notion = this.getNotionClient(g);
       const database = g.sd.notionDatabases.get(databaseId);
       if (!database) throw new Error('Database not found');
 
@@ -326,7 +336,7 @@ export class NotionReducer extends Reducer<
       });
 
       // refetch all
-      this._fetchAndUpdateDatabase(g, notion);
+      this._fetchAndUpdateDatabase(g);
     } catch (error) {
       console.error('Failed to reorder page:', error);
       throw error;

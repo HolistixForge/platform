@@ -8,6 +8,12 @@ getRequestContext => getRequestExports
 gatewayStopNotify
 
 hidden node in search bar
+const filterOutNodes = gv?.params.filterOutNodes?.map((n) => sd.nodes.get(n));
+const getHiddenNodesByType = (type: string) => {
+return filterOutNodes
+?.filter((n) => n?.type === type)
+.map((n) => ({ id: n?.id as string, name: n?.name as string }));
+};
 
 servers module exports: register images
 

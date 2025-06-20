@@ -1,10 +1,17 @@
+import { useEffect } from 'react';
+
 import {
   ButtonBase,
-  TAction,
   FormError,
   FormErrors,
   TextFieldset,
+  useAction,
+  DialogControlled,
 } from '@monorepo/ui-base';
+import { useDispatcher } from '@monorepo/collab-engine';
+import { TPosition } from '@monorepo/core';
+
+import { TNotionEvent } from '../../notion-events';
 
 /**
  *
@@ -17,14 +24,55 @@ export type NewNotionDatabaseFormData = { databaseId: string };
  */
 
 export const NewNotionDatabaseForm = ({
-  action,
+  viewId,
+  position,
+  closeForm,
 }: {
-  action: TAction<NewNotionDatabaseFormData>;
+  viewId: string;
+  position: TPosition;
+  closeForm: () => void;
 }) => {
   //
 
+  const dispatcher = useDispatcher<TNotionEvent>();
+
+  const action = useAction<NewNotionDatabaseFormData>(
+    (d) => {
+      return dispatcher.dispatch({
+        type: 'notion:init-database',
+        databaseId: d.databaseId,
+        origin: {
+          viewId: viewId,
+          position,
+        },
+      });
+    },
+    [dispatcher, position, viewId],
+    {
+      startOpened: true,
+      checkForm: (d, e) => {
+        if (!d.databaseId) e.databaseId = 'Please enter the databse Id';
+      },
+    }
+  );
+
+  //
+
+  useEffect(() => {
+    if (!action.isOpened) {
+      closeForm();
+    }
+  }, [action.isOpened]);
+
+  //
+
   return (
-    <>
+    <DialogControlled
+      title="New Notion Database"
+      description="Provide the Notion Database Id."
+      open={action.isOpened}
+      onOpenChange={action.close}
+    >
       <FormError errors={action.errors} id="databaseId" />
       <TextFieldset
         label="Databse Id"
@@ -45,6 +93,6 @@ export const NewNotionDatabaseForm = ({
           loading={action.loading}
         />
       </div>
-    </>
+    </DialogControlled>
   );
 };
