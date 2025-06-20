@@ -1,10 +1,10 @@
 import {
   ButtonBase,
+  DialogControlled,
   FormError,
   FormErrors,
   TextFieldset,
   useAction,
-  DialogControlled,
 } from '@monorepo/ui-base';
 import { TPosition } from '@monorepo/core';
 import { useDispatcher } from '@monorepo/collab-engine';
@@ -15,15 +15,15 @@ import { useEffect } from 'react';
  *
  */
 
-export interface NewIframeFormData {
-  src: string;
+export interface NewYoutubeFormData {
+  videoId: string;
 }
 
 /**
  *
  */
 
-export const NewIframeForm = ({
+export const NewYoutubeForm = ({
   viewId,
   position,
   closeForm,
@@ -36,14 +36,14 @@ export const NewIframeForm = ({
 
   const dispatcher = useDispatcher<TEventSocials>();
 
-  const action = useAction<NewIframeFormData>(
+  const action = useAction<NewYoutubeFormData>(
     (d) => {
       return dispatcher.dispatch({
-        type: 'socials:new-iframe',
-        src: d.src,
+        type: 'socials:new-youtube',
+        videoId: d.videoId,
         origin: {
           viewId: viewId,
-          position,
+          position: position,
         },
       });
     },
@@ -51,7 +51,7 @@ export const NewIframeForm = ({
     {
       startOpened: true,
       checkForm: (d, e) => {
-        if (!d.src) e.src = 'Please enter the iframe source URL';
+        if (!d.videoId) e.videoId = 'Please enter the youtube video Id';
       },
     }
   );
@@ -68,18 +68,18 @@ export const NewIframeForm = ({
 
   return (
     <DialogControlled
-      title="New Iframe"
-      description="Enter the URL to embed in the iframe"
+      title="New Youtube video"
+      description="Paste the video's id"
       open={action.isOpened}
       onOpenChange={action.close}
     >
-      <FormError errors={action.errors} id="src" />
+      <FormError errors={action.errors} id="videoId" />
       <TextFieldset
-        label="URL"
-        name="src"
+        label="Video Id"
+        name="videoId"
         onChange={action.handleInputChange}
-        value={action.formData.src}
-        placeholder="https://example.com"
+        value={action.formData.videoId}
+        placeholder="Video Id"
       />
 
       <FormErrors errors={action.errors} />
@@ -89,7 +89,7 @@ export const NewIframeForm = ({
         <ButtonBase
           className="submit"
           callback={() => action.callback(action.formData)}
-          text="Embed Iframe"
+          text="Embed Video"
           loading={action.loading}
         />
       </div>

@@ -1,26 +1,68 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  TAction,
   ButtonBase,
   TextFieldset,
   FormError,
   FormErrors,
+  useAction,
+  DialogControlled,
 } from '@monorepo/ui-base';
 import { useQueryUsersSearch } from '@monorepo/frontend-data';
 import { UserListItem } from '@monorepo/ui-base';
 import { TF_User } from '@monorepo/demiurge-types';
+import { useDispatcher } from '@monorepo/collab-engine';
+import { TEventSocials } from '../socials-events';
+import { TPosition } from '@monorepo/core';
+
+//
 
 export interface NewNodeUserFormData {
   userId: string;
 }
 
 export const NewNodeUserForm = ({
-  action,
+  viewId,
+  position,
+  closeForm,
 }: {
-  action: TAction<NewNodeUserFormData>;
+  viewId: string;
+  position: TPosition;
+  closeForm: () => void;
 }) => {
   const [search, setSearch] = useState('');
   const { data: users = [], isFetching } = useQueryUsersSearch(search);
+
+  const dispatcher = useDispatcher<TEventSocials>();
+
+  const action = useAction<NewNodeUserFormData>(
+    (d) => {
+      return dispatcher.dispatch({
+        type: 'socials:new-node-user',
+        userId: d.userId,
+        origin: {
+          viewId: viewId,
+          position,
+        },
+      });
+    },
+    [dispatcher, position, viewId],
+    {
+      startOpened: true,
+      checkForm: (d, e) => {
+        if (!d.userId) e.userId = 'Please select a user';
+      },
+    }
+  );
+
+  //
+
+  useEffect(() => {
+    if (!action.isOpened) {
+      closeForm();
+    }
+  }, [action.isOpened]);
+
+  //
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
@@ -34,7 +76,12 @@ export const NewNodeUserForm = ({
   };
 
   return (
-    <>
+    <DialogControlled
+      title="Add User Node"
+      description="Search and select a user to add as a node."
+      open={action.isOpened}
+      onOpenChange={action.close}
+    >
       <FormError errors={action.errors} id="userId" />
       <TextFieldset
         label="Search user"
@@ -77,6 +124,6 @@ export const NewNodeUserForm = ({
           disabled={!action.formData.userId}
         />
       </div>
-    </>
+    </DialogControlled>
   );
 };

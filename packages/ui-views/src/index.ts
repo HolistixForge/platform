@@ -12,9 +12,6 @@ export { NewPasswordForm } from './lib/form/form-new-password/new-password';
 
 export { NewProjectForm } from './lib/form/form-new-project/new-project';
 
-export { NewYoutubeForm } from './lib/form/form-new-youtube/new-youtube';
-export type { NewYoutubeFormData } from './lib/form/form-new-youtube/new-youtube';
-
 export { Header } from './lib/mvp-ui-view/components/header';
 
 export { ResourceBar } from './lib/mvp-ui-view/components/resource-bar';
