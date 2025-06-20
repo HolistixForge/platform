@@ -4,7 +4,7 @@
 
 ## Aws instance
 
-In AWS, setup an Ubuntu Instance, **Ubuntu server 24.04 LTS 64 bits x86 (t2.xlarge)** with **100 GB** disk
+In AWS, setup an Ubuntu Instance, **Ubuntu server 24.04 LTS graviton (t4g.xlarge)** with **50 GB** disk
 
 create or reuse an IAM role 'ganymede-aws-api' for this instance to run with.
 This allow the instance to create other for running users projects resources (docker images) in the cloud
