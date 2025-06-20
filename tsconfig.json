@@ -92,6 +92,9 @@
     },
     {
       "path": "./packages/modules/module"
+    },
+    {
+      "path": "./packages/browser-proxy/browser-proxy-provider"
     }
   ],
   "ts-node": {
