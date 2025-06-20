@@ -49,7 +49,7 @@
         ],
         "options": {
           "buildTarget": "@monorepo/browser-proxy-app:build",
-          "runBuildTargetDependencies": false
+          "runBuildTargetDependencies": true
         },
         "configurations": {
           "development": {

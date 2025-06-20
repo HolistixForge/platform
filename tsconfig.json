@@ -97,9 +97,6 @@
       "path": "./packages/browser-proxy/browser-proxy-provider"
     },
     {
-      "path": "./packages/browser-proxy/browser-proxy-app-e2e"
-    },
-    {
       "path": "./packages/browser-proxy/browser-proxy-app"
     }
   ],
