@@ -80,9 +80,8 @@
   },
   "workspaces": [
     "packages/*",
-    "packagessimple-types}",
-    "packagesloge",
-    "packages/modules/*"
+    "packages/modules/*",
+    "packages/browser-proxy/*"
   ],
   "dependencies": {
     "@aws-sdk/client-ec2": "^3.734.0",

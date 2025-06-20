@@ -16,12 +16,10 @@
           "format": [
             "cjs"
           ],
-          "bundle": false,
+          "bundle": true,
+          "thirdParty": true,
           "main": "packages/browser-proxy/browser-proxy-app/src/main.ts",
           "tsConfig": "packages/browser-proxy/browser-proxy-app/tsconfig.app.json",
-          "assets": [
-            "packages/browser-proxy/browser-proxy-app/src/assets"
-          ],
           "esbuildOptions": {
             "sourcemap": true,
             "outExtension": {

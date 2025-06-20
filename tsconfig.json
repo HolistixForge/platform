@@ -94,9 +94,6 @@
       "path": "./packages/modules/module"
     },
     {
-      "path": "./packages/browser-proxy/browser-proxy-provider"
-    },
-    {
       "path": "./packages/browser-proxy/browser-proxy-app"
     }
   ],

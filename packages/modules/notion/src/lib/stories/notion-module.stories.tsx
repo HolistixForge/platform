@@ -22,7 +22,11 @@ const modulesBackend: ModuleBackend[] = [
   {
     collabChunk: {
       name: 'config',
-      loadExtraContext: () => ({ config: { NOTION_API_KEY: 'secret_123' } }),
+      loadExtraContext: () => ({
+        config: {
+          NOTION_API_KEY: '123',
+        },
+      }),
     },
   },
   notionBackend,

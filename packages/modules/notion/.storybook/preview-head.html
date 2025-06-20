@@ -1,0 +1,231 @@
+<!-- Load configuration first -->
+<script src="./fetch-config.js"></script>
+
+<script type="text/javascript">
+// Enhanced fetch-tracer with proxy support
+(function () {
+  'use strict';
+
+  // Get configuration with defaults
+  const config = window.FETCH_TRACER_CONFIG || {};
+  const PROXY_URL = config.proxyUrl || 'http://localhost:3001';
+  const LOCALHOST_PATTERNS = config.localhostPatterns || [
+    /^https?:\/\/localhost/,
+    /^https?:\/\/127\.0\.0\.1/,
+    /^https?:\/\/0\.0\.0\.0/,
+    /^https?:\/\/\[::1\]/,
+    /^file:\/\//,
+    /^data:/,
+    /^blob:/
+  ];
+  const EXCLUDE_PATTERNS = config.excludePatterns || [];
+  const LOGGING = config.logging || { enabled: true, level: 'info' };
+  const PROXY_CONFIG = config.proxy || { timeout: 30000, retries: 3, retryDelay: 1000 };
+
+  // Store the original fetch function
+  const originalFetch = globalThis.fetch;
+
+  // Logging function with level filtering
+  function log(level, message, data = {}) {
+    if (!LOGGING.enabled) return;
+    
+    const levels = { debug: 0, info: 1, warn: 2, error: 3 };
+    if (levels[level] < levels[LOGGING.level]) return;
+    
+    const timestamp = new Date().toISOString();
+    const prefix = `[FETCH TRACE ${level.toUpperCase()}]`;
+    
+    console[level](`${prefix} ${timestamp} - ${message}`, data);
+  }
+
+  // Check if URL should be proxied
+  function shouldProxy(url) {
+    const urlObj = new URL(url, window.location.href);
+    const fullUrl = urlObj.href;
+    
+    // Check if it matches any localhost pattern
+    if (LOCALHOST_PATTERNS.some(pattern => pattern.test(fullUrl))) {
+      return false;
+    }
+    
+    // Check if it matches any exclude pattern
+    if (EXCLUDE_PATTERNS.some(pattern => pattern.test(fullUrl))) {
+      return false;
+    }
+    
+    return true;
+  }
+
+  // Create proxy request format
+  function createProxyRequest(url, options = {}) {
+    const proxyRequest = {
+      method: options.method || 'GET',
+      url: url,
+      headers: options.headers || {},
+      body: null,
+      bodyType: 'none'
+    };
+
+    // Handle different body types
+    if (options.body) {
+      if (typeof options.body === 'string') {
+        proxyRequest.body = options.body;
+        proxyRequest.bodyType = 'text';
+      } else if (options.body instanceof FormData) {
+        // Convert FormData to object for JSON serialization
+        const formDataObj = {};
+        for (const [key, value] of options.body.entries()) {
+          formDataObj[key] = value;
+        }
+        proxyRequest.body = formDataObj;
+        proxyRequest.bodyType = 'formData';
+      } else if (options.body instanceof URLSearchParams) {
+        proxyRequest.body = options.body.toString();
+        proxyRequest.bodyType = 'form';
+      } else {
+        proxyRequest.body = options.body;
+        proxyRequest.bodyType = 'json';
+      }
+    }
+
+    return proxyRequest;
+  }
+
+  // Retry function for proxy requests
+  async function retryProxyRequest(proxyRequest, maxRetries = PROXY_CONFIG.retries) {
+    let lastError;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        log('debug', `Proxy attempt ${attempt}/${maxRetries}`, { url: proxyRequest.url });
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), PROXY_CONFIG.timeout);
+        
+        const proxyResponse = await originalFetch(`${PROXY_URL}/proxy`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(proxyRequest),
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!proxyResponse.ok) {
+          throw new Error(`Proxy request failed: ${proxyResponse.status} ${proxyResponse.statusText}`);
+        }
+
+        const result = await proxyResponse.json();
+
+        // If the proxy returned an error, throw it
+        if (result.error) {
+          const error = new Error(result.error.message || 'Proxy request failed');
+          error.status = result.error.status;
+          error.json = result.error.json;
+          throw error;
+        }
+
+        // console.log('🔄     Proxy response result:', result);
+
+        return {...result, body: JSON.stringify(result.body)};
+      } catch (error) {
+        lastError = error;
+        log('warn', `Proxy attempt ${attempt} failed`, { 
+          url: proxyRequest.url, 
+          error: error.message,
+          attempt,
+          maxRetries
+        });
+        
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, PROXY_CONFIG.retryDelay));
+        }
+      }
+    }
+    
+    throw lastError;
+  }
+
+  // Enhanced traced fetch with proxy support
+  const tracedFetch = async function (...args) {
+    const startTime = Date.now();
+    const url = args[0];
+    const options = args[1] || {};
+
+    log('info', 'Starting request', {
+      url,
+      method: options.method || 'GET',
+      stack: LOGGING.includeStack ? new Error().stack?.split('\n').slice(2, 6).join('\n') : undefined,
+      willProxy: shouldProxy(url)
+    });
+
+    try {
+      let response;
+
+      // Check if request should be proxied
+      if (shouldProxy(url)) {
+        log('info', 'Proxying request', { url });
+        
+        const proxyRequest = createProxyRequest(url, options);
+        const result = await retryProxyRequest(proxyRequest);
+
+        // Create a Response object from the proxy result
+        response = new Response(result.body, {
+          status: result.status,
+          statusText: result.statusText,
+          headers: result.headers || {}
+        });
+
+        log('info', 'Proxied request completed', {
+          url,
+          status: response.status,
+          statusText: response.statusText,
+          duration: `${Date.now() - startTime}ms`,
+          proxied: true
+        });
+      } else {
+        // Use original fetch for localhost requests
+        response = await originalFetch.apply(this, args);
+        
+        log('info', 'Direct request completed', {
+          url,
+          status: response.status,
+          statusText: response.statusText,
+          duration: `${Date.now() - startTime}ms`,
+          proxied: false
+        });
+      }
+
+      return response;
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      log('error', 'Request failed', {
+        url,
+        error: error.message,
+        duration: `${duration}ms`,
+        proxied: shouldProxy(url)
+      });
+      throw error;
+    }
+  };
+
+  // Copy properties from original fetch
+  Object.setPrototypeOf(tracedFetch, Object.getPrototypeOf(originalFetch));
+  Object.assign(tracedFetch, originalFetch);
+
+  // Replace the global fetch
+  globalThis.fetch = tracedFetch;
+
+  log('info', 'Global fetch has been patched for tracing and proxying');
+  log('info', 'Proxy configuration', { 
+    proxyUrl: PROXY_URL,
+    localhostPatterns: LOCALHOST_PATTERNS.length,
+    excludePatterns: EXCLUDE_PATTERNS.length,
+    loggingLevel: LOGGING.level,
+    retries: PROXY_CONFIG.retries,
+    timeout: PROXY_CONFIG.timeout
+  });
+})();
+</script>

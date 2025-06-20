@@ -1,5 +1,8 @@
 ⚠️ Antoine's stuffs
 
+browser-proxy-app running checker component
+Api key copy paste fake config module
+
 Ctrl F : extracontext => modulesExports
 Ctrl F : extraArgs => requestExports
 getRequestContext => getRequestExports

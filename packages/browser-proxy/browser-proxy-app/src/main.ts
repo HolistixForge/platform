@@ -1,7 +1,6 @@
 import * as http from 'http';
 import * as https from 'https';
 import * as url from 'url';
-import { development } from '@monorepo/backend-engine';
 
 interface ProxyRequest {
     method: string;
@@ -165,19 +164,23 @@ export class ProxyServer {
 
             // Allow self-signed certificates in development
             if (isHttps) {
+                /*
                 development(() => {
                     (options as any).rejectUnauthorized = false;
                 });
+                */
             }
 
             const proxyReq = client.request(options, (proxyRes) => {
                 let responseBody = '';
 
                 proxyRes.on('data', (chunk) => {
+                    //console.log('🔄     Proxy response data:', chunk);
                     responseBody += chunk;
                 });
 
                 proxyRes.on('end', () => {
+                    //console.log('🔄     Proxy response end');
                     let parsedBody: any;
 
                     try {
@@ -188,11 +191,15 @@ export class ProxyServer {
                         parsedBody = responseBody;
                     }
 
+                    //console.log('🔄     Proxy response parsed body:', parsedBody);
+
                     const result: ProxyResponse = {
                         statusCode: proxyRes.statusCode || 500,
                         headers: proxyRes.headers as Record<string, string>,
                         body: parsedBody,
                     };
+
+                    //console.log('🔄     Proxy response result:', result);
 
                     // If the response indicates an error, add error info
                     if (proxyRes.statusCode && proxyRes.statusCode >= 400) {
@@ -202,6 +209,8 @@ export class ProxyServer {
                             json: parsedBody,
                         };
                     }
+
+                    //console.log('🔄     Proxy response resolve:', result);
 
                     resolve(result);
                 });
