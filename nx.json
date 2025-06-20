@@ -56,7 +56,8 @@
         "packages/app-ganymede-e2e/**/*",
         "packages/app-account-e2e/**/*",
         "packages/app-ganymede-cmds-e2e/**/*",
-        "packages/app-collab-e2e/**/*"
+        "packages/app-collab-e2e/**/*",
+        "packages/browser-proxy/browser-proxy-app-e2e/**/*"
       ]
     },
     {
@@ -66,6 +67,17 @@
         "buildStorybookTargetName": "build-storybook",
         "testStorybookTargetName": "test-storybook",
         "staticStorybookTargetName": "static-storybook"
+      }
+    },
+    {
+      "plugin": "@nx/react/router-plugin",
+      "options": {
+        "buildTargetName": "build",
+        "devTargetName": "dev",
+        "startTargetName": "start",
+        "watchDepsTargetName": "watch-deps",
+        "buildDepsTargetName": "build-deps",
+        "typecheckTargetName": "typecheck"
       }
     }
   ],
@@ -97,6 +109,9 @@
       "cache": true,
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
+    },
+    "test": {
+      "dependsOn": ["^build"]
     }
   }
 }
