@@ -7,6 +7,7 @@ export {
   Outputs,
   Inputs,
   useMakeButton,
+  useNodeHeaderButtons,
   NodeHeader,
   useTestToolbarButtons,
   useConnector,

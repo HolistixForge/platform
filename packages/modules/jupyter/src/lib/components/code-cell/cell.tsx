@@ -17,6 +17,7 @@ import {
   NodeMainToolbar,
   useMakeButton,
   useNodeContext,
+  useNodeHeaderButtons,
 } from '@monorepo/space/frontend';
 import { makeUuid } from '@monorepo/simple-types';
 import { TServersSharedData, TServer } from '@monorepo/servers';
@@ -246,17 +247,7 @@ const CellOutput = (props: ReturnType<typeof useCellLogic>) => {
 
 export const NodeCell = ({ node }: { node: TGraphNode }) => {
   //
-  const {
-    id,
-    viewStatus,
-    expand,
-    reduce,
-    isOpened,
-    open,
-    close,
-    selected,
-    filterOut,
-  } = useNodeContext();
+  const { id, isOpened, open, selected } = useNodeContext();
 
   const cellLogic = useCellLogic({
     cellId: node.data!.cellId as string,
@@ -265,18 +256,10 @@ export const NodeCell = ({ node }: { node: TGraphNode }) => {
 
   const { handleClearOutput, handleExecute, handleDeleteCell } = cellLogic;
 
-  const isExpanded = viewStatus.mode === 'EXPANDED';
-  const buttons = useMakeButton({
-    isExpanded,
-    expand,
-    reduce,
-    isOpened,
-    open,
-    close,
+  const buttons = useNodeHeaderButtons({
+    onDelete: handleDeleteCell,
     onClear: handleClearOutput,
     onPlay: handleExecute,
-    onDelete: handleDeleteCell,
-    filterOut,
   });
 
   return (

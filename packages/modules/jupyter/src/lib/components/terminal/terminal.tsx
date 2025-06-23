@@ -20,8 +20,8 @@ import {
   DisableZoomDragPan,
   InputsAndOutputs,
   NodeHeader,
-  useMakeButton,
   useNodeContext,
+  useNodeHeaderButtons,
 } from '@monorepo/space/frontend';
 
 import { TJupyterSharedData } from '../../jupyter-shared-model';
@@ -183,17 +183,7 @@ export const NodeTerminal = ({ node }: { node: TGraphNode }) => {
     terminalId: string;
   };
 
-  const {
-    id,
-    viewStatus,
-    expand,
-    reduce,
-    isOpened,
-    open,
-    close,
-    selected,
-    filterOut,
-  } = useNodeContext();
+  const { id, isOpened, open, selected } = useNodeContext();
 
   const dispatcher = useDispatcher<TDemiurgeNotebookEvent>();
 
@@ -204,16 +194,8 @@ export const NodeTerminal = ({ node }: { node: TGraphNode }) => {
     });
   }, [dispatcher, terminalId]);
 
-  const isExpanded = viewStatus.mode === 'EXPANDED';
-  const buttons = useMakeButton({
-    isExpanded,
-    expand,
-    reduce,
-    isOpened,
-    open,
-    close,
+  const buttons = useNodeHeaderButtons({
     onDelete: handleDeleteTerminal,
-    filterOut,
   });
 
   return (

@@ -6,8 +6,8 @@ import {
   DisableZoomDragPan,
   TNodeContext,
   NodeHeader,
-  useMakeButton,
   useNodeContext,
+  useNodeHeaderButtons,
 } from '@monorepo/space/frontend';
 
 import { TEventSocials } from '../socials-events';
@@ -17,42 +17,20 @@ import './node-iframe.scss';
 export type NodeIframeInternalProps = {
   src: string;
   onDelete: () => Promise<void>;
-} & Pick<
-  TNodeContext,
-  | 'id'
-  | 'isOpened'
-  | 'open'
-  | 'close'
-  | 'viewStatus'
-  | 'expand'
-  | 'reduce'
-  | 'selected'
-  | 'filterOut'
->;
+} & Pick<TNodeContext, 'id' | 'isOpened' | 'open' | 'selected'>;
 
 export const NodeIframeInternal = ({
   id,
   isOpened,
   open,
-  close,
   src,
   onDelete,
-  viewStatus,
-  expand,
-  reduce,
   selected,
-  filterOut,
 }: NodeIframeInternalProps) => {
-  const isExpanded = viewStatus.mode === 'EXPANDED';
-  const buttons = useMakeButton({
-    isExpanded,
-    expand,
-    reduce,
+  //
+
+  const buttons = useNodeHeaderButtons({
     onDelete,
-    isOpened,
-    open,
-    close,
-    filterOut,
   });
 
   return (

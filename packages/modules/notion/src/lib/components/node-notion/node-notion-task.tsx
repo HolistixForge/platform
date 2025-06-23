@@ -1,8 +1,8 @@
 import {
   DisableZoomDragPan,
   NodeHeader,
-  useMakeButton,
   useNodeContext,
+  useNodeHeaderButtons,
 } from '@monorepo/space/frontend';
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
 import { TGraphNode } from '@monorepo/core';
@@ -48,7 +48,7 @@ export const NodeNotionTask = ({ node }: { node: TGraphNode }) => {
     });
   }, [dispatcher, pageId]);
 
-  const buttons = useMakeButton({
+  const buttons = useNodeHeaderButtons({
     onDelete: handleDeletePage,
   });
 

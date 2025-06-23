@@ -1,6 +1,6 @@
 import { TJsonObject } from '@monorepo/simple-types';
 
-import { useMakeButton, NodeHeader } from '..';
+import { NodeHeader, useNodeHeaderButtons } from '..';
 import { InputsAndOutputs } from './assets/inputsOutputs/inputsOutputs';
 import { useNodeContext } from './node-wrappers/node-wrapper';
 
@@ -15,18 +15,11 @@ export const CustomStoryNode = ({
 }) => {
   const nc = useNodeContext();
 
-  const { close, expand, reduce, isOpened, viewStatus, selected } = nc;
+  const { isOpened, viewStatus, selected } = nc;
 
   const isExpanded = viewStatus.mode === 'EXPANDED';
 
-  const buttons = useMakeButton({
-    isExpanded,
-    expand,
-    reduce,
-    isOpened,
-    open,
-    close,
-  });
+  const buttons = useNodeHeaderButtons({});
 
   return (
     <div style={{ width: isExpanded ? '250px' : '100px' }}>

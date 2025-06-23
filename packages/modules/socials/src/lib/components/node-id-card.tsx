@@ -7,8 +7,8 @@ import { TG_User } from '@monorepo/demiurge-types';
 import { useDispatcher, useAwarenessUserList } from '@monorepo/collab-engine';
 import {
   NodeHeader,
-  useMakeButton,
   useNodeContext,
+  useNodeHeaderButtons,
 } from '@monorepo/space/frontend';
 
 import { TEventSocials } from '../socials-events';
@@ -64,7 +64,7 @@ export const NodeIdCard = ({ node }: { node: TGraphNode }) => {
     });
   }, [dispatcher, id]);
 
-  const buttons = useMakeButton({
+  const buttons = useNodeHeaderButtons({
     onDelete: handleDelete,
   });
 

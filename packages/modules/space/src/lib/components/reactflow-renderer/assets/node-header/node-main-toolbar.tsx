@@ -1,5 +1,11 @@
-import { useState } from 'react';
-import { EraserIcon, PlayIcon, TrashIcon } from '@radix-ui/react-icons';
+import { useState, useCallback } from 'react';
+import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  EraserIcon,
+  PlayIcon,
+  TrashIcon,
+} from '@radix-ui/react-icons';
 
 import { sleep } from '@monorepo/simple-types';
 import {
@@ -8,11 +14,16 @@ import {
   ButtonIconProps,
   useAction,
 } from '@monorepo/ui-base';
-import { icons as icons2 } from '../inputsOutputs/icons';
+import { useDispatcher } from '@monorepo/collab-engine';
 
+import { icons as icons2 } from '../inputsOutputs/icons';
 import { DisableZoomDragPan } from '../../node-wrappers/disable-zoom-drag-pan';
+import { useNodeContext } from '../../node-wrappers/node-wrapper';
+import { TSpaceEvent } from '../../../../space-events';
 
 import './node-main-toolbar.scss';
+
+//
 
 export type NodeMainToolbarProps = {
   buttons: ButtonIconProps[];
@@ -49,14 +60,20 @@ type UseMakeButton = {
   isExpanded?: boolean;
   expand?: () => void;
   reduce?: () => void;
-  filterOut?: () => void;
   //
   isLocked?: boolean;
   onLock?: () => void;
   onUnlock?: () => void;
   //
-  onFullScreen?: () => void;
+  filterOut?: () => void;
+  //
   onDelete?: () => Promise<void>;
+  //
+  onMoveToFront?: () => Promise<void>;
+  onMoveToBack?: () => Promise<void>;
+  //
+  onFullScreen?: () => void;
+  //
   onPlay?: () => void;
   onClear?: () => void;
 };
@@ -69,14 +86,22 @@ export const useMakeButton = ({
   isExpanded,
   expand,
   reduce,
-  filterOut,
   //
   isLocked,
   onLock,
   onUnlock,
   //
-  onFullScreen,
+  filterOut,
+  //
   onDelete,
+  //
+  onMoveToFront,
+  onMoveToBack,
+  //
+  // special buttons
+  //
+  onFullScreen,
+  //
   onPlay,
   onClear,
 }: UseMakeButton) => {
@@ -155,6 +180,79 @@ export const useMakeButton = ({
       Icon: icons2.EyeSlash,
       callback: filterOut,
     });
+
+  if (onMoveToFront)
+    buttons.push({
+      Icon: ArrowUpIcon,
+      callback: onMoveToFront,
+    });
+
+  if (onMoveToBack)
+    buttons.push({
+      Icon: ArrowDownIcon,
+      callback: onMoveToBack,
+    });
+
+  return buttons;
+};
+
+//
+
+export const useNodeHeaderButtons = ({
+  onDelete,
+  onPlay,
+  onClear,
+}: {
+  onDelete?: () => Promise<void>;
+  onPlay?: () => void;
+  onClear?: () => void;
+}) => {
+  const dispatcher = useDispatcher<TSpaceEvent>();
+
+  const {
+    id,
+    viewId,
+    viewStatus,
+    expand,
+    reduce,
+    isOpened,
+    open,
+    close,
+    filterOut,
+  } = useNodeContext();
+
+  const handleMoveToFront = useCallback(async () => {
+    await dispatcher.dispatch({
+      type: 'space:move-node-to-front',
+      viewId: viewId,
+      nid: id,
+    });
+  }, [dispatcher, id, viewId]);
+
+  const handleMoveToBack = useCallback(async () => {
+    await dispatcher.dispatch({
+      type: 'space:move-node-to-back',
+      viewId: viewId,
+      nid: id,
+    });
+  }, [dispatcher, id, viewId]);
+
+  const isExpanded = viewStatus.mode === 'EXPANDED';
+
+  const buttons = useMakeButton({
+    isExpanded,
+    expand,
+    reduce,
+    onDelete,
+    isOpened,
+    open,
+    close,
+    filterOut,
+    onMoveToFront: handleMoveToFront,
+    onMoveToBack: handleMoveToBack,
+    onPlay,
+    onClear,
+  });
 
   return buttons;
 };

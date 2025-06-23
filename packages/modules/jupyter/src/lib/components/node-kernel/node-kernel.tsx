@@ -4,8 +4,8 @@ import {
   InputsAndOutputs,
   DisableZoomDragPan,
   NodeHeader,
-  useMakeButton,
   useNodeContext,
+  useNodeHeaderButtons,
 } from '@monorepo/space/frontend';
 import { ButtonBase, useAction } from '@monorepo/ui-base';
 import { TGraphNode } from '@monorepo/core';
@@ -24,19 +24,7 @@ import { TDemiurgeNotebookEvent } from '../../jupyter-events';
 export const NodeKernel = ({ node }: { node: TGraphNode }) => {
   //
 
-  const {
-    id,
-    viewStatus,
-    expand,
-    reduce,
-    isOpened,
-    open,
-    close,
-    selected,
-    filterOut,
-  } = useNodeContext();
-
-  const isExpanded = viewStatus.mode === 'EXPANDED';
+  const { id, isOpened, open, selected } = useNodeContext();
 
   const dkid = node.data!.dkid as TDKID;
 
@@ -89,15 +77,8 @@ export const NodeKernel = ({ node }: { node: TGraphNode }) => {
       });
   }, [dispatcher, dkid, client_id]);
 
-  const buttons = useMakeButton({
-    isExpanded,
-    expand,
-    reduce,
+  const buttons = useNodeHeaderButtons({
     onDelete: handleDeleteKernel,
-    isOpened,
-    open,
-    close,
-    filterOut,
   });
 
   //

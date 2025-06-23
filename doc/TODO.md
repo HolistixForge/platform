@@ -1,6 +1,6 @@
 ⚠️ Antoine's stuffs
 
-N8N: SAML based authentication ?
+N8N: SAML based authentication ?, custom : https://kb.jarylchng.com/i/n8n-and-authelia-bypass-n8n-native-login-page-usin-sNRmS-7j5u1/
 
 tab bar responsive
 
