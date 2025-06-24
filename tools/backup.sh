@@ -81,16 +81,28 @@ for project_dir in "$DATA_DIR"/*/; do
       fi
       # Only use the first 10 digits for seconds
       ts_sec=${ts:0:10}
-      # If timestamp is in the future or within the last 24 hours, skip deletion
-      if [ "$ts_sec" -ge "$now_utc" ] || [ $((now_utc - ts_sec)) -lt 86400 ]; then
-        continue
-      fi
+
       day=$(date -u -d @${ts_sec} +%Y-%m-%d 2>/dev/null)
       if [ -z "$day" ]; then
+        echo "SKIP [INVALID TIMESTAMP] $file: $day"
         continue
       fi
+
+      # If timestamp is in the future or within the last 24 hours, skip deletion
+      if [ "$ts_sec" -ge "$now_utc" ] || [ $((now_utc - ts_sec)) -lt 86400 ]; then
+        echo "SKIP [IN THE FUTURE OR WITHIN THE LAST 24 HOURS] $file: $day"
+        continue
+      fi
+      
       # If this file is not the latest for the day, delete it
       if [ "$file" != "${latest_file_for_day[$day]}" ]; then
+        echo "DELETE [NOT LATEST THIS DAY] $file: $day"
+        rm -f "$file"
+      fi
+
+      # if file is older than 10 days, delete it
+      if [ $((now_utc - ts_sec)) -gt 864000 ]; then
+        echo "DELETE [OLD] $file: $day"
         rm -f "$file"
       fi
     done
@@ -99,14 +111,23 @@ for project_dir in "$DATA_DIR"/*/; do
   unset latest_ts_for_day
 done
 
-# Archive the data directory
+echo "Archive the data directory"
+# First copy to /tmp to avoid corruption during long archive operations
+TEMP_DATA_DIR="/tmp/backup-data-$$"
+cp -r "$(dirname "$0")/../data" "$TEMP_DATA_DIR"
+
 ARCHIVE_PATH="/home/ubuntu/backup-$DATE.tar.bz2"
-tar -cjf "$ARCHIVE_PATH" -C "$(dirname "$0")/.." data
+tar -cjf "$ARCHIVE_PATH" -C $(dirname "$TEMP_DATA_DIR") $(basename "$TEMP_DATA_DIR")
+
+# Clean up temporary directory
+rm -rf "$TEMP_DATA_DIR"
 
 if [ $? -eq 0 ]; then
   echo "Archive created: $ARCHIVE_PATH"
 else
   echo "Archive creation failed!"
+  # Clean up temp dir even if archive failed
+  rm -rf "$TEMP_DATA_DIR"
   exit 1
 fi
 

@@ -348,6 +348,7 @@ export const HolistixSpace = ({
           registerViewportChangeCallback={registerViewportChangeCallback}
         />
         <ReactflowLayer
+          mode={mode}
           viewId={viewId}
           nodeComponent={logics.Node}
           edgeComponent={CustomStoryEdge}
