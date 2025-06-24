@@ -10,9 +10,10 @@ import { TGraphNode } from '@monorepo/module';
 import { useDispatcher } from '@monorepo/collab-engine';
 
 import { NodeHeader } from '../assets/node-header/node-header';
-import { useMakeButton } from '../assets/node-header/node-main-toolbar';
+import { useNodeHeaderButtons } from '../assets/node-header/node-main-toolbar';
 import { useNodeContext } from '../node-wrappers/node-wrapper';
 import { DisableZoomDragPan } from '../node-wrappers/disable-zoom-drag-pan';
+
 import {
   SHAPE_TYPES,
   TShapeType,
@@ -73,17 +74,7 @@ export const Shape = ({ node }: { node: TGraphNode }) => {
   };
 
   const useNodeValue = useNodeContext();
-  const {
-    id,
-    expand,
-    reduce,
-    isOpened,
-    open,
-    close,
-    viewStatus,
-    selected,
-    filterOut,
-  } = useNodeValue;
+  const { id, isOpened, open, selected } = useNodeValue;
 
   const dispatcher = useDispatcher<
     TEventShapePropertyChange | TEventDeleteShape
@@ -96,16 +87,8 @@ export const Shape = ({ node }: { node: TGraphNode }) => {
     });
   }, [dispatcher, id]);
 
-  const isExpanded = viewStatus.mode === 'EXPANDED';
-  const buttons = useMakeButton({
-    isExpanded,
-    expand,
-    reduce,
-    isOpened,
-    open,
-    close,
+  const buttons = useNodeHeaderButtons({
     onDelete: handleDeleteShape,
-    filterOut,
   });
 
   const handleShapeTypeChange = useCallback(

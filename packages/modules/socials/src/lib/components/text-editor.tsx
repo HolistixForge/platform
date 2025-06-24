@@ -13,7 +13,7 @@ import {
   DisableZoomDragPan,
   TNodeContext,
   NodeHeader,
-  useMakeButton,
+  useNodeHeaderButtons,
 } from '@monorepo/space/frontend';
 import { makeUuid } from '@monorepo/simple-types';
 
@@ -53,19 +53,15 @@ Quill.register('modules/cursors', QuillCursors);
 
 export type NodeTextEditorInternalProps = {
   onDelete: () => Promise<void>;
-} & TNodeContext;
+} & Pick<TNodeContext, 'id' | 'isOpened' | 'open' | 'selected'>;
 
 //
 
 export const NodeTextEditorInternal = ({
-  viewStatus,
-  expand,
-  reduce,
   isOpened,
   id,
   selected,
   onDelete,
-  filterOut,
 }: NodeTextEditorInternalProps) => {
   const { awareness } = useAwareness();
   const quillInstanceRef = useRef<any>(null);
@@ -117,16 +113,8 @@ export const NodeTextEditorInternal = ({
 
   //
 
-  const isExpanded = viewStatus.mode === 'EXPANDED';
-  const buttons = useMakeButton({
-    isExpanded,
-    expand,
-    reduce,
-    isOpened,
-    open,
-    close,
+  const buttons = useNodeHeaderButtons({
     onDelete,
-    filterOut,
   });
 
   const bindEditor = useBindEditor();

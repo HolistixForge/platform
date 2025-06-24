@@ -13,7 +13,10 @@ export { EdgeComponent } from './lib/components/assets/edges/edge';
 export { DisableZoomDragPan } from './lib/components/node-wrappers/disable-zoom-drag-pan';
 export { NodeMainToolbar } from './lib/components/assets/node-header/node-main-toolbar';
 export { NodeHeader } from './lib/components/assets/node-header/node-header';
-export { useMakeButton } from './lib/components/assets/node-header/node-main-toolbar';
+export {
+  useMakeButton,
+  useNodeHeaderButtons,
+} from './lib/components/assets/node-header/node-main-toolbar';
 export { useTestToolbarButtons } from './lib/components/assets/node-header/node-main-toolbar';
 export { useConnector } from './lib/components/assets/inputsOutputs/inputsOutputs';
 export { useNodeContext } from './lib/components/node-wrappers/node-wrapper';

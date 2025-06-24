@@ -44,7 +44,7 @@ const translateNode = (nw: TNodeView, viewId: string): SpaceNode => {
     data,
     className: statusToClassName(s),
     draggable: true,
-    zIndex: nw.type === 'group' ? 1000 : 2000,
+    // zIndex: nw.type === 'group' ? 1000 : 2000,
     selectable: nw.type !== 'group',
   };
 };

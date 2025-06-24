@@ -173,6 +173,18 @@ export type TEventEdgePropertyChange = {
   };
 };
 
+export type TEventMoveNodeToFront = {
+  type: 'space:move-node-to-front';
+  viewId: string;
+  nid: string;
+};
+
+export type TEventMoveNodeToBack = {
+  type: 'space:move-node-to-back';
+  viewId: string;
+  nid: string;
+};
+
 export type TSpaceEvent =
   | TEventNewView
   | TEventMoveNode
@@ -195,4 +207,6 @@ export type TSpaceEvent =
   | TEventNewShape
   | TEventDeleteShape
   | TEventDeleteGroup
-  | TEventEdgePropertyChange;
+  | TEventEdgePropertyChange
+  | TEventMoveNodeToFront
+  | TEventMoveNodeToBack;

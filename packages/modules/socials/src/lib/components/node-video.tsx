@@ -7,7 +7,7 @@ import {
   DisableZoomDragPan,
   TNodeContext,
   NodeHeader,
-  useMakeButton,
+  useNodeHeaderButtons,
   useNodeContext,
 } from '@monorepo/space/frontend';
 
@@ -29,18 +29,7 @@ export type NodeYoutubeInternalProps = {
   youtubeId: string;
   Youtube: FC<{ data: { videoId: string } }>;
   onDelete: () => Promise<void>;
-} & Pick<
-  TNodeContext,
-  | 'id'
-  | 'isOpened'
-  | 'open'
-  | 'close'
-  | 'viewStatus'
-  | 'expand'
-  | 'reduce'
-  | 'selected'
-  | 'filterOut'
->;
+} & Pick<TNodeContext, 'id' | 'isOpened' | 'open' | 'selected'>;
 
 //
 
@@ -48,28 +37,15 @@ export const NodeYoutubeInternal = ({
   id,
   isOpened,
   open,
-  close,
   youtubeId,
   Youtube,
   onDelete,
-  viewStatus,
-  expand,
-  reduce,
   selected,
-  filterOut,
 }: NodeYoutubeInternalProps) => {
   //
 
-  const isExpanded = viewStatus.mode === 'EXPANDED';
-  const buttons = useMakeButton({
-    isExpanded,
-    expand,
-    reduce,
+  const buttons = useNodeHeaderButtons({
     onDelete,
-    isOpened,
-    open,
-    close,
-    filterOut,
   });
 
   return (

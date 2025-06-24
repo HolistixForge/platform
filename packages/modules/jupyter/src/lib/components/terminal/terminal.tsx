@@ -20,8 +20,8 @@ import {
   DisableZoomDragPan,
   InputsAndOutputs,
   NodeHeader,
-  useMakeButton,
   useNodeContext,
+  useNodeHeaderButtons,
 } from '@monorepo/space/frontend';
 
 import { TJupyterSharedData } from '../../jupyter-shared-model';
@@ -200,17 +200,7 @@ export const NodeTerminal = ({
 }) => {
   const { terminal_id, project_server_id } = node.data!;
 
-  const {
-    id,
-    viewStatus,
-    expand,
-    reduce,
-    isOpened,
-    open,
-    close,
-    selected,
-    filterOut,
-  } = useNodeContext();
+  const { id, isOpened, open, selected } = useNodeContext();
 
   const dispatcher = useDispatcher<TJupyterEvent>();
 
@@ -221,16 +211,8 @@ export const NodeTerminal = ({
     });
   }, [dispatcher, id]);
 
-  const isExpanded = viewStatus.mode === 'EXPANDED';
-  const buttons = useMakeButton({
-    isExpanded,
-    expand,
-    reduce,
-    isOpened,
-    open,
-    close,
+  const buttons = useNodeHeaderButtons({
     onDelete: handleDeleteTerminal,
-    filterOut,
   });
 
   return (

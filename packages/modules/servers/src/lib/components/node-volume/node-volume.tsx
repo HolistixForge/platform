@@ -5,8 +5,8 @@ import {
   TNodeContext,
   NodeHeader,
   DisableZoomDragPan,
-  useMakeButton,
   useNodeContext,
+  useNodeHeaderButtons,
 } from '@monorepo/space/frontend';
 import { TGraphNode } from '@monorepo/module';
 import { useDispatcher } from '@monorepo/collab-engine';
@@ -37,29 +37,16 @@ export type NodeVolumeInternalProps = {
 export const NodeVolumeInternal = ({
   id,
   open,
-  close,
-  isOpened,
   volume_name,
   volume_storage,
   onDelete,
-  viewStatus,
-  expand,
-  reduce,
   selected,
-  filterOut,
+  isOpened,
 }: NodeVolumeInternalProps) => {
   //
 
-  const isExpanded = viewStatus.mode === 'EXPANDED';
-  const buttons = useMakeButton({
-    isExpanded,
-    expand,
-    reduce,
+  const buttons = useNodeHeaderButtons({
     onDelete,
-    isOpened,
-    open,
-    close,
-    filterOut,
   });
 
   return (

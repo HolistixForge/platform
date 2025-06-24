@@ -4,8 +4,8 @@ import {
   InputsAndOutputs,
   DisableZoomDragPan,
   NodeHeader,
-  useMakeButton,
   useNodeContext,
+  useNodeHeaderButtons,
 } from '@monorepo/space/frontend';
 import { TGraphNode } from '@monorepo/module';
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
@@ -30,19 +30,7 @@ export const NodeKernel = ({
 }) => {
   //
 
-  const {
-    id,
-    viewStatus,
-    expand,
-    reduce,
-    isOpened,
-    open,
-    close,
-    selected,
-    filterOut,
-  } = useNodeContext();
-
-  const isExpanded = viewStatus.mode === 'EXPANDED';
+  const { id, isOpened, open, selected } = useNodeContext();
 
   const { kernel_id, project_server_id } = node.data!;
 
@@ -75,15 +63,8 @@ export const NodeKernel = ({
       }));
   }, [dispatcher, kernel_id, client_id]);
 
-  const buttons = useMakeButton({
-    isExpanded,
-    expand,
-    reduce,
+  const buttons = useNodeHeaderButtons({
     onDelete: handleDeleteKernel,
-    isOpened,
-    open,
-    close,
-    filterOut,
   });
 
   //

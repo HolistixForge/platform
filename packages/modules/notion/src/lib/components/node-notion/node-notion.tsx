@@ -1,8 +1,8 @@
 import {
   DisableZoomDragPan,
   NodeHeader,
-  useMakeButton,
   useNodeContext,
+  useNodeHeaderButtons,
 } from '@monorepo/space/frontend';
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
 import { TGraphNode } from '@monorepo/module';
@@ -32,8 +32,7 @@ export const NodeNotion = ({ node }: { node: TGraphNode }) => {
     });
   }, [dispatcher, databaseId]);
 
-  const buttons = useMakeButton({
-    filterOut: useNodeValue.filterOut,
+  const buttons = useNodeHeaderButtons({
     onDelete: handleDeleteDatabase,
   });
 

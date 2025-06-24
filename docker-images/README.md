@@ -35,12 +35,13 @@ $ docker build -f ./xxxxx/Dockerfile . -t ${IMAGE_NAME}:${IMAGE_TAG}
 # Push
 
 ```bash
-$ docker tag ${IMAGE_NAME}:${IMAGE_TAG} public.ecr.aws/x1u8t8i8/${IMAGE_NAME}:${IMAGE_TAG}
-$ docker push public.ecr.aws/x1u8t8i8/${IMAGE_NAME}:${IMAGE_TAG}
+$ PUBLIC_REGISTRY_ID=f3g9x7j4
+$ docker tag ${IMAGE_NAME}:${IMAGE_TAG} public.ecr.aws/${PUBLIC_REGISTRY_ID}/${IMAGE_NAME}:${IMAGE_TAG}
+$ docker push public.ecr.aws/${PUBLIC_REGISTRY_ID}/${IMAGE_NAME}:${IMAGE_TAG}
 ```
 
 # Pull
 
 ```bash
-$ docker pull public.ecr.aws/x1u8t8i8/${IMAGE_NAME}:${IMAGE_TAG}
+$ docker pull public.ecr.aws/${PUBLIC_REGISTRY_ID}/${IMAGE_NAME}:${IMAGE_TAG}
 ```

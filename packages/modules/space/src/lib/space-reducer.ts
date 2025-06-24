@@ -33,6 +33,8 @@ import {
   TEventCloseNode,
   TEventUpdateGraphView,
   TEventEdgePropertyChange,
+  TEventMoveNodeToFront,
+  TEventMoveNodeToBack,
 } from './space-events';
 import {
   defaultGraphView,
@@ -40,6 +42,7 @@ import {
   TGraphView,
   connectorViewDefault,
   isNodeOpened,
+  TNodeView,
 } from './space-types';
 import { getAbsolutePosition } from './utils/position-utils';
 import { edgeId } from './components/apis/types/edge';
@@ -248,6 +251,22 @@ export class SpaceReducer extends Reducer<
           await this.edgePropertyChange(g as Ra<TEventEdgePropertyChange>);
           this.updateAllGraphviews(g);
         })();
+
+      case 'space:move-node-to-front':
+        return this.executeGraphViewAction(
+          g as Ra<TEventMoveNodeToFront>,
+          (gvc, nodes, edges) => {
+            this.moveNodeToFront(g.event as TEventMoveNodeToFront, gvc);
+          }
+        );
+
+      case 'space:move-node-to-back':
+        return this.executeGraphViewAction(
+          g as Ra<TEventMoveNodeToBack>,
+          (gvc, nodes, edges) => {
+            this.moveNodeToBack(g.event as TEventMoveNodeToBack, gvc);
+          }
+        );
 
       default:
         return Promise.resolve();
@@ -623,24 +642,172 @@ export class SpaceReducer extends Reducer<
     gv.edges = Array.from(edgesToRender);
     gv.graph.nodes = [];
 
-    nodesToRender.forEach((nodeId) => {
-      let n = gv.nodeViews.find((n) => n.id === nodeId);
-      if (!n) {
-        n = {
-          id: nodeId,
-          type: nodes.get(nodeId)?.type || 'unknown',
-          position: {
-            x: 0,
-            y: 0,
-          },
-          status: nodeViewDefaultStatus(),
-        };
-        gv.nodeViews.push(n);
+    // Helper function to get all parent IDs for a node (recursively)
+    const getAllParentIds = (nodeId: string): string[] => {
+      const parentIds: string[] = [];
+      let currentNodeId = nodeId;
+
+      while (true) {
+        const nodeView = gv.nodeViews.find((n) => n.id === currentNodeId);
+        if (!nodeView?.parentId) break;
+
+        parentIds.push(nodeView.parentId);
+        currentNodeId = nodeView.parentId;
       }
-      gv.graph.nodes.push(n);
+
+      return parentIds.reverse(); // Return in order from root to immediate parent
+    };
+
+    // Helper function to ensure a node and all its parents are added in correct order
+    const addNodeWithParents = (nodeId: string, addedNodes: Set<string>) => {
+      const parentIds = getAllParentIds(nodeId);
+
+      // Add all parents first (if not already added and in nodesToRender)
+      for (const parentId of parentIds) {
+        if (nodesToRender.has(parentId) && !addedNodes.has(parentId)) {
+          let parentNode = gv.nodeViews.find((n) => n.id === parentId);
+          if (!parentNode) {
+            parentNode = {
+              id: parentId,
+              type: nodes.get(parentId)?.type || 'unknown',
+              position: { x: 0, y: 0 },
+              status: nodeViewDefaultStatus(),
+            };
+            gv.nodeViews.push(parentNode);
+          }
+          gv.graph.nodes.push(parentNode);
+          addedNodes.add(parentId);
+        }
+      }
+
+      // Add the current node if not already added
+      if (!addedNodes.has(nodeId)) {
+        let n = gv.nodeViews.find((n) => n.id === nodeId);
+        if (!n) {
+          n = {
+            id: nodeId,
+            type: nodes.get(nodeId)?.type || 'unknown',
+            position: { x: 0, y: 0 },
+            status: nodeViewDefaultStatus(),
+          };
+          gv.nodeViews.push(n);
+        }
+        gv.graph.nodes.push(n);
+        addedNodes.add(nodeId);
+      }
+    };
+
+    // Track which nodes have been added to avoid duplicates
+    const addedNodes = new Set<string>();
+
+    // Process all nodes to render, ensuring proper parent-child order
+    nodesToRender.forEach((nodeId) => {
+      addNodeWithParents(nodeId, addedNodes);
     });
 
     this.resolveDrawnEdges(gv);
+  }
+
+
+  private moveNodeToFront(action: TEventMoveNodeToFront, gv: TGraphView) {
+    const nodeIndex = gv.graph.nodes.findIndex((n) => n.id === action.nid);
+    if (nodeIndex === -1) {
+      error('SPACE', `Node ${action.nid} not found in graph view`);
+      return;
+    }
+    // Move node one step forward if not at the end
+    if (nodeIndex < gv.graph.nodes.length - 1) {
+      // move to front means move towards the end of the array
+
+      const node = gv.graph.nodes[nodeIndex];
+      const isGroup = node.type === 'group';
+
+      const temp = gv.graph.nodes[nodeIndex];
+      gv.graph.nodes[nodeIndex] = gv.graph.nodes[nodeIndex + 1];
+      gv.graph.nodes[nodeIndex + 1] = temp;
+
+      // If the node is a group and we moved it forward, ensure all its descendants
+      // appear after it in the array
+      if (isGroup && nodeIndex < gv.graph.nodes.length - 1) {
+        const movedNodeIndex = nodeIndex + 1; // New position after moving forward
+        this.moveDescendantsAfterGroup(action.nid, movedNodeIndex, gv);
+      }
+    }
+  }
+
+  private moveNodeToBack(action: TEventMoveNodeToBack, gv: TGraphView) {
+    const nodeIndex = gv.graph.nodes.findIndex((n) => n.id === action.nid);
+    if (nodeIndex === -1) {
+      error('SPACE', `Node ${action.nid} not found in graph view`);
+      return;
+    }
+    if (nodeIndex > 0) {
+      // move to back means move towards the beginning of the array
+
+      const node = gv.graph.nodes[nodeIndex];
+      const hasParent = !!node.parentId;
+
+      // If node is in a group, it can't come before its parent
+      if (hasParent) {
+        const parentIndex = gv.graph.nodes.findIndex((n) => n.id === node.parentId);
+        if (parentIndex === -1) {
+          error('SPACE', `Parent ${node.parentId} not found in graph view`);
+          return;
+        }
+
+        if (nodeIndex - 1 <= parentIndex) {
+          error('SPACE', `Node ${action.nid} cannot move before its parent ${node.parentId}`);
+          return;
+        }
+      }
+      // Move node one step backward
+      const temp = gv.graph.nodes[nodeIndex];
+      gv.graph.nodes[nodeIndex] = gv.graph.nodes[nodeIndex - 1];
+      gv.graph.nodes[nodeIndex - 1] = temp;
+    }
+  }
+
+  private moveDescendantsAfterGroup(groupId: string, groupIndex: number, gv: TGraphView) {
+    // Get all direct children of the group
+    const directChildren = gv.graph.nodes.filter((n) => n.parentId === groupId);
+
+    // Collect all children that need to be moved (those before the group)
+    const childrenToMove: Array<{ node: TNodeView; originalIndex: number }> = [];
+
+    for (const child of directChildren) {
+      const childIndex = gv.graph.nodes.findIndex((n) => n.id === child.id);
+      if (childIndex < groupIndex) {
+        childrenToMove.push({ node: child, originalIndex: childIndex });
+      }
+    }
+
+    // Sort by original index to preserve relative order
+    childrenToMove.sort((a, b) => a.originalIndex - b.originalIndex);
+
+    // Remove children from their current positions (in reverse order to maintain indices)
+    for (let i = childrenToMove.length - 1; i >= 0; i--) {
+      const childIndex = gv.graph.nodes.findIndex((n) => n.id === childrenToMove[i].node.id);
+      gv.graph.nodes.splice(childIndex, 1);
+    }
+
+    // Insert children after the group in their original relative order
+    for (let i = 0; i < childrenToMove.length; i++) {
+      const insertIndex = groupIndex + 1 + i;
+      gv.graph.nodes.splice(insertIndex, 0, childrenToMove[i].node);
+
+      // If the child is also a group, recursively handle its descendants
+      if (childrenToMove[i].node.type === 'group') {
+        this.moveDescendantsAfterGroup(childrenToMove[i].node.id, insertIndex, gv);
+      }
+    }
+
+    // Handle children that are already after the group but are groups themselves
+    for (const child of directChildren) {
+      const childIndex = gv.graph.nodes.findIndex((n) => n.id === child.id);
+      if (childIndex > groupIndex && child.type === 'group') {
+        this.moveDescendantsAfterGroup(child.id, childIndex, gv);
+      }
+    }
   }
 
   //

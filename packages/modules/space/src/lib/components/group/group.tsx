@@ -10,8 +10,9 @@ import {
 } from '@monorepo/ui-base';
 
 import { NodeHeader } from '../assets/node-header/node-header';
-import { useMakeButton } from '../assets/node-header/node-main-toolbar';
+import { useNodeHeaderButtons } from '../assets/node-header/node-main-toolbar';
 import { useNodeContext } from '../node-wrappers/node-wrapper';
+
 import {
   TEventGroupPropertyChange,
   TEventDeleteGroup,
@@ -24,17 +25,7 @@ import './group.scss';
 //
 
 export const Group = ({ node }: { node: TGraphNode }) => {
-  const {
-    id,
-    expand,
-    reduce,
-    isOpened,
-    open,
-    close,
-    viewStatus,
-    selected,
-    filterOut,
-  } = useNodeContext();
+  const { id, isOpened, open, selected } = useNodeContext();
   const groupRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -63,16 +54,8 @@ export const Group = ({ node }: { node: TGraphNode }) => {
     svgBackground?: string;
   };
 
-  const isExpanded = viewStatus.mode === 'EXPANDED';
-  const buttons = useMakeButton({
-    isExpanded,
-    expand,
-    reduce,
-    isOpened,
-    open,
-    close,
+  const buttons = useNodeHeaderButtons({
     onDelete: handleDeleteGroup,
-    filterOut,
   });
 
   const handleBorderColorChange = useCallback((color: ColorValue) => {

@@ -4,9 +4,9 @@ import {
   NodeHeader,
   DisableZoomDragPan,
   TNodeContext,
-  useMakeButton,
   useNodeContext,
   InputsAndOutputs,
+  useNodeHeaderButtons,
 } from '@monorepo/space/frontend';
 import { TGraphNode } from '@monorepo/module';
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
@@ -202,41 +202,14 @@ export const NodeServer = ({ node }: { node: TGraphNode }) => {
 export const NodeServerInternal = (
   props: TServerComponentProps &
     TServerComponentCallbacks &
-    Pick<
-      TNodeContext,
-      | 'id'
-      | 'isOpened'
-      | 'open'
-      | 'close'
-      | 'viewStatus'
-      | 'expand'
-      | 'reduce'
-      | 'filterOut'
-      | 'selected'
-    >
+    Pick<TNodeContext, 'id' | 'isOpened' | 'selected'>
 ) => {
   //
 
-  const {
-    id,
-    isOpened,
-    open,
-    close,
-    viewStatus,
-    expand,
-    reduce,
-    filterOut,
-    selected,
-    onDelete,
-    ...otherProps
-  } = props;
+  const { id, onDelete, isOpened, selected, ...otherProps } = props;
 
-  const isExpanded = viewStatus.mode === 'EXPANDED';
-  const buttons = useMakeButton({
-    isExpanded,
+  const buttons = useNodeHeaderButtons({
     onDelete,
-    isOpened,
-    filterOut,
   });
 
   return (
