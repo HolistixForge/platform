@@ -39,7 +39,7 @@ import { translateEdges, translateNodes } from './to-rf-nodes';
 import { TSpaceEvent } from '../../space-events';
 import { getAbsolutePosition } from '../../utils/position-utils';
 import { TSpaceSharedData } from '../../space-shared-model';
-import { Viewport, INITIAL_VIEWPORT } from './demiurge-space';
+import { Viewport, INITIAL_VIEWPORT, WhiteboardMode } from './demiurge-space';
 import { useSpaceContext } from './spaceContext';
 //
 //
@@ -57,6 +57,7 @@ const toReactFlowViewport = (viewport: Viewport) => {
 
 export type ReactflowLayerProps = {
   viewId: string;
+  mode: WhiteboardMode;
   nodeComponent: FC;
   edgeComponent: FC<EdgeProps>;
   spaceState: SpaceState;
@@ -83,6 +84,7 @@ export type ReactflowLayerProps = {
 
 export const ReactflowLayer = ({
   viewId,
+  mode,
   nodeComponent,
   edgeComponent,
   spaceState,
@@ -365,6 +367,11 @@ export const ReactflowLayer = ({
 
   return (
     <ReactFlow
+      className="coucou"
+      style={{
+        // zIndex: 42, // overrided to 0 by reactflow implementation !
+        pointerEvents: mode !== 'drawing' ? 'all' : 'none',
+      }}
       defaultViewport={toReactFlowViewport(INITIAL_VIEWPORT)}
       maxZoom={1}
       minZoom={0.001}

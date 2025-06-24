@@ -17,6 +17,7 @@ declare -A services=(
     ["gateway-1-2"]="https://gw-1-2.${ENVIRONMENT}.demiurge.co/collab/ping"
     ["gateway-1-3"]="https://gw-1-3.${ENVIRONMENT}.demiurge.co/collab/ping"
     ["gateway-1-4"]="https://gw-1-4.${ENVIRONMENT}.demiurge.co/collab/ping"
+    ["gateway-1-5"]="https://gw-1-5.${ENVIRONMENT}.demiurge.co/collab/ping"
  #   ["storybook"]="https://sb.${ENVIRONMENT}.demiurge.co"
     ["jaeger"]="https://jaeger.${ENVIRONMENT}.demiurge.co"
 )

@@ -216,6 +216,7 @@ export const DemiurgeSpace = ({
           registerViewportChangeCallback={registerViewportChangeCallback}
         />
         <ReactflowLayer
+          mode={mode}
           viewId={viewId}
           nodeComponent={reactflow.nodeComponent}
           edgeComponent={reactflow.edgeComponent}

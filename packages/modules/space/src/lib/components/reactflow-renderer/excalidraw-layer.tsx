@@ -216,7 +216,7 @@ export const ExcalidrawLayer = ({
         right: 0,
         bottom: 0,
         pointerEvents: mode === 'drawing' ? 'all' : 'none',
-        zIndex: 4,
+        zIndex: 0,
       }}
     >
       <Excalidraw
