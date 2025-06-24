@@ -12,11 +12,11 @@ import { TNotionSharedData } from '../../notion-shared-model';
 import { NotionKanban } from './notion-database';
 import { TNotionEvent } from '../../notion-events';
 
-import './node-notion.scss';
+import './node-notion-database.scss';
 
 //
 
-export const NodeNotion = ({ node }: { node: TGraphNode }) => {
+export const NodeNotionDatabase = ({ node }: { node: TGraphNode }) => {
   const databaseId = node.data!.databaseId as string;
   const useNodeValue = useNodeContext();
   const dispatcher = useDispatcher<TNotionEvent>();

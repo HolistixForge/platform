@@ -1,5 +1,5 @@
 import { Notion_loadData } from './lib/notion-shared-model';
-import { NodeNotion } from './lib/components/node-notion/node-notion';
+import { NodeNotionDatabase } from './lib/components/node-notion/node-notion-database';
 import { NodeNotionTask } from './lib/components/node-notion/node-notion-task';
 import { ModuleFrontend } from '@monorepo/module/frontend';
 import { notionMenuEntries } from './lib/notion-menu';
@@ -14,7 +14,7 @@ export const moduleFrontend: ModuleFrontend = {
   },
   spaceMenuEntries: notionMenuEntries,
   nodes: {
-    'notion-database': NodeNotion,
+    'notion-database': NodeNotionDatabase,
     'notion-page': NodeNotionTask,
   },
 };
