@@ -4,9 +4,6 @@
   "include": [],
   "references": [
     {
-      "path": "../../backend-engine"
-    },
-    {
       "path": "./tsconfig.app.json"
     },
     {
