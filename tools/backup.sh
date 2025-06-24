@@ -99,14 +99,23 @@ for project_dir in "$DATA_DIR"/*/; do
   unset latest_ts_for_day
 done
 
-# Archive the data directory
+echo "Archive the data directory"
+# First copy to /tmp to avoid corruption during long archive operations
+TEMP_DATA_DIR="/tmp/backup-data-$$"
+cp -r "$(dirname "$0")/../data" "$TEMP_DATA_DIR"
+
 ARCHIVE_PATH="/home/ubuntu/backup-$DATE.tar.bz2"
-tar -cjf "$ARCHIVE_PATH" -C "$(dirname "$0")/.." data
+tar -cjf "$ARCHIVE_PATH" -C "$(dirname "$TEMP_DATA_DIR")" "$(basename "$TEMP_DATA_DIR")"
+
+# Clean up temporary directory
+rm -rf "$TEMP_DATA_DIR"
 
 if [ $? -eq 0 ]; then
   echo "Archive created: $ARCHIVE_PATH"
 else
   echo "Archive creation failed!"
+  # Clean up temp dir even if archive failed
+  rm -rf "$TEMP_DATA_DIR"
   exit 1
 fi
 
