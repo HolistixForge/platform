@@ -1,125 +1,14 @@
-import { DragEvent } from 'react';
-
-import {
-  TNotionDatabase,
-  TNotionPage,
-  TNotionProperty,
-  TNotionSelect,
-  TNotionStatus,
-  TNotionTitle,
-} from '../../notion-types';
-import { TEventLoadPageNode } from '../../notion-events';
-
 import './notion-database.scss';
-
-//
-
-type NotionKanbanProps = {
-  database: TNotionDatabase;
-  onUpdatePage: (
-    pageId: string,
-    properties: Record<string, TNotionProperty>
-  ) => void;
-  onCreatePage: (properties: Record<string, TNotionProperty>) => void;
-  onDeletePage: (pageId: string) => void;
-  onReorderPage: (pageId: string, newPosition: number) => void;
-};
-
-//
-
-export const NotionKanban = ({
-  database,
-  onUpdatePage,
-  onCreatePage,
-  onDeletePage,
-  onReorderPage,
-}: NotionKanbanProps) => {
-  return (
-    <div className="node-background notion-kanban w-full">
-      <div className="notion-kanban-header">
-        <Logo />
-        <h2
-          className="notion-h2"
-          style={{
-            display: 'inline',
-            lineHeight: '40px',
-            marginBottom: '12px',
-          }}
-        >
-          {database.title[0].text.content}
-        </h2>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {database?.pages?.map((page) => (
-          <TaskItem key={page.id} page={page} />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-//
-
-const TaskItem = ({ page }: { page: TNotionPage }) => {
-  const handleDragStart = (e: DragEvent<HTMLDivElement>) => {
-    const event: TEventLoadPageNode = {
-      type: 'notion:load-page-node',
-      pageId: page.id,
-    };
-    e.dataTransfer.setData('application/json', JSON.stringify(event));
-    e.currentTarget.classList.add('dragging');
-  };
-
-  const handleDragEnd = (e: DragEvent<HTMLDivElement>) => {
-    e.currentTarget.classList.remove('dragging');
-  };
-
-  const title = page.properties.Name as TNotionTitle;
-  const status = page.properties.Status as TNotionStatus | undefined;
-  const pl = page.properties['Priority Level'] as TNotionSelect | undefined;
-
-  return (
-    <div
-      className="task-item"
-      draggable
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <div className="task-title ellipsis">
-          {title?.title?.[0]?.text?.content}
-        </div>
-        <div className="task-meta">
-          <span className={`task-status bg-${status?.status?.color}`}>
-            {status?.status?.name}
-          </span>
-
-          {pl?.select && (
-            <div
-              className={`task-status bg-${pl.select.color}`}
-              style={{ margin: 0 }}
-            >
-              {pl.select.name}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
+import NotionDatabaseList from './notion-database-list';
+import NotionDatabaseKanban from './notion-database-kanban';
+import NotionDatabaseGallery from './notion-database-gallery';
+import { TNotionDatabase, TNotionDatabaseProperty } from '../../notion-types';
 
 //
 
 const Logo = () => (
   <svg
-    style={{
-      width: '25px',
-      display: 'inline',
-      lineHeight: '40px',
-      marginRight: '12px',
-      position: 'relative',
-      top: '-5px',
-    }}
+    className="notion-logo"
     viewBox="0 0 15 15"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
@@ -130,3 +19,144 @@ const Logo = () => (
     />
   </svg>
 );
+
+//
+
+export type TNotionViewMode =
+  | { mode: 'list' }
+  | { mode: 'kanban'; groupBy: 'status' | 'priority' }
+  | { mode: 'gallery'; itemPerLine: number };
+
+//
+
+export type TImportantProperties = {
+  titleProperty?: TNotionDatabaseProperty;
+  priorityProperty?: TNotionDatabaseProperty;
+  statusProperty?: TNotionDatabaseProperty;
+};
+
+//
+
+type NotionDatabaseProps = {
+  database: TNotionDatabase;
+  viewMode: TNotionViewMode;
+  setViewMode: (viewMode: TNotionViewMode) => void;
+  onUpdatePage: (pageId: string, properties: Record<string, any>) => void;
+  onCreatePage: (properties: Record<string, any>) => void;
+  onDeletePage: (pageId: string) => void;
+  onReorderPage: (pageId: string, newPosition: number) => void;
+};
+
+//
+
+export const NotionDatabase = (props: NotionDatabaseProps) => {
+  const {
+    database,
+    viewMode,
+    setViewMode,
+    onUpdatePage,
+    onCreatePage,
+    onDeletePage,
+    onReorderPage,
+  } = props;
+
+  // identify wich property is of type title
+  const titleProperty = Object.values(database.properties).find(
+    (property) => property.type === 'title'
+  );
+
+  // identify wich property is of type select and name like 'priority'
+  const priorityProperty = Object.values(database.properties).find(
+    (property) =>
+      property.type === 'select' &&
+      property.name.toLowerCase().includes('priority')
+  );
+
+  // identify wich property is of type select and name like 'status'
+  const statusProperty = Object.values(database.properties).find(
+    (property) =>
+      property.type === 'status' &&
+      property.name.toLowerCase().includes('status')
+  );
+
+  // console.log({ titleProperty, priorityProperty, statusProperty });
+
+  return (
+    <div className="node-background notion-kanban w-full">
+      <div className="notion-kanban-header">
+        <Logo />
+        <h2 className="notion-h2">{database.title[0].text.content}</h2>
+        <div className="notion-view-switcher">
+          <button
+            className={viewMode.mode === 'list' ? 'active' : ''}
+            onClick={() => setViewMode({ mode: 'list' })}
+          >
+            List
+          </button>
+          {statusProperty && (
+            <button
+              className={
+                viewMode.mode === 'kanban' && viewMode.groupBy === 'status'
+                  ? 'active'
+                  : ''
+              }
+              onClick={() => setViewMode({ mode: 'kanban', groupBy: 'status' })}
+            >
+              Kanban (Status)
+            </button>
+          )}
+          {priorityProperty && (
+            <button
+              className={
+                viewMode.mode === 'kanban' && viewMode.groupBy === 'priority'
+                  ? 'active'
+                  : ''
+              }
+              onClick={() =>
+                setViewMode({ mode: 'kanban', groupBy: 'priority' })
+              }
+            >
+              Kanban (Priority)
+            </button>
+          )}
+          <button
+            className={viewMode.mode === 'gallery' ? 'active' : ''}
+            onClick={() => setViewMode({ mode: 'gallery', itemPerLine: 3 })}
+          >
+            Gallery
+          </button>
+        </div>
+      </div>
+      {viewMode.mode === 'list' && (
+        <NotionDatabaseList
+          database={database}
+          titleProperty={titleProperty}
+          priorityProperty={priorityProperty}
+          statusProperty={statusProperty}
+        />
+      )}
+      {viewMode.mode === 'kanban' && (
+        <NotionDatabaseKanban
+          titleProperty={titleProperty}
+          priorityProperty={priorityProperty}
+          statusProperty={statusProperty}
+          database={database}
+          viewMode={viewMode}
+          onUpdatePage={onUpdatePage}
+          onReorderPage={onReorderPage}
+        />
+      )}
+      {viewMode.mode === 'gallery' && (
+        <NotionDatabaseGallery
+          titleProperty={titleProperty}
+          priorityProperty={priorityProperty}
+          statusProperty={statusProperty}
+          database={database}
+          viewMode={viewMode}
+        />
+      )}
+    </div>
+  );
+};
+
+export default NotionDatabase;

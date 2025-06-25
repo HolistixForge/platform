@@ -79,6 +79,19 @@ export type TNotionProperty =
   | TNotionTitle
   | TNotionRelation;
 
+export type TNotionCover = {
+  type: 'external';
+  external: {
+    url: string;
+  };
+} | {
+  type: 'file';
+  file: {
+    url: string;
+    expiry_time: string;
+  };
+} | null;
+
 export type TNotionPage = {
   object: 'page';
   id: string;
@@ -92,7 +105,7 @@ export type TNotionPage = {
     object: 'user';
     id: string;
   };
-  cover: null | any; // Could be expanded based on actual cover structure
+  cover: TNotionCover;
   icon: null | any; // Could be expanded based on actual icon structure
   parent: {
     type: string;
@@ -116,7 +129,7 @@ type TNotionDatabaseRichTextProperty = TNotionDatabasePropertyBase & {
   rich_text: Record<string, never>; // Empty object in the example
 };
 
-type TNotionDatabaseStatusProperty = TNotionDatabasePropertyBase & {
+export type TNotionDatabaseStatusProperty = TNotionDatabasePropertyBase & {
   type: 'status';
   status: {
     options: Array<{
@@ -134,7 +147,7 @@ type TNotionDatabaseStatusProperty = TNotionDatabasePropertyBase & {
   };
 };
 
-type TNotionDatabaseSelectProperty = TNotionDatabasePropertyBase & {
+export type TNotionDatabaseSelectProperty = TNotionDatabasePropertyBase & {
   type: 'select';
   select: {
     options: Array<{
@@ -146,26 +159,26 @@ type TNotionDatabaseSelectProperty = TNotionDatabasePropertyBase & {
   };
 };
 
-type TNotionDatabaseNumberProperty = TNotionDatabasePropertyBase & {
+export type TNotionDatabaseNumberProperty = TNotionDatabasePropertyBase & {
   type: 'number';
   number: {
     format: string;
   };
 };
 
-type TNotionDatabaseUniqueIdProperty = TNotionDatabasePropertyBase & {
+export type TNotionDatabaseUniqueIdProperty = TNotionDatabasePropertyBase & {
   type: 'unique_id';
   unique_id: {
     prefix: string;
   };
 };
 
-type TNotionDatabaseTitleProperty = TNotionDatabasePropertyBase & {
+export type TNotionDatabaseTitleProperty = TNotionDatabasePropertyBase & {
   type: 'title';
   title: Record<string, never>; // Empty object in the example
 };
 
-type TNotionDatabaseRelationProperty = TNotionDatabasePropertyBase & {
+export type TNotionDatabaseRelationProperty = TNotionDatabasePropertyBase & {
   type: 'relation';
   relation: {
     database_id: string;
@@ -177,7 +190,7 @@ type TNotionDatabaseRelationProperty = TNotionDatabasePropertyBase & {
   };
 };
 
-type TNotionDatabaseProperty =
+export type TNotionDatabaseProperty =
   | TNotionDatabaseRichTextProperty
   | TNotionDatabaseStatusProperty
   | TNotionDatabaseSelectProperty

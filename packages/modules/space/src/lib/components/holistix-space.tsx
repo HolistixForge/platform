@@ -324,71 +324,88 @@ export const HolistixSpace = ({
 
   const [renderForm, setRenderForm] = useState<ReactNode | null>(null);
 
+  const [renderPanel, setRenderPanel] = useState<ReactNode | null>(null);
+
   /**
    *
    */
 
   return (
     <SpaceContext value={context}>
-      <div
-        className={`demiurge-space ${mode}`}
-        style={{ width: '100%', height: '100%', position: 'relative' }}
-        ref={logics.pt.bindDiv.bind(logics.pt)}
-        onWheelCapture={(e) => {
-          // Stop Excalidraw scroll wich pane toward bottom instead of zooming
-          mode === 'drawing' && e.stopPropagation();
-        }}
-        onMouseMove={logics.pt.onPaneMouseMove.bind(logics.pt)}
-        onMouseLeave={logics.pt.setPointerInactive.bind(logics.pt)}
-      >
-        <ExcalidrawLayer
-          viewId={viewId}
-          mode={mode}
-          onViewportChange={onViewportChange}
-          registerViewportChangeCallback={registerViewportChangeCallback}
-        />
-        <ReactflowLayer
-          mode={mode}
-          viewId={viewId}
-          nodeComponent={logics.Node}
-          edgeComponent={CustomStoryEdge}
-          spaceState={logics.ss}
-          pointerTracker={logics.pt}
-          avatarsStore={logics.as}
-          onContextMenu={handleContextualMenu}
-          onContextMenuNewEdge={handleContextualMenuNewEdge}
-          onConnect={onConnect}
-          onDrop={onDrop}
-          onViewportChange={onViewportChange}
-          registerViewportChangeCallback={registerViewportChangeCallback}
-        />
-        <AvatarsRenderer avatarsStore={logics.as} />
-        {edgeMenu && (
-          <EdgeMenu
-            eid={edgeMenu.edgeId}
-            position={[edgeMenu.x, edgeMenu.y]}
-            setRenderProps={handleRenderPropsChange}
+      <div style={{ display: 'flex', height: '100%', width: '100%' }}>
+        <div
+          className={`demiurge-space ${mode}`}
+          style={{
+            flex: 1,
+            width: '100%',
+            height: '100%',
+            position: 'relative',
+          }}
+          ref={logics.pt.bindDiv.bind(logics.pt)}
+          onWheelCapture={(e) => {
+            // Stop Excalidraw scroll wich pane toward bottom instead of zooming
+            mode === 'drawing' && e.stopPropagation();
+          }}
+          onMouseMove={logics.pt.onPaneMouseMove.bind(logics.pt)}
+          onMouseLeave={logics.pt.setPointerInactive.bind(logics.pt)}
+        >
+          <ExcalidrawLayer
+            viewId={viewId}
+            mode={mode}
+            onViewportChange={onViewportChange}
+            registerViewportChangeCallback={registerViewportChangeCallback}
           />
-        )}
-        <ContextualMenu
-          triggerRef={ContextualMenuTriggerRef}
-          entries={spaceMenuEntries({
-            viewId,
-            from,
-            sd: sdm.getData(),
-            position: () => rcc.current,
-            renderForm: setRenderForm,
-            dispatcher,
-          })}
-        />
-        {renderForm}
+          <ReactflowLayer
+            mode={mode}
+            viewId={viewId}
+            nodeComponent={logics.Node}
+            edgeComponent={CustomStoryEdge}
+            spaceState={logics.ss}
+            pointerTracker={logics.pt}
+            avatarsStore={logics.as}
+            onContextMenu={handleContextualMenu}
+            onContextMenuNewEdge={handleContextualMenuNewEdge}
+            onConnect={onConnect}
+            onDrop={onDrop}
+            onViewportChange={onViewportChange}
+            registerViewportChangeCallback={registerViewportChangeCallback}
+          />
+          <AvatarsRenderer avatarsStore={logics.as} />
+          {edgeMenu && (
+            <EdgeMenu
+              eid={edgeMenu.edgeId}
+              position={[edgeMenu.x, edgeMenu.y]}
+              setRenderProps={handleRenderPropsChange}
+            />
+          )}
+          <ContextualMenu
+            triggerRef={ContextualMenuTriggerRef}
+            entries={spaceMenuEntries({
+              viewId,
+              from,
+              sd: sdm.getData(),
+              position: () => rcc.current,
+              renderForm: setRenderForm,
+              renderPanel: setRenderPanel,
+              dispatcher,
+            })}
+          />
+          {renderForm}
 
-        <ModeIndicator
-          mode={mode}
-          onModeChange={setMode}
-          onContextMenu={handleContextualMenu}
-          lastViewportRef={lastViewportRef}
-        />
+          <ModeIndicator
+            mode={mode}
+            onModeChange={setMode}
+            onContextMenu={handleContextualMenu}
+            lastViewportRef={lastViewportRef}
+          />
+        </div>
+        <div
+          style={{
+            flex: 1,
+          }}
+        >
+          {renderPanel}
+        </div>
       </div>
     </SpaceContext>
   );

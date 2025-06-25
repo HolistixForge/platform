@@ -9,7 +9,8 @@ import { TGraphNode } from '@monorepo/module';
 import { useCallback } from 'react';
 
 import { TNotionSharedData } from '../../notion-shared-model';
-import { NotionKanban } from './notion-database';
+import { TNotionDatabase } from '../../notion-types';
+import { NotionDatabase } from './notion-database';
 import { TNotionEvent } from '../../notion-events';
 
 import './node-notion-database.scss';
@@ -21,8 +22,9 @@ export const NodeNotionDatabase = ({ node }: { node: TGraphNode }) => {
   const useNodeValue = useNodeContext();
   const dispatcher = useDispatcher<TNotionEvent>();
 
-  const database = useSharedData<TNotionSharedData>(['notionDatabases'], (sd) =>
-    sd.notionDatabases.get(databaseId)
+  const database: TNotionDatabase = useSharedData<TNotionSharedData>(
+    ['notionDatabases'],
+    (sd) => sd.notionDatabases.get(databaseId)
   );
 
   const handleDeleteDatabase = useCallback(async () => {
@@ -49,7 +51,7 @@ export const NodeNotionDatabase = ({ node }: { node: TGraphNode }) => {
         visible={useNodeValue.selected}
       />
       <DisableZoomDragPan noZoom noDrag>
-        <NotionKanban
+        <NotionDatabase
           database={database}
           onUpdatePage={(pageId, properties) => {
             dispatcher.dispatch({

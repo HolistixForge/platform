@@ -11,27 +11,27 @@ import {
 
 export type TSpaceMenuEntry =
   | {
-      type: 'item';
-      label: string;
-      icon?: string;
-      onClick: () => void;
-      disabled?: boolean;
-      Form?: FC<{}>;
-    }
+    type: 'item';
+    label: string;
+    icon?: string;
+    onClick: () => void;
+    disabled?: boolean;
+    Form?: FC<{}>;
+  }
   | {
-      type: 'separator';
-    }
+    type: 'separator';
+  }
   | {
-      type: 'label';
-      label: string;
-    }
+    type: 'label';
+    label: string;
+  }
   | {
-      type: 'sub-menu';
-      label: string;
-      icon?: string;
-      entries: TSpaceMenuEntry[];
-      disabled?: boolean;
-    };
+    type: 'sub-menu';
+    label: string;
+    icon?: string;
+    entries: TSpaceMenuEntry[];
+    disabled?: boolean;
+  };
 
 //
 
@@ -41,6 +41,7 @@ export type TSpaceMenuEntries = (a: {
   sd: TValidSharedDataToCopy<TValidSharedData>;
   position: () => { x: number; y: number };
   renderForm: (form: ReactNode) => void;
+  renderPanel: (panel: ReactNode) => void;
   dispatcher: FrontendDispatcher<any>;
 }) => TSpaceMenuEntry[];
 

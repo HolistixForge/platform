@@ -1,0 +1,842 @@
+{
+    "dbResponse": {
+        "object": "database",
+        "id": "2088a806-8674-80b5-9546-c86bfc09a736",
+        "cover": null,
+        "icon": {
+            "type": "external",
+            "external": {
+                "url": "https://www.notion.so/icons/checkmark_green.svg"
+            }
+        },
+        "created_time": "2025-06-04T02:37:00.000Z",
+        "created_by": {
+            "object": "user",
+            "id": "dca1e0b3-bf6a-4bcd-aea3-daa8770b6353"
+        },
+        "last_edited_by": {
+            "object": "user",
+            "id": "dca1e0b3-bf6a-4bcd-aea3-daa8770b6353"
+        },
+        "last_edited_time": "2025-06-22T16:04:00.000Z",
+        "title": [
+            {
+                "type": "text",
+                "text": {
+                    "content": "Phagos",
+                    "link": null
+                },
+                "annotations": {
+                    "bold": false,
+                    "italic": false,
+                    "strikethrough": false,
+                    "underline": false,
+                    "code": false,
+                    "color": "default"
+                },
+                "plain_text": "Phagos",
+                "href": null
+            }
+        ],
+        "description": [
+            {
+                "type": "text",
+                "text": {
+                    "content": "Stay organized with tasks, your way.",
+                    "link": null
+                },
+                "annotations": {
+                    "bold": false,
+                    "italic": false,
+                    "strikethrough": false,
+                    "underline": false,
+                    "code": false,
+                    "color": "default"
+                },
+                "plain_text": "Stay organized with tasks, your way.",
+                "href": null
+            }
+        ],
+        "is_inline": false,
+        "properties": {
+            "Assignee": {
+                "id": "%3AtbL",
+                "name": "Assignee",
+                "description": "Who’s responsible for the project?",
+                "type": "people",
+                "people": {}
+            },
+            "Description": {
+                "id": "By%3Ca",
+                "name": "Description",
+                "type": "rich_text",
+                "rich_text": {}
+            },
+            "Due date": {
+                "id": "FV%5C%7D",
+                "name": "Due date",
+                "type": "date",
+                "date": {}
+            },
+            "order": {
+                "id": "GceS",
+                "name": "order",
+                "type": "number",
+                "number": {
+                    "format": "number"
+                }
+            },
+            "Effort level": {
+                "id": "HaLv",
+                "name": "Effort level",
+                "description": "How long will it take?",
+                "type": "select",
+                "select": {
+                    "options": [
+                        {
+                            "id": "63decdf4-f0e6-4848-a1bf-561e68897381",
+                            "name": "Small",
+                            "color": "green",
+                            "description": null
+                        },
+                        {
+                            "id": "b537cf6c-8cb8-4c3f-9a10-132472389014",
+                            "name": "Medium",
+                            "color": "yellow",
+                            "description": null
+                        },
+                        {
+                            "id": "1993545d-653e-48d0-9496-cfc698410019",
+                            "name": "Large",
+                            "color": "red",
+                            "description": null
+                        }
+                    ]
+                }
+            },
+            "Priority": {
+                "id": "Sc%7B%3F",
+                "name": "Priority",
+                "type": "select",
+                "select": {
+                    "options": [
+                        {
+                            "id": "31c883a7-33f8-470e-9176-8040a40106a4",
+                            "name": "High",
+                            "color": "red",
+                            "description": null
+                        },
+                        {
+                            "id": "56939683-8650-4d96-91e1-0a9d1d1f4a13",
+                            "name": "Medium",
+                            "color": "yellow",
+                            "description": null
+                        },
+                        {
+                            "id": "f16c66a7-64d9-4f1a-8eab-a965d86c01e6",
+                            "name": "Low",
+                            "color": "green",
+                            "description": null
+                        }
+                    ]
+                }
+            },
+            "Status": {
+                "id": "Ylmi",
+                "name": "Status",
+                "type": "status",
+                "status": {
+                    "options": [
+                        {
+                            "id": "2882bc4e-da9f-4eb2-a695-c9b64a3c9899",
+                            "name": "Not started",
+                            "color": "default",
+                            "description": null
+                        },
+                        {
+                            "id": "59a26032-d447-44ed-9b17-7c9dec436fd3",
+                            "name": "In progress",
+                            "color": "blue",
+                            "description": null
+                        },
+                        {
+                            "id": "2150867b-0a8d-4a4e-9135-850e487ebad7",
+                            "name": "Done",
+                            "color": "green",
+                            "description": null
+                        }
+                    ],
+                    "groups": [
+                        {
+                            "id": "94a7f3e8-9c67-4689-977b-266bad4c92d9",
+                            "name": "To-do",
+                            "color": "gray",
+                            "option_ids": [
+                                "2882bc4e-da9f-4eb2-a695-c9b64a3c9899"
+                            ]
+                        },
+                        {
+                            "id": "fd9de969-3830-4e5d-b4ca-51ec4d98a801",
+                            "name": "In progress",
+                            "color": "blue",
+                            "option_ids": [
+                                "59a26032-d447-44ed-9b17-7c9dec436fd3"
+                            ]
+                        },
+                        {
+                            "id": "bd5d4001-3eae-4fa0-bff3-b43b76e76557",
+                            "name": "Complete",
+                            "color": "green",
+                            "option_ids": [
+                                "2150867b-0a8d-4a4e-9135-850e487ebad7"
+                            ]
+                        }
+                    ]
+                }
+            },
+            "Task type": {
+                "id": "gnD%3C",
+                "name": "Task type",
+                "type": "multi_select",
+                "multi_select": {
+                    "options": [
+                        {
+                            "id": "55502a5d-c234-4c43-add0-f6e0d10b04df",
+                            "name": "🐞 Bug",
+                            "color": "orange",
+                            "description": null
+                        },
+                        {
+                            "id": "0fe4966d-f87c-4f31-be39-c6c06ae590bc",
+                            "name": "💬 Feature request",
+                            "color": "green",
+                            "description": null
+                        },
+                        {
+                            "id": "515c96c3-86c3-43c9-b9d4-08f43f10f546",
+                            "name": "💅 Polish",
+                            "color": "pink",
+                            "description": null
+                        }
+                    ]
+                }
+            },
+            "Task name": {
+                "id": "title",
+                "name": "Task name",
+                "type": "title",
+                "title": {}
+            }
+        },
+        "parent": {
+            "type": "workspace",
+            "workspace": true
+        },
+        "url": "https://www.notion.so/2088a806867480b59546c86bfc09a736",
+        "public_url": null,
+        "archived": false,
+        "in_trash": false,
+        "request_id": "ed9f2b43-b59d-4895-bc0f-f7e5383d84a9"
+    },
+    "pagesResponse": {
+        "object": "list",
+        "results": [
+            {
+                "object": "page",
+                "id": "2088a806-8674-8089-8313-e1c35ed3a2a7",
+                "created_time": "2025-06-04T15:57:00.000Z",
+                "last_edited_time": "2025-06-04T15:57:00.000Z",
+                "created_by": {
+                    "object": "user",
+                    "id": "dca1e0b3-bf6a-4bcd-aea3-daa8770b6353"
+                },
+                "last_edited_by": {
+                    "object": "user",
+                    "id": "dca1e0b3-bf6a-4bcd-aea3-daa8770b6353"
+                },
+                "cover": null,
+                "icon": {
+                    "type": "external",
+                    "external": {
+                        "url": "https://www.notion.so/icons/checkmark_green.svg"
+                    }
+                },
+                "parent": {
+                    "type": "database_id",
+                    "database_id": "2088a806-8674-80b5-9546-c86bfc09a736"
+                },
+                "archived": false,
+                "in_trash": false,
+                "properties": {
+                    "Assignee": {
+                        "id": "%3AtbL",
+                        "type": "people",
+                        "people": []
+                    },
+                    "Description": {
+                        "id": "By%3Ca",
+                        "type": "rich_text",
+                        "rich_text": []
+                    },
+                    "Due date": {
+                        "id": "FV%5C%7D",
+                        "type": "date",
+                        "date": null
+                    },
+                    "order": {
+                        "id": "GceS",
+                        "type": "number",
+                        "number": null
+                    },
+                    "Effort level": {
+                        "id": "HaLv",
+                        "type": "select",
+                        "select": null
+                    },
+                    "Priority": {
+                        "id": "Sc%7B%3F",
+                        "type": "select",
+                        "select": null
+                    },
+                    "Status": {
+                        "id": "Ylmi",
+                        "type": "status",
+                        "status": {
+                            "id": "2882bc4e-da9f-4eb2-a695-c9b64a3c9899",
+                            "name": "Not started",
+                            "color": "default"
+                        }
+                    },
+                    "Task type": {
+                        "id": "gnD%3C",
+                        "type": "multi_select",
+                        "multi_select": []
+                    },
+                    "Task name": {
+                        "id": "title",
+                        "type": "title",
+                        "title": []
+                    }
+                },
+                "url": "https://www.notion.so/2088a806867480898313e1c35ed3a2a7",
+                "public_url": null
+            },
+            {
+                "object": "page",
+                "id": "2088a806-8674-80c5-b69a-c93f429213b2",
+                "created_time": "2025-06-04T15:57:00.000Z",
+                "last_edited_time": "2025-06-04T15:57:00.000Z",
+                "created_by": {
+                    "object": "user",
+                    "id": "dca1e0b3-bf6a-4bcd-aea3-daa8770b6353"
+                },
+                "last_edited_by": {
+                    "object": "user",
+                    "id": "dca1e0b3-bf6a-4bcd-aea3-daa8770b6353"
+                },
+                "cover": {
+                    "type": "external",
+                    "external": {
+                        "url": "https://www.notion.so/images/page-cover/nasa_carina_nebula.jpg"
+                    }
+                },
+                "icon": {
+                    "type": "external",
+                    "external": {
+                        "url": "https://www.notion.so/icons/checkmark_green.svg"
+                    }
+                },
+                "parent": {
+                    "type": "database_id",
+                    "database_id": "2088a806-8674-80b5-9546-c86bfc09a736"
+                },
+                "archived": false,
+                "in_trash": false,
+                "properties": {
+                    "Assignee": {
+                        "id": "%3AtbL",
+                        "type": "people",
+                        "people": []
+                    },
+                    "Description": {
+                        "id": "By%3Ca",
+                        "type": "rich_text",
+                        "rich_text": []
+                    },
+                    "Due date": {
+                        "id": "FV%5C%7D",
+                        "type": "date",
+                        "date": null
+                    },
+                    "order": {
+                        "id": "GceS",
+                        "type": "number",
+                        "number": null
+                    },
+                    "Effort level": {
+                        "id": "HaLv",
+                        "type": "select",
+                        "select": null
+                    },
+                    "Priority": {
+                        "id": "Sc%7B%3F",
+                        "type": "select",
+                        "select": null
+                    },
+                    "Status": {
+                        "id": "Ylmi",
+                        "type": "status",
+                        "status": {
+                            "id": "2882bc4e-da9f-4eb2-a695-c9b64a3c9899",
+                            "name": "Not started",
+                            "color": "default"
+                        }
+                    },
+                    "Task type": {
+                        "id": "gnD%3C",
+                        "type": "multi_select",
+                        "multi_select": []
+                    },
+                    "Task name": {
+                        "id": "title",
+                        "type": "title",
+                        "title": [
+                            {
+                                "type": "text",
+                                "text": {
+                                    "content": "ok",
+                                    "link": null
+                                },
+                                "annotations": {
+                                    "bold": false,
+                                    "italic": false,
+                                    "strikethrough": false,
+                                    "underline": false,
+                                    "code": false,
+                                    "color": "default"
+                                },
+                                "plain_text": "ok",
+                                "href": null
+                            }
+                        ]
+                    }
+                },
+                "url": "https://www.notion.so/ok-2088a806867480c5b69ac93f429213b2",
+                "public_url": null
+            },
+            {
+                "object": "page",
+                "id": "2088a806-8674-8022-85ba-c74ea35ed6d7",
+                "created_time": "2025-06-04T02:37:00.000Z",
+                "last_edited_time": "2025-06-04T15:55:00.000Z",
+                "created_by": {
+                    "object": "user",
+                    "id": "dca1e0b3-bf6a-4bcd-aea3-daa8770b6353"
+                },
+                "last_edited_by": {
+                    "object": "user",
+                    "id": "288927a4-06de-491e-9755-fcd5af343c17"
+                },
+                "cover": {
+                    "type": "external",
+                    "external": {
+                        "url": "https://www.notion.so/images/page-cover/met_jean_beraud.jpg"
+                    }
+                },
+                "icon": {
+                    "type": "emoji",
+                    "emoji": "🗒️"
+                },
+                "parent": {
+                    "type": "database_id",
+                    "database_id": "2088a806-8674-80b5-9546-c86bfc09a736"
+                },
+                "archived": false,
+                "in_trash": false,
+                "properties": {
+                    "Assignee": {
+                        "id": "%3AtbL",
+                        "type": "people",
+                        "people": []
+                    },
+                    "Description": {
+                        "id": "By%3Ca",
+                        "type": "rich_text",
+                        "rich_text": [
+                            {
+                                "type": "text",
+                                "text": {
+                                    "content": "Include product updates in next release note.",
+                                    "link": null
+                                },
+                                "annotations": {
+                                    "bold": false,
+                                    "italic": false,
+                                    "strikethrough": false,
+                                    "underline": false,
+                                    "code": false,
+                                    "color": "default"
+                                },
+                                "plain_text": "Include product updates in next release note.",
+                                "href": null
+                            }
+                        ]
+                    },
+                    "Due date": {
+                        "id": "FV%5C%7D",
+                        "type": "date",
+                        "date": {
+                            "start": "2025-02-28",
+                            "end": null,
+                            "time_zone": null
+                        }
+                    },
+                    "order": {
+                        "id": "GceS",
+                        "type": "number",
+                        "number": null
+                    },
+                    "Effort level": {
+                        "id": "HaLv",
+                        "type": "select",
+                        "select": {
+                            "id": "1993545d-653e-48d0-9496-cfc698410019",
+                            "name": "Large",
+                            "color": "red"
+                        }
+                    },
+                    "Priority": {
+                        "id": "Sc%7B%3F",
+                        "type": "select",
+                        "select": {
+                            "id": "f16c66a7-64d9-4f1a-8eab-a965d86c01e6",
+                            "name": "Low",
+                            "color": "green"
+                        }
+                    },
+                    "Status": {
+                        "id": "Ylmi",
+                        "type": "status",
+                        "status": {
+                            "id": "2150867b-0a8d-4a4e-9135-850e487ebad7",
+                            "name": "Done",
+                            "color": "green"
+                        }
+                    },
+                    "Task type": {
+                        "id": "gnD%3C",
+                        "type": "multi_select",
+                        "multi_select": [
+                            {
+                                "id": "0fe4966d-f87c-4f31-be39-c6c06ae590bc",
+                                "name": "💬 Feature request",
+                                "color": "green"
+                            }
+                        ]
+                    },
+                    "Task name": {
+                        "id": "title",
+                        "type": "title",
+                        "title": [
+                            {
+                                "type": "text",
+                                "text": {
+                                    "content": "Publish release notes",
+                                    "link": null
+                                },
+                                "annotations": {
+                                    "bold": false,
+                                    "italic": false,
+                                    "strikethrough": false,
+                                    "underline": false,
+                                    "code": false,
+                                    "color": "default"
+                                },
+                                "plain_text": "Publish release notes",
+                                "href": null
+                            }
+                        ]
+                    }
+                },
+                "url": "https://www.notion.so/Publish-release-notes-2088a8068674802285bac74ea35ed6d7",
+                "public_url": null
+            },
+            {
+                "object": "page",
+                "id": "2088a806-8674-8067-8bd0-da282285cb92",
+                "created_time": "2025-06-04T02:37:00.000Z",
+                "last_edited_time": "2025-06-04T04:13:00.000Z",
+                "created_by": {
+                    "object": "user",
+                    "id": "dca1e0b3-bf6a-4bcd-aea3-daa8770b6353"
+                },
+                "last_edited_by": {
+                    "object": "user",
+                    "id": "dca1e0b3-bf6a-4bcd-aea3-daa8770b6353"
+                },
+                "cover": {
+                    "type": "external",
+                    "external": {
+                        "url": "https://www.notion.so/images/page-cover/woodcuts_7.jpg"
+                    }
+                },
+                "icon": {
+                    "type": "emoji",
+                    "emoji": "📕"
+                },
+                "parent": {
+                    "type": "database_id",
+                    "database_id": "2088a806-8674-80b5-9546-c86bfc09a736"
+                },
+                "archived": false,
+                "in_trash": false,
+                "properties": {
+                    "Assignee": {
+                        "id": "%3AtbL",
+                        "type": "people",
+                        "people": []
+                    },
+                    "Description": {
+                        "id": "By%3Ca",
+                        "type": "rich_text",
+                        "rich_text": [
+                            {
+                                "type": "text",
+                                "text": {
+                                    "content": "Update support documents to reflect new product releases.",
+                                    "link": null
+                                },
+                                "annotations": {
+                                    "bold": false,
+                                    "italic": false,
+                                    "strikethrough": false,
+                                    "underline": false,
+                                    "code": false,
+                                    "color": "default"
+                                },
+                                "plain_text": "Update support documents to reflect new product releases.",
+                                "href": null
+                            }
+                        ]
+                    },
+                    "Due date": {
+                        "id": "FV%5C%7D",
+                        "type": "date",
+                        "date": {
+                            "start": "2025-02-20",
+                            "end": null,
+                            "time_zone": null
+                        }
+                    },
+                    "order": {
+                        "id": "GceS",
+                        "type": "number",
+                        "number": null
+                    },
+                    "Effort level": {
+                        "id": "HaLv",
+                        "type": "select",
+                        "select": {
+                            "id": "b537cf6c-8cb8-4c3f-9a10-132472389014",
+                            "name": "Medium",
+                            "color": "yellow"
+                        }
+                    },
+                    "Priority": {
+                        "id": "Sc%7B%3F",
+                        "type": "select",
+                        "select": {
+                            "id": "56939683-8650-4d96-91e1-0a9d1d1f4a13",
+                            "name": "Medium",
+                            "color": "yellow"
+                        }
+                    },
+                    "Status": {
+                        "id": "Ylmi",
+                        "type": "status",
+                        "status": {
+                            "id": "59a26032-d447-44ed-9b17-7c9dec436fd3",
+                            "name": "In progress",
+                            "color": "blue"
+                        }
+                    },
+                    "Task type": {
+                        "id": "gnD%3C",
+                        "type": "multi_select",
+                        "multi_select": [
+                            {
+                                "id": "0fe4966d-f87c-4f31-be39-c6c06ae590bc",
+                                "name": "💬 Feature request",
+                                "color": "green"
+                            }
+                        ]
+                    },
+                    "Task name": {
+                        "id": "title",
+                        "type": "title",
+                        "title": [
+                            {
+                                "type": "text",
+                                "text": {
+                                    "content": "Update help center & FAQ",
+                                    "link": null
+                                },
+                                "annotations": {
+                                    "bold": false,
+                                    "italic": false,
+                                    "strikethrough": false,
+                                    "underline": false,
+                                    "code": false,
+                                    "color": "default"
+                                },
+                                "plain_text": "Update help center & FAQ",
+                                "href": null
+                            }
+                        ]
+                    }
+                },
+                "url": "https://www.notion.so/Update-help-center-FAQ-2088a806867480678bd0da282285cb92",
+                "public_url": null
+            },
+            {
+                "object": "page",
+                "id": "2088a806-8674-80a0-953b-e1f45eba33ca",
+                "created_time": "2025-06-04T02:37:00.000Z",
+                "last_edited_time": "2025-06-04T04:13:00.000Z",
+                "created_by": {
+                    "object": "user",
+                    "id": "dca1e0b3-bf6a-4bcd-aea3-daa8770b6353"
+                },
+                "last_edited_by": {
+                    "object": "user",
+                    "id": "dca1e0b3-bf6a-4bcd-aea3-daa8770b6353"
+                },
+                "cover": {
+                    "type": "external",
+                    "external": {
+                        "url": "https://www.notion.so/images/page-cover/met_silk_kashan_carpet.jpg"
+                    }
+                },
+                "icon": null,
+                "parent": {
+                    "type": "database_id",
+                    "database_id": "2088a806-8674-80b5-9546-c86bfc09a736"
+                },
+                "archived": false,
+                "in_trash": false,
+                "properties": {
+                    "Assignee": {
+                        "id": "%3AtbL",
+                        "type": "people",
+                        "people": []
+                    },
+                    "Description": {
+                        "id": "By%3Ca",
+                        "type": "rich_text",
+                        "rich_text": [
+                            {
+                                "type": "text",
+                                "text": {
+                                    "content": "Change header text to better reflect our latest product offerings.",
+                                    "link": null
+                                },
+                                "annotations": {
+                                    "bold": false,
+                                    "italic": false,
+                                    "strikethrough": false,
+                                    "underline": false,
+                                    "code": false,
+                                    "color": "default"
+                                },
+                                "plain_text": "Change header text to better reflect our latest product offerings.",
+                                "href": null
+                            }
+                        ]
+                    },
+                    "Due date": {
+                        "id": "FV%5C%7D",
+                        "type": "date",
+                        "date": {
+                            "start": "2025-02-03",
+                            "end": null,
+                            "time_zone": null
+                        }
+                    },
+                    "order": {
+                        "id": "GceS",
+                        "type": "number",
+                        "number": null
+                    },
+                    "Effort level": {
+                        "id": "HaLv",
+                        "type": "select",
+                        "select": {
+                            "id": "63decdf4-f0e6-4848-a1bf-561e68897381",
+                            "name": "Small",
+                            "color": "green"
+                        }
+                    },
+                    "Priority": {
+                        "id": "Sc%7B%3F",
+                        "type": "select",
+                        "select": {
+                            "id": "31c883a7-33f8-470e-9176-8040a40106a4",
+                            "name": "High",
+                            "color": "red"
+                        }
+                    },
+                    "Status": {
+                        "id": "Ylmi",
+                        "type": "status",
+                        "status": {
+                            "id": "2150867b-0a8d-4a4e-9135-850e487ebad7",
+                            "name": "Done",
+                            "color": "green"
+                        }
+                    },
+                    "Task type": {
+                        "id": "gnD%3C",
+                        "type": "multi_select",
+                        "multi_select": [
+                            {
+                                "id": "515c96c3-86c3-43c9-b9d4-08f43f10f546",
+                                "name": "💅 Polish",
+                                "color": "pink"
+                            }
+                        ]
+                    },
+                    "Task name": {
+                        "id": "title",
+                        "type": "title",
+                        "title": [
+                            {
+                                "type": "text",
+                                "text": {
+                                    "content": "Improve website copy",
+                                    "link": null
+                                },
+                                "annotations": {
+                                    "bold": false,
+                                    "italic": false,
+                                    "strikethrough": false,
+                                    "underline": false,
+                                    "code": false,
+                                    "color": "default"
+                                },
+                                "plain_text": "Improve website copy",
+                                "href": null
+                            }
+                        ]
+                    }
+                },
+                "url": "https://www.notion.so/Improve-website-copy-2088a806867480a0953be1f45eba33ca",
+                "public_url": null
+            }
+        ],
+        "next_cursor": null,
+        "has_more": false,
+        "type": "page_or_database",
+        "page_or_database": {},
+        "request_id": "c3ab1ff5-174c-45e1-bb36-234badf657ae"
+    }
+}
