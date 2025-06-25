@@ -10,7 +10,7 @@ import { useCallback } from 'react';
 
 import { TNotionSharedData } from '../../notion-shared-model';
 import { TNotionDatabase } from '../../notion-types';
-import { NotionDatabase } from './notion-database';
+import { NotionDatabase, TNotionViewMode } from './notion-database';
 import { TNotionEvent } from '../../notion-events';
 
 import './node-notion-database.scss';
@@ -82,6 +82,12 @@ export const NodeNotionDatabase = ({ node }: { node: TGraphNode }) => {
               pageId,
               newPosition,
             });
+          }}
+          viewMode={{
+            mode: 'list',
+          }}
+          setViewMode={function (viewMode: TNotionViewMode): void {
+            throw new Error('Function not implemented.');
           }}
         />
       </DisableZoomDragPan>

@@ -21,7 +21,8 @@ type Ra<T> = ReduceArgs<
   TCoreSharedData,
   T,
   Record<string, never>,
-  Record<string, never>
+  Record<string, never>,
+  undefined
 >;
 
 // TODO_DEM: timer and events system
@@ -37,7 +38,8 @@ export class MetaReducer extends Reducer<
   TCoreSharedData,
   ReducedEvents,
   Record<string, never>,
-  Record<string, never>
+  Record<string, never>,
+  undefined
 > {
   //
 

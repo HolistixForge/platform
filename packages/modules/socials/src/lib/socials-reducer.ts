@@ -18,7 +18,7 @@ import {
 
 type DispatchedEvents = TEventNewNode | TEventDeleteNode;
 
-type Ra<T> = ReduceArgs<{}, T, DispatchedEvents, undefined>;
+type Ra<T> = ReduceArgs<{}, T, DispatchedEvents, undefined, undefined>;
 
 //
 
@@ -26,6 +26,7 @@ export class SocialsReducer extends Reducer<
   {},
   TEventSocials,
   DispatchedEvents,
+  undefined,
   undefined
 > {
   //
