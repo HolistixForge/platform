@@ -1,5 +1,6 @@
 import { TEventOrigin } from '@monorepo/core';
 import { TNotionProperty } from './notion-types';
+import { TNotionViewMode } from './components/node-notion/notion-database';
 
 export type TEventInitDatabase = {
   type: 'notion:init-database';
@@ -59,6 +60,13 @@ export type TEventDeleteDatabase = {
   databaseId: string;
 };
 
+export type TEventSetNodeView = {
+  type: 'notion:set-node-view';
+  nodeId: string;
+  viewId: string;
+  viewMode: TNotionViewMode;
+};
+
 export type TNotionEvent =
   | TEventInitDatabase
   | TEventUpdatePage
@@ -69,4 +77,5 @@ export type TNotionEvent =
   | TEventLoadPageNode
   | TEventDeletePageNode
   | TEventDeleteDatabaseNode
-  | TEventDeleteDatabase;
+  | TEventDeleteDatabase
+  | TEventSetNodeView;

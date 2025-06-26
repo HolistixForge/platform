@@ -17,14 +17,46 @@ import './node-notion-database.scss';
 
 //
 
-export const NodeNotionDatabase = ({ node }: { node: TGraphNode }) => {
-  const databaseId = node.data!.databaseId as string;
+export type TNodeNotionDatabaseDataPayload = {
+  databaseId: string;
+};
+
+export const NodeNotionDatabase = ({
+  node,
+}: {
+  node: TGraphNode<TNodeNotionDatabaseDataPayload>;
+}) => {
+  const databaseId = node.data!.databaseId;
+
   const useNodeValue = useNodeContext();
   const dispatcher = useDispatcher<TNotionEvent>();
 
   const database: TNotionDatabase = useSharedData<TNotionSharedData>(
     ['notionDatabases'],
     (sd) => sd.notionDatabases.get(databaseId)
+  );
+
+  const viewMode: TNotionViewMode = useSharedData<TNotionSharedData>(
+    ['notionNodeViews'],
+    (sd) =>
+      Array.from(sd.notionNodeViews.values()).find(
+        (v) => v.nodeId === node.id && v.viewId === useNodeValue.viewId
+      )?.viewMode || {
+        mode: 'kanban',
+        groupBy: 'status',
+      }
+  );
+
+  const setViewMode = useCallback(
+    (viewMode: TNotionViewMode) => {
+      dispatcher.dispatch({
+        type: 'notion:set-node-view',
+        nodeId: node.id,
+        viewId: useNodeValue.viewId,
+        viewMode,
+      });
+    },
+    [dispatcher, node.id, useNodeValue.viewId]
   );
 
   const handleDeleteDatabase = useCallback(async () => {
@@ -41,7 +73,7 @@ export const NodeNotionDatabase = ({ node }: { node: TGraphNode }) => {
   if (!database) return <div>Database not found</div>;
 
   return (
-    <div className="node-notion">
+    <div className="common-node node-notion node-resizable">
       <NodeHeader
         buttons={buttons}
         nodeType="notion-database"
@@ -50,7 +82,7 @@ export const NodeNotionDatabase = ({ node }: { node: TGraphNode }) => {
         open={useNodeValue.open}
         visible={useNodeValue.selected}
       />
-      <DisableZoomDragPan noZoom noDrag>
+      <DisableZoomDragPan noZoom noDrag fullHeight>
         <NotionDatabase
           database={database}
           onUpdatePage={(pageId, properties) => {
@@ -83,12 +115,8 @@ export const NodeNotionDatabase = ({ node }: { node: TGraphNode }) => {
               newPosition,
             });
           }}
-          viewMode={{
-            mode: 'list',
-          }}
-          setViewMode={function (viewMode: TNotionViewMode): void {
-            throw new Error('Function not implemented.');
-          }}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
         />
       </DisableZoomDragPan>
     </div>

@@ -9,7 +9,7 @@ import { makeUuid } from '@monorepo/simple-types';
 import { NewNotionDatabaseForm } from './components/forms/new-database';
 import { TNotionSharedData } from './notion-shared-model';
 import { TNotionEvent } from './notion-events';
-import { TNodeNotionDataPayload } from './components/node-notion/node-notion-task';
+import { TNodeNotionDatabaseDataPayload } from './components/node-notion/node-notion-database';
 
 //
 
@@ -50,9 +50,8 @@ export const notionMenuEntries: TSpaceMenuEntries = ({
           type: 'item',
           label: 'Embed',
           onClick: () => {
-            const data: TNodeNotionDataPayload = {
+            const data: TNodeNotionDatabaseDataPayload = {
               databaseId: db.id,
-              pageId: '',
             };
             d.dispatch({
               type: 'core:new-node',

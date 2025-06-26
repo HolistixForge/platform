@@ -7,7 +7,6 @@ drag and drop one task from emebed
 
 node task ==> task Item
 node kanban column ==> column
-node database ==> database
 
 //
 

@@ -1,6 +1,7 @@
 .notion-kanban {
   width: 100%;
   min-height: 100%;
+  max-height: 100%;
   padding: 20px;
   border-radius: var(--node-border-radius);
 
@@ -78,6 +79,7 @@
   gap: 16px;
   overflow-x: auto;
   padding: 16px 0;
+
   .notion-kanban-column {
     flex: 1;
     min-width: 0;

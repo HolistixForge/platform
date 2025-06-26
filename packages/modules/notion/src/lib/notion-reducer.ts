@@ -16,6 +16,7 @@ import {
   TEventUpdatePage,
   TNotionEvent,
   TEventDeleteDatabase,
+  TEventSetNodeView,
 } from './notion-events';
 
 import { TNotionSharedData } from './notion-shared-model';
@@ -90,6 +91,9 @@ export class NotionReducer extends Reducer<
 
       case 'notion:delete-database':
         return this._deleteDatabase(g as Ra<TEventDeleteDatabase>);
+
+      case 'notion:set-node-view':
+        return this._setNodeView(g as Ra<TEventSetNodeView>);
 
       case 'periodic':
         return this._periodic(g as Ra<TEventPeriodic>);
@@ -363,7 +367,13 @@ export class NotionReducer extends Reducer<
       // Remove from shared data
       g.sd.notionDatabases.delete(databaseId);
     }
+  }
 
+  //
 
+  private async _setNodeView(g: Ra<TEventSetNodeView>): Promise<void> {
+    const { nodeId, viewId, viewMode } = g.event;
+    g.sd.notionNodeViews.set(`${nodeId}-${viewId}`,
+      { type: 'database', databaseId: nodeId, nodeId, viewId, viewMode });
   }
 }
