@@ -19,7 +19,7 @@ import { useDispatcher } from '@monorepo/collab-engine';
 import { icons as icons2 } from '../inputsOutputs/icons';
 import { DisableZoomDragPan } from '../../node-wrappers/disable-zoom-drag-pan';
 import { useNodeContext } from '../../node-wrappers/node-wrapper';
-import { TSpaceEvent } from '../../../../space-events';
+import { TSpaceEvent } from '../../../space-events';
 
 import './node-main-toolbar.scss';
 

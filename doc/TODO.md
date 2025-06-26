@@ -1,8 +1,5 @@
 ⚠️ Antoine's stuffs
 
-right click -> notion -> add database ==> open right panel => close
-right click -> notion -> databse -> open / embed / close
-
 drag and drop within kanban column
 drag and drop one kanban column
 drag and drop one task from right panel
@@ -11,8 +8,6 @@ drag and drop one task from emebed
 node task ==> task Item
 node kanban column ==> column
 node database ==> database
-
-right panel: select db, close
 
 //
 

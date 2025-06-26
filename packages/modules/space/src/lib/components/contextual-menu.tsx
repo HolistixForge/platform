@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 import { TSpaceMenuEntry } from '@monorepo/module/frontend';
 import * as ContextMenu from '@radix-ui/react-context-menu';
 import { ChevronRightIcon } from '@radix-ui/react-icons';
@@ -6,13 +8,19 @@ import { ChevronRightIcon } from '@radix-ui/react-icons';
 
 export const ContextualMenu = ({
   triggerRef,
-  entries,
+  entries: entriesFn,
 }: {
   triggerRef: React.Ref<HTMLSpanElement>;
-  entries: TSpaceMenuEntry[];
+  entries: () => TSpaceMenuEntry[];
 }) => {
+  const [entries, setEntries] = useState<TSpaceMenuEntry[]>([]);
+
   return (
-    <ContextMenu.Root>
+    <ContextMenu.Root
+      onOpenChange={() => {
+        setEntries(entriesFn());
+      }}
+    >
       <ContextMenu.Trigger ref={triggerRef} className="ContextMenuTrigger" />
       <ContextMenu.Portal>
         <ContextMenu.Content

@@ -1,4 +1,12 @@
-import { FC, ReactNode, useCallback, useMemo, useRef, useState } from 'react';
+import React, {
+  FC,
+  ReactNode,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  useEffect,
+} from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 
 import {
@@ -9,7 +17,11 @@ import {
   TEdgeEnd,
 } from '@monorepo/core';
 import { TGraphNode } from '@monorepo/module';
-import { TSpaceMenuEntries } from '@monorepo/module/frontend';
+import {
+  PanelComponent,
+  TPanel,
+  TSpaceMenuEntries,
+} from '@monorepo/module/frontend';
 import {
   useDispatcher,
   useAwareness,
@@ -35,6 +47,7 @@ import { ReactflowLayer } from './reactflow-layer';
 import { ExcalidrawLayer } from './excalidraw-layer';
 import { EdgeMenu } from './assets/edges/edge-menu';
 import { CustomStoryEdge } from './edge';
+import { icons } from '@monorepo/ui-base';
 
 //
 
@@ -88,6 +101,7 @@ export type HolistixSpaceProps = {
   viewId: string;
   nodeTypes: TNodeTypes;
   spaceMenuEntries: TSpaceMenuEntries;
+  panelsDefs?: Record<string, PanelComponent>;
 };
 
 //
@@ -118,6 +132,7 @@ export const HolistixSpace = ({
   viewId,
   nodeTypes,
   spaceMenuEntries,
+  panelsDefs,
 }: HolistixSpaceProps) => {
   //
   const sdm = useShareDataManager<TSpaceSharedData & TCoreSharedData>();
@@ -197,6 +212,10 @@ export const HolistixSpace = ({
   const lastViewportRef = useRef<Viewport>(INITIAL_VIEWPORT);
 
   const viewportChangeCallbacks = useRef<((viewport: Viewport) => void)[]>([]);
+
+  // Right panel resize state
+  const [rightPanelWidth, setRightPanelWidth] = useState<number>(33); // 33% default
+  const [isResizing, setIsResizing] = useState<boolean>(false);
 
   // Toggle pan-only mode with Shift+Z
   useHotkeys(
@@ -307,6 +326,43 @@ export const HolistixSpace = ({
     _setEdgeMenu(null);
   }, [setEdgeMenu]);
 
+  // Resize handlers
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  }, []);
+
+  const handleResizeMove = useCallback(
+    (e: MouseEvent) => {
+      if (!isResizing) return;
+
+      const containerWidth = window.innerWidth;
+      const newWidth = (e.clientX / containerWidth) * 100;
+
+      // Clamp between 20% and 80%
+      const clampedWidth = Math.max(20, Math.min(80, newWidth));
+
+      setRightPanelWidth(100 - clampedWidth);
+    },
+    [isResizing]
+  );
+
+  const handleResizeEnd = useCallback(() => {
+    setIsResizing(false);
+  }, []);
+
+  // Add/remove global mouse event listeners
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleResizeMove);
+      document.addEventListener('mouseup', handleResizeEnd);
+    }
+    return () => {
+      document.removeEventListener('mousemove', handleResizeMove);
+      document.removeEventListener('mouseup', handleResizeEnd);
+    };
+  }, [isResizing, handleResizeMove, handleResizeEnd]);
+
   //
 
   const context = useMemo(
@@ -324,7 +380,20 @@ export const HolistixSpace = ({
 
   const [renderForm, setRenderForm] = useState<ReactNode | null>(null);
 
-  const [renderPanel, setRenderPanel] = useState<ReactNode | null>(null);
+  const [panels, setPanels] = useState<TPanel[]>([]);
+
+  const renderPanel = useCallback((panel: TPanel) => {
+    setPanels((panels) => [...panels, panel]);
+  }, []);
+
+  const closePanel = useCallback((uuid: string) => {
+    setPanels((panels) => panels.filter((p) => p.uuid !== uuid));
+  }, []);
+
+  const Panel =
+    panels.length > 0
+      ? panelsDefs?.[panels[panels.length - 1].type] ?? (() => null)
+      : () => null;
 
   /**
    *
@@ -337,7 +406,7 @@ export const HolistixSpace = ({
           className={`demiurge-space ${mode}`}
           style={{
             flex: 1,
-            width: '100%',
+            width: `${100 - rightPanelWidth}%`,
             height: '100%',
             position: 'relative',
           }}
@@ -378,18 +447,7 @@ export const HolistixSpace = ({
               setRenderProps={handleRenderPropsChange}
             />
           )}
-          <ContextualMenu
-            triggerRef={ContextualMenuTriggerRef}
-            entries={spaceMenuEntries({
-              viewId,
-              from,
-              sd: sdm.getData(),
-              position: () => rcc.current,
-              renderForm: setRenderForm,
-              renderPanel: setRenderPanel,
-              dispatcher,
-            })}
-          />
+
           {renderForm}
 
           <ModeIndicator
@@ -399,13 +457,79 @@ export const HolistixSpace = ({
             lastViewportRef={lastViewportRef}
           />
         </div>
-        <div
-          style={{
-            flex: 1,
-          }}
-        >
-          {renderPanel}
-        </div>
+
+        {/* Resize handle */}
+        {panels.length > 0 && (
+          <>
+            <div
+              style={{
+                width: '2px',
+                backgroundColor: isResizing ? '#007acc' : 'var(--c-pink-4)',
+                cursor: 'col-resize',
+                position: 'relative',
+                zIndex: 10,
+              }}
+              onMouseDown={handleResizeStart}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: '2px',
+                  height: '20px',
+                  backgroundColor: isResizing ? '#007acc' : '#999',
+                  borderRadius: '1px',
+                }}
+              />
+            </div>
+
+            <div
+              style={{
+                width: `${rightPanelWidth}%`,
+                height: '100%',
+                overflow: 'auto',
+              }}
+            >
+              <Panel
+                panel={panels[panels.length - 1]}
+                closePanel={closePanel}
+              />
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '10px',
+                  right: '10px',
+                  width: '20px',
+                  height: '20px',
+                  backgroundColor: 'var(--c-pink-4)',
+                  cursor: 'pointer',
+                  borderRadius: '3px',
+                }}
+                onClick={() => setPanels(panels.slice(0, -1))}
+              >
+                <icons.Close style={{ width: '20px', height: '20px' }} />
+              </div>
+            </div>
+          </>
+        )}
+
+        <ContextualMenu
+          triggerRef={ContextualMenuTriggerRef}
+          entries={() =>
+            spaceMenuEntries({
+              viewId,
+              from,
+              sharedData: sdm.getData(),
+              position: () => rcc.current,
+              renderForm: setRenderForm,
+              renderPanel,
+              closePanel,
+              dispatcher,
+            })
+          }
+        />
       </div>
     </SpaceContext>
   );

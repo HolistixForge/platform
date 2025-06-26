@@ -6,7 +6,7 @@ import { NewIframeForm } from './forms/form-new-iframe';
 export const socialsMenuEntries: TSpaceMenuEntries = ({
   viewId,
   from,
-  sd,
+  sharedData,
   position,
   renderForm,
   dispatcher,

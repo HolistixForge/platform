@@ -1,12 +1,89 @@
-import { TSpaceMenuEntries } from '@monorepo/module/frontend';
+import { TSpaceMenuEntries, TSpaceMenuEntry } from '@monorepo/module/frontend';
+import {
+  FrontendDispatcher,
+  TValidSharedDataToCopy,
+} from '@monorepo/collab-engine';
+import { TCoreEvent } from '@monorepo/core';
+import { makeUuid } from '@monorepo/simple-types';
+
 import { NewNotionDatabaseForm } from './components/forms/new-database';
+import { TNotionSharedData } from './notion-shared-model';
+import { TNotionEvent } from './notion-events';
+import { TNodeNotionDataPayload } from './components/node-notion/node-notion-task';
+
+//
 
 export const notionMenuEntries: TSpaceMenuEntries = ({
   from,
   viewId,
   position,
   renderForm,
+  renderPanel,
+  sharedData,
+  dispatcher,
 }) => {
+  const tsd = sharedData as TValidSharedDataToCopy<TNotionSharedData>;
+  const d = dispatcher as FrontendDispatcher<TNotionEvent | TCoreEvent>;
+
+  const databases: TSpaceMenuEntry[] = Array.from(
+    tsd.notionDatabases.entries()
+  ).map(([id, db]) => {
+    const title = db.title?.[0]?.plain_text;
+    return {
+      label: title,
+      type: 'sub-menu',
+      entries: [
+        {
+          type: 'item',
+          label: 'Open',
+          onClick: () => {
+            renderPanel({
+              type: 'notion-database',
+              uuid: makeUuid(),
+              data: {
+                databaseId: db.id,
+              },
+            });
+          },
+        },
+        {
+          type: 'item',
+          label: 'Embed',
+          onClick: () => {
+            const data: TNodeNotionDataPayload = {
+              databaseId: db.id,
+              pageId: '',
+            };
+            d.dispatch({
+              type: 'core:new-node',
+              nodeData: {
+                id: makeUuid(),
+                name: `Notion Database ${db.title?.[0]?.plain_text}`,
+                root: true,
+                type: 'notion-database',
+                data,
+                connectors: [{ connectorName: 'outputs', pins: [] }],
+              },
+              edges: [],
+              origin: {
+                viewId,
+                position: position(),
+              },
+            });
+          },
+          disabled: from !== undefined,
+        },
+        {
+          type: 'item',
+          label: 'Delete',
+          onClick: () => {
+            d.dispatch({ type: 'notion:delete-database', databaseId: db.id });
+          },
+        },
+      ],
+    };
+  });
+
   return [
     {
       type: 'sub-menu',
@@ -24,10 +101,15 @@ export const notionMenuEntries: TSpaceMenuEntries = ({
                 closeForm={() => {
                   renderForm(null);
                 }}
+                renderPanel={renderPanel}
               />
             );
           },
         },
+        {
+          type: 'separator',
+        },
+        ...databases,
       ],
     },
   ];

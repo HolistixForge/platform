@@ -23,8 +23,7 @@ class Observable<TO> {
 
 class MyMap<T extends TJson>
   extends Observable<(event: TEvent) => void>
-  implements SharedMap<T>
-{
+  implements SharedMap<T> {
   _nsts: NoneSharedTypes[] = [];
   _map: Map<string, T> = new Map<string, T>();
 
@@ -46,6 +45,7 @@ class MyMap<T extends TJson>
 
   delete(k: string): void {
     this._map.delete(k);
+    this._nsts.forEach((nst) => nst.flagChange(this._observer));
   }
 
   set(k: string, o: T): void {
@@ -76,8 +76,7 @@ class MyMap<T extends TJson>
 
 class MyArray<T extends TJson>
   extends Observable<(event: TEvent) => void>
-  implements SharedArray<T>
-{
+  implements SharedArray<T> {
   _array: Array<T> = [];
   _nsts: NoneSharedTypes[] = [];
 

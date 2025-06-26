@@ -40,25 +40,17 @@ export type TImportantProperties = {
 type NotionDatabaseProps = {
   database: TNotionDatabase;
   viewMode: TNotionViewMode;
-  setViewMode: (viewMode: TNotionViewMode) => void;
-  onUpdatePage: (pageId: string, properties: Record<string, any>) => void;
-  onCreatePage: (properties: Record<string, any>) => void;
-  onDeletePage: (pageId: string) => void;
-  onReorderPage: (pageId: string, newPosition: number) => void;
+  setViewMode?: (viewMode: TNotionViewMode) => void;
+  onUpdatePage?: (pageId: string, properties: Record<string, any>) => void;
+  onCreatePage?: (properties: Record<string, any>) => void;
+  onDeletePage?: (pageId: string) => void;
+  onReorderPage?: (pageId: string, newPosition: number) => void;
 };
 
 //
 
 export const NotionDatabase = (props: NotionDatabaseProps) => {
-  const {
-    database,
-    viewMode,
-    setViewMode,
-    onUpdatePage,
-    onCreatePage,
-    onDeletePage,
-    onReorderPage,
-  } = props;
+  const { database, viewMode, setViewMode, onUpdatePage } = props;
 
   // identify wich property is of type title
   const titleProperty = Object.values(database.properties).find(
@@ -82,50 +74,54 @@ export const NotionDatabase = (props: NotionDatabaseProps) => {
   // console.log({ titleProperty, priorityProperty, statusProperty });
 
   return (
-    <div className="node-background notion-kanban w-full">
+    <div className="node-background notion-kanban">
       <div className="notion-kanban-header">
         <Logo />
         <h2 className="notion-h2">{database.title[0].text.content}</h2>
-        <div className="notion-view-switcher">
-          <button
-            className={viewMode.mode === 'list' ? 'active' : ''}
-            onClick={() => setViewMode({ mode: 'list' })}
-          >
-            List
-          </button>
-          {statusProperty && (
+        {setViewMode && (
+          <div className="notion-view-switcher">
             <button
-              className={
-                viewMode.mode === 'kanban' && viewMode.groupBy === 'status'
-                  ? 'active'
-                  : ''
-              }
-              onClick={() => setViewMode({ mode: 'kanban', groupBy: 'status' })}
+              className={viewMode.mode === 'list' ? 'active' : ''}
+              onClick={() => setViewMode({ mode: 'list' })}
             >
-              Kanban (Status)
+              List
             </button>
-          )}
-          {priorityProperty && (
+            {statusProperty && (
+              <button
+                className={
+                  viewMode.mode === 'kanban' && viewMode.groupBy === 'status'
+                    ? 'active'
+                    : ''
+                }
+                onClick={() =>
+                  setViewMode({ mode: 'kanban', groupBy: 'status' })
+                }
+              >
+                Kanban (Status)
+              </button>
+            )}
+            {priorityProperty && (
+              <button
+                className={
+                  viewMode.mode === 'kanban' && viewMode.groupBy === 'priority'
+                    ? 'active'
+                    : ''
+                }
+                onClick={() =>
+                  setViewMode({ mode: 'kanban', groupBy: 'priority' })
+                }
+              >
+                Kanban (Priority)
+              </button>
+            )}
             <button
-              className={
-                viewMode.mode === 'kanban' && viewMode.groupBy === 'priority'
-                  ? 'active'
-                  : ''
-              }
-              onClick={() =>
-                setViewMode({ mode: 'kanban', groupBy: 'priority' })
-              }
+              className={viewMode.mode === 'gallery' ? 'active' : ''}
+              onClick={() => setViewMode({ mode: 'gallery', itemPerLine: 3 })}
             >
-              Kanban (Priority)
+              Gallery
             </button>
-          )}
-          <button
-            className={viewMode.mode === 'gallery' ? 'active' : ''}
-            onClick={() => setViewMode({ mode: 'gallery', itemPerLine: 3 })}
-          >
-            Gallery
-          </button>
-        </div>
+          </div>
+        )}
       </div>
       {viewMode.mode === 'list' && (
         <NotionDatabaseList
@@ -143,7 +139,6 @@ export const NotionDatabase = (props: NotionDatabaseProps) => {
           database={database}
           viewMode={viewMode}
           onUpdatePage={onUpdatePage}
-          onReorderPage={onReorderPage}
         />
       )}
       {viewMode.mode === 'gallery' && (

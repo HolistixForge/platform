@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react';
 import { Handle, Position, useUpdateNodeInternals } from '@xyflow/react';
 
 import { useDispatcher } from '@monorepo/collab-engine';
-import { useRegisterListener } from '@monorepo/simple-types';
 
 import { icons } from './icons';
 import { Slot } from '../slot/Slot';

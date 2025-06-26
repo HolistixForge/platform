@@ -51,6 +51,11 @@ export type TEventDeletePageNode = {
 
 export type TEventDeleteDatabaseNode = {
   type: 'notion:delete-database-node';
+  nodeId: string;
+};
+
+export type TEventDeleteDatabase = {
+  type: 'notion:delete-database';
   databaseId: string;
 };
 
@@ -63,4 +68,5 @@ export type TNotionEvent =
   | TEventSyncDatabase
   | TEventLoadPageNode
   | TEventDeletePageNode
-  | TEventDeleteDatabaseNode;
+  | TEventDeleteDatabaseNode
+  | TEventDeleteDatabase;

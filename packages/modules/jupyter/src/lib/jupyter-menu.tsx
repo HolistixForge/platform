@@ -15,12 +15,12 @@ import { TJupyterEvent } from './jupyter-events';
 export const spaceMenuEntrie: TSpaceMenuEntries = ({
   viewId,
   from,
-  sd,
+  sharedData,
   position,
   renderForm,
   dispatcher,
 }) => {
-  const tsd = sd as TValidSharedDataToCopy<
+  const tsd = sharedData as TValidSharedDataToCopy<
     TJupyterSharedData & TCoreSharedData
   >;
 

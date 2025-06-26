@@ -15,11 +15,10 @@ type NotionDatabaseKanbanProps = {
   database: TNotionDatabase;
   viewMode: { mode: 'kanban'; groupBy: 'status' | 'priority' };
 
-  onUpdatePage: (
+  onUpdatePage?: (
     pageId: string,
     properties: Record<string, TNotionProperty>
   ) => void;
-  onReorderPage: (pageId: string, newPosition: number) => void;
 } & TImportantProperties;
 
 //
@@ -28,7 +27,6 @@ export const NotionDatabaseKanban = ({
   database,
   viewMode,
   onUpdatePage,
-  onReorderPage,
   titleProperty,
   priorityProperty,
   statusProperty,
@@ -128,7 +126,7 @@ export const NotionDatabaseKanban = ({
                       color: targetOption.color,
                     },
                   };
-            onUpdatePage(pageId, { [property.name]: newProperty });
+            onUpdatePage?.(pageId, { [property.name]: newProperty });
           }
         }
       } catch (error) {

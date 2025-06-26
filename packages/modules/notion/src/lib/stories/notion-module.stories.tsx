@@ -164,10 +164,17 @@ const nodeTypes = modulesFrontend.reduce((acc, module) => {
 //
 
 const spaceMenuEntries: TSpaceMenuEntries = (args) => {
+  console.log('spaceMenuEntries', args);
   return modulesFrontend.reduce((acc, module) => {
     return [...acc, ...module.spaceMenuEntries(args)];
   }, [] as TSpaceMenuEntry[]);
 };
+
+//
+
+const panelsDefs = modulesFrontend.reduce((acc, module) => {
+  return { ...acc, ...module.panels };
+}, {});
 
 //
 
@@ -186,6 +193,7 @@ const Story = () => {
             <StoryHolistixSpace
               nodeTypes={nodeTypes}
               spaceMenuEntries={spaceMenuEntries}
+              panelsDefs={panelsDefs}
             />
           </div>
         </MockCollaborativeContext>

@@ -9,7 +9,7 @@ import { SHAPE_TYPES, TEventNewShape, TSpaceEvent } from './space-events';
 export const spaceMenuEntries: TSpaceMenuEntries = ({
   viewId,
   from,
-  sd,
+  sharedData,
   position,
   renderForm,
   dispatcher,

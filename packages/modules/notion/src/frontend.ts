@@ -3,6 +3,7 @@ import { NodeNotionDatabase } from './lib/components/node-notion/node-notion-dat
 import { NodeNotionTask } from './lib/components/node-notion/node-notion-task';
 import { ModuleFrontend } from '@monorepo/module/frontend';
 import { notionMenuEntries } from './lib/notion-menu';
+import { NotionRightPanel } from './lib/components/node-notion/right-panel';
 
 //
 
@@ -16,5 +17,8 @@ export const moduleFrontend: ModuleFrontend = {
   nodes: {
     'notion-database': NodeNotionDatabase,
     'notion-page': NodeNotionTask,
+  },
+  panels: {
+    'notion-database': NotionRightPanel,
   },
 };

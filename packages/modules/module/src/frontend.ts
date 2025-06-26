@@ -1,11 +1,13 @@
 import { FC, ReactNode } from 'react';
-import { TGraphNode } from '.';
 import {
   TCollaborativeChunk,
   TValidSharedDataToCopy,
   TValidSharedData,
   FrontendDispatcher,
 } from '@monorepo/collab-engine';
+import { TJsonObject } from '@monorepo/simple-types';
+
+import { TGraphNode } from '.';
 
 //
 
@@ -35,17 +37,22 @@ export type TSpaceMenuEntry =
 
 //
 
+export type TPanel = { type: string; uuid: string; data: TJsonObject }
+
 export type TSpaceMenuEntries = (a: {
   viewId: string;
   from?: { node: string; connectorName: string; pinName?: string };
-  sd: TValidSharedDataToCopy<TValidSharedData>;
+  sharedData: TValidSharedDataToCopy<TValidSharedData>;
   position: () => { x: number; y: number };
   renderForm: (form: ReactNode) => void;
-  renderPanel: (panel: ReactNode) => void;
+  renderPanel: (panel: TPanel) => void;
+  closePanel: (uuid: string) => void;
   dispatcher: FrontendDispatcher<any>;
 }) => TSpaceMenuEntry[];
 
 //
+
+export type PanelComponent = FC<{ panel: TPanel, closePanel: (uuid: string) => void }>
 
 export type ModuleFrontend = {
   collabChunk: TCollaborativeChunk;
@@ -53,4 +60,6 @@ export type ModuleFrontend = {
   nodes: Record<string, FC<{ node: TGraphNode<any> }>>;
 
   spaceMenuEntries: TSpaceMenuEntries;
+
+  panels?: Record<string, PanelComponent>;
 };

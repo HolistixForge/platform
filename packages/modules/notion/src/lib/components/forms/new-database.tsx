@@ -10,6 +10,8 @@ import {
 } from '@monorepo/ui-base';
 import { useDispatcher } from '@monorepo/collab-engine';
 import { TPosition } from '@monorepo/core';
+import { TPanel } from '@monorepo/module/frontend';
+import { makeUuid } from '@monorepo/simple-types';
 
 import { TNotionEvent } from '../../notion-events';
 
@@ -27,23 +29,32 @@ export const NewNotionDatabaseForm = ({
   viewId,
   position,
   closeForm,
+  renderPanel,
 }: {
   viewId: string;
   position: TPosition;
   closeForm: () => void;
+  renderPanel: (panel: TPanel) => void;
 }) => {
   //
 
   const dispatcher = useDispatcher<TNotionEvent>();
 
   const action = useAction<NewNotionDatabaseFormData>(
-    (d) => {
-      return dispatcher.dispatch({
+    async (d) => {
+      await dispatcher.dispatch({
         type: 'notion:init-database',
         databaseId: d.databaseId,
         origin: {
           viewId: viewId,
           position,
+        },
+      });
+      renderPanel({
+        type: 'notion-database',
+        uuid: makeUuid(),
+        data: {
+          databaseId: d.databaseId,
         },
       });
     },

@@ -30,9 +30,9 @@ export const NodeNotionDatabase = ({ node }: { node: TGraphNode }) => {
   const handleDeleteDatabase = useCallback(async () => {
     await dispatcher.dispatch({
       type: 'notion:delete-database-node',
-      databaseId,
+      nodeId: node.id,
     });
-  }, [dispatcher, databaseId]);
+  }, [dispatcher, node.id]);
 
   const buttons = useNodeHeaderButtons({
     onDelete: handleDeleteDatabase,

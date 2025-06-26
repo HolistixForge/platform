@@ -1,7 +1,7 @@
 import { Client } from '@notionhq/client';
 
 import { ReduceArgs, Reducer, TEventPeriodic } from '@monorepo/collab-engine';
-import { TEventDeleteNode, TEventNewNode } from '@monorepo/core';
+import { TCoreSharedData, TEventDeleteNode, TEventNewNode } from '@monorepo/core';
 import { toUuid } from '@monorepo/simple-types';
 
 import {
@@ -15,9 +15,12 @@ import {
   TEventSyncDatabase,
   TEventUpdatePage,
   TNotionEvent,
+  TEventDeleteDatabase,
 } from './notion-events';
 
 import { TNotionSharedData } from './notion-shared-model';
+import { TNotionPage } from './notion-types';
+import { TNodeNotionDataPayload } from './components/node-notion/node-notion-task';
 
 //
 
@@ -28,7 +31,7 @@ type TDepsModulesExports = {
 }
 
 type Ra<T> = ReduceArgs<
-  TNotionSharedData,
+  TNotionSharedData & TCoreSharedData,
   T,
   TEventNewNode | TEventDeleteNode,
   undefined,
@@ -37,7 +40,7 @@ type Ra<T> = ReduceArgs<
 
 
 export class NotionReducer extends Reducer<
-  TNotionSharedData,
+  TNotionSharedData & TCoreSharedData,
   TNotionEvent,
   never,
   undefined,
@@ -85,16 +88,15 @@ export class NotionReducer extends Reducer<
       case 'notion:delete-database-node':
         return this._deleteDatabaseNode(g as Ra<TEventDeleteDatabaseNode>);
 
+      case 'notion:delete-database':
+        return this._deleteDatabase(g as Ra<TEventDeleteDatabase>);
+
       case 'periodic':
         return this._periodic(g as Ra<TEventPeriodic>);
     }
   }
 
   //
-
-  databaseId(databaseId: string) {
-    return `notion-database:${databaseId}`;
-  }
 
   pageId(pageId: string) {
     return `notion-page:${pageId}`;
@@ -116,20 +118,13 @@ export class NotionReducer extends Reducer<
       nodeData: {
         id: nodeId,
         name: `Notion Page ${g.event.pageId}`,
-        root: false,
+        root: true,
         type: 'notion-page',
         data: { pageId: g.event.pageId },
         connectors: [{ connectorName: 'inputs', pins: [] }],
       },
       edges: [
-        {
-          from: {
-            node: this.databaseId(database.id),
-            connectorName: 'outputs',
-          },
-          to: { node: nodeId, connectorName: 'inputs' },
-          semanticType: 'composed_of',
-        },
+
       ],
       origin: g.event.origin,
     });
@@ -138,32 +133,7 @@ export class NotionReducer extends Reducer<
   //
 
   private async _initDatabase(g: Ra<TEventInitDatabase>) {
-    const isOk = await this._fetchAndUpdateDatabase(g);
-    if (!isOk) return;
-
-    const { databaseId } = g.event;
-
-    g.bep.process({
-      type: 'core:new-node',
-      nodeData: {
-        id: this.databaseId(databaseId),
-        name: `Notion Database ${databaseId}`,
-        root: true,
-        type: 'notion-database',
-        data: { databaseId },
-        connectors: [{ connectorName: 'outputs', pins: [] }],
-      },
-      edges: [],
-      origin: g.event.origin
-        ? {
-          ...g.event.origin,
-          position: {
-            x: g.event.origin.position.x + 100,
-            y: g.event.origin.position.y + 100,
-          },
-        }
-        : undefined,
-    });
+    await this._fetchAndUpdateDatabase(g);
   }
 
   //
@@ -198,7 +168,7 @@ export class NotionReducer extends Reducer<
 
       // Get the existing database to compare with new pages
       const existingDatabase = g.sd.notionDatabases.get(databaseId);
-      const newPages = pagesResponse.results;
+      const newPages = pagesResponse.results as TNotionPage[];
 
       // If we had existing pages, check for deleted ones
       if (existingDatabase) {
@@ -356,27 +326,44 @@ export class NotionReducer extends Reducer<
   private async _deleteDatabaseNode(
     g: Ra<TEventDeleteDatabaseNode>
   ): Promise<void> {
-    const { databaseId } = g.event;
-    const nodeId = this.databaseId(databaseId);
-
-    // First, delete all page nodes associated with this database
-    const database = g.sd.notionDatabases.get(databaseId);
-    if (database) {
-      database.pages.forEach((page) => {
-        g.bep.process({
-          type: 'core:delete-node',
-          id: this.pageId(page.id),
-        });
-      });
-    }
-
-    // Then delete the database node itself
+    const { nodeId } = g.event;
     g.bep.process({
       type: 'core:delete-node',
       id: nodeId,
     });
+  }
 
-    // Remove from shared data
-    g.sd.notionDatabases.delete(databaseId);
+  //
+
+
+  private async _deleteDatabase(
+    g: Ra<TEventDeleteDatabase>
+  ): Promise<void> {
+    const { databaseId } = g.event;
+
+    // First, delete all nodes associated with this database
+    const database = g.sd.notionDatabases.get(databaseId);
+    if (database) {
+      const pagesIds = database.pages.map((page) => page.id);
+      g.sd.nodes.forEach((node) => {
+        if (node.type === 'notion-page' && pagesIds.includes((node.data as TNodeNotionDataPayload).pageId)) {
+          g.bep.process({
+            type: 'core:delete-node',
+            id: node.id,
+          });
+        }
+        else if (node.type === 'notion-database' && node.data?.databaseId === databaseId) {
+          g.bep.process({
+            type: 'core:delete-node',
+            id: node.id,
+          });
+        }
+
+      })
+      // Remove from shared data
+      g.sd.notionDatabases.delete(databaseId);
+    }
+
+
   }
 }

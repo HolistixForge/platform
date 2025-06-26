@@ -22,7 +22,16 @@ import { NotionPropertyRenderer } from './notion-property-renderer';
 
 //
 
-export const NodeNotionTask = ({ node }: { node: TGraphNode }) => {
+export type TNodeNotionDataPayload = {
+  pageId: string;
+  databaseId: string;
+};
+
+export const NodeNotionTask = ({
+  node,
+}: {
+  node: TGraphNode<TNodeNotionDataPayload>;
+}) => {
   const pageId = node.data!.pageId as string;
   const dispatcher = useDispatcher<TNotionEvent>();
 
@@ -30,9 +39,7 @@ export const NodeNotionTask = ({ node }: { node: TGraphNode }) => {
 
   const o: { database: TNotionDatabase; page: TNotionPage } =
     useSharedData<TNotionSharedData>(['notionDatabases'], (sd) => {
-      const database = Array.from(sd.notionDatabases.values()).find((db) =>
-        db.pages.some((p) => p.id === pageId)
-      );
+      const database = sd.notionDatabases.get(node.data!.databaseId);
       const page = database?.pages.find((p) => p.id === pageId);
       return { database, page };
     });
