@@ -1,11 +1,9 @@
 ⚠️ Antoine's stuffs
 
 drag and drop within kanban column
-drag and drop one kanban column
-
-node kanban column ==> column
-
-select column
+select displayed properties
+kanban column scroll
+kanban subgroup
 update page ?
 
 //

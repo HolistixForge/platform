@@ -103,6 +103,7 @@
       align-items: center;
       gap: 8px;
       margin-bottom: 8px;
+      cursor: grab;
     }
     .notion-kanban-dot {
       width: 12px;
@@ -276,5 +277,11 @@
         background: rgba(0, 0, 0, 0.2);
       }
     }
+  }
+}
+
+.node-notion-kanban-column {
+  .notion-kanban-column {
+    border: none;
   }
 }

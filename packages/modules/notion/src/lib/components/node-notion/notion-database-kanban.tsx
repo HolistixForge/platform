@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, DragEvent } from 'react';
 import {
   TNotionDatabase,
   TNotionProperty,
   TNotionPage,
+  TNotionDatabaseProperty,
 } from '../../notion-types';
 import { TaskItem } from './notion-database-list';
 import { TImportantProperties } from './notion-database';
+import { TEventLoadKanbanColumnNode } from '../../notion-events';
 
 import './notion-database.scss';
 
@@ -15,7 +17,7 @@ type NotionDatabaseKanbanProps = {
   database: TNotionDatabase;
   viewMode: { mode: 'kanban'; groupBy: 'status' | 'priority' };
 
-  onUpdatePage?: (
+  onUpdatePage: (
     pageId: string,
     properties: Record<string, TNotionProperty>
   ) => void;
@@ -27,11 +29,9 @@ export const NotionDatabaseKanban = ({
   database,
   viewMode,
   onUpdatePage,
-  titleProperty,
   priorityProperty,
   statusProperty,
 }: NotionDatabaseKanbanProps) => {
-  const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
   const groupBy = viewMode.groupBy;
 
   const property = groupBy === 'status' ? statusProperty : priorityProperty;
@@ -55,20 +55,6 @@ export const NotionDatabaseKanban = ({
 
   const groupOptions = getGroupOptions();
 
-  const groupedPages = groupOptions.map((option) => ({
-    option,
-    pages:
-      database.pages?.filter((page: TNotionPage) => {
-        const pageProperty = page.properties[property.name];
-        if (pageProperty?.type === 'status') {
-          return pageProperty.status?.id === option.id;
-        } else if (pageProperty?.type === 'select') {
-          return pageProperty.select?.id === option.id;
-        }
-        return false;
-      }) || [],
-  }));
-
   const unassignedPages =
     database.pages?.filter((page: TNotionPage) => {
       const pageProperty = page.properties[property.name];
@@ -81,16 +67,87 @@ export const NotionDatabaseKanban = ({
     }) || [];
 
   if (unassignedPages.length > 0) {
-    groupedPages.push({
-      option: {
-        id: 'unassigned',
-        name: 'Unassigned',
-        color: 'gray',
-        description: null,
-      },
-      pages: unassignedPages,
+    groupOptions.push({
+      id: 'unassigned',
+      name: 'Unassigned',
+      color: 'gray',
+      description: null,
     });
   }
+
+  // column drag handlers
+
+  const handleColumnDragStart = (e: DragEvent<HTMLDivElement>) => {
+    const event: Partial<TEventLoadKanbanColumnNode> = {
+      type: 'notion:load-kanban-column-node',
+      databaseId: database.id,
+      propertyId: property.id,
+      optionId: e.currentTarget.id,
+    };
+    e.dataTransfer.setData('application/json', JSON.stringify(event));
+    e.currentTarget.classList.add('dragging');
+  };
+
+  const handleColumnDragEnd = (e: DragEvent<HTMLDivElement>) => {
+    e.currentTarget.classList.remove('dragging');
+  };
+
+  //
+
+  return (
+    <div className="notion-kanban-board">
+      {groupOptions.map((option) => (
+        <NotionDatabaseKanbanColumn
+          key={option.id}
+          database={database}
+          property={property}
+          option={option}
+          handleColumnDragStart={handleColumnDragStart}
+          handleColumnDragEnd={handleColumnDragEnd}
+          onUpdatePage={onUpdatePage}
+        />
+      ))}
+    </div>
+  );
+};
+
+//
+
+export const NotionDatabaseKanbanColumn = ({
+  titleProperty,
+  priorityProperty,
+  statusProperty,
+  database,
+  handleColumnDragStart,
+  handleColumnDragEnd,
+  onUpdatePage,
+  property,
+  option,
+}: {
+  database: TNotionDatabase;
+  handleColumnDragStart?: (e: DragEvent<HTMLDivElement>) => void;
+  handleColumnDragEnd?: (e: DragEvent<HTMLDivElement>) => void;
+  onUpdatePage: (
+    pageId: string,
+    properties: Record<string, TNotionProperty>
+  ) => void;
+  property: TNotionDatabaseProperty;
+  option: { id: string; name: string; color: string };
+} & TImportantProperties) => {
+  //
+
+  const pages =
+    database.pages?.filter((page: TNotionPage) => {
+      const pageProperty = page.properties[property.name];
+      if (pageProperty?.type === 'status') {
+        return pageProperty.status?.id === option.id;
+      } else if (pageProperty?.type === 'select') {
+        return pageProperty.select?.id === option.id;
+      }
+      return false;
+    }) || [];
+
+  const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 
   const handleDrop = (e: React.DragEvent, targetOptionId: string) => {
     e.preventDefault();
@@ -100,6 +157,8 @@ export const NotionDatabaseKanban = ({
     if (eventData) {
       try {
         const event = JSON.parse(eventData);
+        console.log('handleDrop', { event });
+        /*
         if (event.databaseId === database.id && event.pageId) {
           const pageId = event.pageId;
           const targetOption =
@@ -128,7 +187,7 @@ export const NotionDatabaseKanban = ({
                   };
             onUpdatePage?.(pageId, { [property.name]: newProperty });
           }
-        }
+        }*/
       } catch (error) {
         console.error('Error parsing drag event:', error);
       }
@@ -151,44 +210,43 @@ export const NotionDatabaseKanban = ({
     }
   };
 
+  //
   return (
-    <div className="notion-kanban-board">
-      {groupedPages.map(({ option, pages }) => (
-        <div
-          key={option.id}
-          className={`notion-kanban-column${
-            dragOverColumn === option.id ? ' drag-over' : ''
-          }`}
-          onDrop={(e) => handleDrop(e, option.id)}
-          onDragOver={handleDragOver}
-          onDragEnter={(e) => handleDragEnter(e, option.id)}
-          onDragLeave={handleDragLeave}
-        >
-          <div className="notion-kanban-column-header">
-            <div className="notion-kanban-column-header-row">
-              <div
-                className={`task-status bg-${option.color} notion-kanban-dot`}
-              />
-              <h3 className="notion-kanban-title">{option.name}</h3>
-            </div>
-            <div className="notion-kanban-count">
-              {pages.length} {pages.length === 1 ? 'item' : 'items'}
-            </div>
-          </div>
-          <div className="notion-kanban-column-content">
-            {pages.map((page: TNotionPage) => (
-              <TaskItem
-                key={page.id}
-                page={page}
-                database={database}
-                titleProperty={titleProperty}
-                priorityProperty={priorityProperty}
-                statusProperty={statusProperty}
-              />
-            ))}
-          </div>
+    <div
+      key={option.id}
+      id={option.id}
+      className={`notion-kanban-column${
+        dragOverColumn === option.id ? ' drag-over' : ''
+      }`}
+      draggable={!!handleColumnDragStart}
+      onDragStart={handleColumnDragStart}
+      onDragEnd={handleColumnDragEnd}
+      onDrop={(e) => handleDrop(e, option.id)}
+      onDragOver={handleDragOver}
+      onDragEnter={(e) => handleDragEnter(e, option.id)}
+      onDragLeave={handleDragLeave}
+    >
+      <div className="notion-kanban-column-header">
+        <div className="notion-kanban-column-header-row">
+          <div className={`task-status bg-${option.color} notion-kanban-dot`} />
+          <h3 className="notion-kanban-title">{option.name}</h3>
         </div>
-      ))}
+        <div className="notion-kanban-count">
+          {pages.length} {pages.length === 1 ? 'item' : 'items'}
+        </div>
+      </div>
+      <div className="notion-kanban-column-content">
+        {pages.map((page: TNotionPage) => (
+          <TaskItem
+            key={page.id}
+            page={page}
+            database={database}
+            titleProperty={titleProperty}
+            priorityProperty={priorityProperty}
+            statusProperty={statusProperty}
+          />
+        ))}
+      </div>
     </div>
   );
 };

@@ -51,6 +51,20 @@ export type TEventDeletePageNode = {
   nodeId: string;
 };
 
+export type TEventLoadKanbanColumnNode = {
+  type: 'notion:load-kanban-column-node';
+  databaseId: string;
+  propertyId: string;
+  optionId: string;
+  origin?: TEventOrigin;
+};
+
+export type TEventDeleteKanbanColumnNode = {
+  type: 'notion:delete-kanban-column-node';
+  nodeId: string;
+};
+
+
 export type TEventDeleteDatabaseNode = {
   type: 'notion:delete-database-node';
   nodeId: string;
@@ -77,6 +91,8 @@ export type TNotionEvent =
   | TEventSyncDatabase
   | TEventLoadPageNode
   | TEventDeletePageNode
+  | TEventLoadKanbanColumnNode
+  | TEventDeleteKanbanColumnNode
   | TEventDeleteDatabaseNode
   | TEventDeleteDatabase
   | TEventSetNodeView;

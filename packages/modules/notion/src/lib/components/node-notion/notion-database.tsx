@@ -41,7 +41,7 @@ type NotionDatabaseProps = {
   database: TNotionDatabase;
   viewMode: TNotionViewMode;
   setViewMode?: (viewMode: TNotionViewMode) => void;
-  onUpdatePage?: (pageId: string, properties: Record<string, any>) => void;
+  onUpdatePage: (pageId: string, properties: Record<string, any>) => void;
   onCreatePage?: (properties: Record<string, any>) => void;
   onDeletePage?: (pageId: string) => void;
   onReorderPage?: (pageId: string, newPosition: number) => void;

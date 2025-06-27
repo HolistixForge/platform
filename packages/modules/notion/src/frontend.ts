@@ -4,6 +4,7 @@ import { NodeNotionTask } from './lib/components/node-notion/node-notion-task';
 import { ModuleFrontend } from '@monorepo/module/frontend';
 import { notionMenuEntries } from './lib/notion-menu';
 import { NotionRightPanel } from './lib/components/node-notion/right-panel';
+import { NodeNotionKanbanColumn } from './lib/components/node-notion/node-notion-kanban-column';
 
 //
 
@@ -17,6 +18,7 @@ export const moduleFrontend: ModuleFrontend = {
   nodes: {
     'notion-database': NodeNotionDatabase,
     'notion-page': NodeNotionTask,
+    'notion-kanban-column': NodeNotionKanbanColumn,
   },
   panels: {
     'notion-database': NotionRightPanel,

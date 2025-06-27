@@ -17,11 +17,14 @@ import {
   TNotionEvent,
   TEventDeleteDatabase,
   TEventSetNodeView,
+  TEventLoadKanbanColumnNode,
+  TEventDeleteKanbanColumnNode,
 } from './notion-events';
 
 import { TNotionSharedData } from './notion-shared-model';
 import { TNotionPage } from './notion-types';
 import { TNodeNotionTaskDataPayload } from './components/node-notion/node-notion-task';
+import { TNodeNotionKanbanColumnDataPayload } from './components/node-notion/node-notion-kanban-column';
 
 //
 
@@ -82,6 +85,12 @@ export class NotionReducer extends Reducer<
 
       case 'notion:load-page-node':
         return this._loadPageNode(g as Ra<TEventLoadPageNode>);
+
+      case 'notion:load-kanban-column-node':
+        return this._loadKanbanColumnNode(g as Ra<TEventLoadKanbanColumnNode>);
+
+      case 'notion:delete-kanban-column-node':
+        return this._deleteKanbanColumnNode(g as Ra<TEventDeleteKanbanColumnNode>);
 
       case 'notion:delete-page-node':
         return this._deletePageNode(g as Ra<TEventDeletePageNode>);
@@ -374,5 +383,42 @@ export class NotionReducer extends Reducer<
     const { nodeId, viewId, viewMode } = g.event;
     g.sd.notionNodeViews.set(`${nodeId}-${viewId}`,
       { type: 'database', databaseId: nodeId, nodeId, viewId, viewMode });
+  }
+
+  //
+
+  private async _loadKanbanColumnNode(g: Ra<TEventLoadKanbanColumnNode>): Promise<void> {
+    const { databaseId, propertyId, optionId } = g.event;
+
+    const data: TNodeNotionKanbanColumnDataPayload = {
+      databaseId,
+      propertyId,
+      optionId,
+
+    }
+
+    g.bep.process({
+      type: 'core:new-node',
+      nodeData: {
+        id: makeUuid(),
+        name: `Notion Kanban Column`,
+        root: true,
+        type: 'notion-kanban-column',
+        data: data,
+        connectors: [],
+      },
+      edges: [],
+      origin: g.event.origin,
+    });
+  }
+
+  //
+
+  private async _deleteKanbanColumnNode(g: Ra<TEventDeleteKanbanColumnNode>): Promise<void> {
+    const { nodeId } = g.event;
+    g.bep.process({
+      type: 'core:delete-node',
+      id: nodeId,
+    });
   }
 }
