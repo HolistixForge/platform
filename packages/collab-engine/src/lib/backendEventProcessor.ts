@@ -5,6 +5,7 @@ import { TValidSharedData } from './chunk';
 import { TJsonWithDate } from '@monorepo/simple-types';
 import { SharedEditor } from './SharedEditor';
 import { BackendEventSequence, SequenceEvent } from './backendEventSequence';
+import { TEventPeriodic } from './events';
 
 type ValidReducer<Targs> = Reducer<
   TValidSharedData,
@@ -40,6 +41,16 @@ export class BackendEventProcessor<TE extends TJsonWithDate, Targs> {
     this._sharedTypes = sharedTypes;
     this._dispatcherExtraArgs = extraArgs;
     this._extraContext = extraContext;
+
+    const interval = 5000;
+    setInterval(() => {
+      try {
+        const e: TEventPeriodic = { type: 'periodic', interval, date: new Date() }
+        this.process(e as any);
+      } catch (err) {
+        console.log(err);
+      }
+    }, interval);
   }
 
   //

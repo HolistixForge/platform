@@ -59,6 +59,7 @@ export const TaskItem = ({
     };
     e.dataTransfer.setData('application/json', JSON.stringify(event));
     e.currentTarget.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
     e.stopPropagation();
   };
 

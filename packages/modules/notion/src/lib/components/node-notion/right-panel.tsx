@@ -37,5 +37,11 @@ export const NotionRightPanel = ({
 
   if (!db) return null;
 
-  return <NotionDatabase database={db} viewMode={{ mode: 'list' }} />;
+  return (
+    <NotionDatabase
+      database={db}
+      viewMode={{ mode: 'list' }}
+      onUpdatePage={() => {}}
+    />
+  );
 };

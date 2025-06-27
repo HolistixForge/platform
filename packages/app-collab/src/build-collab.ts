@@ -257,15 +257,6 @@ export async function initProjectCollaboration(
     });
   });
 
-  const interval = 5000;
-  setInterval(() => {
-    try {
-      bep.process({ type: 'periodic', interval, date: new Date() });
-    } catch (err) {
-      console.log(err);
-    }
-  }, interval);
-
   return { bep };
 }
 

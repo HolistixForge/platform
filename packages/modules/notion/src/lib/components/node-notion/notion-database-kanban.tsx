@@ -29,6 +29,7 @@ export const NotionDatabaseKanban = ({
   database,
   viewMode,
   onUpdatePage,
+  titleProperty,
   priorityProperty,
   statusProperty,
 }: NotionDatabaseKanbanProps) => {
@@ -46,9 +47,9 @@ export const NotionDatabaseKanban = ({
 
   const getGroupOptions = () => {
     if (property.type === 'status') {
-      return property.status.options;
+      return [...property.status.options];
     } else if (property.type === 'select') {
-      return property.select.options;
+      return [...property.select.options];
     }
     return [];
   };
@@ -105,6 +106,9 @@ export const NotionDatabaseKanban = ({
           handleColumnDragStart={handleColumnDragStart}
           handleColumnDragEnd={handleColumnDragEnd}
           onUpdatePage={onUpdatePage}
+          titleProperty={titleProperty}
+          priorityProperty={priorityProperty}
+          statusProperty={statusProperty}
         />
       ))}
     </div>
@@ -147,47 +151,76 @@ export const NotionDatabaseKanbanColumn = ({
       return false;
     }) || [];
 
-  const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
+  const [dragOverColumn, setDragOverColumn] = useState<boolean>(false);
 
-  const handleDrop = (e: React.DragEvent, targetOptionId: string) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    setDragOverColumn(null);
+    e.stopPropagation();
+    setDragOverColumn(false);
+
     const eventData = e.dataTransfer.getData('application/json');
-    console.log('handleDrop', { eventData });
     if (eventData) {
       try {
         const event = JSON.parse(eventData);
-        console.log('handleDrop', { event });
-        /*
-        if (event.databaseId === database.id && event.pageId) {
+        console.log({ event });
+
+        if (
+          event.type === 'notion:load-page-node' &&
+          event.databaseId === database.id &&
+          event.pageId
+        ) {
           const pageId = event.pageId;
-          const targetOption =
-            groupOptions.find((opt) => opt.id === targetOptionId) ||
-            (targetOptionId === 'unassigned' ? null : undefined);
+          const targetOption = option;
+
           if (targetOption) {
-            const newProperty: TNotionProperty =
-              property.type === 'status'
-                ? {
-                    id: property.id,
-                    type: 'status',
-                    status: {
-                      id: targetOption.id,
-                      name: targetOption.name,
-                      color: targetOption.color,
-                    },
-                  }
-                : {
-                    id: property.id,
-                    type: 'select',
-                    select: {
-                      id: targetOption.id,
-                      name: targetOption.name,
-                      color: targetOption.color,
-                    },
-                  };
+            let newProperty: TNotionProperty;
+
+            if (targetOption.id === 'unassigned') {
+              // Set the property to null for unassigned items
+              if (property.type === 'status') {
+                newProperty = {
+                  id: property.id,
+                  type: 'status',
+                  status: null,
+                } as unknown as TNotionProperty;
+              } else {
+                newProperty = {
+                  id: property.id,
+                  type: 'select',
+                  select: null,
+                } as unknown as TNotionProperty;
+              }
+            } else {
+              // Set the property to the target option
+              newProperty =
+                property.type === 'status'
+                  ? {
+                      id: property.id,
+                      type: 'status',
+                      status: {
+                        id: targetOption.id,
+                        name: targetOption.name,
+                        color: targetOption.color,
+                      },
+                    }
+                  : {
+                      id: property.id,
+                      type: 'select',
+                      select: {
+                        id: targetOption.id,
+                        name: targetOption.name,
+                        color: targetOption.color,
+                      },
+                    };
+            }
+
+            console.log('############################# newProperty', {
+              newProperty,
+            });
+
             onUpdatePage?.(pageId, { [property.name]: newProperty });
           }
-        }*/
+        }
       } catch (error) {
         console.error('Error parsing drag event:', error);
       }
@@ -196,18 +229,15 @@ export const NotionDatabaseKanbanColumn = ({
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-  };
-
-  const handleDragEnter = (e: React.DragEvent, columnId: string) => {
-    e.preventDefault();
-    setDragOverColumn(columnId);
+    e.stopPropagation();
+    setDragOverColumn(true);
+    e.dataTransfer.dropEffect = 'move';
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setDragOverColumn(null);
-    }
+    e.stopPropagation();
+    setDragOverColumn(false);
   };
 
   //
@@ -215,15 +245,12 @@ export const NotionDatabaseKanbanColumn = ({
     <div
       key={option.id}
       id={option.id}
-      className={`notion-kanban-column${
-        dragOverColumn === option.id ? ' drag-over' : ''
-      }`}
+      className={`notion-kanban-column${dragOverColumn ? ' drag-over' : ''}`}
       draggable={!!handleColumnDragStart}
       onDragStart={handleColumnDragStart}
       onDragEnd={handleColumnDragEnd}
-      onDrop={(e) => handleDrop(e, option.id)}
+      onDrop={handleDrop}
       onDragOver={handleDragOver}
-      onDragEnter={(e) => handleDragEnter(e, option.id)}
       onDragLeave={handleDragLeave}
     >
       <div className="notion-kanban-column-header">

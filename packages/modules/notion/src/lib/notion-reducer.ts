@@ -170,7 +170,7 @@ export class NotionReducer extends Reducer<
       // Fetch initial pages
       const pagesResponse = await notion.databases.query({
         database_id: databaseId,
-        sorts: [{ property: 'order', direction: 'ascending' }],
+        // sorts: [{ property: 'order', direction: 'ascending' }],
       });
 
       if (!dbResponse || !pagesResponse) {
@@ -236,10 +236,18 @@ export class NotionReducer extends Reducer<
     try {
       const notion = this.getNotionClient(g);
       // Update the page in Notion
-      await notion.pages.update({
+
+      const o = {
         page_id: pageId,
         properties: g.event.properties,
+      }
+
+      console.log('############################# _updatePage', {
+        auth: g.extraContext.config.NOTION_API_KEY,
+        o,
       });
+
+      await notion.pages.update(o);
 
       // refetch all asynchronously
       this._fetchAndUpdateDatabase(g);

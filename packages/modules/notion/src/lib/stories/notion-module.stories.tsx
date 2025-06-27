@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
+import { Logger } from '@monorepo/log';
 import { MockCollaborativeContext } from '@monorepo/collab-engine';
 import {
   moduleBackend as coreBackend,
@@ -13,6 +15,8 @@ import { moduleFrontend as spaceFrontend } from '@monorepo/space/frontend';
 import { StoryHolistixSpace } from '@monorepo/space/stories';
 import type { ModuleBackend } from '@monorepo/module';
 import { useState, useEffect, ReactNode } from 'react';
+
+Logger.setPriority(7);
 
 // Proxy check wrapper component
 const ProxyCheckWrapper = ({ children }: { children: ReactNode }) => {
