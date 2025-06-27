@@ -13,16 +13,21 @@ import { TEventUpdatePage, TNotionEvent } from '../../notion-events';
 import './node-notion-task.scss';
 import {
   TNotionDatabase,
+  TNotionDatabaseSelectProperty,
+  TNotionDatabaseStatusProperty,
   TNotionPage,
+  TNotionRichText,
   TNotionSelect,
   TNotionStatus,
   TNotionTitle,
 } from '../../notion-types';
 import { NotionPropertyRenderer } from './notion-property-renderer';
+import { getCoverImageUrl } from './notion-database-list';
+import { useDatabaseMainProperties } from './notion-database';
 
 //
 
-export type TNodeNotionDataPayload = {
+export type TNodeNotionTaskDataPayload = {
   pageId: string;
   databaseId: string;
 };
@@ -30,12 +35,10 @@ export type TNodeNotionDataPayload = {
 export const NodeNotionTask = ({
   node,
 }: {
-  node: TGraphNode<TNodeNotionDataPayload>;
+  node: TGraphNode<TNodeNotionTaskDataPayload>;
 }) => {
   const pageId = node.data!.pageId as string;
   const dispatcher = useDispatcher<TNotionEvent>();
-
-  //const [isEditing, setIsEditing] = useState(false);
 
   const o: { database: TNotionDatabase; page: TNotionPage } =
     useSharedData<TNotionSharedData>(['notionDatabases'], (sd) => {
@@ -46,14 +49,17 @@ export const NodeNotionTask = ({
 
   const { database, page } = o;
 
+  const { titleProperty, priorityProperty, statusProperty } =
+    useDatabaseMainProperties(database);
+
   const useNodeValue = useNodeContext();
 
   const handleDeletePage = useCallback(async () => {
     await dispatcher.dispatch({
       type: 'notion:delete-page-node',
-      pageId,
+      nodeId: node.id,
     });
-  }, [dispatcher, pageId]);
+  }, [dispatcher, node.id]);
 
   const buttons = useNodeHeaderButtons({
     onDelete: handleDeletePage,
@@ -77,19 +83,43 @@ export const NodeNotionTask = ({
     [database, page, dispatcher]
   );
 
-  const title = page.properties.Name as TNotionTitle;
-  const status = page.properties.Status as TNotionStatus | undefined;
-  const pl = page.properties['Priority Level'] as TNotionSelect | undefined;
+  const title = titleProperty
+    ? (page.properties[titleProperty.name] as TNotionTitle)
+    : undefined;
 
-  const statusOptions =
-    database?.properties.Status?.type === 'status'
-      ? database.properties.Status.status.options
-      : [];
+  const status = statusProperty
+    ? (page.properties[statusProperty.name] as TNotionStatus)
+    : undefined;
 
-  const priorityOptions =
-    database?.properties['Priority Level']?.type === 'select'
-      ? database.properties['Priority Level'].select.options
-      : [];
+  const priority = priorityProperty
+    ? (page.properties[priorityProperty.name] as TNotionSelect)
+    : undefined;
+
+  const description = page.properties.Description as
+    | TNotionRichText
+    | undefined;
+
+  const coverImageUrl = getCoverImageUrl(page.cover);
+
+  /*
+  console.log({
+    title,
+    status,
+    priority,
+    description,
+    titleProperty,
+    statusProperty,
+    priorityProperty,
+  });
+  */
+
+  const statusOptions = statusProperty
+    ? (statusProperty as TNotionDatabaseStatusProperty).status.options
+    : [];
+
+  const priorityOptions = priorityProperty
+    ? (priorityProperty as TNotionDatabaseSelectProperty).select.options
+    : [];
 
   /*
   console.log({
@@ -101,7 +131,10 @@ export const NodeNotionTask = ({
   */
 
   return (
-    <div className="node-notion-task">
+    <div
+      className={`node-notion-task${coverImageUrl ? ' has-cover' : ''}`}
+      style={{ position: 'relative' }}
+    >
       <NodeHeader
         buttons={buttons}
         nodeType="notion-task"
@@ -113,86 +146,106 @@ export const NodeNotionTask = ({
       <DisableZoomDragPan noDrag>
         {page && database && (
           <div className="node-background node-notion-task-content">
-            <input
-              className="node-notion-task-title"
-              style={{ fontSize: '16px' }}
-              defaultValue={title?.title?.[0]?.text?.content}
-              onBlur={(e) =>
-                handlePropertyUpdate('title', {
-                  type: 'title',
-                  title: [{ text: { content: e.target.value } }],
-                })
-              }
-            />
+            {coverImageUrl && (
+              <div
+                className="task-item-cover"
+                style={{
+                  backgroundImage: `url(${coverImageUrl})`,
+                  backgroundSize: 'cover',
+                  //backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
+                  height: '170px',
+                }}
+              />
+            )}
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <input
+                className="node-notion-task-title"
+                style={{ fontSize: '16px' }}
+                defaultValue={title?.title?.[0]?.text?.content || '[Untitled]'}
+                onBlur={(e) =>
+                  handlePropertyUpdate('title', {
+                    type: 'title',
+                    title: [{ text: { content: e.target.value } }],
+                  })
+                }
+              />
 
-            <select
-              className={`node-notion-task-status bg-${status?.status?.color}`}
-              value={status?.status?.name || 'No Status'}
-              onChange={(e) =>
-                handlePropertyUpdate('Status', {
-                  type: 'status',
-                  status: {
-                    name: e.target.value,
-                  },
-                })
-              }
-            >
-              <option value="">Select status...</option>
-              {statusOptions.map((option) => (
-                <option key={option.id} value={option.name}>
-                  {option.name}
+              <p className="task-item-description">
+                {description?.rich_text?.[0]?.text?.content ||
+                  '[No description]'}
+              </p>
+
+              <select
+                className={`node-notion-task-status bg-${status?.status?.color}`}
+                value={status?.status?.name || 'No Status'}
+                onChange={(e) =>
+                  handlePropertyUpdate('Status', {
+                    type: 'status',
+                    status: {
+                      name: e.target.value,
+                    },
+                  })
+                }
+              >
+                <option value="">Select status...</option>
+                {statusOptions.map((option) => (
+                  <option key={option.id} value={option.name}>
+                    {option.name}
+                  </option>
+                ))}
+                <option value="No Status" disabled>
+                  No Status
                 </option>
-              ))}
-              <option value="No Status" disabled>
-                No Status
-              </option>
-            </select>
+              </select>
 
-            <select
-              className={`node-notion-task-status bg-${pl?.select?.color}`}
-              value={pl?.select?.name || 'No Priority'}
-              onChange={(e) =>
-                handlePropertyUpdate('Priority Level', {
-                  type: 'select',
-                  select: {
-                    name: e.target.value,
-                  },
-                })
-              }
-            >
-              <option value="">Select priority...</option>
-              {priorityOptions.map((option) => (
-                <option key={option.id} value={option.name}>
-                  {option.name}
+              <select
+                className={`node-notion-task-status bg-${priority?.select?.color}`}
+                value={priority?.select?.name || 'No Priority'}
+                onChange={(e) =>
+                  handlePropertyUpdate('Priority Level', {
+                    type: 'select',
+                    select: {
+                      name: e.target.value,
+                    },
+                  })
+                }
+              >
+                <option value="">Select priority...</option>
+                {priorityOptions.map((option) => (
+                  <option key={option.id} value={option.name}>
+                    {option.name}
+                  </option>
+                ))}
+                <option value="No Priority" disabled>
+                  No Priority
                 </option>
-              ))}
-              <option value="No Priority" disabled>
-                No Priority
-              </option>
-            </select>
+              </select>
 
-            <div className="node-notion-task-properties">
-              {Object.entries(page.properties).map(([key, prop]) => {
-                if (
-                  key === 'Name' ||
-                  key === 'Status' ||
-                  key === 'Priority Level'
-                )
-                  return null;
+              <div className="node-notion-task-properties">
+                {Object.entries(page.properties).map(([key, prop]) => {
+                  if (
+                    key === titleProperty?.name ||
+                    key === statusProperty?.name ||
+                    key === priorityProperty?.name ||
+                    key === 'Description'
+                  )
+                    return null;
 
-                return (
-                  <div key={key} className="node-notion-task-property">
-                    <span className="node-notion-task-property-label">
-                      {key}
-                    </span>
-                    <NotionPropertyRenderer
-                      property={prop}
-                      database={database}
-                      onUpdate={(value) => handlePropertyUpdate(key, value)}
-                    />
-                  </div>
-                );
-              })}
+                  return (
+                    <div key={key} className="node-notion-task-property">
+                      <span className="node-notion-task-property-label">
+                        {key}
+                      </span>
+                      <NotionPropertyRenderer
+                        property={prop}
+                        database={database}
+                        onUpdate={(value) => handlePropertyUpdate(key, value)}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}

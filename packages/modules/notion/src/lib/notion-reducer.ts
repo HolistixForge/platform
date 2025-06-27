@@ -2,7 +2,7 @@ import { Client } from '@notionhq/client';
 
 import { ReduceArgs, Reducer, TEventPeriodic } from '@monorepo/collab-engine';
 import { TCoreSharedData, TEventDeleteNode, TEventNewNode } from '@monorepo/core';
-import { toUuid } from '@monorepo/simple-types';
+import { makeUuid, toUuid } from '@monorepo/simple-types';
 
 import {
   TEventCreatePage,
@@ -21,7 +21,7 @@ import {
 
 import { TNotionSharedData } from './notion-shared-model';
 import { TNotionPage } from './notion-types';
-import { TNodeNotionDataPayload } from './components/node-notion/node-notion-task';
+import { TNodeNotionTaskDataPayload } from './components/node-notion/node-notion-task';
 
 //
 
@@ -100,11 +100,6 @@ export class NotionReducer extends Reducer<
     }
   }
 
-  //
-
-  pageId(pageId: string) {
-    return `notion-page:${pageId}`;
-  }
 
   //
 
@@ -115,16 +110,19 @@ export class NotionReducer extends Reducer<
 
     if (!database) return;
 
-    const nodeId = this.pageId(g.event.pageId);
+    const data: TNodeNotionTaskDataPayload = {
+      pageId: g.event.pageId,
+      databaseId: g.event.databaseId,
+    }
 
     g.bep.process({
       type: 'core:new-node',
       nodeData: {
-        id: nodeId,
+        id: makeUuid(),
         name: `Notion Page ${g.event.pageId}`,
         root: true,
         type: 'notion-page',
-        data: { pageId: g.event.pageId },
+        data: data,
         connectors: [{ connectorName: 'inputs', pins: [] }],
       },
       edges: [
@@ -182,11 +180,13 @@ export class NotionReducer extends Reducer<
         );
 
         // Dispatch delete node events for each deleted page
-        deletedPages.forEach((deletedPage) => {
-          g.bep.process({
-            type: 'core:delete-node',
-            id: this.pageId(deletedPage.id),
-          });
+        g.sd.nodes.forEach((node) => {
+          if (node.type === 'notion-page' && deletedPages.some((deletedPage) => deletedPage.id === node.data?.pageId)) {
+            g.bep.process({
+              type: 'core:delete-node',
+              id: node.id,
+            });
+          }
         });
       }
 
@@ -318,8 +318,7 @@ export class NotionReducer extends Reducer<
   }
 
   private async _deletePageNode(g: Ra<TEventDeletePageNode>): Promise<void> {
-    const { pageId } = g.event;
-    const nodeId = this.pageId(pageId);
+    const { nodeId } = g.event;
 
     g.bep.process({
       type: 'core:delete-node',
@@ -350,7 +349,7 @@ export class NotionReducer extends Reducer<
     if (database) {
       const pagesIds = database.pages.map((page) => page.id);
       g.sd.nodes.forEach((node) => {
-        if (node.type === 'notion-page' && pagesIds.includes((node.data as TNodeNotionDataPayload).pageId)) {
+        if (node.type === 'notion-page' && pagesIds.includes((node.data as TNodeNotionTaskDataPayload).pageId)) {
           g.bep.process({
             type: 'core:delete-node',
             id: node.id,

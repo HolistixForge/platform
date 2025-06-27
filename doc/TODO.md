@@ -2,11 +2,11 @@
 
 drag and drop within kanban column
 drag and drop one kanban column
-drag and drop one task from right panel
-drag and drop one task from emebed
 
-node task ==> task Item
 node kanban column ==> column
+
+select column
+update page ?
 
 //
 

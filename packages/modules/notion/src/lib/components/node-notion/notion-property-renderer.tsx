@@ -108,6 +108,88 @@ export const NotionPropertyRenderer = ({
       );
     }
 
+    case 'people': {
+      return (
+        <div className="node-notion-people">
+          {property.people.length > 0 ? (
+            <div className="node-notion-people-list">
+              {property.people.map((person, index) => (
+                <span key={index} className="node-notion-person">
+                  {person.name || person.id}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <span className="node-notion-empty">No assignees</span>
+          )}
+        </div>
+      );
+    }
+
+    case 'date': {
+      const dateValue = property.date?.start || '';
+      return (
+        <input
+          type="date"
+          defaultValue={dateValue}
+          onBlur={(e) =>
+            onUpdate({
+              type: 'date',
+              date: e.target.value ? { start: e.target.value } : null,
+            })
+          }
+          className="node-notion-input"
+        />
+      );
+    }
+
+    case 'multi_select': {
+      const propertyDef =
+        database.properties[
+          Object.keys(database.properties).find(
+            (key) => database.properties[key].id === property.id
+          )!
+        ];
+      const options =
+        propertyDef.type === 'multi_select'
+          ? propertyDef.multi_select.options
+          : [];
+      const selectedValues = property.multi_select.map((item) => item.name);
+
+      return (
+        <div className="node-notion-multi-select">
+          <select
+            multiple
+            value={selectedValues}
+            onChange={(e) => {
+              const selectedOptions = Array.from(
+                e.target.selectedOptions,
+                (option) => option.value
+              );
+              const updatedSelection = selectedOptions.map((name) => {
+                const option = options.find((opt) => opt.name === name);
+                return {
+                  id: option?.id || '',
+                  name: name,
+                  color: option?.color || 'default',
+                };
+              });
+              onUpdate({
+                type: 'multi_select',
+                multi_select: updatedSelection,
+              });
+            }}
+          >
+            {options.map((option) => (
+              <option key={option.id} value={option.name}>
+                {option.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      );
+    }
+
     case 'relation':
       return (
         <div className="node-notion-relation">

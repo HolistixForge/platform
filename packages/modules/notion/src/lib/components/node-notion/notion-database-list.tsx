@@ -9,8 +9,18 @@ import {
   TNotionCover,
 } from '../../notion-types';
 import { TImportantProperties } from './notion-database';
+import { TEventLoadPageNode } from '../../notion-events';
 
 import './notion-database.scss';
+
+//
+
+export const getCoverImageUrl = (cover: TNotionCover): string | null => {
+  if (!cover) return null;
+  if (cover.type === 'external') return cover.external.url;
+  if (cover.type === 'file') return cover.file.url;
+  return null;
+};
 
 //
 
@@ -39,18 +49,11 @@ export const TaskItem = ({
     | TNotionRichText
     | undefined;
 
-  // Get cover image URL if available
-  const getCoverImageUrl = (cover: TNotionCover): string | null => {
-    if (!cover) return null;
-    if (cover.type === 'external') return cover.external.url;
-    if (cover.type === 'file') return cover.file.url;
-    return null;
-  };
-
   const coverImageUrl = getCoverImageUrl(page.cover);
 
   const handleDragStart = (e: DragEvent<HTMLDivElement>) => {
-    const event = {
+    const event: Partial<TEventLoadPageNode> = {
+      type: 'notion:load-page-node',
       databaseId: database.id,
       pageId: page.id,
     };

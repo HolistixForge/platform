@@ -20,7 +20,6 @@
     outline: none;
 
     option {
-      background-color: #2d2d2d;
       color: #ffffff;
       padding: 8px;
     }
@@ -57,7 +56,7 @@
     transition: background-color 0.2s ease;
 
     &:hover {
-      background: #4a4a4a;
+      background: rgba(255, 255, 255, 0.1);
     }
 
     &-label {
@@ -99,7 +98,6 @@
 
   &:focus {
     outline: none;
-    border-color: #2563eb;
   }
 }
 
@@ -107,4 +105,57 @@
   font-size: 14px;
   color: #6b7280;
   padding: 4px 0;
+}
+
+.node-notion-task {
+  select[multiple] {
+    width: 100%;
+
+    &:focus,
+    &:active {
+      option:checked,
+      option:hover,
+      option:focus,
+      option:active {
+        border: none;
+        outline: none;
+        background: linear-gradient(
+          0deg,
+          var(--c-pink-4) 0%,
+          var(--c-pink-3) 100%
+        );
+      }
+    }
+
+    option {
+      outline: none;
+      border: none;
+      border-radius: 3px;
+
+      &:checked {
+        background: linear-gradient(
+          0deg,
+          var(--c-pink-4) 0%,
+          var(--c-pink-3) 100%
+        );
+      }
+
+      &:hover {
+        background: linear-gradient(
+            0deg,
+            var(--c-pink-4) 0%,
+            var(--c-pink-3) 100%
+          )
+          rgba(255, 255, 255, 0.25);
+      }
+
+      &:focus {
+        background-color: yellow;
+      }
+
+      &:active {
+        background-color: orange;
+      }
+    }
+  }
 }

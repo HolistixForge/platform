@@ -192,28 +192,6 @@
   position: relative;
   overflow: hidden;
 
-  .task-item-cover {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    filter: saturate(0.1);
-    transition: filter 0.2s ease;
-    z-index: 1;
-
-    &::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.4);
-      transition: background 0.2s ease;
-    }
-  }
-
   .task-item-header,
   .task-item-meta {
     position: relative;
@@ -224,13 +202,6 @@
     background: rgba(54, 54, 54, 0.2) !important;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-
-    .task-item-cover {
-      filter: saturate(1);
-      &::after {
-        background: rgba(0, 0, 0, 0.2);
-      }
-    }
   }
 
   &.dragging {
@@ -272,5 +243,38 @@
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+  }
+}
+
+.task-item,
+.node-notion-task {
+  .task-item-cover {
+    border-radius: var(--node-border-radius) var(--node-border-radius) 0 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    filter: saturate(0.1);
+    transition: filter 0.2s ease;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      transition: background 0.2s ease;
+    }
+  }
+  &:hover {
+    .task-item-cover {
+      filter: saturate(1);
+      &::after {
+        background: rgba(0, 0, 0, 0.2);
+      }
+    }
   }
 }

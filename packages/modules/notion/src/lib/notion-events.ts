@@ -42,12 +42,13 @@ export type TEventSyncDatabase = {
 export type TEventLoadPageNode = {
   type: 'notion:load-page-node';
   pageId: string;
+  databaseId: string;
   origin?: TEventOrigin;
 };
 
 export type TEventDeletePageNode = {
   type: 'notion:delete-page-node';
-  pageId: string;
+  nodeId: string;
 };
 
 export type TEventDeleteDatabaseNode = {

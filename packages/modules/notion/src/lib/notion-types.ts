@@ -70,6 +70,42 @@ export type TNotionRelation = {
   has_more: boolean;
 };
 
+export type TNotionPeople = {
+  id: string;
+  type: 'people';
+  people: Array<{
+    object: 'user';
+    id: string;
+    name?: string;
+    avatar_url?: string;
+    type?: 'person' | 'bot';
+    person?: {
+      email: string;
+    };
+    bot?: Record<string, any>;
+  }>;
+};
+
+export type TNotionDate = {
+  id: string;
+  type: 'date';
+  date: {
+    start: string;
+    end: string | null;
+    time_zone: string | null;
+  } | null;
+};
+
+export type TNotionMultiSelect = {
+  id: string;
+  type: 'multi_select';
+  multi_select: Array<{
+    id: string;
+    name: string;
+    color: string;
+  }>;
+};
+
 export type TNotionProperty =
   | TNotionRichText
   | TNotionStatus
@@ -77,7 +113,10 @@ export type TNotionProperty =
   | TNotionNumber
   | TNotionUniqueId
   | TNotionTitle
-  | TNotionRelation;
+  | TNotionRelation
+  | TNotionPeople
+  | TNotionDate
+  | TNotionMultiSelect;
 
 export type TNotionCover = {
   type: 'external';
@@ -190,6 +229,28 @@ export type TNotionDatabaseRelationProperty = TNotionDatabasePropertyBase & {
   };
 };
 
+export type TNotionDatabasePeopleProperty = TNotionDatabasePropertyBase & {
+  type: 'people';
+  people: Record<string, never>; // Empty object in the example
+};
+
+export type TNotionDatabaseDateProperty = TNotionDatabasePropertyBase & {
+  type: 'date';
+  date: Record<string, never>; // Empty object in the example
+};
+
+export type TNotionDatabaseMultiSelectProperty = TNotionDatabasePropertyBase & {
+  type: 'multi_select';
+  multi_select: {
+    options: Array<{
+      id: string;
+      name: string;
+      color: string;
+      description: string | null;
+    }>;
+  };
+};
+
 export type TNotionDatabaseProperty =
   | TNotionDatabaseRichTextProperty
   | TNotionDatabaseStatusProperty
@@ -197,7 +258,10 @@ export type TNotionDatabaseProperty =
   | TNotionDatabaseNumberProperty
   | TNotionDatabaseUniqueIdProperty
   | TNotionDatabaseTitleProperty
-  | TNotionDatabaseRelationProperty;
+  | TNotionDatabaseRelationProperty
+  | TNotionDatabasePeopleProperty
+  | TNotionDatabaseDateProperty
+  | TNotionDatabaseMultiSelectProperty;
 
 export type TNotionDatabase = {
   object: 'database';

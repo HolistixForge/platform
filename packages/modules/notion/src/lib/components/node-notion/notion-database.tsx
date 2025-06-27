@@ -49,9 +49,7 @@ type NotionDatabaseProps = {
 
 //
 
-export const NotionDatabase = (props: NotionDatabaseProps) => {
-  const { database, viewMode, setViewMode, onUpdatePage } = props;
-
+export const useDatabaseMainProperties = (database: TNotionDatabase) => {
   // identify wich property is of type title
   const titleProperty = Object.values(database.properties).find(
     (property) => property.type === 'title'
@@ -70,6 +68,17 @@ export const NotionDatabase = (props: NotionDatabaseProps) => {
       property.type === 'status' &&
       property.name.toLowerCase().includes('status')
   );
+
+  return { titleProperty, priorityProperty, statusProperty };
+};
+
+//
+
+export const NotionDatabase = (props: NotionDatabaseProps) => {
+  const { database, viewMode, setViewMode, onUpdatePage } = props;
+
+  const { titleProperty, priorityProperty, statusProperty } =
+    useDatabaseMainProperties(database);
 
   // console.log({ titleProperty, priorityProperty, statusProperty });
 
