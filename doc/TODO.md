@@ -1,10 +1,7 @@
 ⚠️ Antoine's stuffs
 
-drag and drop within kanban column
 select displayed properties
-kanban column scroll
-kanban subgroup
-update page ?
+list db from api key
 
 //
 

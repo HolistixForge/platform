@@ -6,7 +6,7 @@ import {
   TNotionDatabaseProperty,
 } from '../../notion-types';
 import { TaskItem } from './notion-database-list';
-import { TImportantProperties } from './notion-database';
+import { TImportantProperties, TViewKanban } from './notion-database';
 import { TEventLoadKanbanColumnNode } from '../../notion-events';
 
 import './notion-database.scss';
@@ -15,7 +15,8 @@ import './notion-database.scss';
 
 type NotionDatabaseKanbanProps = {
   database: TNotionDatabase;
-  viewMode: { mode: 'kanban'; groupBy: 'status' | 'priority' };
+  viewMode: TViewKanban;
+  setViewMode?: (viewMode: TViewKanban) => void;
 
   onUpdatePage: (
     pageId: string,
@@ -28,14 +29,30 @@ type NotionDatabaseKanbanProps = {
 export const NotionDatabaseKanban = ({
   database,
   viewMode,
+  setViewMode,
   onUpdatePage,
   titleProperty,
   priorityProperty,
   statusProperty,
 }: NotionDatabaseKanbanProps) => {
   const groupBy = viewMode.groupBy;
+  const subgroupBy = viewMode.subgroupBy;
 
   const property = groupBy === 'status' ? statusProperty : priorityProperty;
+
+  // Get available properties for subgrouping (select and status types)
+  const getAvailableSubgroupProperties = () => {
+    return Object.entries(database.properties || {}).filter(([_, prop]) => {
+      return prop.type === 'select' || prop.type === 'status';
+    });
+  };
+
+  const availableSubgroupProperties = getAvailableSubgroupProperties();
+
+  // Get the selected subgroup property
+  const subgroupProperty = subgroupBy
+    ? database.properties?.[subgroupBy]
+    : null;
 
   if (!property) {
     return (
@@ -59,10 +76,11 @@ export const NotionDatabaseKanban = ({
   const unassignedPages =
     database.pages?.filter((page: TNotionPage) => {
       const pageProperty = page.properties[property.name];
+
       if (pageProperty?.type === 'status') {
-        return !pageProperty.status;
+        return pageProperty.status === null;
       } else if (pageProperty?.type === 'select') {
-        return !pageProperty.select;
+        return pageProperty.select === null;
       }
       return true;
     }) || [];
@@ -93,24 +111,57 @@ export const NotionDatabaseKanban = ({
     e.currentTarget.classList.remove('dragging');
   };
 
+  // Subgroup property change handler
+  const handleSubgroupChange = (propertyName: string) => {
+    if (setViewMode) {
+      setViewMode({
+        ...viewMode,
+        subgroupBy: propertyName || undefined,
+      } as TViewKanban);
+    }
+  };
+
   //
 
   return (
     <div className="notion-kanban-board">
-      {groupOptions.map((option) => (
-        <NotionDatabaseKanbanColumn
-          key={option.id}
-          database={database}
-          property={property}
-          option={option}
-          handleColumnDragStart={handleColumnDragStart}
-          handleColumnDragEnd={handleColumnDragEnd}
-          onUpdatePage={onUpdatePage}
-          titleProperty={titleProperty}
-          priorityProperty={priorityProperty}
-          statusProperty={statusProperty}
-        />
-      ))}
+      {/* Subgroup selector */}
+      {availableSubgroupProperties.length > 0 && (
+        <div className="notion-kanban-subgroup-selector">
+          <label htmlFor="subgroup-select">Group by: </label>
+          <select
+            id="subgroup-select"
+            value={subgroupBy || ''}
+            onChange={(e) => handleSubgroupChange(e.target.value)}
+            className="notion-subgroup-select"
+          >
+            <option value="">No subgrouping</option>
+            {availableSubgroupProperties.map(([propName, prop]) => (
+              <option key={propName} value={propName}>
+                {prop.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      <div className="notion-kanban-columns-container">
+        {groupOptions.map((option) => (
+          <NotionDatabaseKanbanColumn
+            key={option.id}
+            database={database}
+            property={property}
+            option={option}
+            subgroupProperty={subgroupProperty}
+            handleColumnDragStart={handleColumnDragStart}
+            handleColumnDragEnd={handleColumnDragEnd}
+            onUpdatePage={onUpdatePage}
+            titleProperty={titleProperty}
+            priorityProperty={priorityProperty}
+            statusProperty={statusProperty}
+          />
+        ))}
+      </div>
     </div>
   );
 };
@@ -127,6 +178,7 @@ export const NotionDatabaseKanbanColumn = ({
   onUpdatePage,
   property,
   option,
+  subgroupProperty,
 }: {
   database: TNotionDatabase;
   handleColumnDragStart?: (e: DragEvent<HTMLDivElement>) => void;
@@ -137,6 +189,7 @@ export const NotionDatabaseKanbanColumn = ({
   ) => void;
   property: TNotionDatabaseProperty;
   option: { id: string; name: string; color: string };
+  subgroupProperty?: TNotionDatabaseProperty | null;
 } & TImportantProperties) => {
   //
 
@@ -144,19 +197,95 @@ export const NotionDatabaseKanbanColumn = ({
     database.pages?.filter((page: TNotionPage) => {
       const pageProperty = page.properties[property.name];
       if (pageProperty?.type === 'status') {
-        return pageProperty.status?.id === option.id;
+        return (
+          pageProperty.status?.id === option.id ||
+          (option.id === 'unassigned' && pageProperty.status === null)
+        );
       } else if (pageProperty?.type === 'select') {
-        return pageProperty.select?.id === option.id;
+        return (
+          pageProperty.select?.id === option.id ||
+          (option.id === 'unassigned' && pageProperty.select === null)
+        );
       }
       return false;
     }) || [];
 
+  // Group pages by subgroup property
+  const getSubgroupOptions = () => {
+    if (!subgroupProperty) return [];
+
+    if (subgroupProperty.type === 'status') {
+      return [...subgroupProperty.status.options];
+    } else if (subgroupProperty.type === 'select') {
+      return [...subgroupProperty.select.options];
+    }
+    return [];
+  };
+
+  const subgroupOptions = getSubgroupOptions();
+
+  // Add unassigned subgroup if there are pages without subgroup value
+  const unassignedSubgroupPages = pages.filter((page: TNotionPage) => {
+    if (!subgroupProperty) return false;
+
+    const pageSubgroupProperty = page.properties[subgroupProperty.name];
+    if (pageSubgroupProperty?.type === 'status') {
+      return pageSubgroupProperty.status === null;
+    } else if (pageSubgroupProperty?.type === 'select') {
+      return pageSubgroupProperty.select === null;
+    }
+    return true;
+  });
+
+  const finalSubgroupOptions = [...subgroupOptions];
+  if (unassignedSubgroupPages.length > 0) {
+    finalSubgroupOptions.push({
+      id: 'unassigned-subgroup',
+      name: 'Unassigned',
+      color: 'gray',
+      description: null,
+    });
+  }
+
+  // Group pages by subgroup
+  const groupedPages = subgroupProperty
+    ? finalSubgroupOptions
+        .map((subgroupOption) => {
+          const subgroupPages = pages.filter((page: TNotionPage) => {
+            const pageSubgroupProperty = page.properties[subgroupProperty.name];
+
+            if (pageSubgroupProperty?.type === 'status') {
+              return (
+                pageSubgroupProperty.status?.id === subgroupOption.id ||
+                (subgroupOption.id === 'unassigned-subgroup' &&
+                  pageSubgroupProperty.status === null)
+              );
+            } else if (pageSubgroupProperty?.type === 'select') {
+              return (
+                pageSubgroupProperty.select?.id === subgroupOption.id ||
+                (subgroupOption.id === 'unassigned-subgroup' &&
+                  pageSubgroupProperty.select === null)
+              );
+            }
+            return false;
+          });
+
+          return {
+            subgroupOption,
+            pages: subgroupPages,
+          };
+        })
+        .filter((group) => group.pages.length > 0)
+    : [{ subgroupOption: null, pages }];
+
   const [dragOverColumn, setDragOverColumn] = useState<boolean>(false);
+  const [dragOverSubgroup, setDragOverSubgroup] = useState<string | null>(null);
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragOverColumn(false);
+    setDragOverSubgroup(null);
 
     const eventData = e.dataTransfer.getData('application/json');
     if (eventData) {
@@ -214,11 +343,61 @@ export const NotionDatabaseKanbanColumn = ({
                     };
             }
 
-            console.log('############################# newProperty', {
-              newProperty,
-            });
+            // If dropping into a specific subgroup, also update the subgroup property
+            if (dragOverSubgroup && subgroupProperty) {
+              let subgroupPropertyValue: TNotionProperty;
 
-            onUpdatePage?.(pageId, { [property.name]: newProperty });
+              if (dragOverSubgroup === 'unassigned-subgroup') {
+                if (subgroupProperty.type === 'status') {
+                  subgroupPropertyValue = {
+                    id: subgroupProperty.id,
+                    type: 'status',
+                    status: null,
+                  } as unknown as TNotionProperty;
+                } else {
+                  subgroupPropertyValue = {
+                    id: subgroupProperty.id,
+                    type: 'select',
+                    select: null,
+                  } as unknown as TNotionProperty;
+                }
+              } else {
+                const subgroupOption = finalSubgroupOptions.find(
+                  (opt) => opt.id === dragOverSubgroup
+                );
+                if (subgroupOption) {
+                  subgroupPropertyValue =
+                    subgroupProperty.type === 'status'
+                      ? {
+                          id: subgroupProperty.id,
+                          type: 'status',
+                          status: {
+                            id: subgroupOption.id,
+                            name: subgroupOption.name,
+                            color: subgroupOption.color,
+                          },
+                        }
+                      : {
+                          id: subgroupProperty.id,
+                          type: 'select',
+                          select: {
+                            id: subgroupOption.id,
+                            name: subgroupOption.name,
+                            color: subgroupOption.color,
+                          },
+                        };
+                } else {
+                  subgroupPropertyValue = newProperty; // fallback
+                }
+              }
+
+              onUpdatePage?.(pageId, {
+                [property.name]: newProperty,
+                [subgroupProperty.name]: subgroupPropertyValue,
+              });
+            } else {
+              onUpdatePage?.(pageId, { [property.name]: newProperty });
+            }
           }
         }
       } catch (error) {
@@ -238,6 +417,20 @@ export const NotionDatabaseKanbanColumn = ({
     e.preventDefault();
     e.stopPropagation();
     setDragOverColumn(false);
+  };
+
+  // Subgroup-specific drag handlers
+  const handleSubgroupDragOver = (e: React.DragEvent, subgroupId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverSubgroup(subgroupId);
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleSubgroupDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverSubgroup(null);
   };
 
   //
@@ -263,15 +456,46 @@ export const NotionDatabaseKanbanColumn = ({
         </div>
       </div>
       <div className="notion-kanban-column-content">
-        {pages.map((page: TNotionPage) => (
-          <TaskItem
-            key={page.id}
-            page={page}
-            database={database}
-            titleProperty={titleProperty}
-            priorityProperty={priorityProperty}
-            statusProperty={statusProperty}
-          />
+        {groupedPages.map(({ subgroupOption, pages: subgroupPages }) => (
+          <div
+            key={subgroupOption?.id || 'no-subgroup'}
+            className={`notion-kanban-subgroup${
+              dragOverSubgroup === (subgroupOption?.id || 'no-subgroup')
+                ? ' drag-over'
+                : ''
+            }`}
+            onDrop={handleDrop}
+            onDragOver={(e) =>
+              handleSubgroupDragOver(e, subgroupOption?.id || 'no-subgroup')
+            }
+            onDragLeave={handleSubgroupDragLeave}
+          >
+            {subgroupProperty && subgroupOption && (
+              <div className="notion-kanban-subgroup-header">
+                <div
+                  className={`task-status bg-${subgroupOption.color} notion-kanban-subgroup-dot`}
+                />
+                <span className="notion-kanban-subgroup-title">
+                  {subgroupOption.name}
+                </span>
+                <span className="notion-kanban-subgroup-count">
+                  {subgroupPages.length}
+                </span>
+              </div>
+            )}
+            <div className="notion-kanban-subgroup-content">
+              {subgroupPages.map((page: TNotionPage) => (
+                <TaskItem
+                  key={page.id}
+                  page={page}
+                  database={database}
+                  titleProperty={titleProperty}
+                  priorityProperty={priorityProperty}
+                  statusProperty={statusProperty}
+                />
+              ))}
+            </div>
+          </div>
         ))}
       </div>
     </div>

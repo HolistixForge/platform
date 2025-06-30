@@ -22,9 +22,15 @@ const Logo = () => (
 
 //
 
+export type TViewKanban = {
+  mode: 'kanban';
+  groupBy: 'status' | 'priority';
+  subgroupBy?: string;
+};
+
 export type TNotionViewMode =
   | { mode: 'list' }
-  | { mode: 'kanban'; groupBy: 'status' | 'priority' }
+  | TViewKanban
   | { mode: 'gallery'; itemPerLine: number };
 
 //
@@ -147,6 +153,7 @@ export const NotionDatabase = (props: NotionDatabaseProps) => {
           statusProperty={statusProperty}
           database={database}
           viewMode={viewMode}
+          setViewMode={setViewMode}
           onUpdatePage={onUpdatePage}
         />
       )}

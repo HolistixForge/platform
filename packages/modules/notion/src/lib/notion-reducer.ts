@@ -54,7 +54,7 @@ export class NotionReducer extends Reducer<
 
   private client: Client | null = null;
 
-  private getNotionClient(g: Ra<{}>) {
+  private getNotionClient(g: Ra<unknown>) {
     if (!this.client) {
       this.client = new Client({ auth: g.extraContext.config.NOTION_API_KEY });
     }
@@ -242,10 +242,6 @@ export class NotionReducer extends Reducer<
         properties: g.event.properties,
       }
 
-      console.log('############################# _updatePage', {
-        auth: g.extraContext.config.NOTION_API_KEY,
-        o,
-      });
 
       await notion.pages.update(o);
 

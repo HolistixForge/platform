@@ -6,6 +6,9 @@
       "path": "../../frontend-data"
     },
     {
+      "path": "../../log"
+    },
+    {
       "path": "../../simple-types"
     },
     {

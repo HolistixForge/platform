@@ -62,29 +62,37 @@
       method: options.method || 'GET',
       url: url,
       headers: options.headers || {},
-      body: null,
-      bodyType: 'none'
+      body: null
     };
 
-    // Handle different body types
+    // Handle different body types based on Content-Type header
     if (options.body) {
-      if (typeof options.body === 'string') {
+      const contentType = options.headers?.['content-type'] || options.headers?.['Content-Type'] || '';
+      
+      if (contentType.includes('application/json')) {
         proxyRequest.body = options.body;
-        proxyRequest.bodyType = 'text';
-      } else if (options.body instanceof FormData) {
-        // Convert FormData to object for JSON serialization
-        const formDataObj = {};
-        for (const [key, value] of options.body.entries()) {
-          formDataObj[key] = value;
+      } else if (contentType.includes('application/x-www-form-urlencoded')) {
+        if (options.body instanceof URLSearchParams) {
+          proxyRequest.body = options.body.toString();
+        } else if (typeof options.body === 'object') {
+          proxyRequest.body = new URLSearchParams(options.body).toString();
+        } else {
+          proxyRequest.body = options.body.toString();
         }
-        proxyRequest.body = formDataObj;
-        proxyRequest.bodyType = 'formData';
-      } else if (options.body instanceof URLSearchParams) {
-        proxyRequest.body = options.body.toString();
-        proxyRequest.bodyType = 'form';
+      } else if (contentType.includes('multipart/form-data')) {
+        if (options.body instanceof FormData) {
+          // Convert FormData to object for JSON serialization
+          const formDataObj = {};
+          for (const [key, value] of options.body.entries()) {
+            formDataObj[key] = value;
+          }
+          proxyRequest.body = formDataObj;
+        } else {
+          proxyRequest.body = options.body;
+        }
       } else {
+        // For other content types, use as-is
         proxyRequest.body = options.body;
-        proxyRequest.bodyType = 'json';
       }
     }
 
