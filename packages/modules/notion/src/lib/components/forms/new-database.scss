@@ -1,0 +1,73 @@
+.new-notion-database-form {
+  .search-section {
+    margin-bottom: 20px;
+  }
+
+  .search-results {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+
+    .loading-state {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+
+    .database-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .database-item {
+      padding: 12px;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+
+      &.selected {
+        background-color: #f0f8ff;
+        border-color: #007acc;
+
+        &:hover {
+          background-color: #e6f3ff;
+        }
+      }
+
+      .database-title {
+        font-weight: bold;
+        margin-bottom: 4px;
+        color: #fff;
+      }
+
+      .database-description {
+        font-size: 0.9em;
+        color: #666;
+        margin-bottom: 4px;
+      }
+
+      .database-id {
+        font-size: 0.8em;
+        color: #999;
+        font-family: 'Courier New', monospace;
+      }
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    margin-top: 25px;
+    justify-content: flex-end;
+  }
+}

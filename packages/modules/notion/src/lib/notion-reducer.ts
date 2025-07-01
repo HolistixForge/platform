@@ -19,10 +19,12 @@ import {
   TEventSetNodeView,
   TEventLoadKanbanColumnNode,
   TEventDeleteKanbanColumnNode,
+  TEventSearchDatabases,
+  TEventClearUserSearchResults,
 } from './notion-events';
 
 import { TNotionSharedData } from './notion-shared-model';
-import { TNotionPage } from './notion-types';
+import { TNotionPage, TNotionDatabaseSearchResult } from './notion-types';
 import { TNodeNotionTaskDataPayload } from './components/node-notion/node-notion-task';
 import { TNodeNotionKanbanColumnDataPayload } from './components/node-notion/node-notion-kanban-column';
 
@@ -103,6 +105,12 @@ export class NotionReducer extends Reducer<
 
       case 'notion:set-node-view':
         return this._setNodeView(g as Ra<TEventSetNodeView>);
+
+      case 'notion:search-databases':
+        return this._searchDatabases(g as Ra<TEventSearchDatabases>);
+
+      case 'notion:clear-user-search-results':
+        return this._clearUserSearchResults(g as Ra<TEventClearUserSearchResults>);
 
       case 'periodic':
         return this._periodic(g as Ra<TEventPeriodic>);
@@ -424,5 +432,25 @@ export class NotionReducer extends Reducer<
       type: 'core:delete-node',
       id: nodeId,
     });
+  }
+
+  private async _searchDatabases(g: Ra<TEventSearchDatabases>): Promise<void> {
+    try {
+      const notion = this.getNotionClient(g);
+      const response = await notion.search({
+        filter: { property: 'object', value: 'database' },
+        query: g.event.query || '',
+      });
+
+      // Store search results for this specific user
+      const searchResults = response.results as TNotionDatabaseSearchResult[];
+      g.sd.notionDatabaseSearchResults.set(g.event.userId, searchResults);
+    } catch (error) {
+      console.error('Failed to search databases:', error);
+    }
+  }
+
+  private async _clearUserSearchResults(g: Ra<TEventClearUserSearchResults>): Promise<void> {
+    g.sd.notionDatabaseSearchResults.delete(g.event.userId);
   }
 }

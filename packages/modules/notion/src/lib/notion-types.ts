@@ -293,3 +293,12 @@ export type TNotionDatabase = {
   request_id: string;
   pages: TNotionPage[];
 };
+
+export type TNotionDatabaseSearchResult = {
+  object: 'database';
+  id: string;
+  title: TNotionText[];
+  description: any[];
+  url: string;
+  last_edited_time: string;
+};

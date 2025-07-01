@@ -82,6 +82,17 @@ export type TEventSetNodeView = {
   viewMode: TNotionViewMode;
 };
 
+export type TEventSearchDatabases = {
+  type: 'notion:search-databases';
+  query?: string;
+  userId: string;
+};
+
+export type TEventClearUserSearchResults = {
+  type: 'notion:clear-user-search-results';
+  userId: string;
+};
+
 export type TNotionEvent =
   | TEventInitDatabase
   | TEventUpdatePage
@@ -95,4 +106,6 @@ export type TNotionEvent =
   | TEventDeleteKanbanColumnNode
   | TEventDeleteDatabaseNode
   | TEventDeleteDatabase
-  | TEventSetNodeView;
+  | TEventSetNodeView
+  | TEventSearchDatabases
+  | TEventClearUserSearchResults;
