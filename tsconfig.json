@@ -95,6 +95,9 @@
     },
     {
       "path": "./packages/browser-proxy/browser-proxy-app"
+    },
+    {
+      "path": "./packages/modules/airtable"
     }
   ],
   "ts-node": {

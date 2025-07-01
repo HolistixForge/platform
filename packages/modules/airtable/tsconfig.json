@@ -1,0 +1,37 @@
+{
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../module"
+    },
+    {
+      "path": "../../frontend-data"
+    },
+    {
+      "path": "../core"
+    },
+    {
+      "path": "../../collab-engine"
+    },
+    {
+      "path": "../../log"
+    },
+    {
+      "path": "../space"
+    },
+    {
+      "path": "../../ui-base"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    },
+    {
+      "path": "./tsconfig.storybook.json"
+    }
+  ],
+  "extends": "../../../tsconfig.base.json"
+}
