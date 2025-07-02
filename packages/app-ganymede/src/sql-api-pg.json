@@ -12,8 +12,8 @@
     }
   },
   "proc_projects_new_personal": {
-    "query": "call proc_projects_new_personal($1, $2, $3)",
-    "types": "s,s,o",
+    "query": "call proc_projects_new_personal($1, $2, $3, $4)",
+    "types": "s,s,b,o",
     "return": {
       "resultsets": [
         {

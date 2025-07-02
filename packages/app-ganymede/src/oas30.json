@@ -70,6 +70,9 @@
                 "properties": {
                   "name": {
                     "$ref": "#/components/schemas/project/properties/name"
+                  },
+                  "public": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
