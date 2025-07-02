@@ -33,7 +33,7 @@ export const NotionRightPanel = ({
     if (loaded && !db) {
       closePanel(panel.uuid);
     }
-  }, [db]);
+  }, [db, loaded, closePanel, panel.uuid]);
 
   if (!db) return null;
 
@@ -41,7 +41,9 @@ export const NotionRightPanel = ({
     <NotionDatabase
       database={db}
       viewMode={{ mode: 'list' }}
-      onUpdatePage={() => {}}
+      onUpdatePage={() => {
+        /* */
+      }}
     />
   );
 };

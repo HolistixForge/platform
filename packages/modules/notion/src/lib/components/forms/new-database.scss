@@ -37,11 +37,10 @@
       }
 
       &.selected {
-        background-color: #f0f8ff;
         border-color: #007acc;
 
         &:hover {
-          background-color: #e6f3ff;
+          background-color: rgba(255, 255, 255, 0.1);
         }
       }
 

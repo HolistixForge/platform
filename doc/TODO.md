@@ -1,5 +1,6 @@
 ⚠️ Antoine's stuffs
 
+cmd generator lowercase
 select displayed properties
 list db from api key
 

@@ -14,6 +14,9 @@ import { moduleFrontend as spaceFrontend } from '@monorepo/space/frontend';
 import { StoryHolistixSpace } from '@monorepo/space/stories';
 import type { ModuleBackend } from '@monorepo/module';
 
+import { moduleBackend as airtableBackend } from '../../index';
+import { moduleFrontend as airtableFrontend } from '../../frontend';
+
 Logger.setPriority(7);
 
 // Proxy check wrapper component
@@ -147,15 +150,15 @@ const modulesBackend: ModuleBackend[] = [
       name: 'config',
       loadExtraContext: () => ({
         config: {
-          AIRTABLE_API_KEY:
-            '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',
+          AIRTABLE_API_KEY: '123',
         },
       }),
     },
   },
+  airtableBackend,
 ];
 
-const modulesFrontend = [coreFrontend, spaceFrontend];
+const modulesFrontend = [coreFrontend, spaceFrontend, airtableFrontend];
 
 //
 

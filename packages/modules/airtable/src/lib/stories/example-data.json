@@ -1,0 +1,700 @@
+{
+    "meta": {
+        "meta": {
+            "projectActivity": {
+                "last_activity": "2025-07-02T08:32:01.233Z",
+                "gateway_shutdown": "2025-07-02T08:37:01.233Z"
+            }
+        }
+    },
+    "nodes": {},
+    "edges": [],
+    "graphViews": {
+        "space-story": {
+            "params": {
+                "maxRank": 2,
+                "roots": [],
+                "filterOutNodes": []
+            },
+            "nodeViews": [],
+            "graph": {
+                "nodes": [],
+                "edges": []
+            },
+            "connectorViews": {},
+            "edges": []
+        }
+    },
+    "drawing": {
+        "space-story": {
+            "elements": [],
+            "hash": "2914"
+        }
+    },
+    "airtableBases": {
+        "appWtBR2myLIJIGUK": {
+            "id": "appWtBR2myLIJIGUK",
+            "name": "Engineering Project Management",
+            "tables": [
+                {
+                    "id": "tbllJCBf9jiN9bav2",
+                    "name": "Tasks",
+                    "primaryFieldId": "fldYTXiUgCimV8Aq4",
+                    "fields": [
+                        {
+                            "type": "singleLineText",
+                            "id": "fldYTXiUgCimV8Aq4",
+                            "name": "Name"
+                        },
+                        {
+                            "type": "singleSelect",
+                            "options": {
+                                "choices": [
+                                    {
+                                        "id": "selVP0UDSvHYAZ3aa",
+                                        "name": "Not started",
+                                        "color": "blueLight2"
+                                    },
+                                    {
+                                        "id": "selOEtLaG4uniTG9K",
+                                        "name": "In progress",
+                                        "color": "cyanLight2"
+                                    },
+                                    {
+                                        "id": "sel7HpXkw55TwDfVz",
+                                        "name": "Done",
+                                        "color": "tealLight2"
+                                    }
+                                ]
+                            },
+                            "id": "fldmalF79YbJtIupv",
+                            "name": "Status"
+                        },
+                        {
+                            "type": "multilineText",
+                            "id": "fldlIutYKwkJn8xvJ",
+                            "name": "Description"
+                        },
+                        {
+                            "type": "singleSelect",
+                            "options": {
+                                "choices": [
+                                    {
+                                        "id": "seldRIBpqxGGYEn4n",
+                                        "name": "Top",
+                                        "color": "blueLight2"
+                                    },
+                                    {
+                                        "id": "sel5hUrzJdfxM6tLP",
+                                        "name": "Warning",
+                                        "color": "cyanLight2"
+                                    },
+                                    {
+                                        "id": "seluHnpwrOfa2X8DH",
+                                        "name": "Low",
+                                        "color": "tealLight2"
+                                    },
+                                    {
+                                        "id": "sel51tVf8MZVxgqgF",
+                                        "name": "Middle",
+                                        "color": "greenLight2"
+                                    }
+                                ]
+                            },
+                            "id": "fldh2JJ57LdZmvAxy",
+                            "name": "Priority Level"
+                        },
+                        {
+                            "type": "singleLineText",
+                            "id": "fldLhfSaUUo5f7tRg",
+                            "name": "Google Drive File"
+                        },
+                        {
+                            "type": "singleLineText",
+                            "id": "fld6lbtUiAPqY352B",
+                            "name": "Figma File"
+                        },
+                        {
+                            "type": "singleLineText",
+                            "id": "fldGr0Zmns2XE8ast",
+                            "name": "ID"
+                        },
+                        {
+                            "type": "multipleRecordLinks",
+                            "options": {
+                                "linkedTableId": "tblxImq7SJt3sd81n",
+                                "isReversed": false,
+                                "prefersSingleRecordLink": false,
+                                "inverseLinkFieldId": "fldl46mg1Ql27BCTt"
+                            },
+                            "id": "fldMMqYh9Zpbgxfzj",
+                            "name": "GitHub Pull Requests"
+                        },
+                        {
+                            "type": "number",
+                            "options": {
+                                "precision": 0
+                            },
+                            "id": "fldlM46MFgrIkoQTk",
+                            "name": "Order"
+                        },
+                        {
+                            "type": "multipleRecordLinks",
+                            "options": {
+                                "linkedTableId": "tblkPMaqSzPaKPqGf",
+                                "isReversed": false,
+                                "prefersSingleRecordLink": true,
+                                "inverseLinkFieldId": "fldZ6XRPuwWUO2dJ3"
+                            },
+                            "id": "fldoaBE7tceqsLq7v",
+                            "name": "Project"
+                        },
+                        {
+                            "type": "multipleRecordLinks",
+                            "options": {
+                                "linkedTableId": "tblnme60HYKz2eh7B",
+                                "isReversed": false,
+                                "prefersSingleRecordLink": false,
+                                "inverseLinkFieldId": "fldSik7Q0s8lr1hFH"
+                            },
+                            "id": "fldMVZ5veJR4dAvU9",
+                            "name": "Files"
+                        }
+                    ],
+                    "views": [
+                        {
+                            "id": "viwVtdFkkv8iOXhp2",
+                            "name": "Grid view",
+                            "type": "grid"
+                        }
+                    ],
+                    "records": [
+                        {
+                            "id": "rec7tls3a0S9JG0tf",
+                            "createdTime": "2025-06-29T22:39:51.000Z",
+                            "fields": {
+                                "Name": "Integration Agent Bee bro",
+                                "Status": "Not started",
+                                "Description": "je suis ici ",
+                                "Priority Level": "Warning",
+                                "ID": "TD-9"
+                            }
+                        },
+                        {
+                            "id": "recKlugCCxeG1dCZa",
+                            "createdTime": "2025-06-29T22:39:51.000Z",
+                            "fields": {
+                                "Name": " the pitch deck paradigm ",
+                                "Status": "In progress",
+                                "Description": "présentation",
+                                "Priority Level": "Middle",
+                                "ID": "TD-11"
+                            }
+                        },
+                        {
+                            "id": "recNQem1CDIR9aIrY",
+                            "createdTime": "2025-06-29T22:39:51.000Z",
+                            "fields": {
+                                "Name": "Hackathon",
+                                "ID": "TD-12"
+                            }
+                        },
+                        {
+                            "id": "recTj7wUVtnU134fY",
+                            "createdTime": "2025-06-29T22:39:51.000Z",
+                            "fields": {
+                                "Name": "Business Marketing Model",
+                                "Status": "Done",
+                                "Description": "test de la description la task",
+                                "Priority Level": "Middle",
+                                "ID": "TD-1",
+                                "Order": 6
+                            }
+                        },
+                        {
+                            "id": "recajaCncRkm6h2yu",
+                            "createdTime": "2025-06-29T22:39:51.000Z",
+                            "fields": {
+                                "Name": "Web summit ",
+                                "Status": "In progress",
+                                "Priority Level": "Top",
+                                "ID": "TD-4",
+                                "Order": 3
+                            }
+                        },
+                        {
+                            "id": "rechTayKmRM0vGXXx",
+                            "createdTime": "2025-06-29T22:39:51.000Z",
+                            "fields": {
+                                "Name": "Kakemono",
+                                "Status": "Not started",
+                                "Description": "je suis une description ",
+                                "Priority Level": "Middle",
+                                "ID": "TD-10",
+                                "Order": 1740416738127
+                            }
+                        },
+                        {
+                            "id": "recjLw2545psYcHfS",
+                            "createdTime": "2025-06-29T22:39:51.000Z",
+                            "fields": {
+                                "Name": "Lien d’affiliation mise en place linkdin",
+                                "Status": "Done",
+                                "Description": "edited description",
+                                "Priority Level": "Middle",
+                                "ID": "TD-7"
+                            }
+                        },
+                        {
+                            "id": "reckrlXWk5CJ7hIZV",
+                            "createdTime": "2025-06-29T22:39:51.000Z",
+                            "fields": {
+                                "Name": "Envoyer mails VC",
+                                "Status": "In progress",
+                                "Priority Level": "Middle",
+                                "ID": "TD-2",
+                                "Order": 5
+                            }
+                        },
+                        {
+                            "id": "recmMyC9eLGgcBYS0",
+                            "createdTime": "2025-06-29T22:39:51.000Z",
+                            "fields": {
+                                "Name": "Setup le dataspace",
+                                "Status": "Done",
+                                "Description": "test",
+                                "Priority Level": "Warning",
+                                "ID": "TD-5",
+                                "Order": 2
+                            }
+                        },
+                        {
+                            "id": "recsjTroQ3oZfWP31",
+                            "createdTime": "2025-06-29T22:39:51.000Z",
+                            "fields": {
+                                "Name": "Papier proposition commercial",
+                                "Status": "Not started",
+                                "Description": "test",
+                                "Priority Level": "Middle",
+                                "ID": "TD-8"
+                            }
+                        },
+                        {
+                            "id": "rectvfdJfQEdtmWX2",
+                            "createdTime": "2025-06-29T22:39:51.000Z",
+                            "fields": {
+                                "Name": "Faire la Vidéo du produit",
+                                "Status": "Not started",
+                                "Description": "test",
+                                "Priority Level": "Top",
+                                "ID": "TD-6",
+                                "Order": -29
+                            }
+                        },
+                        {
+                            "id": "recxVsjYmnyiJC6qU",
+                            "createdTime": "2025-06-29T22:39:51.000Z",
+                            "fields": {
+                                "Name": "Créer la landing page ",
+                                "Status": "In progress",
+                                "Priority Level": "Low",
+                                "ID": "TD-3",
+                                "Order": 4
+                            }
+                        }
+                    ]
+                },
+                {
+                    "id": "tblkPMaqSzPaKPqGf",
+                    "name": "Projects",
+                    "primaryFieldId": "fldOTttg6gCvCPhSE",
+                    "fields": [
+                        {
+                            "type": "singleLineText",
+                            "id": "fldOTttg6gCvCPhSE",
+                            "name": "Project Name"
+                        },
+                        {
+                            "type": "multilineText",
+                            "id": "fldHaoLYUQYhwbmIu",
+                            "name": "Project Description"
+                        },
+                        {
+                            "type": "date",
+                            "options": {
+                                "dateFormat": {
+                                    "name": "local",
+                                    "format": "l"
+                                }
+                            },
+                            "id": "fldXEDMkl6H05x8NG",
+                            "name": "Start Date"
+                        },
+                        {
+                            "type": "date",
+                            "options": {
+                                "dateFormat": {
+                                    "name": "local",
+                                    "format": "l"
+                                }
+                            },
+                            "id": "fldnOKuHU1RV0tskS",
+                            "name": "End Date"
+                        },
+                        {
+                            "type": "singleSelect",
+                            "options": {
+                                "choices": [
+                                    {
+                                        "id": "selXKNekRaoaQ7okV",
+                                        "name": "Not Started",
+                                        "color": "blueLight2"
+                                    },
+                                    {
+                                        "id": "sel44bCzGkDFisEiB",
+                                        "name": "In Progress",
+                                        "color": "cyanLight2"
+                                    },
+                                    {
+                                        "id": "selI0E72eLjJEvr80",
+                                        "name": "Completed",
+                                        "color": "tealLight2"
+                                    },
+                                    {
+                                        "id": "selrDohUM3KsnYqrY",
+                                        "name": "On Hold",
+                                        "color": "greenLight2"
+                                    }
+                                ]
+                            },
+                            "id": "fldjjB8YTCCN6JHIG",
+                            "name": "Project Status"
+                        },
+                        {
+                            "type": "singleSelect",
+                            "options": {
+                                "choices": [
+                                    {
+                                        "id": "selDxxYx4mnBViAuZ",
+                                        "name": "Low",
+                                        "color": "blueLight2"
+                                    },
+                                    {
+                                        "id": "seljlNxwBX3alq7xN",
+                                        "name": "Medium",
+                                        "color": "cyanLight2"
+                                    },
+                                    {
+                                        "id": "selNArpktdB58ZTO9",
+                                        "name": "High",
+                                        "color": "tealLight2"
+                                    }
+                                ]
+                            },
+                            "id": "flduxS4KsesisuoWZ",
+                            "name": "Priority Level"
+                        },
+                        {
+                            "type": "currency",
+                            "options": {
+                                "precision": 2,
+                                "symbol": "$"
+                            },
+                            "id": "fldrHfkj091E4JAXM",
+                            "name": "Budget"
+                        },
+                        {
+                            "type": "multipleRecordLinks",
+                            "options": {
+                                "linkedTableId": "tbllJCBf9jiN9bav2",
+                                "isReversed": false,
+                                "prefersSingleRecordLink": false,
+                                "inverseLinkFieldId": "fldoaBE7tceqsLq7v"
+                            },
+                            "id": "fldZ6XRPuwWUO2dJ3",
+                            "name": "Tasks"
+                        },
+                        {
+                            "type": "multipleRecordLinks",
+                            "options": {
+                                "linkedTableId": "tblnme60HYKz2eh7B",
+                                "isReversed": false,
+                                "prefersSingleRecordLink": false,
+                                "inverseLinkFieldId": "fldc2IW2NtTqrrznS"
+                            },
+                            "id": "fld92s03J1HiRWDXO",
+                            "name": "Associated Files"
+                        }
+                    ],
+                    "views": [
+                        {
+                            "id": "viwL1aU4coafViH2m",
+                            "name": "Grid view",
+                            "type": "grid"
+                        }
+                    ],
+                    "records": [
+                        {
+                            "id": "rec09AkkJGQDTGVhN",
+                            "createdTime": "2025-06-29T22:39:51.000Z",
+                            "fields": {}
+                        },
+                        {
+                            "id": "rec9shcznHeRkvpaY",
+                            "createdTime": "2025-06-30T00:44:54.000Z",
+                            "fields": {
+                                "Project Name": "appWtBR2myLIJIGUK"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "id": "tblnme60HYKz2eh7B",
+                    "name": "Files",
+                    "primaryFieldId": "fldhDa8SAOZhy9EOO",
+                    "fields": [
+                        {
+                            "type": "singleLineText",
+                            "id": "fldhDa8SAOZhy9EOO",
+                            "name": "File Name"
+                        },
+                        {
+                            "type": "singleSelect",
+                            "options": {
+                                "choices": [
+                                    {
+                                        "id": "sel2mY7E3GYf60Khx",
+                                        "name": "Google Drive",
+                                        "color": "blueLight2"
+                                    },
+                                    {
+                                        "id": "selY2JPoVoFMzwsxf",
+                                        "name": "Figma",
+                                        "color": "cyanLight2"
+                                    },
+                                    {
+                                        "id": "selt9MBevoji7tw9g",
+                                        "name": "Other",
+                                        "color": "tealLight2"
+                                    }
+                                ]
+                            },
+                            "id": "fldaQMAU1KPOYWPhX",
+                            "name": "File Type"
+                        },
+                        {
+                            "type": "date",
+                            "options": {
+                                "dateFormat": {
+                                    "name": "local",
+                                    "format": "l"
+                                }
+                            },
+                            "id": "fldh1DizoUOt596wC",
+                            "name": "Upload Date"
+                        },
+                        {
+                            "type": "number",
+                            "options": {
+                                "precision": 0
+                            },
+                            "id": "fldBe0LFnV6WwS7qX",
+                            "name": "File Size"
+                        },
+                        {
+                            "type": "multipleAttachments",
+                            "options": {
+                                "isReversed": true
+                            },
+                            "id": "fldYuTU5BuLkdoKic",
+                            "name": "Preview"
+                        },
+                        {
+                            "type": "multipleRecordLinks",
+                            "options": {
+                                "linkedTableId": "tbllJCBf9jiN9bav2",
+                                "isReversed": false,
+                                "prefersSingleRecordLink": true,
+                                "inverseLinkFieldId": "fldMVZ5veJR4dAvU9"
+                            },
+                            "id": "fldSik7Q0s8lr1hFH",
+                            "name": "Associated Task"
+                        },
+                        {
+                            "type": "multipleRecordLinks",
+                            "options": {
+                                "linkedTableId": "tblkPMaqSzPaKPqGf",
+                                "isReversed": false,
+                                "prefersSingleRecordLink": false,
+                                "inverseLinkFieldId": "fld92s03J1HiRWDXO"
+                            },
+                            "id": "fldc2IW2NtTqrrznS",
+                            "name": "Projects"
+                        },
+                        {
+                            "type": "multipleRecordLinks",
+                            "options": {
+                                "linkedTableId": "tblxImq7SJt3sd81n",
+                                "isReversed": false,
+                                "prefersSingleRecordLink": false,
+                                "inverseLinkFieldId": "fldQvNSArRW9Cu1NO"
+                            },
+                            "id": "fldcyr1OEv1fBnm4a",
+                            "name": "Pull Requests"
+                        }
+                    ],
+                    "views": [
+                        {
+                            "id": "viwi3QQ2HTKlfaQs5",
+                            "name": "Grid view",
+                            "type": "grid"
+                        }
+                    ],
+                    "records": [
+                        {
+                            "id": "recTT07PKDXQ4LI51",
+                            "createdTime": "2025-06-29T22:39:51.000Z",
+                            "fields": {}
+                        }
+                    ]
+                },
+                {
+                    "id": "tblxImq7SJt3sd81n",
+                    "name": "Pull Requests",
+                    "primaryFieldId": "fld8X4hSTczb0JZP8",
+                    "fields": [
+                        {
+                            "type": "singleLineText",
+                            "id": "fld8X4hSTczb0JZP8",
+                            "name": "Pull Request ID"
+                        },
+                        {
+                            "type": "singleLineText",
+                            "id": "fldxs7mX5XigbtTO6",
+                            "name": "Title"
+                        },
+                        {
+                            "type": "multilineText",
+                            "id": "fld7XWBsoKUXcrOOt",
+                            "name": "Description"
+                        },
+                        {
+                            "type": "singleSelect",
+                            "options": {
+                                "choices": [
+                                    {
+                                        "id": "selnY1127fxLgVACr",
+                                        "name": "Open",
+                                        "color": "blueLight2"
+                                    },
+                                    {
+                                        "id": "selIJFw7zlDItlc5B",
+                                        "name": "Closed",
+                                        "color": "cyanLight2"
+                                    },
+                                    {
+                                        "id": "sel3x921p2PN39aW2",
+                                        "name": "Merged",
+                                        "color": "tealLight2"
+                                    }
+                                ]
+                            },
+                            "id": "fldq3FT9kKvKtvvey",
+                            "name": "Status"
+                        },
+                        {
+                            "type": "date",
+                            "options": {
+                                "dateFormat": {
+                                    "name": "local",
+                                    "format": "l"
+                                }
+                            },
+                            "id": "fldG7I2d5moo2eMuw",
+                            "name": "Creation Date"
+                        },
+                        {
+                            "type": "date",
+                            "options": {
+                                "dateFormat": {
+                                    "name": "local",
+                                    "format": "l"
+                                }
+                            },
+                            "id": "fldOkS4m4fVQfG79u",
+                            "name": "Last Updated"
+                        },
+                        {
+                            "type": "singleLineText",
+                            "id": "fldZWaMwSKe8ekvXJ",
+                            "name": "Author"
+                        },
+                        {
+                            "type": "multipleSelects",
+                            "options": {
+                                "choices": [
+                                    {
+                                        "id": "selFXZOTBFYuNkmSJ",
+                                        "name": "Approved",
+                                        "color": "blueLight2"
+                                    },
+                                    {
+                                        "id": "selp6UdiIU0FMITjT",
+                                        "name": "Changes Requested",
+                                        "color": "cyanLight2"
+                                    },
+                                    {
+                                        "id": "sel2C7L3OGNNFZVnY",
+                                        "name": "Commented",
+                                        "color": "tealLight2"
+                                    }
+                                ]
+                            },
+                            "id": "fldtJtChmGS4vxbGz",
+                            "name": "Reviewers"
+                        },
+                        {
+                            "type": "multipleRecordLinks",
+                            "options": {
+                                "linkedTableId": "tbllJCBf9jiN9bav2",
+                                "isReversed": false,
+                                "prefersSingleRecordLink": true,
+                                "inverseLinkFieldId": "fldMMqYh9Zpbgxfzj"
+                            },
+                            "id": "fldl46mg1Ql27BCTt",
+                            "name": "Associated Task"
+                        },
+                        {
+                            "type": "multipleRecordLinks",
+                            "options": {
+                                "linkedTableId": "tblnme60HYKz2eh7B",
+                                "isReversed": false,
+                                "prefersSingleRecordLink": false,
+                                "inverseLinkFieldId": "fldcyr1OEv1fBnm4a"
+                            },
+                            "id": "fldQvNSArRW9Cu1NO",
+                            "name": "Files Changed"
+                        }
+                    ],
+                    "views": [
+                        {
+                            "id": "viwrg5ZG8rBrzufkh",
+                            "name": "Grid view",
+                            "type": "grid"
+                        }
+                    ],
+                    "records": [
+                        {
+                            "id": "recQKLRYocBSP9RCU",
+                            "createdTime": "2025-06-29T22:39:51.000Z",
+                            "fields": {}
+                        }
+                    ]
+                }
+            ],
+            "permissionLevel": "create"
+        }
+    },
+    "airtableNodeViews": {},
+    "airtableBaseSearchResults": {}
+}

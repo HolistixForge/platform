@@ -1,0 +1,62 @@
+import React, { useEffect, useState } from 'react';
+
+import { useSharedData } from '@monorepo/collab-engine';
+import { TPanel } from '@monorepo/module/frontend';
+import { TAirtableSharedData } from '../../airtable-shared-model';
+import { AirtableTableList } from './airtable-table-list';
+
+import './airtable-right-panel.scss';
+
+interface AirtableRightPanelProps {
+  panel: TPanel;
+  closePanel: (uuid: string) => void;
+}
+
+export const AirtableRightPanel: React.FC<AirtableRightPanelProps> = ({
+  panel,
+  closePanel,
+}) => {
+  const baseId = panel.data.baseId as string;
+
+  const sd = useSharedData<TAirtableSharedData>(['airtableBases'], (sd) => sd);
+
+  const base = sd.airtableBases.get(baseId);
+
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!loaded && base) {
+      setLoaded(true);
+    }
+    if (loaded && !base) {
+      closePanel(panel.uuid);
+    }
+  }, [base, loaded, closePanel, panel.uuid]);
+
+  if (!base) return null;
+
+  return (
+    <div className="airtable-right-panel">
+      <div className="airtable-header">
+        <div className="airtable-logo">
+          <span role="img" aria-label="">
+            📊
+          </span>
+        </div>
+        <h2 className="airtable-h2">{base.name}</h2>
+        <div className="airtable-meta">
+          <span className="airtable-count">{base.tables.length} tables</span>
+          <span className="airtable-permission">{base.permissionLevel}</span>
+        </div>
+      </div>
+
+      {base.description && (
+        <div className="airtable-description">
+          <p>{base.description}</p>
+        </div>
+      )}
+
+      <AirtableTableList base={base} tables={base.tables} />
+    </div>
+  );
+};

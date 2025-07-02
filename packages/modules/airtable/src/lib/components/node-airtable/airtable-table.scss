@@ -1,0 +1,243 @@
+.airtable-table {
+  .airtable-logo {
+    width: 24px;
+    height: 24px;
+  }
+
+  .airtable-table-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid #e0e0e0;
+
+    .airtable-h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .airtable-view-switcher {
+      display: flex;
+      gap: 8px;
+      margin-left: auto;
+
+      button {
+        padding: 6px 12px;
+        border: 1px solid #d0d0d0;
+        border-radius: 4px;
+        background: white;
+        cursor: pointer;
+        font-size: 12px;
+
+        &.active {
+          background: #ff6b35;
+          color: white;
+          border-color: #ff6b35;
+        }
+
+        &:hover:not(.active) {
+          background: #f5f5f5;
+        }
+      }
+    }
+  }
+}
+
+.airtable-table-list {
+  padding: 16px;
+
+  .airtable-list-header {
+    margin-bottom: 16px;
+
+    h3 {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+    }
+
+    p {
+      margin: 0;
+      color: #666;
+      font-size: 14px;
+    }
+  }
+
+  .airtable-list-content {
+    .airtable-list-item {
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 12px;
+      margin-bottom: 8px;
+
+      .airtable-record-id {
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #333;
+      }
+
+      .airtable-record-fields {
+        .airtable-field {
+          display: flex;
+          gap: 8px;
+          margin-bottom: 4px;
+          font-size: 14px;
+
+          .field-name {
+            font-weight: 500;
+            color: #666;
+            min-width: 80px;
+          }
+
+          .field-value {
+            color: #333;
+          }
+        }
+      }
+    }
+  }
+}
+
+.airtable-table-kanban {
+  padding: 16px;
+
+  .airtable-kanban-header {
+    margin-bottom: 16px;
+
+    h3 {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+    }
+
+    p {
+      margin: 0;
+      color: #666;
+      font-size: 14px;
+    }
+  }
+
+  .airtable-kanban-content {
+    .airtable-kanban-columns {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+
+      .airtable-kanban-column {
+        min-width: 280px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 16px;
+
+        h4 {
+          margin: 0 0 12px 0;
+          font-size: 14px;
+          font-weight: 600;
+          color: #333;
+        }
+
+        .airtable-kanban-cards {
+          .airtable-kanban-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+            .card-title {
+              font-weight: 600;
+              margin-bottom: 8px;
+              color: #333;
+            }
+
+            .card-content {
+              .card-field {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 4px;
+                font-size: 12px;
+
+                span:first-child {
+                  color: #666;
+                }
+
+                span:last-child {
+                  color: #333;
+                  font-weight: 500;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.airtable-table-gallery {
+  padding: 16px;
+
+  .airtable-gallery-header {
+    margin-bottom: 16px;
+
+    h3 {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+    }
+
+    p {
+      margin: 0;
+      color: #666;
+      font-size: 14px;
+    }
+  }
+
+  .airtable-gallery-content {
+    .airtable-gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+
+      .airtable-gallery-card {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 16px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+        .gallery-card-header {
+          margin-bottom: 12px;
+
+          h4 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+          }
+        }
+
+        .gallery-card-content {
+          .gallery-field {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+
+            .field-label {
+              color: #666;
+              font-weight: 500;
+            }
+
+            .field-value {
+              color: #333;
+              text-align: right;
+              max-width: 60%;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+          }
+        }
+      }
+    }
+  }
+}

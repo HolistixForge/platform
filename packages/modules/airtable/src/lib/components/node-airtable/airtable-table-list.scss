@@ -1,0 +1,173 @@
+.airtable-table-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 4px;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
+  }
+}
+
+.table-item {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid #404040;
+  border-radius: 8px;
+  padding: 16px;
+  cursor: grab;
+  transition: all 0.2s ease;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    background: rgba(54, 54, 54, 0.2) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-color: #4dabf7;
+  }
+
+  &.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+  }
+
+  .table-item-header {
+    .table-item-title {
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0 0 8px 0;
+      line-height: 1.4;
+    }
+
+    .table-item-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+
+      .table-count,
+      .table-fields {
+        background: rgba(77, 171, 247, 0.2);
+        color: #4dabf7;
+        padding: 2px 6px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .table-item-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .table-primary-field {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+
+      .field-label {
+        color: #868e96;
+        font-size: 12px;
+        font-weight: 500;
+        min-width: 60px;
+      }
+
+      .field-name {
+        color: #ffffff;
+        font-size: 13px;
+        font-weight: 500;
+      }
+    }
+
+    .table-sample-records {
+      .sample-label {
+        color: #868e96;
+        font-size: 12px;
+        font-weight: 500;
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .sample-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        .sample-record {
+          color: #ddd;
+          font-size: 12px;
+          padding: 4px 8px;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 3px;
+          border-left: 3px solid #4dabf7;
+        }
+      }
+    }
+  }
+
+  .table-item-footer {
+    margin-top: auto;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    .table-views {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+
+      .view-badge {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        padding: 2px 6px;
+        border-radius: 10px;
+        font-size: 10px;
+        font-weight: 500;
+        text-transform: capitalize;
+      }
+    }
+  }
+}
+
+// Color variations for different table types
+.table-item {
+  &.has-records {
+    border-left: 4px solid #51cf66;
+  }
+
+  &.empty-table {
+    border-left: 4px solid #868e96;
+    opacity: 0.7;
+  }
+
+  &.many-fields {
+    border-left: 4px solid #ffd43b;
+  }
+}

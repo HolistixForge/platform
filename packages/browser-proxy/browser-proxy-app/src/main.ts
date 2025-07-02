@@ -292,11 +292,11 @@ export class ProxyServer {
             const body = await this.parseRequestBody(req);
             const proxyRequest: ProxyRequest = JSON.parse(body);
 
-            // Check if we should log this request/response
-            const shouldLog = this.logResponseMethods.includes(proxyRequest.method.toUpperCase());
+            // Check if we should log this request/response based on method
+            const shouldLogByMethod = this.logResponseMethods.includes(proxyRequest.method.toUpperCase());
 
             // Log the incoming request only for specified methods
-            if (shouldLog) {
+            if (shouldLogByMethod) {
                 ProxyLogger.logRequest(proxyRequest);
             } else {
                 console.log(`🔄 Proxying ${proxyRequest.method} ${proxyRequest.url} (silent mode)`);
@@ -305,8 +305,12 @@ export class ProxyServer {
             // Forward the request
             const result = await this.forwardRequest(proxyRequest);
 
-            // Log the response only for specified methods
-            if (shouldLog) {
+            // Log the response if method is in logResponseMethods OR if status code is not 200
+            const shouldLogResponse = shouldLogByMethod || (result.statusCode !== 200);
+
+            if (shouldLogResponse) {
+                if (!shouldLogByMethod)
+                    ProxyLogger.logRequest(proxyRequest);
                 ProxyLogger.logResponse(result, proxyRequest.url);
             } else {
                 console.log(`✅ ${proxyRequest.method} ${proxyRequest.url} completed (${result.statusCode})`);
