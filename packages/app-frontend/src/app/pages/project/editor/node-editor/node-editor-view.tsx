@@ -14,6 +14,7 @@ import {
   NodeTextEditor,
   NodeIframe,
   NodeIdCard,
+  NodeReservation,
 } from '@monorepo/socials/frontend';
 import { NodeNotion, NodeNotionTask } from '@monorepo/notion/frontend';
 import { useSharedData } from '@monorepo/collab-engine';
@@ -44,6 +45,7 @@ const nodeTypes = {
   shape: Shape,
   iframe: NodeIframe,
   'node-user': NodeIdCard,
+  reservation: NodeReservation,
 };
 
 //

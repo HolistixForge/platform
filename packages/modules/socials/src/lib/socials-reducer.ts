@@ -12,18 +12,20 @@ import {
   TEventDeleteIframe,
   TEventNewNodeUser,
   TEventDeleteNodeUser,
+  TEventNewReservation,
+  TEventDeleteReservation,
 } from './socials-events';
 
 //
 
 type DispatchedEvents = TEventNewNode | TEventDeleteNode;
 
-type Ra<T> = ReduceArgs<{}, T, DispatchedEvents, undefined>;
+type Ra<T> = ReduceArgs<Record<string, never>, T, DispatchedEvents, undefined>;
 
 //
 
 export class SocialsReducer extends Reducer<
-  {},
+  Record<string, never>,
   TEventSocials,
   DispatchedEvents,
   undefined
@@ -55,6 +57,12 @@ export class SocialsReducer extends Reducer<
 
       case 'socials:delete-node-user':
         return this._deleteNodeUser(g as Ra<TEventDeleteNodeUser>);
+
+      case 'socials:new-reservation':
+        return this._newReservation(g as Ra<TEventNewReservation>);
+
+      case 'socials:delete-reservation':
+        return this._deleteReservation(g as Ra<TEventDeleteReservation>);
 
       default:
         return Promise.resolve();
@@ -175,6 +183,35 @@ export class SocialsReducer extends Reducer<
   }
 
   _deleteNodeUser(g: Ra<TEventDeleteNodeUser>): Promise<void> {
+    g.bep.process({
+      type: 'core:delete-node',
+      id: g.event.nodeId,
+    });
+    return Promise.resolve();
+  }
+
+  //
+
+  _newReservation(g: Ra<TEventNewReservation>): Promise<void> {
+    const id = makeUuid();
+
+    g.bep.process({
+      type: 'core:new-node',
+      nodeData: {
+        id,
+        name: 'Reservation',
+        type: 'reservation',
+        root: true,
+        data: { userId: g.event.userId },
+        connectors: [],
+      },
+      edges: [],
+      origin: g.event.origin,
+    });
+    return Promise.resolve();
+  }
+
+  _deleteReservation(g: Ra<TEventDeleteReservation>): Promise<void> {
     g.bep.process({
       type: 'core:delete-node',
       id: g.event.nodeId,

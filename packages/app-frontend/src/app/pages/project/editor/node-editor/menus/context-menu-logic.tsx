@@ -21,7 +21,7 @@ import {
   NewVolumeFormData,
 } from '@monorepo/ui-views';
 import { useAction, DialogControlled } from '@monorepo/ui-base';
-import { useQueryServerImages } from '@monorepo/frontend-data';
+import { useCurrentUser, useQueryServerImages } from '@monorepo/frontend-data';
 import {
   NewNotionDatabaseForm,
   NewNotionDatabaseFormData,
@@ -217,6 +217,8 @@ export const ContextMenuLogic = ({
   //
 
   const { status, data } = useQueryServerImages();
+
+  const { data: user } = useCurrentUser();
 
   //
 
@@ -454,6 +456,23 @@ export const ContextMenuLogic = ({
 
   //
 
+  const onNewReservation = useCallback(() => {
+    if (!user?.user?.user_id) return;
+    dispatcher.dispatch({
+      type: 'socials:new-reservation',
+      userId: user?.user?.user_id,
+      origin: {
+        viewId: viewId,
+        position: {
+          x: refCoordinates.current.x,
+          y: refCoordinates.current.y,
+        },
+      },
+    });
+  }, [dispatcher, refCoordinates, user, viewId]);
+
+  //
+
   const onNewTextEditor = useCallback(() => {
     dispatcher.dispatch({
       type: 'socials:new-text-editor',
@@ -576,6 +595,13 @@ export const ContextMenuLogic = ({
         { separator: true },
         */
         {
+          title: 'Reservation',
+          onClick: onNewReservation,
+          disabled: false,
+          hiddenNodes: getHiddenNodesByType('reservation'),
+        },
+        { separator: true },
+        {
           title: 'Chat Box',
           onClick: onNewChatBox,
           disabled: false,
@@ -634,6 +660,7 @@ export const ContextMenuLogic = ({
     onNewShape,
     iframe_action.open,
     nodeUser_action.open,
+    onNewReservation,
   ]);
 
   /**

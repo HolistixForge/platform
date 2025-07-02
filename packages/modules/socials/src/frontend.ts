@@ -9,3 +9,4 @@ export { NewIframeForm } from './lib/forms/form-new-iframe';
 export type { NewIframeFormData } from './lib/forms/form-new-iframe';
 export { NewNodeUserForm } from './lib/forms/form-new-node-user';
 export type { NewNodeUserFormData } from './lib/forms/form-new-node-user';
+export { NodeReservation } from './lib/components/node-reservation';

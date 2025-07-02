@@ -24,7 +24,7 @@ interface IDCardProps {
   lanyard?: boolean;
 }
 
-export const IDCard: React.FC<IDCardProps> = ({ user, color, lanyard }) => {
+const ReservationCard: React.FC<IDCardProps> = ({ user, color, lanyard }) => {
   return (
     <div className="id-card-container">
       <IDCardSvg lanyard={lanyard} />
@@ -34,6 +34,7 @@ export const IDCard: React.FC<IDCardProps> = ({ user, color, lanyard }) => {
         </div>
         <div className="info-section">
           <UserUsername {...user} color={color} />
+          <span className="reservation-label">RESERVATION</span>
         </div>
       </div>
     </div>
@@ -42,7 +43,7 @@ export const IDCard: React.FC<IDCardProps> = ({ user, color, lanyard }) => {
 
 //
 
-export const NodeIdCard = ({ node }: { node: TGraphNode }) => {
+export const NodeReservation = ({ node }: { node: TGraphNode }) => {
   const userId = node.data?.userId as string;
 
   const { data: user } = useQueryUser(userId);
@@ -59,7 +60,7 @@ export const NodeIdCard = ({ node }: { node: TGraphNode }) => {
 
   const handleDelete = useCallback(async () => {
     await dispatcher.dispatch({
-      type: 'socials:delete-node-user',
+      type: 'socials:delete-reservation',
       nodeId: id,
     });
   }, [dispatcher, id]);
@@ -71,7 +72,7 @@ export const NodeIdCard = ({ node }: { node: TGraphNode }) => {
   if (!user) return null;
 
   return (
-    <div className="common-node node-id-card">
+    <div className="common-node node-id-card node-reservation">
       <NodeHeader
         nodeType="id-card"
         buttons={buttons}
@@ -80,7 +81,7 @@ export const NodeIdCard = ({ node }: { node: TGraphNode }) => {
         open={open}
         isOpened={isOpened}
       />
-      <IDCard user={user} color={color} lanyard={selected} />
+      <ReservationCard user={user} color={color} lanyard={selected} />
     </div>
   );
 };

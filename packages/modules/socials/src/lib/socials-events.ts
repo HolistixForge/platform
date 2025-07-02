@@ -43,6 +43,17 @@ export type TEventDeleteNodeUser = {
   nodeId: string;
 };
 
+export type TEventNewReservation = {
+  type: 'socials:new-reservation';
+  userId: string;
+  origin?: TEventOrigin;
+};
+
+export type TEventDeleteReservation = {
+  type: 'socials:delete-reservation';
+  nodeId: string;
+};
+
 export type TEventSocials =
   | TEventNewYoutube
   | TEventDeleteYoutube
@@ -51,4 +62,6 @@ export type TEventSocials =
   | TEventNewIframe
   | TEventDeleteIframe
   | TEventNewNodeUser
-  | TEventDeleteNodeUser;
+  | TEventDeleteNodeUser
+  | TEventNewReservation
+  | TEventDeleteReservation;
