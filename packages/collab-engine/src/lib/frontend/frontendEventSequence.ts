@@ -18,11 +18,11 @@ export class FrontendEventSequence<T extends TJsonObject> {
   public lastEvent:
     | (T & Pick<SequenceEvent, 'sequenceRevertPoint' | 'sequenceEnd'>)
     | undefined;
+  public hasError = false;
 
-  private counter: number = 0;
+  private counter = 0;
   private sequenceId: string;
   private dispatcher: FrontendDispatcher<T>;
-  private hasError: boolean = false;
   private localOverrider: LocalOverrider<TValidSharedData>;
   private debouncedDispatch: _.DebouncedFunc<
     (

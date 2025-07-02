@@ -190,6 +190,8 @@ process.on('SIGUSR1', () => {
 //
 
 const gatewayStopNotify = async () => {
+  log(6, 'GATEWAY', 'gatewayStopNotify');
+
   await toGanymede({
     url: '/gateway-stop',
     method: 'POST',
@@ -288,7 +290,7 @@ export type TAllEvents =
 //
 
 export async function initProjectCollaboration(
-  bep: BackendEventProcessor<TAllEvents, {}>
+  bep: BackendEventProcessor<TAllEvents, unknown>
 ) {
   // create Y document
   ydoc = u.getYDoc(ROOM_ID);

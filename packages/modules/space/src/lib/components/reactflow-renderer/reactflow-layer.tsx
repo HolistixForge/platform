@@ -201,6 +201,22 @@ export const ReactflowLayer = ({
     (event: React.MouseEvent, node: Node, nodes: Node[]) => {
       const n = spaceState.getNodes().find((n) => n.id === node.id);
       if (!n) return;
+
+      // Check if node is non-movable by walking up DOM tree
+
+      let element = event.target as HTMLElement;
+      const tree = [];
+      let movable = true;
+      while (element && !element.classList.contains('react-flow__nodes')) {
+        tree.push(element.classList);
+        if (element.classList.contains('node-non-movable')) {
+          movable = false;
+        }
+        element = element.parentElement as HTMLElement;
+      }
+
+      // console.log('onNodeDrag', { event, node, nodes, tree, movable });
+
       // Create sequence if it doesn't exist
       if (!moveNodeEventSequenceRef.current) {
         moveNodeEventSequenceRef.current = createEventSequence({
@@ -229,6 +245,11 @@ export const ReactflowLayer = ({
             }
           },
         });
+
+        if (!movable) {
+          moveNodeEventSequenceRef.current.hasError = true;
+        }
+
         // define the revert state in case of error during the sequence
         moveNodeEventSequenceRef.current.dispatch({
           type: 'space:move-node',
@@ -238,7 +259,8 @@ export const ReactflowLayer = ({
           sequenceRevertPoint: true,
         });
       }
-      // start moving the node
+
+      // move the node
       moveNodeEventSequenceRef.current.dispatch({
         type: 'space:move-node',
         viewId,
@@ -402,12 +424,14 @@ export const ReactflowLayer = ({
 //
 //
 
-const ReactflowInstanceSetter = forwardRef<ReactFlowInstance, {}>(({}, ref) => {
-  const reactflowInstance = useReactFlow();
-  useEffect(() => {
-    if (ref && 'current' in ref) {
-      ref.current = reactflowInstance;
-    }
-  }, [reactflowInstance]);
-  return null;
-});
+const ReactflowInstanceSetter = forwardRef<ReactFlowInstance, unknown>(
+  (unknown, ref) => {
+    const reactflowInstance = useReactFlow();
+    useEffect(() => {
+      if (ref && 'current' in ref) {
+        ref.current = reactflowInstance;
+      }
+    }, [reactflowInstance]);
+    return null;
+  }
+);
