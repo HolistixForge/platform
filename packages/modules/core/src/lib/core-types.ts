@@ -62,5 +62,6 @@ export type TProjectMeta = {
   projectActivity: {
     last_activity: string;
     gateway_shutdown: string;
+    disable_gateway_shutdown: boolean;
   };
 };

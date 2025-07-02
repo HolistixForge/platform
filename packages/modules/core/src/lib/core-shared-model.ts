@@ -16,6 +16,10 @@ export type TCoreSharedData = {
 
 export const Core_loadData = (st: SharedTypes): TCoreSharedData => {
   const meta = st.getSharedMap<TProjectMeta>('demiurge-meta');
+
+  const disable_gateway_shutdown =
+    meta.get('meta')?.projectActivity.disable_gateway_shutdown || false;
+
   meta.set('meta', {
     projectActivity: {
       last_activity: new Date().toISOString(),
@@ -23,6 +27,7 @@ export const Core_loadData = (st: SharedTypes): TCoreSharedData => {
         GATEWAY_INACIVITY_SHUTDOWN_DELAY,
         new Date()
       ).toISOString(),
+      disable_gateway_shutdown,
     },
   });
   return {
