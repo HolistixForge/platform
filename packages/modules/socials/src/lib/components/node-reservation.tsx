@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 
 import { TGraphNode } from '@monorepo/core';
-import { useCurrentUser, useQueryUser } from '@monorepo/frontend-data';
+import { useQueryUser } from '@monorepo/frontend-data';
 import { UserAvatar, UserUsername } from '@monorepo/ui-base';
 import { TG_User } from '@monorepo/demiurge-types';
 import { useDispatcher, useAwarenessUserList } from '@monorepo/collab-engine';
@@ -33,7 +33,12 @@ const ReservationCard: React.FC<IDCardProps> = ({ user, color, lanyard }) => {
           <UserAvatar {...user} />
         </div>
         <div className="info-section">
-          <UserUsername {...user} color={color} />
+          <UserUsername
+            {...user}
+            color={color}
+            ellipsis={false}
+            style={{ textAlign: 'center' }}
+          />
           <span className="reservation-label">RESERVATION</span>
         </div>
       </div>
@@ -48,8 +53,6 @@ export const NodeReservation = ({ node }: { node: TGraphNode }) => {
 
   const { data: user } = useQueryUser(userId);
 
-  const { data: currentUser } = useCurrentUser();
-
   const users = useAwarenessUserList();
   const color = user
     ? users.find((u) => u.username === user.username)?.color ||
@@ -60,15 +63,12 @@ export const NodeReservation = ({ node }: { node: TGraphNode }) => {
 
   const dispatcher = useDispatcher<TEventSocials>();
 
-  const editable = currentUser?.user?.user_id === userId;
-
   const handleDelete = useCallback(async () => {
-    if (!editable) return;
     await dispatcher.dispatch({
       type: 'socials:delete-reservation',
       nodeId: id,
     });
-  }, [dispatcher, id, editable]);
+  }, [dispatcher, id]);
 
   const buttons = useNodeHeaderButtons(
     {
@@ -80,11 +80,7 @@ export const NodeReservation = ({ node }: { node: TGraphNode }) => {
   if (!user) return null;
 
   return (
-    <div
-      className={`common-node node-id-card node-reservation ${
-        !editable ? 'node-non-movable node-non-deletable' : ''
-      }`}
-    >
+    <div className={`common-node node-id-card node-reservation`}>
       <NodeHeader
         nodeType="id-card"
         buttons={buttons}

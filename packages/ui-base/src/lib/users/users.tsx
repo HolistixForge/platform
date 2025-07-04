@@ -93,21 +93,26 @@ export const UserAvatar = ({
 export const UserUsername = ({
   username,
   color = '#fff',
+  ellipsis = true,
+  style,
 }: {
   username: string;
   firstname: string | null;
   lastname: string | null;
   color?: string;
+  ellipsis?: boolean;
+  style?: CSSProperties;
 }) => {
   const { username: un, user_type } = usernameSplit(username);
 
-  const style = {
+  const _style = {
+    ...style,
     color: color,
     '--user-color': color,
   };
 
   return (
-    <span className="username ellipsis" style={style}>
+    <span className={`username ${ellipsis ? 'ellipsis' : ''}`} style={_style}>
       {user_type === 'github' && (
         <GitHubLogoIcon className="user-type github" />
       )}

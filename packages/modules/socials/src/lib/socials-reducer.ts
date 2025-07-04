@@ -1,6 +1,9 @@
-import { TEventDeleteNode, TEventNewNode } from '@monorepo/core';
+import { TCoreSharedData, TEventDeleteNode, TEventNewNode } from '@monorepo/core';
 import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
 import { makeUuid } from '@monorepo/simple-types';
+import { makeProjectScopeString } from '@monorepo/demiurge-types';
+import { UserException } from '@monorepo/log';
+import { TEventLockNode } from '@monorepo/space';
 
 import {
   TEventSocials,
@@ -18,17 +21,25 @@ import {
 
 //
 
-type DispatchedEvents = TEventNewNode | TEventDeleteNode;
+type TExtraArgs = {
+  project_id: string;
+  user_id: string;
+  jwt: {
+    scope: string[]
+  }
+};
 
-type Ra<T> = ReduceArgs<Record<string, never>, T, DispatchedEvents, undefined>;
+type DispatchedEvents = TEventNewNode | TEventDeleteNode | TEventLockNode;
+
+type Ra<T> = ReduceArgs<TCoreSharedData, T, DispatchedEvents, TExtraArgs>;
 
 //
 
 export class SocialsReducer extends Reducer<
-  Record<string, never>,
+  TCoreSharedData,
   TEventSocials,
   DispatchedEvents,
-  undefined
+  TExtraArgs
 > {
   //
 
@@ -193,6 +204,13 @@ export class SocialsReducer extends Reducer<
   //
 
   _newReservation(g: Ra<TEventNewReservation>): Promise<void> {
+
+    g.sd.nodes.forEach((node) => {
+      if (node.data?.userId === g.event.userId) {
+        throw new UserException('User already has a reservation');
+      }
+    });
+
     const id = makeUuid();
 
     g.bep.process({
@@ -208,14 +226,29 @@ export class SocialsReducer extends Reducer<
       edges: [],
       origin: g.event.origin,
     });
+
+    if (g.event.origin) {
+      g.bep.process({
+        type: 'space:lock-node',
+        viewId: g.event.origin?.viewId,
+        nid: id,
+      }, g.extraArgs);
+    }
+
     return Promise.resolve();
   }
 
   _deleteReservation(g: Ra<TEventDeleteReservation>): Promise<void> {
-    g.bep.process({
-      type: 'core:delete-node',
-      id: g.event.nodeId,
-    });
+    const nodeData = g.sd.nodes.get(g.event.nodeId);
+
+    const admin = g.extraArgs.jwt.scope.includes(makeProjectScopeString(g.extraArgs.project_id, 'project:admin'));
+
+    if (admin || nodeData?.data?.userId === g.extraArgs.user_id) {
+      g.bep.process({
+        type: 'core:delete-node',
+        id: g.event.nodeId,
+      });
+    }
     return Promise.resolve();
   }
 }

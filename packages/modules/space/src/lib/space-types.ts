@@ -34,6 +34,7 @@ export type TNodeView = {
   position: TPosition;
   size?: { width: number; height: number };
   status: TNodeViewStatus;
+  lockedBy?: string;
 };
 
 //

@@ -14,6 +14,7 @@ export type {
   TEventNewGroup,
   TEventNewShape,
   TEventShapePropertyChange,
+  TEventLockNode,
 } from './lib/space-events';
 
 export { SHAPE_TYPES } from './lib/space-events';

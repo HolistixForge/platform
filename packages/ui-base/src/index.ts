@@ -26,6 +26,7 @@ export {
   cssVar,
   getCssProperties,
   paletteRandomColor,
+  hasClassInTree,
 } from './lib/css-utils/css-utils';
 
 /** Forms */

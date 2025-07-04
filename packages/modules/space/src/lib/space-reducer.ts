@@ -6,8 +6,9 @@ import {
   TEventNewNode,
   TGraphNode,
 } from '@monorepo/core';
-import { error } from '@monorepo/log';
+import { error, UserException } from '@monorepo/log';
 import { TJsonObject } from '@monorepo/simple-types';
+import { makeProjectScopeString } from '@monorepo/demiurge-types';
 
 import { TSpaceSharedData } from './space-shared-model';
 import {
@@ -35,6 +36,7 @@ import {
   TEventEdgePropertyChange,
   TEventMoveNodeToFront,
   TEventMoveNodeToBack,
+  TEventLockNode,
 } from './space-events';
 import {
   defaultGraphView,
@@ -51,13 +53,23 @@ import { edgeId } from './components/apis/types/edge';
  *
  */
 
+
+type TExtraArgs = {
+  project_id: string;
+  user_id: string;
+  jwt: {
+    scope: string[]
+  }
+};
+
+
 type ReducedEvents = TSpaceEvent | TCoreEvent;
 
 type Ra<T> = ReduceArgs<
   TSpaceSharedData & TCoreSharedData,
   T,
   ReducedEvents,
-  undefined
+  TExtraArgs
 >;
 
 /**
@@ -68,7 +80,7 @@ export class SpaceReducer extends Reducer<
   TSpaceSharedData & TCoreSharedData,
   ReducedEvents,
   TSpaceEvent,
-  undefined
+  TExtraArgs
 > {
   private executeGraphViewAction<T extends { viewId: string }>(
     g: Ra<T>,
@@ -94,18 +106,52 @@ export class SpaceReducer extends Reducer<
     return Promise.resolve();
   }
 
+  private executeGraphViewActionIfUserHasPermission<T extends { viewId: string, nid: string }>(
+    g: Ra<T>,
+    action: (
+      gvc: TGraphView,
+      nodes: Map<string, TGraphNode>,
+      edges: TEdge[]
+    ) => void
+  ): Promise<void> {
+
+    const gv = g.sd.graphViews.get(g.event.viewId);
+    if (!gv) {
+      error('SPACE', `Graph view ${g.event.viewId} not found`);
+      return Promise.resolve();
+    }
+    const nv = gv.nodeViews.find((n) => n.id === g.event.nid);
+    if (!nv) {
+      error('SPACE', `Node ${g.event.nid} not found in graph view`);
+      return Promise.resolve();
+    }
+
+    let authorized = true;
+
+    if (nv.lockedBy) {
+      authorized = false;
+      const nodeData = g.sd.nodes.get(g.event.nid);
+      const admin = g.extraArgs.jwt.scope.includes(makeProjectScopeString(g.extraArgs.project_id, 'project:admin'));
+      if (admin || nodeData?.data?.userId === g.extraArgs.user_id) {
+        authorized = true;
+      }
+    }
+
+    if (authorized) {
+      return this.executeGraphViewAction(g, action);
+    }
+    else throw new UserException('You are not authorized to perform this action');
+  }
+
   reduce(g: Ra<ReducedEvents>): Promise<void> {
     switch (g.event.type) {
       case 'space:new-view':
         return this.newView(g as Ra<TEventNewView>);
 
       case 'space:move-node':
-        return this.executeGraphViewAction(
-          g as Ra<TEventMoveNode>,
-          (gvc, nodes, edges) => {
-            this.moveNode(g.event as TEventMoveNode, gvc, nodes, edges);
-          }
-        );
+        return this.executeGraphViewActionIfUserHasPermission(g as Ra<TEventMoveNode>, (gvc, nodes, edges) => {
+          this.moveNode(g.event as TEventMoveNode, gvc, nodes, edges);
+        });
 
       case 'space:reduce-node':
         return this.executeGraphViewAction(g as Ra<TEventReduceNode>, (gvc) => {
@@ -266,9 +312,31 @@ export class SpaceReducer extends Reducer<
           }
         );
 
+      case 'space:lock-node':
+        return this.executeGraphViewAction(
+          g as Ra<TEventLockNode>,
+          (gvc, nodes, edges) => {
+            this.lockNode(g.event as TEventLockNode, gvc, nodes, edges, g.extraArgs.user_id);
+          }
+        );
+
       default:
         return Promise.resolve();
     }
+  }
+
+  private lockNode(action: TEventLockNode, gv: TGraphView,
+    nodes: Readonly<Map<string, TGraphNode>>,
+    edges: Readonly<Array<TEdge>>,
+    user_id: string) {
+    //
+    const node = gv.nodeViews.find((n) => n.id === action.nid);
+    if (!node) {
+      error('SPACE', `Node ${action.nid} not found in graph view`);
+      return;
+    }
+    node.lockedBy = user_id;
+    this.updateGraphview(gv, nodes, edges);
   }
 
   private openCloseNode(

@@ -91,3 +91,51 @@ function stringToNumberInRange(str: string, min: number, max: number): number {
   const result = min + (hash % range);
   return result;
 }
+
+
+//
+
+function hasClassInParent(
+  element: HTMLElement,
+  className: string
+): boolean {
+  if (element.classList.contains(className)) {
+    return true;
+  }
+  return element.parentElement
+    ? hasClassInParent(element.parentElement, className)
+    : false;
+}
+
+function hasClassInChildren(
+  element: HTMLElement,
+  className: string,
+  childrenLevels = 5
+): boolean {
+  if (childrenLevels === 0) {
+    // console.log('childrenLevels === 0', element, className);
+    return false;
+  }
+  if (element.classList.contains(className)) {
+    // console.log(`level ${childrenLevels}, found [${className}] in `, element);
+    return true;
+  }
+  return Array.from(element.children).some((child) =>
+    hasClassInChildren(
+      child as HTMLElement,
+      className,
+      childrenLevels - 1
+    )
+  );
+}
+
+export function hasClassInTree(
+  element: HTMLElement,
+  className: string,
+  childrenLevels = 5
+) {
+  return (
+    hasClassInParent(element, className) ||
+    hasClassInChildren(element, className, childrenLevels)
+  );
+}

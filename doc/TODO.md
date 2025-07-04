@@ -1,5 +1,7 @@
 ⚠️ Antoine's stuffs
 
+sharedata nodeView purge
+
 N8N: SAML based authentication ?, custom : https://kb.jarylchng.com/i/n8n-and-authelia-bypass-n8n-native-login-page-usin-sNRmS-7j5u1/
 
 tab bar responsive
@@ -99,3 +101,4 @@ selected node zindex
 - MyJvascriptRenderer... sandboxing / isolation. still needed for cloud labs ?
 - useSharedData() re-render only if changes, performance audit
 - monaco language chunks useless compilation
+  $$

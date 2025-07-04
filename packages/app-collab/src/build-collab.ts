@@ -298,7 +298,7 @@ export async function initProjectCollaboration(
   const yst = new YjsSharedTypes(ydoc);
   const yse = new YjsSharedEditor(ydoc.getMap(EDITORS_YTEXT_YMAP_KEY));
 
-  const extraContext = {};
+  const extraContext = { project_id: PROJECT?.PROJECT_ID };
   const loadChunks = compileChunks(chunks, extraContext, bep);
   const sd = loadChunks(yst) as TSd;
 
