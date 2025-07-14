@@ -1,5 +1,7 @@
 ⚠️ Antoine's stuffs
 
+sharedata nodeView purge
+
 cmd generator lowercase
 select displayed properties
 list db from api key
@@ -130,3 +132,4 @@ selected node zindex
 - MyJvascriptRenderer... sandboxing / isolation. still needed for cloud labs ?
 - useSharedData() re-render only if changes, performance audit
 - monaco language chunks useless compilation
+  $$

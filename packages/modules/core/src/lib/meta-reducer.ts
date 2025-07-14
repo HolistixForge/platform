@@ -58,20 +58,30 @@ export class MetaReducer extends Reducer<
     if (g.event.type === 'periodic') {
       const meta = g.sd.meta.get('meta');
       if (meta) {
-        const gateway_shutdown = new Date(
-          meta.projectActivity.gateway_shutdown
-        );
-        if (isPassed(gateway_shutdown)) {
-          if (shouldIBeDead === false) {
-            log(6, 'GATEWAY', 'shutdown');
-
-            this.gatewayStopNotify();
-            shouldIBeDead = true;
-          } else {
-            log(6, 'GATEWAY', 'shutdown failed process still alive');
+        if (!meta.projectActivity.disable_gateway_shutdown) {
+          const gateway_shutdown = new Date(
+            meta.projectActivity.gateway_shutdown
+          );
+          if (isPassed(gateway_shutdown)) {
+            if (shouldIBeDead === false) {
+              log(6, 'GATEWAY', 'shutdown');
+              this.gatewayStopNotify();
+              shouldIBeDead = true;
+            } else {
+              log(6, 'GATEWAY', 'shutdown failed process still alive');
+            }
           }
         }
       }
+    }
+
+    if (g.event.type === 'core:disable-gateway-shutdown') {
+      const meta = g.sd.meta.get('meta')
+      if (meta) {
+        meta.projectActivity.disable_gateway_shutdown = true;
+        g.sd.meta.set('meta', meta);
+      }
+
     }
 
     return Promise.resolve();
@@ -94,6 +104,7 @@ const rearmGatewayTimer = (meta: SharedMap<TProjectMeta>, last?: Date) => {
           GATEWAY_INACIVITY_SHUTDOWN_DELAY,
           last
         ).toISOString(),
+        disable_gateway_shutdown: curMeta.projectActivity.disable_gateway_shutdown,
       },
     });
   }

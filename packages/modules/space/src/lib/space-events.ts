@@ -185,6 +185,12 @@ export type TEventMoveNodeToBack = {
   nid: string;
 };
 
+export type TEventLockNode = {
+  type: 'space:lock-node';
+  viewId: string;
+  nid: string;
+};
+
 export type TSpaceEvent =
   | TEventNewView
   | TEventMoveNode
@@ -209,4 +215,5 @@ export type TSpaceEvent =
   | TEventDeleteGroup
   | TEventEdgePropertyChange
   | TEventMoveNodeToFront
-  | TEventMoveNodeToBack;
+  | TEventMoveNodeToBack
+  | TEventLockNode;

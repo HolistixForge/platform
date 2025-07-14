@@ -33,9 +33,14 @@ export type TEventLoad = {
   type: 'core:load';
 };
 
+export type TEventDisableGatewayShutdown = {
+  type: 'core:disable-gateway-shutdown';
+};
+
 export type TCoreEvent =
   | TEventNewNode
   | TEventDeleteNode
   | TEventNewEdge
   | TEventDeleteEdge
-  | TEventLoad;
+  | TEventLoad
+  | TEventDisableGatewayShutdown;

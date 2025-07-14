@@ -29,6 +29,7 @@
             "args": [
               "{jwt.user_id}",
               "{json.name}",
+              "{json.public}",
               null
             ]
           },
@@ -465,7 +466,8 @@
           "type": "authorization-control",
           "args": {
             "type": "jwt",
-            "action": "p:{path.project_id}:project:start"
+            "action": "p:{path.project_id}:project:start",
+            "publicAction": "p:{path.project_id}:public:access"
           }
         },
         {

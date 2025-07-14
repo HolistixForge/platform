@@ -5,6 +5,7 @@ import { Command, TCommandReturn } from './Command';
 type TArgs = {
   type: string; // 'jwt' | 'hmac' | 'jwt,hmac';
   action: string;
+  publicAction?: string; // if true, the action is public, for public projects
 };
 
 //
@@ -13,7 +14,7 @@ export class AuthorizationControl extends Command {
   //
 
   async run(args: TArgs): Promise<TCommandReturn> {
-    const { type, action } = args;
+    const { type, action, publicAction } = args;
 
     let scope: string | undefined = undefined;
 
@@ -32,6 +33,10 @@ export class AuthorizationControl extends Command {
     }
 
     if (!scope) throw new ForbiddenException([{ message: 'no scope found' }]);
+
+    if (publicAction && scope.includes(publicAction)) {
+      return Promise.resolve({});
+    }
 
     if (!scope.includes(action))
       throw new ForbiddenException([

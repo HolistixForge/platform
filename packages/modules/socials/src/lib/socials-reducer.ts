@@ -1,6 +1,9 @@
-import { TEventDeleteNode, TEventNewNode } from '@monorepo/core';
+import { TCoreSharedData, TEventDeleteNode, TEventNewNode } from '@monorepo/core';
 import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
 import { makeUuid } from '@monorepo/simple-types';
+import { makeProjectScopeString } from '@monorepo/demiurge-types';
+import { UserException } from '@monorepo/log';
+import { TEventLockNode } from '@monorepo/space';
 
 import {
   TEventSocials,
@@ -12,21 +15,31 @@ import {
   TEventDeleteIframe,
   TEventNewNodeUser,
   TEventDeleteNodeUser,
+  TEventNewReservation,
+  TEventDeleteReservation,
 } from './socials-events';
 
 //
 
-type DispatchedEvents = TEventNewNode | TEventDeleteNode;
+type TExtraArgs = {
+  project_id: string;
+  user_id: string;
+  jwt: {
+    scope: string[]
+  }
+};
 
-type Ra<T> = ReduceArgs<{}, T, DispatchedEvents, undefined, undefined>;
+type DispatchedEvents = TEventNewNode | TEventDeleteNode | TEventLockNode;
+
+type Ra<T> = ReduceArgs<TCoreSharedData, T, DispatchedEvents, TExtraArgs, undefined>;
 
 //
 
 export class SocialsReducer extends Reducer<
-  {},
+  TCoreSharedData,
   TEventSocials,
   DispatchedEvents,
-  undefined,
+  TExtraArgs,
   undefined
 > {
   //
@@ -56,6 +69,12 @@ export class SocialsReducer extends Reducer<
 
       case 'socials:delete-node-user':
         return this._deleteNodeUser(g as Ra<TEventDeleteNodeUser>);
+
+      case 'socials:new-reservation':
+        return this._newReservation(g as Ra<TEventNewReservation>);
+
+      case 'socials:delete-reservation':
+        return this._deleteReservation(g as Ra<TEventDeleteReservation>);
 
       default:
         return Promise.resolve();
@@ -180,6 +199,59 @@ export class SocialsReducer extends Reducer<
       type: 'core:delete-node',
       id: g.event.nodeId,
     });
+    return Promise.resolve();
+  }
+
+  //
+
+  _newReservation(g: Ra<TEventNewReservation>): Promise<void> {
+
+    const userId = g.event.userId || g.extraArgs.user_id;
+
+    g.sd.nodes.forEach((node) => {
+      if (node.data?.userId === userId) {
+        throw new UserException('User already has a reservation');
+      }
+    });
+
+    const id = makeUuid();
+
+    g.bep.process({
+      type: 'core:new-node',
+      nodeData: {
+        id,
+        name: 'Reservation',
+        type: 'reservation',
+        root: true,
+        data: { userId },
+        connectors: [],
+      },
+      edges: [],
+      origin: g.event.origin,
+    });
+
+    if (g.event.origin) {
+      g.bep.process({
+        type: 'space:lock-node',
+        viewId: g.event.origin?.viewId,
+        nid: id,
+      }, g.extraArgs);
+    }
+
+    return Promise.resolve();
+  }
+
+  _deleteReservation(g: Ra<TEventDeleteReservation>): Promise<void> {
+    const nodeData = g.sd.nodes.get(g.event.nodeId);
+
+    const admin = g.extraArgs.jwt.scope.includes(makeProjectScopeString(g.extraArgs.project_id, 'project:admin'));
+
+    if (admin || nodeData?.data?.userId === g.extraArgs.user_id) {
+      g.bep.process({
+        type: 'core:delete-node',
+        id: g.event.nodeId,
+      });
+    }
     return Promise.resolve();
   }
 }

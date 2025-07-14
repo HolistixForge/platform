@@ -50,10 +50,11 @@ export const compileChunks = (
   o: {
     dispatcher?: FrontendDispatcher<any>;
     bep?: BackendEventProcessor<any, any>;
+    extraContext?: Record<string, any>;
   }
 ) => {
   let allSharedData: TValidSharedData = {};
-  const extraContext: Record<string, any> = {};
+  const extraContext: Record<string, any> = o.extraContext || {};
 
   chunks.forEach((chunk) => {
     if (chunk.deps) {

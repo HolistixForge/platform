@@ -51,6 +51,20 @@ export const socialsMenuEntries: TSpaceMenuEntries = ({
         },
         {
           type: 'item',
+          label: 'New Reservation',
+          disabled: from !== undefined,
+          onClick: () => {
+            dispatcher.dispatch({
+              type: 'socials:new-reservation',
+              origin: {
+                viewId: viewId,
+                position: position(),
+              },
+            });
+          },
+        },
+        {
+          type: 'item',
           label: 'New Iframe',
           disabled: from !== undefined,
           onClick: () => {

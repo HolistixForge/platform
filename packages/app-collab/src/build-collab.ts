@@ -151,6 +151,8 @@ process.on('SIGUSR1', () => {
 /*
 
 const gatewayStopNotify = async () => {
+  log(6, 'GATEWAY', 'gatewayStopNotify');
+
   await toGanymede({
     url: '/gateway-stop',
     method: 'POST',
@@ -194,7 +196,7 @@ export type TAllEvents =
 //
 
 export async function initProjectCollaboration(
-  bep: BackendEventProcessor<TAllEvents, {}>
+  bep: BackendEventProcessor<TAllEvents, unknown>
 ) {
   // create Y document
   ydoc = u.getYDoc(ROOM_ID);
@@ -202,7 +204,8 @@ export async function initProjectCollaboration(
   const yst = new YjsSharedTypes(ydoc);
   const yse = new YjsSharedEditor(ydoc.getMap(EDITORS_YTEXT_YMAP_KEY));
 
-  const { sharedData, extraContext } = compileChunks(chunks, yst, { bep });
+  const ec = { project_id: PROJECT?.PROJECT_ID };
+  const { sharedData, extraContext } = compileChunks(chunks, yst, { bep, extraContext: ec });
 
   // load data from saved file
   const loaded = loadDoc();

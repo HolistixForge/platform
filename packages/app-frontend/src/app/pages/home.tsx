@@ -54,6 +54,9 @@ const ProjectsList = () => {
       checkForm: (d, e) => {
         if (!d.name) e.name = 'Please choose a name';
       },
+      values: {
+        public: false,
+      },
     }
   );
 

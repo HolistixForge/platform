@@ -63,8 +63,8 @@ export const model: AuthorizationCodeModel &
     const image_options = row['image_options'] as TServerImageOptions;
     const oauthClientOptions = row['service_name']
       ? image_options.oauthClients?.find(
-          (oc) => oc.serviceName === row['service_name']
-        )
+        (oc) => oc.serviceName === row['service_name']
+      )
       : undefined;
 
     // if a valid client is found
@@ -462,6 +462,13 @@ const getUserProjectScope = async (user_id: string, project_id: string) => {
         (row['scope'] as string[]).map((s) =>
           makeProjectScopeString(project_id, s)
         )
+      );
+    }
+    // else project is public
+    else if (row['public'] === true) {
+      vs = vs.concat(
+        [makeProjectScopeString(project_id)],
+        makeProjectScopeString(project_id, 'public:access')
       );
     }
   }

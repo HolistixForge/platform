@@ -5,6 +5,7 @@ export type TScope = {
 };
 
 const SCOPE: TScope[] = [
+  { name: 'project:admin', user: true, gateway: false },
   { name: 'project:delete', user: true, gateway: false },
   { name: 'project:start', user: true, gateway: false },
 

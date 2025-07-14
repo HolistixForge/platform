@@ -28,6 +28,7 @@
   }
 
   .info-section {
+    text-align: center;
     max-width: 100%;
     margin-top: 20px;
 
@@ -48,5 +49,19 @@
         margin-right: 10px;
       }
     }
+  }
+}
+
+.node-reservation {
+  .id-card {
+    background-color: #0a66c2;
+  }
+  .reservation-label {
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 525;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: center;
   }
 }

@@ -198,15 +198,18 @@ export const useMakeButton = ({
 
 //
 
-export const useNodeHeaderButtons = ({
-  onDelete,
-  onPlay,
-  onClear,
-}: {
-  onDelete?: () => Promise<void>;
-  onPlay?: () => void;
-  onClear?: () => void;
-}) => {
+export const useNodeHeaderButtons = (
+  {
+    onDelete,
+    onPlay,
+    onClear,
+  }: {
+    onDelete?: () => Promise<void>;
+    onPlay?: () => void;
+    onClear?: () => void;
+  },
+  disabled: string[] = []
+) => {
   const dispatcher = useDispatcher<TSpaceEvent>();
 
   const {
@@ -247,7 +250,7 @@ export const useNodeHeaderButtons = ({
     isOpened,
     open,
     close,
-    filterOut,
+    filterOut: disabled.includes('filterOut') ? undefined : filterOut,
     onMoveToFront: handleMoveToFront,
     onMoveToBack: handleMoveToBack,
     onPlay,

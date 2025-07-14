@@ -47,4 +47,5 @@ export type {
   TEventOrigin,
   TCoreEvent,
   TEventLoad,
+  TEventDisableGatewayShutdown
 } from './lib/core-events';
