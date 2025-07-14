@@ -64,10 +64,10 @@ export class Inputs {
     o: DeepReadonly<TJson>,
     request?: Request
   ): Promise<TJson> {
-    const evalMatch = async (match: string): Promise<TJson | null> => {
+    const evalMatch = async (match: string): Promise<TJson | undefined> => {
       const id = match.replace(/[{}]/g, '');
       const v = await this.evalInput(id, request);
-      return v || null;
+      return v;
     };
 
     const evalString = async (s: string) => {
@@ -79,7 +79,7 @@ export class Inputs {
         if (matchs[0] === s) {
           const v = await evalMatch(matchs[0]);
           // we set it, recursively looking for variables in its properties
-          if (!v) return s;
+          if (v === undefined) return s;
           return this.cloneEvalArgs(v, request);
         } else {
           // else, multiple value to replace in this arg definition

@@ -76,7 +76,8 @@
                   }
                 },
                 "required": [
-                  "name"
+                  "name",
+                  "public"
                 ]
               }
             }
