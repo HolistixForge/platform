@@ -9,6 +9,8 @@ import {
   useCallback,
 } from 'react';
 import { InfoCircledIcon } from '@radix-ui/react-icons';
+import { Link } from 'react-router-dom';
+
 import {
   ButtonBase,
   paletteRandomColor,
@@ -309,6 +311,21 @@ export const ProjectContext = ({
   // TODO_MODULE: inject 'authentication' module that define extracontext getToken
 
   log(7, 'COLLABORATIVE_CONTEXT', 'update', { projectState, user });
+
+  if (user.username === 'anonymous') {
+    return (
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-80px)]">
+        <InfoCircledIcon className="w-[38px] h-[38px]" />
+        <p className="text-lg">Please login first, then come back here</p>
+        <p>&nbsp;</p>
+        <p>
+          <Link to={`/account/login`}>
+            <ButtonBase className="login" text="Login" />
+          </Link>
+        </p>
+      </div>
+    );
+  }
 
   switch (projectState.status) {
     case 'loading':
