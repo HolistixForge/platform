@@ -8,7 +8,6 @@ import React, { useState } from 'react';
 import { TGraphNode } from '@monorepo/module';
 import { useSharedData } from '@monorepo/collab-engine';
 import { TAirtableSharedData } from '../../airtable-shared-model';
-import AirtableTableList from './airtable-table-list';
 import AirtableTableKanban from './airtable-table-kanban';
 import AirtableTableGallery from './airtable-table-gallery';
 
@@ -155,8 +154,8 @@ export const AirtableTable: React.FC<AirtableTableProps> = ({ node }) => {
                   >
                     {table.fields.map((field: TAirtableField) => (
                       <td key={field.id}>
-                        {record.fields[field.id]
-                          ? String(record.fields[field.id])
+                        {record.fields[field.name]
+                          ? String(record.fields[field.name])
                           : ''}
                       </td>
                     ))}

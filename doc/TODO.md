@@ -3,12 +3,13 @@
 sharedata nodeView purge
 
 cmd generator lowercase
+
 select displayed properties
 list db from api key
 
 //
 
-Api key copy paste fake config module
+Api key copy paste: fake config module
 
 Ctrl F : extracontext => modulesExports
 Ctrl F : extraArgs => requestExports

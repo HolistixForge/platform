@@ -1,5 +1,6 @@
 import { TAirtableTable, TAirtableField } from '../../airtable-types';
 import { TAirtableViewMode } from './airtable-table';
+import AirtableRecordCard from './AirtableRecordCard';
 
 type AirtableTableGalleryProps = {
   table: TAirtableTable;
@@ -22,23 +23,18 @@ const AirtableTableGallery = (props: AirtableTableGalleryProps) => {
         </p>
       </div>
       <div className="airtable-gallery-content">
-        <div className="airtable-gallery-grid">
+        <div
+          className="airtable-gallery-grid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: `repeat(${
+              viewMode.mode === 'gallery' ? viewMode.itemPerLine : 3
+            }, 1fr)`,
+            gap: '16px', // adjust as needed or remove if handled by CSS
+          }}
+        >
           {table.records.map((record) => (
-            <div key={record.id} className="airtable-gallery-card">
-              <div className="gallery-card-header">
-                <h4>{record.id}</h4>
-              </div>
-              <div className="gallery-card-content">
-                {Object.entries(record.fields)
-                  .slice(0, 3)
-                  .map(([key, value]) => (
-                    <div key={key} className="gallery-field">
-                      <span className="field-label">{key}:</span>
-                      <span className="field-value">{String(value)}</span>
-                    </div>
-                  ))}
-              </div>
-            </div>
+            <AirtableRecordCard key={record.id} record={record} table={table} />
           ))}
         </div>
       </div>

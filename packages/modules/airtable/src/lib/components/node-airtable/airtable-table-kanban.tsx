@@ -4,6 +4,7 @@ import {
   TAirtableField,
   TAirtableRecordValue,
 } from '../../airtable-types';
+import AirtableRecordCard from './AirtableRecordCard';
 
 interface AirtableTableKanbanProps {
   table: TAirtableTable;
@@ -18,7 +19,7 @@ export const AirtableTableKanban: React.FC<AirtableTableKanbanProps> = ({
   const groupedRecords = new Map<string, TAirtableRecordValue[]>();
 
   table.records.forEach((record: TAirtableRecordValue) => {
-    const groupValue = record.fields[groupByField.id];
+    const groupValue = record.fields[groupByField.name];
     const groupKey = groupValue ? String(groupValue) : 'No Value';
 
     if (!groupedRecords.has(groupKey)) {
@@ -44,20 +45,11 @@ export const AirtableTableKanban: React.FC<AirtableTableKanbanProps> = ({
             </div>
             <div className="column-content">
               {records.map((record: TAirtableRecordValue) => (
-                <div key={record.id} className="kanban-card">
-                  <div className="card-content">
-                    {table.fields.slice(0, 3).map((field: TAirtableField) => (
-                      <div key={field.id} className="card-field">
-                        <span className="field-name">{field.name}:</span>
-                        <span className="field-value">
-                          {record.fields[field.id]
-                            ? String(record.fields[field.id])
-                            : ''}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <AirtableRecordCard
+                  key={record.id}
+                  record={record}
+                  table={table}
+                />
               ))}
             </div>
           </div>
