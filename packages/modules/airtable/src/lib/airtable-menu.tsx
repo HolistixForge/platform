@@ -9,7 +9,7 @@ import { makeUuid } from '@monorepo/simple-types';
 import { NewAirtableBaseForm } from './components/forms/new-base';
 import { TAirtableSharedData } from './airtable-shared-model';
 import { TAirtableEvent } from './airtable-events';
-import { TNodeAirtableTableDataPayload } from './components/node-airtable/node-airtable-table';
+import { TNodeAirtableTableDataPayload } from './components/node-airtable/airtable-table';
 
 //
 
@@ -27,6 +27,35 @@ export const airtableMenuEntries: TSpaceMenuEntries = ({
 
   const bases: TSpaceMenuEntry[] = Array.from(tsd.airtableBases.entries()).map(
     ([id, base]) => {
+      // Create table entries for the embed submenu
+      const tableEntries = base.tables.map((table) => ({
+        type: 'item' as const,
+        label: table.name,
+        onClick: () => {
+          const data: TNodeAirtableTableDataPayload = {
+            baseId: base.id,
+            tableId: table.id,
+          };
+          d.dispatch({
+            type: 'core:new-node',
+            nodeData: {
+              id: makeUuid(),
+              name: `Airtable Table ${table.name}`,
+              root: true,
+              type: 'airtable-table',
+              data,
+              connectors: [{ connectorName: 'outputs', pins: [] }],
+            },
+            edges: [],
+            origin: {
+              viewId,
+              position: position(),
+            },
+          });
+        },
+        disabled: from !== undefined,
+      }));
+
       return {
         label: base.name,
         type: 'sub-menu',
@@ -45,36 +74,10 @@ export const airtableMenuEntries: TSpaceMenuEntries = ({
             },
           },
           {
-            type: 'item',
+            type: 'sub-menu',
             label: 'Embed',
-            onClick: () => {
-              // For Airtable, we'll embed the first table by default
-              // In a full implementation, you might want to show a table selector
-              const firstTable = base.tables[0];
-              if (firstTable) {
-                const data: TNodeAirtableTableDataPayload = {
-                  baseId: base.id,
-                  tableId: firstTable.id,
-                };
-                d.dispatch({
-                  type: 'core:new-node',
-                  nodeData: {
-                    id: makeUuid(),
-                    name: `Airtable Table ${firstTable.name}`,
-                    root: true,
-                    type: 'airtable-table',
-                    data,
-                    connectors: [{ connectorName: 'outputs', pins: [] }],
-                  },
-                  edges: [],
-                  origin: {
-                    viewId,
-                    position: position(),
-                  },
-                });
-              }
-            },
             disabled: from !== undefined,
+            entries: tableEntries,
           },
           {
             type: 'item',

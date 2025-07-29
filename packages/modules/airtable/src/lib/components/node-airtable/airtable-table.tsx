@@ -4,12 +4,19 @@ import {
   TAirtableField,
   TAirtableRecordValue,
 } from '../../airtable-types';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { TGraphNode } from '@monorepo/module';
-import { useSharedData } from '@monorepo/collab-engine';
+import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
+import {
+  DisableZoomDragPan,
+  NodeHeader,
+  useNodeContext,
+  useNodeHeaderButtons,
+} from '@monorepo/space/frontend';
 import { TAirtableSharedData } from '../../airtable-shared-model';
 import AirtableTableKanban from './airtable-table-kanban';
 import AirtableTableGallery from './airtable-table-gallery';
+import { TAirtableEvent } from '../../airtable-events';
 
 //
 
@@ -54,7 +61,7 @@ export type TViewKanban = {
 
 export type TAirtableViewMode =
   | { mode: 'list' }
-  | { mode: 'kanban'; groupBy: string }
+  | { mode: 'kanban'; groupBy: string; subgroupBy?: string }
   | { mode: 'gallery'; itemPerLine: number };
 
 //
@@ -77,10 +84,12 @@ interface AirtableTableProps {
 }
 
 export const AirtableTable: React.FC<AirtableTableProps> = ({ node }) => {
-  const [viewMode, setViewMode] = useState<TAirtableViewMode>({ mode: 'list' });
   const [selectedRecords, setSelectedRecords] = useState<Set<string>>(
     new Set()
   );
+
+  const useNodeValue = useNodeContext();
+  const dispatcher = useDispatcher<TAirtableEvent>();
 
   const sd = useSharedData<TAirtableSharedData>(['airtableBases'], (sd) => sd);
 
@@ -99,8 +108,24 @@ export const AirtableTable: React.FC<AirtableTableProps> = ({ node }) => {
     setSelectedRecords(newSelected);
   };
 
+  const viewMode: TAirtableViewMode = useSharedData<TAirtableSharedData>(
+    ['airtableNodeViews'],
+    (sd) =>
+      Array.from(sd.airtableNodeViews.values()).find(
+        (v) => v.nodeId === node.id && v.viewId === useNodeValue.viewId
+      )?.viewMode || {
+        mode: 'kanban',
+        groupBy: 'status',
+      }
+  );
+
   const handleViewModeChange = (newMode: TAirtableViewMode) => {
-    setViewMode(newMode);
+    dispatcher.dispatch({
+      type: 'airtable:set-node-view',
+      nodeId: node.id,
+      viewId: useNodeValue.viewId,
+      viewMode: newMode,
+    });
   };
 
   // Find important fields for the view components
@@ -167,17 +192,17 @@ export const AirtableTable: React.FC<AirtableTableProps> = ({ node }) => {
         );
 
       case 'kanban': {
-        const groupByField =
-          table.fields.find(
-            (field: TAirtableField) =>
-              field.id === viewMode.groupBy ||
-              field.name.toLowerCase().includes(viewMode.groupBy.toLowerCase())
-          ) ||
-          statusField ||
-          table.fields[0];
-
         return (
-          <AirtableTableKanban table={table} groupByField={groupByField} />
+          <AirtableTableKanban
+            table={table}
+            viewMode={viewMode}
+            onUpdateRecord={(recordId, fields) => {
+              console.log('update record', recordId, fields);
+            }}
+            titleField={titleField}
+            priorityField={priorityField}
+            statusField={statusField}
+          />
         );
       }
 
@@ -197,41 +222,64 @@ export const AirtableTable: React.FC<AirtableTableProps> = ({ node }) => {
     }
   };
 
-  return (
-    <div className="airtable-table">
-      <div className="airtable-table-header">
-        <Logo />
-        <h2 className="airtable-h2">{table.name}</h2>
-        <div className="airtable-view-switcher">
-          <button
-            className={viewMode.mode === 'list' ? 'active' : ''}
-            onClick={() => handleViewModeChange({ mode: 'list' })}
-          >
-            List
-          </button>
-          <button
-            className={viewMode.mode === 'kanban' ? 'active' : ''}
-            onClick={() =>
-              handleViewModeChange({
-                mode: 'kanban',
-                groupBy: statusField?.id || table.fields[0]?.id || 'status',
-              })
-            }
-          >
-            Kanban
-          </button>
-          <button
-            className={viewMode.mode === 'gallery' ? 'active' : ''}
-            onClick={() =>
-              handleViewModeChange({ mode: 'gallery', itemPerLine: 3 })
-            }
-          >
-            Gallery
-          </button>
-        </div>
-      </div>
+  const handleDelete = useCallback(async () => {
+    await dispatcher.dispatch({
+      type: 'airtable:delete-table-node',
+      nodeId: node.id,
+    });
+  }, [dispatcher, node.id]);
 
-      <div className="table-content">{renderViewContent()}</div>
+  const buttons = useNodeHeaderButtons({
+    onDelete: handleDelete,
+  });
+
+  return (
+    <div className="common-node node-airtable node-resizable">
+      <NodeHeader
+        buttons={buttons}
+        nodeType="notion-database"
+        id={useNodeValue.id}
+        isOpened={useNodeValue.isOpened}
+        open={useNodeValue.open}
+        visible={useNodeValue.selected}
+      />
+      <DisableZoomDragPan noZoom noDrag fullHeight>
+        <div className="airtable-table">
+          <div className="airtable-table-header">
+            <Logo />
+            <h2 className="airtable-h2">{table.name}</h2>
+            <div className="airtable-view-switcher">
+              <button
+                className={viewMode.mode === 'list' ? 'active' : ''}
+                onClick={() => handleViewModeChange({ mode: 'list' })}
+              >
+                List
+              </button>
+              <button
+                className={viewMode.mode === 'kanban' ? 'active' : ''}
+                onClick={() =>
+                  handleViewModeChange({
+                    mode: 'kanban',
+                    groupBy: statusField?.id || table.fields[0]?.id || 'status',
+                  })
+                }
+              >
+                Kanban
+              </button>
+              <button
+                className={viewMode.mode === 'gallery' ? 'active' : ''}
+                onClick={() =>
+                  handleViewModeChange({ mode: 'gallery', itemPerLine: 3 })
+                }
+              >
+                Gallery
+              </button>
+            </div>
+          </div>
+
+          <div className="table-content">{renderViewContent()}</div>
+        </div>
+      </DisableZoomDragPan>
     </div>
   );
 };
