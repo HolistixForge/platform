@@ -14,6 +14,7 @@ import {
   SimpleMessagePage,
 } from './pages/account';
 import { HomePage } from './pages/home';
+import { MaintenancePage } from './pages/maintenance';
 import { ProjectRoot } from './pages/project/project-root';
 import { ProjectAuthorizationsPage } from './pages/project/authorizations';
 import { EditorPage } from './pages/project/editor/editor-page';
@@ -26,6 +27,8 @@ import '@radix-ui/themes/styles.css';
 //
 
 export function App() {
+  // return <MaintenancePage />;
+
   const location = useLocation();
   const hideMobileBlock = location.pathname === '/account/login-linkedin';
   return (
@@ -40,6 +43,7 @@ export function App() {
         >
           <EnforceUserAccountReady>
             <Routes>
+              <Route path="/maintenance" element={<MaintenancePage />} />
               <Route path="/" element={<HomePage />} />
               <Route path="/p/:owner/:project_name" element={<ProjectRoot />}>
                 <Route path="editor" element={<EditorPage />} />
