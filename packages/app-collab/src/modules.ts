@@ -12,6 +12,7 @@ import { moduleBackend as jupyter } from '@monorepo/jupyter';
 import { moduleBackend as tabs } from '@monorepo/tabs';
 import { moduleBackend as notion } from '@monorepo/notion';
 import { moduleBackend as socials } from '@monorepo/socials';
+import { moduleBackend as airtable } from '@monorepo/airtable';
 import { toGanymede } from './build-collab';
 import { runScript } from './run-script';
 import { CONFIG } from './config';
@@ -45,6 +46,17 @@ export const modules: ModuleBackend[] = [
       }),
     },
   },
+  {
+    collabChunk: {
+      name: 'config',
+      loadExtraContext: () => ({
+        config: {
+          NOTION_API_KEY: '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',
+          AIRTABLE_API_KEY: 'patHY43dqtZMM1GRK.e55234d4a6f95714796d381be083cdc4e08eb54baebfd322424148ae268a8e06'
+        },
+      }),
+    },
+  },
   core,
   space,
   chats,
@@ -52,5 +64,6 @@ export const modules: ModuleBackend[] = [
   jupyter,
   tabs,
   notion,
+  airtable,
   socials,
 ];

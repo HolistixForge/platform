@@ -24,6 +24,9 @@
       "path": "../demiurge-types/tsconfig.lib.json"
     },
     {
+      "path": "../modules/airtable/tsconfig.lib.json"
+    },
+    {
       "path": "../modules/socials/tsconfig.lib.json"
     },
     {

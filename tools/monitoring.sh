@@ -1,25 +1,25 @@
-#!/bin/bash
 
 # Get the script's directory
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # exemple: $ watch -n 30 -c ./doc/monitoring.sh
 
-ENVIRONMENT=dev-002
+ENVIRONMENT=dev-004
+DOMAIN=holistix.so
 
 # List of services to monitor (URL and display name)
 declare -A services=(
-    ["frontend"]="https://${ENVIRONMENT}.demiurge.co"
-#    ["frontend dev"]="https://frontend.${ENVIRONMENT}.demiurge.co"
-    ["ganymede"]="https://ganymede.${ENVIRONMENT}.demiurge.co/jupyterlab"
-    ["account"]="https://account.${ENVIRONMENT}.demiurge.co/user"
-    ["gateway-1-1"]="https://gw-1-1.${ENVIRONMENT}.demiurge.co/collab/ping"
-    ["gateway-1-2"]="https://gw-1-2.${ENVIRONMENT}.demiurge.co/collab/ping"
-    ["gateway-1-3"]="https://gw-1-3.${ENVIRONMENT}.demiurge.co/collab/ping"
-    ["gateway-1-4"]="https://gw-1-4.${ENVIRONMENT}.demiurge.co/collab/ping"
-    ["gateway-1-5"]="https://gw-1-5.${ENVIRONMENT}.demiurge.co/collab/ping"
- #   ["storybook"]="https://sb.${ENVIRONMENT}.demiurge.co"
-    ["jaeger"]="https://jaeger.${ENVIRONMENT}.demiurge.co"
+    ["frontend"]="https://${ENVIRONMENT}.${DOMAIN}"
+#    ["frontend dev"]="https://frontend.${ENVIRONMENT}.${DOMAIN}"
+    ["ganymede"]="https://ganymede.${ENVIRONMENT}.${DOMAIN}/jupyterlab"
+    ["account"]="https://account.${ENVIRONMENT}.${DOMAIN}/user"
+    ["gateway-1-1"]="https://gw-1-1.${ENVIRONMENT}.${DOMAIN}/collab/ping"
+    ["gateway-1-2"]="https://gw-1-2.${ENVIRONMENT}.${DOMAIN}/collab/ping"
+    ["gateway-1-3"]="https://gw-1-3.${ENVIRONMENT}.${DOMAIN}/collab/ping"
+    ["gateway-1-4"]="https://gw-1-4.${ENVIRONMENT}.${DOMAIN}/collab/ping"
+    ["gateway-1-5"]="https://gw-1-5.${ENVIRONMENT}.${DOMAIN}/collab/ping"
+ #   ["storybook"]="https://sb.${ENVIRONMENT}.${DOMAIN}"
+    ["jaeger"]="https://jaeger.${ENVIRONMENT}.${DOMAIN}"
 )
 
 # Function to check the status of a URL with a timeout of 2 seconds

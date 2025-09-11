@@ -36,7 +36,7 @@ export default defineConfig({
         frontend: 'src/frontend.ts',
       },
       name: '@monorepo/airtable',
-      fileName: 'index',
+      fileName: (format, entryName) => `${entryName}.js`,
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
       formats: ['es'],

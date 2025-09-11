@@ -8,6 +8,7 @@ import '@monorepo/ui-base/style';
 import '@monorepo/ui-views/style';
 import '@monorepo/servers/style';
 import '@monorepo/notion/style';
+import '@monorepo/airtable/style';
 import '@monorepo/space/style';
 import '@monorepo/tabs/style';
 import '@monorepo/chats/style';

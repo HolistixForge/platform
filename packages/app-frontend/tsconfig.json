@@ -3,31 +3,34 @@
   "include": [],
   "references": [
     {
+      "path": "../simple-types"
+    },
+    {
       "path": "../api-fetch"
     },
     {
-      "path": "../modules/module"
+      "path": "../modules/airtable"
     },
     {
-      "path": "../modules/tabs"
-    },
-    {
-      "path": "../modules/chats"
-    },
-    {
-      "path": "../modules/jupyter"
+      "path": "../modules/notion"
     },
     {
       "path": "../modules/socials"
     },
     {
+      "path": "../modules/jupyter"
+    },
+    {
+      "path": "../modules/chats"
+    },
+    {
+      "path": "../modules/tabs"
+    },
+    {
+      "path": "../modules/module"
+    },
+    {
       "path": "../modules/space"
-    },
-    {
-      "path": "../simple-types"
-    },
-    {
-      "path": "../modules/notion"
     },
     {
       "path": "../modules/core"

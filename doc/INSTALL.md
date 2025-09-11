@@ -50,20 +50,6 @@ see [dev-pod Dockerfile](../docker-images/backend-images/dev-pod/Dockerfile) as 
 - install [docker](https://docs.docker.com/engine/install/ubuntu/)
 - add user to "docker" group: `$ sudo usermod -aG docker $USER && newgrp docker`
 
-## Build dev-pod docker image
-
-Build dev-pod docker image. see [README](../docker-images/backend-images/dev-pod/README.md).
-
-## Install NFS server
-
-We will serve the same repo over NFS to the different service's pods. Install nfs server
-
-`$ sudo apt-get install nfs-server`
-
-(mkdir, chown nobody:nogroup, etc/exports, exportfs -a)
-
-⚠️ NOT SURE NEEDED : add user to "nogroup" group: `sudo usermod -a -G nogroup $USER && newgrp nogroup` (to have permission to edit workspace)
-
 ## Setup access to services
 
 In AWS:
@@ -158,7 +144,7 @@ $ PGPASSWORD=xxx ./run.sh procedures
 $ PGPASSWORD=xxx ./run.sh triggers
 ```
 
-## start a jaeger docker container
+## [ OPTIONAL ] start a jaeger docker container
 
 ```shell
 $ docker run -d --name jaeger \
@@ -203,41 +189,11 @@ server {
 $ sudo certbot --nginx
 ```
 
-# Start frontend development server
+# Start frontend server
 
-In **app-frontend** package, change Environment name in:
-
-- in vite.config.js : server.allowedHosts: ["frontend.dev-002.demiurge.co"]
-
-- in [.env](../packages/app-frontend/.env): Change value of **VITE_ENVIRONMENT**
-
-Then start the development server:
-
-```shell
-$ nohup npx nx run app-frontend:serve --port 6002 > /tmp/app-frontend 2>&1 &
-```
-
-In AWS route 53 DNS, add CNAME entries for **frontend.dev-XXX.demiurge.co** and **dev-XXX.demiurge.co** to the instance default fqdn
-
-Add servers definitions in nginx reverse proxy config file to route traffic to frontend development server
+Add servers definitions in nginx reverse proxy config file to route traffic to frontend server
 
 ```
-server {
-    listen 80;
-    server_name frontend.dev-002.demiurge.co;
-
-    location / {
-        proxy_pass http://127.0.0.1:6002;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-
 server {
     server_name dev-002.demiurge.co;
 
@@ -264,12 +220,22 @@ $ sudo certbot --nginx
 
 # build frontend
 
-```shell
-npx nx run app-frontend:build:production \
-    && sudo rm -rf /var/www/app-frontend \
-    && sudo cp -ra dist/packages/app-frontend /var/www/app-frontend \
-    && sudo chown -R www-data /var/www/app-frontend
+create packages/app-frontend/.env file:
+
 ```
+VITE_ENVIRONMENT=dev-004
+VITE_DOMAIN_NAME=holistix.so
+```
+
+```shell
+./tools/menu.sh
+2
+3
+```
+
+# ganymede and account configs
+
+create .env file for ganymede and account apps
 
 # Install gateway
 

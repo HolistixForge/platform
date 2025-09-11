@@ -8,6 +8,7 @@ import { moduleFrontend as jupyter } from '@monorepo/jupyter/frontend';
 import { moduleFrontend as tabs } from '@monorepo/tabs';
 import { moduleFrontend as notion } from '@monorepo/notion/frontend';
 import { moduleFrontend as socials } from '@monorepo/socials/frontend';
+import { moduleFrontend as airtable } from '@monorepo/airtable/frontend';
 
 export const modules: ModuleFrontend[] = [
   {
@@ -39,5 +40,6 @@ export const modules: ModuleFrontend[] = [
   jupyter,
   tabs,
   notion,
+  airtable,
   socials,
 ];

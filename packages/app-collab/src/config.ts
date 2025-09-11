@@ -6,7 +6,6 @@ const envVars = [
   'GANYMEDE_FQDN',
   'SCRIPTS_DIR',
   'GATEWAY_FQDN',
-  'NOTION_API_KEY',
 ] as const;
 
 type EnvVars = (typeof envVars)[number];

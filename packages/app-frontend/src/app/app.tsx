@@ -36,7 +36,7 @@ export function App() {
 
         <ApiContext
           env={import.meta.env.VITE_ENVIRONMENT}
-          domain={'demiurge.co'}
+          domain={import.meta.env.VITE_DOMAIN_NAME}
         >
           <EnforceUserAccountReady>
             <Routes>
