@@ -390,10 +390,15 @@ export const HolistixSpace = ({
     setPanels((panels) => panels.filter((p) => p.uuid !== uuid));
   }, []);
 
+
+  const UnknownPanel = ({type}: {type: string}) => {
+    return <div>Unknown Panel [{type}]</div>;
+  };
+
   const Panel =
     panels.length > 0
-      ? panelsDefs?.[panels[panels.length - 1].type] ?? (() => null)
-      : () => null;
+      ? panelsDefs?.[panels[panels.length - 1].type] ?? (() => <UnknownPanel type={panels[panels.length - 1].type} />)
+      : () => <UnknownPanel type="unknown" />;
 
   /**
    *

@@ -93,8 +93,8 @@ export const EditorTabsSystemLogic = () => {
           onTabRowAdd={onTabRowAdd}
           onTabRename={onTabRename}
         >
-          {roTree.flat().map((panel) => (
-            <Panel key={panel.path.join('.')} tabPath={panel.path} {...panel} />
+          {roTree.flat().map((tab) => (
+            <TabTypeRouter key={tab.path.join('.')} tabPath={tab.path} {...tab} />
           ))}
         </TabsRadix>
       </div>
@@ -106,7 +106,7 @@ export const EditorTabsSystemLogic = () => {
 
 //
 
-const Panel: FC<PanelProps & TabPayload> = (props) => {
+const TabTypeRouter: FC<PanelProps & TabPayload> = (props) => {
   if (props.type === 'node-editor') {
     return <NodeEditorView viewId={props.viewId} />;
   } else if (props.type === 'resources-grid') {

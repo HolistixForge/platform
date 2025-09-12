@@ -17,6 +17,10 @@ const spaceMenuEntries: TSpaceMenuEntries = (args) => {
   }, [] as TSpaceMenuEntry[]);
 };
 
+const panelsDefs = modules.reduce((acc, module) => {
+  return { ...acc, ...module.panels };
+}, {});
+
 /**
  *
  */
@@ -29,6 +33,7 @@ export const NodeEditorView = ({ viewId }: { viewId: string }) => {
         viewId={viewId}
         nodeTypes={nodeTypes}
         spaceMenuEntries={spaceMenuEntries}
+        panelsDefs={panelsDefs}
       />
     </div>
   );
