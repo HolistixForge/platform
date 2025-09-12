@@ -7,6 +7,7 @@ import {
 import { TEventLoadRecordNode } from '../../airtable-events';
 
 interface AirtableRecordCardProps {
+  baseId: string;
   record: TAirtableRecordValue;
   table: TAirtableTable;
   fieldsToShow?: TAirtableField[];
@@ -14,6 +15,7 @@ interface AirtableRecordCardProps {
 }
 
 const AirtableRecordCard: React.FC<AirtableRecordCardProps> = ({
+  baseId,
   record,
   table,
   fieldsToShow,
@@ -39,11 +41,13 @@ const AirtableRecordCard: React.FC<AirtableRecordCardProps> = ({
     const event: Partial<TEventLoadRecordNode> = {
       type: 'airtable:load-record-node',
       recordId: record.id,
-      baseId: table.id, // Using table.id as baseId for now
+      baseId: baseId,
       tableId: table.id,
     };
     e.dataTransfer.setData('application/json', JSON.stringify(event));
     e.currentTarget.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.stopPropagation();
   };
 
   const handleDragEnd = (e: DragEvent<HTMLDivElement>) => {

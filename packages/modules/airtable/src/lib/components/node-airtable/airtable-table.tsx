@@ -194,6 +194,7 @@ export const AirtableTable: React.FC<AirtableTableProps> = ({ node }) => {
       case 'kanban': {
         return (
           <AirtableTableKanban
+            baseId={base.id}
             table={table}
             viewMode={viewMode}
             onUpdateRecord={(recordId, fields) => {

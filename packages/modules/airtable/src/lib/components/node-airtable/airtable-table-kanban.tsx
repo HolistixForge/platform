@@ -11,6 +11,7 @@ import { TViewKanban } from './airtable-table';
 
 // Props interface
 type AirtableTableKanbanProps = {
+  baseId: string;
   table: TAirtableTable;
   viewMode: TViewKanban;
   setViewMode?: (viewMode: TViewKanban) => void;
@@ -18,6 +19,7 @@ type AirtableTableKanbanProps = {
 } & TAirtableImportantProperties;
 
 export const AirtableTableKanban = ({
+  baseId,
   table,
   viewMode,
   setViewMode,
@@ -88,7 +90,7 @@ export const AirtableTableKanban = ({
   const handleColumnDragStart = (e: DragEvent<HTMLDivElement>) => {
     const event: Partial<TEventLoadKanbanColumnNode> = {
       type: 'airtable:load-kanban-column-node',
-      baseId: table.id, // Using table.id as baseId for now
+      baseId: baseId,
       tableId: table.id,
       fieldId: property.id,
       optionId: e.currentTarget.id,
@@ -144,6 +146,7 @@ export const AirtableTableKanban = ({
             handleColumnDragStart={handleColumnDragStart}
             handleColumnDragEnd={handleColumnDragEnd}
             onUpdateRecord={onUpdateRecord}
+            baseId={baseId}
             titleField={titleField}
             priorityField={priorityField}
             statusField={statusField}
@@ -155,6 +158,7 @@ export const AirtableTableKanban = ({
 };
 
 export const AirtableTableKanbanColumn = ({
+  baseId,
   titleField,
   priorityField,
   statusField,
@@ -166,6 +170,7 @@ export const AirtableTableKanbanColumn = ({
   option,
   subgroupProperty,
 }: {
+  baseId: string;
   table: TAirtableTable;
   handleColumnDragStart?: (e: DragEvent<HTMLDivElement>) => void;
   handleColumnDragEnd?: (e: DragEvent<HTMLDivElement>) => void;
@@ -397,6 +402,7 @@ export const AirtableTableKanbanColumn = ({
             <div className="airtable-kanban-subgroup-content">
               {subgroupRecords.map((record: TAirtableRecordValue) => (
                 <AirtableRecordCard
+                  baseId={baseId}
                   key={record.id}
                   record={record}
                   table={table}
