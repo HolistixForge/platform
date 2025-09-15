@@ -10,9 +10,7 @@ export const moduleBackend: ModuleBackend = {
     loadSharedData: Core_loadData,
     loadReducers: (sd) => [
       new CoreReducer(),
-      new MetaReducer(() => {
-        throw new Error('gatewayStopNotify not implemented');
-      }),
+      new MetaReducer(),
     ],
     deps: ['gateway'], // gatewayStopNotify
   },

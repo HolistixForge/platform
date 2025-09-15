@@ -30,6 +30,9 @@
       "path": "../modules/socials/tsconfig.lib.json"
     },
     {
+      "path": "../modules/gateway/tsconfig.lib.json"
+    },
+    {
       "path": "../modules/module/tsconfig.lib.json"
     },
     {

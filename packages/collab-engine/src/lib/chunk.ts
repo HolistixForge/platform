@@ -53,7 +53,7 @@ export const compileChunks = (
     extraContext?: Record<string, any>;
   }
 ) => {
-  let allSharedData: TValidSharedData = {};
+  const allSharedData: TValidSharedData = {};
   const extraContext: Record<string, any> = o.extraContext || {};
 
   chunks.forEach((chunk) => {

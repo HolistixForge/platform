@@ -3,19 +3,19 @@
   "include": [],
   "references": [
     {
-      "path": "../gateway"
+      "path": "../../collab-engine"
+    },
+    {
+      "path": "../module"
     },
     {
       "path": "../../log"
     },
     {
-      "path": "../../collab-engine"
-    },
-    {
       "path": "../../simple-types"
     },
     {
-      "path": "../module"
+      "path": "../../backend-engine"
     },
     {
       "path": "./tsconfig.lib.json"

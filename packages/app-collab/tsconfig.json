@@ -13,6 +13,9 @@
       "path": "../modules/socials"
     },
     {
+      "path": "../modules/gateway"
+    },
+    {
       "path": "../modules/module"
     },
     {

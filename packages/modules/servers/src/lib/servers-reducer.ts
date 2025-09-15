@@ -5,11 +5,11 @@ import {
   TEventPeriodic,
 } from '@monorepo/collab-engine';
 import { TJwtServer, TJwtUser } from '@monorepo/demiurge-types';
-import { TMyfetchRequest, secondAgo } from '@monorepo/simple-types';
+import { secondAgo } from '@monorepo/simple-types';
 import {
-  error,
   ForbiddenException,
   log,
+  error,
   NotFoundException,
 } from '@monorepo/log';
 import {
@@ -22,6 +22,7 @@ import {
   TEventLoad,
 } from '@monorepo/core';
 import { TGraphNode } from '@monorepo/module';
+import { TGatewayExtraContext } from '@monorepo/gateway';
 import { UserException } from '@monorepo/log';
 
 import { TServersSharedData } from './servers-shared-model';
@@ -74,18 +75,7 @@ type UsedSharedData = TCoreSharedData & TServersSharedData;
 
 //
 
-export type TGanymedeExtraContext = {
-  ganymede: { toGanymede: <T>(r: TMyfetchRequest) => Promise<T> };
-};
-
-export type TGatewayExtraContext = {
-  gateway: {
-    updateReverseProxy: Turp;
-    gatewayFQDN: string;
-  };
-};
-
-type TExtraContext = TGanymedeExtraContext & TGatewayExtraContext;
+type TExtraContext = TGatewayExtraContext;
 
 //
 
@@ -156,9 +146,9 @@ export class ServersReducer extends Reducer<
 
   //
 
-  async _getUpToDateServerData(g: Ra<{}>, psid: number) {
+  async _getUpToDateServerData(g: Ra<unknown>, psid: number) {
     // get all project's servers and find the new one's data
-    const r2 = await g.extraContext.ganymede.toGanymede<{ _0: TG_Server[] }>({
+    const r2 = await g.extraContext.gateway.toGanymede<{ _0: TG_Server[] }>({
       url: '/projects/{project_id}/servers',
       method: 'GET',
     });
@@ -181,7 +171,7 @@ export class ServersReducer extends Reducer<
     psids.forEach((psid) => g.sd.projectServers.delete(`${psid}`));
 
     // get server list from API
-    const r = await g.extraContext.ganymede.toGanymede<{ _0: TG_Server[] }>({
+    const r = await g.extraContext.gateway.toGanymede<{ _0: TG_Server[] }>({
       url: '/projects/{project_id}/servers',
       method: 'GET',
       headers: { authorization: g.extraArgs.authorizationHeader },
@@ -219,7 +209,7 @@ export class ServersReducer extends Reducer<
     let psid = g.event.from.project_server_id;
 
     if (g.event.from.new) {
-      const r = await g.extraContext.ganymede.toGanymede<{
+      const r = await g.extraContext.gateway.toGanymede<{
         _0: { new_project_server_id: number };
       }>({
         url: '/projects/{project_id}/servers',
@@ -240,7 +230,7 @@ export class ServersReducer extends Reducer<
         let state: TEc2InstanceState | undefined = undefined;
 
         if (server.location === 'aws') {
-          const is = await g.extraContext.ganymede.toGanymede<{
+          const is = await g.extraContext.gateway.toGanymede<{
             state: TEc2InstanceState;
           }>({
             url: '/projects/{project_id}/server/{project_server_id}/instance-state',
@@ -319,7 +309,7 @@ export class ServersReducer extends Reducer<
     if (psid) {
       const s = g.sd.projectServers.get(`${psid}`);
       if (s) {
-        await g.extraContext.ganymede.toGanymede({
+        await g.extraContext.gateway.toGanymede({
           url: '/projects/{project_id}/server/{project_server_id}/host',
           pathParameters: {
             project_server_id: g.event.project_server_id,
@@ -365,7 +355,7 @@ export class ServersReducer extends Reducer<
         `attemps: ${attempts}, maxAttemps: ${maxAttempts}`
       );
       try {
-        const response = await g.extraContext.ganymede.toGanymede<{
+        const response = await g.extraContext.gateway.toGanymede<{
           state: TEc2InstanceState;
         }>({
           url: '/projects/{project_id}/server/{project_server_id}/instance-state',
@@ -444,7 +434,7 @@ export class ServersReducer extends Reducer<
     if (psid) {
       const s = g.sd.projectServers.get(`${psid}`);
       if (s) {
-        await g.extraContext.ganymede.toGanymede({
+        await g.extraContext.gateway.toGanymede({
           url: '/projects/{project_id}/server/{project_server_id}/to-cloud',
           pathParameters: {
             project_server_id: g.event.project_server_id,
@@ -477,7 +467,7 @@ export class ServersReducer extends Reducer<
     if (psid) {
       const s = g.sd.projectServers.get(`${psid}`);
       if (s) {
-        await g.extraContext.ganymede.toGanymede({
+        await g.extraContext.gateway.toGanymede({
           url: '/projects/{project_id}/server/{project_server_id}/stop',
           pathParameters: {
             project_server_id: g.event.project_server_id,
@@ -499,7 +489,7 @@ export class ServersReducer extends Reducer<
     if (psid) {
       const s = g.sd.projectServers.get(`${psid}`);
       if (s) {
-        await g.extraContext.ganymede.toGanymede({
+        await g.extraContext.gateway.toGanymede({
           url: '/projects/{project_id}/server/{project_server_id}/start',
           pathParameters: {
             project_server_id: g.event.project_server_id,
@@ -520,7 +510,7 @@ export class ServersReducer extends Reducer<
     if (psid) {
       const s = g.sd.projectServers.get(`${psid}`);
       if (s) {
-        await g.extraContext.ganymede.toGanymede({
+        await g.extraContext.gateway.toGanymede({
           url: '/projects/{project_id}/server/{project_server_id}/delete-cloud',
           pathParameters: {
             project_server_id: g.event.project_server_id,
@@ -623,7 +613,7 @@ export class ServersReducer extends Reducer<
 
   async _deleteServer(g: Ra<TEventDeleteServer>) {
     const pid = g.event.project_server_id;
-    await g.extraContext.ganymede.toGanymede({
+    await g.extraContext.gateway.toGanymede({
       url: '/projects/{project_id}/server/{project_server_id}',
       method: 'DELETE',
       pathParameters: {
@@ -641,7 +631,7 @@ export class ServersReducer extends Reducer<
   //
 
   async _newVolume(g: Ra<TEventNewVolume>) {
-    const r = await g.extraContext.ganymede.toGanymede<{
+    const r = await g.extraContext.gateway.toGanymede<{
       _0: { new_volume_id: number };
     }>({
       url: '/projects/{project_id}/volume',
@@ -654,7 +644,7 @@ export class ServersReducer extends Reducer<
     });
 
     // get all project's volume and find the new one's data
-    const r2 = await g.extraContext.ganymede.toGanymede<{ _0: TApi_Volume[] }>({
+    const r2 = await g.extraContext.gateway.toGanymede<{ _0: TApi_Volume[] }>({
       url: '/projects/{project_id}/volume',
       method: 'GET',
       headers: { authorization: g.extraArgs.authorizationHeader },
@@ -679,7 +669,7 @@ export class ServersReducer extends Reducer<
    */
 
   async _mountVolume(g: Ra<TEventMountVolume>) {
-    await g.extraContext.ganymede.toGanymede({
+    await g.extraContext.gateway.toGanymede({
       url: '/projects/{project_id}/server/{project_server_id}/mount',
       method: 'POST',
       pathParameters: {
@@ -702,7 +692,7 @@ export class ServersReducer extends Reducer<
    */
 
   async _unmountVolume(g: Ra<TEventUnmountVolume>) {
-    await g.extraContext.ganymede.toGanymede({
+    await g.extraContext.gateway.toGanymede({
       url: '/projects/{project_id}/server/{project_server_id}/unmount',
       method: 'POST',
       pathParameters: {
@@ -726,7 +716,7 @@ export class ServersReducer extends Reducer<
    */
 
   async _deleteVolume(g: Ra<TEventDeleteVolume>) {
-    await g.extraContext.ganymede.toGanymede({
+    await g.extraContext.gateway.toGanymede({
       url: '/projects/{project_id}/volume/{volume_id}',
       method: 'DELETE',
       pathParameters: {
@@ -771,8 +761,8 @@ const serverInitialInfo = (image_id: number) => {
       };
     case 6:
       return {
-        type: 'n8n'
-      }
+        type: 'n8n',
+      };
   }
   throw new UserException('server image unknown');
 };

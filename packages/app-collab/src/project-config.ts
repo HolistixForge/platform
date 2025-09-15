@@ -1,6 +1,7 @@
 // import { development } from '@monorepo/backend-engine';
 import { log } from '@monorepo/log';
 import { TJson } from '@monorepo/simple-types';
+import { TProjectConfig } from '@monorepo/gateway';
 import * as fs from 'fs';
 
 //
@@ -26,11 +27,6 @@ const readJsonFileOrNull = (filename: string) => {
 };
 
 //
-
-export type TProjectConfig = {
-  GANYMEDE_API_TOKEN: string;
-  PROJECT_ID: string;
-};
 
 export let PROJECT: TProjectConfig | null = readJsonFileOrNull(
   DEV_PROJECT_CONFIG_FILE

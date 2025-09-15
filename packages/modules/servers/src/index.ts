@@ -8,8 +8,7 @@ export const moduleBackend: ModuleBackend = {
     loadSharedData: Servers_loadData,
     loadReducers: (sd) => [new ServersReducer()],
     deps: [
-      'gateway', // updateReverseProxy, gatewayFQDN
-      'ganymede', // toGanymede
+      'gateway', // updateReverseProxy, gatewayFQDN, toGanymede, ...
     ],
   },
 };
@@ -21,8 +20,6 @@ export {
   makeServer,
   makeVolume,
   makeMountEdge,
-  type TGanymedeExtraContext,
-  type TGatewayExtraContext,
 } from './lib/servers-reducer';
 
 export type {

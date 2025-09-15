@@ -1,6 +1,7 @@
 import { ReduceArgs, Reducer, SharedMap } from '@monorepo/collab-engine';
 import { log } from '@monorepo/log';
 import { inSeconds, isPassed } from '@monorepo/simple-types';
+import { TGatewayExtraContext } from '@monorepo/gateway';
 
 import { TCoreSharedData } from './core-shared-model';
 import { TProjectMeta } from './core-types';
@@ -22,7 +23,7 @@ type Ra<T> = ReduceArgs<
   T,
   Record<string, never>,
   Record<string, never>,
-  undefined
+  TGatewayExtraContext
 >;
 
 // TODO_DEM: timer and events system
@@ -39,16 +40,11 @@ export class MetaReducer extends Reducer<
   ReducedEvents,
   Record<string, never>,
   Record<string, never>,
-  undefined
+  TGatewayExtraContext
 > {
   //
 
-  gatewayStopNotify: () => Promise<void>;
 
-  constructor(gatewayStopNotify: () => Promise<void>) {
-    super();
-    this.gatewayStopNotify = gatewayStopNotify;
-  }
 
   reduce(g: Ra<ReducedEvents>): Promise<void> {
     if (!eventFilter.includes(g.event.type)) {
@@ -65,7 +61,7 @@ export class MetaReducer extends Reducer<
           if (isPassed(gateway_shutdown)) {
             if (shouldIBeDead === false) {
               log(6, 'GATEWAY', 'shutdown');
-              this.gatewayStopNotify();
+              g.extraContext.gateway.gatewayStopNotify();
               shouldIBeDead = true;
             } else {
               log(6, 'GATEWAY', 'shutdown failed process still alive');

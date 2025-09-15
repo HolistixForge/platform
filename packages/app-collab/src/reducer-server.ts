@@ -15,9 +15,9 @@ import {
 import { TJson } from '@monorepo/simple-types';
 import { log, NotFoundException } from '@monorepo/log';
 import { BackendEventProcessor } from '@monorepo/collab-engine';
+import { TProjectConfig } from '@monorepo/gateway';
 
-import { TAllEvents } from './build-collab';
-import { TProjectConfig, VPN } from './project-config';
+import { VPN } from './project-config';
 import { ROOM_ID, startProjectCollab } from './main';
 
 //
@@ -27,18 +27,18 @@ import oas from './oas30.json';
 import execPipesDefinition from './exec-pipes.json';
 
 class ReduceEventCommand extends Command {
-  _bep: BackendEventProcessor<TAllEvents, any>;
+  _bep: BackendEventProcessor<any, any>;
 
   constructor(
     config: TCommandConfig,
-    d: BackendEventProcessor<TAllEvents, any>
+    d: BackendEventProcessor<any, any>
   ) {
     super(config);
     this._bep = d;
   }
 
   async run(args: {
-    event: TAllEvents;
+    event: { type: string };
     authorizationHeader: string;
     user_id: string;
     jwt: TJson;
@@ -115,7 +115,7 @@ class RoomIdCommand extends Command {
 //
 
 export const startEventsReducerServer = async (
-  dispatcher: BackendEventProcessor<TAllEvents, any>,
+  dispatcher: BackendEventProcessor<any, any>,
   reducerServerBind: TStart[]
 ) => {
   CommandFactory.setCustomCommand((type: string, config) => {

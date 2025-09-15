@@ -42,10 +42,16 @@
       "path": "../../api-fetch/tsconfig.lib.json"
     },
     {
+      "path": "../gateway/tsconfig.lib.json"
+    },
+    {
       "path": "../../log/tsconfig.lib.json"
     },
     {
       "path": "../../demiurge-types/tsconfig.lib.json"
+    },
+    {
+      "path": "../core/tsconfig.lib.json"
     },
     {
       "path": "../../simple-types/tsconfig.lib.json"
@@ -58,9 +64,6 @@
     },
     {
       "path": "../../collab-engine/tsconfig.lib.json"
-    },
-    {
-      "path": "../core/tsconfig.lib.json"
     },
     {
       "path": "../module/tsconfig.lib.json"
