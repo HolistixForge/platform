@@ -7,7 +7,7 @@ import {
 } from '../../airtable-types';
 import AirtableRecordCard from './AirtableRecordCard';
 import { TEventLoadKanbanColumnNode } from '../../airtable-events';
-import { TViewKanban } from './airtable-table';
+import { TViewKanban } from './node-airtable-table';
 
 // Props interface
 type AirtableTableKanbanProps = {
@@ -36,8 +36,12 @@ export const AirtableTableKanban = ({
 
   // Get available properties for subgrouping (singleSelect and multipleSelects types)
   const getAvailableSubgroupProperties = () => {
-    return Object.entries(table.fields || {}).filter(([_, field]) => {
-      return field.type === 'singleSelect' || field.type === 'multipleSelects';
+    return (table.fields || []).filter((field) => {
+      return (
+        (field.type === 'singleSelect' || field.type === 'multipleSelects') &&
+        (groupBy !== 'status' || field.name !== statusField?.name) &&
+        (groupBy !== 'priority' || field.name !== priorityField?.name)
+      );
     });
   };
 
@@ -86,23 +90,6 @@ export const AirtableTableKanban = ({
     });
   }
 
-  // Column drag handlers
-  const handleColumnDragStart = (e: DragEvent<HTMLDivElement>) => {
-    const event: Partial<TEventLoadKanbanColumnNode> = {
-      type: 'airtable:load-kanban-column-node',
-      baseId: baseId,
-      tableId: table.id,
-      fieldId: property.id,
-      optionId: e.currentTarget.id,
-    };
-    e.dataTransfer.setData('application/json', JSON.stringify(event));
-    e.currentTarget.classList.add('dragging');
-  };
-
-  const handleColumnDragEnd = (e: DragEvent<HTMLDivElement>) => {
-    e.currentTarget.classList.remove('dragging');
-  };
-
   // Subgroup property change handler
   const handleSubgroupChange = (propertyName: string) => {
     if (setViewMode) {
@@ -126,9 +113,9 @@ export const AirtableTableKanban = ({
             className="airtable-subgroup-select"
           >
             <option value="">No subgrouping</option>
-            {availableSubgroupProperties.map(([propName, prop]) => (
-              <option key={propName} value={propName}>
-                {prop.name}
+            {availableSubgroupProperties.map((field) => (
+              <option key={field.name} value={field.name}>
+                {field.name}
               </option>
             ))}
           </select>
@@ -143,8 +130,7 @@ export const AirtableTableKanban = ({
             property={property}
             option={option}
             subgroupProperty={subgroupProperty}
-            handleColumnDragStart={handleColumnDragStart}
-            handleColumnDragEnd={handleColumnDragEnd}
+            draggable={true}
             onUpdateRecord={onUpdateRecord}
             baseId={baseId}
             titleField={titleField}
@@ -162,9 +148,8 @@ export const AirtableTableKanbanColumn = ({
   titleField,
   priorityField,
   statusField,
+  draggable = false,
   table,
-  handleColumnDragStart,
-  handleColumnDragEnd,
   onUpdateRecord,
   property,
   option,
@@ -172,8 +157,7 @@ export const AirtableTableKanbanColumn = ({
 }: {
   baseId: string;
   table: TAirtableTable;
-  handleColumnDragStart?: (e: DragEvent<HTMLDivElement>) => void;
-  handleColumnDragEnd?: (e: DragEvent<HTMLDivElement>) => void;
+  draggable?: boolean;
   onUpdateRecord: (recordId: string, fields: Record<string, unknown>) => void;
   property: TAirtableField;
   option: { id: string; name: string; color: string };
@@ -254,6 +238,27 @@ export const AirtableTableKanbanColumn = ({
         })
         .filter((group) => group.records.length > 0)
     : [{ subgroupOption: null, records }];
+
+  const [draggingColumn, setDraggingColumn] = useState<boolean>(false);
+
+  // Column drag handlers
+  const handleColumnDragStart = (e: DragEvent<HTMLDivElement>) => {
+    const event: Partial<TEventLoadKanbanColumnNode> = {
+      type: 'airtable:load-kanban-column-node',
+      baseId: baseId,
+      tableId: table.id,
+      fieldId: property.id,
+      optionId: e.currentTarget.id,
+    };
+    e.dataTransfer.setData('application/json', JSON.stringify(event));
+    setDraggingColumn(true);
+    e.dataTransfer.effectAllowed = 'move';
+    e.stopPropagation();
+  };
+
+  const handleColumnDragEnd = (e: DragEvent<HTMLDivElement>) => {
+    setDraggingColumn(false);
+  };
 
   const [dragOverColumn, setDragOverColumn] = useState<boolean>(false);
   const [dragOverSubgroup, setDragOverSubgroup] = useState<string | null>(null);
@@ -352,15 +357,20 @@ export const AirtableTableKanbanColumn = ({
     <div
       key={option.id}
       id={option.id}
-      className={`airtable-kanban-column${dragOverColumn ? ' drag-over' : ''}`}
-      draggable={!!handleColumnDragStart}
+      className={`airtable-kanban-column${dragOverColumn ? ' drag-over' : ''} ${
+        draggingColumn ? 'dragging' : ''
+      }`}
+      draggable={draggable}
       onDragStart={handleColumnDragStart}
       onDragEnd={handleColumnDragEnd}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
     >
-      <div className="airtable-kanban-column-header">
+      <div
+        className="airtable-kanban-column-header"
+        style={{ cursor: draggable ? 'grab' : 'default' }}
+      >
         <div className="airtable-kanban-column-header-row">
           <div
             className={`task-status bg-${option.color} airtable-kanban-dot`}

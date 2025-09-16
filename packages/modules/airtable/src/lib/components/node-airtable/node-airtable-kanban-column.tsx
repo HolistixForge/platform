@@ -10,6 +10,11 @@ import {
 } from '../../airtable-types';
 import { AirtableTableKanbanColumn } from './airtable-table-kanban';
 import { TAirtableEvent } from '../../airtable-events';
+import {
+  DisableZoomDragPan,
+  NodeHeader,
+  useNodeContext,
+} from '@monorepo/space/frontend';
 
 export type TNodeAirtableKanbanColumnDataPayload = {
   baseId: string;
@@ -33,6 +38,7 @@ export const NodeAirtableKanbanColumn: React.FC<
   // Access shared data to get base, table, and field information
   const sd = useSharedData<TAirtableSharedData>(['airtableBases'], (sd) => sd);
   const dispatcher = useDispatcher<TAirtableEvent>();
+  const useNodeValue = useNodeContext();
 
   if (!data) {
     return (
@@ -112,18 +118,28 @@ export const NodeAirtableKanbanColumn: React.FC<
   };
 
   return (
-    <div className="node-airtable-kanban-column">
-      <AirtableTableKanbanColumn
-        baseId={data.baseId}
-        table={table}
-        property={field}
-        option={option}
-        onUpdateRecord={onUpdateRecord}
-        titleField={importantProperties.titleField}
-        priorityField={importantProperties.priorityField}
-        statusField={importantProperties.statusField}
-        // Note: Not providing handleColumnDragStart and handleColumnDragEnd as requested
+    <div className="common-node node-airtable node-resizable node-airtable-kanban-column">
+      <NodeHeader
+        buttons={[]}
+        nodeType="Airtable Kanban Column"
+        id={useNodeValue.id}
+        isOpened={useNodeValue.isOpened}
+        open={useNodeValue.open}
+        visible={useNodeValue.selected}
       />
+      <DisableZoomDragPan noZoom noDrag fullHeight>
+        <AirtableTableKanbanColumn
+          baseId={data.baseId}
+          table={table}
+          property={field}
+          option={option}
+          onUpdateRecord={onUpdateRecord}
+          titleField={importantProperties.titleField}
+          priorityField={importantProperties.priorityField}
+          statusField={importantProperties.statusField}
+          // Note: Not providing handleColumnDragStart and handleColumnDragEnd as requested
+        />
+      </DisableZoomDragPan>
     </div>
   );
 };

@@ -83,7 +83,7 @@ interface AirtableTableProps {
   node: TGraphNode<TNodeAirtableTableDataPayload>;
 }
 
-export const AirtableTable: React.FC<AirtableTableProps> = ({ node }) => {
+export const NodeAirtableTable: React.FC<AirtableTableProps> = ({ node }) => {
   const [selectedRecords, setSelectedRecords] = useState<Set<string>>(
     new Set()
   );
@@ -147,6 +147,17 @@ export const AirtableTable: React.FC<AirtableTableProps> = ({ node }) => {
         field.name.toLowerCase().includes('importance'))
   );
 
+  const handleDelete = useCallback(async () => {
+    await dispatcher.dispatch({
+      type: 'airtable:delete-table-node',
+      nodeId: node.id,
+    });
+  }, [dispatcher, node.id]);
+
+  const buttons = useNodeHeaderButtons({
+    onDelete: handleDelete,
+  });
+
   if (!table) {
     return (
       <div className="airtable-table">
@@ -197,6 +208,7 @@ export const AirtableTable: React.FC<AirtableTableProps> = ({ node }) => {
             baseId={base.id}
             table={table}
             viewMode={viewMode}
+            setViewMode={handleViewModeChange}
             onUpdateRecord={(recordId, fields) => {
               console.log('update record', recordId, fields);
             }}
@@ -223,22 +235,13 @@ export const AirtableTable: React.FC<AirtableTableProps> = ({ node }) => {
     }
   };
 
-  const handleDelete = useCallback(async () => {
-    await dispatcher.dispatch({
-      type: 'airtable:delete-table-node',
-      nodeId: node.id,
-    });
-  }, [dispatcher, node.id]);
-
-  const buttons = useNodeHeaderButtons({
-    onDelete: handleDelete,
-  });
+  console.log({ viewMode });
 
   return (
     <div className="common-node node-airtable node-resizable">
       <NodeHeader
         buttons={buttons}
-        nodeType="notion-database"
+        nodeType="Airtable Table"
         id={useNodeValue.id}
         isOpened={useNodeValue.isOpened}
         open={useNodeValue.open}
@@ -257,15 +260,34 @@ export const AirtableTable: React.FC<AirtableTableProps> = ({ node }) => {
                 List
               </button>
               <button
-                className={viewMode.mode === 'kanban' ? 'active' : ''}
+                className={
+                  viewMode.mode === 'kanban' && viewMode.groupBy === 'status'
+                    ? 'active'
+                    : ''
+                }
                 onClick={() =>
                   handleViewModeChange({
                     mode: 'kanban',
-                    groupBy: statusField?.id || table.fields[0]?.id || 'status',
+                    groupBy: 'status',
                   })
                 }
               >
-                Kanban
+                Kanban (Status)
+              </button>
+              <button
+                className={
+                  viewMode.mode === 'kanban' && viewMode.groupBy === 'priority'
+                    ? 'active'
+                    : ''
+                }
+                onClick={() =>
+                  handleViewModeChange({
+                    mode: 'kanban',
+                    groupBy: 'priority',
+                  })
+                }
+              >
+                Kanban (Priority)
               </button>
               <button
                 className={viewMode.mode === 'gallery' ? 'active' : ''}
@@ -285,4 +307,4 @@ export const AirtableTable: React.FC<AirtableTableProps> = ({ node }) => {
   );
 };
 
-export default AirtableTable;
+export default NodeAirtableTable;

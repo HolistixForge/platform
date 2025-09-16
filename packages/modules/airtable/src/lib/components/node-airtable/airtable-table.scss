@@ -149,8 +149,7 @@
 }
 
 .airtable-kanban-column {
-  min-width: 280px;
-  max-width: 320px;
+  flex: 1 1 280px;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   border: 1px solid #404040;

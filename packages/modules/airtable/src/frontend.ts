@@ -4,7 +4,7 @@ import { NodeAirtableKanbanColumn } from './lib/components/node-airtable/node-ai
 import { ModuleFrontend } from '@monorepo/module/frontend';
 import { airtableMenuEntries } from './lib/airtable-menu';
 import { AirtableRightPanel } from './lib/components/node-airtable/right-panel';
-import { AirtableTable } from './lib/components/node-airtable/airtable-table';
+import { NodeAirtableTable } from './lib/components/node-airtable/node-airtable-table';
 
 //
 
@@ -16,7 +16,7 @@ export const moduleFrontend: ModuleFrontend = {
     },
     spaceMenuEntries: airtableMenuEntries,
     nodes: {
-        'airtable-table': AirtableTable,
+        'airtable-table': NodeAirtableTable,
         'airtable-record': NodeAirtableRecord,
         'airtable-kanban-column': NodeAirtableKanbanColumn,
     },
