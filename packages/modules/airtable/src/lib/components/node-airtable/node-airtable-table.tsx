@@ -235,8 +235,6 @@ export const NodeAirtableTable: React.FC<AirtableTableProps> = ({ node }) => {
     }
   };
 
-  console.log({ viewMode });
-
   return (
     <div className="common-node node-airtable node-resizable">
       <NodeHeader

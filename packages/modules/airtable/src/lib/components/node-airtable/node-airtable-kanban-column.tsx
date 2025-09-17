@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { TGraphNode } from '@monorepo/module';
 import { useSharedData, useDispatcher } from '@monorepo/collab-engine';
 import { TAirtableSharedData } from '../../airtable-shared-model';
@@ -14,6 +14,7 @@ import {
   DisableZoomDragPan,
   NodeHeader,
   useNodeContext,
+  useNodeHeaderButtons,
 } from '@monorepo/space/frontend';
 
 export type TNodeAirtableKanbanColumnDataPayload = {
@@ -38,16 +39,15 @@ export const NodeAirtableKanbanColumn: React.FC<
   // Access shared data to get base, table, and field information
   const sd = useSharedData<TAirtableSharedData>(['airtableBases'], (sd) => sd);
   const dispatcher = useDispatcher<TAirtableEvent>();
-  const useNodeValue = useNodeContext();
 
   if (!data) {
     return (
-      <div className="node-airtable-kanban-column">
+      <NodeAirtableKanbanColumnWrap>
         <div className="node-header">
           <h3>Airtable Kanban Column</h3>
           <span className="option-id">No data</span>
         </div>
-      </div>
+      </NodeAirtableKanbanColumnWrap>
     );
   }
 
@@ -60,7 +60,7 @@ export const NodeAirtableKanbanColumn: React.FC<
 
   if (!base || !table || !field) {
     return (
-      <div className="node-airtable-kanban-column">
+      <NodeAirtableKanbanColumnWrap>
         <div className="node-header">
           <h3>Airtable Kanban Column</h3>
           <span className="option-id">Data not found</span>
@@ -71,7 +71,7 @@ export const NodeAirtableKanbanColumn: React.FC<
           <p>Field: {data.fieldId}</p>
           <p>Option: {data.optionId}</p>
         </div>
-      </div>
+      </NodeAirtableKanbanColumnWrap>
     );
   }
 
@@ -118,9 +118,46 @@ export const NodeAirtableKanbanColumn: React.FC<
   };
 
   return (
+    <NodeAirtableKanbanColumnWrap>
+      <AirtableTableKanbanColumn
+        baseId={data.baseId}
+        table={table}
+        property={field}
+        option={option}
+        onUpdateRecord={onUpdateRecord}
+        titleField={importantProperties.titleField}
+        priorityField={importantProperties.priorityField}
+        statusField={importantProperties.statusField}
+      />
+    </NodeAirtableKanbanColumnWrap>
+  );
+};
+
+//
+
+const NodeAirtableKanbanColumnWrap = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
+  const useNodeValue = useNodeContext();
+  const dispatcher = useDispatcher<TAirtableEvent>();
+
+  const handleDelete = useCallback(async () => {
+    await dispatcher.dispatch({
+      type: 'airtable:delete-kanban-column-node',
+      nodeId: useNodeValue.id,
+    });
+  }, [dispatcher, useNodeValue.id]);
+
+  const buttons = useNodeHeaderButtons({
+    onDelete: handleDelete,
+  });
+
+  return (
     <div className="common-node node-airtable node-resizable node-airtable-kanban-column">
       <NodeHeader
-        buttons={[]}
+        buttons={buttons}
         nodeType="Airtable Kanban Column"
         id={useNodeValue.id}
         isOpened={useNodeValue.isOpened}
@@ -128,17 +165,7 @@ export const NodeAirtableKanbanColumn: React.FC<
         visible={useNodeValue.selected}
       />
       <DisableZoomDragPan noZoom noDrag fullHeight>
-        <AirtableTableKanbanColumn
-          baseId={data.baseId}
-          table={table}
-          property={field}
-          option={option}
-          onUpdateRecord={onUpdateRecord}
-          titleField={importantProperties.titleField}
-          priorityField={importantProperties.priorityField}
-          statusField={importantProperties.statusField}
-          // Note: Not providing handleColumnDragStart and handleColumnDragEnd as requested
-        />
+        {children}
       </DisableZoomDragPan>
     </div>
   );

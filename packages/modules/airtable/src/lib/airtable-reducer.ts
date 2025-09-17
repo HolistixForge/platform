@@ -26,7 +26,7 @@ import { TAirtableSharedData } from './airtable-shared-model';
 import { TAirtableBase, TAirtableBaseSearchResult, TAirtableRecordValue, TAirtableTable } from './airtable-types';
 import { TNodeAirtableRecordDataPayload } from './components/node-airtable/node-airtable-record';
 import { TNodeAirtableKanbanColumnDataPayload } from './components/node-airtable/node-airtable-kanban-column';
-import { TNodeAirtableTableDataPayload } from './components/node-airtable/airtable-table';
+import { TNodeAirtableTableDataPayload } from './components/node-airtable/node-airtable-table';
 
 //
 
