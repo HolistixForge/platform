@@ -20,6 +20,158 @@ import { TAirtableEvent } from '../../airtable-events';
 
 //
 
+/**
+ * Renders field content based on field type and value
+ */
+const renderFieldContent = (
+  field: TAirtableField,
+  value: unknown
+): React.ReactNode => {
+  if (!value) {
+    return '';
+  }
+
+  // Handle text fields
+  if (field.type === 'singleLineText' || field.type === 'longText') {
+    return String(value);
+  }
+
+  // Handle attachment fields with thumbnails
+  if (field.type === 'multipleAttachments' && Array.isArray(value)) {
+    const firstAttachment = value[0] as {
+      thumbnails?: { large: { url: string } };
+      filename?: string;
+    };
+    if (firstAttachment?.thumbnails && firstAttachment.thumbnails.large.url) {
+      return (
+        <img
+          src={firstAttachment.thumbnails.large.url}
+          alt={firstAttachment.filename || ''}
+          style={{ maxWidth: '50px', maxHeight: '50px', objectFit: 'cover' }}
+        />
+      );
+    }
+    return value.length > 0 ? `${value.length} attachment(s)` : '';
+  }
+
+  // Handle single select fields
+  if (field.type === 'singleSelect') {
+    return (value as { name?: string }).name || String(value);
+  }
+
+  // Handle multiple select fields
+  if (field.type === 'multipleSelects' && Array.isArray(value)) {
+    return value
+      .map((item: unknown) => (item as { name?: string }).name || String(item))
+      .join(', ');
+  }
+
+  // Handle checkbox fields
+  if (field.type === 'checkbox') {
+    return value ? '✓' : '✗';
+  }
+
+  // Handle number fields
+  if (
+    field.type === 'number' ||
+    field.type === 'currency' ||
+    field.type === 'percent'
+  ) {
+    return String(value);
+  }
+
+  // Handle date fields
+  if (
+    field.type === 'date' ||
+    field.type === 'createdTime' ||
+    field.type === 'lastModifiedTime'
+  ) {
+    return new Date(value as string).toLocaleDateString();
+  }
+
+  // Handle URL fields
+  if (field.type === 'url') {
+    return (
+      <a href={value as string} target="_blank" rel="noopener noreferrer">
+        {value as string}
+      </a>
+    );
+  }
+
+  // Handle email fields
+  if (field.type === 'email') {
+    return <a href={`mailto:${value as string}`}>{value as string}</a>;
+  }
+
+  // Handle phone number fields
+  if (field.type === 'phoneNumber') {
+    return <a href={`tel:${value as string}`}>{value as string}</a>;
+  }
+
+  // Handle rating fields
+  if (field.type === 'rating') {
+    return `${value}★`;
+  }
+
+  // Handle collaborator fields
+  if (
+    field.type === 'singleCollaborator' ||
+    field.type === 'multipleCollaborators'
+  ) {
+    if (Array.isArray(value)) {
+      return value
+        .map(
+          (collaborator: unknown) =>
+            (collaborator as { name?: string; email?: string }).name ||
+            (collaborator as { name?: string; email?: string }).email
+        )
+        .join(', ');
+    }
+    return (
+      (value as { name?: string; email?: string }).name ||
+      (value as { name?: string; email?: string }).email ||
+      String(value)
+    );
+  }
+
+  // Handle record links
+  if (field.type === 'multipleRecordLinks') {
+    if (Array.isArray(value)) {
+      return value
+        .map(
+          (link: unknown) =>
+            (link as { title?: string; id?: string }).title ||
+            (link as { title?: string; id?: string }).id
+        )
+        .join(', ');
+    }
+    return (
+      (value as { title?: string; id?: string }).title ||
+      (value as { title?: string; id?: string }).id ||
+      String(value)
+    );
+  }
+
+  // Handle arrays (fallback for any array type)
+  if (Array.isArray(value)) {
+    return value.length > 0 ? `${value.length} item(s)` : '';
+  }
+
+  // Handle objects (fallback for complex types)
+  if (typeof value === 'object') {
+    return (
+      <pre style={{ fontSize: '12px', margin: 0, whiteSpace: 'pre-wrap' }}>
+        {JSON.stringify(value, null, 2)}
+      </pre>
+    );
+  }
+
+  // Fallback for any other type
+  return String(value);
+};
+
+//
+
 const Logo = () => (
   <svg
     className="airtable-logo"
@@ -190,9 +342,7 @@ export const NodeAirtableTable: React.FC<AirtableTableProps> = ({ node }) => {
                   >
                     {table.fields.map((field: TAirtableField) => (
                       <td key={field.id}>
-                        {record.fields[field.name]
-                          ? String(record.fields[field.name])
-                          : ''}
+                        {renderFieldContent(field, record.fields[field.name])}
                       </td>
                     ))}
                   </tr>
@@ -222,6 +372,7 @@ export const NodeAirtableTable: React.FC<AirtableTableProps> = ({ node }) => {
       case 'gallery':
         return (
           <AirtableTableGallery
+            baseId={base.id}
             table={table}
             titleField={titleField}
             priorityField={priorityField}

@@ -633,9 +633,14 @@
   gap: 16px;
 }
 
-.list-view table td {
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 7px;
+.list-view table {
+  tr.selected {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  td {
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 7px;
+  }
 }
 .list-view table td:last-child {
   border-right: none;

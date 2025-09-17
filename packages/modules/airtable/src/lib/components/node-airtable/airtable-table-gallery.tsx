@@ -1,5 +1,5 @@
 import { TAirtableTable, TAirtableField } from '../../airtable-types';
-import { TAirtableViewMode } from './airtable-table';
+import { TAirtableViewMode } from './node-airtable-table';
 import AirtableRecordCard from './AirtableRecordCard';
 
 type AirtableTableGalleryProps = {
@@ -8,10 +8,11 @@ type AirtableTableGalleryProps = {
   priorityField?: TAirtableField;
   statusField?: TAirtableField;
   viewMode: TAirtableViewMode;
+  baseId: string;
 };
 
 const AirtableTableGallery = (props: AirtableTableGalleryProps) => {
-  const { table, viewMode } = props;
+  const { table, viewMode, baseId } = props;
 
   return (
     <div className="airtable-table-gallery">
@@ -34,7 +35,12 @@ const AirtableTableGallery = (props: AirtableTableGalleryProps) => {
           }}
         >
           {table.records.map((record) => (
-            <AirtableRecordCard key={record.id} record={record} table={table} />
+            <AirtableRecordCard
+              key={record.id}
+              record={record}
+              table={table}
+              baseId={baseId}
+            />
           ))}
         </div>
       </div>
