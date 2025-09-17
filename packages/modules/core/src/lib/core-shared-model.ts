@@ -21,7 +21,7 @@ export const Core_loadData = (st: SharedTypes): TCoreSharedData => {
   const disable_gateway_shutdown =
     meta.get('meta')?.projectActivity.disable_gateway_shutdown || false;
 
-  meta.set('meta', {
+  const newMeta = {
     projectActivity: {
       last_activity: new Date().toISOString(),
       gateway_shutdown: inSeconds(
@@ -30,7 +30,11 @@ export const Core_loadData = (st: SharedTypes): TCoreSharedData => {
       ).toISOString(),
       disable_gateway_shutdown,
     },
-  });
+  };
+
+  console.log('#####---> Core_loadData: meta', newMeta);
+
+  meta.set('meta', newMeta);
   return {
     meta,
     nodes: st.getSharedMap<TGraphNode>('demiurge-nodes'),
