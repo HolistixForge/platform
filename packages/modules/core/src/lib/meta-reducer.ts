@@ -44,8 +44,6 @@ export class MetaReducer extends Reducer<
 > {
   //
 
-
-
   reduce(g: Ra<ReducedEvents>): Promise<void> {
     if (!eventFilter.includes(g.event.type)) {
       rearmGatewayTimer(g.sd.meta);
@@ -72,12 +70,12 @@ export class MetaReducer extends Reducer<
     }
 
     if (g.event.type === 'core:disable-gateway-shutdown') {
-      const meta = g.sd.meta.get('meta')
+      const meta = g.sd.meta.get('meta');
       if (meta) {
         meta.projectActivity.disable_gateway_shutdown = true;
+        console.log('#####---> core:disable-gateway-shutdown: meta', meta);
         g.sd.meta.set('meta', meta);
       }
-
     }
 
     return Promise.resolve();
@@ -92,7 +90,8 @@ const rearmGatewayTimer = (meta: SharedMap<TProjectMeta>, last?: Date) => {
 
   if (!curMeta || prevLast.getTime() < last.getTime()) {
     log(6, 'META', `last project activity: ${last.toISOString()}`);
-    meta.set('meta', {
+
+    const newMeta: TProjectMeta = {
       ...curMeta,
       projectActivity: {
         last_activity: last.toISOString(),
@@ -100,8 +99,13 @@ const rearmGatewayTimer = (meta: SharedMap<TProjectMeta>, last?: Date) => {
           GATEWAY_INACIVITY_SHUTDOWN_DELAY,
           last
         ).toISOString(),
-        disable_gateway_shutdown: curMeta.projectActivity.disable_gateway_shutdown,
+        disable_gateway_shutdown:
+          curMeta.projectActivity.disable_gateway_shutdown,
       },
-    });
+    };
+
+    console.log('#####---> rearmGatewayTimer: meta', newMeta);
+
+    meta.set('meta', newMeta);
   }
 };
