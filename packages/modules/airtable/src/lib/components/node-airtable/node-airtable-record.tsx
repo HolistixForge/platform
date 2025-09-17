@@ -1,10 +1,15 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { TGraphNode } from '@monorepo/module';
-import { useSharedData } from '@monorepo/collab-engine';
+import { useSharedData, useDispatcher } from '@monorepo/collab-engine';
 import { TAirtableSharedData } from '../../airtable-shared-model';
 import { TAirtableRecordValue, TAirtableTable } from '../../airtable-types';
 import AirtableRecordCard from './AirtableRecordCard';
-import { NodeHeader, useNodeContext } from '@monorepo/space/frontend';
+import {
+  NodeHeader,
+  useNodeContext,
+  useNodeHeaderButtons,
+} from '@monorepo/space/frontend';
+import { TAirtableEvent } from '../../airtable-events';
 
 export type TNodeAirtableRecordDataPayload = {
   recordId: string;
@@ -25,6 +30,18 @@ export const NodeAirtableRecord: React.FC<NodeAirtableRecordProps> = ({
   const data = node.data;
   const useNodeValue = useNodeContext();
   const sd = useSharedData<TAirtableSharedData>(['airtableBases'], (sd) => sd);
+  const dispatcher = useDispatcher<TAirtableEvent>();
+
+  const handleDelete = useCallback(async () => {
+    await dispatcher.dispatch({
+      type: 'airtable:delete-record-node',
+      nodeId: useNodeValue.id,
+    });
+  }, [dispatcher, useNodeValue.id]);
+
+  const buttons = useNodeHeaderButtons({
+    onDelete: handleDelete,
+  });
 
   if (!data) {
     return (
@@ -57,7 +74,7 @@ export const NodeAirtableRecord: React.FC<NodeAirtableRecordProps> = ({
   return (
     <div className="common-node node-airtable node-resizable node-airtable-record">
       <NodeHeader
-        buttons={[]}
+        buttons={buttons}
         nodeType="Airtable Record"
         id={useNodeValue.id}
         isOpened={useNodeValue.isOpened}

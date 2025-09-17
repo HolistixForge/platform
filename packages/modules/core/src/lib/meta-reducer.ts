@@ -59,7 +59,7 @@ export class MetaReducer extends Reducer<
           if (isPassed(gateway_shutdown)) {
             if (shouldIBeDead === false) {
               log(6, 'GATEWAY', 'shutdown');
-              g.extraContext.gateway.gatewayStopNotify();
+              g.extraContext.gateway.gatewayStopNotify?.();
               shouldIBeDead = true;
             } else {
               log(6, 'GATEWAY', 'shutdown failed process still alive');
