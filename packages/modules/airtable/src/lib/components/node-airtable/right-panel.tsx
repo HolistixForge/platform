@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useSharedData } from '@monorepo/collab-engine';
 import { TPanel } from '@monorepo/module/frontend';
 import { TAirtableSharedData } from '../../airtable-shared-model';
-import { AirtableTableList } from './airtable-table-list';
+import { AirtableBaseTableList } from './airtable-base-table-list';
 
 import './airtable-right-panel.scss';
 
@@ -56,7 +56,7 @@ export const AirtableRightPanel: React.FC<AirtableRightPanelProps> = ({
         </div>
       )}
 
-      <AirtableTableList base={base} tables={base.tables} />
+      <AirtableBaseTableList base={base} tables={base.tables} />
     </div>
   );
 };

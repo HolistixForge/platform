@@ -2,7 +2,7 @@ import { DragEvent } from 'react';
 import { TAirtableBase, TAirtableTable } from '../../airtable-types';
 import { TEventLoadTableNode } from '../../airtable-events';
 
-import './airtable-table-list.scss';
+import './airtable-base-table-list.scss';
 
 //
 
@@ -100,7 +100,7 @@ export const TableItem = ({
 
 //
 
-export const AirtableTableList = ({
+export const AirtableBaseTableList = ({
   base,
   tables,
 }: {
@@ -116,4 +116,4 @@ export const AirtableTableList = ({
   );
 };
 
-export default AirtableTableList;
+export default AirtableBaseTableList;
