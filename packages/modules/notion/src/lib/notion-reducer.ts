@@ -1,7 +1,11 @@
 import { Client } from '@notionhq/client';
 
 import { ReduceArgs, Reducer, TEventPeriodic } from '@monorepo/collab-engine';
-import { TCoreSharedData, TEventDeleteNode, TEventNewNode } from '@monorepo/core';
+import {
+  TCoreSharedData,
+  TEventDeleteNode,
+  TEventNewNode,
+} from '@monorepo/core';
 import { makeUuid, toUuid } from '@monorepo/simple-types';
 
 import {
@@ -33,8 +37,8 @@ import { TNodeNotionKanbanColumnDataPayload } from './components/node-notion/nod
 type TDepsModulesExports = {
   config: {
     NOTION_API_KEY: string;
-  }
-}
+  };
+};
 
 type Ra<T> = ReduceArgs<
   TNotionSharedData & TCoreSharedData,
@@ -43,7 +47,6 @@ type Ra<T> = ReduceArgs<
   undefined,
   TDepsModulesExports
 >;
-
 
 export class NotionReducer extends Reducer<
   TNotionSharedData & TCoreSharedData,
@@ -64,7 +67,6 @@ export class NotionReducer extends Reducer<
   }
 
   async reduce(g: Ra<TNotionEvent | TEventPeriodic>): Promise<void> {
-
     switch (g.event.type) {
       case 'notion:init-database':
         return this._initDatabase(g as Ra<TEventInitDatabase>);
@@ -92,7 +94,9 @@ export class NotionReducer extends Reducer<
         return this._loadKanbanColumnNode(g as Ra<TEventLoadKanbanColumnNode>);
 
       case 'notion:delete-kanban-column-node':
-        return this._deleteKanbanColumnNode(g as Ra<TEventDeleteKanbanColumnNode>);
+        return this._deleteKanbanColumnNode(
+          g as Ra<TEventDeleteKanbanColumnNode>
+        );
 
       case 'notion:delete-page-node':
         return this._deletePageNode(g as Ra<TEventDeletePageNode>);
@@ -110,13 +114,14 @@ export class NotionReducer extends Reducer<
         return this._searchDatabases(g as Ra<TEventSearchDatabases>);
 
       case 'notion:clear-user-search-results':
-        return this._clearUserSearchResults(g as Ra<TEventClearUserSearchResults>);
+        return this._clearUserSearchResults(
+          g as Ra<TEventClearUserSearchResults>
+        );
 
       case 'periodic':
         return this._periodic(g as Ra<TEventPeriodic>);
     }
   }
-
 
   //
 
@@ -130,7 +135,7 @@ export class NotionReducer extends Reducer<
     const data: TNodeNotionTaskDataPayload = {
       pageId: g.event.pageId,
       databaseId: g.event.databaseId,
-    }
+    };
 
     g.bep.process({
       type: 'core:new-node',
@@ -142,9 +147,7 @@ export class NotionReducer extends Reducer<
         data: data,
         connectors: [{ connectorName: 'inputs', pins: [] }],
       },
-      edges: [
-
-      ],
+      edges: [],
       origin: g.event.origin,
     });
   }
@@ -158,9 +161,8 @@ export class NotionReducer extends Reducer<
   //
 
   private async _fetchAndUpdateDatabase(
-    g: Ra<{ databaseId: string }>,
+    g: Ra<{ databaseId: string }>
   ): Promise<boolean> {
-
     let { databaseId } = g.event;
 
     const r = toUuid(databaseId);
@@ -198,7 +200,12 @@ export class NotionReducer extends Reducer<
 
         // Dispatch delete node events for each deleted page
         g.sd.nodes.forEach((node) => {
-          if (node.type === 'notion-page' && deletedPages.some((deletedPage) => deletedPage.id === node.data?.pageId)) {
+          if (
+            node.type === 'notion-page' &&
+            deletedPages.some(
+              (deletedPage) => deletedPage.id === node.data?.pageId
+            )
+          ) {
             g.bep.process({
               type: 'core:delete-node',
               id: node.id,
@@ -223,12 +230,13 @@ export class NotionReducer extends Reducer<
     const now = new Date();
     const timeSinceLastSync = now.getTime() - this.lastSync.getTime();
 
-    // Only sync if more than 1 minute has passed
+    // Only sync if more than some time has passed
     if (timeSinceLastSync >= 5000) {
       g.sd.notionDatabases.forEach((database) => {
-        this._fetchAndUpdateDatabase(
-          { ...g, event: { databaseId: database.id } },
-        );
+        this._fetchAndUpdateDatabase({
+          ...g,
+          event: { databaseId: database.id },
+        });
       });
       this.lastSync = now;
     }
@@ -236,9 +244,7 @@ export class NotionReducer extends Reducer<
 
   //
 
-  private async _updatePage(
-    g: Ra<TEventUpdatePage>,
-  ): Promise<void> {
+  private async _updatePage(g: Ra<TEventUpdatePage>): Promise<void> {
     const { pageId } = g.event;
 
     try {
@@ -248,8 +254,7 @@ export class NotionReducer extends Reducer<
       const o = {
         page_id: pageId,
         properties: g.event.properties,
-      }
-
+      };
 
       await notion.pages.update(o);
 
@@ -261,9 +266,7 @@ export class NotionReducer extends Reducer<
     }
   }
 
-  private async _createPage(
-    g: Ra<TEventCreatePage>,
-  ): Promise<void> {
+  private async _createPage(g: Ra<TEventCreatePage>): Promise<void> {
     const { databaseId } = g.event;
 
     try {
@@ -283,9 +286,7 @@ export class NotionReducer extends Reducer<
     }
   }
 
-  private async _deletePage(
-    g: Ra<TEventDeletePage>,
-  ): Promise<void> {
+  private async _deletePage(g: Ra<TEventDeletePage>): Promise<void> {
     const { databaseId, pageId } = g.event;
 
     try {
@@ -308,9 +309,7 @@ export class NotionReducer extends Reducer<
     }
   }
 
-  private async _reorderPage(
-    g: Ra<TEventReorderPage>,
-  ): Promise<void> {
+  private async _reorderPage(g: Ra<TEventReorderPage>): Promise<void> {
     const { databaseId, pageId, newPosition } = g.event;
 
     try {
@@ -359,10 +358,7 @@ export class NotionReducer extends Reducer<
 
   //
 
-
-  private async _deleteDatabase(
-    g: Ra<TEventDeleteDatabase>
-  ): Promise<void> {
+  private async _deleteDatabase(g: Ra<TEventDeleteDatabase>): Promise<void> {
     const { databaseId } = g.event;
 
     // First, delete all nodes associated with this database
@@ -370,20 +366,24 @@ export class NotionReducer extends Reducer<
     if (database) {
       const pagesIds = database.pages.map((page) => page.id);
       g.sd.nodes.forEach((node) => {
-        if (node.type === 'notion-page' && pagesIds.includes((node.data as TNodeNotionTaskDataPayload).pageId)) {
+        if (
+          node.type === 'notion-page' &&
+          pagesIds.includes((node.data as TNodeNotionTaskDataPayload).pageId)
+        ) {
+          g.bep.process({
+            type: 'core:delete-node',
+            id: node.id,
+          });
+        } else if (
+          node.type === 'notion-database' &&
+          node.data?.databaseId === databaseId
+        ) {
           g.bep.process({
             type: 'core:delete-node',
             id: node.id,
           });
         }
-        else if (node.type === 'notion-database' && node.data?.databaseId === databaseId) {
-          g.bep.process({
-            type: 'core:delete-node',
-            id: node.id,
-          });
-        }
-
-      })
+      });
       // Remove from shared data
       g.sd.notionDatabases.delete(databaseId);
     }
@@ -393,21 +393,27 @@ export class NotionReducer extends Reducer<
 
   private async _setNodeView(g: Ra<TEventSetNodeView>): Promise<void> {
     const { nodeId, viewId, viewMode } = g.event;
-    g.sd.notionNodeViews.set(`${nodeId}-${viewId}`,
-      { type: 'database', databaseId: nodeId, nodeId, viewId, viewMode });
+    g.sd.notionNodeViews.set(`${nodeId}-${viewId}`, {
+      type: 'database',
+      databaseId: nodeId,
+      nodeId,
+      viewId,
+      viewMode,
+    });
   }
 
   //
 
-  private async _loadKanbanColumnNode(g: Ra<TEventLoadKanbanColumnNode>): Promise<void> {
+  private async _loadKanbanColumnNode(
+    g: Ra<TEventLoadKanbanColumnNode>
+  ): Promise<void> {
     const { databaseId, propertyId, optionId } = g.event;
 
     const data: TNodeNotionKanbanColumnDataPayload = {
       databaseId,
       propertyId,
       optionId,
-
-    }
+    };
 
     g.bep.process({
       type: 'core:new-node',
@@ -426,7 +432,9 @@ export class NotionReducer extends Reducer<
 
   //
 
-  private async _deleteKanbanColumnNode(g: Ra<TEventDeleteKanbanColumnNode>): Promise<void> {
+  private async _deleteKanbanColumnNode(
+    g: Ra<TEventDeleteKanbanColumnNode>
+  ): Promise<void> {
     const { nodeId } = g.event;
     g.bep.process({
       type: 'core:delete-node',
@@ -450,7 +458,9 @@ export class NotionReducer extends Reducer<
     }
   }
 
-  private async _clearUserSearchResults(g: Ra<TEventClearUserSearchResults>): Promise<void> {
+  private async _clearUserSearchResults(
+    g: Ra<TEventClearUserSearchResults>
+  ): Promise<void> {
     g.sd.notionDatabaseSearchResults.delete(g.event.userId);
   }
 }
