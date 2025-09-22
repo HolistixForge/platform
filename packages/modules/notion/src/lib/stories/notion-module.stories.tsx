@@ -125,7 +125,7 @@ const ProxyCheckWrapper = ({ children }: { children: ReactNode }) => {
     return <ProxyInstructions loading={isChecking} />;
   }
 
-  return <>{children}</>;
+  return children;
 };
 
 //
@@ -134,16 +134,6 @@ const modulesBackend: ModuleBackend[] = [
   { collabChunk: { name: 'gateway' } },
   coreBackend,
   spaceBackend,
-  {
-    collabChunk: {
-      name: 'config',
-      loadExtraContext: () => ({
-        config: {
-          NOTION_API_KEY: '123',
-        },
-      }),
-    },
-  },
   notionBackend,
 ];
 

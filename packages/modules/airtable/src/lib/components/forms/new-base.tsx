@@ -27,7 +27,7 @@ import './new-base.scss';
  *
  */
 
-export type NewAirtableBaseFormData = { baseId: string };
+export type NewAirtableBaseFormData = { apiKey: string; baseId: string };
 
 /**
  *
@@ -70,6 +70,7 @@ export const NewAirtableBaseForm = ({
           viewId: viewId,
           position,
         },
+        AIRTABLE_API_KEY: d.apiKey,
       });
       renderPanel({
         type: 'airtable-base',
@@ -83,6 +84,7 @@ export const NewAirtableBaseForm = ({
     {
       startOpened: true,
       checkForm: (d, e) => {
+        if (!d.apiKey) e.apiKey = 'Please enter your Airtable API key';
         if (!d.baseId) e.baseId = 'Please select a base';
       },
     }
@@ -97,6 +99,7 @@ export const NewAirtableBaseForm = ({
           type: 'airtable:search-bases',
           query: searchQuery,
           userId: currentUserId,
+          AIRTABLE_API_KEY: action.formData.apiKey,
         });
       } catch (error) {
         console.error('Failed to search bases:', error);
@@ -108,7 +111,7 @@ export const NewAirtableBaseForm = ({
     // Debounce search
     const timeoutId = setTimeout(searchBases, 300);
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, dispatcher, currentUserId]);
+  }, [searchQuery, dispatcher, currentUserId, action.formData.apiKey]);
 
   //
 
@@ -139,65 +142,116 @@ export const NewAirtableBaseForm = ({
 
   return (
     <DialogControlled
-      title="Select Airtable Base"
-      description="Search and select an Airtable base to add to your project."
+      title={
+        action.formData.apiKey
+          ? 'Select Airtable Base'
+          : 'Enter Airtable API Key'
+      }
+      description={
+        action.formData.apiKey
+          ? 'Search and select an Airtable base to add to your project.'
+          : 'Paste your Airtable API key to continue. You can create one in your Airtable account settings.'
+      }
       open={action.isOpened}
       onOpenChange={action.close}
     >
       <div className="new-airtable-base-form">
-        <div className="search-section">
-          <TextFieldset
-            label="Search Bases"
-            name="searchQuery"
-            onChange={(e) => setSearchQuery(e.target.value)}
-            value={searchQuery}
-            placeholder="Search for bases..."
-          />
-        </div>
-
-        <div className="search-results">
-          {isSearching ? (
-            <div className="loading-state">Searching bases...</div>
-          ) : searchResults.length === 0 ? (
-            <div className="empty-state">
-              {searchQuery ? 'No bases found' : 'Start typing to search bases'}
+        {!action.formData.apiKey ? (
+          // API Key Input Step
+          <>
+            <div className="api-key-section">
+              <TextFieldset
+                label="Airtable API Key"
+                name="apiKey"
+                type="password"
+                onChange={(e) =>
+                  action.handleChange({ apiKey: e.target.value })
+                }
+                value={action.formData.apiKey || ''}
+                placeholder="Enter your Airtable API key..."
+              />
             </div>
-          ) : (
-            <div className="base-list">
-              {searchResults.map((base) => (
-                <div
-                  key={base.id}
-                  className={`base-item ${
-                    action.formData.baseId === base.id ? 'selected' : ''
-                  }`}
-                  onClick={() => handleBaseSelect(base)}
-                >
-                  <div className="base-title">{getBaseTitle(base)}</div>
-                  <div className="base-description">
-                    {getBaseDescription(base)}
-                  </div>
-                  <div className="base-id">ID: {base.id}</div>
-                  <div className="base-permission">
-                    Permission: {base.permissionLevel}
-                  </div>
+
+            <FormError errors={action.errors} id="apiKey" />
+            <FormErrors errors={action.errors} />
+
+            <div className="form-actions">
+              <ButtonBase
+                className="submit"
+                text="Continue"
+                loading={action.loading}
+                disabled={true}
+              />
+            </div>
+          </>
+        ) : (
+          // Base Selection Step
+          <>
+            <div className="search-section">
+              <div className="api-key-info">
+                <span>API Key configured</span>
+                <ButtonBase
+                  className="back-button"
+                  callback={() => action.handleChange({ apiKey: '' })}
+                  text="Change API Key"
+                />
+              </div>
+              <TextFieldset
+                label="Search Bases"
+                name="searchQuery"
+                onChange={(e) => setSearchQuery(e.target.value)}
+                value={searchQuery}
+                placeholder="Search for bases..."
+              />
+            </div>
+
+            <div className="search-results">
+              {isSearching ? (
+                <div className="loading-state">Searching bases...</div>
+              ) : searchResults.length === 0 ? (
+                <div className="empty-state">
+                  {searchQuery
+                    ? 'No bases found'
+                    : 'Start typing to search bases'}
                 </div>
-              ))}
+              ) : (
+                <div className="base-list">
+                  {searchResults.map((base) => (
+                    <div
+                      key={base.id}
+                      className={`base-item ${
+                        action.formData.baseId === base.id ? 'selected' : ''
+                      }`}
+                      onClick={() => handleBaseSelect(base)}
+                    >
+                      <div className="base-title">{getBaseTitle(base)}</div>
+                      <div className="base-description">
+                        {getBaseDescription(base)}
+                      </div>
+                      <div className="base-id">ID: {base.id}</div>
+                      <div className="base-permission">
+                        Permission: {base.permissionLevel}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        <FormError errors={action.errors} id="baseId" />
-        <FormErrors errors={action.errors} />
+            <FormError errors={action.errors} id="baseId" />
+            <FormErrors errors={action.errors} />
 
-        <div className="form-actions">
-          <ButtonBase
-            className="submit"
-            callback={() => action.callback(action.formData)}
-            text="Load Selected Base"
-            loading={action.loading}
-            disabled={!action.formData.baseId}
-          />
-        </div>
+            <div className="form-actions">
+              <ButtonBase
+                className="submit"
+                callback={() => action.callback(action.formData)}
+                text="Load Selected Base"
+                loading={action.loading}
+                disabled={!action.formData.baseId}
+              />
+            </div>
+          </>
+        )}
       </div>
     </DialogControlled>
   );

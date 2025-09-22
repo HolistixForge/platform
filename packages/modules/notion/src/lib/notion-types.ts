@@ -118,18 +118,21 @@ export type TNotionProperty =
   | TNotionDate
   | TNotionMultiSelect;
 
-export type TNotionCover = {
-  type: 'external';
-  external: {
-    url: string;
-  };
-} | {
-  type: 'file';
-  file: {
-    url: string;
-    expiry_time: string;
-  };
-} | null;
+export type TNotionCover =
+  | {
+      type: 'external';
+      external: {
+        url: string;
+      };
+    }
+  | {
+      type: 'file';
+      file: {
+        url: string;
+        expiry_time: string;
+      };
+    }
+  | null;
 
 export type TNotionPage = {
   object: 'page';
@@ -264,6 +267,7 @@ export type TNotionDatabaseProperty =
   | TNotionDatabaseMultiSelectProperty;
 
 export type TNotionDatabase = {
+  NOTION_API_KEY: string;
   object: 'database';
   id: string;
   cover: null | any;

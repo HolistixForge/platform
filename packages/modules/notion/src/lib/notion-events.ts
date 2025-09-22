@@ -5,6 +5,7 @@ import { TNotionViewMode } from './components/node-notion/notion-database';
 export type TEventInitDatabase = {
   type: 'notion:init-database';
   databaseId: string;
+  NOTION_API_KEY: string;
   origin?: TEventOrigin;
 };
 
@@ -64,7 +65,6 @@ export type TEventDeleteKanbanColumnNode = {
   nodeId: string;
 };
 
-
 export type TEventDeleteDatabaseNode = {
   type: 'notion:delete-database-node';
   nodeId: string;
@@ -84,6 +84,7 @@ export type TEventSetNodeView = {
 
 export type TEventSearchDatabases = {
   type: 'notion:search-databases';
+  NOTION_API_KEY: string;
   query?: string;
   userId: string;
 };

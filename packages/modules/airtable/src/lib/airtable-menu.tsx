@@ -9,7 +9,7 @@ import { makeUuid } from '@monorepo/simple-types';
 import { NewAirtableBaseForm } from './components/forms/new-base';
 import { TAirtableSharedData } from './airtable-shared-model';
 import { TAirtableEvent } from './airtable-events';
-import { TNodeAirtableTableDataPayload } from './components/node-airtable/airtable-table';
+import { TNodeAirtableTableDataPayload } from './components/node-airtable/node-airtable-table';
 
 //
 

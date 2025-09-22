@@ -13,18 +13,6 @@ import { moduleBackend as airtable } from '@monorepo/airtable';
 
 export const modules: ModuleBackend[] = [
   gateway,
-  {
-    collabChunk: {
-      name: 'config',
-      loadExtraContext: () => ({
-        config: {
-          NOTION_API_KEY: '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',
-          AIRTABLE_API_KEY:
-            'patHY43dqtZMM1GRK.e55234d4a6f95714796d381be083cdc4e08eb54baebfd322424148ae268a8e06',
-        },
-      }),
-    },
-  },
   core,
   space,
   chats,

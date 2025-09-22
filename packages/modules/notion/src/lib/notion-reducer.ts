@@ -34,18 +34,12 @@ import { TNodeNotionKanbanColumnDataPayload } from './components/node-notion/nod
 
 //
 
-type TDepsModulesExports = {
-  config: {
-    NOTION_API_KEY: string;
-  };
-};
-
 type Ra<T> = ReduceArgs<
   TNotionSharedData & TCoreSharedData,
   T,
   TEventNewNode | TEventDeleteNode,
   undefined,
-  TDepsModulesExports
+  undefined
 >;
 
 export class NotionReducer extends Reducer<
@@ -53,17 +47,19 @@ export class NotionReducer extends Reducer<
   TNotionEvent,
   never,
   undefined,
-  TDepsModulesExports
+  undefined
 > {
   private lastSync: Date = new Date(0); // Initialize to epoch
 
-  private client: Client | null = null;
+  private clients: Map<string, Client> = new Map();
 
-  private getNotionClient(g: Ra<unknown>) {
-    if (!this.client) {
-      this.client = new Client({ auth: g.extraContext.config.NOTION_API_KEY });
+  private getNotionClient(g: Ra<unknown>, apiKey: string) {
+    let client = this.clients.get(apiKey);
+    if (!client) {
+      client = new Client({ auth: apiKey });
+      this.clients.set(apiKey, client);
     }
-    return this.client;
+    return client;
   }
 
   async reduce(g: Ra<TNotionEvent | TEventPeriodic>): Promise<void> {
@@ -161,7 +157,7 @@ export class NotionReducer extends Reducer<
   //
 
   private async _fetchAndUpdateDatabase(
-    g: Ra<{ databaseId: string }>
+    g: Ra<{ databaseId: string; NOTION_API_KEY?: string }>
   ): Promise<boolean> {
     let { databaseId } = g.event;
 
@@ -170,8 +166,13 @@ export class NotionReducer extends Reducer<
     databaseId = r;
     g.event.databaseId = r;
 
+    const apiKey =
+      g.event.NOTION_API_KEY ||
+      g.sd.notionDatabases.get(databaseId)?.NOTION_API_KEY ||
+      '';
+
     try {
-      const notion = this.getNotionClient(g);
+      const notion = this.getNotionClient(g, apiKey);
       // Fetch database metadata
       const dbResponse = await notion.databases.retrieve({
         database_id: databaseId,
@@ -214,7 +215,11 @@ export class NotionReducer extends Reducer<
         });
       }
 
-      const database = { ...dbResponse, pages: newPages };
+      const database = {
+        ...dbResponse,
+        pages: newPages,
+        NOTION_API_KEY: apiKey,
+      };
       g.sd.notionDatabases.set(databaseId, database as any);
     } catch (error) {
       console.error('Failed to fetch and update database:', error);
@@ -246,9 +251,11 @@ export class NotionReducer extends Reducer<
 
   private async _updatePage(g: Ra<TEventUpdatePage>): Promise<void> {
     const { pageId } = g.event;
+    const apiKey =
+      g.sd.notionDatabases.get(g.event.databaseId)?.NOTION_API_KEY || '';
 
     try {
-      const notion = this.getNotionClient(g);
+      const notion = this.getNotionClient(g, apiKey);
       // Update the page in Notion
 
       const o = {
@@ -268,9 +275,11 @@ export class NotionReducer extends Reducer<
 
   private async _createPage(g: Ra<TEventCreatePage>): Promise<void> {
     const { databaseId } = g.event;
+    const apiKey =
+      g.sd.notionDatabases.get(g.event.databaseId)?.NOTION_API_KEY || '';
 
     try {
-      const notion = this.getNotionClient(g);
+      const notion = this.getNotionClient(g, apiKey);
 
       // Create page in Notion
       await notion.pages.create({
@@ -288,9 +297,11 @@ export class NotionReducer extends Reducer<
 
   private async _deletePage(g: Ra<TEventDeletePage>): Promise<void> {
     const { databaseId, pageId } = g.event;
+    const apiKey =
+      g.sd.notionDatabases.get(g.event.databaseId)?.NOTION_API_KEY || '';
 
     try {
-      const notion = this.getNotionClient(g);
+      const notion = this.getNotionClient(g, apiKey);
       // Archive the page in Notion (Notion doesn't support true deletion)
       await notion.pages.update({
         page_id: pageId,
@@ -311,9 +322,10 @@ export class NotionReducer extends Reducer<
 
   private async _reorderPage(g: Ra<TEventReorderPage>): Promise<void> {
     const { databaseId, pageId, newPosition } = g.event;
-
+    const apiKey =
+      g.sd.notionDatabases.get(g.event.databaseId)?.NOTION_API_KEY || '';
     try {
-      const notion = this.getNotionClient(g);
+      const notion = this.getNotionClient(g, apiKey);
       const database = g.sd.notionDatabases.get(databaseId);
       if (!database) throw new Error('Database not found');
 
@@ -444,7 +456,7 @@ export class NotionReducer extends Reducer<
 
   private async _searchDatabases(g: Ra<TEventSearchDatabases>): Promise<void> {
     try {
-      const notion = this.getNotionClient(g);
+      const notion = this.getNotionClient(g, g.event.NOTION_API_KEY || '');
       const response = await notion.search({
         filter: { property: 'object', value: 'database' },
         query: g.event.query || '',

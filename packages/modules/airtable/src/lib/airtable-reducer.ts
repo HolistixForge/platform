@@ -4,7 +4,7 @@ import {
   TEventDeleteNode,
   TEventNewNode,
 } from '@monorepo/core';
-import { makeUuid, TJson } from '@monorepo/simple-types';
+import { makeUuid } from '@monorepo/simple-types';
 
 import {
   TEventCreateRecord,
@@ -15,7 +15,6 @@ import {
   TEventLoadRecordNode,
   TEventLoadTableNode,
   TEventReorderRecord,
-  TEventSyncBase,
   TEventUpdateRecord,
   TAirtableEvent,
   TEventDeleteBase,
@@ -39,18 +38,12 @@ import { TNodeAirtableTableDataPayload } from './components/node-airtable/node-a
 
 //
 
-type TDepsModulesExports = {
-  config: {
-    AIRTABLE_API_KEY: string;
-  };
-};
-
 type Ra<T> = ReduceArgs<
   TAirtableSharedData & TCoreSharedData,
   T,
   TEventNewNode | TEventDeleteNode,
   undefined,
-  TDepsModulesExports
+  undefined
 >;
 
 export class AirtableReducer extends Reducer<
@@ -58,16 +51,16 @@ export class AirtableReducer extends Reducer<
   TAirtableEvent,
   never,
   undefined,
-  TDepsModulesExports
+  undefined
 > {
   private lastSync: Date = new Date(0); // Initialize to epoch
 
   private async makeAirtableRequest(
     g: Ra<unknown>,
     endpoint: string,
+    apiKey: string,
     options: RequestInit = {}
   ) {
-    const apiKey = g.extraContext.config.AIRTABLE_API_KEY;
     const baseUrl = 'https://api.airtable.com/v0';
 
     const response = await fetch(`${baseUrl}${endpoint}`, {
@@ -92,10 +85,6 @@ export class AirtableReducer extends Reducer<
     switch (g.event.type) {
       case 'airtable:init-base':
         return this._initBase(g as Ra<TEventInitBase>);
-
-      case 'airtable:sync-base':
-        await this._fetchAndUpdateBase(g as Ra<TEventSyncBase>);
-        return;
 
       case 'airtable:update-record':
         return this._updateRecord(g as Ra<TEventUpdateRecord>);
@@ -216,13 +205,22 @@ export class AirtableReducer extends Reducer<
   //
 
   private async _fetchAndUpdateBase(
-    g: Ra<{ baseId: string }>
+    g: Ra<{ baseId: string; AIRTABLE_API_KEY?: string }>
   ): Promise<boolean> {
     const { baseId } = g.event;
 
+    const apiKey =
+      g.event.AIRTABLE_API_KEY ||
+      g.sd.airtableBases.get(baseId)?.AIRTABLE_API_KEY ||
+      '';
+
     try {
       // Fetch all bases and find the one we're interested in
-      const basesResponse = await this.makeAirtableRequest(g, '/meta/bases');
+      const basesResponse = await this.makeAirtableRequest(
+        g,
+        '/meta/bases',
+        apiKey
+      );
       const baseResponse = basesResponse.bases?.find(
         (base: { id: string }) => base.id === baseId
       );
@@ -235,7 +233,8 @@ export class AirtableReducer extends Reducer<
       // Fetch tables for this base
       const tablesResponse = await this.makeAirtableRequest(
         g,
-        `/meta/bases/${baseId}/tables`
+        `/meta/bases/${baseId}/tables`,
+        apiKey
       );
 
       if (!baseResponse || !tablesResponse) {
@@ -260,7 +259,8 @@ export class AirtableReducer extends Reducer<
             try {
               const recordsResponse = await this.makeAirtableRequest(
                 g,
-                `/${baseId}/${table.id}`
+                `/${baseId}/${table.id}`,
+                apiKey
               );
               return {
                 ...table,
@@ -281,6 +281,7 @@ export class AirtableReducer extends Reducer<
       );
 
       const updatedBase: TAirtableBase = {
+        AIRTABLE_API_KEY: apiKey,
         id: baseId,
         name: baseResponse.name,
         description: baseResponse.description,
@@ -393,10 +394,15 @@ export class AirtableReducer extends Reducer<
     try {
       const { baseId, tableId, recordId, fields } = g.event;
 
-      await this.makeAirtableRequest(g, `/${baseId}/${tableId}/${recordId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ fields }),
-      });
+      await this.makeAirtableRequest(
+        g,
+        `/${baseId}/${tableId}/${recordId}`,
+        g.sd.airtableBases.get(baseId)?.AIRTABLE_API_KEY || '',
+        {
+          method: 'PATCH',
+          body: JSON.stringify({ fields }),
+        }
+      );
 
       // Trigger a full sync to ensure consistency with external changes
       setTimeout(() => {
@@ -416,9 +422,10 @@ export class AirtableReducer extends Reducer<
     try {
       const { baseId, tableId, fields } = g.event;
 
-      const response = await this.makeAirtableRequest(
+      await this.makeAirtableRequest(
         g,
         `/${baseId}/${tableId}`,
+        g.sd.airtableBases.get(baseId)?.AIRTABLE_API_KEY || '',
         {
           method: 'POST',
           body: JSON.stringify({ fields }),
@@ -443,9 +450,14 @@ export class AirtableReducer extends Reducer<
     try {
       const { baseId, tableId, recordId } = g.event;
 
-      await this.makeAirtableRequest(g, `/${baseId}/${tableId}/${recordId}`, {
-        method: 'DELETE',
-      });
+      await this.makeAirtableRequest(
+        g,
+        `/${baseId}/${tableId}/${recordId}`,
+        g.sd.airtableBases.get(baseId)?.AIRTABLE_API_KEY || '',
+        {
+          method: 'DELETE',
+        }
+      );
 
       // Check if any kanban column nodes need to be deleted due to this record deletion
       g.sd.nodes.forEach((node) => {
@@ -513,6 +525,7 @@ export class AirtableReducer extends Reducer<
             await this.makeAirtableRequest(
               g,
               `/${baseId}/${tableId}/${recordId}`,
+              g.sd.airtableBases.get(baseId)?.AIRTABLE_API_KEY || '',
               {
                 method: 'PATCH',
                 body: JSON.stringify({
@@ -652,7 +665,11 @@ export class AirtableReducer extends Reducer<
       const { query, userId } = g.event;
 
       // Search user's bases
-      const response = await this.makeAirtableRequest(g, '/meta/bases');
+      const response = await this.makeAirtableRequest(
+        g,
+        '/meta/bases',
+        g.event.AIRTABLE_API_KEY
+      );
 
       if (response.bases) {
         let filteredBases = response.bases;

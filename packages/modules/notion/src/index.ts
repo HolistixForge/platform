@@ -7,7 +7,6 @@ export const moduleBackend: ModuleBackend = {
     name: 'notion',
     loadSharedData: Notion_loadData,
     loadReducers: (sd) => [new NotionReducer()],
-    deps: ['config'], // notionApiKey: CONFIG.NOTION_API_KEY
   },
 };
 
