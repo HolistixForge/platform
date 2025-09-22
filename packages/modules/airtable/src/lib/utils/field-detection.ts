@@ -111,6 +111,86 @@ export const PRIORITY_KEYWORDS = [
   'уровень',
 ];
 
+export const NAME_KEYWORDS = [
+  // English
+  'name',
+  'title',
+  'subject',
+  'label',
+  'heading',
+  'caption',
+  // French
+  'nom',
+  'titre',
+  'sujet',
+  'étiquette',
+  'en-tête',
+  'légende',
+  // Spanish
+  'nombre',
+  'título',
+  'asunto',
+  'etiqueta',
+  'encabezado',
+  'leyenda',
+  // Italian
+  'nome',
+  'titolo',
+  'soggetto',
+  'etichetta',
+  'intestazione',
+  'didascalia',
+  // German
+  'name',
+  'titel',
+  'betreff',
+  'etikett',
+  'überschrift',
+  'beschriftung',
+  // Chinese (Simplified)
+  '名称',
+  '标题',
+  '主题',
+  '标签',
+  '标题',
+  '说明',
+  // Chinese (Traditional)
+  '名稱',
+  '標題',
+  '主題',
+  '標籤',
+  '標題',
+  '說明',
+  // Japanese
+  '名前',
+  'タイトル',
+  '件名',
+  'ラベル',
+  '見出し',
+  'キャプション',
+  // Portuguese
+  'nome',
+  'título',
+  'assunto',
+  'rótulo',
+  'cabeçalho',
+  'legenda',
+  // Dutch
+  'naam',
+  'titel',
+  'onderwerp',
+  'label',
+  'kop',
+  'bijschrift',
+  // Russian
+  'имя',
+  'заголовок',
+  'тема',
+  'метка',
+  'заголовок',
+  'подпись',
+];
+
 /**
  * Checks if a field name contains any of the provided keywords
  */
@@ -127,7 +207,7 @@ export const containsKeywords = (
 /**
  * Detects status field from a list of fields
  */
-export const detectStatusField = (fields: any[]) => {
+export const detectStatusField = (fields: { type: string; name: string }[]) => {
   return fields.find(
     (field) =>
       field.type === 'singleSelect' &&
@@ -138,7 +218,9 @@ export const detectStatusField = (fields: any[]) => {
 /**
  * Detects priority field from a list of fields
  */
-export const detectPriorityField = (fields: any[]) => {
+export const detectPriorityField = (
+  fields: { type: string; name: string }[]
+) => {
   return fields.find(
     (field) =>
       field.type === 'singleSelect' &&
@@ -147,17 +229,33 @@ export const detectPriorityField = (fields: any[]) => {
 };
 
 /**
+ * Detects name/title field from a list of fields
+ */
+export const detectNameField = (fields: { type: string; name: string }[]) => {
+  return fields.find(
+    (field) =>
+      (field.type === 'singleLineText' || field.type === 'longText') &&
+      containsKeywords(field.name, NAME_KEYWORDS)
+  );
+};
+
+/**
  * Advanced detection using field options analysis
  * This could analyze the actual options in singleSelect fields
  * to determine if they represent status or priority values
  */
-export const detectFieldByOptions = (field: any) => {
+export const detectFieldByOptions = (field: {
+  type: string;
+  options?: {
+    choices?: { name: string }[];
+  };
+}) => {
   if (field.type !== 'singleSelect' || !field.options?.choices) {
     return null;
   }
 
   const options = field.options.choices
-    .map((choice: any) => choice.name.toLowerCase())
+    .map((choice: { name: string }) => choice.name.toLowerCase())
     .join(' ');
 
   // Status-like options

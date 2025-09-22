@@ -398,21 +398,6 @@ export class AirtableReducer extends Reducer<
         body: JSON.stringify({ fields }),
       });
 
-      // Update local state immediately for responsive UI
-      const base = g.sd.airtableBases.get(baseId);
-      if (base) {
-        const table = base.tables.find((t) => t.id === tableId);
-        if (table) {
-          const record = table.records.find((r) => r.id === recordId);
-          if (record) {
-            record.fields = {
-              ...(record.fields as object),
-              ...fields,
-            } as Record<string, TJson>;
-          }
-        }
-      }
-
       // Trigger a full sync to ensure consistency with external changes
       setTimeout(() => {
         this._fetchAndUpdateBase({
@@ -535,13 +520,6 @@ export class AirtableReducer extends Reducer<
                 }),
               }
             );
-
-            // Update local state
-            const record = table.records.find((r) => r.id === recordId);
-            if (record) {
-              (record.fields as Record<string, unknown>)[orderField.id] =
-                newPosition;
-            }
           }
         }
       }

@@ -193,11 +193,17 @@ export const NodeAirtableTable: React.FC<AirtableTableProps> = ({ node }) => {
             viewMode={viewMode}
             setViewMode={handleViewModeChange}
             onUpdateRecord={(recordId, fields) => {
-              console.log('update record', recordId, fields);
+              dispatcher.dispatch({
+                type: 'airtable:update-record',
+                baseId: base.id,
+                tableId: table.id,
+                recordId,
+                fields,
+              });
             }}
             titleField={titleField}
-            priorityField={priorityField}
-            statusField={statusField}
+            priorityField={priorityField as TAirtableField}
+            statusField={statusField as TAirtableField}
           />
         );
       }
@@ -208,8 +214,8 @@ export const NodeAirtableTable: React.FC<AirtableTableProps> = ({ node }) => {
             baseId={base.id}
             table={table}
             titleField={titleField}
-            priorityField={priorityField}
-            statusField={statusField}
+            priorityField={priorityField as TAirtableField}
+            statusField={statusField as TAirtableField}
             viewMode={viewMode}
           />
         );
