@@ -3,6 +3,15 @@
   "include": [],
   "references": [
     {
+      "path": "../../collab-engine"
+    },
+    {
+      "path": "../../simple-types"
+    },
+    {
+      "path": "../module"
+    },
+    {
       "path": "./tsconfig.lib.json"
     },
     {
