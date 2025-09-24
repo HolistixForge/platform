@@ -101,11 +101,15 @@
     },
     {
       "path": "./packages/modules/gateway"
+    },
+    {
+      "path": "./packages/modules/excalidraw"
     }
   ],
   "ts-node": {
     "compilerOptions": {
-      "module": "commonjs"
+      "module": "commonjs",
+      "moduleResolution": "node10"
     }
   }
 }
