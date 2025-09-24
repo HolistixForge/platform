@@ -26,7 +26,7 @@ const toExcalidrawViewport = (viewport: Viewport) => {
 
 const makeAppState = (mode: WhiteboardMode) => {
   return {
-    viewModeEnabled: mode !== 'drawing', // Enable view mode when not in drawing mode
+    viewModeEnabled: true, // Enable view mode when not in drawing mode
     zenModeEnabled: false,
     gridSize: undefined,
     theme: 'light' as any,
@@ -215,7 +215,7 @@ export const ExcalidrawLayer = ({
         left: 0,
         right: 0,
         bottom: 0,
-        pointerEvents: mode === 'drawing' ? 'all' : 'none',
+        pointerEvents: 'all',
         zIndex: 0,
       }}
     >

@@ -13,6 +13,7 @@ export type TSpaceSharedData = {
 export const Space_loadData = (st: SharedTypes): TSpaceSharedData => {
   return {
     graphViews: st.getSharedMap<TGraphView>('demiurge-space_graphViews'),
+    // todo: excalidraw as a module: remove this
     drawing: st.getSharedMap<TJsonObject>('demiurge-space_drawing'),
   };
 };

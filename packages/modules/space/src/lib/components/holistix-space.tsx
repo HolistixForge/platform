@@ -1,12 +1,4 @@
-import React, {
-  FC,
-  ReactNode,
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-  useEffect,
-} from 'react';
+import { FC, ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 
 import {
@@ -18,9 +10,10 @@ import {
 } from '@monorepo/core';
 import { TGraphNode } from '@monorepo/module';
 import {
+  LayerViewportAdapter,
   PanelComponent,
-  TPanel,
   TSpaceMenuEntries,
+  TLayerProvider,
 } from '@monorepo/module/frontend';
 import {
   useDispatcher,
@@ -41,13 +34,13 @@ import { TEventEdgePropertyChange } from '../space-events';
 import { TGraphView } from '../space-types';
 import { ContextualMenu } from './contextual-menu';
 import { edgeId, TEdgeRenderProps } from './apis/types/edge';
-import { SpaceContext } from './spaceContext';
+import { ReactflowLayerContext } from './reactflow-layer-context';
 import { AvatarsRenderer } from './avatarsRenderer';
 import { ReactflowLayer } from './reactflow-layer';
-import { ExcalidrawLayer } from './excalidraw-layer';
 import { EdgeMenu } from './assets/edges/edge-menu';
 import { CustomStoryEdge } from './edge';
-import { icons } from '@monorepo/ui-base';
+import { RightPanels, usePanelContext } from './right-panels';
+import { ModeIndicator } from './ModeIndicator';
 
 //
 
@@ -55,7 +48,7 @@ type TNodeTypes = { [key: string]: FC<{ node: TGraphNode }> };
 
 //
 
-export type WhiteboardMode = 'default' | 'move-node' | 'drawing';
+export type WhiteboardMode = 'default' | 'move-node';
 
 //
 
@@ -97,17 +90,6 @@ const makeSpaceNode = (nodeTypes: TNodeTypes) => {
 
 //
 
-export type HolistixSpaceProps = {
-  viewId: string;
-  nodeTypes: TNodeTypes;
-  spaceMenuEntries: TSpaceMenuEntries;
-  panelsDefs?: Record<string, PanelComponent>;
-};
-
-//
-
-//
-
 const useOpenRadixContextMenu = () => {
   const triggerRef = useRef<HTMLSpanElement>(null);
 
@@ -125,14 +107,57 @@ const useOpenRadixContextMenu = () => {
 };
 
 //
-//
-//
+
+/**
+ * #########################################################
+ * HolistixSpace
+ * @param param0
+ * @returns
+ */
+
+export type HolistixSpaceProps = {
+  viewId: string;
+  nodeTypes: TNodeTypes;
+  spaceMenuEntries: TSpaceMenuEntries;
+  panelsDefs?: Record<string, PanelComponent>;
+  layersProviders?: TLayerProvider[];
+};
 
 export const HolistixSpace = ({
   viewId,
   nodeTypes,
   spaceMenuEntries,
   panelsDefs,
+  layersProviders,
+}: HolistixSpaceProps) => {
+  /**
+   *
+   */
+
+  return (
+    <RightPanels panelsDefs={panelsDefs}>
+      <HolistixSpaceWhiteboard
+        viewId={viewId}
+        nodeTypes={nodeTypes}
+        spaceMenuEntries={spaceMenuEntries}
+        layersProviders={layersProviders}
+      />
+    </RightPanels>
+  );
+};
+
+/**
+ * #########################################################
+ * HolistixSpaceContent
+ * @param param0
+ * @returns
+ */
+
+const HolistixSpaceWhiteboard = ({
+  viewId,
+  nodeTypes,
+  spaceMenuEntries,
+  layersProviders,
 }: HolistixSpaceProps) => {
   //
   const sdm = useShareDataManager<TSpaceSharedData & TCoreSharedData>();
@@ -141,15 +166,13 @@ export const HolistixSpace = ({
 
   const { awareness } = useAwareness();
 
+  const { openPanel, closePanel } = usePanelContext();
+
   const logics = useMemo(() => {
     const pt = new PointerTracker(viewId, awareness);
     const as = new HtmlAvatarStore(viewId, pt, awareness);
-    const ss = new CollabSpaceState(viewId, sdm);
-
-    const Node = makeSpaceNode(nodeTypes);
-
-    return { pt, as, ss, Node };
-  }, []);
+    return { pt, as };
+  }, [viewId, awareness]);
 
   /**
    * Contextual menu logics
@@ -189,33 +212,179 @@ export const HolistixSpace = ({
    *
    */
 
-  const onDrop = useCallback(
-    ({ data, position }: { data: any; position: TPosition }) => {
-      console.log({ data, position });
-      dispatcher.dispatch({ ...data, origin: { position, viewId } });
-    },
-    []
-  );
-
-  const onConnect = useCallback((edge: TEdge) => {
-    console.log({ edge });
-    dispatcher.dispatch({
-      type: 'core:new-edge',
-      edge,
-    });
-  }, []);
-
-  // Modes state
-  const [mode, setMode] = useState<WhiteboardMode>('default');
-
   // Viewport state
   const lastViewportRef = useRef<Viewport>(INITIAL_VIEWPORT);
 
   const viewportChangeCallbacks = useRef<((viewport: Viewport) => void)[]>([]);
 
-  // Right panel resize state
-  const [rightPanelWidth, setRightPanelWidth] = useState<number>(33); // 33% default
-  const [isResizing, setIsResizing] = useState<boolean>(false);
+  // Viewport synchronization logic
+  const onViewportChange = useCallback(
+    (newViewport: Viewport) => {
+      if (
+        newViewport.absoluteX !== lastViewportRef.current.absoluteX ||
+        newViewport.absoluteY !== lastViewportRef.current.absoluteY ||
+        newViewport.zoom !== lastViewportRef.current.zoom
+      ) {
+        lastViewportRef.current = newViewport;
+        logics.pt.onMove(newViewport);
+        logics.as.updateAllAvatars();
+        viewportChangeCallbacks.current.forEach((callback) => {
+          callback(newViewport);
+        });
+      }
+    },
+    [logics.pt, logics.as]
+  );
+
+  const registerViewportChangeCallback = useCallback(
+    (callback: (viewport: Viewport) => void) => {
+      viewportChangeCallbacks.current.push(callback);
+    },
+    []
+  );
+
+  const viewport = useMemo(
+    () => ({
+      onViewportChange,
+      registerViewportChangeCallback,
+      getViewport: () => lastViewportRef.current,
+    }),
+    [onViewportChange, registerViewportChangeCallback]
+  );
+
+  //
+
+  //
+
+  const [renderForm, setRenderForm] = useState<ReactNode | null>(null);
+
+  return (
+    <>
+      <div
+        className={`demiurge-space`}
+        style={{
+          width: '100%',
+          height: '100%',
+          position: 'relative',
+        }}
+        ref={logics.pt.bindDiv.bind(logics.pt)}
+        onMouseMove={logics.pt.onPaneMouseMove.bind(logics.pt)}
+        onMouseLeave={logics.pt.setPointerInactive.bind(logics.pt)}
+      >
+        {/* <ExcalidrawLayer
+          viewId={viewId}          
+          onViewportChange={onViewportChange}
+          registerViewportChangeCallback={registerViewportChangeCallback}
+        /> */}
+
+        <ReactFlowBaseLayer
+          viewId={viewId}
+          nodeTypes={nodeTypes}
+          pointerTracker={logics.pt}
+          viewport={viewport}
+          onContextMenu={handleContextualMenu}
+          onContextMenuNewEdge={handleContextualMenuNewEdge}
+        />
+
+        {/* module defined layers - inactive by default */}
+        {layersProviders?.map((provider) => (
+          <div
+            key={provider.id}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              pointerEvents: 'none',
+              zIndex: provider.zIndexHint ?? 1,
+            }}
+          >
+            <provider.Component
+              viewId={viewId}
+              active={false}
+              viewport={viewport}
+            />
+          </div>
+        ))}
+
+        <AvatarsRenderer avatarsStore={logics.as} />
+
+        {renderForm}
+      </div>
+
+      <ContextualMenu
+        triggerRef={ContextualMenuTriggerRef}
+        entries={() =>
+          spaceMenuEntries({
+            viewId,
+            from,
+            sharedData: sdm.getData(),
+            position: () => rcc.current,
+            renderForm: setRenderForm,
+            renderPanel: openPanel,
+            closePanel,
+            dispatcher,
+          })
+        }
+      />
+    </>
+  );
+};
+
+/**
+ * #########################################################
+ * ReactFlowContent
+ * @param param0
+ * @returns
+ */
+
+const ReactFlowBaseLayer = ({
+  viewId,
+  nodeTypes,
+  pointerTracker,
+  viewport,
+  onContextMenu,
+  onContextMenuNewEdge,
+}: {
+  viewId: string;
+  nodeTypes: TNodeTypes;
+  pointerTracker: PointerTracker;
+  viewport: LayerViewportAdapter;
+  onContextMenu: (xy: TPosition, clientPosition: TPosition) => void;
+  onContextMenuNewEdge: (
+    from: TEdgeEnd,
+    xy: TPosition,
+    clientPosition: TPosition
+  ) => void;
+}) => {
+  //
+
+  const dispatcher = useDispatcher<TEventEdgePropertyChange | TEventNewEdge>();
+
+  const onDrop = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ({ data, position }: { data: any; position: TPosition }) => {
+      dispatcher.dispatch({ ...data, origin: { position, viewId } });
+    },
+    [dispatcher, viewId]
+  );
+
+  const onConnect = useCallback(
+    (edge: TEdge) => {
+      dispatcher.dispatch({
+        type: 'core:new-edge',
+        edge,
+      });
+    },
+    [dispatcher]
+  );
+
+  /**
+   * Modes state
+   */
+
+  const [mode, setMode] = useState<WhiteboardMode>('default');
 
   // Toggle pan-only mode with Shift+Z
   useHotkeys(
@@ -228,41 +397,9 @@ export const HolistixSpace = ({
     }
   );
 
-  // Toggle drawing mode with Shift+D
-  useHotkeys(
-    'shift+d',
-    () => {
-      setMode(mode === 'drawing' ? 'default' : 'drawing');
-    },
-    {
-      preventDefault: true,
-    }
-  );
-
-  // Viewport synchronization logic
-  const onViewportChange = useCallback((newViewport: Viewport) => {
-    if (
-      newViewport.absoluteX !== lastViewportRef.current.absoluteX ||
-      newViewport.absoluteY !== lastViewportRef.current.absoluteY ||
-      newViewport.zoom !== lastViewportRef.current.zoom
-    ) {
-      lastViewportRef.current = newViewport;
-      logics.pt.onMove(newViewport);
-      logics.as.updateAllAvatars();
-      viewportChangeCallbacks.current.forEach((callback) => {
-        callback(newViewport);
-      });
-    }
-  }, []);
-
-  const registerViewportChangeCallback = useCallback(
-    (callback: (viewport: Viewport) => void) => {
-      viewportChangeCallbacks.current.push(callback);
-    },
-    []
-  );
-
-  //
+  /**
+   * Edge menu logics
+   */
 
   const [edgeMenu, _setEdgeMenu] = useState<{
     edgeId: string;
@@ -301,6 +438,7 @@ export const HolistixSpace = ({
           const gv: TGraphView = sdc.graphViews.get(viewId);
           const e = gv.graph.edges.find((e) => edgeId(e) === event.edgeId);
           if (e) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (e as any).renderProps = event.properties.renderProps;
           }
         },
@@ -319,324 +457,64 @@ export const HolistixSpace = ({
         });
       }
     },
-    [dispatcher, edgeMenu]
+    [edgeMenu]
   );
 
   const resetEdgeMenu = useCallback(() => {
     _setEdgeMenu(null);
-  }, [setEdgeMenu]);
-
-  // Resize handlers
-  const handleResizeStart = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
   }, []);
 
-  const handleResizeMove = useCallback(
-    (e: MouseEvent) => {
-      if (!isResizing) return;
+  /**
+   * Space context
+   */
 
-      const containerWidth = window.innerWidth;
-      const newWidth = (e.clientX / containerWidth) * 100;
+  const sdm = useShareDataManager<TSpaceSharedData & TCoreSharedData>();
 
-      // Clamp between 20% and 80%
-      const clampedWidth = Math.max(20, Math.min(80, newWidth));
-
-      setRightPanelWidth(100 - clampedWidth);
-    },
-    [isResizing]
-  );
-
-  const handleResizeEnd = useCallback(() => {
-    setIsResizing(false);
-  }, []);
-
-  // Add/remove global mouse event listeners
-  useEffect(() => {
-    if (isResizing) {
-      document.addEventListener('mousemove', handleResizeMove);
-      document.addEventListener('mouseup', handleResizeEnd);
-    }
-    return () => {
-      document.removeEventListener('mousemove', handleResizeMove);
-      document.removeEventListener('mouseup', handleResizeEnd);
-    };
-  }, [isResizing, handleResizeMove, handleResizeEnd]);
-
-  //
+  const ss = useMemo(() => new CollabSpaceState(viewId, sdm), [viewId, sdm]);
 
   const context = useMemo(
     () => ({
-      spaceState: logics.ss,
-      currentUser: awareness._user || undefined,
+      spaceState: ss,
       mode,
       viewId,
       edgeMenu,
       setEdgeMenu,
       resetEdgeMenu,
     }),
-    [mode, edgeMenu, setEdgeMenu, resetEdgeMenu]
+    [ss, mode, viewId, edgeMenu, setEdgeMenu, resetEdgeMenu]
   );
 
-  const [renderForm, setRenderForm] = useState<ReactNode | null>(null);
+  const Node = useMemo(() => makeSpaceNode(nodeTypes), [nodeTypes]);
 
-  const [panels, setPanels] = useState<TPanel[]>([]);
-
-  const renderPanel = useCallback((panel: TPanel) => {
-    setPanels((panels) => [...panels, panel]);
-  }, []);
-
-  const closePanel = useCallback((uuid: string) => {
-    setPanels((panels) => panels.filter((p) => p.uuid !== uuid));
-  }, []);
-
-
-  const UnknownPanel = ({type}: {type: string}) => {
-    return <div>Unknown Panel [{type}]</div>;
-  };
-
-  const Panel =
-    panels.length > 0
-      ? panelsDefs?.[panels[panels.length - 1].type] ?? (() => <UnknownPanel type={panels[panels.length - 1].type} />)
-      : () => <UnknownPanel type="unknown" />;
-
-  /**
-   *
-   */
-
+  //
   return (
-    <SpaceContext value={context}>
-      <div style={{ display: 'flex', height: '100%', width: '100%' }}>
-        <div
-          className={`demiurge-space ${mode}`}
-          style={{
-            flex: 1,
-            width: `${100 - rightPanelWidth}%`,
-            height: '100%',
-            position: 'relative',
-          }}
-          ref={logics.pt.bindDiv.bind(logics.pt)}
-          onWheelCapture={(e) => {
-            // Stop Excalidraw scroll wich pane toward bottom instead of zooming
-            mode === 'drawing' && e.stopPropagation();
-          }}
-          onMouseMove={logics.pt.onPaneMouseMove.bind(logics.pt)}
-          onMouseLeave={logics.pt.setPointerInactive.bind(logics.pt)}
-        >
-          <ExcalidrawLayer
-            viewId={viewId}
-            mode={mode}
-            onViewportChange={onViewportChange}
-            registerViewportChangeCallback={registerViewportChangeCallback}
-          />
-          <ReactflowLayer
-            mode={mode}
-            viewId={viewId}
-            nodeComponent={logics.Node}
-            edgeComponent={CustomStoryEdge}
-            spaceState={logics.ss}
-            pointerTracker={logics.pt}
-            avatarsStore={logics.as}
-            onContextMenu={handleContextualMenu}
-            onContextMenuNewEdge={handleContextualMenuNewEdge}
-            onConnect={onConnect}
-            onDrop={onDrop}
-            onViewportChange={onViewportChange}
-            registerViewportChangeCallback={registerViewportChangeCallback}
-          />
-          <AvatarsRenderer avatarsStore={logics.as} />
-          {edgeMenu && (
-            <EdgeMenu
-              eid={edgeMenu.edgeId}
-              position={[edgeMenu.x, edgeMenu.y]}
-              setRenderProps={handleRenderPropsChange}
-            />
-          )}
-
-          {renderForm}
-
-          <ModeIndicator
-            mode={mode}
-            onModeChange={setMode}
-            onContextMenu={handleContextualMenu}
-            lastViewportRef={lastViewportRef}
-          />
-        </div>
-
-        {/* Resize handle */}
-        {panels.length > 0 && (
-          <>
-            <div
-              style={{
-                width: '2px',
-                backgroundColor: isResizing ? '#007acc' : 'var(--c-pink-4)',
-                cursor: 'col-resize',
-                position: 'relative',
-                zIndex: 10,
-              }}
-              onMouseDown={handleResizeStart}
-            >
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  width: '2px',
-                  height: '20px',
-                  backgroundColor: isResizing ? '#007acc' : '#999',
-                  borderRadius: '1px',
-                }}
-              />
-            </div>
-
-            <div
-              style={{
-                width: `${rightPanelWidth}%`,
-                height: '100%',
-                overflow: 'auto',
-              }}
-            >
-              <Panel
-                panel={panels[panels.length - 1]}
-                closePanel={closePanel}
-              />
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '10px',
-                  right: '10px',
-                  width: '20px',
-                  height: '20px',
-                  backgroundColor: 'var(--c-pink-4)',
-                  cursor: 'pointer',
-                  borderRadius: '3px',
-                }}
-                onClick={() => setPanels(panels.slice(0, -1))}
-              >
-                <icons.Close style={{ width: '20px', height: '20px' }} />
-              </div>
-            </div>
-          </>
-        )}
-
-        <ContextualMenu
-          triggerRef={ContextualMenuTriggerRef}
-          entries={() =>
-            spaceMenuEntries({
-              viewId,
-              from,
-              sharedData: sdm.getData(),
-              position: () => rcc.current,
-              renderForm: setRenderForm,
-              renderPanel,
-              closePanel,
-              dispatcher,
-            })
-          }
+    <ReactflowLayerContext value={context}>
+      <ReactflowLayer
+        mode={mode}
+        viewId={viewId}
+        nodeComponent={Node}
+        edgeComponent={CustomStoryEdge}
+        spaceState={ss}
+        pointerTracker={pointerTracker}
+        onContextMenu={onContextMenu}
+        onContextMenuNewEdge={onContextMenuNewEdge}
+        onConnect={onConnect}
+        onDrop={onDrop}
+        viewport={viewport}
+      />
+      <ModeIndicator
+        mode={mode}
+        onModeChange={setMode}
+        onContextMenu={onContextMenu}
+        getViewport={viewport.getViewport}
+      />
+      {edgeMenu && (
+        <EdgeMenu
+          eid={edgeMenu.edgeId}
+          position={[edgeMenu.x, edgeMenu.y]}
+          setRenderProps={handleRenderPropsChange}
         />
-      </div>
-    </SpaceContext>
-  );
-};
-
-//
-//
-//
-
-export const ModeIndicator = ({
-  mode,
-  onModeChange,
-  onContextMenu,
-  lastViewportRef,
-}: {
-  mode: WhiteboardMode;
-  onModeChange: (mode: WhiteboardMode) => void;
-  lastViewportRef: React.MutableRefObject<Viewport>;
-  onContextMenu: (xy: TPosition, clientPosition: TPosition) => void;
-}) => {
-  const modes: { key: WhiteboardMode; label: string }[] = [
-    { key: 'default', label: 'Normal' },
-    { key: 'drawing', label: 'Drawing' },
-    { key: 'move-node', label: 'Move Node' },
-  ];
-
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        bottom: '10px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        display: 'flex',
-        gap: '8px',
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        borderRadius: '5px',
-        zIndex: 5,
-        overflow: 'hidden',
-      }}
-    >
-      {modes.map((m) => (
-        <button
-          key={m.key}
-          onClick={() => onModeChange(m.key)}
-          style={{
-            background: mode === m.key ? '#fff' : 'transparent',
-            color: mode === m.key ? '#222' : '#fff',
-            border: 'none',
-            padding: '0px 10px',
-            fontWeight: mode === m.key ? 'bold' : 'normal',
-            cursor: 'pointer',
-            outline: 'none',
-            transition: 'background 0.2s, color 0.2s',
-            fontSize: '10px',
-            height: '30px',
-          }}
-        >
-          {m.label}
-        </button>
-      ))}
-
-      <button
-        onClick={() => {
-          const obj = {
-            ww: window.innerWidth,
-            wh: window.innerHeight,
-            zoom: lastViewportRef.current.zoom,
-            absX: lastViewportRef.current.absoluteX,
-            absY: lastViewportRef.current.absoluteY,
-            resX:
-              -lastViewportRef.current.absoluteX +
-              window.innerWidth / 2 / lastViewportRef.current.zoom,
-            resY:
-              -lastViewportRef.current.absoluteY +
-              window.innerHeight / 2 / lastViewportRef.current.zoom,
-          };
-
-          onContextMenu(
-            {
-              x: obj.resX,
-              y: obj.resY,
-            },
-            { x: window.innerWidth / 2, y: window.innerHeight / 2 }
-          );
-        }}
-        style={{
-          background: 'transparent',
-          color: '#fff',
-          border: 'none',
-          padding: '0px 10px',
-          fontWeight: 'normal',
-          cursor: 'pointer',
-          outline: 'none',
-          transition: 'background 0.2s, color 0.2s',
-          fontSize: '10px',
-          height: '30px',
-          borderLeft: '1px solid rgba(255, 255, 255, 0.2)',
-        }}
-      >
-        +
-      </button>
-    </div>
+      )}
+    </ReactflowLayerContext>
   );
 };

@@ -7,7 +7,6 @@ import { WhiteboardMode } from './holistix-space';
 
 export type TSpaceContext = {
   spaceState: SpaceState;
-  currentUser?: { username: string; color: string };
   mode: WhiteboardMode;
   viewId: string;
   edgeMenu: {
@@ -25,7 +24,7 @@ const spaceContext = createContext<TSpaceContext | null>(null);
 
 //
 
-export const SpaceContext = ({
+export const ReactflowLayerContext = ({
   value,
   children,
 }: { value: TSpaceContext } & { children: ReactNode }) => {

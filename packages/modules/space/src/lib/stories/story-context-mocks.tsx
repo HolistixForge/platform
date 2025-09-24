@@ -12,7 +12,10 @@ import {
   moduleFrontend as coreFrontend,
 } from '@monorepo/core';
 
-import { SpaceContext, TSpaceContext } from '../components/spaceContext';
+import {
+  ReactflowLayerContext,
+  TSpaceContext,
+} from '../components/reactflow-layer-context';
 import { TNodeContext } from '../components/apis/types/node';
 import { TSpaceSharedData } from '../space-shared-model';
 import { CollabSpaceState } from '../components/collab-space-state';
@@ -153,7 +156,11 @@ export const StoryMockSpaceContext = ({
 
   // useRegisterListener(context.spaceState);
 
-  return <SpaceContext value={{ ...context }}>{children}</SpaceContext>;
+  return (
+    <ReactflowLayerContext value={{ ...context }}>
+      {children}
+    </ReactflowLayerContext>
+  );
 };
 
 //

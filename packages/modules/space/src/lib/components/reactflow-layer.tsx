@@ -22,6 +22,8 @@ import {
   useReactFlow,
 } from '@xyflow/react';
 import * as _ from 'lodash';
+
+import { LayerViewport, LayerViewportAdapter } from '@monorepo/module/frontend';
 import { useRegisterListener } from '@monorepo/simple-types';
 import { clientXY } from '@monorepo/ui-toolkit';
 import { TPosition, TEdge, TEdgeEnd, EEdgeSemanticType } from '@monorepo/core';
@@ -34,18 +36,17 @@ import {
 import { PointerTracker } from './PointerTracker';
 import { NodeWrapper } from './node-wrappers/node-wrapper';
 import { SpaceState } from './apis/spaceState';
-import { HtmlAvatarStore } from './htmlAvatarStore';
 import { translateEdges, translateNodes } from './to-rf-nodes';
 import { TSpaceEvent } from '../space-events';
 import { getAbsolutePosition } from '../utils/position-utils';
 import { TSpaceSharedData } from '../space-shared-model';
-import { Viewport, INITIAL_VIEWPORT, WhiteboardMode } from './holistix-space';
+import { INITIAL_VIEWPORT, WhiteboardMode } from './holistix-space';
+import { useSpaceContext } from './reactflow-layer-context';
 
-import { useSpaceContext } from './spaceContext';
 //
 //
 
-const toReactFlowViewport = (viewport: Viewport) => {
+const toReactFlowViewport = (viewport: LayerViewport) => {
   return {
     x: viewport.absoluteX * viewport.zoom,
     y: viewport.absoluteY * viewport.zoom,
@@ -63,7 +64,6 @@ export type ReactflowLayerProps = {
   edgeComponent: FC<EdgeProps>;
   spaceState: SpaceState;
   pointerTracker: PointerTracker;
-  avatarsStore: HtmlAvatarStore;
   onContextMenu: (xy: TPosition, clientPosition: TPosition) => void;
   onContextMenuNewEdge: (
     from: TEdgeEnd,
@@ -72,10 +72,7 @@ export type ReactflowLayerProps = {
   ) => void;
   onConnect: (edge: TEdge) => void;
   onDrop: ({ data, position }: { data: any; position: TPosition }) => void;
-  onViewportChange: (viewport: Viewport) => void;
-  registerViewportChangeCallback: (
-    callback: (viewport: Viewport) => void
-  ) => void;
+  viewport: LayerViewportAdapter;
 };
 
 /**
@@ -90,9 +87,7 @@ export const ReactflowLayer = ({
   edgeComponent,
   spaceState,
   pointerTracker,
-  avatarsStore,
-  onViewportChange,
-  registerViewportChangeCallback,
+  viewport: viewportAdapter,
   onContextMenu,
   onContextMenuNewEdge,
   onConnect,
@@ -192,7 +187,7 @@ export const ReactflowLayer = ({
         onContextMenuNewEdge(connectingNodeId.current, p, pclient);
       }
     },
-    [onContextMenuNewEdge]
+    [onContextMenuNewEdge, pointerTracker]
   );
 
   //
@@ -250,7 +245,7 @@ export const ReactflowLayer = ({
         position: node.position,
       });
     },
-    []
+    [createEventSequence, spaceState, viewId]
   );
 
   const onNodeDragStop = useCallback(
@@ -270,7 +265,7 @@ export const ReactflowLayer = ({
         moveNodeEventSequenceRef.current = null;
       }
     },
-    []
+    [viewId]
   );
 
   //
@@ -280,16 +275,16 @@ export const ReactflowLayer = ({
    */
   const _onMove = useCallback(
     (event: any, viewport: ReactFlowViewport) => {
-      onViewportChange({
+      viewportAdapter.onViewportChange({
         absoluteX: viewport.x / viewport.zoom,
         absoluteY: viewport.y / viewport.zoom,
         zoom: viewport.zoom,
       });
     },
-    [avatarsStore, onViewportChange]
+    [viewportAdapter]
   );
 
-  const setViewport = useCallback((viewport: Viewport) => {
+  const setViewport = useCallback((viewport: LayerViewport) => {
     if (reactflowRef.current) {
       const vp = toReactFlowViewport(viewport);
       reactflowRef.current.setViewport(vp);
@@ -297,8 +292,8 @@ export const ReactflowLayer = ({
   }, []);
 
   useEffect(() => {
-    registerViewportChangeCallback(setViewport);
-  }, []);
+    viewportAdapter.registerViewportChangeCallback(setViewport);
+  }, [viewportAdapter, setViewport]);
 
   //
 
@@ -314,18 +309,21 @@ export const ReactflowLayer = ({
     []
   );
 
-  const handleDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const pclient = clientXY(event);
-    const p = pointerTracker.fromMouseEvent(pclient);
-    try {
-      const jsonData = event.dataTransfer.getData('application/json');
-      const data = JSON.parse(jsonData);
-      onDrop?.({ data, position: p });
-    } catch (err) {
-      console.error('Drop error:', err);
-    }
-  }, []);
+  const handleDrop = useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      const pclient = clientXY(event);
+      const p = pointerTracker.fromMouseEvent(pclient);
+      try {
+        const jsonData = event.dataTransfer.getData('application/json');
+        const data = JSON.parse(jsonData);
+        onDrop?.({ data, position: p });
+      } catch (err) {
+        console.error('Drop error:', err);
+      }
+    },
+    [onDrop, pointerTracker]
+  );
 
   /**
    * capture the pointer coordinates in the canvas when user right click on background
@@ -337,7 +335,7 @@ export const ReactflowLayer = ({
       onContextMenu(p, pclient);
       event.preventDefault();
     },
-    [onContextMenu]
+    [onContextMenu, pointerTracker]
   );
 
   //
@@ -360,7 +358,7 @@ export const ReactflowLayer = ({
       event.preventDefault();
       resetEdgeMenu();
     },
-    [awareness, resetEdgeMenu]
+    [awareness, resetEdgeMenu, viewId]
   );
 
   //
@@ -372,10 +370,13 @@ export const ReactflowLayer = ({
   return (
     <ReactFlow
       className="coucou"
-      style={{
-        // zIndex: 42, // overrided to 0 by reactflow implementation !
-        pointerEvents: mode !== 'drawing' ? 'all' : 'none',
-      }}
+      style={
+        {
+          // zIndex: 42, // overrided to 0 by reactflow implementation !
+          // todo: excalidraw as a module: remove this
+          // pointerEvents: mode !== 'drawing' ? 'all' : 'none',
+        }
+      }
       defaultViewport={toReactFlowViewport(INITIAL_VIEWPORT)}
       maxZoom={1}
       minZoom={0.001}
@@ -413,7 +414,7 @@ const ReactflowInstanceSetter = forwardRef<ReactFlowInstance, unknown>(
       if (ref && 'current' in ref) {
         ref.current = reactflowInstance;
       }
-    }, [reactflowInstance]);
+    }, [reactflowInstance, ref]);
     return null;
   }
 );

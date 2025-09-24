@@ -21,6 +21,8 @@ const panelsDefs = modules.reduce((acc, module) => {
   return { ...acc, ...module.panels };
 }, {});
 
+const layersProviders = modules.flatMap((m) => m.layers || []);
+
 /**
  *
  */
@@ -34,6 +36,7 @@ export const NodeEditorView = ({ viewId }: { viewId: string }) => {
         nodeTypes={nodeTypes}
         spaceMenuEntries={spaceMenuEntries}
         panelsDefs={panelsDefs}
+        layersProviders={layersProviders}
       />
     </div>
   );

@@ -26,7 +26,7 @@ import {
 
 import { TNodeContext } from '../apis/types/node';
 import { SelectionsAwareness } from './selection-awareness';
-import { useSpaceContext } from '../spaceContext';
+import { useSpaceContext } from '../reactflow-layer-context';
 import { isNodeOpened, TNodeViewStatus } from '../../space-types';
 import { SpaceNode } from '../to-rf-nodes';
 import { DisableZoomDragPan } from './disable-zoom-drag-pan';
@@ -116,7 +116,7 @@ export const NodeWrapper =
 
     const dispatcher = useDispatcher<TSpaceEvent>();
 
-    const { currentUser, mode, viewId } = useSpaceContext();
+    const { mode, viewId } = useSpaceContext();
 
     const { awareness } = useAwareness();
 
@@ -146,9 +146,11 @@ export const NodeWrapper =
 
     // is this object selected on this view by current user ?
     const selected =
-      currentUser &&
+      awareness.getUser() &&
       selectingUsers.find(
-        (u) => u.user.username === currentUser.username && u.viewId === viewId
+        (u) =>
+          u.user.username === awareness.getUser().username &&
+          u.viewId === viewId
       )
         ? true
         : false;
