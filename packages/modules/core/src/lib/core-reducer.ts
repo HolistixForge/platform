@@ -6,8 +6,11 @@ import {
   TEventDeleteNode,
   TEventNewEdge,
   TEventDeleteEdge,
+  TEventLoad,
 } from './core-events';
 import { TCoreSharedData } from './core-shared-model';
+import { GATEWAY_INACIVITY_SHUTDOWN_DELAY } from './meta-reducer';
+import { inSeconds } from '@monorepo/simple-types';
 //
 
 type ReducedEvents = TCoreEvent;
@@ -37,6 +40,9 @@ export class CoreReducer extends Reducer<
 
   reduce(g: Ra<ReducedEvents>): Promise<void> {
     switch (g.event.type) {
+      case 'core:load':
+        return this._load(g as Ra<TEventLoad>);
+
       case 'core:new-node':
         return this._newNode(g as Ra<TEventNewNode>);
 
@@ -52,6 +58,29 @@ export class CoreReducer extends Reducer<
       default:
         return Promise.resolve();
     }
+  }
+
+  /**
+   *
+   */
+
+  async _load(g: Ra<TEventLoad>) {
+    const disable_gateway_shutdown =
+      g.sd.meta.get('meta')?.projectActivity.disable_gateway_shutdown || false;
+
+    const newMeta = {
+      projectActivity: {
+        last_activity: new Date().toISOString(),
+        gateway_shutdown: inSeconds(
+          GATEWAY_INACIVITY_SHUTDOWN_DELAY,
+          new Date()
+        ).toISOString(),
+        disable_gateway_shutdown,
+      },
+    };
+
+    g.sd.meta.set('meta', newMeta);
+    return Promise.resolve();
   }
 
   /**

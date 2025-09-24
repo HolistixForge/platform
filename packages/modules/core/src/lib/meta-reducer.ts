@@ -73,7 +73,6 @@ export class MetaReducer extends Reducer<
       const meta = g.sd.meta.get('meta');
       if (meta) {
         meta.projectActivity.disable_gateway_shutdown = true;
-        console.log('#####---> core:disable-gateway-shutdown: meta', meta);
         g.sd.meta.set('meta', meta);
       }
     }
@@ -103,8 +102,6 @@ const rearmGatewayTimer = (meta: SharedMap<TProjectMeta>, last?: Date) => {
           curMeta.projectActivity.disable_gateway_shutdown,
       },
     };
-
-    console.log('#####---> rearmGatewayTimer: meta', newMeta);
 
     meta.set('meta', newMeta);
   }
