@@ -20,11 +20,13 @@ import {
   FinalConnectionState,
   ReactFlowInstance,
   useReactFlow,
+  OnConnectStart,
+  OnNodeDrag,
+  OnMove,
 } from '@xyflow/react';
-import * as _ from 'lodash';
 
 import { LayerViewport, LayerViewportAdapter } from '@monorepo/module/frontend';
-import { useRegisterListener } from '@monorepo/simple-types';
+import { TJsonObject, useRegisterListener } from '@monorepo/simple-types';
 import { clientXY } from '@monorepo/ui-toolkit';
 import { TPosition, TEdge, TEdgeEnd, EEdgeSemanticType } from '@monorepo/core';
 import {
@@ -40,7 +42,7 @@ import { translateEdges, translateNodes } from './to-rf-nodes';
 import { TSpaceEvent } from '../space-events';
 import { getAbsolutePosition } from '../utils/position-utils';
 import { TSpaceSharedData } from '../space-shared-model';
-import { INITIAL_VIEWPORT, WhiteboardMode } from './holistix-space';
+import { INITIAL_VIEWPORT } from './holistix-space';
 import { useSpaceContext } from './reactflow-layer-context';
 
 //
@@ -59,7 +61,7 @@ const toReactFlowViewport = (viewport: LayerViewport) => {
 
 export type ReactflowLayerProps = {
   viewId: string;
-  mode: WhiteboardMode;
+  active: boolean;
   nodeComponent: FC;
   edgeComponent: FC<EdgeProps>;
   spaceState: SpaceState;
@@ -71,7 +73,13 @@ export type ReactflowLayerProps = {
     clientPosition: TPosition
   ) => void;
   onConnect: (edge: TEdge) => void;
-  onDrop: ({ data, position }: { data: any; position: TPosition }) => void;
+  onDrop: ({
+    data,
+    position,
+  }: {
+    data: TJsonObject;
+    position: TPosition;
+  }) => void;
   viewport: LayerViewportAdapter;
 };
 
@@ -82,7 +90,7 @@ export type ReactflowLayerProps = {
 
 export const ReactflowLayer = ({
   viewId,
-  mode,
+  active,
   nodeComponent,
   edgeComponent,
   spaceState,
@@ -110,7 +118,7 @@ export const ReactflowLayer = ({
 
   const nodeTypes: NodeTypes = useMemo(
     () => ({
-      wrapper: NodeWrapper(nodeComponent) as any,
+      wrapper: NodeWrapper(nodeComponent) as FC,
     }),
     [nodeComponent]
   );
@@ -162,11 +170,11 @@ export const ReactflowLayer = ({
   /** we store the connector from wich an edge is draw to attach new node when
    * user will mouseup. */
 
-  const onConnectStart = useCallback((_: any, p: any) => {
+  const onConnectStart: OnConnectStart = useCallback((_, p) => {
     const { nodeId, handleId, handleType } = p;
     if (handleType === 'source')
       connectingNodeId.current = {
-        node: nodeId,
+        node: nodeId || '',
         connectorName: handleId || '',
       };
     else connectingNodeId.current = null;
@@ -193,8 +201,8 @@ export const ReactflowLayer = ({
   //
   //
 
-  const onNodeDrag = useCallback(
-    (event: React.MouseEvent, node: Node, nodes: Node[]) => {
+  const onNodeDrag: OnNodeDrag = useCallback(
+    (event, node, nodes) => {
       const n = spaceState.getNodes().find((n) => n.id === node.id);
       if (!n) return;
 
@@ -202,12 +210,12 @@ export const ReactflowLayer = ({
       if (!moveNodeEventSequenceRef.current) {
         moveNodeEventSequenceRef.current = createEventSequence({
           localReduceUpdateKeys: ['graphViews'],
-          localReduce: (sdc, event) => {
+          localReduce: (sdc: TSpaceSharedData, event) => {
             // define the local state override applied to shared state locally during the sequence life
             const gv = sdc.graphViews.get(viewId);
-            const draggedNode = gv.graph.nodes.find(
-              (n: any) => n.id === node.id
-            );
+            if (!gv) return;
+
+            const draggedNode = gv.graph.nodes.find((n) => n.id === node.id);
 
             if (draggedNode) {
               // if action is done and node has a group id, return.
@@ -273,8 +281,8 @@ export const ReactflowLayer = ({
   /**
    * This event handler is called while the user is either panning or zooming the viewport.
    */
-  const _onMove = useCallback(
-    (event: any, viewport: ReactFlowViewport) => {
+  const _onMove: OnMove = useCallback(
+    (event, viewport: ReactFlowViewport) => {
       viewportAdapter.onViewportChange({
         absoluteX: viewport.x / viewport.zoom,
         absoluteY: viewport.y / viewport.zoom,
@@ -297,10 +305,10 @@ export const ReactflowLayer = ({
 
   //
 
-  const handleDragOver = useCallback(
+  const handleDragOver: React.DragEventHandler<HTMLDivElement> = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       event.preventDefault();
-      const targetIsPane = (event as any).target.classList.contains(
+      const targetIsPane = (event.target as HTMLElement).classList.contains(
         'react-flow__pane'
       );
       if (targetIsPane) event.dataTransfer.dropEffect = 'move';
@@ -369,14 +377,9 @@ export const ReactflowLayer = ({
 
   return (
     <ReactFlow
-      className="coucou"
-      style={
-        {
-          // zIndex: 42, // overrided to 0 by reactflow implementation !
-          // todo: excalidraw as a module: remove this
-          // pointerEvents: mode !== 'drawing' ? 'all' : 'none',
-        }
-      }
+      style={{
+        pointerEvents: active ? 'all' : 'none',
+      }}
       defaultViewport={toReactFlowViewport(INITIAL_VIEWPORT)}
       maxZoom={1}
       minZoom={0.001}

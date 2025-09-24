@@ -284,6 +284,7 @@ const HolistixSpaceWhiteboard = ({
           viewport={viewport}
           onContextMenu={handleContextualMenu}
           onContextMenuNewEdge={handleContextualMenuNewEdge}
+          active={true} // TODO: get active layer from layersProviders
         />
 
         {/* module defined layers - inactive by default */}
@@ -346,6 +347,7 @@ const ReactFlowBaseLayer = ({
   viewport,
   onContextMenu,
   onContextMenuNewEdge,
+  active,
 }: {
   viewId: string;
   nodeTypes: TNodeTypes;
@@ -357,6 +359,7 @@ const ReactFlowBaseLayer = ({
     xy: TPosition,
     clientPosition: TPosition
   ) => void;
+  active: boolean;
 }) => {
   //
 
@@ -490,7 +493,7 @@ const ReactFlowBaseLayer = ({
   return (
     <ReactflowLayerContext value={context}>
       <ReactflowLayer
-        mode={mode}
+        active={active}
         viewId={viewId}
         nodeComponent={Node}
         edgeComponent={CustomStoryEdge}
