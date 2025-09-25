@@ -268,11 +268,45 @@ const HolistixSpaceWhiteboard = ({
   const [showLayersPanel, setShowLayersPanel] = useState<boolean>(true);
 
   return (
-    <>
+    <div style={{ display: 'flex', height: '100%' }}>
+      <div
+        style={{
+          flex: '0 0 ' + (showLayersPanel ? '240px' : '24px'),
+          transition: 'flex 120ms ease',
+          background: 'var(--c-blue-61)',
+          border: '1px solid var(--color-border, #e5e7eb)',
+          borderRadius: 6,
+          overflow: 'hidden',
+          zIndex: 20,
+          display: 'flex',
+        }}
+      >
+        <div style={{ flex: 1, display: showLayersPanel ? 'block' : 'none' }}>
+          <LayersTreePanel
+            providers={layersProviders || []}
+            activateLayer={activateLayer}
+            activeLayerId={activeLayerId}
+          />
+        </div>
+        <button
+          title={showLayersPanel ? 'Collapse' : 'Expand'}
+          onClick={() => setShowLayersPanel((v) => !v)}
+          style={{
+            width: 24,
+            border: 'none',
+            background: 'transparent',
+            cursor: 'pointer',
+            borderLeft: '1px solid var(--color-border, #e5e7eb)',
+          }}
+        >
+          {showLayersPanel ? '<' : '>'}
+        </button>
+      </div>
+
       <div
         className={`holistix-space-whiteboard`}
         style={{
-          width: '100%',
+          flex: '1 1 auto',
           height: '100%',
           position: 'relative',
         }}
@@ -280,51 +314,6 @@ const HolistixSpaceWhiteboard = ({
         onMouseMove={logics.pt.onPaneMouseMove.bind(logics.pt)}
         onMouseLeave={logics.pt.setPointerInactive.bind(logics.pt)}
       >
-        {/* Floating Layers panel (left) */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 8,
-            left: 16,
-            bottom: 140,
-            width: showLayersPanel ? 240 : 24,
-            transition: 'width 120ms ease',
-            background: 'var(--c-blue-61)',
-            border: '1px solid var(--color-border, #e5e7eb)',
-            borderRadius: 6,
-            overflow: 'hidden',
-            zIndex: 20,
-            display: 'flex',
-          }}
-        >
-          <div style={{ flex: 1, display: showLayersPanel ? 'block' : 'none' }}>
-            <LayersTreePanel
-              providers={layersProviders || []}
-              activateLayer={activateLayer}
-              activeLayerId={activeLayerId}
-            />
-          </div>
-          <button
-            title={showLayersPanel ? 'Collapse' : 'Expand'}
-            onClick={() => setShowLayersPanel((v) => !v)}
-            style={{
-              width: 24,
-              border: 'none',
-              background: 'transparent',
-              cursor: 'pointer',
-              borderLeft: '1px solid var(--color-border, #e5e7eb)',
-            }}
-          >
-            {showLayersPanel ? '<' : '>'}
-          </button>
-        </div>
-
-        {/* <ExcalidrawLayer
-          viewId={viewId}          
-          onViewportChange={onViewportChange}
-          registerViewportChangeCallback={registerViewportChangeCallback}
-        /> */}
-
         <ReactFlowBaseLayer
           viewId={viewId}
           nodeTypes={nodeTypes}
@@ -377,7 +366,7 @@ const HolistixSpaceWhiteboard = ({
           })
         }
       />
-    </>
+    </div>
   );
 };
 
