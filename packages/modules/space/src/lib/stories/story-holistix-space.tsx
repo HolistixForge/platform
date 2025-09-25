@@ -26,12 +26,17 @@ export const StoryHolistixSpace = (
 
   useEffect(() => {
     if (!view) {
-      dispatcher.dispatch({
-        type: 'space:new-view',
-        viewId: STORY_VIEW_ID,
-      });
+      (async () => {
+        await dispatcher.dispatch({
+          type: 'core:load',
+        });
+        await dispatcher.dispatch({
+          type: 'space:new-view',
+          viewId: STORY_VIEW_ID,
+        });
+      })();
     }
-  }, [view]);
+  }, [dispatcher, view]);
 
   if (!view) {
     return <div>Loading story space...</div>;

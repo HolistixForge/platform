@@ -380,6 +380,7 @@ export const ReactflowLayer = ({
       style={{
         pointerEvents: active ? 'all' : 'none',
       }}
+      className={active ? 'active' : ''}
       defaultViewport={toReactFlowViewport(INITIAL_VIEWPORT)}
       maxZoom={1}
       minZoom={0.001}

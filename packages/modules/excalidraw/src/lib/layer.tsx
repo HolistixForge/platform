@@ -17,6 +17,18 @@ import { TExcalidrawSharedData } from './excalidraw-shared-model';
 
 //
 
+// Excalidraw export helpers will be dynamically imported when needed
+type ExportToSvgArgs = {
+  elements: readonly OrderedExcalidrawElement[];
+  appState: Partial<AppState> & {
+    exportBackground?: boolean;
+    exportWithDarkMode?: boolean;
+  };
+  files: BinaryFiles;
+};
+
+//
+
 type ExcalidrawAPI = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateScene: (scene: any) => void;
@@ -55,8 +67,8 @@ function simpleHash(obj: TJsonObject[]): string {
 const appState = {
   viewModeEnabled: false,
   zenModeEnabled: false,
-  gridSize: undefined,
-  theme: 'light',
+  gridSize: undefined as number | undefined,
+  theme: 'light' as const,
   viewBackgroundColor: 'transparent',
 };
 
@@ -143,11 +155,11 @@ export const ExcalidrawLayerComponent: FC<{
   // Debounced function for setting drawing data
   const debouncedSetDrawing = useRef(
     debounce(
-      (elements: TJsonObject[], hash: string) => {
+      (elements: TJsonObject[], hash: string, svg: string) => {
         sharedData.excalidrawDrawing.set(nodeId, {
           elements,
           hash,
-          svg: 'TODO',
+          svg,
         });
       },
       250,
@@ -156,7 +168,7 @@ export const ExcalidrawLayerComponent: FC<{
   ).current;
 
   useEffect(() => {
-    // On mount, ensure drawing entry exists
+    // On mount, ensure drawing entry exists or initialize it
     const d = sharedData.excalidrawDrawing.get(nodeId);
     if (!d) {
       const elements: TJsonObject[] = [];
@@ -164,7 +176,7 @@ export const ExcalidrawLayerComponent: FC<{
       sharedData.excalidrawDrawing.set(nodeId, {
         elements,
         hash,
-        svg: 'TODO',
+        svg: '',
       });
       lastHashRef.current = hash;
     } else {
@@ -187,9 +199,9 @@ export const ExcalidrawLayerComponent: FC<{
   //
 
   const handleChange = useCallback(
-    (
+    async (
       elements: readonly OrderedExcalidrawElement[],
-      appState: AppState,
+      _appState: AppState,
       files: BinaryFiles
     ) => {
       const newHash = simpleHash(elements as unknown as TJsonObject[]);
@@ -197,7 +209,37 @@ export const ExcalidrawLayerComponent: FC<{
         return; // No actual change
       }
       lastHashRef.current = newHash as string;
-      debouncedSetDrawing(elements as unknown as TJsonObject[], newHash);
+
+      // Generate SVG using Excalidraw export helper (dynamic import)
+      let svgString = '';
+      try {
+        const { exportToSvg } = (await import(
+          '@excalidraw/excalidraw'
+        )) as unknown as {
+          exportToSvg: (args: ExportToSvgArgs) => Promise<SVGSVGElement>;
+        };
+        const currentAppState =
+          apiRef.current?.getAppState() || ({} as AppState);
+        const svgEl = await exportToSvg({
+          elements: elements as readonly OrderedExcalidrawElement[],
+          appState: {
+            ...currentAppState,
+            exportBackground: false,
+            exportWithDarkMode: false,
+          },
+          files,
+        });
+        svgString = new XMLSerializer().serializeToString(svgEl);
+      } catch (e) {
+        // best-effort; keep svg empty on failure
+        svgString = '';
+      }
+
+      debouncedSetDrawing(
+        elements as unknown as TJsonObject[],
+        newHash,
+        svgString
+      );
     },
     [debouncedSetDrawing]
   );
@@ -224,7 +266,6 @@ export const ExcalidrawLayerComponent: FC<{
   }, [debouncedSetDrawing]);
 
   //
-
   //
   //
   //
@@ -237,7 +278,10 @@ export const ExcalidrawLayerComponent: FC<{
     : { absoluteX: 0, absoluteY: 0, zoom: 1 };
 
   return (
-    <div style={{ position: 'absolute', inset: 0 }}>
+    <div
+      className="excalidraw-layer"
+      style={{ position: 'absolute', inset: 0 }}
+    >
       <Excalidraw
         excalidrawAPI={(api: ExcalidrawAPI) => {
           apiRef.current = api;
@@ -277,47 +321,3 @@ export const layers: TLayerProvider[] = [
     Component: ExcalidrawLayerComponent,
   },
 ];
-
-/*
-
-
-.demiurge-space {
-  &.default,
-  &.move-node {
-    // remove excalidraw controls
-    .layer-ui__wrapper {
-      display: none;
-    }
-
-    // remove minimap on small screens
-    @media (max-width: 640px) {
-      .react-flow__panel.react-flow__minimap.bottom.right {
-        display: none !important;
-      }
-    }
-
-    / *
-    .FixedSideContainer.FixedSideContainer_side_top {
-      display: none;
-    }
-    .layer-ui__wrapper__footer.App-menu.App-menu_bottom {
-      display: none;
-    }
-      * /
-}
-&.drawing {
-  // remove reactflow controls
-  .react-flow__panel.react-flow__controls.vertical.bottom.left {
-    display: none;
-  }
-  .react-flow__panel.react-flow__minimap.bottom.right {
-    display: none;
-  }
-}
-
-// remove excalidraw bottom bar on small screens
-.App-bottom-bar {
-  display: none;
-}
-}
-*/

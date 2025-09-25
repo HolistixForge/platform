@@ -3,6 +3,15 @@
   "include": [],
   "references": [
     {
+      "path": "../core"
+    },
+    {
+      "path": "../../frontend-data"
+    },
+    {
+      "path": "../../log"
+    },
+    {
       "path": "../../collab-engine"
     },
     {
@@ -10,6 +19,12 @@
     },
     {
       "path": "../module"
+    },
+    {
+      "path": "../space"
+    },
+    {
+      "path": "../../ui-base"
     },
     {
       "path": "./tsconfig.lib.json"
