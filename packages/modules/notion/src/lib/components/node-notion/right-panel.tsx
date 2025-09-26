@@ -24,8 +24,6 @@ export const NotionRightPanel = ({
 
   const [loaded, setLoaded] = useState(false);
 
-  console.log('db', { databaseId, db, sd });
-
   useEffect(() => {
     if (!loaded && db) {
       setLoaded(true);

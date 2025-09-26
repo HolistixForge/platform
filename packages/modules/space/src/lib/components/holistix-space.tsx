@@ -42,6 +42,7 @@ import { CustomStoryEdge } from './edge';
 import { RightPanels, usePanelContext } from './right-panels';
 import { ModeIndicator } from './ModeIndicator';
 import { LayersTreePanel } from './panels/layers-tree-panel';
+import { LayerContextProvider } from './layer-context';
 
 //
 
@@ -256,117 +257,124 @@ const HolistixSpaceWhiteboard = ({
   //
   //
 
-  const [activeLayerId, setActiveLayerId] = useState<string | null>(
-    'reactflow'
-  );
+  const [activeLayer, setActiveLayer] = useState({
+    layerId: 'reactflow',
+    payload: {},
+  });
 
-  const activateLayer = useCallback((layerId: string) => {
-    setActiveLayerId(layerId);
+  const activateLayer = useCallback((layerId: string, payload?: any) => {
+    setActiveLayer({ layerId, payload });
   }, []);
 
   const [renderForm, setRenderForm] = useState<ReactNode | null>(null);
   const [showLayersPanel, setShowLayersPanel] = useState<boolean>(true);
 
   return (
-    <div style={{ display: 'flex', height: '100%' }}>
-      <div
-        style={{
-          flex: '0 0 ' + (showLayersPanel ? '240px' : '24px'),
-          transition: 'flex 120ms ease',
-          background: 'var(--c-blue-61)',
-          border: '1px solid var(--color-border, #e5e7eb)',
-          borderRadius: 6,
-          overflow: 'hidden',
-          zIndex: 20,
-          display: 'flex',
-        }}
-      >
-        <div style={{ flex: 1, display: showLayersPanel ? 'block' : 'none' }}>
-          <LayersTreePanel
-            providers={layersProviders || []}
-            activateLayer={activateLayer}
-            activeLayerId={activeLayerId}
-          />
-        </div>
-        <button
-          title={showLayersPanel ? 'Collapse' : 'Expand'}
-          onClick={() => setShowLayersPanel((v) => !v)}
+    <LayerContextProvider
+      value={{
+        activeLayerId: activeLayer.layerId,
+        activeLayerPayload: activeLayer.payload,
+        activateLayer,
+      }}
+    >
+      <div style={{ display: 'flex', height: '100%' }}>
+        <div
           style={{
-            width: 24,
-            border: 'none',
-            background: 'transparent',
-            cursor: 'pointer',
-            borderLeft: '1px solid var(--color-border, #e5e7eb)',
+            flex: '0 0 ' + (showLayersPanel ? '240px' : '24px'),
+            transition: 'flex 120ms ease',
+            background: 'var(--c-blue-61)',
+            border: '1px solid var(--color-border, #e5e7eb)',
+            borderRadius: 6,
+            overflow: 'hidden',
+            zIndex: 20,
+            display: 'flex',
           }}
         >
-          {showLayersPanel ? '<' : '>'}
-        </button>
-      </div>
-
-      <div
-        className={`holistix-space-whiteboard`}
-        style={{
-          flex: '1 1 auto',
-          height: '100%',
-          position: 'relative',
-        }}
-        ref={logics.pt.bindDiv.bind(logics.pt)}
-        onMouseMove={logics.pt.onPaneMouseMove.bind(logics.pt)}
-        onMouseLeave={logics.pt.setPointerInactive.bind(logics.pt)}
-      >
-        <ReactFlowBaseLayer
-          viewId={viewId}
-          nodeTypes={nodeTypes}
-          pointerTracker={logics.pt}
-          viewport={viewport}
-          onContextMenu={handleContextualMenu}
-          onContextMenuNewEdge={handleContextualMenuNewEdge}
-          active={activeLayerId === 'reactflow'}
-        />
-
-        {/* module defined layers - inactive by default */}
-        {layersProviders?.map((provider) => (
-          <div
-            key={provider.id}
+          <div style={{ flex: 1, display: showLayersPanel ? 'block' : 'none' }}>
+            <LayersTreePanel providers={layersProviders || []} />
+          </div>
+          <button
+            title={showLayersPanel ? 'Collapse' : 'Expand'}
+            onClick={() => setShowLayersPanel((v) => !v)}
             style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              pointerEvents: activeLayerId === provider.id ? 'auto' : 'none',
-              zIndex: provider.zIndexHint ?? 1,
+              width: 24,
+              border: 'none',
+              background: 'transparent',
+              cursor: 'pointer',
+              borderLeft: '1px solid var(--color-border, #e5e7eb)',
             }}
           >
-            <provider.Component
-              viewId={viewId}
-              active={activeLayerId === provider.id}
-              viewport={viewport}
-            />
-          </div>
-        ))}
+            {showLayersPanel ? '<' : '>'}
+          </button>
+        </div>
 
-        <AvatarsRenderer avatarsStore={logics.as} />
+        <div
+          className={`holistix-space-whiteboard`}
+          style={{
+            flex: '1 1 auto',
+            height: '100%',
+            position: 'relative',
+          }}
+          ref={logics.pt.bindDiv.bind(logics.pt)}
+          onMouseMove={logics.pt.onPaneMouseMove.bind(logics.pt)}
+          onMouseLeave={logics.pt.setPointerInactive.bind(logics.pt)}
+        >
+          <ReactFlowBaseLayer
+            viewId={viewId}
+            nodeTypes={nodeTypes}
+            pointerTracker={logics.pt}
+            viewport={viewport}
+            onContextMenu={handleContextualMenu}
+            onContextMenuNewEdge={handleContextualMenuNewEdge}
+            active={activeLayer.layerId === 'reactflow'}
+          />
 
-        {renderForm}
+          {/* module defined layers - inactive by default */}
+          {layersProviders?.map((provider) => (
+            <div
+              key={provider.id}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                pointerEvents:
+                  activeLayer.layerId === provider.id ? 'auto' : 'none',
+                zIndex: provider.zIndexHint ?? 1,
+              }}
+            >
+              <provider.Component
+                viewId={viewId}
+                active={activeLayer.layerId === provider.id}
+                viewport={viewport}
+                payload={activeLayer.payload}
+              />
+            </div>
+          ))}
+
+          <AvatarsRenderer avatarsStore={logics.as} />
+
+          {renderForm}
+        </div>
+
+        <ContextualMenu
+          triggerRef={ContextualMenuTriggerRef}
+          entries={() =>
+            spaceMenuEntries({
+              viewId,
+              from,
+              sharedData: sdm.getData(),
+              position: () => rcc.current,
+              renderForm: setRenderForm,
+              renderPanel: openPanel,
+              closePanel,
+              dispatcher,
+            })
+          }
+        />
       </div>
-
-      <ContextualMenu
-        triggerRef={ContextualMenuTriggerRef}
-        entries={() =>
-          spaceMenuEntries({
-            viewId,
-            from,
-            sharedData: sdm.getData(),
-            position: () => rcc.current,
-            renderForm: setRenderForm,
-            renderPanel: openPanel,
-            closePanel,
-            dispatcher,
-          })
-        }
-      />
-    </div>
+    </LayerContextProvider>
   );
 };
 
@@ -430,7 +438,7 @@ const ReactFlowBaseLayer = ({
   useHotkeys(
     'shift+z',
     () => {
-      setMode(mode === 'move-node' ? 'default' : 'move-node');
+      active && setMode(mode === 'move-node' ? 'default' : 'move-node');
     },
     {
       preventDefault: true,

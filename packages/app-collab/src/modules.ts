@@ -10,6 +10,7 @@ import { moduleBackend as tabs } from '@monorepo/tabs';
 import { moduleBackend as notion } from '@monorepo/notion';
 import { moduleBackend as socials } from '@monorepo/socials';
 import { moduleBackend as airtable } from '@monorepo/airtable';
+import { moduleBackend as excalidraw } from '@monorepo/excalidraw';
 
 export const modules: ModuleBackend[] = [
   gateway,
@@ -22,4 +23,5 @@ export const modules: ModuleBackend[] = [
   notion,
   airtable,
   socials,
+  excalidraw,
 ];

@@ -39,6 +39,9 @@
       "path": "../api-fetch/tsconfig.lib.json"
     },
     {
+      "path": "../modules/excalidraw/tsconfig.lib.json"
+    },
+    {
       "path": "../modules/airtable/tsconfig.lib.json"
     },
     {

@@ -273,7 +273,6 @@ export const AirtableTableKanbanColumn = ({
     if (eventData) {
       try {
         const event = JSON.parse(eventData);
-        console.log({ event });
 
         if (
           event.type === 'airtable:load-record-node' &&

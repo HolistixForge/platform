@@ -291,7 +291,6 @@ export const NotionDatabaseKanbanColumn = ({
     if (eventData) {
       try {
         const event = JSON.parse(eventData);
-        console.log({ event });
 
         if (
           event.type === 'notion:load-page-node' &&

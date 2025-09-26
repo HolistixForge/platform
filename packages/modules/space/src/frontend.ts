@@ -1,7 +1,9 @@
+import { ModuleFrontend } from '@monorepo/module/frontend';
+
 import { Group } from './lib/components/group/group';
 import { Shape } from './lib/components/shape/shape';
 import { Space_loadData } from './lib/space-shared-model';
-import { ModuleFrontend } from '@monorepo/module/frontend';
+import { spaceMenuEntries } from './lib/space-menu';
 import './lib/index.scss';
 
 export {
@@ -30,7 +32,7 @@ export type { TNodeContext } from './lib/components/apis/types/node';
 
 export { HolistixSpace } from './lib/components/holistix-space';
 
-import { spaceMenuEntries } from './lib/space-menu';
+export { useLayerContext } from './lib/components/layer-context';
 
 //
 

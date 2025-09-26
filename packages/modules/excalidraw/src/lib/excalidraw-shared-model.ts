@@ -3,7 +3,7 @@ import { SharedMap, SharedTypes } from '@monorepo/collab-engine';
 
 export type TExcalidrawDrawing = {
   elements: TJsonObject[];
-  hash: string;
+  fromUser: string;
   svg: string;
 };
 

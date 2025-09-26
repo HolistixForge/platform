@@ -94,6 +94,8 @@ export type LayerComponentProps = {
   active: boolean;
   /** Adapter for cross-layer viewport synchronization. */
   viewport: LayerViewportAdapter;
+  /** Optional: payload data passed when layer is activated. */
+  payload?: any;
 };
 
 /**

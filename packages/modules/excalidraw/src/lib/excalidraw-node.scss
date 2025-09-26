@@ -1,0 +1,26 @@
+.node-excalidraw {
+  min-height: 200px;
+  min-width: 200px;
+
+  .excalidraw-content {
+    overflow: hidden; // Hide any content that exceeds the node bounds
+
+    .excalidraw-svg-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+
+      // Ensure SVG maintains its aspect ratio and fits within bounds
+      svg {
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+        object-fit: contain; // Maintain aspect ratio while fitting in container
+      }
+    }
+  }
+}

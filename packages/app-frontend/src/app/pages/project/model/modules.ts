@@ -9,6 +9,7 @@ import { moduleFrontend as tabs } from '@monorepo/tabs';
 import { moduleFrontend as notion } from '@monorepo/notion/frontend';
 import { moduleFrontend as socials } from '@monorepo/socials/frontend';
 import { moduleFrontend as airtable } from '@monorepo/airtable/frontend';
+import { moduleFrontend as excalidraw } from '@monorepo/excalidraw/frontend';
 
 export const modules: ModuleFrontend[] = [
   {
@@ -42,4 +43,5 @@ export const modules: ModuleFrontend[] = [
   notion,
   airtable,
   socials,
+  excalidraw,
 ];

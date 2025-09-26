@@ -1,6 +1,7 @@
 import { useMemo, FC, useEffect, useRef, useState, useCallback } from 'react';
 import { debounce } from 'lodash';
 
+import { useCurrentUser } from '@monorepo/frontend-data';
 import { OrderedExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 import { AppState, Collaborator, SocketId } from '@excalidraw/excalidraw/types';
 import { BinaryFiles } from '@excalidraw/excalidraw/types';
@@ -10,8 +11,13 @@ import {
   LayerViewportAdapter,
   TLayerProvider,
 } from '@monorepo/module/frontend';
-import { useAwarenessUserList } from '@monorepo/collab-engine';
+import {
+  useAwarenessUserList,
+  useDispatcher,
+  FrontendDispatcher,
+} from '@monorepo/collab-engine';
 import { useSharedDataDirect } from '@monorepo/collab-engine';
+import { TSpaceEvent } from '@monorepo/space';
 
 import { TExcalidrawSharedData } from './excalidraw-shared-model';
 
@@ -74,14 +80,110 @@ const appState = {
 
 //
 
-const nodeId = 'todo';
+// Debounced function for setting drawing data
+const debouncedHandleChange = debounce(
+  async (
+    sharedData: TExcalidrawSharedData,
+    viewId: string,
+    dispatcher: FrontendDispatcher<TSpaceEvent>,
+    nodeId: string,
+    elements: readonly OrderedExcalidrawElement[],
+    files: BinaryFiles,
+    api: ExcalidrawAPI,
+    userid: string
+  ) => {
+    // Generate SVG using Excalidraw export helper (dynamic import)
+    let svgString = '';
+
+    try {
+      const { exportToSvg, getCommonBounds } = (await import(
+        '@excalidraw/excalidraw'
+      )) as unknown as {
+        exportToSvg: (args: ExportToSvgArgs) => Promise<SVGSVGElement>;
+        getCommonBounds: (
+          elements: readonly OrderedExcalidrawElement[]
+        ) => [number, number, number, number];
+      };
+
+      if (elements.length > 0) {
+        // Get the bounds of the actual drawing content
+        const [minX, minY, maxX, maxY] = getCommonBounds(
+          elements as readonly OrderedExcalidrawElement[]
+        );
+
+        const currentAppState = api.getAppState() || ({} as AppState);
+
+        const svgEl = await exportToSvg({
+          elements: elements as readonly OrderedExcalidrawElement[],
+          appState: {
+            ...currentAppState,
+            exportBackground: false,
+            exportWithDarkMode: false,
+            // Set the viewport to focus on the drawing bounds
+            scrollX: minX,
+            scrollY: minY,
+          },
+          files,
+        });
+
+        svgString = new XMLSerializer().serializeToString(svgEl);
+
+        const selectionAwarenessBoxPadding = 25; // look for css : .selection-awareness-box
+
+        // move the excalidraw node to the xmin, ymin
+        dispatcher.dispatch({
+          type: 'space:move-node',
+          viewId: viewId,
+          nid: nodeId,
+          position: {
+            x: minX - selectionAwarenessBoxPadding,
+            y: minY - selectionAwarenessBoxPadding,
+          },
+        });
+        dispatcher.dispatch({
+          type: 'space:resize-node',
+          viewId: viewId,
+          nid: nodeId,
+          size: {
+            width: maxX - minX + selectionAwarenessBoxPadding * 2,
+            height: maxY - minY + selectionAwarenessBoxPadding * 2,
+          },
+        });
+      }
+
+      sharedData.excalidrawDrawing.set(nodeId, {
+        elements: elements as unknown as TJsonObject[],
+        fromUser: userid,
+        svg: svgString,
+      });
+    } catch (e) {
+      console.error('exportToSvg failed', e);
+      // best-effort; keep svg empty on failure
+    }
+  },
+  250,
+  { maxWait: 250 }
+);
+//
+
+export type TExcalidrawLayerPayload = { nodeId: string; viewId: string };
+
+// nodeId will be determined from payload
 
 export const ExcalidrawLayerComponent: FC<{
   viewId: string;
   active: boolean;
   viewport: LayerViewportAdapter;
-  mode?: string;
-}> = ({ active, viewport }) => {
+  payload?: TExcalidrawLayerPayload;
+}> = ({ active, viewport, payload }) => {
+  const { data, status } = useCurrentUser();
+  const userid =
+    status === 'success' && data.user.user_id ? data.user.user_id : '';
+
+  const { nodeId = '', viewId = '' } = payload || {};
+
+  const dispatcher = useDispatcher<TSpaceEvent>();
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [Excalidraw, setExcalidraw] = useState<FC<any> | null>(null);
   const apiRef = useRef<ExcalidrawAPI | null>(null);
@@ -95,6 +197,8 @@ export const ExcalidrawLayerComponent: FC<{
     []
   );
 
+  //
+
   useEffect(() => {
     return viewport.registerViewportChangeCallback((vp) => {
       if (apiRef.current) {
@@ -106,6 +210,8 @@ export const ExcalidrawLayerComponent: FC<{
     });
   }, [viewport, toExcalidrawViewport]);
 
+  //
+
   useEffect(() => {
     if (!active || Excalidraw) return;
     (async () => {
@@ -114,6 +220,8 @@ export const ExcalidrawLayerComponent: FC<{
       setExcalidraw(() => (mod as { Excalidraw: FC }).Excalidraw);
     })();
   }, [active, Excalidraw]);
+
+  //
 
   const handleScrollChange = useCallback(
     (scrollX: number, scrollY: number, zoom: { value: number }) => {
@@ -125,10 +233,6 @@ export const ExcalidrawLayerComponent: FC<{
     },
     [viewport]
   );
-
-  //
-  //
-  //
 
   // collaborative
 
@@ -149,99 +253,58 @@ export const ExcalidrawLayerComponent: FC<{
 
   const sharedData = useSharedDataDirect<TExcalidrawSharedData>();
 
-  // Store last applied hash to avoid unnecessary updates and infinite loops
-  const lastHashRef = useRef<string | null>(null);
-
-  // Debounced function for setting drawing data
-  const debouncedSetDrawing = useRef(
-    debounce(
-      (elements: TJsonObject[], hash: string, svg: string) => {
-        sharedData.excalidrawDrawing.set(nodeId, {
-          elements,
-          hash,
-          svg,
-        });
-      },
-      250,
-      { maxWait: 250 }
-    )
-  ).current;
-
   useEffect(() => {
     // On mount, ensure drawing entry exists or initialize it
+    if (!nodeId) return;
     const d = sharedData.excalidrawDrawing.get(nodeId);
     if (!d) {
       const elements: TJsonObject[] = [];
-      const hash = simpleHash(elements);
       sharedData.excalidrawDrawing.set(nodeId, {
         elements,
-        hash,
+        fromUser: userid,
         svg: '',
       });
-      lastHashRef.current = hash;
-    } else {
-      lastHashRef.current = d.hash as string;
     }
     // Observe remote changes
     sharedData.excalidrawDrawing.observe(() => {
-      const me = sharedData.excalidrawDrawing.get(nodeId);
-      if (me && me.hash !== lastHashRef.current) {
-        lastHashRef.current = me.hash as string;
-        if (apiRef.current) {
-          apiRef.current.updateScene({
-            elements: structuredClone(me.elements) || [],
-          });
-        }
+      const d = sharedData.excalidrawDrawing.get(nodeId);
+      if (d?.fromUser !== userid) {
+        // update the drawing if it is from another user
+        previousHash.current = simpleHash(d?.elements || []);
+        apiRef.current?.updateScene({
+          elements: structuredClone(d?.elements) || [],
+        });
       }
     });
-  }, [sharedData]);
+  }, [nodeId, sharedData, userid]);
 
   //
 
+  const previousHash = useRef<string | null>(null);
+
   const handleChange = useCallback(
-    async (
+    (
       elements: readonly OrderedExcalidrawElement[],
       _appState: AppState,
       files: BinaryFiles
     ) => {
-      const newHash = simpleHash(elements as unknown as TJsonObject[]);
-      if (newHash === lastHashRef.current) {
-        return; // No actual change
-      }
-      lastHashRef.current = newHash as string;
-
-      // Generate SVG using Excalidraw export helper (dynamic import)
-      let svgString = '';
-      try {
-        const { exportToSvg } = (await import(
-          '@excalidraw/excalidraw'
-        )) as unknown as {
-          exportToSvg: (args: ExportToSvgArgs) => Promise<SVGSVGElement>;
-        };
-        const currentAppState =
-          apiRef.current?.getAppState() || ({} as AppState);
-        const svgEl = await exportToSvg({
-          elements: elements as readonly OrderedExcalidrawElement[],
-          appState: {
-            ...currentAppState,
-            exportBackground: false,
-            exportWithDarkMode: false,
-          },
+      const hash = simpleHash(elements as unknown as TJsonObject[]);
+      if (hash !== previousHash.current) {
+        previousHash.current = hash;
+        debouncedHandleChange(
+          sharedData,
+          viewId,
+          dispatcher,
+          nodeId,
+          elements,
           files,
-        });
-        svgString = new XMLSerializer().serializeToString(svgEl);
-      } catch (e) {
-        // best-effort; keep svg empty on failure
-        svgString = '';
+          apiRef.current as ExcalidrawAPI,
+          userid
+        );
       }
-
-      debouncedSetDrawing(
-        elements as unknown as TJsonObject[],
-        newHash,
-        svgString
-      );
     },
-    [debouncedSetDrawing]
+
+    [dispatcher, nodeId, sharedData, viewId, userid]
   );
 
   // mode switch, collaborators update, content update
@@ -261,9 +324,9 @@ export const ExcalidrawLayerComponent: FC<{
   // Cancel debounce on unmount
   useEffect(() => {
     return () => {
-      debouncedSetDrawing.cancel();
+      debouncedHandleChange.cancel();
     };
-  }, [debouncedSetDrawing]);
+  }, []);
 
   //
   //

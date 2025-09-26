@@ -59,7 +59,6 @@ export const Group = ({ node }: { node: TGraphNode }) => {
   });
 
   const handleBorderColorChange = useCallback((color: ColorValue) => {
-    console.log('group color', color);
     dispatcher.dispatch({
       type: 'space:group-property-change',
       groupId: id,
@@ -70,7 +69,6 @@ export const Group = ({ node }: { node: TGraphNode }) => {
   }, []);
 
   const handleFillColorChange = useCallback((color: ColorValue) => {
-    console.log('group color', color);
     dispatcher.dispatch({
       type: 'space:group-property-change',
       groupId: id,

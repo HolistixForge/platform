@@ -7,19 +7,28 @@
       "path": "../demiurge-types"
     },
     {
+      "path": "../modules/excalidraw"
+    },
+    {
       "path": "../modules/airtable"
     },
     {
       "path": "../modules/socials"
     },
     {
-      "path": "../modules/gateway"
+      "path": "../modules/notion"
+    },
+    {
+      "path": "../modules/servers"
+    },
+    {
+      "path": "../modules/chats"
     },
     {
       "path": "../modules/module"
     },
     {
-      "path": "../backend-engine"
+      "path": "../modules/gateway"
     },
     {
       "path": "../simple-types"
@@ -28,16 +37,10 @@
       "path": "../log"
     },
     {
-      "path": "../modules/notion"
-    },
-    {
       "path": "../modules/jupyter"
     },
     {
-      "path": "../modules/servers"
-    },
-    {
-      "path": "../modules/chats"
+      "path": "../backend-engine"
     },
     {
       "path": "../modules/space"

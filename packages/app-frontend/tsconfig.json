@@ -9,6 +9,9 @@
       "path": "../api-fetch"
     },
     {
+      "path": "../modules/excalidraw"
+    },
+    {
       "path": "../modules/airtable"
     },
     {

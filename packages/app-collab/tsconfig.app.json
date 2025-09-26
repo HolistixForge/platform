@@ -24,19 +24,28 @@
       "path": "../demiurge-types/tsconfig.lib.json"
     },
     {
+      "path": "../modules/excalidraw/tsconfig.lib.json"
+    },
+    {
       "path": "../modules/airtable/tsconfig.lib.json"
     },
     {
       "path": "../modules/socials/tsconfig.lib.json"
     },
     {
-      "path": "../modules/gateway/tsconfig.lib.json"
+      "path": "../modules/notion/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/servers/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/chats/tsconfig.lib.json"
     },
     {
       "path": "../modules/module/tsconfig.lib.json"
     },
     {
-      "path": "../backend-engine/tsconfig.lib.json"
+      "path": "../modules/gateway/tsconfig.lib.json"
     },
     {
       "path": "../simple-types/tsconfig.lib.json"
@@ -45,16 +54,10 @@
       "path": "../log/tsconfig.lib.json"
     },
     {
-      "path": "../modules/notion/tsconfig.lib.json"
-    },
-    {
       "path": "../modules/jupyter/tsconfig.lib.json"
     },
     {
-      "path": "../modules/servers/tsconfig.lib.json"
-    },
-    {
-      "path": "../modules/chats/tsconfig.lib.json"
+      "path": "../backend-engine/tsconfig.lib.json"
     },
     {
       "path": "../modules/space/tsconfig.lib.json"
