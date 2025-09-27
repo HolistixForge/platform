@@ -34,6 +34,8 @@ export { HolistixSpace } from './lib/components/holistix-space';
 
 export { useLayerContext } from './lib/components/layer-context';
 
+export type { TLayerTreeItem } from './lib/layer-tree-types';
+
 //
 
 export const moduleFrontend: ModuleFrontend = {

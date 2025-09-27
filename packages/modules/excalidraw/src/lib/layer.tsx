@@ -18,6 +18,7 @@ import {
 } from '@monorepo/collab-engine';
 import { useSharedDataDirect } from '@monorepo/collab-engine';
 import { TSpaceEvent } from '@monorepo/space';
+import { useLayerContext, TLayerTreeItem } from '@monorepo/space/frontend';
 
 import { TExcalidrawSharedData } from './excalidraw-shared-model';
 
@@ -183,6 +184,7 @@ export const ExcalidrawLayerComponent: FC<{
   const { nodeId = '', viewId = '' } = payload || {};
 
   const dispatcher = useDispatcher<TSpaceEvent>();
+  const { updateLayerTree } = useLayerContext();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [Excalidraw, setExcalidraw] = useState<FC<any> | null>(null);
@@ -291,6 +293,45 @@ export const ExcalidrawLayerComponent: FC<{
       const hash = simpleHash(elements as unknown as TJsonObject[]);
       if (hash !== previousHash.current) {
         previousHash.current = hash;
+
+        // Update tree data for the layer panel
+        if (updateLayerTree && nodeId) {
+          console.log('elements', elements);
+          const treeItems: TLayerTreeItem[] = elements
+            .filter((e) => !e.isDeleted)
+            .map((element, index) => ({
+              id: `${nodeId}-element-${index}`,
+              type: 'node',
+              title:
+                element.type === 'text'
+                  ? element.text || `Text ${index + 1}`
+                  : `${
+                      element.type.charAt(0).toUpperCase() +
+                      element.type.slice(1)
+                    } ${index + 1}`,
+              level: 1,
+              visible: true,
+              expanded: false,
+              locked: false,
+              nodeData: {
+                id: `${nodeId}-element-${index}`,
+                type: 'excalidraw-element',
+                position: { x: element.x, y: element.y },
+                status: {
+                  mode: 'EXPANDED' as const,
+                  forceOpened: false,
+                  forceClosed: false,
+                  isFiltered: false,
+                  rank: 0,
+                  maxRank: 1,
+                },
+              },
+              layerId: 'excalidraw',
+            }));
+
+          updateLayerTree('excalidraw', treeItems, 'Excalidraw');
+        }
+
         debouncedHandleChange(
           sharedData,
           viewId,
@@ -304,7 +345,7 @@ export const ExcalidrawLayerComponent: FC<{
       }
     },
 
-    [dispatcher, nodeId, sharedData, viewId, userid]
+    [dispatcher, nodeId, sharedData, viewId, userid, updateLayerTree]
   );
 
   // mode switch, collaborators update, content update
@@ -321,12 +362,16 @@ export const ExcalidrawLayerComponent: FC<{
     }
   }, [collaborators]);
 
-  // Cancel debounce on unmount
+  // Cancel debounce on unmount, clear layer tree
   useEffect(() => {
     return () => {
       debouncedHandleChange.cancel();
+      previousHash.current = null;
+      if (updateLayerTree && nodeId) {
+        updateLayerTree('excalidraw', [], 'Excalidraw');
+      }
     };
-  }, []);
+  }, [updateLayerTree, nodeId]);
 
   //
   //

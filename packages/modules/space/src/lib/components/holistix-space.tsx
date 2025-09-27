@@ -43,6 +43,13 @@ import { RightPanels, usePanelContext } from './right-panels';
 import { ModeIndicator } from './ModeIndicator';
 import { LayersTreePanel } from './panels/layers-tree-panel';
 import { LayerContextProvider } from './layer-context';
+import { buildNodeTree } from '../layer-tree-utils';
+import {
+  TLayerTreeOperation,
+  TLayerTreeItem,
+  TLayerTreeCollection,
+} from '../layer-tree-types';
+import { isEqual } from 'lodash';
 
 //
 
@@ -266,6 +273,72 @@ const HolistixSpaceWhiteboard = ({
     setActiveLayer({ layerId, payload });
   }, []);
 
+  // Build tree collection for layer panel
+  const [treeCollection, setTreeCollection] = useState<TLayerTreeCollection>(
+    () => {
+      return {
+        layers: [
+          {
+            layerId: 'reactflow',
+            title: 'Base layer',
+            items: [],
+          },
+          ...(layersProviders?.map((provider) => ({
+            layerId: provider.id,
+            title: provider.title,
+            items: [],
+          })) || []),
+        ],
+      };
+    }
+  );
+
+  // Handle tree operations
+  const handleTreeOperation = useCallback((operation: TLayerTreeOperation) => {
+    // TODO: Implement tree operations
+    console.log('Tree operation:', operation);
+  }, []);
+
+  // Handle layer tree updates
+  const handleUpdateLayerTree = useCallback(
+    (layerId: string, items: TLayerTreeItem[], title: string) => {
+      setTreeCollection((prev) => {
+        const existingLayerIndex = prev.layers.findIndex(
+          (layer) => layer.layerId === layerId
+        );
+
+        if (existingLayerIndex !== -1) {
+          // Update existing layer in place
+          return {
+            layers: prev.layers.map((layer) => {
+              if (layer.layerId === layerId) {
+                return { layerId, items, title };
+              }
+              return layer;
+            }),
+          };
+        } else {
+          // Append new layer at the end
+          return {
+            layers: [...prev.layers, { layerId, items, title }],
+          };
+        }
+      });
+    },
+    []
+  );
+
+  // Update reactflow layer tree data
+  const previousTreeItemsRef = useRef<TLayerTreeItem[] | null>(null);
+  const gv = sdm.getData().graphViews.get(viewId);
+  const nodes = gv?.graph.nodes || [];
+  const nodeViews = gv?.nodeViews || [];
+  const treeItems = buildNodeTree(nodes, nodeViews);
+  if (!isEqual(treeItems, previousTreeItemsRef.current)) {
+    previousTreeItemsRef.current = treeItems;
+    handleUpdateLayerTree('reactflow', treeItems, 'Base layer');
+  }
+
   const [renderForm, setRenderForm] = useState<ReactNode | null>(null);
   const [showLayersPanel, setShowLayersPanel] = useState<boolean>(true);
 
@@ -275,6 +348,9 @@ const HolistixSpaceWhiteboard = ({
         activeLayerId: activeLayer.layerId,
         activeLayerPayload: activeLayer.payload,
         activateLayer,
+        treeCollection,
+        onTreeOperation: handleTreeOperation,
+        updateLayerTree: handleUpdateLayerTree,
       }}
     >
       <div style={{ display: 'flex', height: '100%' }}>

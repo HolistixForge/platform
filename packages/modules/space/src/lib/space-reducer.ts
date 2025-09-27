@@ -53,15 +53,13 @@ import { edgeId } from './components/apis/types/edge';
  *
  */
 
-
 type TExtraArgs = {
   project_id: string;
   user_id: string;
   jwt: {
-    scope: string[]
-  }
+    scope: string[];
+  };
 };
-
 
 type ReducedEvents = TSpaceEvent | TCoreEvent;
 
@@ -108,7 +106,9 @@ export class SpaceReducer extends Reducer<
     return Promise.resolve();
   }
 
-  private executeGraphViewActionIfUserHasPermission<T extends { viewId: string, nid: string }>(
+  private executeGraphViewActionIfUserHasPermission<
+    T extends { viewId: string; nid: string }
+  >(
     g: Ra<T>,
     action: (
       gvc: TGraphView,
@@ -116,7 +116,6 @@ export class SpaceReducer extends Reducer<
       edges: TEdge[]
     ) => void
   ): Promise<void> {
-
     const gv = g.sd.graphViews.get(g.event.viewId);
     if (!gv) {
       error('SPACE', `Graph view ${g.event.viewId} not found`);
@@ -133,7 +132,9 @@ export class SpaceReducer extends Reducer<
     if (nv.lockedBy) {
       authorized = false;
       const nodeData = g.sd.nodes.get(g.event.nid);
-      const admin = g.extraArgs.jwt.scope.includes(makeProjectScopeString(g.extraArgs.project_id, 'project:admin'));
+      const admin = g.extraArgs.jwt.scope.includes(
+        makeProjectScopeString(g.extraArgs.project_id, 'project:admin')
+      );
       if (admin || nodeData?.data?.userId === g.extraArgs.user_id) {
         authorized = true;
       }
@@ -141,8 +142,8 @@ export class SpaceReducer extends Reducer<
 
     if (authorized) {
       return this.executeGraphViewAction(g, action);
-    }
-    else throw new UserException('You are not authorized to perform this action');
+    } else
+      throw new UserException('You are not authorized to perform this action');
   }
 
   reduce(g: Ra<ReducedEvents>): Promise<void> {
@@ -151,9 +152,12 @@ export class SpaceReducer extends Reducer<
         return this.newView(g as Ra<TEventNewView>);
 
       case 'space:move-node':
-        return this.executeGraphViewActionIfUserHasPermission(g as Ra<TEventMoveNode>, (gvc, nodes, edges) => {
-          this.moveNode(g.event as TEventMoveNode, gvc, nodes, edges);
-        });
+        return this.executeGraphViewActionIfUserHasPermission(
+          g as Ra<TEventMoveNode>,
+          (gvc, nodes, edges) => {
+            this.moveNode(g.event as TEventMoveNode, gvc, nodes, edges);
+          }
+        );
 
       case 'space:reduce-node':
         return this.executeGraphViewAction(g as Ra<TEventReduceNode>, (gvc) => {
@@ -318,7 +322,13 @@ export class SpaceReducer extends Reducer<
         return this.executeGraphViewAction(
           g as Ra<TEventLockNode>,
           (gvc, nodes, edges) => {
-            this.lockNode(g.event as TEventLockNode, gvc, nodes, edges, g.extraArgs.user_id);
+            this.lockNode(
+              g.event as TEventLockNode,
+              gvc,
+              nodes,
+              edges,
+              g.extraArgs.user_id
+            );
           }
         );
 
@@ -327,10 +337,13 @@ export class SpaceReducer extends Reducer<
     }
   }
 
-  private lockNode(action: TEventLockNode, gv: TGraphView,
+  private lockNode(
+    action: TEventLockNode,
+    gv: TGraphView,
     nodes: Readonly<Map<string, TGraphNode>>,
     edges: Readonly<Array<TEdge>>,
-    user_id: string) {
+    user_id: string
+  ) {
     //
     const node = gv.nodeViews.find((n) => n.id === action.nid);
     if (!node) {
@@ -593,7 +606,7 @@ export class SpaceReducer extends Reducer<
           edge.to.node,
           edge.to.connectorName
         );
-        let groupEdge = edgesGroups.get(id);
+        const groupEdge = edgesGroups.get(id);
 
         if (!groupEdge) {
           const newGroupEdge: TEdge = {
@@ -776,7 +789,6 @@ export class SpaceReducer extends Reducer<
     this.resolveDrawnEdges(gv);
   }
 
-
   private moveNodeToFront(action: TEventMoveNodeToFront, gv: TGraphView) {
     const nodeIndex = gv.graph.nodes.findIndex((n) => n.id === action.nid);
     if (nodeIndex === -1) {
@@ -817,14 +829,19 @@ export class SpaceReducer extends Reducer<
 
       // If node is in a group, it can't come before its parent
       if (hasParent) {
-        const parentIndex = gv.graph.nodes.findIndex((n) => n.id === node.parentId);
+        const parentIndex = gv.graph.nodes.findIndex(
+          (n) => n.id === node.parentId
+        );
         if (parentIndex === -1) {
           error('SPACE', `Parent ${node.parentId} not found in graph view`);
           return;
         }
 
         if (nodeIndex - 1 <= parentIndex) {
-          error('SPACE', `Node ${action.nid} cannot move before its parent ${node.parentId}`);
+          error(
+            'SPACE',
+            `Node ${action.nid} cannot move before its parent ${node.parentId}`
+          );
           return;
         }
       }
@@ -835,12 +852,17 @@ export class SpaceReducer extends Reducer<
     }
   }
 
-  private moveDescendantsAfterGroup(groupId: string, groupIndex: number, gv: TGraphView) {
+  private moveDescendantsAfterGroup(
+    groupId: string,
+    groupIndex: number,
+    gv: TGraphView
+  ) {
     // Get all direct children of the group
     const directChildren = gv.graph.nodes.filter((n) => n.parentId === groupId);
 
     // Collect all children that need to be moved (those before the group)
-    const childrenToMove: Array<{ node: TNodeView; originalIndex: number }> = [];
+    const childrenToMove: Array<{ node: TNodeView; originalIndex: number }> =
+      [];
 
     for (const child of directChildren) {
       const childIndex = gv.graph.nodes.findIndex((n) => n.id === child.id);
@@ -854,7 +876,9 @@ export class SpaceReducer extends Reducer<
 
     // Remove children from their current positions (in reverse order to maintain indices)
     for (let i = childrenToMove.length - 1; i >= 0; i--) {
-      const childIndex = gv.graph.nodes.findIndex((n) => n.id === childrenToMove[i].node.id);
+      const childIndex = gv.graph.nodes.findIndex(
+        (n) => n.id === childrenToMove[i].node.id
+      );
       gv.graph.nodes.splice(childIndex, 1);
     }
 
@@ -865,7 +889,11 @@ export class SpaceReducer extends Reducer<
 
       // If the child is also a group, recursively handle its descendants
       if (childrenToMove[i].node.type === 'group') {
-        this.moveDescendantsAfterGroup(childrenToMove[i].node.id, insertIndex, gv);
+        this.moveDescendantsAfterGroup(
+          childrenToMove[i].node.id,
+          insertIndex,
+          gv
+        );
       }
     }
 
