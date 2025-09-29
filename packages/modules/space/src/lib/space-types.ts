@@ -35,6 +35,7 @@ export type TNodeView = {
   size?: { width: number; height: number };
   status: TNodeViewStatus;
   lockedBy?: string;
+  disabledFeatures?: string[];
 };
 
 //

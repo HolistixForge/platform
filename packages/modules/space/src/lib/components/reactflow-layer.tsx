@@ -206,6 +206,10 @@ export const ReactflowLayer = ({
       const n = spaceState.getNodes().find((n) => n.id === node.id);
       if (!n) return;
 
+      if (n.disabledFeatures?.includes('frontend-move-node')) {
+        return;
+      }
+
       // Create sequence if it doesn't exist
       if (!moveNodeEventSequenceRef.current) {
         moveNodeEventSequenceRef.current = createEventSequence({

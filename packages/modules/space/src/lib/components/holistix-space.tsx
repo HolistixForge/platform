@@ -367,7 +367,7 @@ const HolistixSpaceWhiteboard = ({
           }}
         >
           <div style={{ flex: 1, display: showLayersPanel ? 'block' : 'none' }}>
-            <LayersTreePanel providers={layersProviders || []} />
+            <LayersTreePanel viewId={viewId} />
           </div>
           <button
             title={showLayersPanel ? 'Collapse' : 'Expand'}

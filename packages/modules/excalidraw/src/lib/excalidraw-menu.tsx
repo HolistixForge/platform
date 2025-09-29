@@ -3,13 +3,16 @@ import { TSpaceMenuEntries } from '@monorepo/module/frontend';
 import { TGraphNode } from '@monorepo/module';
 import { TEventNewNode } from '@monorepo/core';
 import { makeUuid } from '@monorepo/simple-types';
+import { TEventDisableFeature } from '@monorepo/space';
 
 export const excalidrawMenuEntries: TSpaceMenuEntries = ({
   viewId,
   position,
   dispatcher,
 }) => {
-  const d = dispatcher as FrontendDispatcher<TEventNewNode>;
+  const d = dispatcher as FrontendDispatcher<
+    TEventNewNode | TEventDisableFeature
+  >;
 
   return [
     {
@@ -38,6 +41,21 @@ export const excalidrawMenuEntries: TSpaceMenuEntries = ({
                 viewId: viewId,
                 position: position(),
               },
+            });
+
+            // Disable grouping and move-node features for Excalidraw nodes
+            d.dispatch({
+              type: 'space:disable-feature',
+              viewId: viewId,
+              nid: nodeId,
+              feature: 'grouping',
+            });
+
+            d.dispatch({
+              type: 'space:disable-feature',
+              viewId: viewId,
+              nid: nodeId,
+              feature: 'frontend-move-node',
             });
           },
         },

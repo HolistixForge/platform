@@ -191,6 +191,13 @@ export type TEventLockNode = {
   nid: string;
 };
 
+export type TEventDisableFeature = {
+  type: 'space:disable-feature';
+  viewId: string;
+  nid: string;
+  feature: string;
+};
+
 export type TSpaceEvent =
   | TEventNewView
   | TEventMoveNode
@@ -216,4 +223,5 @@ export type TSpaceEvent =
   | TEventEdgePropertyChange
   | TEventMoveNodeToFront
   | TEventMoveNodeToBack
-  | TEventLockNode;
+  | TEventLockNode
+  | TEventDisableFeature;

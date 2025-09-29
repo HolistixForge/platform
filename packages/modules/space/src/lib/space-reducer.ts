@@ -37,6 +37,7 @@ import {
   TEventMoveNodeToFront,
   TEventMoveNodeToBack,
   TEventLockNode,
+  TEventDisableFeature,
 } from './space-events';
 import {
   defaultGraphView,
@@ -332,6 +333,14 @@ export class SpaceReducer extends Reducer<
           }
         );
 
+      case 'space:disable-feature':
+        return this.executeGraphViewAction(
+          g as Ra<TEventDisableFeature>,
+          (gvc, nodes, edges) => {
+            this.disableFeature(g.event as TEventDisableFeature, gvc);
+          }
+        );
+
       default:
         return Promise.resolve();
     }
@@ -352,6 +361,22 @@ export class SpaceReducer extends Reducer<
     }
     node.lockedBy = user_id;
     this.updateGraphview(gv, nodes, edges);
+  }
+
+  private disableFeature(action: TEventDisableFeature, gv: TGraphView) {
+    const node = gv.nodeViews.find((n) => n.id === action.nid);
+    if (!node) {
+      error('SPACE', `Node ${action.nid} not found in graph view`);
+      return;
+    }
+
+    if (!node.disabledFeatures) {
+      node.disabledFeatures = [];
+    }
+
+    if (!node.disabledFeatures.includes(action.feature)) {
+      node.disabledFeatures.push(action.feature);
+    }
   }
 
   private openCloseNode(
@@ -455,6 +480,12 @@ export class SpaceReducer extends Reducer<
       return;
     }
 
+    // Check if the node has disabled features
+    if (node.disabledFeatures?.includes('backend-move-node')) {
+      error('SPACE', `Node ${action.nid} cannot be moved (feature disabled)`);
+      return;
+    }
+
     const absolutePosition = getAbsolutePosition(
       action.position,
       node.parentId,
@@ -517,11 +548,18 @@ export class SpaceReducer extends Reducer<
       }
 
       if (targetGroup) {
-        node.parentId = targetGroup.id;
-        node.position = {
-          x: absolutePosition.x - targetGroup.absPosition.x,
-          y: absolutePosition.y - targetGroup.absPosition.y,
-        };
+        // Check if the node can be grouped
+        if (node.disabledFeatures?.includes('grouping')) {
+          // Node cannot be grouped, just move it without grouping
+          delete node.parentId;
+          node.position = absolutePosition;
+        } else {
+          node.parentId = targetGroup.id;
+          node.position = {
+            x: absolutePosition.x - targetGroup.absPosition.x,
+            y: absolutePosition.y - targetGroup.absPosition.y,
+          };
+        }
       } else {
         delete node.parentId;
         node.position = absolutePosition;

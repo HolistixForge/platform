@@ -24,6 +24,7 @@ export type {
   TEventNewShape,
   TEventShapePropertyChange,
   TEventLockNode,
+  TEventDisableFeature,
 } from './lib/space-events';
 
 export { SHAPE_TYPES } from './lib/space-events';

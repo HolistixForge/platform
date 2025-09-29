@@ -1,13 +1,24 @@
 import { FC, useMemo } from 'react';
-import { TLayerProvider } from '@monorepo/module/frontend';
 import { useLayerContext } from '../layer-context';
 import { flattenLayerTreeCollection } from '../../layer-tree-utils';
+import { useAwareness, useAwarenessSelections } from '@monorepo/collab-engine';
 
 export const LayersTreePanel: FC<{
-  providers: TLayerProvider[];
-}> = ({ providers }) => {
+  viewId: string;
+}> = ({ viewId }) => {
   const { activeLayerId, activeLayerPayload, activateLayer, treeCollection } =
     useLayerContext();
+
+  const { awareness } = useAwareness();
+  const selections = useAwarenessSelections();
+
+  // Handle node selection
+  const handleNodeClick = (nodeId: string) => {
+    awareness.emitSelectionAwareness({
+      nodes: [nodeId],
+      viewId,
+    });
+  };
 
   // Flatten tree items for rendering
   const flattenedItems = useMemo(() => {
@@ -23,6 +34,7 @@ export const LayersTreePanel: FC<{
           const isActiveLayer =
             item.type === 'layer' && item.id === activeLayerId;
           const isClickable = item.type === 'layer' && item.id === 'reactflow';
+          const isNodeClickable = item.layerId === 'reactflow';
           const indent = item.level * 16; // Indent based on level
 
           // Check if this node is being edited (matches activeLayerPayload.nodeId)
@@ -33,6 +45,16 @@ export const LayersTreePanel: FC<{
 
           // Determine if this item belongs to the active layer
           const belongsToActiveLayer = item.layerId === activeLayerId;
+
+          // Determine if this reactflow node is selected by current user in this view
+          const selectedByCurrentUser =
+            item.layerId === 'reactflow' &&
+            !!awareness.getUser() &&
+            !!(selections[item.id] || []).find(
+              (u) =>
+                u.user.username === awareness.getUser().username &&
+                u.viewId === viewId
+            );
 
           // Style based on active state
           const getItemStyle = () => {
@@ -80,18 +102,31 @@ export const LayersTreePanel: FC<{
           return (
             <div
               key={item.id}
-              onClick={isClickable ? () => activateLayer(item.id) : undefined}
+              onClick={
+                isClickable
+                  ? () => activateLayer(item.id)
+                  : isNodeClickable
+                  ? () => handleNodeClick(item.id)
+                  : undefined
+              }
               style={{
                 padding: '6px 12px',
                 marginLeft: `${indent}px`,
                 marginBottom: '2px',
-                cursor: isClickable ? 'pointer' : 'default',
+                cursor: isClickable || isNodeClickable ? 'pointer' : 'default',
                 borderRadius: '6px',
                 transition: 'all 0.2s ease',
                 fontSize: item.type === 'layer' ? '14px' : '12px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
+                // Additional highlight if this reactflow node is selected by me
+                ...(selectedByCurrentUser
+                  ? {
+                      outline: '2px solid #60a5fa',
+                      boxShadow: '0 0 0 2px rgba(59,130,246,0.25) inset',
+                    }
+                  : {}),
                 ...itemStyle,
               }}
             >
