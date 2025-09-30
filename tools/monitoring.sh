@@ -4,7 +4,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # exemple: $ watch -n 30 -c ./doc/monitoring.sh
 
-ENVIRONMENT=dev-004
+ENVIRONMENT=dev-005
 DOMAIN=holistix.so
 
 # List of services to monitor (URL and display name)
@@ -18,6 +18,11 @@ declare -A services=(
     ["gateway-1-3"]="https://gw-1-3.${ENVIRONMENT}.${DOMAIN}/collab/ping"
     ["gateway-1-4"]="https://gw-1-4.${ENVIRONMENT}.${DOMAIN}/collab/ping"
     ["gateway-1-5"]="https://gw-1-5.${ENVIRONMENT}.${DOMAIN}/collab/ping"
+    ["gateway-1-6"]="https://gw-1-6.${ENVIRONMENT}.${DOMAIN}/collab/ping"
+    ["gateway-1-7"]="https://gw-1-7.${ENVIRONMENT}.${DOMAIN}/collab/ping"
+    ["gateway-1-8"]="https://gw-1-8.${ENVIRONMENT}.${DOMAIN}/collab/ping"
+    ["gateway-1-9"]="https://gw-1-9.${ENVIRONMENT}.${DOMAIN}/collab/ping"
+    ["gateway-1-10"]="https://gw-1-10.${ENVIRONMENT}.${DOMAIN}/collab/ping"
  #   ["storybook"]="https://sb.${ENVIRONMENT}.${DOMAIN}"
     ["jaeger"]="https://jaeger.${ENVIRONMENT}.${DOMAIN}"
 )
