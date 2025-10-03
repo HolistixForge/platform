@@ -4,7 +4,7 @@
 export type TJwtServer = {
   type: 'server_token';
   project_id: string;
-  project_server_id: string;
+  user_container_id: string;
   scope: string;
 };
 
@@ -34,4 +34,5 @@ export type TJwtUser = {
   client_id: string;
   user: { id: string; username: string };
   scope: string[];
+  grants?: string[];
 };

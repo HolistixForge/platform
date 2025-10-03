@@ -7,7 +7,7 @@ import {
   TCoreSharedData,
   TEventNewEdge,
   TEdgeEnd,
-} from '@monorepo/core';
+} from '@monorepo/core-graph';
 import { TGraphNode } from '@monorepo/module';
 import {
   LayerViewportAdapter,

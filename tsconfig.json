@@ -58,13 +58,13 @@
       "path": "./packages/app-collab"
     },
     {
-      "path": "./packages/modules/core"
+      "path": "./packages/modules/core-graph"
     },
     {
       "path": "./packages/modules/space"
     },
     {
-      "path": "./packages/modules/servers"
+      "path": "./packages/modules/user-containers"
     },
     {
       "path": "./packages/modules/jupyter"
@@ -104,6 +104,15 @@
     },
     {
       "path": "./packages/modules/excalidraw"
+    },
+    {
+      "path": "./packages/modules/collab"
+    },
+    {
+      "path": "./packages/json-file-persistence"
+    },
+    {
+      "path": "./packages/modules/reducers"
     }
   ],
   "ts-node": {

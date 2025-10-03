@@ -1,4 +1,4 @@
-import { TEventOrigin } from '@monorepo/core';
+import { TEventOrigin } from '@monorepo/core-graph';
 import { TAirtableViewMode } from './airtable-types';
 
 export type TEventInitBase = {

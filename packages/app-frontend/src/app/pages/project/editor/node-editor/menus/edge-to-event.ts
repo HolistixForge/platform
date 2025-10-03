@@ -1,5 +1,5 @@
-import { TServerEvents } from '@monorepo/servers';
-import { TCoreSharedData, TEdge } from '@monorepo/core';
+import { TServerEvents } from '@monorepo/user-containers';
+import { TCoreSharedData, TEdge } from '@monorepo/core-graph';
 
 export const edgeToEvent = (
   edge: TEdge,
@@ -12,10 +12,11 @@ export const edgeToEvent = (
 
   switch (n1?.type) {
     case 'volume':
-      if (n2.type === 'server')
+      if (n2.type === 'user-container')
         return {
-          type: 'servers:mount-volume',
-          project_server_id: n2.data!.project_server_id as number,
+          type: 'user-containers:mount-volume',
+          project_user_container_id: n2.data!
+            .project_user_container_id as number,
           volume_id: n1.data!.volume_id as number,
         };
       break;

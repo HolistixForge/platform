@@ -36,7 +36,7 @@
       "path": "../modules/notion/tsconfig.lib.json"
     },
     {
-      "path": "../modules/servers/tsconfig.lib.json"
+      "path": "../modules/user-containers/tsconfig.lib.json"
     },
     {
       "path": "../modules/chats/tsconfig.lib.json"

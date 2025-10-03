@@ -1,5 +1,5 @@
 import { Dispatcher } from '@monorepo/collab-engine';
-import { TEdge } from '@monorepo/core';
+import { TEdge } from '@monorepo/core-graph';
 import { TNodeView, nodeViewDefaultStatus, TSpaceEvent } from '@monorepo/space';
 import { TSd } from './build-collab';
 

@@ -1,5 +1,5 @@
 // TODO_DEM: move in plugin/jupyter
-import { TEventOrigin } from '@monorepo/core';
+import { TEventOrigin } from '@monorepo/core-graph';
 import { IOutput, Kernel, Terminal } from './jupyter-types';
 
 export type FormFieldsOnly<T extends TJupyterEvent> = Partial<

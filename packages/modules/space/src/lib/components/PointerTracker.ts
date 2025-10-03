@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { TPosition } from '@monorepo/core';
+import { TPosition } from '@monorepo/core-graph';
 import { Viewport } from './holistix-space';
 import { Awareness } from '@monorepo/collab-engine';
 

@@ -9,7 +9,7 @@
       "path": "../frontend-data"
     },
     {
-      "path": "../modules/servers"
+      "path": "../modules/user-containers"
     },
     {
       "path": "../ui-base"

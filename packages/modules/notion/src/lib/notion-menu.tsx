@@ -3,7 +3,7 @@ import {
   FrontendDispatcher,
   TValidSharedDataToCopy,
 } from '@monorepo/collab-engine';
-import { TCoreEvent } from '@monorepo/core';
+import { TCoreEvent } from '@monorepo/core-graph';
 import { makeUuid } from '@monorepo/simple-types';
 
 import { NewNotionDatabaseForm } from './components/forms/new-database';

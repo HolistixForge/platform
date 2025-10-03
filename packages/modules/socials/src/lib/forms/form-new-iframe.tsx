@@ -6,7 +6,7 @@ import {
   useAction,
   DialogControlled,
 } from '@monorepo/ui-base';
-import { TPosition } from '@monorepo/core';
+import { TPosition } from '@monorepo/core-graph';
 import { useDispatcher } from '@monorepo/collab-engine';
 import { TEventSocials } from '../socials-events';
 import { useEffect } from 'react';

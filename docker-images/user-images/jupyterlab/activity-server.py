@@ -53,7 +53,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             # Construct new JSON payload for /collab/event
             event_payload = json.dumps({
                 "event": {
-                    "type": "servers:activity",
+                    "type": "user-containers:activity",
                     "last_activity": last_activity
                 }
             })

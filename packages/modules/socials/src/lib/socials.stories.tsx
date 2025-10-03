@@ -6,7 +6,7 @@ import {
   SharedTypes,
 } from '@monorepo/collab-engine';
 import { Logger } from '@monorepo/log';
-import { TCoreSharedData } from '@monorepo/core';
+import { TCoreSharedData } from '@monorepo/core-graph';
 import { TSpaceSharedData, defaultGraphView } from '@monorepo/space';
 import { STORY_VIEW_ID } from '@monorepo/space/stories';
 import { HolistixSpace } from '@monorepo/space/frontend';
@@ -20,7 +20,7 @@ import { ModuleBackend } from '@monorepo/module';
 import {
   moduleBackend as coreBackend,
   moduleFrontend as coreFrontend,
-} from '@monorepo/core';
+} from '@monorepo/core-graph';
 import { moduleBackend as spaceBackend } from '@monorepo/space';
 import { moduleFrontend as spaceFrontend } from '@monorepo/space/frontend';
 import { moduleBackend as socialsBackend } from '../';

@@ -10,7 +10,7 @@ import {
   TCoreSharedData,
   moduleBackend as coreBackend,
   moduleFrontend as coreFrontend,
-} from '@monorepo/core';
+} from '@monorepo/core-graph';
 
 import {
   ReactflowLayerContext,

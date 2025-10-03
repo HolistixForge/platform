@@ -9,7 +9,7 @@ import {
   EDITORS_YTEXT_YMAP_KEY,
   TCollabNativeEvent,
 } from '@monorepo/collab-engine';
-import { TCoreEvent } from '@monorepo/core';
+import { TCoreEvent } from '@monorepo/core-graph';
 import { TabPayload, TTabEvents } from '@monorepo/tabs';
 import { TSpaceEvent } from '@monorepo/space';
 
@@ -40,7 +40,9 @@ export async function initProjectCollaboration(
   const yst = new YjsSharedTypes(ydoc);
   const yse = new YjsSharedEditor(ydoc.getMap(EDITORS_YTEXT_YMAP_KEY));
 
-  const ec = { gateway_init: { project: PROJECT, config: CONFIG, ydoc } };
+  const ec = {
+    gateway_init: { project: PROJECT, config: CONFIG, ydoc },
+  };
 
   const { sharedData, extraContext } = compileChunks(chunks, yst, {
     bep,

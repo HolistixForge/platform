@@ -10,12 +10,12 @@ import {
   SelectItem,
 } from '@monorepo/ui-base';
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
-import { TPosition } from '@monorepo/core';
+import { TPosition } from '@monorepo/core-graph';
 import { TJupyterEvent } from '../jupyter-events';
 import { TJupyterSharedData } from '../jupyter-shared-model';
 import { TJupyterServerData } from '../jupyter-types';
 import { useJLsManager } from '../jupyter-shared-model-front';
-import { TServer, TServersSharedData } from '@monorepo/servers';
+import { TServer, TServersSharedData } from '@monorepo/user-containers';
 
 type NewTerminalFormData = { terminal_id: string };
 

@@ -42,7 +42,7 @@ export const moduleFrontend: ModuleFrontend = {
   collabChunk: {
     name: 'space',
     loadSharedData: Space_loadData,
-    deps: ['core'],
+    deps: ['core-graph'],
   },
   spaceMenuEntries,
   nodes: {

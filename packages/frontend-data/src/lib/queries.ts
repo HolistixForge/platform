@@ -34,21 +34,6 @@ export type TG_ServerImage = {
   image_sha256: string | null;
 };
 
-export const useQueryServerImages = () => {
-  const { ganymedeApi } = useApi();
-
-  return useQuery({
-    queryKey: ['images'],
-    queryFn: () =>
-      ganymedeApi.fetch({
-        url: `images`,
-        method: 'GET',
-      }) as Promise<{
-        _0: TG_ServerImage[];
-      }>,
-  });
-};
-
 //
 
 export const useQueryScope = () => {

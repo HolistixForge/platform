@@ -1,4 +1,8 @@
-import { TCoreSharedData, TEventDeleteNode, TEventNewNode } from '@monorepo/core';
+import {
+  TCoreSharedData,
+  TEventDeleteNode,
+  TEventNewNode,
+} from '@monorepo/core-graph';
 import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
 import { makeUuid } from '@monorepo/simple-types';
 import { makeProjectScopeString } from '@monorepo/demiurge-types';
@@ -25,13 +29,19 @@ type TExtraArgs = {
   project_id: string;
   user_id: string;
   jwt: {
-    scope: string[]
-  }
+    scope: string[];
+  };
 };
 
 type DispatchedEvents = TEventNewNode | TEventDeleteNode | TEventLockNode;
 
-type Ra<T> = ReduceArgs<TCoreSharedData, T, DispatchedEvents, TExtraArgs, undefined>;
+type Ra<T> = ReduceArgs<
+  TCoreSharedData,
+  T,
+  DispatchedEvents,
+  TExtraArgs,
+  undefined
+>;
 
 //
 
@@ -205,7 +215,6 @@ export class SocialsReducer extends Reducer<
   //
 
   _newReservation(g: Ra<TEventNewReservation>): Promise<void> {
-
     const userId = g.event.userId || g.extraArgs.user_id;
 
     g.sd.nodes.forEach((node) => {
@@ -231,11 +240,14 @@ export class SocialsReducer extends Reducer<
     });
 
     if (g.event.origin) {
-      g.bep.process({
-        type: 'space:lock-node',
-        viewId: g.event.origin?.viewId,
-        nid: id,
-      }, g.extraArgs);
+      g.bep.process(
+        {
+          type: 'space:lock-node',
+          viewId: g.event.origin?.viewId,
+          nid: id,
+        },
+        g.extraArgs
+      );
     }
 
     return Promise.resolve();
@@ -244,7 +256,9 @@ export class SocialsReducer extends Reducer<
   _deleteReservation(g: Ra<TEventDeleteReservation>): Promise<void> {
     const nodeData = g.sd.nodes.get(g.event.nodeId);
 
-    const admin = g.extraArgs.jwt.scope.includes(makeProjectScopeString(g.extraArgs.project_id, 'project:admin'));
+    const admin = g.extraArgs.jwt.scope.includes(
+      makeProjectScopeString(g.extraArgs.project_id, 'project:admin')
+    );
 
     if (admin || nodeData?.data?.userId === g.extraArgs.user_id) {
       g.bep.process({

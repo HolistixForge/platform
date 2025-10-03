@@ -8,12 +8,12 @@ import {
   projectServerNodeId,
   TEventNewServer,
   TEventDeleteServer,
-} from '@monorepo/servers';
+} from '@monorepo/user-containers';
 import {
   TEventDeleteNode,
   TEventNewNode,
   TCoreSharedData,
-} from '@monorepo/core';
+} from '@monorepo/core-graph';
 
 import {
   TJupyterEvent,
@@ -118,9 +118,9 @@ export class JupyterReducer extends Reducer<
 
   reduce(g: Ra<ReducedEvents>): Promise<void> {
     switch (g.event.type) {
-      case 'servers:new':
+      case 'user-containers:new':
         return this._newServer(g as Ra<TEventNewServer>);
-      case 'servers:delete':
+      case 'user-containers:delete':
         return this._deleteServer(g as Ra<TEventDeleteServer>);
       // cells
       case 'jupyter:new-cell':
@@ -156,7 +156,7 @@ export class JupyterReducer extends Reducer<
     }
   }
 
-  async _newServer(g: Ra<TEventNewServer>): Promise<void> {
+  async _newUserContainer(g: Ra<TEventNewUserContainer>): Promise<void> {
     const r = g.event.result;
     if (r && JUPYTER_IMAGE_IDS.includes(r.server.image_id)) {
       if (g.sd.jupyterServers.get(`${r.server.project_server_id}`)) return;

@@ -3,8 +3,8 @@ import {
   TValidSharedData,
   useExtraContext,
 } from '@monorepo/collab-engine';
-import { TServersSharedData } from '@monorepo/servers';
-import { TServersExtraContext } from '@monorepo/servers/frontend';
+import { TServersSharedData } from '@monorepo/user-containers';
+import { TServersExtraContext } from '@monorepo/user-containers/frontend';
 import { useRegisterListener } from '@monorepo/simple-types';
 
 import { JLsManager, TKernelPack } from './front/jls-manager';

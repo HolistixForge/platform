@@ -12,10 +12,10 @@ import {
 } from '@monorepo/tabs';
 import { useCurrentUser } from '@monorepo/frontend-data';
 import { useSharedData } from '@monorepo/collab-engine';
-import { serviceUrl } from '@monorepo/servers';
+import { serviceUrl } from '@monorepo/user-containers';
 
 import { useDispatcher } from '../model/collab-model-chunk';
-import { TServer, TServersSharedData } from '@monorepo/servers';
+import { TServer, TServersSharedData } from '@monorepo/user-containers';
 import { NodeEditorView } from './node-editor/node-editor-view';
 import { ResourcePage } from './resources-page';
 
@@ -94,7 +94,11 @@ export const EditorTabsSystemLogic = () => {
           onTabRename={onTabRename}
         >
           {roTree.flat().map((tab) => (
-            <TabTypeRouter key={tab.path.join('.')} tabPath={tab.path} {...tab} />
+            <TabTypeRouter
+              key={tab.path.join('.')}
+              tabPath={tab.path}
+              {...tab}
+            />
           ))}
         </TabsRadix>
       </div>

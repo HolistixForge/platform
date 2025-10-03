@@ -7,7 +7,7 @@
       "path": "../demiurge-types"
     },
     {
-      "path": "../modules/servers"
+      "path": "../modules/user-containers"
     },
     {
       "path": "../simple-types"

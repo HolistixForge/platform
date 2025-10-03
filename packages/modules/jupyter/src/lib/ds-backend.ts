@@ -1,4 +1,4 @@
-import { TServer, serviceUrl } from '@monorepo/servers';
+import { TServer, serviceUrl } from '@monorepo/user-containers';
 
 import { TJupyterServerData, TServerSettings } from './jupyter-types';
 import { JupyterlabDriver } from './driver';

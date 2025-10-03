@@ -4,7 +4,7 @@ import {
   TCoreSharedData,
   TEdge,
   TEventNewNode,
-} from '@monorepo/core';
+} from '@monorepo/core-graph';
 import { TGraphNode } from '@monorepo/module';
 import { error, UserException } from '@monorepo/log';
 import { TJsonObject } from '@monorepo/simple-types';

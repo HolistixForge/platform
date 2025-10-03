@@ -9,7 +9,7 @@ import {
   TServerImageOptions,
   TD_ServerImage,
   TG_Server,
-} from '@monorepo/servers';
+} from '@monorepo/user-containers';
 import { ONE_YEAR_MS, makeShortUuid } from '@monorepo/simple-types';
 
 //

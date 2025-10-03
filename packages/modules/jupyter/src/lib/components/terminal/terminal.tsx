@@ -14,7 +14,7 @@ import { Widget } from '@lumino/widgets';
 import { MessageLoop } from '@lumino/messaging';
 
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
-import { TServer, TServersSharedData } from '@monorepo/servers';
+import { TServer, TServersSharedData } from '@monorepo/user-containers';
 import { TGraphNode } from '@monorepo/module';
 import {
   DisableZoomDragPan,

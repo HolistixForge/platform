@@ -28,7 +28,12 @@ import {
 import { LayerViewport, LayerViewportAdapter } from '@monorepo/module/frontend';
 import { TJsonObject, useRegisterListener } from '@monorepo/simple-types';
 import { clientXY } from '@monorepo/ui-toolkit';
-import { TPosition, TEdge, TEdgeEnd, EEdgeSemanticType } from '@monorepo/core';
+import {
+  TPosition,
+  TEdge,
+  TEdgeEnd,
+  EEdgeSemanticType,
+} from '@monorepo/core-graph';
 import {
   useEventSequence,
   FrontendEventSequence,

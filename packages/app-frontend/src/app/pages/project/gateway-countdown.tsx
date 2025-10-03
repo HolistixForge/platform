@@ -11,7 +11,7 @@ import {
   TCoreSharedData,
   TProjectMeta,
   TEventDisableGatewayShutdown,
-} from '@monorepo/core';
+} from '@monorepo/core-graph';
 
 //
 

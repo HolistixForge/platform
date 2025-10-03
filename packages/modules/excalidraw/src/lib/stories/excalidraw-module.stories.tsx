@@ -9,7 +9,7 @@ import type { ModuleBackend } from '@monorepo/module';
 import {
   moduleBackend as coreBackend,
   moduleFrontend as coreFrontend,
-} from '@monorepo/core';
+} from '@monorepo/core-graph';
 import { moduleBackend as spaceBackend } from '@monorepo/space';
 import { moduleFrontend as spaceFrontend } from '@monorepo/space/frontend';
 

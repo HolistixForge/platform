@@ -3,7 +3,7 @@ import {
   TCoreSharedData,
   TEventDeleteNode,
   TEventNewNode,
-} from '@monorepo/core';
+} from '@monorepo/core-graph';
 import { makeUuid } from '@monorepo/simple-types';
 
 import {

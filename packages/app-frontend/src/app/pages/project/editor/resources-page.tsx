@@ -1,10 +1,10 @@
 import { useState } from 'react';
 
 import { ResourceBar, ServerStack } from '@monorepo/ui-views';
-import { ServerCard } from '@monorepo/servers/frontend';
+import { ServerCard } from '@monorepo/user-containers/frontend';
 
-import { TServer, TServersSharedData } from '@monorepo/servers';
-import { NewServerForm } from '@monorepo/servers/frontend';
+import { TServer, TServersSharedData } from '@monorepo/user-containers';
+import { NewServerForm } from '@monorepo/user-containers/frontend';
 import { useSharedData } from '@monorepo/collab-engine';
 
 import { ProjectSidebar } from '../sidebar';

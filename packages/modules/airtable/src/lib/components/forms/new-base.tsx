@@ -13,7 +13,7 @@ import {
   useSharedData,
   useAwareness,
 } from '@monorepo/collab-engine';
-import { TPosition } from '@monorepo/core';
+import { TPosition } from '@monorepo/core-graph';
 import { TPanel } from '@monorepo/module/frontend';
 import { makeUuid } from '@monorepo/simple-types';
 

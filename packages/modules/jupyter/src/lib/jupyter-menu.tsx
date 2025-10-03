@@ -2,7 +2,7 @@ import {
   TValidSharedDataToCopy,
   FrontendDispatcher,
 } from '@monorepo/collab-engine';
-import { TCoreSharedData } from '@monorepo/core';
+import { TCoreSharedData } from '@monorepo/core-graph';
 import { TSpaceMenuEntries } from '@monorepo/module/frontend';
 import { TJupyterSharedData } from './jupyter-shared-model';
 import { NewKernelForm } from './form/new-kernel';

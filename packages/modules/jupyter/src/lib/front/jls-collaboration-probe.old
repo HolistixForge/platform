@@ -6,7 +6,7 @@ import { TAwarenessUser, YjsAwareness } from '@monorepo/collab-engine';
 import { buildUserCss, getYDoc } from '@monorepo/collab-engine';
 import { ApiFetch } from '@monorepo/api-fetch';
 import { log } from '@monorepo/log';
-import { TG_Server } from '@monorepo/servers';
+import { TG_Server } from '@monorepo/user-containers';
 
 //
 

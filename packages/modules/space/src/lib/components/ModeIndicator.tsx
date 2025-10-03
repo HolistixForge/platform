@@ -1,4 +1,4 @@
-import { TPosition } from '@monorepo/core';
+import { TPosition } from '@monorepo/core-graph';
 import { WhiteboardMode } from './holistix-space';
 import { LayerViewport } from '@monorepo/module/frontend';
 

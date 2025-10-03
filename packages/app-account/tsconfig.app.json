@@ -24,7 +24,7 @@
       "path": "../demiurge-types/tsconfig.lib.json"
     },
     {
-      "path": "../modules/servers/tsconfig.lib.json"
+      "path": "../modules/user-containers/tsconfig.lib.json"
     },
     {
       "path": "../simple-types/tsconfig.lib.json"

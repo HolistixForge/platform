@@ -12,7 +12,7 @@ import {
 
 import '@xyflow/react/dist/style.css';
 
-import { EEdgeSemanticType, TEdge } from '@monorepo/core';
+import { EEdgeSemanticType, TEdge } from '@monorepo/core-graph';
 
 import { EdgeComponent, LabelEnd, LabelMiddle, LabelStart } from './edge';
 import { EdgeShape, TEdgeRenderProps } from '../../apis/types/edge';

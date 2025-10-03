@@ -311,242 +311,6 @@
         }
       }
     },
-    "/projects/{project_id}/servers": {
-      "get": {
-        "summary": "List project's servers",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "$ref": "#/components/parameters/project_id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "project servers list",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "_0": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/server"
-                      }
-                    }
-                  },
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "list-project-servers"
-            }
-          ]
-        }
-      },
-      "post": {
-        "summary": "New project server",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "$ref": "#/components/parameters/project_id"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "$ref": "#/components/schemas/server/properties/server_name"
-                  },
-                  "imageId": {
-                    "type": "number"
-                  }
-                },
-                "required": [
-                  "name",
-                  "imageId"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "project server id",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "_0": {
-                      "type": "object",
-                      "properties": {
-                        "new_project_server_id": {
-                          "$ref": "#/components/schemas/server/properties/project_server_id"
-                        }
-                      }
-                    }
-                  },
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "new-project-server"
-            }
-          ]
-        }
-      }
-    },
-    "/projects/{project_id}/volume": {
-      "get": {
-        "summary": "List project's volumes",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "$ref": "#/components/parameters/project_id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "project volumes list",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "_0": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/volume"
-                      }
-                    }
-                  },
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "list-volume"
-            }
-          ]
-        }
-      },
-      "post": {
-        "summary": "New project volume",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "$ref": "#/components/parameters/project_id"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "$ref": "#/components/schemas/volume/properties/volume_name"
-                  },
-                  "storage": {
-                    "$ref": "#/components/schemas/volume/properties/volume_storage"
-                  }
-                },
-                "required": [
-                  "name",
-                  "storage"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "project volume id",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "_0": {
-                      "type": "object",
-                      "properties": {
-                        "volume_id": {
-                          "$ref": "#/components/schemas/volume/properties/volume_id"
-                        }
-                      }
-                    }
-                  },
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "new-volume"
-            }
-          ]
-        }
-      }
-    },
     "/projects/{project_id}/volume/{volume_id}": {
       "delete": {
         "summary": "Delete project volume",
@@ -577,331 +341,6 @@
             {
               "selector": true,
               "exec-pipe-id": "delete-volume"
-            }
-          ]
-        }
-      }
-    },
-    "/projects/{project_id}/server/{project_server_id}": {
-      "delete": {
-        "summary": "Delete project server",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "$ref": "#/components/parameters/project_id"
-          },
-          {
-            "$ref": "#/components/parameters/project_server_id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/empty"
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "delete-project-server"
-            }
-          ]
-        }
-      }
-    },
-    "/projects/{project_id}/server/{project_server_id}/host": {
-      "post": {
-        "summary": "Flag this server as hosted by calling user",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "$ref": "#/components/parameters/project_id"
-          },
-          {
-            "$ref": "#/components/parameters/project_server_id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/empty"
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "project-server-host"
-            }
-          ]
-        }
-      }
-    },
-    "/projects/{project_id}/server/{project_server_id}/cmd": {
-      "get": {
-        "summary": "Stop project server",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "$ref": "#/components/parameters/project_server_id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "command",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "command": {
-                      "type": "string"
-                    }
-                  },
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "project-server-cmd"
-            }
-          ]
-        }
-      }
-    },
-    "/projects/{project_id}/server/{project_server_id}/to-cloud": {
-      "post": {
-        "summary": "Create a demiurge's cloud hosted resource for this server",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "$ref": "#/components/parameters/project_id"
-          },
-          {
-            "$ref": "#/components/parameters/project_server_id"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "instanceType": {
-                    "type": "string"
-                  },
-                  "storage": {
-                    "type": "number"
-                  }
-                },
-                "required": [
-                  "instanceType",
-                  "storage"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/empty"
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "project-server-to-cloud"
-            }
-          ]
-        }
-      }
-    },
-    "/projects/{project_id}/server/{project_server_id}/instance-state": {
-      "get": {
-        "summary": "get instance state",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "$ref": "#/components/parameters/project_id"
-          },
-          {
-            "$ref": "#/components/parameters/project_server_id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "instance state",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "state": {
-                      "type": "string"
-                    }
-                  },
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "project-server-cloud-state"
-            }
-          ]
-        }
-      }
-    },
-    "/projects/{project_id}/server/{project_server_id}/stop": {
-      "post": {
-        "summary": "Stop demiurge's cloud hosted resource for this server",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "$ref": "#/components/parameters/project_id"
-          },
-          {
-            "$ref": "#/components/parameters/project_server_id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/empty"
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "project-server-cloud-stop"
-            }
-          ]
-        }
-      }
-    },
-    "/projects/{project_id}/server/{project_server_id}/start": {
-      "post": {
-        "summary": "Start demiurge's cloud hosted resource for this server",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "$ref": "#/components/parameters/project_id"
-          },
-          {
-            "$ref": "#/components/parameters/project_server_id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/empty"
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "project-server-cloud-start"
-            }
-          ]
-        }
-      }
-    },
-    "/projects/{project_id}/server/{project_server_id}/delete-cloud": {
-      "post": {
-        "summary": "Delete demiurge's cloud hosted resource for this server",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "$ref": "#/components/parameters/project_id"
-          },
-          {
-            "$ref": "#/components/parameters/project_server_id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/empty"
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "project-server-cloud-delete"
             }
           ]
         }
@@ -980,189 +419,6 @@
             {
               "selector": true,
               "exec-pipe-id": "update-project-authorizations"
-            }
-          ]
-        }
-      }
-    },
-    "/projects/{project_id}/server/{project_server_id}/mounts": {
-      "get": {
-        "summary": "list project server's volume mounts",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "$ref": "#/components/parameters/project_id"
-          },
-          {
-            "$ref": "#/components/parameters/project_server_id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "server's volumes mounts list",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "_0": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/mount"
-                      }
-                    }
-                  },
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "list-project-server-mounts"
-            }
-          ]
-        }
-      }
-    },
-    "/projects/{project_id}/server/{project_server_id}/mount": {
-      "post": {
-        "summary": "mount a volume on server",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "$ref": "#/components/parameters/project_id"
-          },
-          {
-            "$ref": "#/components/parameters/project_server_id"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "volume_id": {
-                    "$ref": "#/components/schemas/mount/properties/volume_id"
-                  },
-                  "mount_point": {
-                    "$ref": "#/components/schemas/mount/properties/mount_point"
-                  }
-                },
-                "required": [
-                  "volume_id",
-                  "mount_point"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "status",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {},
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "mount-volume"
-            }
-          ]
-        }
-      }
-    },
-    "/projects/{project_id}/server/{project_server_id}/unmount": {
-      "post": {
-        "summary": "unmount a volume from a server",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "$ref": "#/components/parameters/project_id"
-          },
-          {
-            "$ref": "#/components/parameters/project_server_id"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "volume_id": {
-                    "$ref": "#/components/schemas/mount/properties/volume_id"
-                  },
-                  "mount_point": {
-                    "$ref": "#/components/schemas/mount/properties/mount_point"
-                  }
-                },
-                "required": [
-                  "volume_id",
-                  "mount_point"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "status",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {},
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "unmount-volume"
             }
           ]
         }
@@ -1603,6 +859,131 @@
             {
               "selector": true,
               "exec-pipe-id": "gateway-stop"
+            }
+          ]
+        }
+      }
+    },
+    "/oauth/clients": {
+      "post": {
+        "summary": "Create OAuth client for user container",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "service_name": {
+                    "type": "string",
+                    "description": "Name of the service"
+                  },
+                  "user_container_id": {
+                    "type": "string",
+                    "description": "ID of the user container"
+                  },
+                  "access_token_lifetime": {
+                    "type": "integer",
+                    "description": "Access token lifetime in seconds"
+                  },
+                  "redirect_uris": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Allowed redirect URIs"
+                  }
+                },
+                "required": ["service_name", "user_container_id"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OAuth client created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "client_id": {
+                      "type": "string",
+                      "description": "OAuth client ID"
+                    },
+                    "client_secret": {
+                      "type": "string",
+                      "description": "OAuth client secret"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        },
+        "x-backend-engine": {
+          "points": [
+            {
+              "selector": true,
+              "exec-pipe-id": "create-oauth-client"
+            }
+          ]
+        }
+      },
+      "delete": {
+        "summary": "Delete OAuth client for user container",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
+          {
+            "name": "user_container_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID of the user container"
+          },
+          {
+            "name": "service_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the service"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OAuth client deleted successfully"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        },
+        "x-backend-engine": {
+          "points": [
+            {
+              "selector": true,
+              "exec-pipe-id": "delete-oauth-client"
             }
           ]
         }

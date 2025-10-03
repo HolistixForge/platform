@@ -6,7 +6,7 @@ import { TSpaceMenuEntries, TSpaceMenuEntry } from '@monorepo/module/frontend';
 import {
   moduleBackend as coreBackend,
   moduleFrontend as coreFrontend,
-} from '@monorepo/core';
+} from '@monorepo/core-graph';
 
 import { HolistixSpace } from '../../components/holistix-space';
 import { STORY_VIEW_ID } from '../story-holistix-space';

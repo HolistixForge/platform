@@ -10,7 +10,7 @@ import {
   useSharedData,
 } from '@monorepo/collab-engine';
 import { TGraphNode } from '@monorepo/module';
-import { TCoreEvent } from '@monorepo/core';
+import { TCoreEvent } from '@monorepo/core-graph';
 import {
   DisableZoomDragPan,
   InputsAndOutputs,
@@ -21,7 +21,7 @@ import {
   useNodeHeaderButtons,
 } from '@monorepo/space/frontend';
 import { makeUuid } from '@monorepo/simple-types';
-import { TServersSharedData, TServer } from '@monorepo/servers';
+import { TServersSharedData, TServer } from '@monorepo/user-containers';
 
 import { TJupyterEvent } from '../../jupyter-events';
 import {

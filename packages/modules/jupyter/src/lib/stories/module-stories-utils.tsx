@@ -6,27 +6,25 @@ import {
   useDispatcher,
 } from '@monorepo/collab-engine';
 import { TJsonObject, TMyfetchRequest } from '@monorepo/simple-types';
-import { TServersSharedData, TServerEvents } from '@monorepo/servers';
-import { TCoreSharedData } from '@monorepo/core';
+import { TServersSharedData, TServerEvents } from '@monorepo/user-containers';
+import { TCoreSharedData } from '@monorepo/core-graph';
 
 //
 
-import { moduleBackend as coreBackend } from '@monorepo/core';
+import { moduleBackend as coreBackend } from '@monorepo/core-graph';
 import { moduleBackend as spaceBackend } from '@monorepo/space';
 import {
-  moduleBackend as serversBackend,
+  moduleBackend as userContainersBackend,
   TG_Server,
-  TGanymedeExtraContext,
-  TGatewayExtraContext,
-} from '@monorepo/servers';
+} from '@monorepo/user-containers';
 //
-import { moduleFrontend as coreFrontend } from '@monorepo/core';
+import { moduleFrontend as coreFrontend } from '@monorepo/core-graph';
 import { moduleFrontend as spaceFrontend } from '@monorepo/space/frontend';
 import { STORY_VIEW_ID } from '@monorepo/space/stories';
 import {
-  moduleFrontend as serversFrontend,
+  moduleFrontend as userContainersFrontend,
   TAuthenticationExtraContext,
-} from '@monorepo/servers/frontend';
+} from '@monorepo/user-containers/frontend';
 import { ModuleFrontend } from '@monorepo/module/frontend';
 
 //
@@ -57,7 +55,7 @@ const modulesBackend = [
   {
     collabChunk: {
       name: 'gateway',
-      loadExtraContext: (): TGatewayExtraContext => ({
+      loadExtraContext: (): any => ({
         gateway: {
           updateReverseProxy: async () => {},
           gatewayFQDN: STORY_JUPYTER_IP,
@@ -68,7 +66,7 @@ const modulesBackend = [
   {
     collabChunk: {
       name: 'ganymede',
-      loadExtraContext: (): TGanymedeExtraContext => ({
+      loadExtraContext: (): any => ({
         ganymede: {
           toGanymede: async <T,>(req: TMyfetchRequest): Promise<T> => {
             if (
@@ -114,7 +112,7 @@ const modulesBackend = [
   },
   coreBackend,
   spaceBackend,
-  serversBackend,
+  userContainersBackend,
   jupyterBackend,
 ];
 
@@ -138,18 +136,18 @@ export const modulesFrontend: ModuleFrontend[] = [
   },
   coreFrontend,
   spaceFrontend,
-  serversFrontend,
+  userContainersFrontend,
   jupyterFrontend,
 ];
 
 //
 
 const getRequestContext = (event: TJsonObject): TJsonObject => {
-  if (event.type === 'server:map-http-service') {
+  if (event.type === 'user-container:map-http-service') {
     // mock jwt payload for a server 'map http service' event
     const r = {
       jwt: {
-        project_server_id: STORY_PROJECT_SERVER_ID,
+        user_container_id: STORY_PROJECT_USER_CONTAINER_ID,
       },
     };
     return r;
@@ -270,11 +268,11 @@ export const useInitStoryJupyterServer =
         // Step 1: Create server if it doesn't exist
         else if (!jupyter) {
           await dispatcher.dispatch({
-            type: 'servers:new',
+            type: 'user-containers:new',
             from: {
               new: {
-                serverName: 'story-server',
-                imageId: 2, // Image id of jupyterlab minimal notebook docker image
+                userContainerName: 'story-user-container',
+                imageId: 'jupyter:minimal', // Image id of jupyterlab minimal notebook docker image
               },
             },
             origin: {

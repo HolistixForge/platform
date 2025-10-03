@@ -1,5 +1,9 @@
 import { serverUrl } from '@monorepo/api-fetch';
-import { TServer, TServersSharedData, serviceUrl } from '@monorepo/servers';
+import {
+  TServer,
+  TServersSharedData,
+  serviceUrl,
+} from '@monorepo/user-containers';
 import { Listenable } from '@monorepo/simple-types';
 import { FrontendDispatcher } from '@monorepo/collab-engine';
 

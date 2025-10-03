@@ -3,7 +3,6 @@ export { ApiContext, useApi } from './lib/api-context';
 export { GanymedeApi } from './lib/api-ganymede';
 
 export {
-  useQueryServerImages,
   useQueryScope,
   useQueryUsersSearch,
   useQueryUser,

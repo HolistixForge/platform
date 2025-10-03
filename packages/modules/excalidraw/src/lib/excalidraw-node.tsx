@@ -7,7 +7,7 @@ import { NodeHeader } from '@monorepo/space/frontend';
 import { InputsAndOutputs } from '@monorepo/space/frontend';
 import { DisableZoomDragPan } from '@monorepo/space/frontend';
 import { ButtonBase } from '@monorepo/ui-base';
-import { TCoreEvent } from '@monorepo/core';
+import { TCoreEvent } from '@monorepo/core-graph';
 
 import { TExcalidrawLayerPayload } from './layer';
 import { TExcalidrawSharedData } from './excalidraw-shared-model';

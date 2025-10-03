@@ -6,6 +6,12 @@
       "path": "../../collab-engine"
     },
     {
+      "path": "../reducers"
+    },
+    {
+      "path": "../collab"
+    },
+    {
       "path": "../module"
     },
     {

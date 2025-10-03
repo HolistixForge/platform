@@ -12,7 +12,7 @@ import { UserListItem } from '@monorepo/ui-base';
 import { TF_User } from '@monorepo/demiurge-types';
 import { useDispatcher } from '@monorepo/collab-engine';
 import { TEventSocials } from '../socials-events';
-import { TPosition } from '@monorepo/core';
+import { TPosition } from '@monorepo/core-graph';
 
 //
 

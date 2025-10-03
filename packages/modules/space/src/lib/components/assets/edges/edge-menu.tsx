@@ -3,7 +3,7 @@ import { CSSProperties } from 'react';
 import { ColorPicker } from '@monorepo/ui-base';
 import { SelectFieldset, SelectItem, SliderFieldset } from '@monorepo/ui-base';
 import { useSharedData } from '@monorepo/collab-engine';
-import { TCoreSharedData } from '@monorepo/core';
+import { TCoreSharedData } from '@monorepo/core-graph';
 
 import { edgeId, TEdgeRenderProps } from '../../apis/types/edge';
 

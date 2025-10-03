@@ -33,16 +33,16 @@
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "references": [
     {
-      "path": "../simple-types/tsconfig.lib.json"
-    },
-    {
-      "path": "../api-fetch/tsconfig.lib.json"
-    },
-    {
       "path": "../modules/excalidraw/tsconfig.lib.json"
     },
     {
       "path": "../modules/airtable/tsconfig.lib.json"
+    },
+    {
+      "path": "../simple-types/tsconfig.lib.json"
+    },
+    {
+      "path": "../api-fetch/tsconfig.lib.json"
     },
     {
       "path": "../modules/notion/tsconfig.lib.json"
@@ -60,16 +60,13 @@
       "path": "../modules/tabs/tsconfig.lib.json"
     },
     {
-      "path": "../modules/module/tsconfig.lib.json"
-    },
-    {
       "path": "../modules/space/tsconfig.lib.json"
     },
     {
       "path": "../modules/core/tsconfig.lib.json"
     },
     {
-      "path": "../modules/servers/tsconfig.lib.json"
+      "path": "../modules/user-containers/tsconfig.lib.json"
     },
     {
       "path": "../collab-engine/tsconfig.lib.json"

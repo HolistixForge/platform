@@ -1,4 +1,4 @@
-import { TEventOrigin } from '@monorepo/core';
+import { TEventOrigin } from '@monorepo/core-graph';
 
 export type TEventNewYoutube = {
   type: 'socials:new-youtube';

@@ -12,22 +12,22 @@
       "path": "../../api-fetch"
     },
     {
+      "path": "../../log"
+    },
+    {
       "path": "../../simple-types"
     },
     {
       "path": "../core"
     },
     {
-      "path": "../../log"
+      "path": "../module"
     },
     {
       "path": "../../collab-engine"
     },
     {
-      "path": "../servers"
-    },
-    {
-      "path": "../module"
+      "path": "../user-containers"
     },
     {
       "path": "../space"

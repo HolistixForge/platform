@@ -1,4 +1,4 @@
-import { TEventOrigin, TPosition } from '@monorepo/core';
+import { TEventOrigin, TPosition } from '@monorepo/core-graph';
 import { TEdgeRenderProps } from './components/apis/types/edge';
 
 export type TEventMoveNode = {

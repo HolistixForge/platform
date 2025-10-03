@@ -1,4 +1,4 @@
-import { TPosition, TEdge } from '@monorepo/core';
+import { TPosition, TEdge } from '@monorepo/core-graph';
 
 export type TSelectingUsers = {
   user: { username: string; color: string };

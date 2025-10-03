@@ -5,7 +5,7 @@ import { MockCollaborativeContext } from '@monorepo/collab-engine';
 import {
   moduleBackend as coreBackend,
   moduleFrontend as coreFrontend,
-} from '@monorepo/core';
+} from '@monorepo/core-graph';
 import { StoryApiContext } from '@monorepo/frontend-data';
 import { TSpaceMenuEntries, TSpaceMenuEntry } from '@monorepo/module/frontend';
 import { moduleBackend as notionBackend } from '../..';

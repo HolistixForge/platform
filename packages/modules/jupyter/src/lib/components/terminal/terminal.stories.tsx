@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { useEffect, useState } from 'react';
 
 import { Logger } from '@monorepo/log';
-import { TServerEvents, TServersSharedData } from '@monorepo/servers';
+import { TServerEvents, TServersSharedData } from '@monorepo/user-containers';
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
 import { ButtonBase, SelectFieldset, SelectItem } from '@monorepo/ui-base';
 

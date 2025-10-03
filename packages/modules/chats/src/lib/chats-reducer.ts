@@ -5,7 +5,7 @@ import {
   TEventDeleteNode,
   TEventNewEdge,
   TEventNewNode,
-} from '@monorepo/core';
+} from '@monorepo/core-graph';
 
 import {
   TChatEvent,
@@ -46,7 +46,8 @@ export class ChatReducer extends Reducer<
   TChatSharedData,
   TChatEvent,
   DispatchedEvents,
-  TExtraArgs, undefined
+  TExtraArgs,
+  undefined
 > {
   //
 
@@ -157,12 +158,12 @@ export class ChatReducer extends Reducer<
       ],
       origin: g.event.origin
         ? {
-          ...g.event.origin,
-          position: {
-            x: g.event.origin.position.x + 100,
-            y: g.event.origin.position.y + 100,
-          },
-        }
+            ...g.event.origin,
+            position: {
+              x: g.event.origin.position.x + 100,
+              y: g.event.origin.position.y + 100,
+            },
+          }
         : undefined,
     });
 

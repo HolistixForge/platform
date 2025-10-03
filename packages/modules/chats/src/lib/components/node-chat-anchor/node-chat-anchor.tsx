@@ -1,6 +1,6 @@
 import { icons } from '@monorepo/ui-base';
 import { InputsAndOutputs, useNodeContext } from '@monorepo/space/frontend';
-import { useNodeEdges } from '@monorepo/core';
+import { useNodeEdges } from '@monorepo/core-graph';
 import { TGraphNode } from '@monorepo/module';
 import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
 import { useCurrentUser } from '@monorepo/frontend-data';

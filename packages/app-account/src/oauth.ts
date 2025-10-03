@@ -52,7 +52,7 @@ export const setupOauthRoutes = (router: express.Router) => {
     res: express.Response,
     next: express.NextFunction
   ) {
-    // jupyterlab servers don't send a scope
+    // jupyterlab user containers don't send a scope
     if (!req.query.scope && !req.body.scope) req.query.scope = 'none';
 
     const queryParameters = {

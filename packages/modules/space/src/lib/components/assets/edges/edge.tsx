@@ -14,7 +14,7 @@ import {
   useViewport,
 } from '@xyflow/react';
 
-import { TEdge } from '@monorepo/core';
+import { TEdge } from '@monorepo/core-graph';
 
 import { ReactflowEdgePayload, TEdgeRenderProps } from '../../apis/types/edge';
 import { calculateEdgePath } from './edge-path-utils';

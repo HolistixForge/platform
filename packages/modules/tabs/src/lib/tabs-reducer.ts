@@ -1,5 +1,5 @@
 import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
-import { TEventLoad } from '@monorepo/core';
+import { TEventLoad } from '@monorepo/core-graph';
 
 import {
   TEventActiveTabChange,

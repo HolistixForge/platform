@@ -12,7 +12,7 @@ import {
 
 import { error, log } from '@monorepo/log';
 import { makeUuid } from '@monorepo/simple-types';
-import { TServerImageOptions } from '@monorepo/servers';
+import { TServerImageOptions } from '@monorepo/user-containers';
 import { development, generateJwtToken } from '@monorepo/backend-engine';
 import {
   GLOBAL_CLIENT_ID,
@@ -63,8 +63,8 @@ export const model: AuthorizationCodeModel &
     const image_options = row['image_options'] as TServerImageOptions;
     const oauthClientOptions = row['service_name']
       ? image_options.oauthClients?.find(
-        (oc) => oc.serviceName === row['service_name']
-      )
+          (oc) => oc.serviceName === row['service_name']
+        )
       : undefined;
 
     // if a valid client is found

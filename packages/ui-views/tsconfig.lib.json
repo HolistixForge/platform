@@ -45,7 +45,7 @@
       "path": "../frontend-data/tsconfig.lib.json"
     },
     {
-      "path": "../modules/servers/tsconfig.lib.json"
+      "path": "../modules/user-containers/tsconfig.lib.json"
     },
     {
       "path": "../ui-base/tsconfig.lib.json"

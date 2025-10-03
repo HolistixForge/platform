@@ -19,7 +19,7 @@
       "path": "../modules/notion"
     },
     {
-      "path": "../modules/servers"
+      "path": "../modules/user-containers"
     },
     {
       "path": "../modules/chats"

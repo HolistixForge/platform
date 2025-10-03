@@ -1,4 +1,4 @@
-import { TEdge } from '@monorepo/core';
+import { TEdge } from '@monorepo/core-graph';
 import { TGraphNode, TConnector } from '@monorepo/module';
 import { Listenable } from '@monorepo/simple-types';
 

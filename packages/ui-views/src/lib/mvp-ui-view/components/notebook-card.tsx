@@ -8,7 +8,7 @@ import {
   SelectFieldset,
   SelectItem,
 } from '@monorepo/ui-base';
-import { StatusLed } from '@monorepo/servers/frontend';
+import { StatusLed } from '@monorepo/user-containers/frontend';
 import { TF_User } from '@monorepo/demiurge-types';
 
 //

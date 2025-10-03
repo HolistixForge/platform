@@ -16,7 +16,7 @@ export const moduleFrontend: ModuleFrontend = {
     name: 'jupyter',
     loadSharedData: Jupyter_loadData,
     loadExtraContext: Jupyter_Load_Frontend_ExtraContext,
-    deps: ['servers'],
+    deps: ['user-containers'],
   },
   spaceMenuEntries: spaceMenuEntrie,
   nodes: {

@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 
-import { TGraphNode } from '@monorepo/core';
+import { TGraphNode } from '@monorepo/module';
 import { useQueryUser } from '@monorepo/frontend-data';
 import { UserAvatar, UserUsername } from '@monorepo/ui-base';
 import { TG_User } from '@monorepo/demiurge-types';

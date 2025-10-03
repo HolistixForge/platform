@@ -7,7 +7,7 @@ export const moduleBackend: ModuleBackend = {
     name: 'space',
     loadSharedData: Space_loadData,
     loadReducers: (sd) => [new SpaceReducer()],
-    deps: ['core'],
+    deps: ['core-graph'],
   },
 };
 

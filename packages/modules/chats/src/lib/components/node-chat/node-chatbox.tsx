@@ -8,7 +8,7 @@ import {
   useNodeContext,
 } from '@monorepo/space/frontend';
 
-import { useNodeEdges } from '@monorepo/core';
+import { useNodeEdges } from '@monorepo/core-graph';
 import { TGraphNode } from '@monorepo/module';
 import { useCurrentUser, useQueriesUsers } from '@monorepo/frontend-data';
 import {
