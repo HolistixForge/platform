@@ -1,10 +1,10 @@
 import { TCoreSharedData } from '@monorepo/core-graph';
-import { TGraphNode } from '@monorepo/module';
+import { TGraphNode } from '@monorepo/core-graph';
 import { TEdge } from '@monorepo/core-graph';
 
 import { defaultGraphView, TGraphView } from '../../space-types';
 import { graph1 } from './graph-1';
-import { TSpaceSharedData } from '../../space-shared-model';
+import { TSpaceSharedData } from '../../..';
 import { STORY_VIEW_ID } from '../story-holistix-space';
 
 //
@@ -27,10 +27,10 @@ const loadStoryGraph = (
 //
 
 export const loadStoryData = (sd: TSpaceSharedData & TCoreSharedData) => {
-  const graphViews = sd.graphViews;
+  const graphViews = sd['space:graphViews'];
   const gv: TGraphView = defaultGraphView();
 
-  loadStoryGraph(gv, sd.nodes as any, sd.edges as any);
+  loadStoryGraph(gv, sd['core:nodes'] as any, sd['core:edges'] as any);
 
   graphViews.set(STORY_VIEW_ID, gv);
 };

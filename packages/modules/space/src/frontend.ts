@@ -1,10 +1,17 @@
-import { ModuleFrontend } from '@monorepo/module/frontend';
+import { FC } from 'react';
+
+import { TModule } from '@monorepo/module';
+import { TCollabFrontendExports } from '@monorepo/collab/frontend';
+import { TGraphNode } from '@monorepo/core-graph';
 
 import { Group } from './lib/components/group/group';
 import { Shape } from './lib/components/shape/shape';
-import { Space_loadData } from './lib/space-shared-model';
-import { spaceMenuEntries } from './lib/space-menu';
+import { spaceMenuEntries, TSpaceMenuEntries } from './lib/space-menu';
 import './lib/index.scss';
+import { TLayerProvider } from './lib/components/layer-types';
+import { TJsonObject } from '@monorepo/simple-types';
+
+//
 
 export {
   InputsAndOutputs,
@@ -36,17 +43,61 @@ export { useLayerContext } from './lib/components/layer-context';
 
 export type { TLayerTreeItem } from './lib/layer-tree-types';
 
-//
+type TRequired = {
+  collab: TCollabFrontendExports;
+};
 
-export const moduleFrontend: ModuleFrontend = {
-  collabChunk: {
-    name: 'space',
-    loadSharedData: Space_loadData,
-    deps: ['core-graph'],
-  },
-  spaceMenuEntries,
-  nodes: {
-    group: Group,
-    shape: Shape,
+type TSpaceExports = {
+  registerMenuEntries: (entries: TSpaceMenuEntries) => void;
+  registerNodes: (nodes: { [key: string]: FC<{ node: TGraphNode }> }) => void;
+  registerLayer: (layers: TLayerProvider) => void;
+  registerPanel: (panel: PanelComponent) => void;
+};
+
+const menuEntries: TSpaceMenuEntries[] = [];
+
+let nodes: { [key: string]: FC<{ node: TGraphNode }> } = {};
+
+const layers: TLayerProvider[] = [];
+
+export type TPanel = { type: string; uuid: string; data: TJsonObject };
+
+export type PanelComponent = FC<{
+  panel: TPanel;
+  closePanel: (uuid: string) => void;
+}>;
+
+const panels: PanelComponent[] = [];
+
+export const moduleFrontend: TModule<TRequired, TSpaceExports> = {
+  name: 'space',
+  version: '0.0.1',
+  description: 'Space module',
+  dependencies: ['core-graph'],
+  load: ({ depsExports, moduleExports }) => {
+    depsExports.collab.collab.loadSharedData('map', 'graphViews');
+
+    const exports: TSpaceExports = {
+      registerMenuEntries: (entries) => {
+        menuEntries.push(entries);
+      },
+      registerNodes: (newNodes) => {
+        nodes = { ...nodes, ...newNodes };
+      },
+      registerLayer: (newLayer) => {
+        layers.push(newLayer);
+      },
+      registerPanel: (newPanel) => {
+        panels.push(newPanel);
+      },
+    };
+
+    exports.registerMenuEntries(spaceMenuEntries);
+    exports.registerNodes({
+      group: Group,
+      shape: Shape,
+    });
+
+    moduleExports(exports);
   },
 };

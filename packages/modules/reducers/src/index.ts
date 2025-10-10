@@ -1,14 +1,27 @@
 import { TModule } from '@monorepo/module';
+import { TJson, TJsonWithUndefined, TStringMap } from '@monorepo/simple-types';
+import { BackendEventProcessor } from './lib/backendEventProcessor';
 
-type TBaseEvent = { type: string };
+export type TBaseEvent = { type: string; [key: string]: TJsonWithUndefined };
 
-export abstract class Reducer<TEvents = TBaseEvent, TDepsExports = unknown> {
-  abstract reduce(e: TEvents, depsExports: TDepsExports): Promise<void>;
+export abstract class RequestData {
+  abstract get ip(): string;
+  abstract get user_id(): string;
+  abstract get jwt(): TJson;
+  abstract get headers(): TStringMap;
+}
+
+export abstract class Reducer<TEvents = TBaseEvent> {
+  abstract reduce(
+    e: TEvents,
+
+    requestData: RequestData
+  ): Promise<void>;
 }
 
 export type TReducersBackendExports = {
-  reducers: Reducer[];
-  loadReducers: (r: Reducer) => void;
+  processEvent: (e: TBaseEvent, requestData: RequestData) => Promise<void>;
+  loadReducers: (r: Reducer<unknown>) => void;
 };
 
 export const moduleBackend: TModule<undefined, TReducersBackendExports> = {
@@ -17,11 +30,13 @@ export const moduleBackend: TModule<undefined, TReducersBackendExports> = {
   description: 'Reducers module',
   dependencies: [],
   load: (args) => {
-    const reducers: Reducer[] = [];
+    const bep = new BackendEventProcessor();
     args.moduleExports({
-      reducers,
-      loadReducers: (r: Reducer) => {
-        reducers.push(r);
+      processEvent: async (e: TBaseEvent, requestData: RequestData) => {
+        await bep.processEvent(e, requestData);
+      },
+      loadReducers: (r: Reducer<unknown>) => {
+        bep.addReducer(r);
       },
     });
   },

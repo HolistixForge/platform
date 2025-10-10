@@ -3,6 +3,8 @@ export type {
   TJsonObject,
   TJsonArray,
   TJsonWithDate,
+  TJsonWithUndefined,
+  TStringMap,
 } from './lib/simple-types';
 
 export type {

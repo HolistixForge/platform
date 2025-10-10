@@ -2,7 +2,7 @@ import { CSSProperties } from 'react';
 
 import { ColorPicker } from '@monorepo/ui-base';
 import { SelectFieldset, SelectItem, SliderFieldset } from '@monorepo/ui-base';
-import { useSharedData } from '@monorepo/collab-engine';
+import { useLocalSharedData } from '@monorepo/collab/frontend';
 import { TCoreSharedData } from '@monorepo/core-graph';
 
 import { edgeId, TEdgeRenderProps } from '../../apis/types/edge';
@@ -71,10 +71,10 @@ export const EdgeMenu = ({
     width: 'fit-content',
   };
 
-  const renderProps: TEdgeRenderProps = useSharedData<TCoreSharedData>(
-    ['edges'],
+  const renderProps: TEdgeRenderProps = useLocalSharedData<TCoreSharedData>(
+    ['core:edges'],
     (sd) => {
-      const edge = sd.edges.find((e) => edgeId(e) === eid);
+      const edge = sd['core:edges'].find((e) => edgeId(e) === eid);
       const renderProps = (edge as any)?.renderProps;
       return renderProps || {};
     }

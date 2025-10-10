@@ -6,7 +6,7 @@ import {
   SelectFieldset,
   SelectItem,
 } from '@monorepo/ui-base';
-import { TGraphNode } from '@monorepo/module';
+import { TGraphNode } from '@monorepo/core-graph';
 import { useDispatcher } from '@monorepo/collab-engine';
 
 import { NodeHeader } from '../assets/node-header/node-header';

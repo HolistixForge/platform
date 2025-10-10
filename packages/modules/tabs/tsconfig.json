@@ -3,7 +3,7 @@
   "include": [],
   "references": [
     {
-      "path": "../core"
+      "path": "../core-graph"
     },
     {
       "path": "../../collab-engine"

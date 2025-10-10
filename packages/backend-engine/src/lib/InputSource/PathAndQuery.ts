@@ -1,4 +1,6 @@
-import { Request, TStringMap } from '../Request/Request';
+import { TStringMap } from '@monorepo/simple-types';
+
+import { Request } from '../Request/Request';
 import { InputSource } from './InputSource';
 
 export class PathAndQuery extends InputSource {

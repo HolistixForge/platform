@@ -19,7 +19,7 @@ export {
   GATEWAY_PROJECT_SCOPE,
   makeProjectScopeString,
   makeGatewayScopeString,
-  serverAccessScope,
+  userContainerAccessScope,
   GLOBAL_CLIENT_ID,
   GLOBAL_CLIENT_SECRET,
 } from './lib/ganymede-api/scope';

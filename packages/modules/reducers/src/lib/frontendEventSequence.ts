@@ -1,20 +1,18 @@
 import * as _ from 'lodash';
 
-import { makeUuid, TJsonObject } from '@monorepo/simple-types';
-import { FrontendDispatcher } from './frontendDispatcher';
-import { SequenceEvent } from '../backendEventSequence';
-import { LocalOverrider } from './localOverrider';
-import { TValidSharedData } from '../chunk';
+import { makeUuid } from '@monorepo/simple-types';
+import { FrontendDispatcher } from './dispatchers';
+import { SequenceEvent } from './backendEventSequence';
+import { TBaseEvent } from '..';
 
 //
 
-export type LocalReduceFunction = (sdc: any, event: any) => void;
+export type LocalReduceFunction<TE = TBaseEvent> = (event: TE) => void;
 
 //
 
-export class FrontendEventSequence<T extends TJsonObject> {
-  public localReduce: LocalReduceFunction;
-  public localReduceUpdateKeys: string[];
+export class FrontendEventSequence<T extends TBaseEvent> {
+  public localReduce: LocalReduceFunction<T>;
   public lastEvent:
     | (T & Pick<SequenceEvent, 'sequenceRevertPoint' | 'sequenceEnd'>)
     | undefined;
@@ -23,7 +21,6 @@ export class FrontendEventSequence<T extends TJsonObject> {
   private counter = 0;
   private sequenceId: string;
   private dispatcher: FrontendDispatcher<T>;
-  private localOverrider: LocalOverrider<TValidSharedData>;
   private debouncedDispatch: _.DebouncedFunc<
     (
       event: T & Pick<SequenceEvent, 'sequenceRevertPoint' | 'sequenceEnd'>
@@ -32,16 +29,11 @@ export class FrontendEventSequence<T extends TJsonObject> {
 
   constructor(
     dispatcher: FrontendDispatcher<T>,
-    localReduce: LocalReduceFunction,
-    localOverrider: LocalOverrider<TValidSharedData>,
-    localReduceUpdateKeys: string[]
+    localReduce: LocalReduceFunction<T>
   ) {
     this.localReduce = localReduce;
     this.sequenceId = makeUuid();
     this.dispatcher = dispatcher;
-    this.localOverrider = localOverrider;
-    this.localReduceUpdateKeys = localReduceUpdateKeys;
-    this.localOverrider.registerFrontendEventSequence(this);
 
     // Create debounced version of dispatch
     this.debouncedDispatch = _.debounce(
@@ -69,16 +61,14 @@ export class FrontendEventSequence<T extends TJsonObject> {
     event: T & Pick<SequenceEvent, 'sequenceRevertPoint' | 'sequenceEnd'>
   ) {
     if (this.hasError) return;
-
     this.lastEvent = event;
-    this.localOverrider.apply(this);
+    this.localReduce(event);
     this.debouncedDispatch(event);
   }
 
   cleanup() {
-    // TODO: bof ! to avoid node jumpinf after sequence end due to shared state push from backend
     setTimeout(() => {
-      this.localOverrider.unregisterFrontendEventSequence(this);
+      //
     }, 2000);
   }
 }

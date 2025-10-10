@@ -1,5 +1,5 @@
 import { TEdge } from '@monorepo/core-graph';
-import { TGraphNode, TConnector } from '@monorepo/module';
+import { TGraphNode, TConnector } from '@monorepo/core-graph';
 import { Listenable } from '@monorepo/simple-types';
 
 import {

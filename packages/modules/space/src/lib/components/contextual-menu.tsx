@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { TSpaceMenuEntry } from '@monorepo/module/frontend';
+import { TSpaceMenuEntry } from '../space-menu';
 import * as ContextMenu from '@radix-ui/react-context-menu';
 import { ChevronRightIcon } from '@radix-ui/react-icons';
 

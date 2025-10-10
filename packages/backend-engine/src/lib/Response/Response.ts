@@ -1,7 +1,6 @@
 import { log } from '@monorepo/log';
 import { JsonValue } from '../JsonValue';
-import { TStringMap } from '../Request/Request';
-import { TJson, TUri } from '@monorepo/simple-types';
+import { TJson, TUri, TStringMap } from '@monorepo/simple-types';
 
 //
 //

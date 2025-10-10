@@ -49,7 +49,7 @@
       "path": "../modules/tabs"
     },
     {
-      "path": "../modules/core"
+      "path": "../modules/core-graph"
     },
     {
       "path": "../collab-engine"

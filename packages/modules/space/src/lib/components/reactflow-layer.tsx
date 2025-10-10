@@ -25,7 +25,7 @@ import {
   OnMove,
 } from '@xyflow/react';
 
-import { LayerViewport, LayerViewportAdapter } from '@monorepo/module/frontend';
+import { LayerViewport, LayerViewportAdapter } from './layer-types';
 import { TJsonObject, useRegisterListener } from '@monorepo/simple-types';
 import { clientXY } from '@monorepo/ui-toolkit';
 import {
@@ -46,7 +46,7 @@ import { SpaceState } from './apis/spaceState';
 import { translateEdges, translateNodes } from './to-rf-nodes';
 import { TSpaceEvent } from '../space-events';
 import { getAbsolutePosition } from '../utils/position-utils';
-import { TSpaceSharedData } from '../space-shared-model';
+import { TSpaceSharedData } from '../..';
 import { INITIAL_VIEWPORT } from './holistix-space';
 import { useSpaceContext } from './reactflow-layer-context';
 
@@ -218,10 +218,10 @@ export const ReactflowLayer = ({
       // Create sequence if it doesn't exist
       if (!moveNodeEventSequenceRef.current) {
         moveNodeEventSequenceRef.current = createEventSequence({
-          localReduceUpdateKeys: ['graphViews'],
+          localReduceUpdateKeys: ['space:graphViews'],
           localReduce: (sdc: TSpaceSharedData, event) => {
             // define the local state override applied to shared state locally during the sequence life
-            const gv = sdc.graphViews.get(viewId);
+            const gv = sdc['space:graphViews'].get(viewId);
             if (!gv) return;
 
             const draggedNode = gv.graph.nodes.find((n) => n.id === node.id);

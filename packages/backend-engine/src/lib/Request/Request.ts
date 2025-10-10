@@ -1,9 +1,5 @@
 import { Response } from '../Response/Response';
-import { TJson } from '@monorepo/simple-types';
-
-export type TStringMap = {
-  [k: string]: string;
-};
+import { TJson, TStringMap } from '@monorepo/simple-types';
 
 export type TRequestData = {
   httpMethod: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';

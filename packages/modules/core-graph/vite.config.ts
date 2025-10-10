@@ -6,7 +6,7 @@ import * as path from 'path';
 
 export default defineConfig({
   root: __dirname,
-  cacheDir: '../../../node_modules/.vite/packages/modules/core',
+  cacheDir: '../../../node_modules/.vite/packages/modules/core-graph',
   plugins: [
     react(),
     dts({

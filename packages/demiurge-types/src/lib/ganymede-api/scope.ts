@@ -55,7 +55,7 @@ export const makeProjectScopeString = (project_id: string, action?: string) =>
 
 //
 
-export const user-containerAccessScope = (client_id: string) =>
+export const userContainerAccessScope = (client_id: string) =>
   `user-container:access:${client_id}`;
 
 //
@@ -65,3 +65,5 @@ export const makeGatewayScopeString = (gateway_id: string, action?: string) =>
 
 export const GLOBAL_CLIENT_ID = 'demiurge-global';
 export const GLOBAL_CLIENT_SECRET = 'none';
+
+// TODO_REMODULE: redo permission management, delete demiurge-types

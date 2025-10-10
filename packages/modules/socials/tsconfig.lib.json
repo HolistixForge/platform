@@ -54,7 +54,7 @@
       "path": "../../frontend-data/tsconfig.lib.json"
     },
     {
-      "path": "../core/tsconfig.lib.json"
+      "path": "../core-graph/tsconfig.lib.json"
     },
     {
       "path": "../../demiurge-types/tsconfig.lib.json"

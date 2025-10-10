@@ -1,24 +1,34 @@
 import { TModule } from '@monorepo/module';
 import { TValidSharedData } from '@monorepo/collab-engine';
+import {
+  Collab,
+  YjsServerCollab,
+  YjsServerCollabConfig,
+  NoneCollabConfig,
+  NoneCollab,
+} from './lib/collab';
 
-export type TCollabExports<TSd = TValidSharedData> = {
-  sharedData: TSd;
-  loadSharedData: (type: 'map' | 'array', name: string) => void;
-};
+//
 
-export const moduleBackend: TModule<undefined, TCollabExports> = {
+export type TCollabBackendExports<
+  TSd extends TValidSharedData = TValidSharedData
+> = { collab: Collab<TSd> };
+
+export const moduleBackend: TModule<undefined, TCollabBackendExports> = {
   name: 'collab',
   version: '0.0.1',
   description: 'Collaborative module',
   dependencies: [],
   load: (args) => {
-    args.moduleExports({
-      sharedData: {},
-      loadSharedData: (type: 'map' | 'array', name: string) => {
-        throw new Error('Not implemented');
-      },
-    });
+    const config = args.config as YjsServerCollabConfig | NoneCollabConfig;
+    const collab =
+      config.type === 'yjs-server'
+        ? new YjsServerCollab(config)
+        : new NoneCollab(config);
+    args.moduleExports({ collab });
   },
 };
 
-export const moduleFrontend = moduleBackend;
+//
+
+export type { TEventUserLeave } from './lib/collab-events';

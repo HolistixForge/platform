@@ -1,7 +1,7 @@
-import { TStringMap } from '../Request/Request';
+import { TJson, TUri, TStringMap } from '@monorepo/simple-types';
+
 import { TCookie } from '../Response/Response';
 import { TCommandConfig } from './CommandFactory';
-import { TJson, TUri } from '@monorepo/simple-types';
 
 export type TCommandReturn = {
   data?: TJson;

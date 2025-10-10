@@ -1,7 +1,7 @@
 import isEqual from 'lodash.isequal';
 
 import { Reducer } from '@monorepo/reducers';
-import { TCollabExports } from '@monorepo/collab';
+import { TCollabBackendExports } from '@monorepo/collab';
 
 import {
   TEventNewNode,
@@ -15,14 +15,12 @@ import { TCoreSharedData } from './core-types';
 
 //
 
-export class CoreReducer extends Reducer<
-  TCoreEvent,
-  TCollabExports<TCoreSharedData>
-> {
-  override reduce(
-    event: TCoreEvent,
-    depsExports: TCollabExports<TCoreSharedData>
-  ): Promise<void> {
+type TRequired = {
+  collab: TCollabBackendExports<TCoreSharedData>;
+};
+
+export class CoreReducer extends Reducer<TCoreEvent, TRequired> {
+  override reduce(event: TCoreEvent, depsExports: TRequired): Promise<void> {
     switch (event.type) {
       case 'core:new-node':
         return this._newNode(event, depsExports);
@@ -45,18 +43,15 @@ export class CoreReducer extends Reducer<
    *
    */
 
-  async _newNode(
-    event: TEventNewNode,
-    depsExports: TCollabExports<TCoreSharedData>
-  ) {
+  async _newNode(event: TEventNewNode, depsExports: TRequired) {
     const nd = event.nodeData;
 
     // add node data
-    depsExports.sharedData['core:nodes'].set(nd.id, nd);
+    depsExports.collab.collab.sharedData['core:nodes'].set(nd.id, nd);
 
     // add edges
     if (event.edges) {
-      depsExports.sharedData['core:edges'].push(event.edges);
+      depsExports.collab.collab.sharedData['core:edges'].push(event.edges);
     }
   }
 
@@ -64,28 +59,25 @@ export class CoreReducer extends Reducer<
    *
    */
 
-  async _deleteNode(
-    event: TEventDeleteNode,
-    depsExports: TCollabExports<TCoreSharedData>
-  ) {
+  async _deleteNode(event: TEventDeleteNode, depsExports: TRequired) {
     const id = event.id;
 
     // delete all edges from or to this node
     // console.log({ before: 'before', edges: edgesToStrings(sd.edges) });
-    depsExports.sharedData['core:edges'].deleteMatching(
+    depsExports.collab.collab.sharedData['core:edges'].deleteMatching(
       (e) => e.from.node === id || e.to.node === id
     );
 
     // delete node data
-    depsExports.sharedData['core:nodes'].delete(id);
+    depsExports.collab.collab.sharedData['core:nodes'].delete(id);
   }
 
   /**
    *
    */
 
-  _newEdge(event: TEventNewEdge, depsExports: TCollabExports<TCoreSharedData>) {
-    depsExports.sharedData['core:edges'].push([event.edge]);
+  _newEdge(event: TEventNewEdge, depsExports: TRequired) {
+    depsExports.collab.collab.sharedData['core:edges'].push([event.edge]);
     return Promise.resolve();
   }
 
@@ -93,11 +85,8 @@ export class CoreReducer extends Reducer<
    *
    */
 
-  _deleteEdge(
-    event: TEventDeleteEdge,
-    depsExports: TCollabExports<TCoreSharedData>
-  ) {
-    depsExports.sharedData['core:edges'].deleteMatching((e) =>
+  _deleteEdge(event: TEventDeleteEdge, depsExports: TRequired) {
+    depsExports.collab.collab.sharedData['core:edges'].deleteMatching((e) =>
       isEqual(event.edge, e)
     );
     return Promise.resolve();

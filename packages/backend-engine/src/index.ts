@@ -17,7 +17,6 @@ export { CommandFactory } from './lib/Command/CommandFactory';
 export type { TCommandConfig } from './lib/Command/CommandFactory';
 
 export { Request } from './lib/Request/Request';
-export type { TStringMap } from './lib/Request/Request';
 
 export { Inputs } from './lib/InputSource/Inputs';
 export { InputSource } from './lib/InputSource/InputSource';

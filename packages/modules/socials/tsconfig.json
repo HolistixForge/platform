@@ -6,6 +6,9 @@
       "path": "../../log"
     },
     {
+      "path": "../core-graph"
+    },
+    {
       "path": "../../simple-types"
     },
     {
@@ -16,9 +19,6 @@
     },
     {
       "path": "../../frontend-data"
-    },
-    {
-      "path": "../core"
     },
     {
       "path": "../../demiurge-types"

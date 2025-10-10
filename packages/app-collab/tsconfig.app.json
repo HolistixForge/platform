@@ -66,7 +66,7 @@
       "path": "../modules/tabs/tsconfig.lib.json"
     },
     {
-      "path": "../modules/core/tsconfig.lib.json"
+      "path": "../modules/core-graph/tsconfig.lib.json"
     },
     {
       "path": "../collab-engine/tsconfig.lib.json"

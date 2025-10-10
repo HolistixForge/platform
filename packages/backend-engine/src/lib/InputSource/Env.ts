@@ -1,6 +1,8 @@
+import { TStringMap } from '@monorepo/simple-types';
+
 import { DeepReadonly } from 'ts-essentials';
 import { development } from '../debug';
-import { Request, TStringMap } from '../Request/Request';
+import { Request } from '../Request/Request';
 import { InputSource } from './InputSource';
 import { Inputs } from './Inputs';
 

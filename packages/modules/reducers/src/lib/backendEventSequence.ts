@@ -9,8 +9,8 @@ export type SequenceEvent = {
 
 export class BackendEventSequence<T extends SequenceEvent> {
   sequenceId: string;
-  counter: number = 0;
-  _hasError: boolean = false;
+  counter = 0;
+  _hasError = false;
   _events: T[] = [];
   _revert: (() => void) | null = null;
 

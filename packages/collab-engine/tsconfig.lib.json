@@ -35,16 +35,19 @@
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "references": [
     {
-      "path": "../ui-toolkit/tsconfig.lib.json"
-    },
-    {
-      "path": "../simple-types/tsconfig.lib.json"
+      "path": "../modules/module/tsconfig.lib.json"
     },
     {
       "path": "../api-fetch/tsconfig.lib.json"
     },
     {
+      "path": "../ui-toolkit/tsconfig.lib.json"
+    },
+    {
       "path": "../log/tsconfig.lib.json"
+    },
+    {
+      "path": "../simple-types/tsconfig.lib.json"
     }
   ]
 }

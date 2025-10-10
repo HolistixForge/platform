@@ -1,16 +1,20 @@
-import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
+import {
+  Reducer,
+  RequestData,
+  TReducersBackendExports,
+} from '@monorepo/reducers';
 import {
   TCoreEvent,
   TCoreSharedData,
   TEdge,
   TEventNewNode,
 } from '@monorepo/core-graph';
-import { TGraphNode } from '@monorepo/module';
+import { TGraphNode } from '@monorepo/core-graph';
 import { error, UserException } from '@monorepo/log';
 import { TJsonObject } from '@monorepo/simple-types';
 import { makeProjectScopeString } from '@monorepo/demiurge-types';
 
-import { TSpaceSharedData } from './space-shared-model';
+import { TSpaceSharedData } from '../index';
 import {
   TSpaceEvent,
   TEventNewView,
@@ -32,7 +36,6 @@ import {
   TEventUnfilterOutNode,
   TEventOpenNode,
   TEventCloseNode,
-  TEventUpdateGraphView,
   TEventEdgePropertyChange,
   TEventMoveNodeToFront,
   TEventMoveNodeToBack,
@@ -49,182 +52,99 @@ import {
 } from './space-types';
 import { getAbsolutePosition } from './utils/position-utils';
 import { edgeId } from './components/apis/types/edge';
+import { TCollabExports } from '@monorepo/collab';
+import { TGatewayExports } from '@monorepo/gateway';
 
 /**
  *
  */
-
-type TExtraArgs = {
-  project_id: string;
-  user_id: string;
-  jwt: {
-    scope: string[];
-  };
-};
 
 type ReducedEvents = TSpaceEvent | TCoreEvent;
 
-type Ra<T> = ReduceArgs<
-  TSpaceSharedData & TCoreSharedData,
-  T,
-  ReducedEvents,
-  TExtraArgs,
-  undefined
->;
+type RequiredExports = {
+  collab: TCollabExports<TSpaceSharedData & TCoreSharedData>;
+  reducers: TReducersBackendExports;
+  gateway: TGatewayExports;
+};
 
 /**
  *
  */
 
-export class SpaceReducer extends Reducer<
-  TSpaceSharedData & TCoreSharedData,
-  ReducedEvents,
-  TSpaceEvent,
-  TExtraArgs,
-  undefined
-> {
-  private executeGraphViewAction<T extends { viewId: string }>(
-    g: Ra<T>,
-    action: (
-      gvc: TGraphView,
-      nodes: Map<string, TGraphNode>,
-      edges: TEdge[]
-    ) => void
+export class SpaceReducer extends Reducer<ReducedEvents, RequiredExports> {
+  //
+  override reduce(
+    event: ReducedEvents,
+    depsExports: RequiredExports,
+    requestData: RequestData
   ): Promise<void> {
-    const viewId = g.event.viewId;
-    const gv = g.sd.graphViews.get(viewId);
-    if (!gv) {
-      error('SPACE', `Graph view ${viewId} not found`);
-      return Promise.resolve();
-    }
-
-    const gvc = structuredClone(gv);
-    const nodes = g.sd.nodes as unknown as Map<string, TGraphNode>;
-    const edges = g.sd.edges as unknown as TEdge[];
-
-    action(gvc, nodes, edges);
-    g.sd.graphViews.set(viewId, gvc);
-    return Promise.resolve();
-  }
-
-  private executeGraphViewActionIfUserHasPermission<
-    T extends { viewId: string; nid: string }
-  >(
-    g: Ra<T>,
-    action: (
-      gvc: TGraphView,
-      nodes: Map<string, TGraphNode>,
-      edges: TEdge[]
-    ) => void
-  ): Promise<void> {
-    const gv = g.sd.graphViews.get(g.event.viewId);
-    if (!gv) {
-      error('SPACE', `Graph view ${g.event.viewId} not found`);
-      return Promise.resolve();
-    }
-    const nv = gv.nodeViews.find((n) => n.id === g.event.nid);
-    if (!nv) {
-      error('SPACE', `Node ${g.event.nid} not found in graph view`);
-      return Promise.resolve();
-    }
-
-    let authorized = true;
-
-    if (nv.lockedBy) {
-      authorized = false;
-      const nodeData = g.sd.nodes.get(g.event.nid);
-      const admin = g.extraArgs.jwt.scope.includes(
-        makeProjectScopeString(g.extraArgs.project_id, 'project:admin')
-      );
-      if (admin || nodeData?.data?.userId === g.extraArgs.user_id) {
-        authorized = true;
-      }
-    }
-
-    if (authorized) {
-      return this.executeGraphViewAction(g, action);
-    } else
-      throw new UserException('You are not authorized to perform this action');
-  }
-
-  reduce(g: Ra<ReducedEvents>): Promise<void> {
-    switch (g.event.type) {
+    switch (event.type) {
       case 'space:new-view':
-        return this.newView(g as Ra<TEventNewView>);
+        return this.newView(event, depsExports, requestData);
 
       case 'space:move-node':
         return this.executeGraphViewActionIfUserHasPermission(
-          g as Ra<TEventMoveNode>,
+          event,
+          depsExports,
+          requestData,
           (gvc, nodes, edges) => {
-            this.moveNode(g.event as TEventMoveNode, gvc, nodes, edges);
+            this.moveNode(event, gvc, nodes, edges);
           }
         );
 
       case 'space:reduce-node':
-        return this.executeGraphViewAction(g as Ra<TEventReduceNode>, (gvc) => {
-          this.changeNodeMode(g.event as TEventReduceNode, gvc, 'REDUCED');
+        return this.executeGraphViewAction(event, depsExports, (gvc) => {
+          this.changeNodeMode(event as TEventReduceNode, gvc, 'REDUCED');
         });
 
       case 'space:expand-node':
-        return this.executeGraphViewAction(g as Ra<TEventExpandNode>, (gvc) => {
-          this.changeNodeMode(g.event as TEventExpandNode, gvc, 'EXPANDED');
+        return this.executeGraphViewAction(event, depsExports, (gvc) => {
+          this.changeNodeMode(event as TEventExpandNode, gvc, 'EXPANDED');
         });
 
       case 'space:close-connector':
       case 'space:open-connector':
-        return this.executeGraphViewAction(
-          g as Ra<TEventCloseConnector | TEventOpenConnector>,
-          (gvc) => {
-            this.openCloseConnector(
-              g.event as TEventCloseConnector | TEventOpenConnector,
-              gvc
-            );
-          }
-        );
+        return this.executeGraphViewAction(event, depsExports, (gvc) => {
+          this.openCloseConnector(
+            event as TEventCloseConnector | TEventOpenConnector,
+            gvc
+          );
+        });
 
       case 'space:highlight':
-        return this.executeGraphViewAction(
-          g as Ra<TEventHighlightFromConnector>,
-          (gvc) => {
-            this.setEdgeHighlight(
-              g.event as TEventHighlightFromConnector,
-              gvc,
-              true
-            );
-          }
-        );
+        return this.executeGraphViewAction(event, depsExports, (gvc) => {
+          this.setEdgeHighlight(
+            event as TEventHighlightFromConnector,
+            gvc,
+            true
+          );
+        });
 
       case 'space:unhighlight':
-        return this.executeGraphViewAction(
-          g as Ra<TEventUnhighlightFromConnector>,
-          (gvc) => {
-            this.setEdgeHighlight(
-              g.event as TEventUnhighlightFromConnector,
-              gvc,
-              false
-            );
-          }
-        );
+        return this.executeGraphViewAction(event, depsExports, (gvc) => {
+          this.setEdgeHighlight(
+            event as TEventUnhighlightFromConnector,
+            gvc,
+            false
+          );
+        });
 
       case 'space:filter-out-node':
         return this.executeGraphViewAction(
-          g as Ra<TEventFilterOutNode>,
+          event,
+          depsExports,
           (gvc, nodes, edges) => {
-            this.filterOutNode(
-              g.event as TEventFilterOutNode,
-              gvc,
-              nodes,
-              edges
-            );
+            this.filterOutNode(event as TEventFilterOutNode, gvc, nodes, edges);
           }
         );
 
       case 'space:unfilter-out-node':
         return this.executeGraphViewAction(
-          g as Ra<TEventUnfilterOutNode>,
+          event,
+          depsExports,
           (gvc, nodes, edges) => {
             this.unfilterOutNode(
-              g.event as TEventUnfilterOutNode,
+              event as TEventUnfilterOutNode,
               gvc,
               nodes,
               edges
@@ -235,10 +155,11 @@ export class SpaceReducer extends Reducer<
       case 'space:open-node':
       case 'space:close-node':
         return this.executeGraphViewAction(
-          g as Ra<TEventOpenNode | TEventCloseNode>,
+          event,
+          depsExports,
           (gvc, nodes, edges) => {
             this.openCloseNode(
-              g.event as TEventOpenNode | TEventCloseNode,
+              event as TEventOpenNode | TEventCloseNode,
               gvc,
               nodes,
               edges
@@ -248,102 +169,178 @@ export class SpaceReducer extends Reducer<
 
       case 'space:resize-node':
         return this.executeGraphViewAction(
-          g as Ra<TEventResizeNode>,
+          event,
+          depsExports,
           (gvc, nodes, edges) => {
-            this.resizeNode(g.event as TEventResizeNode, gvc, nodes, edges);
+            this.resizeNode(event as TEventResizeNode, gvc, nodes, edges);
           }
         );
 
       case 'space:update-graph-view':
         return this.executeGraphViewAction(
-          g as Ra<TEventUpdateGraphView>,
+          event,
+          depsExports,
           (gvc, nodes, edges) => {
             this.updateGraphview(gvc, nodes, edges);
           }
         );
 
       case 'space:new-group':
-        this.newGroup(g as Ra<TEventNewGroup>);
+        this.newGroup(event, depsExports, requestData);
         return Promise.resolve();
 
       case 'space:new-shape':
-        this.newShape(g as Ra<TEventNewShape>);
+        this.newShape(event, depsExports, requestData);
         return Promise.resolve();
 
       case 'space:group-property-change':
-        this.groupPropertyChange(g as Ra<TEventGroupPropertyChange>);
+        this.groupPropertyChange(event, depsExports);
         return Promise.resolve();
 
       case 'space:shape-property-change':
-        this.shapePropertyChange(g as Ra<TEventShapePropertyChange>);
+        this.shapePropertyChange(event, depsExports);
         return Promise.resolve();
 
       case 'space:delete-shape':
-        this.deleteShape(g as Ra<TEventDeleteShape>);
+        this.deleteShape(event, depsExports, requestData);
         return Promise.resolve();
 
       case 'space:delete-group':
-        this.deleteGroup(g as Ra<TEventDeleteGroup>);
+        this.deleteGroup(event, depsExports, requestData);
         return Promise.resolve();
 
       case 'core:delete-edge':
       case 'core:delete-node':
       case 'core:new-edge':
-        this.updateAllGraphviews(g);
+        this.updateAllGraphviews(event, depsExports, requestData);
         return Promise.resolve();
 
       case 'core:new-node':
-        this.newNode(g as Ra<TEventNewNode>);
-        this.updateAllGraphviews(g);
+        this.newNode(event, depsExports);
+        this.updateAllGraphviews(event, depsExports, requestData);
         return Promise.resolve();
 
       case 'space:edge-property-change':
         return (async () => {
-          await this.edgePropertyChange(g as Ra<TEventEdgePropertyChange>);
-          this.updateAllGraphviews(g);
+          await this.edgePropertyChange(event, depsExports);
+          this.updateAllGraphviews(event, depsExports, requestData);
         })();
 
       case 'space:move-node-to-front':
         return this.executeGraphViewAction(
-          g as Ra<TEventMoveNodeToFront>,
+          event,
+          depsExports,
           (gvc, nodes, edges) => {
-            this.moveNodeToFront(g.event as TEventMoveNodeToFront, gvc);
+            this.moveNodeToFront(event, gvc);
           }
         );
 
       case 'space:move-node-to-back':
         return this.executeGraphViewAction(
-          g as Ra<TEventMoveNodeToBack>,
+          event,
+          depsExports,
           (gvc, nodes, edges) => {
-            this.moveNodeToBack(g.event as TEventMoveNodeToBack, gvc);
+            this.moveNodeToBack(event, gvc);
           }
         );
 
       case 'space:lock-node':
         return this.executeGraphViewAction(
-          g as Ra<TEventLockNode>,
+          event,
+          depsExports,
           (gvc, nodes, edges) => {
-            this.lockNode(
-              g.event as TEventLockNode,
-              gvc,
-              nodes,
-              edges,
-              g.extraArgs.user_id
-            );
+            this.lockNode(event, gvc, nodes, edges, requestData.user_id);
           }
         );
 
       case 'space:disable-feature':
         return this.executeGraphViewAction(
-          g as Ra<TEventDisableFeature>,
+          event,
+          depsExports,
           (gvc, nodes, edges) => {
-            this.disableFeature(g.event as TEventDisableFeature, gvc);
+            this.disableFeature(event, gvc);
           }
         );
 
       default:
         return Promise.resolve();
     }
+  }
+
+  private executeGraphViewAction<T extends { viewId: string }>(
+    event: T,
+    depsExports: RequiredExports,
+    action: (
+      gvc: TGraphView,
+      nodes: Map<string, TGraphNode>,
+      edges: TEdge[]
+    ) => void
+  ): Promise<void> {
+    const viewId = event.viewId;
+    const gv = depsExports.collab.sharedData['space:graphViews'].get(viewId);
+    if (!gv) {
+      error('SPACE', `Graph view ${viewId} not found`);
+      return Promise.resolve();
+    }
+
+    const gvc = structuredClone(gv);
+    const nodes = depsExports.collab.sharedData['core:nodes'] as unknown as Map<
+      string,
+      TGraphNode
+    >;
+    const edges = depsExports.collab.sharedData[
+      'core:edges'
+    ] as unknown as TEdge[];
+
+    action(gvc, nodes, edges);
+    depsExports.collab.sharedData['space:graphViews'].set(viewId, gvc);
+    return Promise.resolve();
+  }
+
+  private executeGraphViewActionIfUserHasPermission<
+    T extends { viewId: string; nid: string }
+  >(
+    event: T,
+    depsExports: RequiredExports,
+    requestData: RequestData,
+    action: (
+      gvc: TGraphView,
+      nodes: Map<string, TGraphNode>,
+      edges: TEdge[]
+    ) => void
+  ): Promise<void> {
+    const gv = depsExports.collab.sharedData['space:graphViews'].get(
+      event.viewId
+    );
+    if (!gv) {
+      error('SPACE', `Graph view ${event.viewId} not found`);
+      return Promise.resolve();
+    }
+    const nv = gv.nodeViews.find((n) => n.id === event.nid);
+    if (!nv) {
+      error('SPACE', `Node ${event.nid} not found in graph view`);
+      return Promise.resolve();
+    }
+
+    let authorized = true;
+
+    if (nv.lockedBy) {
+      authorized = false;
+      const nodeData = depsExports.collab.sharedData['core:nodes'].get(
+        event.nid
+      );
+      const admin = (requestData.jwt as any)?.scope?.includes(
+        makeProjectScopeString(depsExports.gateway.project_id, 'project:admin')
+      );
+      if (admin || nodeData?.data?.userId === requestData.user_id) {
+        authorized = true;
+      }
+    }
+
+    if (authorized) {
+      return this.executeGraphViewAction(event, depsExports, action);
+    } else
+      throw new UserException('You are not authorized to perform this action');
   }
 
   private lockNode(
@@ -767,6 +764,7 @@ export class SpaceReducer extends Reducer<
       let currentNodeId = nodeId;
 
       while (true) {
+        // eslint-disable-next-line no-loop-func
         const nodeView = gv.nodeViews.find((n) => n.id === currentNodeId);
         if (!nodeView?.parentId) break;
 
@@ -946,115 +944,142 @@ export class SpaceReducer extends Reducer<
 
   //
 
-  newShape(g: Ra<TEventNewShape>) {
-    g.bep.process({
-      type: 'core:new-node',
-      nodeData: {
-        name: `shape ${g.event.shapeId}`,
-        root: true,
-        id: g.event.shapeId,
-        type: 'shape',
-        data: {
-          shapeType: g.event.shapeType,
-          borderColor: '#672aa4',
-          fillColor: '#672aa4',
-          fillOpacity: 0,
+  newShape(
+    event: TEventNewShape,
+    depsExports: RequiredExports,
+    requestData: RequestData
+  ) {
+    depsExports.reducers.processEvent(
+      {
+        type: 'core:new-node',
+        nodeData: {
+          name: `shape ${event.shapeId}`,
+          root: true,
+          id: event.shapeId,
+          type: 'shape',
+          data: {
+            shapeType: event.shapeType,
+            borderColor: '#672aa4',
+            fillColor: '#672aa4',
+            fillOpacity: 0,
+          },
+          connectors: [
+            { connectorName: 'inputs', pins: [] },
+            { connectorName: 'outputs', pins: [] },
+          ],
         },
-        connectors: [
-          { connectorName: 'inputs', pins: [] },
-          { connectorName: 'outputs', pins: [] },
-        ],
+        edges: [],
+        origin: event.origin,
       },
-      edges: [],
-      origin: g.event.origin,
-    });
+      requestData
+    );
   }
 
   //
 
-  newGroup(g: Ra<TEventNewGroup>) {
-    g.bep.process({
-      type: 'core:new-node',
-      nodeData: {
-        name: `group ${g.event.title}`,
-        root: true,
-        id: g.event.groupId,
-        type: 'group',
-        data: { title: g.event.title },
-        connectors: [
-          { connectorName: 'inputs', pins: [] },
-          { connectorName: 'outputs', pins: [] },
-        ],
+  newGroup(
+    event: TEventNewGroup,
+    depsExports: RequiredExports,
+    requestData: RequestData
+  ) {
+    depsExports.reducers.processEvent(
+      {
+        type: 'core:new-node',
+        nodeData: {
+          name: `group ${event.title}`,
+          root: true,
+          id: event.groupId,
+          type: 'group',
+          data: { title: event.title },
+          connectors: [
+            { connectorName: 'inputs', pins: [] },
+            { connectorName: 'outputs', pins: [] },
+          ],
+        },
+        edges: [],
+        origin: event.origin,
       },
-      edges: [],
-      origin: g.event.origin,
-    });
+      requestData
+    );
   }
 
   //
 
-  groupPropertyChange(g: Ra<TEventGroupPropertyChange>) {
-    const node = g.sd.nodes.get(g.event.groupId);
+  groupPropertyChange(
+    event: TEventGroupPropertyChange,
+    depsExports: RequiredExports
+  ) {
+    const node = depsExports.collab.sharedData['core:nodes'].get(event.groupId);
     if (!node) {
-      error('SPACE', `node ${g.event.groupId} not found`);
+      error('SPACE', `node ${event.groupId} not found`);
       return;
     }
     node.data = {
       ...node.data,
-      ...g.event.properties,
+      ...event.properties,
     };
-    g.sd.nodes.set(g.event.groupId, node);
+    depsExports.collab.sharedData['core:nodes'].set(event.groupId, node);
   }
 
   //
 
-  shapePropertyChange(g: Ra<TEventShapePropertyChange>) {
-    const node = g.sd.nodes.get(g.event.shapeId);
+  shapePropertyChange(
+    event: TEventShapePropertyChange,
+    depsExports: RequiredExports
+  ) {
+    const node = depsExports.collab.sharedData['core:nodes'].get(event.shapeId);
     if (!node) {
-      error('SPACE', `node ${g.event.shapeId} not found`);
+      error('SPACE', `node ${event.shapeId} not found`);
       return;
     }
     node.data = {
       ...node.data,
-      ...g.event.properties,
+      ...event.properties,
     };
-    g.sd.nodes.set(g.event.shapeId, node);
+    depsExports.collab.sharedData['core:nodes'].set(event.shapeId, node);
   }
 
   //
 
-  edgePropertyChange(g: Ra<TEventEdgePropertyChange>) {
-    return g.st.transaction(async () => {
+  edgePropertyChange(
+    event: TEventEdgePropertyChange,
+    depsExports: RequiredExports
+  ) {
+    return depsExports.collab.transaction(async () => {
       let edge;
       let i;
-      for (i = 0; i < g.sd.edges.length; i++) {
-        if (edgeId(g.sd.edges.get(i)) === g.event.edgeId) {
-          edge = g.sd.edges.get(i);
+      for (i = 0; i < depsExports.collab.sharedData['core:edges'].length; i++) {
+        if (
+          edgeId(depsExports.collab.sharedData['core:edges'].get(i)) ===
+          event.edgeId
+        ) {
+          edge = depsExports.collab.sharedData['core:edges'].get(i);
           break;
         }
       }
       if (!edge) {
-        error('SPACE', `edge ${g.event.edgeId} not found`);
+        error('SPACE', `edge ${event.edgeId} not found`);
         return;
       }
 
-      (edge as any).renderProps = g.event.properties.renderProps as TJsonObject;
+      (edge as unknown as { renderProps: TJsonObject }).renderProps = event
+        .properties.renderProps as TJsonObject;
 
-      g.sd.edges.delete(i);
-      g.sd.edges.push([edge]);
+      depsExports.collab.sharedData['core:edges'].delete(i);
+      depsExports.collab.sharedData['core:edges'].push([edge]);
     });
   }
 
   //
 
-  newNode(g: Ra<TEventNewNode>) {
-    g.sd.graphViews.forEach((gv, k) => {
+  newNode(event: TEventNewNode, depsExports: RequiredExports) {
+    depsExports.collab.sharedData['space:graphViews'].forEach((gv, k) => {
       gv.nodeViews.push({
-        id: g.event.nodeData.id,
-        type: g.event.nodeData.type,
+        id: event.nodeData.id,
+        type: event.nodeData.type,
         position:
-          g.event.origin?.viewId === k && g.event.origin?.position
-            ? g.event.origin?.position
+          event.origin?.viewId === k && event.origin?.position
+            ? event.origin?.position
             : { x: 0, y: 0 },
         status: nodeViewDefaultStatus(),
       });
@@ -1063,41 +1088,66 @@ export class SpaceReducer extends Reducer<
 
   //
 
-  newView(g: Ra<TEventNewView>) {
+  newView(
+    event: TEventNewView,
+    depsExports: RequiredExports,
+    requestData: RequestData
+  ) {
     const nv: TGraphView = defaultGraphView();
-    g.sd.graphViews.set(g.event.viewId, nv);
+    depsExports.collab.sharedData['space:graphViews'].set(event.viewId, nv);
 
-    g.bep.process({
-      type: 'space:update-graph-view',
-      viewId: g.event.viewId,
-    });
+    depsExports.reducers.processEvent(
+      {
+        type: 'space:update-graph-view',
+        viewId: event.viewId,
+      },
+      requestData
+    );
 
     return Promise.resolve();
   }
 
   //
 
-  updateAllGraphviews(g: Ra<ReducedEvents>) {
-    g.sd.graphViews.forEach((gv, k) => {
-      g.bep.process({
-        type: 'space:update-graph-view',
-        viewId: k,
-      });
+  updateAllGraphviews(
+    event: ReducedEvents,
+    depsExports: RequiredExports,
+    requestData: RequestData
+  ) {
+    depsExports.collab.sharedData['space:graphViews'].forEach((gv, k) => {
+      depsExports.reducers.processEvent(
+        {
+          type: 'space:update-graph-view',
+          viewId: k,
+        },
+        requestData
+      );
     });
   }
 
-  deleteShape(g: Ra<TEventDeleteShape>) {
-    g.bep.process({
-      type: 'core:delete-node',
-      id: g.event.shapeId,
-    });
+  deleteShape(
+    event: TEventDeleteShape,
+    depsExports: RequiredExports,
+    requestData: RequestData
+  ) {
+    depsExports.reducers.processEvent(
+      {
+        type: 'core:delete-node',
+        id: event.shapeId,
+      },
+      requestData
+    );
   }
 
-  deleteGroup(g: Ra<TEventDeleteGroup>) {
-    const { groupId } = g.event;
+  deleteGroup(
+    event: TEventDeleteGroup,
+    depsExports: RequiredExports,
+    requestData: RequestData
+  ) {
+    const { groupId } = event;
 
     // Before deleting the group, detach all child nodes and set their positions to absolute
-    g.sd.graphViews.forEach((gv, viewId) => {
+    depsExports.collab.sharedData['space:graphViews'].forEach((gv, viewId) => {
       // Find all nodes where parentId matches the group being deleted
       const childNodes = gv.nodeViews.filter(
         (node) => node.parentId === groupId
@@ -1121,9 +1171,12 @@ export class SpaceReducer extends Reducer<
     });
 
     // Then delete the group node
-    g.bep.process({
-      type: 'core:delete-node',
-      id: groupId,
-    });
+    depsExports.reducers.processEvent(
+      {
+        type: 'core:delete-node',
+        id: groupId,
+      },
+      requestData
+    );
   }
 }

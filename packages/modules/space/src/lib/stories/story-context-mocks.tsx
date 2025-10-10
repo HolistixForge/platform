@@ -3,13 +3,12 @@ import { ReactNode, useMemo } from 'react';
 import {
   MockCollaborativeContext,
   TCollaborationContext,
-  TCollaborativeChunk,
   useShareDataManager,
 } from '@monorepo/collab-engine';
 import {
   TCoreSharedData,
-  moduleBackend as coreBackend,
-  moduleFrontend as coreFrontend,
+  moduleBackend as coreGraphBackend,
+  moduleFrontend as coreGraphFrontend,
 } from '@monorepo/core-graph';
 
 import {
@@ -17,32 +16,30 @@ import {
   TSpaceContext,
 } from '../components/reactflow-layer-context';
 import { TNodeContext } from '../components/apis/types/node';
-import { TSpaceSharedData } from '../space-shared-model';
+import { TSpaceSharedData } from '../..';
 import { CollabSpaceState } from '../components/collab-space-state';
 import { STORY_VIEW_ID } from './story-holistix-space';
 import { WhiteboardMode } from '../components/holistix-space';
 
 import { moduleBackend as spaceBackend } from '../..';
 import { moduleFrontend as spaceFrontend } from '../../frontend';
+import { TModule } from '@monorepo/module';
 
 //
 
-const frontChunks: TCollaborativeChunk[] = [
-  coreFrontend.collabChunk,
-  spaceFrontend.collabChunk,
+const modulesFrontend: TModule<never, unknown>[] = [
+  coreGraphFrontend,
+  spaceFrontend,
 ];
 
-const backChunks: TCollaborativeChunk[] = [
-  {
-    name: 'gateway',
-  },
-  coreBackend.collabChunk,
-  spaceBackend.collabChunk,
+const moduleBackend: TModule<never, unknown>[] = [
+  coreGraphBackend,
+  spaceBackend,
 ];
 
 //
 
-export const StoryMock_CollaborativeContext_SpaceContext = ({
+export const StoryMockCollaborativeContextSpaceContext = ({
   children,
   callback,
 }: {
@@ -53,8 +50,8 @@ export const StoryMock_CollaborativeContext_SpaceContext = ({
 
   return (
     <MockCollaborativeContext
-      frontChunks={frontChunks}
-      backChunks={backChunks}
+      frontModules={modulesFrontend}
+      backModules={moduleBackend}
       getRequestContext={() => ({})}
       callback={callback}
     >
@@ -65,7 +62,7 @@ export const StoryMock_CollaborativeContext_SpaceContext = ({
 
 //
 
-export const StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss = ({
+export const StoryMockCollaborativeContextSpaceContextReactflowBgAndCss = ({
   children,
   selected,
   isOpened = true,
@@ -83,7 +80,7 @@ export const StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss = ({
   //
 
   return (
-    <StoryMock_CollaborativeContext_SpaceContext
+    <StoryMockCollaborativeContextSpaceContext
       callback={({ sharedData, dispatcher, sharedTypes }) => {
         sharedTypes.transaction(async () => {
           const connectors = [];
@@ -108,7 +105,7 @@ export const StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss = ({
             });
           }
 
-          (sharedData as TCoreSharedData).nodes.set(nodeId, {
+          (sharedData as TCoreSharedData)['core:nodes'].set(nodeId, {
             root: true,
             id: nodeId,
             name: nodeId,
@@ -129,7 +126,7 @@ export const StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss = ({
           {children}
         </MockReactFlowNodeCSS>
       </StoryMockSpaceContext>
-    </StoryMock_CollaborativeContext_SpaceContext>
+    </StoryMockCollaborativeContextSpaceContext>
   );
 };
 
@@ -149,7 +146,9 @@ export const StoryMockSpaceContext = ({
       mode: 'default' as WhiteboardMode,
       viewId: STORY_VIEW_ID,
       edgeMenu: null,
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       setEdgeMenu: () => {},
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       resetEdgeMenu: () => {},
     };
   }, []);

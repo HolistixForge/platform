@@ -12,7 +12,7 @@
       "path": "../../simple-types"
     },
     {
-      "path": "../core"
+      "path": "../core-graph"
     },
     {
       "path": "../../collab-engine"

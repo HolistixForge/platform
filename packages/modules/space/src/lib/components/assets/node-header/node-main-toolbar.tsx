@@ -14,7 +14,7 @@ import {
   ButtonIconProps,
   useAction,
 } from '@monorepo/ui-base';
-import { useDispatcher } from '@monorepo/collab-engine';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 
 import { icons as icons2 } from '../inputsOutputs/icons';
 import { DisableZoomDragPan } from '../../node-wrappers/disable-zoom-drag-pan';

@@ -7,7 +7,7 @@ import * as path from 'path';
 
 export default defineConfig({
   root: __dirname,
-  cacheDir: '../../../node_modules/.vite/packages/modules/servers',
+  cacheDir: '../../../node_modules/.vite/packages/modules/user-containers',
   plugins: [
     react(),
     dts({

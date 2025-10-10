@@ -21,7 +21,7 @@ export const bindEditor = async (
         (bindingObject as YjsBindingData).ytext,
         editorObject.getModel() as any,
         new Set([editorObject]),
-        (awareness as YjsAwareness)._provider.awareness
+        (awareness as YjsAwareness)._awareness
       );
     }
     //
@@ -30,7 +30,7 @@ export const bindEditor = async (
       new QuillBinding(
         (bindingObject as YjsBindingData).ytext,
         editorObject,
-        (awareness as YjsAwareness)._provider.awareness
+        (awareness as YjsAwareness)._awareness
       );
     }
   }

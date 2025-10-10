@@ -8,7 +8,7 @@ import React, {
   useContext,
   useMemo,
 } from 'react';
-import { PanelComponent, TPanel } from '@monorepo/module/frontend';
+import { PanelComponent, TPanel } from '../../frontend';
 import { icons } from '@monorepo/ui-base';
 
 // Panel Context

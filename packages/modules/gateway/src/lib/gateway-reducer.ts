@@ -1,7 +1,7 @@
 import { log } from '@monorepo/log';
 import { inSeconds, isPassed } from '@monorepo/simple-types';
 import { Reducer } from '@monorepo/reducers';
-import { TCollabExports } from '@monorepo/collab';
+import { TCollabBackendExports } from '@monorepo/collab';
 import { TGatewayExports } from '..';
 
 import { TGatewayMeta, TGatewaySharedData } from './gateway-types';
@@ -20,17 +20,17 @@ export const GATEWAY_INACIVITY_SHUTDOWN_DELAY = 300; // secondes
 
 let shouldIBeDead = false;
 
-export class GatewayReducer extends Reducer<
-  TGatewayEvents,
-  TCollabExports<TGatewaySharedData> & { gateway: TGatewayExports }
-> {
+type RequiredExports = {
+  collab: TCollabBackendExports<TGatewaySharedData>;
+  gateway: TGatewayExports;
+};
+
+export class GatewayReducer extends Reducer<TGatewayEvents, RequiredExports> {
   //
 
   override reduce(
     event: TGatewayEvents,
-    depsExports: TCollabExports<TGatewaySharedData> & {
-      gateway: TGatewayExports;
-    }
+    depsExports: RequiredExports
   ): Promise<void> {
     this.rearmGatewayTimer(event, depsExports);
 
@@ -47,11 +47,9 @@ export class GatewayReducer extends Reducer<
 
   //
 
-  async _load(
-    event: TEventLoad,
-    depsExports: TCollabExports<TGatewaySharedData>
-  ) {
-    const meta = depsExports.sharedData['gateway:gateway'].get('unique');
+  async _load(event: TEventLoad, depsExports: RequiredExports) {
+    const meta =
+      depsExports.collab.collab.sharedData['gateway:gateway'].get('unique');
     const disable_gateway_shutdown =
       meta?.projectActivity.disable_gateway_shutdown || false;
 
@@ -66,7 +64,10 @@ export class GatewayReducer extends Reducer<
       },
     };
 
-    depsExports.sharedData['gateway:gateway'].set('unique', newMeta);
+    depsExports.collab.collab.sharedData['gateway:gateway'].set(
+      'unique',
+      newMeta
+    );
     return Promise.resolve();
   }
 
@@ -74,11 +75,12 @@ export class GatewayReducer extends Reducer<
 
   rearmGatewayTimer = (
     event: { type: string },
-    depsExports: TCollabExports<TGatewaySharedData>
+    depsExports: RequiredExports
   ) => {
     const now = new Date();
 
-    const curMeta = depsExports.sharedData['gateway:gateway'].get('unique');
+    const curMeta =
+      depsExports.collab.collab.sharedData['gateway:gateway'].get('unique');
 
     const prevLast = new Date(curMeta?.projectActivity.last_activity || '');
 
@@ -98,7 +100,10 @@ export class GatewayReducer extends Reducer<
         },
       };
 
-      depsExports.sharedData['gateway:gateway'].set('unique', newMeta);
+      depsExports.collab.collab.sharedData['gateway:gateway'].set(
+        'unique',
+        newMeta
+      );
     }
   };
 
@@ -106,11 +111,10 @@ export class GatewayReducer extends Reducer<
 
   _periodic(
     event: TEventPeriodic,
-    depsExports: TCollabExports<TGatewaySharedData> & {
-      gateway: TGatewayExports;
-    }
+    depsExports: RequiredExports
   ): Promise<void> {
-    const meta = depsExports.sharedData['gateway:gateway'].get('unique');
+    const meta =
+      depsExports.collab.collab.sharedData['gateway:gateway'].get('unique');
     if (meta) {
       if (!meta.projectActivity.disable_gateway_shutdown) {
         const gateway_shutdown = new Date(
@@ -132,12 +136,16 @@ export class GatewayReducer extends Reducer<
 
   _disableGatewayShutdown(
     event: TEventDisableShutdown,
-    depsExports: TCollabExports<TGatewaySharedData>
+    depsExports: RequiredExports
   ): Promise<void> {
-    const meta = depsExports.sharedData['gateway:gateway'].get('unique');
+    const meta =
+      depsExports.collab.collab.sharedData['gateway:gateway'].get('unique');
     if (meta) {
       meta.projectActivity.disable_gateway_shutdown = true;
-      depsExports.sharedData['gateway:gateway'].set('unique', meta);
+      depsExports.collab.collab.sharedData['gateway:gateway'].set(
+        'unique',
+        meta
+      );
     }
     return Promise.resolve();
   }

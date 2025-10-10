@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { Doc } from 'yjs';
 import {
   createContext,
   useContext,
@@ -11,40 +13,16 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import * as YWS from 'y-websocket';
 
 import { log } from '@monorepo/log';
-import { TJsonObject } from '@monorepo/simple-types';
 
 import {
   TValidSharedData,
-  FrontendDispatcher,
   TAwarenessUser,
-  TCollaborativeChunk,
-  TCollabNativeEvent,
   SharedTypes,
-  YjsSharedTypes,
-  NoneSharedTypes,
-  compileChunks,
   Awareness,
-  YjsAwareness,
-  NoneAwareness,
-  _AwarenessListenerArgs,
-  BackendEventProcessor,
 } from '../../index';
-import { TokenMethods, getYDoc } from './ydocs';
-import { buildUserCss } from './YjsCssStylesheet';
-import { sharedDataToJson } from '../chunk';
-import { NoneSharedEditor, SharedEditor } from '../SharedEditor';
-import { YjsSharedEditor } from '../yjs/YjsSharedEditor';
-import { bindEditor } from './bind-editor';
-import { EDITORS_YTEXT_YMAP_KEY } from '../yjs/YjsSharedEditor';
-import {
-  FrontendEventSequence,
-  LocalReduceFunction,
-} from './frontendEventSequence';
-import {
-  LocalOverrider,
-  SharedDataManager,
-  TValidSharedDataToCopy,
-} from './localOverrider';
+
+import { sharedDataToJson } from '../sharedData';
+import { SharedEditor } from '../SharedEditor';
 
 import './context.scss';
 
@@ -55,7 +33,10 @@ import './context.scss';
 export type TYjsCollabConfig = {
   type: 'yjs';
   ws_server: string;
-  token: TokenMethods;
+  token: {
+    get: () => string;
+    refresh: () => void;
+  };
 };
 export type TNoneCollabConfig = { type: 'none'; simulateUsers?: boolean };
 export type TCollabConfig = TNoneCollabConfig | TYjsCollabConfig;
@@ -65,11 +46,10 @@ export type TCollabConfig = TNoneCollabConfig | TYjsCollabConfig;
 export type TCollaborationContext = {
   sharedTypes: SharedTypes;
   sharedData: TValidSharedData;
-  localOverrider: LocalOverrider<TValidSharedData>;
+  //localOverrider: LocalOverrider<TValidSharedData>;
   awareness: Awareness;
-  dispatcher: FrontendDispatcher<any>;
+  //dispatcher: FrontendDispatcher<any>;
   sharedEditor: SharedEditor;
-  extraContext: any;
   cleanup: () => void;
 };
 
@@ -81,12 +61,11 @@ const collaborationContext = createContext<TCollaborationContext | null>(null);
 type CollaborativeContextProps = {
   children: ReactNode;
   id: string;
-  collabChunks: TCollaborativeChunk[];
   config: TCollabConfig;
-  dispatcher: FrontendDispatcher<any>;
+  // dispatcher: FrontendDispatcher<any>;
   user: TAwarenessUser;
   /** ONLY USE THIS IF YOU ARE USING A MOCK COLLABORATIVE CONTEXT */
-  bep?: BackendEventProcessor<any, any>;
+  //bep?: BackendEventProcessor<any, any>;
   onError?: () => void;
 };
 
@@ -108,13 +87,12 @@ type TConnectionError = {
 
 export const useCollaborativeContextInternal = ({
   id,
-  collabChunks,
   config,
   user,
-  dispatcher,
+  //dispatcher,
   onError,
-  bep,
-}: Omit<CollaborativeContextProps, 'children'>) => {
+}: //bep,
+Omit<CollaborativeContextProps, 'children'>) => {
   //
   const [state, _setState] = useState<TState>({
     error: null,
@@ -162,16 +140,18 @@ export const useCollaborativeContextInternal = ({
 
   //
 
-  const context = useMemo<TCollaborationContext>(() => {
+  const context = useMemo<any>(() => {
     log(7, 'COLLAB_INIT', 'collab context');
 
     let sharedTypes: SharedTypes;
     let awareness: Awareness;
     let provider: YWS.WebsocketProvider | undefined;
-    let ydoc: any;
+    let ydoc: Doc;
     let sharedEditor: SharedEditor | undefined;
 
+    /*
     if (config.type === 'yjs') {
+         
       const result = getYDoc(
         id, // store uid
         id, // roomId
@@ -183,38 +163,6 @@ export const useCollaborativeContextInternal = ({
       ydoc = result.ydoc;
       provider = result.provider;
 
-      provider.on('connection-error', (event: Event) => {
-        log(
-          7,
-          'COLLAB',
-          `provider.connection-error: ${config.ws_server} : ${id}`,
-          event
-        );
-        addError(event);
-      });
-
-      provider.on('connection-close', (event: CloseEvent | null) => {
-        log(
-          7,
-          'COLLAB',
-          `provider.connection-close: ${config.ws_server} : ${id}`,
-          event
-        );
-        if (event?.code === 3003) {
-          addError(event);
-        }
-      });
-
-      provider.on('sync', (state: boolean) => {
-        log(7, 'COLLAB', `provider.sync: ${config.ws_server} : ${id}`, state);
-        setState({ synced: state });
-        if (state) {
-          resetErrors();
-        }
-      });
-
-      result.syncedPromise?.then((synced) => setState({ synced }));
-
       sharedTypes = new YjsSharedTypes(ydoc);
       sharedEditor = new YjsSharedEditor(ydoc.getMap(EDITORS_YTEXT_YMAP_KEY));
       awareness = new YjsAwareness(ydoc, provider, buildUserCss);
@@ -224,6 +172,7 @@ export const useCollaborativeContextInternal = ({
       awareness = new NoneAwareness(config.simulateUsers);
       setState({ synced: true });
     }
+
     awareness.setUser(user);
 
     const { sharedData, extraContext } = compileChunks(
@@ -259,7 +208,8 @@ export const useCollaborativeContextInternal = ({
         }
       },
     };
-  }, [config, user, collabChunks, id, addError, resetErrors]);
+    */
+  }, [config, user, id, addError, resetErrors]);
 
   // Add useEffect for cleanup
   useEffect(() => {
@@ -363,179 +313,9 @@ export const CollaborativeContext = (props: CollaborativeContextProps) => {
 //
 //
 
-export const useAwareness = () => {
-  const { awareness } = useContext(
-    collaborationContext
-  ) as TCollaborationContext;
-  return { awareness };
-};
-
-//
-//
-//
-
-/**
- * useAwarenessUserList: subscribes to the list of active users (username/color),
- * and only updates when the user list changes (not on pointer/selection changes).
- */
-export function useAwarenessUserList(): TAwarenessUser[] {
-  const { awareness } = useContext(
-    collaborationContext
-  ) as TCollaborationContext;
-  const [users, setUsers] = useState<TAwarenessUser[]>(() =>
-    awareness.getUserList()
-  );
-  useEffect(() => {
-    const listener = () => setUsers(awareness.getUserList());
-    awareness.addUserListListener(listener);
-    setUsers(awareness.getUserList());
-    return () => {
-      awareness.removeUserListListener(listener);
-    };
-  }, [awareness]);
-  return users;
-}
-
-//
-//
-//
-
-/**
- * useAwarenessSelections: subscribes to selection tracking changes.
- * Returns an object mapping nodeId to selecting users array.
- */
-export function useAwarenessSelections(): { [nodeId: string]: any[] } {
-  const { awareness } = useContext(
-    collaborationContext
-  ) as TCollaborationContext;
-  const [selections, setSelections] = useState<{ [nodeId: string]: any[] }>(
-    () => awareness.getSelectionTracking()
-  );
-  useEffect(() => {
-    const listener = () => setSelections(awareness.getSelectionTracking());
-    awareness.addSelectionListener(listener);
-    setSelections(awareness.getSelectionTracking());
-    return () => {
-      awareness.removeSelectionListener(listener);
-    };
-  }, [awareness]);
-  return selections;
-}
-
-//
-//
-//
-
-export const useSharedData = <TSharedData extends TValidSharedData>(
-  observe: Array<keyof TSharedData>,
-  f: (data: TValidSharedDataToCopy<TSharedData>) => any
-): ReturnType<typeof f> => {
-  //
-  const { localOverrider } = useContext(
-    collaborationContext
-  ) as TCollaborationContext;
-
-  const [, refresh] = useState({});
-
-  const updateComponent = useCallback(() => refresh({}), []);
-
-  useEffect(() => {
-    localOverrider.observe(observe as string[], updateComponent);
-    return () => {
-      localOverrider.unobserve(observe as string[], updateComponent);
-    };
-  }, [localOverrider, observe, updateComponent]);
-
-  return f(localOverrider.getData() as any);
-};
-
-//
-
 export const useSharedDataDirect = <TSharedData extends TValidSharedData>() => {
   const { sharedData } = useContext(
     collaborationContext
   ) as TCollaborationContext;
   return sharedData as TSharedData;
-};
-
-//
-//
-
-export const useShareDataManager = <
-  TSharedData extends TValidSharedData
->(): SharedDataManager<TSharedData> => {
-  //
-  const { localOverrider } = useContext(
-    collaborationContext
-  ) as TCollaborationContext;
-
-  return localOverrider as SharedDataManager<TSharedData>;
-};
-
-//
-//
-
-export const useDispatcher = <TE,>() => {
-  const { dispatcher } = useContext(
-    collaborationContext
-  ) as TCollaborationContext;
-  return dispatcher as FrontendDispatcher<TE | TCollabNativeEvent>;
-};
-
-//
-//
-
-export const useEventSequence = <
-  TEvents extends TJsonObject,
-  TSharedData extends TValidSharedData
->() => {
-  const { dispatcher, localOverrider } = useContext(
-    collaborationContext
-  ) as TCollaborationContext;
-
-  const createEventSequence = useCallback(
-    ({
-      localReduce,
-      localReduceUpdateKeys,
-    }: {
-      localReduce: LocalReduceFunction;
-      localReduceUpdateKeys: Array<keyof TSharedData>;
-    }) => {
-      return new FrontendEventSequence<TEvents>(
-        dispatcher,
-        localReduce,
-        localOverrider,
-        localReduceUpdateKeys as string[]
-      );
-    },
-    [dispatcher, localOverrider]
-  );
-
-  return { createEventSequence };
-};
-
-//
-//
-
-export const useExtraContext = <T,>() => {
-  const { extraContext } = useContext(
-    collaborationContext
-  ) as TCollaborationContext;
-  return extraContext as T;
-};
-
-//
-//
-
-export const useBindEditor = () => {
-  const { awareness, sharedEditor } = useContext(
-    collaborationContext
-  ) as TCollaborationContext;
-
-  return useCallback(
-    (editorType: string, editorId: string, editorObject: any) => {
-      bindEditor(awareness, sharedEditor, editorType, editorId, editorObject);
-    },
-    [awareness, sharedEditor]
-  );
 };

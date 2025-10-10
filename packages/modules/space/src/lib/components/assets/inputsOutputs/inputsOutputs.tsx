@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Handle, Position, useUpdateNodeInternals } from '@xyflow/react';
 
-import { useDispatcher } from '@monorepo/collab-engine';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 
 import { icons } from './icons';
 import { Slot } from '../slot/Slot';
@@ -85,7 +85,14 @@ export const useConnector = (nodeId: string, connectorName: string) => {
       // TODO_: edges readraw is delayed and it's ugly
       updateNodeInternals(nodeId);
     }, 500);
-  }, [nodeId, connectorName, isOpened, updateNodeInternals]);
+  }, [
+    dispatcher,
+    isOpened,
+    nodeId,
+    connectorName,
+    viewId,
+    updateNodeInternals,
+  ]);
 
   //
 
@@ -103,7 +110,7 @@ export const useConnector = (nodeId: string, connectorName: string) => {
         viewId,
       });
     },
-    [isHovered]
+    [dispatcher, isHovered, nodeId, viewId]
   );
 
   //
@@ -125,7 +132,7 @@ export const useConnector = (nodeId: string, connectorName: string) => {
         viewId,
       });
     },
-    [isHovered]
+    [dispatcher, isHovered, nodeId, viewId]
   );
 
   //

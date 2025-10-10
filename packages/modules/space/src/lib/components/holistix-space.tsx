@@ -1,5 +1,6 @@
 import { FC, ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { isEqual } from 'lodash';
 
 import {
   TPosition,
@@ -8,30 +9,29 @@ import {
   TEventNewEdge,
   TEdgeEnd,
 } from '@monorepo/core-graph';
-import { TGraphNode } from '@monorepo/module';
+import { TGraphNode } from '@monorepo/core-graph';
 import {
-  LayerViewportAdapter,
-  PanelComponent,
-  TSpaceMenuEntries,
-  TLayerProvider,
-} from '@monorepo/module/frontend';
+  useLocalSharedData,
+  useLocalSharedDataManager,
+  useAwareness,
+  TOverrideFunction,
+  TValidSharedDataToCopy,
+} from '@monorepo/collab/frontend';
 import {
   useDispatcher,
-  useAwareness,
-  useSharedData,
-  useShareDataManager,
-  useEventSequence,
   FrontendEventSequence,
-} from '@monorepo/collab-engine';
+} from '@monorepo/reducers/frontend';
 
+import { PanelComponent } from '../../frontend';
+import { TSpaceMenuEntries } from '../space-menu';
+import { LayerViewportAdapter, TLayerProvider } from './layer-types';
 import { PointerTracker } from './PointerTracker';
 import { HtmlAvatarStore } from './htmlAvatarStore';
 import { CollabSpaceState } from './collab-space-state';
 import { useNodeContext } from './node-wrappers/node-wrapper';
 import { CustomStoryNode } from './node';
-import { TSpaceSharedData } from '../space-shared-model';
+import { TSpaceSharedData } from '../..';
 import { TEventEdgePropertyChange } from '../space-events';
-import { TGraphView } from '../space-types';
 import { ContextualMenu } from './contextual-menu';
 import { edgeId, TEdgeRenderProps } from './apis/types/edge';
 import { ReactflowLayerContext } from './reactflow-layer-context';
@@ -49,7 +49,6 @@ import {
   TLayerTreeItem,
   TLayerTreeCollection,
 } from '../layer-tree-types';
-import { isEqual } from 'lodash';
 
 //
 
@@ -80,9 +79,9 @@ export const INITIAL_VIEWPORT: Viewport = {
 const makeSpaceNode = (nodeTypes: TNodeTypes) => {
   return () => {
     const nodeContext = useNodeContext();
-    const node: TGraphNode | undefined = useSharedData<TCoreSharedData>(
-      ['nodes'],
-      (sd) => sd.nodes.get(nodeContext.id)
+    const node: TGraphNode | undefined = useLocalSharedData<TCoreSharedData>(
+      ['core:nodes'],
+      (sd) => sd['core:nodes'].get(nodeContext.id)
     );
 
     if (node) {
@@ -169,7 +168,7 @@ const HolistixSpaceWhiteboard = ({
   layersProviders,
 }: HolistixSpaceProps) => {
   //
-  const sdm = useShareDataManager<TSpaceSharedData & TCoreSharedData>();
+  const lsdm = useLocalSharedDataManager<TSpaceSharedData & TCoreSharedData>();
 
   const dispatcher = useDispatcher<TEventEdgePropertyChange | TEventNewEdge>();
 
@@ -269,8 +268,8 @@ const HolistixSpaceWhiteboard = ({
     payload: {},
   });
 
-  const activateLayer = useCallback((layerId: string, payload?: any) => {
-    setActiveLayer({ layerId, payload });
+  const activateLayer = useCallback((layerId: string, payload?: object) => {
+    setActiveLayer({ layerId, payload: payload || {} });
   }, []);
 
   // Build tree collection for layer panel
@@ -330,7 +329,7 @@ const HolistixSpaceWhiteboard = ({
 
   // Update reactflow layer tree data
   const previousTreeItemsRef = useRef<TLayerTreeItem[] | null>(null);
-  const gv = sdm.getData().graphViews.get(viewId);
+  const gv = lsdm.getData()['space:graphViews'].get(viewId);
   const nodes = gv?.graph.nodes || [];
   const nodeViews = gv?.nodeViews || [];
   const treeItems = buildNodeTree(nodes, nodeViews);
@@ -440,7 +439,7 @@ const HolistixSpaceWhiteboard = ({
             spaceMenuEntries({
               viewId,
               from,
-              sharedData: sdm.getData(),
+              sharedData: lsdm.getData(),
               position: () => rcc.current,
               renderForm: setRenderForm,
               renderPanel: openPanel,
@@ -529,7 +528,7 @@ const ReactFlowBaseLayer = ({
     edgeId: string;
     x: number;
     y: number;
-  } | null>(null);
+  } | null>(null); //
 
   const setEdgeMenu = useCallback(
     ({ edgeId, x, y }: { edgeId: string; x: number; y: number }) => {
@@ -538,51 +537,74 @@ const ReactFlowBaseLayer = ({
     []
   );
 
-  // Event sequence for edge renderProps change
-  const { createEventSequence } = useEventSequence<
-    TEventEdgePropertyChange,
-    TSpaceSharedData
-  >();
-  const renderPropsChangeEventSequenceRef =
-    useRef<FrontendEventSequence<TEventEdgePropertyChange> | null>(null);
+  /*
+   * #########################################################
+   */
 
-  // Manage event sequence lifecycle based on edgeMenu
-  const prevEdgeIdRef = useRef<string | null>(null);
-  if (edgeMenu?.edgeId !== prevEdgeIdRef.current) {
-    // Clean up previous sequence if edgeId changed or edgeMenu is null
-    if (renderPropsChangeEventSequenceRef.current) {
-      renderPropsChangeEventSequenceRef.current.cleanup();
-      renderPropsChangeEventSequenceRef.current = null;
-    }
-    if (edgeMenu?.edgeId) {
-      // Create new sequence for this edgeId
-      renderPropsChangeEventSequenceRef.current = createEventSequence({
-        localReduceUpdateKeys: ['graphViews'],
-        localReduce: (sdc, event) => {
-          const gv: TGraphView = sdc.graphViews.get(viewId);
-          const e = gv.graph.edges.find((e) => edgeId(e) === event.edgeId);
-          if (e) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (e as any).renderProps = event.properties.renderProps;
-          }
-        },
-      });
-    }
-    prevEdgeIdRef.current = edgeMenu?.edgeId ?? null;
-  }
+  const lsdm = useLocalSharedDataManager<TSpaceSharedData>();
 
-  const handleRenderPropsChange = useCallback(
-    (rp: TEdgeRenderProps) => {
-      if (edgeMenu && renderPropsChangeEventSequenceRef.current) {
-        renderPropsChangeEventSequenceRef.current.dispatch({
+  // whenever edge menu is opened, we register an override function
+  // to apply the edge properties to the local shared data
+  const handleRenderPropsChange = useMemo(() => {
+    //
+    if (!edgeMenu?.edgeId) return;
+
+    // function to apply the edge properties to the local shared data
+    const applyEdgeProperties = (
+      event: TEventEdgePropertyChange,
+      localSharedData: TValidSharedDataToCopy<TSpaceSharedData>
+    ) => {
+      const gv = localSharedData['space:graphViews'].get(viewId);
+      if (!gv) return;
+      const e = gv.graph.edges.find((e) => edgeId(e) === event.edgeId);
+      if (e) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (e as any).renderProps = event.properties.renderProps;
+      }
+    };
+
+    // create an event sequence that both dispatches the event to backend
+    // and applies the edge properties to the local shared data
+    const es = new FrontendEventSequence<TEventEdgePropertyChange>(
+      dispatcher,
+      (event) => {
+        applyEdgeProperties(event, lsdm.getData());
+      }
+    );
+
+    // register an override function to apply the edge properties to the local shared data
+    // when the shared data is updated (pushed from backend)
+    const localOverrider: TOverrideFunction<
+      TValidSharedDataToCopy<TSpaceSharedData>
+    > = {
+      apply: (localSharedData) => {
+        if (es.lastEvent) applyEdgeProperties(es.lastEvent, localSharedData);
+      },
+      keys: ['space:graphViews'],
+    };
+
+    lsdm.registerOverrideFunction(localOverrider);
+    // TODO_: Unregister override function on edge menu close
+
+    // on render props change, we dispatch an event to backend through the event sequence
+    // object that handle debouncing, sequence id and sequence counter, and also applies
+    // the edge properties to the local shared data
+    const handleRenderPropsChange = (rp: TEdgeRenderProps) => {
+      if (edgeMenu && es) {
+        es.dispatch({
           type: 'space:edge-property-change',
           edgeId: edgeMenu.edgeId,
           properties: { renderProps: rp },
         });
       }
-    },
-    [edgeMenu]
-  );
+    };
+
+    return handleRenderPropsChange;
+  }, [edgeMenu, dispatcher, lsdm, viewId]);
+
+  /*
+   * #########################################################
+   */
 
   const resetEdgeMenu = useCallback(() => {
     _setEdgeMenu(null);
@@ -592,7 +614,7 @@ const ReactFlowBaseLayer = ({
    * Space context
    */
 
-  const sdm = useShareDataManager<TSpaceSharedData & TCoreSharedData>();
+  const sdm = useLocalSharedDataManager<TSpaceSharedData & TCoreSharedData>();
 
   const ss = useMemo(() => new CollabSpaceState(viewId, sdm), [viewId, sdm]);
 
@@ -638,7 +660,12 @@ const ReactFlowBaseLayer = ({
         <EdgeMenu
           eid={edgeMenu.edgeId}
           position={[edgeMenu.x, edgeMenu.y]}
-          setRenderProps={handleRenderPropsChange}
+          setRenderProps={
+            handleRenderPropsChange ??
+            (() => {
+              /**/
+            })
+          }
         />
       )}
     </ReactflowLayerContext>

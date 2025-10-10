@@ -15,7 +15,7 @@
       "path": "../../demiurge-types"
     },
     {
-      "path": "../core"
+      "path": "../core-graph"
     },
     {
       "path": "../../simple-types"

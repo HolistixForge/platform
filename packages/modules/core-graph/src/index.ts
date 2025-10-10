@@ -1,9 +1,12 @@
 import type { TModule } from '@monorepo/module';
-import type { TCollabExports } from '@monorepo/collab';
+import type { TCollabBackendExports } from '@monorepo/collab';
 import type { TReducersBackendExports } from '@monorepo/reducers';
 import { CoreReducer } from './lib/core-reducer';
 
-type TRequired = { collab: TCollabExports; reducers: TReducersBackendExports };
+type TRequired = {
+  collab: TCollabBackendExports;
+  reducers: TReducersBackendExports;
+};
 
 export const moduleBackend: TModule<TRequired, undefined> = {
   name: 'core-graph',
@@ -11,9 +14,8 @@ export const moduleBackend: TModule<TRequired, undefined> = {
   description: 'Core module',
   dependencies: ['collab', 'reducers'],
   load: ({ depsExports, moduleExports }) => {
-    depsExports.collab.loadSharedData('map', 'meta');
-    depsExports.collab.loadSharedData('map', 'nodes');
-    depsExports.collab.loadSharedData('array', 'edges');
+    depsExports.collab.collab.loadSharedData('map', 'nodes');
+    depsExports.collab.collab.loadSharedData('array', 'edges');
 
     depsExports.reducers.loadReducers(new CoreReducer());
   },
@@ -25,8 +27,8 @@ export const moduleFrontend: TModule<TRequired, undefined> = {
   description: 'Core module',
   dependencies: ['collab'],
   load: ({ depsExports, moduleExports }) => {
-    depsExports.collab.loadSharedData('map', 'nodes');
-    depsExports.collab.loadSharedData('array', 'edges');
+    depsExports.collab.collab.loadSharedData('map', 'nodes');
+    depsExports.collab.collab.loadSharedData('array', 'edges');
   },
 };
 
@@ -35,6 +37,9 @@ export type {
   TEdge,
   TEdgeEnd,
   EEdgeSemanticType,
+  TGraphNode,
+  TConnector,
+  TPin,
 } from './lib/core-types';
 
 export type { TCoreSharedData } from './lib/core-types';

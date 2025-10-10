@@ -7,8 +7,9 @@ import type { TModule } from '@monorepo/module';
 import { TMyfetchRequest } from '@monorepo/simple-types';
 import { myfetch } from '@monorepo/backend-engine';
 import { ForwardException } from '@monorepo/backend-engine';
-import { TCollabExports } from '@monorepo/collab';
 import { TReducersBackendExports } from '@monorepo/reducers';
+import { TCollabBackendExports } from '@monorepo/collab';
+import { TCollabFrontendExports } from '@monorepo/collab/frontend';
 
 //
 
@@ -20,6 +21,7 @@ export type TGatewayExports = {
   ) => Promise<void>;
   gatewayStop: () => Promise<void>;
   gatewayFQDN: string;
+  project_id: string;
 };
 
 //
@@ -43,7 +45,7 @@ export type TGatewayInitExtraContext = {
 
 type TRequired = {
   gateway_init: TGatewayInitExtraContext;
-  collab: TCollabExports;
+  collab: TCollabBackendExports;
   reducers: TReducersBackendExports;
 };
 
@@ -55,7 +57,7 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
   description: 'Gateway module',
   dependencies: ['collab', 'reducers'],
   load: ({ depsExports, moduleExports }) => {
-    depsExports.collab.loadSharedData('map', 'gateway');
+    depsExports.collab.collab.loadSharedData('map', 'gateway');
 
     const gateway_init = depsExports.gateway_init;
 
@@ -105,6 +107,7 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
           );
         }
         output = result.stdout.toString();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         throw new RunException(`Error executing [${fcmd}]: ${err.message}`);
       }
@@ -154,6 +157,8 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
       },
 
       gatewayFQDN: gateway_init.config.GATEWAY_FQDN,
+
+      project_id: gateway_init.project.PROJECT_ID,
     };
 
     moduleExports(myExports);
@@ -163,7 +168,7 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
 //
 
 export const moduleFrontend: TModule<
-  { collab: TCollabExports },
+  { collab: TCollabFrontendExports },
   TGatewayExports
 > = {
   name: 'gateway',
@@ -171,7 +176,7 @@ export const moduleFrontend: TModule<
   description: 'Gateway module',
   dependencies: ['collab'],
   load: ({ depsExports }) => {
-    depsExports.collab.loadSharedData('map', 'gateway');
+    depsExports.collab.collab.loadSharedData('map', 'gateway');
   },
 };
 

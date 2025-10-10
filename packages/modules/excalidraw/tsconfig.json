@@ -3,19 +3,19 @@
   "include": [],
   "references": [
     {
-      "path": "../core"
+      "path": "../../log"
     },
     {
       "path": "../../frontend-data"
     },
     {
-      "path": "../../log"
+      "path": "../../simple-types"
+    },
+    {
+      "path": "../core-graph"
     },
     {
       "path": "../../collab-engine"
-    },
-    {
-      "path": "../../simple-types"
     },
     {
       "path": "../module"

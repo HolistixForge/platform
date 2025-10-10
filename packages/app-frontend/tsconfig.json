@@ -30,10 +30,13 @@
       "path": "../modules/tabs"
     },
     {
+      "path": "../modules/module"
+    },
+    {
       "path": "../modules/space"
     },
     {
-      "path": "../modules/core"
+      "path": "../modules/core-graph"
     },
     {
       "path": "../modules/user-containers"

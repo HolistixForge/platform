@@ -1,8 +1,8 @@
 import { TCoreSharedData } from '@monorepo/core-graph';
-import { TGraphNode } from '@monorepo/module';
+import { TGraphNode } from '@monorepo/core-graph';
 import { SharedDataManager } from '@monorepo/collab-engine';
 
-import { TSpaceSharedData } from '../space-shared-model';
+import { TSpaceSharedData } from '../..';
 import { SpaceState } from './apis/spaceState';
 import { TGraphView } from '../space-types';
 
@@ -20,17 +20,17 @@ export class CollabSpaceState extends SpaceState {
     this.sdm = sdm;
     this.viewId = viewId;
 
-    this.sdm.observe(['graphViews'], () => {
+    this.sdm.observe(['space:graphViews'], () => {
       this.updateState();
       this.notifyListeners();
     });
 
-    this.sdm.observe(['nodes'], () => {
+    this.sdm.observe(['core:nodes'], () => {
       this.updateNodes();
       this.notifyListeners();
     });
 
-    this.sdm.observe(['edges'], () => {
+    this.sdm.observe(['core:edges'], () => {
       this.notifyListeners();
     });
 
@@ -39,14 +39,14 @@ export class CollabSpaceState extends SpaceState {
   }
 
   private updateState() {
-    const state = this.sdm.getData().graphViews.get(this.viewId);
+    const state = this.sdm.getData()['space:graphViews'].get(this.viewId);
     if (state)
       // throw new Error(`No graphViews for viewId [${this.viewId}]`);
       this.state = state;
   }
 
   private updateNodes() {
-    const nodes = this.sdm.getData().nodes;
+    const nodes = this.sdm.getData()['core:nodes'];
     if (!nodes) throw new Error('No nodes');
     this.nodes = nodes;
   }

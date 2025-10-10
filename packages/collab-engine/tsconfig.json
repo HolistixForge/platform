@@ -3,16 +3,19 @@
   "include": [],
   "references": [
     {
-      "path": "../ui-toolkit"
-    },
-    {
-      "path": "../simple-types"
+      "path": "../modules/module"
     },
     {
       "path": "../api-fetch"
     },
     {
+      "path": "../ui-toolkit"
+    },
+    {
       "path": "../log"
+    },
+    {
+      "path": "../simple-types"
     },
     {
       "path": "./tsconfig.lib.json"

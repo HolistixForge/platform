@@ -1,7 +1,13 @@
 import { EColor, log } from '@monorepo/log';
-import { TJson, TJsonWithDate, TUri, fullUri } from '@monorepo/simple-types';
+import {
+  TJson,
+  TJsonWithDate,
+  TUri,
+  fullUri,
+  TStringMap,
+} from '@monorepo/simple-types';
 import express from 'express';
-import { TStringMap } from '../../Request/Request';
+
 import { jaegerSetResponse } from '../../Logs/jaeger';
 
 type ExpressRequest = express.Request;

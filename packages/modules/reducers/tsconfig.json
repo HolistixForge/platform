@@ -3,6 +3,15 @@
   "include": [],
   "references": [
     {
+      "path": "../../log"
+    },
+    {
+      "path": "../../api-fetch"
+    },
+    {
+      "path": "../../simple-types"
+    },
+    {
       "path": "../module"
     },
     {
