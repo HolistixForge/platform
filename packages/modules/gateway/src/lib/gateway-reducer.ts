@@ -25,31 +25,37 @@ type RequiredExports = {
   gateway: TGatewayExports;
 };
 
-export class GatewayReducer extends Reducer<TGatewayEvents, RequiredExports> {
+export class GatewayReducer extends Reducer<TGatewayEvents> {
+  private depsExports: RequiredExports;
+
+  constructor(depsExports: RequiredExports) {
+    super();
+    this.depsExports = depsExports;
+  }
+
   //
 
-  override reduce(
-    event: TGatewayEvents,
-    depsExports: RequiredExports
-  ): Promise<void> {
-    this.rearmGatewayTimer(event, depsExports);
+  override reduce(event: TGatewayEvents): Promise<void> {
+    this.rearmGatewayTimer(event);
 
     switch (event.type) {
       case 'gateway:load':
-        return this._load(event, depsExports);
+        return this._load(event);
       case 'gateway:periodic':
-        return this._periodic(event, depsExports);
+        return this._periodic(event);
       case 'gateway:disable-shutdown':
-        return this._disableGatewayShutdown(event, depsExports);
+        return this._disableGatewayShutdown(event);
     }
     return Promise.resolve();
   }
 
   //
 
-  async _load(event: TEventLoad, depsExports: RequiredExports) {
+  async _load(event: TEventLoad) {
     const meta =
-      depsExports.collab.collab.sharedData['gateway:gateway'].get('unique');
+      this.depsExports.collab.collab.sharedData['gateway:gateway'].get(
+        'unique'
+      );
     const disable_gateway_shutdown =
       meta?.projectActivity.disable_gateway_shutdown || false;
 
@@ -64,7 +70,7 @@ export class GatewayReducer extends Reducer<TGatewayEvents, RequiredExports> {
       },
     };
 
-    depsExports.collab.collab.sharedData['gateway:gateway'].set(
+    this.depsExports.collab.collab.sharedData['gateway:gateway'].set(
       'unique',
       newMeta
     );
@@ -73,14 +79,13 @@ export class GatewayReducer extends Reducer<TGatewayEvents, RequiredExports> {
 
   //
 
-  rearmGatewayTimer = (
-    event: { type: string },
-    depsExports: RequiredExports
-  ) => {
+  rearmGatewayTimer = (event: { type: string }) => {
     const now = new Date();
 
     const curMeta =
-      depsExports.collab.collab.sharedData['gateway:gateway'].get('unique');
+      this.depsExports.collab.collab.sharedData['gateway:gateway'].get(
+        'unique'
+      );
 
     const prevLast = new Date(curMeta?.projectActivity.last_activity || '');
 
@@ -100,7 +105,7 @@ export class GatewayReducer extends Reducer<TGatewayEvents, RequiredExports> {
         },
       };
 
-      depsExports.collab.collab.sharedData['gateway:gateway'].set(
+      this.depsExports.collab.collab.sharedData['gateway:gateway'].set(
         'unique',
         newMeta
       );
@@ -109,12 +114,11 @@ export class GatewayReducer extends Reducer<TGatewayEvents, RequiredExports> {
 
   //
 
-  _periodic(
-    event: TEventPeriodic,
-    depsExports: RequiredExports
-  ): Promise<void> {
+  _periodic(event: TEventPeriodic): Promise<void> {
     const meta =
-      depsExports.collab.collab.sharedData['gateway:gateway'].get('unique');
+      this.depsExports.collab.collab.sharedData['gateway:gateway'].get(
+        'unique'
+      );
     if (meta) {
       if (!meta.projectActivity.disable_gateway_shutdown) {
         const gateway_shutdown = new Date(
@@ -123,7 +127,7 @@ export class GatewayReducer extends Reducer<TGatewayEvents, RequiredExports> {
         if (isPassed(gateway_shutdown)) {
           if (shouldIBeDead === false) {
             log(6, 'GATEWAY', 'shutdown');
-            depsExports.gateway.gatewayStop();
+            this.depsExports.gateway.gatewayStop();
             shouldIBeDead = true;
           } else {
             log(6, 'GATEWAY', 'shutdown failed process still alive');
@@ -134,15 +138,14 @@ export class GatewayReducer extends Reducer<TGatewayEvents, RequiredExports> {
     return Promise.resolve();
   }
 
-  _disableGatewayShutdown(
-    event: TEventDisableShutdown,
-    depsExports: RequiredExports
-  ): Promise<void> {
+  _disableGatewayShutdown(event: TEventDisableShutdown): Promise<void> {
     const meta =
-      depsExports.collab.collab.sharedData['gateway:gateway'].get('unique');
+      this.depsExports.collab.collab.sharedData['gateway:gateway'].get(
+        'unique'
+      );
     if (meta) {
       meta.projectActivity.disable_gateway_shutdown = true;
-      depsExports.collab.collab.sharedData['gateway:gateway'].set(
+      this.depsExports.collab.collab.sharedData['gateway:gateway'].set(
         'unique',
         meta
       );

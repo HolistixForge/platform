@@ -1,12 +1,13 @@
 import { useEffect } from 'react';
 
-import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
+import { useLocalSharedData } from '@monorepo/collab/frontend';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 
 import {
   HolistixSpace,
-  HolistixSpaceProps,
+  HolistixSpaceWhiteboardProps,
 } from '../components/holistix-space';
-import { TSpaceSharedData } from '../space-shared-model';
+import { TSpaceSharedData } from '../..';
 
 //
 
@@ -16,12 +17,13 @@ export const STORY_VIEW_ID = 'space-story';
 
 /** HolistixSpace but initialise a view with id {STORY_VIEW_ID} */
 export const StoryHolistixSpace = (
-  props: Omit<HolistixSpaceProps, 'viewId'>
+  props: Omit<HolistixSpaceWhiteboardProps, 'viewId'>
 ) => {
   const dispatcher = useDispatcher();
 
-  const view = useSharedData<TSpaceSharedData>(['graphViews'], (sd) =>
-    sd.graphViews.get(STORY_VIEW_ID)
+  const view = useLocalSharedData<TSpaceSharedData>(
+    ['space:graphViews'],
+    (sd) => sd['space:graphViews'].get(STORY_VIEW_ID)
   );
 
   useEffect(() => {

@@ -14,6 +14,7 @@ import {
   NoneSharedTypes,
   NoneAwareness,
   NoneSharedEditor,
+  TAwarenessUser,
 } from '@monorepo/collab-engine';
 
 //
@@ -33,14 +34,19 @@ export abstract class Collab<T extends TValidSharedData> {
 
   public abstract init(config: object): void;
 
-  public loadSharedData(type: 'map' | 'array', name: string): void {
+  public loadSharedData(
+    type: 'map' | 'array',
+    moduleName: string,
+    name: string
+  ): void {
+    const fullname = `${moduleName}:${name}`;
     if (type === 'map') {
       Object.assign(this.sharedData, {
-        [name]: this.sharedTypes.getSharedMap(name),
+        [fullname]: this.sharedTypes.getSharedMap(fullname),
       });
     } else {
       Object.assign(this.sharedData, {
-        [name]: this.sharedTypes.getSharedArray(name),
+        [fullname]: this.sharedTypes.getSharedArray(fullname),
       });
     }
   }
@@ -56,6 +62,7 @@ export type YjsClientCollabConfig = {
     get: () => string;
     refresh: () => void;
   };
+  user: TAwarenessUser;
 };
 
 //
@@ -122,6 +129,7 @@ export class YjsClientCollab extends Collab<TValidSharedData> {
     this.sharedTypes = new YjsSharedTypes(doc);
     this.sharedEditor = new YjsSharedEditor(doc.getMap(EDITORS_YTEXT_YMAP_KEY));
     this.awareness = new YjsAwareness(doc, provider.awareness);
+    this.awareness.setUser(config.user);
 
     provider.on('connection-error', (event: Event) => {
       log(7, 'COLLAB', `provider.connection-error`, event);
@@ -237,6 +245,7 @@ export type NoneCollabConfig = {
   type: 'none';
   room_id: string;
   simulateUsers: boolean;
+  user: TAwarenessUser;
 };
 
 export class NoneCollab extends Collab<TValidSharedData> {
@@ -254,5 +263,6 @@ export class NoneCollab extends Collab<TValidSharedData> {
     this.sharedTypes = new NoneSharedTypes(config.room_id);
     this.sharedEditor = new NoneSharedEditor();
     this.awareness = new NoneAwareness(config.simulateUsers);
+    this.awareness.setUser(config.user);
   }
 }

@@ -1,10 +1,8 @@
 import { FC, ReactNode } from 'react';
 
-import {
-  FrontendDispatcher,
-  TValidSharedData,
-  TValidSharedDataToCopy,
-} from '@monorepo/collab-engine';
+import { TValidSharedData } from '@monorepo/collab-engine';
+import { TValidSharedDataToCopy } from '@monorepo/collab/frontend';
+import { FrontendDispatcher } from '@monorepo/reducers/frontend';
 import { makeUuid, TJsonObject } from '@monorepo/simple-types';
 
 import { SHAPE_TYPES, TEventNewShape, TSpaceEvent } from './space-events';

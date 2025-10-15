@@ -1,15 +1,9 @@
 import { ReactNode, useMemo } from 'react';
 
-import {
-  MockCollaborativeContext,
-  TCollaborationContext,
-  useShareDataManager,
-} from '@monorepo/collab-engine';
-import {
-  TCoreSharedData,
-  moduleBackend as coreGraphBackend,
-  moduleFrontend as coreGraphFrontend,
-} from '@monorepo/core-graph';
+import { TCoreSharedData } from '@monorepo/core-graph';
+import { useLocalSharedDataManager } from '@monorepo/collab/frontend';
+import { FrontendDispatcher } from '@monorepo/reducers/frontend';
+import { SharedTypes } from '@monorepo/collab-engine';
 
 import {
   ReactflowLayerContext,
@@ -20,55 +14,62 @@ import { TSpaceSharedData } from '../..';
 import { CollabSpaceState } from '../components/collab-space-state';
 import { STORY_VIEW_ID } from './story-holistix-space';
 import { WhiteboardMode } from '../components/holistix-space';
-
-import { moduleBackend as spaceBackend } from '../..';
-import { moduleFrontend as spaceFrontend } from '../../frontend';
-import { TModule } from '@monorepo/module';
+import { TSpaceEvent } from '../space-events';
 
 //
 
-const modulesFrontend: TModule<never, unknown>[] = [
-  coreGraphFrontend,
-  spaceFrontend,
-];
+export const storyDefineOneNode = (
+  sharedData: TCoreSharedData,
+  dispatcher: FrontendDispatcher<TSpaceEvent>,
+  sharedTypes: SharedTypes,
+  inputs: number,
+  outputs: number,
+  nodeId: string
+) => {
+  sharedTypes.transaction(async () => {
+    const connectors = [];
 
-const moduleBackend: TModule<never, unknown>[] = [
-  coreGraphBackend,
-  spaceBackend,
-];
+    if (inputs !== undefined) {
+      connectors.push({
+        connectorName: 'inputs',
+        pins: Array.from({ length: inputs }, (_, i) => ({
+          id: `input-${i + 1}`,
+          pinName: `input-${i + 1}`,
+        })),
+      });
+    }
 
-//
+    if (outputs !== undefined) {
+      connectors.push({
+        connectorName: 'outputs',
+        pins: Array.from({ length: outputs }, (_, i) => ({
+          id: `output-${i + 1}`,
+          pinName: `output-${i + 1}`,
+        })),
+      });
+    }
 
-export const StoryMockCollaborativeContextSpaceContext = ({
-  children,
-  callback,
-}: {
-  children: ReactNode;
-  callback?: (context: TCollaborationContext) => void;
-}) => {
-  //
+    (sharedData as TCoreSharedData)['core-graph:nodes'].set(nodeId, {
+      root: true,
+      id: nodeId,
+      name: nodeId,
+      type: 'whatever',
+      connectors,
+    });
+  });
 
-  return (
-    <MockCollaborativeContext
-      frontModules={modulesFrontend}
-      backModules={moduleBackend}
-      getRequestContext={() => ({})}
-      callback={callback}
-    >
-      <StoryMockSpaceContext>{children}</StoryMockSpaceContext>
-    </MockCollaborativeContext>
-  );
+  dispatcher.dispatch({
+    type: 'space:new-view',
+    viewId: STORY_VIEW_ID,
+  });
 };
 
 //
 
-export const StoryMockCollaborativeContextSpaceContextReactflowBgAndCss = ({
+export const StoryMockSpaceContextReactflowBgAndCss = ({
   children,
   selected,
   isOpened = true,
-  nodeId = 'whatever',
-  inputs,
-  outputs,
 }: {
   children: ReactNode;
   selected?: boolean;
@@ -80,53 +81,12 @@ export const StoryMockCollaborativeContextSpaceContextReactflowBgAndCss = ({
   //
 
   return (
-    <StoryMockCollaborativeContextSpaceContext
-      callback={({ sharedData, dispatcher, sharedTypes }) => {
-        sharedTypes.transaction(async () => {
-          const connectors = [];
-
-          if (inputs !== undefined) {
-            connectors.push({
-              connectorName: 'inputs',
-              pins: Array.from({ length: inputs }, (_, i) => ({
-                id: `input-${i + 1}`,
-                pinName: `input-${i + 1}`,
-              })),
-            });
-          }
-
-          if (outputs !== undefined) {
-            connectors.push({
-              connectorName: 'outputs',
-              pins: Array.from({ length: outputs }, (_, i) => ({
-                id: `output-${i + 1}`,
-                pinName: `output-${i + 1}`,
-              })),
-            });
-          }
-
-          (sharedData as TCoreSharedData)['core:nodes'].set(nodeId, {
-            root: true,
-            id: nodeId,
-            name: nodeId,
-            type: 'whatever',
-            connectors,
-          });
-        });
-
-        dispatcher.dispatch({
-          type: 'space:new-view',
-          viewId: STORY_VIEW_ID,
-        });
-      }}
-    >
-      <StoryMockSpaceContext>
-        <MockSpaceBackground />
-        <MockReactFlowNodeCSS selected={selected || false} isOpened={isOpened}>
-          {children}
-        </MockReactFlowNodeCSS>
-      </StoryMockSpaceContext>
-    </StoryMockCollaborativeContextSpaceContext>
+    <StoryMockSpaceContext>
+      <MockSpaceBackground />
+      <MockReactFlowNodeCSS selected={selected || false} isOpened={isOpened}>
+        {children}
+      </MockReactFlowNodeCSS>
+    </StoryMockSpaceContext>
   );
 };
 
@@ -137,7 +97,7 @@ export const StoryMockSpaceContext = ({
 }: {
   children: ReactNode;
 }) => {
-  const sdm = useShareDataManager<TSpaceSharedData & TCoreSharedData>();
+  const sdm = useLocalSharedDataManager<TSpaceSharedData & TCoreSharedData>();
 
   const context: TSpaceContext = useMemo(() => {
     return {
@@ -151,7 +111,7 @@ export const StoryMockSpaceContext = ({
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       resetEdgeMenu: () => {},
     };
-  }, []);
+  }, [sdm]);
 
   // useRegisterListener(context.spaceState);
 

@@ -3,16 +3,7 @@
   "include": [],
   "references": [
     {
-      "path": "../modules/module"
-    },
-    {
-      "path": "../api-fetch"
-    },
-    {
       "path": "../ui-toolkit"
-    },
-    {
-      "path": "../log"
     },
     {
       "path": "../simple-types"

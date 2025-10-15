@@ -70,7 +70,7 @@ export class BackendEventProcessor<TE extends TBaseEvent> {
     // Handle sequence logic
     if (sequence) {
       // Skip if sequence had error or counter is lower than a previous event
-      // except if it is the first event (sequenceRevertPoint), reducersneed to set the revert point
+      // except if it is the first event (sequenceRevertPoint), reducers need to set the revert point
       // no need to check for sequence ended, because counter logic covers it (last event in sequence has the higher counter)
       const b = sequence.addEvent(event as SequenceEvent);
       if (!event.sequenceRevertPoint && (sequence.isFailed() || !b)) {

@@ -1,6 +1,6 @@
 // Stories utils
 
-export { StoryMockCollaborativeContextSpaceContextReactflowBgAndCss } from './lib/stories/story-context-mocks';
+export { StoryMockSpaceContextReactflowBgAndCss } from './lib/stories/story-context-mocks';
 
 export {
   STORY_VIEW_ID,

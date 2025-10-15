@@ -7,9 +7,11 @@ import { TGraphNode } from '@monorepo/core-graph';
 import { Group } from './lib/components/group/group';
 import { Shape } from './lib/components/shape/shape';
 import { spaceMenuEntries, TSpaceMenuEntries } from './lib/space-menu';
-import './lib/index.scss';
 import { TLayerProvider } from './lib/components/layer-types';
 import { TJsonObject } from '@monorepo/simple-types';
+import { TSpaceMenuEntry } from './lib/space-menu';
+
+import './lib/components/css/index.scss';
 
 //
 
@@ -47,19 +49,6 @@ type TRequired = {
   collab: TCollabFrontendExports;
 };
 
-type TSpaceExports = {
-  registerMenuEntries: (entries: TSpaceMenuEntries) => void;
-  registerNodes: (nodes: { [key: string]: FC<{ node: TGraphNode }> }) => void;
-  registerLayer: (layers: TLayerProvider) => void;
-  registerPanel: (panel: PanelComponent) => void;
-};
-
-const menuEntries: TSpaceMenuEntries[] = [];
-
-let nodes: { [key: string]: FC<{ node: TGraphNode }> } = {};
-
-const layers: TLayerProvider[] = [];
-
 export type TPanel = { type: string; uuid: string; data: TJsonObject };
 
 export type PanelComponent = FC<{
@@ -67,7 +56,35 @@ export type PanelComponent = FC<{
   closePanel: (uuid: string) => void;
 }>;
 
-const panels: PanelComponent[] = [];
+export type TUIElements = {
+  panels: Record<string, PanelComponent>;
+  getMenuEntries: TSpaceMenuEntries;
+  nodes: { [key: string]: FC<{ node: TGraphNode }> };
+  layers: TLayerProvider[];
+};
+
+const modulesMenuEntries: TSpaceMenuEntries[] = [];
+
+const uiElements: TUIElements = {
+  panels: {},
+  getMenuEntries: (args) => {
+    return modulesMenuEntries.reduce((acc, module) => {
+      return [...acc, ...module(args)];
+    }, [] as TSpaceMenuEntry[]);
+  },
+  nodes: {},
+  layers: [],
+};
+
+export type TSpaceExports = {
+  registerMenuEntries: (entries: TSpaceMenuEntries) => void;
+  registerNodes: (nodes: { [key: string]: FC<{ node: TGraphNode }> }) => void;
+  registerLayer: (layers: TLayerProvider) => void;
+  registerPanel: (panels: Record<string, PanelComponent>) => void;
+  uiElements: TUIElements;
+};
+
+//
 
 export const moduleFrontend: TModule<TRequired, TSpaceExports> = {
   name: 'space',
@@ -75,21 +92,22 @@ export const moduleFrontend: TModule<TRequired, TSpaceExports> = {
   description: 'Space module',
   dependencies: ['core-graph'],
   load: ({ depsExports, moduleExports }) => {
-    depsExports.collab.collab.loadSharedData('map', 'graphViews');
+    depsExports.collab.collab.loadSharedData('map', 'space', 'graphViews');
 
     const exports: TSpaceExports = {
       registerMenuEntries: (entries) => {
-        menuEntries.push(entries);
+        modulesMenuEntries.push(entries);
       },
       registerNodes: (newNodes) => {
-        nodes = { ...nodes, ...newNodes };
+        uiElements.nodes = { ...uiElements.nodes, ...newNodes };
       },
       registerLayer: (newLayer) => {
-        layers.push(newLayer);
+        uiElements.layers.push(newLayer);
       },
-      registerPanel: (newPanel) => {
-        panels.push(newPanel);
+      registerPanel: (newPanels) => {
+        uiElements.panels = { ...uiElements.panels, ...newPanels };
       },
+      uiElements,
     };
 
     exports.registerMenuEntries(spaceMenuEntries);

@@ -72,9 +72,9 @@ export const EdgeMenu = ({
   };
 
   const renderProps: TEdgeRenderProps = useLocalSharedData<TCoreSharedData>(
-    ['core:edges'],
+    ['core-graph:edges'],
     (sd) => {
-      const edge = sd['core:edges'].find((e) => edgeId(e) === eid);
+      const edge = sd['core-graph:edges'].find((e) => edgeId(e) === eid);
       const renderProps = (edge as any)?.renderProps;
       return renderProps || {};
     }

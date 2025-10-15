@@ -1,6 +1,6 @@
 import { TCoreSharedData } from '@monorepo/core-graph';
 import { TGraphNode } from '@monorepo/core-graph';
-import { SharedDataManager } from '@monorepo/collab-engine';
+import { LocalOverrider } from '@monorepo/collab';
 
 import { TSpaceSharedData } from '../..';
 import { SpaceState } from './apis/spaceState';
@@ -9,12 +9,12 @@ import { TGraphView } from '../space-types';
 //
 
 export class CollabSpaceState extends SpaceState {
-  sdm: SharedDataManager<TSpaceSharedData & TCoreSharedData>;
+  sdm: LocalOverrider<TSpaceSharedData & TCoreSharedData>;
   viewId: string;
 
   constructor(
     viewId: string,
-    sdm: SharedDataManager<TSpaceSharedData & TCoreSharedData>
+    sdm: LocalOverrider<TSpaceSharedData & TCoreSharedData>
   ) {
     super();
     this.sdm = sdm;
@@ -25,12 +25,12 @@ export class CollabSpaceState extends SpaceState {
       this.notifyListeners();
     });
 
-    this.sdm.observe(['core:nodes'], () => {
+    this.sdm.observe(['core-graph:nodes'], () => {
       this.updateNodes();
       this.notifyListeners();
     });
 
-    this.sdm.observe(['core:edges'], () => {
+    this.sdm.observe(['core-graph:edges'], () => {
       this.notifyListeners();
     });
 
@@ -46,7 +46,7 @@ export class CollabSpaceState extends SpaceState {
   }
 
   private updateNodes() {
-    const nodes = this.sdm.getData()['core:nodes'];
+    const nodes = this.sdm.getData()['core-graph:nodes'];
     if (!nodes) throw new Error('No nodes');
     this.nodes = nodes;
   }

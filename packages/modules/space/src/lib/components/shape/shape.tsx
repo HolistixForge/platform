@@ -7,7 +7,7 @@ import {
   SelectItem,
 } from '@monorepo/ui-base';
 import { TGraphNode } from '@monorepo/core-graph';
-import { useDispatcher } from '@monorepo/collab-engine';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 
 import { NodeHeader } from '../assets/node-header/node-header';
 import { useNodeHeaderButtons } from '../assets/node-header/node-main-toolbar';

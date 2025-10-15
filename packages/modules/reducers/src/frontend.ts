@@ -25,3 +25,4 @@ export const moduleFrontend: TModule<
 
 export { useDispatcher, useEventSequence } from './lib/reducers-hooks';
 export { FrontendEventSequence } from './lib/frontendEventSequence';
+export { FrontendDispatcher } from './lib/dispatchers';

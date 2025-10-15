@@ -30,7 +30,11 @@ export const loadStoryData = (sd: TSpaceSharedData & TCoreSharedData) => {
   const graphViews = sd['space:graphViews'];
   const gv: TGraphView = defaultGraphView();
 
-  loadStoryGraph(gv, sd['core:nodes'] as any, sd['core:edges'] as any);
+  loadStoryGraph(
+    gv,
+    sd['core-graph:nodes'] as any,
+    sd['core-graph:edges'] as any
+  );
 
   graphViews.set(STORY_VIEW_ID, gv);
 };

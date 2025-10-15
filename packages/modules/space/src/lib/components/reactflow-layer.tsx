@@ -21,11 +21,9 @@ import {
   ReactFlowInstance,
   useReactFlow,
   OnConnectStart,
-  OnNodeDrag,
   OnMove,
 } from '@xyflow/react';
 
-import { LayerViewport, LayerViewportAdapter } from './layer-types';
 import { TJsonObject, useRegisterListener } from '@monorepo/simple-types';
 import { clientXY } from '@monorepo/ui-toolkit';
 import {
@@ -35,20 +33,26 @@ import {
   EEdgeSemanticType,
 } from '@monorepo/core-graph';
 import {
-  useEventSequence,
-  FrontendEventSequence,
   useAwareness,
-} from '@monorepo/collab-engine';
+  TValidSharedDataToCopy,
+  useLocalSharedDataManager,
+  TOverrideFunction,
+} from '@monorepo/collab/frontend';
+import {
+  FrontendEventSequence,
+  useDispatcher,
+} from '@monorepo/reducers/frontend';
 
 import { PointerTracker } from './PointerTracker';
 import { NodeWrapper } from './node-wrappers/node-wrapper';
 import { SpaceState } from './apis/spaceState';
 import { translateEdges, translateNodes } from './to-rf-nodes';
-import { TSpaceEvent } from '../space-events';
+import { TEventMoveNode } from '../space-events';
 import { getAbsolutePosition } from '../utils/position-utils';
 import { TSpaceSharedData } from '../..';
 import { INITIAL_VIEWPORT } from './holistix-space';
 import { useSpaceContext } from './reactflow-layer-context';
+import { LayerViewport, LayerViewportAdapter } from './layer-types';
 
 //
 //
@@ -109,13 +113,6 @@ export const ReactflowLayer = ({
   const reactflowRef = useRef<ReactFlowInstance | null>(null);
 
   useRegisterListener(spaceState, 'DemiurgeSpace', viewId);
-
-  const { createEventSequence } = useEventSequence<
-    TSpaceEvent,
-    TSpaceSharedData
-  >();
-  const moveNodeEventSequenceRef =
-    useRef<FrontendEventSequence<TSpaceEvent> | null>(null);
 
   //
   // ***************  ***************
@@ -206,85 +203,104 @@ export const ReactflowLayer = ({
   //
   //
 
-  const onNodeDrag: OnNodeDrag = useCallback(
-    (event, node, nodes) => {
-      const n = spaceState.getNodes().find((n) => n.id === node.id);
-      if (!n) return;
+  const dispatcher = useDispatcher<TEventMoveNode>();
 
-      if (n.disabledFeatures?.includes('frontend-move-node')) {
-        return;
+  const lsdm = useLocalSharedDataManager<TSpaceSharedData>();
+
+  const { handleNodeDrag, handleNodeDragStop } = useMemo(() => {
+    //
+
+    // function to move the node in local shared data
+    const moveNodeLocally = (
+      localSharedData: TValidSharedDataToCopy<TSpaceSharedData>,
+      nodeId: string,
+      event: TEventMoveNode
+    ) => {
+      // define the local state override applied to shared state locally during the sequence life
+      const gv = localSharedData['space:graphViews'].get(viewId);
+      if (!gv) return;
+
+      const draggedNode = gv.graph.nodes.find((n) => n.id === nodeId);
+
+      if (draggedNode) {
+        // if action is done and node has a group id, return.
+        if (draggedNode.parentId)
+          // the very last overide, (backend have computed group) draggedNode.parentId will be the group id,
+          // and event.position will still be absolute.
+          // do nothing.
+          return;
+
+        draggedNode.position = getAbsolutePosition(
+          event.position,
+          draggedNode.parentId,
+          gv
+        );
+        draggedNode.parentId = undefined;
       }
+    };
 
-      // Create sequence if it doesn't exist
-      if (!moveNodeEventSequenceRef.current) {
-        moveNodeEventSequenceRef.current = createEventSequence({
-          localReduceUpdateKeys: ['space:graphViews'],
-          localReduce: (sdc: TSpaceSharedData, event) => {
-            // define the local state override applied to shared state locally during the sequence life
-            const gv = sdc['space:graphViews'].get(viewId);
-            if (!gv) return;
-
-            const draggedNode = gv.graph.nodes.find((n) => n.id === node.id);
-
-            if (draggedNode) {
-              // if action is done and node has a group id, return.
-              if (!moveNodeEventSequenceRef.current && draggedNode.parentId)
-                // the very last overide, (backend have computed group) draggedNode.parentId will be the group id,
-                // and event.position will still be absolute.
-                // do nothing.
-                return;
-
-              draggedNode.position = getAbsolutePosition(
-                event.position,
-                draggedNode.parentId,
-                gv
-              );
-              draggedNode.parentId = undefined;
-            }
-          },
-        });
-
-        // define the revert state in case of error during the sequence
-        moveNodeEventSequenceRef.current.dispatch({
-          type: 'space:move-node',
-          viewId,
-          nid: node.id,
-          position: n.position,
-          sequenceRevertPoint: true,
-        });
+    // create an event sequence that both dispatches the event to backend
+    // and applies the node properties to the local shared data
+    const es = new FrontendEventSequence<TEventMoveNode>(
+      dispatcher,
+      (event) => {
+        moveNodeLocally(lsdm.getData(), event.nid, event);
       }
+    );
 
-      // move the node
-      moveNodeEventSequenceRef.current.dispatch({
+    // register an override function to apply the node properties to the local shared data
+    // when the shared data is updated (pushed from backend)
+    const localOverrider: TOverrideFunction<
+      TValidSharedDataToCopy<TSpaceSharedData>
+    > = {
+      apply: (localSharedData) => {
+        if (es.lastEvent)
+          moveNodeLocally(localSharedData, es.lastEvent.nid, es.lastEvent);
+      },
+      keys: ['space:graphViews'],
+    };
+
+    lsdm.registerOverrideFunction(localOverrider);
+
+    // on node drag, we dispatch an event to backend through the event sequence
+    // object that handle debouncing, sequence id and sequence counter, and also applies
+    // the node properties to the local shared data
+    const handleNodeDrag = (
+      event: React.MouseEvent,
+      node: Node,
+      nodes: Node[]
+    ) => {
+      es.dispatch({
         type: 'space:move-node',
         viewId,
         nid: node.id,
         position: node.position,
       });
-    },
-    [createEventSequence, spaceState, viewId]
-  );
+    };
 
-  const onNodeDragStop = useCallback(
-    (event: React.MouseEvent, node: Node, nodes: Node[]) => {
-      if (moveNodeEventSequenceRef.current) {
-        // Send final position
-        moveNodeEventSequenceRef.current.dispatch({
-          type: 'space:move-node',
-          viewId,
-          nid: node.id,
-          position: node.position,
-          stop: true,
-          sequenceEnd: true,
-        });
-        // cleanup the sequence, delete the local state override
-        moveNodeEventSequenceRef.current.cleanup();
-        moveNodeEventSequenceRef.current = null;
-      }
-    },
-    [viewId]
-  );
+    const handleNodeDragStop = (
+      event: React.MouseEvent,
+      node: Node,
+      nodes: Node[]
+    ) => {
+      es.dispatch({
+        type: 'space:move-node',
+        viewId,
+        nid: node.id,
+        position: node.position,
+        stop: true,
+        sequenceEnd: true,
+      });
+      es.reset();
+    };
 
+    return {
+      handleNodeDrag,
+      handleNodeDragStop,
+    };
+  }, [dispatcher, lsdm, viewId]);
+
+  //
   //
 
   /**
@@ -400,8 +416,8 @@ export const ReactflowLayer = ({
       onConnect={_onConnect}
       onConnectEnd={onConnectEnd}
       onConnectStart={onConnectStart}
-      onNodeDrag={onNodeDrag}
-      onNodeDragStop={onNodeDragStop}
+      onNodeDrag={handleNodeDrag}
+      onNodeDragStop={handleNodeDragStop}
       onMove={_onMove}
       onDragOver={handleDragOver}
       onDrop={handleDrop}

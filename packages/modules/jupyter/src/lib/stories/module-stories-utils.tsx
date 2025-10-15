@@ -214,7 +214,7 @@ export const JupyterStoryInit = ({
     );
   }
 
-  return <>{children}</>;
+  return children;
 };
 
 //

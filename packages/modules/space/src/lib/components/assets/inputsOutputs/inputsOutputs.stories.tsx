@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { InputsOutputs } from './inputsOutputs';
-import { StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss } from '../../../stories/story-context-mocks';
+import { StoryMockSpaceContextReactflowBgAndCss } from '../../../stories/story-context-mocks';
 
 //
 
@@ -11,7 +11,7 @@ const StoryWrapper = (props: {
   const nodeId = 'whatever';
 
   return (
-    <StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss
+    <StoryMockSpaceContextReactflowBgAndCss
       nodeId={nodeId}
       inputs={props.pinCount}
       outputs={props.pinCount}
@@ -24,7 +24,7 @@ const StoryWrapper = (props: {
       <div style={{ position: 'relative' }}>
         <InputsOutputs nodeId={nodeId} {...props} />
       </div>
-    </StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss>
+    </StoryMockSpaceContextReactflowBgAndCss>
   );
 };
 

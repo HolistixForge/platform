@@ -40,8 +40,7 @@ export default defineConfig(() => ({
       formats: ['es' as const],
     },
     rollupOptions: {
-      // External packages that should not be bundled into your library.
-      external: ['react', 'react-dom', 'react/jsx-runtime'],
+      external: (id) => !id.startsWith('.') && !id.startsWith('/'),
     },
   },
 }));

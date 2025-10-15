@@ -32,3 +32,5 @@ export const moduleBackend: TModule<undefined, TCollabBackendExports> = {
 //
 
 export type { TEventUserLeave } from './lib/collab-events';
+
+export { LocalOverrider } from './lib/overrider';

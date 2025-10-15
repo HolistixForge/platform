@@ -80,14 +80,15 @@ export class LocalOverrider<
 
   public observe(keys: Array<keyof TSharedData>, observer: () => void) {
     keys.forEach((key) => {
+      if (!this.observers[key]) this.observers[key] = [];
+      this.observers[key].push(observer);
+
       if (!this.sdObservers.has(key as string)) {
         const sdObserver = () => this.update(key as string);
         this.sdObservers.set(key as string, sdObserver);
         this.sharedData[key].observe(sdObserver);
         sdObserver();
       }
-      if (!this.observers[key]) this.observers[key] = [];
-      this.observers[key].push(observer);
     });
   }
 

@@ -52,7 +52,7 @@ import {
 } from './space-types';
 import { getAbsolutePosition } from './utils/position-utils';
 import { edgeId } from './components/apis/types/edge';
-import { TCollabExports } from '@monorepo/collab';
+import { TCollabBackendExports } from '@monorepo/collab';
 import { TGatewayExports } from '@monorepo/gateway';
 
 /**
@@ -62,7 +62,7 @@ import { TGatewayExports } from '@monorepo/gateway';
 type ReducedEvents = TSpaceEvent | TCoreEvent;
 
 type RequiredExports = {
-  collab: TCollabExports<TSpaceSharedData & TCoreSharedData>;
+  collab: TCollabBackendExports<TSpaceSharedData & TCoreSharedData>;
   reducers: TReducersBackendExports;
   gateway: TGatewayExports;
 };
@@ -71,21 +71,27 @@ type RequiredExports = {
  *
  */
 
-export class SpaceReducer extends Reducer<ReducedEvents, RequiredExports> {
+export class SpaceReducer extends Reducer<ReducedEvents> {
   //
+  private depsExports: RequiredExports;
+
+  constructor(depsExports: RequiredExports) {
+    super();
+    this.depsExports = depsExports;
+  }
+
   override reduce(
     event: ReducedEvents,
-    depsExports: RequiredExports,
     requestData: RequestData
   ): Promise<void> {
     switch (event.type) {
       case 'space:new-view':
-        return this.newView(event, depsExports, requestData);
+        return this.newView(event, requestData);
 
       case 'space:move-node':
         return this.executeGraphViewActionIfUserHasPermission(
           event,
-          depsExports,
+
           requestData,
           (gvc, nodes, edges) => {
             this.moveNode(event, gvc, nodes, edges);
@@ -93,18 +99,18 @@ export class SpaceReducer extends Reducer<ReducedEvents, RequiredExports> {
         );
 
       case 'space:reduce-node':
-        return this.executeGraphViewAction(event, depsExports, (gvc) => {
+        return this.executeGraphViewAction(event, (gvc) => {
           this.changeNodeMode(event as TEventReduceNode, gvc, 'REDUCED');
         });
 
       case 'space:expand-node':
-        return this.executeGraphViewAction(event, depsExports, (gvc) => {
+        return this.executeGraphViewAction(event, (gvc) => {
           this.changeNodeMode(event as TEventExpandNode, gvc, 'EXPANDED');
         });
 
       case 'space:close-connector':
       case 'space:open-connector':
-        return this.executeGraphViewAction(event, depsExports, (gvc) => {
+        return this.executeGraphViewAction(event, (gvc) => {
           this.openCloseConnector(
             event as TEventCloseConnector | TEventOpenConnector,
             gvc
@@ -112,7 +118,7 @@ export class SpaceReducer extends Reducer<ReducedEvents, RequiredExports> {
         });
 
       case 'space:highlight':
-        return this.executeGraphViewAction(event, depsExports, (gvc) => {
+        return this.executeGraphViewAction(event, (gvc) => {
           this.setEdgeHighlight(
             event as TEventHighlightFromConnector,
             gvc,
@@ -121,7 +127,7 @@ export class SpaceReducer extends Reducer<ReducedEvents, RequiredExports> {
         });
 
       case 'space:unhighlight':
-        return this.executeGraphViewAction(event, depsExports, (gvc) => {
+        return this.executeGraphViewAction(event, (gvc) => {
           this.setEdgeHighlight(
             event as TEventUnhighlightFromConnector,
             gvc,
@@ -130,137 +136,101 @@ export class SpaceReducer extends Reducer<ReducedEvents, RequiredExports> {
         });
 
       case 'space:filter-out-node':
-        return this.executeGraphViewAction(
-          event,
-          depsExports,
-          (gvc, nodes, edges) => {
-            this.filterOutNode(event as TEventFilterOutNode, gvc, nodes, edges);
-          }
-        );
+        return this.executeGraphViewAction(event, (gvc, nodes, edges) => {
+          this.filterOutNode(event as TEventFilterOutNode, gvc, nodes, edges);
+        });
 
       case 'space:unfilter-out-node':
-        return this.executeGraphViewAction(
-          event,
-          depsExports,
-          (gvc, nodes, edges) => {
-            this.unfilterOutNode(
-              event as TEventUnfilterOutNode,
-              gvc,
-              nodes,
-              edges
-            );
-          }
-        );
+        return this.executeGraphViewAction(event, (gvc, nodes, edges) => {
+          this.unfilterOutNode(
+            event as TEventUnfilterOutNode,
+            gvc,
+            nodes,
+            edges
+          );
+        });
 
       case 'space:open-node':
       case 'space:close-node':
-        return this.executeGraphViewAction(
-          event,
-          depsExports,
-          (gvc, nodes, edges) => {
-            this.openCloseNode(
-              event as TEventOpenNode | TEventCloseNode,
-              gvc,
-              nodes,
-              edges
-            );
-          }
-        );
+        return this.executeGraphViewAction(event, (gvc, nodes, edges) => {
+          this.openCloseNode(
+            event as TEventOpenNode | TEventCloseNode,
+            gvc,
+            nodes,
+            edges
+          );
+        });
 
       case 'space:resize-node':
-        return this.executeGraphViewAction(
-          event,
-          depsExports,
-          (gvc, nodes, edges) => {
-            this.resizeNode(event as TEventResizeNode, gvc, nodes, edges);
-          }
-        );
+        return this.executeGraphViewAction(event, (gvc, nodes, edges) => {
+          this.resizeNode(event as TEventResizeNode, gvc, nodes, edges);
+        });
 
       case 'space:update-graph-view':
-        return this.executeGraphViewAction(
-          event,
-          depsExports,
-          (gvc, nodes, edges) => {
-            this.updateGraphview(gvc, nodes, edges);
-          }
-        );
+        return this.executeGraphViewAction(event, (gvc, nodes, edges) => {
+          this.updateGraphview(gvc, nodes, edges);
+        });
 
       case 'space:new-group':
-        this.newGroup(event, depsExports, requestData);
+        this.newGroup(event, requestData);
         return Promise.resolve();
 
       case 'space:new-shape':
-        this.newShape(event, depsExports, requestData);
+        this.newShape(event, requestData);
         return Promise.resolve();
 
       case 'space:group-property-change':
-        this.groupPropertyChange(event, depsExports);
+        this.groupPropertyChange(event);
         return Promise.resolve();
 
       case 'space:shape-property-change':
-        this.shapePropertyChange(event, depsExports);
+        this.shapePropertyChange(event);
         return Promise.resolve();
 
       case 'space:delete-shape':
-        this.deleteShape(event, depsExports, requestData);
+        this.deleteShape(event, requestData);
         return Promise.resolve();
 
       case 'space:delete-group':
-        this.deleteGroup(event, depsExports, requestData);
+        this.deleteGroup(event, requestData);
         return Promise.resolve();
 
       case 'core:delete-edge':
       case 'core:delete-node':
       case 'core:new-edge':
-        this.updateAllGraphviews(event, depsExports, requestData);
+        this.updateAllGraphviews(event, requestData);
         return Promise.resolve();
 
       case 'core:new-node':
-        this.newNode(event, depsExports);
-        this.updateAllGraphviews(event, depsExports, requestData);
+        this.newNode(event);
+        this.updateAllGraphviews(event, requestData);
         return Promise.resolve();
 
       case 'space:edge-property-change':
         return (async () => {
-          await this.edgePropertyChange(event, depsExports);
-          this.updateAllGraphviews(event, depsExports, requestData);
+          await this.edgePropertyChange(event);
+          this.updateAllGraphviews(event, requestData);
         })();
 
       case 'space:move-node-to-front':
-        return this.executeGraphViewAction(
-          event,
-          depsExports,
-          (gvc, nodes, edges) => {
-            this.moveNodeToFront(event, gvc);
-          }
-        );
+        return this.executeGraphViewAction(event, (gvc, nodes, edges) => {
+          this.moveNodeToFront(event, gvc);
+        });
 
       case 'space:move-node-to-back':
-        return this.executeGraphViewAction(
-          event,
-          depsExports,
-          (gvc, nodes, edges) => {
-            this.moveNodeToBack(event, gvc);
-          }
-        );
+        return this.executeGraphViewAction(event, (gvc, nodes, edges) => {
+          this.moveNodeToBack(event, gvc);
+        });
 
       case 'space:lock-node':
-        return this.executeGraphViewAction(
-          event,
-          depsExports,
-          (gvc, nodes, edges) => {
-            this.lockNode(event, gvc, nodes, edges, requestData.user_id);
-          }
-        );
+        return this.executeGraphViewAction(event, (gvc, nodes, edges) => {
+          this.lockNode(event, gvc, nodes, edges, requestData.user_id);
+        });
 
       case 'space:disable-feature':
-        return this.executeGraphViewAction(
-          event,
-          depsExports,
-          (gvc, nodes, edges) => {
-            this.disableFeature(event, gvc);
-          }
-        );
+        return this.executeGraphViewAction(event, (gvc, nodes, edges) => {
+          this.disableFeature(event, gvc);
+        });
 
       default:
         return Promise.resolve();
@@ -269,7 +239,6 @@ export class SpaceReducer extends Reducer<ReducedEvents, RequiredExports> {
 
   private executeGraphViewAction<T extends { viewId: string }>(
     event: T,
-    depsExports: RequiredExports,
     action: (
       gvc: TGraphView,
       nodes: Map<string, TGraphNode>,
@@ -277,23 +246,26 @@ export class SpaceReducer extends Reducer<ReducedEvents, RequiredExports> {
     ) => void
   ): Promise<void> {
     const viewId = event.viewId;
-    const gv = depsExports.collab.sharedData['space:graphViews'].get(viewId);
+    const gv =
+      this.depsExports.collab.collab.sharedData['space:graphViews'].get(viewId);
     if (!gv) {
       error('SPACE', `Graph view ${viewId} not found`);
       return Promise.resolve();
     }
 
     const gvc = structuredClone(gv);
-    const nodes = depsExports.collab.sharedData['core:nodes'] as unknown as Map<
-      string,
-      TGraphNode
-    >;
-    const edges = depsExports.collab.sharedData[
-      'core:edges'
+    const nodes = this.depsExports.collab.collab.sharedData[
+      'core-graph:nodes'
+    ] as unknown as Map<string, TGraphNode>;
+    const edges = this.depsExports.collab.collab.sharedData[
+      'core-graph:edges'
     ] as unknown as TEdge[];
 
     action(gvc, nodes, edges);
-    depsExports.collab.sharedData['space:graphViews'].set(viewId, gvc);
+    this.depsExports.collab.collab.sharedData['space:graphViews'].set(
+      viewId,
+      gvc
+    );
     return Promise.resolve();
   }
 
@@ -301,7 +273,6 @@ export class SpaceReducer extends Reducer<ReducedEvents, RequiredExports> {
     T extends { viewId: string; nid: string }
   >(
     event: T,
-    depsExports: RequiredExports,
     requestData: RequestData,
     action: (
       gvc: TGraphView,
@@ -309,9 +280,9 @@ export class SpaceReducer extends Reducer<ReducedEvents, RequiredExports> {
       edges: TEdge[]
     ) => void
   ): Promise<void> {
-    const gv = depsExports.collab.sharedData['space:graphViews'].get(
-      event.viewId
-    );
+    const gv = this.depsExports.collab.collab.sharedData[
+      'space:graphViews'
+    ].get(event.viewId);
     if (!gv) {
       error('SPACE', `Graph view ${event.viewId} not found`);
       return Promise.resolve();
@@ -326,11 +297,14 @@ export class SpaceReducer extends Reducer<ReducedEvents, RequiredExports> {
 
     if (nv.lockedBy) {
       authorized = false;
-      const nodeData = depsExports.collab.sharedData['core:nodes'].get(
-        event.nid
-      );
+      const nodeData = this.depsExports.collab.collab.sharedData[
+        'core-graph:nodes'
+      ].get(event.nid);
       const admin = (requestData.jwt as any)?.scope?.includes(
-        makeProjectScopeString(depsExports.gateway.project_id, 'project:admin')
+        makeProjectScopeString(
+          this.depsExports.gateway.project_id,
+          'project:admin'
+        )
       );
       if (admin || nodeData?.data?.userId === requestData.user_id) {
         authorized = true;
@@ -338,7 +312,7 @@ export class SpaceReducer extends Reducer<ReducedEvents, RequiredExports> {
     }
 
     if (authorized) {
-      return this.executeGraphViewAction(event, depsExports, action);
+      return this.executeGraphViewAction(event, action);
     } else
       throw new UserException('You are not authorized to perform this action');
   }
@@ -944,12 +918,8 @@ export class SpaceReducer extends Reducer<ReducedEvents, RequiredExports> {
 
   //
 
-  newShape(
-    event: TEventNewShape,
-    depsExports: RequiredExports,
-    requestData: RequestData
-  ) {
-    depsExports.reducers.processEvent(
+  newShape(event: TEventNewShape, requestData: RequestData) {
+    this.depsExports.reducers.processEvent(
       {
         type: 'core:new-node',
         nodeData: {
@@ -977,12 +947,8 @@ export class SpaceReducer extends Reducer<ReducedEvents, RequiredExports> {
 
   //
 
-  newGroup(
-    event: TEventNewGroup,
-    depsExports: RequiredExports,
-    requestData: RequestData
-  ) {
-    depsExports.reducers.processEvent(
+  newGroup(event: TEventNewGroup, requestData: RequestData) {
+    this.depsExports.reducers.processEvent(
       {
         type: 'core:new-node',
         nodeData: {
@@ -1005,11 +971,10 @@ export class SpaceReducer extends Reducer<ReducedEvents, RequiredExports> {
 
   //
 
-  groupPropertyChange(
-    event: TEventGroupPropertyChange,
-    depsExports: RequiredExports
-  ) {
-    const node = depsExports.collab.sharedData['core:nodes'].get(event.groupId);
+  groupPropertyChange(event: TEventGroupPropertyChange) {
+    const node = this.depsExports.collab.collab.sharedData[
+      'core-graph:nodes'
+    ].get(event.groupId);
     if (!node) {
       error('SPACE', `node ${event.groupId} not found`);
       return;
@@ -1018,16 +983,18 @@ export class SpaceReducer extends Reducer<ReducedEvents, RequiredExports> {
       ...node.data,
       ...event.properties,
     };
-    depsExports.collab.sharedData['core:nodes'].set(event.groupId, node);
+    this.depsExports.collab.collab.sharedData['core-graph:nodes'].set(
+      event.groupId,
+      node
+    );
   }
 
   //
 
-  shapePropertyChange(
-    event: TEventShapePropertyChange,
-    depsExports: RequiredExports
-  ) {
-    const node = depsExports.collab.sharedData['core:nodes'].get(event.shapeId);
+  shapePropertyChange(event: TEventShapePropertyChange) {
+    const node = this.depsExports.collab.collab.sharedData[
+      'core-graph:nodes'
+    ].get(event.shapeId);
     if (!node) {
       error('SPACE', `node ${event.shapeId} not found`);
       return;
@@ -1036,24 +1003,33 @@ export class SpaceReducer extends Reducer<ReducedEvents, RequiredExports> {
       ...node.data,
       ...event.properties,
     };
-    depsExports.collab.sharedData['core:nodes'].set(event.shapeId, node);
+    this.depsExports.collab.collab.sharedData['core-graph:nodes'].set(
+      event.shapeId,
+      node
+    );
   }
 
   //
 
-  edgePropertyChange(
-    event: TEventEdgePropertyChange,
-    depsExports: RequiredExports
-  ) {
-    return depsExports.collab.transaction(async () => {
+  edgePropertyChange(event: TEventEdgePropertyChange) {
+    return this.depsExports.collab.collab.sharedTypes.transaction(async () => {
       let edge;
       let i;
-      for (i = 0; i < depsExports.collab.sharedData['core:edges'].length; i++) {
+      for (
+        i = 0;
+        i <
+        this.depsExports.collab.collab.sharedData['core-graph:edges'].length;
+        i++
+      ) {
         if (
-          edgeId(depsExports.collab.sharedData['core:edges'].get(i)) ===
-          event.edgeId
+          edgeId(
+            this.depsExports.collab.collab.sharedData['core-graph:edges'].get(i)
+          ) === event.edgeId
         ) {
-          edge = depsExports.collab.sharedData['core:edges'].get(i);
+          edge =
+            this.depsExports.collab.collab.sharedData['core-graph:edges'].get(
+              i
+            );
           break;
         }
       }
@@ -1065,38 +1041,41 @@ export class SpaceReducer extends Reducer<ReducedEvents, RequiredExports> {
       (edge as unknown as { renderProps: TJsonObject }).renderProps = event
         .properties.renderProps as TJsonObject;
 
-      depsExports.collab.sharedData['core:edges'].delete(i);
-      depsExports.collab.sharedData['core:edges'].push([edge]);
+      this.depsExports.collab.collab.sharedData['core-graph:edges'].delete(i);
+      this.depsExports.collab.collab.sharedData['core-graph:edges'].push([
+        edge,
+      ]);
     });
   }
 
   //
 
-  newNode(event: TEventNewNode, depsExports: RequiredExports) {
-    depsExports.collab.sharedData['space:graphViews'].forEach((gv, k) => {
-      gv.nodeViews.push({
-        id: event.nodeData.id,
-        type: event.nodeData.type,
-        position:
-          event.origin?.viewId === k && event.origin?.position
-            ? event.origin?.position
-            : { x: 0, y: 0 },
-        status: nodeViewDefaultStatus(),
-      });
-    });
+  newNode(event: TEventNewNode) {
+    this.depsExports.collab.collab.sharedData['space:graphViews'].forEach(
+      (gv, k) => {
+        gv.nodeViews.push({
+          id: event.nodeData.id,
+          type: event.nodeData.type,
+          position:
+            event.origin?.viewId === k && event.origin?.position
+              ? event.origin?.position
+              : { x: 0, y: 0 },
+          status: nodeViewDefaultStatus(),
+        });
+      }
+    );
   }
 
   //
 
-  newView(
-    event: TEventNewView,
-    depsExports: RequiredExports,
-    requestData: RequestData
-  ) {
+  newView(event: TEventNewView, requestData: RequestData) {
     const nv: TGraphView = defaultGraphView();
-    depsExports.collab.sharedData['space:graphViews'].set(event.viewId, nv);
+    this.depsExports.collab.collab.sharedData['space:graphViews'].set(
+      event.viewId,
+      nv
+    );
 
-    depsExports.reducers.processEvent(
+    this.depsExports.reducers.processEvent(
       {
         type: 'space:update-graph-view',
         viewId: event.viewId,
@@ -1109,28 +1088,22 @@ export class SpaceReducer extends Reducer<ReducedEvents, RequiredExports> {
 
   //
 
-  updateAllGraphviews(
-    event: ReducedEvents,
-    depsExports: RequiredExports,
-    requestData: RequestData
-  ) {
-    depsExports.collab.sharedData['space:graphViews'].forEach((gv, k) => {
-      depsExports.reducers.processEvent(
-        {
-          type: 'space:update-graph-view',
-          viewId: k,
-        },
-        requestData
-      );
-    });
+  updateAllGraphviews(event: ReducedEvents, requestData: RequestData) {
+    this.depsExports.collab.collab.sharedData['space:graphViews'].forEach(
+      (gv, k) => {
+        this.depsExports.reducers.processEvent(
+          {
+            type: 'space:update-graph-view',
+            viewId: k,
+          },
+          requestData
+        );
+      }
+    );
   }
 
-  deleteShape(
-    event: TEventDeleteShape,
-    depsExports: RequiredExports,
-    requestData: RequestData
-  ) {
-    depsExports.reducers.processEvent(
+  deleteShape(event: TEventDeleteShape, requestData: RequestData) {
+    this.depsExports.reducers.processEvent(
       {
         type: 'core:delete-node',
         id: event.shapeId,
@@ -1139,39 +1112,37 @@ export class SpaceReducer extends Reducer<ReducedEvents, RequiredExports> {
     );
   }
 
-  deleteGroup(
-    event: TEventDeleteGroup,
-    depsExports: RequiredExports,
-    requestData: RequestData
-  ) {
+  deleteGroup(event: TEventDeleteGroup, requestData: RequestData) {
     const { groupId } = event;
 
     // Before deleting the group, detach all child nodes and set their positions to absolute
-    depsExports.collab.sharedData['space:graphViews'].forEach((gv, viewId) => {
-      // Find all nodes where parentId matches the group being deleted
-      const childNodes = gv.nodeViews.filter(
-        (node) => node.parentId === groupId
-      );
+    this.depsExports.collab.collab.sharedData['space:graphViews'].forEach(
+      (gv, viewId) => {
+        // Find all nodes where parentId matches the group being deleted
+        const childNodes = gv.nodeViews.filter(
+          (node) => node.parentId === groupId
+        );
 
-      // For each child node, calculate absolute position and remove parentId
-      childNodes.forEach((childNode) => {
-        if (childNode.position) {
-          // Calculate absolute position considering all parent groups
-          const absolutePosition = getAbsolutePosition(
-            childNode.position,
-            groupId,
-            gv
-          );
+        // For each child node, calculate absolute position and remove parentId
+        childNodes.forEach((childNode) => {
+          if (childNode.position) {
+            // Calculate absolute position considering all parent groups
+            const absolutePosition = getAbsolutePosition(
+              childNode.position,
+              groupId,
+              gv
+            );
 
-          // Update node position to absolute and remove parent reference
-          childNode.position = absolutePosition;
-          delete childNode.parentId;
-        }
-      });
-    });
+            // Update node position to absolute and remove parent reference
+            childNode.position = absolutePosition;
+            delete childNode.parentId;
+          }
+        });
+      }
+    );
 
     // Then delete the group node
-    depsExports.reducers.processEvent(
+    this.depsExports.reducers.processEvent(
       {
         type: 'core:delete-node',
         id: groupId,

@@ -19,10 +19,10 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import { useDebugComponent } from '@monorepo/log';
 
 import {
-  useDispatcher,
   useAwarenessSelections,
   useAwareness,
-} from '@monorepo/collab-engine';
+} from '@monorepo/collab/frontend';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 
 import { TNodeContext } from '../apis/types/node';
 import { SelectionsAwareness } from './selection-awareness';

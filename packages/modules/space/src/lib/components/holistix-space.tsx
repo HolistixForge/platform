@@ -22,7 +22,7 @@ import {
   FrontendEventSequence,
 } from '@monorepo/reducers/frontend';
 
-import { PanelComponent } from '../../frontend';
+import { PanelComponent, TSpaceExports } from '../../frontend';
 import { TSpaceMenuEntries } from '../space-menu';
 import { LayerViewportAdapter, TLayerProvider } from './layer-types';
 import { PointerTracker } from './PointerTracker';
@@ -49,6 +49,7 @@ import {
   TLayerTreeItem,
   TLayerTreeCollection,
 } from '../layer-tree-types';
+import { useModuleExports } from '@monorepo/module/frontend';
 
 //
 
@@ -80,8 +81,8 @@ const makeSpaceNode = (nodeTypes: TNodeTypes) => {
   return () => {
     const nodeContext = useNodeContext();
     const node: TGraphNode | undefined = useLocalSharedData<TCoreSharedData>(
-      ['core:nodes'],
-      (sd) => sd['core:nodes'].get(nodeContext.id)
+      ['core-graph:nodes'],
+      (sd) => sd['core-graph:nodes'].get(nodeContext.id)
     );
 
     if (node) {
@@ -123,32 +124,16 @@ const useOpenRadixContextMenu = () => {
  * @returns
  */
 
-export type HolistixSpaceProps = {
-  viewId: string;
-  nodeTypes: TNodeTypes;
-  spaceMenuEntries: TSpaceMenuEntries;
-  panelsDefs?: Record<string, PanelComponent>;
-  layersProviders?: TLayerProvider[];
-};
-
-export const HolistixSpace = ({
-  viewId,
-  nodeTypes,
-  spaceMenuEntries,
-  panelsDefs,
-  layersProviders,
-}: HolistixSpaceProps) => {
-  /**
-   *
-   */
-
+export const HolistixSpace = ({ viewId }: { viewId: string }) => {
+  const { space } = useModuleExports<{ space: TSpaceExports }>('HolistixSpace');
+  const uies = space.uiElements;
   return (
-    <RightPanels panelsDefs={panelsDefs}>
+    <RightPanels panelsDefs={uies.panels}>
       <HolistixSpaceWhiteboard
         viewId={viewId}
-        nodeTypes={nodeTypes}
-        spaceMenuEntries={spaceMenuEntries}
-        layersProviders={layersProviders}
+        nodeTypes={uies.nodes}
+        spaceMenuEntries={uies.getMenuEntries}
+        layersProviders={uies.layers}
       />
     </RightPanels>
   );
@@ -161,16 +146,25 @@ export const HolistixSpace = ({
  * @returns
  */
 
+export type HolistixSpaceWhiteboardProps = {
+  viewId: string;
+  nodeTypes: TNodeTypes;
+  spaceMenuEntries: TSpaceMenuEntries;
+  panelsDefs?: Record<string, PanelComponent>;
+  layersProviders?: TLayerProvider[];
+};
+
 const HolistixSpaceWhiteboard = ({
   viewId,
   nodeTypes,
   spaceMenuEntries,
   layersProviders,
-}: HolistixSpaceProps) => {
+}: HolistixSpaceWhiteboardProps) => {
   //
-  const lsdm = useLocalSharedDataManager<TSpaceSharedData & TCoreSharedData>();
 
   const dispatcher = useDispatcher<TEventEdgePropertyChange | TEventNewEdge>();
+
+  const lsdm = useLocalSharedDataManager<TSpaceSharedData & TCoreSharedData>();
 
   const { awareness } = useAwareness();
 
@@ -182,9 +176,9 @@ const HolistixSpaceWhiteboard = ({
     return { pt, as };
   }, [viewId, awareness]);
 
-  /**
-   * Contextual menu logics
-   */
+  //
+  // Contextual menu logics
+  //
 
   // right click coordinates
   const rcc = useRef<TPosition>({ x: 0, y: 0 });
@@ -216,9 +210,9 @@ const HolistixSpaceWhiteboard = ({
     [openContextualMenu]
   );
 
-  /**
-   *
-   */
+  //
+  //
+  //
 
   // Viewport state
   const lastViewportRef = useRef<Viewport>(INITIAL_VIEWPORT);
@@ -327,9 +321,23 @@ const HolistixSpaceWhiteboard = ({
     []
   );
 
+  const [renderForm, setRenderForm] = useState<ReactNode | null>(null);
+  const [showLayersPanel, setShowLayersPanel] = useState<boolean>(true);
+
+  const gv = useLocalSharedData<TSpaceSharedData>(
+    ['space:graphViews'],
+    (sd) => {
+      return sd['space:graphViews']?.get(viewId);
+    }
+  );
+
   // Update reactflow layer tree data
   const previousTreeItemsRef = useRef<TLayerTreeItem[] | null>(null);
-  const gv = lsdm.getData()['space:graphViews'].get(viewId);
+
+  //
+
+  if (!gv) return null;
+
   const nodes = gv?.graph.nodes || [];
   const nodeViews = gv?.nodeViews || [];
   const treeItems = buildNodeTree(nodes, nodeViews);
@@ -337,9 +345,6 @@ const HolistixSpaceWhiteboard = ({
     previousTreeItemsRef.current = treeItems;
     handleUpdateLayerTree('reactflow', treeItems, 'Base layer');
   }
-
-  const [renderForm, setRenderForm] = useState<ReactNode | null>(null);
-  const [showLayersPanel, setShowLayersPanel] = useState<boolean>(true);
 
   return (
     <LayerContextProvider
@@ -404,7 +409,9 @@ const HolistixSpaceWhiteboard = ({
             active={activeLayer.layerId === 'reactflow'}
           />
 
-          {/* module defined layers - inactive by default */}
+          {
+            // module defined layers - inactive by default
+          }
           {layersProviders?.map((provider) => (
             <div
               key={provider.id}
@@ -547,7 +554,6 @@ const ReactFlowBaseLayer = ({
   // to apply the edge properties to the local shared data
   const handleRenderPropsChange = useMemo(() => {
     //
-    if (!edgeMenu?.edgeId) return;
 
     // function to apply the edge properties to the local shared data
     const applyEdgeProperties = (
@@ -584,23 +590,26 @@ const ReactFlowBaseLayer = ({
     };
 
     lsdm.registerOverrideFunction(localOverrider);
-    // TODO_: Unregister override function on edge menu close
+
+    let lastEdgeId: string | undefined;
 
     // on render props change, we dispatch an event to backend through the event sequence
     // object that handle debouncing, sequence id and sequence counter, and also applies
     // the edge properties to the local shared data
-    const handleRenderPropsChange = (rp: TEdgeRenderProps) => {
-      if (edgeMenu && es) {
-        es.dispatch({
-          type: 'space:edge-property-change',
-          edgeId: edgeMenu.edgeId,
-          properties: { renderProps: rp },
-        });
+    const handleRenderPropsChange = (edgeId: string, rp: TEdgeRenderProps) => {
+      if (lastEdgeId !== edgeId) {
+        es.reset();
       }
+      lastEdgeId = edgeId;
+      es.dispatch({
+        type: 'space:edge-property-change',
+        edgeId: edgeId,
+        properties: { renderProps: rp },
+      });
     };
 
     return handleRenderPropsChange;
-  }, [edgeMenu, dispatcher, lsdm, viewId]);
+  }, [dispatcher, lsdm, viewId]);
 
   /*
    * #########################################################
@@ -660,12 +669,9 @@ const ReactFlowBaseLayer = ({
         <EdgeMenu
           eid={edgeMenu.edgeId}
           position={[edgeMenu.x, edgeMenu.y]}
-          setRenderProps={
-            handleRenderPropsChange ??
-            (() => {
-              /**/
-            })
-          }
+          setRenderProps={(rp: TEdgeRenderProps) => {
+            handleRenderPropsChange(edgeMenu.edgeId, rp);
+          }}
         />
       )}
     </ReactflowLayerContext>

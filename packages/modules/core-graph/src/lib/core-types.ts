@@ -61,6 +61,6 @@ export type TEdge = {
 };
 
 export type TCoreSharedData = {
-  'core:nodes': SharedMap<TGraphNode>;
-  'core:edges': SharedArray<TEdge>;
+  'core-graph:nodes': SharedMap<TGraphNode>;
+  'core-graph:edges': SharedArray<TEdge>;
 };

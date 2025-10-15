@@ -7,7 +7,7 @@ const getNodeEdges = (edges: Array<TEdge>, nid: string) =>
 
 export const useNodeEdges = (id: string) => {
   const { edges } = useLocalSharedData<TCoreSharedData>(
-    ['core:edges'],
+    ['core-graph:edges'],
     (sd) => sd
   );
   const nodeEdges = getNodeEdges(edges || [], id);

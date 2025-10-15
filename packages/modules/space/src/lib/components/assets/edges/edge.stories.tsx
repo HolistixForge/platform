@@ -16,7 +16,7 @@ import { EEdgeSemanticType, TEdge } from '@monorepo/core-graph';
 
 import { EdgeComponent, LabelEnd, LabelMiddle, LabelStart } from './edge';
 import { EdgeShape, TEdgeRenderProps } from '../../apis/types/edge';
-import { StoryMock_CollaborativeContext_SpaceContext } from '../../../stories/story-context-mocks';
+import { StoryMockSpaceContext } from '../../../stories/story-context-mocks';
 
 //
 type NData = { id: string };
@@ -128,7 +128,7 @@ const StoryWrapper = ({ edgeShape }: { edgeShape: EdgeShape }) => {
 
   return (
     <div style={{ width: 'calc(100vw - 50px)', height: 'calc(100vh - 50px)' }}>
-      <StoryMock_CollaborativeContext_SpaceContext>
+      <StoryMockSpaceContext>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -137,7 +137,7 @@ const StoryWrapper = ({ edgeShape }: { edgeShape: EdgeShape }) => {
         >
           <Background />
         </ReactFlow>
-      </StoryMock_CollaborativeContext_SpaceContext>
+      </StoryMockSpaceContext>
     </div>
   );
 };

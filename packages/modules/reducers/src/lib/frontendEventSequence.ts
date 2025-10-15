@@ -16,6 +16,9 @@ export class FrontendEventSequence<T extends TBaseEvent> {
   public lastEvent:
     | (T & Pick<SequenceEvent, 'sequenceRevertPoint' | 'sequenceEnd'>)
     | undefined;
+  public firstEvent:
+    | (T & Pick<SequenceEvent, 'sequenceRevertPoint' | 'sequenceEnd'>)
+    | undefined;
   public hasError = false;
 
   private counter = 0;
@@ -61,14 +64,23 @@ export class FrontendEventSequence<T extends TBaseEvent> {
     event: T & Pick<SequenceEvent, 'sequenceRevertPoint' | 'sequenceEnd'>
   ) {
     if (this.hasError) return;
+
+    if (!this.firstEvent) {
+      this.firstEvent = event;
+      event.sequenceRevertPoint = true;
+    }
+
     this.lastEvent = event;
+
     this.localReduce(event);
     this.debouncedDispatch(event);
   }
 
-  cleanup() {
-    setTimeout(() => {
-      //
-    }, 2000);
+  reset() {
+    this.firstEvent = undefined;
+    this.lastEvent = undefined;
+    this.hasError = false;
+    this.counter = 0;
+    this.sequenceId = makeUuid();
   }
 }

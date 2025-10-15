@@ -21,32 +21,18 @@ export {
 
 export { NoneSharedTypes } from './lib/none/NoneSharedTypes';
 export { NoneAwareness } from './lib/none/NoneAwareness';
+
 export { NoneSharedEditor } from './lib/SharedEditor';
 
 export { SharedTypes } from './lib/SharedTypes';
 export type { SharedMap, SharedArray } from './lib/SharedTypes';
 
+export { sharedDataToJson } from './lib/sharedData';
 export type { TValidSharedData } from './lib/sharedData';
-
-export type { TEventUserLeave, TCollabNativeEvent } from './lib/events';
-
-//
-
-export { CollaborativeContext } from './lib/frontend/context';
-export type {
-  TCollabConfig,
-  TYjsCollabConfig,
-  TNoneCollabConfig,
-  TCollaborationContext,
-} from './lib/frontend/context';
 
 export { buildUserCss } from './lib/frontend/YjsCssStylesheet';
 
-export { sharedDataToJson } from './lib/sharedData';
-
 export { EDITORS_YTEXT_YMAP_KEY } from './lib/yjs/YjsSharedEditor';
-
-export { MockCollaborativeContext } from './lib/frontend/mockCollaborativeContext';
 
 export { SharedEditor } from './lib/SharedEditor';
 

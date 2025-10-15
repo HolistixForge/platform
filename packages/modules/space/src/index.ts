@@ -5,24 +5,27 @@ import { SpaceReducer } from './lib/space-reducer';
 import { TGraphView } from './lib/space-types';
 import { TCollabBackendExports } from '@monorepo/collab';
 import { TReducersBackendExports } from '@monorepo/reducers';
+import { TGatewayExports } from '@monorepo/gateway';
+import { TCoreSharedData } from '@monorepo/core-graph';
 
 export type TSpaceSharedData = {
   'space:graphViews': SharedMap<TGraphView>;
 };
 
 type TRequired = {
-  collab: TCollabBackendExports;
+  collab: TCollabBackendExports<TSpaceSharedData & TCoreSharedData>;
   reducers: TReducersBackendExports;
+  gateway: TGatewayExports;
 };
 
 export const moduleBackend: TModule<TRequired> = {
   name: 'space',
   version: '0.0.1',
   description: 'Space module',
-  dependencies: ['core-graph'],
+  dependencies: ['core-graph', 'gateway'],
   load: ({ depsExports }) => {
-    depsExports.collab.collab.loadSharedData('map', 'graphViews');
-    depsExports.reducers.loadReducers(new SpaceReducer());
+    depsExports.collab.collab.loadSharedData('map', 'space', 'graphViews');
+    depsExports.reducers.loadReducers(new SpaceReducer(depsExports));
   },
 };
 

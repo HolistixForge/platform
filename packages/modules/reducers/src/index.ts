@@ -12,11 +12,7 @@ export abstract class RequestData {
 }
 
 export abstract class Reducer<TEvents = TBaseEvent> {
-  abstract reduce(
-    e: TEvents,
-
-    requestData: RequestData
-  ): Promise<void>;
+  abstract reduce(e: TEvents, requestData: RequestData): Promise<void>;
 }
 
 export type TReducersBackendExports = {

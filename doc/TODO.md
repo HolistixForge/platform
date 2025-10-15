@@ -1,22 +1,19 @@
 ⚠️ Antoine's stuffs
 
+fix space stories
+fix other modules and their stories
+move css to packages
+organisation/project => room
+dns
 sharedata nodeView purge
-
 cmd generator lowercase
-
-select displayed properties
-list db from api key
-
-//
-
 Api key copy paste: fake config module
-
-Ctrl F : extracontext => modulesExports
-Ctrl F : extraArgs => requestExports
-getRequestContext => getRequestExports
-\*CollabContext =>
-
-gatewayStopNotify
+Remove all SQL procedures and exec-pipes that are not used anymore
+merge account and ganymede: organization, member, gateway management only
+load save project
+permission module
+credentials module
+automate
 
 hidden node in search bar
 const filterOutNodes = gv?.params.filterOutNodes?.map((n) => sd.nodes.get(n));

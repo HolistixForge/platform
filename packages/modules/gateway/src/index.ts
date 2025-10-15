@@ -11,6 +11,9 @@ import { TReducersBackendExports } from '@monorepo/reducers';
 import { TCollabBackendExports } from '@monorepo/collab';
 import { TCollabFrontendExports } from '@monorepo/collab/frontend';
 
+import { GatewayReducer } from './lib/gateway-reducer';
+import { TGatewaySharedData } from './lib/gateway-types';
+
 //
 
 export type TGatewayExports = {
@@ -45,8 +48,9 @@ export type TGatewayInitExtraContext = {
 
 type TRequired = {
   gateway_init: TGatewayInitExtraContext;
-  collab: TCollabBackendExports;
+  collab: TCollabBackendExports<TGatewaySharedData>;
   reducers: TReducersBackendExports;
+  gateway: TGatewayExports;
 };
 
 //
@@ -57,7 +61,8 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
   description: 'Gateway module',
   dependencies: ['collab', 'reducers'],
   load: ({ depsExports, moduleExports }) => {
-    depsExports.collab.collab.loadSharedData('map', 'gateway');
+    depsExports.collab.collab.loadSharedData('map', 'gateway', 'gateway');
+    depsExports.reducers.loadReducers(new GatewayReducer(depsExports));
 
     const gateway_init = depsExports.gateway_init;
 
@@ -176,7 +181,7 @@ export const moduleFrontend: TModule<
   description: 'Gateway module',
   dependencies: ['collab'],
   load: ({ depsExports }) => {
-    depsExports.collab.collab.loadSharedData('map', 'gateway');
+    depsExports.collab.collab.loadSharedData('map', 'gateway', 'gateway');
   },
 };
 

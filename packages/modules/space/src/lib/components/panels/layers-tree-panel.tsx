@@ -1,7 +1,10 @@
 import { FC, useMemo } from 'react';
 import { useLayerContext } from '../layer-context';
 import { flattenLayerTreeCollection } from '../../layer-tree-utils';
-import { useAwareness, useAwarenessSelections } from '@monorepo/collab-engine';
+import {
+  useAwareness,
+  useAwarenessSelections,
+} from '@monorepo/collab/frontend';
 
 export const LayersTreePanel: FC<{
   viewId: string;

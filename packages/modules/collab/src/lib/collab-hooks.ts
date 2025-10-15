@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   TAwarenessUser,
@@ -19,21 +19,31 @@ export const useLocalSharedData = <TSharedData extends TValidSharedData>(
   f: (data: TValidSharedDataToCopy<TSharedData>) => any
 ): ReturnType<typeof f> => {
   //
-  const exports = useModuleExports<{ collab: TCollabFrontendExports }>();
+  const exports = useModuleExports<{ collab: TCollabFrontendExports }>(
+    'useLocalSharedData'
+  );
 
   const [, refresh] = useState({});
 
-  const updateComponent = useCallback(() => refresh({}), []);
+  const updateComponent = useRef(() => refresh({}));
+
+  useMemo(() => {
+    exports.collab.localOverrider.observe(
+      observe as string[],
+      updateComponent.current
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    exports.collab.localOverrider.observe(observe as string[], updateComponent);
-    return () => {
+    return () =>
       exports.collab.localOverrider.unobserve(
         observe as string[],
-        updateComponent
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        updateComponent.current
       );
-    };
-  }, [exports.collab.localOverrider, observe, updateComponent]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return f(
     exports.collab.localOverrider.getData() as TValidSharedDataToCopy<TSharedData>
@@ -46,14 +56,18 @@ export const useLocalSharedDataManager = <
   TSharedData extends TValidSharedData
 >() => {
   //
-  const exports = useModuleExports<{ collab: TCollabFrontendExports }>();
+  const exports = useModuleExports<{ collab: TCollabFrontendExports }>(
+    'useLocalSharedDataManager'
+  );
   return exports.collab.localOverrider as LocalOverrider<TSharedData>;
 };
 
 //
 
 export const useAwareness = () => {
-  const exports = useModuleExports<{ collab: TCollabFrontendExports }>();
+  const exports = useModuleExports<{ collab: TCollabFrontendExports }>(
+    'useAwareness'
+  );
   return { awareness: exports.collab.collab.awareness };
 };
 
@@ -64,7 +78,9 @@ export const useAwareness = () => {
  * and only updates when the user list changes (not on pointer/selection changes).
  */
 export function useAwarenessUserList(): TAwarenessUser[] {
-  const exports = useModuleExports<{ collab: TCollabFrontendExports }>();
+  const exports = useModuleExports<{ collab: TCollabFrontendExports }>(
+    'useAwarenessUserList'
+  );
 
   const awareness = exports.collab.collab.awareness;
 
@@ -92,7 +108,9 @@ export function useAwarenessUserList(): TAwarenessUser[] {
 export function useAwarenessSelections(): {
   [nodeId: string]: TUserSelection[];
 } {
-  const exports = useModuleExports<{ collab: TCollabFrontendExports }>();
+  const exports = useModuleExports<{ collab: TCollabFrontendExports }>(
+    'useAwarenessSelections'
+  );
 
   const awareness = exports.collab.collab.awareness;
 
@@ -113,7 +131,9 @@ export function useAwarenessSelections(): {
 //
 
 export const useBindEditor = () => {
-  const exports = useModuleExports<{ collab: TCollabFrontendExports }>();
+  const exports = useModuleExports<{ collab: TCollabFrontendExports }>(
+    'useBindEditor'
+  );
 
   const { awareness, sharedEditor } = exports.collab.collab;
 

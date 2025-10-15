@@ -18,11 +18,11 @@ const generateRandomPosition = () => {
 
 export class NoneAwareness extends Awareness {
   _fakeState: _AwarenessStates = new Map<number, _AwarenessState>();
-  private _simulationEnabled: boolean = false;
+  private _simulationEnabled = false;
   private _simulationUsers: TAwarenessUser[] = [];
   private _simulationInterval: NodeJS.Timeout | null = null;
 
-  constructor(enableSimulation: boolean = false) {
+  constructor(enableSimulation = false) {
     super();
     this._simulationEnabled = enableSimulation;
 
@@ -142,12 +142,15 @@ export class NoneAwareness extends Awareness {
     });
   }
 
-  override emitPositionAwareness(a: _PositionAwareness) {}
+  override emitPositionAwareness(a: _PositionAwareness) {
+    //
+  }
 
   override emitSelectionAwareness(a: {
     nodes: string[];
     viewId: string;
   }): void {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const state = this._fakeState.get(0)!;
     state.selections = {
       space: {

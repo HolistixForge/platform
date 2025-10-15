@@ -2,7 +2,7 @@ import type { Preview } from '@storybook/react';
 import { GlobalWrapper } from './global-wrapper';
 
 import '@monorepo/ui-base/style';
-import '../src/lib/index.scss';
+import '../src/lib/components/css/index.scss';
 
 const preview: Preview = {
   parameters: {

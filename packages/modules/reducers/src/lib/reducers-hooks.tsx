@@ -13,10 +13,10 @@ import {
 //
 
 export const useDispatcher = <TE extends TBaseEvent>() => {
-  const { reducers } = useModuleExports<{
+  const o = useModuleExports<{
     reducers: TReducersFrontendExports<TE>;
-  }>();
-  return reducers.dispatcher as FrontendDispatcher<TE>;
+  }>('useDispatcher');
+  return o.reducers.dispatcher as FrontendDispatcher<TE>;
 };
 
 //
