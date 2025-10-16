@@ -1,66 +1,102 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { useMemo } from 'react';
 
 import { Logger } from '@monorepo/log';
-import { MockCollaborativeContext } from '@monorepo/collab-engine';
 import { StoryApiContext } from '@monorepo/frontend-data';
-import { TSpaceMenuEntries, TSpaceMenuEntry } from '@monorepo/module/frontend';
-import type { ModuleBackend } from '@monorepo/module';
 
+//
+import { loadModules, TModule } from '@monorepo/module';
+import { ModuleProvider } from '@monorepo/module/frontend';
 import {
   moduleBackend as coreBackend,
   moduleFrontend as coreFrontend,
 } from '@monorepo/core-graph';
+import { moduleBackend as collabBackend } from '@monorepo/collab';
+import { moduleFrontend as collabFrontend } from '@monorepo/collab/frontend';
+import {
+  moduleBackend as reducersBackend,
+  TReducersBackendExports,
+} from '@monorepo/reducers';
+import {
+  moduleFrontend as reducersFrontend,
+  linkDispatchToProcessEvent,
+  TReducersFrontendExports,
+} from '@monorepo/reducers/frontend';
 import { moduleBackend as spaceBackend } from '@monorepo/space';
 import { moduleFrontend as spaceFrontend } from '@monorepo/space/frontend';
-
+//
 import { moduleBackend as excalidrawBackend } from '../..';
 import { moduleFrontend as excalidrawFrontend } from '../../frontend';
+
 import { StoryHolistixSpace } from '@monorepo/space/stories';
+
+//
 
 Logger.setPriority(7);
 
-const modulesBackend: ModuleBackend[] = [
-  { collabChunk: { name: 'gateway' } },
-  coreBackend,
-  spaceBackend,
-  excalidrawBackend,
-];
-
-const modulesFrontend = [coreFrontend, spaceFrontend, excalidrawFrontend];
-
-const nodeTypes = modulesFrontend.reduce((acc, module) => {
-  return { ...acc, ...module.nodes };
-}, {});
-
-const spaceMenuEntries: TSpaceMenuEntries = (args) => {
-  return modulesFrontend.reduce((acc, module) => {
-    return [...acc, ...module.spaceMenuEntries(args)];
-  }, [] as TSpaceMenuEntry[]);
+const collabConfig = {
+  type: 'none',
+  room_id: 'space-story',
+  simulateUsers: true,
+  user: { username: 'test', color: 'red' },
 };
 
-const panelsDefs = modulesFrontend.reduce((acc, module) => {
-  return { ...acc, ...module.panels };
-}, {} as Record<string, any>);
+const modulesBackend: { module: TModule<never, object>; config: object }[] = [
+  {
+    module: collabBackend,
+    config: collabConfig,
+  },
+  { module: reducersBackend, config: {} },
+  { module: coreBackend, config: {} },
+  {
+    module: {
+      name: 'gateway',
+      version: '0.0.1',
+      description: 'Gateway module',
+      dependencies: ['collab', 'reducers'],
+      load: () => {
+        //
+      },
+    },
+    config: {},
+  },
+  { module: spaceBackend, config: {} },
+  { module: excalidrawBackend, config: {} },
+];
 
-const layersProviders = modulesFrontend.flatMap((m) => m.layers || []);
+const modulesFrontend: { module: TModule<never, object>; config: object }[] = [
+  {
+    module: collabFrontend,
+    config: collabConfig,
+  },
+  { module: reducersFrontend, config: {} },
+  { module: coreFrontend, config: {} },
+  { module: spaceFrontend, config: {} },
+  { module: excalidrawFrontend, config: {} },
+];
+
+//
 
 const Story = () => {
+  const { frontendModules } = useMemo(() => {
+    const backendModules = loadModules(modulesBackend);
+    const frontendModules = loadModules(modulesFrontend);
+
+    linkDispatchToProcessEvent(
+      backendModules as { reducers: TReducersBackendExports },
+      frontendModules as { reducers: TReducersFrontendExports }
+    );
+
+    return { backendModules, frontendModules };
+  }, []);
+
   return (
     <StoryApiContext>
-      <MockCollaborativeContext
-        frontChunks={modulesFrontend.map((m) => m.collabChunk)}
-        backChunks={modulesBackend.map((m) => m.collabChunk)}
-        getRequestContext={() => ({})}
-      >
+      <ModuleProvider exports={frontendModules}>
         <div style={{ height: '100vh', width: '100vw' }}>
-          <StoryHolistixSpace
-            nodeTypes={nodeTypes}
-            spaceMenuEntries={spaceMenuEntries}
-            panelsDefs={panelsDefs}
-            layersProviders={layersProviders}
-          />
+          <StoryHolistixSpace />
         </div>
-      </MockCollaborativeContext>
+      </ModuleProvider>
     </StoryApiContext>
   );
 };

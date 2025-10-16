@@ -6,6 +6,9 @@
       "path": "../../log"
     },
     {
+      "path": "../reducers"
+    },
+    {
       "path": "../../frontend-data"
     },
     {
@@ -16,6 +19,9 @@
     },
     {
       "path": "../../collab-engine"
+    },
+    {
+      "path": "../collab"
     },
     {
       "path": "../module"

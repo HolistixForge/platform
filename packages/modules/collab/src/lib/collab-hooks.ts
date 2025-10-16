@@ -145,3 +145,12 @@ export const useBindEditor = () => {
     [awareness, sharedEditor]
   );
 };
+
+//
+
+export const useSharedDataDirect = <TSharedData extends TValidSharedData>() => {
+  const exports = useModuleExports<{ collab: TCollabFrontendExports }>(
+    'useSharedDataDirect'
+  );
+  return exports.collab.collab.sharedData as TSharedData;
+};

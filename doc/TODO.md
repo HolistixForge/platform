@@ -1,6 +1,6 @@
 ⚠️ Antoine's stuffs
 
-fix space stories
+fix excalidraw nodes move disabled
 fix other modules and their stories
 move css to packages
 organisation/project => room

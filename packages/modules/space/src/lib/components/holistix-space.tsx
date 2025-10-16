@@ -22,7 +22,7 @@ import {
   FrontendEventSequence,
 } from '@monorepo/reducers/frontend';
 
-import { PanelComponent, TSpaceExports } from '../../frontend';
+import { PanelComponent, TSpaceFrontendExports } from '../../frontend';
 import { TSpaceMenuEntries } from '../space-menu';
 import { LayerViewportAdapter, TLayerProvider } from './layer-types';
 import { PointerTracker } from './PointerTracker';
@@ -125,7 +125,9 @@ const useOpenRadixContextMenu = () => {
  */
 
 export const HolistixSpace = ({ viewId }: { viewId: string }) => {
-  const { space } = useModuleExports<{ space: TSpaceExports }>('HolistixSpace');
+  const { space } = useModuleExports<{ space: TSpaceFrontendExports }>(
+    'HolistixSpace'
+  );
   const uies = space.uiElements;
   return (
     <RightPanels panelsDefs={uies.panels}>

@@ -7,16 +7,12 @@ import { AppState, Collaborator, SocketId } from '@excalidraw/excalidraw/types';
 import { BinaryFiles } from '@excalidraw/excalidraw/types';
 
 import { TJsonObject } from '@monorepo/simple-types';
-import {
-  LayerViewportAdapter,
-  TLayerProvider,
-} from '@monorepo/module/frontend';
+import { LayerViewportAdapter, TLayerProvider } from '@monorepo/space/frontend';
 import {
   useAwarenessUserList,
-  useDispatcher,
-  FrontendDispatcher,
-} from '@monorepo/collab-engine';
-import { useSharedDataDirect } from '@monorepo/collab-engine';
+  useSharedDataDirect,
+} from '@monorepo/collab/frontend';
+import { useDispatcher, FrontendDispatcher } from '@monorepo/reducers/frontend';
 import { TSpaceEvent } from '@monorepo/space';
 import { useLayerContext, TLayerTreeItem } from '@monorepo/space/frontend';
 
@@ -152,7 +148,7 @@ const debouncedHandleChange = debounce(
         });
       }
 
-      sharedData.excalidrawDrawing.set(nodeId, {
+      sharedData['excalidraw:drawing'].set(nodeId, {
         elements: elements as unknown as TJsonObject[],
         fromUser: userid,
         svg: svgString,
@@ -258,18 +254,18 @@ export const ExcalidrawLayerComponent: FC<{
   useEffect(() => {
     // On mount, ensure drawing entry exists or initialize it
     if (!nodeId) return;
-    const d = sharedData.excalidrawDrawing.get(nodeId);
+    const d = sharedData['excalidraw:drawing'].get(nodeId);
     if (!d) {
       const elements: TJsonObject[] = [];
-      sharedData.excalidrawDrawing.set(nodeId, {
+      sharedData['excalidraw:drawing'].set(nodeId, {
         elements,
         fromUser: userid,
         svg: '',
       });
     }
     // Observe remote changes
-    sharedData.excalidrawDrawing.observe(() => {
-      const d = sharedData.excalidrawDrawing.get(nodeId);
+    sharedData['excalidraw:drawing'].observe(() => {
+      const d = sharedData['excalidraw:drawing'].get(nodeId);
       if (d?.fromUser !== userid) {
         // update the drawing if it is from another user
         previousHash.current = simpleHash(d?.elements || []);
@@ -398,7 +394,7 @@ export const ExcalidrawLayerComponent: FC<{
           appState: { ...appState, ...toExcalidrawViewport(initialVp) },
           elements:
             (structuredClone(
-              sharedData.excalidrawDrawing.get(nodeId)?.elements
+              sharedData['excalidraw:drawing'].get(nodeId)?.elements
             ) as unknown as OrderedExcalidrawElement[]) || [],
         }}
         onChange={handleChange}
@@ -421,11 +417,9 @@ export const ExcalidrawLayerComponent: FC<{
   );
 };
 
-export const layers: TLayerProvider[] = [
-  {
-    id: 'excalidraw',
-    title: 'Excalidraw',
-    zIndexHint: 10,
-    Component: ExcalidrawLayerComponent,
-  },
-];
+export const layer: TLayerProvider = {
+  id: 'excalidraw',
+  title: 'Excalidraw',
+  zIndexHint: 10,
+  Component: ExcalidrawLayerComponent,
+};

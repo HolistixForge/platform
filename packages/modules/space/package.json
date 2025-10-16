@@ -6,7 +6,7 @@
     "projectType": "library",
     "sourceRoot": "packages/modules/space/src"
   },
-  "style": "./dist/style.css",
+  "style": "./dist/space.css",
   "exports": {
     "./package.json": "./package.json",
     ".": {
@@ -24,7 +24,7 @@
       "import": "./dist/stories.js",
       "default": "./dist/stories.js"
     },
-    "./style": "./dist/style.css"
+    "./style": "./dist/space.css"
   },
   "types": "./dist/index.d.ts",
   "module": "./dist/index.js",

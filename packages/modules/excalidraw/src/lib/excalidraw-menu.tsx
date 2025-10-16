@@ -1,7 +1,6 @@
-import { FrontendDispatcher } from '@monorepo/collab-engine';
-import { TSpaceMenuEntries } from '@monorepo/module/frontend';
-import { TGraphNode } from '@monorepo/module';
-import { TEventNewNode } from '@monorepo/core-graph';
+import { FrontendDispatcher } from '@monorepo/reducers/frontend';
+import { TSpaceMenuEntries } from '@monorepo/space/frontend';
+import { TGraphNode, TEventNewNode } from '@monorepo/core-graph';
 import { makeUuid } from '@monorepo/simple-types';
 import { TEventDisableFeature } from '@monorepo/space';
 

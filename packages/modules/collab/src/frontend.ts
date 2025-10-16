@@ -43,6 +43,7 @@ export {
   useAwarenessUserList,
   useAwarenessSelections,
   useBindEditor,
+  useSharedDataDirect,
 } from './lib/collab-hooks';
 
 export type {

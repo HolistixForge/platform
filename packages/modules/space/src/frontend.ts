@@ -6,10 +6,16 @@ import { TGraphNode } from '@monorepo/core-graph';
 
 import { Group } from './lib/components/group/group';
 import { Shape } from './lib/components/shape/shape';
-import { spaceMenuEntries, TSpaceMenuEntries } from './lib/space-menu';
-import { TLayerProvider } from './lib/components/layer-types';
+import {
+  spaceMenuEntries,
+  TSpaceMenuEntries,
+  TSpaceMenuEntry,
+} from './lib/space-menu';
+import {
+  TLayerProvider,
+  LayerViewportAdapter,
+} from './lib/components/layer-types';
 import { TJsonObject } from '@monorepo/simple-types';
-import { TSpaceMenuEntry } from './lib/space-menu';
 
 import './lib/components/css/index.scss';
 
@@ -45,6 +51,10 @@ export { useLayerContext } from './lib/components/layer-context';
 
 export type { TLayerTreeItem } from './lib/layer-tree-types';
 
+export type { TLayerProvider, LayerViewportAdapter };
+
+export type { TSpaceMenuEntries, TSpaceMenuEntry };
+
 type TRequired = {
   collab: TCollabFrontendExports;
 };
@@ -76,7 +86,7 @@ const uiElements: TUIElements = {
   layers: [],
 };
 
-export type TSpaceExports = {
+export type TSpaceFrontendExports = {
   registerMenuEntries: (entries: TSpaceMenuEntries) => void;
   registerNodes: (nodes: { [key: string]: FC<{ node: TGraphNode }> }) => void;
   registerLayer: (layers: TLayerProvider) => void;
@@ -86,7 +96,7 @@ export type TSpaceExports = {
 
 //
 
-export const moduleFrontend: TModule<TRequired, TSpaceExports> = {
+export const moduleFrontend: TModule<TRequired, TSpaceFrontendExports> = {
   name: 'space',
   version: '0.0.1',
   description: 'Space module',
@@ -94,7 +104,7 @@ export const moduleFrontend: TModule<TRequired, TSpaceExports> = {
   load: ({ depsExports, moduleExports }) => {
     depsExports.collab.collab.loadSharedData('map', 'space', 'graphViews');
 
-    const exports: TSpaceExports = {
+    const exports: TSpaceFrontendExports = {
       registerMenuEntries: (entries) => {
         modulesMenuEntries.push(entries);
       },

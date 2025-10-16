@@ -1,5 +1,5 @@
 import { TJsonObject } from '@monorepo/simple-types';
-import { SharedMap, SharedTypes } from '@monorepo/collab-engine';
+import { SharedMap } from '@monorepo/collab-engine';
 
 export type TExcalidrawDrawing = {
   elements: TJsonObject[];
@@ -8,12 +8,5 @@ export type TExcalidrawDrawing = {
 };
 
 export type TExcalidrawSharedData = {
-  excalidrawDrawing: SharedMap<TExcalidrawDrawing>;
-};
-
-export const Excalidraw_loadData = (st: SharedTypes): TExcalidrawSharedData => {
-  return {
-    excalidrawDrawing:
-      st.getSharedMap<TExcalidrawDrawing>('excalidraw-drawing'),
-  };
+  'excalidraw:drawing': SharedMap<TExcalidrawDrawing>;
 };

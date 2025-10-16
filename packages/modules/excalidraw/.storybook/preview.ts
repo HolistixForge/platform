@@ -3,7 +3,7 @@ import { GlobalWrapper } from './global-wrapper';
 
 import '@monorepo/ui-base/style';
 import '@monorepo/space/style';
-// import '../src/lib/index.scss';
+import '../src/lib/style.scss';
 
 const preview: Preview = {
   parameters: {

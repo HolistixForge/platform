@@ -180,7 +180,7 @@ export type TExcalidrawDrawing = {
 const debouncedSetDrawing = useMemo(
   () =>
     debounce((elements, hash, svg) => {
-      sharedData.excalidrawDrawing.set(nodeId, { elements, hash, svg });
+      sharedData['excalidraw:drawing'].set(nodeId, { elements, hash, svg });
     }, 250),
   [nodeId, sharedData]
 );
