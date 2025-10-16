@@ -91,7 +91,6 @@ export class SpaceReducer extends Reducer<ReducedEvents> {
       case 'space:move-node':
         return this.executeGraphViewActionIfUserHasPermission(
           event,
-
           requestData,
           (gvc, nodes, edges) => {
             this.moveNode(event, gvc, nodes, edges);

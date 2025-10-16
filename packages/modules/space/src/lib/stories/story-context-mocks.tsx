@@ -1,7 +1,6 @@
 import { ReactNode, useMemo } from 'react';
 
-import { TCoreSharedData } from '@monorepo/core-graph';
-import { useLocalSharedDataManager } from '@monorepo/collab/frontend';
+import { TCoreSharedData, TGraphNode } from '@monorepo/core-graph';
 import { FrontendDispatcher } from '@monorepo/reducers/frontend';
 import { SharedTypes } from '@monorepo/collab-engine';
 
@@ -10,11 +9,11 @@ import {
   TSpaceContext,
 } from '../components/reactflow-layer-context';
 import { TNodeContext } from '../components/apis/types/node';
-import { TSpaceSharedData } from '../..';
-import { CollabSpaceState } from '../components/collab-space-state';
 import { STORY_VIEW_ID } from './story-holistix-space';
 import { WhiteboardMode } from '../components/holistix-space';
 import { TSpaceEvent } from '../space-events';
+import { SpaceState } from '../components/apis/spaceState';
+import { defaultGraphView } from '../space-types';
 
 //
 
@@ -70,6 +69,9 @@ export const StoryMockSpaceContextReactflowBgAndCss = ({
   children,
   selected,
   isOpened = true,
+  nodeId,
+  inputs,
+  outputs,
 }: {
   children: ReactNode;
   selected?: boolean;
@@ -80,8 +82,38 @@ export const StoryMockSpaceContextReactflowBgAndCss = ({
 }) => {
   //
 
+  const spaceState = useMemo(() => {
+    const ss = new SpaceState();
+
+    const node: TGraphNode = {
+      id: nodeId || '',
+      name: nodeId || '',
+      root: true,
+      type: 'whatever',
+      connectors: [
+        {
+          connectorName: 'inputs',
+          pins: Array.from({ length: inputs || 0 }, (_, i) => ({
+            id: `input-${i + 1}`,
+            pinName: `input-${i + 1}`,
+          })),
+        },
+        {
+          connectorName: 'outputs',
+          pins: Array.from({ length: outputs || 0 }, (_, i) => ({
+            id: `output-${i + 1}`,
+            pinName: `output-${i + 1}`,
+          })),
+        },
+      ],
+    };
+
+    ss.setState(defaultGraphView(), new Map([[nodeId || '', node]]));
+    return ss;
+  }, [nodeId, inputs, outputs]);
+
   return (
-    <StoryMockSpaceContext>
+    <StoryMockSpaceContext spaceState={spaceState}>
       <MockSpaceBackground />
       <MockReactFlowNodeCSS selected={selected || false} isOpened={isOpened}>
         {children}
@@ -94,14 +126,17 @@ export const StoryMockSpaceContextReactflowBgAndCss = ({
 
 export const StoryMockSpaceContext = ({
   children,
+  spaceState,
 }: {
   children: ReactNode;
+  spaceState?: SpaceState;
 }) => {
-  const sdm = useLocalSharedDataManager<TSpaceSharedData & TCoreSharedData>();
+  //const sdm = useLocalSharedDataManager<TSpaceSharedData & TCoreSharedData>();
 
   const context: TSpaceContext = useMemo(() => {
     return {
-      spaceState: new CollabSpaceState(STORY_VIEW_ID, sdm),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      spaceState: spaceState || ({} as any), // new CollabSpaceState(STORY_VIEW_ID, sdm),
       currentUser: { username: 'toto', color: '#ffa500' },
       mode: 'default' as WhiteboardMode,
       viewId: STORY_VIEW_ID,
@@ -111,9 +146,7 @@ export const StoryMockSpaceContext = ({
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       resetEdgeMenu: () => {},
     };
-  }, [sdm]);
-
-  // useRegisterListener(context.spaceState);
+  }, [spaceState]);
 
   return (
     <ReactflowLayerContext value={{ ...context }}>

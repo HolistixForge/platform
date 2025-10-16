@@ -43,17 +43,10 @@ export class FrontendEventSequence<T extends TBaseEvent> {
       (
         event: T & Pick<SequenceEvent, 'sequenceRevertPoint' | 'sequenceEnd'>
       ) => {
-        this.counter++;
-        this.dispatcher
-          .dispatch({
-            ...event,
-            sequenceId: this.sequenceId,
-            sequenceCounter: this.counter,
-          })
-          .catch((error) => {
-            this.hasError = true;
-            throw error;
-          });
+        this.dispatcher.dispatch(event).catch((error) => {
+          this.hasError = true;
+          throw error;
+        });
       },
       150,
       { maxWait: 150 }
@@ -72,8 +65,17 @@ export class FrontendEventSequence<T extends TBaseEvent> {
 
     this.lastEvent = event;
 
-    this.localReduce(event);
-    this.debouncedDispatch(event);
+    this.counter++;
+
+    const fullEvent = {
+      ...event,
+      sequenceId: this.sequenceId,
+      sequenceCounter: this.counter,
+    };
+
+    this.localReduce(fullEvent);
+
+    this.debouncedDispatch(fullEvent);
   }
 
   reset() {

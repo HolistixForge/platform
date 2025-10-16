@@ -574,7 +574,7 @@ const ReactFlowBaseLayer = ({
     const es = new FrontendEventSequence<TEventEdgePropertyChange>(
       dispatcher,
       (event) => {
-        applyEdgeProperties(event, lsdm.getData());
+        lsdm.apply(localOverrider);
       }
     );
 

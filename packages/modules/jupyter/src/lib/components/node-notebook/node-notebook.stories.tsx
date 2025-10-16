@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { playAdd__hover, useTestBoolean } from '@monorepo/ui-base';
 import { nodeViewDefaultStatus } from '@monorepo/space';
-import { StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss } from '@monorepo/space/stories';
+import { StoryMockSpaceContextReactflowBgAndCss } from '@monorepo/space/stories';
 
 import { NodeNotebookProps } from './node-notebook';
 import { NodeNotebook } from './node-notebook';
@@ -27,7 +27,7 @@ const NodeStory = (
   } = useTestBoolean(props.expanded);
 
   return (
-    <StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss
+    <StoryMockSpaceContextReactflowBgAndCss
       inputs={3}
       outputs={4}
       selected={props.selected}
@@ -45,7 +45,7 @@ const NodeStory = (
         open={open}
         close={close}
       />
-    </StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss>
+    </StoryMockSpaceContextReactflowBgAndCss>
   );
 };
 

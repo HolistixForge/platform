@@ -1,8 +1,19 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { InputsOutputs } from './inputsOutputs';
 import { StoryMockSpaceContextReactflowBgAndCss } from '../../../stories/story-context-mocks';
+import { ModuleProvider } from '@monorepo/module/frontend';
 
 //
+
+const fakeFrontendModules = {
+  reducers: {
+    dispatcher: {
+      dispatch: () => {
+        /**/
+      },
+    },
+  },
+};
 
 const StoryWrapper = (props: {
   connectorName: 'inputs' | 'outputs';
@@ -11,20 +22,17 @@ const StoryWrapper = (props: {
   const nodeId = 'whatever';
 
   return (
-    <StoryMockSpaceContextReactflowBgAndCss
-      nodeId={nodeId}
-      inputs={props.pinCount}
-      outputs={props.pinCount}
-    >
-      <p style={{ height: '100px' }}>
-        This story does show the correct pin count sometimes. it is due to an
-        identified missing refresh/update of data. look for TODO_CONNECTOR in
-        the code
-      </p>
-      <div style={{ position: 'relative' }}>
-        <InputsOutputs nodeId={nodeId} {...props} />
-      </div>
-    </StoryMockSpaceContextReactflowBgAndCss>
+    <ModuleProvider exports={fakeFrontendModules}>
+      <StoryMockSpaceContextReactflowBgAndCss
+        nodeId={nodeId}
+        inputs={props.pinCount}
+        outputs={props.pinCount}
+      >
+        <div style={{ position: 'relative' }}>
+          <InputsOutputs nodeId={nodeId} {...props} />
+        </div>
+      </StoryMockSpaceContextReactflowBgAndCss>
+    </ModuleProvider>
   );
 };
 

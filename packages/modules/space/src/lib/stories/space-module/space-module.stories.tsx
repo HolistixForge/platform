@@ -13,8 +13,15 @@ import {
   TCollabBackendExports,
 } from '@monorepo/collab';
 import { moduleFrontend as collabFrontend } from '@monorepo/collab/frontend';
-import { moduleBackend as reducersBackend } from '@monorepo/reducers';
-import { moduleFrontend as reducersFrontend } from '@monorepo/reducers/frontend';
+import {
+  moduleBackend as reducersBackend,
+  TReducersBackendExports,
+} from '@monorepo/reducers';
+import {
+  moduleFrontend as reducersFrontend,
+  linkDispatchToProcessEvent,
+  TReducersFrontendExports,
+} from '@monorepo/reducers/frontend';
 import { TCoreSharedData } from '@monorepo/core-graph';
 
 import { HolistixSpace } from '../../components/holistix-space';
@@ -87,8 +94,17 @@ const modulesFrontend: { module: TModule<never, object>; config: object }[] = [
 //
 
 const StoryWrapper = () => {
-  const backendModules = useMemo(() => loadModules(modulesBackend), []);
-  const frontendModules = useMemo(() => loadModules(modulesFrontend), []);
+  const { frontendModules } = useMemo(() => {
+    const backendModules = loadModules(modulesBackend);
+    const frontendModules = loadModules(modulesFrontend);
+
+    linkDispatchToProcessEvent(
+      backendModules as { reducers: TReducersBackendExports },
+      frontendModules as { reducers: TReducersFrontendExports }
+    );
+
+    return { backendModules, frontendModules };
+  }, []);
 
   return (
     <ModuleProvider exports={frontendModules}>
@@ -105,7 +121,7 @@ const meta = {
   title: 'Modules/Space/Main',
   component: StoryWrapper,
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
   argTypes: {},
 } satisfies Meta<typeof StoryWrapper>;

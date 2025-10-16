@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { useTestBoolean } from '@monorepo/ui-base';
-import { StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss } from '@monorepo/space/stories';
+import { StoryMockSpaceContextReactflowBgAndCss } from '@monorepo/space/stories';
 
 import {
   NodeChatAnchorInternal,
@@ -22,7 +22,7 @@ const StoryWrapper = (
   const nodeId = 'whatever';
 
   return (
-    <StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss
+    <StoryMockSpaceContextReactflowBgAndCss
       nodeId={nodeId}
       selected={props.selected}
       isOpened={isOpened}
@@ -34,7 +34,7 @@ const StoryWrapper = (
         isOpened={isOpened}
         onClose={() => {}}
       />
-    </StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss>
+    </StoryMockSpaceContextReactflowBgAndCss>
   );
 };
 

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { useTestBoolean } from '@monorepo/ui-base';
 import { TNodeContext } from '@monorepo/space/frontend';
-import { StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss } from '@monorepo/space/stories';
+import { StoryMockSpaceContextReactflowBgAndCss } from '@monorepo/space/stories';
 
 import { NodeServerInternal } from './node-server';
 import {
@@ -42,7 +42,7 @@ const StoryWrapper = (
   const state = useMockServerBehaviours(props);
 
   return (
-    <StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss
+    <StoryMockSpaceContextReactflowBgAndCss
       selected={props.selected}
       isOpened={isOpened}
       outputs={0}
@@ -67,7 +67,7 @@ const StoryWrapper = (
         close={close}
         {...state}
       />
-    </StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss>
+    </StoryMockSpaceContextReactflowBgAndCss>
   );
 };
 

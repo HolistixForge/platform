@@ -3,9 +3,6 @@
   "include": [],
   "references": [
     {
-      "path": "../gateway"
-    },
-    {
       "path": "../../ui-toolkit"
     },
     {
@@ -15,13 +12,16 @@
       "path": "../../demiurge-types"
     },
     {
-      "path": "../../simple-types"
+      "path": "../gateway"
     },
     {
       "path": "../reducers"
     },
     {
       "path": "../../collab-engine"
+    },
+    {
+      "path": "../../simple-types"
     },
     {
       "path": "../core-graph"

@@ -25,20 +25,3 @@ export class FrontendDispatcher<TE extends TBaseEvent> {
     });
   }
 }
-
-//
-
-/**
- * A dispatcher that adds a jitter to the dispatch time
- * to simulate a real network propagation
- */
-export class JitterDispatcher<
-  TE extends TBaseEvent
-> extends FrontendDispatcher<TE> {
-  override async dispatch(event: TE): Promise<void> {
-    await new Promise((resolve) =>
-      setTimeout(resolve, Math.random() * 200 + 25)
-    );
-    await super.dispatch(event);
-  }
-}

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { nodeViewDefaultStatus } from '@monorepo/space';
-import { StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss } from '@monorepo/space/stories';
+import { StoryMockSpaceContextReactflowBgAndCss } from '@monorepo/space/stories';
 import { sleep } from '@monorepo/simple-types';
 import { useTestBoolean } from '@monorepo/ui-base';
 
@@ -27,7 +27,7 @@ const StoryWrapper = (
   } = useTestBoolean(props.expanded);
 
   return (
-    <StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss
+    <StoryMockSpaceContextReactflowBgAndCss
       selected={props.selected}
       isOpened={isOpened}
       inputs={0}
@@ -47,7 +47,7 @@ const StoryWrapper = (
         close={close}
         {...props}
       />
-    </StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss>
+    </StoryMockSpaceContextReactflowBgAndCss>
   );
 };
 

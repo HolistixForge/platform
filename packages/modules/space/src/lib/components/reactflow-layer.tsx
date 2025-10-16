@@ -244,7 +244,7 @@ export const ReactflowLayer = ({
     const es = new FrontendEventSequence<TEventMoveNode>(
       dispatcher,
       (event) => {
-        moveNodeLocally(lsdm.getData(), event.nid, event);
+        lsdm.apply(localOverrider);
       }
     );
 

@@ -2,7 +2,7 @@ import { TModule } from '@monorepo/module';
 import { TBaseEvent } from '.';
 import { FrontendDispatcher } from './lib/dispatchers';
 
-export type TReducersFrontendExports<TE extends TBaseEvent> = {
+export type TReducersFrontendExports<TE extends TBaseEvent = TBaseEvent> = {
   dispatcher: FrontendDispatcher<TE>;
 };
 
@@ -26,3 +26,5 @@ export const moduleFrontend: TModule<
 export { useDispatcher, useEventSequence } from './lib/reducers-hooks';
 export { FrontendEventSequence } from './lib/frontendEventSequence';
 export { FrontendDispatcher } from './lib/dispatchers';
+
+export { linkDispatchToProcessEvent } from './lib/story-utils';
