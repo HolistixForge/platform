@@ -268,14 +268,27 @@ export const ReactflowLayer = ({
     const handleNodeDrag = (
       event: React.MouseEvent,
       node: Node,
-      nodes: Node[]
+      nodes: Node[],
+      end = false
     ) => {
+      const nodeView = spaceState.getNodes().find((n) => n.id === node.id);
+      if (!nodeView) return;
+      if (nodeView.disabledFeatures?.includes('frontend-move-node')) {
+        console.log('node is disabled for moving');
+        return;
+      }
       es.dispatch({
         type: 'space:move-node',
         viewId,
         nid: node.id,
         position: node.position,
+        stop: end,
+        sequenceEnd: end,
       });
+
+      if (end) {
+        es.reset();
+      }
     };
 
     const handleNodeDragStop = (
@@ -283,22 +296,14 @@ export const ReactflowLayer = ({
       node: Node,
       nodes: Node[]
     ) => {
-      es.dispatch({
-        type: 'space:move-node',
-        viewId,
-        nid: node.id,
-        position: node.position,
-        stop: true,
-        sequenceEnd: true,
-      });
-      es.reset();
+      handleNodeDrag(event, node, nodes, true);
     };
 
     return {
       handleNodeDrag,
       handleNodeDragStop,
     };
-  }, [dispatcher, lsdm, viewId]);
+  }, [dispatcher, lsdm, spaceState, viewId]);
 
   //
   //

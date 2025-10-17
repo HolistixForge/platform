@@ -292,7 +292,7 @@ export const ExcalidrawLayerComponent: FC<{
 
         // Update tree data for the layer panel
         if (updateLayerTree && nodeId) {
-          console.log('elements', elements);
+          // console.log('elements', elements);
           const treeItems: TLayerTreeItem[] = elements
             .filter((e) => !e.isDeleted)
             .map((element, index) => ({

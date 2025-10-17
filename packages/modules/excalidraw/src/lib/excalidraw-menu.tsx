@@ -21,7 +21,7 @@ export const excalidrawMenuEntries: TSpaceMenuEntries = ({
         {
           type: 'item',
           label: 'New Excalidraw Drawing',
-          onClick: () => {
+          onClick: async () => {
             const nodeId = makeUuid();
             const node: TGraphNode = {
               id: nodeId,
@@ -32,7 +32,7 @@ export const excalidrawMenuEntries: TSpaceMenuEntries = ({
               data: {},
             };
 
-            d.dispatch({
+            await d.dispatch({
               type: 'core:new-node',
               nodeData: node,
               edges: [],
@@ -43,14 +43,14 @@ export const excalidrawMenuEntries: TSpaceMenuEntries = ({
             });
 
             // Disable grouping and move-node features for Excalidraw nodes
-            d.dispatch({
+            await d.dispatch({
               type: 'space:disable-feature',
               viewId: viewId,
               nid: nodeId,
               feature: 'grouping',
             });
 
-            d.dispatch({
+            await d.dispatch({
               type: 'space:disable-feature',
               viewId: viewId,
               nid: nodeId,

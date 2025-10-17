@@ -1,4 +1,5 @@
 import { createContext, useContext, useMemo } from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 export const moduleContext = createContext<{ exports: object }>({
   exports: {},
@@ -12,6 +13,10 @@ export const ModuleProvider = ({
   exports: object;
 }) => {
   const contextValue = useMemo(() => ({ exports }), [exports]);
+
+  useHotkeys('ctrl+shift+z', () => {
+    console.log({ exports });
+  });
 
   return (
     <moduleContext.Provider value={contextValue}>
