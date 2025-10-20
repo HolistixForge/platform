@@ -625,6 +625,8 @@ export class AirtableReducer extends Reducer<TAirtableEvent> {
       // Remove from local state
       this.exports.collab.collab.sharedData['airtable:bases'].delete(baseId);
 
+      const nodeDeleted: string[] = [];
+
       // Delete all related nodes
       this.exports.collab.collab.sharedData['core-graph:nodes'].forEach(
         (node) => {
@@ -642,6 +644,7 @@ export class AirtableReducer extends Reducer<TAirtableEvent> {
                 },
                 requestData
               );
+              nodeDeleted.push(node.id);
             }
           }
         }
@@ -649,9 +652,10 @@ export class AirtableReducer extends Reducer<TAirtableEvent> {
 
       // Clear related node views
       const nodeViewsToDelete: string[] = [];
+
       this.exports.collab.collab.sharedData['airtable:node-views'].forEach(
         (view, id) => {
-          if (view.baseId === baseId) {
+          if (nodeDeleted.includes(view.nodeId)) {
             nodeViewsToDelete.push(id);
           }
         }
@@ -673,9 +677,6 @@ export class AirtableReducer extends Reducer<TAirtableEvent> {
     this.exports.collab.collab.sharedData['airtable:node-views'].set(
       `${nodeId}-${viewId}`,
       {
-        type: 'table',
-        baseId: '', // Will be set by the node component
-        tableId: '', // Will be set by the node component
         nodeId,
         viewId,
         viewMode,

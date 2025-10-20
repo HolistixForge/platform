@@ -89,7 +89,7 @@ export const NodeChatbox = ({ node }: { node: TGraphNode }) => {
     picture: null,
   };
 
-  // fill each user's information (name, color) as they beacome ready
+  // fill each user's information (name, color) as they become ready
   usersId.users.forEach((uid, k) => {
     const q = usersQueries[k];
     const u =

@@ -206,7 +206,9 @@ export const Chatbox = ({
               {general ? 'GENERAL CHAT' : 'CHAT'}
             </div>
           </div>
-          <p className="id">{general ? 'Dashboard' : `#${chatId}`}</p>
+          <p className="id">
+            {general ? 'Dashboard' : `#${chatId.substring(0, 8)}`}
+          </p>
         </div>
         {!general && (
           <SwitchFieldset

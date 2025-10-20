@@ -90,15 +90,14 @@ export const ChatboxLogic = ({
   };
 
   const writingUsers: { username: string; color?: string }[] = [];
+
   if (chat) {
     Object.keys(chat.isWriting).forEach((k) => {
-      if (userId) {
-        const u = chat.isWriting[k];
-        if (u) {
-          writingUsers.push(
-            usersInfo.get(k) || { username: 'unknown', color: '#ccc' }
-          );
-        }
+      const u = chat.isWriting[k];
+      if (u) {
+        writingUsers.push(
+          usersInfo.get(k) || { username: 'unknown', color: '#ccc' }
+        );
       }
     });
   }

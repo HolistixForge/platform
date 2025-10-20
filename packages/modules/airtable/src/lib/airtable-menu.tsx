@@ -23,8 +23,6 @@ export const airtableMenuEntries: TSpaceMenuEntries = ({
   const tsd = sharedData as TValidSharedDataToCopy<TAirtableSharedData>;
   const d = dispatcher as FrontendDispatcher<TAirtableEvent | TCoreEvent>;
 
-  console.log({ tsd });
-
   const bases: TSpaceMenuEntry[] = Array.from(
     tsd['airtable:bases']?.entries() ?? []
   ).map(([id, base]) => {

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { useTestBoolean } from '@monorepo/ui-base';
 import { StoryMockSpaceContextReactflowBgAndCss } from '@monorepo/space/stories';
+import { ModuleProvider } from '@monorepo/module/frontend';
 
 import {
   NodeChatAnchorInternal,
@@ -9,6 +10,16 @@ import {
 } from './node-chat-anchor';
 
 //
+
+const fakeFrontendModules = {
+  reducers: {
+    dispatcher: {
+      dispatch: () => {
+        /**/
+      },
+    },
+  },
+};
 
 const StoryWrapper = (
   props: Pick<
@@ -22,19 +33,23 @@ const StoryWrapper = (
   const nodeId = 'whatever';
 
   return (
-    <StoryMockSpaceContextReactflowBgAndCss
-      nodeId={nodeId}
-      selected={props.selected}
-      isOpened={isOpened}
-    >
-      <NodeChatAnchorInternal
+    <ModuleProvider exports={fakeFrontendModules}>
+      <StoryMockSpaceContextReactflowBgAndCss
         nodeId={nodeId}
-        onOpen={open}
-        {...props}
+        selected={props.selected}
         isOpened={isOpened}
-        onClose={() => {}}
-      />
-    </StoryMockSpaceContextReactflowBgAndCss>
+      >
+        <NodeChatAnchorInternal
+          nodeId={nodeId}
+          onOpen={open}
+          {...props}
+          isOpened={isOpened}
+          onClose={() => {
+            /**/
+          }}
+        />
+      </StoryMockSpaceContextReactflowBgAndCss>
+    </ModuleProvider>
   );
 };
 

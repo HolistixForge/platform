@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 
 import { Logger } from '@monorepo/log';
 import { StoryApiContext } from '@monorepo/frontend-data';
+import { StoryHolistixSpace } from '@monorepo/space/stories';
 
 //
 import { loadModules, TModule } from '@monorepo/module';
@@ -27,8 +28,6 @@ import { moduleFrontend as spaceFrontend } from '@monorepo/space/frontend';
 //
 import { moduleBackend as excalidrawBackend } from '../..';
 import { moduleFrontend as excalidrawFrontend } from '../../frontend';
-
-import { StoryHolistixSpace } from '@monorepo/space/stories';
 
 //
 

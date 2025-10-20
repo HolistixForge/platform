@@ -19,7 +19,7 @@
     /^blob:/
   ];
   const EXCLUDE_PATTERNS = config.excludePatterns || [];
-  const LOGGING = config.logging || { enabled: true, level: 'info' };
+  const LOGGING = config.logging || { enabled: false, level: 'info' };
   const PROXY_CONFIG = config.proxy || { timeout: 30000, retries: 3, retryDelay: 1000 };
 
   // Store the original fetch function

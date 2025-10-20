@@ -9,7 +9,6 @@ export type TEventNewMessage = {
   chatId: string;
   content: string;
   replyToIndex?: number;
-  __dev__user_id?: string;
 };
 
 export type TEventDeleteMessage = {
@@ -22,7 +21,6 @@ export type TEventIsWriting = {
   type: 'chats:is-writing';
   chatId: string;
   value: boolean;
-  __dev__user_id?: string;
 };
 
 export type TEventUserHasRead = {

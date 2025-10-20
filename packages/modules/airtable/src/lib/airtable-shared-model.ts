@@ -5,9 +5,6 @@ import { TAirtableViewMode } from './components/node-airtable/node-airtable-tabl
 //
 
 export type TAirtableNodeView = {
-  type: 'table';
-  baseId: string;
-  tableId: string;
   nodeId: string;
   viewId: string;
   viewMode: TAirtableViewMode;

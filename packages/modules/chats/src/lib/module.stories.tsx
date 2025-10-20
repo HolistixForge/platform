@@ -1,33 +1,157 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { useCallback } from 'react';
+import { useMemo } from 'react';
 
-import {
-  TCollaborativeChunk,
-  useSharedData,
-  useDispatcher,
-  SharedMap,
-  MockCollaborativeContext,
-  TCollaborationContext,
-} from '@monorepo/collab-engine';
 import { randomGuys } from '@monorepo/ui-base';
 import { Logger } from '@monorepo/log';
+import { StoryApiContext } from '@monorepo/frontend-data';
+import { StoryHolistixSpace } from '@monorepo/space/stories';
 
-import { TChatSharedData } from './chats-shared-model';
-import { TChatEvent } from './chats-events';
-import { TChat } from './chats-types';
-import { ChatboxLogic } from './components/node-chat/chatbox-logic';
+//
+import { loadModules, TModule } from '@monorepo/module';
+import { ModuleProvider } from '@monorepo/module/frontend';
+import {
+  moduleBackend as coreBackend,
+  moduleFrontend as coreFrontend,
+} from '@monorepo/core-graph';
+import {
+  moduleBackend as collabBackend,
+  TCollabBackendExports,
+} from '@monorepo/collab';
+import { moduleFrontend as collabFrontend } from '@monorepo/collab/frontend';
+import {
+  moduleBackend as reducersBackend,
+  TReducersBackendExports,
+} from '@monorepo/reducers';
+import {
+  moduleFrontend as reducersFrontend,
+  linkDispatchToProcessEvent,
+  TReducersFrontendExports,
+} from '@monorepo/reducers/frontend';
+import { moduleBackend as spaceBackend } from '@monorepo/space';
+import { moduleFrontend as spaceFrontend } from '@monorepo/space/frontend';
+//
+
 import { moduleFrontend } from '../frontend';
-import { moduleBackend } from '../';
+import { moduleBackend, TChatSharedData } from '../';
+import { TMyfetchRequest } from '@monorepo/simple-types';
 
 //
 
 Logger.setPriority(7);
 
-//
+const collabConfig = {
+  type: 'none',
+  room_id: 'space-story',
+  simulateUsers: true,
+  user: { username: 'test', color: 'red' },
+};
 
-const frontendChunks: TCollaborativeChunk[] = [moduleFrontend.collabChunk];
+const modulesBackend: { module: TModule<never, object>; config: object }[] = [
+  {
+    module: collabBackend,
+    config: collabConfig,
+  },
+  { module: reducersBackend, config: {} },
+  { module: coreBackend, config: {} },
+  {
+    module: {
+      name: 'gateway',
+      version: '0.0.1',
+      description: 'Gateway module',
+      dependencies: ['collab', 'reducers'],
+      load: () => {
+        //
+      },
+    },
+    config: {},
+  },
+  { module: spaceBackend, config: {} },
+  { module: moduleBackend, config: {} },
+  {
+    module: {
+      name: 'fake-writer',
+      version: '0.0.1',
+      description: 'Fake writer module',
+      dependencies: ['chats'],
+      load: ({
+        depsExports,
+      }: {
+        depsExports: {
+          collab: TCollabBackendExports<TChatSharedData>;
+          reducers: TReducersBackendExports;
+        };
+      }) => {
+        setInterval(() => {
+          const chats = depsExports.collab.collab.sharedData['chats:chats'];
+          chats.forEach((c) => {
+            const randomGuy =
+              randomGuys[Math.floor(Math.random() * randomGuys.length)].user_id;
 
-const backendChunks: TCollaborativeChunk[] = [moduleBackend.collabChunk];
+            // Send is writing event
+            depsExports.reducers.processEvent(
+              {
+                type: 'chats:is-writing',
+                chatId: c.id,
+                value: true,
+              },
+              {
+                ip: '',
+                user_id: randomGuy,
+                jwt: null,
+                headers: {},
+              }
+            );
+
+            // Wait 4 seconds before sending message
+            setTimeout(() => {
+              depsExports.reducers.processEvent(
+                {
+                  type: 'chats:new-message',
+                  chatId: c.id,
+                  content: makeLoremIpsum(),
+                  replyToIndex: Math.floor(Math.random() * c.messages.length),
+                },
+                {
+                  ip: '',
+                  user_id: randomGuy,
+                  jwt: null,
+                  headers: {},
+                }
+              );
+
+              // Send stopped writing event
+              depsExports.reducers.processEvent(
+                {
+                  type: 'chats:is-writing',
+                  chatId: c.id,
+                  value: false,
+                },
+                {
+                  ip: '',
+                  user_id: randomGuy,
+                  jwt: null,
+                  headers: {},
+                }
+              );
+            }, 4000);
+          });
+        }, 7000);
+      },
+    },
+    config: {},
+  },
+];
+
+const modulesFrontend: { module: TModule<never, object>; config: object }[] = [
+  {
+    module: collabFrontend,
+    config: collabConfig,
+  },
+  { module: reducersFrontend, config: {} },
+  { module: coreFrontend, config: {} },
+  { module: spaceFrontend, config: {} },
+  { module: moduleFrontend, config: {} },
+];
 
 //
 
@@ -36,7 +160,7 @@ const li =
 
 const makeLoremIpsum = () => {
   const words = li.split(' ');
-  const numWords = Math.floor(Math.random() * 20) + 5; // Between 5-25 words
+  const numWords = Math.floor(Math.random() * 120) + 5; // Between 5-125 words
   const punctuation = [',', '.', '!', '?', '...'];
 
   let result = '';
@@ -67,95 +191,40 @@ const makeLoremIpsum = () => {
 
 //
 
-const StoryWrapper = () => {
-  const cb = useCallback((context: TCollaborationContext) => {
-    const { dispatcher, sharedData } = context;
-    // fake users messages
-    setInterval(() => {
-      const chats = sharedData['chats:chats'] as SharedMap<TChat>;
-      chats.forEach((c) => {
-        const randomGuy =
-          randomGuys[Math.floor(Math.random() * randomGuys.length)];
-
-        // Send is writing event
-        dispatcher.dispatch({
-          type: 'chats:is-writing',
-          chatId: c.id,
-          value: true,
-          __dev__user_id: randomGuy.user_id,
-        });
-
-        // Wait 2 seconds before sending message
-        setTimeout(() => {
-          const newMessageEvent = {
-            __dev__user_id: randomGuy.user_id,
-            type: 'chats:new-message',
-            chatId: c.id,
-            content: makeLoremIpsum(),
-            replyToIndex: Math.floor(Math.random() * c.messages.length),
-          };
-          dispatcher.dispatch(newMessageEvent);
-
-          // Send stopped writing event
-          dispatcher.dispatch({
-            type: 'chats:is-writing',
-            chatId: c.id,
-            value: false,
-            __dev__user_id: randomGuy.user_id,
-          });
-        }, 2000);
-      });
-    }, 7000);
-  }, []);
-
-  return (
-    <MockCollaborativeContext
-      frontChunks={frontendChunks}
-      backChunks={backendChunks}
-      callback={cb}
-      getRequestContext={() => ({})}
-    >
-      <ChatsGrid />
-    </MockCollaborativeContext>
-  );
+const ganymedeApiMock = (r: TMyfetchRequest) => {
+  console.log(r);
+  if (r.url === 'user-by-id') {
+    const uid = r.queryParameters?.user_id;
+    const user = randomGuys.find((u) => u.user_id === uid);
+    console.log({ uid, user });
+    if (user) return Promise.resolve({ _0: [user] });
+  }
+  throw new Error('oops');
 };
 
 //
 
-const guys = new Map(randomGuys.map((guy) => [guy.user_id, guy]));
+const Story = () => {
+  const { frontendModules } = useMemo(() => {
+    const backendModules = loadModules(modulesBackend);
+    const frontendModules = loadModules(modulesFrontend);
 
-const ChatsGrid = () => {
-  const chats: SharedMap<TChat> = useSharedData<TChatSharedData>(
-    ['chats:chats'],
-    (sd) => sd['chats:chats']
-  );
-  const dispatcher = useDispatcher<TChatEvent>();
+    linkDispatchToProcessEvent(
+      backendModules as { reducers: TReducersBackendExports },
+      frontendModules as { reducers: TReducersFrontendExports }
+    );
 
-  const addChat = () => {
-    dispatcher.dispatch({ type: 'chats:new-chat' });
-  };
+    return { backendModules, frontendModules };
+  }, []);
 
   return (
-    <div>
-      <button onClick={addChat}>+</button>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, 450px)',
-          gap: '10px',
-        }}
-      >
-        {Array.from(chats.values()).map((chat) => (
-          <div key={chat.id} style={{ maxHeight: '650px' }}>
-            <ChatboxLogic
-              chatId={chat.id}
-              usersInfo={guys}
-              userId={randomGuys[0].user_id}
-            />
-          </div>
-        ))}
-      </div>
-    </div>
+    <StoryApiContext ganymedeApiMock={ganymedeApiMock}>
+      <ModuleProvider exports={frontendModules}>
+        <div style={{ height: '100vh', width: '100vw' }}>
+          <StoryHolistixSpace />
+        </div>
+      </ModuleProvider>
+    </StoryApiContext>
   );
 };
 
@@ -163,17 +232,15 @@ const ChatsGrid = () => {
 
 const meta = {
   title: 'Module/Chats/Main',
-  component: StoryWrapper,
+  component: Story,
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
   argTypes: {},
-} satisfies Meta<typeof StoryWrapper>;
+} satisfies Meta<typeof Story>;
 
 export default meta;
 
-type Story = StoryObj<typeof StoryWrapper>;
-
-export const Default: Story = {
+export const Default: StoryObj<typeof Story> = {
   args: {},
 };

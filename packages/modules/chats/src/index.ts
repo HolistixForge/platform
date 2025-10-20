@@ -1,12 +1,16 @@
-import { ChatReducer } from './lib/chats-reducer';
 import type { TModule } from '@monorepo/module';
 import type { TCollabBackendExports } from '@monorepo/collab';
 import type { TReducersBackendExports } from '@monorepo/reducers';
-import type { TChatSharedData } from './lib/chats-shared-model';
 import type { TCoreSharedData } from '@monorepo/core-graph';
+import { TSpaceSharedData } from '@monorepo/space';
+
+import { ChatReducer } from './lib/chats-reducer';
+import type { TChatSharedData } from './lib/chats-shared-model';
 
 type TRequired = {
-  collab: TCollabBackendExports<TChatSharedData & TCoreSharedData>;
+  collab: TCollabBackendExports<
+    TChatSharedData & TCoreSharedData & TSpaceSharedData
+  >;
   reducers: TReducersBackendExports;
 };
 
@@ -17,7 +21,7 @@ export const moduleBackend: TModule<TRequired> = {
   dependencies: ['core-graph', 'collab', 'reducers'],
   load: ({ depsExports }) => {
     depsExports.collab.collab.loadSharedData('map', 'chats', 'chats');
-    depsExports.reducers.loadReducers(new ChatReducer());
+    depsExports.reducers.loadReducers(new ChatReducer(depsExports));
   },
 };
 

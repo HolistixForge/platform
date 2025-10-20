@@ -106,14 +106,15 @@ export const NodeAirtableTable: React.FC<AirtableTableProps> = ({ node }) => {
     (t: TAirtableTable) => t.id === node.data?.tableId
   );
 
+  const vm = sd['airtable:node-views'].get(`${node.id}-${useNodeValue.viewId}`);
+
   const rawViewMode: TAirtableViewMode = useMemo(
     () =>
-      sd['airtable:node-views'].get(`${node.id}-${useNodeValue.viewId}`)
-        ?.viewMode || {
+      vm?.viewMode || {
         mode: 'kanban',
         groupBy: 'status',
       },
-    [node.id, sd, useNodeValue.viewId]
+    [vm?.viewMode]
   );
 
   const handleViewModeChange = useCallback(
