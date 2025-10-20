@@ -1,7 +1,6 @@
 ⚠️ Antoine's stuffs
 
-reducers
-fix other modules and their stories: airtable, chats, notion, socials, tabs, user-containers, jupyter
+fix other modules and their stories: socials, tabs, user-containers, jupyter
 factor proxy story
 organisation/project => room
 dns
@@ -13,6 +12,9 @@ load save project
 permission module
 credentials module
 automate
+docs
+website
+license
 
 hidden node in search bar
 const filterOutNodes = gv?.params.filterOutNodes?.map((n) => sd.nodes.get(n));

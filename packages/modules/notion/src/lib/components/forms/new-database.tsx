@@ -90,18 +90,20 @@ export const NewNotionDatabaseForm = ({
   // Search for databases on mount and when search query changes
   useEffect(() => {
     const searchDatabases = async () => {
-      setIsSearching(true);
-      try {
-        await dispatcher.dispatch({
-          type: 'notion:search-databases',
-          NOTION_API_KEY: action.formData.apiKey,
-          query: searchQuery,
-          userId: currentUserId,
-        });
-      } catch (error) {
-        console.error('Failed to search databases:', error);
-      } finally {
-        setIsSearching(false);
+      if (action.formData.apiKey) {
+        setIsSearching(true);
+        try {
+          await dispatcher.dispatch({
+            type: 'notion:search-databases',
+            NOTION_API_KEY: action.formData.apiKey,
+            query: searchQuery,
+            userId: currentUserId,
+          });
+        } catch (error) {
+          console.error('Failed to search databases:', error);
+        } finally {
+          setIsSearching(false);
+        }
       }
     };
 

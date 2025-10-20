@@ -4,7 +4,7 @@ import {
   useNodeContext,
   useNodeHeaderButtons,
 } from '@monorepo/space/frontend';
-import { useSharedDataDirect } from '@monorepo/collab/frontend';
+import { useLocalSharedData } from '@monorepo/collab/frontend';
 import { useDispatcher } from '@monorepo/reducers/frontend';
 import { TGraphNode } from '@monorepo/core-graph';
 import { useCallback } from 'react';
@@ -32,13 +32,13 @@ export const NodeNotionDatabase = ({
   const useNodeValue = useNodeContext();
   const dispatcher = useDispatcher<TNotionEvent>();
 
-  const database: TNotionDatabase = useSharedDataDirect<TNotionSharedData>(
+  const database: TNotionDatabase = useLocalSharedData<TNotionSharedData>(
     ['notion:databases'],
     (sd) => sd['notion:databases'].get(databaseId)
   );
 
-  const viewMode: TNotionViewMode = useSharedDataDirect<TNotionSharedData>(
-    [''notion:node-views''],
+  const viewMode: TNotionViewMode = useLocalSharedData<TNotionSharedData>(
+    ['notion:node-views'],
     (sd) =>
       Array.from(sd['notion:node-views'].values()).find(
         (v) => v.nodeId === node.id && v.viewId === useNodeValue.viewId

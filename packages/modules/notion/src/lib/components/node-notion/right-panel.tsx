@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { useSharedDataDirect } from '@monorepo/collab/frontend';
+import { useLocalSharedData } from '@monorepo/collab/frontend';
 
 import { NotionDatabase } from './notion-database';
 import { TNotionSharedData } from '../../notion-shared-model';
@@ -18,7 +18,7 @@ export const NotionRightPanel = ({
 }) => {
   const databaseId = panel.data.databaseId as string;
 
-  const sd = useSharedDataDirect<TNotionSharedData>(
+  const sd = useLocalSharedData<TNotionSharedData>(
     ['notion:databases'],
     (sd) => sd
   );

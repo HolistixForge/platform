@@ -147,7 +147,7 @@ const ProxyCheckWrapper = ({ children }: { children: ReactNode }) => {
   return children;
 };
 
-Logger.setPriority(7);
+//
 
 const collabConfig = {
   type: 'none',

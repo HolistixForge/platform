@@ -1,10 +1,8 @@
 import { TSpaceMenuEntries, TSpaceMenuEntry } from '@monorepo/space/frontend';
-import {
-  FrontendDispatcher,
-  TValidSharedDataToCopy,
-} from '@monorepo/collab-engine';
+import { TValidSharedDataToCopy } from '@monorepo/collab/frontend';
 import { TCoreEvent } from '@monorepo/core-graph';
 import { makeUuid } from '@monorepo/simple-types';
+import { FrontendDispatcher } from '@monorepo/reducers/frontend';
 
 import { NewNotionDatabaseForm } from './components/forms/new-database';
 import { TNotionSharedData } from './notion-shared-model';
@@ -26,7 +24,7 @@ export const notionMenuEntries: TSpaceMenuEntries = ({
   const d = dispatcher as FrontendDispatcher<TNotionEvent | TCoreEvent>;
 
   const databases: TSpaceMenuEntry[] = Array.from(
-    tsd['notion:databases'].entries()
+    tsd['notion:databases']?.entries() || []
   ).map(([id, db]) => {
     const title = db.title?.[0]?.plain_text;
     return {

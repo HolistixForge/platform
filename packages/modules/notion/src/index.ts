@@ -23,7 +23,7 @@ export const moduleBackend: TModule<TRequired> = {
       'notion',
       'database-search-results'
     );
-    depsExports.reducers.loadReducers(new NotionReducer());
+    depsExports.reducers.loadReducers(new NotionReducer(depsExports));
   },
 };
 

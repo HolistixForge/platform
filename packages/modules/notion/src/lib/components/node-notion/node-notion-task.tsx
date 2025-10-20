@@ -4,7 +4,7 @@ import {
   useNodeContext,
   useNodeHeaderButtons,
 } from '@monorepo/space/frontend';
-import { useSharedDataDirect } from '@monorepo/collab/frontend';
+import { useLocalSharedData } from '@monorepo/collab/frontend';
 import { useDispatcher } from '@monorepo/reducers/frontend';
 import { TGraphNode } from '@monorepo/core-graph';
 import { TNotionSharedData } from '../../notion-shared-model';
@@ -42,7 +42,7 @@ export const NodeNotionTask = ({
   const dispatcher = useDispatcher<TNotionEvent>();
 
   const o: { database: TNotionDatabase; page: TNotionPage } =
-    useSharedDataDirect<TNotionSharedData>(['notion:databases'], (sd) => {
+    useLocalSharedData<TNotionSharedData>(['notion:databases'], (sd) => {
       const database = sd['notion:databases'].get(node.data!.databaseId);
       const page = database?.pages.find((p) => p.id === pageId);
       return { database, page };
