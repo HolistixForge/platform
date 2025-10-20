@@ -8,8 +8,9 @@ import {
   InputsAndOutputs,
   useNodeHeaderButtons,
 } from '@monorepo/space/frontend';
-import { TGraphNode } from '@monorepo/module';
-import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
+import { TGraphNode } from '@monorepo/core-graph';
+import { useSharedDataDirect } from '@monorepo/collab/frontend';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 import { useApi, useCurrentUser, useQueryUser } from '@monorepo/frontend-data';
 import { TTabEvents } from '@monorepo/tabs';
 
@@ -30,16 +31,16 @@ export const useServerProps = (
 ): (TServerComponentProps & TServerComponentCallbacks) | undefined => {
   //
 
-  const server: TServer = useSharedData<TServersSharedData>(
-    ['projectServers'],
+  const server: TServer = useSharedDataDirect<TServersSharedData>(
+    ['user-containers:containers'],
     (sd) => {
-      return sd.projectServers.get(`${project_server_id}`);
+      return sd['user-containers:containers'].get(`${project_server_id}`);
     }
   );
 
   const { data: currentUserData } = useCurrentUser();
 
-  const containerImages = useSharedData<TServersSharedData>(
+  const containerImages = useSharedDataDirect<TServersSharedData>(
     ['containerImages'],
     (sd) => sd.containerImages
   );

@@ -430,7 +430,7 @@ This document tracks all tasks for refactoring the container management system.
 
 - [ ] **Update keys**
 
-  - [ ] `sd.projectServers` → `sd.userContainers`
+  - [ ] `sd['user-containers:containers']` → `sd.userContainers`
   - [ ] Update all Map operations
   - [ ] Update Yjs document structure
 

@@ -18,16 +18,22 @@
       "path": "../../simple-types"
     },
     {
-      "path": "../core-graph"
-    },
-    {
-      "path": "../module"
-    },
-    {
       "path": "../../collab-engine"
     },
     {
+      "path": "../core-graph"
+    },
+    {
+      "path": "../reducers"
+    },
+    {
       "path": "../user-containers"
+    },
+    {
+      "path": "../collab"
+    },
+    {
+      "path": "../module"
     },
     {
       "path": "../space"

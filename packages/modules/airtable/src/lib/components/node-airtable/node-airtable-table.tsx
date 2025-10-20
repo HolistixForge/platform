@@ -1,8 +1,12 @@
 import './airtable-table.scss';
 import { TAirtableTable, TAirtableField } from '../../airtable-types';
-import React, { useCallback, useEffect } from 'react';
-import { TGraphNode } from '@monorepo/module';
-import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import { TGraphNode } from '@monorepo/core-graph';
+import {
+  TValidSharedDataToCopy,
+  useLocalSharedData,
+} from '@monorepo/collab/frontend';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 import {
   DisableZoomDragPan,
   NodeHeader,
@@ -18,6 +22,7 @@ import {
   detectStatusField,
   detectPriorityField,
 } from '../../utils/field-detection';
+import { TJsonObject } from '@monorepo/simple-types';
 
 //
 
@@ -90,22 +95,25 @@ export const NodeAirtableTable: React.FC<AirtableTableProps> = ({ node }) => {
   const useNodeValue = useNodeContext();
   const dispatcher = useDispatcher<TAirtableEvent>();
 
-  const sd = useSharedData<TAirtableSharedData>(['airtableBases'], (sd) => sd);
+  const sd: TValidSharedDataToCopy<TAirtableSharedData> =
+    useLocalSharedData<TAirtableSharedData>(
+      ['airtable:bases', 'airtable:node-views'],
+      (sd) => sd
+    );
 
-  const base = sd.airtableBases.get(node.data?.baseId || '');
+  const base = sd['airtable:bases'].get(node.data?.baseId || '');
   const table = base?.tables.find(
     (t: TAirtableTable) => t.id === node.data?.tableId
   );
 
-  const rawViewMode: TAirtableViewMode = useSharedData<TAirtableSharedData>(
-    ['airtableNodeViews'],
-    (sd) =>
-      Array.from(sd.airtableNodeViews.values()).find(
-        (v) => v.nodeId === node.id && v.viewId === useNodeValue.viewId
-      )?.viewMode || {
+  const rawViewMode: TAirtableViewMode = useMemo(
+    () =>
+      sd['airtable:node-views'].get(`${node.id}-${useNodeValue.viewId}`)
+        ?.viewMode || {
         mode: 'kanban',
         groupBy: 'status',
-      }
+      },
+    [node.id, sd, useNodeValue.viewId]
   );
 
   const handleViewModeChange = useCallback(
@@ -181,6 +189,10 @@ export const NodeAirtableTable: React.FC<AirtableTableProps> = ({ node }) => {
   }
 
   const renderViewContent = () => {
+    if (!base) {
+      return <div>No base found</div>;
+    }
+
     switch (viewMode.mode) {
       case 'list':
         return <AirtableTableList table={table} />;
@@ -198,7 +210,7 @@ export const NodeAirtableTable: React.FC<AirtableTableProps> = ({ node }) => {
                 baseId: base.id,
                 tableId: table.id,
                 recordId,
-                fields,
+                fields: fields as TJsonObject,
               });
             }}
             titleField={titleField}

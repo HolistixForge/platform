@@ -1,4 +1,5 @@
-import { useSharedData, useDispatcher } from '@monorepo/collab-engine';
+import { useLocalSharedData } from '@monorepo/collab/frontend';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 import { ButtonIconProps } from '@monorepo/ui-base';
 
 import { TChatSharedData } from '../../chats-shared-model';
@@ -30,9 +31,9 @@ export const ChatboxLogic = ({
   usersInfo,
   buttons,
 }: ChatboxLogicProps) => {
-  const chat: TChat | undefined = useSharedData<TChatSharedData>(
-    ['chats'],
-    (sd) => sd.chats.get(chatId)
+  const chat: TChat | undefined = useLocalSharedData<TChatSharedData>(
+    ['chats:chats'],
+    (sd) => sd['chats:chats'].get(chatId)
   );
   const dispatcher = useDispatcher<TChatEvent>();
 

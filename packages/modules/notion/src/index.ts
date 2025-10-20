@@ -1,12 +1,29 @@
-import { Notion_loadData } from './lib/notion-shared-model';
 import { NotionReducer } from './lib/notion-reducer';
-import type { ModuleBackend } from '@monorepo/module';
+import type { TModule } from '@monorepo/module';
+import type { TCollabBackendExports } from '@monorepo/collab';
+import type { TReducersBackendExports } from '@monorepo/reducers';
+import type { TNotionSharedData } from './lib/notion-shared-model';
+import type { TCoreSharedData } from '@monorepo/core-graph';
 
-export const moduleBackend: ModuleBackend = {
-  collabChunk: {
-    name: 'notion',
-    loadSharedData: Notion_loadData,
-    loadReducers: (sd) => [new NotionReducer()],
+type TRequired = {
+  collab: TCollabBackendExports<TNotionSharedData & TCoreSharedData>;
+  reducers: TReducersBackendExports;
+};
+
+export const moduleBackend: TModule<TRequired> = {
+  name: 'notion',
+  version: '0.0.1',
+  description: 'Notion module',
+  dependencies: ['core-graph', 'collab', 'reducers'],
+  load: ({ depsExports }) => {
+    depsExports.collab.collab.loadSharedData('map', 'notion', 'databases');
+    depsExports.collab.collab.loadSharedData('map', 'notion', 'node-views');
+    depsExports.collab.collab.loadSharedData(
+      'map',
+      'notion',
+      'database-search-results'
+    );
+    depsExports.reducers.loadReducers(new NotionReducer());
   },
 };
 

@@ -9,7 +9,8 @@ import {
   SelectFieldset,
   SelectItem,
 } from '@monorepo/ui-base';
-import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
+import { useLocalSharedData } from '@monorepo/collab/frontend';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 import { TPosition } from '@monorepo/core-graph';
 import { TJupyterEvent } from '../jupyter-events';
 import { TJupyterSharedData } from '../jupyter-shared-model';
@@ -33,16 +34,16 @@ export const NewTerminalForm = ({
   const dispatcher = useDispatcher<TJupyterEvent>();
   const { jupyter: jmc } = useJLsManager();
 
-  const sd = useSharedData<TServersSharedData & TJupyterSharedData>(
-    ['projectServers', 'jupyterServers'],
+  const sd = useLocalSharedData<TServersSharedData & TJupyterSharedData>(
+    ['user-containers:containers', 'jupyter:servers'],
     (sd) => sd
   );
 
-  const server: TServer | undefined = sd.projectServers.get(
+  const server: TServer | undefined = sd['user-containers:containers'].get(
     project_server_id.toString()
   );
 
-  const jupyter: TJupyterServerData | undefined = sd.jupyterServers.get(
+  const jupyter: TJupyterServerData | undefined = sd['jupyter:servers'].get(
     project_server_id.toString()
   );
 

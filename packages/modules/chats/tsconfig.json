@@ -18,6 +18,12 @@
       "path": "../core-graph"
     },
     {
+      "path": "../reducers"
+    },
+    {
+      "path": "../collab"
+    },
+    {
       "path": "../module"
     },
     {

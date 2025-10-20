@@ -365,7 +365,7 @@ export const loadExampleData = (
 
   // ------------------
 
-  sd.projectServers.set(`${1}`, {
+  sd['user-containers:containers'].set(`${1}`, {
     image_id: 42,
     project_id: 1000000,
     project_server_id: 1,
@@ -381,7 +381,7 @@ export const loadExampleData = (
     ec2_instance_state: null,
   });
 
-  sd.jupyterServers.set('1', {
+  sd['jupyter:servers'].set('1', {
     project_server_id: 1,
     kernels: [
       {

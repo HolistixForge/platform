@@ -4,8 +4,9 @@ import {
   useNodeContext,
   useNodeHeaderButtons,
 } from '@monorepo/space/frontend';
-import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
-import { TGraphNode } from '@monorepo/module';
+import { useSharedDataDirect } from '@monorepo/collab/frontend';
+import { useDispatcher } from '@monorepo/reducers/frontend';
+import { TGraphNode } from '@monorepo/core-graph';
 import { TNotionSharedData } from '../../notion-shared-model';
 import { useCallback } from 'react';
 import { TEventUpdatePage, TNotionEvent } from '../../notion-events';
@@ -41,8 +42,8 @@ export const NodeNotionTask = ({
   const dispatcher = useDispatcher<TNotionEvent>();
 
   const o: { database: TNotionDatabase; page: TNotionPage } =
-    useSharedData<TNotionSharedData>(['notionDatabases'], (sd) => {
-      const database = sd.notionDatabases.get(node.data!.databaseId);
+    useSharedDataDirect<TNotionSharedData>(['notion:databases'], (sd) => {
+      const database = sd['notion:databases'].get(node.data!.databaseId);
       const page = database?.pages.find((p) => p.id === pageId);
       return { database, page };
     });

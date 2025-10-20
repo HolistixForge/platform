@@ -8,8 +8,8 @@ import {
   useNodeContext,
   useNodeHeaderButtons,
 } from '@monorepo/space/frontend';
-import { TGraphNode } from '@monorepo/module';
-import { useDispatcher } from '@monorepo/collab-engine';
+import { TGraphNode } from '@monorepo/core-graph';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 
 import { TEventDeleteVolume } from '../../servers-events';
 

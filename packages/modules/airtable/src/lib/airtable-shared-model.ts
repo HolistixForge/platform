@@ -1,4 +1,4 @@
-import { SharedMap, SharedTypes } from '@monorepo/collab-engine';
+import { SharedMap } from '@monorepo/collab-engine';
 import { TAirtableBase, TAirtableBaseSearchResult } from './airtable-types';
 import { TAirtableViewMode } from './components/node-airtable/node-airtable-table';
 
@@ -14,21 +14,7 @@ export type TAirtableNodeView = {
 };
 
 export type TAirtableSharedData = {
-  airtableBases: SharedMap<TAirtableBase>;
-  airtableNodeViews: SharedMap<TAirtableNodeView>;
-  airtableBaseSearchResults: SharedMap<TAirtableBaseSearchResult[]>;
-};
-
-//
-
-export const Airtable_loadData = (st: SharedTypes): TAirtableSharedData => {
-  return {
-    airtableBases: st.getSharedMap<TAirtableBase>('module-airtable-v0.1-bases'),
-    airtableNodeViews: st.getSharedMap<TAirtableNodeView>(
-      'module-airtable-v0.1-node-views'
-    ),
-    airtableBaseSearchResults: st.getSharedMap<TAirtableBaseSearchResult[]>(
-      'module-airtable-v0.1-search-results'
-    ),
-  };
+  'airtable:bases': SharedMap<TAirtableBase>;
+  'airtable:node-views': SharedMap<TAirtableNodeView>;
+  'airtable:base-search-results': SharedMap<TAirtableBaseSearchResult[]>;
 };

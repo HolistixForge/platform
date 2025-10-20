@@ -79,8 +79,8 @@ export class JupyterReducer extends Reducer<
   constructor(sd: TServersSharedData & TJupyterSharedData) {
     super();
     this._drivers = new DriversStoreBackend(
-      sd.jupyterServers as any,
-      sd.projectServers as any
+      sd['jupyter:servers'] as any,
+      sd['user-containers:containers'] as any
     );
   }
 
@@ -159,8 +159,8 @@ export class JupyterReducer extends Reducer<
   async _newUserContainer(g: Ra<TEventNewUserContainer>): Promise<void> {
     const r = g.event.result;
     if (r && JUPYTER_IMAGE_IDS.includes(r.server.image_id)) {
-      if (g.sd.jupyterServers.get(`${r.server.project_server_id}`)) return;
-      g.sd.jupyterServers.set(`${r.server.project_server_id}`, {
+      if (g.sd['jupyter:servers'].get(`${r.server.project_server_id}`)) return;
+      g.sd['jupyter:servers'].set(`${r.server.project_server_id}`, {
         project_server_id: r.server.project_server_id,
         kernels: {},
         cells: {},
@@ -172,7 +172,7 @@ export class JupyterReducer extends Reducer<
   async _resourcesChanged(g: Ra<TEventJupyterResourcesChanged>): Promise<void> {
     const { resources } = g.event;
     const { kernels, terminals } = resources;
-    const server = g.sd.jupyterServers.get(`${g.event.project_server_id}`);
+    const server = g.sd['jupyter:servers'].get(`${g.event.project_server_id}`);
     if (!server) return;
 
     const newKernels = kernels.reduce((acc, kernel) => {
@@ -189,7 +189,7 @@ export class JupyterReducer extends Reducer<
 
     server.terminals = newTerminals;
 
-    g.sd.jupyterServers.set(`${server.project_server_id}`, server);
+    g.sd['jupyter:servers'].set(`${server.project_server_id}`, server);
   }
 
   makeKernelNodeId(id: string) {
@@ -201,7 +201,7 @@ export class JupyterReducer extends Reducer<
     const kid = g.event.kernel_id;
     if (!kid) throw new Error('kernelId is required for new cell');
     const server: TJupyterServerData | undefined = this.findServerByKernelId(
-      Array.from(g.sd.jupyterServers.values()),
+      Array.from(g.sd['jupyter:servers'].values()),
       kid
     );
     if (!server)
@@ -253,13 +253,13 @@ export class JupyterReducer extends Reducer<
       outputs: [],
     };
 
-    g.sd.jupyterServers.set(`${server.project_server_id}`, server);
+    g.sd['jupyter:servers'].set(`${server.project_server_id}`, server);
   }
 
   async _deleteCell(g: Ra<TEventDeleteCell>): Promise<void> {
     const cellId = g.event.cell_id;
     const server = this.findServerByCellId(
-      Array.from(g.sd.jupyterServers.values()),
+      Array.from(g.sd['jupyter:servers'].values()),
       cellId
     );
     if (server && server.cells[cellId]) {
@@ -278,14 +278,14 @@ export class JupyterReducer extends Reducer<
       });
 
       g.sharedEditor.deleteEditor(cellId);
-      g.sd.jupyterServers.set(`${server.project_server_id}`, server);
+      g.sd['jupyter:servers'].set(`${server.project_server_id}`, server);
     }
   }
 
   async _execute(g: Ra<TEventExecutePythonNode>): Promise<void> {
     const { cell_id, code } = g.event;
     const server: TJupyterServerData | undefined = this.findServerByCellId(
-      Array.from(g.sd.jupyterServers.values()),
+      Array.from(g.sd['jupyter:servers'].values()),
       cell_id
     );
     if (!server) return;
@@ -310,49 +310,49 @@ export class JupyterReducer extends Reducer<
           })
           .catch((e) => {
             cell.outputs = [];
-            g.sd.jupyterServers.set(`${server.project_server_id}`, server);
+            g.sd['jupyter:servers'].set(`${server.project_server_id}`, server);
             throw e;
           });
       }
 
       cell.busy = true;
       cell.outputs = [];
-      g.sd.jupyterServers.set(`${server.project_server_id}`, server);
+      g.sd['jupyter:servers'].set(`${server.project_server_id}`, server);
     }
   }
 
   _nodeOutput(g: Ra<TEventPythonNodeOutput>): Promise<void> {
     const { cell_id, output } = g.event;
     const server = this.findServerByCellId(
-      Array.from(g.sd.jupyterServers.values()),
+      Array.from(g.sd['jupyter:servers'].values()),
       cell_id
     );
     if (server && server.cells[cell_id]) {
       server.cells[cell_id].outputs = output as unknown as TJsonArray;
       server.cells[cell_id].busy = false;
     }
-    g.sd.jupyterServers.set(`${server.project_server_id}`, server);
+    g.sd['jupyter:servers'].set(`${server.project_server_id}`, server);
     return Promise.resolve();
   }
 
   _clearOutput(g: Ra<TEventClearNodeOutput>): Promise<void> {
     const { cell_id } = g.event;
     const server = this.findServerByCellId(
-      Array.from(g.sd.jupyterServers.values()),
+      Array.from(g.sd['jupyter:servers'].values()),
       cell_id
     );
     if (server && server.cells[cell_id]) {
       server.cells[cell_id].outputs = [];
       server.cells[cell_id].busy = false;
     }
-    g.sd.jupyterServers.set(`${server.project_server_id}`, server);
+    g.sd['jupyter:servers'].set(`${server.project_server_id}`, server);
     return Promise.resolve();
   }
 
   //
 
   async _newTerminal(g: Ra<TEventNewTerminal>): Promise<void> {
-    const server = g.sd.jupyterServers.get(`${g.event.project_server_id}`);
+    const server = g.sd['jupyter:servers'].get(`${g.event.project_server_id}`);
     if (!server)
       throw new NotFoundException([
         { message: `No such project server [${g.event.project_server_id}]` },
@@ -378,7 +378,7 @@ export class JupyterReducer extends Reducer<
       sessionModel: { name: terminal_id },
     };
 
-    g.sd.jupyterServers.set(`${server.project_server_id}`, server);
+    g.sd['jupyter:servers'].set(`${server.project_server_id}`, server);
 
     await g.bep.process({
       type: 'jupyter:new-terminal-node',
@@ -431,7 +431,7 @@ export class JupyterReducer extends Reducer<
     const { terminal_id } = g.event;
 
     const server = this.findServerByTerminalId(
-      Array.from(g.sd.jupyterServers.values()),
+      Array.from(g.sd['jupyter:servers'].values()),
       terminal_id
     );
     if (server && server.terminals[terminal_id]) {
@@ -448,7 +448,7 @@ export class JupyterReducer extends Reducer<
       });
 
       delete server.terminals[terminal_id];
-      g.sd.jupyterServers.set(`${server.project_server_id}`, server);
+      g.sd['jupyter:servers'].set(`${server.project_server_id}`, server);
     }
   }
 
@@ -461,7 +461,7 @@ export class JupyterReducer extends Reducer<
 
   async _deleteServer(g: Ra<TEventDeleteServer>): Promise<void> {
     const projectServerId = g.event.project_server_id;
-    const jupyterServer = g.sd.jupyterServers.get(`${projectServerId}`);
+    const jupyterServer = g.sd['jupyter:servers'].get(`${projectServerId}`);
 
     if (jupyterServer) {
       // Delete all kernels associated with this server
@@ -487,7 +487,7 @@ export class JupyterReducer extends Reducer<
       }
 
       // Remove the server from jupyterServers
-      g.sd.jupyterServers.delete(`${projectServerId}`);
+      g.sd['jupyter:servers'].delete(`${projectServerId}`);
     }
   }
 

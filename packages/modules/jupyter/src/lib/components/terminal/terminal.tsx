@@ -13,9 +13,13 @@ import { Terminal } from '@jupyterlab/terminal';
 import { Widget } from '@lumino/widgets';
 import { MessageLoop } from '@lumino/messaging';
 
-import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
+import {
+  useLocalSharedData,
+  useSharedDataDirect,
+} from '@monorepo/collab/frontend';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 import { TServer, TServersSharedData } from '@monorepo/user-containers';
-import { TGraphNode } from '@monorepo/module';
+import { TGraphNode } from '@monorepo/core-graph';
 import {
   DisableZoomDragPan,
   InputsAndOutputs,
@@ -99,17 +103,19 @@ export const JupyterTerminal = ({
     undefined
   );
 
-  const terminal: MyTerminal = useSharedData<TJupyterSharedData>(
-    ['jupyterServers'],
+  const terminal: MyTerminal = useLocalSharedData<TJupyterSharedData>(
+    ['jupyter:servers'],
     (sd) => {
-      return sd.jupyterServers.get(`${projectServerId}`)?.terminals[terminalId];
+      return sd['jupyter:servers'].get(`${projectServerId}`)?.terminals[
+        terminalId
+      ];
     }
   );
 
-  const server: TServer = useSharedData<TServersSharedData>(
-    ['projectServers'],
+  const server: TServer = useLocalSharedData<TServersSharedData>(
+    ['user-containers:containers'],
     (sd) => {
-      return sd.projectServers.get(`${projectServerId}`);
+      return sd['user-containers:containers'].get(`${projectServerId}`);
     }
   );
 

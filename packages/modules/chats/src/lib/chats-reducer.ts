@@ -82,11 +82,11 @@ export class ChatReducer extends Reducer<
   //
 
   __deepCopyEditAndApply(g: Ra<{ chatId: string }>, f: (chat: TChat) => void) {
-    const chat = g.sd.chats.get(g.event.chatId);
+    const chat = g.sd['chats:chats'].get(g.event.chatId);
     if (chat) {
       const nchat = structuredClone(chat);
       f(nchat);
-      g.sd.chats.set(g.event.chatId, nchat);
+      g.sd['chats:chats'].set(g.event.chatId, nchat);
     }
   }
 
@@ -110,7 +110,7 @@ export class ChatReducer extends Reducer<
 
   _newChat(g: Ra<TEventNewChat>): Promise<void> {
     const nc = newChat(g.st);
-    g.sd.chats.set(nc.id, nc);
+    g.sd['chats:chats'].set(nc.id, nc);
 
     const anchorNodeId = makeUuid();
     const chatNodeId = makeUuid();
@@ -211,7 +211,7 @@ export class ChatReducer extends Reducer<
   //
 
   _deleteChat(g: Ra<TEventDeleteChat>): Promise<void> {
-    const chat = g.sd.chats.get(g.event.chatId);
+    const chat = g.sd['chats:chats'].get(g.event.chatId);
     if (chat) {
       g.sd.nodes.forEach((node) => {
         if (
@@ -224,7 +224,7 @@ export class ChatReducer extends Reducer<
           });
         }
       });
-      g.sd.chats.delete(g.event.chatId);
+      g.sd['chats:chats'].delete(g.event.chatId);
     }
     return Promise.resolve();
   }

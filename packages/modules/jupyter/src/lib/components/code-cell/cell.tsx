@@ -5,12 +5,10 @@ import { Widget } from '@lumino/widgets';
 
 import {
   useAwareness,
-  useDispatcher,
   useBindEditor,
-  useSharedData,
-} from '@monorepo/collab-engine';
-import { TGraphNode } from '@monorepo/module';
-import { TCoreEvent } from '@monorepo/core-graph';
+  useLocalSharedData,
+} from '@monorepo/collab/frontend';
+import { TGraphNode, TCoreEvent } from '@monorepo/core-graph';
 import {
   DisableZoomDragPan,
   InputsAndOutputs,
@@ -22,6 +20,7 @@ import {
 } from '@monorepo/space/frontend';
 import { makeUuid } from '@monorepo/simple-types';
 import { TServersSharedData, TServer } from '@monorepo/user-containers';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 
 import { TJupyterEvent } from '../../jupyter-events';
 import {
@@ -54,15 +53,15 @@ export const useCellLogic = ({
   const { awareness } = useAwareness();
 
   const jupyter: TJupyterServerData | undefined =
-    useSharedData<TJupyterSharedData>(['jupyterServers'], (sd) =>
-      sd.jupyterServers.get(`${projectServerId}`)
+    useLocalSharedData<TJupyterSharedData>(['jupyter:servers'], (sd) =>
+      sd['jupyter:servers'].get(`${projectServerId}`)
     );
 
   const cell = jupyter?.cells[cellId];
 
-  const ps: TServer | undefined = useSharedData<TServersSharedData>(
-    ['projectServers'],
-    (sd) => sd.projectServers.get(`${projectServerId}`)
+  const ps: TServer | undefined = useLocalSharedData<TServersSharedData>(
+    ['user-containers:containers'],
+    (sd) => sd['user-containers:containers'].get(`${projectServerId}`)
   );
 
   const client_id = ps?.oauth?.find(

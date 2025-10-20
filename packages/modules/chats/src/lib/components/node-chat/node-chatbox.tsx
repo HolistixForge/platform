@@ -9,13 +9,13 @@ import {
 } from '@monorepo/space/frontend';
 
 import { useNodeEdges } from '@monorepo/core-graph';
-import { TGraphNode } from '@monorepo/module';
+import { TGraphNode } from '@monorepo/core-graph';
 import { useCurrentUser, useQueriesUsers } from '@monorepo/frontend-data';
 import {
   useAwarenessUserList,
-  useDispatcher,
-  useSharedData,
-} from '@monorepo/collab-engine';
+  useLocalSharedData,
+} from '@monorepo/collab/frontend';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 
 import { ChatboxLogic } from './chatbox-logic';
 import { TChatSharedData } from '../../chats-shared-model';
@@ -26,8 +26,9 @@ import { TChatEvent } from '../../chats-events';
 export const NodeChatbox = ({ node }: { node: TGraphNode }) => {
   const chatId = node.data!.chatId as string;
 
-  const chat: TChat = useSharedData<TChatSharedData>(['chats'], (sd) =>
-    sd.chats.get(chatId)
+  const chat: TChat = useLocalSharedData<TChatSharedData>(
+    ['chats:chats'],
+    (sd) => sd['chats:chats'].get(chatId)
   );
 
   const dispatcher = useDispatcher<TChatEvent | TSpaceEvent>();

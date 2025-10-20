@@ -1,10 +1,11 @@
 import React, { useCallback } from 'react';
 
-import { TGraphNode } from '@monorepo/module';
+import { TGraphNode } from '@monorepo/core-graph';
 import { useQueryUser } from '@monorepo/frontend-data';
 import { UserAvatar, UserUsername } from '@monorepo/ui-base';
 import { TG_User } from '@monorepo/demiurge-types';
-import { useDispatcher, useAwarenessUserList } from '@monorepo/collab-engine';
+import { useAwarenessUserList } from '@monorepo/collab/frontend';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 import {
   NodeHeader,
   useNodeContext,

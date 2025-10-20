@@ -1,12 +1,29 @@
-import { Airtable_loadData } from './lib/airtable-shared-model';
 import { AirtableReducer } from './lib/airtable-reducer';
-import type { ModuleBackend } from '@monorepo/module';
+import type { TModule } from '@monorepo/module';
+import type { TCollabBackendExports } from '@monorepo/collab';
+import type { TReducersBackendExports } from '@monorepo/reducers';
+import type { TAirtableSharedData } from './lib/airtable-shared-model';
+import type { TCoreSharedData } from '@monorepo/core-graph';
 
-export const moduleBackend: ModuleBackend = {
-  collabChunk: {
-    name: 'airtable',
-    loadSharedData: Airtable_loadData,
-    loadReducers: (sd) => [new AirtableReducer()],
+type TRequired = {
+  collab: TCollabBackendExports<TAirtableSharedData & TCoreSharedData>;
+  reducers: TReducersBackendExports;
+};
+
+export const moduleBackend: TModule<TRequired> = {
+  name: 'airtable',
+  version: '0.0.1',
+  description: 'Airtable module',
+  dependencies: ['core-graph', 'collab', 'reducers'],
+  load: ({ depsExports }) => {
+    depsExports.collab.collab.loadSharedData('map', 'airtable', 'bases');
+    depsExports.collab.collab.loadSharedData('map', 'airtable', 'node-views');
+    depsExports.collab.collab.loadSharedData(
+      'map',
+      'airtable',
+      'base-search-results'
+    );
+    depsExports.reducers.loadReducers(new AirtableReducer(depsExports));
   },
 };
 

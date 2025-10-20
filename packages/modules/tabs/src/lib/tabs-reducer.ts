@@ -71,8 +71,8 @@ export class TabsReducer extends Reducer<
   //
 
   _load(g: Ra<TEventLoad>) {
-    if (!g.sd.tabs.get('unique')) {
-      g.sd.tabs.set('unique', {
+    if (!g.sd['tabs:tabs'].get('unique')) {
+      g.sd['tabs:tabs'].set('unique', {
         tree: {
           payload: { type: 'group' },
           title: 'root',
@@ -90,12 +90,15 @@ export class TabsReducer extends Reducer<
     g: Ra<{}>,
     f: (t: ReadWriteTree<TabPayload>, a: TUsersActiveTabs) => void
   ) {
-    const o = g.sd.tabs.get('unique') as TTabsTree;
+    const o = g.sd['tabs:tabs'].get('unique') as TTabsTree;
     if (o) {
       let no = structuredClone(o);
       const trw = new ReadWriteTree<TabPayload>(no.tree);
       f(trw, no.actives);
-      g.sd.tabs.set('unique', { tree: trw.get([], 0)!, actives: no.actives });
+      g.sd['tabs:tabs'].set('unique', {
+        tree: trw.get([], 0)!,
+        actives: no.actives,
+      });
     }
   }
 

@@ -8,13 +8,10 @@ import {
   useAction,
   DialogControlled,
 } from '@monorepo/ui-base';
-import {
-  useDispatcher,
-  useSharedData,
-  useAwareness,
-} from '@monorepo/collab-engine';
+import { useAwareness, useLocalSharedData } from '@monorepo/collab/frontend';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 import { TPosition } from '@monorepo/core-graph';
-import { TPanel } from '@monorepo/module/frontend';
+import { TPanel } from '@monorepo/space/frontend';
 import { makeUuid } from '@monorepo/simple-types';
 
 import { TAirtableEvent } from '../../airtable-events';
@@ -56,9 +53,9 @@ export const NewAirtableBaseForm = ({
 
   // Get search results from shared data for current user
   const searchResults: TAirtableBaseSearchResult[] =
-    useSharedData<TAirtableSharedData>(
-      ['airtableBaseSearchResults'],
-      (sd) => sd.airtableBaseSearchResults.get(currentUserId) || []
+    useLocalSharedData<TAirtableSharedData>(
+      ['airtable:base-search-results'],
+      (sd) => sd['airtable:base-search-results'].get(currentUserId) || []
     );
 
   const action = useAction<NewAirtableBaseFormData>(
@@ -93,18 +90,20 @@ export const NewAirtableBaseForm = ({
   // Search for bases on mount and when search query changes
   useEffect(() => {
     const searchBases = async () => {
-      setIsSearching(true);
-      try {
-        await dispatcher.dispatch({
-          type: 'airtable:search-bases',
-          query: searchQuery,
-          userId: currentUserId,
-          AIRTABLE_API_KEY: action.formData.apiKey,
-        });
-      } catch (error) {
-        console.error('Failed to search bases:', error);
-      } finally {
-        setIsSearching(false);
+      if (action.formData.apiKey) {
+        setIsSearching(true);
+        try {
+          await dispatcher.dispatch({
+            type: 'airtable:search-bases',
+            query: searchQuery,
+            userId: currentUserId,
+            AIRTABLE_API_KEY: action.formData.apiKey,
+          });
+        } catch (error) {
+          console.error('Failed to search bases:', error);
+        } finally {
+          setIsSearching(false);
+        }
       }
     };
 

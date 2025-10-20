@@ -206,7 +206,7 @@ Each gateway is a Docker container running:
 2. Fetches server data from Ganymede
 3. Maps image_id to server type using hardcoded switch statement (lines 747-768)
 4. Creates graph node in whiteboard
-5. Stores in shared state `sd.projectServers`
+5. Stores in shared state `sd['user-containers:containers']`
 
 **Problem**: Server type mapping is hardcoded in reducer based on image_id.
 

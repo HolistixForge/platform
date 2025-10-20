@@ -122,7 +122,7 @@ export class NotionReducer extends Reducer<
   //
 
   private async _loadPageNode(g: Ra<TEventLoadPageNode>): Promise<void> {
-    const database = Array.from(g.sd.notionDatabases.values()).find((d) =>
+    const database = Array.from(g.sd['notion:databases'].values()).find((d) =>
       d.pages.find((p) => p.id === g.event.pageId)
     );
 
@@ -168,7 +168,7 @@ export class NotionReducer extends Reducer<
 
     const apiKey =
       g.event.NOTION_API_KEY ||
-      g.sd.notionDatabases.get(databaseId)?.NOTION_API_KEY ||
+      g.sd['notion:databases'].get(databaseId)?.NOTION_API_KEY ||
       '';
 
     try {
@@ -189,7 +189,7 @@ export class NotionReducer extends Reducer<
       }
 
       // Get the existing database to compare with new pages
-      const existingDatabase = g.sd.notionDatabases.get(databaseId);
+      const existingDatabase = g.sd['notion:databases'].get(databaseId);
       const newPages = pagesResponse.results as TNotionPage[];
 
       // If we had existing pages, check for deleted ones
@@ -220,7 +220,7 @@ export class NotionReducer extends Reducer<
         pages: newPages,
         NOTION_API_KEY: apiKey,
       };
-      g.sd.notionDatabases.set(databaseId, database as any);
+      g.sd['notion:databases'].set(databaseId, database as any);
     } catch (error) {
       console.error('Failed to fetch and update database:', error);
       return false;
@@ -237,7 +237,7 @@ export class NotionReducer extends Reducer<
 
     // Only sync if more than some time has passed
     if (timeSinceLastSync >= 5000) {
-      g.sd.notionDatabases.forEach((database) => {
+      g.sd['notion:databases'].forEach((database) => {
         this._fetchAndUpdateDatabase({
           ...g,
           event: { databaseId: database.id },
@@ -252,7 +252,7 @@ export class NotionReducer extends Reducer<
   private async _updatePage(g: Ra<TEventUpdatePage>): Promise<void> {
     const { pageId } = g.event;
     const apiKey =
-      g.sd.notionDatabases.get(g.event.databaseId)?.NOTION_API_KEY || '';
+      g.sd['notion:databases'].get(g.event.databaseId)?.NOTION_API_KEY || '';
 
     try {
       const notion = this.getNotionClient(g, apiKey);
@@ -276,7 +276,7 @@ export class NotionReducer extends Reducer<
   private async _createPage(g: Ra<TEventCreatePage>): Promise<void> {
     const { databaseId } = g.event;
     const apiKey =
-      g.sd.notionDatabases.get(g.event.databaseId)?.NOTION_API_KEY || '';
+      g.sd['notion:databases'].get(g.event.databaseId)?.NOTION_API_KEY || '';
 
     try {
       const notion = this.getNotionClient(g, apiKey);
@@ -298,7 +298,7 @@ export class NotionReducer extends Reducer<
   private async _deletePage(g: Ra<TEventDeletePage>): Promise<void> {
     const { databaseId, pageId } = g.event;
     const apiKey =
-      g.sd.notionDatabases.get(g.event.databaseId)?.NOTION_API_KEY || '';
+      g.sd['notion:databases'].get(g.event.databaseId)?.NOTION_API_KEY || '';
 
     try {
       const notion = this.getNotionClient(g, apiKey);
@@ -309,10 +309,10 @@ export class NotionReducer extends Reducer<
       });
 
       // Update local state
-      const database = g.sd.notionDatabases.get(databaseId);
+      const database = g.sd['notion:databases'].get(databaseId);
       if (database) {
         database.pages = database.pages.filter((p) => p.id !== pageId);
-        g.sd.notionDatabases.set(databaseId, database);
+        g.sd['notion:databases'].set(databaseId, database);
       }
     } catch (error) {
       console.error('Failed to delete page:', error);
@@ -323,10 +323,10 @@ export class NotionReducer extends Reducer<
   private async _reorderPage(g: Ra<TEventReorderPage>): Promise<void> {
     const { databaseId, pageId, newPosition } = g.event;
     const apiKey =
-      g.sd.notionDatabases.get(g.event.databaseId)?.NOTION_API_KEY || '';
+      g.sd['notion:databases'].get(g.event.databaseId)?.NOTION_API_KEY || '';
     try {
       const notion = this.getNotionClient(g, apiKey);
-      const database = g.sd.notionDatabases.get(databaseId);
+      const database = g.sd['notion:databases'].get(databaseId);
       if (!database) throw new Error('Database not found');
 
       // Find current position
@@ -374,7 +374,7 @@ export class NotionReducer extends Reducer<
     const { databaseId } = g.event;
 
     // First, delete all nodes associated with this database
-    const database = g.sd.notionDatabases.get(databaseId);
+    const database = g.sd['notion:databases'].get(databaseId);
     if (database) {
       const pagesIds = database.pages.map((page) => page.id);
       g.sd.nodes.forEach((node) => {
@@ -397,7 +397,7 @@ export class NotionReducer extends Reducer<
         }
       });
       // Remove from shared data
-      g.sd.notionDatabases.delete(databaseId);
+      g.sd['notion:databases'].delete(databaseId);
     }
   }
 
@@ -405,7 +405,7 @@ export class NotionReducer extends Reducer<
 
   private async _setNodeView(g: Ra<TEventSetNodeView>): Promise<void> {
     const { nodeId, viewId, viewMode } = g.event;
-    g.sd.notionNodeViews.set(`${nodeId}-${viewId}`, {
+    g.sd['notion:node-views'].set(`${nodeId}-${viewId}`, {
       type: 'database',
       databaseId: nodeId,
       nodeId,
@@ -464,7 +464,7 @@ export class NotionReducer extends Reducer<
 
       // Store search results for this specific user
       const searchResults = response.results as TNotionDatabaseSearchResult[];
-      g.sd.notionDatabaseSearchResults.set(g.event.userId, searchResults);
+      g.sd['notion:database-search-results'].set(g.event.userId, searchResults);
     } catch (error) {
       console.error('Failed to search databases:', error);
     }
@@ -473,6 +473,6 @@ export class NotionReducer extends Reducer<
   private async _clearUserSearchResults(
     g: Ra<TEventClearUserSearchResults>
   ): Promise<void> {
-    g.sd.notionDatabaseSearchResults.delete(g.event.userId);
+    g.sd['notion:database-search-results'].delete(g.event.userId);
   }
 }

@@ -72,7 +72,7 @@ const StoryWrapper = () => {
     const { dispatcher, sharedData } = context;
     // fake users messages
     setInterval(() => {
-      const chats = sharedData.chats as SharedMap<TChat>;
+      const chats = sharedData['chats:chats'] as SharedMap<TChat>;
       chats.forEach((c) => {
         const randomGuy =
           randomGuys[Math.floor(Math.random() * randomGuys.length)];
@@ -126,8 +126,8 @@ const guys = new Map(randomGuys.map((guy) => [guy.user_id, guy]));
 
 const ChatsGrid = () => {
   const chats: SharedMap<TChat> = useSharedData<TChatSharedData>(
-    ['chats'],
-    (sd) => sd.chats
+    ['chats:chats'],
+    (sd) => sd['chats:chats']
   );
   const dispatcher = useDispatcher<TChatEvent>();
 

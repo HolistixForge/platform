@@ -10,7 +10,7 @@ import {
 import { useQueryUsersSearch } from '@monorepo/frontend-data';
 import { UserListItem } from '@monorepo/ui-base';
 import { TF_User } from '@monorepo/demiurge-types';
-import { useDispatcher } from '@monorepo/collab-engine';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 import { TEventSocials } from '../socials-events';
 import { TPosition } from '@monorepo/core-graph';
 

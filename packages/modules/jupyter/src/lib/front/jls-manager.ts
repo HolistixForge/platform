@@ -83,8 +83,8 @@ export class JLsManager extends Listenable {
     this._sd = sd;
     this._dispatcher = dispatcher;
     this.getToken = getToken;
-    this._sd.projectServers.observe(() => this._onChange());
-    this._sd.jupyterServers.observe(() => this._onChange());
+    this._sd['user-containers:containers'].observe(() => this._onChange());
+    this._sd['jupyter:servers'].observe(() => this._onChange());
   }
 
   /**
@@ -97,8 +97,10 @@ export class JLsManager extends Listenable {
   //
 
   private async _updateKernelPack(kp: TKernelPack) {
-    const server = this._sd.projectServers.get(`${kp.project_server_id}`);
-    const jupyterServer = this._sd.jupyterServers.get(
+    const server = this._sd['user-containers:containers'].get(
+      `${kp.project_server_id}`
+    );
+    const jupyterServer = this._sd['jupyter:servers'].get(
       `${kp.project_server_id}`
     );
 

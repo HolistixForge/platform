@@ -3,10 +3,16 @@
   "include": [],
   "references": [
     {
+      "path": "../../collab-engine"
+    },
+    {
       "path": "../core-graph"
     },
     {
-      "path": "../../collab-engine"
+      "path": "../reducers"
+    },
+    {
+      "path": "../collab"
     },
     {
       "path": "../module"

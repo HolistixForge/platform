@@ -1,10 +1,12 @@
-import { ReduceArgs, Reducer, TEventPeriodic } from '@monorepo/collab-engine';
 import {
-  TCoreSharedData,
-  TEventDeleteNode,
-  TEventNewNode,
-} from '@monorepo/core-graph';
+  Reducer,
+  RequestData,
+  TEventPeriodic,
+  TReducersBackendExports,
+} from '@monorepo/reducers';
 import { makeUuid } from '@monorepo/simple-types';
+import { TCollabBackendExports } from '@monorepo/collab';
+import { TCoreSharedData } from '@monorepo/core-graph';
 
 import {
   TEventCreateRecord,
@@ -24,8 +26,6 @@ import {
   TEventSearchBases,
   TEventClearUserSearchResults,
 } from './airtable-events';
-
-import { TAirtableSharedData } from './airtable-shared-model';
 import {
   TAirtableBase,
   TAirtableBaseSearchResult,
@@ -35,28 +35,19 @@ import {
 import { TNodeAirtableRecordDataPayload } from './components/node-airtable/node-airtable-record';
 import { TNodeAirtableKanbanColumnDataPayload } from './components/node-airtable/node-airtable-kanban-column';
 import { TNodeAirtableTableDataPayload } from './components/node-airtable/node-airtable-table';
+import { TAirtableSharedData } from './airtable-shared-model';
+
+type TRequiredExports = {
+  collab: TCollabBackendExports<TAirtableSharedData & TCoreSharedData>;
+  reducers: TReducersBackendExports;
+};
 
 //
 
-type Ra<T> = ReduceArgs<
-  TAirtableSharedData & TCoreSharedData,
-  T,
-  TEventNewNode | TEventDeleteNode,
-  undefined,
-  undefined
->;
-
-export class AirtableReducer extends Reducer<
-  TAirtableSharedData & TCoreSharedData,
-  TAirtableEvent,
-  never,
-  undefined,
-  undefined
-> {
+export class AirtableReducer extends Reducer<TAirtableEvent> {
   private lastSync: Date = new Date(0); // Initialize to epoch
 
   private async makeAirtableRequest(
-    g: Ra<unknown>,
     endpoint: string,
     apiKey: string,
     options: RequestInit = {}
@@ -81,95 +72,111 @@ export class AirtableReducer extends Reducer<
     return response.json();
   }
 
-  async reduce(g: Ra<TAirtableEvent | TEventPeriodic>): Promise<void> {
-    switch (g.event.type) {
+  constructor(private readonly exports: TRequiredExports) {
+    super();
+    this.exports = exports;
+  }
+
+  override async reduce(
+    event: TAirtableEvent | TEventPeriodic,
+    requestData: RequestData
+  ): Promise<void> {
+    switch (event.type) {
       case 'airtable:init-base':
-        return this._initBase(g as Ra<TEventInitBase>);
+        return this._initBase(event, requestData);
 
       case 'airtable:update-record':
-        return this._updateRecord(g as Ra<TEventUpdateRecord>);
+        return this._updateRecord(event, requestData);
 
       case 'airtable:create-record':
-        return this._createRecord(g as Ra<TEventCreateRecord>);
+        return this._createRecord(event, requestData);
 
       case 'airtable:delete-record':
-        return this._deleteRecord(g as Ra<TEventDeleteRecord>);
+        return this._deleteRecord(event, requestData);
 
       case 'airtable:reorder-record':
-        return this._reorderRecord(g as Ra<TEventReorderRecord>);
+        return this._reorderRecord(event);
 
       case 'airtable:load-record-node':
-        return this._loadRecordNode(g as Ra<TEventLoadRecordNode>);
+        return this._loadRecordNode(event, requestData);
 
       case 'airtable:load-table-node':
-        return this._loadTableNode(g as Ra<TEventLoadTableNode>);
+        return this._loadTableNode(event, requestData);
 
       case 'airtable:load-kanban-column-node':
-        return this._loadKanbanColumnNode(g as Ra<TEventLoadKanbanColumnNode>);
+        return this._loadKanbanColumnNode(event, requestData);
 
       case 'airtable:delete-kanban-column-node':
-        return this._deleteKanbanColumnNode(
-          g as Ra<TEventDeleteKanbanColumnNode>
-        );
+        return this._deleteKanbanColumnNode(event, requestData);
 
       case 'airtable:delete-record-node':
-        return this._deleteRecordNode(g as Ra<TEventDeleteRecordNode>);
+        return this._deleteRecordNode(event, requestData);
 
       case 'airtable:delete-table-node':
-        return this._deleteTableNode(g as Ra<TEventDeleteTableNode>);
+        return this._deleteTableNode(event, requestData);
 
       case 'airtable:delete-base':
-        return this._deleteBase(g as Ra<TEventDeleteBase>);
+        return this._deleteBase(event, requestData);
 
       case 'airtable:set-node-view':
-        return this._setNodeView(g as Ra<TEventSetNodeView>);
+        return this._setNodeView(event);
 
       case 'airtable:search-bases':
-        return this._searchBases(g as Ra<TEventSearchBases>);
+        return this._searchBases(event);
 
       case 'airtable:clear-user-search-results':
-        return this._clearUserSearchResults(
-          g as Ra<TEventClearUserSearchResults>
-        );
+        return this._clearUserSearchResults(event);
 
       case 'periodic':
-        return this._periodic(g as Ra<TEventPeriodic>);
+        return this._periodic(event, requestData);
     }
   }
 
   //
 
-  private async _loadRecordNode(g: Ra<TEventLoadRecordNode>): Promise<void> {
-    const base = Array.from(g.sd.airtableBases.values()).find((d) =>
-      d.tables.find((t) => t.records.find((r) => r.id === g.event.recordId))
+  private async _loadRecordNode(
+    event: TEventLoadRecordNode,
+    requestData: RequestData
+  ): Promise<void> {
+    const base = Array.from(
+      this.exports.collab.collab.sharedData['airtable:bases'].values()
+    ).find((d) =>
+      d.tables.find((t) => t.records.find((r) => r.id === event.recordId))
     );
 
     if (!base) return;
 
     const data: TNodeAirtableRecordDataPayload = {
-      recordId: g.event.recordId,
-      baseId: g.event.baseId,
-      tableId: g.event.tableId,
+      recordId: event.recordId,
+      baseId: event.baseId,
+      tableId: event.tableId,
     };
 
-    g.bep.process({
-      type: 'core:new-node',
-      nodeData: {
-        id: makeUuid(),
-        name: `Airtable Record ${g.event.recordId}`,
-        root: true,
-        type: 'airtable-record',
-        data: data,
-        connectors: [{ connectorName: 'inputs', pins: [] }],
+    this.exports.reducers.processEvent(
+      {
+        type: 'core:new-node',
+        nodeData: {
+          id: makeUuid(),
+          name: `Airtable Record ${event.recordId}`,
+          root: true,
+          type: 'airtable-record',
+          data: data,
+          connectors: [{ connectorName: 'inputs', pins: [] }],
+        },
+        edges: [],
+        origin: event.origin,
       },
-      edges: [],
-      origin: g.event.origin,
-    });
+      requestData
+    );
   }
 
-  private async _loadTableNode(g: Ra<TEventLoadTableNode>): Promise<void> {
-    const { baseId, tableId } = g.event;
-    const base = g.sd.airtableBases.get(baseId);
+  private async _loadTableNode(
+    event: TEventLoadTableNode,
+    requestData: RequestData
+  ): Promise<void> {
+    const { baseId, tableId } = event;
+    const base =
+      this.exports.collab.collab.sharedData['airtable:bases'].get(baseId);
 
     if (!base) return;
 
@@ -177,47 +184,54 @@ export class AirtableReducer extends Reducer<
     if (!table) return;
 
     const data: TNodeAirtableTableDataPayload = {
-      baseId: g.event.baseId,
-      tableId: g.event.tableId,
+      baseId: event.baseId,
+      tableId: event.tableId,
     };
 
-    g.bep.process({
-      type: 'core:new-node',
-      nodeData: {
-        id: makeUuid(),
-        name: `Airtable Table ${table.name}`,
-        root: true,
-        type: 'airtable-table',
-        data: data,
-        connectors: [{ connectorName: 'inputs', pins: [] }],
+    this.exports.reducers.processEvent(
+      {
+        type: 'core:new-node',
+        nodeData: {
+          id: makeUuid(),
+          name: `Airtable Table ${table.name}`,
+          root: true,
+          type: 'airtable-table',
+          data: data,
+          connectors: [{ connectorName: 'inputs', pins: [] }],
+        },
+        edges: [],
+        origin: event.origin,
       },
-      edges: [],
-      origin: g.event.origin,
-    });
+      requestData
+    );
   }
 
   //
 
-  private async _initBase(g: Ra<TEventInitBase>) {
-    await this._fetchAndUpdateBase(g);
+  private async _initBase(event: TEventInitBase, requestData: RequestData) {
+    await this._fetchAndUpdateBase(event, requestData);
   }
 
   //
 
   private async _fetchAndUpdateBase(
-    g: Ra<{ baseId: string; AIRTABLE_API_KEY?: string }>
+    event: {
+      baseId: string;
+      AIRTABLE_API_KEY?: string;
+    },
+    requestData: RequestData
   ): Promise<boolean> {
-    const { baseId } = g.event;
+    const { baseId } = event;
 
     const apiKey =
-      g.event.AIRTABLE_API_KEY ||
-      g.sd.airtableBases.get(baseId)?.AIRTABLE_API_KEY ||
+      event.AIRTABLE_API_KEY ||
+      this.exports.collab.collab.sharedData['airtable:bases'].get(baseId)
+        ?.AIRTABLE_API_KEY ||
       '';
 
     try {
       // Fetch all bases and find the one we're interested in
       const basesResponse = await this.makeAirtableRequest(
-        g,
         '/meta/bases',
         apiKey
       );
@@ -232,7 +246,6 @@ export class AirtableReducer extends Reducer<
 
       // Fetch tables for this base
       const tablesResponse = await this.makeAirtableRequest(
-        g,
         `/meta/bases/${baseId}/tables`,
         apiKey
       );
@@ -242,7 +255,8 @@ export class AirtableReducer extends Reducer<
       }
 
       // Get the existing base to compare with new data
-      const existingBase = g.sd.airtableBases.get(baseId);
+      const existingBase =
+        this.exports.collab.collab.sharedData['airtable:bases'].get(baseId);
       const newTables = tablesResponse.tables || [];
 
       // Fetch records for each table
@@ -258,7 +272,6 @@ export class AirtableReducer extends Reducer<
           }) => {
             try {
               const recordsResponse = await this.makeAirtableRequest(
-                g,
                 `/${baseId}/${table.id}`,
                 apiKey
               );
@@ -301,17 +314,22 @@ export class AirtableReducer extends Reducer<
         );
 
         // Delete nodes for deleted tables
-        g.sd.nodes.forEach((node) => {
-          if (node.type === 'airtable-table') {
-            const nodeData = node.data as TNodeAirtableTableDataPayload;
-            if (deletedTables.find((t) => t.id === nodeData.tableId)) {
-              g.bep.process({
-                type: 'core:delete-node',
-                id: node.id,
-              });
+        this.exports.collab.collab.sharedData['core-graph:nodes'].forEach(
+          (node) => {
+            if (node.type === 'airtable-table') {
+              const nodeData = node.data as TNodeAirtableTableDataPayload;
+              if (deletedTables.find((t) => t.id === nodeData.tableId)) {
+                this.exports.reducers.processEvent(
+                  {
+                    type: 'core:delete-node',
+                    id: node.id,
+                  },
+                  requestData
+                );
+              }
             }
           }
-        });
+        );
 
         // Check for deleted and updated records in remaining tables
         existingBase.tables.forEach((oldTable) => {
@@ -327,22 +345,30 @@ export class AirtableReducer extends Reducer<
             );
 
             // Dispatch delete node events for each deleted record
-            g.sd.nodes.forEach((node) => {
-              if (node.type === 'airtable-record') {
-                const nodeData = node.data as TNodeAirtableRecordDataPayload;
-                if (deletedRecords.find((r) => r.id === nodeData.recordId)) {
-                  g.bep.process({
-                    type: 'core:delete-node',
-                    id: node.id,
-                  });
+            this.exports.collab.collab.sharedData['core-graph:nodes'].forEach(
+              (node) => {
+                if (node.type === 'airtable-record') {
+                  const nodeData = node.data as TNodeAirtableRecordDataPayload;
+                  if (deletedRecords.find((r) => r.id === nodeData.recordId)) {
+                    this.exports.reducers.processEvent(
+                      {
+                        type: 'core:delete-node',
+                        id: node.id,
+                      },
+                      requestData
+                    );
+                  }
                 }
               }
-            });
+            );
           }
         });
       }
 
-      g.sd.airtableBases.set(baseId, updatedBase);
+      this.exports.collab.collab.sharedData['airtable:bases'].set(
+        baseId,
+        updatedBase
+      );
       return true;
     } catch (error) {
       console.error('Failed to fetch Airtable base:', error);
@@ -352,13 +378,16 @@ export class AirtableReducer extends Reducer<
 
   //
 
-  private async _periodic(g: Ra<TEventPeriodic>): Promise<void> {
+  private async _periodic(
+    event: TEventPeriodic,
+    requestData: RequestData
+  ): Promise<void> {
     const now = new Date();
     const timeSinceLastSync = now.getTime() - this.lastSync.getTime();
 
     // Only sync if more than some time has passed
     if (timeSinceLastSync >= 5000) {
-      await this._syncAllBases(g);
+      await this._syncAllBases(event, requestData);
     }
   }
 
@@ -366,22 +395,25 @@ export class AirtableReducer extends Reducer<
    * Syncs all Airtable bases to detect external changes
    * This can be called manually or automatically via periodic sync
    */
-  private async _syncAllBases(g: Ra<unknown>): Promise<void> {
+  private async _syncAllBases(
+    event: unknown,
+    requestData: RequestData
+  ): Promise<void> {
     const now = new Date();
 
     // Sync all bases in parallel for better performance
-    const syncPromises = Array.from(g.sd.airtableBases.values()).map(
-      async (base) => {
-        try {
-          await this._fetchAndUpdateBase({
-            ...g,
-            event: { baseId: base.id },
-          });
-        } catch (error) {
-          console.error(`Failed to sync Airtable base ${base.id}:`, error);
-        }
+    const syncPromises = Array.from(
+      this.exports.collab.collab.sharedData['airtable:bases'].values()
+    ).map(async (base) => {
+      try {
+        await this._fetchAndUpdateBase(
+          { baseId: base.id, AIRTABLE_API_KEY: base.AIRTABLE_API_KEY },
+          requestData
+        );
+      } catch (error) {
+        console.error(`Failed to sync Airtable base ${base.id}:`, error);
       }
-    );
+    });
 
     // Wait for all syncs to complete
     await Promise.allSettled(syncPromises);
@@ -390,14 +422,17 @@ export class AirtableReducer extends Reducer<
 
   //
 
-  private async _updateRecord(g: Ra<TEventUpdateRecord>): Promise<void> {
+  private async _updateRecord(
+    event: TEventUpdateRecord,
+    requestData: RequestData
+  ): Promise<void> {
     try {
-      const { baseId, tableId, recordId, fields } = g.event;
+      const { baseId, tableId, recordId, fields } = event;
 
       await this.makeAirtableRequest(
-        g,
         `/${baseId}/${tableId}/${recordId}`,
-        g.sd.airtableBases.get(baseId)?.AIRTABLE_API_KEY || '',
+        this.exports.collab.collab.sharedData['airtable:bases'].get(baseId)
+          ?.AIRTABLE_API_KEY || '',
         {
           method: 'PATCH',
           body: JSON.stringify({ fields }),
@@ -406,10 +441,7 @@ export class AirtableReducer extends Reducer<
 
       // Trigger a full sync to ensure consistency with external changes
       setTimeout(() => {
-        this._fetchAndUpdateBase({
-          ...g,
-          event: { baseId },
-        });
+        this._fetchAndUpdateBase({ baseId }, requestData);
       }, 1000); // Small delay to avoid rate limiting
     } catch (error) {
       console.error('Failed to update Airtable record:', error);
@@ -418,14 +450,17 @@ export class AirtableReducer extends Reducer<
 
   //
 
-  private async _createRecord(g: Ra<TEventCreateRecord>): Promise<void> {
+  private async _createRecord(
+    event: TEventCreateRecord,
+    requestData: RequestData
+  ): Promise<void> {
     try {
-      const { baseId, tableId, fields } = g.event;
+      const { baseId, tableId, fields } = event;
 
       await this.makeAirtableRequest(
-        g,
         `/${baseId}/${tableId}`,
-        g.sd.airtableBases.get(baseId)?.AIRTABLE_API_KEY || '',
+        this.exports.collab.collab.sharedData['airtable:bases'].get(baseId)
+          ?.AIRTABLE_API_KEY || '',
         {
           method: 'POST',
           body: JSON.stringify({ fields }),
@@ -434,10 +469,7 @@ export class AirtableReducer extends Reducer<
 
       // Trigger a full sync to ensure consistency with external changes
       setTimeout(() => {
-        this._fetchAndUpdateBase({
-          ...g,
-          event: { baseId },
-        });
+        this._fetchAndUpdateBase({ baseId }, requestData);
       }, 1000);
     } catch (error) {
       console.error('Failed to create Airtable record:', error);
@@ -446,55 +478,63 @@ export class AirtableReducer extends Reducer<
 
   //
 
-  private async _deleteRecord(g: Ra<TEventDeleteRecord>): Promise<void> {
+  private async _deleteRecord(
+    event: TEventDeleteRecord,
+    requestData: RequestData
+  ): Promise<void> {
     try {
-      const { baseId, tableId, recordId } = g.event;
+      const { baseId, tableId, recordId } = event;
 
       await this.makeAirtableRequest(
-        g,
         `/${baseId}/${tableId}/${recordId}`,
-        g.sd.airtableBases.get(baseId)?.AIRTABLE_API_KEY || '',
+        this.exports.collab.collab.sharedData['airtable:bases'].get(baseId)
+          ?.AIRTABLE_API_KEY || '',
         {
           method: 'DELETE',
         }
       );
 
       // Check if any kanban column nodes need to be deleted due to this record deletion
-      g.sd.nodes.forEach((node) => {
-        if (node.type === 'airtable-kanban-column') {
-          const nodeData = node.data as TNodeAirtableKanbanColumnDataPayload;
-          if (nodeData.baseId === baseId && nodeData.tableId === tableId) {
-            // Check if this kanban column still has records after the deletion
-            const base = g.sd.airtableBases.get(baseId);
-            if (base) {
-              const table = base.tables.find((t) => t.id === tableId);
-              if (table) {
-                const columnRecords = table.records.filter(
-                  (r: TAirtableRecordValue) => {
-                    const fields = r.fields as Record<string, unknown>;
-                    const fieldValue = fields[nodeData.fieldId];
-                    return fieldValue === nodeData.optionId;
-                  }
+      this.exports.collab.collab.sharedData['core-graph:nodes'].forEach(
+        (node) => {
+          if (node.type === 'airtable-kanban-column') {
+            const nodeData = node.data as TNodeAirtableKanbanColumnDataPayload;
+            if (nodeData.baseId === baseId && nodeData.tableId === tableId) {
+              // Check if this kanban column still has records after the deletion
+              const base =
+                this.exports.collab.collab.sharedData['airtable:bases'].get(
+                  baseId
                 );
+              if (base) {
+                const table = base.tables.find((t) => t.id === tableId);
+                if (table) {
+                  const columnRecords = table.records.filter(
+                    (r: TAirtableRecordValue) => {
+                      const fields = r.fields as Record<string, unknown>;
+                      const fieldValue = fields[nodeData.fieldId];
+                      return fieldValue === nodeData.optionId;
+                    }
+                  );
 
-                if (columnRecords.length === 0) {
-                  g.bep.process({
-                    type: 'core:delete-node',
-                    id: node.id,
-                  });
+                  if (columnRecords.length === 0) {
+                    this.exports.reducers.processEvent(
+                      {
+                        type: 'core:delete-node',
+                        id: node.id,
+                      },
+                      requestData
+                    );
+                  }
                 }
               }
             }
           }
         }
-      });
+      );
 
       // Trigger a full sync to ensure consistency with external changes
       setTimeout(() => {
-        this._fetchAndUpdateBase({
-          ...g,
-          event: { baseId },
-        });
+        this._fetchAndUpdateBase({ baseId }, requestData);
       }, 1000);
     } catch (error) {
       console.error('Failed to delete Airtable record:', error);
@@ -504,14 +544,15 @@ export class AirtableReducer extends Reducer<
 
   //
 
-  private async _reorderRecord(g: Ra<TEventReorderRecord>): Promise<void> {
+  private async _reorderRecord(event: TEventReorderRecord): Promise<void> {
     // Airtable doesn't have built-in ordering, so we'll implement this
     // by updating a custom order field if it exists
     try {
-      const { baseId, tableId, recordId, newPosition } = g.event;
+      const { baseId, tableId, recordId, newPosition } = event;
 
       // Find the table and check if it has an order field
-      const base = g.sd.airtableBases.get(baseId);
+      const base =
+        this.exports.collab.collab.sharedData['airtable:bases'].get(baseId);
       if (base) {
         const table = base.tables.find((t) => t.id === tableId);
         if (table) {
@@ -523,9 +564,10 @@ export class AirtableReducer extends Reducer<
 
           if (orderField) {
             await this.makeAirtableRequest(
-              g,
               `/${baseId}/${tableId}/${recordId}`,
-              g.sd.airtableBases.get(baseId)?.AIRTABLE_API_KEY || '',
+              this.exports.collab.collab.sharedData['airtable:bases'].get(
+                baseId
+              )?.AIRTABLE_API_KEY || '',
               {
                 method: 'PATCH',
                 body: JSON.stringify({
@@ -544,59 +586,79 @@ export class AirtableReducer extends Reducer<
   //
 
   private async _deleteRecordNode(
-    g: Ra<TEventDeleteRecordNode>
+    event: TEventDeleteRecordNode,
+    requestData: RequestData
   ): Promise<void> {
-    g.bep.process({
-      type: 'core:delete-node',
-      id: g.event.nodeId,
-    });
+    this.exports.reducers.processEvent(
+      {
+        type: 'core:delete-node',
+        id: event.nodeId,
+      },
+      requestData
+    );
   }
 
   //
 
-  private async _deleteTableNode(g: Ra<TEventDeleteTableNode>): Promise<void> {
-    g.bep.process({
-      type: 'core:delete-node',
-      id: g.event.nodeId,
-    });
+  private async _deleteTableNode(
+    event: TEventDeleteTableNode,
+    requestData: RequestData
+  ): Promise<void> {
+    this.exports.reducers.processEvent(
+      {
+        type: 'core:delete-node',
+        id: event.nodeId,
+      },
+      requestData
+    );
   }
 
   //
 
-  private async _deleteBase(g: Ra<TEventDeleteBase>): Promise<void> {
+  private async _deleteBase(
+    event: TEventDeleteBase,
+    requestData: RequestData
+  ): Promise<void> {
     try {
-      const { baseId } = g.event;
+      const { baseId } = event;
 
       // Remove from local state
-      g.sd.airtableBases.delete(baseId);
+      this.exports.collab.collab.sharedData['airtable:bases'].delete(baseId);
 
       // Delete all related nodes
-      g.sd.nodes.forEach((node) => {
-        if (
-          node.type === 'airtable-table' ||
-          node.type === 'airtable-record' ||
-          node.type === 'airtable-kanban-column'
-        ) {
-          const nodeData = node.data as { baseId: string };
-          if (nodeData.baseId === baseId) {
-            g.bep.process({
-              type: 'core:delete-node',
-              id: node.id,
-            });
+      this.exports.collab.collab.sharedData['core-graph:nodes'].forEach(
+        (node) => {
+          if (
+            node.type === 'airtable-table' ||
+            node.type === 'airtable-record' ||
+            node.type === 'airtable-kanban-column'
+          ) {
+            const nodeData = node.data as { baseId: string };
+            if (nodeData.baseId === baseId) {
+              this.exports.reducers.processEvent(
+                {
+                  type: 'core:delete-node',
+                  id: node.id,
+                },
+                requestData
+              );
+            }
           }
         }
-      });
+      );
 
       // Clear related node views
       const nodeViewsToDelete: string[] = [];
-      g.sd.airtableNodeViews.forEach((view, id) => {
-        if (view.baseId === baseId) {
-          nodeViewsToDelete.push(id);
+      this.exports.collab.collab.sharedData['airtable:node-views'].forEach(
+        (view, id) => {
+          if (view.baseId === baseId) {
+            nodeViewsToDelete.push(id);
+          }
         }
-      });
+      );
 
       nodeViewsToDelete.forEach((id) => {
-        g.sd.airtableNodeViews.delete(id);
+        this.exports.collab.collab.sharedData['airtable:node-views'].delete(id);
       });
     } catch (error) {
       console.error('Failed to delete Airtable base:', error);
@@ -605,25 +667,29 @@ export class AirtableReducer extends Reducer<
 
   //
 
-  private async _setNodeView(g: Ra<TEventSetNodeView>): Promise<void> {
-    const { nodeId, viewId, viewMode } = g.event;
+  private async _setNodeView(event: TEventSetNodeView): Promise<void> {
+    const { nodeId, viewId, viewMode } = event;
 
-    g.sd.airtableNodeViews.set(`${nodeId}-${viewId}`, {
-      type: 'table',
-      baseId: '', // Will be set by the node component
-      tableId: '', // Will be set by the node component
-      nodeId,
-      viewId,
-      viewMode,
-    });
+    this.exports.collab.collab.sharedData['airtable:node-views'].set(
+      `${nodeId}-${viewId}`,
+      {
+        type: 'table',
+        baseId: '', // Will be set by the node component
+        tableId: '', // Will be set by the node component
+        nodeId,
+        viewId,
+        viewMode,
+      }
+    );
   }
 
   //
 
   private async _loadKanbanColumnNode(
-    g: Ra<TEventLoadKanbanColumnNode>
+    event: TEventLoadKanbanColumnNode,
+    requestData: RequestData
   ): Promise<void> {
-    const { baseId, tableId, fieldId, optionId } = g.event;
+    const { baseId, tableId, fieldId, optionId } = event;
 
     const data: TNodeAirtableKanbanColumnDataPayload = {
       baseId,
@@ -632,43 +698,49 @@ export class AirtableReducer extends Reducer<
       optionId,
     };
 
-    g.bep.process({
-      type: 'core:new-node',
-      nodeData: {
-        id: makeUuid(),
-        name: `Airtable Kanban Column ${optionId}`,
-        root: true,
-        type: 'airtable-kanban-column',
-        data: data,
-        connectors: [{ connectorName: 'inputs', pins: [] }],
+    this.exports.reducers.processEvent(
+      {
+        type: 'core:new-node',
+        nodeData: {
+          id: makeUuid(),
+          name: `Airtable Kanban Column ${optionId}`,
+          root: true,
+          type: 'airtable-kanban-column',
+          data: data,
+          connectors: [{ connectorName: 'inputs', pins: [] }],
+        },
+        edges: [],
+        origin: event.origin,
       },
-      edges: [],
-      origin: g.event.origin,
-    });
+      requestData
+    );
   }
 
   //
 
   private async _deleteKanbanColumnNode(
-    g: Ra<TEventDeleteKanbanColumnNode>
+    event: TEventDeleteKanbanColumnNode,
+    requestData: RequestData
   ): Promise<void> {
-    g.bep.process({
-      type: 'core:delete-node',
-      id: g.event.nodeId,
-    });
+    this.exports.reducers.processEvent(
+      {
+        type: 'core:delete-node',
+        id: event.nodeId,
+      },
+      requestData
+    );
   }
 
   //
 
-  private async _searchBases(g: Ra<TEventSearchBases>): Promise<void> {
+  private async _searchBases(event: TEventSearchBases): Promise<void> {
     try {
-      const { query, userId } = g.event;
+      const { query, userId } = event;
 
       // Search user's bases
       const response = await this.makeAirtableRequest(
-        g,
         '/meta/bases',
-        g.event.AIRTABLE_API_KEY
+        event.AIRTABLE_API_KEY
       );
 
       if (response.bases) {
@@ -699,7 +771,9 @@ export class AirtableReducer extends Reducer<
           })
         );
 
-        g.sd.airtableBaseSearchResults.set(userId, searchResults);
+        this.exports.collab.collab.sharedData[
+          'airtable:base-search-results'
+        ].set(userId, searchResults);
       }
     } catch (error) {
       console.error('Failed to search Airtable bases:', error);
@@ -709,9 +783,11 @@ export class AirtableReducer extends Reducer<
   //
 
   private async _clearUserSearchResults(
-    g: Ra<TEventClearUserSearchResults>
+    event: TEventClearUserSearchResults
   ): Promise<void> {
-    const { userId } = g.event;
-    g.sd.airtableBaseSearchResults.delete(userId);
+    const { userId } = event;
+    this.exports.collab.collab.sharedData[
+      'airtable:base-search-results'
+    ].delete(userId);
   }
 }

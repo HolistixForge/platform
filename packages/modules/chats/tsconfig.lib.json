@@ -54,6 +54,12 @@
       "path": "../core-graph/tsconfig.lib.json"
     },
     {
+      "path": "../reducers/tsconfig.lib.json"
+    },
+    {
+      "path": "../collab/tsconfig.lib.json"
+    },
+    {
       "path": "../module/tsconfig.lib.json"
     },
     {

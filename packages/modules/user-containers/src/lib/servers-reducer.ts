@@ -13,7 +13,8 @@ import {
   TEventNewNode,
   TEventLoad,
 } from '@monorepo/core-graph';
-import { TGraphNode, TOAuthClient } from '@monorepo/module';
+import { TGraphNode } from '@monorepo/core-graph';
+import { TOAuthClient } from './container-image';
 import { TGatewayExtraContext } from '@monorepo/gateway';
 
 import { TServersSharedData } from './servers-shared-model';
@@ -231,7 +232,7 @@ export class ServersReducer extends Reducer<
     }));
 
     // Store in shared state
-    g.sd.projectServers.set(containerId, container);
+    g.sd['user-containers:containers'].set(containerId, container);
 
     // Create graph node
     const node: TGraphNode = {
@@ -262,9 +263,9 @@ export class ServersReducer extends Reducer<
     const jwt = g.extraArgs.jwt as TJwtServer;
     const containerId = jwt.user_container_id;
     if (containerId) {
-      const s = g.sd.projectServers.get(containerId);
+      const s = g.sd['user-containers:containers'].get(containerId);
       if (s) {
-        g.sd.projectServers.set(containerId, {
+        g.sd['user-containers:containers'].set(containerId, {
           ...s,
           last_watchdog_at: new Date().toISOString(),
           ip: g.extraArgs.ip,
@@ -282,9 +283,9 @@ export class ServersReducer extends Reducer<
     const jwt = g.extraArgs.jwt as TJwtServer;
     const containerId = jwt.user_container_id;
     if (containerId) {
-      const s = g.sd.projectServers.get(containerId);
+      const s = g.sd['user-containers:containers'].get(containerId);
       if (s) {
-        g.sd.projectServers.set(containerId, {
+        g.sd['user-containers:containers'].set(containerId, {
           ...s,
           last_activity: g.event.last_activity,
         });
@@ -297,14 +298,14 @@ export class ServersReducer extends Reducer<
   async _hostServer(g: Ra<TEventHostServer>) {
     const containerId = g.event.user_container_id;
     if (containerId) {
-      const s = g.sd.projectServers.get(containerId);
+      const s = g.sd['user-containers:containers'].get(containerId);
       if (s) {
         s.host_user_id =
           g.extraArgs.jwt.type === 'access_token'
             ? g.extraArgs.jwt.user.id
             : null;
 
-        g.sd.projectServers.set(containerId, s);
+        g.sd['user-containers:containers'].set(containerId, s);
       }
     }
   }
@@ -317,10 +318,10 @@ export class ServersReducer extends Reducer<
         'container:cloud',
       ]);
 
-      const s = g.sd.projectServers.get(containerId);
+      const s = g.sd['user-containers:containers'].get(containerId);
       if (s) {
         s.location = 'cloud';
-        g.sd.projectServers.set(containerId, s);
+        g.sd['user-containers:containers'].set(containerId, s);
         // TODO start polling state
       }
     }
@@ -336,7 +337,7 @@ export class ServersReducer extends Reducer<
         'container:cloud',
       ]);
 
-      const s = g.sd.projectServers.get(containerId);
+      const s = g.sd['user-containers:containers'].get(containerId);
       if (s) {
         // TODO pause server
       }
@@ -353,7 +354,7 @@ export class ServersReducer extends Reducer<
         'container:cloud',
       ]);
 
-      const s = g.sd.projectServers.get(containerId);
+      const s = g.sd['user-containers:containers'].get(containerId);
       if (s) {
         // TODO start server, and start polling state
       }
@@ -370,7 +371,7 @@ export class ServersReducer extends Reducer<
         'container:delete',
       ]);
 
-      const s = g.sd.projectServers.get(containerId);
+      const s = g.sd['user-containers:containers'].get(containerId);
       if (s) {
         // TODO delete server resources
         // TODO stop polling state
@@ -386,7 +387,7 @@ export class ServersReducer extends Reducer<
 
     if (!containerId) throw new ForbiddenException();
 
-    const s = g.sd.projectServers.get(containerId);
+    const s = g.sd['user-containers:containers'].get(containerId);
     if (!s) throw new NotFoundException();
 
     const httpServices = [...s.httpServices];
@@ -416,7 +417,7 @@ export class ServersReducer extends Reducer<
         });
       }
 
-      g.sd.projectServers.set(containerId, {
+      g.sd['user-containers:containers'].set(containerId, {
         ...s,
         httpServices,
       });
@@ -429,7 +430,7 @@ export class ServersReducer extends Reducer<
 
   async _updateNginx(sd: UsedSharedData, updateReverseProxy: Turp) {
     const locations: { location: string; ip: string; port: number }[] = [];
-    sd.projectServers.forEach((server) => {
+    sd['user-containers:containers'].forEach((server) => {
       if (server.ip) {
         server.httpServices.forEach((hs) => {
           locations.push({
@@ -448,13 +449,13 @@ export class ServersReducer extends Reducer<
   async _periodic(g: Ra<TEventPeriodic>) {
     // remove declared http services for server that did not
     // sent watchdog event for 30 secondes (down)
-    g.sd.projectServers.forEach((server) => {
+    g.sd['user-containers:containers'].forEach((server) => {
       if (
         server.httpServices.length > 0 &&
         (!server.last_watchdog_at ||
           secondAgo(server.last_watchdog_at, g.event.date) > 30)
       ) {
-        g.sd.projectServers.set(`${server.user_container_id}`, {
+        g.sd['user-containers:containers'].set(`${server.user_container_id}`, {
           ...server,
           httpServices: [],
         });
@@ -476,7 +477,7 @@ export class ServersReducer extends Reducer<
       headers: { authorization: g.extraArgs.authorizationHeader },
     });
 
-    g.sd.projectServers.delete(containerId);
+    g.sd['user-containers:containers'].delete(containerId);
     const id = projectServerNodeId(containerId);
 
     g.bep.process({ type: 'core:delete-node', id });

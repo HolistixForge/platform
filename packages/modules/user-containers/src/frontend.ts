@@ -1,8 +1,9 @@
 import './lib/index.scss';
-import { Servers_loadData } from './lib/servers-shared-model';
 import { NodeServer } from './lib/components/node-server/node-server';
 import { NodeVolume } from './lib/components/node-volume/node-volume';
-import { ModuleFrontend } from '@monorepo/module/frontend';
+import type { TModule } from '@monorepo/module';
+import type { TCollabFrontendExports } from '@monorepo/collab/frontend';
+import type { TSpaceFrontendExports } from '@monorepo/space/frontend';
 import { TServer } from './lib/servers-types';
 import { serversMenuEntries } from './lib/servers-menu';
 
@@ -25,28 +26,52 @@ export type TAuthenticationExtraContext = {
   };
 };
 
-export const moduleFrontend: ModuleFrontend = {
-  collabChunk: {
-    name: 'user-containers',
-    loadSharedData: Servers_loadData,
-    loadExtraContext: ({ extraContext }): TServersExtraContext => ({
+type TRequired = {
+  collab: TCollabFrontendExports;
+  space: TSpaceFrontendExports;
+  authentication: TAuthenticationExtraContext;
+};
+
+export type TUserContainersFrontendExports = TServersExtraContext;
+
+export const moduleFrontend: TModule<
+  TRequired,
+  TUserContainersFrontendExports
+> = {
+  name: 'user-containers',
+  version: '0.0.1',
+  description: 'User containers module',
+  dependencies: ['core-graph', 'collab', 'space', 'authentication'],
+  load: ({ depsExports, moduleExports }) => {
+    depsExports.collab.collab.loadSharedData(
+      'map',
+      'user-containers',
+      'containers'
+    );
+    depsExports.collab.collab.loadSharedData(
+      'array',
+      'user-containers',
+      'images'
+    );
+
+    depsExports.space.registerMenuEntries(serversMenuEntries);
+    depsExports.space.registerNodes({
+      server: NodeServer,
+      volume: NodeVolume,
+    });
+
+    moduleExports({
       servers: {
         getToken: (server, serviceName) => {
           const oauth_client = server.oauth.find(
             (o) => o.service_name === serviceName
           );
           if (!oauth_client) throw new Error('jupyterlab not mapped');
-          return (
-            extraContext as TAuthenticationExtraContext
-          ).authentication.getToken(oauth_client.client_id);
+          return depsExports.authentication.authentication.getToken(
+            oauth_client.client_id
+          );
         },
       },
-    }),
-    deps: ['authentication'],
-  },
-  spaceMenuEntries: serversMenuEntries,
-  nodes: {
-    server: NodeServer,
-    volume: NodeVolume,
+    });
   },
 };

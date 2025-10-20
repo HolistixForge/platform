@@ -10,7 +10,8 @@ import {
   useAction,
   DialogControlled,
 } from '@monorepo/ui-base';
-import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
+import { useSharedDataDirect } from '@monorepo/collab/frontend';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 
 import { TServerEvents } from '../servers-events';
 import { TServersSharedData } from '../servers-shared-model';
@@ -41,7 +42,7 @@ export const NewServerForm = ({
 }) => {
   //
 
-  const containerImages = useSharedData<TServersSharedData>(
+  const containerImages = useSharedDataDirect<TServersSharedData>(
     ['containerImages'],
     (sd) => sd.containerImages
   );

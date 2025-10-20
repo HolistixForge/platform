@@ -8,13 +8,10 @@ import {
   useAction,
   DialogControlled,
 } from '@monorepo/ui-base';
-import {
-  useDispatcher,
-  useSharedData,
-  useAwareness,
-} from '@monorepo/collab-engine';
+import { useAwareness, useLocalSharedData } from '@monorepo/collab/frontend';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 import { TPosition } from '@monorepo/core-graph';
-import { TPanel } from '@monorepo/module/frontend';
+import { TPanel } from '@monorepo/space/frontend';
 import { makeUuid } from '@monorepo/simple-types';
 
 import { TNotionEvent } from '../../notion-events';
@@ -56,9 +53,9 @@ export const NewNotionDatabaseForm = ({
 
   // Get search results from shared data for current user
   const searchResults: TNotionDatabaseSearchResult[] =
-    useSharedData<TNotionSharedData>(
-      ['notionDatabaseSearchResults'],
-      (sd) => sd.notionDatabaseSearchResults.get(currentUserId) || []
+    useLocalSharedData<TNotionSharedData>(
+      ['notion:database-search-results'],
+      (sd) => sd['notion:database-search-results'].get(currentUserId) || []
     );
 
   const action = useAction<NewNotionDatabaseFormData>(

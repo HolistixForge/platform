@@ -9,7 +9,7 @@ import {
   TextFieldset,
   SliderFieldset,
 } from '@monorepo/ui-base';
-import { useDispatcher } from '@monorepo/collab-engine';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 import { TPosition } from '@monorepo/core-graph';
 
 import { TServerEvents } from '../servers-events';

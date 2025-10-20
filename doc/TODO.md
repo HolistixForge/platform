@@ -1,13 +1,12 @@
 ⚠️ Antoine's stuffs
 
-fix excalidraw nodes move disabled
-fix other modules and their stories
-move css to packages
+reducers
+fix other modules and their stories: airtable, chats, notion, socials, tabs, user-containers, jupyter
+factor proxy story
 organisation/project => room
 dns
 sharedata nodeView purge
 cmd generator lowercase
-Api key copy paste: fake config module
 Remove all SQL procedures and exec-pipes that are not used anymore
 merge account and ganymede: organization, member, gateway management only
 load save project

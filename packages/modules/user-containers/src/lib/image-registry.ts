@@ -1,4 +1,4 @@
-import { TContainerImageDefinition } from '@monorepo/module';
+import { TContainerImageDefinition } from './container-image';
 
 export class ContainerImageRegistry {
   private images: Map<string, TContainerImageDefinition> = new Map();

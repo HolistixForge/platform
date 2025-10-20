@@ -2,12 +2,9 @@ import { useEffect, useRef, useMemo, useCallback } from 'react';
 import Quill from 'quill';
 import QuillCursors from 'quill-cursors';
 
-import {
-  useAwareness,
-  useBindEditor,
-  useDispatcher,
-} from '@monorepo/collab-engine';
-import { TGraphNode } from '@monorepo/module';
+import { useAwareness, useBindEditor } from '@monorepo/collab/frontend';
+import { useDispatcher } from '@monorepo/reducers/frontend';
+import { TGraphNode } from '@monorepo/core-graph';
 import {
   useNodeContext,
   DisableZoomDragPan,

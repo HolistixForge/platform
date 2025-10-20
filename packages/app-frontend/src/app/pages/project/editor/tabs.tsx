@@ -11,7 +11,7 @@ import {
   TTabsTree,
 } from '@monorepo/tabs';
 import { useCurrentUser } from '@monorepo/frontend-data';
-import { useSharedData } from '@monorepo/collab-engine';
+import { useLocalSharedData } from '@monorepo/collab/frontend';
 import { serviceUrl } from '@monorepo/user-containers';
 
 import { useDispatcher } from '../model/collab-model-chunk';
@@ -23,8 +23,9 @@ import { ResourcePage } from './resources-page';
 
 export const EditorTabsSystemLogic = () => {
   //
-  const sdTabs: TTabsTree = useSharedData<TTabsSharedData>(['tabs'], (d) =>
-    d.tabs.get('unique')
+  const sdTabs: TTabsTree = useLocalSharedData<TTabsSharedData>(
+    ['tabs:tabs'],
+    (d) => d['tabs:tabs'].get('unique')
   );
 
   const dispatcher = useDispatcher();
@@ -136,8 +137,8 @@ const ProjectServerUIView = (props: {
   service_name: string;
 }) => {
   const server: TServer = useSharedData<TServersSharedData>(
-    ['projectServers'],
-    (sd) => sd.projectServers.get(`${props.project_server_id}`)
+    ['user-containers:containers'],
+    (sd) => sd['user-containers:containers'].get(`${props.project_server_id}`)
   );
 
   const url = serviceUrl(server, props.service_name);

@@ -1,8 +1,8 @@
 import { FC, Suspense, useCallback } from 'react';
 
-import { TGraphNode } from '@monorepo/module';
+import { TGraphNode } from '@monorepo/core-graph';
 import { useFactory } from '@monorepo/lazy-factory';
-import { useDispatcher } from '@monorepo/collab-engine';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 import {
   DisableZoomDragPan,
   TNodeContext,

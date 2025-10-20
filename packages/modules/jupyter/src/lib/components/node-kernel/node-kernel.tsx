@@ -7,8 +7,9 @@ import {
   useNodeContext,
   useNodeHeaderButtons,
 } from '@monorepo/space/frontend';
-import { TGraphNode } from '@monorepo/module';
-import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
+import { TGraphNode } from '@monorepo/core-graph';
+import { useLocalSharedData } from '@monorepo/collab/frontend';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 import { TServersSharedData, TServer } from '@monorepo/user-containers';
 import { Datetime } from '@monorepo/ui-base';
 
@@ -36,12 +37,12 @@ export const NodeKernel = ({
 
   const kernelPack = useKernelPack(project_server_id, kernel_id);
 
-  const s: { ps: TServer; js: TJupyterServerData } = useSharedData<
+  const s: { ps: TServer; js: TJupyterServerData } = useLocalSharedData<
     TServersSharedData & TJupyterSharedData
-  >(['jupyterServers', 'projectServers'], (sd) => {
+  >(['jupyter:servers', 'user-containers:containers'], (sd) => {
     return {
-      js: sd.jupyterServers.get(`${project_server_id}`),
-      ps: sd.projectServers.get(`${project_server_id}`),
+      js: sd['jupyter:servers'].get(`${project_server_id}`),
+      ps: sd['user-containers:containers'].get(`${project_server_id}`),
     };
   });
 

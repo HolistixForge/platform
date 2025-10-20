@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
-import { TGraphNode } from '@monorepo/module';
-import { useSharedData, useDispatcher } from '@monorepo/collab-engine';
+import { TGraphNode } from '@monorepo/core-graph';
+import { useLocalSharedData } from '@monorepo/collab/frontend';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 import { TAirtableSharedData } from '../../airtable-shared-model';
 import {
   TAirtableTable,
@@ -16,6 +17,7 @@ import {
   useNodeContext,
   useNodeHeaderButtons,
 } from '@monorepo/space/frontend';
+import { TJsonObject } from '@monorepo/simple-types';
 
 export type TNodeAirtableKanbanColumnDataPayload = {
   baseId: string;
@@ -37,7 +39,10 @@ export const NodeAirtableKanbanColumn: React.FC<
   const data = node.data;
 
   // Access shared data to get base, table, and field information
-  const sd = useSharedData<TAirtableSharedData>(['airtableBases'], (sd) => sd);
+  const sd = useLocalSharedData<TAirtableSharedData>(
+    ['airtable:bases'],
+    (sd) => sd
+  );
   const dispatcher = useDispatcher<TAirtableEvent>();
 
   if (!data) {
@@ -52,7 +57,7 @@ export const NodeAirtableKanbanColumn: React.FC<
   }
 
   // Get base, table, and field from shared data
-  const base = sd.airtableBases.get(data.baseId);
+  const base = sd['airtable:bases'].get(data.baseId);
   const table = base?.tables.find((t: TAirtableTable) => t.id === data.tableId);
   const field = table?.fields.find(
     (f: TAirtableField) => f.id === data.fieldId
@@ -113,7 +118,7 @@ export const NodeAirtableKanbanColumn: React.FC<
       baseId: data.baseId,
       tableId: data.tableId,
       recordId,
-      fields,
+      fields: fields as TJsonObject,
     });
   };
 

@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import {
-  MockCollaborativeContext,
-  useSharedData,
-  useDispatcher,
-} from '@monorepo/collab-engine';
+import { useLocalSharedData } from '@monorepo/collab/frontend';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 import { TJsonObject, TMyfetchRequest } from '@monorepo/simple-types';
 import { TServersSharedData, TServerEvents } from '@monorepo/user-containers';
 import { TCoreSharedData } from '@monorepo/core-graph';
@@ -15,7 +12,7 @@ import { moduleBackend as coreBackend } from '@monorepo/core-graph';
 import { moduleBackend as spaceBackend } from '@monorepo/space';
 import {
   moduleBackend as userContainersBackend,
-  TG_Server,
+  TServer,
 } from '@monorepo/user-containers';
 //
 import { moduleFrontend as coreFrontend } from '@monorepo/core-graph';
@@ -25,7 +22,6 @@ import {
   moduleFrontend as userContainersFrontend,
   TAuthenticationExtraContext,
 } from '@monorepo/user-containers/frontend';
-import { ModuleFrontend } from '@monorepo/module/frontend';
 
 //
 
@@ -228,13 +224,17 @@ export const useInitStoryJupyterServer =
   (): UseInitStoryJupyterServerResult => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
-    const sd = useSharedData<
+    const sd = useLocalSharedData<
       TServersSharedData & TJupyterSharedData & TCoreSharedData
-    >(['projectServers', 'jupyterServers'], (sd) => sd);
+    >(['user-containers:containers', 'jupyter:servers'], (sd) => sd);
     const dispatcher = useDispatcher<TServerEvents | TJupyterEvent>();
 
-    const server = sd.projectServers.get(STORY_PROJECT_SERVER_ID.toString());
-    const jupyter = sd.jupyterServers.get(STORY_PROJECT_SERVER_ID.toString());
+    const server = sd['user-containers:containers'].get(
+      STORY_PROJECT_SERVER_ID.toString()
+    );
+    const jupyter = sd['jupyter:servers'].get(
+      STORY_PROJECT_SERVER_ID.toString()
+    );
     const service = server?.httpServices.find(
       (s: { name: string }) => s.name === 'jupyterlab'
     );

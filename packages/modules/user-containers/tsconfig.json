@@ -6,16 +6,13 @@
       "path": "../../api-fetch"
     },
     {
-      "path": "../gateway"
-    },
-    {
       "path": "../../log"
     },
     {
       "path": "../../demiurge-types"
     },
     {
-      "path": "../core-graph"
+      "path": "../../collab-engine"
     },
     {
       "path": "../../simple-types"
@@ -27,7 +24,16 @@
       "path": "../../frontend-data"
     },
     {
-      "path": "../../collab-engine"
+      "path": "../core-graph"
+    },
+    {
+      "path": "../gateway"
+    },
+    {
+      "path": "../reducers"
+    },
+    {
+      "path": "../collab"
     },
     {
       "path": "../module"

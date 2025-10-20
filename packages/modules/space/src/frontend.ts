@@ -69,7 +69,7 @@ export type PanelComponent = FC<{
 export type TUIElements = {
   panels: Record<string, PanelComponent>;
   getMenuEntries: TSpaceMenuEntries;
-  nodes: { [key: string]: FC<{ node: TGraphNode }> };
+  nodes: { [key: string]: FC<{ node: TGraphNode<never> }> };
   layers: TLayerProvider[];
 };
 
@@ -79,7 +79,17 @@ const uiElements: TUIElements = {
   panels: {},
   getMenuEntries: (args) => {
     return modulesMenuEntries.reduce((acc, module) => {
-      return [...acc, ...module(args)];
+      try {
+        const entries = module(args);
+        return [...acc, ...entries];
+      } catch (error) {
+        console.error(
+          'Error getting menu entries for module',
+          module.name,
+          error
+        );
+        return acc;
+      }
     }, [] as TSpaceMenuEntry[]);
   },
   nodes: {},
@@ -88,7 +98,9 @@ const uiElements: TUIElements = {
 
 export type TSpaceFrontendExports = {
   registerMenuEntries: (entries: TSpaceMenuEntries) => void;
-  registerNodes: (nodes: { [key: string]: FC<{ node: TGraphNode }> }) => void;
+  registerNodes: (nodes: {
+    [key: string]: FC<{ node: TGraphNode<never> }>;
+  }) => void;
   registerLayer: (layers: TLayerProvider) => void;
   registerPanel: (panels: Record<string, PanelComponent>) => void;
   uiElements: TUIElements;

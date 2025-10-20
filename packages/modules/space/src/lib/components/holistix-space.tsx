@@ -53,7 +53,7 @@ import { useModuleExports } from '@monorepo/module/frontend';
 
 //
 
-type TNodeTypes = { [key: string]: FC<{ node: TGraphNode }> };
+type TNodeTypes = { [key: string]: FC<{ node: TGraphNode<never> }> };
 
 //
 
@@ -80,10 +80,10 @@ export const INITIAL_VIEWPORT: Viewport = {
 const makeSpaceNode = (nodeTypes: TNodeTypes) => {
   return () => {
     const nodeContext = useNodeContext();
-    const node: TGraphNode | undefined = useLocalSharedData<TCoreSharedData>(
-      ['core-graph:nodes'],
-      (sd) => sd['core-graph:nodes'].get(nodeContext.id)
-    );
+    const node: TGraphNode<never> | undefined =
+      useLocalSharedData<TCoreSharedData>(['core-graph:nodes'], (sd) =>
+        sd['core-graph:nodes'].get(nodeContext.id)
+      );
 
     if (node) {
       const NodeComponent = nodeTypes[node.type];

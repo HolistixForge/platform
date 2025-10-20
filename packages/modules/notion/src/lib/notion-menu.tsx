@@ -1,4 +1,4 @@
-import { TSpaceMenuEntries, TSpaceMenuEntry } from '@monorepo/module/frontend';
+import { TSpaceMenuEntries, TSpaceMenuEntry } from '@monorepo/space/frontend';
 import {
   FrontendDispatcher,
   TValidSharedDataToCopy,
@@ -26,7 +26,7 @@ export const notionMenuEntries: TSpaceMenuEntries = ({
   const d = dispatcher as FrontendDispatcher<TNotionEvent | TCoreEvent>;
 
   const databases: TSpaceMenuEntry[] = Array.from(
-    tsd.notionDatabases.entries()
+    tsd['notion:databases'].entries()
   ).map(([id, db]) => {
     const title = db.title?.[0]?.plain_text;
     return {

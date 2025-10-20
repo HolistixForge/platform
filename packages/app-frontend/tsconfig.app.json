@@ -57,6 +57,9 @@
       "path": "../modules/chats/tsconfig.lib.json"
     },
     {
+      "path": "../modules/collab/tsconfig.lib.json"
+    },
+    {
       "path": "../modules/tabs/tsconfig.lib.json"
     },
     {

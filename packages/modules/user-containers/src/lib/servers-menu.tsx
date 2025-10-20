@@ -1,4 +1,4 @@
-import { TSpaceMenuEntries } from '@monorepo/module/frontend';
+import { TSpaceMenuEntries } from '@monorepo/space/frontend';
 import { NewServerForm } from './form/new-server';
 
 //

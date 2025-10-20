@@ -7,7 +7,7 @@ import {
   useAction,
 } from '@monorepo/ui-base';
 import { TPosition } from '@monorepo/core-graph';
-import { useDispatcher } from '@monorepo/collab-engine';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 import { TEventSocials } from '../socials-events';
 import { useEffect } from 'react';
 

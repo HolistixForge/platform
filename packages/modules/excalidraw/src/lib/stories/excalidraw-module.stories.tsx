@@ -112,8 +112,6 @@ const meta = {
 
 export default meta;
 
-type Story = StoryObj<typeof Story>;
-
-export const Default: Story = {
+export const Default: StoryObj<typeof Story> = {
   args: {},
 };

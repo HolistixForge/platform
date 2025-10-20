@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react';
 
 import { Logger } from '@monorepo/log';
 import { TServerEvents, TServersSharedData } from '@monorepo/user-containers';
-import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
+import { useLocalSharedData } from '@monorepo/collab/frontend';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 import { ButtonBase, SelectFieldset, SelectItem } from '@monorepo/ui-base';
 
 import { TJupyterEvent } from '../../jupyter-events';
@@ -36,12 +37,14 @@ const Terminals = () => {
   const dispatcher = useDispatcher<TJupyterEvent | TServerEvents>();
   const { jupyter: jmc } = useJLsManager();
 
-  const sd = useSharedData<TServersSharedData & TJupyterSharedData>(
-    ['projectServers', 'jupyterServers'],
+  const sd = useLocalSharedData<TServersSharedData & TJupyterSharedData>(
+    ['user-containers:containers', 'jupyter:servers'],
     (sd) => sd
   );
-  const server = sd.projectServers.get(STORY_PROJECT_SERVER_ID.toString());
-  const jupyter: TJupyterServerData | undefined = sd.jupyterServers.get(
+  const server = sd['user-containers:containers'].get(
+    STORY_PROJECT_SERVER_ID.toString()
+  );
+  const jupyter: TJupyterServerData | undefined = sd['jupyter:servers'].get(
     STORY_PROJECT_SERVER_ID.toString()
   );
   const service = server?.httpServices.find(

@@ -3,7 +3,7 @@ import {
   FrontendDispatcher,
 } from '@monorepo/collab-engine';
 import { TCoreSharedData } from '@monorepo/core-graph';
-import { TSpaceMenuEntries } from '@monorepo/module/frontend';
+import { TSpaceMenuEntries } from '@monorepo/space/frontend';
 import { TJupyterSharedData } from './jupyter-shared-model';
 import { NewKernelForm } from './form/new-kernel';
 import { NewTerminalForm } from './form/new-terminal';
@@ -26,7 +26,7 @@ export const spaceMenuEntrie: TSpaceMenuEntries = ({
 
   const node = from && tsd.nodes.get(from?.node);
   const project_server_id = node?.data?.project_server_id as number;
-  const jupyter = tsd.jupyterServers.get(`${project_server_id}`);
+  const jupyter = tsd['jupyter:servers'].get(`${project_server_id}`);
 
   const d = dispatcher as FrontendDispatcher<TJupyterEvent>;
 

@@ -14,8 +14,8 @@ import { ProjectSidebar } from '../sidebar';
 export const ResourcePage = () => {
   const projectServers: Map<string, TServer> =
     useSharedData<TServersSharedData>(
-      ['projectServers'],
-      (sd) => sd.projectServers
+      ['user-containers:containers'],
+      (sd) => sd['user-containers:containers']
     );
 
   const [displayNewServerForm, setDisplayNewServerForm] = useState(false);

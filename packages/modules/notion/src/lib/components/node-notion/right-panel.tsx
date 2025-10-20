@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 
-import { useSharedData } from '@monorepo/collab-engine';
+import { useSharedDataDirect } from '@monorepo/collab/frontend';
 
 import { NotionDatabase } from './notion-database';
 import { TNotionSharedData } from '../../notion-shared-model';
-import { TPanel } from '@monorepo/module/frontend';
+import { TPanel } from '@monorepo/space/frontend';
 import { toUuid } from '@monorepo/simple-types';
 
 //
@@ -18,9 +18,12 @@ export const NotionRightPanel = ({
 }) => {
   const databaseId = panel.data.databaseId as string;
 
-  const sd = useSharedData<TNotionSharedData>(['notionDatabases'], (sd) => sd);
+  const sd = useSharedDataDirect<TNotionSharedData>(
+    ['notion:databases'],
+    (sd) => sd
+  );
 
-  const db = sd.notionDatabases.get(toUuid(databaseId));
+  const db = sd['notion:databases'].get(toUuid(databaseId));
 
   const [loaded, setLoaded] = useState(false);
 
