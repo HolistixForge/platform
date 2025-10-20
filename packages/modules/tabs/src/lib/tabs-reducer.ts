@@ -1,5 +1,9 @@
-import { ReduceArgs, Reducer } from '@monorepo/collab-engine';
-import { TEventLoad } from '@monorepo/core-graph';
+import { TEventLoad } from '@monorepo/gateway';
+import {
+  Reducer,
+  RequestData,
+  TReducersBackendExports,
+} from '@monorepo/reducers';
 
 import {
   TEventActiveTabChange,
@@ -18,50 +22,38 @@ import {
 } from './tabs-types';
 import { TTabsSharedData } from './tabs-shared-model';
 import { ReadWriteTree } from './tree';
+import { TCollabBackendExports } from '@monorepo/collab';
 
-/**
- *
- */
-
-type TExtraArgs = {
-  user_id: string;
+type TRequired = {
+  collab: TCollabBackendExports<TTabsSharedData>;
+  reducers: TReducersBackendExports;
 };
 
-type Ra<T> = ReduceArgs<
-  TTabsSharedData,
-  T,
-  Record<string, never>,
-  TExtraArgs,
-  undefined
->;
-
-/**
- *
- */
-
-export class TabsReducer extends Reducer<
-  TTabsSharedData,
-  TTabEvents<TabPayload> | TEventLoad,
-  Record<string, never>,
-  TExtraArgs,
-  undefined
-> {
+export class TabsReducer extends Reducer<TTabEvents<TabPayload> | TEventLoad> {
   //
 
-  reduce(g: Ra<TTabEvents<TabPayload> | TEventLoad>): Promise<void> {
-    switch (g.event.type) {
+  constructor(private readonly depsExports: TRequired) {
+    super();
+  }
+
+  reduce(
+    event: TTabEvents<TabPayload> | TEventLoad,
+    requestData: RequestData
+  ): Promise<void> {
+    //
+    switch (event.type) {
       case 'tabs:active-tab-change':
-        return this._activeTabChange(g as Ra<TEventActiveTabChange>);
+        return this._activeTabChange(event, requestData);
       case 'tabs:add-tab':
-        return this._addTab(g as Ra<TEventAddTab<TabPayload>>);
+        return this._addTab(event, requestData);
       case 'tabs:delete-tab':
-        return this._deleteTab(g as Ra<TEventDeleteTab>);
+        return this._deleteTab(event, requestData);
       case 'tabs:rename-tab':
-        return this._renameTab(g as Ra<TEventRenameTab>);
+        return this._renameTab(event, requestData);
       case 'tabs:convert-tab-to-group':
-        return this._convertTabToGroup(g as Ra<TEventConvertTabToGroup>);
-      case 'core:load':
-        return this._load(g as Ra<TEventLoad>);
+        return this._convertTabToGroup(event, requestData);
+      case 'gateway:load':
+        return this._load(event, requestData);
 
       default:
         return Promise.resolve();
@@ -70,9 +62,9 @@ export class TabsReducer extends Reducer<
 
   //
 
-  _load(g: Ra<TEventLoad>) {
-    if (!g.sd['tabs:tabs'].get('unique')) {
-      g.sd['tabs:tabs'].set('unique', {
+  _load(event: TEventLoad, requestData: RequestData) {
+    if (!this.depsExports.collab.collab.sharedData['tabs:tabs'].get('unique')) {
+      this.depsExports.collab.collab.sharedData['tabs:tabs'].set('unique', {
         tree: {
           payload: { type: 'group' },
           title: 'root',
@@ -87,15 +79,16 @@ export class TabsReducer extends Reducer<
   //
 
   __deepCopyEditAndApply(
-    g: Ra<{}>,
     f: (t: ReadWriteTree<TabPayload>, a: TUsersActiveTabs) => void
   ) {
-    const o = g.sd['tabs:tabs'].get('unique') as TTabsTree;
+    const o = this.depsExports.collab.collab.sharedData['tabs:tabs'].get(
+      'unique'
+    ) as TTabsTree;
     if (o) {
-      let no = structuredClone(o);
+      const no = structuredClone(o);
       const trw = new ReadWriteTree<TabPayload>(no.tree);
       f(trw, no.actives);
-      g.sd['tabs:tabs'].set('unique', {
+      this.depsExports.collab.collab.sharedData['tabs:tabs'].set('unique', {
         tree: trw.get([], 0)!,
         actives: no.actives,
       });
@@ -118,25 +111,33 @@ export class TabsReducer extends Reducer<
 
   //
 
-  _activeTabChange(g: Ra<TEventActiveTabChange>): Promise<void> {
-    this.__deepCopyEditAndApply(g, (t, actives) => {
-      const { path } = g.event;
-      this._setActive(actives, path, g.extraArgs.user_id);
+  _activeTabChange(
+    event: TEventActiveTabChange,
+    requestData: RequestData
+  ): Promise<void> {
+    this.__deepCopyEditAndApply((t, actives) => {
+      const { path } = event;
+      this._setActive(actives, path, requestData.user_id);
     });
     return Promise.resolve();
   }
 
   //
 
-  _addTab(g: Ra<TEventAddTab<TabPayload>>): Promise<void> {
-    this.__deepCopyEditAndApply(g, (t, actives) => {
-      let { path, title, payload } = g.event;
+  _addTab(
+    event: TEventAddTab<TabPayload>,
+    requestData: RequestData
+  ): Promise<void> {
+    this.__deepCopyEditAndApply((t, actives) => {
+      const { path, payload } = event;
+      let { title } = event;
+
       const e = t.get(path, path.length);
       if (e) {
         const l = e.children.length;
         if (!title) title = `New ${l}`;
         t.insert([...path, title], payload || newTabPayload());
-        this._setActive(actives, [...path, title], g.extraArgs.user_id);
+        this._setActive(actives, [...path, title], requestData.user_id);
       }
     });
     return Promise.resolve();
@@ -144,35 +145,38 @@ export class TabsReducer extends Reducer<
 
   //
 
-  _deleteTab(g: Ra<TEventDeleteTab>): Promise<void> {
-    this.__deepCopyEditAndApply(g, (t, actives) => {
-      const { path } = g.event;
+  _deleteTab(event: TEventDeleteTab, requestData: RequestData): Promise<void> {
+    this.__deepCopyEditAndApply((t, actives) => {
+      const { path } = event;
       const newSelected = t.delete(path);
       if (newSelected)
-        this._setActive(actives, newSelected, g.extraArgs.user_id, path);
+        this._setActive(actives, newSelected, requestData.user_id, path);
     });
     return Promise.resolve();
   }
 
   //
 
-  _renameTab(g: Ra<TEventRenameTab>): Promise<void> {
-    this.__deepCopyEditAndApply(g, (t, actives) => {
-      const { path, title } = g.event;
+  _renameTab(event: TEventRenameTab, requestData: RequestData): Promise<void> {
+    this.__deepCopyEditAndApply((t, actives) => {
+      const { path, title } = event;
       t.update(path, { title });
       //
       const npath = [...path];
       npath[path.length - 1] = title;
-      this._setActive(actives, npath, g.extraArgs.user_id, path);
+      this._setActive(actives, npath, requestData.user_id, path);
     });
     return Promise.resolve();
   }
 
   //
 
-  _convertTabToGroup(g: Ra<TEventConvertTabToGroup>): Promise<void> {
-    this.__deepCopyEditAndApply(g, (t, actives) => {
-      const { path } = g.event;
+  _convertTabToGroup(
+    event: TEventConvertTabToGroup,
+    requestData: RequestData
+  ): Promise<void> {
+    this.__deepCopyEditAndApply((t, actives) => {
+      const { path } = event;
       if (path.length < MAX_TAB_ROW) {
         const initial = structuredClone(t.get(path, path.length));
         if (initial) {
@@ -187,7 +191,7 @@ export class TabsReducer extends Reducer<
           this._setActive(
             actives,
             [...npath, newGroupTitle, initial.title],
-            g.extraArgs.user_id,
+            requestData.user_id,
             path
           );
         }

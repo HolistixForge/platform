@@ -18,7 +18,7 @@ export const moduleBackend: TModule<TBackendRequired> = {
   dependencies: ['core-graph', 'collab', 'reducers'],
   load: ({ depsExports }) => {
     depsExports.collab.collab.loadSharedData('map', 'tabs', 'tabs');
-    depsExports.reducers.loadReducers(new TabsReducer());
+    depsExports.reducers.loadReducers(new TabsReducer(depsExports));
   },
 };
 

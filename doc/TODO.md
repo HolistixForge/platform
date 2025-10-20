@@ -1,6 +1,6 @@
 ⚠️ Antoine's stuffs
 
-fix other modules and their stories: socials, tabs, user-containers, jupyter
+fix other modules and their stories: user-containers, jupyter
 factor proxy story
 organisation/project => room
 dns

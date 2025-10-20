@@ -6,6 +6,9 @@
       "path": "../../collab-engine"
     },
     {
+      "path": "../gateway"
+    },
+    {
       "path": "../core-graph"
     },
     {

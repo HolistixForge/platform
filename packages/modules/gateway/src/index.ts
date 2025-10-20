@@ -188,4 +188,5 @@ export const moduleFrontend: TModule<
 //
 
 export type { TGatewayEvents } from './lib/gateway-events';
+export type { TEventLoad } from './lib/gateway-events';
 export type { TGatewaySharedData } from './lib/gateway-types';

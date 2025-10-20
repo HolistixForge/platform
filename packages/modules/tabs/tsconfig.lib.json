@@ -42,6 +42,9 @@
       "path": "../../collab-engine/tsconfig.lib.json"
     },
     {
+      "path": "../gateway/tsconfig.lib.json"
+    },
+    {
       "path": "../core-graph/tsconfig.lib.json"
     },
     {
