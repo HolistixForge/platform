@@ -12,19 +12,19 @@
       "path": "../../simple-types"
     },
     {
-      "path": "../../lazy-factory"
+      "path": "../../frontend-data"
+    },
+    {
+      "path": "../../demiurge-types"
     },
     {
       "path": "../collab"
     },
     {
-      "path": "../../frontend-data"
+      "path": "../gateway"
     },
     {
       "path": "../core-graph"
-    },
-    {
-      "path": "../../demiurge-types"
     },
     {
       "path": "../reducers"

@@ -1,23 +1,32 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
+import { ModuleProvider } from '@monorepo/module/frontend';
+
 import { NewYoutubeForm } from './form-new-youtube';
-import { MockCollaborativeContext } from '@monorepo/collab-engine';
 
 //
 
+const fakeFrontendModules = {
+  reducers: {
+    dispatcher: {
+      dispatch: () => {
+        /**/
+      },
+    },
+  },
+};
+
 const StoryWrapper = () => {
   return (
-    <MockCollaborativeContext
-      frontChunks={[]}
-      backChunks={[]}
-      getRequestContext={() => ({})}
-    >
+    <ModuleProvider exports={fakeFrontendModules}>
       <NewYoutubeForm
         viewId={''}
         position={{ x: 0, y: 0 }}
-        closeForm={() => {}}
+        closeForm={() => {
+          /**/
+        }}
       />
-    </MockCollaborativeContext>
+    </ModuleProvider>
   );
 };
 

@@ -25,12 +25,6 @@
       "path": "./packages/frontend-data"
     },
     {
-      "path": "./packages/lazy-factory"
-    },
-    {
-      "path": "./packages/social-embeds"
-    },
-    {
       "path": "./packages/backend-engine"
     },
     {

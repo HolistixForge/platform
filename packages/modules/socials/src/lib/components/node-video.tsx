@@ -1,7 +1,6 @@
 import { FC, Suspense, useCallback } from 'react';
 
 import { TGraphNode } from '@monorepo/core-graph';
-import { useFactory } from '@monorepo/lazy-factory';
 import { useDispatcher } from '@monorepo/reducers/frontend';
 import {
   DisableZoomDragPan,
@@ -11,17 +10,9 @@ import {
   useNodeContext,
 } from '@monorepo/space/frontend';
 
-import factory from '@monorepo/lazy-factory';
-
 import { TEventSocials } from '../socials-events';
 
 import './node-video.scss';
-
-// TODO: compile error if import path is not calculated,
-// does it still lazy load ?
-factory.setLibraries({
-  socials: () => import(`@monorepo/${'social-embeds'}`).then((l) => l.default),
-});
 
 //
 
@@ -75,13 +66,12 @@ export const NodeYoutubeInternal = ({
 //
 
 export const NodeYoutube = ({ node }: { node: TGraphNode }) => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const videoId = node.data!.videoId as string;
 
   const useNodeValue = useNodeContext();
 
   const { id } = useNodeValue;
-
-  const { Component: Youtube } = useFactory('socials:youtube', ['DOM'], null);
 
   const dispatcher = useDispatcher<TEventSocials>();
 
@@ -101,5 +91,30 @@ export const NodeYoutube = ({ node }: { node: TGraphNode }) => {
       {...useNodeValue}
       onDelete={handleDelete}
     />
+  );
+};
+
+interface I_YoutubeProps {
+  data: {
+    videoId: string;
+  };
+}
+
+export const Youtube = ({ data }: I_YoutubeProps) => {
+  const { videoId } = data;
+
+  const src = `https://www.youtube.com/embed/${videoId}`;
+
+  return (
+    <div style={{ height: '100%' }}>
+      <iframe
+        style={{ width: '100%', height: '100%' }}
+        src={src}
+        title="YouTube video player"
+        frameBorder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      ></iframe>
+    </div>
   );
 };

@@ -48,19 +48,19 @@
       "path": "../../simple-types/tsconfig.lib.json"
     },
     {
-      "path": "../../lazy-factory/tsconfig.lib.json"
+      "path": "../../frontend-data/tsconfig.lib.json"
+    },
+    {
+      "path": "../../demiurge-types/tsconfig.lib.json"
     },
     {
       "path": "../collab/tsconfig.lib.json"
     },
     {
-      "path": "../../frontend-data/tsconfig.lib.json"
+      "path": "../gateway/tsconfig.lib.json"
     },
     {
       "path": "../core-graph/tsconfig.lib.json"
-    },
-    {
-      "path": "../../demiurge-types/tsconfig.lib.json"
     },
     {
       "path": "../reducers/tsconfig.lib.json"

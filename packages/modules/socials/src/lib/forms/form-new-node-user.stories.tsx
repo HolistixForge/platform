@@ -1,37 +1,46 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { NewNodeUserForm } from './form-new-node-user';
-import { MockCollaborativeContext } from '@monorepo/collab-engine';
 import { StoryApiContext } from '@monorepo/frontend-data';
 import { randomGuys } from '@monorepo/ui-base';
+import { ModuleProvider } from '@monorepo/module/frontend';
+
+import { NewNodeUserForm } from './form-new-node-user';
 
 //
 
+const fakeFrontendModules = {
+  reducers: {
+    dispatcher: {
+      dispatch: () => {
+        /**/
+      },
+    },
+  },
+};
+
 const StoryWrapper = () => {
   return (
-    <StoryApiContext
-      ganymedeApiMock={(r) => {
-        console.log({ r });
-        if (r.method === 'GET' && r.url.includes('users-search')) {
-          return Promise.resolve({
-            _0: randomGuys,
-          });
-        }
-        throw new Error('Not implemented');
-      }}
-    >
-      <MockCollaborativeContext
-        frontChunks={[]}
-        backChunks={[]}
-        getRequestContext={() => ({})}
+    <ModuleProvider exports={fakeFrontendModules}>
+      <StoryApiContext
+        ganymedeApiMock={(r) => {
+          console.log({ r });
+          if (r.method === 'GET' && r.url.includes('users-search')) {
+            return Promise.resolve({
+              _0: randomGuys,
+            });
+          }
+          throw new Error('Not implemented');
+        }}
       >
         <NewNodeUserForm
           viewId={''}
           position={{ x: 0, y: 0 }}
-          closeForm={() => {}}
+          closeForm={() => {
+            /**/
+          }}
         />
-      </MockCollaborativeContext>
-    </StoryApiContext>
+      </StoryApiContext>
+    </ModuleProvider>
   );
 };
 
