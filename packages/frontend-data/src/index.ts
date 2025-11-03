@@ -23,8 +23,6 @@ export {
   useMutationStartProject,
 } from './lib/queries';
 
-export type { TG_ServerImage } from './lib/queries';
-
 export type {
   LoginFormData,
   NewPasswordFormData,

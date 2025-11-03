@@ -39,7 +39,13 @@
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "references": [
     {
+      "path": "../../frontend-data/tsconfig.lib.json"
+    },
+    {
       "path": "../../api-fetch/tsconfig.lib.json"
+    },
+    {
+      "path": "../../collab-engine/tsconfig.lib.json"
     },
     {
       "path": "../../log/tsconfig.lib.json"
@@ -48,16 +54,10 @@
       "path": "../../demiurge-types/tsconfig.lib.json"
     },
     {
-      "path": "../../collab-engine/tsconfig.lib.json"
-    },
-    {
       "path": "../../simple-types/tsconfig.lib.json"
     },
     {
       "path": "../tabs/tsconfig.lib.json"
-    },
-    {
-      "path": "../../frontend-data/tsconfig.lib.json"
     },
     {
       "path": "../core-graph/tsconfig.lib.json"

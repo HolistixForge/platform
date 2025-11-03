@@ -1,138 +1,84 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { randomGuy } from '@monorepo/ui-base';
-
 import { ServerCardInternal } from './server-card';
 import {
-  newServerLocationNoneStory,
-  cloudRunningStory,
+  makeStoryArgs,
   recentActivityStory,
-  hostedWithServicesStory,
-  cloudStoppedStory,
-  hostedNotAliveCurrentUserHosting,
-  hostedNotAliveCurrentUserNotHosting,
+  withServicesStory,
+  StoryArgs,
 } from './server-card-stories';
-import {
-  TServerComponentCallbacks,
-  TServerComponentProps,
-} from '../servers-types';
-import { useMockServerBehaviours } from './server-card-mock';
 
 //
 
-const StoryWrapper = (
-  props: TServerComponentProps & TServerComponentCallbacks
-) => {
-  const state = useMockServerBehaviours(props);
-  console.log({ state });
-  return <ServerCardInternal {...state} />;
+const StoryWrapper = (props: StoryArgs) => {
+  return <ServerCardInternal {...props} />;
 };
 
 //
 
 const meta = {
-  title: 'Modules/Servers/Components/Server Card',
+  title: 'Modules/UserContainers/Components/Server Card',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',
     controls: {
-      exclude: [
-        'image',
-        'onCloudStart',
-        'onCloudStop',
-        'onCloudDelete',
-        'onCopyCommand',
-        'onHost',
-        'onCloud',
-        'onDelete',
-        'oauth',
-        'ip',
-      ],
+      exclude: ['image', 'oauth', 'ip'],
     },
   },
   argTypes: {
-    ec2_instance_state: {
-      control: {
-        type: 'select',
+    container: {
+      last_watchdog_at: {
+        options: {
+          now: new Date('2100-01-01'),
+          undefined: undefined,
+          'long time ago': new Date('1970-01-01'),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        control: {
+          type: 'select',
+        },
       },
-      options: [
-        'pending',
-        'running',
-        'shutting-down',
-        'stopped',
-        'stopping',
-        'terminated',
-      ],
-      description: "only if location is 'aws'",
-    },
 
-    location: {
-      control: {
-        type: 'select',
+      last_activity: {
+        options: {
+          now: new Date('2100-01-01'),
+          undefined: undefined,
+          'long time ago': new Date('1970-01-01'),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        control: {
+          type: 'select',
+        },
       },
-      options: ['none', 'aws', 'hosted'],
-    },
 
-    last_watchdog_at: {
-      options: {
-        now: new Date('2100-01-01'),
-        undefined: undefined,
-        'long time ago': new Date('1970-01-01'),
-      } as any,
-      control: {
-        type: 'select',
+      httpServices: {
+        control: {
+          type: 'select',
+        },
+        options: {
+          zero: [],
+          one: [
+            {
+              port: 8888,
+              name: 'jupyterlab',
+              location: 'xxxxx/jupyterlab',
+            },
+          ],
+          two: [
+            {
+              port: 8888,
+              name: 'jupyterlab',
+              location: 'xxxxx/jupyterlab',
+            },
+            {
+              port: 8282,
+              name: 'postgres-admin',
+              location: 'xxxxx/pg',
+            },
+          ],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
       },
-    },
-
-    last_activity: {
-      options: {
-        now: new Date('2100-01-01'),
-        undefined: undefined,
-        'long time ago': new Date('1970-01-01'),
-      } as any,
-      control: {
-        type: 'select',
-      },
-    },
-
-    httpServices: {
-      control: {
-        type: 'select',
-      },
-      options: {
-        zero: [],
-        one: [
-          {
-            port: 8888,
-            name: 'jupyterlab',
-            location: 'xxxxx/jupyterlab',
-          },
-        ],
-        two: [
-          {
-            port: 8888,
-            name: 'jupyterlab',
-            location: 'xxxxx/jupyterlab',
-          },
-          {
-            port: 8282,
-            name: 'postgres-admin',
-            location: 'xxxxx/pg',
-          },
-        ],
-      } as any,
-    },
-
-    host: {
-      control: {
-        type: 'select',
-      },
-      options: {
-        undefined: undefined,
-        'one guy': randomGuy(),
-        'another guy': randomGuy(),
-      } as any,
-      description: "only if location is 'hosted'",
     },
   },
 } satisfies Meta<typeof StoryWrapper>;
@@ -144,42 +90,18 @@ type Story = StoryObj<typeof StoryWrapper>;
 //
 //
 
-export const NewServerLocationNone: Story = {
-  args: { ...newServerLocationNoneStory() },
+export const Off: Story = {
+  args: { ...makeStoryArgs() },
 };
 
 //
 
-export const CloudRunning: Story = {
-  args: { ...cloudRunningStory() },
-};
-
-//
-
-export const CloudStopped: Story = {
-  args: { ...cloudStoppedStory() },
-};
-
-//
-
-export const CloudRunningRecentActivity: Story = {
+export const RunningRecentActivity: Story = {
   args: { ...recentActivityStory() },
 };
 
 //
 
-export const HostedNotAliveCurrentUserHosting: Story = {
-  args: { ...hostedNotAliveCurrentUserHosting() },
-};
-
-//
-
-export const HostedNotAliveCurrentUserNotHosting: Story = {
-  args: { ...hostedNotAliveCurrentUserNotHosting() },
-};
-
-//
-
-export const HostedWithServices: Story = {
-  args: { ...hostedWithServicesStory() },
+export const WithServices: Story = {
+  args: { ...withServicesStory() },
 };

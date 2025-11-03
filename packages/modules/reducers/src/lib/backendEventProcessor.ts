@@ -5,7 +5,7 @@ import { Reducer, RequestData, TBaseEvent } from '..';
 //
 
 export type TEventPeriodic = {
-  type: 'periodic';
+  type: 'reducers:periodic';
   date: Date;
   interval: number;
 };
@@ -33,7 +33,7 @@ export class BackendEventProcessor<TE extends TBaseEvent> {
     setInterval(() => {
       try {
         const e: TEventPeriodic = {
-          type: 'periodic',
+          type: 'reducers:periodic',
           interval,
           date: new Date(),
         };

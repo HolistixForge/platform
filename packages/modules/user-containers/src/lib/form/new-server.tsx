@@ -10,28 +10,29 @@ import {
   useAction,
   DialogControlled,
 } from '@monorepo/ui-base';
-import { useSharedDataDirect } from '@monorepo/collab/frontend';
+import { useLocalSharedData } from '@monorepo/collab/frontend';
 import { useDispatcher } from '@monorepo/reducers/frontend';
 
-import { TServerEvents } from '../servers-events';
-import { TServersSharedData } from '../servers-shared-model';
+import { TUserContainersEvents } from '../servers-events';
+import { TUserContainersSharedData } from '../servers-shared-model';
 import { TPosition } from '@monorepo/core-graph';
 import { useEffect } from 'react';
+import { TContainerImageInfo } from '../container-image';
 
 /**
  *
  */
 
-export type NewServerFormData = {
+export type NewContainerFormData = {
   imageId: string;
-  serverName: string;
+  containerName: string;
 };
 
 /**
  *
  */
 
-export const NewServerForm = ({
+export const NewContainerForm = ({
   viewId,
   position,
   closeForm,
@@ -42,23 +43,20 @@ export const NewServerForm = ({
 }) => {
   //
 
-  const containerImages = useSharedDataDirect<TServersSharedData>(
-    ['containerImages'],
-    (sd) => sd.containerImages
-  );
+  const containerImages: Map<string, TContainerImageInfo> =
+    useLocalSharedData<TUserContainersSharedData>(
+      ['user-containers:images'],
+      (sd) => sd['user-containers:images']
+    );
 
-  const dispatcher = useDispatcher<TServerEvents>();
+  const dispatcher = useDispatcher<TUserContainersEvents>();
 
-  const action = useAction<NewServerFormData>(
+  const action = useAction<NewContainerFormData>(
     (d) => {
       return dispatcher.dispatch({
-        type: 'servers:new',
-        from: {
-          new: {
-            serverName: d.serverName,
-            imageId: d.imageId,
-          },
-        },
+        type: 'user-container:new',
+        containerName: d.containerName,
+        imageId: d.imageId,
         origin:
           viewId && position
             ? {
@@ -72,9 +70,9 @@ export const NewServerForm = ({
     {
       startOpened: true,
       checkForm: (d, e) => {
-        if (!d.imageId) e.imageId = 'Please select a server image';
-        if (!d.serverName)
-          e.serverName = 'Please choose a name for the new server';
+        if (!d.imageId) e.imageId = 'Please select a container image';
+        if (!d.containerName)
+          e.containerName = 'Please choose a name for the new container';
       },
     }
   );
@@ -91,18 +89,18 @@ export const NewServerForm = ({
 
   return (
     <DialogControlled
-      title="New Server"
-      description="Choose a name and select an image for your new server."
+      title="New Container"
+      description="Choose a name and select an image for your new container."
       open={action.isOpened}
       onOpenChange={action.close}
     >
-      <FormError errors={action.errors} id="serverName" />
+      <FormError errors={action.errors} id="containerName" />
       <TextFieldset
         label="Name"
-        name="serverName"
+        name="containerName"
         onChange={action.handleInputChange}
-        value={action.formData.serverName}
-        placeholder="Server name"
+        value={action.formData.containerName}
+        placeholder="Container name"
       />
 
       <FormError errors={action.errors} id="imageId" />
@@ -110,22 +108,24 @@ export const NewServerForm = ({
         name="imageId"
         value={action.formData.imageId || ''}
         onChange={(s) => action.handleChange({ imageId: s })}
-        placeholder="Select a server image…"
+        placeholder="Select a container image…"
         label="Image"
         required
       >
         <Select.Group>
           <Select.Label className="SelectLabel">Images</Select.Label>
           {containerImages &&
-            Array.from(containerImages).map((img: any) => (
-              <SelectItem
-                key={img.imageId}
-                value={img.imageId}
-                title={img.description || ''}
-              >
-                {img.imageName}
-              </SelectItem>
-            ))}
+            Array.from(containerImages.values()).map(
+              (img: TContainerImageInfo) => (
+                <SelectItem
+                  key={img.imageId}
+                  value={img.imageId}
+                  title={img.description || ''}
+                >
+                  {img.imageName}
+                </SelectItem>
+              )
+            )}
         </Select.Group>
       </SelectFieldset>
 
@@ -136,7 +136,7 @@ export const NewServerForm = ({
         <ButtonBase
           className="submit"
           callback={() => action.callback(action.formData)}
-          text="Create server"
+          text="Create container"
           loading={action.loading}
         />
       </div>

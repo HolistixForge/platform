@@ -4,7 +4,10 @@ import {
   generateJwtToken,
 } from '@monorepo/backend-engine';
 import { ForbiddenException, NotFoundException } from '@monorepo/log';
-import { makeProjectScopeString, TJwtServer } from '@monorepo/demiurge-types';
+import {
+  makeProjectScopeString,
+  TJwtUserContainer,
+} from '@monorepo/demiurge-types';
 import {
   TServerImageOptions,
   TD_ServerImage,
@@ -43,7 +46,7 @@ export class ServerCommand extends Command {
         { message: 'You do not host this server' },
       ]);
 
-    const payload: TJwtServer = {
+    const payload: TJwtUserContainer = {
       type: 'server_token',
       project_id: args.project_id,
       project_server_id: args.project_server_id,

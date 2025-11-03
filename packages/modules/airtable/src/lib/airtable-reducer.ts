@@ -127,7 +127,7 @@ export class AirtableReducer extends Reducer<TAirtableEvent> {
       case 'airtable:clear-user-search-results':
         return this._clearUserSearchResults(event);
 
-      case 'periodic':
+      case 'reducers:periodic':
         return this._periodic(event, requestData);
     }
   }

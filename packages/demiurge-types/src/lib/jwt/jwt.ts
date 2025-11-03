@@ -1,7 +1,7 @@
 /**
  * token given to users's project server container
  */
-export type TJwtServer = {
+export type TJwtUserContainer = {
   type: 'server_token';
   project_id: string;
   user_container_id: string;

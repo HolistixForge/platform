@@ -1,5 +1,5 @@
 import { TSpaceMenuEntries } from '@monorepo/space/frontend';
-import { NewServerForm } from './form/new-server';
+import { NewContainerForm } from './form/new-server';
 
 //
 
@@ -19,7 +19,7 @@ export const serversMenuEntries: TSpaceMenuEntries = ({
           label: 'New Server',
           onClick: () => {
             renderForm(
-              <NewServerForm
+              <NewContainerForm
                 viewId={viewId}
                 position={position()}
                 closeForm={() => {

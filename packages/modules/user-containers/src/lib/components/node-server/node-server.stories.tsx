@@ -2,180 +2,119 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { useTestBoolean } from '@monorepo/ui-base';
 import { TNodeContext } from '@monorepo/space/frontend';
-import { StoryMockSpaceContextReactflowBgAndCss } from '@monorepo/space/stories';
+import {
+  StoryMockSpaceContextReactflowBgAndCss,
+  MockNodeContext,
+} from '@monorepo/space/stories';
+import { ModuleProvider } from '@monorepo/module/frontend';
 
 import { NodeServerInternal } from './node-server';
 import {
-  newServerLocationNoneStory,
-  cloudRunningStory,
+  makeStoryArgs,
   recentActivityStory,
-  hostedWithServicesStory,
-  cloudStoppedStory,
-  hostedNotAliveCurrentUserHosting,
-  hostedNotAliveCurrentUserNotHosting,
+  withServicesStory,
+  StoryArgs,
 } from '../server-card-stories';
-import {
-  TServerComponentCallbacks,
-  TServerComponentProps,
-} from '../../servers-types';
-import { randomGuy } from '@monorepo/ui-base';
-import { useMockServerBehaviours } from '../server-card-mock';
 
 //
 
+const exports = {
+  reducers: {
+    dispatcher: () => {
+      /**/
+    },
+  },
+};
+
 const StoryWrapper = (
-  props: TServerComponentProps &
-    TServerComponentCallbacks &
-    Pick<TNodeContext, 'filterOut'> & {
+  props: StoryArgs &
+    Pick<TNodeContext, 'filterOut' | 'selected'> & {
       expanded: boolean;
-      selected: boolean;
     }
 ) => {
   //
-  const { is: isOpened, set: open, unset: close } = useTestBoolean(true);
-  const {
-    is: isExpanded,
-    set: expand,
-    unset: reduce,
-  } = useTestBoolean(props.expanded);
-
-  const state = useMockServerBehaviours(props);
+  const { is: isOpened } = useTestBoolean(true);
 
   return (
-    <StoryMockSpaceContextReactflowBgAndCss
-      selected={props.selected}
-      isOpened={isOpened}
-      outputs={0}
-    >
-      <NodeServerInternal
-        id="efa52136"
-        filterOut={props.filterOut}
+    <ModuleProvider exports={exports}>
+      <StoryMockSpaceContextReactflowBgAndCss
         selected={props.selected}
-        expand={expand}
-        reduce={reduce}
-        viewStatus={{
-          mode: isExpanded ? 'EXPANDED' : 'REDUCED',
-          forceClosed: false,
-          forceOpened: false,
-          rank: 1,
-          maxRank: 2,
-          isFiltered: false,
-        }}
-        onCopyCommand={props.onCopyCommand}
         isOpened={isOpened}
-        open={open}
-        close={close}
-        {...state}
-      />
-    </StoryMockSpaceContextReactflowBgAndCss>
+        outputs={0}
+      >
+        <MockNodeContext>
+          <NodeServerInternal {...props} />
+        </MockNodeContext>
+      </StoryMockSpaceContextReactflowBgAndCss>
+    </ModuleProvider>
   );
 };
 
 //
 
 const meta = {
-  title: 'Modules/Servers/Components/Node Server',
+  title: 'Modules/UserContainers/Components/Node Server',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',
     controls: {
-      exclude: [
-        'image',
-        'onCloudStart',
-        'onCloudStop',
-        'onCloudDelete',
-        'onCopyCommand',
-        'onHost',
-        'onCloud',
-        'onDelete',
-        'oauth',
-        'ip',
-      ],
+      exclude: [],
     },
   },
   argTypes: {
-    ec2_instance_state: {
-      control: {
-        type: 'select',
+    container: {
+      last_watchdog_at: {
+        options: {
+          now: new Date('2100-01-01'),
+          undefined: undefined,
+          'long time ago': new Date('1970-01-01'),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        control: {
+          type: 'select',
+        },
       },
-      options: [
-        'pending',
-        'running',
-        'shutting-down',
-        'stopped',
-        'stopping',
-        'terminated',
-      ],
-      description: "only if location is 'aws'",
-    },
 
-    location: {
-      control: {
-        type: 'select',
+      last_activity: {
+        options: {
+          now: new Date('2100-01-01'),
+          undefined: undefined,
+          'long time ago': new Date('1970-01-01'),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        control: {
+          type: 'select',
+        },
       },
-      options: ['none', 'aws', 'hosted'],
-    },
 
-    last_watchdog_at: {
-      options: {
-        now: new Date('2100-01-01'),
-        undefined: undefined,
-        'long time ago': new Date('1970-01-01'),
-      } as any,
-      control: {
-        type: 'select',
+      httpServices: {
+        control: {
+          type: 'select',
+        },
+        options: {
+          zero: [],
+          one: [
+            {
+              port: 8888,
+              name: 'jupyterlab',
+              location: 'xxxxx/jupyterlab',
+            },
+          ],
+          two: [
+            {
+              port: 8888,
+              name: 'jupyterlab',
+              location: 'xxxxx/jupyterlab',
+            },
+            {
+              port: 8282,
+              name: 'postgres-admin',
+              location: 'xxxxx/pg',
+            },
+          ],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
       },
-    },
-
-    last_activity: {
-      options: {
-        now: new Date('2100-01-01'),
-        undefined: undefined,
-        'long time ago': new Date('1970-01-01'),
-      } as any,
-      control: {
-        type: 'select',
-      },
-    },
-
-    httpServices: {
-      control: {
-        type: 'select',
-      },
-      options: {
-        zero: [],
-        one: [
-          {
-            port: 8888,
-            name: 'jupyterlab',
-            location: 'xxxxx/jupyterlab',
-          },
-        ],
-        two: [
-          {
-            port: 8888,
-            name: 'jupyterlab',
-            location: 'xxxxx/jupyterlab',
-          },
-          {
-            port: 8282,
-            name: 'postgres-admin',
-            location: 'xxxxx/pg',
-          },
-        ],
-      } as any,
-    },
-
-    host: {
-      control: {
-        type: 'select',
-      },
-      options: {
-        undefined: undefined,
-        'one guy': randomGuy(),
-        'another guy': randomGuy(),
-      } as any,
-      description: "only if location is 'hosted'",
     },
   },
 } satisfies Meta<typeof StoryWrapper>;
@@ -188,37 +127,17 @@ type Story = StoryObj<typeof StoryWrapper>;
 //
 //
 
-export const NewServerLocationNone: Story = {
+export const Off: Story = {
   args: {
     selected: true,
     expanded: true,
-    ...newServerLocationNoneStory(),
+    ...makeStoryArgs(),
   },
 };
 
 //
 
-export const CloudRunning: Story = {
-  args: {
-    selected: true,
-    expanded: true,
-    ...cloudRunningStory(),
-  },
-};
-
-//
-
-export const CloudStopped: Story = {
-  args: {
-    selected: true,
-    expanded: true,
-    ...cloudStoppedStory(),
-  },
-};
-
-//
-
-export const CloudRunningRecentActivity: Story = {
+export const RunningRecentActivity: Story = {
   args: {
     selected: true,
     expanded: true,
@@ -228,30 +147,10 @@ export const CloudRunningRecentActivity: Story = {
 
 //
 
-export const HostedNotAliveCurrentUserHosting: Story = {
+export const WithServices: Story = {
   args: {
     selected: true,
     expanded: true,
-    ...hostedNotAliveCurrentUserHosting(),
-  },
-};
-
-//
-
-export const HostedNotAliveCurrentUserNotHosting: Story = {
-  args: {
-    selected: true,
-    expanded: true,
-    ...hostedNotAliveCurrentUserNotHosting(),
-  },
-};
-
-//
-
-export const HostedWithServices: Story = {
-  args: {
-    selected: true,
-    expanded: true,
-    ...hostedWithServicesStory(),
+    ...withServicesStory(),
   },
 };

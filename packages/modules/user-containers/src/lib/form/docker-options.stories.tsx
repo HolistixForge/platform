@@ -49,7 +49,7 @@ const StoryWrapper = () => {
 //
 
 const meta = {
-  title: 'Modules/Servers/Forms/Docker Options',
+  title: 'Modules/UserContainers/Forms/Docker Options',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',
@@ -59,8 +59,6 @@ const meta = {
 
 export default meta;
 
-type Story = StoryObj<typeof StoryWrapper>;
-
-export const Normal: Story = {
+export const Normal: StoryObj<typeof StoryWrapper> = {
   args: {},
 };

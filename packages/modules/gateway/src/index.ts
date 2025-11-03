@@ -20,7 +20,7 @@ export type TGatewayExports = {
   toGanymede: <T>(r: TMyfetchRequest) => Promise<T>;
   //    loadDoc: () => boolean;
   updateReverseProxy: (
-    services: { location: string; ip: string; port: number }[]
+    services: { host: string; ip: string; port: number }[]
   ) => Promise<void>;
   gatewayStop: () => Promise<void>;
   gatewayFQDN: string;
@@ -143,11 +143,12 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
       toGanymede,
 
       updateReverseProxy: async (
-        services: { location: string; ip: string; port: number }[]
+        services: { host: string; ip: string; port: number }[]
       ) => {
         const config = services
-          .map((s) => `${s.location} ${s.ip} ${s.port}\n`)
+          .map((s) => `${s.host} ${s.ip} ${s.port}\n`)
           .join('');
+        throw new Error('fix update-nginx-locations script');
         runScript('update-nginx-locations', config);
       },
 

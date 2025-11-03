@@ -1,98 +1,40 @@
-import { TG_User } from '@monorepo/demiurge-types';
-import { TG_ServerImage } from '@monorepo/frontend-data';
 import { serverUrl } from '@monorepo/api-fetch';
+import { TJsonObject } from '@monorepo/simple-types';
 
-/** What server publish themselve to Shared States Server */
-export type TServerPublishedInfo = {
-  /** publish to Shared States Server by project server themselves */
+/** What user containers publish themselve */
+export type TUserContainerPublishedInfo = {
+  /** publish to Shared States Server by user containers themselves */
   ip?: string;
   httpServices: {
     host: string;
     port: number;
     name: string;
-    location: string;
     secure?: boolean;
   }[];
-  /** last time server call api (network watchdog) */
+  /** last time container call api (network watchdog) */
   last_watchdog_at: string | null;
-  /** Last time server was used by user or task (used for inactive project shutdown) */
+  /** Last time container was used by user or task (used for inactive project shutdown) */
   last_activity: string | null;
   /** system usage stats, cpu ram storage etc. */
-  system?: ServerSystemInfo;
+  system?: UserContainerSystemInfo;
 };
 
 /** what is maintain in Shared States Server (SSS) : app-collab */
-export type TServer = {
+export type TUserContainer = {
   user_container_id: string;
-  server_name: string;
-  image_id: number;
-  host_user_id: string | null;
+  container_name: string;
+  image_id: string;
   oauth: {
     service_name: string;
     client_id: string;
   }[];
-  location: 'hosted' | 'cloud' | 'none';
-  type: string;
+  runner: TJsonObject;
   created_at: string;
-} & TServerPublishedInfo;
-
-/** what server react component receive */
-export type TServerComponentProps = Omit<
-  TServer,
-  | 'host_user_id'
-  | 'last_activity'
-  | 'last_watchdog_at'
-  | 'project_id'
-  | 'image_id'
-> & {
-  host?: TG_User;
-  /** last time server call api (network watchdog) */
-  last_watchdog_at: Date | null;
-  /** Last time server was used by user or task (used for inactive project shutdown) */
-  last_activity: Date | null;
-  image: TG_ServerImage;
-};
+} & TUserContainerPublishedInfo;
 
 //
 
-export type TServerComponentCallbacks = {
-  onCloud: (InstanceType: string, storage: number) => Promise<void>;
-  onCloudStart: () => Promise<void>;
-  onCloudStop: () => Promise<void>;
-  onCloudDelete: () => Promise<void>;
-  //
-  onHost: () => Promise<void>;
-  onCopyCommand?: () => Promise<string>;
-  /** remove server declaration in Demiurge */
-  onDelete: () => Promise<void>;
-  onOpenService?: (name: string) => Promise<void>;
-};
-
-export const TServer_to_TServerComponentProps = (
-  server: TServer,
-  host?: TG_User,
-  images?: TG_ServerImage[]
-): TServerComponentProps => {
-  const image = images?.find((i) => i.image_id === server.image_id) || {
-    image_id: -1,
-    image_name: 'loading...',
-    image_tag: 'loading...',
-    image_sha256: 'loading...',
-  };
-  return {
-    ...server,
-    image,
-    last_watchdog_at: server.last_watchdog_at
-      ? new Date(server.last_watchdog_at)
-      : null,
-    last_activity: server.last_activity ? new Date(server.last_activity) : null,
-    host,
-  };
-};
-
-//
-
-export type ServerSystemInfo = {
+export type UserContainerSystemInfo = {
   cpu?: {
     usage: string; // "0.08, 0.18, 0.11",
     count: string; // "4",
@@ -118,7 +60,7 @@ export type ServerSystemInfo = {
 //
 
 export const serviceUrl = (
-  s: Pick<TServer, 'ip' | 'httpServices'>,
+  s: Pick<TUserContainer, 'ip' | 'httpServices'>,
   serviceName: string,
   websocket = false
 ) => {
@@ -141,7 +83,7 @@ export const serviceUrl = (
 
   return serverUrl({
     host,
-    location: service.location,
+    location: '',
     port,
     websocket,
     ssl,

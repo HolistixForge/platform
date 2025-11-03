@@ -3,182 +3,89 @@ import { CSSProperties, useCallback } from 'react';
 import {
   NodeHeader,
   DisableZoomDragPan,
-  TNodeContext,
   useNodeContext,
   InputsAndOutputs,
   useNodeHeaderButtons,
 } from '@monorepo/space/frontend';
 import { TGraphNode } from '@monorepo/core-graph';
-import { useSharedDataDirect } from '@monorepo/collab/frontend';
+import { useLocalSharedData } from '@monorepo/collab/frontend';
 import { useDispatcher } from '@monorepo/reducers/frontend';
-import { useApi, useCurrentUser, useQueryUser } from '@monorepo/frontend-data';
 import { TTabEvents } from '@monorepo/tabs';
+import { TJsonObject } from '@monorepo/simple-types';
 
 import { ServerCardInternal } from '../server-card';
-import {
-  TServerComponentProps,
-  TServerComponentCallbacks,
-  TServer,
-  TServer_to_TServerComponentProps,
-} from '../../servers-types';
-import { TServersSharedData } from '../../servers-shared-model';
-import { TServerEvents } from '../../servers-events';
+import { TUserContainer } from '../../servers-types';
+import { TUserContainersSharedData } from '../../servers-shared-model';
+import { TUserContainersEvents } from '../../servers-events';
+import { TContainerImageInfo } from '../../container-image';
 
 //
 
-export const useServerProps = (
-  project_server_id: number
-): (TServerComponentProps & TServerComponentCallbacks) | undefined => {
+export type UseContainerProps = {
+  container: TUserContainer;
+  image: TContainerImageInfo | undefined;
+  onDelete: () => Promise<void>;
+  onOpenService: (name: string) => void;
+};
+
+export const useContainerProps = (
+  container_id: string
+): UseContainerProps | undefined => {
   //
 
-  const server: TServer = useSharedDataDirect<TServersSharedData>(
+  const uc: TUserContainer = useLocalSharedData<TUserContainersSharedData>(
     ['user-containers:containers'],
-    (sd) => {
-      return sd['user-containers:containers'].get(`${project_server_id}`);
-    }
+    (sd) => sd['user-containers:containers'].get(`${container_id}`)
   );
 
-  const { data: currentUserData } = useCurrentUser();
+  const containerImages: Map<string, TContainerImageInfo> =
+    useLocalSharedData<TUserContainersSharedData>(
+      ['user-containers:images'],
+      (sd) => sd['user-containers:images']
+    );
 
-  const containerImages = useSharedDataDirect<TServersSharedData>(
-    ['containerImages'],
-    (sd) => sd.containerImages
-  );
-
-  const { data: hostData } = useQueryUser(server?.host_user_id || null);
-
-  const dispatcher = useDispatcher<TServerEvents | TTabEvents<any>>();
-
-  const { ganymedeApi } = useApi();
-
-  //
-
-  const onHost = useCallback(async () => {
-    if (server)
-      await dispatcher.dispatch({
-        type: 'servers:host',
-        project_server_id: server.project_server_id,
-      });
-  }, [dispatcher, server]);
-
-  //
-
-  const onCopyCommand = async () => {
-    const r = await (ganymedeApi.fetch({
-      url: 'projects/{project_id}/server/{project_server_id}/cmd',
-      method: 'GET',
-      pathParameters: {
-        project_id: server.project_id,
-        project_server_id,
-      },
-    }) as Promise<{ command: string }>);
-    return r.command;
-  };
-
-  //
-
-  const onCloud = useCallback(
-    async (instanceType: string, storage: number) => {
-      if (server)
-        await dispatcher.dispatch({
-          type: 'servers:to-cloud',
-          project_server_id: server.project_server_id,
-          instanceType,
-          storage,
-        });
-    },
-    [dispatcher, server]
-  );
-
-  //
-
-  const onCloudStart = async () => {
-    if (server)
-      await dispatcher.dispatch({
-        type: 'servers:cloud-start',
-        project_server_id: server.project_server_id,
-      });
-  };
-
-  //
-
-  const onCloudStop = async () => {
-    if (server)
-      await dispatcher.dispatch({
-        type: 'servers:cloud-pause',
-        project_server_id: server.project_server_id,
-      });
-  };
-
-  //
-
-  const onCloudDelete = useCallback(async () => {
-    if (server)
-      await dispatcher.dispatch({
-        type: 'servers:cloud-delete',
-        project_server_id: server.project_server_id,
-      });
-  }, [dispatcher, server]);
-
-  //
+  const dispatcher = useDispatcher<
+    TUserContainersEvents | TTabEvents<TJsonObject>
+  >();
 
   const onDelete = useCallback(async () => {
-    if (server)
+    if (uc)
       await dispatcher.dispatch({
-        type: 'servers:delete',
-        project_server_id: server.project_server_id,
-        client_id: server.oauth[0].client_id,
+        type: 'user-container:delete',
+        user_container_id: container_id,
       });
-  }, [dispatcher, server]);
+  }, [dispatcher, container_id, uc]);
 
   //
 
   const onOpenService = useCallback(
     async (name: string) => {
-      if (server) {
-        const service = server.httpServices.find((svc) => svc.name === name);
+      if (uc) {
+        const service = uc.httpServices.find((svc) => svc.name === name);
         if (service) {
           await dispatcher.dispatch({
             type: 'tabs:add-tab',
             path: [],
-            title: `${server.server_name}:${service.name}`,
+            title: `${uc.container_name}:${service.name}`,
             payload: {
               type: 'resource-ui',
-              project_server_id: server.project_server_id,
+              user_container_id: container_id,
               service_name: name,
             },
           });
         }
       }
     },
-    [dispatcher, server]
+    [dispatcher, container_id, uc]
   );
 
   //
-  if (server)
+  if (uc)
     return {
-      onHost,
-      onCopyCommand:
-        // define onCopyCommand only if user is the host, so that other users do not have the button displayed
-        hostData?.user_id !== undefined &&
-        currentUserData?.user.user_id === hostData?.user_id
-          ? onCopyCommand
-          : undefined,
-      //
-      onCloud,
-      onCloudStart,
-      onCloudStop,
-      onCloudDelete,
-      //
       onDelete,
       onOpenService,
-
-      //
-      ...TServer_to_TServerComponentProps(
-        server,
-        hostData,
-        containerImages ? Array.from(containerImages) : []
-      ),
+      container: uc,
+      image: containerImages.get(`${uc.image_id}`),
     };
 
   return undefined;
@@ -189,13 +96,14 @@ export const useServerProps = (
 export const NodeServer = ({
   node,
 }: {
-  node: TGraphNode<{ project_server_id: number }>;
+  node: TGraphNode<{ container_id: string }>;
 }) => {
-  const project_server_id = node.data!.project_server_id as number;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const container_id = node.data!.container_id as string;
 
   const useNodeValue = useNodeContext();
 
-  const props = useServerProps(project_server_id);
+  const props = useContainerProps(container_id);
 
   if (props) return <NodeServerInternal {...useNodeValue} {...props} />;
 
@@ -206,14 +114,12 @@ export const NodeServer = ({
  *
  */
 
-export const NodeServerInternal = (
-  props: TServerComponentProps &
-    TServerComponentCallbacks &
-    Pick<TNodeContext, 'id' | 'isOpened' | 'selected' | 'open'>
-) => {
+export const NodeServerInternal = (props: UseContainerProps) => {
   //
 
-  const { id, onDelete, isOpened, selected, open, ...otherProps } = props;
+  const { onDelete, ...otherProps } = props;
+
+  const { id, isOpened, selected, open } = useNodeContext();
 
   const buttons = useNodeHeaderButtons({
     onDelete,

@@ -1,13 +1,12 @@
 ⚠️ Antoine's stuffs
 
 fix other modules and their stories: user-containers, jupyter
-factor proxy story
-organisation/project => room
-dns
-sharedata nodeView purge
-cmd generator lowercase
-Remove all SQL procedures and exec-pipes that are not used anymore
+organisation/project => room ?
 merge account and ganymede: organization, member, gateway management only
+Remove all SQL procedures and exec-pipes that are not used anymore
+
+dns
+
 load save project
 permission module
 credentials module
@@ -15,6 +14,9 @@ automate
 docs
 website
 license
+
+sharedata nodeView purge
+cmd generator lowercase
 
 hidden node in search bar
 const filterOutNodes = gv?.params.filterOutNodes?.map((n) => sd.nodes.get(n));

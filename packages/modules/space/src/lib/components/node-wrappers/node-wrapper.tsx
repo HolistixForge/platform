@@ -6,6 +6,7 @@ import {
   MouseEvent,
   useRef,
   useState,
+  ReactNode,
 } from 'react';
 import {
   ReactFlowState,
@@ -305,4 +306,46 @@ const NodeStatusDebugOverlay = (s: TNodeViewStatus & { zoom: number }) => {
       </div>
     );
   else return null;
+};
+
+//
+
+export const MockNodeContext = ({ children }: { children: ReactNode }) => {
+  return (
+    <nodeContext.Provider
+      value={{
+        id: '123',
+        zoom: 1,
+        viewId: '123',
+        viewStatus: {
+          mode: 'EXPANDED',
+          forceClosed: false,
+          forceOpened: false,
+          rank: 0,
+          maxRank: 0,
+          isFiltered: false,
+        },
+        isOpened: true,
+        selected: true,
+        selectingUsers: [],
+        filterOut: () => {
+          /**/
+        },
+        expand: () => {
+          /**/
+        },
+        reduce: () => {
+          /**/
+        },
+        open: () => {
+          /**/
+        },
+        close: () => {
+          /**/
+        },
+      }}
+    >
+      {children}
+    </nodeContext.Provider>
+  );
 };

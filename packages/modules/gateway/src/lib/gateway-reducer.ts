@@ -1,6 +1,6 @@
 import { log } from '@monorepo/log';
 import { inSeconds, isPassed } from '@monorepo/simple-types';
-import { Reducer } from '@monorepo/reducers';
+import { Reducer, TEventPeriodic } from '@monorepo/reducers';
 import { TCollabBackendExports } from '@monorepo/collab';
 import { TGatewayExports } from '..';
 
@@ -9,7 +9,6 @@ import {
   TGatewayEvents,
   TEventLoad,
   TEventDisableShutdown,
-  TEventPeriodic,
 } from './gateway-events';
 
 /**
@@ -25,7 +24,7 @@ type RequiredExports = {
   gateway: TGatewayExports;
 };
 
-export class GatewayReducer extends Reducer<TGatewayEvents> {
+export class GatewayReducer extends Reducer<TGatewayEvents | TEventPeriodic> {
   private depsExports: RequiredExports;
 
   constructor(depsExports: RequiredExports) {
@@ -35,13 +34,13 @@ export class GatewayReducer extends Reducer<TGatewayEvents> {
 
   //
 
-  override reduce(event: TGatewayEvents): Promise<void> {
+  override reduce(event: TGatewayEvents | TEventPeriodic): Promise<void> {
     this.rearmGatewayTimer(event);
 
     switch (event.type) {
       case 'gateway:load':
         return this._load(event);
-      case 'gateway:periodic':
+      case 'reducers:periodic':
         return this._periodic(event);
       case 'gateway:disable-shutdown':
         return this._disableGatewayShutdown(event);

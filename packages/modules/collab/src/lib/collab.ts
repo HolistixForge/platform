@@ -3,6 +3,7 @@ import { Doc } from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 
 import { log } from '@monorepo/log';
+import { TJson } from '@monorepo/simple-types';
 import {
   SharedEditor,
   SharedTypes,
@@ -15,6 +16,8 @@ import {
   NoneAwareness,
   NoneSharedEditor,
   TAwarenessUser,
+  SharedMap,
+  SharedArray,
 } from '@monorepo/collab-engine';
 
 //
@@ -34,21 +37,36 @@ export abstract class Collab<T extends TValidSharedData> {
 
   public abstract init(config: object): void;
 
-  public loadSharedData(
-    type: 'map' | 'array',
+  public loadSharedData<T extends TJson>(
+    sdtype: 'map',
     moduleName: string,
     name: string
-  ): void {
+  ): SharedMap<T>;
+  public loadSharedData<T extends TJson>(
+    sdtype: 'array',
+    moduleName: string,
+    name: string
+  ): SharedArray<T>;
+  public loadSharedData<T extends TJson>(
+    sdtype: 'map' | 'array',
+    moduleName: string,
+    name: string
+  ): SharedMap<T> | SharedArray<T> {
     const fullname = `${moduleName}:${name}`;
-    if (type === 'map') {
+    if (sdtype === 'map') {
+      const map = this.sharedTypes.getSharedMap(fullname) as SharedMap<T>;
       Object.assign(this.sharedData, {
-        [fullname]: this.sharedTypes.getSharedMap(fullname),
+        [fullname]: map,
       });
-    } else {
+      return map;
+    } else if (sdtype === 'array') {
+      const array = this.sharedTypes.getSharedArray(fullname) as SharedArray<T>;
       Object.assign(this.sharedData, {
-        [fullname]: this.sharedTypes.getSharedArray(fullname),
+        [fullname]: array,
       });
+      return array;
     }
+    throw new Error(`Invalid shared data type: ${sdtype}`);
   }
 }
 

@@ -1,56 +1,88 @@
+import { useMemo } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { MockCollaborativeContext } from '@monorepo/collab-engine';
-import { StoryApiContext } from '@monorepo/frontend-data';
+import { ModuleProvider } from '@monorepo/module/frontend';
+import { TModule, loadModules } from '@monorepo/module';
+import {
+  moduleFrontend as collabFrontend,
+  TCollabFrontendExports,
+} from '@monorepo/collab/frontend';
+import { moduleFrontend as coreFrontend } from '@monorepo/core-graph';
+import { moduleFrontend as spaceFrontend } from '@monorepo/space/frontend';
+import { moduleFrontend as tabsFrontend } from '@monorepo/tabs';
+import { moduleFrontend as reducersFrontend } from '@monorepo/reducers/frontend';
 
-import { NewServerForm } from './new-server';
+import { NewContainerForm } from './new-server';
+import { TUserContainersSharedData } from '../servers-shared-model';
+import { moduleFrontend as userContainersFrontend } from '../../frontend';
 
 //
+const collabConfig = {
+  type: 'none',
+  room_id: 'space-story',
+  simulateUsers: true,
+  user: { username: 'test', color: 'red' },
+};
 
-const images = [
+const modulesFrontend: { module: TModule<never, object>; config: object }[] = [
   {
-    image_id: 0,
-    image_name: 'image super bien',
-    image_sha256: null,
-    image_tag: 'ffa500',
+    module: collabFrontend,
+    config: collabConfig,
+  },
+  { module: reducersFrontend, config: {} },
+  { module: coreFrontend, config: {} },
+  { module: spaceFrontend, config: {} },
+  { module: tabsFrontend, config: {} },
+  {
+    module: userContainersFrontend,
+    config: {},
   },
   {
-    image_id: 1,
-    image_name: 'mega lib 42',
-    image_sha256: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-    image_tag: 'ffa500',
+    module: {
+      name: 'story-init',
+      version: '0.0.1',
+      description: 'Story init module',
+      dependencies: ['collab'],
+      load: ({ depsExports }) => {
+        (
+          depsExports as unknown as {
+            collab: TCollabFrontendExports<TUserContainersSharedData>;
+          }
+        ).collab.collab.sharedData['user-containers:images'].push([
+          {
+            imageId: 'test',
+            imageName: 'Test',
+            description: 'Test',
+          },
+        ]);
+        //
+      },
+    },
+    config: {},
   },
 ];
 
 const StoryWrapper = () => {
+  const frontendModules = useMemo(() => {
+    const frontendModules = loadModules(modulesFrontend);
+    return frontendModules;
+  }, []);
+
   return (
-    <StoryApiContext
-      ganymedeApiMock={(r) => {
-        if (r.url === 'images') {
-          return Promise.resolve({ _0: images });
-        }
-        throw new Error('Not implemented');
-      }}
-    >
-      <MockCollaborativeContext
-        frontChunks={[]}
-        backChunks={[]}
-        getRequestContext={() => ({})}
-      >
-        <NewServerForm
-          viewId={''}
-          position={{ x: 0, y: 0 }}
-          closeForm={() => null}
-        />
-      </MockCollaborativeContext>
-    </StoryApiContext>
+    <ModuleProvider exports={frontendModules}>
+      <NewContainerForm
+        viewId={''}
+        position={{ x: 0, y: 0 }}
+        closeForm={() => null}
+      />
+    </ModuleProvider>
   );
 };
 
 //
 
 const meta = {
-  title: 'Modules/Servers/Forms/NewServer',
+  title: 'Modules/UserContainers/Forms/NewServer',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

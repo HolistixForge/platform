@@ -3,7 +3,13 @@
   "include": [],
   "references": [
     {
+      "path": "../../frontend-data"
+    },
+    {
       "path": "../../api-fetch"
+    },
+    {
+      "path": "../../collab-engine"
     },
     {
       "path": "../../log"
@@ -12,16 +18,10 @@
       "path": "../../demiurge-types"
     },
     {
-      "path": "../../collab-engine"
-    },
-    {
       "path": "../../simple-types"
     },
     {
       "path": "../tabs"
-    },
-    {
-      "path": "../../frontend-data"
     },
     {
       "path": "../core-graph"

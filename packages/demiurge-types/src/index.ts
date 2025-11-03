@@ -26,7 +26,7 @@ export {
 export type { TScope } from './lib/ganymede-api/scope';
 
 export type {
-  TJwtServer,
+  TJwtUserContainer,
   TJwtProject,
   TJwtGateway,
   TJwtUser,

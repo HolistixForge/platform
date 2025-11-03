@@ -116,7 +116,7 @@ export class NotionReducer extends Reducer<TNotionEvent | TEventPeriodic> {
       case 'notion:clear-user-search-results':
         return this._clearUserSearchResults(event);
 
-      case 'periodic':
+      case 'reducers:periodic':
         return this._periodic(event, requestData);
     }
   }
