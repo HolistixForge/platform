@@ -28,7 +28,7 @@ export type TUserContainer = {
     service_name: string;
     client_id: string;
   }[];
-  runner: TJsonObject;
+  runner: { id: string } & TJsonObject;
   created_at: string;
 } & TUserContainerPublishedInfo;
 

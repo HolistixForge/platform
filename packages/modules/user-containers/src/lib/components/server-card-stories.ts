@@ -8,7 +8,7 @@ export const makeStoryArgs = (): StoryArgs => ({
     container_name: 'My Super Server',
     image_id: '1',
     oauth: [],
-    runner: {},
+    runner: { id: 'none' },
     created_at: new Date().toISOString(),
     last_watchdog_at: null,
     last_activity: null,
@@ -44,6 +44,9 @@ export const makeStoryArgs = (): StoryArgs => ({
   },
   onDelete: () => Promise.resolve(),
   onOpenService: () => {
+    /**/
+  },
+  onSelectRunner: () => {
     /**/
   },
 });

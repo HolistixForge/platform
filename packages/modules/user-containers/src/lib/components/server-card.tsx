@@ -25,6 +25,7 @@ import {
   useContainerProps,
   UseContainerProps,
 } from './node-server/node-server';
+import { TContainerRunnerFrontend } from '../../frontend';
 
 /**
  *
@@ -59,12 +60,16 @@ const isAlive = (last_watchdog_at: string | null) => {
 //
 //
 
+//
+
 export const ServerCardInternal = ({
   container,
   image,
   onDelete,
   onOpenService,
-}: UseContainerProps) => {
+  onSelectRunner,
+  runners,
+}: UseContainerProps & { runners: Map<string, TContainerRunnerFrontend> }) => {
   //
 
   const deleteAction = useAction(
@@ -183,6 +188,30 @@ export const ServerCardInternal = ({
         </div>
       </div>
 
+      <div>
+        {container.runner.id === 'none' && (
+          <>
+            <div className="text-white text-[12px]">
+              <p>Select a runner to start the container</p>
+            </div>
+            <div className="flex gap-2">
+              {Array.from(runners.values()).map((runner, k) => (
+                <div
+                  key={runner.label}
+                  className="flex items-center gap-2 cursor-pointer border border-white/10 rounded-[4px] p-2"
+                  onClick={() => {
+                    onSelectRunner(runner.label);
+                  }}
+                >
+                  <runner.icon />
+                  <p>{runner.label}</p>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
       <TagsBar tags={tags} addTag={addTag} />
 
       <div className="absolute right-4 bottom-[20px]">
@@ -257,19 +286,4 @@ const SystemInfo = ({
       </Tooltip.Portal>
     </Tooltip.Root>
   );
-};
-
-//
-
-export const ServerCard = ({ container_id }: { container_id: string }) => {
-  const props = useContainerProps(container_id);
-
-  if (props)
-    return (
-      <div style={{ '--node-wrapper-header-height': '-8px' } as CSSProperties}>
-        <ServerCardInternal {...props} />
-      </div>
-    );
-
-  return null;
 };

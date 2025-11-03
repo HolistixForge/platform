@@ -7,9 +7,17 @@ import type { TGatewayExports } from '@monorepo/gateway';
 import type { TUserContainersSharedData } from './lib/servers-shared-model';
 import type { TCoreSharedData } from '@monorepo/core-graph';
 import type { TContainerImageInfo } from './lib/container-image';
+import type { ContainerRunner } from './lib/runner';
+import { localRunnerBackend } from './lib/local-runner';
+
+//
 
 export type TUserContainersExports = {
   imageRegistry: ContainerImageRegistry;
+  registerContainerRunner: (
+    id: string,
+    containerRunner: ContainerRunner
+  ) => void;
 };
 
 type TRequired = {
@@ -41,9 +49,21 @@ export const moduleBackend: TModule<TRequired, TUserContainersExports> = {
     // Setup image registry
     const registry = new ContainerImageRegistry(iamgesSharedArray);
 
+    const containerRunners: Map<string, ContainerRunner> = new Map();
+
+    const registerContainerRunner: (
+      id: string,
+      containerRunner: ContainerRunner
+    ) => void = (id, containerRunner) => {
+      containerRunners.set(id, containerRunner);
+    };
+
+    registerContainerRunner('local', localRunnerBackend);
+
     // Export registry and images
     moduleExports({
       imageRegistry: registry,
+      registerContainerRunner,
     });
 
     // Load reducers

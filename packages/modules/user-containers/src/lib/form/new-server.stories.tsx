@@ -48,13 +48,11 @@ const modulesFrontend: { module: TModule<never, object>; config: object }[] = [
           depsExports as unknown as {
             collab: TCollabFrontendExports<TUserContainersSharedData>;
           }
-        ).collab.collab.sharedData['user-containers:images'].push([
-          {
-            imageId: 'test',
-            imageName: 'Test',
-            description: 'Test',
-          },
-        ]);
+        ).collab.collab.sharedData['user-containers:images'].set('test', {
+          imageId: 'test',
+          imageName: 'Test',
+          description: 'Test',
+        });
         //
       },
     },

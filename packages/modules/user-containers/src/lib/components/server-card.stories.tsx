@@ -7,11 +7,17 @@ import {
   withServicesStory,
   StoryArgs,
 } from './server-card-stories';
+import { localRunnerFrontend } from '../local-runner';
 
 //
 
 const StoryWrapper = (props: StoryArgs) => {
-  return <ServerCardInternal {...props} />;
+  return (
+    <ServerCardInternal
+      {...props}
+      runners={new Map([['local', localRunnerFrontend]])}
+    />
+  );
 };
 
 //

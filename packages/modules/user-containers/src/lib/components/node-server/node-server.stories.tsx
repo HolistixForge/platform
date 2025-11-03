@@ -15,6 +15,7 @@ import {
   withServicesStory,
   StoryArgs,
 } from '../server-card-stories';
+import { localRunnerFrontend } from '../../local-runner';
 
 //
 
@@ -43,7 +44,10 @@ const StoryWrapper = (
         outputs={0}
       >
         <MockNodeContext>
-          <NodeServerInternal {...props} />
+          <NodeServerInternal
+            {...props}
+            runners={new Map([['local', localRunnerFrontend]])}
+          />
         </MockNodeContext>
       </StoryMockSpaceContextReactflowBgAndCss>
     </ModuleProvider>

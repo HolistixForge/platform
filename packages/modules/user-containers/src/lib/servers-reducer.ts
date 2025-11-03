@@ -114,7 +114,7 @@ export class UserContainersReducer extends Reducer<
       user_container_id: containerId,
       container_name: event.containerName,
       image_id: imageDef.imageId,
-      runner: { type: 'none' },
+      runner: { id: 'none' },
       oauth: await this.createOAuthClients(containerId, imageDef.oauthClients),
       ip: undefined,
       httpServices: [],

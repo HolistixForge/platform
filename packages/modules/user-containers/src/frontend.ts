@@ -4,6 +4,23 @@ import type { TModule } from '@monorepo/module';
 import type { TCollabFrontendExports } from '@monorepo/collab/frontend';
 import type { TSpaceFrontendExports } from '@monorepo/space/frontend';
 import { serversMenuEntries } from './lib/servers-menu';
+import { localRunnerFrontend } from './lib/local-runner';
+
+//
+
+export type TContainerRunnerFrontend = {
+  icon: React.FC;
+  label: string;
+  UI: React.FC;
+};
+
+export type TUserContainersFrontendExports = {
+  registerContainerRunner: (
+    id: string,
+    containerRunner: TContainerRunnerFrontend
+  ) => void;
+  getRunners: () => Map<string, TContainerRunnerFrontend>;
+};
 
 type TRequired = {
   collab: TCollabFrontendExports;
@@ -30,6 +47,22 @@ export const moduleFrontend: TModule<TRequired> = {
     depsExports.space.registerMenuEntries(serversMenuEntries);
     depsExports.space.registerNodes({
       'user-container': NodeServer,
+    });
+
+    const containerRunners: Map<string, TContainerRunnerFrontend> = new Map();
+
+    const registerContainerRunner: (
+      id: string,
+      containerRunner: TContainerRunnerFrontend
+    ) => void = (id, containerRunner) => {
+      containerRunners.set(id, containerRunner);
+    };
+
+    registerContainerRunner('local', localRunnerFrontend);
+
+    moduleExports({
+      registerContainerRunner,
+      getRunners: () => containerRunners,
     });
   },
 };

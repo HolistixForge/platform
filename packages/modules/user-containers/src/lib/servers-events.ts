@@ -36,9 +36,16 @@ export type TEventMapHttpService = {
   name: string;
 };
 
+export type TEventSelectRunner = {
+  type: 'user-container:set-runner';
+  user_container_id: string;
+  runner_id: string;
+};
+
 export type TUserContainersEvents =
   | TEventNew
   | TEventDelete
   | TEventWatchdog
   | TEventMapHttpService
-  | TEventActivity;
+  | TEventActivity
+  | TEventSelectRunner;
