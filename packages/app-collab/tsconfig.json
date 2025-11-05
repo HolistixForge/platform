@@ -4,43 +4,19 @@
   "include": [],
   "references": [
     {
-      "path": "../demiurge-types"
-    },
-    {
-      "path": "../modules/excalidraw"
-    },
-    {
-      "path": "../modules/airtable"
-    },
-    {
-      "path": "../modules/socials"
-    },
-    {
-      "path": "../modules/notion"
-    },
-    {
-      "path": "../modules/user-containers"
-    },
-    {
-      "path": "../modules/chats"
-    },
-    {
-      "path": "../modules/module"
-    },
-    {
-      "path": "../modules/gateway"
+      "path": "../collab-engine"
     },
     {
       "path": "../simple-types"
     },
     {
-      "path": "../log"
-    },
-    {
-      "path": "../modules/jupyter"
+      "path": "../modules/gateway"
     },
     {
       "path": "../backend-engine"
+    },
+    {
+      "path": "../log"
     },
     {
       "path": "../modules/space"
@@ -52,7 +28,7 @@
       "path": "../modules/core-graph"
     },
     {
-      "path": "../collab-engine"
+      "path": "../modules/reducers"
     },
     {
       "path": "./tsconfig.app.json"

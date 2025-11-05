@@ -28,25 +28,10 @@
       "path": "./packages/backend-engine"
     },
     {
-      "path": "./packages/app-ganymede-e2e"
-    },
-    {
       "path": "./packages/app-ganymede"
     },
     {
-      "path": "./packages/app-account-e2e"
-    },
-    {
-      "path": "./packages/app-account"
-    },
-    {
-      "path": "./packages/app-ganymede-cmds-e2e"
-    },
-    {
       "path": "./packages/app-ganymede-cmds"
-    },
-    {
-      "path": "./packages/app-collab-e2e"
     },
     {
       "path": "./packages/app-collab"
@@ -101,9 +86,6 @@
     },
     {
       "path": "./packages/modules/collab"
-    },
-    {
-      "path": "./packages/json-file-persistence"
     },
     {
       "path": "./packages/modules/reducers"

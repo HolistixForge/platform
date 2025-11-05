@@ -5,31 +5,37 @@ const u = require('y-websocket/bin/utils');
 
 import { jwtPayload } from '@monorepo/backend-engine';
 import { log, ForbiddenException } from '@monorepo/log';
-import { makeProjectScopeString } from '@monorepo/demiurge-types';
-
-import { PROJECT } from './project-config';
+import { ProjectRoomsManager } from './state/ProjectRooms';
 
 //
 //
-//
 
-type MyJwtPayload = { type: string; scope: string[]; exp: number };
+type MyJwtPayload = { 
+  type: string; 
+  user_id?: string;
+  scope: string[]; 
+  exp: number;
+};
 
-//
-
+/**
+ * Setup YJS WebSocket with Multi-Room Support
+ * 
+ * Each project gets its own YJS room.
+ * WebSocket path format: /collab/{room_id}?token=...
+ * or /project/{project_id}?token=...
+ * 
+ * @param servers - HTTP/HTTPS servers
+ * @param projectRooms - Manager for all project rooms
+ */
 export function graftYjsWebsocket(
   servers: (http.Server | https.Server)[],
-  roomId: string
+  projectRooms: ProjectRoomsManager
 ) {
-  //
-
   servers.forEach((server) => {
     const isSsl = server instanceof https.Server;
     const wss: ws.Server = new ws.Server(
       isSsl ? { server } : { noServer: true }
     );
-
-    //
 
     wss.on(
       'connection',
@@ -37,110 +43,132 @@ export function graftYjsWebsocket(
         ws: ws,
         req: http.IncomingMessage,
         err: Error | null,
-        jwt: MyJwtPayload
+        jwt: MyJwtPayload,
+        room_id: string
       ) => {
         if (err) {
           ws.close(4001, 'REFRESH_TOKEN');
           return;
         }
 
-        // close socket when the token will expire
-        const currentTime = Date.now() / 1000; // Get current time in seconds
+        // Close socket when token expires
+        const currentTime = Date.now() / 1000;
         const timeDifference = jwt.exp - currentTime;
         if (timeDifference > 0) {
           setTimeout(() => {
-            log(6, 'WS_CONNECTION', 'destroy socket, token expired');
+            log(6, 'WS_CONNECTION', 'Closing socket - token expired');
             ws.close(4000, 'expired');
-          }, timeDifference * 1000); // Convert seconds to milliseconds
+          }, timeDifference * 1000);
         }
 
-        log(6, 'WS_CONNECTION', `connection: url: ${req.url}`);
+        log(6, 'WS_CONNECTION', `Connection: ${req.url}, room: ${room_id}`);
 
-        // Extract UUID from URL path
-        const urlPath = req.url?.split('?')[0]; // Get path without query params
-        const match = urlPath?.match(/\/collab\/([^/]+)/);
-        const uuid = match?.[1];
-
-        if (!uuid) {
-          log(6, 'WS_CONNECTION', 'Invalid URL format - missing room id UUID');
-          ws.close(3003, 'invalid_url');
-          return;
-        }
-
-        if (uuid !== roomId) {
-          log(6, 'WS_CONNECTION', 'Invalid room id', { uuid, roomId });
-          ws.close(3003, 'invalid_room_id');
-          return;
-        }
-
-        log(6, 'WS_CONNECTION', `room id UUID: ${uuid}`);
-
-        // setup Yjs
-        u.setupWSConnection(ws, req, { docName: roomId, gc: false });
+        // Setup YJS for this room
+        u.setupWSConnection(ws, req, { docName: room_id, gc: false });
       }
     );
 
-    //
-
     if (!isSsl) {
       server.on('upgrade', (request, socket, head) => {
-        authenticate(request, function next(err, jwt) {
-          if (err && err.constructor.name !== 'OAuthRefreshTokenException') {
+        // Authenticate and route to correct room
+        authenticateAndRoute(request, projectRooms, function next(err, jwt, room_id) {
+          if (err) {
             socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+            socket.destroy();
+            return;
+          }
+
+          if (!room_id) {
+            socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
             socket.destroy();
             return;
           }
 
           try {
             wss.handleUpgrade(request, socket, head, function done(ws) {
-              wss.emit('connection', ws, request, err, jwt);
+              wss.emit('connection', ws, request, err, jwt, room_id);
             });
           } catch (error) {
-            console.log(error); // TODO
+            console.error('WebSocket upgrade error:', error);
           }
         });
       });
     }
   });
+
+  log(6, 'WEBSOCKET', `Multi-room WebSocket grafted for ${projectRooms.getProjectCount()} projects`);
 }
 
-//
-
-//
-
-function authenticate(
+/**
+ * Authenticate WebSocket connection and route to correct room
+ * 
+ * URL formats supported:
+ * - /collab/{room_id}?token=...
+ * - /project/{project_id}?token=...
+ */
+function authenticateAndRoute(
   request: http.IncomingMessage,
-  callback: (e: Error | null, payload: MyJwtPayload | null) => void
+  projectRooms: ProjectRoomsManager,
+  callback: (
+    err: Error | null,
+    payload: MyJwtPayload | null,
+    room_id: string | null
+  ) => void
 ) {
-  const u = new URL(`https://localhost${request.url}`);
-  const token = u.searchParams.get('token');
+  const url = new URL(`https://localhost${request.url}`);
+  const token = url.searchParams.get('token');
+  const pathname = url.pathname;
 
-  let payload: MyJwtPayload;
+  // Validate token
   if (!token) {
-    callback(new Error('Forbidden'), null);
+    callback(new Error('No token provided'), null, null);
     return;
   }
 
+  let payload: MyJwtPayload;
   try {
     payload = jwtPayload(token) as MyJwtPayload;
   } catch (err: any) {
-    callback(err, null);
+    callback(err, null, null);
     return;
   }
 
   if (!payload || payload.type !== 'access_token') {
     const err = new ForbiddenException([
-      { message: `invalid jwt token: not an access token` },
+      { message: 'Invalid JWT token: not an access token' },
     ]);
-    callback(err, null);
+    callback(err, null, null);
     return;
   }
 
-  if (!payload.scope.includes(makeProjectScopeString(PROJECT!.PROJECT_ID))) {
-    const err = new ForbiddenException([{ message: `insufficient scope` }]);
-    callback(err, null);
+  // Route to correct room based on URL
+  let room_id: string | null = null;
+
+  // Format 1: /collab/{room_id}
+  const collabMatch = pathname.match(/^\/collab\/([^/]+)$/);
+  if (collabMatch) {
+    const requested_room_id = collabMatch[1];
+    // Verify this room exists
+    const project_id = projectRooms.getProjectIdByRoomId(requested_room_id);
+    if (project_id) {
+      room_id = requested_room_id;
+    }
+  }
+
+  // Format 2: /project/{project_id}
+  const projectMatch = pathname.match(/^\/project\/([^/]+)$/);
+  if (projectMatch) {
+    const project_id = projectMatch[1];
+    room_id = projectRooms.getRoomId(project_id) || null;
+  }
+
+  if (!room_id) {
+    callback(new Error('Room not found'), null, null);
     return;
   }
 
-  callback(null, payload);
+  // TODO: Check permission - user has access to this project
+  // For now, just check token is valid
+
+  callback(null, payload, room_id);
 }

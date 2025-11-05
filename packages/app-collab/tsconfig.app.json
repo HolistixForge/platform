@@ -7,7 +7,7 @@
     "tsBuildInfoFile": "out-tsc/app-collab/tsconfig.app.tsbuildinfo",
     "resolveJsonModule": true
   },
-  "files": ["src/oas30.json", "src/exec-pipes.json"],
+  "files": ["src/oas30.json"],
   "include": ["src/**/*.ts"],
   "exclude": [
     "out-tsc",
@@ -21,43 +21,19 @@
   ],
   "references": [
     {
-      "path": "../demiurge-types/tsconfig.lib.json"
-    },
-    {
-      "path": "../modules/excalidraw/tsconfig.lib.json"
-    },
-    {
-      "path": "../modules/airtable/tsconfig.lib.json"
-    },
-    {
-      "path": "../modules/socials/tsconfig.lib.json"
-    },
-    {
-      "path": "../modules/notion/tsconfig.lib.json"
-    },
-    {
-      "path": "../modules/user-containers/tsconfig.lib.json"
-    },
-    {
-      "path": "../modules/chats/tsconfig.lib.json"
-    },
-    {
-      "path": "../modules/module/tsconfig.lib.json"
-    },
-    {
-      "path": "../modules/gateway/tsconfig.lib.json"
+      "path": "../collab-engine/tsconfig.lib.json"
     },
     {
       "path": "../simple-types/tsconfig.lib.json"
     },
     {
-      "path": "../log/tsconfig.lib.json"
-    },
-    {
-      "path": "../modules/jupyter/tsconfig.lib.json"
+      "path": "../modules/gateway/tsconfig.lib.json"
     },
     {
       "path": "../backend-engine/tsconfig.lib.json"
+    },
+    {
+      "path": "../log/tsconfig.lib.json"
     },
     {
       "path": "../modules/space/tsconfig.lib.json"
@@ -69,7 +45,7 @@
       "path": "../modules/core-graph/tsconfig.lib.json"
     },
     {
-      "path": "../collab-engine/tsconfig.lib.json"
+      "path": "../modules/reducers/tsconfig.lib.json"
     }
   ]
 }

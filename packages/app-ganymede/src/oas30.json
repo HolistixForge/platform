@@ -1,65 +1,221 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "ganymede API",
-    "version": "1.0"
+    "title": "Ganymede API (Auth + Resources)",
+    "version": "2.0",
+    "description": "Unified API for authentication and resource management"
   },
   "paths": {
-    "/projects": {
-      "get": {
-        "summary": "get project by owner and name",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "$ref": "#/components/parameters/user_id"
-          },
-          {
-            "$ref": "#/components/parameters/project_name"
-          }
-        ],
+    "/me": {
+      "post": {
+        "summary": "Get current user session",
+        "tags": ["Auth"],
         "responses": {
           "200": {
-            "description": "project",
+            "description": "User session data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/signup": {
+      "post": {
+        "summary": "Sign up new user",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "format": "password", "minLength": 10 },
+                  "username": { "type": "string", "pattern": "^[a-zA-Z0-9_]*$", "minLength": 3, "maxLength": 50 },
+                  "firstname": { "type": "string", "maxLength": 50 },
+                  "lastname": { "type": "string", "maxLength": 50 }
+                },
+                "required": ["email", "password", "username"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/empty" },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "summary": "Login user",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string" }
+                },
+                "required": ["email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/empty" },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/logout": {
+      "post": {
+        "summary": "Logout user",
+        "tags": ["Auth"],
+        "responses": {
+          "200": { "$ref": "#/components/responses/empty" }
+        }
+      }
+    },
+    "/orgs": {
+      "get": {
+        "summary": "List user's organizations",
+        "tags": ["Organizations"],
+        "parameters": [{ "$ref": "#/components/parameters/headers_authorization" }],
+        "responses": {
+          "200": {
+            "description": "List of organizations",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "_0": {
-                      "$ref": "#/components/schemas/project"
+                    "organizations": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/organization" }
                     }
-                  },
-                  "additionalProperties": false
+                  }
                 }
               }
             }
           },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      },
+      "post": {
+        "summary": "Create organization",
+        "tags": ["Organizations"],
+        "parameters": [{ "$ref": "#/components/parameters/headers_authorization" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "minLength": 1, "maxLength": 100 }
+                },
+                "required": ["name"]
+              }
+            }
           }
         },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "get-project-by-name"
+        "responses": {
+          "200": {
+            "description": "Organization created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "organization_id": { "type": "string", "format": "uuid" }
+                  }
+                }
+              }
             }
-          ]
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
         }
       }
     },
-    "/projects/new": {
-      "post": {
-        "summary": "create a new project",
+    "/orgs/{org_id}": {
+      "get": {
+        "summary": "Get organization",
+        "tags": ["Organizations"],
         "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          }
+          { "$ref": "#/components/parameters/headers_authorization" },
+          { "$ref": "#/components/parameters/org_id" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organization details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/organization" }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      },
+      "delete": {
+        "summary": "Delete organization",
+        "tags": ["Organizations"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          { "$ref": "#/components/parameters/org_id" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/empty" },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/orgs/{org_id}/members": {
+      "get": {
+        "summary": "List organization members",
+        "tags": ["Organizations"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          { "$ref": "#/components/parameters/org_id" }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of members",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "members": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/organization_member" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      },
+      "post": {
+        "summary": "Add organization member",
+        "tags": ["Organizations"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          { "$ref": "#/components/parameters/org_id" }
         ],
         "requestBody": {
           "required": true,
@@ -68,924 +224,267 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "name": {
-                    "$ref": "#/components/schemas/project/properties/name"
-                  },
-                  "public": {
-                    "type": "boolean"
-                  }
+                  "user_id": { "type": "string", "format": "uuid" },
+                  "role": { "type": "string", "enum": ["owner", "admin", "member"] }
                 },
-                "required": [
-                  "name",
-                  "public"
-                ]
+                "required": ["user_id", "role"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/empty" },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/projects": {
+      "get": {
+        "summary": "List user's projects",
+        "tags": ["Projects"],
+        "parameters": [{ "$ref": "#/components/parameters/headers_authorization" }],
+        "responses": {
+          "200": {
+            "description": "List of projects",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "projects": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/project" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      },
+      "post": {
+        "summary": "Create project",
+        "tags": ["Projects"],
+        "parameters": [{ "$ref": "#/components/parameters/headers_authorization" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "organization_id": { "type": "string", "format": "uuid" },
+                  "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+                  "public": { "type": "boolean" }
+                },
+                "required": ["organization_id", "name", "public"]
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "user model",
+            "description": "Project created",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "_0": {
-                      "type": "object",
-                      "properties": {
-                        "new_project_id": {
-                          "$ref": "#/components/schemas/project/properties/project_id"
-                        }
-                      },
-                      "additionalProperties": false
-                    }
-                  },
-                  "additionalProperties": false
+                    "project_id": { "type": "string", "format": "uuid" }
+                  }
                 }
               }
             }
           },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "new-project"
-            }
-          ]
+          "4XX": { "$ref": "#/components/responses/errors" }
         }
       }
     },
     "/projects/{project_id}": {
       "get": {
+        "summary": "Get project",
+        "tags": ["Projects"],
         "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "$ref": "#/components/parameters/project_id"
-          }
+          { "$ref": "#/components/parameters/headers_authorization" },
+          { "$ref": "#/components/parameters/project_id" }
         ],
         "responses": {
           "200": {
-            "description": "project",
+            "description": "Project details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/project" }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      },
+      "delete": {
+        "summary": "Delete project",
+        "tags": ["Projects"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          { "$ref": "#/components/parameters/project_id" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/empty" },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/projects/{project_id}/members": {
+      "get": {
+        "summary": "List project members",
+        "tags": ["Projects"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          { "$ref": "#/components/parameters/project_id" }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of members",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "_0": {
-                      "$ref": "#/components/schemas/project"
+                    "members": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/project_member" }
                     }
-                  },
-                  "additionalProperties": false
+                  }
                 }
               }
             }
           },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "get-project-gateway"
-            }
-          ]
-        }
-      },
-      "delete": {
-        "summary": "Delete a project",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "$ref": "#/components/parameters/project_id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/empty"
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "delete-project"
-            }
-          ]
+          "4XX": { "$ref": "#/components/responses/errors" }
         }
       }
     },
-    "/projects/{project_id}/start": {
+    "/gateway/start": {
       "post": {
-        "summary": "bind a gateway to project",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "$ref": "#/components/parameters/project_id"
+        "summary": "Start gateway for organization",
+        "tags": ["Gateway"],
+        "parameters": [{ "$ref": "#/components/parameters/headers_authorization" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "organization_id": { "type": "string", "format": "uuid" }
+                },
+                "required": ["organization_id"]
+              }
+            }
           }
-        ],
+        },
         "responses": {
           "200": {
-            "description": "project gateway hostname",
+            "description": "Gateway started",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "_0": {
-                      "type": "object",
-                      "properties": {
-                        "gateway_hostname": {
-                          "$ref": "#/components/schemas/project/properties/gateway_hostname"
+                    "gateway_hostname": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/gateway/config": {
+      "post": {
+        "summary": "Gateway handshake - get org config",
+        "tags": ["Gateway"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "tmp_handshake_token": { "type": "string", "format": "uuid" }
+                },
+                "required": ["tmp_handshake_token"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Gateway configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "organization_id": { "type": "string", "format": "uuid" },
+                    "organization_name": { "type": "string" },
+                    "gateway_id": { "type": "string", "format": "uuid" },
+                    "gateway_token": { "type": "string" },
+                    "projects": {
+                      "type": "array",
+                      "items": { "type": "string", "format": "uuid" }
+                    },
+                    "members": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "user_id": { "type": "string", "format": "uuid" },
+                          "username": { "type": "string" },
+                          "role": { "type": "string", "enum": ["owner", "admin", "member"] }
                         }
-                      },
-                      "additionalProperties": false
+                      }
                     }
-                  },
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "start-project"
-            }
-          ]
-        }
-      }
-    },
-    "/gateway-config": {
-      "post": {
-        "summary": "used by gateways to get config",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "tmp_handshake_token": {
-                    "type": "string",
-                    "description": "tmp_handshake_token"
                   }
-                },
-                "required": [
-                  "tmp_handshake_token"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "gateway configuration",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "GANYMEDE_API_TOKEN": {
-                      "type": "string"
-                    },
-                    "PROJECT_ID": {
-                      "type": "string"
-                    },
-                    "YJS_DOC_ID": {
-                      "type": "string"
-                    }
-                  },
-                  "additionalProperties": false
                 }
               }
             }
           },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "gateway-config"
-            }
-          ]
+          "4XX": { "$ref": "#/components/responses/errors" }
         }
       }
     },
-    "/projects/{project_id}/volume/{volume_id}": {
-      "delete": {
-        "summary": "Delete project volume",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "$ref": "#/components/parameters/project_id"
-          },
-          {
-            "$ref": "#/components/parameters/volume_id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/empty"
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "delete-volume"
-            }
-          ]
-        }
-      }
-    },
-    "/projects/{project_id}/authorizations": {
-      "post": {
-        "summary": "list project users authorizations",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "$ref": "#/components/parameters/project_id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "authorizations list",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "_0": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/authorization"
-                      }
-                    }
-                  },
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "list-project-authorizations"
-            }
-          ]
-        }
-      },
-      "patch": {
-        "summary": "change project users authorizations",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "$ref": "#/components/parameters/project_id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/empty"
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "update-project-authorizations"
-            }
-          ]
-        }
-      }
-    },
-    "/me/projects": {
+    "/users/search": {
       "get": {
-        "summary": "list current user projects",
+        "summary": "Search users",
+        "tags": ["Users"],
         "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
           {
-            "$ref": "#/components/parameters/headers_authorization"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "user projects list",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "_0": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/project"
-                      }
-                    }
-                  },
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "list-user-project"
-            }
-          ]
-        }
-      }
-    },
-    "/user-by-id": {
-      "get": {
-        "summary": "get demiurge user by user_id",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "$ref": "#/components/parameters/user_id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "users",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "_0": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/user"
-                      }
-                    }
-                  },
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "user-by-id"
-            }
-          ]
-        }
-      }
-    },
-    "/users-search": {
-      "get": {
-        "summary": "search demiurge user by name",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "name": "searched",
+            "name": "query",
             "in": "query",
-            "description": "the begining of a username to search for",
-            "schema": {
-              "$ref": "#/components/schemas/user/properties/username"
-            }
+            "required": true,
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
           "200": {
-            "description": "users",
+            "description": "Users matching search",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "_0": {
+                    "users": {
                       "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/user"
-                      }
+                      "items": { "$ref": "#/components/schemas/user" }
                     }
-                  },
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "users-search"
-            }
-          ]
-        }
-      }
-    },
-    "/images": {
-      "get": {
-        "summary": "list of available docker images",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "images",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "_0": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/image"
-                      }
-                    }
-                  },
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "list-images"
-            }
-          ]
-        }
-      }
-    },
-    "/scope": {
-      "get": {
-        "summary": "return list of app existing scope",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "scope",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/scope"
-                  },
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "list-scope"
-            }
-          ]
-        }
-      }
-    },
-    "/jupyterlab": {
-      "get": {
-        "summary": "Hub version",
-        "description": "mock the jupyterHub / api endpoint, that returns the hub version in response header.",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "X-JupyterHub-Version X.Y.Z",
-            "headers": {
-              "X-JupyterHub-Version": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^[0-9].[0-9].[0-9]$"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  },
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "fake-hub-version"
-            }
-          ]
-        }
-      }
-    },
-    "/jupyterlab/user": {
-      "get": {
-        "summary": "return the jupyterHub user model associated to the provided token",
-        "description": "This endpoint must only be used by jupyterlab pods.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "user model",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "name": {
-                      "type": "string",
-                      "description": "username",
-                      "example": "boby"
-                    },
-                    "kind": {
-                      "type": "string",
-                      "description": "always 'user'",
-                      "example": "user"
-                    },
-                    "admin": {
-                      "type": "boolean",
-                      "example": false,
-                      "description": "always false"
-                    },
-                    "group": {
-                      "type": "array",
-                      "description": "always empty"
-                    },
-                    "scopes": {
-                      "type": "array",
-                      "description": "list of user's scopes for the server associater to the token provided.",
-                      "example": [
-                        "access:servers!server=xxxxxxxxxx/",
-                        "read:users:groups!user=xxxxxxxxxx",
-                        "read:users:name!user=xxxxxxxxxx"
-                      ]
-                    }
-                  },
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "get-jupyterlab-user-model"
-            }
-          ]
-        }
-      }
-    },
-    "/dynredir/{project_server_id}/{service_name}/{request_path}": {
-      "get": {
-        "parameters": [
-          {
-            "in": "query",
-            "name": "queryParams",
-            "style": "form",
-            "explode": true,
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "302": {
-            "description": "redirection",
-            "headers": {
-              "location": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "dynredir"
-            }
-          ]
-        }
-      }
-    },
-    "/gateway-ready": {
-      "post": {
-        "summary": "set gateway ready to start a project",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/empty"
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "gateway-ready"
-            }
-          ]
-        }
-      }
-    },
-    "/gateway-stop": {
-      "post": {
-        "summary": "gateway tell ganymede it is shuting down a project",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/empty"
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "gateway-stop"
-            }
-          ]
-        }
-      }
-    },
-    "/oauth/clients": {
-      "post": {
-        "summary": "Create OAuth client for user container",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "service_name": {
-                    "type": "string",
-                    "description": "Name of the service"
-                  },
-                  "user_container_id": {
-                    "type": "string",
-                    "description": "ID of the user container"
-                  },
-                  "access_token_lifetime": {
-                    "type": "integer",
-                    "description": "Access token lifetime in seconds"
-                  },
-                  "redirect_uris": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "description": "Allowed redirect URIs"
                   }
-                },
-                "required": ["service_name", "user_container_id"],
-                "additionalProperties": false
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OAuth client created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "client_id": {
-                      "type": "string",
-                      "description": "OAuth client ID"
-                    },
-                    "client_secret": {
-                      "type": "string",
-                      "description": "OAuth client secret"
-                    }
-                  },
-                  "additionalProperties": false
                 }
               }
             }
           },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "create-oauth-client"
-            }
-          ]
-        }
-      },
-      "delete": {
-        "summary": "Delete OAuth client for user container",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          },
-          {
-            "name": "user_container_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "ID of the user container"
-          },
-          {
-            "name": "service_name",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Name of the service"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OAuth client deleted successfully"
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "delete-oauth-client"
-            }
-          ]
+          "4XX": { "$ref": "#/components/responses/errors" }
         }
       }
     }
@@ -993,7 +492,7 @@
   "components": {
     "responses": {
       "empty": {
-        "description": "ok",
+        "description": "Success",
         "content": {
           "application/json": {
             "schema": {
@@ -1004,396 +503,104 @@
         }
       },
       "errors": {
-        "description": "errors",
+        "description": "Error response",
         "content": {
           "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/errors"
-            }
+            "schema": { "$ref": "#/components/schemas/errors" }
           }
         }
       }
     },
     "schemas": {
-      "Empty": {
-        "title": "Empty Schema",
-        "type": "object"
-      },
       "errors": {
         "type": "object",
         "properties": {
-          "uuid": {
-            "type": "string"
-          },
+          "uuid": { "type": "string" },
           "errors": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
-                "message": {
-                  "type": "string"
-                },
-                "public": {
-                  "type": "boolean"
-                },
-                "default": {
-                  "type": "boolean"
-                }
-              },
-              "additionalProperties": false
+                "message": { "type": "string" },
+                "public": { "type": "boolean" }
+              }
             }
           }
-        },
-        "additionalProperties": false
+        }
       },
       "user": {
-        "title": "User Schema",
         "type": "object",
         "properties": {
-          "user_id": {
-            "description": "User System Id",
-            "type": "string",
-            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-            "maxLength": 36,
-            "example": "b677ffdb-2a4a-4875-834c-fd2a64262a44"
-          },
-          "username": {
-            "description": "User name (@)",
-            "type": "string",
-            "maxLength": 50,
-            "pattern": "^[a-zA-Z0-9_]*$",
-            "example": "Boby_7891"
-          },
-          "firstname": {
-            "description": "User fistname",
-            "type": "string",
-            "maxLength": 50,
-            "pattern": "^[a-zA-Z0-9_]*$",
-            "example": "Robert"
-          },
-          "lastname": {
-            "description": "User lastname",
-            "type": "string",
-            "maxLength": 50,
-            "pattern": "^[a-zA-Z0-9_]*$",
-            "example": "Doe"
-          },
-          "picture": {
-            "description": "User profil picture",
-            "type": "string",
-            "nullable": true,
-            "maxLength": 200,
-            "pattern": "^$|^https://[a-zA-Z0-9./-_]{1,256}$",
-            "example": "https://domain.com/xxx"
-          }
-        },
-        "additionalProperties": false
+          "user_id": { "type": "string", "format": "uuid" },
+          "username": { "type": "string", "maxLength": 128 },
+          "email": { "type": "string", "format": "email" },
+          "picture": { "type": "string", "nullable": true },
+          "firstname": { "type": "string", "nullable": true },
+          "lastname": { "type": "string", "nullable": true }
+        }
+      },
+      "organization": {
+        "type": "object",
+        "properties": {
+          "organization_id": { "type": "string", "format": "uuid" },
+          "owner_user_id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string", "maxLength": 100 },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "organization_member": {
+        "type": "object",
+        "properties": {
+          "user_id": { "type": "string", "format": "uuid" },
+          "username": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "role": { "type": "string", "enum": ["owner", "admin", "member"] },
+          "added_at": { "type": "string", "format": "date-time" }
+        }
       },
       "project": {
-        "title": "Project",
         "type": "object",
         "properties": {
-          "name": {
-            "title": "Project name",
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 50,
-            "pattern": "^[a-zA-Z0-9_ ]*$",
-            "example": "My Super_project-1"
-          },
-          "project_id": {
-            "title": "Project id",
-            "type": "string",
-            "example": "9b94ea74-8514-4e2d-977b-8006463b849e"
-          },
-          "owner_id": {
-            "description": "User System Id",
-            "type": "string",
-            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-            "maxLength": 36,
-            "example": "b677ffdb-2a4a-4875-834c-fd2a64262a44"
-          },
-          "organization_id": {
-            "description": "Organization Id",
-            "type": "string",
-            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-            "maxLength": 36,
-            "example": "b677ffdb-2a4a-4875-834c-fd2a64262a44"
-          },
-          "created_on": {
-            "title": "project creation date",
-            "description": "ISO 8601 UTC date time of user authorization",
-            "type": "string",
-            "nullable": true,
-            "maxLength": 24,
-            "pattern": "^([12]\\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01]))T([0-2][0-9]):([0-5][0-9]):([0-5][0-9]).000Z$",
-            "example": "2023-03-28T07:15:50.000Z"
-          },
-          "gateway_hostname": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
+          "project_id": { "type": "string", "format": "uuid" },
+          "organization_id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string", "maxLength": 100 },
+          "public": { "type": "boolean" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "gateway_hostname": { "type": "string", "nullable": true }
+        }
       },
-      "image": {
-        "title": "Docker Image",
+      "project_member": {
         "type": "object",
         "properties": {
-          "image_id": {
-            "title": "Image id",
-            "type": "number",
-            "example": 42
-          },
-          "image_name": {
-            "title": "Image name",
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 256,
-            "example": "jupyter/datascience-notebook"
-          },
-          "image_tag": {
-            "title": "Image tag",
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 256,
-            "example": "x86_64-lab-4.0.0"
-          },
-          "image_sha256": {
-            "title": "Image sha256",
-            "type": "string",
-            "minLength": 64,
-            "maxLength": 64,
-            "example": "af5b0c34be3b7672ec70a14b5fbe0d42269dcd7db7a0b5df88b1b1d13c516340"
-          }
-        },
-        "additionalProperties": false
-      },
-      "scope": {
-        "title": "scope",
-        "type": "object",
-        "properties": {
-          "name": {
-            "title": "scope name",
-            "type": "string",
-            "example": "server:access"
-          },
-          "user": {
-            "title": "is user scope",
-            "type": "boolean"
-          },
-          "system": {
-            "title": "is system scope",
-            "type": "boolean"
-          }
-        },
-        "additionalProperties": false
-      },
-      "volume": {
-        "title": "Volume",
-        "type": "object",
-        "properties": {
-          "volume_id": {
-            "title": "Volume id",
-            "type": "number",
-            "example": 1598746
-          },
-          "volume_name": {
-            "title": "Volume name",
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 50,
-            "pattern": "^[a-zA-Z0-9-]*$",
-            "example": "My-Super-Volume-1"
-          },
-          "volume_storage": {
-            "title": "Volume storage size (Gi)",
-            "type": "number",
-            "example": 1024
-          }
-        },
-        "additionalProperties": false
-      },
-      "mount": {
-        "title": "Mount",
-        "type": "object",
-        "properties": {
-          "volume_id": {
-            "title": "Volume id",
-            "type": "number",
-            "example": 1598746
-          },
-          "volume_name": {
-            "title": "Volume name",
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 50,
-            "pattern": "^[a-zA-Z0-9-]*$",
-            "example": "My-Super-Volume-1"
-          },
-          "volume_storage": {
-            "title": "Volume storage size (Gi)",
-            "type": "number",
-            "example": 1024
-          },
-          "mount_point": {
-            "title": "mount point",
-            "type": "string",
-            "minLength": 2,
-            "maxLength": 512,
-            "pattern": "^/[a-zA-Z0-9/-_]*$",
-            "example": "/mnt/data"
-          }
-        },
-        "additionalProperties": false
-      },
-      "server": {
-        "title": "Project",
-        "type": "object",
-        "properties": {
-          "project_server_id": {
-            "title": "project server id",
-            "type": "number",
-            "example": 1598746
-          },
-          "project_id": {
-            "title": "Project id",
-            "type": "string",
-            "example": "9b94ea74-8514-4e2d-977b-8006463b849e"
-          },
-          "server_name": {
-            "title": "Server name",
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 50,
-            "pattern": "^[a-zA-Z0-9_ ]*$",
-            "example": "My Super_server-1"
-          },
-          "image_id": {
-            "title": "server image Id",
-            "type": "number"
-          },
-          "host_user_id": {
-            "title": "Host user id",
-            "type": "string",
-            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-            "maxLength": 36,
-            "example": "b677ffdb-2a4a-4875-834c-fd2a64262a44",
-            "nullable": true
-          },
-          "ec2_instance_id": {
-            "title": "ec2 instance id",
-            "type": "string",
-            "nullable": true
-          },
-          "location": {
-            "title": "where does the server live",
-            "type": "string",
-            "enum": [
-              "aws",
-              "none",
-              "hosted"
-            ]
-          },
-          "oauth": {
-            "title": "oauth",
-            "type": "array",
-            "items": {
-              "type": "object"
-            }
-          }
-        },
-        "additionalProperties": false
-      },
-      "authorization": {
-        "title": "Project Server user authorizations",
-        "type": "object",
-        "properties": {
-          "user_id": {
-            "description": "User System Id",
-            "type": "string",
-            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-            "maxLength": 36,
-            "example": "b677ffdb-2a4a-4875-834c-fd2a64262a44"
-          },
-          "scope": {
-            "title": "current user authorization scopes for this Server",
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "is_owner": {
-            "type": "boolean"
-          }
-        },
-        "additionalProperties": false
+          "user_id": { "type": "string", "format": "uuid" },
+          "username": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "added_at": { "type": "string", "format": "date-time" }
+        }
       }
     },
     "parameters": {
-      "user_cookie": {
-        "name": "cookie demiurge-user",
-        "in": "cookie",
-        "description": "demiurge user cookie containing valid access_token",
-        "schema": {
-          "type": "string",
-          "maxLength": 4096,
-          "pattern": "^[a-zA-Z0-9_%+/]*$",
-          "example": "%7B%22id_token%22%3A%22eyJraWQiOiJhbzJlQkIxV21MeGlVV1hZT2JxYlJSaU01anEzR3VXUjBSZjFvVExzUWVRPSIsImFsZyI6IlJTMjU2In0.eyJhdF9oYXNoIjoiY1g1bUttdXc1VFBGZTRVSFhfY2RmdyIsInN1YiI6ImI2NzdmZmRiLTJhNGEtNDg3NS04MzRjLWZkMmE2NDI2MmE0NCIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAudXMtZWFzdC0xLmFtYXpvbmF3cy5jb21cL3VzLWVhc3QtMV9PcTFkamM3S2wiLCJjb2duaXRvOnVzZXJuYW1lIjoibGFqb2llIiwib3JpZ2luX2p0aSI6ImM5YmE3ZDAwLTgxYTItNDc4YS05YmZmLTcxZWRmMDRiNTM0NCIsImF1ZCI6IjU2dXNqbG5vdTJxYTF0YWc2aW5zaTM5MGNxIiwiZXZlbnRfaWQiOiI3YzMwMjcxZi1kY2NhLTQzNzMtOWY0My1iNTg0NzQ3NTA0MDYiLCJ0b2tlbl91c2UiOiJpZCIsImF1dGhfdGltZSI6MTY3OTkxNDQ0OCwiZXhwIjoxNjc5OTE4MDQ4LCJpYXQiOjE2Nzk5MTQ0NDgsImp0aSI6ImQ0ZmRhZjUwLTk3ZDAtNDc3NC05MzA0LWJhODVmYWYxMDdmYyIsImVtYWlsIjoiYW50b2luZS5kdXJhbmRAb3V0bG9vay5jb20ifQ.msH6hnp1LpVdOlnPGf-ZHwm-JcD_KHTJMeR5QO2TN-rEqcmD7MDokkdGOdXqlz7mFT5pshW1NaXjYrw_Fryf5coWiU5At9GHeDXyUdRoewyQiXydMO_p6v9CQAXjRRPS6jUb6SVgKyMvKIVz7u0xcwcPWWlSuJoMF6PMgqPcsrnzieDnIAFUJgEAGJZH-GUnQdWodnxVfaH7-SlAXejXk5vtv7VUtp8xlQZZnLy_0SpL0xrqwXBI6n2By9-pwCb2akADXaIkW80tPntV1jB5e7SsRFqxCKENLeOvnK9MclJ8uabfau752cI7isk46xpFKHAvObzyQclfM4CuWwXeXQ%22%2C%22access_token%22%3A%22eyJraWQiOiJcL2JNVDk3UnhBcDRGU25GR1ZUQU1zb3RCN0J3YWhwMVRraWpiTVNVV29yVT0iLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJiNjc3ZmZkYi0yYTRhLTQ4NzUtODM0Yy1mZDJhNjQyNjJhNDQiLCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAudXMtZWFzdC0xLmFtYXpvbmF3cy5jb21cL3VzLWVhc3QtMV9PcTFkamM3S2wiLCJ2ZXJzaW9uIjoyLCJjbGllbnRfaWQiOiI1NnVzamxub3UycWExdGFnNmluc2kzOTBjcSIsIm9yaWdpbl9qdGkiOiJjOWJhN2QwMC04MWEyLTQ3OGEtOWJmZi03MWVkZjA0YjUzNDQiLCJldmVudF9pZCI6IjdjMzAyNzFmLWRjY2EtNDM3My05ZjQzLWI1ODQ3NDc1MDQwNiIsInRva2VuX3VzZSI6ImFjY2VzcyIsInNjb3BlIjoicGhvbmUgb3BlbmlkIGVtYWlsIiwiYXV0aF90aW1lIjoxNjc5OTE0NDQ4LCJleHAiOjE2Nzk5MTgwNDgsImlhdCI6MTY3OTkxNDQ0OCwianRpIjoiM2IxYWJhMTgtMjFhNy00YjQ1LTk0NzMtNGMxZDJlMGI4ZDhiIiwidXNlcm5hbWUiOiJsYWpvaWUifQ.OY2UCKP3VuUwKR9HX8KZR-H9WBirOepvyDdf0AhRE5_Mwvi4cs5XzwWBSX6OT2-CBcle81xFtxOEprzqMIjKFHsSlxaxhTi7ktA0qtaAIeJE2zY4i4CdfKasK-vXtwj6VjF6R7hR-kGzjX7vQ79aty26qn155e2upneHkixlz3NG_JapBHa8yHQRlDJ-5zocjb844JpAkxKpyZkSj61IVZkMwOtIqSZDgtYZNEsbHSGSB1zST-ezZpY1ZasY6fbstCB5ZbG2NqusgeZ8XKQtE8awgNWVbWFuuCO5qj6LukARODRq2ON_aI55UP2rXlRUQe3h5afpxvJOWMY2xY5ofA%22%2C%22refresh_token%22%3A%22eyJjdHkiOiJKV1QiLCJlbmMiOiJBMjU2R0NNIiwiYWxnIjoiUlNBLU9BRVAifQ.km7cW6bLYaPbwKU5laZnmLFp0Aua3cWlqInCrp3zOmyDXxWx_lAcpIAHEKavsQC4j_XV0-7mBSspjfdaVLdBxOeN_I4eidUuwkpFEmg_pPK7-5xDh5z_FF3wWN8gpSNGMaA1jX9uyp5dd9_4JSpR8ZyvEmkOsP7vNgC1zYsPmaZahS9X9qVZutH1LhKplXFx5kB_uIiKysnkIoiaENlEg7E4fTBnEkqV5WH0oQeA1yJKwzbWw3OnIdDtiEzNXM51zfFE7GMDGja4_kkDiCnnf2990pTmO5dL6G6zz3dep4GO0EOA6rnGPdhCikw64y3KAgOrtD_KtLzLgwT7_OkLGQ.J8ZLPIC8xjGwNLd-.OiROePxunnJqECeG3QHCae89oUVeAVhiO0rj-dDv14u1M67UV-r3Saz_PPpRJsnK2hzEBvLQo7VB_212RwNDpmpVlvXmk_4mCP6OAxt3Ynx2CruNG7hBFicZsLh6RKBnd7EXQTKKa12bhpASayB9t4HLTw_N7rD5i_xWt8cQTNYuRMozrTa3E6is3mb6eR8M6ZAy4MLBOYfBPuvvMjTDxnaRl5lZwQ_IzXFWiWPUPfH0TyerXAgrUxQx4uCzdaS9VUNdJ1hI4tUgv7_ByVSEsohKqUFNanPakjDWs-Oy7HU-HGpZN0qw_b4x089ZDDJOUi-5rAlnBt65qJhuPpi6NFEEXy1K8DKfWcYhhFl6OzzTUoAJR57wTm4H9QmtnUyjGC-_vgWah00ZhD5Qnl3mCye0H7RkANK-Vvk46IOhqV50tVAYlWc3d3G0giUuN99xAHNZuZQqsYidM6QOveYVKTIYTKwsgpLeZWsfW0h38PaL0y_reztnl6YNFhGTEW1gDE4FezcJxVvjzeNPHmcqn7pIeL7yBXjxmP6a8qZBQ73wZbseoDY6lImnu8SzVpSiNdbdR5zjwJXLS9QglmQMWRgqMNfwTJIdpnAUmevsx41m_1lNcGpNTzhFxUFAKYmcgO7gsiqxj7INmMwPWxhASZIQb-QkyQ-4fOVIwXzwYKUwQ76LZw9h_8iDqiUekQehh98mnnSGpf2tFHJN47eb9H2svHR32huqd1ZOv9MQXzxL79ZZ9U0sTxElzv-2CNPSHERwrHvssXn9gFPvFDpevlcTKnC9eVW14J189-QUyyQSlmG26ZzYFR34fPJnHrEmlheUEDZuC5A-lu5fjT25uPGomZfaR7OkkLhxS5c7g1XKzTtMmrZf0PBtJvXpsjYfa9FlmZ1CwGJ8qWFOqCYxZ9S3pPtPRBSNp5vPSRid2GMv0UTSMIiBLHf1YiJsJw-PlKBPSNxyo6CnVVj87HhrTQ4kfQ_bd8XITHe5GYkKDaZK3ekTj1o7CmcB-c6Zar6YcgHEyycmKpUc-YL8YU5jlScja4x1Wpwv2PAqqPv2e56agCq1Ch86czf18dPEP_iD8-_cUi5mJ_Agl-9TFpO-JA2vh_Ft3z5ukzMohG8kCit3QRfKnwDXQCnuyQUFM213AdI8qMPEfXmqtZIONlY8J9LCac28Mp0XgUmcrM7WPV4hpX2fYGsogmpnI6QqLPZOjM5cQWcO_n5u1EwUEZT9X8AfC9D0cGH9UgPQPcN7V4p21Wzq56UPjBZjpTRXcbR40SiEHYE.mTfiMZ14oSWbFQ9vwgngUQ%22%2C%22expires_in%22%3A3600%2C%22token_type%22%3A%22Bearer%22%7D"
-        }
-      },
       "headers_authorization": {
         "in": "header",
         "name": "authorization",
-        "description": "demiurge user's access token or server (JWT)",
+        "description": "JWT access token",
         "required": true,
         "schema": {
           "type": "string",
-          "maxLength": 4096,
           "pattern": "^(?:token\\s)?[-A-Za-z0-9_+./]*={0,3}$"
         }
       },
+      "org_id": {
+        "in": "path",
+        "name": "org_id",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      },
       "project_id": {
         "in": "path",
-        "required": true,
         "name": "project_id",
-        "description": "a uuid, id of the project.",
-        "schema": {
-          "$ref": "#/components/schemas/project/properties/project_id"
-        }
-      },
-      "project_server_id": {
-        "in": "path",
         "required": true,
-        "name": "project_server_id",
-        "description": "a unsigned integer, id of the project's server.",
-        "schema": {
-          "$ref": "#/components/schemas/server/properties/project_server_id"
-        }
-      },
-      "volume_id": {
-        "in": "path",
-        "required": true,
-        "name": "volume_id",
-        "description": "a unsigned integer, id of the volume.",
-        "schema": {
-          "$ref": "#/components/schemas/volume/properties/volume_id"
-        }
-      },
-      "user_id": {
-        "name": "user_id",
-        "in": "query",
-        "description": "an exact user id",
-        "schema": {
-          "$ref": "#/components/schemas/user/properties/user_id"
-        }
-      },
-      "project_name": {
-        "name": "project_name",
-        "in": "query",
-        "description": "the exact project name",
-        "schema": {
-          "$ref": "#/components/schemas/project/properties/name"
-        }
+        "schema": { "type": "string", "format": "uuid" }
       }
     }
   }

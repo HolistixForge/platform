@@ -1,41 +1,26 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "ganymede API",
-    "version": "1.0"
+    "title": "Gateway API (Collaboration & Events)",
+    "version": "2.0",
+    "description": "Organization-level gateway for collaborative state, containers, and OAuth"
   },
   "paths": {
     "/collab/ping": {
       "get": {
+        "summary": "Health check",
+        "tags": ["Collab"],
         "responses": {
-          "200": {
-            "$ref": "#/components/responses/empty"
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "ping"
-            }
-          ]
+          "200": { "$ref": "#/components/responses/empty" }
         }
       }
     },
     "/collab/event": {
       "post": {
-        "summary": "event",
-        "description": "reduce event",
+        "summary": "Process collaborative event",
+        "tags": ["Collab"],
         "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          }
+          { "$ref": "#/components/parameters/headers_authorization" }
         ],
         "requestBody": {
           "required": true,
@@ -47,49 +32,28 @@
                   "event": {
                     "type": "object",
                     "properties": {
-                      "type": {
-                        "type": "string"
-                      }
+                      "type": { "type": "string" }
                     },
                     "additionalProperties": true,
-                    "required": [
-                      "type"
-                    ]
+                    "required": ["type"]
                   }
                 },
-                "required": [
-                  "event"
-                ],
+                "required": ["event"],
                 "additionalProperties": false
               }
             }
           }
         },
         "responses": {
-          "200": {
-            "$ref": "#/components/responses/empty"
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "event"
-            }
-          ]
+          "200": { "$ref": "#/components/responses/empty" },
+          "4XX": { "$ref": "#/components/responses/errors" }
         }
       }
     },
     "/collab/start": {
       "post": {
-        "summary": "start project collaboration event API and websocket",
-        "parameters": [],
+        "summary": "Initialize gateway with organization handshake",
+        "tags": ["Collab"],
         "requestBody": {
           "required": true,
           "content": {
@@ -97,147 +61,80 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "tmp_handshake_token": {
-                    "type": "string"
-                  }
+                  "tmp_handshake_token": { "type": "string", "format": "uuid" }
                 },
-                "required": [
-                  "tmp_handshake_token"
-                ],
-                "additionalProperties": false
+                "required": ["tmp_handshake_token"]
               }
             }
           }
         },
         "responses": {
-          "200": {
-            "$ref": "#/components/responses/empty"
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "start"
-            }
-          ]
+          "200": { "$ref": "#/components/responses/empty" },
+          "4XX": { "$ref": "#/components/responses/errors" }
         }
       }
     },
     "/collab/room-id": {
       "get": {
-        "summary": "get room id",
+        "summary": "Get current room ID",
+        "tags": ["Collab"],
         "responses": {
           "200": {
-            "description": "room id",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "room-id"
-            }
-          ]
-        }
-      }
-    },
-    "/collab/vpn": {
-      "get": {
-        "summary": "",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/headers_authorization"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "vpn config",
+            "description": "Room ID",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "config": {
-                      "type": "string"
-                    },
-                    "certificates": {
+                    "data": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/collab/vpn-config": {
+      "get": {
+        "summary": "Get VPN configuration",
+        "tags": ["VPN"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" }
+        ],
+        "responses": {
+          "200": {
+            "description": "VPN configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
                       "type": "object",
                       "properties": {
-                        "clients.crt": {
-                          "type": "string"
-                        },
-                        "clients.key": {
-                          "type": "string"
-                        },
-                        "ca.crt": {
-                          "type": "string"
-                        },
-                        "ta.key": {
-                          "type": "string"
-                        }
+                        "ca": { "type": "string" },
+                        "cert": { "type": "string" },
+                        "key": { "type": "string" },
+                        "ta": { "type": "string" },
+                        "port": { "type": "number" },
+                        "config": { "type": "string" }
                       }
                     }
-                  },
-                  "additionalProperties": false
+                  }
                 }
               }
             }
           },
-          "4XX": {
-            "$ref": "#/components/responses/errors"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/errors"
-          }
-        },
-        "x-backend-engine": {
-          "points": [
-            {
-              "selector": true,
-              "exec-pipe-id": "vpn"
-            }
-          ]
+          "4XX": { "$ref": "#/components/responses/errors" }
         }
       }
     }
   },
   "components": {
-    "parameters": {
-      "headers_authorization": {
-        "in": "header",
-        "name": "authorization",
-        "description": "demiurge user's access token or server (JWT)",
-        "required": true,
-        "schema": {
-          "type": "string",
-          "maxLength": 4096,
-          "pattern": "^(?:token\\s)?[-A-Za-z0-9_+./]*={0,3}$"
-        }
-      }
-    },
     "responses": {
       "empty": {
-        "description": "ok",
+        "description": "Success",
         "content": {
           "application/json": {
             "schema": {
@@ -248,47 +145,42 @@
         }
       },
       "errors": {
-        "description": "errors",
+        "description": "Error response",
         "content": {
           "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/errors"
-            }
+            "schema": { "$ref": "#/components/schemas/errors" }
           }
         }
       }
     },
     "schemas": {
-      "Empty": {
-        "title": "Empty Schema",
-        "type": "object"
-      },
       "errors": {
         "type": "object",
         "properties": {
-          "uuid": {
-            "type": "string"
-          },
+          "uuid": { "type": "string" },
           "errors": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
-                "message": {
-                  "type": "string"
-                },
-                "public": {
-                  "type": "boolean"
-                },
-                "default": {
-                  "type": "boolean"
-                }
-              },
-              "additionalProperties": false
+                "message": { "type": "string" },
+                "public": { "type": "boolean" }
+              }
             }
           }
-        },
-        "additionalProperties": false
+        }
+      }
+    },
+    "parameters": {
+      "headers_authorization": {
+        "in": "header",
+        "name": "authorization",
+        "description": "JWT access token",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^(?:token\\s)?[-A-Za-z0-9_+./]*={0,3}$"
+        }
       }
     }
   }

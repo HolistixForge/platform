@@ -39,3 +39,4 @@ export const moduleBackend: TModule<undefined, TReducersBackendExports> = {
 };
 
 export type { TEventPeriodic } from './lib/backendEventProcessor';
+export { BackendEventProcessor } from './lib/backendEventProcessor';

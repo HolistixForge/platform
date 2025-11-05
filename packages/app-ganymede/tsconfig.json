@@ -3,13 +3,10 @@
   "include": [],
   "references": [
     {
-      "path": "../simple-types"
-    },
-    {
       "path": "../demiurge-types"
     },
     {
-      "path": "../modules/user-containers"
+      "path": "../simple-types"
     },
     {
       "path": "../log"

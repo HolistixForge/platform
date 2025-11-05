@@ -1,133 +1,159 @@
+import './declarations.d.ts';
+import express from 'express';
+import expressSession from 'express-session';
+import passport from 'passport';
+import { NotFoundException } from '@monorepo/log';
 import {
-  ExpressHandler,
-  ApiDefinition,
-  EpDefinition,
-  Executor,
-  CommandFactory,
-  TSqlApi,
-  TConnections,
-  Connections,
-  Inputs,
-  TStart,
-  myfetch,
-  TCommandConfig,
-  ConfigException,
+  setupBasicExpressApp,
+  setupErrorsHandler,
+  setupValidator,
 } from '@monorepo/backend-engine';
-import { OpenAPIV3 } from 'express-openapi-validator/dist/framework/types';
 
-import {} from './config.js';
-import { TokenToJupyterlabUserModel } from './commands/jupyterlab-user-model.js';
-import { ListScope, ValidateUserScope } from './commands/scope.js';
-import { GatewayConfig } from './commands/gateway-config.js';
-import { ServerCommand } from './commands/server-command.js';
-import {
-  Ec2InstanceCreate,
-  Ec2InstanceState,
-  Ec2InstanceStop,
-  Ec2InstanceStart,
-  Ec2InstanceDelete,
-} from './commands/ec2-instance.js';
-
-//
-//
-
-import oas from './oas30.json';
-
-import execPipesDefinition from './exec-pipes.json';
-
-import databases from './data-connections.json';
-
-import sqlApi from './sql-api-pg.json';
+import { CONFIG } from './config';
+import { PgSessionModel } from './models/session';
+import * as oas from './oas30.json';
+import { setupGithubRoutes } from './routes/auth/github';
+import { setupGitlabRoutes } from './routes/auth/gitlab';
+import { setupDiscordRoutes } from './routes/auth/discord';
+import { setupLinkedinRoutes } from './routes/auth/linkedin';
+import { setupLocalRoutes } from './routes/auth/local';
+import { setupTOTPRoutes } from './routes/auth/totp';
+import { setupMagicLinkRoutes } from './routes/auth/magic-link';
+import { setupOauthRoutes } from './routes/auth/oauth';
+import { setupOrganizationRoutes } from './routes/organizations';
+import { setupProjectRoutes } from './routes/projects';
+import { setupGatewayRoutes } from './routes/gateway';
+import { setupUserRoutes } from './routes/users';
 
 //
+// Express app setup
 //
 
-CommandFactory.setCustomCommand((type: string, config: TCommandConfig) => {
-  switch (type) {
-    case 'token-to-jupyterlab-user-model':
-      return new TokenToJupyterlabUserModel(config);
-    case 'list-scope':
-      return new ListScope(config);
-    case 'validate-scope':
-      return new ValidateUserScope(config);
-    case 'gateway-config':
-      return new GatewayConfig(config);
-    case 'server-command':
-      return new ServerCommand(config);
-    case 'ec2-instance-create':
-      return new Ec2InstanceCreate(config);
-    case 'ec2-instance-state':
-      return new Ec2InstanceState(config);
-    case 'ec2-instance-stop':
-      return new Ec2InstanceStop(config);
-    case 'ec2-instance-start':
-      return new Ec2InstanceStart(config);
-    case 'ec2-instance-delete':
-      return new Ec2InstanceDelete(config);
-  }
-  throw new ConfigException('invalid command');
+const app = express();
+app.set('trust proxy', 1);
+
+setupBasicExpressApp(app, {
+  jaeger: process.env.JAEGER_FQDN
+    ? {
+        serviceName: 'demiurge',
+        serviceTag: 'ganymede',
+        host: process.env.JAEGER_FQDN,
+      }
+    : undefined,
+});
+
+app.options('*', (req, res) => {
+  res.status(200).end();
 });
 
 //
+// OpenAPI Request/Response Validation
 //
 
+setupValidator(app, {
+  apiSpec: oas as any,
+  validateRequests: true,
+  validateResponses: {
+    removeAdditional: 'failing',
+    onError: (err, body, req) => {
+      if (!err.message.includes(' must be string')) {
+        console.error('Response validation error:', err.message);
+        console.error('From:', req.originalUrl);
+      }
+    },
+  },
+});
+
 //
+// Session setup
 //
 
-export const main = async () => {
-  const apiDefinition = new ApiDefinition(oas as any);
+export const SESSION_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days
 
-  const epDefinition = new EpDefinition(execPipesDefinition as any);
+app.use(
+  expressSession({
+    store: new PgSessionModel(),
+    secret: CONFIG.SESSION_COOKIE_KEY,
+    resave: false,
+    saveUninitialized: false,
+    name: 'sessid',
+    cookie: {
+      secure: true,
+      domain: CONFIG.GANYMEDE_FQDN,
+      maxAge: SESSION_MAX_AGE,
+      httpOnly: true,
+      path: '/',
+      sameSite: 'lax',
+    },
+  })
+);
 
-  const inputs = new Inputs({});
+//
+// Passport setup
+//
 
-  const executor = new Executor(apiDefinition, epDefinition, inputs);
+app.use(passport.initialize());
+app.use(passport.session());
 
-  const _db = (await executor._inputs.cloneEvalArgs(databases)) as TConnections;
-  _db['pg-1'].api = sqlApi as TSqlApi;
-  const connections = new Connections(_db);
-  executor.setConnections(connections);
+//
+// Routes
+//
 
-  //
-  //
+const router = express.Router();
+setupGithubRoutes(router);
+setupGitlabRoutes(router);
+setupLinkedinRoutes(router);
+setupDiscordRoutes(router);
+setupLocalRoutes(router);
+setupTOTPRoutes(router);
+setupMagicLinkRoutes(router);
+setupOauthRoutes(router);
+setupOrganizationRoutes(router);
+setupProjectRoutes(router);
+setupGatewayRoutes(router);
+setupUserRoutes(router);
 
-  const bindings: TStart[] = JSON.parse(
-    (await executor._inputs.cloneEvalArgs(
-      '{env.GANYMEDE_SERVER_BIND}'
-    )) as string
-  );
+app.use('/', router);
 
-  const eh = new ExpressHandler(executor, apiDefinition, {
-    openApiValidator: {
-      apiSpec: oas as OpenAPIV3.DocumentV3,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      ignorePaths: (path: string) => {
-        return false;
+//
+// Error handlers
+//
+
+app.use(function (req, res, next) {
+  const err: any = new NotFoundException();
+  next(err);
+});
+
+setupErrorsHandler(app);
+
+//
+// Start server
+//
+
+const bindings: Array<{
+  port: number;
+  protocol: 'http' | 'https';
+  cert?: string;
+  key?: string;
+}> = JSON.parse(CONFIG.GANYMEDE_SERVER_BIND);
+
+bindings.forEach((binding) => {
+  if (binding.protocol === 'https') {
+    const https = require('https');
+    const fs = require('fs');
+    const server = https.createServer(
+      {
+        cert: fs.readFileSync(binding.cert),
+        key: fs.readFileSync(binding.key),
       },
-    },
-    basicExpressApp: {
-      jaeger: process.env.JAEGER_FQDN
-        ? {
-            serviceName: 'demiurge',
-            serviceTag: 'ganymede',
-            host: process.env.JAEGER_FQDN,
-          }
-        : undefined,
-    },
-  });
-
-  bindings.forEach((b) => {
-    eh.start(b);
-  });
-
-  // TODO_DEM: delete if fixed by ajv: ajv lib issue workaround,
-  // when first request is one with pathParameters, openapi spec validation fail within ajv lib
-  // (required field must be 'array')
-  // else, openapi spec compilation is fine.
-  myfetch({
-    url: `http://localhost:${bindings[0].port}/jupyterlab`,
-    method: 'GET',
-  });
-};
-
-main();
+      app
+    );
+    server.listen(binding.port, () => {
+      console.log(`Ganymede HTTPS server listening on port ${binding.port}`);
+    });
+  } else {
+    app.listen(binding.port, () => {
+      console.log(`Ganymede HTTP server listening on port ${binding.port}`);
+    });
+  }
+});

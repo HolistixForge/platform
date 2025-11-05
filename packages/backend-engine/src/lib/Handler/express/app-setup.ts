@@ -12,7 +12,6 @@ import {
 } from '@monorepo/log';
 
 import { respond } from './responses';
-import { OpenapiException } from '../../Exceptions/Exception';
 import { jaegerSetError, setupJaegerLog } from '../../Logs/jaeger';
 
 //
@@ -91,7 +90,10 @@ export const setupErrorsHandler = (app: express.Express) => {
       err.status === 400 &&
       Array.isArray(err.errors)
     )
-      exception = new OpenapiException(err);
+      exception = new Exception(
+        err.errors.map((e: any) => ({ message: e.message, public: true })),
+        400
+      );
     // if openapi validator not found ?
     else if (
       err.name === 'Not Found' &&

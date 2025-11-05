@@ -1,5 +1,4 @@
 import { DeepReadonly } from 'ts-essentials';
-import { SqlException } from '../../Exceptions/Exception';
 // import { Mysql, TMysqlConfig } from './mysql/Mysql';
 import { Sql, TSqlConfig } from './Sql';
 import { PostgreSQL } from './postgres/PostgreSQL';
@@ -61,7 +60,7 @@ export class Connections {
           break;
 
         default:
-          throw new SqlException(`no such sql driver [${cd.type}]`);
+          throw new Error(`no such sql driver [${cd.type}]`);
       }
     }
   }

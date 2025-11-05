@@ -1,12 +1,10 @@
 import { spawnSync } from 'child_process';
 
-import { RunException } from '@monorepo/backend-engine';
 import { TJson } from '@monorepo/simple-types';
 import { log } from '@monorepo/log';
 import type { TModule } from '@monorepo/module';
 import { TMyfetchRequest } from '@monorepo/simple-types';
 import { myfetch } from '@monorepo/backend-engine';
-import { ForwardException } from '@monorepo/backend-engine';
 import { TReducersBackendExports } from '@monorepo/reducers';
 import { TCollabBackendExports } from '@monorepo/collab';
 import { TCollabFrontendExports } from '@monorepo/collab/frontend';
@@ -81,8 +79,10 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
       };
       const response = await myfetch(request);
       log(6, 'GATEWAY', `${request.url} response: ${response.statusCode}`);
-      if (response.statusCode !== 200)
-        throw new ForwardException(request, response);
+      if (response.statusCode !== 200) {
+        const error = new Error(`Request to ${request.url} failed with status ${response.statusCode}`);
+        throw error;
+      }
 
       return response.json as T;
     };
@@ -107,31 +107,31 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
           inputString ? { input: inputString } : undefined
         );
         if (result.error) {
-          throw new RunException(
+          throw new Error(
             `Error executing [${fcmd}]: ${result.error.message}`
           );
         }
         output = result.stdout.toString();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
-        throw new RunException(`Error executing [${fcmd}]: ${err.message}`);
+        throw new Error(`Error executing [${fcmd}]: ${err.message}`);
       }
       let json;
       try {
         json = JSON.parse(output);
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
-        throw new RunException(
+        throw new Error(
           `Error executing [${fcmd}]: not a JSON output [[[${output}]]]`
         );
       }
       if (json.status === 'error') {
-        throw new RunException(
+        throw new Error(
           `Error executing script [${name}]: ${json.error}`
         );
       } else if (json.status === 'ok') return json as TJson;
       else
-        throw new RunException(
+        throw new Error(
           `Error executing [${fcmd}]: invalid output status format [${json.status}]`
         );
     };

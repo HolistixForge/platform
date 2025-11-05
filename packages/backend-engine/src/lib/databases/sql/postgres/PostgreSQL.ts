@@ -1,5 +1,4 @@
 import { QueryResult, Pool, PoolClient } from 'pg';
-import { SqlException } from '../../../Exceptions/Exception';
 import { TSqlApi } from '../Connections';
 import { Row, Sql, SqlResult, SqlResultsSet, TSqlConfig } from '../Sql';
 import { TJsonWithDate } from '@monorepo/simple-types';
@@ -107,10 +106,10 @@ export class PostgreSQL extends Sql {
           this._connection = null;
           reconnect = true;
         } else {
-          throw new SqlException(`sql error: ${err.message}`);
+          throw new Error(`SQL error: ${err.message}`);
         }
       }
     } while (reconnect);
-    throw new SqlException(`sql error`);
+    throw new Error(`SQL error`);
   }
 }
