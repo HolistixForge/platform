@@ -1,12 +1,7 @@
 ⚠️ Antoine's stuffs
 
 fix other modules and their stories: user-containers, jupyter
-organisation/project => room ?
-merge account and ganymede: organization, member, gateway management only
-Remove all SQL procedures and exec-pipes that are not used anymore
-
 dns
-
 load save project
 permission module
 credentials module
