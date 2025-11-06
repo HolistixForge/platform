@@ -3,26 +3,35 @@ import * as http from 'http';
 import * as https from 'https';
 import * as fs from 'fs';
 import { log } from '@monorepo/log';
-import { setupBasicExpressApp, setupErrorsHandler, setupValidator, TStart } from '@monorepo/backend-engine';
+import {
+  setupBasicExpressApp,
+  setupErrorsHandler,
+  setupValidator,
+  TStart,
+} from '@monorepo/backend-engine';
 import { BackendEventProcessor } from '@monorepo/reducers';
 import { TProjectConfig } from '@monorepo/gateway';
-import { makeUuid, sleep } from '@monorepo/simple-types';
+import { makeUuid } from '@monorepo/simple-types';
 
 import { initProjectCollaboration } from './build-collab';
 import { PROJECT, VPN, setProjectConfig } from './project-config';
 import { CONFIG } from './config';
-import { 
-  setupCollabRoutes, 
-  setBackendEventProcessor, 
+import {
+  setupCollabRoutes,
+  setBackendEventProcessor,
   setRoomId,
-  setStartProjectCollabCallback 
+  setStartProjectCollabCallback,
 } from './routes/collab';
 import oauthRoutes from './routes/oauth';
 import containerRoutes from './routes/containers';
 import * as oas from './oas30.json';
-import { initializeGateway, shutdownGateway } from './initialization/gateway-init';
+import {
+  initializeGateway,
+  shutdownGateway,
+} from './initialization/gateway-init';
 import { ProjectRoomsManager } from './state/ProjectRooms';
 import { loadOrganizationConfig } from './config/organization';
+import { signalGatewayReady } from './initialization/signal-ready';
 
 //
 // Global state
@@ -84,10 +93,10 @@ const setupExpressApp = () => {
   const router = express.Router();
   setupCollabRoutes(router);
   app.use('/', router);
-  
+
   // OAuth routes
   app.use('/oauth', oauthRoutes);
-  
+
   // Container routes
   app.use('/containers', containerRoutes);
 
@@ -101,7 +110,10 @@ const setupExpressApp = () => {
 // Server startup
 //
 
-const startServer = (app: express.Express, config: TStart): https.Server | http.Server => {
+const startServer = (
+  app: express.Express,
+  config: TStart
+): https.Server | http.Server => {
   const { host, port, certificate } = config;
   const url = `${certificate ? 'https' : 'http'}://${host}:${port}`;
 
@@ -127,46 +139,17 @@ const startServer = (app: express.Express, config: TStart): https.Server | http.
 };
 
 //
-// Signal gateway ready to Ganymede
-//
-
-const signalGatewayReady = async () => {
-  while (true) {
-    try {
-      const response = await fetch(`https://${CONFIG.GANYMEDE_FQDN}/gateway/ready`, {
-        method: 'POST',
-        headers: { 
-          'authorization': CONFIG.GATEWAY_TOKEN,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ 
-          gateway_id: projectRooms?.getProjectCount() ? 'org-gateway' : 'legacy-gateway' 
-        })
-      });
-      
-      if (response.ok) {
-        log(6, 'GATEWAY', 'Successfully signaled ready to Ganymede');
-        break;
-      }
-    } catch (e: any) {
-      log(6, 'GATEWAY', `Can't set ready flag on Ganymede [${e.message}]`);
-      await sleep(5);
-    }
-  }
-};
-
-//
 // Graceful shutdown
 //
 
 function setupShutdownHandlers() {
   const shutdown = async (signal: string) => {
     log(6, 'GATEWAY', `Received ${signal}, initiating graceful shutdown...`);
-    
+
     if (projectRooms) {
       await shutdownGateway(projectRooms);
     }
-    
+
     log(6, 'GATEWAY', 'Shutdown complete, exiting');
     process.exit(0);
   };
@@ -192,27 +175,40 @@ function setupShutdownHandlers() {
     const bindings: TStart[] = JSON.parse(CONFIG.SERVER_BIND);
     bindings.map((b) => startServer(app, b));
 
+    // Signal gateway is ready (if GATEWAY_ID is set)
+    const gatewayId = process.env.GATEWAY_ID;
+    if (gatewayId) {
+      await signalGatewayReady(gatewayId);
+    }
+
     // Load organization configuration
     const orgConfig = loadOrganizationConfig();
-    
+
     if (orgConfig) {
       // NEW: Initialize gateway with organization config
-      log(6, 'GATEWAY', `Initializing gateway for organization: ${orgConfig.organization_name}`);
+      log(
+        6,
+        'GATEWAY',
+        `Initializing gateway for organization: ${orgConfig.organization_name}`
+      );
       projectRooms = await initializeGateway(orgConfig);
-      await signalGatewayReady();
       log(6, 'GATEWAY', 'Gateway ready and serving organization');
     } else if (PROJECT) {
       // LEGACY: Support old single-project mode for backwards compatibility
-      log(5, 'GATEWAY', 'Running in legacy single-project mode (no organization config)');
+      log(
+        5,
+        'GATEWAY',
+        'Running in legacy single-project mode (no organization config)'
+      );
       await startProjectCollab(PROJECT);
     } else {
-      log(3, 'GATEWAY', 'No organization config or project config found - gateway idle');
-      await signalGatewayReady();
+      log(6, 'GATEWAY', 'Gateway idle, waiting for organization allocation...');
+      // Gateway is registered via app-ganymede-cmd CLI tool
+      // Then allocated to organizations via /gateway/start API
     }
 
     // Setup graceful shutdown
     setupShutdownHandlers();
-    
   } catch (error: any) {
     log(1, 'GATEWAY', `Fatal error during startup: ${error.message}`);
     console.error(error);

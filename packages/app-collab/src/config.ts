@@ -1,11 +1,12 @@
 const undefinedValues: string[] = [];
 
 const envVars = [
+  'GATEWAY_ID',
   'GATEWAY_TOKEN',
+  'GATEWAY_HMAC_SECRET',
   'SERVER_BIND',
   'GANYMEDE_FQDN',
   'SCRIPTS_DIR',
-  'GATEWAY_FQDN',
 ] as const;
 
 type EnvVars = (typeof envVars)[number];
@@ -21,6 +22,9 @@ envVars.forEach((varName) => {
   }
 });
 
+// Optional env vars (with defaults)
+const DATA_DIR = process.env.DATA_DIR || '/data';
+
 if (undefinedValues.length > 0) {
   throw new Error(
     `The following environment variables are not defined: ${undefinedValues.join(
@@ -31,4 +35,4 @@ if (undefinedValues.length > 0) {
 
 console.log('CONFIG', CONFIG);
 
-export { CONFIG };
+export { CONFIG, DATA_DIR };

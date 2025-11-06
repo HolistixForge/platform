@@ -1,6 +1,8 @@
+WARNING: obsolete, not up to date
+
 # project server state and transition
 
-## Data model 
+## Data model
 
 [project server types](../packages/demiurge-types/src/lib/project-server.ts)
 
@@ -46,7 +48,7 @@ user run command:
 //
 
 user click "CLOUD" button:
-    => user choose [cpu, ram, storage, gpu, etc.] by selecting an instance type (aws ec2 types) options 
+    => user choose [cpu, ram, storage, gpu, etc.] by selecting an instance type (aws ec2 types) options
     // ami-002c743bda62bd54a, ami-05763d63bd86bcd34, g4dn ?
     => call PROJECT_GATEWAY_API:
         => call GANYMEDE_API:

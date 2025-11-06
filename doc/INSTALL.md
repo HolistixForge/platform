@@ -2,34 +2,9 @@
 
 ## install
 
-## Aws instance
+## Aws instance or similar instance on VPS on any cloud provider
 
 In AWS, setup an Ubuntu Instance, **Ubuntu server 24.04 LTS graviton (t4g.xlarge)** with **50 GB** disk
-
-create or reuse an IAM role 'ganymede-aws-api' for this instance to run with.
-This allow the instance to create other for running users projects resources (docker images) in the cloud
-
-add the following permission on this role
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "ec2:RunInstances",
-        "ec2:StartInstances",
-        "ec2:StopInstances",
-        "ec2:TerminateInstances",
-        "ec2:DescribeInstances",
-        "ec2:CreateTags"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-```
 
 ## Clone repo
 
