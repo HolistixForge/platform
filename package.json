@@ -20,7 +20,7 @@
     "@nx/vite": "^20.8.2",
     "@nx/web": "^20.8.2",
     "@storybook/addon-essentials": "8.5.0",
-    "@storybook/addon-interactions": "^8.4.6",
+    "@storybook/addon-interactions": "8.5.0",
     "@storybook/core-server": "8.5.0",
     "@storybook/jest": "^0.2.3",
     "@storybook/react-vite": "8.5.0",
