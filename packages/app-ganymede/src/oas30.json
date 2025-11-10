@@ -8,28 +8,34 @@
   "paths": {
     "/me": {
       "post": {
-        "summary": "Get current user session",
-        "tags": ["Auth"],
+        "summary": "test logged in",
         "responses": {
           "200": {
-            "description": "User session data",
+            "description": "user session data",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "properties": {},
                   "additionalProperties": true
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
     "/signup": {
       "post": {
-        "summary": "Sign up new user",
-        "tags": ["Auth"],
+        "summary": "signup new user",
+        "description": "",
+        "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -37,27 +43,50 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "email": { "type": "string", "format": "email" },
-                  "password": { "type": "string", "format": "password", "minLength": 10 },
-                  "username": { "type": "string", "pattern": "^[a-zA-Z0-9_]*$", "minLength": 3, "maxLength": 50 },
-                  "firstname": { "type": "string", "maxLength": 50 },
-                  "lastname": { "type": "string", "maxLength": 50 }
+                  "email": {
+                    "$ref": "#/components/schemas/user/properties/email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password"
+                  },
+                  "username": {
+                    "$ref": "#/components/schemas/user/properties/username"
+                  },
+                  "firstname": {
+                    "$ref": "#/components/schemas/user/properties/firstname"
+                  },
+                  "lastname": {
+                    "$ref": "#/components/schemas/user/properties/lastname"
+                  }
                 },
-                "required": ["email", "password", "username"]
+                "required": [
+                  "email",
+                  "password",
+                  "username"
+                ]
               }
             }
           }
         },
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
     "/login": {
       "post": {
-        "summary": "Login user",
-        "tags": ["Auth"],
+        "summary": "login user",
+        "description": "",
+        "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -65,26 +94,411 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "email": { "type": "string", "format": "email" },
-                  "password": { "type": "string" }
+                  "email": {
+                    "$ref": "#/components/schemas/user/properties/email"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
                 },
-                "required": ["email", "password"]
+                "required": [
+                  "email",
+                  "password"
+                ]
               }
             }
           }
         },
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
     "/logout": {
       "post": {
-        "summary": "Logout user",
-        "tags": ["Auth"],
+        "summary": "logout user",
+        "description": "",
+        "parameters": [],
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" }
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        }
+      }
+    },
+    "/password": {
+      "post": {
+        "summary": "change password",
+        "description": "",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string",
+                    "format": "password"
+                  }
+                },
+                "required": [
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        }
+      }
+    },
+    "/github": {
+      "get": {
+        "summary": "authenticate with github",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        }
+      }
+    },
+    "/github/callback": {
+      "get": {
+        "summary": "authenticate with github",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "description": "the code to be exchanged for a token.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "a4bd4a782344ee6bc91b"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        }
+      }
+    },
+    "/gitlab": {
+      "get": {
+        "summary": "authenticate with gitlab",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        }
+      }
+    },
+    "/gitlab/callback": {
+      "get": {
+        "summary": "authenticate with gitlab",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "description": "the code to be exchanged for a token.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "cb156f0ed48ae66e7d3890e8295b9cca120867040ac85710e3a541891669f1d4"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        }
+      }
+    },
+    "/totp/setup": {
+      "post": {
+        "summary": "setup Totp",
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "user private key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "otpUrl": {
+                      "type": "string"
+                    },
+                    "key": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        }
+      }
+    },
+    "/totp/login": {
+      "post": {
+        "summary": "Totp check",
+        "description": "",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        }
+      }
+    },
+    "/magiclink/request": {
+      "post": {
+        "summary": "request magic link token email",
+        "description": "",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "$ref": "#/components/schemas/user/properties/email"
+                  },
+                  "context": {
+                    "type": "string",
+                    "enum": [
+                      "reset-password",
+                      "validate-email"
+                    ]
+                  }
+                },
+                "required": [
+                  "email"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        }
+      }
+    },
+    "/magiclink/callback": {
+      "get": {
+        "summary": "verify magic link token",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "description": "the token sent by email.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "xxxxxxxxxxxxxxxxxxxxxxxxx"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        }
+      }
+    },
+    "/linkedin": {
+      "get": {
+        "summary": "authenticate with linkedin",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        }
+      }
+    },
+    "/linkedin/callback": {
+      "get": {
+        "summary": "authenticate with linkedin",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "description": "the code to be exchanged for a token.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "AQX1..."
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        }
+      }
+    },
+    "/discord": {
+      "get": {
+        "summary": "authenticate with discord",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        }
+      }
+    },
+    "/discord/callback": {
+      "get": {
+        "summary": "authenticate with discord",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "description": "the code to be exchanged for a token.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "discord_code_example"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
