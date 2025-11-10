@@ -95,6 +95,7 @@ echo ""
 
 # 1. Create directory structure
 mkdir -p "${ENV_DIR}"
+mkdir -p "${ENV_DIR}/pids"  # Store PID files
 mkdir -p "${DATA_DIR}"
 mkdir -p "${LOGS_DIR}"
 
@@ -223,7 +224,7 @@ FRONTEND_FQDN=${ENV_NAME}.local
 
 # Server binding
 GANYMEDE_SERVER_BIND='[{"host":"127.0.0.1","port":${GANYMEDE_PORT}}]'
-ALLOWED_ORIGINS=["https://${ENV_NAME}.local"]
+ALLOWED_ORIGINS='["https://${ENV_NAME}.local"]'
 
 # Magic link email (optional)
 MAILING_HOST=xxxxx
@@ -243,7 +244,8 @@ EOF
 echo "🔧 Registering gateway with Ganymede..."
 cd "${WORKSPACE_PATH}"
 
-# Build app-ganymede-cmds if needed
+# Build app-ganymede-cmds
+npm install
 echo "   Building app-ganymede-cmds..."
 npx nx run app-ganymede-cmds:build
 if [ $? -ne 0 ]; then
@@ -409,120 +411,8 @@ sudo ln -sf "/etc/nginx/sites-available/${ENV_NAME}" "/etc/nginx/sites-enabled/$
 sudo nginx -t
 sudo service nginx reload
 
-# 12. Create helper scripts
-cat > "${ENV_DIR}/start.sh" <<SCRIPT_EOF
-#!/bin/bash
-set -e
-
-ENV_DIR="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
-
-echo "🚀 Starting environment: \$(basename \${ENV_DIR})..."
-
-# Load environment to get WORKSPACE path
-set -a
-source "\${ENV_DIR}/.env.ganymede"
-set +a
-
-# Build apps (if needed)
-cd "\${WORKSPACE}"
-echo "🔨 Building apps..."
-npx nx run app-ganymede:build
-npx nx run app-collab:build
-
-# Start Ganymede (all env vars from .env.ganymede are exported)
-echo "▶️  Starting Ganymede..."
-cd "\${WORKSPACE}"
-node "\${WORKSPACE}/dist/packages/app-ganymede/main.js" \
-  > "\${ENV_DIR}/logs/ganymede.log" 2>&1 &
-echo \$! > "\${ENV_DIR}/ganymede.pid"
-
-# Wait for Ganymede to start
-sleep 3
-
-# Load Gateway environment (will override some vars like PORT)
-set -a
-source "\${ENV_DIR}/.env.gateway"
-set +a
-
-# Start Gateway (all env vars from .env.gateway are exported)
-echo "▶️  Starting Gateway..."
-cd "\${WORKSPACE}"
-node "\${WORKSPACE}/dist/packages/app-collab/main.js" \
-  > "\${ENV_DIR}/logs/gateway.log" 2>&1 &
-echo \$! > "\${ENV_DIR}/gateway.pid"
-
-# Get environment name from directory
-ENV_NAME=$(basename "${ENV_DIR}")
-
-echo ""
-echo "✅ Environment started!"
-echo "   Frontend:  https://${ENV_NAME}.local"
-echo "   Ganymede:  https://ganymede.${ENV_NAME}.local"
-echo "   Gateway:   https://gateway.${ENV_NAME}.local"
-echo ""
-echo "📋 Logs:"
-echo "   ${ENV_DIR}/logs.sh ganymede"
-echo "   ${ENV_DIR}/logs.sh gateway"
-echo ""
-echo "🛑 Stop: ${ENV_DIR}/stop.sh"
-SCRIPT_EOF
-
-chmod +x "${ENV_DIR}/start.sh"
-
-cat > "${ENV_DIR}/stop.sh" <<SCRIPT_EOF
-#!/bin/bash
-set -e
-
-ENV_DIR="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
-ENV_NAME=\$(basename "\${ENV_DIR}")
-
-echo "🛑 Stopping environment: \${ENV_NAME}..."
-
-if [ -f "\${ENV_DIR}/ganymede.pid" ]; then
-  PID=\$(cat "\${ENV_DIR}/ganymede.pid")
-  if kill -0 \$PID 2>/dev/null; then
-    kill \$PID 2>/dev/null || true
-    echo "   Stopped Ganymede (PID: \$PID)"
-  fi
-  rm "\${ENV_DIR}/ganymede.pid"
-fi
-
-if [ -f "\${ENV_DIR}/gateway.pid" ]; then
-  PID=\$(cat "\${ENV_DIR}/gateway.pid")
-  if kill -0 \$PID 2>/dev/null; then
-    kill \$PID 2>/dev/null || true
-    echo "   Stopped Gateway (PID: \$PID)"
-  fi
-  rm "\${ENV_DIR}/gateway.pid"
-fi
-
-echo "✅ Environment stopped"
-SCRIPT_EOF
-
-chmod +x "${ENV_DIR}/stop.sh"
-
-cat > "${ENV_DIR}/logs.sh" <<SCRIPT_EOF
-#!/bin/bash
-ENV_DIR="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
-
-case "\$1" in
-  ganymede)
-    tail -f "\${ENV_DIR}/logs/ganymede.log"
-    ;;
-  gateway)
-    tail -f "\${ENV_DIR}/logs/gateway.log"
-    ;;
-  *)
-    echo "Usage: \$0 {ganymede|gateway}"
-    echo ""
-    echo "Or directly:"
-    echo "  tail -f \${ENV_DIR}/logs/ganymede.log"
-    echo "  tail -f \${ENV_DIR}/logs/gateway.log"
-    ;;
-esac
-SCRIPT_EOF
-
-chmod +x "${ENV_DIR}/logs.sh"
+# 12. Environment ready - no scripts generated
+# All management is done through envctl.sh in scripts/local-dev/
 
 # 13. Update /etc/hosts in dev container
 echo "📝 Updating /etc/hosts..."
@@ -570,17 +460,24 @@ echo ""
 echo "3. 🏗️  Build frontend:"
 echo "      ./build-frontend.sh ${ENV_NAME} ${WORKSPACE_PATH}"
 echo ""
-echo "4. 🚀 Start the environment:"
-echo "      ${ENV_DIR}/start.sh"
+echo "4. 📊 Monitor all environments:"
+echo "      ./envctl-monitor.sh"
+echo "      ./envctl-monitor.sh watch    # Live updates"
 echo ""
-echo "5. 🌐 Access from host OS browser:"
+echo "5. 🚀 Start the environment:"
+echo "      ./envctl.sh start ${ENV_NAME}"
+echo ""
+echo "6. 🌐 Access from host OS browser:"
 echo "      https://${ENV_NAME}.local"
 echo ""
-echo "6. 📊 View logs:"
-echo "      ${ENV_DIR}/logs.sh ganymede"
-echo "      ${ENV_DIR}/logs.sh gateway"
+echo "7. 📊 View logs:"
+echo "      ./envctl.sh logs ${ENV_NAME} ganymede"
+echo "      ./envctl.sh logs ${ENV_NAME} gateway"
 echo ""
-echo "7. 🛑 Stop:"
-echo "      ${ENV_DIR}/stop.sh"
+echo "8. 🛑 Stop:"
+echo "      ./envctl.sh stop ${ENV_NAME}"
+echo ""
+echo "9. 🔄 Restart:"
+echo "      ./envctl.sh restart ${ENV_NAME}"
 echo ""
 

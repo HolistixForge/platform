@@ -16,10 +16,14 @@ cd /root/workspace/monorepo/scripts/local-dev
 # 3. Build frontend
 ./build-frontend.sh dev-001
 
-# 4. Start
-/root/.local-dev/dev-001/start.sh
+# 4. Monitor environments
+./envctl.sh list                # List all environments
+./envctl-monitor.sh watch       # Live monitoring
 
-# 5. Configure host OS (see LOCAL_DEVELOPMENT.md)
+# 5. Start environment
+./envctl.sh start dev-001
+
+# 6. Configure host OS (see LOCAL_DEVELOPMENT.md)
 # - Install SSL root CA
 # - Add hosts entries
 # - Access: https://dev-001.local
@@ -32,18 +36,35 @@ cd /root/workspace/monorepo/scripts/local-dev
 | Script                   | Purpose                                  | Run Once |
 | ------------------------ | ---------------------------------------- | -------- |
 | `setup-all.sh`           | Master setup - runs all one-time scripts | ✅       |
+| `install-node.sh`        | Install Node.js 24.x from NodeSource     | ✅       |
 | `install-system-deps.sh` | Install PostgreSQL, Nginx, utilities     | ✅       |
 | `install-mkcert.sh`      | Install mkcert for SSL certificates      | ✅       |
 | `setup-postgres.sh`      | Configure PostgreSQL server              | ✅       |
 
 ### Environment Management
 
-| Script                                        | Purpose                | Usage                         |
-| --------------------------------------------- | ---------------------- | ----------------------------- |
-| `create-env.sh <name> [workspace] [database]` | Create new environment | `./create-env.sh dev-001`     |
-| `list-envs.sh`                                | List all environments  | `./list-envs.sh`              |
-| `delete-env.sh <name>`                        | Delete environment     | `./delete-env.sh dev-001`     |
-| `build-frontend.sh <name> [workspace]`        | Build frontend for env | `./build-frontend.sh dev-001` |
+| Script                                        | Purpose                     | Usage                             |
+| --------------------------------------------- | --------------------------- | --------------------------------- |
+| `create-env.sh <name> [workspace] [database]` | Create new environment      | `./create-env.sh dev-001`         |
+| `delete-env.sh <name>`                        | Delete environment          | `./delete-env.sh dev-001`         |
+| `build-frontend.sh <name> [workspace]`        | Build frontend for env      | `./build-frontend.sh dev-001`     |
+| **`envctl.sh <command> [args]`**              | **Main controller**         | **See Environment Control below** |
+| **`envctl-monitor.sh [watch]`**               | **Monitoring (no flicker)** | `./envctl-monitor.sh watch`       |
+
+### Environment Control (envctl.sh)
+
+| Command                     | Purpose                                    | Example                                |
+| --------------------------- | ------------------------------------------ | -------------------------------------- |
+| `list, ls`                  | List all environments                      | `./envctl.sh list`                     |
+| `status [env]`              | Show status                                | `./envctl.sh status dev-001`           |
+| `monitor`                   | Live monitoring (2s updates)               | `./envctl.sh monitor`                  |
+| `start <env> [service]`     | Start environment/service                  | `./envctl.sh start dev-001`            |
+| `stop <env> [service]`      | Stop environment/service                   | `./envctl.sh stop dev-001`             |
+| `restart <env> [service]`   | Restart environment/service                | `./envctl.sh restart dev-001`          |
+| `logs <env> <service> [-f]` | View logs (ganymede/gateway)               | `./envctl.sh logs dev-001 ganymede -f` |
+| `build <env> [target]`      | Build apps (all/ganymede/gateway/frontend) | `./envctl.sh build dev-001`            |
+
+**Services:** `ganymede`, `gateway`, `both` (default)
 
 **Multiple workspaces example:**
 
@@ -52,16 +73,6 @@ cd /root/workspace/monorepo/scripts/local-dev
 ./create-env.sh main /root/workspace/monorepo /root/workspace/database
 ./create-env.sh feat-a /root/workspace/monorepo-feat-a /root/workspace/database-feat-a
 ```
-
-### Per-Environment Scripts (Auto-Created)
-
-Located in `/root/.local-dev/<env-name>/`:
-
-| Script                        | Purpose                  |
-| ----------------------------- | ------------------------ |
-| `start.sh`                    | Start Ganymede + Gateway |
-| `stop.sh`                     | Stop all processes       |
-| `logs.sh {ganymede\|gateway}` | View logs                |
 
 ### Host OS Helpers
 
@@ -80,9 +91,9 @@ Located in `/root/.local-dev/<env-name>/`:
       ├── ssl-key.pem            # SSL private key
       ├── jwt-key                # JWT signing key
       ├── jwt-key-public.pem     # JWT public key
-      ├── start.sh               # ▶️  Start services
-      ├── stop.sh                # ⏹️  Stop services
-      ├── logs.sh                # 📊 View logs
+      ├── pids/                  # 🆕 Process IDs (managed by envctl)
+      │   ├── ganymede.pid
+      │   └── gateway.pid
       ├── data/                  # Gateway persistent data
       │   ├── gateway-state-*.json
       │   └── project-*/
@@ -91,6 +102,8 @@ Located in `/root/.local-dev/<env-name>/`:
           ├── gateway.log
           └── *-access/error.log
 ```
+
+**Note:** Scripts are no longer generated in each environment. Use `envctl.sh` for all management.
 
 ## Related Documentation
 

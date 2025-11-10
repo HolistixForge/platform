@@ -14,6 +14,7 @@ sudo apt install -y postgresql postgresql-contrib
 
 # Install Nginx
 sudo apt install -y nginx
+sudo service nginx start
 
 # Install other utilities
 sudo apt install -y jq curl git

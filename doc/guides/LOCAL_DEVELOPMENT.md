@@ -122,22 +122,11 @@ cd /root/workspace
 
 # Clone main monorepo
 git clone https://github.com/YourOrg/monorepo.git
-cd monorepo
-npm install
 
 # Clone database repo
 cd /root/workspace
 git clone https://github.com/YourOrg/database.git
 ```
-
-### 3. Run One-Time Setup
-
-```bash
-cd /root/workspace/monorepo/scripts/local-dev
-./setup-all.sh
-```
-
-Now you're ready to create environments!
 
 ## Quick Start (TL;DR)
 
@@ -150,6 +139,7 @@ Now you're ready to create environments!
 # Create environment
 ./scripts/local-dev/create-env.sh dev-001
 ./scripts/local-dev/build-frontend.sh dev-001
+./scripts/local-dev/envctl.sh start dev-001
 ```
 
 **On host OS (Windows example):**
