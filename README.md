@@ -16,12 +16,14 @@ Demiurge is a collaborative workspace that combines real-time editing, whiteboar
 ## 🚀 Quick Start
 
 **Local Development:**
+
 ```bash
 # See comprehensive setup guide
 👉 doc/guides/LOCAL_DEVELOPMENT.md
 ```
 
 **Production Deployment:**
+
 ```bash
 # See deployment guide
 👉 doc/guides/PRODUCTION_DEPLOYMENT.md
@@ -32,6 +34,7 @@ Demiurge is a collaborative workspace that combines real-time editing, whiteboar
 **Main Hub:** [doc/README.md](doc/README.md)
 
 Quick Links:
+
 - 🏗️ [Architecture Overview](doc/architecture/OVERVIEW.md)
 - 🚀 [Local Development](doc/guides/LOCAL_DEVELOPMENT.md)
 - 🧪 [Module Testing](doc/guides/MODULES_TESTING.md)
@@ -41,17 +44,20 @@ Quick Links:
 ## 🛠️ Tech Stack
 
 **Frontend:**
+
 - React, TypeScript, SCSS
 - React Flow (whiteboard)
 - Vite (bundler)
 
 **Backend:**
+
 - Node.js, Express, TypeScript
 - Yjs (CRDT for collaboration)
 - PostgreSQL (user/org/project data)
 - WebSocket (real-time sync)
 
 **Infrastructure:**
+
 - Docker (containerization)
 - Nginx (reverse proxy, SSL termination)
 - OpenVPN (container networking)

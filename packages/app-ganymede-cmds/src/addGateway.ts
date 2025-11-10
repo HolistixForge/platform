@@ -28,18 +28,18 @@ const gatewayGlobalToken = (gateway_id: string) => {
 //
 
 export const addGateway = async (fqdn: string, version: string) => {
-  const r = await pg.query('call proc_gateway_new($1, $2, $3)', [
+  const r = await pg.query('call proc_gateway_new($1, $2, NULL)', [
     fqdn,
     version,
-    null,
   ]);
   const gwId = r.next()!.oneRow()['gateway_id'] as string;
 
   const token = gatewayGlobalToken(gwId);
 
-  log(6, 'NEW_GATEWAY', `${fqdn}: ${gwId}`);
-  log(6, 'NEW_GATEWAY', `toekn: ${token}`);
-
   const payload = jwtPayload(token);
-  log(6, 'NEW_GATEWAY', `payload: `, payload);
+  log(6, 'NEW_GATEWAY', `payload:`, payload);
+
+  console.log('');
+  console.log('gateway_id:', gwId);
+  console.log('token:', token);
 };

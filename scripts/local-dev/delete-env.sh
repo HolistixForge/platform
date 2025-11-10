@@ -46,15 +46,24 @@ sudo rm -f "/etc/nginx/sites-enabled/${ENV_NAME}"
 sudo rm -f "/etc/nginx/sites-available/${ENV_NAME}"
 sudo nginx -t && sudo service nginx reload
 
-# Drop database
+# Drop database and user
 DB_NAME="ganymede_${ENV_NAME//-/_}"
-echo "🐘 Dropping database: ${DB_NAME}..."
-PGPASSWORD=devpassword psql -U postgres -h localhost -c "DROP DATABASE IF EXISTS ${DB_NAME};" 2>/dev/null || true
+APP_DB_USER="ganymede_app_${ENV_NAME//-/_}"
+
+echo "🐘 Dropping database and user..."
+PGPASSWORD=devpassword psql -U postgres -h localhost << EOF 2>/dev/null || true
+DROP DATABASE IF EXISTS ${DB_NAME};
+DROP USER IF EXISTS ${APP_DB_USER};
+EOF
+echo "   ✅ Database dropped: ${DB_NAME}"
+echo "   ✅ User dropped: ${APP_DB_USER}"
 
 # Remove /etc/hosts entries
 echo "📝 Removing /etc/hosts entries..."
-sudo sed -i "/# local-dev-${ENV_NAME}/d" /etc/hosts
-sudo sed -i "/${ENV_NAME}.local/d" /etc/hosts
+TMP_HOSTS=$(mktemp)
+sudo grep -v "local-dev-${ENV_NAME}" /etc/hosts | sudo grep -v "${ENV_NAME}.local" > "$TMP_HOSTS"
+sudo cp "$TMP_HOSTS" /etc/hosts
+rm "$TMP_HOSTS"
 
 # Remove directory
 echo "🗑️  Removing directory..."

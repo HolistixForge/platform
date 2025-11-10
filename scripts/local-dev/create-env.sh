@@ -98,18 +98,78 @@ mkdir -p "${ENV_DIR}"
 mkdir -p "${DATA_DIR}"
 mkdir -p "${LOGS_DIR}"
 
-# 2. Create database
-echo "🐘 Creating database..."
+# 2. Create database and app user
+echo "🐘 Creating database and application user..."
+
+# Create database
 PGPASSWORD=devpassword psql -U postgres -h localhost -c "CREATE DATABASE ${DB_NAME};" 2>/dev/null || echo "   Database already exists"
 
-# 3. Deploy database schema
+# Generate random password for application user (32 chars, alphanumeric)
+APP_DB_USER="ganymede_app_${ENV_NAME//-/_}"
+APP_DB_PASSWORD=$(openssl rand -base64 24 | tr -d '/+=' | head -c 32)
+
+# Create application user with limited privileges (or update password if exists)
+PGPASSWORD=devpassword psql -U postgres -h localhost -d "${DB_NAME}" << EOF
+-- Create user if not exists, otherwise update password
+DO \$\$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '${APP_DB_USER}') THEN
+    CREATE USER ${APP_DB_USER} WITH PASSWORD '${APP_DB_PASSWORD}';
+  ELSE
+    ALTER USER ${APP_DB_USER} WITH PASSWORD '${APP_DB_PASSWORD}';
+  END IF;
+END
+\$\$;
+
+-- Grant connection privilege
+GRANT CONNECT ON DATABASE ${DB_NAME} TO ${APP_DB_USER};
+EOF
+
+echo "   ✅ Database created: ${DB_NAME}"
+echo "   ✅ Application user created: ${APP_DB_USER}"
+
+# 3. Deploy database schema (using postgres superuser)
 echo "📊 Deploying database schema..."
 cd "${DATABASE_PATH}"
+# Set locale to avoid warnings
+export LANGUAGE=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
 PGPASSWORD=devpassword ./run.sh schema "${DB_NAME}"
 PGPASSWORD=devpassword ./run.sh procedures "${DB_NAME}"
 PGPASSWORD=devpassword ./run.sh triggers "${DB_NAME}"
 
-# 4. Generate SSL certificates
+# 4. Grant privileges to application user (after schema is deployed)
+echo "🔐 Granting privileges to application user..."
+PGPASSWORD=devpassword psql -U postgres -h localhost -d "${DB_NAME}" << EOF
+-- CRITICAL: Grant usage on schema (must be first!)
+GRANT USAGE, CREATE ON SCHEMA public TO ${APP_DB_USER};
+
+-- Grant table privileges (SELECT, INSERT, UPDATE, DELETE)
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO ${APP_DB_USER};
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ${APP_DB_USER};
+
+-- Grant sequence privileges (for serial columns)
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO ${APP_DB_USER};
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO ${APP_DB_USER};
+
+-- Grant execution on functions AND procedures (PostgreSQL 11+ distinguishes these)
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO ${APP_DB_USER};
+GRANT EXECUTE ON ALL PROCEDURES IN SCHEMA public TO ${APP_DB_USER};
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO ${APP_DB_USER};
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON PROCEDURES TO ${APP_DB_USER};
+
+-- Set search_path to include public schema (usually default, but make explicit)
+ALTER USER ${APP_DB_USER} SET search_path TO public;
+EOF
+
+echo "   ✅ Application user granted: SELECT, INSERT, UPDATE, DELETE on tables"
+echo "   ✅ Application user granted: USAGE on sequences"
+echo "   ✅ Application user granted: EXECUTE on functions and procedures"
+echo "   ✅ Application user search_path set to public"
+echo "   ⚠️  Application user CANNOT: CREATE/DROP tables, CREATE users"
+
+# 5. Generate SSL certificates
 echo "🔐 Generating SSL certificates..."
 cd "${ENV_DIR}"
 mkcert \
@@ -122,105 +182,113 @@ mkcert \
 mv "${ENV_NAME}.local+3.pem" ssl-cert.pem
 mv "${ENV_NAME}.local+3-key.pem" ssl-key.pem
 
-# 5. Generate JWT keys
+# 6. Generate JWT keys
 echo "🔑 Generating JWT keys..."
+rm -f "${ENV_DIR}/jwt-key" "${ENV_DIR}/jwt-key-public.pem"
 ssh-keygen -t rsa -b 4096 -m PEM -f "${ENV_DIR}/jwt-key" -N ""
 ssh-keygen -f "${ENV_DIR}/jwt-key.pub" -e -m PEM > "${ENV_DIR}/jwt-key-public.pem"
 
-# 6. Create Ganymede .env file
+# 7. Create Ganymede .env file
 echo "📝 Creating Ganymede config..."
 cat > "${ENV_DIR}/.env.ganymede" <<EOF
 # Environment: ${ENV_NAME}
 NODE_ENV=development
-PORT=${GANYMEDE_PORT}
 
-# Database
+WORKSPACE=${WORKSPACE_PATH}
+
+# Database (application user with limited privileges)
 PG_HOST=localhost
 PG_PORT=5432
-PG_USER=postgres
-PG_PASSWORD=devpassword
+PG_USER=${APP_DB_USER}
+PG_PASSWORD=${APP_DB_PASSWORD}
 PG_DATABASE=${DB_NAME}
 
 # JWT
-JWT_PRIVATE_KEY_FILE=${ENV_DIR}/jwt-key
-JWT_PUBLIC_KEY_FILE=${ENV_DIR}/jwt-key-public.pem
+JWT_PRIVATE_KEY="$(cat ${ENV_DIR}/jwt-key)"
+JWT_PUBLIC_KEY="$(cat ${ENV_DIR}/jwt-key-public.pem)"
 
 # OAuth Providers (configure your own)
-GITHUB_CLIENT_ID=
-GITHUB_CLIENT_SECRET=
-GITLAB_CLIENT_ID=
-GITLAB_CLIENT_SECRET=
-DISCORD_CLIENT_ID=
-DISCORD_CLIENT_SECRET=
-LINKEDIN_CLIENT_ID=
-LINKEDIN_CLIENT_SECRET=
+GITHUB_CLIENT_ID=xxxxx
+GITHUB_CLIENT_SECRET=xxxxx
+GITLAB_CLIENT_ID=xxxxx
+GITLAB_CLIENT_SECRET=xxxxx
+DISCORD_CLIENT_ID=xxxxx
+DISCORD_CLIENT_SECRET=xxxxx
+LINKEDIN_CLIENT_ID=xxxxx
+LINKEDIN_CLIENT_SECRET=xxxxx
 
-# URLs (no GATEWAY_FQDN - gateways register themselves dynamically!)
-APP_GANYMEDE_URL=https://ganymede.${ENV_NAME}.local
-FRONTEND_URL=https://${ENV_NAME}.local
-
-# Workspace location
-WORKSPACE=${WORKSPACE_PATH}
+# URLs
+GANYMEDE_FQDN=ganymede.${ENV_NAME}.local
+FRONTEND_FQDN=${ENV_NAME}.local
 
 # Server binding
-SERVER_BIND='[{"host":"127.0.0.1","port":${GANYMEDE_PORT}}]'
+GANYMEDE_SERVER_BIND='[{"host":"127.0.0.1","port":${GANYMEDE_PORT}}]'
+ALLOWED_ORIGINS=["https://${ENV_NAME}.local"]
 
 # Magic link email (optional)
-SMTP_HOST=
-SMTP_PORT=
-SMTP_USER=
-SMTP_PASSWORD=
-SMTP_FROM=
+MAILING_HOST=xxxxx
+MAILING_PORT=xxxxx
+MAILING_USER=xxxxx
+MAILING_PASSWORD=xxxxx
+MAILING_FROM=xxxxx
 
 # Session secret
-SESSION_SECRET=$(openssl rand -hex 32)
+SESSION_COOKIE_KEY=$(openssl rand -hex 32)
 
 # Jaeger (optional)
 # JAEGER_FQDN=
 EOF
 
-# 7. Register gateway with Ganymede (using app-ganymede-cmd)
+# 8. Register gateway with Ganymede (using app-ganymede-cmd)
 echo "🔧 Registering gateway with Ganymede..."
 cd "${WORKSPACE_PATH}"
 
 # Build app-ganymede-cmds if needed
-if [ ! -f "${WORKSPACE_PATH}/dist/packages/app-ganymede-cmds/main.js" ]; then
-  npx nx run app-ganymede-cmds:build > /dev/null 2>&1
+echo "   Building app-ganymede-cmds..."
+npx nx run app-ganymede-cmds:build
+if [ $? -ne 0 ]; then
+  echo "❌ Failed to build app-ganymede-cmds"
+  exit 1
 fi
 
-# Load Ganymede env to get database connection
+# Load Ganymede env to get database connection, jwt keys
+set -a  # Auto-export all variables
 source "${ENV_DIR}/.env.ganymede"
+set +a  # Disable auto-export
 
 # Register gateway and capture output
 GATEWAY_HOSTNAME="gateway.${ENV_NAME}.local"
 GATEWAY_VERSION="0.0.1"
 
-REGISTER_OUTPUT=$(JWT_PRIVATE_KEY_FILE="${JWT_PRIVATE_KEY_FILE}" \
-  JWT_PUBLIC_KEY_FILE="${JWT_PUBLIC_KEY_FILE}" \
-  PG_HOST="${PG_HOST}" \
-  PG_PORT="${PG_PORT}" \
-  PG_USER="${PG_USER}" \
-  PG_PASSWORD="${PG_PASSWORD}" \
-  PG_DATABASE="${PG_DATABASE}" \
-  LOG_LEVEL=6 \
+set +e
+REGISTER_OUTPUT=$(LOG_LEVEL=6 \
   node "${WORKSPACE_PATH}/dist/packages/app-ganymede-cmds/main.js" add-gateway \
     -h "${GATEWAY_HOSTNAME}" \
     -gv "${GATEWAY_VERSION}" 2>&1)
+REGISTER_EXIT_CODE=$?
+set -e
 
 # Extract gateway_id and token from output
-GATEWAY_ID=$(echo "$REGISTER_OUTPUT" | grep -oP 'gateway_id.*:\s*\K[a-f0-9-]+' | head -1)
-GATEWAY_TOKEN=$(echo "$REGISTER_OUTPUT" | grep -oP 'token:\s*\K[^\s]+' | head -1)
+# Format: "gateway_id: <uuid>" and "token: <jwt>"
+GATEWAY_ID=$(echo "$REGISTER_OUTPUT" | grep 'gateway_id:' | grep -oP '[a-f0-9-]{36}' | head -1)
+GATEWAY_TOKEN=$(echo "$REGISTER_OUTPUT" | grep '^token:' | awk '{print $2}')
 
 if [ -z "$GATEWAY_ID" ] || [ -z "$GATEWAY_TOKEN" ]; then
-  echo "❌ Failed to register gateway. Output:"
+  echo "❌ Failed to extract gateway info from output. [GATEWAY_ID: $GATEWAY_ID, GATEWAY_TOKEN: $GATEWAY_TOKEN]"
+  echo ""
+  echo "Output:"
   echo "$REGISTER_OUTPUT"
+  echo ""
+  echo "This usually means the output format changed or the command failed silently."
   exit 1
 fi
 
+echo "   ✅ Gateway registered"
 echo "   Gateway ID: ${GATEWAY_ID}"
 echo "   Token saved to .env.gateway"
+set -e
 
-# 8. Create Gateway .env file
+# 9. Create Gateway .env file
 echo "📝 Creating Gateway config..."
 cat > "${ENV_DIR}/.env.gateway" <<EOF
 # Environment: ${ENV_NAME}
@@ -249,7 +317,7 @@ WORKSPACE=${WORKSPACE_PATH}
 # JAEGER_FQDN=
 EOF
 
-# 9. Create Nginx server blocks
+# 10. Create Nginx server blocks
 echo "🌐 Creating Nginx configuration..."
 sudo tee "/etc/nginx/sites-available/${ENV_NAME}" > /dev/null <<EOF
 # Frontend
@@ -337,11 +405,11 @@ EOF
 # Enable site
 sudo ln -sf "/etc/nginx/sites-available/${ENV_NAME}" "/etc/nginx/sites-enabled/${ENV_NAME}"
 
-# 10. Test and reload Nginx
+# 11. Test and reload Nginx
 sudo nginx -t
 sudo service nginx reload
 
-# 11. Create helper scripts
+# 12. Create helper scripts
 cat > "${ENV_DIR}/start.sh" <<SCRIPT_EOF
 #!/bin/bash
 set -e
@@ -351,7 +419,9 @@ ENV_DIR="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
 echo "🚀 Starting environment: \$(basename \${ENV_DIR})..."
 
 # Load environment to get WORKSPACE path
+set -a
 source "\${ENV_DIR}/.env.ganymede"
+set +a
 
 # Build apps (if needed)
 cd "\${WORKSPACE}"
@@ -359,30 +429,27 @@ echo "🔨 Building apps..."
 npx nx run app-ganymede:build
 npx nx run app-collab:build
 
-# Load Ganymede environment
-source "${ENV_DIR}/.env.ganymede"
-
-# Start Ganymede
-echo "▶️  Starting Ganymede on port ${PORT}..."
-cd "${WORKSPACE}"
-NODE_ENV=development \
-  node "${WORKSPACE}/dist/packages/app-ganymede/main.js" \
-  > "${ENV_DIR}/logs/ganymede.log" 2>&1 &
-echo $! > "${ENV_DIR}/ganymede.pid"
+# Start Ganymede (all env vars from .env.ganymede are exported)
+echo "▶️  Starting Ganymede..."
+cd "\${WORKSPACE}"
+node "\${WORKSPACE}/dist/packages/app-ganymede/main.js" \
+  > "\${ENV_DIR}/logs/ganymede.log" 2>&1 &
+echo \$! > "\${ENV_DIR}/ganymede.pid"
 
 # Wait for Ganymede to start
 sleep 3
 
-# Load Gateway environment
-source "${ENV_DIR}/.env.gateway"
+# Load Gateway environment (will override some vars like PORT)
+set -a
+source "\${ENV_DIR}/.env.gateway"
+set +a
 
-# Start Gateway
-echo "▶️  Starting Gateway on port ${PORT}..."
-cd "${WORKSPACE}"
-NODE_ENV=development \
-  node "${WORKSPACE}/dist/packages/app-collab/main.js" \
-  > "${ENV_DIR}/logs/gateway.log" 2>&1 &
-echo $! > "${ENV_DIR}/gateway.pid"
+# Start Gateway (all env vars from .env.gateway are exported)
+echo "▶️  Starting Gateway..."
+cd "\${WORKSPACE}"
+node "\${WORKSPACE}/dist/packages/app-collab/main.js" \
+  > "\${ENV_DIR}/logs/gateway.log" 2>&1 &
+echo \$! > "\${ENV_DIR}/gateway.pid"
 
 # Get environment name from directory
 ENV_NAME=$(basename "${ENV_DIR}")
@@ -457,13 +524,17 @@ SCRIPT_EOF
 
 chmod +x "${ENV_DIR}/logs.sh"
 
-# 12. Update /etc/hosts in dev container
+# 13. Update /etc/hosts in dev container
 echo "📝 Updating /etc/hosts..."
-sudo sed -i "/# local-dev-${ENV_NAME}/d" /etc/hosts
-sudo tee -a /etc/hosts > /dev/null <<EOF
+# Remove existing entries for this environment (if any), then add new ones
+TMP_HOSTS=$(mktemp)
+sudo grep -v "local-dev-${ENV_NAME}" /etc/hosts | sudo grep -v "${ENV_NAME}.local" > "$TMP_HOSTS"
+cat >> "$TMP_HOSTS" <<EOF
 # local-dev-${ENV_NAME}
 127.0.0.1  ${ENV_NAME}.local ganymede.${ENV_NAME}.local gateway.${ENV_NAME}.local
 EOF
+sudo cp "$TMP_HOSTS" /etc/hosts
+rm "$TMP_HOSTS"
 
 echo ""
 echo "╔════════════════════════════════════════════════════════════════╗"
@@ -471,6 +542,13 @@ echo "║  ✅ Environment '${ENV_NAME}' created successfully!            "
 echo "╚════════════════════════════════════════════════════════════════╝"
 echo ""
 echo "📂 Location: ${ENV_DIR}"
+echo "🗄️  Database: ${DB_NAME}"
+echo "👤 App User: ${APP_DB_USER} (credentials in .env.ganymede)"
+echo ""
+echo "🔑 Database Admin Credentials (for manual operations):"
+echo "   User: postgres"
+echo "   Password: devpassword"
+echo "   Connect: PGPASSWORD=devpassword psql -U postgres -h localhost -d ${DB_NAME}"
 echo ""
 echo "📋 Next steps:"
 echo ""

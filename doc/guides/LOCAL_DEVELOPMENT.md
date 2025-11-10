@@ -91,13 +91,10 @@ Before creating environments, you need a development container. This is a one-ti
 # Run Ubuntu container with required capabilities
 docker run -d \
   --name demiurge-dev \
-  --hostname demiurge-dev \
   -p 80:80 \
   -p 443:443 \
   --cap-add=NET_ADMIN \
   --device /dev/net/tun \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  -v demiurge-workspace:/root/workspace \
   -it ubuntu:24.04 \
   /bin/bash
 
@@ -109,8 +106,6 @@ docker exec -it demiurge-dev /bin/bash
 
 - `-p 80:80 -p 443:443` - Expose HTTP/HTTPS ports for Nginx
 - `--cap-add=NET_ADMIN --device /dev/net/tun` - For OpenVPN (gateway VPN)
-- `-v /var/run/docker.sock` - Access Docker to start user containers
-- `-v demiurge-workspace` - Persistent volume for code
 
 ### 2. Inside Container: Install Dependencies
 
@@ -150,17 +145,11 @@ Now you're ready to create environments!
 
 ```bash
 # One-time setup
-./scripts/local-dev/install-system-deps.sh
-./scripts/local-dev/install-mkcert.sh
-./scripts/local-dev/setup-postgres.sh
+./scripts/local-dev/setup-all.sh
 
 # Create environment
 ./scripts/local-dev/create-env.sh dev-001
 ./scripts/local-dev/build-frontend.sh dev-001
-
-# Get IP and root CA for host OS setup
-hostname -I
-mkcert -CAROOT  # Copy rootCA.pem to host OS
 ```
 
 **On host OS (Windows example):**
