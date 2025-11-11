@@ -24,7 +24,7 @@ import {
 } from './routes/collab';
 import oauthRoutes from './routes/oauth';
 import containerRoutes from './routes/containers';
-import * as oas from './oas30.json';
+import oas from './oas30.json';
 import {
   initializeGateway,
   shutdownGateway,

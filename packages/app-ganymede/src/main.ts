@@ -11,7 +11,7 @@ import {
 
 import { CONFIG } from './config';
 import { PgSessionModel } from './models/session';
-import * as oas from './oas30.json';
+import oas from './oas30.json';
 import { setupGithubRoutes } from './routes/auth/github';
 import { setupGitlabRoutes } from './routes/auth/gitlab';
 import { setupDiscordRoutes } from './routes/auth/discord';
