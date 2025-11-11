@@ -53,7 +53,7 @@ This is an **Nx monorepo** with multiple packages:
 ```
 packages/
 ├── app-ganymede/        # Main API (users, orgs, projects, auth)
-├── app-collab/          # Gateway (collaboration, containers, OAuth)
+├── app-gateway/         # Gateway (collaboration, containers, OAuth)
 ├── app-frontend/        # React frontend
 ├── app-ganymede-cmds/   # CLI tools
 ├── modules/             # Feature modules (extensible)
@@ -113,6 +113,7 @@ npx nx run-many -t test
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation only
@@ -177,7 +178,8 @@ export async function createContainer(
 }
 
 // ❌ Bad
-export function createContainer(data) {  // No types
+export function createContainer(data) {
+  // No types
   // Implementation
 }
 ```
@@ -306,6 +308,7 @@ doc/
 ### Review Guidelines
 
 **Reviewers should check:**
+
 - Code correctness and logic
 - Test coverage
 - Performance implications
@@ -313,6 +316,7 @@ doc/
 - Documentation completeness
 
 **Review comments should be:**
+
 - Constructive and specific
 - Include suggestions when possible
 - Distinguish between blocking and non-blocking issues
@@ -350,4 +354,3 @@ Create an issue with:
 - Join our community chat (TBD)
 
 Thank you for contributing! 🎉
-

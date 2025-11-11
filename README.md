@@ -109,7 +109,7 @@ See [doc/architecture/OVERVIEW.md](doc/architecture/OVERVIEW.md) for detailed ar
 monorepo/
 ├── packages/
 │   ├── app-ganymede/        # Main API server
-│   ├── app-collab/          # Gateway (per-organization)
+│   ├── app-gateway/         # Gateway (per-organization)
 │   ├── app-frontend/        # React frontend
 │   ├── app-ganymede-cmds/   # CLI tools
 │   ├── modules/             # Feature modules

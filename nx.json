@@ -56,7 +56,7 @@
         "packages/app-ganymede-e2e/**/*",
         "packages/app-account-e2e/**/*",
         "packages/app-ganymede-cmds-e2e/**/*",
-        "packages/app-collab-e2e/**/*"
+        "packages/app-gateway-e2e/**/*"
       ]
     },
     {

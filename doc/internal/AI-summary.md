@@ -51,7 +51,7 @@ This document helps AI assistants quickly understand the Demiurge codebase and a
 
 - **Frontend:** `packages/app-frontend/` - React SPA, whiteboard
 - **Ganymede:** `packages/app-ganymede/` - Main API server
-- **Gateway:** `packages/app-collab/` - Per-org collaborative backend
+- **Gateway:** `packages/app-gateway/` - Per-org collaborative backend
 - **CLI:** `packages/app-ganymede-cmds/` - Admin CLI tools
 
 ### Core Libraries
@@ -167,10 +167,10 @@ export const moduleBackend: ModuleBackend = {
 
 **Key files:**
 
-- `packages/app-collab/src/state/GatewayState.ts` - Generic persistent storage
-- `packages/app-collab/src/state/ProjectRooms.ts` - Multi-project YJS rooms
-- `packages/app-collab/src/permissions/PermissionManager.ts` - Permission logic
-- `packages/app-collab/src/oauth/OAuthManager.ts` - OAuth2 provider
+- `packages/app-gateway/src/state/GatewayState.ts` - Generic persistent storage
+- `packages/app-gateway/src/state/ProjectRooms.ts` - Multi-project YJS rooms
+- `packages/app-gateway/src/permissions/PermissionManager.ts` - Permission logic
+- `packages/app-gateway/src/oauth/OAuthManager.ts` - OAuth2 provider
 
 ### 4. Database Schema (PostgreSQL)
 
@@ -205,8 +205,8 @@ See [`doc/architecture/REFACTORING.md#database-schema`](../architecture/REFACTOR
 
 **Key files:**
 
-- `packages/app-collab/src/permissions/PermissionManager.ts`
-- `packages/app-collab/src/middleware/permissions.ts`
+- `packages/app-gateway/src/permissions/PermissionManager.ts`
+- `packages/app-gateway/src/middleware/permissions.ts`
 
 ## Common Tasks for AI Assistants
 
@@ -220,7 +220,7 @@ See [`doc/architecture/REFACTORING.md#database-schema`](../architecture/REFACTOR
 ### Adding a New Endpoint
 
 1. See [`CONTRIBUTING.md`](../../CONTRIBUTING.md#backend-express)
-2. Add to `packages/app-ganymede/src/routes/` or `packages/app-collab/src/routes/`
+2. Add to `packages/app-ganymede/src/routes/` or `packages/app-gateway/src/routes/`
 3. Update OpenAPI spec: `src/oas30.json`
 4. Use `asyncHandler` for error handling
 

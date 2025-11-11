@@ -7,7 +7,7 @@
 **Only maintain these 2 files:**
 
 1. `/doc/REFACTORING.md` (this file) - TODO list, architecture, decisions
-2. `/packages/app-collab/GATEWAY_IMPLEMENTATION.md` - Implementation pseudo-code
+2. `/packages/app-gateway/GATEWAY_IMPLEMENTATION.md` - Implementation pseudo-code
 
 **When to update:**
 
@@ -47,7 +47,7 @@ _None - refactoring complete!_
   - [ ] Update permission checks in frontend
 
 - [x] **Merge app-account into app-ganymede** ✅ COMPLETED
-- [x] **Implement app-gateway (app-collab) new architecture** ✅ COMPLETED
+- [x] **Implement app-gateway new architecture** ✅ COMPLETED
 
   - [x] Copy auth routes (github, gitlab, discord, linkedin, local, totp, magic-link, oauth)
   - [x] Copy models (users, session, oauth, magic-link)
@@ -117,7 +117,7 @@ Total: 11 tables
 
 ---
 
-### Process 2: app-collab (Gateway, per-org)
+### Process 2: app-gateway (Gateway, per-org)
 
 **Role:** Heavyweight, per-organization collaborative backend
 
@@ -303,7 +303,7 @@ organizations_gateways (organization_id uuid, gateway_id uuid, tmp_handshake_tok
 
 ## 📁 IMPLEMENTATION GUIDES
 
-See: `packages/app-collab/GATEWAY_IMPLEMENTATION.md` for complete implementation details.
+See: `packages/app-gateway/GATEWAY_IMPLEMENTATION.md` for complete implementation details.
 
 ---
 
@@ -344,7 +344,7 @@ See: `packages/app-collab/GATEWAY_IMPLEMENTATION.md` for complete implementation
 - ✅ OpenAPI validation with setupValidator
 - ✅ Deleted exec-pipes.json, data-connections.json, sql-api-pg.json
 
-**app-collab (Gateway):**
+**app-gateway (Gateway):**
 
 - ✅ Converted to standard Express (removed ExpressHandler completely)
 - ✅ Routes: /collab/ping, /collab/event, /collab/start, /collab/room-id, /collab/vpn-config

@@ -13,7 +13,7 @@ docker run --rm -it --name "test-dev-pod" \
     --privileged \
     --add-host=host.docker.internal:host-gateway \
     -e NFS_SERVER=host.docker.internal \
-    -e SERVE_NX_APP=app-collab \
+    -e SERVE_NX_APP=app-gateway \
     "${IMAGE_NAME}:${IMAGE_TAG}"
 ```
 

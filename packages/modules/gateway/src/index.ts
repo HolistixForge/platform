@@ -38,7 +38,7 @@ export type TGatewayInitExtraContext = {
     GANYMEDE_FQDN: string;
     GATEWAY_TOKEN: string;
     GATEWAY_FQDN: string;
-    SCRIPTS_DIR: string;
+    GATEWAY_SCRIPTS_DIR: string;
   };
 };
 
@@ -80,7 +80,9 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
       const response = await myfetch(request);
       log(6, 'GATEWAY', `${request.url} response: ${response.statusCode}`);
       if (response.statusCode !== 200) {
-        const error = new Error(`Request to ${request.url} failed with status ${response.statusCode}`);
+        const error = new Error(
+          `Request to ${request.url} failed with status ${response.statusCode}`
+        );
         throw error;
       }
 
@@ -92,7 +94,7 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
     //
 
     const runScript = (name: EScripts, inputString?: string) => {
-      const DIR = gateway_init.config.SCRIPTS_DIR;
+      const DIR = gateway_init.config.GATEWAY_SCRIPTS_DIR;
       const cmd = `${DIR}/main.sh`;
       const args = ['-r', `bin/${name}.sh`];
 
@@ -107,9 +109,7 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
           inputString ? { input: inputString } : undefined
         );
         if (result.error) {
-          throw new Error(
-            `Error executing [${fcmd}]: ${result.error.message}`
-          );
+          throw new Error(`Error executing [${fcmd}]: ${result.error.message}`);
         }
         output = result.stdout.toString();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -126,9 +126,7 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
         );
       }
       if (json.status === 'error') {
-        throw new Error(
-          `Error executing script [${name}]: ${json.error}`
-        );
+        throw new Error(`Error executing script [${name}]: ${json.error}`);
       } else if (json.status === 'ok') return json as TJson;
       else
         throw new Error(

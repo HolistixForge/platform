@@ -94,8 +94,8 @@
 
 **Files to Create:**
 
-1. `packages/app-collab/src/state/GatewayState.ts` - Generic state manager
-2. `packages/app-collab/src/state/types.ts` - Data structure types
+1. `packages/app-gateway/src/state/GatewayState.ts` - Generic state manager
+2. `packages/app-gateway/src/state/types.ts` - Data structure types
 
 **Sub-tasks:**
 
@@ -198,9 +198,9 @@ export interface TGatewayStateData {
 
 **Files to Create:**
 
-1. `packages/app-collab/src/permissions/PermissionManager.ts` - Permission logic
-2. `packages/app-collab/src/permissions/types.ts` - Permission types
-3. `packages/app-collab/src/middleware/permissions.ts` - Express middleware
+1. `packages/app-gateway/src/permissions/PermissionManager.ts` - Permission logic
+2. `packages/app-gateway/src/permissions/types.ts` - Permission types
+3. `packages/app-gateway/src/middleware/permissions.ts` - Express middleware
 
 **Sub-tasks:**
 
@@ -321,7 +321,7 @@ export const requirePermissionTemplate = (template: string) =>
 
 **Files to Create:**
 
-1. `packages/app-collab/src/state/ProjectRooms.ts` - Room manager
+1. `packages/app-gateway/src/state/ProjectRooms.ts` - Room manager
 2. `packages/json-file-persistence/src/ProjectPersistence.ts` - Per-project save/load
 
 **Sub-tasks:**
@@ -372,10 +372,10 @@ export const requirePermissionTemplate = (template: string) =>
 
 **Files to Create:**
 
-1. `packages/app-collab/src/oauth/OAuthManager.ts` - OAuth data management
-2. `packages/app-collab/src/oauth/model.ts` - OAuth2Server model adapter
-3. `packages/app-collab/src/oauth/server.ts` - OAuth2Server instance
-4. `packages/app-collab/src/routes/oauth.ts` - OAuth routes
+1. `packages/app-gateway/src/oauth/OAuthManager.ts` - OAuth data management
+2. `packages/app-gateway/src/oauth/model.ts` - OAuth2Server model adapter
+3. `packages/app-gateway/src/oauth/server.ts` - OAuth2Server instance
+4. `packages/app-gateway/src/routes/oauth.ts` - OAuth routes
 
 **Sub-tasks:**
 
@@ -464,7 +464,7 @@ export class OAuthManager {
 
 **Files to Create:**
 
-1. `packages/app-collab/src/containers/ContainerTokenManager.ts`
+1. `packages/app-gateway/src/containers/ContainerTokenManager.ts`
 
 **Sub-tasks:**
 
@@ -533,7 +533,7 @@ export class ContainerTokenManager {
 
 **Files to Update:**
 
-1. `packages/app-collab/src/main.ts` - Org initialization
+1. `packages/app-gateway/src/main.ts` - Org initialization
 2. `packages/modules/gateway/src/index.ts` - Update config types
 
 **Sub-tasks:**
@@ -680,7 +680,7 @@ async function startOrganizationGateway(config: TOrganizationConfig) {
 
 **8.4 Update OpenAPI Specs**
 
-- [ ] Add OAuth endpoints to `app-collab/src/oas30.json`
+- [ ] Add OAuth endpoints to `app-gateway/src/oas30.json`
 - [ ] Remove OAuth from `app-ganymede/src/oas30.json` (moved to gateway)
 
 **8.5 End-to-End Testing**
@@ -696,7 +696,7 @@ async function startOrganizationGateway(config: TOrganizationConfig) {
 ## 🗂️ FINAL FILE STRUCTURE
 
 ```
-packages/app-collab/src/
+packages/app-gateway/src/
 ├── state/
 │   ├── GatewayState.ts              🆕 Generic storage (load/save/dirty)
 │   ├── ProjectRooms.ts              🆕 Multi-room YJS manager
@@ -940,7 +940,7 @@ packages/json-file-persistence/src/
 - [ ] 7.2 Clean `app-ganymede/src/models/oauth.ts`
 - [ ] 7.3 Update `modules/gateway` - Remove exception imports
 - [ ] 7.4 Update OpenAPI specs
-- [ ] 7.5 Delete old exec-pipes.json from app-collab (if exists)
+- [ ] 7.5 Delete old exec-pipes.json from app-gateway (if exists)
 - [ ] 7.6 Test all builds
 - [ ] 7.7 Test end-to-end flows
 - [ ] 7.8 Update documentation

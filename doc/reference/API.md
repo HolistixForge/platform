@@ -311,7 +311,7 @@ GET /projects?limit=20&offset=40
 Detailed API schemas are defined in OpenAPI 3.0 format:
 
 - **Ganymede:** `packages/app-ganymede/src/oas30.json`
-- **Gateway:** `packages/app-collab/src/oas30.json`
+- **Gateway:** `packages/app-gateway/src/oas30.json`
 
 These specs include:
 - Complete request/response schemas

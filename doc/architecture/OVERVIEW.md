@@ -77,7 +77,7 @@ Demiurge is composed of three main applications plus supporting infrastructure:
 - `gateways`, `organizations_gateways`
 - `oauth_clients`, `oauth_tokens` (for container apps)
 
-### 2. app-collab (Gateway)
+### 2. app-gateway (Gateway)
 
 **Purpose:** Per-organization collaborative backend with real-time state synchronization.
 

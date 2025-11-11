@@ -11,7 +11,7 @@ inotify-tools
 CMD env && ls -l \
     && /home/dev/main.sh \
     && ls -l ${WORKSPACE} \
-    && echo ${SCRIPTS_DIR} && cd ${SCRIPTS_DIR} \
+    && echo ${GATEWAY_SCRIPTS_DIR} && cd ${GATEWAY_SCRIPTS_DIR} \
     && pwd && ls -l \
     && sudo -E -u ${DEV_USER} ./main.sh -r bin/reset-gateway.sh \
     && tail -f /tmp/gateway.log

@@ -309,6 +309,9 @@ GANYMEDE_FQDN=ganymede.${ENV_NAME}.local
 # Server binding
 SERVER_BIND='[{"host":"127.0.0.1","port":${GATEWAY_PORT}}]'
 
+# Gateway scripts directory
+GATEWAY_SCRIPTS_DIR=${WORKSPACE_PATH}/docker-images/backend-images/gateway/app
+
 # Data storage
 DATA_DIR=${DATA_DIR}
 

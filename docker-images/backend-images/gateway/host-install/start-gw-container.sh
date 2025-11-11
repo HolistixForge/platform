@@ -12,13 +12,13 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ##
 
 OPENVPN_PORT=$(get_vpn_port $GW_ID)
-APP_COLLAB_PORT=$(get_app_port $GW_ID)
+APP_GATEWAY_PORT=$(get_app_port $GW_ID)
 
 GATEWAY_FQDN=gw-${GW_INSTANCE_ID}-${GW_ID}.${ENV_NAME}.${DOMAIN_NAME}
 
 IMAGE_NAME=gateway
 IMAGE_TAG=latest
-SCRIPTS_DIR="/home/dev/workspace/monorepo/docker-images/backend-images/gateway/app"
+GATEWAY_SCRIPTS_DIR="/home/dev/workspace/monorepo/docker-images/backend-images/gateway/app"
 
 # Base docker run command
 DOCKER_CMD="docker run --rm -it --name gw-${GW_INSTANCE_ID}-${GW_ID} --privileged"
@@ -42,11 +42,11 @@ DOCKER_CMD+=" \
     -e GATEWAY_TOKEN=${GATEWAY_TOKEN} \
     -e GATEWAY_FQDN=${GATEWAY_FQDN} \
     -e OPENVPN_PORT=${OPENVPN_PORT} \
-    -e APP_COLLAB_PORT=${APP_COLLAB_PORT} \
-    -e SCRIPTS_DIR=${SCRIPTS_DIR} \
+    -e APP_GATEWAY_PORT=${APP_GATEWAY_PORT} \
+    -e GATEWAY_SCRIPTS_DIR=${GATEWAY_SCRIPTS_DIR} \
     \
     -p ${OPENVPN_PORT}:${OPENVPN_PORT}/udp \
-    -p ${APP_COLLAB_PORT}:${APP_COLLAB_PORT} \
+    -p ${APP_GATEWAY_PORT}:${APP_GATEWAY_PORT} \
     \
     \"${IMAGE_NAME}:${IMAGE_TAG}\""
 

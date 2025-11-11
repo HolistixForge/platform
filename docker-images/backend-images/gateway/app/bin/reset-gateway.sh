@@ -10,13 +10,13 @@ function success_exit {
 function reset_gateway {
     lib/stop-vpn.sh
 
-    lib/stop-app-collab.sh
+    lib/stop-app-gateway.sh
 
     lib/reset-nginx.sh
 
     lib/start-vpn.sh
 
-    lib/start-app-collab.sh
+    lib/start-app-gateway.sh
 }
 
 export -f reset_gateway

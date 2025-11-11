@@ -23,7 +23,7 @@ export type ModuleBackend = {
 };
 ```
 
-**Current Modules** (`packages/app-collab/src/modules.ts`):
+**Current Modules** (`packages/app-gateway/src/modules.ts`):
 
 - `gateway` - Gateway management, VPN, nginx proxy control
 - `core` - Core graph/node system
@@ -163,7 +163,7 @@ CREATE TABLE public.projects_gateways (
 
 Each gateway is a Docker container running:
 
-- **app-collab** (TypeScript/Node.js collaborative backend)
+- **app-gateway** (TypeScript/Node.js collaborative backend)
 - **OpenVPN server** (for container-to-gateway VPN)
 - **Nginx reverse proxy** (routes HTTP requests to containers)
 
@@ -374,7 +374,7 @@ When processing OAuth tokens, `redirect_uris` containing `DYNREDIR` are expanded
 
 ### 6. Shared State and Collaboration
 
-**Gateway App**: `packages/app-collab/` runs on each gateway
+**Gateway App**: `packages/app-gateway/` runs on each gateway
 
 **Shared State Structure** (`packages/modules/servers/src/lib/servers-shared-model.ts`):
 

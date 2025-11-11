@@ -1,0 +1,97 @@
+{
+  "name": "@monorepo/app-gateway",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "name": "app-gateway",
+    "projectType": "application",
+    "sourceRoot": "packages/app-gateway/src",
+    "targets": {
+      "build": {
+        "executor": "@nx/esbuild:esbuild",
+        "outputs": [
+          "{options.outputPath}"
+        ],
+        "defaultConfiguration": "production",
+        "options": {
+          "platform": "node",
+          "outputPath": "dist/packages/app-gateway",
+          "format": [
+            "cjs"
+          ],
+          "bundle": true,
+          "thirdParty": true,
+          "external": [
+            "react",
+            "react-dom",
+            "*.css",
+            "*.svg",
+            "*.woff",
+            "*.woff2",
+            "*.eot",
+            "*.ttf",
+            "*.otf"
+          ],
+          "main": "packages/app-gateway/src/main.ts",
+          "tsConfig": "packages/app-gateway/tsconfig.app.json",
+          "assets": [
+            "packages/app-gateway/src/assets"
+          ],
+          "esbuildOptions": {
+            "sourcemap": true,
+            "outExtension": {
+              ".js": ".js"
+            },
+            "loader": {
+              ".css": "empty",
+              ".svg": "empty",
+              ".woff": "empty",
+              ".woff2": "empty",
+              ".eot": "empty",
+              ".ttf": "empty",
+              ".otf": "empty"
+            }
+          }
+        },
+        "configurations": {
+          "development": {},
+          "production": {
+            "esbuildOptions": {
+              "sourcemap": true,
+              "outExtension": {
+                ".js": ".js"
+              }
+            }
+          }
+        }
+      },
+      "serve": {
+        "executor": "@nx/js:node",
+        "defaultConfiguration": "development",
+        "dependsOn": [
+          "build"
+        ],
+        "options": {
+          "buildTarget": "app-gateway:build",
+          "runBuildTargetDependencies": true
+        },
+        "configurations": {
+          "development": {
+            "buildTarget": "app-gateway:build:development"
+          },
+          "production": {
+            "buildTarget": "app-gateway:build:production"
+          }
+        }
+      },
+      "test": {
+        "options": {
+          "passWithNoTests": true
+        }
+      }
+    }
+  },
+  "dependencies": {
+    "@node-oauth/oauth2-server": "^5.2.1"
+  }
+}

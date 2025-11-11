@@ -3,7 +3,7 @@
 # Source the configuration file
 source "${BASH_SOURCE%/*}/config.conf"
 
-cd "${SCRIPTS_DIR}"
+cd "${GATEWAY_SCRIPTS_DIR}"
 
 # Function to set -x if not already set
 set_x_if_not_set() {

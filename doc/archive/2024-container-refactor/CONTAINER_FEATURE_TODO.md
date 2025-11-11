@@ -37,7 +37,7 @@ This document tracks all tasks for refactoring the container management system.
   - [ ] Modify `compileChunks()` in `packages/collab-engine/src/lib/chunk.ts`
   - [ ] Add `modules` parameter to pass full module objects
   - [ ] Pass modules to `loadExtraContext()`
-  - [ ] Update all callers (app-collab, app-frontend)
+  - [ ] Update all callers (app-gateway, app-frontend)
 
 ### 1.2 Image Registry Implementation
 
@@ -324,7 +324,7 @@ This document tracks all tasks for refactoring the container management system.
   - [ ] `packages/modules/servers/` → `packages/modules/user-containers/`
   - [ ] Update package.json name
   - [ ] Update nx project configuration
-  - [ ] Update module registration in app-collab and app-frontend
+  - [ ] Update module registration in app-gateway and app-frontend
 
 ### 3.2 File Renames
 

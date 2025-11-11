@@ -391,7 +391,7 @@ cd /root/workspace/monorepo
 npx nx run app-ganymede:build
 
 # Rebuild Gateway
-npx nx run app-collab:build
+npx nx run app-gateway:build
 
 # Rebuild Frontend
 ./scripts/local-dev/build-frontend.sh dev-001

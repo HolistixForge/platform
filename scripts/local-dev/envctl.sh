@@ -362,8 +362,8 @@ cmd_build() {
             npx nx run app-ganymede:build
             ;;
         gateway)
-            echo -e "${BLUE}🔨 Building app-collab (gateway)...${NC}"
-            npx nx run app-collab:build
+            echo -e "${BLUE}🔨 Building app-gateway...${NC}"
+            npx nx run app-gateway:build
             ;;
         frontend)
             echo -e "${BLUE}🔨 Building frontend...${NC}"
@@ -372,7 +372,7 @@ cmd_build() {
         all)
             echo -e "${BLUE}🔨 Building all apps...${NC}"
             npx nx run app-ganymede:build
-            npx nx run app-collab:build
+            npx nx run app-gateway:build
             "${SCRIPT_DIR}/build-frontend.sh" "$env_name" "${WORKSPACE}"
             ;;
         *)

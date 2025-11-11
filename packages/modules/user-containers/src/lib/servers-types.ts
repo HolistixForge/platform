@@ -19,7 +19,7 @@ export type TUserContainerPublishedInfo = {
   system?: UserContainerSystemInfo;
 };
 
-/** what is maintain in Shared States Server (SSS) : app-collab */
+/** what is maintain in Shared States Server (SSS) : app-gateway */
 export type TUserContainer = {
   user_container_id: string;
   container_name: string;

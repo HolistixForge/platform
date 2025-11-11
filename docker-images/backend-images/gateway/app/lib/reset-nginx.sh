@@ -9,7 +9,7 @@ env
 sudo tee "${NGINX_CONFIG}" >/dev/null <<EOF
 
 server {
-    listen ${APP_COLLAB_PORT};
+    listen ${APP_GATEWAY_PORT};
     server_name 127.0.0.1;
 
     error_page 502 /502.html;

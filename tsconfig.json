@@ -34,7 +34,7 @@
       "path": "./packages/app-ganymede-cmds"
     },
     {
-      "path": "./packages/app-collab"
+      "path": "./packages/app-gateway"
     },
     {
       "path": "./packages/modules/core-graph"
