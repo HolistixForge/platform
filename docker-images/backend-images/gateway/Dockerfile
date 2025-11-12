@@ -3,15 +3,13 @@ FROM dev-pod:latest
 USER root 
 
 RUN apt update && apt install -y \
-openvpn \
-easy-rsa \
-nginx \
-inotify-tools
+  openvpn \
+  easy-rsa \
+  nginx \
+  inotify-tools
 
-CMD env && ls -l \
-    && /home/dev/main.sh \
-    && ls -l ${WORKSPACE} \
-    && echo ${GATEWAY_SCRIPTS_DIR} && cd ${GATEWAY_SCRIPTS_DIR} \
-    && pwd && ls -l \
-    && sudo -E -u ${DEV_USER} ./main.sh -r bin/reset-gateway.sh \
-    && tail -f /tmp/gateway.log
+# Copy and set entrypoint
+COPY --chmod=755 ./app/entrypoint-dev.sh /entrypoint.sh
+
+# Entrypoint will handle hot-reloading via trigger file
+ENTRYPOINT ["/entrypoint.sh"]

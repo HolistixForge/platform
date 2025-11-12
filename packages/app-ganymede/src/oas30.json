@@ -843,7 +843,7 @@
                     "organization_id": { "type": "string", "format": "uuid" },
                     "organization_name": { "type": "string" },
                     "gateway_id": { "type": "string", "format": "uuid" },
-                    "gateway_token": { "type": "string" },
+                    "organization_token": { "type": "string", "description": "JWT token for organization-bound operations" },
                     "projects": {
                       "type": "array",
                       "items": { "type": "string", "format": "uuid" }
@@ -859,6 +859,177 @@
                         }
                       }
                     }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/gateway/ready": {
+      "post": {
+        "summary": "Gateway signals it's ready to be allocated",
+        "tags": ["Gateway"],
+        "parameters": [{ "$ref": "#/components/parameters/headers_authorization_bearer" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "gateway_id": { "type": "string", "format": "uuid" }
+                },
+                "required": ["gateway_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Gateway marked as ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        },
+        "security": [{ "gatewayToken": [] }]
+      }
+    },
+    "/gateway/stop": {
+      "post": {
+        "summary": "Stop gateway (deallocate from organization)",
+        "tags": ["Gateway"],
+        "parameters": [{ "$ref": "#/components/parameters/headers_authorization_bearer" }],
+        "responses": {
+          "200": {
+            "description": "Gateway stopped",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        },
+        "security": [{ "organizationToken": [] }]
+      }
+    },
+    "/gateway/data/push": {
+      "post": {
+        "summary": "Push organization data snapshot from gateway",
+        "tags": ["Gateway"],
+        "parameters": [{ "$ref": "#/components/parameters/headers_authorization_bearer" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "timestamp": { "type": "string", "format": "date-time" },
+                  "data": {
+                    "type": "object",
+                    "description": "Organization data snapshot (YJS state, permissions, OAuth tokens, etc.)",
+                    "additionalProperties": true
+                  }
+                },
+                "required": ["data"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Data stored successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "stored_at": { "type": "string", "format": "date-time" },
+                    "size_bytes": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        },
+        "security": [{ "organizationToken": [] }]
+      }
+    },
+    "/gateway/data/pull": {
+      "post": {
+        "summary": "Pull organization data snapshot to gateway",
+        "tags": ["Gateway"],
+        "parameters": [{ "$ref": "#/components/parameters/headers_authorization_bearer" }],
+        "responses": {
+          "200": {
+            "description": "Data retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "exists": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "nullable": true,
+                      "additionalProperties": true
+                    },
+                    "timestamp": { "type": "string", "format": "date-time", "nullable": true },
+                    "stored_at": { "type": "string", "format": "date-time", "nullable": true }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        },
+        "security": [{ "organizationToken": [] }]
+      }
+    },
+    "/gateway/data/{organization_id}": {
+      "delete": {
+        "summary": "Delete organization data",
+        "tags": ["Gateway"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "in": "path",
+            "name": "organization_id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" }
                   }
                 }
               }
@@ -997,11 +1168,21 @@
       "headers_authorization": {
         "in": "header",
         "name": "authorization",
-        "description": "JWT access token",
+        "description": "JWT access token (user token with 'token ' prefix)",
         "required": true,
         "schema": {
           "type": "string",
           "pattern": "^(?:token\\s)?[-A-Za-z0-9_+./]*={0,3}$"
+        }
+      },
+      "headers_authorization_bearer": {
+        "in": "header",
+        "name": "authorization",
+        "description": "JWT token (gateway/organization token with 'Bearer ' prefix)",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^Bearer\\s[-A-Za-z0-9_+./]*={0,3}$"
         }
       },
       "org_id": {
@@ -1015,6 +1196,26 @@
         "name": "project_id",
         "required": true,
         "schema": { "type": "string", "format": "uuid" }
+      }
+    },
+    "securitySchemes": {
+      "userToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "User JWT token (TJwtUser)"
+      },
+      "gatewayToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Gateway JWT token (TJwtGateway)"
+      },
+      "organizationToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Organization JWT token (TJwtOrganization)"
       }
     }
   }

@@ -1,19 +1,26 @@
 #!/bin/bash
-# Create a new local development environment
-# Usage: ./create-env.sh dev-001 [workspace-path] [database-path]
-# Usage: ./create-env.sh dev-002
-# Usage: ./create-env.sh feat-my-feature /root/workspace-feat /root/database-feat
+# Create a new local development environment with multi-gateway support
+# Usage: ./create-env.sh <env-name> [domain] [workspace-path] [database-path]
+# Usage: ./create-env.sh dev-001
+# Usage: ./create-env.sh dev-001 domain.local
+# Usage: ./create-env.sh dev-001 demiurge.local /root/workspace-feat /root/database-feat
 
 set -e
 
 ENV_NAME=$1
-WORKSPACE_PATH=${2:-"/root/workspace/monorepo"}
-DATABASE_PATH=${3:-"/root/workspace/database"}
+DOMAIN=${2:-"domain.local"}
+WORKSPACE_PATH=${3:-"/root/workspace/monorepo"}
+DATABASE_PATH=${4:-"/root/workspace/database"}
+GATEWAY_POOL_SIZE=${GATEWAY_POOL_SIZE:-3}  # Default: 3 gateways in pool
 
 if [ -z "$ENV_NAME" ]; then
-  echo "Usage: $0 <env-name> [workspace-path] [database-path]"
+  echo "Usage: $0 <env-name> [domain] [workspace-path] [database-path]"
   echo "Example: $0 dev-001"
-  echo "Example: $0 feat-xyz /root/workspace-feat /root/database-feat"
+  echo "Example: $0 dev-001 domain.local"
+  echo "Example: $0 dev-001 demiurge.mycompany.local /root/workspace-feat /root/database-feat"
+  echo ""
+  echo "Gateway pool size can be set via environment variable:"
+  echo "  GATEWAY_POOL_SIZE=5 $0 dev-001"
   exit 1
 fi
 
@@ -86,11 +93,12 @@ DATA_DIR="${ENV_DIR}/data"
 LOGS_DIR="${ENV_DIR}/logs"
 
 echo "📦 Creating environment: ${ENV_NAME}"
+echo "   Domain: ${DOMAIN}"
 echo "   Workspace: ${WORKSPACE_PATH}"
 echo "   Database repo: ${DATABASE_PATH}"
 echo "   Database: ${DB_NAME}"
 echo "   Ganymede port: ${GANYMEDE_PORT}"
-echo "   Gateway port: ${GATEWAY_PORT}"
+echo "   Gateway pool size: ${GATEWAY_POOL_SIZE}"
 echo ""
 
 # 1. Create directory structure
@@ -170,18 +178,16 @@ echo "   ✅ Application user granted: EXECUTE on functions and procedures"
 echo "   ✅ Application user search_path set to public"
 echo "   ⚠️  Application user CANNOT: CREATE/DROP tables, CREATE users"
 
-# 5. Generate SSL certificates
+# 5. Generate SSL certificates (wildcard for all subdomains)
 echo "🔐 Generating SSL certificates..."
 cd "${ENV_DIR}"
 mkcert \
-  "${ENV_NAME}.local" \
-  "ganymede.${ENV_NAME}.local" \
-  "gateway.${ENV_NAME}.local" \
-  "*.gateway.${ENV_NAME}.local"
+  "${DOMAIN}" \
+  "*.${DOMAIN}"
 
 # Rename for clarity
-mv "${ENV_NAME}.local+3.pem" ssl-cert.pem
-mv "${ENV_NAME}.local+3-key.pem" ssl-key.pem
+mv "${DOMAIN}+1.pem" ssl-cert.pem 2>/dev/null || mv "*.${DOMAIN}+1.pem" ssl-cert.pem
+mv "${DOMAIN}+1-key.pem" ssl-key.pem 2>/dev/null || mv "*.${DOMAIN}+1-key.pem" ssl-key.pem
 
 # 6. Generate JWT keys
 echo "🔑 Generating JWT keys..."
@@ -219,12 +225,23 @@ LINKEDIN_CLIENT_ID=xxxxx
 LINKEDIN_CLIENT_SECRET=xxxxx
 
 # URLs
-GANYMEDE_FQDN=ganymede.${ENV_NAME}.local
-FRONTEND_FQDN=${ENV_NAME}.local
+GANYMEDE_FQDN=ganymede.${DOMAIN}
+FRONTEND_FQDN=${DOMAIN}
+
+# Domain configuration
+DOMAIN=${DOMAIN}
+ENVIRONMENT_NAME=${ENV_NAME}
 
 # Server binding
 GANYMEDE_SERVER_BIND='[{"host":"127.0.0.1","port":${GANYMEDE_PORT}}]'
-ALLOWED_ORIGINS='["https://${ENV_NAME}.local"]'
+ALLOWED_ORIGINS='["https://${DOMAIN}"]'
+
+# PowerDNS configuration
+POWERDNS_API_URL=http://localhost:8081
+POWERDNS_API_KEY=local-dev-api-key
+
+# Gateway pool scripts directory
+GATEWAY_SCRIPTS_DIR=${WORKSPACE_PATH}/scripts/local-dev
 
 # Magic link email (optional)
 MAILING_HOST=xxxxx
@@ -240,95 +257,14 @@ SESSION_COOKIE_KEY=$(openssl rand -hex 32)
 # JAEGER_FQDN=
 EOF
 
-# 8. Register gateway with Ganymede (using app-ganymede-cmd)
-echo "🔧 Registering gateway with Ganymede..."
-cd "${WORKSPACE_PATH}"
-
-# Build app-ganymede-cmds
-npm install
-echo "   Building app-ganymede-cmds..."
-npx nx run app-ganymede-cmds:build
-if [ $? -ne 0 ]; then
-  echo "❌ Failed to build app-ganymede-cmds"
-  exit 1
-fi
-
-# Load Ganymede env to get database connection, jwt keys
-set -a  # Auto-export all variables
-source "${ENV_DIR}/.env.ganymede"
-set +a  # Disable auto-export
-
-# Register gateway and capture output
-GATEWAY_HOSTNAME="gateway.${ENV_NAME}.local"
-GATEWAY_VERSION="0.0.1"
-
-set +e
-REGISTER_OUTPUT=$(LOG_LEVEL=6 \
-  node "${WORKSPACE_PATH}/dist/packages/app-ganymede-cmds/main.js" add-gateway \
-    -h "${GATEWAY_HOSTNAME}" \
-    -gv "${GATEWAY_VERSION}" 2>&1)
-REGISTER_EXIT_CODE=$?
-set -e
-
-# Extract gateway_id and token from output
-# Format: "gateway_id: <uuid>" and "token: <jwt>"
-GATEWAY_ID=$(echo "$REGISTER_OUTPUT" | grep 'gateway_id:' | grep -oP '[a-f0-9-]{36}' | head -1)
-GATEWAY_TOKEN=$(echo "$REGISTER_OUTPUT" | grep '^token:' | awk '{print $2}')
-
-if [ -z "$GATEWAY_ID" ] || [ -z "$GATEWAY_TOKEN" ]; then
-  echo "❌ Failed to extract gateway info from output. [GATEWAY_ID: $GATEWAY_ID, GATEWAY_TOKEN: $GATEWAY_TOKEN]"
-  echo ""
-  echo "Output:"
-  echo "$REGISTER_OUTPUT"
-  echo ""
-  echo "This usually means the output format changed or the command failed silently."
-  exit 1
-fi
-
-echo "   ✅ Gateway registered"
-echo "   Gateway ID: ${GATEWAY_ID}"
-echo "   Token saved to .env.gateway"
-set -e
-
-# 9. Create Gateway .env file
-echo "📝 Creating Gateway config..."
-cat > "${ENV_DIR}/.env.gateway" <<EOF
-# Environment: ${ENV_NAME}
-NODE_ENV=development
-PORT=${GATEWAY_PORT}
-
-# Gateway identification (registered via app-ganymede-cmd)
-GATEWAY_ID=${GATEWAY_ID}
-GATEWAY_HOSTNAME=${GATEWAY_HOSTNAME}
-GATEWAY_TOKEN=${GATEWAY_TOKEN}
-GATEWAY_HMAC_SECRET=$(openssl rand -hex 32)
-
-# Ganymede connection
-GANYMEDE_FQDN=ganymede.${ENV_NAME}.local
-
-# Server binding
-SERVER_BIND='[{"host":"127.0.0.1","port":${GATEWAY_PORT}}]'
-
-# Gateway scripts directory
-GATEWAY_SCRIPTS_DIR=${WORKSPACE_PATH}/docker-images/backend-images/gateway/app
-
-# Data storage
-DATA_DIR=${DATA_DIR}
-
-# Workspace location
-WORKSPACE=${WORKSPACE_PATH}
-
-# Jaeger (optional)
-# JAEGER_FQDN=
-EOF
-
-# 10. Create Nginx server blocks
-echo "🌐 Creating Nginx configuration..."
+# 8. Create Nginx server blocks (Stage 1 - Main nginx with SSL termination)
+echo "🌐 Creating Nginx configuration (Stage 1)..."
+echo "   NOTE: Gateway-specific configs will be added dynamically by Ganymede"
 sudo tee "/etc/nginx/sites-available/${ENV_NAME}" > /dev/null <<EOF
 # Frontend
 server {
     listen 443 ssl;
-    server_name ${ENV_NAME}.local;
+    server_name ${DOMAIN};
 
     ssl_certificate ${ENV_DIR}/ssl-cert.pem;
     ssl_certificate_key ${ENV_DIR}/ssl-key.pem;
@@ -352,7 +288,7 @@ server {
 # Ganymede API
 server {
     listen 443 ssl;
-    server_name ganymede.${ENV_NAME}.local;
+    server_name ganymede.${DOMAIN};
 
     ssl_certificate ${ENV_DIR}/ssl-cert.pem;
     ssl_certificate_key ${ENV_DIR}/ssl-key.pem;
@@ -365,78 +301,141 @@ server {
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header X-Forwarded-Proto https;
     }
 
     access_log ${LOGS_DIR}/ganymede-access.log;
     error_log ${LOGS_DIR}/ganymede-error.log;
 }
 
-# Gateway (Collab)
-server {
-    listen 443 ssl;
-    server_name gateway.${ENV_NAME}.local *.gateway.${ENV_NAME}.local;
-
-    ssl_certificate ${ENV_DIR}/ssl-cert.pem;
-    ssl_certificate_key ${ENV_DIR}/ssl-key.pem;
-
-    location / {
-        proxy_pass http://127.0.0.1:${GATEWAY_PORT};
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-
-        # WebSocket support
-        proxy_read_timeout 86400s;
-        proxy_send_timeout 86400s;
-    }
-
-    access_log ${LOGS_DIR}/gateway-access.log;
-    error_log ${LOGS_DIR}/gateway-error.log;
-}
+# Dynamic gateway configs will be included here
+include ${ENV_DIR}/nginx-gateways.d/*.conf;
 
 # Redirect HTTP to HTTPS
 server {
     listen 80;
-    server_name ${ENV_NAME}.local ganymede.${ENV_NAME}.local gateway.${ENV_NAME}.local *.gateway.${ENV_NAME}.local;
+    server_name ${DOMAIN} *.${DOMAIN};
     return 301 https://\$server_name\$request_uri;
 }
 EOF
 
+# Create directory for dynamic gateway nginx configs
+mkdir -p "${ENV_DIR}/nginx-gateways.d"
+sudo chmod 755 "${ENV_DIR}/nginx-gateways.d"
+
 # Enable site
 sudo ln -sf "/etc/nginx/sites-available/${ENV_NAME}" "/etc/nginx/sites-enabled/${ENV_NAME}"
 
-# 11. Test and reload Nginx
+# 9. Test and reload Nginx
 sudo nginx -t
 sudo service nginx reload
 
-# 12. Environment ready - no scripts generated
-# All management is done through envctl.sh in scripts/local-dev/
+# 10. Register services in PowerDNS
+echo "🌐 Setting up DNS zone and registering services..."
 
-# 13. Update /etc/hosts in dev container
-echo "📝 Updating /etc/hosts..."
-# Remove existing entries for this environment (if any), then add new ones
-TMP_HOSTS=$(mktemp)
-sudo grep -v "local-dev-${ENV_NAME}" /etc/hosts | sudo grep -v "${ENV_NAME}.local" > "$TMP_HOSTS"
-cat >> "$TMP_HOSTS" <<EOF
-# local-dev-${ENV_NAME}
-127.0.0.1  ${ENV_NAME}.local ganymede.${ENV_NAME}.local gateway.${ENV_NAME}.local
-EOF
-sudo cp "$TMP_HOSTS" /etc/hosts
-rm "$TMP_HOSTS"
+# Get container IP
+DEV_CONTAINER_IP="127.0.0.1"
 
+# Check if PowerDNS is running
+if ! curl -s -f "http://localhost:8081/api/v1/servers" -H "X-API-Key: local-dev-api-key" > /dev/null 2>&1; then
+    echo "❌ PowerDNS API not responding. Did you run setup-powerdns.sh?"
+    exit 1
+fi
+
+# Create DNS zone for this domain (if it doesn't exist)
+echo "   Creating DNS zone: ${DOMAIN}"
+ZONE_EXISTS=$(curl -s "http://localhost:8081/api/v1/servers/localhost/zones/${DOMAIN}." \
+    -H "X-API-Key: local-dev-api-key" 2>/dev/null | grep -c "\"name\":\"${DOMAIN}\"" || true)
+
+if [ "$ZONE_EXISTS" -eq 0 ]; then
+    curl -X POST "http://localhost:8081/api/v1/servers/localhost/zones" \
+      -H "X-API-Key: local-dev-api-key" \
+      -H "Content-Type: application/json" \
+      -d "{
+        \"name\": \"${DOMAIN}.\",
+        \"kind\": \"Native\",
+        \"nameservers\": [\"ns1.${DOMAIN}.\"]
+      }" > /dev/null 2>&1
+
+    if [ $? -ne 0 ]; then
+        echo "❌ Failed to create DNS zone"
+        exit 1
+    fi
+    
+    echo "   ✅ DNS zone '${DOMAIN}' created"
+else
+    echo "   ✅ DNS zone '${DOMAIN}' already exists"
+fi
+
+# Register main domain (frontend)
+echo "   Registering ${DOMAIN} → ${DEV_CONTAINER_IP}"
+curl -X PATCH "http://localhost:8081/api/v1/servers/localhost/zones/${DOMAIN}." \
+  -H "X-API-Key: local-dev-api-key" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"rrsets\": [{
+      \"name\": \"${DOMAIN}.\",
+      \"type\": \"A\",
+      \"changetype\": \"REPLACE\",
+      \"ttl\": 60,
+      \"records\": [{\"content\": \"${DEV_CONTAINER_IP}\", \"disabled\": false}]
+    }]
+  }" > /dev/null 2>&1
+
+# Register Ganymede
+echo "   Registering ganymede.${DOMAIN} → ${DEV_CONTAINER_IP}"
+curl -X PATCH "http://localhost:8081/api/v1/servers/localhost/zones/${DOMAIN}." \
+  -H "X-API-Key: local-dev-api-key" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"rrsets\": [{
+      \"name\": \"ganymede.${DOMAIN}.\",
+      \"type\": \"A\",
+      \"changetype\": \"REPLACE\",
+      \"ttl\": 60,
+      \"records\": [{\"content\": \"${DEV_CONTAINER_IP}\", \"disabled\": false}]
+    }]
+  }" > /dev/null 2>&1
+
+# Register wildcard for all subdomains (will handle org-{uuid}.domain.com)
+echo "   Registering *.${DOMAIN} → ${DEV_CONTAINER_IP}"
+curl -X PATCH "http://localhost:8081/api/v1/servers/localhost/zones/${DOMAIN}." \
+  -H "X-API-Key: local-dev-api-key" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"rrsets\": [{
+      \"name\": \"*.${DOMAIN}.\",
+      \"type\": \"A\",
+      \"changetype\": \"REPLACE\",
+      \"ttl\": 60,
+      \"records\": [{\"content\": \"${DEV_CONTAINER_IP}\", \"disabled\": false}]
+    }]
+  }" > /dev/null 2>&1
+
+echo "   ✅ DNS records registered in PowerDNS"
+
+# 11. Create gateway pool
+echo "📦 Creating gateway pool (${GATEWAY_POOL_SIZE} gateways)..."
+
+# Create org-data directory for centralized data storage
+mkdir -p "${ENV_DIR}/org-data"
+chmod 755 "${ENV_DIR}/org-data"
+
+# Run gateway-pool.sh script with environment variables
+ENV_NAME="${ENV_NAME}" DOMAIN="${DOMAIN}" WORKSPACE_VOLUME="demiurge-workspace" \
+  "${WORKSPACE_PATH}/scripts/local-dev/gateway-pool.sh" create ${GATEWAY_POOL_SIZE}
+
+# 12. Environment ready!
 echo ""
-echo "╔════════════════════════════════════════════════════════════════╗"
-echo "║  ✅ Environment '${ENV_NAME}' created successfully!            "
-echo "╚════════════════════════════════════════════════════════════════╝"
+echo "╔══════════════════════════════════════════════════════════════╗"
+echo "║  ✅ Environment ${ENV_NAME} ready!                           ║"
+echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 echo "📂 Location: ${ENV_DIR}"
 echo "🗄️  Database: ${DB_NAME}"
 echo "👤 App User: ${APP_DB_USER} (credentials in .env.ganymede)"
+echo "🌐 Domain: ${DOMAIN}"
+echo "📦 Gateway Pool: ${GATEWAY_POOL_SIZE} gateways ready"
 echo ""
 echo "🔑 Database Admin Credentials (for manual operations):"
 echo "   User: postgres"
@@ -445,17 +444,11 @@ echo "   Connect: PGPASSWORD=devpassword psql -U postgres -h localhost -d ${DB_N
 echo ""
 echo "📋 Next steps:"
 echo ""
-echo "1. 🖥️  Add to host OS hosts file:"
+echo "1. 🌐 DNS is already configured via PowerDNS!"
+echo "   All domains (${DOMAIN}, ganymede.${DOMAIN}, org-*.${DOMAIN}) resolve automatically"
 echo ""
-echo "   Windows (C:\\Windows\\System32\\drivers\\etc\\hosts as Admin):"
-echo "   macOS/Linux (/etc/hosts with sudo):"
-echo ""
-echo "      <dev-container-ip>  ${ENV_NAME}.local"
-echo "      <dev-container-ip>  ganymede.${ENV_NAME}.local"
-echo "      <dev-container-ip>  gateway.${ENV_NAME}.local"
-echo ""
-echo "   Get dev container IP: hostname -I"
-echo "   Or use helper: ./windows-add-hosts.ps1 <ip> ${ENV_NAME}"
+echo "   ⚠️  IMPORTANT: Configure host OS DNS delegation (ONE-TIME SETUP)"
+echo "   See setup-all.sh output or doc/guides/MULTI_GATEWAY_ARCHITECTURE.md"
 echo ""
 echo "2. ⚙️  Configure OAuth providers (optional):"
 echo "      nano ${ENV_DIR}/.env.ganymede"
@@ -463,24 +456,20 @@ echo ""
 echo "3. 🏗️  Build frontend:"
 echo "      ./build-frontend.sh ${ENV_NAME} ${WORKSPACE_PATH}"
 echo ""
-echo "4. 📊 Monitor all environments:"
-echo "      ./envctl-monitor.sh"
-echo "      ./envctl-monitor.sh watch    # Live updates"
-echo ""
-echo "5. 🚀 Start the environment:"
+echo "4. 🚀 Start the environment:"
 echo "      ./envctl.sh start ${ENV_NAME}"
 echo ""
-echo "6. 🌐 Access from host OS browser:"
-echo "      https://${ENV_NAME}.local"
+echo "5. 🌐 Access from host OS browser:"
+echo "      https://${DOMAIN}"
+echo "      https://ganymede.${DOMAIN}"
 echo ""
-echo "7. 📊 View logs:"
+echo "6. 📊 View logs:"
 echo "      ./envctl.sh logs ${ENV_NAME} ganymede"
-echo "      ./envctl.sh logs ${ENV_NAME} gateway"
 echo ""
-echo "8. 🛑 Stop:"
+echo "7. 🛑 Stop:"
 echo "      ./envctl.sh stop ${ENV_NAME}"
 echo ""
-echo "9. 🔄 Restart:"
+echo "8. 🔄 Restart:"
 echo "      ./envctl.sh restart ${ENV_NAME}"
 echo ""
 

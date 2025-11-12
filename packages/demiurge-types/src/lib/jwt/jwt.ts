@@ -2,23 +2,25 @@
  * token given to users's project server container
  */
 export type TJwtUserContainer = {
-  type: 'server_token';
+  type: 'user_container_token';
   project_id: string;
   user_container_id: string;
   scope: string;
 };
 
 /**
- * token given to gateway when bound to a project
+ * token given to gateway when bound to a organization
+ * Includes gateway_id to track which gateway is serving the org
  */
-export type TJwtProject = {
-  type: 'project_token';
-  project_id: string;
+export type TJwtOrganization = {
+  type: 'organization_token';
+  organization_id: string;
+  gateway_id: string;
   scope: string;
 };
 
 /**
- * token given to gateway when in stand by
+ * token given to gateway container when started
  */
 export type TJwtGateway = {
   type: 'gateway_token';
@@ -27,7 +29,7 @@ export type TJwtGateway = {
 };
 
 /**
- * token given to users
+ * token given to (human) users
  */
 export type TJwtUser = {
   type: 'access_token' | 'refresh_token';
