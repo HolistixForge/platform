@@ -458,75 +458,6 @@ export class OAuthManager {
 
 ---
 
-### PHASE 5: ContainerTokenManager
-
-**Purpose:** Manage container HMAC tokens using GatewayState
-
-**Files to Create:**
-
-1. `packages/app-gateway/src/containers/ContainerTokenManager.ts`
-
-**Sub-tasks:**
-
-**5.1 Create ContainerTokenManager** (`containers/ContainerTokenManager.ts`)
-
-```typescript
-export class ContainerTokenManager {
-  constructor(private gatewayState: GatewayState) {}
-
-  generateToken(container_id: string, project_id: string): string {
-    const payload = {
-      container_id,
-      project_id,
-      org_id: this.gatewayState.getData().organization_id,
-    };
-    const token = makeHmacToken(CONFIG.HMAC_SECRET, payload);
-
-    this.gatewayState.updateData((data) => {
-      data.container_tokens[container_id] = {
-        token,
-        project_id,
-        created_at: new Date().toISOString(),
-      };
-    });
-
-    return token;
-  }
-
-  validateToken(
-    token: string
-  ): { container_id: string; project_id: string } | null {
-    // Verify HMAC, extract payload
-    const payload = verifyHmacToken(token, CONFIG.HMAC_SECRET);
-    const stored =
-      this.gatewayState.getData().container_tokens[payload.container_id];
-
-    if (stored && stored.token === token) {
-      return {
-        container_id: payload.container_id,
-        project_id: payload.project_id,
-      };
-    }
-    return null;
-  }
-
-  deleteToken(container_id: string): void {
-    this.gatewayState.updateData((data) => {
-      delete data.container_tokens[container_id];
-    });
-  }
-}
-```
-
-**5.2 Test ContainerTokenManager**
-
-- [ ] Generate token
-- [ ] Validate token
-- [ ] Invalid token rejected
-- [ ] Delete token
-
----
-
 ### PHASE 6: Organization-Based Initialization
 
 **Purpose:** Initialize gateway for entire org with multiple projects
@@ -936,7 +867,6 @@ packages/json-file-persistence/src/
 
 ### 🧹 PHASE 7: Cleanup - 10 tasks
 
-- [ ] 7.1 Delete `app-ganymede-cmds`
 - [ ] 7.2 Clean `app-ganymede/src/models/oauth.ts`
 - [ ] 7.3 Update `modules/gateway` - Remove exception imports
 - [ ] 7.4 Update OpenAPI specs
@@ -949,22 +879,6 @@ packages/json-file-persistence/src/
 
 ---
 
-## 📊 COMPLEXITY (REVISED)
-
-| Phase                | Tasks | Complexity | Time |
-| -------------------- | ----- | ---------- | ---- |
-| 1. GatewayState      | 12    | Medium     | 2-3h |
-| 2. PermissionManager | 10    | Low-Medium | 2-3h |
-| 3. Multi-Rooms       | 11    | Medium     | 2-3h |
-| 4. OAuthManager      | 15    | High       | 4-5h |
-| 5. ContainerTokens   | 8     | Low-Medium | 2h   |
-| 6. Integration       | 12    | Medium     | 2-3h |
-| 7. Cleanup           | 10    | Low        | 2h   |
-
-**Total: ~78 tasks, 16-21 hours**
-
----
-
 ## 🎯 IMPLEMENTATION ORDER
 
 1. **GatewayState** - Generic storage foundation
@@ -974,17 +888,3 @@ packages/json-file-persistence/src/
 5. **OAuthManager** - Complex OAuth logic
 6. **Integration** - Wire everything together
 7. **Cleanup** - Polish and test
-
----
-
-## 🚀 READY TO START
-
-The plan is now:
-
-- ✅ GatewayState is generic (separation of concerns)
-- ✅ Specialized managers for each domain
-- ✅ Simple permissions (exact match, no hierarchy yet)
-- ✅ Multi-project support
-- ✅ Clear dependencies
-
-**Shall I proceed with Phase 1: GatewayState (Generic Storage)?**

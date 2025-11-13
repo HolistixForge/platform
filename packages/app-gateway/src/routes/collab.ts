@@ -86,7 +86,24 @@ export const setupCollabRoutes = (router: Router) => {
 
       log(6, 'GATEWAY', 'Received config from Ganymede', { config });
 
-      if (config.GANYMEDE_API_TOKEN && startProjectCollabCallback) {
+      // NEW: Pull organization data from Ganymede
+      if (
+        config.organization_token &&
+        config.organization_id &&
+        config.gateway_id
+      ) {
+        const { gatewayDataSync } = await import('../services/data-sync');
+
+        gatewayDataSync.setOrganizationContext(
+          config.organization_id,
+          config.gateway_id,
+          config.organization_token
+        );
+
+        await gatewayDataSync.pullDataFromGanymede();
+      }
+
+      if (config.organization_token && startProjectCollabCallback) {
         await startProjectCollabCallback(config);
       }
 

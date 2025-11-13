@@ -88,7 +88,10 @@ for i in $(seq 1 $COUNT); do
   REGISTER_OUTPUT=$(LOG_LEVEL=6 \
     node "${WORKSPACE_PATH}/dist/packages/app-ganymede-cmds/main.js" add-gateway \
       -h "${GATEWAY_HOSTNAME}" \
-      -gv "${GATEWAY_VERSION}" 2>&1)
+      -gv "${GATEWAY_VERSION}" \
+      -c "${GATEWAY_NAME}" \
+      -hp "${GW_HTTP_PORT}" \
+      -vp "${GW_VPN_PORT}" 2>&1)
   REGISTER_EXIT_CODE=$?
   set -e
   

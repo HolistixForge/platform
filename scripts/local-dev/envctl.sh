@@ -156,12 +156,36 @@ stop_service() {
     rm -f "$pid_file"
 }
 
+# Function to restart gateway containers (triggers hot-reload)
+restart_gateway_containers() {
+    local env_name=$1
+    local workspace_path="${WORKSPACE_PATH:-/root/workspace/monorepo}"
+    local trigger_file="${workspace_path}/.gateway-reload-trigger"
+    
+    echo -e "${BLUE}♻️  Triggering hot-reload for all gateway containers...${NC}"
+   
+    # Touch reload trigger file (watched by all gateways via shared volume)
+    touch "$trigger_file"
+    
+    echo -e "${GREEN}✅ Reload triggered for all gateways${NC}"
+    echo -e "${GRAY}   Containers will rebuild and restart app-gateway${NC}"
+    echo -e "${GRAY}   Watch logs: docker logs gw-pool-0 -f${NC}"
+}
+
 # Function to restart a service
 restart_service() {
     local env_name=$1
     local service=$2
     
-    echo -e "${BLUE}🔄 Restarting ${service}...${NC}"
+    echo -e "${CYAN}🔄 Restarting ${service}...${NC}"
+    
+    # Special handling for gateway: use reload trigger for containers
+    if [ "$service" = "gateway" ]; then
+        restart_gateway_containers "$env_name"
+        return $?
+    fi
+    
+    # For other services (ganymede): normal restart
     stop_service "$env_name" "$service"
     sleep 1
     start_service "$env_name" "$service"

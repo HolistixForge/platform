@@ -16,69 +16,65 @@ This guide sets up a **complete local development environment** inside your deve
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                          Docker Host                                 │
-│                                                                      │
-│  ┌──────────────────────────────────────────────────────────────┐  │
-│  │          Development Container (Ubuntu)                       │  │
-│  │                                                               │  │
-│  │  ┌────────────────────────────────────────────────────────┐  │  │
-│  │  │                Nginx (Port 443)                         │  │  │
-│  │  │  SSL Termination for all environments                  │  │  │
-│  │  └────┬─────────────┬─────────────┬───────────────────────┘  │  │
-│  │       │             │             │                           │  │
-│  │  ┌────▼─────┐  ┌────▼─────┐  ┌───▼──────┐                   │  │
-│  │  │ ENV: 001 │  │ ENV: 002 │  │ ENV: 003 │ (Multiple envs)   │  │
-│  │  ├──────────┤  ├──────────┤  ├──────────┤                   │  │
-│  │  │ Ganymede │  │ Ganymede │  │ Ganymede │                   │  │
-│  │  │ :6000    │  │ :6010    │  │ :6020    │                   │  │
-│  │  │          │  │          │  │          │                   │  │
-│  │  │ Gateway  │  │ Gateway  │  │ Gateway  │                   │  │
-│  │  │ :7000    │  │ :7010    │  │ :7020    │                   │  │
-│  │  │          │  │          │  │          │                   │  │
-│  │  │ Frontend │  │ Frontend │  │ Frontend │                   │  │
-│  │  │ (static) │  │ (static) │  │ (static) │                   │  │
-│  │  └────┬─────┘  └────┬─────┘  └────┬─────┘                   │  │
-│  │       │             │             │                           │  │
-│  │       └─────────────┴─────────────┴──────────────┐            │  │
-│  │                                                   │            │  │
-│  │  ┌────────────────────────────────────────────┐  │            │  │
-│  │  │     PostgreSQL Server (Port 5432)          │◄─┘            │  │
-│  │  │                                             │               │  │
-│  │  │  Databases:                                │               │  │
-│  │  │  - ganymede_dev_001  (for dev-001)        │               │  │
-│  │  │  - ganymede_dev_002  (for dev-002)        │               │  │
-│  │  │  - ganymede_dev_003  (for dev-003)        │               │  │
-│  │  └────────────────────────────────────────────┘               │  │
-│  │                                                               │  │
-│  │  File Structure:                                              │  │
-│  │  /root/workspace/monorepo/                                   │  │
-│  │  /root/.local-dev/                                           │  │
-│  │    ├── dev-001/ (.env, SSL certs, JWT keys, data, logs)     │  │
-│  │    ├── dev-002/                                              │  │
-│  │    └── dev-003/                                              │  │
-│  └──────────────────────────────────────────────────────────────┘  │
-│                                                                      │
-│  ┌──────────────────────────────────────────────────────────────┐  │
-│  │             User Containers (Docker)                          │  │
-│  │  (Started by users, run alongside dev container)             │  │
-│  │                                                               │  │
-│  │  - jupyter-container-1 (env: dev-001)                        │  │
-│  │  - pgadmin-container-2 (env: dev-001)                        │  │
-│  │  - vscode-container-3 (env: dev-002)                         │  │
-│  │                                                               │  │
-│  │  Connected to gateway via VPN                                │  │
-│  └──────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────┐
+│                               Docker Host                                 │
+│                                                                           │
+│  ┌────────────────────────────────────────────────────────────────────┐  │
+│  │          Main Development Container (Ubuntu 24.04)                  │  │
+│  │                                                                     │  │
+│  │  ┌──────────────────────────────────────────────────────────────┐  │  │
+│  │  │  Nginx (Stage 1) - Port 443                                  │  │  │
+│  │  │  - SSL Termination (wildcard *.domain.local)                │  │  │
+│  │  │  - Routes to: Frontend, Ganymede, Gateway containers       │  │  │
+│  │  └───┬────────────────┬──────────────┬───────────────────────── │  │  │
+│  │      │                │              │                             │  │
+│  │  ┌───▼──────┐    ┌───▼─────────┐   PowerDNS (port 53)            │  │
+│  │  │ Frontend │    │  Ganymede   │   - Dynamic DNS for all domains │  │
+│  │  │ (static) │    │  :6000      │   - API: localhost:8081         │  │
+│  │  └──────────┘    │  ┌────────┐ │                                  │  │
+│  │                  │  │ Docker │ │   PostgreSQL (port 5432)          │  │
+│  │                  │  │ Client │ │   - ganymede_dev_001             │  │
+│  │                  │  └───┬────┘ │   - pdns (PowerDNS DB)           │  │
+│  │                  └──────┼──────┘                                   │  │
+│  │                         │                                          │  │
+│  │  Named Volume: demiurge-workspace                                 │  │
+│  │  Shared with:    │                                                 │  │
+│  │                  ▼                                                 │  │
+│  └────────────────────────────────────────────────────────────────────┘  │
+│                                                                           │
+│  ┌────────────────────────────────────────────────────────────────────┐  │
+│  │  Gateway Pool (Docker Containers - Managed by Ganymede)            │  │
+│  │                                                                     │  │
+│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐                   │  │
+│  │  │ gw-pool-0  │  │ gw-pool-1  │  │ gw-pool-2  │                   │  │
+│  │  │ :7100      │  │ :7101      │  │ :7102      │                   │  │
+│  │  │ VPN:49100  │  │ VPN:49101  │  │ VPN:49102  │                   │  │
+│  │  ├────────────┤  ├────────────┤  ├────────────┤                   │  │
+│  │  │ State:     │  │ State:     │  │ State:     │                   │  │
+│  │  │  READY     │  │  ALLOCATED │  │  READY     │                   │  │
+│  │  │  (idle)    │  │  (serving  │  │  (idle)    │                   │  │
+│  │  │            │  │   org-123) │  │            │                   │  │
+│  │  │ Nginx      │  │ Nginx      │  │ Nginx      │                   │  │
+│  │  │ (Stage 2)  │  │ (Stage 2)  │  │ (Stage 2)  │                   │  │
+│  │  │ OpenVPN    │  │ OpenVPN    │  │ OpenVPN    │                   │  │
+│  │  └────────────┘  └────────────┘  └────────────┘                   │  │
+│  │                                                                     │  │
+│  │  Shared workspace via named volume (hot-reload enabled)            │  │
+│  │  Allocation managed in PostgreSQL (gateways.ready flag)            │  │
+│  └────────────────────────────────────────────────────────────────────┘  │
+│                                                                           │
+│  ┌────────────────────────────────────────────────────────────────────┐  │
+│  │             User Containers (Docker - Started by Users)            │  │
+│  │  - jupyter-123  → VPN to gw-pool-1 → nginx stage 2 → user app     │  │
+│  │  - vscode-456   → VPN to gw-pool-1 → nginx stage 2 → user app     │  │
+│  └────────────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────────────┘
 
-Access from host OS browser:
-  https://dev-001.local              → Frontend (env 001)
-  https://ganymede.dev-001.local     → Ganymede API
-  https://gateway.dev-001.local      → Gateway (collab)
-
-  https://dev-002.local              → Frontend (env 002)
-  https://ganymede.dev-002.local     → Ganymede API
-  https://gateway.dev-002.local      → Gateway
+Access from host OS browser (via DNS delegation):
+  https://domain.local                  → Frontend
+  https://ganymede.domain.local         → Ganymede API
+  https://org-{uuid}.domain.local       → Gateway (allocated to organization)
+  https://uc-{uuid}.org-{uuid}.domain.local → User container (via gateway)
 ```
 
 ## Creating the Development Container
@@ -88,13 +84,22 @@ Before creating environments, you need a development container. This is a one-ti
 ### 1. Run Development Container
 
 ```bash
-# Run Ubuntu container with required capabilities
+# Create named volume for shared workspace
+docker volume create demiurge-workspace
+
+# Run Ubuntu container with Docker socket and named volume
 docker run -d \
   --name demiurge-dev \
   -p 80:80 \
   -p 443:443 \
+  -p 53:53/udp \
+  -p 53:53/tcp \
+  -p 7100-7199:7100-7199 \
+  -p 49100-49199:49100-49199/udp \
   --cap-add=NET_ADMIN \
   --device /dev/net/tun \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v demiurge-workspace:/root/workspace \
   -it ubuntu:24.04 \
   /bin/bash
 
@@ -102,10 +107,15 @@ docker run -d \
 docker exec -it demiurge-dev /bin/bash
 ```
 
-**Capabilities explained:**
+**Ports and mounts explained:**
 
-- `-p 80:80 -p 443:443` - Expose HTTP/HTTPS ports for Nginx
-- `--cap-add=NET_ADMIN --device /dev/net/tun` - For OpenVPN (gateway VPN)
+- `-p 80:80 -p 443:443` - HTTP/HTTPS for Nginx (Stage 1)
+- `-p 53:53/udp -p 53:53/tcp` - PowerDNS server
+- `-p 7100-7199:7100-7199` - Gateway pool HTTP ports
+- `-p 49100-49199:49100-49199/udp` - Gateway pool OpenVPN ports
+- `--cap-add=NET_ADMIN --device /dev/net/tun` - For OpenVPN in gateways
+- `-v /var/run/docker.sock:/var/run/docker.sock` - Docker socket (manage gateway containers)
+- `-v demiurge-workspace:/root/workspace` - Named volume (shared with gateways)
 
 ### 2. Inside Container: Install Dependencies
 
@@ -133,50 +143,103 @@ git clone https://github.com/YourOrg/database.git
 **In development container:**
 
 ```bash
-# One-time setup
+# One-time setup (installs PowerDNS, builds Docker images, etc.)
+cd /root/workspace/monorepo
 ./scripts/local-dev/setup-all.sh
 
-# Create environment
-./scripts/local-dev/create-env.sh dev-001
-./scripts/local-dev/build-frontend.sh dev-001
+# Create environment with gateway pool
+./scripts/local-dev/create-env.sh dev-001 domain.local
+./scripts/local-dev/build-frontend.sh dev-001 /root/workspace/monorepo
+
+# Start environment
 ./scripts/local-dev/envctl.sh start dev-001
 ```
 
-**On host OS (Windows example):**
+**On host OS (ONE-TIME DNS Setup):**
 
-```powershell
-# As Administrator
-# 1. Install root CA (double-click rootCA.pem)
-# 2. Add to hosts file
-notepad C:\Windows\System32\drivers\etc\hosts
-# Add: <dev-container-ip>  dev-001.local ganymede.dev-001.local gateway.dev-001.local
-ipconfig /flushdns
-```
-
-**Start and access:**
+Get your dev container IP:
 
 ```bash
-# In dev container
-/root/.local-dev/dev-001/start.sh
-
-# In browser on host OS
-https://dev-001.local
+# Inside dev container
+hostname -I
+# Example output: 172.17.0.2
 ```
 
-## Environment Naming Convention
+Then configure DNS delegation on your host OS:
 
-Each environment has:
+**Windows:**
 
-- **Name**: `dev-001`, `dev-002`, etc. (or `feat-xyz`, `bugfix-123`)
-- **Subdomains**:
-  - Frontend: `{env}.local` (e.g., `dev-001.local`)
-  - Ganymede: `ganymede.{env}.local`
-  - Gateway: `gateway.{env}.local`
-- **Database**: `ganymede_{env_safe}` (e.g., `ganymede_dev_001`)
-- **Ports**: Base port + (env_number \* 10)
-  - Ganymede: `6000 + (N * 10)` → 6000, 6010, 6020...
-  - Gateway: `7000 + (N * 10)` → 7000, 7010, 7020...
-- **Data directory**: `/root/.local-dev/env-{number}/`
+```powershell
+# Network Adapter → Properties → IPv4 → DNS Server
+# Set to: 172.17.0.2 (your dev container IP)
+```
+
+**macOS:**
+
+```bash
+sudo mkdir -p /etc/resolver
+echo 'nameserver 172.17.0.2' | sudo tee /etc/resolver/domain
+```
+
+**Linux:**
+
+```bash
+# Edit /etc/systemd/resolved.conf
+sudo nano /etc/systemd/resolved.conf
+# Add:
+[Resolve]
+DNS=172.17.0.2
+Domains=~domain
+# Then restart:
+sudo systemctl restart systemd-resolved
+```
+
+**Access from host OS browser:**
+
+```
+https://domain.local                    → Frontend
+https://ganymede.domain.local           → Ganymede API
+https://org-{uuid}.domain.local         → Gateway (when allocated)
+```
+
+All DNS resolution happens automatically via PowerDNS!
+
+## Environment and Domain Structure
+
+### Domain Configuration
+
+Each environment uses a configurable domain (default: `domain.local`):
+
+- **Frontend**: `{domain}` (e.g., `domain.local`)
+- **Ganymede**: `ganymede.{domain}` (e.g., `ganymede.domain.local`)
+- **Gateways**: `org-{uuid}.{domain}` (dynamically allocated)
+- **User Containers**: `uc-{uuid}.org-{uuid}.{domain}`
+
+### Gateway Pool
+
+Gateway containers are named sequentially:
+
+- `gw-pool-0` → HTTP: 7100, VPN: 49100/udp
+- `gw-pool-1` → HTTP: 7101, VPN: 49101/udp
+- `gw-pool-2` → HTTP: 7102, VPN: 49102/udp
+
+Gateways are dynamically allocated to organizations:
+
+- State managed in PostgreSQL (`gateways.ready` flag)
+- DNS registered automatically when allocated
+- Nginx config created dynamically
+- Returned to pool after 5 minutes of inactivity
+
+### Per-Environment Storage
+
+- **Database**: `ganymede_{env_name}` (e.g., `ganymede_dev_001`)
+- **Ganymede Port**: `6000 + (N * 10)` → 6000, 6010, 6020...
+- **Data directory**: `/root/.local-dev/{env_name}/`
+  - SSL certificates (wildcard `*.{domain}`)
+  - JWT keys
+  - Gateway pool state
+  - Organization data snapshots
+  - Logs
 
 ## One-Time Setup Scripts
 
@@ -196,7 +259,20 @@ Installs:
 ./scripts/local-dev/install-system-deps.sh
 ```
 
-### 2. Install mkcert for SSL
+### 2. Install Docker CLI
+
+**Script:** Install Docker client inside dev container to manage gateway containers
+
+```bash
+# Install Docker client (not Docker daemon - we use host's Docker via socket)
+apt-get install -y docker.io
+
+# Verify Docker access
+docker ps
+# Should show containers running on host
+```
+
+### 3. Install mkcert for SSL
 
 **Script:** [`scripts/local-dev/install-mkcert.sh`](../scripts/local-dev/install-mkcert.sh)
 

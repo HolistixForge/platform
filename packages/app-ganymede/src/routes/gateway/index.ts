@@ -10,6 +10,10 @@ import { pg } from '../../database/pg';
 import { generateJwtToken } from '@monorepo/backend-engine';
 import { asyncHandler, AuthRequest } from '../../middleware/route-handler';
 import { setupGatewayDataRoutes } from './data';
+import { powerDNS } from '../../services/powerdns-client';
+import { nginxManager } from '../../services/nginx-manager';
+import { EPriority, log } from '@monorepo/log';
+import { makeOrgGatewayHostname, makeOrgGatewayUrl } from '../../lib/url-helpers';
 
 export const setupGatewayRoutes = (router: Router) => {
   // Mount data push/pull endpoints
@@ -21,6 +25,10 @@ export const setupGatewayRoutes = (router: Router) => {
     asyncHandler(async (req: AuthRequest, res) => {
       const { organization_id } = req.body;
 
+      if (!organization_id) {
+        return res.status(400).json({ error: 'Missing organization_id' });
+      }
+
       // Check user is org member
       const memberCheck = await pg.query(
         'SELECT 1 FROM organizations_members WHERE organization_id = $1 AND user_id = $2',
@@ -30,23 +38,111 @@ export const setupGatewayRoutes = (router: Router) => {
         return res.status(403).json({ error: 'Not organization member' });
       }
 
-      // Allocate gateway
-      const result = await pg.query(
-        'CALL proc_organizations_start_gateway($1, $2, $3)',
-        [organization_id, null, null]
+      log(6, 'GATEWAY_ALLOC', `Starting gateway for org ${organization_id}`);
+
+      // Check if org already has allocated gateway
+      const existingCheck = await pg.query(
+        'SELECT * FROM func_organizations_get_active_gateway($1)',
+        [organization_id]
       );
-      const row = result.next()?.oneRow();
-      const gateway_hostname = row?.['gateway_hostname'];
-      const tmp_handshake_token = row?.['tmp_handshake_token'];
+      const existing = existingCheck.next()?.oneRow();
 
-      // Call gateway to initialize
-      await fetch(`https://${gateway_hostname}/collab/start`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tmp_handshake_token }),
-      });
+      if (existing) {
+        const gateway_hostname = makeOrgGatewayHostname(organization_id);
+        log(
+          6,
+          'GATEWAY_ALLOC',
+          `Gateway already allocated: ${gateway_hostname}`
+        );
+        return res.json({ gateway_hostname });
+      }
 
-      return res.json({ gateway_hostname });
+      try {
+        // 1. Allocate gateway from pool (database)
+        const result = await pg.query(
+          'CALL proc_organizations_start_gateway($1, $2, $3, $4, $5, $6)',
+          [organization_id, null, null, null, null, null]
+        );
+        const row = result.next()?.oneRow();
+
+        if (!row) {
+          throw new Error('Failed to allocate gateway from pool');
+        }
+
+        const container_name = row['container_name'];
+        const http_port = row['http_port'] as number;
+        const tmp_handshake_token = row['tmp_handshake_token'];
+
+        log(
+          6,
+          'GATEWAY_ALLOC',
+          `Allocated ${container_name} (port ${http_port}) to org ${organization_id}`
+        );
+
+        // 2. Register DNS (org-{uuid}.domain.local → 127.0.0.1)
+        await powerDNS.registerGateway(organization_id);
+
+        // 3. Create Nginx config (routes org traffic to gateway HTTP port)
+        await nginxManager.createGatewayConfig(organization_id, http_port);
+
+        // 4. Reload Nginx
+        await nginxManager.reloadNginx();
+
+        // 5. Construct gateway hostname and URL
+        const gateway_hostname = makeOrgGatewayHostname(organization_id);
+        const gateway_url = makeOrgGatewayUrl(organization_id);
+
+        log(
+          6,
+          'GATEWAY_ALLOC',
+          `Gateway accessible at: ${gateway_url}`
+        );
+
+        // 6. Call gateway handshake
+        const handshakeUrl = `${gateway_url}/collab/start`;
+        log(6, 'GATEWAY_ALLOC', `Calling gateway handshake: ${handshakeUrl}`);
+
+        const handshakeResponse = await fetch(handshakeUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tmp_handshake_token }),
+        });
+
+        if (!handshakeResponse.ok) {
+          const errorText = await handshakeResponse.text();
+          throw new Error(
+            `Gateway handshake failed: ${handshakeResponse.status} ${errorText}`
+          );
+        }
+
+        log(
+          6,
+          'GATEWAY_ALLOC',
+          `✅ Gateway started successfully for org ${organization_id}`
+        );
+
+        return res.json({ gateway_hostname });
+      } catch (error: any) {
+        log(
+          EPriority.Error,
+          'GATEWAY_ALLOC',
+          `Failed to start gateway for org ${organization_id}:`,
+          error.message
+        );
+
+        // TODO: Cleanup on failure (deallocate, remove DNS, remove nginx config)
+
+        if (error.message.includes('no_gateway_available')) {
+          return res
+            .status(503)
+            .json({ error: 'No available gateways in pool. Try again later.' });
+        }
+
+        return res.status(500).json({
+          error: 'Failed to start gateway',
+          details: error.message,
+        });
+      }
     })
   );
 
@@ -139,10 +235,50 @@ export const setupGatewayRoutes = (router: Router) => {
     '/gateway/stop',
     authenticateOrganizationToken,
     asyncHandler(async (req: OrganizationAuthRequest, res) => {
+      const organization_id = req.organization.id;
       const gateway_id = req.organization.gateway_id;
 
-      await pg.query('CALL proc_organizations_gateways_stop($1)', [gateway_id]);
-      return res.json({ success: true });
+      log(
+        6,
+        'GATEWAY_DEALLOC',
+        `Stopping gateway ${gateway_id} for org ${organization_id}`
+      );
+
+      try {
+        // 1. Mark gateway allocation as ended in database
+        await pg.query('CALL proc_organizations_gateways_stop($1)', [
+          gateway_id,
+        ]);
+
+        // 2. Remove DNS records
+        await powerDNS.deregisterGateway(organization_id);
+
+        // 3. Remove Nginx config
+        await nginxManager.removeGatewayConfig(organization_id);
+
+        // 4. Reload Nginx
+        await nginxManager.reloadNginx();
+
+        log(
+          6,
+          'GATEWAY_DEALLOC',
+          `✅ Gateway deallocated, returned to pool (ready for next org)`
+        );
+
+        return res.json({ success: true });
+      } catch (error: any) {
+        log(
+          EPriority.Error,
+          'GATEWAY_DEALLOC',
+          `Failed to stop gateway:`,
+          error.message
+        );
+
+        return res.status(500).json({
+          error: 'Failed to stop gateway',
+          details: error.message,
+        });
+      }
     })
   );
 };

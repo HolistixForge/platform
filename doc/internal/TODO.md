@@ -1,131 +1,159 @@
-⚠️ Antoine's stuffs
+# Demiurge Platform - TODO
 
-fix other modules and their stories: user-containers, jupyter
-dns
-load save project
-permission module
-credentials module
-automate
-docs
-website
-license
+**Last Updated:** 2025-11-12
 
-sharedata nodeView purge
-cmd generator lowercase
+This document tracks all remaining tasks, improvements, and known issues.
 
-hidden node in search bar
-const filterOutNodes = gv?.params.filterOutNodes?.map((n) => sd.nodes.get(n));
-const getHiddenNodesByType = (type: string) => {
-return filterOutNodes
-?.filter((n) => n?.type === type)
-.map((n) => ({ id: n?.id as string, name: n?.name as string }));
-};
+---
 
-servers module exports: register images
+## 🔴 HIGH PRIORITY (Blocking Production)
 
-TODO_CONNECTOR
-TODO_SPACE_STATE
+### 1. Integrate Gateway Data Sync with Actual State
 
-Daily backup
+**Context:** [packages/app-gateway/src/services/data-sync.ts](packages/app-gateway/src/services/data-sync.ts)
 
-N8N: SAML based authentication ?, custom : https://kb.jarylchng.com/i/n8n-and-authelia-bypass-n8n-native-login-page-usin-sNRmS-7j5u1/
+**Problem:**
+The data sync service has stub implementations that don't actually collect/restore gateway state.
 
-tab bar responsive
+**Current State:**
 
-UI hierarchie level:
-niveau 1 : niveau abstraction / hierarchie
-niveau 2 : tab bar
-niveau 3 : feature bar
-niveau 4 : dans un tab : choisir vue space | grid | document
+```typescript
+protected async collectDataSnapshot(): Promise<any> {
+  // TODO: Implement actual data collection
+  return { yjs_state: {}, gateway_state: {} };  // Stub!
+}
 
-collabs pointer:
+protected async applyDataSnapshot(data: any): Promise<void> {
+  // TODO: Implement actual data restoration
+  log(6, 'DATA_SYNC', 'Applying data snapshot (stub)');  // Stub!
+}
+```
 
-- remove spring ?
+**Required:**
 
-collab-engine:
+1. Integrate with `GatewayState` class (if exists)
+2. Integrate with `ProjectRoomsManager` to collect YJS state
+3. Collect OAuth tokens, permissions, container tokens
+4. Restore state on `pullDataFromGanymede()`
 
-- granularite
-- event sequence with fallback
-- local or server reduction, (why if transaction works!)
-- YJS handle send, send, send, send -> update -> apply old value problem ! optmistic UI work out of the box
-- keep distant reduction for server events, and anything with intermediate api or process
-- look for elegant react YJS hooks solution with fine granularity
-- need for local override ?
-- API
-  use collaborators
-  use Awareness
-  use Data
-- use Yjs type in story, with mock of other users
-- PERMISSIONS management
-- geographic permission
-- permission and complexe non atomic process => decided to handle everything backend => latency, out of order => event sequences
-- shift to normal use for majority of event ? => permission (content, spatial), fallback, ?
+**Related Files:**
 
-perf:
+- `packages/app-gateway/src/state/GatewayState.ts`
+- `packages/app-gateway/src/state/ProjectRooms.ts`
+- `packages/app-gateway/src/initialization/gateway-init.ts`
+- `doc/architecture/GATEWAY_IMPLEMENTATION_PLAN.md`
 
-- indice: iframes blink on pan when edge menu open
-- ONZOOM
+---
 
-ls -tp | tail -n +11 | sudo xargs -d '\n' rm --
+### 2. Add Allocation Failure Rollback
 
-edge editor:
+**Context:** [packages/app-ganymede/src/routes/gateway/index.ts](packages/app-ganymede/src/routes/gateway/index.ts:110-112)
 
-- edge renderProps should be in graphviews, group style too
+**Problem:**
+If `/gateway/start` fails after partial allocation (e.g., Nginx reload fails), the gateway remains allocated but unusable, leading to pool exhaustion.
 
-event sequence:
+**Current Code:**
 
-- fallback logics: add a reset point or function if not exists when sequenceRevertPoint is set
+```typescript
+} catch (error: any) {
+  log(2, 'GATEWAY_ALLOC', `Failed to start gateway:`, error.message);
+  // TODO: Cleanup on failure (deallocate, remove DNS, remove nginx config)
+  return res.status(500).json({ error: 'Failed to start gateway' });
+}
+```
 
-dns
-shut down button
+**Required:**
 
-selected node zindex
+1. Track allocation steps in try block
+2. On failure, rollback completed steps:
+   - Call `proc_organizations_gateways_stop(gateway_id)`
+   - Call `powerDNS.deregisterGateway(org_id)`
+   - Call `nginxManager.removeGatewayConfig(org_id)`
+   - Call `nginxManager.reloadNginx()`
 
-- DNS: https://chatgpt.com/share/67acc6e5-32e4-8011-a71b-e4d900e0f9e5
-- node positioning
+---
 
-- close tab for down resource
-- click on card go to settings if down
+## 🟡 MEDIUM PRIORITY (Code Quality)
 
-- token update for resources
+### 4. Remove Hardcoded Paths
 
-- iframe app wrapping, live status, stoped message, refresh gateway
-- close reset retry websocket in frontend when project go down
+**Context:**
 
-- use env for { "sshKeyName": "dev-antoine-key", "securityGroupId": "sg-058d2af5f284c993c" }
-- deploy cloud: storage = desired size + image size + image size uncompressed + os
-- TODO_GATEWAY: delete connected server ?
-- resource detail page
-- share link ? user/resource association
-- gateway disk image, auto resize gateway pool
-- fine grained access control
-- terminal, live users, granted users
-- user finished free credits / payment
-- API key : github gitlab, aws
-- gpu access doc and docker options wizard
-- /me trop bavard
-- nginx error, home pages
-- event permissions control
-- delete hosted server: check down, only remove it from UI, explain it in user dialog,
-- check server exist for /collab/vpn, /collab/event endpoint
-- shared terminals
-- new project from repo: data initialization from .py .ypmb .yaml
-- TODO_EMAIL_VALIDATION
-- TODO_JL_PROBE
-- TODO_MENU
-- db: prune old session, old magick link, old tokens and codes
-- billing / cleaning cron (and also extraction of server run time from "project_servers" and "projects" before delete triggers, or aws have runtime data per instance ?)
-- organization, group
-- version monitoring/management: helm, terraform, eks cluster, npm dependencies, nodejs, react, react flow, jupyterlab/hub/widget
-- db: not root for app. setup backup for prod db
-- vscode server image
-- open api: describe and validate cookies schemas
-- template project sharing
-- dispose terminals
-- monaco function handle plugin
-- collaborative bokeh widget
-- requirejs version
-- MyJvascriptRenderer... sandboxing / isolation. still needed for cloud labs ?
-- useSharedData() re-render only if changes, performance audit
-- monaco language chunks useless compilation
-  $$
+- [packages/app-ganymede/src/routes/gateway/data.ts](packages/app-ganymede/src/routes/gateway/data.ts:27-29)
+- [packages/app-ganymede/src/services/nginx-manager.ts](packages/app-ganymede/src/services/nginx-manager.ts:17-23)
+
+**Problem:**
+Hardcoded `/root/.local-dev/...` paths in many places.
+
+**Current:**
+
+```typescript
+function getDataDir(): string {
+  const envName = process.env.ENVIRONMENT_NAME || 'dev-001';
+  return `/root/.local-dev/${envName}/org-data`; // Hardcoded!
+}
+```
+
+**Required:**
+
+1. Add environment variable: `LOCAL_DEV_DIR=/root/.local-dev`
+2. Use a function getEnvsDir() to build paths
+
+**Files to update:**
+
+- `packages/app-ganymede/src/config.ts`
+- `packages/app-ganymede/src/routes/gateway/data.ts`
+- `packages/app-ganymede/src/services/nginx-manager.ts`
+- `scripts/local-dev/create-env.sh` (export LOCAL_DEV_DIR)
+- ...
+
+---
+
+### 6. Add Nginx Reload Error Recovery
+
+**Context:** [packages/app-ganymede/src/services/nginx-manager.ts](packages/app-ganymede/src/services/nginx-manager.ts)
+
+**Problem:**
+If `nginx -t` fails, we throw but don't clean up the bad config file.
+
+**Required:**
+
+1. On `nginx -t` failure, delete the newly created config
+2. Restore previous known-good state
+3. Return descriptive error
+
+### 8. Add Gateway Pool Auto-Scaling
+
+**Context:** [scripts/local-dev/gateway-pool.sh](scripts/local-dev/gateway-pool.sh)
+
+**Enhancement:**
+Monitor pool utilization and auto-create gateways when low:
+
+- If `ready_count < 2` → create 3 more gateways
+- Configurable thresholds
+- Logged to Ganymede
+
+---
+
+### 10. Add Monitoring Hooks
+
+**Context:** Gateway lifecycle events
+
+**Enhancement:**
+
+- Log allocation/deallocation events to centralized logger
+- Track gateway utilization metrics
+- Monitor allocation success/failure rates
+- Alert on pool exhaustion
+
+**Deferred:** Waiting for comprehensive monitoring implementation (separate task)
+
+---
+
+## 📋 MAINTENANCE TASKS
+
+### Cleanup Old Implementations
+
+- [ ] Remove old gateway startup scripts
+
+---

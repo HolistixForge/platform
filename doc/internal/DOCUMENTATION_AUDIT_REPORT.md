@@ -1,7 +1,7 @@
 # Documentation Audit Report - Multi-Gateway Architecture
 
 **Date:** 2025-11-12  
-**Context:** Before implementing multi-gateway architecture (MULTI_GATEWAY_ARCHITECTURE.md)  
+**Context:** Before implementing multi-gateway architecture (GATEWAY_ARCHITECTURE.md)  
 **Purpose:** Identify overlaps, conflicts, and opportunities for consolidation
 
 ---
@@ -35,7 +35,7 @@ After reviewing all documentation, I found:
 
 **What needs updating:**
 
-- Complete rewrite following MULTI_GATEWAY_ARCHITECTURE.md
+- Complete rewrite following GATEWAY_ARCHITECTURE.md
 - Add PowerDNS setup section
 - Add Docker socket setup
 - Add named volume setup
@@ -77,9 +77,9 @@ After reviewing all documentation, I found:
 - Add PowerDNS setup
 - Add Let's Encrypt automation
 - Add gateway pool setup
-- Simplify (most info already in MULTI_GATEWAY_ARCHITECTURE.md Phase 8)
+- Simplify (most info already in GATEWAY_ARCHITECTURE.md Phase 8)
 
-**Recommendation:** Rewrite as short document saying "same as dev, use Let's Encrypt for SSL, see MULTI_GATEWAY_ARCHITECTURE.md"
+**Recommendation:** Rewrite as short document saying "same as dev, use Let's Encrypt for SSL, see GATEWAY_ARCHITECTURE.md"
 
 ---
 
@@ -199,7 +199,7 @@ After reviewing all documentation, I found:
 
 ### 2.1 `doc/archive/2024-container-refactor/DNS_SERVER_COMPARISON.md` ✅ ALREADY REFERENCED
 
-**Status:** Already referenced in MULTI_GATEWAY_ARCHITECTURE.md
+**Status:** Already referenced in GATEWAY_ARCHITECTURE.md
 
 **Valuable info:**
 
@@ -208,7 +208,7 @@ After reviewing all documentation, I found:
 - ✅ Integration code examples
 - ✅ API usage examples
 
-**Recommendation:** Keep as-is, already linked from MULTI_GATEWAY_ARCHITECTURE.md
+**Recommendation:** Keep as-is, already linked from GATEWAY_ARCHITECTURE.md
 
 ---
 
@@ -222,7 +222,7 @@ After reviewing all documentation, I found:
 - HTTP service registration patterns
 - Nginx update mechanisms
 
-**Overlap with MULTI_GATEWAY_ARCHITECTURE.md:**
+**Overlap with GATEWAY_ARCHITECTURE.md:**
 
 - Container domain structure (updated in new arch)
 - DNS registration (updated approach)
@@ -232,7 +232,7 @@ After reviewing all documentation, I found:
 
 - Keep for container image registry implementation (future phase)
 - Update container URL structure to match new arch: `uc-{uuid}.org-{uuid}.domain.local`
-- Mark sections about DNS as "superseded by MULTI_GATEWAY_ARCHITECTURE.md"
+- Mark sections about DNS as "superseded by GATEWAY_ARCHITECTURE.md"
 
 ---
 
@@ -248,7 +248,7 @@ After reviewing all documentation, I found:
 - ✅ Code structure and file organization
 - ✅ Implementation order and dependencies
 
-**Overlap with MULTI_GATEWAY_ARCHITECTURE.md:**
+**Overlap with GATEWAY_ARCHITECTURE.md:**
 
 - Storage location (MULTI_GATEWAY now uses Ganymede API)
 - Gateway initialization (both docs cover this)
@@ -256,7 +256,7 @@ After reviewing all documentation, I found:
 **Conflicts:**
 
 - GATEWAY_IMPLEMENTATION_PLAN stores data locally in `/data/`
-- MULTI_GATEWAY_ARCHITECTURE stores data centrally in Ganymede
+- GATEWAY_ARCHITECTURE stores data centrally in Ganymede
 
 **Recommendation:**
 
@@ -280,7 +280,7 @@ After reviewing all documentation, I found:
 
 ---
 
-### 3.2 MERGE: MULTI_GATEWAY_ARCHITECTURE + LOCAL_DEVELOPMENT? ⚠️ MAYBE LATER
+### 3.2 MERGE: GATEWAY_ARCHITECTURE + LOCAL_DEVELOPMENT? ⚠️ MAYBE LATER
 
 **Recommendation:** Keep separate initially, consider merge after implementation stabilizes
 
@@ -311,7 +311,7 @@ After reviewing all documentation, I found:
 
 - Update `packages/app-gateway/README.md` with new architecture
 - Keep `docker-images/backend-images/gateway/README.md` for Docker image specifics
-- Both should reference MULTI_GATEWAY_ARCHITECTURE.md for details
+- Both should reference GATEWAY_ARCHITECTURE.md for details
 
 ---
 
@@ -331,7 +331,7 @@ After reviewing all documentation, I found:
 
 **Locations:**
 
-1. `doc/guides/MULTI_GATEWAY_ARCHITECTURE.md` - NEW comprehensive diagram with PowerDNS, gateway pool
+1. `doc/guides/GATEWAY_ARCHITECTURE.md` - NEW comprehensive diagram with PowerDNS, gateway pool
 2. `doc/guides/LOCAL_DEVELOPMENT.md` - Current dev setup diagram (single gateway)
 3. `doc/architecture/OVERVIEW.md` - High-level 3-tier diagram
 4. `doc/internal/AI-summary.md` - Simple text diagram
@@ -405,7 +405,7 @@ After reviewing all documentation, I found:
 
 **Use this for:**
 
-- MULTI_GATEWAY_ARCHITECTURE.md (keep current detailed diagram)
+- GATEWAY_ARCHITECTURE.md (keep current detailed diagram)
 - LOCAL_DEVELOPMENT.md (use simplified version)
 - OVERVIEW.md (update high-level version)
 
@@ -537,7 +537,7 @@ After reviewing all documentation, I found:
 **Recommendation:**
 
 - Keep this document
-- Mark DNS sections as "Superseded by MULTI_GATEWAY_ARCHITECTURE.md"
+- Mark DNS sections as "Superseded by GATEWAY_ARCHITECTURE.md"
 - Reference from MULTI_GATEWAY as "Phase 9: Container Image Registry (future)"
 - Update container URL structure to `uc-{uuid}.org-{uuid}.domain.local`
 
@@ -554,12 +554,12 @@ After reviewing all documentation, I found:
 
 **Status:** Mostly about database and app structure, not deployment
 
-**Overlap:** Gateway allocation per org (covered in MULTI_GATEWAY_ARCHITECTURE)
+**Overlap:** Gateway allocation per org (covered in GATEWAY_ARCHITECTURE)
 
 **Recommendation:**
 
 - Keep as-is (complementary)
-- Cross-reference with MULTI_GATEWAY_ARCHITECTURE.md
+- Cross-reference with GATEWAY_ARCHITECTURE.md
 - Add note in "Gateway Per Organization" section about pool-based allocation
 
 ---
@@ -584,7 +584,7 @@ After reviewing all documentation, I found:
 2. **PRODUCTION_DEPLOYMENT.md:** `ganymede.dev-002.demiurge.co`, `account.dev-002.demiurge.co`
 3. **docker-images/backend-images/gateway/README.md:** `gw-{instance}-{id}.{env}.{domain}`
 4. **OVERVIEW.md:** `{slug}.containers.domain.com`
-5. **MULTI_GATEWAY_ARCHITECTURE.md (NEW):** `domain.local`, `org-{uuid}.domain.local`, `uc-{uuid}.org-{uuid}.domain.local`
+5. **GATEWAY_ARCHITECTURE.md (NEW):** `domain.local`, `org-{uuid}.domain.local`, `uc-{uuid}.org-{uuid}.domain.local`
 
 **Resolution needed:** After implementation, update all docs to use new structure
 
@@ -607,7 +607,7 @@ After reviewing all documentation, I found:
 **Action:**
 
 - Keep DNS_SERVER_COMPARISON.md (referenced)
-- Mark others as "Historical - see MULTI_GATEWAY_ARCHITECTURE.md for current approach"
+- Mark others as "Historical - see GATEWAY_ARCHITECTURE.md for current approach"
 - Add README in this directory explaining status
 
 ---
@@ -676,7 +676,7 @@ doc/
 ├── guides/
 │   ├── LOCAL_DEVELOPMENT.md (needs major update)
 │   ├── PRODUCTION_DEPLOYMENT.md (needs rewrite)
-│   ├── MULTI_GATEWAY_ARCHITECTURE.md (NEW - comprehensive)
+│   ├── GATEWAY_ARCHITECTURE.md (NEW - comprehensive)
 │   ├── MODULES_TESTING.md (keep as-is)
 │   └── NX_WORKSPACE.md (keep as-is)
 ├── architecture/
@@ -702,7 +702,7 @@ doc/
 │   └── TROUBLESHOOTING.md (NEW)
 ├── architecture/
 │   ├── OVERVIEW.md (updated diagrams)
-│   ├── MULTI_GATEWAY_ARCHITECTURE.md (moved here from guides/)
+│   ├── GATEWAY_ARCHITECTURE.md (moved here from guides/)
 │   ├── GATEWAY_IMPLEMENTATION_PLAN.md (updated storage)
 │   └── REFACTORING.md (minor updates)
 └── reference/
@@ -730,7 +730,7 @@ doc/
 
 ### 8.1 Gateway Allocation Flow
 
-**MULTI_GATEWAY_ARCHITECTURE.md:**
+**GATEWAY_ARCHITECTURE.md:**
 
 - Comprehensive 7-step flow with pool allocation, DNS, Nginx
 - Includes auto-deallocation (5min inactivity)
@@ -748,7 +748,7 @@ doc/
 
 ### 8.2 DNS Management
 
-**MULTI_GATEWAY_ARCHITECTURE.md:**
+**GATEWAY_ARCHITECTURE.md:**
 
 - PowerDNS with existing PostgreSQL
 - REST API integration
@@ -775,7 +775,7 @@ doc/
 
 ### 8.3 SSL Certificates
 
-**MULTI_GATEWAY_ARCHITECTURE.md:**
+**GATEWAY_ARCHITECTURE.md:**
 
 - Centralized SSL in stage 1 nginx
 - Wildcard cert `*.domain.local`
@@ -797,7 +797,7 @@ doc/
 
 ### 8.4 Docker Setup
 
-**MULTI_GATEWAY_ARCHITECTURE.md:**
+**GATEWAY_ARCHITECTURE.md:**
 
 - Docker socket mounting
 - Named volumes
@@ -823,7 +823,7 @@ doc/
 
 ### Immediate (Before Implementation Rollout)
 
-1. **LOCAL_DEVELOPMENT.md** - Complete rewrite based on MULTI_GATEWAY_ARCHITECTURE.md
+1. **LOCAL_DEVELOPMENT.md** - Complete rewrite based on GATEWAY_ARCHITECTURE.md
 2. **PRODUCTION_DEPLOYMENT.md** - Simplify to reference LOCAL_DEVELOPMENT + Let's Encrypt
 3. **docker-images/backend-images/gateway/README.md** - Update for pool, remove NFS
 
@@ -881,10 +881,10 @@ These sections contain valuable information that must be preserved during update
 
 ### After Implementation is Stable:
 
-**Move MULTI_GATEWAY_ARCHITECTURE.md to architecture/**
+**Move GATEWAY_ARCHITECTURE.md to architecture/**
 
 ```
-doc/architecture/MULTI_GATEWAY_ARCHITECTURE.md (comprehensive design doc)
+doc/architecture/GATEWAY_ARCHITECTURE.md (comprehensive design doc)
 ```
 
 **Rewrite LOCAL_DEVELOPMENT.md as user-facing guide:**
@@ -907,7 +907,7 @@ doc/architecture/MULTI_GATEWAY_ARCHITECTURE.md (comprehensive design doc)
 **Update cross-references:**
 
 - Update doc/README.md hub to reference new structure
-- Add MULTI_GATEWAY_ARCHITECTURE to "Understand the System" section
+- Add GATEWAY_ARCHITECTURE to "Understand the System" section
 - Update all internal doc links
 
 ---
@@ -919,7 +919,7 @@ doc/architecture/MULTI_GATEWAY_ARCHITECTURE.md (comprehensive design doc)
 **Conflict:**
 
 - GATEWAY_IMPLEMENTATION_PLAN.md: `/data/gateway-state-{org_id}.json` (local storage)
-- MULTI_GATEWAY_ARCHITECTURE.md: Ganymede API at `/root/.local-dev/{env}/org-data/{org-uuid}.json`
+- GATEWAY_ARCHITECTURE.md: Ganymede API at `/root/.local-dev/{env}/org-data/{org-uuid}.json`
 
 **Resolution:** Update GATEWAY_IMPLEMENTATION_PLAN to clarify:
 
@@ -956,7 +956,7 @@ doc/architecture/MULTI_GATEWAY_ARCHITECTURE.md (comprehensive design doc)
 
 | Document                       | Completeness  | Accuracy            | Needs Update         |
 | ------------------------------ | ------------- | ------------------- | -------------------- |
-| MULTI_GATEWAY_ARCHITECTURE.md  | ✅ Excellent  | ✅ Current          | ❌ No (just created) |
+| GATEWAY_ARCHITECTURE.md        | ✅ Excellent  | ✅ Current          | ❌ No (just created) |
 | LOCAL_DEVELOPMENT.md           | ✅ Good       | ⚠️ Outdated         | ✅ Major rewrite     |
 | PRODUCTION_DEPLOYMENT.md       | ⚠️ Incomplete | ⚠️ Outdated         | ✅ Rewrite           |
 | OVERVIEW.md                    | ✅ Good       | ✅ Mostly current   | ⚠️ Minor updates     |
@@ -973,19 +973,19 @@ doc/architecture/MULTI_GATEWAY_ARCHITECTURE.md (comprehensive design doc)
 
 ### Phase 1: Pre-Implementation
 
-- [x] Create MULTI_GATEWAY_ARCHITECTURE.md ✅ DONE
+- [x] Create GATEWAY_ARCHITECTURE.md ✅ DONE
 - [ ] Add note to LOCAL_DEVELOPMENT.md: "⚠️ This doc will be updated for multi-gateway architecture soon"
 
 ### Phase 2: During Implementation
 
 - [ ] Update code comments to reference new architecture
-- [ ] Keep MULTI_GATEWAY_ARCHITECTURE.md updated with implementation learnings
+- [ ] Keep GATEWAY_ARCHITECTURE.md updated with implementation learnings
 - [ ] Document any deviations from the plan
 
 ### Phase 3: Post-Implementation
 
 1. **Rewrite LOCAL_DEVELOPMENT.md** (top priority)
-   - Use MULTI_GATEWAY_ARCHITECTURE.md as source
+   - Use GATEWAY_ARCHITECTURE.md as source
    - Extract user-facing workflows
    - Preserve platform-specific guides
 2. **Update PRODUCTION_DEPLOYMENT.md** (short doc)
@@ -1021,7 +1021,7 @@ doc/architecture/MULTI_GATEWAY_ARCHITECTURE.md (comprehensive design doc)
 
 ### Critical (Must Do)
 
-1. ✅ **Keep MULTI_GATEWAY_ARCHITECTURE.md** as the authoritative design document
+1. ✅ **Keep GATEWAY_ARCHITECTURE.md** as the authoritative design document
 2. ✅ **Rewrite LOCAL_DEVELOPMENT.md** after implementation (user-facing guide)
 3. ✅ **Update all domain/URL references** to new structure
 4. ✅ **Update architecture diagrams** consistently across all docs
@@ -1044,7 +1044,7 @@ doc/architecture/MULTI_GATEWAY_ARCHITECTURE.md (comprehensive design doc)
 
 ## 16. Questions for Consideration
 
-1. **Should MULTI_GATEWAY_ARCHITECTURE.md stay in guides/ or move to architecture/?**
+1. **Should GATEWAY_ARCHITECTURE.md stay in guides/ or move to architecture/?**
 
    - Pros for architecture/: Design doc, comprehensive, technical
    - Pros for guides/: Includes implementation guide, practical
@@ -1075,6 +1075,6 @@ doc/architecture/MULTI_GATEWAY_ARCHITECTURE.md (comprehensive design doc)
 
 **Estimated documentation update effort:** 8-12 hours (after implementation complete)
 
-**The MULTI_GATEWAY_ARCHITECTURE.md document is excellent and comprehensive.** It should become the authoritative source for the new architecture, with other docs updated to reference it and provide user-facing/platform-specific details.
+**The GATEWAY_ARCHITECTURE.md document is excellent and comprehensive.** It should become the authoritative source for the new architecture, with other docs updated to reference it and provide user-facing/platform-specific details.
 
 **Key insight:** Most existing docs just need URL/domain updates and references to MULTI_GATEWAY. Only LOCAL_DEVELOPMENT.md needs a complete rewrite.

@@ -11,11 +11,20 @@ program
 
 program
   .command('add-gateway')
-  .description('Add a new gateway')
+  .description('Add a new gateway to the pool')
   .requiredOption('-h, --fqdn <hostname>', 'Fully Qualified Domain Name of the gateway')
   .requiredOption('-gv, --gw-version <version>', 'Version of the gateway')
+  .requiredOption('-c, --container-name <name>', 'Docker container name (e.g., gw-pool-0)')
+  .requiredOption('-hp, --http-port <port>', 'Gateway HTTP port (e.g., 7100)', parseInt)
+  .requiredOption('-vp, --vpn-port <port>', 'Gateway VPN port (e.g., 49100)', parseInt)
   .action(async (options) => {
-    await addGateway(options.fqdn, options.gwVersion);
+    await addGateway(
+      options.fqdn,
+      options.gwVersion,
+      options.containerName,
+      options.httpPort,
+      options.vpnPort
+    );
     process.exit(0);
   });
 

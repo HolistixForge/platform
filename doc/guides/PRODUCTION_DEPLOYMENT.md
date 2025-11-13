@@ -1,4 +1,4 @@
-# Development setup
+# Warning : Obsolete documentation, prod will be similar to dev
 
 ## install
 

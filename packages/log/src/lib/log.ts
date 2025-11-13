@@ -6,7 +6,7 @@ import { TJson } from '@monorepo/simple-types';
 export enum EPriority {
   Emergency = 0,
   Alert = 1,
-  Critical = 1,
+  Critical = 2,
   Error = 3,
   Warning = 4,
   Notice = 5,

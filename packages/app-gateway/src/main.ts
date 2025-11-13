@@ -146,6 +146,16 @@ function setupShutdownHandlers() {
   const shutdown = async (signal: string) => {
     log(6, 'GATEWAY', `Received ${signal}, initiating graceful shutdown...`);
 
+    // NEW: Push data to Ganymede before shutdown
+    try {
+      const { gatewayDataSync } = await import('./services/data-sync');
+      await gatewayDataSync.pushDataToGanymede();
+      log(6, 'GATEWAY', 'Data pushed to Ganymede');
+    } catch (error: any) {
+      log(2, 'GATEWAY', 'Failed to push data on shutdown:', error.message);
+      // Continue with shutdown even if push fails
+    }
+
     if (projectRooms) {
       await shutdownGateway(projectRooms);
     }

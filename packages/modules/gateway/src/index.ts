@@ -22,14 +22,15 @@ export type TGatewayExports = {
   ) => Promise<void>;
   gatewayStop: () => Promise<void>;
   gatewayFQDN: string;
-  project_id: string;
+  organization_id: string;
 };
 
 //
 
 export type TProjectConfig = {
-  GANYMEDE_API_TOKEN: string;
-  PROJECT_ID: string;
+  organization_id: string;
+  organization_token: string;
+  gateway_id: string;
 };
 
 export type TGatewayInitExtraContext = {
@@ -70,12 +71,11 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
       if (!request.headers?.authorization)
         request.headers = {
           ...request.headers,
-          authorization: gateway_init.project.GANYMEDE_API_TOKEN,
+          authorization: gateway_init.project.organization_token,
         };
       request.url = `${ganymede_api}${request.url}`;
       request.pathParameters = {
         ...request.pathParameters,
-        project_id: gateway_init.project.PROJECT_ID,
       };
       const response = await myfetch(request);
       log(6, 'GATEWAY', `${request.url} response: ${response.statusCode}`);
@@ -162,7 +162,7 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
 
       gatewayFQDN: gateway_init.config.GATEWAY_FQDN,
 
-      project_id: gateway_init.project.PROJECT_ID,
+      organization_id: gateway_init.project.organization_id,
     };
 
     moduleExports(myExports);
