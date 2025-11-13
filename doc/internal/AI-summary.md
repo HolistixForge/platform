@@ -18,25 +18,7 @@ This document helps AI assistants quickly understand the Demiurge codebase and a
 
 ## Quick Architecture Overview
 
-```
-┌─────────────┐
-│  Frontend   │ React + Yjs (WebSocket)
-│  (Browser)  │
-└──────┬──────┘
-       │
-       ├─HTTP──▶ Ganymede API (users, orgs, projects, auth)
-       │         └─ PostgreSQL (persistent data)
-       │
-       └─WS────▶ Gateway (per-org collaborative backend)
-                 ├─ Yjs CRDT (shared state)
-                 ├─ Reducers (event processors)
-                 ├─ Permissions (in-memory)
-                 ├─ OAuth2 provider (for containers)
-                 └─ OpenVPN + Nginx (container networking)
-                     │
-                     └─▶ User Containers (Docker)
-                         JupyterLab, pgAdmin, n8n, etc.
-```
+see [../architecture/SYSTEM_ARCHITECTURE.md](../architecture/SYSTEM_ARCHITECTURE.md)
 
 **Key Architectural Patterns:**
 
@@ -70,7 +52,7 @@ This document helps AI assistants quickly understand the Demiurge codebase and a
 - **Start here:** [`README.md`](../../README.md) - Project overview
 - **Doc hub:** [`doc/README.md`](../README.md) - Complete documentation index
 - **Architecture:** [`doc/architecture/OVERVIEW.md`](../architecture/OVERVIEW.md)
-- **Current work:** [`doc/architecture/REFACTORING.md`](../architecture/REFACTORING.md)
+- **Current work:** [`doc/architecture/GATEWAY_ARCHITECTURE.md`](../architecture/GATEWAY_ARCHITECTURE.md)
 - **Local dev:** [`doc/guides/LOCAL_DEVELOPMENT.md`](../guides/LOCAL_DEVELOPMENT.md)
 - **API:** [`doc/reference/API.md`](../reference/API.md)
 
@@ -96,7 +78,7 @@ This document helps AI assistants quickly understand the Demiurge codebase and a
 - Frontend integration with new backend architecture
 - Module refinement
 
-See [`doc/architecture/REFACTORING.md`](../architecture/REFACTORING.md) for complete status.
+See [`doc/architecture/GATEWAY_ARCHITECTURE.md`](../architecture/GATEWAY_ARCHITECTURE.md) and [`doc/architecture/SYSTEM_ARCHITECTURE.md`](../architecture/SYSTEM_ARCHITECTURE.md) for complete system architecture.
 
 ## Key Concepts for AI Assistants
 
@@ -183,7 +165,7 @@ export const moduleBackend: ModuleBackend = {
 
 **Container data NOT in DB** - stored in gateway shared state (Yjs)
 
-See [`doc/architecture/REFACTORING.md#database-schema`](../architecture/REFACTORING.md#database-schema) for details.
+See [`doc/architecture/SYSTEM_ARCHITECTURE.md#database-schema-gateways`](../architecture/SYSTEM_ARCHITECTURE.md#database-schema-gateways) for details.
 
 ### 5. Permissions
 
@@ -275,8 +257,9 @@ See [`doc/architecture/REFACTORING.md#database-schema`](../architecture/REFACTOR
 **Architecture:**
 
 - [Overview](../architecture/OVERVIEW.md) - System design
-- [Refactoring](../architecture/REFACTORING.md) - Current work & database schema
-- [Gateway Plan](../architecture/GATEWAY_IMPLEMENTATION_PLAN.md) - Implementation details
+- [System Architecture](../architecture/SYSTEM_ARCHITECTURE.md) - Complete system diagram
+- [Gateway Architecture](../architecture/GATEWAY_ARCHITECTURE.md) - Multi-gateway architecture
+- [Gateway Work](../current-works/GATEWAY_WORK.md) - Implementation details
 - [Layer System](../../packages/modules/space/src/lib/layer.md) - Whiteboard layers ⭐
 
 **Guides:**

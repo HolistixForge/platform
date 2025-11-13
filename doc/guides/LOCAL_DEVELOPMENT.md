@@ -7,75 +7,24 @@ This guide sets up a **complete local development environment** inside your deve
 **Key Features:**
 
 - ✅ Multiple isolated environments (e.g., `dev-001`, `dev-002` for different branches)
-- ✅ Real HTTPS with trusted certificates
-- ✅ Real domain names (`.local` TLD)
-- ✅ Full stack: PostgreSQL, Nginx, Ganymede, Gateway
+- ✅ **Multi-gateway pool architecture** - Multiple containerized gateways, dynamically allocated
+- ✅ Real HTTPS with trusted certificates (wildcard `*.domain.local`)
+- ✅ **PowerDNS** - Dynamic DNS management via REST API
+- ✅ Real domain names with automatic DNS delegation
+- ✅ Full stack: PostgreSQL, Nginx, Ganymede, Gateway Pool, PowerDNS
 - ✅ User containers running in Docker (like production)
 - ✅ Everything scriptable and reproducible
+- ✅ Hot-reload support for rapid iteration
 
-## Architecture
+---
 
-```
-┌──────────────────────────────────────────────────────────────────────────┐
-│                               Docker Host                                 │
-│                                                                           │
-│  ┌────────────────────────────────────────────────────────────────────┐  │
-│  │          Main Development Container (Ubuntu 24.04)                  │  │
-│  │                                                                     │  │
-│  │  ┌──────────────────────────────────────────────────────────────┐  │  │
-│  │  │  Nginx (Stage 1) - Port 443                                  │  │  │
-│  │  │  - SSL Termination (wildcard *.domain.local)                │  │  │
-│  │  │  - Routes to: Frontend, Ganymede, Gateway containers       │  │  │
-│  │  └───┬────────────────┬──────────────┬───────────────────────── │  │  │
-│  │      │                │              │                             │  │
-│  │  ┌───▼──────┐    ┌───▼─────────┐   PowerDNS (port 53)            │  │
-│  │  │ Frontend │    │  Ganymede   │   - Dynamic DNS for all domains │  │
-│  │  │ (static) │    │  :6000      │   - API: localhost:8081         │  │
-│  │  └──────────┘    │  ┌────────┐ │                                  │  │
-│  │                  │  │ Docker │ │   PostgreSQL (port 5432)          │  │
-│  │                  │  │ Client │ │   - ganymede_dev_001             │  │
-│  │                  │  └───┬────┘ │   - pdns (PowerDNS DB)           │  │
-│  │                  └──────┼──────┘                                   │  │
-│  │                         │                                          │  │
-│  │  Named Volume: demiurge-workspace                                 │  │
-│  │  Shared with:    │                                                 │  │
-│  │                  ▼                                                 │  │
-│  └────────────────────────────────────────────────────────────────────┘  │
-│                                                                           │
-│  ┌────────────────────────────────────────────────────────────────────┐  │
-│  │  Gateway Pool (Docker Containers - Managed by Ganymede)            │  │
-│  │                                                                     │  │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐                   │  │
-│  │  │ gw-pool-0  │  │ gw-pool-1  │  │ gw-pool-2  │                   │  │
-│  │  │ :7100      │  │ :7101      │  │ :7102      │                   │  │
-│  │  │ VPN:49100  │  │ VPN:49101  │  │ VPN:49102  │                   │  │
-│  │  ├────────────┤  ├────────────┤  ├────────────┤                   │  │
-│  │  │ State:     │  │ State:     │  │ State:     │                   │  │
-│  │  │  READY     │  │  ALLOCATED │  │  READY     │                   │  │
-│  │  │  (idle)    │  │  (serving  │  │  (idle)    │                   │  │
-│  │  │            │  │   org-123) │  │            │                   │  │
-│  │  │ Nginx      │  │ Nginx      │  │ Nginx      │                   │  │
-│  │  │ (Stage 2)  │  │ (Stage 2)  │  │ (Stage 2)  │                   │  │
-│  │  │ OpenVPN    │  │ OpenVPN    │  │ OpenVPN    │                   │  │
-│  │  └────────────┘  └────────────┘  └────────────┘                   │  │
-│  │                                                                     │  │
-│  │  Shared workspace via named volume (hot-reload enabled)            │  │
-│  │  Allocation managed in PostgreSQL (gateways.ready flag)            │  │
-│  └────────────────────────────────────────────────────────────────────┘  │
-│                                                                           │
-│  ┌────────────────────────────────────────────────────────────────────┐  │
-│  │             User Containers (Docker - Started by Users)            │  │
-│  │  - jupyter-123  → VPN to gw-pool-1 → nginx stage 2 → user app     │  │
-│  │  - vscode-456   → VPN to gw-pool-1 → nginx stage 2 → user app     │  │
-│  └────────────────────────────────────────────────────────────────────┘  │
-└──────────────────────────────────────────────────────────────────────────┘
+## Architecture Diagram
 
-Access from host OS browser (via DNS delegation):
-  https://domain.local                  → Frontend
-  https://ganymede.domain.local         → Ganymede API
-  https://org-{uuid}.domain.local       → Gateway (allocated to organization)
-  https://uc-{uuid}.org-{uuid}.domain.local → User container (via gateway)
-```
+📊 **Complete System Architecture Diagram**
+
+See: [../architecture/SYSTEM_ARCHITECTURE.md](../architecture/SYSTEM_ARCHITECTURE.md)
+
+---
 
 ## Creating the Development Container
 
@@ -306,15 +255,45 @@ Configures PostgreSQL for local development:
 ./scripts/local-dev/setup-postgres.sh
 ```
 
-### 4. Master Setup Script (All-in-One)
+### 4. Setup PowerDNS
+
+**Script:** [`scripts/local-dev/setup-powerdns.sh`](../scripts/local-dev/setup-powerdns.sh)
+
+Installs and configures PowerDNS for dynamic DNS management:
+
+- Installs `pdns-server` and `pdns-backend-pgsql`
+- Uses existing PostgreSQL database
+- Enables REST API on port 8081
+- Applies official schema
+
+```bash
+./scripts/local-dev/setup-powerdns.sh
+```
+
+### 5. Build Docker Images
+
+**Script:** [`scripts/local-dev/build-images.sh`](../scripts/local-dev/build-images.sh)
+
+Builds Docker images for gateway containers:
+
+- `dev-pod:latest` - Base image with dev tools
+- `demiurge-gateway:latest` - Gateway image with hot-reload
+
+```bash
+./scripts/local-dev/build-images.sh
+```
+
+### 6. Master Setup Script (All-in-One)
 
 **Script:** [`scripts/local-dev/setup-all.sh`](../scripts/local-dev/setup-all.sh)
 
-Runs all three setup scripts above in sequence:
+Runs all setup scripts in sequence:
 
 ```bash
 ./scripts/local-dev/setup-all.sh
 ```
+
+This installs everything: system deps, Docker CLI, mkcert, PostgreSQL, PowerDNS, and builds images.
 
 ## Environment Management Scripts
 
@@ -324,58 +303,67 @@ Runs all three setup scripts above in sequence:
 
 Creates a complete isolated environment with:
 
-1. **Random port allocation** (collision-safe)
+1. **Domain configuration** (default: `domain.local`)
 2. **Database creation** and schema deployment
-3. **SSL certificates** (mkcert)
-4. **JWT keys** generation
-5. **Gateway registration** (via `app-ganymede-cmd`)
-6. **Config files** (.env.ganymede, .env.gateway)
-7. **Nginx configuration**
-8. **Helper scripts** (start.sh, stop.sh, logs.sh)
+3. **PowerDNS zone creation** and DNS records
+4. **SSL certificates** (mkcert wildcard `*.{domain}`)
+5. **JWT keys** generation
+6. **Gateway pool creation** (default: 3 gateways)
+7. **Nginx configuration** (Stage 1 + dynamic gateway configs)
+8. **Config files** (.env.ganymede)
+9. **Helper scripts** (start.sh, stop.sh, logs.sh)
 
 **Usage:**
 
 ```bash
-# Use default workspace
+# Create environment with default domain (domain.local)
 ./scripts/local-dev/create-env.sh dev-001
 
-# Use custom workspace (different git branch/checkout)
-./scripts/local-dev/create-env.sh feat-xyz /root/workspace-feat /root/database-feat
+# Create environment with custom domain
+./scripts/local-dev/create-env.sh dev-001 mycompany.local
+
+# Specify custom gateway pool size
+GATEWAY_POOL_SIZE=5 ./scripts/local-dev/create-env.sh dev-001 domain.local
 ```
 
 **Arguments:**
 
 1. `env-name` (required) - Environment name
-2. `workspace-path` (optional) - Path to monorepo (default: `/root/workspace/monorepo`)
-3. `database-path` (optional) - Path to database repo (default: `/root/workspace/database`)
+2. `domain` (optional) - Domain name (default: `domain.local`)
 
 **What it does:**
 
-- Scans existing environments to find used ports
-- Randomly allocates ENV_NUMBER (1-99) with collision detection
-- Creates database: `ganymede_{env_name}` (dashes → underscores)
-- Registers gateway in database via `app-ganymede-cmd add-gateway`
-- Saves `GATEWAY_ID`, `GATEWAY_TOKEN`, and `WORKSPACE` path to `.env` files
-- Generates multi-domain SSL cert for `{env}.local`, `ganymede.{env}.local`, `gateway.{env}.local`
+- Creates PostgreSQL database: `ganymede_{env_name}` (dashes → underscores)
+- Creates PowerDNS zone for the specified domain
+- Registers DNS records:
+  - `{domain}` → Frontend
+  - `ganymede.{domain}` → Ganymede API
+  - `*.{domain}` → Wildcard for dynamic allocations
+- Generates wildcard SSL certificate: `*.{domain}`
+- Creates gateway pool (3 containers by default):
+  - Each gateway registers with Ganymede via `app-ganymede-cmd add-gateway`
+  - Assigns sequential ports (7100, 7101, 7102 for HTTP; 49100, 49101, 49102 for VPN)
+  - Each gateway receives a JWT token for API access
+- Creates Nginx configuration (Stage 1) with dynamic gateway includes
+- Creates `org-data/` directory for centralized organization data storage
 
-**Multiple Workspaces:**
+**Environment Variables:**
 
-Each environment can use a different workspace (useful for testing different branches simultaneously):
+- `GATEWAY_POOL_SIZE` - Number of gateways to create (default: 3)
+- `DOMAIN` - Domain name (default: `domain.local`)
+
+**Multiple Domains:**
+
+You can create multiple environments with different domains:
 
 ```bash
-# Create workspaces for different branches
-cd /root/workspace
-git clone monorepo monorepo-feat-a && cd monorepo-feat-a && git checkout feat-a && npm install
-git clone monorepo monorepo-feat-b && cd monorepo-feat-b && git checkout feat-b && npm install
-git clone database database-feat-a && cd database-feat-a && git checkout feat-a
-git clone database database-feat-b && cd database-feat-b && git checkout feat-b
+# Development environment
+./create-env.sh dev-001 dev.local
 
-# Create environments pointing to different workspaces
-./create-env.sh dev-001 /root/workspace/monorepo /root/workspace/database
-./create-env.sh feat-a /root/workspace/monorepo-feat-a /root/workspace/database-feat-a
-./create-env.sh feat-b /root/workspace/monorepo-feat-b /root/workspace/database-feat-b
+# Testing environment
+./create-env.sh test-001 test.local
 
-# Each environment is fully isolated!
+# Each has its own DNS zone, gateway pool, and SSL certificate
 ```
 
 ### List Environments
@@ -396,11 +384,12 @@ Shows all environments with their status (running/stopped).
 
 Completely removes an environment:
 
-- Stops processes
-- Drops database
+- Stops Ganymede process
+- Stops and removes gateway pool containers
+- Drops PostgreSQL database
+- Removes PowerDNS zone (optional)
 - Removes Nginx config
-- Cleans /etc/hosts
-- Deletes directory
+- Deletes environment directory
 
 **Usage:**
 
@@ -417,65 +406,86 @@ Builds frontend with environment-specific configuration.
 **Usage:**
 
 ```bash
-# Use default workspace
 ./scripts/local-dev/build-frontend.sh dev-001
-
-# Use custom workspace
-./scripts/local-dev/build-frontend.sh feat-xyz /root/workspace-feat
 ```
+
+### Manage Gateway Pool
+
+**Script:** [`scripts/local-dev/gateway-pool.sh`](../scripts/local-dev/gateway-pool.sh)
+
+Creates additional gateway containers in the pool:
+
+**Usage:**
+
+```bash
+# Create 2 more gateways
+ENV_NAME=dev-001 DOMAIN=domain.local \
+  ./scripts/local-dev/gateway-pool.sh 2
+```
+
+**Note:** Gateway allocation and deallocation is managed automatically by Ganymede. This script is only for creating additional pool capacity.
 
 ## Common Tasks
 
 ### Start an Environment
 
-**Per-environment script** (auto-created):
+**Using envctl.sh:**
 
 ```bash
-/root/.local-dev/dev-001/start.sh
+./scripts/local-dev/envctl.sh start dev-001
 ```
 
-Starts Ganymede + Gateway, builds apps if needed, signals gateway ready.
+This starts:
+
+- Ganymede API server
+- Gateway pool containers (if not already running)
+
+Gateway containers start automatically when created and stay running, waiting for allocation.
 
 ### Stop an Environment
 
 ```bash
-/root/.local-dev/dev-001/stop.sh
+./scripts/local-dev/envctl.sh stop dev-001
 ```
 
-Gracefully stops all processes.
+This stops:
+
+- Ganymede API server
+- Does NOT stop gateway containers (they remain in the pool)
 
 ### View Logs
 
 ```bash
-# Follow Ganymede logs
-/root/.local-dev/dev-001/logs.sh ganymede
-
-# Follow Gateway logs
-/root/.local-dev/dev-001/logs.sh gateway
-
-# Or directly:
+# Ganymede logs
 tail -f /root/.local-dev/dev-001/logs/ganymede.log
-tail -f /root/.local-dev/dev-001/logs/gateway.log
+
+# Gateway pool logs (via Docker)
+docker logs gw-pool-0
+docker logs gw-pool-1
+docker logs -f gw-pool-2  # Follow
+
+# PowerDNS logs
+sudo tail -f /var/log/pdns.log
 ```
 
-### Rebuild Apps
+### Rebuild and Restart
 
 ```bash
 cd /root/workspace/monorepo
 
 # Rebuild Ganymede
 npx nx run app-ganymede:build
+./scripts/local-dev/envctl.sh restart dev-001 ganymede
 
-# Rebuild Gateway
+# Rebuild and hot-reload ALL gateways
 npx nx run app-gateway:build
+./scripts/local-dev/envctl.sh restart dev-001 gateway
 
 # Rebuild Frontend
 ./scripts/local-dev/build-frontend.sh dev-001
-
-# Then restart
-/root/.local-dev/dev-001/stop.sh
-/root/.local-dev/dev-001/start.sh
 ```
+
+**Hot-Reload:** When you restart gateways, all containers in the pool reload simultaneously without losing their state.
 
 ### Access Database
 
@@ -501,11 +511,12 @@ docker build -t jupyterlab:local -f Dockerfile-minimal .
 
 2. **Start container from UI**:
 
-   - Access: `https://dev-001.local`
+   - Access: `https://domain.local` (or your custom domain)
    - Create new container (Jupyter, pgAdmin, etc.)
    - Container starts via Docker
-   - Connects to gateway via VPN
-   - Accessible via gateway proxy
+   - Automatically allocated gateway from pool
+   - Container connects to gateway via VPN
+   - Accessible via: `https://uc-{uuid}.org-{org-uuid}.domain.local`
 
 3. **View container logs**:
 
@@ -530,115 +541,100 @@ Or if using Docker Desktop with port forwarding, you can use `127.0.0.1`.
 
 ---
 
-### Step 2: Add DNS Entries to Hosts File
+### Step 2: Configure DNS Delegation
+
+**PowerDNS runs inside your dev container** and manages all domain records automatically. You only need to configure your host OS to delegate DNS queries to the dev container.
 
 #### Windows 11
 
-1. **Open hosts file as Administrator:**
+**Method 1: Network Adapter Settings (Recommended)**
 
-   - Press `Win + X`, select "Terminal (Admin)" or "PowerShell (Admin)"
-   - Run: `notepad C:\Windows\System32\drivers\etc\hosts`
-   - Or use any text editor run as Administrator
+1. Open **Settings** → **Network & Internet** → **Properties** (for your active network)
+2. Scroll to **DNS server assignment** → Click **Edit**
+3. Select **Manual**
+4. Enable **IPv4**
+5. Enter your dev container IP (e.g., `172.17.0.2`)
+6. Click **Save**
 
-2. **Add entries:**
+**Method 2: Hosts File (Fallback)**
 
-   ```
-   # Demiurge Local Dev - Environment dev-001
-   <dev-container-ip>  dev-001.local
-   <dev-container-ip>  ganymede.dev-001.local
-   <dev-container-ip>  gateway.dev-001.local
+If DNS delegation doesn't work, add static entries:
 
-   # Demiurge Local Dev - Environment dev-002
-   <dev-container-ip>  dev-002.local
-   <dev-container-ip>  ganymede.dev-002.local
-   <dev-container-ip>  gateway.dev-002.local
-   ```
+```powershell
+# Open as Administrator
+notepad C:\Windows\System32\drivers\etc\hosts
 
-3. **Save and close**
+# Add:
+<dev-container-ip>  domain.local
+<dev-container-ip>  ganymede.domain.local
+# Note: Wildcards don't work in hosts file, you'll need to add each gateway manually
+```
 
-4. **Flush DNS cache:**
+**Verify:**
 
-   ```powershell
-   ipconfig /flushdns
-   ```
-
-5. **Verify:**
-   ```powershell
-   ping dev-001.local
-   ```
+```powershell
+nslookup domain.local
+```
 
 #### macOS
 
-1. **Open hosts file:**
+**DNS Resolver Configuration:**
 
-   ```bash
-   sudo nano /etc/hosts
-   ```
+```bash
+# Create resolver directory
+sudo mkdir -p /etc/resolver
 
-2. **Add entries:**
+# Create resolver file for your domain
+echo "nameserver <dev-container-ip>" | sudo tee /etc/resolver/domain
 
-   ```
-   # Demiurge Local Dev - Environment dev-001
-   <dev-container-ip>  dev-001.local
-   <dev-container-ip>  ganymede.dev-001.local
-   <dev-container-ip>  gateway.dev-001.local
+# For custom domains, create additional files:
+# echo "nameserver <dev-container-ip>" | sudo tee /etc/resolver/mycompany
+```
 
-   # Demiurge Local Dev - Environment dev-002
-   <dev-container-ip>  dev-002.local
-   <dev-container-ip>  ganymede.dev-002.local
-   <dev-container-ip>  gateway.dev-002.local
-   ```
+**Verify:**
 
-3. **Save:** `Ctrl+O`, `Enter`, `Ctrl+X`
+```bash
+dig @<dev-container-ip> domain.local
+scutil --dns  # Check resolver configuration
+```
 
-4. **Flush DNS cache:**
+#### Linux (Ubuntu/Debian with systemd-resolved)
 
-   ```bash
-   sudo dscacheutil -flushcache
-   sudo killall -HUP mDNSResponder
-   ```
+**Edit systemd-resolved configuration:**
 
-5. **Verify:**
-   ```bash
-   ping dev-001.local
-   ```
+```bash
+sudo nano /etc/systemd/resolved.conf
+```
 
-#### Linux (Ubuntu)
+**Add:**
 
-1. **Open hosts file:**
+```ini
+[Resolve]
+DNS=<dev-container-ip>
+Domains=~domain.local  # '~' means this server handles this domain
+```
 
-   ```bash
-   sudo nano /etc/hosts
-   ```
+**Restart:**
 
-2. **Add entries:**
+```bash
+sudo systemctl restart systemd-resolved
+```
 
-   ```
-   # Demiurge Local Dev - Environment dev-001
-   <dev-container-ip>  dev-001.local
-   <dev-container-ip>  ganymede.dev-001.local
-   <dev-container-ip>  gateway.dev-001.local
+**Verify:**
 
-   # Demiurge Local Dev - Environment dev-002
-   <dev-container-ip>  dev-002.local
-   <dev-container-ip>  ganymede.dev-002.local
-   <dev-container-ip>  gateway.dev-002.local
-   ```
+```bash
+resolvectl status
+dig @<dev-container-ip> domain.local
+```
 
-3. **Save:** `Ctrl+O`, `Enter`, `Ctrl+X`
+**Alternative (using NetworkManager):**
 
-4. **Flush DNS cache (if systemd-resolved is running):**
-
-   ```bash
-   sudo systemd-resolve --flush-caches
-   # Or on newer Ubuntu:
-   sudo resolvectl flush-caches
-   ```
-
-5. **Verify:**
-   ```bash
-   ping dev-001.local
-   ```
+```bash
+# Add DNS to your connection
+nmcli connection modify <connection-name> ipv4.dns "<dev-container-ip>"
+nmcli connection modify <connection-name> ipv4.dns-search "domain.local"
+nmcli connection up <connection-name>
+```
 
 ---
 
@@ -783,23 +779,6 @@ ls -la /etc/ssl/certs | grep mkcert
 
 ---
 
-### Step 4: Helper Script for Windows Hosts File
-
-**Script:** [`scripts/local-dev/windows-add-hosts.ps1`](../scripts/local-dev/windows-add-hosts.ps1)
-
-Automates adding hosts file entries on Windows (requires Administrator privileges).
-
-**Usage:**
-
-```powershell
-# Run PowerShell as Administrator
-.\scripts\local-dev\windows-add-hosts.ps1 <dev-container-ip> <env-name>
-
-# Example:
-.\scripts\local-dev\windows-add-hosts.ps1 172.17.0.2 dev-001
-ipconfig /flushdns
-```
-
 ---
 
 ## Quick Reference
@@ -811,59 +790,83 @@ ipconfig /flushdns
 /root/.local-dev/                      - All environments
   ├── dev-001/                         - Environment "dev-001"
   │   ├── .env.ganymede               - Ganymede config
-  │   ├── .env.gateway                - Gateway config
-  │   ├── ssl-cert.pem                - SSL certificate
+  │   ├── ssl-cert.pem                - SSL certificate (wildcard *.domain.local)
   │   ├── ssl-key.pem                 - SSL private key
   │   ├── jwt-key                     - JWT private key
   │   ├── jwt-key-public.pem          - JWT public key
-  │   ├── start.sh                    - Start script
-  │   ├── stop.sh                     - Stop script
-  │   ├── logs.sh                     - View logs
-  │   ├── data/                       - Gateway data storage
-  │   └── logs/                       - Application logs
+  │   ├── nginx-gateways.d/           - Dynamic gateway Nginx configs
+  │   ├── org-data/                   - Organization data snapshots
+  │   └── logs/                       - Ganymede logs
   └── dev-002/                         - Another environment
+```
+
+### Gateway Containers
+
+Gateway pool containers are managed by Docker:
+
+```bash
+# List gateway containers
+docker ps --filter label=environment=dev-001
+
+# View gateway logs
+docker logs gw-pool-0
+
+# Check gateway status in database
+PGPASSWORD=devpassword psql -U postgres -d ganymede_dev_001 -c \
+  "SELECT gateway_id, ready, container_name, http_port FROM gateways;"
 ```
 
 ### Port Allocation
 
-**Method:** Random allocation with collision detection
+**Main Services:**
 
-- Scans existing environments to find used ports
-- Randomly selects ENV_NUMBER (1-99)
-- Checks for collisions, retries if needed
-- Formula: `BASE_PORT + (ENV_NUMBER * 10)`
+- **Nginx (Stage 1):** 80, 443
+- **PowerDNS:** 53/udp, 53/tcp, 8081 (API)
+- **PostgreSQL:** 5432
+- **Ganymede:** 6000
 
-**Examples:**
+**Gateway Pool (per container):**
+
+- **HTTP:** 7100-7199 (sequential: gw-pool-0 → 7100, gw-pool-1 → 7101, etc.)
+- **OpenVPN:** 49100-49199/udp (sequential: gw-pool-0 → 49100, gw-pool-1 → 49101, etc.)
+
+**Example Pool:**
 
 ```
-Environment     ENV_NUMBER  Ganymede  Gateway
---------------  ----------  --------  -------
-dev-001         (random)    6000+N*10 7000+N*10
-feat-xyz        (random)    6000+N*10 7000+N*10
-bugfix-123      (random)    6000+N*10 7000+N*10
+Gateway       HTTP Port  VPN Port   Status
+-----------   ---------  --------   --------
+gw-pool-0     7100       49100/udp  READY
+gw-pool-1     7101       49101/udp  ALLOCATED (org-abc123)
+gw-pool-2     7102       49102/udp  READY
 ```
-
-**Base Ports:**
-
-- Ganymede: 6000
-- Gateway: 7000
 
 ### URLs
 
-```
-Environment: dev-001
-  Frontend:  https://dev-001.local
-  Ganymede:  https://ganymede.dev-001.local
-  Gateway:   https://gateway.dev-001.local
+**With default domain (domain.local):**
 
-Environment: dev-002
-  Frontend:  https://dev-002.local
-  Ganymede:  https://ganymede.dev-002.local
-  Gateway:   https://gateway.dev-002.local
 ```
+Frontend:         https://domain.local
+Ganymede API:     https://ganymede.domain.local
+Gateway (org):    https://org-{organization-uuid}.domain.local
+User Container:   https://uc-{container-uuid}.org-{org-uuid}.domain.local
+```
+
+**With custom domain (e.g., mycompany.local):**
+
+```
+Frontend:         https://mycompany.local
+Ganymede API:     https://ganymede.mycompany.local
+Gateway (org):    https://org-{uuid}.mycompany.local
+User Container:   https://uc-{uuid}.org-{uuid}.mycompany.local
+```
+
+**Note:** Gateway and user container URLs are created dynamically when organizations start projects. DNS records are registered automatically by Ganymede.
+
+---
 
 ## Related Documentation
 
 - [MODULES_TESTING.md](MODULES_TESTING.md) - Testing modules in Storybook
-- [INSTALL.md](INSTALL.md) - Production deployment guide
-- [REFACTORING.md](REFACTORING.md) - Architecture refactoring details
+- [PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md) - Production deployment guide
+- [System Architecture](../architecture/SYSTEM_ARCHITECTURE.md) - Complete system diagram
+- [Gateway Architecture](../architecture/GATEWAY_ARCHITECTURE.md) - Multi-gateway architecture

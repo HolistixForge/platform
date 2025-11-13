@@ -4,7 +4,7 @@ This folder contains historical documentation that has been superseded but is pr
 
 ## 2024 Container Feature Refactoring
 
-**Status:** Superseded by current implementation (see [../architecture/REFACTORING.md](../architecture/REFACTORING.md))
+**Status:** Superseded by current implementation (see [../architecture/SYSTEM_ARCHITECTURE.md](../architecture/SYSTEM_ARCHITECTURE.md) and [../architecture/GATEWAY_ARCHITECTURE.md](../architecture/GATEWAY_ARCHITECTURE.md))
 
 The container feature went through a major architectural redesign in 2024. These documents capture the planning phase and analysis:
 

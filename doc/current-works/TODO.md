@@ -41,7 +41,7 @@ protected async applyDataSnapshot(data: any): Promise<void> {
 - `packages/app-gateway/src/state/GatewayState.ts`
 - `packages/app-gateway/src/state/ProjectRooms.ts`
 - `packages/app-gateway/src/initialization/gateway-init.ts`
-- `doc/architecture/GATEWAY_IMPLEMENTATION_PLAN.md`
+- `doc/current-works/GATEWAY_WORK.md`
 
 ---
 

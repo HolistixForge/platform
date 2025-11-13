@@ -13,8 +13,9 @@ Welcome to the Demiurge documentation! This hub will guide you to the right reso
 ### Understand the System
 
 - 🏗️ **[Architecture Overview](architecture/OVERVIEW.md)** - System design and components
-- 📐 **[Current Refactoring](architecture/REFACTORING.md)** - Organization-centric architecture
-- 📋 **[Gateway Implementation Plan](architecture/GATEWAY_IMPLEMENTATION_PLAN.md)** - 7-phase implementation (78 tasks)
+- 📐 **[System Architecture](architecture/SYSTEM_ARCHITECTURE.md)** - Complete architecture diagram
+- 📊 **[Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md)** - Multi-gateway pool architecture
+- 🔧 **[Gateway Implementation](current-works/GATEWAY_WORK.md)** - 7-phase implementation (78 tasks)
 - 🎨 **[Layer System Architecture](../packages/modules/space/src/lib/layer.md)** - Modular whiteboard layers (Excalidraw integration)
 
 ### Learn How To
@@ -45,9 +46,10 @@ doc/
 ├── README.md                 ← You are here
 │
 ├── architecture/             # System Design
-│   ├── OVERVIEW.md           - High-level architecture
-│   ├── REFACTORING.md        - Current org-centric refactor
-│   └── GATEWAY_IMPLEMENTATION_PLAN.md  - Implementation roadmap
+│   ├── OVERVIEW.md                   - High-level architecture
+│   ├── SYSTEM_ARCHITECTURE.md        - Complete system diagram
+│   ├── GATEWAY_ARCHITECTURE.md       - Multi-gateway architecture
+│   └── ARCHITECTURAL_DECISIONS.md    - Key design decisions
 │
 ├── guides/                   # How-To Guides
 │   ├── LOCAL_DEVELOPMENT.md  - Multi-env local setup
@@ -60,8 +62,13 @@ doc/
 │   ├── API.md                - REST API documentation
 │   └── GPU_HOST_SETUP.md     - GPU configuration
 │
-├── internal/                 # Internal/WIP Docs
+├── current-works/            # Active Work & Tracking
+│   ├── GATEWAY_WORK.md       - Gateway implementation details
 │   ├── TODO.md               - Task tracking
+│   ├── TODO_ANTOINE.md       - Antoine's task list
+│   └── DOCUMENTATION_AUDIT_REPORT.md  - Doc audit status
+│
+├── internal/                 # Internal Notes
 │   └── AI-summary.md         - AI context notes
 │
 └── archive/                  # Historical Docs
@@ -92,7 +99,8 @@ doc/
 1. [Architecture Overview](architecture/OVERVIEW.md)
 2. [Local Development Setup](guides/LOCAL_DEVELOPMENT.md)
 3. [API Reference](reference/API.md)
-4. [Current Refactoring](architecture/REFACTORING.md)
+4. [System Architecture](architecture/SYSTEM_ARCHITECTURE.md)
+5. [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md)
 5. [Nx Workspace Guide](guides/NX_WORKSPACE.md)
 
 ### DevOps/SRE
@@ -108,11 +116,11 @@ doc/
 
 - **Authentication:** [Architecture](architecture/OVERVIEW.md#authentication), [API](reference/API.md#authentication)
 - **Collaboration:** [Architecture](architecture/OVERVIEW.md#collaboration), [Modules Testing](guides/MODULES_TESTING.md)
-- **Containers:** [Refactoring](architecture/REFACTORING.md), [Archive](archive/2024-container-refactor/)
-- **Database:** [Architecture](architecture/OVERVIEW.md#database), [Refactoring](architecture/REFACTORING.md#database-schema)
-- **Gateway:** [Architecture](architecture/OVERVIEW.md#gateway), [Implementation Plan](architecture/GATEWAY_IMPLEMENTATION_PLAN.md)
+- **Containers:** [System Architecture](architecture/SYSTEM_ARCHITECTURE.md#layer-4-user-containers), [Archive](archive/2024-container-refactor/)
+- **Database:** [Architecture](architecture/OVERVIEW.md#database), [Schema](architecture/SYSTEM_ARCHITECTURE.md#database-schema-gateways)
+- **Gateway:** [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md), [System View](architecture/SYSTEM_ARCHITECTURE.md#layer-3-gateway-pool-containers), [Implementation](current-works/GATEWAY_WORK.md)
 - **Modules:** [Modules Testing](guides/MODULES_TESTING.md), [Architecture](architecture/OVERVIEW.md#modules), [Layer System](../packages/modules/space/src/lib/layer.md)
-- **Permissions:** [Refactoring](architecture/REFACTORING.md#permissions), [Gateway Plan](architecture/GATEWAY_IMPLEMENTATION_PLAN.md#phase-2-permissionmanager)
+- **Permissions:** [Gateway Work](current-works/GATEWAY_WORK.md)
 
 ### Search Tips
 

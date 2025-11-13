@@ -20,6 +20,7 @@ Cookie: connect.sid=s%3A...
 ```
 
 Obtained via login endpoints:
+
 - `POST /auth/local/login`
 - `GET /auth/{provider}/callback` (OAuth)
 - `POST /auth/totp/verify`
@@ -37,62 +38,62 @@ Authorization: Bearer eyJhbGc...
 
 ### Authentication
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/auth/local/signup` | Create account with email/password |
-| `POST` | `/auth/local/login` | Login with email/password |
-| `POST` | `/auth/logout` | Logout current user |
-| `GET` | `/auth/github` | OAuth login with GitHub |
-| `GET` | `/auth/gitlab` | OAuth login with GitLab |
-| `GET` | `/auth/discord` | OAuth login with Discord |
-| `GET` | `/auth/linkedin` | OAuth login with LinkedIn |
-| `POST` | `/auth/totp/setup` | Setup TOTP (2FA) |
-| `POST` | `/auth/totp/verify` | Verify TOTP code |
-| `POST` | `/auth/magic-link/send` | Send magic link email |
-| `GET` | `/auth/magic-link/{token}` | Login via magic link |
+| Method | Endpoint                   | Description                        |
+| ------ | -------------------------- | ---------------------------------- |
+| `POST` | `/auth/local/signup`       | Create account with email/password |
+| `POST` | `/auth/local/login`        | Login with email/password          |
+| `POST` | `/auth/logout`             | Logout current user                |
+| `GET`  | `/auth/github`             | OAuth login with GitHub            |
+| `GET`  | `/auth/gitlab`             | OAuth login with GitLab            |
+| `GET`  | `/auth/discord`            | OAuth login with Discord           |
+| `GET`  | `/auth/linkedin`           | OAuth login with LinkedIn          |
+| `POST` | `/auth/totp/setup`         | Setup TOTP (2FA)                   |
+| `POST` | `/auth/totp/verify`        | Verify TOTP code                   |
+| `POST` | `/auth/magic-link/send`    | Send magic link email              |
+| `GET`  | `/auth/magic-link/{token}` | Login via magic link               |
 
 ### Users
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/users/me` | Get current user info |
-| `GET` | `/users/{id}` | Get user by ID |
-| `GET` | `/users/search?q={query}` | Search users by email/username |
+| Method | Endpoint                  | Description                    |
+| ------ | ------------------------- | ------------------------------ |
+| `GET`  | `/users/me`               | Get current user info          |
+| `GET`  | `/users/{id}`             | Get user by ID                 |
+| `GET`  | `/users/search?q={query}` | Search users by email/username |
 
 ### Organizations
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/organizations` | List user's organizations |
-| `POST` | `/organizations` | Create new organization |
-| `GET` | `/organizations/{id}` | Get organization details |
-| `DELETE` | `/organizations/{id}` | Delete organization |
-| `GET` | `/organizations/{id}/members` | List organization members |
-| `POST` | `/organizations/{id}/members` | Add member to organization |
-| `DELETE` | `/organizations/{id}/members/{user_id}` | Remove member |
-| `PUT` | `/organizations/{id}/members/{user_id}/role` | Update member role |
+| Method   | Endpoint                                     | Description                |
+| -------- | -------------------------------------------- | -------------------------- |
+| `GET`    | `/organizations`                             | List user's organizations  |
+| `POST`   | `/organizations`                             | Create new organization    |
+| `GET`    | `/organizations/{id}`                        | Get organization details   |
+| `DELETE` | `/organizations/{id}`                        | Delete organization        |
+| `GET`    | `/organizations/{id}/members`                | List organization members  |
+| `POST`   | `/organizations/{id}/members`                | Add member to organization |
+| `DELETE` | `/organizations/{id}/members/{user_id}`      | Remove member              |
+| `PUT`    | `/organizations/{id}/members/{user_id}/role` | Update member role         |
 
 ### Projects
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/projects` | List user's projects |
-| `GET` | `/organizations/{org_id}/projects` | List organization's projects |
-| `POST` | `/projects` | Create new project |
-| `GET` | `/projects/{id}` | Get project details (includes gateway) |
-| `DELETE` | `/projects/{id}` | Delete project |
-| `GET` | `/projects/{id}/members` | List project members |
-| `POST` | `/projects/{id}/members` | Add member to project |
-| `DELETE` | `/projects/{id}/members/{user_id}` | Remove member |
+| Method   | Endpoint                           | Description                            |
+| -------- | ---------------------------------- | -------------------------------------- |
+| `GET`    | `/projects`                        | List user's projects                   |
+| `GET`    | `/organizations/{org_id}/projects` | List organization's projects           |
+| `POST`   | `/projects`                        | Create new project                     |
+| `GET`    | `/projects/{id}`                   | Get project details (includes gateway) |
+| `DELETE` | `/projects/{id}`                   | Delete project                         |
+| `GET`    | `/projects/{id}/members`           | List project members                   |
+| `POST`   | `/projects/{id}/members`           | Add member to project                  |
+| `DELETE` | `/projects/{id}/members/{user_id}` | Remove member                          |
 
 ### Gateway Management
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/gateway/start` | Start gateway for organization |
+| Method | Endpoint          | Description                            |
+| ------ | ----------------- | -------------------------------------- |
+| `POST` | `/gateway/start`  | Start gateway for organization         |
 | `POST` | `/gateway/config` | Get gateway config (called by gateway) |
-| `POST` | `/gateway/ready` | Signal gateway is ready |
-| `POST` | `/gateway/stop` | Stop gateway |
+| `POST` | `/gateway/ready`  | Signal gateway is ready                |
+| `POST` | `/gateway/stop`   | Stop gateway                           |
 
 ## Gateway API Endpoints
 
@@ -142,31 +143,31 @@ Gateway pushes state updates via Yjs synchronization protocol.
 
 ### HTTP Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/collab/ping` | Health check |
-| `POST` | `/collab/start` | Initialize gateway (called by Ganymede) |
-| `GET` | `/collab/room-id` | Get current project room ID |
-| `GET` | `/collab/vpn-config` | Get OpenVPN configuration |
+| Method | Endpoint             | Description                             |
+| ------ | -------------------- | --------------------------------------- |
+| `GET`  | `/collab/ping`       | Health check                            |
+| `POST` | `/collab/start`      | Initialize gateway (called by Ganymede) |
+| `GET`  | `/collab/room-id`    | Get current project room ID             |
+| `GET`  | `/collab/vpn-config` | Get OpenVPN configuration               |
 
 ### OAuth2 Provider
 
 Gateway provides OAuth2 for container applications:
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/oauth/authorize` | OAuth authorization endpoint |
-| `POST` | `/oauth/authorize` | Grant authorization |
-| `POST` | `/oauth/token` | Exchange code for token |
-| `GET` | `/oauth/public-key` | Get JWT public key |
-| `GET` | `/oauth/clients` | List OAuth clients |
-| `POST` | `/oauth/clients` | Create OAuth client |
+| Method | Endpoint            | Description                  |
+| ------ | ------------------- | ---------------------------- |
+| `GET`  | `/oauth/authorize`  | OAuth authorization endpoint |
+| `POST` | `/oauth/authorize`  | Grant authorization          |
+| `POST` | `/oauth/token`      | Exchange code for token      |
+| `GET`  | `/oauth/public-key` | Get JWT public key           |
+| `GET`  | `/oauth/clients`    | List OAuth clients           |
+| `POST` | `/oauth/clients`    | Create OAuth client          |
 
 ### Container Tokens
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/containers/{id}/token` | Get container auth token |
+| Method | Endpoint                     | Description              |
+| ------ | ---------------------------- | ------------------------ |
+| `GET`  | `/containers/{id}/token`     | Get container auth token |
 | `POST` | `/containers/validate-token` | Validate container token |
 
 ## Request/Response Examples
@@ -261,48 +262,20 @@ Content-Type: application/json
 
 Standard HTTP error codes:
 
-| Code | Meaning |
-|------|---------|
-| `400` | Bad Request - Invalid input |
-| `401` | Unauthorized - Not authenticated |
-| `403` | Forbidden - Not authorized |
+| Code  | Meaning                            |
+| ----- | ---------------------------------- |
+| `400` | Bad Request - Invalid input        |
+| `401` | Unauthorized - Not authenticated   |
+| `403` | Forbidden - Not authorized         |
 | `404` | Not Found - Resource doesn't exist |
 | `409` | Conflict - Resource already exists |
-| `500` | Internal Server Error |
+| `500` | Internal Server Error              |
 
 **Error Response Format:**
 
 ```json
 {
   "error": "Error message describing what went wrong"
-}
-```
-
-## Rate Limiting
-
-Currently not implemented. May be added in future for API protection.
-
-## Pagination
-
-List endpoints support pagination via query parameters:
-
-```http
-GET /projects?limit=20&offset=40
-```
-
-- `limit`: Number of items per page (default: 50, max: 100)
-- `offset`: Number of items to skip
-
-**Response includes:**
-
-```json
-{
-  "data": [...],
-  "pagination": {
-    "limit": 20,
-    "offset": 40,
-    "total": 156
-  }
 }
 ```
 
@@ -314,6 +287,7 @@ Detailed API schemas are defined in OpenAPI 3.0 format:
 - **Gateway:** `packages/app-gateway/src/oas30.json`
 
 These specs include:
+
 - Complete request/response schemas
 - Validation rules
 - Parameter descriptions
@@ -324,4 +298,3 @@ These specs include:
 - **[Architecture Overview](../architecture/OVERVIEW.md)** - System architecture
 - **[Local Development](../guides/LOCAL_DEVELOPMENT.md)** - Testing APIs locally
 - **[Contributing](../../CONTRIBUTING.md)** - Adding new endpoints
-

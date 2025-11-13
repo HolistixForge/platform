@@ -663,13 +663,6 @@ packages/json-file-persistence/src/
 
 ## 📝 REVISED CHECKLIST (8 PHASES, ~80 TASKS)
 
-### ✅ PREREQUISITES (DONE)
-
-- [x] Database refactored (organizations)
-- [x] Apps converted to TypeScript Express
-- [x] Backend-engine stripped
-- [x] app-account deleted
-
 ### 🏗️ PHASE 1: GatewayState (Generic Storage) - 12 tasks
 
 - [ ] 1.1 Create `state/types.ts`

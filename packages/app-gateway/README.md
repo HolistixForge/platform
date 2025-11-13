@@ -69,6 +69,8 @@ See [doc/guides/PRODUCTION_DEPLOYMENT.md](../../doc/guides/PRODUCTION_DEPLOYMENT
 ## Related Documentation
 
 - [Architecture Overview](../../doc/architecture/OVERVIEW.md)
-- [Gateway Implementation Plan](../../doc/architecture/GATEWAY_IMPLEMENTATION_PLAN.md)
+- [Gateway Implementation Details](../../doc/current-works/GATEWAY_WORK.md)
+- [Gateway Architecture](../../doc/architecture/GATEWAY_ARCHITECTURE.md)
+- [System Architecture](../../doc/architecture/SYSTEM_ARCHITECTURE.md)
 - [Module System & Layer Architecture](../modules/space/src/lib/layer.md)
 - [Local Development](../../doc/guides/LOCAL_DEVELOPMENT.md)

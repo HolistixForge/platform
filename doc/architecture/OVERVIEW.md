@@ -4,45 +4,17 @@ This document provides a high-level overview of the Demiurge platform architectu
 
 ## System Components
 
-Demiurge is composed of three main applications plus supporting infrastructure:
+Demiurge is composed of three main applications plus supporting infrastructure.
 
-```
-┌────────────────────────────────────────────────────────────────────┐
-│                          User's Browser                             │
-│  ┌──────────────────────────────────────────────────────────────┐  │
-│  │                  Frontend (React + Vite)                      │  │
-│  │  - Whiteboard (React Flow)                                    │  │
-│  │  - Real-time sync (WebSocket)                                 │  │
-│  │  - Module system (pluggable UI components)                    │  │
-│  └───────────────────┬──────────────────────────────────────────┘  │
-└────────────────────────┼─────────────────────────────────────────────┘
-                         │
-         ┌───────────────┴───────────────┐
-         │ HTTPS                         │ WebSocket (collab)
-         ▼                               ▼
-┌─────────────────┐            ┌────────────────────────────┐
-│   Ganymede API  │            │   Gateway (per-org)         │
-│   (Express.js)  │◄──────────▶│   (Express.js + Yjs)       │
-│                 │   REST     │                             │
-│ - Auth          │            │ - Collaboration Engine      │
-│ - Users/Orgs    │            │ - Permissions              │
-│ - Projects      │            │ - OAuth2 Provider          │
-│ - Gateway mgmt  │            │ - Container Management     │
-└────────┬────────┘            │ - OpenVPN + Nginx Proxy    │
-         │                     └────────┬───────────────────┘
-         │                              │
-         ▼                              ▼
-┌──────────────────┐          ┌────────────────────────────┐
-│   PostgreSQL     │          │  User Containers (Docker)   │
-│                  │          │  - JupyterLab               │
-│ - users          │          │  - pgAdmin                  │
-│ - organizations  │          │  - n8n                      │
-│ - projects       │          │  - Custom images            │
-│ - gateways       │          │                             │
-│ - sessions       │          │  VPN connected to gateway   │
-│ - oauth_*        │          │  Stable DNS URLs            │
-└──────────────────┘          └─────────────────────────────┘
-```
+---
+
+## Architecture Diagram
+
+📊 **Complete System Architecture Diagram**
+
+See: [./SYSTEM_ARCHITECTURE.md](./SYSTEM_ARCHITECTURE.md)
+
+---
 
 ## Core Applications
 
@@ -51,6 +23,7 @@ Demiurge is composed of three main applications plus supporting infrastructure:
 **Purpose:** Central API for user management, authentication, organizations, and projects.
 
 **Responsibilities:**
+
 - User authentication (OAuth, TOTP, magic link, local)
 - Organization management (CRUD, members)
 - Project management (CRUD, members)
@@ -58,12 +31,14 @@ Demiurge is composed of three main applications plus supporting infrastructure:
 - Session management
 
 **Tech Stack:**
+
 - Express.js + TypeScript
 - Passport.js (authentication strategies)
 - PostgreSQL (persistent data)
 - OpenAPI validation
 
 **Key Endpoints:**
+
 - `/auth/*` - Authentication flows
 - `/organizations` - Organization management
 - `/projects` - Project management
@@ -71,6 +46,7 @@ Demiurge is composed of three main applications plus supporting infrastructure:
 - `/users` - User search and info
 
 **Database Tables:**
+
 - `users`, `passwords`, `totp`, `magic_links`, `sessions`
 - `organizations`, `organizations_members`
 - `projects`, `projects_members`
@@ -82,6 +58,7 @@ Demiurge is composed of three main applications plus supporting infrastructure:
 **Purpose:** Per-organization collaborative backend with real-time state synchronization.
 
 **Responsibilities:**
+
 - Real-time collaboration (Yjs CRDT)
 - Event processing (reducer pattern)
 - Permission validation
@@ -91,6 +68,7 @@ Demiurge is composed of three main applications plus supporting infrastructure:
 - Reverse proxy (Nginx)
 
 **Tech Stack:**
+
 - Express.js + TypeScript
 - Yjs (CRDT for shared state)
 - y-websocket (WebSocket sync)
@@ -99,6 +77,7 @@ Demiurge is composed of three main applications plus supporting infrastructure:
 - Nginx (HTTP proxy)
 
 **State Management:**
+
 - **Shared State (Yjs):** Collaborative data synced to all clients
   - Graph nodes/edges
   - Container runtime data
@@ -111,6 +90,7 @@ Demiurge is composed of three main applications plus supporting infrastructure:
 
 **Module System:**
 Extensible architecture where features are implemented as modules:
+
 - `core` - Graph/node system
 - `user-containers` - Container management
 - `jupyter` - JupyterLab integration
@@ -122,6 +102,7 @@ Extensible architecture where features are implemented as modules:
 **Purpose:** User interface with whiteboard, real-time collaboration, and module UIs.
 
 **Responsibilities:**
+
 - Interactive whiteboard (React Flow)
 - Real-time sync with gateway (WebSocket)
 - Authentication UI
@@ -129,6 +110,7 @@ Extensible architecture where features are implemented as modules:
 - Container management UI
 
 **Tech Stack:**
+
 - React + TypeScript
 - React Flow (whiteboard)
 - SCSS (styling)
@@ -187,12 +169,14 @@ Extensible architecture where features are implemented as modules:
 ### 1. Organization-Centric Model
 
 Everything is scoped to organizations:
+
 - Users are members of organizations
 - Projects belong to organizations
 - Gateways are allocated per organization
 - Permissions are defined at organization level
 
 **Benefits:**
+
 - Clear multi-tenancy
 - Resource isolation
 - Simplified sharing within teams
@@ -206,7 +190,7 @@ Frontend sends events, gateway processes them through reducers:
 dispatch({
   type: 'user-containers:new',
   name: 'my-jupyter',
-  imageId: 'jupyter:minimal'
+  imageId: 'jupyter:minimal',
 });
 
 // Gateway reducer
@@ -218,6 +202,7 @@ async function _newUserContainer(context) {
 ```
 
 **Benefits:**
+
 - Predictable state updates
 - Easy to audit (event log)
 - Supports optimistic UI
@@ -240,6 +225,7 @@ export const moduleBackend: ModuleBackend = {
 ```
 
 **Benefits:**
+
 - Loose coupling
 - Independent development
 - Easy to add/remove features
@@ -254,11 +240,13 @@ Containers get permanent URLs that survive gateway changes:
 ```
 
 Instead of:
+
 ```
 {gateway-host}/{container-id}/{service}  ❌ Changes when gateway reassigned
 ```
 
 **Benefits:**
+
 - Bookmarkable URLs
 - Shareable links
 - No broken URLs after gateway changes
@@ -277,6 +265,7 @@ Instead of:
 - **Gateway:** Validates permissions for events (in-memory, fast)
 
 **Permission Strings:**
+
 ```
 org:admin                    - Organization admin
 org:member                   - Organization member
@@ -314,18 +303,18 @@ See [guides/PRODUCTION_DEPLOYMENT.md](../guides/PRODUCTION_DEPLOYMENT.md) for de
 
 ## Technology Choices
 
-| Component | Technology | Rationale |
-|-----------|------------|-----------|
-| **Frontend** | React | Component model, large ecosystem |
-| **Whiteboard** | React Flow | Canvas-based graph editor |
-| **Backend** | Express.js | Simple, flexible, Node.js ecosystem |
-| **Database** | PostgreSQL | Reliable, feature-rich RDBMS |
-| **Collaboration** | Yjs | CRDT with great performance |
-| **Monorepo** | Nx | Build caching, dependency graph |
-| **Containers** | Docker | Standard containerization |
-| **VPN** | OpenVPN | Mature, reliable |
-| **DNS** | PowerDNS | REST API, database backend |
-| **SSL** | Let's Encrypt | Free, automated certificates |
+| Component         | Technology    | Rationale                           |
+| ----------------- | ------------- | ----------------------------------- |
+| **Frontend**      | React         | Component model, large ecosystem    |
+| **Whiteboard**    | React Flow    | Canvas-based graph editor           |
+| **Backend**       | Express.js    | Simple, flexible, Node.js ecosystem |
+| **Database**      | PostgreSQL    | Reliable, feature-rich RDBMS        |
+| **Collaboration** | Yjs           | CRDT with great performance         |
+| **Monorepo**      | Nx            | Build caching, dependency graph     |
+| **Containers**    | Docker        | Standard containerization           |
+| **VPN**           | OpenVPN       | Mature, reliable                    |
+| **DNS**           | PowerDNS      | REST API, database backend          |
+| **SSL**           | Let's Encrypt | Free, automated certificates        |
 
 ## Performance Considerations
 
@@ -366,8 +355,8 @@ See [guides/PRODUCTION_DEPLOYMENT.md](../guides/PRODUCTION_DEPLOYMENT.md) for de
 
 ## Related Documentation
 
-- **[Refactoring](REFACTORING.md)** - Current organization-centric refactor
-- **[Gateway Implementation](GATEWAY_IMPLEMENTATION_PLAN.md)** - Implementation roadmap
+- **[System Architecture](SYSTEM_ARCHITECTURE.md)** - Complete system diagram
+- **[Gateway Architecture](GATEWAY_ARCHITECTURE.md)** - Multi-gateway pool architecture
+- **[Gateway Implementation](../current-works/GATEWAY_WORK.md)** - Implementation details
 - **[Local Development](../guides/LOCAL_DEVELOPMENT.md)** - Dev environment setup
 - **[Contributing](../../CONTRIBUTING.md)** - Development workflow
-

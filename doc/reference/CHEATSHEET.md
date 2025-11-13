@@ -1,29 +1,5 @@
 # Cheat Sheet
 
-## NX related actions
-
-see [NX](./nx.md)
-
-## bashrc
-
-```bash
-alias psa='ps uf --ppid 2 -p 2 --deselect'
-alias dps='docker ps -a --format "table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Names}}"'
-
-storybook() {
-    PGIDS=$(ps ax -o "pid,cmd" | grep '[n]pm exec nx run demiurge-ui-components:storybook' | awk '{print $1}')
-    echo $PGIDS
-    if ! [ -z "${PGID}" ]; then
-        for PGID in $PGIDS; do
-            kill -9 -- -"${PGID}"
-            echo "killed $PGID"
-        done
-    fi
-    nohup npx nx run demiurge-ui-components:storybook --port 4400 >/tmp/demiurge-ui-components-storybook.log 2>&1 &
-    echo Log: tail -f /tmp/demiurge-ui-components-storybook.log
-}
-```
-
 ## sshfs on Windows with WinFsp and SSHFS-Win
 
 See [here](https://www.petergirnus.com/blog/how-to-sshfs-on-windows)
