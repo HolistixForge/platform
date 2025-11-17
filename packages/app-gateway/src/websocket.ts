@@ -3,19 +3,17 @@ import * as https from 'https';
 import ws from 'ws';
 const u = require('y-websocket/bin/utils');
 
-import { jwtPayload } from '@monorepo/backend-engine';
 import { log, ForbiddenException } from '@monorepo/log';
 import { ProjectRoomsManager } from './state/ProjectRooms';
+import {
+  extractJwtPayload,
+  checkProjectAccess,
+  type TAnyJwt,
+} from './middleware/jwt-auth';
+import type { TJwtUser } from '@monorepo/demiurge-types';
 
 //
 //
-
-type MyJwtPayload = {
-  type: string;
-  user_id?: string;
-  scope: string[];
-  exp: number;
-};
 
 /**
  * Setup YJS WebSocket with Multi-Room Support
@@ -43,7 +41,7 @@ export function graftYjsWebsocket(
         ws: ws,
         req: http.IncomingMessage,
         err: Error | null,
-        jwt: MyJwtPayload,
+        jwt: TAnyJwt,
         room_id: string
       ) => {
         if (err) {
@@ -51,14 +49,16 @@ export function graftYjsWebsocket(
           return;
         }
 
-        // Close socket when token expires
-        const currentTime = Date.now() / 1000;
-        const timeDifference = jwt.exp - currentTime;
-        if (timeDifference > 0) {
-          setTimeout(() => {
-            log(6, 'WS_CONNECTION', 'Closing socket - token expired');
-            ws.close(4000, 'expired');
-          }, timeDifference * 1000);
+        // Close socket when token expires (if exp is present)
+        if ('exp' in jwt && typeof jwt.exp === 'number') {
+          const currentTime = Date.now() / 1000;
+          const timeDifference = jwt.exp - currentTime;
+          if (timeDifference > 0) {
+            setTimeout(() => {
+              log(6, 'WS_CONNECTION', 'Closing socket - token expired');
+              ws.close(4000, 'expired');
+            }, timeDifference * 1000);
+          }
         }
 
         log(6, 'WS_CONNECTION', `Connection: ${req.url}, room: ${room_id}`);
@@ -119,7 +119,7 @@ function authenticateAndRoute(
   projectRooms: ProjectRoomsManager,
   callback: (
     err: Error | null,
-    payload: MyJwtPayload | null,
+    payload: TAnyJwt | null,
     room_id: string | null
   ) => void
 ) {
@@ -133,21 +133,24 @@ function authenticateAndRoute(
     return;
   }
 
-  let payload: MyJwtPayload;
+  let payload: TAnyJwt;
   try {
-    payload = jwtPayload(token) as MyJwtPayload;
+    payload = extractJwtPayload(token);
   } catch (err: any) {
     callback(err, null, null);
     return;
   }
 
-  if (!payload || payload.type !== 'access_token') {
+  // Only accept user access tokens for WebSocket (not container tokens, org tokens, etc)
+  if (payload.type !== 'access_token') {
     const err = new ForbiddenException([
-      { message: 'Invalid JWT token: not an access token' },
+      { message: 'Invalid JWT token: WebSocket requires user access_token' },
     ]);
     callback(err, null, null);
     return;
   }
+
+  const userToken = payload as TJwtUser;
 
   // Route to correct room based on URL
   let room_id: string | null = null;
@@ -175,8 +178,27 @@ function authenticateAndRoute(
     return;
   }
 
-  // TODO: Check permission - user has access to this project
-  // For now, just check token is valid
+  // Get project_id from room_id
+  const project_id = projectRooms.getProjectIdByRoomId(room_id);
+  if (!project_id) {
+    callback(new Error('Project not found for room'), null, null);
+    return;
+  }
+
+  // Check permission: user has access to this project
+  const user_id = userToken.user?.id;
+  if (!user_id) {
+    callback(new Error('JWT missing user.id'), null, null);
+    return;
+  }
+
+  // Check permissions using shared function
+  const hasProjectAccess = checkProjectAccess(user_id, project_id);
+
+  if (!hasProjectAccess) {
+    callback(new Error(`No access to project: ${project_id}`), null, null);
+    return;
+  }
 
   callback(null, payload, room_id);
 }

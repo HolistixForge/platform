@@ -8,43 +8,23 @@ This document tracks all remaining tasks, improvements, and known issues.
 
 ## 🔴 HIGH PRIORITY (Blocking Production)
 
-### GWROUTESPERMCHECK - Add Permission Checks to Routes
+### GWGANYMEDEDATADELETE - Add Admin Auth for Data Deletion
 
-**Context:** Multiple routes need permission validation
+**Context:** `DELETE /gateway/data/:organization_id` endpoint (`packages/app-ganymede/src/routes/gateway/data.ts:236`) has TODO for admin auth
 
-**Current TODOs:**
-
-1. **`/collab/vpn-config`** (`routes/collab.ts:121`)
-
-   - Add JWT authorization check
-   - Check permission: `p:{jwt.project_id}:project:vpn-access`
-
-2. **`/oauth/clients` GET** (`routes/oauth.ts:218`)
-
-   - Add permission check for listing OAuth clients
-   - Should check if user has access to project/container
-
-3. **`/collab/event`** (`routes/collab.ts:44`)
-
-   - Currently no permission checks
-   - Should validate user has permission for the event being processed
-
-4. **WebSocket connections** (`websocket.ts:178`)
-   - TODO: Check permission - user has access to this project
-   - Currently only validates JWT token, doesn't check project access
+**Problem:**
+Endpoint currently returns `ForbiddenException` immediately. Needs proper admin authentication when implemented.
 
 **Required:**
 
-- Implement permission checks using `getGatewayInstances().permissionManager`
-- Add appropriate permission strings for each endpoint
-- Test permission enforcement
+- Add admin authentication middleware
+- Verify user has system admin privileges
+- Implement the deletion logic after auth is added
 
 **Related Files:**
 
-- `packages/app-gateway/src/routes/collab.ts`
-- `packages/app-gateway/src/routes/oauth.ts`
-- `packages/app-gateway/src/websocket.ts`
-- `packages/app-gateway/src/middleware/permissions.ts`
+- `packages/app-ganymede/src/routes/gateway/data.ts`
+- `packages/app-ganymede/src/middleware/auth.ts`
 
 ---
 
@@ -131,8 +111,7 @@ If `/gateway/start` fails after partial allocation (e.g., Nginx reload fails), t
 
 **Required:**
 
-- Document OAuth endpoints (`/oauth/authorize`, `/oauth/token`, `/oauth/clients`)
-- Document container token endpoints (`/containers/:id/token`, `/containers/validate-token`)
+- Document OAuth endpoints (`/oauth/authorize`, `/oauth/token`, `/oauth/authenticate`)
 - Add schemas for new routes
 - Remove OAuth from Ganymede OpenAPI (moved to gateway)
 

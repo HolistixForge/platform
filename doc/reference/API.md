@@ -11,7 +11,9 @@ This document provides an overview of the REST API endpoints. For detailed schem
 
 All API requests require authentication via session cookies or JWT tokens.
 
-### Session Authentication
+### Authentication Types
+
+#### Session Authentication
 
 Used for web application requests:
 
@@ -26,12 +28,39 @@ Obtained via login endpoints:
 - `POST /auth/totp/verify`
 - `GET /auth/magic-link/{token}`
 
-### JWT Authentication
+#### JWT Token Types
 
-Used for programmatic access and container authentication:
+The system uses different JWT token types for different purposes:
+
+- **`TJwtUser`** (`access_token` / `refresh_token`): User authentication tokens
+
+  - Contains: `user.id`, `user.username`, `client_id`, `scope[]`, optional `project_id`
+  - Used for: Human user API access, collaboration events, WebSocket connections
+
+- **`TJwtUserContainer`** (`user_container_token`): Container authentication tokens
+
+  - Contains: `project_id`, `user_container_id`, `scope`
+  - Used for: User container server authentication (VPN config, etc.)
+
+- **`TJwtOrganization`** (`organization_token`): Organization-level tokens
+
+  - Contains: `organization_id`, `gateway_id`, `scope`
+  - Used for: Gateway-to-Ganymede communication
+
+- **`TJwtGateway`** (`gateway_token`): Gateway-level tokens
+  - Contains: `gateway_id`, `scope`
+  - Used for: Gateway container authentication
+
+All JWT tokens should be sent in the Authorization header:
 
 ```http
 Authorization: Bearer eyJhbGc...
+```
+
+Or with `token ` prefix for user tokens:
+
+```http
+Authorization: token eyJhbGc...
 ```
 
 ## Ganymede API Endpoints
@@ -97,11 +126,14 @@ Authorization: Bearer eyJhbGc...
 
 ## Gateway API Endpoints
 
-Gateway endpoints are accessed via WebSocket for collaboration events, and via HTTP for specific operations.
+Gateway endpoints are accessed via WebSocket for collaboration data, and via HTTP for specific operations.
 
 ### Collaboration (WebSocket)
 
-**Endpoint:** `wss://gateway.{org-id}.{env}.{domain}/collab`
+**Endpoint:** `wss://gateway.{org-id}.{env}.{domain}/collab/{room_id}?token=...`  
+**Authentication:** `TJwtUser` (access_token only)
+
+The WebSocket connection requires a user access token in the query parameter. The token must have a `project_id` (either in the JWT payload or inferred from the room_id), and the user must have access to that project (member, admin, or org admin/owner).
 
 **Events sent to gateway:**
 
@@ -143,32 +175,35 @@ Gateway pushes state updates via Yjs synchronization protocol.
 
 ### HTTP Endpoints
 
-| Method | Endpoint             | Description                             |
-| ------ | -------------------- | --------------------------------------- |
-| `GET`  | `/collab/ping`       | Health check                            |
-| `POST` | `/collab/start`      | Initialize gateway (called by Ganymede) |
-| `GET`  | `/collab/room-id`    | Get current project room ID             |
-| `GET`  | `/collab/vpn-config` | Get OpenVPN configuration               |
+| Method | Endpoint             | Authentication                                | Description                             |
+| ------ | -------------------- | --------------------------------------------- | --------------------------------------- |
+| `GET`  | `/collab/ping`       | None                                          | Health check                            |
+| `POST` | `/collab/start`      | None (handshake token in body)                | Initialize gateway (called by Ganymede) |
+| `GET`  | `/collab/room-id`    | `TJwtUser` with `project_id` + project access | Get room ID for a project               |
+| `POST` | `/collab/event`      | `TJwtUser` with `project_id` + project access | Process collaborative event             |
+| `GET`  | `/collab/vpn-config` | `TJwtUserContainer` (must belong to org)      | Get OpenVPN configuration               |
+
+**Authentication Details:**
+
+- **`GET /collab/room-id`**: Requires `TJwtUser` token. The `project_id` can be provided in JWT payload or as a query parameter (`?project_id=...`). The user must have project access (member, admin, or org admin/owner). Returns the room_id for the specified project.
+- **`POST /collab/event`**: Requires `TJwtUser` token with `project_id` in the JWT payload. The user must have project access (member, admin, or org admin/owner).
+- **`GET /collab/vpn-config`**: Requires `TJwtUserContainer` token. The token's `project_id` must belong to the organization this gateway is serving.
 
 ### OAuth2 Provider
 
 Gateway provides OAuth2 for container applications:
 
-| Method | Endpoint            | Description                  |
-| ------ | ------------------- | ---------------------------- |
-| `GET`  | `/oauth/authorize`  | OAuth authorization endpoint |
-| `POST` | `/oauth/authorize`  | Grant authorization          |
-| `POST` | `/oauth/token`      | Exchange code for token      |
-| `GET`  | `/oauth/public-key` | Get JWT public key           |
-| `GET`  | `/oauth/clients`    | List OAuth clients           |
-| `POST` | `/oauth/clients`    | Create OAuth client          |
+| Method | Endpoint              | Authentication                    | Description                  |
+| ------ | --------------------- | --------------------------------- | ---------------------------- |
+| `GET`  | `/oauth/authorize`    | Session (Passport/req.user)       | OAuth authorization endpoint |
+| `POST` | `/oauth/token`        | None (client credentials in body) | Exchange code for token      |
+| `POST` | `/oauth/authenticate` | OAuth access token (Bearer)       | Validate OAuth token         |
 
-### Container Tokens
+**Authentication Details:**
 
-| Method | Endpoint                     | Description              |
-| ------ | ---------------------------- | ------------------------ |
-| `GET`  | `/containers/{id}/token`     | Get container auth token |
-| `POST` | `/containers/validate-token` | Validate container token |
+- **`GET /oauth/authorize`**: Requires user to be authenticated via session cookie (Passport). Used for OAuth2 authorization flow where the user grants permission.
+- **`POST /oauth/token`**: No authentication required. Uses client credentials (client_id, client_secret) from request body for OAuth2 token exchange.
+- **`POST /oauth/authenticate`**: Requires OAuth2 access token (Bearer token) in Authorization header. Used by resource servers to validate tokens.
 
 ## Request/Response Examples
 

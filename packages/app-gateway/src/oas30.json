@@ -3,7 +3,7 @@
   "info": {
     "title": "Gateway API (Collaboration & Events)",
     "version": "2.0",
-    "description": "Organization-level gateway for collaborative state, containers, and OAuth"
+    "description": "Organization-level gateway for collaborative state and OAuth"
   },
   "paths": {
     "/collab/ping": {
@@ -76,8 +76,22 @@
     },
     "/collab/room-id": {
       "get": {
-        "summary": "Get current room ID",
+        "summary": "Get room ID for a project",
+        "description": "Returns the room ID for a specific project. Requires project access permission.",
         "tags": ["Collab"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "in": "query",
+            "name": "project_id",
+            "description": "Project ID (optional if provided in JWT)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Room ID",
@@ -86,12 +100,14 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "data": { "type": "string" }
-                  }
+                    "data": { "type": "string", "format": "uuid" }
+                  },
+                  "required": ["data"]
                 }
               }
             }
-          }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
         }
       }
     },

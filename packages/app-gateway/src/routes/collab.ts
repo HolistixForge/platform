@@ -7,8 +7,13 @@ import { asyncHandler } from '../middleware/route-handler';
 import { VPN } from '../project-config';
 import { CONFIG } from '../config';
 import { initializeGateway } from '../initialization/gateway-init';
+import {
+  authenticateJwt,
+  requireUserContainerToken,
+} from '../middleware/jwt-auth';
+import { requireProjectAccess } from '../middleware/permissions';
+import { getGatewayInstances } from '../initialization/gateway-instances';
 
-let ROOM_ID = '';
 let bep: BackendEventProcessor<any> | null = null;
 
 export const setBackendEventProcessor = (
@@ -16,12 +21,6 @@ export const setBackendEventProcessor = (
 ) => {
   bep = processor;
 };
-
-export const setRoomId = (roomId: string) => {
-  ROOM_ID = roomId;
-};
-
-export const getRoomId = () => ROOM_ID;
 
 // This will be called from main.ts
 export let startProjectCollabCallback:
@@ -43,21 +42,22 @@ export const setupCollabRoutes = (router: Router) => {
   // POST /collab/event - Process collaborative event
   router.post(
     '/collab/event',
+    authenticateJwt,
+    requireProjectAccess(), // Check project access if project_id is in JWT
     asyncHandler(async (req: Request, res) => {
       if (!bep) {
         throw new NotFoundException([{ message: 'Collab data not bound' }]);
       }
 
+      const authReq = req as any;
       const { event } = req.body;
-      // const authorizationHeader = req.headers.authorization as string;
-      const jwt = (req as any).jwt; // Assuming JWT middleware sets this
-      const user_id = jwt?.user_id || 'unknown';
+      const user_id = authReq.user.id;
       const ip = (req.headers['x-real-ip'] as string) || req.ip || 'unknown';
 
       const requestData = {
         ip,
         user_id,
-        jwt: jwt || {},
+        jwt: authReq.jwt || {},
         headers: req.headers as any,
       };
 
@@ -111,23 +111,58 @@ export const setupCollabRoutes = (router: Router) => {
     })
   );
 
-  // GET /collab/room-id - Get current room ID
-  router.get('/collab/room-id', ((_req: Request, res: any) => {
-    return res.json({ data: ROOM_ID });
-  }) as any);
+  // GET /collab/room-id - Get room ID for a project
+  router.get(
+    '/collab/room-id',
+    authenticateJwt,
+    requireProjectAccess(), // Requires project_id in JWT or query and checks access
+    asyncHandler(async (req: Request, res) => {
+      const authReq = req as any;
+
+      // Get project_id from JWT, query, or params (in that order of precedence)
+      const project_id =
+        authReq.jwt?.project_id ||
+        (req.query.project_id as string) ||
+        authReq.params?.project_id;
+
+      if (!project_id) {
+        throw new NotFoundException([{ message: 'Project ID required' }]);
+      }
+
+      const instances = getGatewayInstances();
+      if (!instances) {
+        throw new NotFoundException([
+          { message: 'Gateway instances not initialized' },
+        ]);
+      }
+
+      const room_id = instances.projectRooms.getRoomId(project_id);
+
+      if (!room_id) {
+        throw new NotFoundException([
+          {
+            message: `Project ${project_id} not initialized or room not found`,
+          },
+        ]);
+      }
+
+      return res.json({ data: room_id });
+    })
+  );
 
   // GET /collab/vpn-config - Get VPN configuration
-  router.get('/collab/vpn-config', ((_req: Request, res: any) => {
-    // TODO: Add JWT authorization check
-    // Check if user has permission: p:{jwt.project_id}:project:vpn-access
+  // Requires TJwtUserContainer token for the correct organization
+  router.get(
+    '/collab/vpn-config',
+    requireUserContainerToken, // Requires user_container_token and verifies organization
+    asyncHandler(async (req: Request, res) => {
+      if (!VPN) {
+        return res.status(500).json({ error: 'VPN config not available' });
+      }
 
-    if (!VPN) {
-      return res.status(500).json({ error: 'VPN config not available' });
-    }
-
-    const vpnConfig = {
-      ...VPN,
-      config: `client
+      const vpnConfig = {
+        ...VPN,
+        config: `client
 dev tun
 proto udp
 remote GATEWAY_HOSTNAME ${VPN.port}
@@ -140,8 +175,9 @@ ca ca.crt
 tls-client
 tls-auth ta.key 1
 # verb 5`,
-    };
+      };
 
-    return res.json({ data: vpnConfig });
-  }) as any);
+      return res.json({ data: vpnConfig });
+    })
+  );
 };

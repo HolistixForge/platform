@@ -19,11 +19,9 @@ import { CONFIG } from './config';
 import {
   setupCollabRoutes,
   setBackendEventProcessor,
-  setRoomId,
   setStartProjectCollabCallback,
 } from './routes/collab';
 import oauthRoutes from './routes/oauth';
-import containerRoutes from './routes/containers';
 import oas from './oas30.json';
 import {
   initializeGateway,
@@ -44,10 +42,7 @@ let bep: BackendEventProcessor<never>;
 
 const startProjectCollab = async (project: TProjectConfig) => {
   setProjectConfig(project);
-  const roomId = makeUuid();
-  setRoomId(roomId);
   await initProjectCollaboration(bep);
-  log(6, 'GATEWAY', `Legacy single-project mode: room ID ${roomId}`);
 };
 
 //
@@ -95,9 +90,6 @@ const setupExpressApp = () => {
 
   // OAuth routes
   app.use('/oauth', oauthRoutes);
-
-  // Container routes
-  app.use('/containers', containerRoutes);
 
   // Error handler
   setupErrorsHandler(app);

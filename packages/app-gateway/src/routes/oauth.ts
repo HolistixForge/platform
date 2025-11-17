@@ -2,9 +2,7 @@ import { Router, Request, Response } from 'express';
 import { asyncHandler } from '../middleware/route-handler';
 import { getGatewayInstances } from '../initialization/gateway-instances';
 import { createOAuth2Server } from '../oauth';
-import { requirePermission } from '../middleware/permissions';
 import { log } from '@monorepo/log';
-import { makeUuid } from '@monorepo/simple-types';
 
 const router = Router();
 
@@ -28,17 +26,6 @@ function getOAuth2Server() {
     instances.permissionManager
   );
   return oauth2ServerInstance;
-}
-
-/**
- * Get OAuthManager instance from gateway instances
- */
-function getOAuthManager() {
-  const instances = getGatewayInstances();
-  if (!instances) {
-    throw new Error('Gateway instances not initialized');
-  }
-  return instances.oauthManager;
 }
 
 /**
@@ -153,91 +140,6 @@ router.post(
       log(5, 'OAUTH', `Authentication failed: ${error.message}`);
       return res.status(401).json({ error: 'Invalid token' });
     }
-  })
-);
-
-/**
- * Register OAuth Client (admin only, container management)
- * POST /oauth/clients
- * Body: {
- *   container_id: string,
- *   project_id: string,
- *   service_name: string,
- *   redirect_uris: string[],
- *   grants: string[]
- * }
- */
-router.post(
-  '/clients',
-  requirePermission('org:admin'), // Only org admins can register OAuth clients
-  asyncHandler(async (req: any, res: Response) => {
-    const oauthManager = getOAuthManager();
-    const { container_id, project_id, service_name, redirect_uris, grants } =
-      req.body;
-
-    if (!container_id || !project_id || !service_name) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    const client_id = makeUuid();
-    const client_secret = makeUuid();
-
-    oauthManager.addClient({
-      client_id: client_id,
-      client_secret: client_secret,
-      container_id: String(container_id),
-      project_id: String(project_id),
-      service_name: String(service_name),
-      redirect_uris: redirect_uris || [],
-      grants: grants || ['authorization_code', 'refresh_token'],
-      created_at: new Date().toISOString(),
-    });
-
-    log(
-      6,
-      'OAUTH',
-      `Registered OAuth client: ${client_id} for container: ${container_id}`
-    );
-
-    return res.json({
-      client_id,
-      client_secret,
-      container_id,
-      service_name,
-    });
-  })
-);
-
-/**
- * List OAuth Clients (for a project or container)
- * GET /oauth/clients?project_id=...&container_id=...
- */
-router.get(
-  '/clients',
-  asyncHandler(async (req: Request, res: Response) => {
-    // TODO: Add permission check
-    const oauthManager = getOAuthManager();
-    const { project_id, container_id } = req.query;
-
-    let clients = oauthManager.getAllClients();
-
-    if (container_id) {
-      clients = clients.filter((c) => c.container_id === container_id);
-    } else if (project_id) {
-      clients = clients.filter((c) => c.project_id === project_id);
-    }
-
-    // Don't return client_secret in list
-    const sanitized = clients.map((c) => ({
-      client_id: c.client_id,
-      container_id: c.container_id,
-      project_id: c.project_id,
-      service_name: c.service_name,
-      redirect_uris: c.redirect_uris,
-      grants: c.grants,
-    }));
-
-    return res.json({ clients: sanitized });
   })
 );
 
