@@ -29,7 +29,6 @@ import {
   initializeGateway,
   shutdownGateway,
 } from './initialization/gateway-init';
-import { ProjectRoomsManager } from './state/ProjectRooms';
 import { loadOrganizationConfig } from './config/organization';
 import { signalGatewayReady } from './initialization/signal-ready';
 
@@ -37,8 +36,7 @@ import { signalGatewayReady } from './initialization/signal-ready';
 // Global state
 //
 
-let bep: BackendEventProcessor<any>;
-let projectRooms: ProjectRoomsManager | null = null;
+let bep: BackendEventProcessor<never>;
 
 //
 // Legacy single-project mode (backwards compatibility)
@@ -76,6 +74,7 @@ const setupExpressApp = () => {
 
   // OpenAPI validation
   setupValidator(app, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     apiSpec: oas as any,
     validateRequests: true,
     validateResponses: {
@@ -131,6 +130,7 @@ const startServer = (
     log(6, 'GATEWAY', `Express server listening [${url}]`);
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   server.on('error', (...args: any[]) => {
     console.error('Express server error:', args);
   });
@@ -146,18 +146,12 @@ function setupShutdownHandlers() {
   const shutdown = async (signal: string) => {
     log(6, 'GATEWAY', `Received ${signal}, initiating graceful shutdown...`);
 
-    // NEW: Push data to Ganymede before shutdown
     try {
-      const { gatewayDataSync } = await import('./services/data-sync');
-      await gatewayDataSync.pushDataToGanymede();
-      log(6, 'GATEWAY', 'Data pushed to Ganymede');
+      await shutdownGateway();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      log(2, 'GATEWAY', 'Failed to push data on shutdown:', error.message);
-      // Continue with shutdown even if push fails
-    }
-
-    if (projectRooms) {
-      await shutdownGateway(projectRooms);
+      log(2, 'GATEWAY', 'Failed to shutdown gateway:', error.message);
+      // Continue with exit even if shutdown fails
     }
 
     log(6, 'GATEWAY', 'Shutdown complete, exiting');
@@ -174,7 +168,7 @@ function setupShutdownHandlers() {
 
 (async function main() {
   try {
-    bep = new BackendEventProcessor<any>();
+    bep = new BackendEventProcessor<never>();
     setBackendEventProcessor(bep);
     setStartProjectCollabCallback(startProjectCollab);
 
@@ -191,7 +185,7 @@ function setupShutdownHandlers() {
       await signalGatewayReady(gatewayId);
     }
 
-    // Load organization configuration
+    // Load organization configuration (for hot restart)
     const orgConfig = loadOrganizationConfig();
 
     if (orgConfig) {
@@ -201,7 +195,11 @@ function setupShutdownHandlers() {
         'GATEWAY',
         `Initializing gateway for organization: ${orgConfig.organization_name}`
       );
-      projectRooms = await initializeGateway(orgConfig);
+      await initializeGateway(
+        orgConfig.organization_id,
+        orgConfig.gateway_id,
+        orgConfig.gateway_token
+      );
       log(6, 'GATEWAY', 'Gateway ready and serving organization');
     } else if (PROJECT) {
       // LEGACY: Support old single-project mode for backwards compatibility
@@ -215,10 +213,12 @@ function setupShutdownHandlers() {
       log(6, 'GATEWAY', 'Gateway idle, waiting for organization allocation...');
       // Gateway is registered via app-ganymede-cmd CLI tool
       // Then allocated to organizations via /gateway/start API
+      // Initialization happens via /collab/start
     }
 
     // Setup graceful shutdown
     setupShutdownHandlers();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     log(1, 'GATEWAY', `Fatal error during startup: ${error.message}`);
     console.error(error);

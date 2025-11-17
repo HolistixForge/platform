@@ -1,6 +1,7 @@
 import { log } from '@monorepo/log';
 import { makeHmacToken } from '@monorepo/backend-engine';
-import { GatewayState } from '../state/GatewayState';
+import { IPersistenceProvider } from '../state/IPersistenceProvider';
+import type { TContainerTokenData } from './types';
 
 /**
  * ContainerTokenManager - HMAC Token Management for Containers
@@ -8,8 +9,9 @@ import { GatewayState } from '../state/GatewayState';
  * Responsibilities:
  * - Generate HMAC tokens for containers (container ↔ gateway auth)
  * - Validate container tokens
- * - Store tokens in GatewayState (persisted)
+ * - Store tokens internally (persisted via IPersistenceProvider)
  * - Clean up tokens when containers are destroyed
+ * - Provide persistence via IPersistenceProvider interface
  *
  * Token Format: HMAC-SHA256 based on:
  * - container_id
@@ -17,10 +19,11 @@ import { GatewayState } from '../state/GatewayState';
  * - secret (from env: GATEWAY_HMAC_SECRET)
  * - timestamp
  */
-export class ContainerTokenManager {
+export class ContainerTokenManager implements IPersistenceProvider {
   private secret: string;
+  private data: TContainerTokenData;
 
-  constructor(private gatewayState: GatewayState, secret?: string) {
+  constructor(secret?: string) {
     this.secret =
       secret || process.env.GATEWAY_HMAC_SECRET || 'default-secret-change-me';
     if (this.secret === 'default-secret-change-me') {
@@ -30,7 +33,36 @@ export class ContainerTokenManager {
         'WARNING: Using default HMAC secret! Set GATEWAY_HMAC_SECRET env var!'
       );
     }
+
+    this.data = {
+      container_tokens: {},
+    };
   }
+
+  // IPersistenceProvider implementation
+
+  loadFromSerialized(data: Record<string, unknown> | null | undefined): void {
+    if (!data) {
+      log(6, 'CONTAINER_TOKEN', 'No container token data to load');
+      return;
+    }
+
+    if (data.container_tokens && typeof data.container_tokens === 'object') {
+      this.data.container_tokens =
+        data.container_tokens as TContainerTokenData['container_tokens'];
+      log(6, 'CONTAINER_TOKEN', 'Loaded container token data');
+    } else {
+      log(5, 'CONTAINER_TOKEN', 'Invalid container token data format');
+    }
+  }
+
+  saveToSerializable(): Record<string, unknown> {
+    return {
+      container_tokens: { ...this.data.container_tokens },
+    };
+  }
+
+  // Token management methods
 
   /**
    * Generate HMAC token for a container
@@ -39,14 +71,12 @@ export class ContainerTokenManager {
     const payload = `${container_id}:${project_id}:${Date.now()}`;
     const token = makeHmacToken(payload, this.secret);
 
-    // Store token in GatewayState
-    this.gatewayState.updateData((data) => {
-      data.container_tokens[container_id] = {
-        token,
-        project_id,
-        created_at: new Date().toISOString(),
-      };
-    });
+    // Store token
+    this.data.container_tokens[container_id] = {
+      token,
+      project_id,
+      created_at: new Date().toISOString(),
+    };
 
     log(7, 'CONTAINER_TOKEN', `Generated token for container: ${container_id}`);
     return token;
@@ -60,10 +90,8 @@ export class ContainerTokenManager {
     token: string
   ): { container_id: string; project_id: string } | null {
     // Find container by token
-    const data = this.gatewayState.getData();
-
     for (const [container_id, containerToken] of Object.entries(
-      data.container_tokens
+      this.data.container_tokens
     )) {
       if (containerToken.token === token) {
         log(
@@ -86,8 +114,7 @@ export class ContainerTokenManager {
    * Get token for a container (if exists)
    */
   getToken(container_id: string): string | null {
-    const containerToken =
-      this.gatewayState.getData().container_tokens[container_id];
+    const containerToken = this.data.container_tokens[container_id];
     return containerToken ? containerToken.token : null;
   }
 
@@ -95,9 +122,7 @@ export class ContainerTokenManager {
    * Revoke/delete token for a container
    */
   revokeToken(container_id: string): void {
-    this.gatewayState.updateData((data) => {
-      delete data.container_tokens[container_id];
-    });
+    delete this.data.container_tokens[container_id];
     log(7, 'CONTAINER_TOKEN', `Revoked token for container: ${container_id}`);
   }
 
@@ -109,8 +134,7 @@ export class ContainerTokenManager {
     project_id: string;
     created_at: string;
   }> {
-    const data = this.gatewayState.getData();
-    const tokens = Object.entries(data.container_tokens).map(
+    const tokens = Object.entries(this.data.container_tokens).map(
       ([container_id, token]) => ({
         container_id,
         project_id: token.project_id,
@@ -129,23 +153,21 @@ export class ContainerTokenManager {
    * Cleanup tokens for a specific project (when project is deleted)
    */
   cleanupProject(project_id: string): void {
-    this.gatewayState.updateData((data) => {
-      const toDelete = Object.entries(data.container_tokens)
-        .filter(([_, token]) => token.project_id === project_id)
-        .map(([container_id]) => container_id);
+    const toDelete = Object.entries(this.data.container_tokens)
+      .filter(([, token]) => token.project_id === project_id)
+      .map(([container_id]) => container_id);
 
-      for (const container_id of toDelete) {
-        delete data.container_tokens[container_id];
-      }
+    for (const container_id of toDelete) {
+      delete this.data.container_tokens[container_id];
+    }
 
-      if (toDelete.length > 0) {
-        log(
-          6,
-          'CONTAINER_TOKEN',
-          `Cleaned up ${toDelete.length} container tokens for project: ${project_id}`
-        );
-      }
-    });
+    if (toDelete.length > 0) {
+      log(
+        6,
+        'CONTAINER_TOKEN',
+        `Cleaned up ${toDelete.length} container tokens for project: ${project_id}`
+      );
+    }
   }
 
   /**
@@ -153,7 +175,7 @@ export class ContainerTokenManager {
    */
   getStats() {
     return {
-      total: Object.keys(this.gatewayState.getData().container_tokens).length,
+      total: Object.keys(this.data.container_tokens).length,
     };
   }
 }

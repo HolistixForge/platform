@@ -1,7 +1,14 @@
 import * as Y from 'yjs';
 import { log } from '@monorepo/log';
 import { makeUuid } from '@monorepo/simple-types';
-import { ProjectPersistence } from './ProjectPersistence';
+import {
+  getAllSharedDataAsJSON,
+  setAllSharedDataFromJSON,
+} from '@monorepo/collab-engine';
+import { IPersistenceProvider } from './IPersistenceProvider';
+
+type TProjectSnapshot = Record<string, unknown>;
+type TProjectSnapshotCollection = Record<string, TProjectSnapshot>;
 
 /**
  * ProjectRoomsManager - Manage Multiple YJS Rooms
@@ -10,48 +17,70 @@ import { ProjectPersistence } from './ProjectPersistence';
  * Each project gets its own:
  * - YJS document (for collaborative state)
  * - room_id (for WebSocket routing)
- * - persistence (saved to /data/project-{id}/)
  *
  * Responsibilities:
  * - Create and manage YJS documents per project
  * - Track room_id for each project
- * - Coordinate with ProjectPersistence for save/load
+ * - Provide snapshots for persistence via IPersistenceProvider interface
  * - Provide access to rooms for WebSocket and modules
  */
-
 export interface ProjectRoomData {
   project_id: string;
   room_id: string;
   ydoc: Y.Doc;
-  persistence: ProjectPersistence;
 }
 
-export class ProjectRoomsManager {
+export class ProjectRoomsManager implements IPersistenceProvider {
   private rooms: Map<string, ProjectRoomData> = new Map();
-  private autoSaveTimer: NodeJS.Timeout | null = null;
+  private pendingSnapshots: Map<string, TProjectSnapshot> = new Map();
+
+  // IPersistenceProvider implementation
+
+  loadFromSerialized(data: Record<string, unknown> | null | undefined): void {
+    if (!data) {
+      log(6, 'PROJECT_ROOMS', 'No project snapshot data to load');
+      return;
+    }
+
+    // Data should be a map of project_id -> snapshot
+    if (typeof data === 'object' && data !== null) {
+      const projects = data as TProjectSnapshotCollection;
+      this.applyProjectSnapshots(projects);
+    } else {
+      log(5, 'PROJECT_ROOMS', 'Invalid project snapshot data format');
+    }
+  }
+
+  saveToSerializable(): Record<string, unknown> {
+    return this.getProjectSnapshots();
+  }
 
   /**
    * Initialize a project room
    * Creates YJS doc, generates room_id, loads saved state
    */
   async initializeProject(project_id: string): Promise<string> {
-    if (this.rooms.has(project_id)) {
+    const existingRoom = this.rooms.get(project_id);
+    if (existingRoom) {
       log(5, 'PROJECT_ROOMS', `Project ${project_id} already initialized`);
-      return this.rooms.get(project_id)!.room_id;
+      return existingRoom.room_id;
     }
 
     const room_id = makeUuid();
     const ydoc = new Y.Doc();
 
-    // Load saved state
-    const persistence = new ProjectPersistence(project_id);
-    await persistence.load(ydoc);
+    // Apply pending snapshot if we received one before initialization
+    const pending = this.pendingSnapshots.get(project_id);
+    if (pending) {
+      setAllSharedDataFromJSON(ydoc, pending);
+      this.pendingSnapshots.delete(project_id);
+      log(6, 'PROJECT_ROOMS', `Applied pending snapshot for ${project_id}`);
+    }
 
     this.rooms.set(project_id, {
       project_id,
       room_id,
       ydoc,
-      persistence,
     });
 
     log(
@@ -124,66 +153,46 @@ export class ProjectRoomsManager {
   }
 
   /**
-   * Save all project states
-   * Called periodically and on shutdown
-   */
-  async saveAll(): Promise<void> {
-    log(7, 'PROJECT_ROOMS', `Saving ${this.rooms.size} project rooms`);
-
-    for (const room of this.rooms.values()) {
-      try {
-        await room.persistence.save(room.ydoc);
-        log(7, 'PROJECT_ROOMS', `Saved project: ${room.project_id}`);
-      } catch (error: any) {
-        log(
-          3,
-          'PROJECT_ROOMS',
-          `Failed to save ${room.project_id}: ${error.message}`
-        );
-      }
-    }
-  }
-
-  /**
-   * Start auto-save for all projects
-   * Saves every 2 minutes
-   */
-  startAutoSave(): void {
-    if (this.autoSaveTimer) {
-      clearInterval(this.autoSaveTimer);
-    }
-
-    this.autoSaveTimer = setInterval(() => {
-      this.saveAll();
-    }, 120000); // 2 minutes
-
-    log(6, 'PROJECT_ROOMS', 'Auto-save started (every 2 minutes)');
-  }
-
-  /**
-   * Stop auto-save timer
-   */
-  stopAutoSave(): void {
-    if (this.autoSaveTimer) {
-      clearInterval(this.autoSaveTimer);
-      this.autoSaveTimer = null;
-      log(6, 'PROJECT_ROOMS', 'Auto-save stopped');
-    }
-  }
-
-  /**
-   * Shutdown: save all projects
-   */
-  async shutdown(): Promise<void> {
-    log(6, 'PROJECT_ROOMS', 'Shutting down - saving all projects');
-    this.stopAutoSave();
-    await this.saveAll();
-  }
-
-  /**
    * Get count of initialized projects
    */
   getProjectCount(): number {
     return this.rooms.size;
+  }
+
+  /**
+   * Serialize all project YJS docs to JSON
+   */
+  getProjectSnapshots(): TProjectSnapshotCollection {
+    const snapshots: TProjectSnapshotCollection = {};
+    for (const room of this.rooms.values()) {
+      snapshots[room.project_id] = getAllSharedDataAsJSON(room.ydoc);
+    }
+    return snapshots;
+  }
+
+  /**
+   * Apply snapshots (either immediately or queue until project initializes)
+   */
+  applyProjectSnapshots(
+    snapshots: TProjectSnapshotCollection | undefined | null
+  ): void {
+    if (!snapshots) {
+      return;
+    }
+
+    for (const [project_id, snapshot] of Object.entries(snapshots)) {
+      const room = this.rooms.get(project_id);
+      if (room) {
+        setAllSharedDataFromJSON(room.ydoc, snapshot);
+        log(6, 'PROJECT_ROOMS', `Applied snapshot for project: ${project_id}`);
+      } else {
+        this.pendingSnapshots.set(project_id, snapshot);
+        log(
+          6,
+          'PROJECT_ROOMS',
+          `Queued snapshot for project ${project_id} (room not initialized yet)`
+        );
+      }
+    }
   }
 }

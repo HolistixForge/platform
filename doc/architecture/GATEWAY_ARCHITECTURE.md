@@ -91,12 +91,16 @@ Frontend → POST /gateway/start → Ganymede:
 ```
 Gateway → POST /gateway/config → Ganymede:
   1. Exchange temp token for TJwtOrganization
-  2. Receive org config (name, members, projects)
+  2. Receive org config (organization_id, gateway_id, organization_token)
 
-Gateway:
-  3. Pull data: POST /gateway/data/pull
-  4. Initialize YJS rooms for projects
-  5. Start serving organization
+Gateway → initializeGateway():
+  3. Create GatewayState instance
+  4. Set organization context → Automatically pulls data from Ganymede
+  5. Create manager instances (PermissionManager, OAuthManager, etc.)
+  6. Register providers → Providers automatically load their data from pulled snapshot
+  7. Store instances in GatewayInstances registry
+  8. Start autosave (pushes to Ganymede every 5min)
+  9. Start serving organization
 ```
 
 ### 4. Serving
@@ -145,7 +149,82 @@ Gateway returns to pool, ready for next org.
 
 ---
 
-## Data Storage Strategy
+## Gateway Initialization and Persistence
+
+### Overview
+
+The gateway uses a **registry-based persistence pattern** where managers implement the `IPersistenceProvider` interface and register themselves with `GatewayState`. All data is stored centrally in Ganymede with automatic synchronization.
+
+**Key Principles:**
+
+- ✅ **Stateless Gateways** - No local file storage, all data in Ganymede
+- ✅ **Provider Pattern** - Managers register and provide their own persistence
+- ✅ **Automatic Sync** - Data pulled on initialization, pushed periodically
+- ✅ **Instance-Based** - No singletons, all instances created per organization
+
+### Architecture
+
+**Key Components:**
+
+1. **GatewayState** - Registry and coordinator for all persistence providers, handles Ganymede sync
+2. **IPersistenceProvider** - Interface implemented by all managers that need persistence
+3. **GatewayInstances** - Registry storing all gateway instances for route access
+4. **Managers** - PermissionManager, OAuthManager, ContainerTokenManager, ProjectRoomsManager - each manages its own data
+
+### Initialization Flow
+
+**Two initialization paths:**
+
+1. **Hot Restart** - Gateway app restarted, loads organization config from `/config/organization.json`
+2. **Normal Allocation** - Gateway allocated via `/collab/start` endpoint
+
+**Initialization Steps:**
+
+1. Create `GatewayState` instance and initialize with org/gateway IDs
+2. Set organization context → Automatically pulls data from Ganymede
+3. Create manager instances (PermissionManager, OAuthManager, etc.)
+4. Register providers with `GatewayState` → Providers automatically load their data from pulled snapshot
+5. Store instances in `GatewayInstances` registry for route access
+6. Start autosave → `GatewayState` pushes data to Ganymede every 5 minutes
+
+### Data Flow
+
+**Pull Flow (Initialization):**
+
+- `GatewayState` pulls data snapshot from Ganymede
+- Data cached internally
+- When providers register, they automatically receive and load their data slice
+
+**Push Flow (Autosave/Shutdown):**
+
+- `GatewayState` collects data from all registered providers
+- Aggregates into single object
+- Pushes to Ganymede via `/gateway/data/push`
+
+**Automatic Triggers:**
+
+- Periodic autosave every 5 minutes
+- Shutdown handlers (SIGTERM/SIGINT) push final data
+
+### Responsibilities
+
+**GatewayState:**
+
+- Registry for persistence providers
+- Data collection from providers
+- Data restoration to providers
+- Ganymede sync (push/pull)
+- Periodic autosave
+- Does NOT store data itself
+
+**Managers:**
+
+- Store their own data internally
+- Implement `IPersistenceProvider` interface
+- Initialize from serialized data
+- Serialize their data for persistence
+
+> **Detailed Documentation:** See [GATEWAY_INITIALIZATION.md](./GATEWAY_INITIALIZATION.md) for implementation details, code examples, and architecture diagrams.
 
 ### Centralized Storage (Stateless Gateways)
 
@@ -162,11 +241,27 @@ Gateway returns to pool, ready for next org.
   "timestamp": "2025-11-12T10:30:00Z",
   "stored_at": "2025-11-12T10:30:01Z",
   "data": {
-    "yjs_state": { "project-uuid": "base64..." },
-    "gateway_state": {
-      "permissions": {},
+    "organization_id": "uuid",
+    "gateway_id": "uuid",
+    "saved_at": "2025-11-12T10:30:00Z",
+    "permissions": {
+      "user-123": ["org:admin", "project:abc:member"]
+    },
+    "oauth": {
       "oauth_clients": {},
+      "oauth_authorization_codes": {},
+      "oauth_tokens": {}
+    },
+    "containers": {
       "container_tokens": {}
+    },
+    "projects": {
+      "project-uuid-1": {
+        /* YJS snapshot */
+      },
+      "project-uuid-2": {
+        /* YJS snapshot */
+      }
     }
   }
 }
@@ -178,6 +273,7 @@ Gateway returns to pool, ready for next org.
 - ✅ Gateway crash-safe
 - ✅ Same gateway serves multiple orgs sequentially
 - ✅ Centralized backup
+- ✅ Automatic synchronization
 
 ---
 
@@ -218,11 +314,30 @@ Gateway returns to pool, ready for next org.
 
 ### Services (Gateway)
 
-**data-sync.ts:**
+**GatewayState (`state/GatewayState.ts`):**
 
-- `pullDataFromGanymede()` - Load org data after allocation
-- `pushDataToGanymede()` - Save org data on autosave/shutdown
-- `setOrganizationContext(org_id, gateway_id, token)` - Set after handshake
+- Registry for persistence providers
+- `register(id, provider)` - Register provider and auto-load its data
+- `collectData()` - Aggregate data from all providers
+- `restoreData(data)` - Restore data to all registered providers
+- `pullDataFromGanymede()` - Pull org data from Ganymede
+- `pushDataToGanymede()` - Push org data to Ganymede
+- `setOrganizationContext(org_id, gateway_id, token)` - Set context and pull data
+- `startAutosave()` - Start periodic push (every 5min)
+- `shutdown()` - Stop autosave and push final data
+
+**Managers:**
+
+- `PermissionManager` - Permissions with `IPersistenceProvider`
+- `OAuthManager` - OAuth data with `IPersistenceProvider`
+- `ContainerTokenManager` - Container tokens with `IPersistenceProvider`
+- `ProjectRoomsManager` - YJS rooms with `IPersistenceProvider`
+
+**Initialization (`initialization/gateway-init.ts`):**
+
+- `initializeGateway(org_id, gateway_id, token)` - Creates all instances, pulls data, registers providers
+- `shutdownGateway()` - Gracefully shutdown (gets instances from registry)
+- `GatewayInstances` registry - Stores instances for route access
 
 ### API Endpoints
 
@@ -238,26 +353,6 @@ Gateway returns to pool, ready for next org.
 **Gateway:**
 
 - `POST /collab/start` (called by Ganymede) - Handshake, pull data, initialize
-
----
-
-## Scripts
-
-**Setup (one-time):**
-
-- `setup-all.sh` - Installs Node, PostgreSQL, Nginx, mkcert, PowerDNS, builds images
-- `setup-powerdns.sh` - Install PowerDNS with official schema
-- `build-images.sh` - Build dev-pod and gateway Docker images
-
-**Environment management:**
-
-- `create-env.sh <env> <domain>` - Create environment, DNS zone, gateway pool
-- `envctl.sh start|stop|restart <env> [service]` - Manage services
-- `gateway-pool.sh <count>` - Create gateway containers
-
-**Hot-reload:**
-
-- `envctl.sh restart <env> gateway` - Touch trigger file → all gateways reload
 
 ---
 
@@ -297,35 +392,6 @@ export ENV_NAME="prod" DOMAIN="demiurge.co" GATEWAY_POOL_SIZE=10
 5. All gateways reload simultaneously
 
 **Entrypoint:** `docker-images/backend-images/gateway/app/entrypoint-dev.sh`
-
----
-
-## PowerDNS Integration
-
-**Installation:** Installed via `apt` in main dev container, uses existing PostgreSQL.
-
-**Configuration:**
-
-- API: `http://localhost:8081`
-- API Key: `local-dev-api-key`
-- Database: `pdns` in PostgreSQL
-
-**Usage:**
-
-- Zones created per environment in `create-env.sh`
-- Records added/removed dynamically by Ganymede
-- Host OS DNS delegated once (e.g., `*.domain.local` → dev container IP)
-
-**Management:**
-
-```bash
-# View zone
-curl http://localhost:8081/api/v1/servers/localhost/zones/domain.local. \
-  -H 'X-API-Key: local-dev-api-key'
-
-# View logs
-sudo tail -f /var/log/pdns.log
-```
 
 ---
 
@@ -444,10 +510,9 @@ See [TODO.md](../../TODO.md) for detailed improvement tasks.
 
 **Main Gaps:**
 
-1. Data sync stubs (collectDataSnapshot/applyDataSnapshot need integration)
-2. No rollback on allocation failure
-3. No gateway health checks before allocation
-4. Hardcoded paths in some services
+1. No rollback on allocation failure
+2. No gateway health checks before allocation
+3. Hardcoded paths in some services
 
 **Not Critical:** These don't block basic functionality, but should be addressed for production.
 

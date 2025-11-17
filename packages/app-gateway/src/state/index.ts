@@ -1,23 +1,18 @@
-import { GatewayState, setupShutdownHandlers } from './GatewayState';
+import { GatewayState } from './GatewayState';
 
-/**
- * Singleton instance of GatewayState
- * Used by all managers (PermissionManager, OAuthManager, etc.)
- */
-export const gatewayState = new GatewayState();
+// Export class
+export { GatewayState };
 
-// Setup shutdown handlers for graceful shutdown
-setupShutdownHandlers(gatewayState);
-
-// Re-export types and classes
-export { GatewayState, setupShutdownHandlers } from './GatewayState';
+// Re-export classes
 export { ProjectRoomsManager } from './ProjectRooms';
 export type { ProjectRoomData } from './ProjectRooms';
-export { ProjectPersistence } from './ProjectPersistence';
+
+// Re-export manager-specific types
+export type { TPermissionData } from '../permissions/types';
 export type {
-  TGatewayStateData,
+  TOAuthData,
   TOAuthClient,
   TOAuthCode,
   TOAuthToken,
-  TContainerToken,
-} from './types';
+} from '../oauth/types';
+export type { TContainerTokenData, TContainerToken } from '../containers/types';

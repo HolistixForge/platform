@@ -1,56 +1,85 @@
-import * as fs from 'fs';
-import * as path from 'path';
 import { log } from '@monorepo/log';
-import { TGatewayStateData } from './types';
+import { IPersistenceProvider } from './IPersistenceProvider';
+
+type TGatewayDataSnapshot = Record<string, unknown>;
 
 /**
- * GatewayState - Generic Persistent Storage
+ * GatewayState - Registry for Persistence Providers with Ganymede Sync
  *
  * Responsibilities:
- * - Load/save JSON data to disk
- * - Track dirty flag for efficient saves
- * - Auto-save every 30 seconds if dirty
- * - Atomic writes (tmp file + rename)
- * - Shutdown handlers
+ * - Register managers and other components that need persistence
+ * - Collect data from all registered providers
+ * - Restore data to all registered providers
+ * - Periodically push data to Ganymede (auto-save)
+ * - Push data on shutdown
+ * - Pull data from Ganymede on startup/allocation
  *
- * Does NOT contain domain logic - just storage.
- * Used by PermissionManager, OAuthManager, ContainerTokenManager.
+ * Does NOT store data itself - each provider manages its own data.
+ * Just coordinates collection, restoration, and sync with Ganymede.
  */
 export class GatewayState {
-  private _data: TGatewayStateData;
-  private _dirty: boolean = false;
-  private _autoSaveInterval: NodeJS.Timeout | null = null;
-  private _initialized: boolean = false;
+  private providers: Map<string, IPersistenceProvider> = new Map();
+  private _initialized = false;
+  private organizationId = '';
+  private gatewayId = '';
+  private organizationToken: string | null = null;
+  private ganymedeFqdn: string;
+  private autosaveTimer: NodeJS.Timeout | null = null;
+  private pulledData: TGatewayDataSnapshot | null = null;
 
   constructor() {
-    // Initialize with empty state
-    this._data = this.createEmptyState();
+    this.ganymedeFqdn = process.env.GANYMEDE_FQDN || 'ganymede.domain.local';
   }
 
   /**
-   * Create empty state structure
+   * Register a persistence provider with an ID
+   * Loads data from pulled snapshot if available
+   * @param id - Unique identifier (e.g., 'permissions', 'oauth', 'containers', 'projects')
+   * @param provider - Provider that implements IPersistenceProvider
    */
-  private createEmptyState(): TGatewayStateData {
-    return {
-      organization_id: '',
-      gateway_id: '',
-      permissions: {},
-      oauth_clients: {},
-      oauth_authorization_codes: {},
-      oauth_tokens: {},
-      container_tokens: {},
-      saved_at: new Date().toISOString(),
-    };
+  register(id: string, provider: IPersistenceProvider): void {
+    if (this.providers.has(id)) {
+      log(
+        3,
+        'GATEWAY_STATE',
+        `Warning: Provider with id '${id}' already registered, replacing`
+      );
+    }
+    this.providers.set(id, provider);
+    log(6, 'GATEWAY_STATE', `Registered persistence provider: ${id}`);
+
+    // Load data from pulled snapshot if available
+    if (this.pulledData && this.pulledData[id] !== undefined) {
+      try {
+        provider.loadFromSerialized(
+          this.pulledData[id] as Record<string, unknown> | null | undefined
+        );
+        log(6, 'GATEWAY_STATE', `Loaded data for provider: ${id}`);
+      } catch (error: any) {
+        log(
+          3,
+          'GATEWAY_STATE',
+          `Failed to load data for provider '${id}': ${error.message}`
+        );
+      }
+    }
+  }
+
+  /**
+   * Unregister a persistence provider
+   */
+  unregister(id: string): void {
+    this.providers.delete(id);
+    log(6, 'GATEWAY_STATE', `Unregistered persistence provider: ${id}`);
   }
 
   /**
    * Initialize state with organization and gateway IDs
    */
   initialize(organization_id: string, gateway_id: string): void {
-    this._data.organization_id = organization_id;
-    this._data.gateway_id = gateway_id;
+    this.organizationId = organization_id;
+    this.gatewayId = gateway_id;
     this._initialized = true;
-    this.markDirty();
     log(
       6,
       'GATEWAY_STATE',
@@ -59,178 +88,296 @@ export class GatewayState {
   }
 
   /**
-   * Get storage file path
+   * Set organization context for Ganymede sync and pull data
+   * Called after /collab/start completes
    */
-  private getFilePath(): string {
-    if (!this._data.organization_id) {
-      throw new Error('GatewayState not initialized - no organization_id');
-    }
-    return path.join(
-      '/data',
-      `gateway-state-${this._data.organization_id}.json`
+  async setOrganizationContext(
+    organizationId: string,
+    gatewayId: string,
+    organizationToken: string
+  ): Promise<void> {
+    this.organizationId = organizationId;
+    this.gatewayId = gatewayId;
+    this.organizationToken = organizationToken;
+
+    log(
+      6,
+      'GATEWAY_STATE',
+      `Organization context set: org=${organizationId}, gateway=${gatewayId}`
     );
+
+    // Pull data from Ganymede after setting context
+    await this.pullDataFromGanymede();
   }
 
   /**
-   * Ensure data directory exists
+   * Clear organization context (on deallocation)
    */
-  private ensureDataDirectory(): void {
-    const dataDir = '/data';
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
+  clearOrganizationContext(): void {
+    this.organizationId = '';
+    this.gatewayId = '';
+    this.organizationToken = null;
+    this.pulledData = null;
+
+    log(6, 'GATEWAY_STATE', 'Organization context cleared');
+  }
+
+  /**
+   * Collect data from all registered providers
+   * @returns Aggregated data object with provider IDs as keys
+   */
+  collectData(): TGatewayDataSnapshot {
+    const data: TGatewayDataSnapshot = {
+      organization_id: this.organizationId,
+      gateway_id: this.gatewayId,
+      saved_at: new Date().toISOString(),
+    };
+
+    for (const [id, provider] of this.providers.entries()) {
+      try {
+        data[id] = provider.saveToSerializable();
+      } catch (error: any) {
+        log(
+          3,
+          'GATEWAY_STATE',
+          `Failed to collect data from provider '${id}': ${error.message}`
+        );
+      }
+    }
+
+    log(
+      6,
+      'GATEWAY_STATE',
+      `Collected data from ${this.providers.size} providers`
+    );
+    return data;
+  }
+
+  /**
+   * Restore data to all registered providers
+   * @param data - Aggregated data object with provider IDs as keys
+   */
+  restoreData(data: TGatewayDataSnapshot | null | undefined): void {
+    if (!data) {
+      log(6, 'GATEWAY_STATE', 'No data to restore');
+      return;
+    }
+
+    // Store pulled data so we can use it when providers register later
+    this.pulledData = data;
+
+    // Restore organization/gateway IDs if present
+    if (typeof data.organization_id === 'string') {
+      this.organizationId = data.organization_id;
+    }
+    if (typeof data.gateway_id === 'string') {
+      this.gatewayId = data.gateway_id;
+    }
+
+    // Restore each already-registered provider's data
+    for (const [id, provider] of this.providers.entries()) {
+      if (data[id] !== undefined) {
+        try {
+          provider.loadFromSerialized(
+            data[id] as Record<string, unknown> | null | undefined
+          );
+          log(6, 'GATEWAY_STATE', `Restored data for provider: ${id}`);
+        } catch (error: any) {
+          log(
+            3,
+            'GATEWAY_STATE',
+            `Failed to restore data for provider '${id}': ${error.message}`
+          );
+        }
+      }
+    }
+
+    log(6, 'GATEWAY_STATE', 'Data restoration complete');
+  }
+
+  /**
+   * Push data snapshot to Ganymede
+   * Called on autosave and shutdown
+   */
+  async pushDataToGanymede(): Promise<void> {
+    if (!this.organizationId || !this.gatewayId || !this.organizationToken) {
+      log(6, 'GATEWAY_STATE', 'No organization context, skipping push');
+      return;
+    }
+
+    log(
+      6,
+      'GATEWAY_STATE',
+      `Pushing data to Ganymede for org ${this.organizationId}`
+    );
+
+    try {
+      const data = this.collectData();
+
+      const response = await fetch(
+        `https://${this.ganymedeFqdn}/gateway/data/push`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${this.organizationToken}`,
+          },
+          body: JSON.stringify({
+            timestamp: new Date().toISOString(),
+            data,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Push failed: ${response.status} ${errorText}`);
+      }
+
+      const result = await response.json();
+
+      log(
+        6,
+        'GATEWAY_STATE',
+        `✅ Data pushed successfully (${result.size_bytes} bytes)`
+      );
+    } catch (error: any) {
+      log(2, 'GATEWAY_STATE', `Failed to push data:`, error.message);
+      // Don't throw - push failure shouldn't crash gateway
     }
   }
 
   /**
-   * Load state from disk
+   * Pull data snapshot from Ganymede
+   * Called after allocation/handshake or during setOrganizationContext
    */
-  async load(): Promise<boolean> {
-    try {
-      const filePath = this.getFilePath();
+  async pullDataFromGanymede(): Promise<void> {
+    if (!this.organizationId || !this.gatewayId || !this.organizationToken) {
+      log(2, 'GATEWAY_STATE', 'Cannot pull: No organization context');
+      throw new Error('No organization context for data pull');
+    }
 
-      if (!fs.existsSync(filePath)) {
+    log(
+      6,
+      'GATEWAY_STATE',
+      `Pulling data from Ganymede for org ${this.organizationId}`
+    );
+
+    try {
+      const response = await fetch(
+        `https://${this.ganymedeFqdn}/gateway/data/pull`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${this.organizationToken}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Pull failed: ${response.status} ${errorText}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error('Pull returned success=false');
+      }
+
+      if (result.exists && result.data) {
         log(
           6,
           'GATEWAY_STATE',
-          `No saved state found at ${filePath} - using empty state`
+          `✅ Data retrieved (stored: ${result.stored_at})`
         );
-        return false;
+        this.restoreData(result.data);
+      } else {
+        log(
+          6,
+          'GATEWAY_STATE',
+          'No existing data for organization (new org or first allocation)'
+        );
+        this.pulledData = null; // Mark that there's no data
       }
-
-      const fileContent = fs.readFileSync(filePath, 'utf-8');
-      const loadedData = JSON.parse(fileContent) as TGatewayStateData;
-
-      // Merge with current (preserves org_id, gateway_id if already set)
-      this._data = {
-        ...loadedData,
-        organization_id:
-          this._data.organization_id || loadedData.organization_id,
-        gateway_id: this._data.gateway_id || loadedData.gateway_id,
-      };
-
-      this._dirty = false;
-      log(6, 'GATEWAY_STATE', `Loaded state from ${filePath}`);
-      return true;
     } catch (error: any) {
-      log(3, 'GATEWAY_STATE', `Failed to load state: ${error.message}`);
-      return false;
+      log(2, 'GATEWAY_STATE', `Failed to pull data:`, error.message);
+      throw error; // Pull failure during allocation should fail the allocation
     }
   }
 
   /**
-   * Save state to disk (atomic write)
+   * Start periodic autosave
+   * Pushes data every N minutes
    */
-  async save(): Promise<void> {
-    if (!this._initialized) {
-      log(5, 'GATEWAY_STATE', 'Cannot save - not initialized');
+  startAutosave(intervalMs = 300000): void {
+    if (this.autosaveTimer) {
+      log(5, 'GATEWAY_STATE', 'Autosave already running');
       return;
     }
 
-    try {
-      this.ensureDataDirectory();
+    log(
+      6,
+      'GATEWAY_STATE',
+      `Starting autosave (interval: ${intervalMs / 1000}s)`
+    );
 
-      const filePath = this.getFilePath();
-      const tmpPath = `${filePath}.tmp`;
+    this.autosaveTimer = setInterval(async () => {
+      await this.pushDataToGanymede();
+    }, intervalMs);
+  }
 
-      // Update saved_at timestamp
-      this._data.saved_at = new Date().toISOString();
-
-      // Write to temp file first
-      fs.writeFileSync(tmpPath, JSON.stringify(this._data, null, 2), 'utf-8');
-
-      // Atomic rename
-      fs.renameSync(tmpPath, filePath);
-
-      this._dirty = false;
-      log(7, 'GATEWAY_STATE', `Saved state to ${filePath}`);
-    } catch (error: any) {
-      log(3, 'GATEWAY_STATE', `Failed to save state: ${error.message}`);
-      throw error;
+  /**
+   * Stop periodic autosave
+   */
+  stopAutosave(): void {
+    if (this.autosaveTimer) {
+      clearInterval(this.autosaveTimer);
+      this.autosaveTimer = null;
+      log(6, 'GATEWAY_STATE', 'Autosave stopped');
     }
   }
 
   /**
-   * Mark state as dirty (needs saving)
-   */
-  markDirty(): void {
-    this._dirty = true;
-  }
-
-  /**
-   * Check if state is dirty
-   */
-  isDirty(): boolean {
-    return this._dirty;
-  }
-
-  /**
-   * Get read-only copy of state
-   */
-  getData(): Readonly<TGatewayStateData> {
-    return this._data;
-  }
-
-  /**
-   * Update state with an updater function
-   * Automatically marks state as dirty
-   */
-  updateData(updater: (data: TGatewayStateData) => void): void {
-    updater(this._data);
-    this.markDirty();
-  }
-
-  /**
-   * Start auto-save interval (saves every 30s if dirty)
-   */
-  startAutoSave(): void {
-    if (this._autoSaveInterval) {
-      log(5, 'GATEWAY_STATE', 'Auto-save already running');
-      return;
-    }
-
-    this._autoSaveInterval = setInterval(() => {
-      if (this._dirty) {
-        log(7, 'GATEWAY_STATE', 'Auto-save triggered (state is dirty)');
-        this.save();
-      }
-    }, 30000); // 30 seconds
-
-    log(6, 'GATEWAY_STATE', 'Auto-save started (every 30s if dirty)');
-  }
-
-  /**
-   * Stop auto-save interval
-   */
-  stopAutoSave(): void {
-    if (this._autoSaveInterval) {
-      clearInterval(this._autoSaveInterval);
-      this._autoSaveInterval = null;
-      log(6, 'GATEWAY_STATE', 'Auto-save stopped');
-    }
-  }
-
-  /**
-   * Shutdown: save state and cleanup
+   * Shutdown: stop autosave and push final data
    */
   async shutdown(): Promise<void> {
-    log(6, 'GATEWAY_STATE', 'Shutting down - saving state');
-    this.stopAutoSave();
-    if (this._dirty || this._initialized) {
-      await this.save();
-    }
+    log(
+      6,
+      'GATEWAY_STATE',
+      'Shutting down - stopping autosave and pushing final data'
+    );
+    this.stopAutosave();
+    await this.pushDataToGanymede();
+    log(6, 'GATEWAY_STATE', 'Shutdown complete');
   }
-}
 
-/**
- * Setup shutdown handlers to save state on exit
- */
-export function setupShutdownHandlers(gatewayState: GatewayState): void {
-  const shutdown = async (signal: string) => {
-    log(6, 'GATEWAY', `Received ${signal} - shutting down gracefully`);
-    await gatewayState.shutdown();
-    process.exit(0);
-  };
+  /**
+   * Check if state is initialized
+   */
+  isInitialized(): boolean {
+    return this._initialized;
+  }
 
-  process.on('SIGTERM', () => shutdown('SIGTERM'));
-  process.on('SIGINT', () => shutdown('SIGINT'));
+  /**
+   * Get organization ID
+   */
+  getOrganizationId(): string {
+    return this.organizationId;
+  }
+
+  /**
+   * Get gateway ID
+   */
+  getGatewayId(): string {
+    return this.gatewayId;
+  }
+
+  /**
+   * Get count of registered providers
+   */
+  getProviderCount(): number {
+    return this.providers.size;
+  }
 }

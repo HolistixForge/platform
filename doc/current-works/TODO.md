@@ -1,6 +1,6 @@
 # Demiurge Platform - TODO
 
-**Last Updated:** 2025-11-12
+**Last Updated:** 2025-01-27
 
 This document tracks all remaining tasks, improvements, and known issues.
 
@@ -8,44 +8,94 @@ This document tracks all remaining tasks, improvements, and known issues.
 
 ## 🔴 HIGH PRIORITY (Blocking Production)
 
-### 1. Integrate Gateway Data Sync with Actual State
+### GWROUTESPERMCHECK - Add Permission Checks to Routes
 
-**Context:** [packages/app-gateway/src/services/data-sync.ts](packages/app-gateway/src/services/data-sync.ts)
+**Context:** Multiple routes need permission validation
 
-**Problem:**
-The data sync service has stub implementations that don't actually collect/restore gateway state.
+**Current TODOs:**
 
-**Current State:**
+1. **`/collab/vpn-config`** (`routes/collab.ts:121`)
 
-```typescript
-protected async collectDataSnapshot(): Promise<any> {
-  // TODO: Implement actual data collection
-  return { yjs_state: {}, gateway_state: {} };  // Stub!
-}
+   - Add JWT authorization check
+   - Check permission: `p:{jwt.project_id}:project:vpn-access`
 
-protected async applyDataSnapshot(data: any): Promise<void> {
-  // TODO: Implement actual data restoration
-  log(6, 'DATA_SYNC', 'Applying data snapshot (stub)');  // Stub!
-}
-```
+2. **`/oauth/clients` GET** (`routes/oauth.ts:218`)
+
+   - Add permission check for listing OAuth clients
+   - Should check if user has access to project/container
+
+3. **`/collab/event`** (`routes/collab.ts:44`)
+
+   - Currently no permission checks
+   - Should validate user has permission for the event being processed
+
+4. **WebSocket connections** (`websocket.ts:178`)
+   - TODO: Check permission - user has access to this project
+   - Currently only validates JWT token, doesn't check project access
 
 **Required:**
 
-1. Integrate with `GatewayState` class (if exists)
-2. Integrate with `ProjectRoomsManager` to collect YJS state
-3. Collect OAuth tokens, permissions, container tokens
-4. Restore state on `pullDataFromGanymede()`
+- Implement permission checks using `getGatewayInstances().permissionManager`
+- Add appropriate permission strings for each endpoint
+- Test permission enforcement
 
 **Related Files:**
 
-- `packages/app-gateway/src/state/GatewayState.ts`
-- `packages/app-gateway/src/state/ProjectRooms.ts`
-- `packages/app-gateway/src/initialization/gateway-init.ts`
-- `doc/current-works/GATEWAY_WORK.md`
+- `packages/app-gateway/src/routes/collab.ts`
+- `packages/app-gateway/src/routes/oauth.ts`
+- `packages/app-gateway/src/websocket.ts`
+- `packages/app-gateway/src/middleware/permissions.ts`
 
 ---
 
-### 2. Add Allocation Failure Rollback
+### GWOAUTHCLEANUP - OAuth Cleanup Periodic Timer
+
+**Context:** `OAuthManager.cleanupExpired()` exists but is never called automatically
+
+**Current:**
+
+- `cleanupExpired()` is only called on shutdown
+- Expired codes/tokens accumulate in memory
+
+**Required:**
+
+- Add periodic timer (e.g., every hour) to call `cleanupExpired()`
+- Can be added to `GatewayState` or `initializeGateway()`
+
+**Related Files:**
+
+- `packages/app-gateway/src/oauth/OAuthManager.ts`
+- `packages/app-gateway/src/initialization/gateway-init.ts`
+
+---
+
+### GWCONTAINERINTEG - User-Containers Module Integration
+
+**Context:** User-containers module needs to use gateway managers
+
+**Problem:**
+Container reducer (`modules/user-containers/src/lib/servers-reducer.ts`) needs access to:
+
+- `permissionManager` - Check container permissions
+- `oauthManager` - Create/delete OAuth clients for containers
+- `containerTokenManager` - Generate tokens for containers
+
+**Required:**
+
+- Update reducer to get managers from `GatewayInstances` registry
+- Implement `createOAuthClients()` to call `oauthManager.addClient()`
+- Implement `deleteOAuthClients()` to call `oauthManager.deleteClient()`
+- Add permission checks in `_new()` and `_delete()` methods
+- Use `containerTokenManager` for hosting tokens
+
+**Related Files:**
+
+- `packages/modules/user-containers/src/lib/servers-reducer.ts`
+- `packages/app-gateway/src/initialization/gateway-instances.ts`
+
+---
+
+### GWALLOCROLLBACK - Add Allocation Failure Rollback
 
 **Context:** [packages/app-ganymede/src/routes/gateway/index.ts](packages/app-ganymede/src/routes/gateway/index.ts:110-112)
 
@@ -75,7 +125,25 @@ If `/gateway/start` fails after partial allocation (e.g., Nginx reload fails), t
 
 ## 🟡 MEDIUM PRIORITY (Code Quality)
 
-### 4. Remove Hardcoded Paths
+### GWOPENAPI - Update OpenAPI Specs
+
+**Context:** New endpoints and schemas need documentation
+
+**Required:**
+
+- Document OAuth endpoints (`/oauth/authorize`, `/oauth/token`, `/oauth/clients`)
+- Document container token endpoints (`/containers/:id/token`, `/containers/validate-token`)
+- Add schemas for new routes
+- Remove OAuth from Ganymede OpenAPI (moved to gateway)
+
+**Related Files:**
+
+- `packages/app-gateway/src/oas30.json`
+- `packages/app-ganymede/src/oas30.json`
+
+---
+
+### GWHARDCODEDPATHS - Remove Hardcoded Paths
 
 **Context:**
 
@@ -97,7 +165,7 @@ function getDataDir(): string {
 **Required:**
 
 1. Add environment variable: `LOCAL_DEV_DIR=/root/.local-dev`
-2. Use a function getEnvsDir() to build paths
+2. Use a function `getEnvsDir()` to build paths
 
 **Files to update:**
 
@@ -109,7 +177,7 @@ function getDataDir(): string {
 
 ---
 
-### 6. Add Nginx Reload Error Recovery
+### GWNGINXERROR - Add Nginx Reload Error Recovery
 
 **Context:** [packages/app-ganymede/src/services/nginx-manager.ts](packages/app-ganymede/src/services/nginx-manager.ts)
 
@@ -122,7 +190,39 @@ If `nginx -t` fails, we throw but don't clean up the bad config file.
 2. Restore previous known-good state
 3. Return descriptive error
 
-### 8. Add Gateway Pool Auto-Scaling
+---
+
+### GWGANYMEDEOAUTH - Clean Ganymede OAuth Model
+
+**Context:** [packages/app-ganymede/src/models/oauth.ts](packages/app-ganymede/src/models/oauth.ts)
+
+**Problem:**
+OAuth logic moved to gateway, but Ganymede still has some OAuth code.
+
+**Required:**
+
+- Keep only global OAuth client in Ganymede
+- Remove database OAuth logic (moved to gateway)
+- Clean up unused OAuth routes/models
+
+---
+
+### GWMODULEEXCEPTIONS - Fix Module Exception Imports
+
+**Context:** [packages/modules/gateway/src/index.ts](packages/modules/gateway/src/index.ts)
+
+**Problem:**
+Some modules may still import deleted exception types (`ForwardException`, `RunException`).
+
+**Required:**
+
+- Check for deleted exception imports
+- Update to use standard `Error` class
+- Verify no broken imports
+
+---
+
+### GWPOOLAUTOSCALE - Add Gateway Pool Auto-Scaling
 
 **Context:** [scripts/local-dev/gateway-pool.sh](scripts/local-dev/gateway-pool.sh)
 
@@ -135,7 +235,7 @@ Monitor pool utilization and auto-create gateways when low:
 
 ---
 
-### 10. Add Monitoring Hooks
+### GWMONITORING - Add Monitoring Hooks
 
 **Context:** Gateway lifecycle events
 
@@ -154,6 +254,19 @@ Monitor pool utilization and auto-create gateways when low:
 
 ### Cleanup Old Implementations
 
-- [ ] Remove old gateway startup scripts
+- [ ] Remove old gateway startup scripts (if any remain)
+- [ ] Verify no references to deleted `data-sync.ts`
+- [ ] Clean up any unused files from old architecture
 
 ---
+
+## 🎯 NEXT STEPS
+
+**Priority Order:**
+
+1. **GWROUTESPERMCHECK** - Security critical, needs to be done before production
+2. **GWOAUTHCLEANUP** - Prevents memory leaks
+3. **GWCONTAINERINTEG** - Required for container lifecycle
+4. **GWALLOCROLLBACK** - Prevents pool exhaustion
+5. **GWOPENAPI** - Documentation
+6. **Code Quality Tasks** - Can be done incrementally

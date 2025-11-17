@@ -1,11 +1,45 @@
 import { Router, Request, Response } from 'express';
 import { asyncHandler } from '../middleware/route-handler';
-import { oauth2Server, oauthManager } from '../oauth';
+import { getGatewayInstances } from '../initialization/gateway-instances';
+import { createOAuth2Server } from '../oauth';
 import { requirePermission } from '../middleware/permissions';
 import { log } from '@monorepo/log';
 import { makeUuid } from '@monorepo/simple-types';
 
 const router = Router();
+
+// Cache OAuth2Server instance
+let oauth2ServerInstance: ReturnType<typeof createOAuth2Server> | null = null;
+
+/**
+ * Get OAuth2Server instance from gateway instances
+ * Creates instance on first call and caches it
+ */
+function getOAuth2Server() {
+  if (oauth2ServerInstance) {
+    return oauth2ServerInstance;
+  }
+  const instances = getGatewayInstances();
+  if (!instances) {
+    throw new Error('Gateway instances not initialized');
+  }
+  oauth2ServerInstance = createOAuth2Server(
+    instances.oauthManager,
+    instances.permissionManager
+  );
+  return oauth2ServerInstance;
+}
+
+/**
+ * Get OAuthManager instance from gateway instances
+ */
+function getOAuthManager() {
+  const instances = getGatewayInstances();
+  if (!instances) {
+    throw new Error('Gateway instances not initialized');
+  }
+  return instances.oauthManager;
+}
 
 /**
  * OAuth Authorization Endpoint
@@ -20,6 +54,7 @@ router.get(
       return res.status(401).json({ error: 'Not authenticated' });
     }
 
+    const oauth2Server = getOAuth2Server();
     const request = new (oauth2Server as any).Request(req);
     const response = new (oauth2Server as any).Response(res);
 
@@ -63,6 +98,7 @@ router.get(
 router.post(
   '/token',
   asyncHandler(async (req: Request, res: Response) => {
+    const oauth2Server = getOAuth2Server();
     const request = new (oauth2Server as any).Request(req);
     const response = new (oauth2Server as any).Response(res);
 
@@ -99,6 +135,7 @@ router.post(
 router.post(
   '/authenticate',
   asyncHandler(async (req: Request, res: Response) => {
+    const oauth2Server = getOAuth2Server();
     const request = new (oauth2Server as any).Request(req);
     const response = new (oauth2Server as any).Response(res);
 
@@ -134,6 +171,7 @@ router.post(
   '/clients',
   requirePermission('org:admin'), // Only org admins can register OAuth clients
   asyncHandler(async (req: any, res: Response) => {
+    const oauthManager = getOAuthManager();
     const { container_id, project_id, service_name, redirect_uris, grants } =
       req.body;
 
@@ -178,7 +216,7 @@ router.get(
   '/clients',
   asyncHandler(async (req: Request, res: Response) => {
     // TODO: Add permission check
-
+    const oauthManager = getOAuthManager();
     const { project_id, container_id } = req.query;
 
     let clients = oauthManager.getAllClients();

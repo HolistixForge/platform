@@ -6,6 +6,7 @@ import { myfetch } from '@monorepo/backend-engine';
 import { asyncHandler } from '../middleware/route-handler';
 import { VPN } from '../project-config';
 import { CONFIG } from '../config';
+import { initializeGateway } from '../initialization/gateway-init';
 
 let ROOM_ID = '';
 let bep: BackendEventProcessor<any> | null = null;
@@ -86,21 +87,20 @@ export const setupCollabRoutes = (router: Router) => {
 
       log(6, 'GATEWAY', 'Received config from Ganymede', { config });
 
-      // NEW: Pull organization data from Ganymede
+      // Initialize gateway with organization context
       if (
         config.organization_token &&
         config.organization_id &&
         config.gateway_id
       ) {
-        const { gatewayDataSync } = await import('../services/data-sync');
-
-        gatewayDataSync.setOrganizationContext(
+        // Initialize gateway (this will pull data from Ganymede)
+        await initializeGateway(
           config.organization_id,
           config.gateway_id,
           config.organization_token
         );
 
-        await gatewayDataSync.pullDataFromGanymede();
+        log(6, 'GATEWAY', 'Gateway initialized from /collab/start');
       }
 
       if (config.organization_token && startProjectCollabCallback) {

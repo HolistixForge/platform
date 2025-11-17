@@ -1,10 +1,21 @@
 import { Router, Request, Response } from 'express';
 import { asyncHandler } from '../middleware/route-handler';
-import { containerTokenManager } from '../containers';
+import { getGatewayInstances } from '../initialization/gateway-instances';
 import { requirePermission } from '../middleware/permissions';
 import { log } from '@monorepo/log';
 
 const router = Router();
+
+/**
+ * Get ContainerTokenManager instance from gateway instances
+ */
+function getContainerTokenManager() {
+  const instances = getGatewayInstances();
+  if (!instances) {
+    throw new Error('Gateway instances not initialized');
+  }
+  return instances.containerTokenManager;
+}
 
 /**
  * Generate container token (called when container starts)
@@ -17,6 +28,7 @@ router.post(
   '/:container_id/token',
   requirePermission('container:create'), // TODO: Future: Make project-specific (e.g., project:{id}:container:create)
   asyncHandler(async (req: any, res: Response) => {
+    const containerTokenManager = getContainerTokenManager();
     const { container_id } = req.params;
     const { project_id } = req.body;
 
@@ -54,6 +66,7 @@ router.post(
 router.post(
   '/validate-token',
   asyncHandler(async (req: Request, res: Response) => {
+    const containerTokenManager = getContainerTokenManager();
     const { token } = req.body;
 
     if (!token) {
@@ -83,6 +96,7 @@ router.delete(
   '/:container_id/token',
   requirePermission('container:delete'), // TODO: Future: Make project-specific
   asyncHandler(async (req: Request, res: Response) => {
+    const containerTokenManager = getContainerTokenManager();
     const { container_id } = req.params;
 
     containerTokenManager.revokeToken(container_id);
@@ -101,6 +115,7 @@ router.get(
   '/tokens',
   requirePermission('org:admin'), // Only org admins can list all tokens
   asyncHandler(async (req: Request, res: Response) => {
+    const containerTokenManager = getContainerTokenManager();
     const { project_id } = req.query;
 
     const tokens = containerTokenManager.listTokens(

@@ -1,11 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
 import { asyncHandler } from './route-handler';
+import { getGatewayInstances } from '../initialization/gateway-instances';
 
-// Will be initialized from main.ts
-let permissionManager: any = null;
-
-export function setPermissionManager(manager: any): void {
-  permissionManager = manager;
+/**
+ * Get PermissionManager instance from gateway instances
+ */
+function getPermissionManager() {
+  const instances = getGatewayInstances();
+  if (!instances) {
+    return null;
+  }
+  return instances.permissionManager;
 }
 
 /**
@@ -15,6 +20,7 @@ export function setPermissionManager(manager: any): void {
 export const requirePermission = (permission: string): any =>
   asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const authReq = req as any;
+    const permissionManager = getPermissionManager();
 
     if (!permissionManager) {
       return res
@@ -43,6 +49,7 @@ export const requirePermission = (permission: string): any =>
 export const requirePermissionTemplate = (template: string): any =>
   asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const authReq = req as any;
+    const permissionManager = getPermissionManager();
 
     if (!permissionManager) {
       return res
@@ -84,6 +91,7 @@ export const requirePermissionTemplate = (template: string): any =>
 export const requireOrgMember = (): any =>
   asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const authReq = req as any;
+    const permissionManager = getPermissionManager();
 
     if (!permissionManager) {
       return res
