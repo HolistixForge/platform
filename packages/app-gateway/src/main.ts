@@ -10,21 +10,14 @@ import {
   TStart,
 } from '@monorepo/backend-engine';
 import { BackendEventProcessor } from '@monorepo/reducers';
-import { TProjectConfig } from '@monorepo/gateway';
-import { makeUuid } from '@monorepo/simple-types';
 
-import { initProjectCollaboration } from './build-collab';
-import { PROJECT, VPN, setProjectConfig } from './project-config';
+import { VPN } from './config/organization';
 import { CONFIG } from './config';
-import {
-  setupCollabRoutes,
-  setBackendEventProcessor,
-  setStartProjectCollabCallback,
-} from './routes/collab';
+import { setupCollabRoutes, setBackendEventProcessor } from './routes/collab';
 import oauthRoutes from './routes/oauth';
 import oas from './oas30.json';
 import {
-  initializeGateway,
+  initializeGatewayForOrganization,
   shutdownGateway,
 } from './initialization/gateway-init';
 import { loadOrganizationConfig } from './config/organization';
@@ -35,15 +28,6 @@ import { signalGatewayReady } from './initialization/signal-ready';
 //
 
 let bep: BackendEventProcessor<never>;
-
-//
-// Legacy single-project mode (backwards compatibility)
-//
-
-const startProjectCollab = async (project: TProjectConfig) => {
-  setProjectConfig(project);
-  await initProjectCollaboration(bep);
-};
 
 //
 // Express setup
@@ -162,7 +146,6 @@ function setupShutdownHandlers() {
   try {
     bep = new BackendEventProcessor<never>();
     setBackendEventProcessor(bep);
-    setStartProjectCollabCallback(startProjectCollab);
 
     if (!VPN) throw new Error('VPN config read failed');
 
@@ -187,20 +170,12 @@ function setupShutdownHandlers() {
         'GATEWAY',
         `Initializing gateway for organization: ${orgConfig.organization_name}`
       );
-      await initializeGateway(
+      await initializeGatewayForOrganization(
         orgConfig.organization_id,
         orgConfig.gateway_id,
         orgConfig.gateway_token
       );
       log(6, 'GATEWAY', 'Gateway ready and serving organization');
-    } else if (PROJECT) {
-      // LEGACY: Support old single-project mode for backwards compatibility
-      log(
-        5,
-        'GATEWAY',
-        'Running in legacy single-project mode (no organization config)'
-      );
-      await startProjectCollab(PROJECT);
     } else {
       log(6, 'GATEWAY', 'Gateway idle, waiting for organization allocation...');
       // Gateway is registered via app-ganymede-cmd CLI tool

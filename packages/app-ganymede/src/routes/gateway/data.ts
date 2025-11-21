@@ -11,15 +11,17 @@
  * - Any other organization-specific runtime state
  */
 
-import { Router, Request, NextFunction } from 'express';
+import { Router, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
-import { EPriority, ForbiddenException, log } from '@monorepo/log';
+import { EPriority, log } from '@monorepo/log';
 import {
   authenticateOrganizationToken,
   OrganizationAuthRequest,
+  authenticateJwt,
 } from '../../middleware/auth';
-import { asyncHandler } from '../../middleware/route-handler';
+import { asyncHandler, AuthRequest } from '../../middleware/route-handler';
+import { pg } from '../../database/pg';
 
 /**
  * Get data directory path for environment
@@ -231,15 +233,35 @@ export const setupGatewayDataRoutes = (router: Router) => {
    * DELETE /gateway/data/:organization_id
    *
    * Called when an organization is permanently deleted.
-   * Requires admin authentication (not gateway token).
+   * Requires organization owner authentication.
    */
   router.delete(
     '/gateway/data/:organization_id',
-    // TODO: Add admin authentication middleware
-
-    asyncHandler(async (req: Request, res, next: NextFunction) => {
-      return next(new ForbiddenException([{ message: 'Not implemented' }]));
+    authenticateJwt,
+    asyncHandler(async (req: AuthRequest, res: Response) => {
       const { organization_id } = req.params;
+
+      // Check user is organization owner
+      const roleCheck = await pg.query(
+        'SELECT func_user_get_org_role($1, $2) as role',
+        [req.user.id, String(organization_id)]
+      );
+      const role = roleCheck.next()?.oneRow()['role'] as string | null;
+      if (role !== 'owner') {
+        // Check if organization exists for better error message
+        const orgResult = await pg.query(
+          'SELECT 1 FROM organizations WHERE organization_id = $1',
+          [organization_id]
+        );
+        if (!orgResult.next()?.oneRow()) {
+          return res.status(404).json({ error: 'Organization not found' });
+        }
+        return res
+          .status(403)
+          .json({
+            error: 'Only organization owner can delete organization data',
+          });
+      }
 
       log(6, 'GATEWAY_DATA', `Delete requested for org ${organization_id}`);
 

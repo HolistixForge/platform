@@ -1,11 +1,7 @@
 import { log } from '@monorepo/log';
 import { IPersistenceProvider } from '../state/IPersistenceProvider';
-import type {
-  TOAuthData,
-  TOAuthClient,
-  TOAuthCode,
-  TOAuthToken,
-} from './types';
+import type { TOAuthClient, TOAuthCode, TOAuthToken } from '@monorepo/gateway';
+import { OAuthManager as AbstractOAuthManager } from '@monorepo/gateway';
 
 /**
  * OAuthManager - OAuth Data Management
@@ -19,10 +15,30 @@ import type {
  *
  * Used by OAuth2Server model.
  */
-export class OAuthManager implements IPersistenceProvider {
+
+/**
+ * OAuth slice of gateway state
+ */
+interface TOAuthData {
+  oauth_clients: {
+    [client_id: string]: TOAuthClient;
+  };
+  oauth_authorization_codes: {
+    [code: string]: TOAuthCode;
+  };
+  oauth_tokens: {
+    [token_id: string]: TOAuthToken;
+  };
+}
+
+export class OAuthManager
+  extends AbstractOAuthManager
+  implements IPersistenceProvider
+{
   private data: TOAuthData;
 
   constructor() {
+    super();
     this.data = {
       oauth_clients: {},
       oauth_authorization_codes: {},
@@ -39,7 +55,8 @@ export class OAuthManager implements IPersistenceProvider {
     }
 
     if (data.oauth_clients && typeof data.oauth_clients === 'object') {
-      this.data.oauth_clients = data.oauth_clients as TOAuthData['oauth_clients'];
+      this.data.oauth_clients =
+        data.oauth_clients as TOAuthData['oauth_clients'];
     }
     if (
       data.oauth_authorization_codes &&
@@ -67,20 +84,16 @@ export class OAuthManager implements IPersistenceProvider {
   // OAuth Clients
   //
 
-  addClient(client: TOAuthClient): void {
+  override addClient(client: TOAuthClient): void {
     this.data.oauth_clients[client.client_id] = client;
-    log(
-      7,
-      'OAUTH',
-      `Added client: ${client.client_id} for container: ${client.container_id}`
-    );
+    log(7, 'OAUTH', `Added client: ${client.client_id}`);
   }
 
-  getClient(client_id: string): TOAuthClient | null {
+  override getClient(client_id: string): TOAuthClient | null {
     return this.data.oauth_clients[client_id] || null;
   }
 
-  deleteClient(client_id: string): void {
+  override deleteClient(client_id: string): void {
     delete this.data.oauth_clients[client_id];
     log(7, 'OAUTH', `Deleted client: ${client_id}`);
   }
@@ -89,24 +102,20 @@ export class OAuthManager implements IPersistenceProvider {
     return Object.values(this.data.oauth_clients);
   }
 
-  getClientsByContainer(container_id: string): TOAuthClient[] {
-    return this.getAllClients().filter((c) => c.container_id === container_id);
-  }
-
   //
   // Authorization Codes
   //
 
-  saveCode(code: TOAuthCode): void {
+  override saveCode(code: TOAuthCode): void {
     this.data.oauth_authorization_codes[code.code] = code;
     log(7, 'OAUTH', `Saved authorization code for user: ${code.user_id}`);
   }
 
-  getCode(code_string: string): TOAuthCode | null {
+  override getCode(code_string: string): TOAuthCode | null {
     return this.data.oauth_authorization_codes[code_string] || null;
   }
 
-  deleteCode(code_string: string): void {
+  override deleteCode(code_string: string): void {
     delete this.data.oauth_authorization_codes[code_string];
     log(7, 'OAUTH', `Deleted authorization code: ${code_string}`);
   }
@@ -115,7 +124,7 @@ export class OAuthManager implements IPersistenceProvider {
   // Tokens
   //
 
-  saveToken(token: TOAuthToken): void {
+  override saveToken(token: TOAuthToken): void {
     this.data.oauth_tokens[token.token_id] = token;
     log(
       7,
@@ -124,7 +133,7 @@ export class OAuthManager implements IPersistenceProvider {
     );
   }
 
-  getToken(access_token: string): TOAuthToken | null {
+  override getToken(access_token: string): TOAuthToken | null {
     // Find token by access_token value
     const tokens = Object.values(this.data.oauth_tokens);
     return tokens.find((t) => t.access_token === access_token) || null;
@@ -136,11 +145,11 @@ export class OAuthManager implements IPersistenceProvider {
     return tokens.find((t) => t.refresh_token === refresh_token) || null;
   }
 
-  getTokenById(token_id: string): TOAuthToken | null {
+  override getTokenById(token_id: string): TOAuthToken | null {
     return this.data.oauth_tokens[token_id] || null;
   }
 
-  deleteToken(token_id: string): void {
+  override deleteToken(token_id: string): void {
     delete this.data.oauth_tokens[token_id];
     log(7, 'OAUTH', `Deleted token: ${token_id}`);
   }
@@ -164,7 +173,9 @@ export class OAuthManager implements IPersistenceProvider {
     }
 
     // Cleanup expired tokens
-    for (const [token_id, tokenData] of Object.entries(this.data.oauth_tokens)) {
+    for (const [token_id, tokenData] of Object.entries(
+      this.data.oauth_tokens
+    )) {
       if (tokenData.refresh_token_expires_at < now) {
         delete this.data.oauth_tokens[token_id];
         cleaned++;

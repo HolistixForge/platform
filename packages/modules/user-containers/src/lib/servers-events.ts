@@ -6,6 +6,7 @@ import { UserContainerSystemInfo, TUserContainer } from './servers-types';
 
 export type TEventNew = {
   type: 'user-container:new';
+  project_id: string;
   containerName: string;
   imageId: string;
   origin?: TEventOrigin;

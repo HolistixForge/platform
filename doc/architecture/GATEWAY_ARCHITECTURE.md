@@ -16,6 +16,13 @@ Demiurge uses a **pool-based multi-gateway architecture** where gateway containe
 - **Automated Infrastructure** - DNS and Nginx managed programmatically (no manual config)
 - **Hot-Reload** - Code changes reload all gateways without rebuild
 
+**Architectural Decisions:**
+
+- **Clean Separation of Concerns** - Each manager (PermissionManager, OAuthManager, TokenManager) is responsible for its own domain logic and uses GatewayState as a generic persistence coordinator
+- **Simple Permissions (MVP)** - Permission system uses string arrays per user with exact matching (e.g., `["org:admin", "container:123:delete"]`). No hierarchy/wildcards in MVP, but designed to be extensible
+- **One Gateway = One Organization** - A gateway manages ALL projects within an organization, sharing VPN network and permission system
+- **Separate YJS State Per Project** - Each project has its own YJS room with isolated state files, allowing concurrent multi-project collaboration
+
 ---
 
 ## Architecture Diagram
@@ -58,6 +65,31 @@ All domains managed by PowerDNS with single DNS delegation on host OS:
 - **Routes:** `uc-{uuid}.org-{uuid}.domain.local` → User container IP:port
 
 **Why 2 stages?** Stage 1 doesn't know user container IPs (managed inside gateway via VPN).
+
+---
+
+## DNS Management Architecture
+
+### Container-Agnostic Design
+
+handle generic FQDN → IP mapping, not container concepts.
+
+**DNSManager Abstraction:**
+
+- **Location:** `packages/app-gateway/src/dns/DNSManager.ts`
+- **Interface:** `packages/modules/gateway/src/lib/managers.ts` (abstract `DNSManager` class)
+- **Exposed via:** Gateway module exports (`TGatewayExports.dnsManager`)
+
+**Methods:**
+
+- `registerRecord(fqdn: string, ip: string): Promise<void>` - Generic DNS registration
+- `deregisterRecord(fqdn: string): Promise<void>` - Generic DNS deregistration
+
+**Implementation:**
+
+- DNSManager calls Ganymede API: `POST /gateway/dns/register` or `DELETE /gateway/dns/deregister`
+- Ganymede calls PowerDNS: `registerRecord(fqdn, ip)` or `deregisterRecord(fqdn)`
+- PowerDNS methods are generic (no container awareness)
 
 ---
 
@@ -147,6 +179,17 @@ Gateway returns to pool, ready for next org.
 
 **Why separate?** Gateway can be ready without being allocated. Different scopes for different operations.
 
+### Gateway Authentication and permissions check
+
+Permissions are Managed by PermissionManager, that maintains a set of string defined fined grain permission for all users.
+
+The gateway also uses **scope-based authorization** with template variable substitution:
+
+- **Generic JWT handling:** `authenticateJwt` middleware accepts any JWT type (`TJwtUser`, `TJwtOrganization`, `TJwtGateway`)
+- **Scope-based authorization:** `requireScope()` middleware checks for required scopes in JWT tokens
+- **Template variables:** Scopes can include variables like `{org_id}`, `${params.key}`, `${body.key}`, `${query.key}`, `${jwt.key}`
+- **Organization-scoped endpoints:** VPN config endpoint requires `org:{org_id}:connect-vpn` scope (resolved at runtime)
+
 ---
 
 ## Gateway Initialization and Persistence
@@ -169,7 +212,7 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
 1. **GatewayState** - Registry and coordinator for all persistence providers, handles Ganymede sync
 2. **IPersistenceProvider** - Interface implemented by all managers that need persistence
 3. **GatewayInstances** - Registry storing all gateway instances for route access
-4. **Managers** - PermissionManager, OAuthManager, ContainerTokenManager, ProjectRoomsManager - each manages its own data
+4. **Managers** - PermissionManager, OAuthManager, TokenManager, ProjectRoomsManager - each manages its own data
 
 ### Initialization Flow
 
@@ -224,7 +267,13 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
 - Initialize from serialized data
 - Serialize their data for persistence
 
-> **Detailed Documentation:** See [GATEWAY_INITIALIZATION.md](./GATEWAY_INITIALIZATION.md) for implementation details, code examples, and architecture diagrams.
+**Manager Responsibilities:**
+
+- **PermissionManager** - Manages string-based permissions per user, exact matching (`hasPermission(user_id, permission)`), uses GatewayState for persistence
+- **OAuthManager** - Manages OAuth clients, authorization codes, and tokens for container applications, implements OAuth2Server model interface
+- **TokenManager** - Generates and validates HMAC and JWT tokens (`generateHMACToken()`, `generateJWTToken()`, `validateToken()`), uses GatewayState for storage
+- **ProjectRoomsManager** - Manages multiple YJS rooms (one per project), handles per-project persistence and WebSocket routing
+- **DNSManager** - Generic DNS record management (FQDN → IP mapping), container-agnostic abstraction over Ganymede API
 
 ### Centralized Storage (Stateless Gateways)
 
@@ -299,6 +348,8 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
 
 - `registerGateway(org_id)` - Add DNS: `org-{uuid}.domain.local` → 127.0.0.1
 - `deregisterGateway(org_id)` - Remove DNS records
+- `registerRecord(fqdn, ip)` - Generic: Register any FQDN → IP mapping (container-agnostic)
+- `deregisterRecord(fqdn)` - Generic: Remove any DNS record (container-agnostic)
 
 **nginx-manager.ts:**
 
@@ -330,8 +381,9 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
 
 - `PermissionManager` - Permissions with `IPersistenceProvider`
 - `OAuthManager` - OAuth data with `IPersistenceProvider`
-- `ContainerTokenManager` - Container tokens with `IPersistenceProvider`
+- `TokenManager` - Token management (HMAC and JWT tokens) with `IPersistenceProvider`
 - `ProjectRoomsManager` - YJS rooms with `IPersistenceProvider`
+- `DNSManager` - Generic DNS record management (FQDN → IP mapping) - no container awareness
 
 **Initialization (`initialization/gateway-init.ts`):**
 
@@ -349,6 +401,8 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
 - `POST /gateway/stop` (TJwtOrganization) - Deallocate, cleanup DNS/Nginx
 - `POST /gateway/data/push` (TJwtOrganization) - Save org data snapshot
 - `POST /gateway/data/pull` (TJwtOrganization) - Load org data snapshot
+- `POST /gateway/dns/register` (TJwtOrganization) - Generic DNS registration (FQDN → IP)
+- `DELETE /gateway/dns/deregister` (TJwtOrganization) - Generic DNS deregistration
 
 **Gateway:**
 
@@ -532,7 +586,7 @@ See [TODO.md](../../TODO.md) for detailed improvement tasks.
 
 **Ganymede Services:**
 
-- `packages/app-ganymede/src/services/powerdns-client.ts`
+- `packages/app-ganymede/src/services/powerdns-client.ts` - Generic DNS operations
 - `packages/app-ganymede/src/services/nginx-manager.ts`
 - `packages/app-ganymede/src/lib/url-helpers.ts`
 
@@ -540,10 +594,12 @@ See [TODO.md](../../TODO.md) for detailed improvement tasks.
 
 - `packages/app-ganymede/src/routes/gateway/index.ts`
 - `packages/app-ganymede/src/routes/gateway/data.ts`
+- `packages/app-ganymede/src/routes/gateway/dns.ts` - Generic DNS management endpoints
 
 **Gateway Services:**
 
-- `packages/app-gateway/src/services/data-sync.ts`
+- `packages/app-gateway/src/dns/DNSManager.ts` - DNSManager implementation (calls Ganymede API)
+- `packages/app-gateway/src/module/module.ts` - Gateway module (exposes DNSManager)
 
 **Database:**
 

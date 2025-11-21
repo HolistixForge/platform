@@ -10,14 +10,20 @@ import { pg } from '../../database/pg';
 import { generateJwtToken } from '@monorepo/backend-engine';
 import { asyncHandler, AuthRequest } from '../../middleware/route-handler';
 import { setupGatewayDataRoutes } from './data';
+import { setupGatewayDNSRoutes } from './dns';
 import { powerDNS } from '../../services/powerdns-client';
 import { nginxManager } from '../../services/nginx-manager';
 import { EPriority, log } from '@monorepo/log';
-import { makeOrgGatewayHostname, makeOrgGatewayUrl } from '../../lib/url-helpers';
+import {
+  makeOrgGatewayHostname,
+  makeOrgGatewayUrl,
+} from '../../lib/url-helpers';
 
 export const setupGatewayRoutes = (router: Router) => {
   // Mount data push/pull endpoints
   setupGatewayDataRoutes(router);
+  // Mount generic DNS management endpoints
+  setupGatewayDNSRoutes(router);
   // POST /gateway/start - Start gateway for organization
   router.post(
     '/gateway/start',
@@ -92,11 +98,7 @@ export const setupGatewayRoutes = (router: Router) => {
         const gateway_hostname = makeOrgGatewayHostname(organization_id);
         const gateway_url = makeOrgGatewayUrl(organization_id);
 
-        log(
-          6,
-          'GATEWAY_ALLOC',
-          `Gateway accessible at: ${gateway_url}`
-        );
+        log(6, 'GATEWAY_ALLOC', `Gateway accessible at: ${gateway_url}`);
 
         // 6. Call gateway handshake
         const handshakeUrl = `${gateway_url}/collab/start`;

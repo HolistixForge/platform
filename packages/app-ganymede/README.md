@@ -27,7 +27,8 @@ See [doc/architecture/OVERVIEW.md](../../doc/architecture/OVERVIEW.md) for syste
 
 Multiple authentication methods:
 
-- OAuth (GitHub, GitLab, Discord, LinkedIn)
+- OAuth providers (GitHub, GitLab, Discord, LinkedIn) - external OAuth login
+- OAuth2 server for user authentication (global `demiurge-global` client) - frontend token issuance
 - TOTP (2FA)
 - Magic link (email)
 - Local (email/password)
@@ -72,7 +73,8 @@ See [doc/reference/API.md](../../doc/reference/API.md) for complete API document
 
 **Key endpoints:**
 
-- `/auth/*` - Authentication
+- `/auth/*` - Authentication (login, signup, OAuth providers, TOTP, magic link)
+- `/oauth/*` - OAuth2 server for user authentication (global client only)
 - `/organizations` - Organization management
 - `/projects` - Project management
 - `/gateway/*` - Gateway lifecycle

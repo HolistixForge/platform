@@ -31,6 +31,43 @@
         }
       }
     },
+    "/user": {
+      "get": {
+        "summary": "Get user from JWT token",
+        "description": "Extracts user information from JWT token in Authorization header",
+        "tags": ["Auth"],
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "description": "JWT token (Bearer token)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(?:Bearer\\s)?[-A-Za-z0-9_+./]*={0,3}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User information from token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user_id": { "type": "string", "format": "uuid", "nullable": true },
+                    "username": { "type": "string", "nullable": true },
+                    "email": { "type": "string", "format": "email", "nullable": true }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
     "/signup": {
       "post": {
         "summary": "signup new user",
@@ -652,6 +689,58 @@
         }
       }
     },
+    "/orgs/{org_id}/members/{user_id}": {
+      "delete": {
+        "summary": "Remove organization member",
+        "tags": ["Organizations"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          { "$ref": "#/components/parameters/org_id" },
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/empty" },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      },
+      "put": {
+        "summary": "Update organization member role",
+        "tags": ["Organizations"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          { "$ref": "#/components/parameters/org_id" },
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "role": { "type": "string", "enum": ["owner", "admin", "member"] }
+                },
+                "required": ["role"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/empty" },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
     "/projects": {
       "get": {
         "summary": "List user's projects",
@@ -773,6 +862,52 @@
               }
             }
           },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      },
+      "post": {
+        "summary": "Add project member",
+        "tags": ["Projects"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          { "$ref": "#/components/parameters/project_id" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user_id": { "type": "string", "format": "uuid" }
+                },
+                "required": ["user_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/empty" },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/projects/{project_id}/members/{user_id}": {
+      "delete": {
+        "summary": "Remove project member",
+        "tags": ["Projects"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          { "$ref": "#/components/parameters/project_id" },
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/empty" },
           "4XX": { "$ref": "#/components/responses/errors" }
         }
       }
@@ -1039,6 +1174,89 @@
         }
       }
     },
+    "/gateway/dns/register": {
+      "post": {
+        "summary": "Register DNS record (FQDN → IP)",
+        "description": "Generic DNS management endpoint. Called by gateway to register any DNS record.",
+        "tags": ["Gateway"],
+        "parameters": [{ "$ref": "#/components/parameters/headers_authorization_bearer" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fqdn": { "type": "string", "description": "Fully qualified domain name" },
+                  "ip": { "type": "string", "format": "ipv4", "description": "IP address" }
+                },
+                "required": ["fqdn", "ip"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "DNS record registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" },
+          "5XX": { "$ref": "#/components/responses/errors" }
+        },
+        "security": [{ "organizationToken": [] }]
+      }
+    },
+    "/gateway/dns/deregister": {
+      "delete": {
+        "summary": "Deregister DNS record",
+        "description": "Generic DNS management endpoint. Called by gateway to remove a DNS record.",
+        "tags": ["Gateway"],
+        "parameters": [{ "$ref": "#/components/parameters/headers_authorization_bearer" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fqdn": { "type": "string", "description": "Fully qualified domain name" }
+                },
+                "required": ["fqdn"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "DNS record deregistered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" },
+          "5XX": { "$ref": "#/components/responses/errors" }
+        },
+        "security": [{ "organizationToken": [] }]
+      }
+    },
     "/users/search": {
       "get": {
         "summary": "Search users",
@@ -1070,6 +1288,249 @@
             }
           },
           "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/users/{user_id}": {
+      "get": {
+        "summary": "Get user by ID",
+        "tags": ["Users"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/user" }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/oauth/authorize": {
+      "get": {
+        "summary": "OAuth2 authorization endpoint (user authentication)",
+        "description": "OAuth2 authorization code flow for user authentication. Used by the frontend to obtain user access tokens. Only supports the global 'demiurge-global' client.",
+        "tags": ["OAuth"],
+        "parameters": [
+          {
+            "name": "response_type",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "enum": ["code"] }
+          },
+          {
+            "name": "client_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "example": "demiurge-global" }
+          },
+          {
+            "name": "redirect_uri",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "uri" }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to redirect_uri with authorization code",
+            "headers": {
+              "Location": {
+                "schema": { "type": "string", "format": "uri" },
+                "description": "redirect_uri?code=...&state=..."
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated - redirect to login page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": { "type": "string" },
+                    "redirect": { "type": "string" },
+                    "client_id": { "type": "string" },
+                    "redirect_uri": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      },
+      "post": {
+        "summary": "OAuth2 authorization endpoint (user authentication) - POST variant",
+        "tags": ["OAuth"],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "response_type": { "type": "string", "enum": ["code"] },
+                  "client_id": { "type": "string" },
+                  "redirect_uri": { "type": "string", "format": "uri" },
+                  "scope": { "type": "string" },
+                  "state": { "type": "string" }
+                },
+                "required": ["response_type", "client_id", "redirect_uri"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authorization code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": { "type": "string" },
+                    "state": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": { "type": "string" },
+                    "redirect": { "type": "string" },
+                    "client_id": { "type": "string" },
+                    "redirect_uri": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/oauth/token": {
+      "post": {
+        "summary": "OAuth2 token endpoint (user authentication)",
+        "description": "Exchange authorization code for access token, or refresh access token. Only supports the global 'demiurge-global' client for user authentication.",
+        "tags": ["OAuth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "grant_type": {
+                    "type": "string",
+                    "enum": ["authorization_code", "refresh_token"]
+                  },
+                  "code": {
+                    "type": "string",
+                    "description": "Authorization code (for authorization_code grant)"
+                  },
+                  "refresh_token": {
+                    "type": "string",
+                    "description": "Refresh token (for refresh_token grant)"
+                  },
+                  "client_id": { "type": "string", "example": "demiurge-global" },
+                  "client_secret": { "type": "string", "example": "none" },
+                  "redirect_uri": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "Must match redirect_uri from authorization request"
+                  }
+                },
+                "required": ["grant_type", "client_id", "client_secret"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Access token response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": { "type": "string" },
+                    "token_type": { "type": "string", "example": "Bearer" },
+                    "expires_in": { "type": "integer" },
+                    "refresh_token": { "type": "string" },
+                    "scope": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" },
+          "5XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/oauth/public-key": {
+      "get": {
+        "summary": "Get JWT public key",
+        "description": "Returns the public key used to verify JWT tokens issued by Ganymede",
+        "tags": ["OAuth"],
+        "responses": {
+          "200": {
+            "description": "Public key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "publicKey": { "type": "string" }
+                  },
+                  "required": ["publicKey"]
+                }
+              }
+            }
+          }
         }
       }
     }

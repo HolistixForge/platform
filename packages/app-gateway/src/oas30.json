@@ -145,6 +145,184 @@
           "4XX": { "$ref": "#/components/responses/errors" }
         }
       }
+    },
+    "/oauth/authorize": {
+      "get": {
+        "summary": "OAuth2 authorization endpoint",
+        "description": "OAuth2 authorization code flow",
+        "tags": ["OAuth"],
+        "parameters": [
+          {
+            "name": "response_type",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "enum": ["code"] }
+          },
+          {
+            "name": "client_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "description": "OAuth client ID" }
+          },
+          {
+            "name": "redirect_uri",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "uri" }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "$ref": "#/components/parameters/headers_authorization" }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to redirect_uri with authorization code",
+            "headers": {
+              "Location": {
+                "schema": { "type": "string", "format": "uri" },
+                "description": "redirect_uri?code=...&state=..."
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/oauth/token": {
+      "post": {
+        "summary": "OAuth2 token endpoint)",
+        "description": "Exchange authorization code for access token, or refresh access token.",
+        "tags": ["OAuth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "grant_type": {
+                    "type": "string",
+                    "enum": ["authorization_code", "refresh_token"]
+                  },
+                  "code": {
+                    "type": "string",
+                    "description": "Authorization code (for authorization_code grant)"
+                  },
+                  "refresh_token": {
+                    "type": "string",
+                    "description": "Refresh token (for refresh_token grant)"
+                  },
+                  "client_id": { "type": "string", "description": "OAuth client ID" },
+                  "client_secret": { "type": "string", "description": "OAuth client secret" },
+                  "redirect_uri": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "Must match redirect_uri from authorization request"
+                  }
+                },
+                "required": ["grant_type", "client_id", "client_secret"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Access token response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": { "type": "string" },
+                    "token_type": { "type": "string", "example": "Bearer" },
+                    "expires_in": { "type": "integer" },
+                    "refresh_token": { "type": "string" },
+                    "scope": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" },
+          "5XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/oauth/authenticate": {
+      "post": {
+        "summary": "OAuth2 token authentication endpoint",
+        "description": "Validate OAuth2 access token.",
+        "tags": ["OAuth"],
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^Bearer\\s[-A-Za-z0-9_+./]*={0,3}$"
+            },
+            "description": "OAuth2 access token (Bearer token)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Token validated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user_id": { "type": "string", "format": "uuid" },
+                    "scope": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "client_id": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
     }
   },
   "components": {

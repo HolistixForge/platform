@@ -1,4 +1,5 @@
-import { TJwtUserContainer } from '@monorepo/demiurge-types';
+import { TJwtUser } from '@monorepo/demiurge-types';
+import { TJwtUserContainer } from './servers-types';
 import { secondAgo } from '@monorepo/simple-types';
 import { ForbiddenException, NotFoundException } from '@monorepo/log';
 import {
@@ -14,6 +15,7 @@ import {
   TEventPeriodic,
 } from '@monorepo/reducers';
 import { TCollabBackendExports } from '@monorepo/collab';
+import crypto from 'crypto';
 
 import { TUserContainersSharedData } from './servers-shared-model';
 import { TUserContainer } from './servers-types';
@@ -24,6 +26,7 @@ import {
   TUserContainersEvents,
   TEventMapHttpService,
   TEventDelete,
+  TEventSelectRunner,
 } from './servers-events';
 import { TOAuthClient } from './container-image';
 import { TUserContainersExports } from '..';
@@ -66,6 +69,8 @@ export class UserContainersReducer extends Reducer<
         return this._MapHttpService(event, requestData);
       case 'user-container:activity':
         return this._Activity(event, requestData);
+      case 'user-container:set-runner':
+        return this._setRunner(event, requestData);
 
       case 'reducers:periodic':
         return this._periodic(event);
@@ -82,21 +87,107 @@ export class UserContainersReducer extends Reducer<
     return `uc_${timestamp}${random}`;
   }
 
+  /**
+   * Generate FQDN for user container
+   * Container-aware logic (lives in user-containers module, not gateway/ganymede)
+   * @param containerId - Container ID
+   * @param organizationId - Organization ID
+   * @returns FQDN: uc-{containerId}.org-{orgId}.{domain}
+   */
+  private generateContainerFQDN(
+    containerId: string,
+    organizationId: string
+  ): string {
+    const domain = process.env.DOMAIN || 'domain.local';
+    return `uc-${containerId}.org-${organizationId}.${domain}`;
+  }
+
   private async createOAuthClients(
     containerId: string,
+    projectId: string,
     oauthClients?: TOAuthClient[]
   ): Promise<
     { client_id: string; client_secret: string; service_name: string }[]
   > {
-    if (!oauthClients) return [];
-    throw new Error('Not implemented');
+    if (!oauthClients || oauthClients.length === 0) return [];
+
+    const oauthManager = this.depsExports.gateway.oauthManager;
+    const createdClients: {
+      client_id: string;
+      client_secret: string;
+      service_name: string;
+    }[] = [];
+
+    for (const oauthClient of oauthClients) {
+      // Generate unique client_id and client_secret
+      const client_id = crypto.randomUUID();
+      const client_secret = crypto.randomUUID();
+
+      // Create OAuth client via OAuthManager
+      oauthManager.addClient({
+        client_id,
+        client_secret,
+        container_id: containerId,
+        project_id: projectId,
+        service_name: oauthClient.serviceName,
+        redirect_uris: oauthClient.redirectUris || [],
+        grants: ['authorization_code', 'refresh_token'],
+        created_at: new Date().toISOString(),
+      });
+
+      createdClients.push({
+        client_id,
+        client_secret,
+        service_name: oauthClient.serviceName,
+      });
+    }
+
+    return createdClients;
   }
 
   private async deleteOAuthClients(containerId: string) {
-    // TODO: delete OAuth clients from database
+    const container =
+      this.depsExports.collab.collab.sharedData[
+        'user-containers:containers'
+      ].get(containerId);
+
+    if (!container) return;
+
+    const oauthManager = this.depsExports.gateway.oauthManager;
+
+    // Delete all OAuth clients for this container
+    for (const oauthClient of container.oauth) {
+      oauthManager.deleteClient(oauthClient.client_id);
+    }
   }
 
   async _new(event: TEventNew, requestData: RequestData) {
+    // Extract user_id from JWT (TJwtUser)
+    const jwt = requestData.jwt as TJwtUser;
+    const user_id = jwt?.user?.id;
+
+    if (!user_id) {
+      throw new ForbiddenException([
+        { message: 'User authentication required' },
+      ]);
+    }
+
+    // Check permission: container:create
+    const permissionManager = this.depsExports.gateway.permissionManager;
+    if (!permissionManager.hasPermission(user_id, 'container:create')) {
+      throw new ForbiddenException([
+        { message: 'Permission denied: container:create' },
+      ]);
+    }
+
+    // Get project_id from  event (if available)
+    const project_id = event.project_id;
+    if (!project_id) {
+      throw new ForbiddenException([
+        { message: 'Project ID required for container creation' },
+      ]);
+    }
+
     // Get image definition from registry
     const imageDef = this.depsExports['user-containers'].imageRegistry.get(
       event.imageId
@@ -109,13 +200,20 @@ export class UserContainersReducer extends Reducer<
     // Generate container ID (string instead of database ID)
     const containerId = this.generateContainerId();
 
+    // Create OAuth clients
+    const oauthClients = await this.createOAuthClients(
+      containerId,
+      project_id,
+      imageDef.oauthClients
+    );
+
     // Create container in shared state (not database)
     const container: TUserContainer = {
       user_container_id: containerId,
       container_name: event.containerName,
       image_id: imageDef.imageId,
       runner: { id: 'none' },
-      oauth: await this.createOAuthClients(containerId, imageDef.oauthClients),
+      oauth: oauthClients,
       ip: undefined,
       httpServices: [],
       last_watchdog_at: null,
@@ -129,6 +227,23 @@ export class UserContainersReducer extends Reducer<
       containerId,
       container
     );
+
+    // Register DNS entry via DNSManager
+    try {
+      const orgId = this.depsExports.gateway.organization_id;
+      const fqdn = this.generateContainerFQDN(containerId, orgId);
+      // Stage 1 Nginx IP (configurable via DEV_CONTAINER_IP env var)
+      const stage1NginxIp = process.env.DEV_CONTAINER_IP || '127.0.0.1';
+
+      await this.depsExports.gateway.dnsManager.registerRecord(
+        fqdn,
+        stage1NginxIp
+      );
+    } catch (error: any) {
+      // Log error but don't fail container creation if DNS registration fails
+      // DNS can be registered later if needed
+      console.error('Failed to register DNS for container:', error);
+    }
 
     // Create graph node
     const e: TEventNewNode = {
@@ -158,53 +273,96 @@ export class UserContainersReducer extends Reducer<
   //
 
   async _Watchdog(event: TEventWatchdog, requestData: RequestData) {
+    // Validate token
     const jwt = requestData.jwt as TJwtUserContainer;
-    const containerId = jwt.user_container_id;
-    if (containerId) {
-      const s =
-        this.depsExports.collab.collab.sharedData[
-          'user-containers:containers'
-        ].get(containerId);
-      if (s) {
-        this.depsExports.collab.collab.sharedData[
-          'user-containers:containers'
-        ].set(containerId, {
-          ...s,
-          last_watchdog_at: new Date().toISOString(),
-          system: event.system,
-        });
-      }
+    if (!jwt || jwt.type !== 'user_container_token') {
+      throw new ForbiddenException([
+        { message: 'Invalid JWT token type for watchdog' },
+      ]);
     }
+
+    const containerId = jwt.user_container_id;
+    if (!containerId) {
+      throw new ForbiddenException([
+        { message: 'Container ID required in token' },
+      ]);
+    }
+
+    // Note: Token validation would need to be implemented in TokenManager
+    // For now, we trust the JWT structure
+
+    const sduc =
+      this.depsExports.collab.collab.sharedData['user-containers:containers'];
+    const s = sduc.get(containerId);
+
+    if (!s) {
+      throw new NotFoundException([
+        { message: `Container ${containerId} not found` },
+      ]);
+    }
+
+    // Update container state
+    // Note: IP changes are handled when container reconnects with new IP
+    // DNS registration happens at container creation, not here
+    sduc.set(containerId, {
+      ...s,
+      last_watchdog_at: new Date().toISOString(),
+      system: event.system,
+      // IP might be updated here if provided in event (currently not in TEventWatchdog)
+    });
   }
 
   //
 
   async _Activity(event: TEventActivity, requestData: RequestData) {
+    // Validate token
     const jwt = requestData.jwt as TJwtUserContainer;
-    const containerId = jwt.user_container_id;
-    if (containerId) {
-      const s =
-        this.depsExports.collab.collab.sharedData[
-          'user-containers:containers'
-        ].get(containerId);
-      if (s) {
-        this.depsExports.collab.collab.sharedData[
-          'user-containers:containers'
-        ].set(containerId, {
-          ...s,
-          last_activity: event.last_activity,
-        });
-      }
+    if (!jwt || jwt.type !== 'user_container_token') {
+      throw new ForbiddenException([
+        { message: 'Invalid JWT token type for activity' },
+      ]);
     }
+
+    const containerId = jwt.user_container_id;
+    if (!containerId) {
+      throw new ForbiddenException([
+        { message: 'Container ID required in token' },
+      ]);
+    }
+
+    const sduc =
+      this.depsExports.collab.collab.sharedData['user-containers:containers'];
+    const s = sduc.get(containerId);
+
+    if (!s) {
+      throw new NotFoundException([
+        { message: `Container ${containerId} not found` },
+      ]);
+    }
+
+    sduc.set(containerId, {
+      ...s,
+      last_activity: event.last_activity,
+    });
   }
 
   //
 
   async _MapHttpService(event: TEventMapHttpService, requestData: RequestData) {
+    // Validate token
     const jwt = requestData.jwt as TJwtUserContainer;
-    const containerId = jwt.user_container_id;
+    if (!jwt || jwt.type !== 'user_container_token') {
+      throw new ForbiddenException([
+        { message: 'Invalid JWT token type for map-http-service' },
+      ]);
+    }
 
-    if (!containerId) throw new ForbiddenException();
+    const containerId = jwt.user_container_id;
+    if (!containerId) {
+      throw new ForbiddenException([
+        { message: 'Container ID required in token' },
+      ]);
+    }
 
     const sduc =
       this.depsExports.collab.collab.sharedData['user-containers:containers'];
@@ -288,20 +446,122 @@ export class UserContainersReducer extends Reducer<
   //
 
   async _delete(event: TEventDelete, requestData: RequestData) {
+    // Extract user_id from JWT (TJwtUser)
+    const jwt = requestData.jwt as TJwtUser;
+    const user_id = jwt?.user?.id;
+
+    if (!user_id) {
+      throw new ForbiddenException([
+        { message: 'User authentication required' },
+      ]);
+    }
+
     const containerId = event.user_container_id;
+
+    // Get container to check ownership (if tracking created_by_user_id)
+    const container =
+      this.depsExports.collab.collab.sharedData[
+        'user-containers:containers'
+      ].get(containerId);
+
+    if (!container) {
+      throw new NotFoundException([
+        { message: `Container ${containerId} not found` },
+      ]);
+    }
+
+    // Check permission: container:delete
+    const permissionManager = this.depsExports.gateway.permissionManager;
+    if (!permissionManager.hasPermission(user_id, 'container:delete')) {
+      throw new ForbiddenException([
+        { message: 'Permission denied: container:delete' },
+      ]);
+    }
+
+    // Delete OAuth clients
     await this.deleteOAuthClients(containerId);
 
+    // Deregister DNS entry via DNSManager
+    try {
+      const orgId = this.depsExports.gateway.organization_id;
+      const fqdn = this.generateContainerFQDN(containerId, orgId);
+
+      await this.depsExports.gateway.dnsManager.deregisterRecord(fqdn);
+    } catch (error: any) {
+      // Log error but continue with deletion
+      console.error('Failed to deregister DNS for container:', error);
+    }
+
+    // Remove from shared state
     this.depsExports.collab.collab.sharedData[
       'user-containers:containers'
     ].delete(containerId);
-    const id = userContainerNodeId(containerId);
 
+    // Update nginx to remove container services
+    await this._updateNginx(
+      this.depsExports.collab.collab.sharedData['user-containers:containers']
+    );
+
+    // Delete graph node
+    const id = userContainerNodeId(containerId);
     const e: TEventDeleteNode = {
       type: 'core:delete-node',
       id,
     };
 
     this.depsExports.reducers.processEvent(e, requestData);
+  }
+
+  //
+  async _setRunner(event: TEventSelectRunner, requestData: RequestData) {
+    // Extract user_id from JWT (TJwtUser)
+    const jwt = requestData.jwt as TJwtUser;
+    const user_id = jwt?.user?.id;
+
+    if (!user_id) {
+      throw new ForbiddenException([
+        { message: 'User authentication required' },
+      ]);
+    }
+
+    const containerId = event.user_container_id;
+    const runnerId = event.runner_id;
+
+    const sduc =
+      this.depsExports.collab.collab.sharedData['user-containers:containers'];
+    const container = sduc.get(containerId);
+
+    if (!container) {
+      throw new NotFoundException([
+        { message: `Container ${containerId} not found` },
+      ]);
+    }
+
+    // Generate hosting token (TJwtUserContainer) for the container
+    // Get project_id from JWT or container context
+    const project_id =
+      (jwt as any)?.project_id || (container as any)?.project_id;
+    if (!project_id) {
+      throw new ForbiddenException([
+        { message: 'Project ID required for token generation' },
+      ]);
+    }
+
+    const tokenManager = this.depsExports.gateway.tokenManager;
+    const hostingToken = tokenManager.generateJWTToken({
+      type: 'user_container_token',
+      project_id,
+      user_container_id: containerId,
+      scope: 'container:access',
+    });
+
+    // Update runner with hosting token
+    // Token can be used for Docker command generation or container authentication
+    // Note: Token is stored but not yet exposed via API - may need to add endpoint later
+    sduc.set(containerId, {
+      ...container,
+      runner: { id: runnerId, hosting_token: hostingToken },
+    });
   }
 
   //

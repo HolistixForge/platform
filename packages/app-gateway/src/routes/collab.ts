@@ -1,16 +1,12 @@
 import { Router, Request } from 'express';
 import { BackendEventProcessor } from '@monorepo/reducers';
-import { TProjectConfig } from '@monorepo/gateway';
 import { log, NotFoundException } from '@monorepo/log';
 import { myfetch } from '@monorepo/backend-engine';
 import { asyncHandler } from '../middleware/route-handler';
-import { VPN } from '../project-config';
+import { VPN } from '../config/organization';
 import { CONFIG } from '../config';
-import { initializeGateway } from '../initialization/gateway-init';
-import {
-  authenticateJwt,
-  requireUserContainerToken,
-} from '../middleware/jwt-auth';
+import { initializeGatewayForOrganization } from '../initialization/gateway-init';
+import { authenticateJwt, requireScope } from '../middleware/jwt-auth';
 import { requireProjectAccess } from '../middleware/permissions';
 import { getGatewayInstances } from '../initialization/gateway-instances';
 
@@ -20,17 +16,6 @@ export const setBackendEventProcessor = (
   processor: BackendEventProcessor<any>
 ) => {
   bep = processor;
-};
-
-// This will be called from main.ts
-export let startProjectCollabCallback:
-  | ((config: TProjectConfig) => Promise<void>)
-  | null = null;
-
-export const setStartProjectCollabCallback = (
-  callback: (config: TProjectConfig) => Promise<void>
-) => {
-  startProjectCollabCallback = callback;
 };
 
 export const setupCollabRoutes = (router: Router) => {
@@ -83,7 +68,11 @@ export const setupCollabRoutes = (router: Router) => {
         jsonBody: { tmp_handshake_token },
       });
 
-      const config = response.json as TProjectConfig;
+      const config = response.json as {
+        organization_id: string;
+        organization_token: string;
+        gateway_id: string;
+      };
 
       log(6, 'GATEWAY', 'Received config from Ganymede', { config });
 
@@ -94,17 +83,13 @@ export const setupCollabRoutes = (router: Router) => {
         config.gateway_id
       ) {
         // Initialize gateway (this will pull data from Ganymede)
-        await initializeGateway(
+        await initializeGatewayForOrganization(
           config.organization_id,
           config.gateway_id,
           config.organization_token
         );
 
         log(6, 'GATEWAY', 'Gateway initialized from /collab/start');
-      }
-
-      if (config.organization_token && startProjectCollabCallback) {
-        await startProjectCollabCallback(config);
       }
 
       return res.json({});
@@ -151,10 +136,11 @@ export const setupCollabRoutes = (router: Router) => {
   );
 
   // GET /collab/vpn-config - Get VPN configuration
-  // Requires TJwtUserContainer token for the correct organization
+  // Requires JWT token with 'org:{org_id}:connect-vpn' scope (organization-specific)
   router.get(
     '/collab/vpn-config',
-    requireUserContainerToken, // Requires user_container_token and verifies organization
+    authenticateJwt, // Extract and attach JWT
+    requireScope('org:{org_id}:connect-vpn'), // Verify token has org-specific scope
     asyncHandler(async (req: Request, res) => {
       if (!VPN) {
         return res.status(500).json({ error: 'VPN config not available' });

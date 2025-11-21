@@ -2,7 +2,7 @@
  * PowerDNS API Client
  *
  * Manages DNS records via PowerDNS REST API for dynamic gateway allocation.
- * All gateways (org-{uuid}.domain.com) and user containers (uc-{uuid}.org-{uuid}.domain.com)
+ * All gateways (org-{uuid}.domain.com) and user containers (uc-{uuid}.org-{uuid}.domain.com), etc.
  * are registered here to route requests through the main nginx (stage 1).
  */
 
@@ -122,23 +122,21 @@ export class PowerDNSClient {
   }
 
   /**
-   * Register a user container's domain (uc-{uuid}.org-{uuid}.domain.com)
-   * Points to the dev container IP (will be routed via gateway nginx stage 2)
+   * Register a DNS record (FQDN → IP)
+   * @param fqdn - Fully qualified domain name (e.g., "uc-xyz.org-abc.domain.local")
+   * @param ip - IP address to point to (e.g., "127.0.0.1" or public IP)
    */
-  async registerUserContainer(
-    orgId: string,
-    containerId: string
-  ): Promise<void> {
-    const fqdn = `uc-${containerId}.org-${orgId}.${this.domain}.`;
-    const ip = process.env.DEV_CONTAINER_IP || '127.0.0.1';
+  async registerRecord(fqdn: string, ip: string): Promise<void> {
+    // Ensure FQDN ends with trailing dot
+    const fqdnWithDot = fqdn.endsWith('.') ? fqdn : `${fqdn}.`;
 
-    log(6, 'POWERDNS', `Registering user container: ${fqdn} → ${ip}`);
+    log(6, 'POWERDNS', `Registering DNS record: ${fqdnWithDot} → ${ip}`);
 
     try {
       await this.client.patch(`/servers/localhost/zones/${this.zoneName}`, {
         rrsets: [
           {
-            name: fqdn,
+            name: fqdnWithDot,
             type: 'A',
             changetype: 'REPLACE',
             ttl: 60,
@@ -152,12 +150,12 @@ export class PowerDNSClient {
         ],
       });
 
-      log(6, 'POWERDNS', `✅ User container registered: ${fqdn}`);
+      log(6, 'POWERDNS', `✅ DNS record registered: ${fqdnWithDot}`);
     } catch (error: any) {
       log(
         EPriority.Error,
         'POWERDNS',
-        `❌ Failed to register user container ${fqdn}:`,
+        `❌ Failed to register DNS record ${fqdnWithDot}:`,
         error.message
       );
       throw new Error(`PowerDNS registration failed: ${error.message}`);
@@ -165,33 +163,32 @@ export class PowerDNSClient {
   }
 
   /**
-   * Deregister a user container's domain
+   * Deregister a DNS record
+   * @param fqdn - Fully qualified domain name to remove
    */
-  async deregisterUserContainer(
-    orgId: string,
-    containerId: string
-  ): Promise<void> {
-    const fqdn = `uc-${containerId}.org-${orgId}.${this.domain}.`;
+  async deregisterRecord(fqdn: string): Promise<void> {
+    // Ensure FQDN ends with trailing dot
+    const fqdnWithDot = fqdn.endsWith('.') ? fqdn : `${fqdn}.`;
 
-    log(6, 'POWERDNS', `Deregistering user container: ${fqdn}`);
+    log(6, 'POWERDNS', `Deregistering DNS record: ${fqdnWithDot}`);
 
     try {
       await this.client.patch(`/servers/localhost/zones/${this.zoneName}`, {
         rrsets: [
           {
-            name: fqdn,
+            name: fqdnWithDot,
             type: 'A',
             changetype: 'DELETE',
           },
         ],
       });
 
-      log(6, 'POWERDNS', `✅ User container deregistered: ${fqdn}`);
+      log(6, 'POWERDNS', `✅ DNS record deregistered: ${fqdnWithDot}`);
     } catch (error: any) {
       log(
         EPriority.Error,
         'POWERDNS',
-        `❌ Failed to deregister user container ${fqdn}:`,
+        `❌ Failed to deregister DNS record ${fqdnWithDot}:`,
         error.message
       );
       // Don't throw - deregistration is best-effort

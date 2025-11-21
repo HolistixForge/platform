@@ -1,6 +1,7 @@
 import { log } from '@monorepo/log';
 import { IPersistenceProvider } from '../state/IPersistenceProvider';
 import type { TPermissionData } from './types';
+import { PermissionManager as AbstractPermissionManager } from '@monorepo/gateway';
 
 /**
  * PermissionManager - Simple Permission Management
@@ -20,10 +21,14 @@ import type { TPermissionData } from './types';
  * MVP: Exact string matching only (no hierarchy, no wildcards)
  * Future: Can add hierarchy by updating hasPermission() logic
  */
-export class PermissionManager implements IPersistenceProvider {
+export class PermissionManager
+  extends AbstractPermissionManager
+  implements IPersistenceProvider
+{
   private data: TPermissionData;
 
   constructor() {
+    super();
     this.data = {
       permissions: {},
     };
@@ -38,7 +43,8 @@ export class PermissionManager implements IPersistenceProvider {
     }
 
     if (data.permissions && typeof data.permissions === 'object') {
-      this.data.permissions = data.permissions as TPermissionData['permissions'];
+      this.data.permissions =
+        data.permissions as TPermissionData['permissions'];
       log(6, 'PERMISSIONS', 'Loaded permission data');
     } else {
       log(5, 'PERMISSIONS', 'Invalid permission data format');
@@ -57,7 +63,7 @@ export class PermissionManager implements IPersistenceProvider {
    * Check if user has exact permission
    * Simple exact-match only (no hierarchy for now)
    */
-  hasPermission(user_id: string, permission: string): boolean {
+  override hasPermission(user_id: string, permission: string): boolean {
     const userPermissions = this.data.permissions[user_id];
     if (!userPermissions) {
       return false;
@@ -68,7 +74,7 @@ export class PermissionManager implements IPersistenceProvider {
   /**
    * Add permission to user
    */
-  addPermission(user_id: string, permission: string): void {
+  override addPermission(user_id: string, permission: string): void {
     if (!this.data.permissions[user_id]) {
       this.data.permissions[user_id] = [];
     }
@@ -81,7 +87,7 @@ export class PermissionManager implements IPersistenceProvider {
   /**
    * Remove permission from user
    */
-  removePermission(user_id: string, permission: string): void {
+  override removePermission(user_id: string, permission: string): void {
     if (this.data.permissions[user_id]) {
       const before = this.data.permissions[user_id].length;
       this.data.permissions[user_id] = this.data.permissions[user_id].filter(
@@ -89,11 +95,7 @@ export class PermissionManager implements IPersistenceProvider {
       );
       const after = this.data.permissions[user_id].length;
       if (before !== after) {
-        log(
-          7,
-          'PERMISSIONS',
-          `Removed permission: ${user_id} → ${permission}`
-        );
+        log(7, 'PERMISSIONS', `Removed permission: ${user_id} → ${permission}`);
       }
     }
   }

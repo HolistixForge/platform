@@ -51,7 +51,7 @@ See: [./SYSTEM_ARCHITECTURE.md](./SYSTEM_ARCHITECTURE.md)
 - `organizations`, `organizations_members`
 - `projects`, `projects_members`
 - `gateways`, `organizations_gateways`
-- `oauth_clients`, `oauth_tokens` (for container apps)
+- `oauth_clients`, `oauth_tokens` (for user authentication via global `demiurge-global` client)
 
 ### 2. app-gateway (Gateway)
 

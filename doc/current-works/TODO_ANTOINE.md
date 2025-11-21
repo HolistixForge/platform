@@ -1,12 +1,14 @@
 ⚠️ Antoine's stuffs
 
 fix other modules and their stories: user-containers, jupyter
+all compile: frontend : only one JWT for user, global client id
+logs
 dns
 load save project
-permission module
-credentials module
+permission
+credentials
 automate
-docs
+docs with FL features upcoming: collab, graph, layers, DNS, containers, logs, IA, automation and reporting language, formal process management, modules
 website
 license
 

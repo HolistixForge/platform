@@ -37,22 +37,13 @@
       "path": "../../collab-engine/tsconfig.lib.json"
     },
     {
-      "path": "../reducers/tsconfig.lib.json"
-    },
-    {
       "path": "../collab/tsconfig.lib.json"
-    },
-    {
-      "path": "../module/tsconfig.lib.json"
-    },
-    {
-      "path": "../../log/tsconfig.lib.json"
     },
     {
       "path": "../../simple-types/tsconfig.lib.json"
     },
     {
-      "path": "../../backend-engine/tsconfig.lib.json"
+      "path": "../module/tsconfig.lib.json"
     }
   ]
 }

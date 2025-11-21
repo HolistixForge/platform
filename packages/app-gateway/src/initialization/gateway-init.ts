@@ -1,16 +1,21 @@
 import { log } from '@monorepo/log';
+import { loadModules } from '@monorepo/module';
 import { GatewayState } from '../state/GatewayState';
 import { PermissionManager } from '../permissions';
 import { ProjectRoomsManager } from '../state/ProjectRooms';
 import { OAuthManager } from '../oauth';
-import { ContainerTokenManager } from '../containers';
+import { TokenManager } from '../tokens';
 import { setGatewayInstances, getGatewayInstances } from './gateway-instances';
+import { createBackendModulesConfig } from '../config/modules';
+
+// Cleanup interval reference (stored to clear on shutdown)
+let oauthCleanupInterval: NodeJS.Timeout | null = null;
 
 export interface GatewayInstances {
   gatewayState: GatewayState;
   permissionManager: PermissionManager;
   oauthManager: OAuthManager;
-  containerTokenManager: ContainerTokenManager;
+  tokenManager: TokenManager;
   projectRooms: ProjectRoomsManager;
 }
 
@@ -26,7 +31,7 @@ export interface GatewayInstances {
  * @param organizationToken - Organization token for Ganymede auth
  * @returns Gateway instances (state and managers)
  */
-export async function initializeGateway(
+export async function initializeGatewayForOrganization(
   organizationId: string,
   gatewayId: string,
   organizationToken: string
@@ -51,16 +56,13 @@ export async function initializeGateway(
   // 3. Create manager instances
   const permissionManager = new PermissionManager();
   const oauthManager = new OAuthManager();
-  const containerTokenManager = new ContainerTokenManager(
-    process.env.GATEWAY_HMAC_SECRET
-  );
+  const tokenManager = new TokenManager(process.env.GATEWAY_HMAC_SECRET);
   const projectRooms = new ProjectRoomsManager();
 
   // 4. Register all managers with GatewayState
   // Registration will automatically load data from pulled snapshot
   gatewayState.register('permissions', permissionManager);
   gatewayState.register('oauth', oauthManager);
-  gatewayState.register('containers', containerTokenManager);
   gatewayState.register('projects', projectRooms);
 
   // 5. Store instances in registry for route access + start auto-save
@@ -70,19 +72,41 @@ export async function initializeGateway(
     gatewayState,
     permissionManager,
     oauthManager,
-    containerTokenManager,
+    tokenManager,
     projectRooms,
   };
   setGatewayInstances(instances);
 
-  // 6. Log statistics
+  // 6. Load backend modules (collab, reducers, core-graph, gateway, user-containers)
+  // Modules are loaded after managers are created so gateway module can access them
+  const modulesConfig = createBackendModulesConfig(
+    organizationId,
+    organizationToken,
+    gatewayId,
+    permissionManager,
+    oauthManager,
+    tokenManager
+  );
+  log(6, 'GATEWAY_INIT', `Loading ${modulesConfig.length} backend modules...`);
+  loadModules(modulesConfig);
+  log(6, 'GATEWAY_INIT', 'Backend modules loaded successfully');
+
+  // 7. Start periodic OAuth cleanup (every hour)
+  if (oauthCleanupInterval) {
+    clearInterval(oauthCleanupInterval);
+  }
+  oauthCleanupInterval = setInterval(() => {
+    oauthManager.cleanupExpired();
+  }, 60 * 60 * 1000); // 1 hour = 60 minutes * 60 seconds * 1000 ms
+  log(6, 'GATEWAY_INIT', 'Started OAuth cleanup timer (runs every hour)');
+
+  // 8. Log statistics
   const oauthStats = oauthManager.getStats();
-  const containerStats = containerTokenManager.getStats();
   log(
     6,
     'GATEWAY_INIT',
     `Gateway initialized: ${projectRooms.getProjectCount()} projects, ` +
-      `${oauthStats.clients} OAuth clients, ${containerStats.total} container tokens`
+      `${oauthStats.clients} OAuth clients`
   );
 
   return instances;
@@ -97,13 +121,20 @@ export async function initializeGateway(
 export async function shutdownGateway(): Promise<void> {
   log(6, 'GATEWAY_SHUTDOWN', 'Initiating graceful shutdown...');
 
+  // Stop OAuth cleanup timer
+  if (oauthCleanupInterval) {
+    clearInterval(oauthCleanupInterval);
+    oauthCleanupInterval = null;
+    log(6, 'GATEWAY_SHUTDOWN', 'Stopped OAuth cleanup timer');
+  }
+
   const instances = getGatewayInstances();
   if (!instances) {
     log(6, 'GATEWAY_SHUTDOWN', 'No gateway instances to shutdown');
     return;
   }
 
-  // Cleanup expired OAuth tokens/codes
+  // Cleanup expired OAuth tokens/codes (final cleanup)
   instances.oauthManager.cleanupExpired();
 
   // Shutdown GatewayState (stops autosave and pushes final data)

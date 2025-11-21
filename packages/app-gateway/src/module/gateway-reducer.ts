@@ -2,14 +2,20 @@ import { log } from '@monorepo/log';
 import { inSeconds, isPassed } from '@monorepo/simple-types';
 import { Reducer, TEventPeriodic } from '@monorepo/reducers';
 import { TCollabBackendExports } from '@monorepo/collab';
-import { TGatewayExports } from '..';
-
-import { TGatewayMeta, TGatewaySharedData } from './gateway-types';
-import {
+import type { TGatewayExports, TGatewaySharedData } from '@monorepo/gateway';
+import type {
   TGatewayEvents,
   TEventLoad,
   TEventDisableShutdown,
-} from './gateway-events';
+} from '@monorepo/gateway';
+
+type TGatewayMeta = {
+  projectActivity: {
+    last_activity: string;
+    gateway_shutdown: string;
+    disable_gateway_shutdown: boolean;
+  };
+};
 
 /**
  *
@@ -113,7 +119,7 @@ export class GatewayReducer extends Reducer<TGatewayEvents | TEventPeriodic> {
 
   //
 
-  _periodic(event: TEventPeriodic): Promise<void> {
+  async _periodic(event: TEventPeriodic): Promise<void> {
     const meta =
       this.depsExports.collab.collab.sharedData['gateway:gateway'].get(
         'unique'
@@ -126,7 +132,11 @@ export class GatewayReducer extends Reducer<TGatewayEvents | TEventPeriodic> {
         if (isPassed(gateway_shutdown)) {
           if (shouldIBeDead === false) {
             log(6, 'GATEWAY', 'shutdown');
-            this.depsExports.gateway.gatewayStop();
+            // Import shutdownGateway dynamically to avoid circular dependency
+            const { shutdownGateway } = await import(
+              '../initialization/gateway-init'
+            );
+            await shutdownGateway();
             shouldIBeDead = true;
           } else {
             log(6, 'GATEWAY', 'shutdown failed process still alive');

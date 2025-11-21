@@ -31,32 +31,6 @@ export function makeOrgGatewayUrl(organizationId: string): string {
 }
 
 /**
- * Construct user container hostname
- * @param containerId - User container UUID
- * @param organizationId - Organization UUID
- * @returns uc-{container-uuid}.org-{org-uuid}.domain.local
- */
-export function makeUserContainerHostname(
-  containerId: string,
-  organizationId: string
-): string {
-  return `uc-${containerId}.org-${organizationId}.${getDomain()}`;
-}
-
-/**
- * Construct user container URL
- * @param containerId - User container UUID
- * @param organizationId - Organization UUID
- * @returns https://uc-{container-uuid}.org-{org-uuid}.domain.local
- */
-export function makeUserContainerUrl(
-  containerId: string,
-  organizationId: string
-): string {
-  return `https://${makeUserContainerHostname(containerId, organizationId)}`;
-}
-
-/**
  * Construct Ganymede API URL
  * @returns https://ganymede.domain.local
  */

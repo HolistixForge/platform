@@ -2,11 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { jwtPayload } from '@monorepo/backend-engine';
 import { ForbiddenException } from '@monorepo/log';
 import { asyncHandler } from './route-handler';
-import type {
-  TJwtUser,
-  TJwtUserContainer,
-  TJwtGateway,
-} from '@monorepo/demiurge-types';
+import type { TJwtUser, TJwtGateway } from '@monorepo/demiurge-types';
 
 // Import TJwtOrganization directly from the file since it's not exported from index
 import type { TJwtOrganization } from '@monorepo/demiurge-types/src/lib/jwt/jwt';
@@ -15,11 +11,7 @@ import { getGatewayInstances } from '../initialization/gateway-instances';
 /**
  * Union type for all JWT token types
  */
-export type TAnyJwt =
-  | TJwtUser
-  | TJwtUserContainer
-  | TJwtOrganization
-  | TJwtGateway;
+export type TAnyJwt = TJwtUser | TJwtOrganization | TJwtGateway;
 
 /**
  * Extract and verify JWT from token string
@@ -74,8 +66,11 @@ export function checkProjectAccess(
 /**
  * JWT Authentication Middleware
  * Extracts JWT from Authorization header and sets req.user and req.jwt
- * Handles all JWT types: TJwtUser, TJwtUserContainer, TJwtOrganization, TJwtGateway
+ * Handles all JWT types: TJwtUser, TJwtOrganization, TJwtGateway
  * Can be used alongside or instead of passport authentication
+ *
+ * Sets req.user only if JWT contains a user.id (for TJwtUser tokens).
+ * Other middleware can use req.jwt to access full JWT payload.
  */
 export const authenticateJwt = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -87,30 +82,19 @@ export const authenticateJwt = asyncHandler(
 
     const jwtPayloadData = extractJwtPayload(authHeader);
 
-    // Extract user_id based on JWT type
+    // Extract user_id only for user tokens (TJwtUser)
     let user_id: string | undefined;
     if (
       jwtPayloadData.type === 'access_token' ||
       jwtPayloadData.type === 'refresh_token'
     ) {
-      // TJwtUser
+      // TJwtUser has user.id
       user_id = jwtPayloadData.user?.id;
-    } else if (jwtPayloadData.type === 'user_container_token') {
-      // TJwtUserContainer - no user_id, only container_id
-      // Set user_id to container_id for compatibility
-      user_id = (jwtPayloadData as TJwtUserContainer).user_container_id;
-    } else if (jwtPayloadData.type === 'organization_token') {
-      // TJwtOrganization - organization-level token
-      // No user_id
-      user_id = undefined;
-    } else if (jwtPayloadData.type === 'gateway_token') {
-      // TJwtGateway - gateway-level token
-      // No user_id
-      user_id = undefined;
     }
+    // Other token types (TJwtOrganization, TJwtGateway) don't have user_id
 
     // Set req.user for compatibility with permission middleware
-    // Only set if we have a user_id (user tokens or container tokens)
+    // Only set if we have a user_id (for user tokens)
     const authReq = req as any;
     if (user_id && !authReq.user) {
       authReq.user = { id: user_id };
@@ -124,61 +108,124 @@ export const authenticateJwt = asyncHandler(
 );
 
 /**
- * Middleware: Require TJwtUserContainer token and verify it belongs to the correct organization
- * Used for endpoints that should only be accessible by user containers (not human users)
+ * Normalize JWT scope property to array
+ * Handles both string and array formats
  */
-export const requireUserContainerToken = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const authHeader = req.headers.authorization as string;
-
-    if (!authHeader) {
-      throw new ForbiddenException([{ message: 'No authorization header' }]);
-    }
-
-    const jwtPayloadData = extractJwtPayload(authHeader);
-
-    // Verify it's a user_container_token
-    if (jwtPayloadData.type !== 'user_container_token') {
-      throw new ForbiddenException([
-        { message: 'Requires user_container_token' },
-      ]);
-    }
-
-    const containerToken = jwtPayloadData as TJwtUserContainer;
-    const project_id = containerToken.project_id;
-
-    if (!project_id) {
-      throw new ForbiddenException([{ message: 'JWT missing project_id' }]);
-    }
-
-    // Verify the project belongs to the organization this gateway is serving
-    const instances = getGatewayInstances();
-    if (!instances) {
-      throw new ForbiddenException([
-        { message: 'Gateway instances not initialized' },
-      ]);
-    }
-
-    const gatewayOrganizationId = instances.gatewayState.getOrganizationId();
-    if (!gatewayOrganizationId) {
-      throw new ForbiddenException([
-        { message: 'Gateway not bound to an organization' },
-      ]);
-    }
-
-    // TODO: In the future, we might need to verify project belongs to organization
-    // For now, we assume if the gateway is serving the organization, it has access to all its projects
-    // This verification could be done by:
-    // 1. Checking if project_id is in the list of projects loaded from Ganymede
-    // 2. Or fetching project details from Ganymede and checking organization_id
-    // For MVP, we trust that the gateway only serves one organization and all projects are valid
-
-    const authReq = req as any;
-    // Set user_id to container_id for compatibility
-    authReq.user = { id: containerToken.user_container_id };
-    authReq.jwt = jwtPayloadData;
-    authReq.containerToken = containerToken;
-
-    return next();
+function normalizeScope(scope: string | string[] | undefined): string[] {
+  if (!scope) {
+    return [];
   }
-);
+  if (Array.isArray(scope)) {
+    return scope;
+  }
+  // String scope - split by space
+  return scope.split(' ').filter((s) => s.length > 0);
+}
+
+/**
+ * Middleware: Require specific scope(s) in JWT
+ * Generic scope-based authorization that works with any JWT type
+ *
+ * Supports template substitution:
+ * - {org_id} - Replaced with gateway's organization ID
+ * - ${params.key} - Replaced with req.params[key]
+ * - ${body.key} - Replaced with req.body[key]
+ * - ${query.key} - Replaced with req.query[key]
+ * - ${jwt.key} - Replaced with req.jwt[key]
+ *
+ * @param requiredScope - Required scope string or array of scopes (with optional templates)
+ * @returns Express middleware function
+ *
+ * Usage:
+ *   requireScope('connect-vpn')
+ *   requireScope('org:{org_id}:connect-vpn')  // Organization-specific scope
+ *   requireScope(['connect-vpn', 'read-projects'])
+ *   requireScope('project:${jwt.project_id}:access')  // Project-specific scope from JWT
+ *
+ * The JWT must have a scope property (string or string[]).
+ * For string scopes, they are split by space.
+ */
+export const requireScope = (requiredScope: string | string[]): any => {
+  const requiredScopesTemplate = Array.isArray(requiredScope)
+    ? requiredScope
+    : [requiredScope];
+
+  return asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const authReq = req as any;
+
+      // JWT must be authenticated first
+      if (!authReq.jwt) {
+        throw new ForbiddenException([
+          { message: 'JWT authentication required' },
+        ]);
+      }
+
+      // Resolve template variables in required scopes
+      const instances = getGatewayInstances();
+      const organizationId = instances?.gatewayState.getOrganizationId() || '';
+
+      const requiredScopes = requiredScopesTemplate.map((scopeTemplate) => {
+        let scope = scopeTemplate;
+
+        // Replace {org_id} with gateway's organization ID
+        scope = scope.replace(/{org_id}/g, organizationId);
+
+        // Replace ${params.key} with req.params[key]
+        scope = scope.replace(
+          /\$\{params\.(\w+)\}/g,
+          (_, key) => authReq.params[key] || ''
+        );
+
+        // Replace ${body.key} with req.body[key]
+        scope = scope.replace(
+          /\$\{body\.(\w+)\}/g,
+          (_, key) => authReq.body[key] || ''
+        );
+
+        // Replace ${query.key} with req.query[key]
+        scope = scope.replace(
+          /\$\{query\.(\w+)\}/g,
+          (_, key) => authReq.query[key] || ''
+        );
+
+        // Replace ${jwt.key} with req.jwt[key]
+        scope = scope.replace(
+          /\$\{jwt\.(\w+)\}/g,
+          (_, key) => authReq.jwt?.[key] || ''
+        );
+
+        return scope;
+      });
+
+      const jwtPayloadData = authReq.jwt;
+
+      // Check if JWT has scope property
+      if (!('scope' in jwtPayloadData)) {
+        throw new ForbiddenException([
+          { message: 'JWT token missing scope property' },
+        ]);
+      }
+
+      // Normalize token scopes to array
+      const tokenScopes = normalizeScope(
+        jwtPayloadData.scope as string | string[]
+      );
+
+      // Check if all required scopes are present
+      const hasAllScopes = requiredScopes.every((scope) =>
+        tokenScopes.includes(scope)
+      );
+
+      if (!hasAllScopes) {
+        throw new ForbiddenException([
+          {
+            message: `Missing required scope(s): ${requiredScopes.join(', ')}`,
+          },
+        ]);
+      }
+
+      return next();
+    }
+  );
+};

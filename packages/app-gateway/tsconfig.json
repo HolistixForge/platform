@@ -7,16 +7,28 @@
       "path": "../collab-engine"
     },
     {
-      "path": "../simple-types"
-    },
-    {
-      "path": "../modules/gateway"
+      "path": "../demiurge-types"
     },
     {
       "path": "../backend-engine"
     },
     {
+      "path": "../simple-types"
+    },
+    {
       "path": "../log"
+    },
+    {
+      "path": "../modules/gateway"
+    },
+    {
+      "path": "../modules/user-containers"
+    },
+    {
+      "path": "../modules/collab"
+    },
+    {
+      "path": "../modules/module"
     },
     {
       "path": "../modules/space"

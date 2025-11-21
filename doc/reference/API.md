@@ -40,7 +40,7 @@ The system uses different JWT token types for different purposes:
 - **`TJwtUserContainer`** (`user_container_token`): Container authentication tokens
 
   - Contains: `project_id`, `user_container_id`, `scope`
-  - Used for: User container server authentication (VPN config, etc.)
+  - Used for: User container server authentication
 
 - **`TJwtOrganization`** (`organization_token`): Organization-level tokens
 
@@ -62,6 +62,20 @@ Or with `token ` prefix for user tokens:
 ```http
 Authorization: token eyJhbGc...
 ```
+
+### Scope-Based Authorization
+
+The gateway sometime uses scope-based authorization for fine-grained access control in addition to permissions managed by gateway. Scopes can include template variables that are resolved at runtime:
+
+- **`{org_id}`** - Replaced with gateway's organization ID
+- **`${params.key}`** - Replaced with `req.params[key]`
+- **`${body.key}`** - Replaced with `req.body[key]`
+- **`${query.key}`** - Replaced with `req.query[key]`
+- **`${jwt.key}`** - Replaced with `req.jwt[key]`
+
+**Examples:**
+
+- `org:{org_id}:connect-vpn` - Organization-specific VPN access (e.g., `org:550e8400-e29b-41d4-a716-446655440000:connect-vpn`)
 
 ## Ganymede API Endpoints
 
@@ -114,6 +128,25 @@ Authorization: token eyJhbGc...
 | `GET`    | `/projects/{id}/members`           | List project members                   |
 | `POST`   | `/projects/{id}/members`           | Add member to project                  |
 | `DELETE` | `/projects/{id}/members/{user_id}` | Remove member                          |
+
+### OAuth2 Provider (User Authentication)
+
+Ganymede provides OAuth2 for **user authentication** only. This is used by the frontend to obtain user access tokens via the global `demiurge-global` client.
+
+| Method | Endpoint              | Description                        |
+| ------ | --------------------- | ---------------------------------- |
+| `GET`  | `/oauth/authorize`    | OAuth2 authorization endpoint      |
+| `POST` | `/oauth/authorize`    | OAuth2 authorization endpoint (POST variant) |
+| `POST` | `/oauth/token`        | Exchange code for token or refresh token |
+| `GET`  | `/oauth/public-key`   | Get JWT public key                 |
+
+**Authentication Details:**
+
+- **`GET /oauth/authorize`**: User must be authenticated via session cookie. Used for OAuth2 authorization code flow where the user grants permission to the frontend application. Only supports the global `demiurge-global` client.
+- **`POST /oauth/token`**: No authentication required. Uses client credentials (client_id, client_secret) from request body. Supports `authorization_code` and `refresh_token` grant types. Only supports the global `demiurge-global` client.
+- **`GET /oauth/public-key`**: No authentication required. Returns the public key used to verify JWT tokens issued by Ganymede.
+
+**Note:** Ganymede OAuth is **only for user authentication**. Container applications use Gateway OAuth (see Gateway API section).
 
 ### Gateway Management
 
@@ -181,29 +214,31 @@ Gateway pushes state updates via Yjs synchronization protocol.
 | `POST` | `/collab/start`      | None (handshake token in body)                | Initialize gateway (called by Ganymede) |
 | `GET`  | `/collab/room-id`    | `TJwtUser` with `project_id` + project access | Get room ID for a project               |
 | `POST` | `/collab/event`      | `TJwtUser` with `project_id` + project access | Process collaborative event             |
-| `GET`  | `/collab/vpn-config` | `TJwtUserContainer` (must belong to org)      | Get OpenVPN configuration               |
+| `GET`  | `/collab/vpn-config` | JWT with `org:{org_id}:connect-vpn` scope     | Get OpenVPN configuration               |
 
 **Authentication Details:**
 
 - **`GET /collab/room-id`**: Requires `TJwtUser` token. The `project_id` can be provided in JWT payload or as a query parameter (`?project_id=...`). The user must have project access (member, admin, or org admin/owner). Returns the room_id for the specified project.
 - **`POST /collab/event`**: Requires `TJwtUser` token with `project_id` in the JWT payload. The user must have project access (member, admin, or org admin/owner).
-- **`GET /collab/vpn-config`**: Requires `TJwtUserContainer` token. The token's `project_id` must belong to the organization this gateway is serving.
+- **`GET /collab/vpn-config`**: Requires any JWT token with `org:{org_id}:connect-vpn` scope, where `{org_id}` is the gateway's organization ID. The scope must match exactly (organization-scoped). The gateway resolves `{org_id}` at runtime and verifies the token contains the matching scope.
 
-### OAuth2 Provider
+### OAuth2 Provider (Container Applications)
 
-Gateway provides OAuth2 for container applications:
+Gateway provides OAuth2 for **container applications** (JupyterLab, pgAdmin, n8n, etc.). Each container service gets its own OAuth client, allowing users to authenticate within those services.
 
-| Method | Endpoint              | Authentication                    | Description                  |
-| ------ | --------------------- | --------------------------------- | ---------------------------- |
-| `GET`  | `/oauth/authorize`    | Session (Passport/req.user)       | OAuth authorization endpoint |
-| `POST` | `/oauth/token`        | None (client credentials in body) | Exchange code for token      |
-| `POST` | `/oauth/authenticate` | OAuth access token (Bearer)       | Validate OAuth token         |
+| Method | Endpoint              | Authentication                    | Description                             |
+| ------ | --------------------- | --------------------------------- | --------------------------------------- |
+| `GET`  | `/oauth/authorize`    | JWT (user token)                  | OAuth authorization endpoint            |
+| `POST` | `/oauth/token`        | None (client credentials in body) | Exchange code for token or refresh token |
+| `POST` | `/oauth/authenticate` | OAuth access token (Bearer)       | Validate OAuth token                    |
 
 **Authentication Details:**
 
-- **`GET /oauth/authorize`**: Requires user to be authenticated via session cookie (Passport). Used for OAuth2 authorization flow where the user grants permission.
-- **`POST /oauth/token`**: No authentication required. Uses client credentials (client_id, client_secret) from request body for OAuth2 token exchange.
-- **`POST /oauth/authenticate`**: Requires OAuth2 access token (Bearer token) in Authorization header. Used by resource servers to validate tokens.
+- **`GET /oauth/authorize`**: Requires user to be authenticated via JWT token. Used for OAuth2 authorization code flow where the user grants permission to container applications. Each container service has its own OAuth client.
+- **`POST /oauth/token`**: No authentication required. Uses client credentials (client_id, client_secret) from request body for OAuth2 token exchange. Supports `authorization_code` and `refresh_token` grant types.
+- **`POST /oauth/authenticate`**: Requires OAuth2 access token (Bearer token) in Authorization header. Used by resource servers (container applications) to validate tokens and get user information.
+
+**Note:** Gateway OAuth is **only for container applications**. User authentication uses Ganymede OAuth (see Ganymede API section).
 
 ## Request/Response Examples
 

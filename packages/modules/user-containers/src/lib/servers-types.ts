@@ -1,6 +1,16 @@
 import { serverUrl } from '@monorepo/api-fetch';
 import { TJsonObject } from '@monorepo/simple-types';
 
+/**
+ * token given to users's project server container
+ */
+export type TJwtUserContainer = {
+  type: 'user_container_token';
+  project_id: string;
+  user_container_id: string;
+  scope: string;
+};
+
 /** What user containers publish themselve */
 export type TUserContainerPublishedInfo = {
   /** publish to Shared States Server by user containers themselves */

@@ -1,172 +1,27 @@
-import { spawnSync } from 'child_process';
-
-import { TJson } from '@monorepo/simple-types';
-import { log } from '@monorepo/log';
 import type { TModule } from '@monorepo/module';
 import { TMyfetchRequest } from '@monorepo/simple-types';
-import { myfetch } from '@monorepo/backend-engine';
-import { TReducersBackendExports } from '@monorepo/reducers';
-import { TCollabBackendExports } from '@monorepo/collab';
 import { TCollabFrontendExports } from '@monorepo/collab/frontend';
 
-import { GatewayReducer } from './lib/gateway-reducer';
-import { TGatewaySharedData } from './lib/gateway-types';
+import {
+  TokenManager,
+  PermissionManager,
+  OAuthManager,
+  DNSManager,
+} from './lib/managers';
 
 //
 
 export type TGatewayExports = {
   toGanymede: <T>(r: TMyfetchRequest) => Promise<T>;
-  //    loadDoc: () => boolean;
   updateReverseProxy: (
     services: { host: string; ip: string; port: number }[]
   ) => Promise<void>;
-  gatewayStop: () => Promise<void>;
   gatewayFQDN: string;
   organization_id: string;
-};
-
-//
-
-export type TProjectConfig = {
-  organization_id: string;
-  organization_token: string;
-  gateway_id: string;
-};
-
-export type TGatewayInitExtraContext = {
-  project: TProjectConfig;
-  config: {
-    GANYMEDE_FQDN: string;
-    GATEWAY_TOKEN: string;
-    GATEWAY_FQDN: string;
-    GATEWAY_SCRIPTS_DIR: string;
-  };
-};
-
-//
-
-type TRequired = {
-  gateway_init: TGatewayInitExtraContext;
-  collab: TCollabBackendExports<TGatewaySharedData>;
-  reducers: TReducersBackendExports;
-  gateway: TGatewayExports;
-};
-
-//
-
-export const moduleBackend: TModule<TRequired, TGatewayExports> = {
-  name: 'gateway',
-  version: '0.0.1',
-  description: 'Gateway module',
-  dependencies: ['collab', 'reducers'],
-  load: ({ depsExports, moduleExports }) => {
-    depsExports.collab.collab.loadSharedData('map', 'gateway', 'gateway');
-    depsExports.reducers.loadReducers(new GatewayReducer(depsExports));
-
-    const gateway_init = depsExports.gateway_init;
-
-    const ganymede_api = `https://${gateway_init.config.GANYMEDE_FQDN}`;
-
-    const toGanymede = async <T>(request: TMyfetchRequest): Promise<T> => {
-      if (!request.headers?.authorization)
-        request.headers = {
-          ...request.headers,
-          authorization: gateway_init.project.organization_token,
-        };
-      request.url = `${ganymede_api}${request.url}`;
-      request.pathParameters = {
-        ...request.pathParameters,
-      };
-      const response = await myfetch(request);
-      log(6, 'GATEWAY', `${request.url} response: ${response.statusCode}`);
-      if (response.statusCode !== 200) {
-        const error = new Error(
-          `Request to ${request.url} failed with status ${response.statusCode}`
-        );
-        throw error;
-      }
-
-      return response.json as T;
-    };
-
-    type EScripts = 'update-nginx-locations' | 'reset-gateway';
-
-    //
-
-    const runScript = (name: EScripts, inputString?: string) => {
-      const DIR = gateway_init.config.GATEWAY_SCRIPTS_DIR;
-      const cmd = `${DIR}/main.sh`;
-      const args = ['-r', `bin/${name}.sh`];
-
-      const fcmd = `${cmd} ${args.join(' ')}`;
-
-      let output;
-
-      try {
-        const result = spawnSync(
-          cmd,
-          args,
-          inputString ? { input: inputString } : undefined
-        );
-        if (result.error) {
-          throw new Error(`Error executing [${fcmd}]: ${result.error.message}`);
-        }
-        output = result.stdout.toString();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (err: any) {
-        throw new Error(`Error executing [${fcmd}]: ${err.message}`);
-      }
-      let json;
-      try {
-        json = JSON.parse(output);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (err) {
-        throw new Error(
-          `Error executing [${fcmd}]: not a JSON output [[[${output}]]]`
-        );
-      }
-      if (json.status === 'error') {
-        throw new Error(`Error executing script [${name}]: ${json.error}`);
-      } else if (json.status === 'ok') return json as TJson;
-      else
-        throw new Error(
-          `Error executing [${fcmd}]: invalid output status format [${json.status}]`
-        );
-    };
-
-    //
-    //
-
-    const myExports: TGatewayExports = {
-      toGanymede,
-
-      updateReverseProxy: async (
-        services: { host: string; ip: string; port: number }[]
-      ) => {
-        const config = services
-          .map((s) => `${s.host} ${s.ip} ${s.port}\n`)
-          .join('');
-        throw new Error('fix update-nginx-locations script');
-        runScript('update-nginx-locations', config);
-      },
-
-      gatewayStop: async () => {
-        log(6, 'GATEWAY', 'gatewayStop');
-        await toGanymede({
-          url: '/gateway-stop',
-          method: 'POST',
-          headers: { authorization: gateway_init.config.GATEWAY_TOKEN },
-        });
-        runScript('reset-gateway');
-      },
-
-      gatewayFQDN: gateway_init.config.GATEWAY_FQDN,
-
-      organization_id: gateway_init.project.organization_id,
-    };
-
-    moduleExports(myExports);
-  },
+  tokenManager: TokenManager;
+  permissionManager: PermissionManager;
+  oauthManager: OAuthManager;
+  dnsManager: DNSManager;
 };
 
 //
@@ -189,3 +44,16 @@ export const moduleFrontend: TModule<
 export type { TGatewayEvents } from './lib/gateway-events';
 export type { TEventLoad } from './lib/gateway-events';
 export type { TGatewaySharedData } from './lib/gateway-types';
+
+// Export manager interfaces and types
+export {
+  TokenManager,
+  PermissionManager,
+  OAuthManager,
+  DNSManager,
+  type TOAuthClient,
+  type TOAuthCode,
+  type TOAuthToken,
+} from './lib/managers';
+
+export type { TEventDisableShutdown } from './lib/gateway-events';

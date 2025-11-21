@@ -52,9 +52,6 @@ export const setupOauthRoutes = (router: express.Router) => {
     res: express.Response,
     next: express.NextFunction
   ) {
-    // jupyterlab user containers don't send a scope
-    if (!req.query.scope && !req.body.scope) req.query.scope = 'none';
-
     const queryParameters = {
       redirect: `${CONFIG.APP_GANYMEDE_URL}${req.path}`,
       client_id: req.query.client_id as string,
