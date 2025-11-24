@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { ServerCardInternal } from './server-card';
+import { UserContainerCardInternal } from './server-card';
 import {
   makeStoryArgs,
   recentActivityStory,
@@ -13,7 +13,7 @@ import { localRunnerFrontend } from '../local-runner';
 
 const StoryWrapper = (props: StoryArgs) => {
   return (
-    <ServerCardInternal
+    <UserContainerCardInternal
       {...props}
       runners={new Map([['local', localRunnerFrontend]])}
     />

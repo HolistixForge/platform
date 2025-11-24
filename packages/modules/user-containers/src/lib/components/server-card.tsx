@@ -1,4 +1,4 @@
-import { CSSProperties, useState } from 'react';
+import { useState } from 'react';
 import {
   InfoCircledIcon,
   TrashIcon,
@@ -21,10 +21,7 @@ import {
 
 import { UserContainerSystemInfo, serviceUrl } from '../servers-types';
 import { StatusLed } from './status-led';
-import {
-  useContainerProps,
-  UseContainerProps,
-} from './node-server/node-server';
+import { UseContainerProps } from './node-server/node-server';
 import { TContainerRunnerFrontend } from '../../frontend';
 
 /**
@@ -62,7 +59,7 @@ const isAlive = (last_watchdog_at: string | null) => {
 
 //
 
-export const ServerCardInternal = ({
+export const UserContainerCardInternal = ({
   container,
   image,
   onDelete,

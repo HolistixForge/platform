@@ -3,16 +3,19 @@
   "include": [],
   "references": [
     {
+      "path": "../simple-types"
+    },
+    {
+      "path": "../api-fetch"
+    },
+    {
       "path": "../modules/excalidraw"
     },
     {
       "path": "../modules/airtable"
     },
     {
-      "path": "../simple-types"
-    },
-    {
-      "path": "../api-fetch"
+      "path": "../modules/module"
     },
     {
       "path": "../modules/notion"
@@ -27,13 +30,16 @@
       "path": "../modules/chats"
     },
     {
-      "path": "../modules/collab"
+      "path": "../modules/gateway"
+    },
+    {
+      "path": "../modules/reducers"
     },
     {
       "path": "../modules/tabs"
     },
     {
-      "path": "../modules/module"
+      "path": "../collab-engine"
     },
     {
       "path": "../modules/space"
@@ -45,7 +51,7 @@
       "path": "../modules/user-containers"
     },
     {
-      "path": "../collab-engine"
+      "path": "../modules/collab"
     },
     {
       "path": "../ui-views"

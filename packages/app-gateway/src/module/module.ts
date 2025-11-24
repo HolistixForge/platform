@@ -6,17 +6,13 @@ import { TMyfetchRequest } from '@monorepo/simple-types';
 import { myfetch } from '@monorepo/backend-engine';
 import { TReducersBackendExports } from '@monorepo/reducers';
 import { TCollabBackendExports } from '@monorepo/collab';
-import type {
-  TGatewayExports,
-  TGatewaySharedData,
-} from '@monorepo/gateway';
+import type { TGatewayExports, TGatewaySharedData } from '@monorepo/gateway';
 
 import { GatewayReducer } from './gateway-reducer';
 import type {
   PermissionManager,
   OAuthManager,
   TokenManager,
-  DNSManager,
 } from '@monorepo/gateway';
 import { DNSManagerImpl } from '../dns/DNSManager';
 
@@ -166,4 +162,3 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
     }
   },
 };
-

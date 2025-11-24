@@ -24,15 +24,10 @@ import {
   useMutationStartProject,
   useQueryProjectByName,
 } from '@monorepo/frontend-data';
-import {
-  FrontendDispatcher,
-  CollaborativeContext,
-} from '@monorepo/collab-engine';
 import { ApiFetch, serverUrl } from '@monorepo/api-fetch';
 import { TMyfetchRequest } from '@monorepo/simple-types';
 import { log } from '@monorepo/log';
 
-import { collabChunks } from './model/collab-model-chunk';
 import { ProjectState, ProjectData, ProjectUser } from './project-types';
 import { ProjectLoading, ProjectError } from './project-loading';
 
@@ -217,12 +212,8 @@ const useProjectState = (
     }
 
     try {
-      const dispatcher = new FrontendDispatcher(collabSetup.eventApi);
       const data: ProjectData = {
         project: projectData._0,
-        collabConfig: collabSetup.collabConfig,
-        yjsDocId: roomId,
-        dispatcher,
         isOwner: projectData._0.owner_id === currentUserData?.user.user_id,
       };
 
@@ -349,27 +340,9 @@ export const ProjectContext = ({
       );
 
     case 'ready':
-      if (!collabChunks) {
-        return (
-          <ProjectLoading
-            message="Initializing collaboration..."
-            progress={80}
-          />
-        );
-      }
-
       return (
         <projectContext.Provider value={projectState.data}>
-          <CollaborativeContext
-            id={projectState.data.yjsDocId}
-            collabChunks={collabChunks}
-            user={user}
-            config={projectState.data.collabConfig}
-            dispatcher={projectState.data.dispatcher}
-            onError={onCollabError}
-          >
-            {children}
-          </CollaborativeContext>
+          {children}
         </projectContext.Provider>
       );
   }

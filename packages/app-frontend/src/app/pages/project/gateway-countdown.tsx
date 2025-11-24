@@ -6,30 +6,31 @@ import {
   useAction,
   ButtonBase,
 } from '@monorepo/ui-base';
-import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
+import { useLocalSharedData } from '@monorepo/collab/frontend';
+import { useDispatcher } from '@monorepo/reducers/frontend';
 import {
-  TCoreSharedData,
-  TProjectMeta,
-  TEventDisableGatewayShutdown,
-} from '@monorepo/core-graph';
-
+  TGatewaySharedData,
+  TGatewayMeta,
+  TEventDisableShutdown,
+} from '@monorepo/gateway';
 //
 
 export const GatewayCountdown = () => {
-  const meta: TProjectMeta = useSharedData<TCoreSharedData>(['meta'], (sd) =>
-    sd.meta.get('meta')
+  const meta: TGatewayMeta = useLocalSharedData<TGatewaySharedData>(
+    ['gateway:gateway'],
+    (sd) => sd['gateway:gateway'].get('unique')
   );
 
   const cb = useCallback(() => {
     /*  */
   }, []);
 
-  const dispatcher = useDispatcher<TEventDisableGatewayShutdown>();
+  const dispatcher = useDispatcher<TEventDisableShutdown>();
 
   const confirmAction = useAction(
     async () => {
       dispatcher.dispatch({
-        type: 'core:disable-gateway-shutdown',
+        type: 'gateway:disable-shutdown',
       });
     },
     [dispatcher],

@@ -17,6 +17,6 @@
       "import": "./dist/frontend.js",
       "default": "./dist/frontend.js"
     },
-    "./style": "./dist/style.css"
+    "./style": "./dist/excalidraw.css"
   }
 }

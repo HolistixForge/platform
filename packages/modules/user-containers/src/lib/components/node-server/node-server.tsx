@@ -14,7 +14,7 @@ import { TTabEvents } from '@monorepo/tabs';
 import { TJsonObject } from '@monorepo/simple-types';
 import { useModuleExports } from '@monorepo/module/frontend';
 
-import { ServerCardInternal } from '../server-card';
+import { UserContainerCardInternal } from '../server-card';
 import { TUserContainer } from '../../servers-types';
 import { TUserContainersSharedData } from '../../servers-shared-model';
 import { TUserContainersEvents } from '../../servers-events';
@@ -154,7 +154,7 @@ export const ServerCard = ({ container_id }: { container_id: string }) => {
   if (props)
     return (
       <div style={{ '--node-wrapper-header-height': '-8px' } as CSSProperties}>
-        <ServerCardInternal {...props} runners={runners} />
+        <UserContainerCardInternal {...props} runners={runners} />
       </div>
     );
 
@@ -195,7 +195,7 @@ export const NodeServerInternal = (
       {isOpened && (
         <DisableZoomDragPan noDrag>
           <div className="node-wrapper-body server">
-            <ServerCardInternal {...otherProps} onDelete={onDelete} />
+            <UserContainerCardInternal {...otherProps} onDelete={onDelete} />
           </div>
         </DisableZoomDragPan>
       )}

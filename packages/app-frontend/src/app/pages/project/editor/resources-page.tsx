@@ -1,28 +1,33 @@
 import { useState } from 'react';
 
 import { ResourceBar, ServerStack } from '@monorepo/ui-views';
-import { ServerCard } from '@monorepo/user-containers/frontend';
-
-import { TServer, TServersSharedData } from '@monorepo/user-containers';
-import { NewServerForm } from '@monorepo/user-containers/frontend';
-import { useSharedData } from '@monorepo/collab-engine';
+import {
+  TUserContainer,
+  TUserContainersSharedData,
+} from '@monorepo/user-containers';
+import {
+  NewContainerForm,
+  TContainerRunnerFrontend,
+  UserContainerCardInternal,
+} from '@monorepo/user-containers/frontend';
+import { useLocalSharedData } from '@monorepo/collab/frontend';
 
 import { ProjectSidebar } from '../sidebar';
 
 //
 
 export const ResourcePage = () => {
-  const projectServers: Map<string, TServer> =
-    useSharedData<TServersSharedData>(
+  const userContainers: Map<string, TUserContainer> =
+    useLocalSharedData<TUserContainersSharedData>(
       ['user-containers:containers'],
       (sd) => sd['user-containers:containers']
     );
 
   const [displayNewServerForm, setDisplayNewServerForm] = useState(false);
 
-  const array: number[] = [];
+  const array: string[] = [];
 
-  projectServers.forEach((p) => array.push(p.project_server_id));
+  userContainers.forEach((p) => array.push(p.user_container_id));
 
   return (
     <>
@@ -37,8 +42,21 @@ export const ResourcePage = () => {
         <ResourceBar title="Resources" />
         <div className="p-24">
           <ServerStack onNewServerClick={() => setDisplayNewServerForm(true)}>
-            {array.map((psid) => (
-              <ServerCard project_server_id={psid} />
+            {array.map((ucid) => (
+              <UserContainerCardInternal
+                container={userContainers.get(ucid) as TUserContainer}
+                image={undefined}
+                onDelete={function (): Promise<void> {
+                  throw new Error('Function not implemented.');
+                }}
+                onOpenService={function (name: string): void {
+                  throw new Error('Function not implemented.');
+                }}
+                onSelectRunner={function (runner_id: string): void {
+                  throw new Error('Function not implemented.');
+                }}
+                runners={new Map<string, TContainerRunnerFrontend>()}
+              />
             ))}
           </ServerStack>
         </div>{' '}
@@ -46,7 +64,7 @@ export const ResourcePage = () => {
       <ProjectSidebar active="project-main" />
 
       {displayNewServerForm && (
-        <NewServerForm closeForm={() => setDisplayNewServerForm(false)} />
+        <NewContainerForm closeForm={() => setDisplayNewServerForm(false)} />
       )}
     </>
   );

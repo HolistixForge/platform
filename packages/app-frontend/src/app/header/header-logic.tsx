@@ -6,7 +6,7 @@ import {
 } from '@monorepo/frontend-data';
 import { useAction } from '@monorepo/ui-base';
 import { Header } from '@monorepo/ui-views';
-import { useAwarenessUserList } from '@monorepo/collab-engine';
+import { useAwarenessUserList } from '@monorepo/collab/frontend';
 import { TF_User, TG_User } from '@monorepo/demiurge-types';
 
 //

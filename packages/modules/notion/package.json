@@ -6,7 +6,7 @@
     "projectType": "library",
     "sourceRoot": "packages/modules/notion/src"
   },
-  "style": "./dist/style.css",
+  "style": "./dist/notion.css",
   "exports": {
     "./package.json": "./package.json",
     ".": {
@@ -19,7 +19,7 @@
       "import": "./dist/frontend.js",
       "default": "./dist/frontend.js"
     },
-    "./style": "./dist/style.css"
+    "./style": "./dist/notion.css"
   },
   "types": "./dist/index.d.ts",
   "module": "./dist/index.js",

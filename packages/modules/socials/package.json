@@ -6,7 +6,7 @@
     "projectType": "library",
     "sourceRoot": "packages/modules/socials/src"
   },
-  "style": "./dist/style.css",
+  "style": "./dist/socials.css",
   "exports": {
     "./package.json": "./package.json",
     ".": {
@@ -19,7 +19,7 @@
       "import": "./dist/frontend.js",
       "default": "./dist/frontend.js"
     },
-    "./style": "./dist/style.css"
+    "./style": "./dist/socials.css"
   },
   "types": "./dist/index.d.ts",
   "module": "./dist/index.js",

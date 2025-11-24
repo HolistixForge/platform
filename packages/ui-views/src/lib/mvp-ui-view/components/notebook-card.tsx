@@ -99,7 +99,9 @@ export const NotebookCard = ({
             <SelectFieldset
               name={''}
               value={'python 3.10.12 modele'}
-              onChange={function (v: string): void {}}
+              onChange={function (v: string): void {
+                /* noop */
+              }}
               placeholder={''}
               className="small w-full"
               integrated

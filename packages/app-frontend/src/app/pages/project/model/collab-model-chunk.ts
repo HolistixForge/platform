@@ -1,8 +1,8 @@
 import {
-  useDispatcher as useDispatcherCollab,
-  useSharedData as useSharedDataCollab,
+  useLocalSharedData as useLocalSharedDataOriginal,
   TValidSharedDataToCopy,
-} from '@monorepo/collab-engine';
+} from '@monorepo/collab/frontend';
+import { useDispatcher as useDispatcherOriginal } from '@monorepo/reducers/frontend';
 import { TCoreSharedData, TCoreEvent } from '@monorepo/core-graph';
 import { TabPayload, TTabEvents, TTabsSharedData } from '@monorepo/tabs';
 import { TSpaceSharedData, TSpaceEvent } from '@monorepo/space';
@@ -11,8 +11,6 @@ import { TServerEvents, TServersSharedData } from '@monorepo/user-containers';
 import { TJupyterEvent, TJupyterSharedData } from '@monorepo/jupyter';
 import { TEventSocials } from '@monorepo/socials';
 import { TNotionEvent } from '@monorepo/notion';
-
-import { modules } from './modules';
 
 //
 
@@ -33,15 +31,13 @@ type AllEvents =
   | TEventSocials
   | TNotionEvent;
 
-export const useDispatcher = useDispatcherCollab<AllEvents>;
-
-export const collabChunks = modules.map((module) => module.collabChunk);
+export const useDispatcher = useDispatcherOriginal<AllEvents>;
 
 //
 
-export const useSharedData: (
+export const useAppLocalSharedData: (
   deps: (keyof AllSharedData)[],
   f: (data: TValidSharedDataToCopy<AllSharedData>) => any
-) => ReturnType<typeof f> = useSharedDataCollab<AllSharedData>;
+) => ReturnType<typeof f> = useLocalSharedDataOriginal<AllSharedData>;
 
 //

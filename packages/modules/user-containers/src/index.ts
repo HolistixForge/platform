@@ -75,7 +75,7 @@ export const moduleBackend: TModule<TRequired, TUserContainersExports> = {
   },
 };
 
-export type { TUserContainersSharedData as TServersSharedData } from './lib/servers-shared-model';
+export type { TUserContainersSharedData } from './lib/servers-shared-model';
 
 export { userContainerNodeId as projectServerNodeId } from './lib/servers-reducer';
 
