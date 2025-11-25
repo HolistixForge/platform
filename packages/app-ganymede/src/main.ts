@@ -1,6 +1,6 @@
 // Initialize OpenTelemetry BEFORE any other imports
 // This ensures auto-instrumentation works correctly
-import { initializeNodeObservability } from '@monorepo/observability/node';
+import { initializeNodeObservability } from '@monorepo/observability';
 initializeNodeObservability({
   serviceName: process.env.OTEL_SERVICE_NAME || 'ganymede',
   environment: process.env.OTEL_DEPLOYMENT_ENVIRONMENT,
