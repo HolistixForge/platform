@@ -2,11 +2,11 @@
 
 user-containers, jupyter
 demiurge-type
-mv database to monorepo
+holistix
 logs
 modules docs and links
 credentials
-docs with FL features upcoming: collab, graph, layers, DNS, containers, logs, IA, automation and reporting language, formal process management, modules
+docs with FL features upcoming: collab, graph, layers, DNS, containers, logs, IA, automation and reporting language, formal process management, new example modules
 website
 license
 

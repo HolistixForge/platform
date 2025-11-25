@@ -101,7 +101,7 @@ doc/
 3. [API Reference](reference/API.md)
 4. [System Architecture](architecture/SYSTEM_ARCHITECTURE.md)
 5. [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md)
-5. [Nx Workspace Guide](guides/NX_WORKSPACE.md)
+6. [Nx Workspace Guide](guides/NX_WORKSPACE.md)
 
 ### DevOps/SRE
 
@@ -151,3 +151,7 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md#documentation) for more details.
 
 **Last updated:** 2025-01-06  
 **Maintained by:** Core team
+
+## History and Rationale
+
+- 📖 **[Fluid Lifecycle Whitepaper](fluid-lifecycle/README.md)** – learn why Demiurge began, the pain points it targets, and the original engineering rationale.
