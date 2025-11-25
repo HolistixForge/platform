@@ -199,7 +199,7 @@ create packages/app-frontend/.env file:
 
 ```
 VITE_ENVIRONMENT=dev-004
-VITE_DOMAIN_NAME=holistix.so
+VITE_DOMAIN_NAME=demiurge.co
 ```
 
 ```shell

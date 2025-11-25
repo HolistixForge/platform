@@ -12,7 +12,13 @@
       "path": "../log"
     },
     {
+      "path": "../observability"
+    },
+    {
       "path": "../backend-engine"
+    },
+    {
+      "path": "../observability"
     },
     {
       "path": "./tsconfig.app.json"

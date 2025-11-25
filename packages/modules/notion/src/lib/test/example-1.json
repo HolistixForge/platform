@@ -26,7 +26,7 @@
             {
                 "type": "text",
                 "text": {
-                    "content": "HolistiX_Tasks",
+                    "content": "Demiurge_Tasks",
                     "link": null
                 },
                 "annotations": {
@@ -37,7 +37,7 @@
                     "code": false,
                     "color": "default"
                 },
-                "plain_text": "HolistiX_Tasks",
+                "plain_text": "Demiurge_Tasks",
                 "href": null
             }
         ],

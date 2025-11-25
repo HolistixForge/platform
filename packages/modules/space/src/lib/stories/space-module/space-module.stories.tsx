@@ -28,8 +28,8 @@ import {
 
 import { TCoreSharedData } from '@monorepo/core-graph';
 
-import { HolistixSpace } from '../../components/holistix-space';
-import { STORY_VIEW_ID } from '../story-holistix-space';
+import { DemiurgeSpace } from '../../components/demiurge-space';
+import { STORY_VIEW_ID } from '../story-demiurge-space';
 import { loadStoryData } from './loader';
 
 import { moduleBackend as spaceBackend, TSpaceSharedData } from '../../..';
@@ -113,7 +113,7 @@ const StoryWrapper = () => {
   return (
     <ModuleProvider exports={frontendModules}>
       <div style={{ height: '100vh', width: '100vw' }}>
-        <HolistixSpace viewId={STORY_VIEW_ID} />
+        <DemiurgeSpace viewId={STORY_VIEW_ID} />
       </div>
     </ModuleProvider>
   );

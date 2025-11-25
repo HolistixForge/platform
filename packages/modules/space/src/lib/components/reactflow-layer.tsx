@@ -50,7 +50,7 @@ import { translateEdges, translateNodes } from './to-rf-nodes';
 import { TEventMoveNode } from '../space-events';
 import { getAbsolutePosition } from '../utils/position-utils';
 import { TSpaceSharedData } from '../..';
-import { INITIAL_VIEWPORT } from './holistix-space';
+import { INITIAL_VIEWPORT } from './demiurge-space';
 import { useSpaceContext } from './reactflow-layer-context';
 import { LayerViewport, LayerViewportAdapter } from './layer-types';
 

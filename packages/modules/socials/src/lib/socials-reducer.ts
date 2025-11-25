@@ -1,7 +1,6 @@
 import { TCoreSharedData } from '@monorepo/core-graph';
 import { Reducer, RequestData } from '@monorepo/reducers';
 import { makeUuid } from '@monorepo/simple-types';
-import { makeProjectScopeString } from '@monorepo/demiurge-types';
 import { UserException } from '@monorepo/log';
 import type { TReducersBackendExports } from '@monorepo/reducers';
 import { TCollabBackendExports } from '@monorepo/collab';
@@ -302,13 +301,19 @@ export class SocialsReducer extends Reducer<TEventSocials> {
       'core-graph:nodes'
     ].get(event.nodeId);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const admin = (requestData.jwt as any)?.scope?.includes(
-      makeProjectScopeString(
-        this.depsExports.gateway.project_id,
-        'project:admin'
-      )
-    );
+    const jwt = requestData.jwt as { project_id?: string };
+    const project_id = jwt?.project_id;
+    if (!project_id) {
+      throw new UserException('Project ID required');
+    }
+    const permissionManager = this.depsExports.gateway.permissionManager;
+    const admin =
+      permissionManager.hasPermission(
+        requestData.user_id,
+        `project:${project_id}:admin`
+      ) ||
+      permissionManager.hasPermission(requestData.user_id, 'org:admin') ||
+      permissionManager.hasPermission(requestData.user_id, 'org:owner');
 
     if (admin || nodeData?.data?.userId === requestData.user_id) {
       this.depsExports.reducers.processEvent(

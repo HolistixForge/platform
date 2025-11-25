@@ -13,10 +13,16 @@
       "path": "../backend-engine"
     },
     {
+      "path": "../observability"
+    },
+    {
       "path": "../simple-types"
     },
     {
       "path": "../log"
+    },
+    {
+      "path": "../observability"
     },
     {
       "path": "../modules/gateway"

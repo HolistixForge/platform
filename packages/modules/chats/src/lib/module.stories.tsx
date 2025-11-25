@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { randomGuys } from '@monorepo/ui-base';
 import { Logger } from '@monorepo/log';
 import { StoryApiContext } from '@monorepo/frontend-data';
-import { StoryHolistixSpace } from '@monorepo/space/stories';
+import { StoryDemiurgeSpace } from '@monorepo/space/stories';
 
 //
 import { loadModules, TModule } from '@monorepo/module';
@@ -221,7 +221,7 @@ const Story = () => {
     <StoryApiContext ganymedeApiMock={ganymedeApiMock}>
       <ModuleProvider exports={frontendModules}>
         <div style={{ height: '100vh', width: '100vw' }}>
-          <StoryHolistixSpace />
+          <StoryDemiurgeSpace />
         </div>
       </ModuleProvider>
     </StoryApiContext>

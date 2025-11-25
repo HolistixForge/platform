@@ -1,7 +1,7 @@
 import { createContext, useContext, ReactNode } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
 import { SpaceState } from './apis/spaceState';
-import { WhiteboardMode } from './holistix-space';
+import { WhiteboardMode } from './demiurge-space';
 
 //
 

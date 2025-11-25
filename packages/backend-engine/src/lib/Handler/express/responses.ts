@@ -7,8 +7,7 @@ import {
   TStringMap,
 } from '@monorepo/simple-types';
 import express from 'express';
-
-import { jaegerSetResponse } from '../../Logs/jaeger';
+import { trace, SpanStatusCode } from '@opentelemetry/api';
 
 type ExpressRequest = express.Request;
 type ExpressResponse = express.Response;
@@ -147,6 +146,17 @@ export const respond = (
       break;
   }
 
-  jaegerSetResponse(req as any, { ...r, status });
+  // Update span with response status (if OpenTelemetry is initialized)
+  const span = trace.getActiveSpan();
+  if (span) {
+    span.setAttribute('http.status_code', status);
+    if (status >= 400) {
+      span.setStatus({
+        code: SpanStatusCode.ERROR,
+        message: `HTTP ${status}`,
+      });
+    }
+  }
+
   log(6, 'RESPONSE', `[${status}:${r.type}] ${logMsg}`, null, color);
 };

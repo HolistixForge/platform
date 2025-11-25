@@ -5,7 +5,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # exemple: $ watch -n 30 -c ./doc/monitoring.sh
 
 ENVIRONMENT=dev-005
-DOMAIN=holistix.so
+DOMAIN=demiurge.co
 
 # List of services to monitor (URL and display name)
 declare -A services=(

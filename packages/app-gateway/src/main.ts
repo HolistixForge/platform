@@ -1,3 +1,11 @@
+// Initialize OpenTelemetry BEFORE any other imports
+// This ensures auto-instrumentation works correctly
+import { initializeNodeObservability } from '@monorepo/observability/node';
+initializeNodeObservability({
+  serviceName: process.env.OTEL_SERVICE_NAME || 'gateway',
+  environment: process.env.OTEL_DEPLOYMENT_ENVIRONMENT,
+});
+
 import express from 'express';
 import * as http from 'http';
 import * as https from 'https';
@@ -38,15 +46,9 @@ const setupExpressApp = () => {
   const app = express();
   app.set('trust proxy', 1);
 
-  setupBasicExpressApp(app, {
-    jaeger: process.env.JAEGER_FQDN
-      ? {
-          serviceName: 'demiurge',
-          serviceTag: 'collab',
-          host: process.env.JAEGER_FQDN,
-        }
-      : undefined,
-  });
+  // Observability is now handled by @monorepo/observability package
+  // Auto-instrumentation will automatically create spans for Express requests
+  setupBasicExpressApp(app);
 
   app.options('*', (req, res) => {
     res.status(200).end();

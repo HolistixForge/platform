@@ -16,6 +16,7 @@ echo "  - PostgreSQL server"
 echo "  - Nginx web server"
 echo "  - mkcert (SSL certificates)"
 echo "  - PowerDNS (DNS server)"
+echo "  - Observability stack (OTLP Collector, Loki, Tempo, Grafana)"
 echo "  - Docker images (dev-pod, gateway)"
 echo "  - Other dependencies"
 echo ""
@@ -58,7 +59,13 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "Step 6/6: Building Docker images..."
+echo "Step 6/7: Setting up Observability Infrastructure..."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+"${SCRIPT_DIR}/setup-observability.sh"
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "Step 7/7: Building Docker images..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 "${SCRIPT_DIR}/build-images.sh"
 

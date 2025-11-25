@@ -4,7 +4,7 @@ export { StoryMockSpaceContextReactflowBgAndCss } from './lib/stories/story-cont
 
 export {
   STORY_VIEW_ID,
-  StoryHolistixSpace,
-} from './lib/stories/story-holistix-space';
+  StoryDemiurgeSpace,
+} from './lib/stories/story-demiurge-space';
 
 export { MockNodeContext } from './lib/components/node-wrappers/node-wrapper';

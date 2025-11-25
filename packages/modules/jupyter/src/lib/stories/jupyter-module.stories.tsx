@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { Logger } from '@monorepo/log';
-import { StoryHolistixSpace } from '@monorepo/space/stories';
+import { StoryDemiurgeSpace } from '@monorepo/space/stories';
 import { StoryApiContext } from '@monorepo/frontend-data';
 import { TSpaceMenuEntries, TSpaceMenuEntry } from '@monorepo/module/frontend';
 
@@ -35,7 +35,7 @@ const StoryWrapper = () => {
     <div style={{ width: '100vw', height: '100vh' }}>
       <StoryApiContext>
         <JupyterStoryCollabContext>
-          <StoryHolistixSpace
+          <StoryDemiurgeSpace
             nodeTypes={nodeTypes}
             spaceMenuEntries={spaceMenuEntries}
           />

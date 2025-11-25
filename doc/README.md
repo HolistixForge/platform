@@ -29,6 +29,7 @@ Welcome to the Demiurge documentation! This hub will guide you to the right reso
 - ⚡ **[Cheatsheet](reference/CHEATSHEET.md)** - Common commands and aliases
 - 🔌 **[API Reference](reference/API.md)** - REST API endpoints
 - 🖥️ **[GPU Host Setup](reference/GPU_HOST_SETUP.md)** - Configure GPU access for Docker
+- 📄 **[Licensing](LICENSING.md)** - License information and commercial licensing
 
 ### Internal/WIP
 

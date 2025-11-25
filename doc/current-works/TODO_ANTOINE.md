@@ -1,14 +1,11 @@
 ⚠️ Antoine's stuffs
 
-user-containers, jupyter
-demiurge-type
-holistix
+user-containers default runner, jupyter
 logs
 modules docs and links
 credentials
 docs with FL features upcoming: collab, graph, layers, DNS, containers, logs, IA, automation and reporting language, formal process management, new example modules
 website
-license
 
 sharedata nodeView purge
 cmd generator lowercase

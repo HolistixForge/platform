@@ -3,7 +3,6 @@ export {
   setupBasicExpressApp,
   setupErrorsHandler,
 } from './lib/Handler/express/app-setup';
-export type { BasicExpressAppOptions } from './lib/Handler/express/app-setup';
 
 export { setupValidator } from './lib/Handler/express/openapi-validator';
 export { respond } from './lib/Handler/express/responses';
@@ -26,6 +25,3 @@ export { development } from './lib/debug';
 
 // Response types (needed by respond function)
 export type { TCookie } from './lib/Response/Response';
-
-// Jaeger logging (optional)
-export { setupJaegerLog } from './lib/Logs/jaeger';

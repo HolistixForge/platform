@@ -5,7 +5,7 @@ import { SharedTypes } from '@monorepo/collab-engine';
 import { Logger } from '@monorepo/log';
 import { TCoreSharedData } from '@monorepo/core-graph';
 import { TSpaceSharedData, defaultGraphView } from '@monorepo/space';
-import { STORY_VIEW_ID, StoryHolistixSpace } from '@monorepo/space/stories';
+import { STORY_VIEW_ID, StoryDemiurgeSpace } from '@monorepo/space/stories';
 import { StoryApiContext } from '@monorepo/frontend-data';
 import { TCollabBackendExports } from '@monorepo/collab';
 
@@ -155,7 +155,7 @@ const loadStoryData = (
       id: 'node-3',
       type: 'iframe',
       data: {
-        src: 'https://www.holistix.so',
+        src: 'https://www.demiurge.co',
       },
       name: 'Node 3',
       root: true,
@@ -250,7 +250,7 @@ const Story = () => {
     <StoryApiContext>
       <ModuleProvider exports={frontendModules}>
         <div style={{ height: '100vh', width: '100vw' }}>
-          <StoryHolistixSpace />
+          <StoryDemiurgeSpace />
         </div>
       </ModuleProvider>
     </StoryApiContext>

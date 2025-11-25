@@ -12,24 +12,13 @@ import {
 } from '@monorepo/log';
 
 import { respond } from './responses';
-import { jaegerSetError, setupJaegerLog } from '../../Logs/jaeger';
+import { trace, SpanStatusCode } from '@opentelemetry/api';
 
 //
 
-export type BasicExpressAppOptions = {
-  jaeger?: {
-    serviceName: string;
-    serviceTag: string;
-    host: string;
-  };
-};
-
 //
 
-export const setupBasicExpressApp = (
-  app: express.Express,
-  options?: BasicExpressAppOptions
-) => {
+export const setupBasicExpressApp = (app: express.Express) => {
   app.disable('x-powered-by');
   app.use((req, res, next) => {
     res.setHeader('X-Powered-By', '');
@@ -47,11 +36,6 @@ export const setupBasicExpressApp = (
   app.use(express.urlencoded({ extended: true }));
 
   app.use(cookieParser());
-
-  if (options?.jaeger) {
-    const { serviceName, serviceTag, host } = options.jaeger;
-    setupJaegerLog(app, serviceName, serviceTag, host);
-  }
 
   // log any request
   app.use((req, res, next) => {
@@ -116,7 +100,15 @@ export const setupErrorsHandler = (app: express.Express) => {
     const serialized = JSON.stringify(json, null, 4);
     error('Error', serialized, exception.stack);
 
-    jaegerSetError(req, exception);
+    // Record exception in active span (if OpenTelemetry is initialized)
+    const span = trace.getActiveSpan();
+    if (span) {
+      span.recordException(exception);
+      span.setStatus({
+        code: SpanStatusCode.ERROR,
+        message: exception.message,
+      });
+    }
 
     const { uuid, errors } = json;
 

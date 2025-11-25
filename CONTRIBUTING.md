@@ -347,6 +347,29 @@ Create an issue with:
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
 - [Express.js Guide](https://expressjs.com/)
 
+## 📄 Licensing
+
+### Contributor License Agreement
+
+By contributing code to Demiurge, you agree that:
+
+- Your contributions will be licensed under the same dual licensing model as the project
+- You grant the project maintainers the right to use your contributions under both:
+  - PolyForm Noncommercial License 1.0.0 (for non-commercial use)
+  - Commercial License (for commercial licensing)
+- You retain copyright to your contributions
+- You have the right to grant these licenses
+
+### License Compatibility
+
+When contributing, ensure that:
+
+- Your code doesn't include third-party code with incompatible licenses
+- You have the right to contribute the code (it's your original work or you have permission)
+- Any third-party code you include is compatible with our dual licensing model
+
+See [doc/LICENSING.md](doc/LICENSING.md) for more information about licensing.
+
 ## 🙋 Questions?
 
 - Check [doc/README.md](doc/README.md) for documentation hub

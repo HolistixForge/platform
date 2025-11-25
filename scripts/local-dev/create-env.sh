@@ -253,8 +253,14 @@ MAILING_FROM=xxxxx
 # Session secret
 SESSION_COOKIE_KEY=$(openssl rand -hex 32)
 
-# Jaeger (optional)
-# JAEGER_FQDN=
+# OpenTelemetry / Observability (OTLP Collector)
+# These endpoints are shared across all environments
+OTLP_ENDPOINT_HTTP=http://localhost:4318
+OTLP_ENDPOINT_GRPC=http://localhost:4317
+# Service name for this environment (used in traces/logs)
+OTEL_SERVICE_NAME=ganymede-${ENV_NAME}
+# Deployment environment (used for filtering in Grafana)
+OTEL_DEPLOYMENT_ENVIRONMENT=${ENV_NAME}
 EOF
 
 # 8. Create Nginx server blocks (Stage 1 - Main nginx with SSL termination)

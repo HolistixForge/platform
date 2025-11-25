@@ -131,7 +131,17 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow, coding standard
 
 ## 📄 License
 
-[To be determined]
+Demiurge is available under a **dual licensing model**:
+
+- **Non-Commercial Use:** [PolyForm Noncommercial License 1.0.0](LICENSE) (free)
+- **Commercial Use:** [Commercial License](COMMERCIAL_LICENSE.md) (requires purchase)
+
+**Quick Guide:**
+
+- ✅ **Free for:** Personal use, education, research, non-profit organizations
+- ❌ **Requires commercial license:** For-profit businesses, SaaS offerings, government use, commercial integrations
+
+**Not sure which license applies?** See [doc/LICENSING.md](doc/LICENSING.md) for detailed information, or contact **licensing@demiurge.co**
 
 ## 🙋 Support
 

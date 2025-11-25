@@ -12,7 +12,6 @@ import {
 import { TGraphNode } from '@monorepo/core-graph';
 import { error, UserException } from '@monorepo/log';
 import { TJsonObject } from '@monorepo/simple-types';
-import { makeProjectScopeString } from '@monorepo/demiurge-types';
 
 import { TSpaceSharedData } from '../index';
 import {
@@ -299,12 +298,19 @@ export class SpaceReducer extends Reducer<ReducedEvents> {
       const nodeData = this.depsExports.collab.collab.sharedData[
         'core-graph:nodes'
       ].get(event.nid);
-      const admin = (requestData.jwt as any)?.scope?.includes(
-        makeProjectScopeString(
-          this.depsExports.gateway.project_id,
-          'project:admin'
-        )
-      );
+      const jwt = requestData.jwt as { project_id?: string };
+      const project_id = jwt?.project_id;
+      let admin = false;
+      if (project_id) {
+        const permissionManager = this.depsExports.gateway.permissionManager;
+        admin =
+          permissionManager.hasPermission(
+            requestData.user_id,
+            `project:${project_id}:admin`
+          ) ||
+          permissionManager.hasPermission(requestData.user_id, 'org:admin') ||
+          permissionManager.hasPermission(requestData.user_id, 'org:owner');
+      }
       if (admin || nodeData?.data?.userId === requestData.user_id) {
         authorized = true;
       }

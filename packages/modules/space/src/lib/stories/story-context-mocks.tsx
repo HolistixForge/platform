@@ -9,8 +9,8 @@ import {
   TSpaceContext,
 } from '../components/reactflow-layer-context';
 import { TNodeContext } from '../components/apis/types/node';
-import { STORY_VIEW_ID } from './story-holistix-space';
-import { WhiteboardMode } from '../components/holistix-space';
+import { STORY_VIEW_ID } from './story-demiurge-space';
+import { WhiteboardMode } from '../components/demiurge-space';
 import { TSpaceEvent } from '../space-events';
 import { SpaceState } from '../components/apis/spaceState';
 import { defaultGraphView } from '../space-types';

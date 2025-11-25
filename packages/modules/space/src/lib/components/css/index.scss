@@ -2,7 +2,7 @@
 @use './nodes';
 @use './edges';
 
-.holistix-space-whiteboard {
+.demiurge-space-whiteboard {
   // remove minimap on small screens
   @media (max-width: 640px) {
     .react-flow__panel.react-flow__minimap.bottom.right {

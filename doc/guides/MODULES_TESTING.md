@@ -160,7 +160,7 @@ const Story = () => {
   return (
     <ModuleProvider exports={frontendModules}>
       <div style={{ height: '100vh', width: '100vw' }}>
-        <HolistixSpace />
+        <DemiurgeSpace />
       </div>
     </ModuleProvider>
   );

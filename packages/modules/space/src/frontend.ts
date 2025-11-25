@@ -45,7 +45,7 @@ export {
 
 export type { TNodeContext } from './lib/components/apis/types/node';
 
-export { HolistixSpace } from './lib/components/holistix-space';
+export { DemiurgeSpace } from './lib/components/demiurge-space';
 
 export { useLayerContext } from './lib/components/layer-context';
 

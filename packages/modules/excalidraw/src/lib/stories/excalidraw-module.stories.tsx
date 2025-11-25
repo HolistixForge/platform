@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 
 import { Logger } from '@monorepo/log';
 import { StoryApiContext } from '@monorepo/frontend-data';
-import { StoryHolistixSpace } from '@monorepo/space/stories';
+import { StoryDemiurgeSpace } from '@monorepo/space/stories';
 
 //
 import { loadModules, TModule } from '@monorepo/module';
@@ -93,7 +93,7 @@ const Story = () => {
     <StoryApiContext>
       <ModuleProvider exports={frontendModules}>
         <div style={{ height: '100vh', width: '100vw' }}>
-          <StoryHolistixSpace />
+          <StoryDemiurgeSpace />
         </div>
       </ModuleProvider>
     </StoryApiContext>

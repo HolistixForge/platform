@@ -5,7 +5,7 @@ import { TEdge } from '@monorepo/core-graph';
 import { defaultGraphView, TGraphView } from '../../space-types';
 import { graph1 } from './graph-1';
 import { TSpaceSharedData } from '../../..';
-import { STORY_VIEW_ID } from '../story-holistix-space';
+import { STORY_VIEW_ID } from '../story-demiurge-space';
 
 //
 

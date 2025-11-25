@@ -1,5 +1,5 @@
 import { TPosition } from '@monorepo/core-graph';
-import { WhiteboardMode } from './holistix-space';
+import { WhiteboardMode } from './demiurge-space';
 import { LayerViewport } from './layer-types';
 
 /**

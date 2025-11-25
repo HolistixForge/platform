@@ -11,15 +11,8 @@ export type {
 export type { TApi_Project } from './lib/ganymede-api/types';
 
 export {
-  USER_SCOPE,
-  GATEWAY_SCOPE,
-  GATEWAY_PROJECT_SCOPE,
-  makeProjectScopeString,
-  makeGatewayScopeString,
-  userContainerAccessScope,
   GLOBAL_CLIENT_ID,
   GLOBAL_CLIENT_SECRET,
-} from './lib/ganymede-api/scope';
-export type { TScope } from './lib/ganymede-api/scope';
+} from './lib/ganymede-api/oauth';
 
 export type { TJwtOrganization, TJwtGateway, TJwtUser } from './lib/jwt/jwt';

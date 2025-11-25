@@ -119,19 +119,19 @@ const useOpenRadixContextMenu = () => {
 
 /**
  * #########################################################
- * HolistixSpace
+ * DemiurgeSpace
  * @param param0
  * @returns
  */
 
-export const HolistixSpace = ({ viewId }: { viewId: string }) => {
+export const DemiurgeSpace = ({ viewId }: { viewId: string }) => {
   const { space } = useModuleExports<{ space: TSpaceFrontendExports }>(
-    'HolistixSpace'
+    'DemiurgeSpace'
   );
   const uies = space.uiElements;
   return (
     <RightPanels panelsDefs={uies.panels}>
-      <HolistixSpaceWhiteboard
+      <DemiurgeSpaceWhiteboard
         viewId={viewId}
         nodeTypes={uies.nodes}
         spaceMenuEntries={uies.getMenuEntries}
@@ -143,12 +143,12 @@ export const HolistixSpace = ({ viewId }: { viewId: string }) => {
 
 /**
  * #########################################################
- * HolistixSpaceContent
+ * DemiurgeSpaceContent
  * @param param0
  * @returns
  */
 
-export type HolistixSpaceWhiteboardProps = {
+export type DemiurgeSpaceWhiteboardProps = {
   viewId: string;
   nodeTypes: TNodeTypes;
   spaceMenuEntries: TSpaceMenuEntries;
@@ -156,12 +156,12 @@ export type HolistixSpaceWhiteboardProps = {
   layersProviders?: TLayerProvider[];
 };
 
-const HolistixSpaceWhiteboard = ({
+const DemiurgeSpaceWhiteboard = ({
   viewId,
   nodeTypes,
   spaceMenuEntries,
   layersProviders,
-}: HolistixSpaceWhiteboardProps) => {
+}: DemiurgeSpaceWhiteboardProps) => {
   //
 
   const dispatcher = useDispatcher<TEventEdgePropertyChange | TEventNewEdge>();
@@ -391,7 +391,7 @@ const HolistixSpaceWhiteboard = ({
         </div>
 
         <div
-          className={`holistix-space-whiteboard`}
+          className={`demiurge-space-whiteboard`}
           style={{
             flex: '1 1 auto',
             height: '100%',

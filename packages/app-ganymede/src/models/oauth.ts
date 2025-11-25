@@ -13,12 +13,7 @@ import {
 import { error, log } from '@monorepo/log';
 import { makeUuid } from '@monorepo/simple-types';
 import { development, generateJwtToken } from '@monorepo/backend-engine';
-import {
-  GLOBAL_CLIENT_ID,
-  TJwtUser,
-  USER_SCOPE,
-  makeProjectScopeString,
-} from '@monorepo/demiurge-types';
+import { GLOBAL_CLIENT_ID, TJwtUser } from '@monorepo/demiurge-types';
 
 import { CONFIG } from '../config';
 import { pg } from '../database/pg';
@@ -63,7 +58,7 @@ export const model: AuthorizationCodeModel &
         refreshTokenLifetime: REFRESH_TOKEN_LIFETIME,
       };
     }
-    
+
     debug(`getClient`, { args: { clientId, clientSecret }, r: false });
     return false;
   },
@@ -330,28 +325,7 @@ export const model: AuthorizationCodeModel &
     if (user.validated_scope) {
       vs = user.validated_scope;
     } else {
-      // General purpose token
-      if (client.id === GLOBAL_CLIENT_ID) {
-        for (let i = 0; i < scope.length; i++) {
-          // for each requested scope,
-          // if it match 'p:xxx', user ask for its permissions for project xxx
-          const s = scope[i];
-          const regex =
-            /^p:([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})$/;
-          const matchResult = s.match(regex);
-          if (matchResult) {
-            // Extracted number is in the first capturing group (index 1)
-            const project_id: string = matchResult[1];
-            vs.push(...(await getUserProjectScope(user.id, project_id)));
-          }
-        }
-      }
-      // else if it is a token for a server
-      else {
-        // TODO: Server OAuth moved to gateway
-        // For now, just allow the requested scope (will be validated in gateway)
-        vs = scope;
-      }
+      vs = scope;
     }
 
     debug(`validateScope`, { args: { user, client, scope }, r: vs });
@@ -360,53 +334,6 @@ export const model: AuthorizationCodeModel &
 };
 
 //
-
-/**
- * Get the user's scope from the database and add the project prefix
- * in front of each scope
- * TODO: Permissions moved to gateway - this is a temporary stub
- * @param user_id
- * @param project_id
- * @returns
- */
-const getUserProjectScope = async (user_id: string, project_id: string) => {
-  // TODO: Query new simplified schema
-  // For now, check if user is org member via project's organization
-  const projectResult = await pg.query(
-    'select * from func_projects_get_by_id($1)',
-    [project_id]
-  );
-  const project = projectResult.next()?.oneRow();
-  
-  if (!project) {
-    return [];
-  }
-  
-  // Check if user is member of the organization
-  const orgMemberResult = await pg.query(
-    'select * from organizations_members where organization_id = $1 and user_id = $2',
-    [project['organization_id'], user_id]
-  );
-  const orgMember = orgMemberResult.next()?.oneRow();
-  
-  if (orgMember) {
-    // Org members get default project scope
-    return [
-      makeProjectScopeString(project_id),
-      ...USER_SCOPE.map((s: string) => makeProjectScopeString(project_id, s))
-    ];
-  }
-  
-  // Check if project is public
-  if (project['public'] === true) {
-    return [
-      makeProjectScopeString(project_id),
-      makeProjectScopeString(project_id, 'public:access')
-    ];
-  }
-  
-  return [];
-};
 
 //
 //

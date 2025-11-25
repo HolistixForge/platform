@@ -30,6 +30,9 @@
       "path": "../backend-engine/tsconfig.lib.json"
     },
     {
+      "path": "../observability/tsconfig.lib.json"
+    },
+    {
       "path": "../simple-types/tsconfig.lib.json"
     },
     {

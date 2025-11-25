@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useLocalSharedData } from '@monorepo/collab/frontend';
 import { useDispatcher } from '@monorepo/reducers/frontend';
 
-import { HolistixSpace } from '../components/holistix-space';
+import { DemiurgeSpace } from '../components/demiurge-space';
 import { TSpaceSharedData } from '../..';
 
 //
@@ -12,8 +12,8 @@ export const STORY_VIEW_ID = 'space-story';
 
 //
 
-/** HolistixSpace but initialise a view with id {STORY_VIEW_ID} */
-export const StoryHolistixSpace = () => {
+/** DemiurgeSpace but initialise a view with id {STORY_VIEW_ID} */
+export const StoryDemiurgeSpace = () => {
   const dispatcher = useDispatcher();
 
   const view = useLocalSharedData<TSpaceSharedData>(
@@ -39,5 +39,5 @@ export const StoryHolistixSpace = () => {
     return <div>Loading story space...</div>;
   }
 
-  return <HolistixSpace viewId={STORY_VIEW_ID} />;
+  return <DemiurgeSpace viewId={STORY_VIEW_ID} />;
 };

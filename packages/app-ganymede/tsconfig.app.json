@@ -7,9 +7,7 @@
     "tsBuildInfoFile": "out-tsc/app-ganymede/tsconfig.app.tsbuildinfo",
     "resolveJsonModule": true
   },
-  "files": [
-    "src/oas30.json"
-  ],
+  "files": ["src/oas30.json"],
   "include": ["src/**/*.ts"],
   "exclude": [
     "out-tsc",
@@ -30,6 +28,9 @@
     },
     {
       "path": "../log/tsconfig.lib.json"
+    },
+    {
+      "path": "../observability/tsconfig.lib.json"
     },
     {
       "path": "../backend-engine/tsconfig.lib.json"

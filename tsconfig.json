@@ -89,6 +89,9 @@
     },
     {
       "path": "./packages/modules/reducers"
+    },
+    {
+      "path": "./packages/observability"
     }
   ],
   "ts-node": {
