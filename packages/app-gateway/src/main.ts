@@ -14,6 +14,7 @@ import { BackendEventProcessor } from '@monorepo/reducers';
 import { VPN } from './config/organization';
 import { CONFIG } from './config';
 import { setupCollabRoutes, setBackendEventProcessor } from './routes/collab';
+import { setupPermissionsRoutes } from './routes/permissions';
 import oauthRoutes from './routes/oauth';
 import oas from './oas30.json';
 import {
@@ -70,6 +71,7 @@ const setupExpressApp = () => {
   // Routes
   const router = express.Router();
   setupCollabRoutes(router);
+  setupPermissionsRoutes(router);
   app.use('/', router);
 
   // OAuth routes

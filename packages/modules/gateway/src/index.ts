@@ -11,6 +11,8 @@ import {
 
 //
 
+import { PermissionRegistry } from './lib/permission-registry';
+
 export type TGatewayExports = {
   toGanymede: <T>(r: TMyfetchRequest) => Promise<T>;
   updateReverseProxy: (
@@ -22,6 +24,7 @@ export type TGatewayExports = {
   permissionManager: PermissionManager;
   oauthManager: OAuthManager;
   dnsManager: DNSManager;
+  permissionRegistry: PermissionRegistry;
 };
 
 //
@@ -55,5 +58,11 @@ export {
   type TOAuthCode,
   type TOAuthToken,
 } from './lib/managers';
+
+// Export PermissionRegistry
+export {
+  PermissionRegistry,
+  type PermissionDefinition,
+} from './lib/permission-registry';
 
 export type { TEventDisableShutdown } from './lib/gateway-events';

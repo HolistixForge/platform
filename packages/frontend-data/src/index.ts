@@ -4,6 +4,8 @@ export { GanymedeApi } from './lib/api-ganymede';
 
 export {
   useQueryScope,
+  useQueryOrganizationGateway,
+  useQueryOrganization,
   useQueryUsersSearch,
   useQueryUser,
   useQueriesUsers,
@@ -20,7 +22,7 @@ export {
   useMutationNewProject,
   useMutationDeleteProject,
   useQueryProjectByName,
-  useMutationStartProject,
+  useMutationStartOrganization,
 } from './lib/queries';
 
 export type {

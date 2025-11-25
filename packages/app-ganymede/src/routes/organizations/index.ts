@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authenticateJwt } from '../../middleware/auth';
 import { pg } from '../../database/pg';
 import { asyncHandler, AuthRequest } from '../../middleware/route-handler';
+import { makeOrgGatewayHostname } from '../../lib/url-helpers';
 
 export const setupOrganizationRoutes = (router: Router) => {
   // GET /orgs - List user's organizations
@@ -191,6 +192,39 @@ export const setupOrganizationRoutes = (router: Router) => {
         [req.params.org_id, req.params.user_id, newRole]
       );
       return res.json({ success: true });
+    })
+  );
+
+  // GET /orgs/:org_id/gateway - Get gateway hostname for organization
+  router.get(
+    '/orgs/:org_id/gateway',
+    authenticateJwt,
+    asyncHandler(async (req: AuthRequest, res) => {
+      // Check user is org member (owner or member)
+      const roleCheck = await pg.query(
+        'SELECT func_user_get_org_role($1, $2) as role',
+        [req.user.id, String(req.params.org_id)]
+      );
+      const role = roleCheck.next()?.oneRow()['role'] as string | null;
+      if (!role) {
+        return res.status(403).json({ error: 'Not organization member' });
+      }
+
+      // Check if gateway is active for this organization
+      const gatewayResult = await pg.query(
+        'SELECT * FROM func_organizations_get_active_gateway($1)',
+        [req.params.org_id]
+      );
+      const gateway = gatewayResult.next()?.oneRow();
+
+      // Gateway hostname is deterministic: org-{organization_id}.domain.local
+      // But we only return it if gateway is actually allocated
+      if (gateway) {
+        const gateway_hostname = makeOrgGatewayHostname(req.params.org_id);
+        return res.json({ gateway_hostname });
+      } else {
+        return res.json({ gateway_hostname: null });
+      }
     })
   );
 };

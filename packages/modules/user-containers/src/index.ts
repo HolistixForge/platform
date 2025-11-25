@@ -32,6 +32,26 @@ export const moduleBackend: TModule<TRequired, TUserContainersExports> = {
   description: 'User containers module',
   dependencies: ['core-graph', 'collab', 'reducers', 'gateway'],
   load: ({ depsExports, moduleExports }) => {
+    // Register permissions with PermissionRegistry
+    const permissionRegistry = depsExports.gateway.permissionRegistry;
+
+    // Simple permissions
+    permissionRegistry.register('user-containers:[user-container:*]:create', {
+      resourcePath: 'user-container:*',
+      action: 'create',
+      description: 'Create user containers',
+    });
+    permissionRegistry.register('user-containers:[user-container:*]:delete', {
+      resourcePath: 'user-container:*',
+      action: 'delete',
+      description: 'Delete user containers',
+    });
+    permissionRegistry.register('user-containers:[user-container:*]:host', {
+      resourcePath: 'user-container:*',
+      action: 'host',
+      description: 'Host user containers',
+    });
+
     // Load shared data
     depsExports.collab.collab.loadSharedData(
       'map',

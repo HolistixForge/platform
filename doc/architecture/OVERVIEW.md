@@ -47,6 +47,8 @@ See: [./SYSTEM_ARCHITECTURE.md](./SYSTEM_ARCHITECTURE.md)
 
 **Database Tables:**
 
+see [psql schema](../../packages/app-ganymede/database/schema/02-schema.sql)
+
 - `users`, `passwords`, `totp`, `magic_links`, `sessions`
 - `organizations`, `organizations_members`
 - `projects`, `projects_members`

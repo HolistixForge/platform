@@ -20,6 +20,8 @@ import { DNSManagerImpl } from '../dns/DNSManager';
  * Gateway Module Configuration
  * Passed to gateway module load() function
  */
+import { PermissionRegistry } from '@monorepo/gateway';
+
 export type GatewayModuleConfig = {
   organization_id: string;
   organization_token: string;
@@ -31,6 +33,7 @@ export type GatewayModuleConfig = {
   permissionManager: PermissionManager;
   oauthManager: OAuthManager;
   tokenManager: TokenManager;
+  permissionRegistry: PermissionRegistry;
 };
 
 type TRequired = {
@@ -126,6 +129,19 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
         );
     };
 
+    // Register gateway module permissions
+    const permissionRegistry = gatewayConfig.permissionRegistry;
+    permissionRegistry.register('gateway:[permissions:*]:read', {
+      resourcePath: 'permissions:*',
+      action: 'read',
+      description: 'Read permissions',
+    });
+    permissionRegistry.register('gateway:[permissions:*]:write', {
+      resourcePath: 'permissions:*',
+      action: 'write',
+      description: 'Write permissions',
+    });
+
     const myExports: TGatewayExports = {
       toGanymede,
 
@@ -147,6 +163,7 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
       permissionManager: gatewayConfig.permissionManager,
       oauthManager: gatewayConfig.oauthManager,
       dnsManager: new DNSManagerImpl(toGanymede),
+      permissionRegistry: gatewayConfig.permissionRegistry,
     };
 
     moduleExports(myExports);

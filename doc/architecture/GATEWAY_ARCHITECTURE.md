@@ -183,6 +183,36 @@ Gateway returns to pool, ready for next org.
 
 Permissions are Managed by PermissionManager, that maintains a set of string defined fined grain permission for all users.
 
+#### Permission Registry System
+
+The **PermissionRegistry** allows modules to register their permissions during module loading. Permissions are compiled and can be retrieved via gateway API endpoints.
+
+**Permission Format:**
+- Format: `{module}:[{resource-path}]:{action}`
+- Resource path supports hierarchical resources: `{type}:{id|*}(/{type}:{id|*})*`
+- Examples:
+  - `user-containers:[user-container:*]:create`
+  - `user-containers:[user-container:{uuid}/service:*]:create`
+  - `gateway:[permissions:*]:read`
+
+**How It Works:**
+1. During gateway initialization, a `PermissionRegistry` instance is created
+2. When modules are loaded, they can access the registry via `depsExports.gateway.permissionRegistry`
+3. Modules register their permissions in their `load()` function
+4. The registry validates permission format and stores definitions
+5. Gateway API endpoints (`GET /permissions`, etc.) retrieve compiled permissions from the registry
+
+**Example Module Registration:**
+```typescript
+// In user-containers module load() function
+const permissionRegistry = depsExports.gateway.permissionRegistry;
+permissionRegistry.register('user-containers:[user-container:*]:create', {
+  resourcePath: 'user-container:*',
+  action: 'create',
+  description: 'Create user containers',
+});
+```
+
 The gateway also uses **scope-based authorization** with template variable substitution:
 
 - **Generic JWT handling:** `authenticateJwt` middleware accepts any JWT type (`TJwtUser`, `TJwtOrganization`, `TJwtGateway`)

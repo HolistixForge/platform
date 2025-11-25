@@ -8,10 +8,7 @@ export type {
 
 //
 
-export type {
-  TApi_Project,
-  TApi_Authorization,
-} from './lib/ganymede-api/types';
+export type { TApi_Project } from './lib/ganymede-api/types';
 
 export {
   USER_SCOPE,

@@ -168,4 +168,12 @@ export class PermissionManager
   getAllUsers(): string[] {
     return Object.keys(this.data.permissions);
   }
+
+  /**
+   * Get all permissions for all users
+   * Returns a map of user_id -> permissions array
+   */
+  getAllPermissions(): { [user_id: string]: string[] } {
+    return { ...this.data.permissions };
+  }
 }

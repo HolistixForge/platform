@@ -5,6 +5,16 @@ import { PermissionManager } from '../permissions';
 import { ProjectRoomsManager } from '../state/ProjectRooms';
 import { OAuthManager } from '../oauth';
 import { TokenManager } from '../tokens';
+import { PermissionRegistry } from '@monorepo/gateway';
+
+export interface GatewayInstances {
+  gatewayState: GatewayState;
+  permissionManager: PermissionManager;
+  oauthManager: OAuthManager;
+  tokenManager: TokenManager;
+  projectRooms: ProjectRoomsManager;
+  permissionRegistry: PermissionRegistry;
+}
 import { setGatewayInstances, getGatewayInstances } from './gateway-instances';
 import { createBackendModulesConfig } from '../config/modules';
 
@@ -65,6 +75,9 @@ export async function initializeGatewayForOrganization(
   gatewayState.register('oauth', oauthManager);
   gatewayState.register('projects', projectRooms);
 
+  // 5.5 Create PermissionRegistry instance
+  const permissionRegistry = new PermissionRegistry();
+
   // 5. Store instances in registry for route access + start auto-save
   gatewayState.startAutosave();
   log(6, 'GATEWAY_INIT', 'Started auto-save (pushes to Ganymede every 5min)');
@@ -74,6 +87,7 @@ export async function initializeGatewayForOrganization(
     oauthManager,
     tokenManager,
     projectRooms,
+    permissionRegistry,
   };
   setGatewayInstances(instances);
 
@@ -85,7 +99,8 @@ export async function initializeGatewayForOrganization(
     gatewayId,
     permissionManager,
     oauthManager,
-    tokenManager
+    tokenManager,
+    permissionRegistry
   );
   log(6, 'GATEWAY_INIT', `Loading ${modulesConfig.length} backend modules...`);
   loadModules(modulesConfig);

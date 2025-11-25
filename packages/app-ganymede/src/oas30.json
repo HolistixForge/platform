@@ -689,6 +689,37 @@
         }
       }
     },
+    "/orgs/{org_id}/gateway": {
+      "get": {
+        "summary": "Get gateway hostname for organization",
+        "description": "Returns gateway hostname if gateway is active for the organization, null otherwise. Requires organization membership.",
+        "tags": ["Organizations"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          { "$ref": "#/components/parameters/org_id" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Gateway hostname",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "gateway_hostname": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Gateway hostname if active, null otherwise"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
     "/orgs/{org_id}/members/{user_id}": {
       "delete": {
         "summary": "Remove organization member",
@@ -743,22 +774,43 @@
     },
     "/projects": {
       "get": {
-        "summary": "List user's projects",
+        "summary": "List user's projects or search by owner and name",
         "tags": ["Projects"],
-        "parameters": [{ "$ref": "#/components/parameters/headers_authorization" }],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "name": "owner",
+            "in": "query",
+            "required": false,
+            "description": "Owner username (when searching with 'name')",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "description": "Project name (when searching with 'owner')",
+            "schema": { "type": "string" }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "List of projects",
+            "description": "Project details (when searching) or list of projects (default)",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "projects": {
-                      "type": "array",
-                      "items": { "$ref": "#/components/schemas/project" }
+                  "oneOf": [
+                    { "$ref": "#/components/schemas/project" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "projects": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/project" }
+                        }
+                      }
                     }
-                  }
+                  ]
                 }
               }
             }

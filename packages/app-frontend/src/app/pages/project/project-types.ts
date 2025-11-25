@@ -11,7 +11,7 @@ export type ProjectState =
     }
   | {
       status: 'not_started';
-      project_id: string;
+      organization_id: string;
     }
   | {
       status: 'ready';
@@ -20,6 +20,7 @@ export type ProjectState =
 
 export type ProjectData = {
   project: TApi_Project;
+  organization_id: string;
   isOwner: boolean;
 };
 

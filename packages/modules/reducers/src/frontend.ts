@@ -1,9 +1,14 @@
 import { TModule } from '@monorepo/module';
 import { TBaseEvent } from '.';
 import { FrontendDispatcher } from './lib/dispatchers';
+import { ApiFetch } from '@monorepo/api-fetch';
 
 export type TReducersFrontendExports<TE extends TBaseEvent = TBaseEvent> = {
   dispatcher: FrontendDispatcher<TE>;
+};
+
+export type TReducersFrontendConfig = {
+  fetch?: ApiFetch; // Gateway fetch function from config
 };
 
 export const moduleFrontend: TModule<
@@ -15,8 +20,16 @@ export const moduleFrontend: TModule<
   description: 'Reducers module',
   dependencies: [],
   load: (args) => {
+    const dispatcher = new FrontendDispatcher();
+
+    // Set fetch from config if provided
+    const config = args.config as TReducersFrontendConfig;
+    if (config.fetch) {
+      dispatcher.setFetch(config.fetch);
+    }
+
     args.moduleExports({
-      dispatcher: new FrontendDispatcher(),
+      dispatcher,
     });
   },
 };

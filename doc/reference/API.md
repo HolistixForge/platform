@@ -299,7 +299,7 @@ Content-Type: application/json
 }
 ```
 
-### Get Project (with Gateway)
+### Get Project
 
 **Request:**
 
@@ -318,13 +318,100 @@ Content-Type: application/json
   "organization_id": "550e8400-e29b-41d4-a716-446655440000",
   "name": "my-project",
   "public": false,
-  "created_at": "2025-01-06T12:01:00.000Z",
-  "gateway": {
-    "gateway_id": "770e8400-e29b-41d4-a716-446655440000",
-    "hostname": "gateway.550e8400.dev-001.domain.com",
-    "ready": true,
-    "websocket_url": "wss://gateway.550e8400.dev-001.domain.com/collab"
+  "created_at": "2025-01-06T12:01:00.000Z"
+}
+```
+
+**Note:** Gateway hostname is available separately via organization data. The project response no longer includes gateway information.
+
+### Get All Permissions
+
+**Request:**
+
+```http
+GET /permissions
+Authorization: Bearer {jwt_token}
+```
+
+**Response:**
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "permissions": [
+    {
+      "permission": "user-containers:[user-container:*]:create",
+      "module": "user-containers",
+      "resourcePath": "user-container:*",
+      "action": "create",
+      "description": "Create user containers"
+    },
+    {
+      "permission": "gateway:[permissions:*]:read",
+      "module": "gateway",
+      "resourcePath": "permissions:*",
+      "action": "read",
+      "description": "Read permissions"
+    }
+  ]
+}
+```
+
+### Get Project User Permissions
+
+**Request:**
+
+```http
+GET /permissions/projects/660e8400-e29b-41d4-a716-446655440000
+Authorization: Bearer {jwt_token}
+```
+
+**Response:**
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "permissions": {
+    "123e4567-e89b-12d3-a456-426614174000": [
+      "user-containers:[user-container:*]:create",
+      "user-containers:[user-container:*]:delete"
+    ],
+    "223e4567-e89b-12d3-a456-426614174001": [
+      "user-containers:[user-container:*]:create"
+    ]
   }
+}
+```
+
+### Update User Permissions
+
+**Request:**
+
+```http
+PATCH /permissions/projects/660e8400-e29b-41d4-a716-446655440000/users/123e4567-e89b-12d3-a456-426614174000
+Authorization: Bearer {jwt_token}
+Content-Type: application/json
+
+{
+  "permissions": [
+    "user-containers:[user-container:*]:create",
+    "user-containers:[user-container:*]:delete"
+  ]
+}
+```
+
+**Response:**
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "success": true
 }
 ```
 

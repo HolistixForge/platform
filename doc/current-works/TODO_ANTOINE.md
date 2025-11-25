@@ -1,13 +1,11 @@
 ⚠️ Antoine's stuffs
 
-fix other modules and their stories: user-containers, jupyter
-all compile: frontend : only one JWT for user, global client id
+user-containers, jupyter
+demiurge-type
+mv database to monorepo
 logs
-dns
-load save project
-permission
+modules docs and links
 credentials
-automate
 docs with FL features upcoming: collab, graph, layers, DNS, containers, logs, IA, automation and reporting language, formal process management, modules
 website
 license

@@ -48,3 +48,7 @@ $ [NX_SKIP_NX_CACHE=true] npx nx run app-frontend:build:production \
 ```
 
 for bundle analyser report, go to **(change XXX)** https://dev-XXX.demiurge.co/bundle-analyse/index.html
+
+## Documentation
+
+- [Frontend Architecture](../../doc/architecture/FRONTEND_ARCHITECTURE.md)

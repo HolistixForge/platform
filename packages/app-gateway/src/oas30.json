@@ -146,6 +146,144 @@
         }
       }
     },
+    "/permissions": {
+      "get": {
+        "summary": "Get all compiled permissions from all modules",
+        "description": "Returns all permissions registered by modules. Requires gateway:[permissions:*]:read permission.",
+        "tags": ["Permissions"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of all permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "permissions": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/permission_definition"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/permissions/projects/{project_id}": {
+      "get": {
+        "summary": "Get user permissions for a project",
+        "description": "Returns permissions for all users in a project. Requires gateway:[permissions:*]:read permission and project access.",
+        "tags": ["Permissions"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Project ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User permissions for project",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "permissions": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": { "type": "string" }
+                      },
+                      "description": "Map of user_id to permissions array"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/permissions/projects/{project_id}/users/{user_id}": {
+      "patch": {
+        "summary": "Update user permissions for a project",
+        "description": "Updates permissions for a user in a project. Requires gateway:[permissions:*]:write permission and project access.",
+        "tags": ["Permissions"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Project ID"
+          },
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "User ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "permissions": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Array of permission strings"
+                  }
+                },
+                "required": ["permissions"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Permissions updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
     "/oauth/authorize": {
       "get": {
         "summary": "OAuth2 authorization endpoint",
@@ -363,6 +501,32 @@
             }
           }
         }
+      },
+      "permission_definition": {
+        "type": "object",
+        "properties": {
+          "permission": {
+            "type": "string",
+            "description": "Full permission string (e.g., 'user-containers:[user-container:*]:create')"
+          },
+          "module": {
+            "type": "string",
+            "description": "Module name that registered this permission"
+          },
+          "resourcePath": {
+            "type": "string",
+            "description": "Resource path (e.g., 'user-container:*' or 'user-container:*/service:*')"
+          },
+          "action": {
+            "type": "string",
+            "description": "Action (e.g., 'create', 'delete', 'read')"
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description"
+          }
+        },
+        "required": ["permission", "module", "resourcePath", "action"]
       }
     },
     "parameters": {
