@@ -21,6 +21,8 @@ App-ganymede is the main API server that handles:
 
 See [doc/architecture/OVERVIEW.md](../../doc/architecture/OVERVIEW.md) for system architecture.
 
+[postgresql database schema and procedure](./database)
+
 ## Key Features
 
 ### Authentication
