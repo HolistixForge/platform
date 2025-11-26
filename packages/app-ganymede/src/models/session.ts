@@ -1,7 +1,7 @@
 import { SessionData, Store } from 'express-session';
 import { TJson, TJsonObject } from '@monorepo/simple-types';
 import { SESSION_MAX_AGE } from '../main';
-import { log } from '@monorepo/log';
+import { EPriority, log } from '@monorepo/log';
 import { pg } from '../database/pg';
 
 type MySessionData = SessionData & { passport?: TJsonObject };
@@ -11,7 +11,11 @@ const SS = 'SESSION_MODEL';
 const debug = (sid: string, session: TJsonObject | null, msg: string) => {
   const p: any = session?.['passport'];
   const username = p?.['user']?.['username'];
-  log(7, SS, `[${sid}] ${username ? `[${username}]` : ''} ${msg}`);
+  log(
+    EPriority.Debug,
+    SS,
+    `[${sid}] ${username ? `[${username}]` : ''} ${msg}`
+  );
 };
 
 //
@@ -110,7 +114,7 @@ export class FakeSessionStore extends Store {
    * @param callback
    */
   destroy(sid: string, callback: (err?: Error) => void) {
-    log(7, 'SESSION_STORE', `destroy session [${sid}]`);
+    log(EPriority.Debug, 'SESSION_STORE', `destroy session [${sid}]`);
     this._dummy.delete(sid);
     callback();
   }
@@ -126,7 +130,7 @@ export class FakeSessionStore extends Store {
   ) {
     const session = this._dummy.get(sid);
     const username = (session as any)?.['passport']?.['user']?.['username'];
-    log(7, SS, `get session [${sid}] [${username}]`);
+    log(EPriority.Debug, SS, `get session [${sid}] [${username}]`);
     if (session) callback(null, session as unknown as SessionData);
     else callback(null, null); // not found
   }
@@ -140,7 +144,7 @@ export class FakeSessionStore extends Store {
   set(sid: string, session: SessionData, callback: (err?: Error) => void) {
     const username = (session as any)?.['passport']?.['user']?.['username'];
     log(
-      7,
+      EPriority.Info,
       SS,
       `set session [${sid}] [${username}], maxAge [${SESSION_MAX_AGE}]`
     );
@@ -160,7 +164,7 @@ export class FakeSessionStore extends Store {
   ) {
     const username = (session as any)?.['passport']?.['user']?.['username'];
     log(
-      7,
+      EPriority.Info,
       SS,
       `touch session [${sid}] [${username}], maxAge [${SESSION_MAX_AGE}]`
     );

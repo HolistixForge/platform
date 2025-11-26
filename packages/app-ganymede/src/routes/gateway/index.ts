@@ -1,8 +1,8 @@
 import { Router, Request } from 'express';
 import {
-  authenticateJwt,
-  authenticateGatewayToken,
-  authenticateOrganizationToken,
+  authenticateJwtUser,
+  authenticateJwtGateway,
+  authenticateJwtOrganization,
   GatewayAuthRequest,
   OrganizationAuthRequest,
 } from '../../middleware/auth';
@@ -27,7 +27,7 @@ export const setupGatewayRoutes = (router: Router) => {
   // POST /gateway/start - Start gateway for organization
   router.post(
     '/gateway/start',
-    authenticateJwt,
+    authenticateJwtUser,
     asyncHandler(async (req: AuthRequest, res) => {
       const { organization_id } = req.body;
 
@@ -44,7 +44,11 @@ export const setupGatewayRoutes = (router: Router) => {
         return res.status(403).json({ error: 'Not organization member' });
       }
 
-      log(6, 'GATEWAY_ALLOC', `Starting gateway for org ${organization_id}`);
+      log(
+        EPriority.Info,
+        'GATEWAY_ALLOC',
+        `Starting gateway for org ${organization_id}`
+      );
 
       // Check if org already has allocated gateway
       const existingCheck = await pg.query(
@@ -56,7 +60,7 @@ export const setupGatewayRoutes = (router: Router) => {
       if (existing) {
         const gateway_hostname = makeOrgGatewayHostname(organization_id);
         log(
-          6,
+          EPriority.Info,
           'GATEWAY_ALLOC',
           `Gateway already allocated: ${gateway_hostname}`
         );
@@ -80,7 +84,7 @@ export const setupGatewayRoutes = (router: Router) => {
         const tmp_handshake_token = row['tmp_handshake_token'];
 
         log(
-          6,
+          EPriority.Info,
           'GATEWAY_ALLOC',
           `Allocated ${container_name} (port ${http_port}) to org ${organization_id}`
         );
@@ -98,11 +102,19 @@ export const setupGatewayRoutes = (router: Router) => {
         const gateway_hostname = makeOrgGatewayHostname(organization_id);
         const gateway_url = makeOrgGatewayUrl(organization_id);
 
-        log(6, 'GATEWAY_ALLOC', `Gateway accessible at: ${gateway_url}`);
+        log(
+          EPriority.Info,
+          'GATEWAY_ALLOC',
+          `Gateway accessible at: ${gateway_url}`
+        );
 
         // 6. Call gateway handshake
         const handshakeUrl = `${gateway_url}/collab/start`;
-        log(6, 'GATEWAY_ALLOC', `Calling gateway handshake: ${handshakeUrl}`);
+        log(
+          EPriority.Info,
+          'GATEWAY_ALLOC',
+          `Calling gateway handshake: ${handshakeUrl}`
+        );
 
         const handshakeResponse = await fetch(handshakeUrl, {
           method: 'POST',
@@ -118,7 +130,7 @@ export const setupGatewayRoutes = (router: Router) => {
         }
 
         log(
-          6,
+          EPriority.Info,
           'GATEWAY_ALLOC',
           `✅ Gateway started successfully for org ${organization_id}`
         );
@@ -218,7 +230,7 @@ export const setupGatewayRoutes = (router: Router) => {
   // POST /gateway/ready - Gateway signals it's ready
   router.post(
     '/gateway/ready',
-    authenticateGatewayToken,
+    authenticateJwtGateway,
     asyncHandler(async (req: GatewayAuthRequest, res) => {
       const { gateway_id } = req.body;
 
@@ -235,13 +247,13 @@ export const setupGatewayRoutes = (router: Router) => {
   // POST /gateway/stop - Stop gateway (called when org deallocates)
   router.post(
     '/gateway/stop',
-    authenticateOrganizationToken,
+    authenticateJwtOrganization,
     asyncHandler(async (req: OrganizationAuthRequest, res) => {
       const organization_id = req.organization.id;
       const gateway_id = req.organization.gateway_id;
 
       log(
-        6,
+        EPriority.Info,
         'GATEWAY_DEALLOC',
         `Stopping gateway ${gateway_id} for org ${organization_id}`
       );
@@ -262,7 +274,7 @@ export const setupGatewayRoutes = (router: Router) => {
         await nginxManager.reloadNginx();
 
         log(
-          6,
+          EPriority.Info,
           'GATEWAY_DEALLOC',
           `✅ Gateway deallocated, returned to pool (ready for next org)`
         );

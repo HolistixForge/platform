@@ -16,9 +16,9 @@ import fs from 'fs';
 import path from 'path';
 import { EPriority, log } from '@monorepo/log';
 import {
-  authenticateOrganizationToken,
+  authenticateJwtOrganization,
   OrganizationAuthRequest,
-  authenticateJwt,
+  authenticateJwtUser,
 } from '../../middleware/auth';
 import { asyncHandler, AuthRequest } from '../../middleware/route-handler';
 import { pg } from '../../database/pg';
@@ -63,7 +63,7 @@ export const setupGatewayDataRoutes = (router: Router) => {
    */
   router.post(
     '/gateway/data/push',
-    authenticateOrganizationToken,
+    authenticateJwtOrganization,
     asyncHandler(async (req: OrganizationAuthRequest, res) => {
       const { timestamp, data } = req.body;
 
@@ -79,7 +79,7 @@ export const setupGatewayDataRoutes = (router: Router) => {
       }
 
       log(
-        6,
+        EPriority.Info,
         'GATEWAY_DATA',
         `Push from gateway ${gateway_id} for org ${organization_id}`
       );
@@ -113,7 +113,7 @@ export const setupGatewayDataRoutes = (router: Router) => {
         const stats = await fs.promises.stat(dataPath);
 
         log(
-          6,
+          EPriority.Info,
           'GATEWAY_DATA',
           `✅ Data stored for org ${organization_id} (${stats.size} bytes)`
         );
@@ -163,14 +163,14 @@ export const setupGatewayDataRoutes = (router: Router) => {
    */
   router.post(
     '/gateway/data/pull',
-    authenticateOrganizationToken,
+    authenticateJwtOrganization,
     asyncHandler(async (req: OrganizationAuthRequest, res) => {
       // Get org_id and gateway_id from token
       const organization_id = req.organization.id;
       const gateway_id = req.organization.gateway_id;
 
       log(
-        6,
+        EPriority.Info,
         'GATEWAY_DATA',
         `Pull requested by gateway ${gateway_id} for org ${organization_id}`
       );
@@ -183,7 +183,7 @@ export const setupGatewayDataRoutes = (router: Router) => {
           await fs.promises.access(dataPath, fs.constants.R_OK);
         } catch {
           log(
-            6,
+            EPriority.Info,
             'GATEWAY_DATA',
             `No existing data for org ${organization_id} (new org or first allocation)`
           );
@@ -200,7 +200,7 @@ export const setupGatewayDataRoutes = (router: Router) => {
         const dataPackage = JSON.parse(content);
 
         log(
-          6,
+          EPriority.Info,
           'GATEWAY_DATA',
           `✅ Data retrieved for org ${organization_id} (stored: ${dataPackage.stored_at})`
         );
@@ -237,7 +237,7 @@ export const setupGatewayDataRoutes = (router: Router) => {
    */
   router.delete(
     '/gateway/data/:organization_id',
-    authenticateJwt,
+    authenticateJwtUser,
     asyncHandler(async (req: AuthRequest, res: Response) => {
       const { organization_id } = req.params;
 
@@ -256,14 +256,16 @@ export const setupGatewayDataRoutes = (router: Router) => {
         if (!orgResult.next()?.oneRow()) {
           return res.status(404).json({ error: 'Organization not found' });
         }
-        return res
-          .status(403)
-          .json({
-            error: 'Only organization owner can delete organization data',
-          });
+        return res.status(403).json({
+          error: 'Only organization owner can delete organization data',
+        });
       }
 
-      log(6, 'GATEWAY_DATA', `Delete requested for org ${organization_id}`);
+      log(
+        EPriority.Info,
+        'GATEWAY_DATA',
+        `Delete requested for org ${organization_id}`
+      );
 
       try {
         const dataPath = getOrgDataPath(organization_id);
@@ -272,7 +274,11 @@ export const setupGatewayDataRoutes = (router: Router) => {
         try {
           await fs.promises.access(dataPath, fs.constants.F_OK);
         } catch {
-          log(6, 'GATEWAY_DATA', `No data file for org ${organization_id}`);
+          log(
+            EPriority.Info,
+            'GATEWAY_DATA',
+            `No data file for org ${organization_id}`
+          );
           return res.json({
             success: true,
             message: 'No data to delete',
@@ -282,7 +288,11 @@ export const setupGatewayDataRoutes = (router: Router) => {
         // Delete file
         await fs.promises.unlink(dataPath);
 
-        log(6, 'GATEWAY_DATA', `✅ Data deleted for org ${organization_id}`);
+        log(
+          EPriority.Info,
+          'GATEWAY_DATA',
+          `✅ Data deleted for org ${organization_id}`
+        );
 
         return res.json({
           success: true,

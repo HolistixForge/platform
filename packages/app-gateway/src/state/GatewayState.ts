@@ -1,4 +1,4 @@
-import { log } from '@monorepo/log';
+import { EPriority, log } from '@monorepo/log';
 import { IPersistenceProvider } from './IPersistenceProvider';
 
 type TGatewayDataSnapshot = Record<string, unknown>;
@@ -40,13 +40,17 @@ export class GatewayState {
   register(id: string, provider: IPersistenceProvider): void {
     if (this.providers.has(id)) {
       log(
-        3,
+        EPriority.Warning,
         'GATEWAY_STATE',
         `Warning: Provider with id '${id}' already registered, replacing`
       );
     }
     this.providers.set(id, provider);
-    log(6, 'GATEWAY_STATE', `Registered persistence provider: ${id}`);
+    log(
+      EPriority.Info,
+      'GATEWAY_STATE',
+      `Registered persistence provider: ${id}`
+    );
 
     // Load data from pulled snapshot if available
     if (this.pulledData && this.pulledData[id] !== undefined) {
@@ -54,10 +58,10 @@ export class GatewayState {
         provider.loadFromSerialized(
           this.pulledData[id] as Record<string, unknown> | null | undefined
         );
-        log(6, 'GATEWAY_STATE', `Loaded data for provider: ${id}`);
+        log(EPriority.Info, 'GATEWAY_STATE', `Loaded data for provider: ${id}`);
       } catch (error: any) {
         log(
-          3,
+          EPriority.Error,
           'GATEWAY_STATE',
           `Failed to load data for provider '${id}': ${error.message}`
         );
@@ -70,7 +74,11 @@ export class GatewayState {
    */
   unregister(id: string): void {
     this.providers.delete(id);
-    log(6, 'GATEWAY_STATE', `Unregistered persistence provider: ${id}`);
+    log(
+      EPriority.Info,
+      'GATEWAY_STATE',
+      `Unregistered persistence provider: ${id}`
+    );
   }
 
   /**
@@ -81,7 +89,7 @@ export class GatewayState {
     this.gatewayId = gateway_id;
     this._initialized = true;
     log(
-      6,
+      EPriority.Info,
       'GATEWAY_STATE',
       `Initialized for org: ${organization_id}, gateway: ${gateway_id}`
     );
@@ -101,7 +109,7 @@ export class GatewayState {
     this.organizationToken = organizationToken;
 
     log(
-      6,
+      EPriority.Info,
       'GATEWAY_STATE',
       `Organization context set: org=${organizationId}, gateway=${gatewayId}`
     );
@@ -119,7 +127,7 @@ export class GatewayState {
     this.organizationToken = null;
     this.pulledData = null;
 
-    log(6, 'GATEWAY_STATE', 'Organization context cleared');
+    log(EPriority.Info, 'GATEWAY_STATE', 'Organization context cleared');
   }
 
   /**
@@ -138,7 +146,7 @@ export class GatewayState {
         data[id] = provider.saveToSerializable();
       } catch (error: any) {
         log(
-          3,
+          EPriority.Error,
           'GATEWAY_STATE',
           `Failed to collect data from provider '${id}': ${error.message}`
         );
@@ -146,7 +154,7 @@ export class GatewayState {
     }
 
     log(
-      6,
+      EPriority.Info,
       'GATEWAY_STATE',
       `Collected data from ${this.providers.size} providers`
     );
@@ -159,7 +167,7 @@ export class GatewayState {
    */
   restoreData(data: TGatewayDataSnapshot | null | undefined): void {
     if (!data) {
-      log(6, 'GATEWAY_STATE', 'No data to restore');
+      log(EPriority.Info, 'GATEWAY_STATE', 'No data to restore');
       return;
     }
 
@@ -181,10 +189,14 @@ export class GatewayState {
           provider.loadFromSerialized(
             data[id] as Record<string, unknown> | null | undefined
           );
-          log(6, 'GATEWAY_STATE', `Restored data for provider: ${id}`);
+          log(
+            EPriority.Info,
+            'GATEWAY_STATE',
+            `Restored data for provider: ${id}`
+          );
         } catch (error: any) {
           log(
-            3,
+            EPriority.Error,
             'GATEWAY_STATE',
             `Failed to restore data for provider '${id}': ${error.message}`
           );
@@ -192,7 +204,7 @@ export class GatewayState {
       }
     }
 
-    log(6, 'GATEWAY_STATE', 'Data restoration complete');
+    log(EPriority.Info, 'GATEWAY_STATE', 'Data restoration complete');
   }
 
   /**
@@ -201,12 +213,16 @@ export class GatewayState {
    */
   async pushDataToGanymede(): Promise<void> {
     if (!this.organizationId || !this.gatewayId || !this.organizationToken) {
-      log(6, 'GATEWAY_STATE', 'No organization context, skipping push');
+      log(
+        EPriority.Info,
+        'GATEWAY_STATE',
+        'No organization context, skipping push'
+      );
       return;
     }
 
     log(
-      6,
+      EPriority.Info,
       'GATEWAY_STATE',
       `Pushing data to Ganymede for org ${this.organizationId}`
     );
@@ -237,12 +253,17 @@ export class GatewayState {
       const result = await response.json();
 
       log(
-        6,
+        EPriority.Info,
         'GATEWAY_STATE',
         `✅ Data pushed successfully (${result.size_bytes} bytes)`
       );
     } catch (error: any) {
-      log(2, 'GATEWAY_STATE', `Failed to push data:`, error.message);
+      log(
+        EPriority.Critical,
+        'GATEWAY_STATE',
+        `Failed to push data:`,
+        error.message
+      );
       // Don't throw - push failure shouldn't crash gateway
     }
   }
@@ -253,12 +274,16 @@ export class GatewayState {
    */
   async pullDataFromGanymede(): Promise<void> {
     if (!this.organizationId || !this.gatewayId || !this.organizationToken) {
-      log(2, 'GATEWAY_STATE', 'Cannot pull: No organization context');
+      log(
+        EPriority.Critical,
+        'GATEWAY_STATE',
+        'Cannot pull: No organization context'
+      );
       throw new Error('No organization context for data pull');
     }
 
     log(
-      6,
+      EPriority.Info,
       'GATEWAY_STATE',
       `Pulling data from Ganymede for org ${this.organizationId}`
     );
@@ -288,21 +313,26 @@ export class GatewayState {
 
       if (result.exists && result.data) {
         log(
-          6,
+          EPriority.Info,
           'GATEWAY_STATE',
           `✅ Data retrieved (stored: ${result.stored_at})`
         );
         this.restoreData(result.data);
       } else {
         log(
-          6,
+          EPriority.Warning,
           'GATEWAY_STATE',
           'No existing data for organization (new org or first allocation)'
         );
         this.pulledData = null; // Mark that there's no data
       }
     } catch (error: any) {
-      log(2, 'GATEWAY_STATE', `Failed to pull data:`, error.message);
+      log(
+        EPriority.Critical,
+        'GATEWAY_STATE',
+        `Failed to pull data:`,
+        error.message
+      );
       throw error; // Pull failure during allocation should fail the allocation
     }
   }
@@ -313,12 +343,12 @@ export class GatewayState {
    */
   startAutosave(intervalMs = 300000): void {
     if (this.autosaveTimer) {
-      log(5, 'GATEWAY_STATE', 'Autosave already running');
+      log(EPriority.Notice, 'GATEWAY_STATE', 'Autosave already running');
       return;
     }
 
     log(
-      6,
+      EPriority.Info,
       'GATEWAY_STATE',
       `Starting autosave (interval: ${intervalMs / 1000}s)`
     );
@@ -335,7 +365,7 @@ export class GatewayState {
     if (this.autosaveTimer) {
       clearInterval(this.autosaveTimer);
       this.autosaveTimer = null;
-      log(6, 'GATEWAY_STATE', 'Autosave stopped');
+      log(EPriority.Info, 'GATEWAY_STATE', 'Autosave stopped');
     }
   }
 
@@ -344,13 +374,13 @@ export class GatewayState {
    */
   async shutdown(): Promise<void> {
     log(
-      6,
+      EPriority.Info,
       'GATEWAY_STATE',
       'Shutting down - stopping autosave and pushing final data'
     );
     this.stopAutosave();
     await this.pushDataToGanymede();
-    log(6, 'GATEWAY_STATE', 'Shutdown complete');
+    log(EPriority.Info, 'GATEWAY_STATE', 'Shutdown complete');
   }
 
   /**

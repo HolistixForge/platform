@@ -9,7 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { log } from '@monorepo/log';
+import { EPriority, log } from '@monorepo/log';
 
 const execAsync = promisify(exec);
 
@@ -37,7 +37,11 @@ export class NginxManager {
     const orgDomain = `org-${orgId}.${domain}`;
     const configPath = path.join(this.nginxGatewaysDir, `org-${orgId}.conf`);
 
-    log(6, 'NGINX', `Creating config for ${orgDomain} → 127.0.0.1:${httpPort}`);
+    log(
+      EPriority.Info,
+      'NGINX',
+      `Creating config for ${orgDomain} → 127.0.0.1:${httpPort}`
+    );
 
     // Create nginx config (Stage 1: SSL termination, route to gateway)
     const nginxConfig = `# Gateway for organization ${orgId}
@@ -82,10 +86,10 @@ server {
       // Write config file
       await fs.promises.writeFile(configPath, nginxConfig, 'utf-8');
 
-      log(6, 'NGINX', `✅ Config created: ${configPath}`);
+      log(EPriority.Info, 'NGINX', `✅ Config created: ${configPath}`);
     } catch (error: any) {
       log(
-        2,
+        EPriority.Error,
         'NGINX',
         `Failed to create config for org ${orgId}:`,
         error.message
@@ -100,7 +104,7 @@ server {
   async removeGatewayConfig(orgId: string): Promise<void> {
     const configPath = path.join(this.nginxGatewaysDir, `org-${orgId}.conf`);
 
-    log(6, 'NGINX', `Removing config for org ${orgId}`);
+    log(EPriority.Info, 'NGINX', `Removing config for org ${orgId}`);
 
     try {
       // Check if file exists
@@ -108,7 +112,7 @@ server {
         await fs.promises.access(configPath, fs.constants.F_OK);
       } catch {
         log(
-          6,
+          EPriority.Info,
           'NGINX',
           `Config doesn't exist for org ${orgId}, nothing to remove`
         );
@@ -118,10 +122,10 @@ server {
       // Remove config file
       await fs.promises.unlink(configPath);
 
-      log(6, 'NGINX', `✅ Config removed: ${configPath}`);
+      log(EPriority.Info, 'NGINX', `✅ Config removed: ${configPath}`);
     } catch (error: any) {
       log(
-        2,
+        EPriority.Error,
         'NGINX',
         `Failed to remove config for org ${orgId}:`,
         error.message
@@ -134,7 +138,7 @@ server {
    * Reload nginx to apply configuration changes
    */
   async reloadNginx(): Promise<void> {
-    log(6, 'NGINX', 'Testing and reloading nginx...');
+    log(EPriority.Info, 'NGINX', 'Testing and reloading nginx...');
 
     try {
       // Test configuration first
@@ -143,16 +147,21 @@ server {
       );
 
       if (testError && !testOutput.includes('syntax is ok')) {
-        log(2, 'NGINX', `Config test failed: ${testError}`);
+        log(EPriority.Critical, 'NGINX', `Config test failed: ${testError}`);
         throw new Error(`Nginx config test failed: ${testError}`);
       }
 
       // Reload nginx
       await execAsync('sudo service nginx reload');
 
-      log(6, 'NGINX', '✅ Nginx reloaded successfully');
+      log(EPriority.Info, 'NGINX', '✅ Nginx reloaded successfully');
     } catch (error: any) {
-      log(2, 'NGINX', `Failed to reload nginx:`, error.message);
+      log(
+        EPriority.Critical,
+        'NGINX',
+        `Failed to reload nginx:`,
+        error.message
+      );
       throw new Error(`Nginx reload failed: ${error.message}`);
     }
   }
@@ -165,7 +174,12 @@ server {
       const files = await fs.promises.readdir(this.nginxGatewaysDir);
       return files.filter((f) => f.endsWith('.conf'));
     } catch (error: any) {
-      log(2, 'NGINX', `Failed to list configs:`, error.message);
+      log(
+        EPriority.Critical,
+        'NGINX',
+        `Failed to list configs:`,
+        error.message
+      );
       return [];
     }
   }

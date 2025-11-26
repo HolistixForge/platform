@@ -82,6 +82,7 @@ export function initializeBrowserObservability(
   options: BrowserObservabilityOptions
 ): WebTracerProvider {
   if (tracerProvider) {
+    // Log warning (using console.warn as this is SDK initialization, before Logger is available)
     console.warn(
       'OpenTelemetry SDK already initialized. Ignoring duplicate initialization.'
     );
@@ -145,6 +146,7 @@ export function initializeBrowserObservability(
     });
   }
 
+  // Log initialization (using console.log as this is SDK initialization, before Logger is available)
   console.log(
     `[Observability] Initialized for service: ${
       options.serviceName

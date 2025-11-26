@@ -1,4 +1,4 @@
-import { log } from '@monorepo/log';
+import { EPriority, log } from '@monorepo/log';
 import { IPersistenceProvider } from '../state/IPersistenceProvider';
 import type { TPermissionData } from './types';
 import { PermissionManager as AbstractPermissionManager } from '@monorepo/gateway';
@@ -38,16 +38,16 @@ export class PermissionManager
 
   loadFromSerialized(data: Record<string, unknown> | null | undefined): void {
     if (!data) {
-      log(6, 'PERMISSIONS', 'No permission data to load');
+      log(EPriority.Info, 'PERMISSIONS', 'No permission data to load');
       return;
     }
 
     if (data.permissions && typeof data.permissions === 'object') {
       this.data.permissions =
         data.permissions as TPermissionData['permissions'];
-      log(6, 'PERMISSIONS', 'Loaded permission data');
+      log(EPriority.Info, 'PERMISSIONS', 'Loaded permission data');
     } else {
-      log(5, 'PERMISSIONS', 'Invalid permission data format');
+      log(EPriority.Notice, 'PERMISSIONS', 'Invalid permission data format');
     }
   }
 
@@ -80,7 +80,11 @@ export class PermissionManager
     }
     if (!this.data.permissions[user_id].includes(permission)) {
       this.data.permissions[user_id].push(permission);
-      log(7, 'PERMISSIONS', `Added permission: ${user_id} → ${permission}`);
+      log(
+        EPriority.Debug,
+        'PERMISSIONS',
+        `Added permission: ${user_id} → ${permission}`
+      );
     }
   }
 
@@ -95,7 +99,11 @@ export class PermissionManager
       );
       const after = this.data.permissions[user_id].length;
       if (before !== after) {
-        log(7, 'PERMISSIONS', `Removed permission: ${user_id} → ${permission}`);
+        log(
+          EPriority.Debug,
+          'PERMISSIONS',
+          `Removed permission: ${user_id} → ${permission}`
+        );
       }
     }
   }
@@ -113,7 +121,7 @@ export class PermissionManager
   setPermissions(user_id: string, permissions: string[]): void {
     this.data.permissions[user_id] = permissions;
     log(
-      7,
+      EPriority.Info,
       'PERMISSIONS',
       `Set permissions: ${user_id} → [${permissions.join(', ')}]`
     );
@@ -130,7 +138,11 @@ export class PermissionManager
       role: 'owner' | 'admin' | 'member';
     }>;
   }): Promise<void> {
-    log(6, 'PERMISSIONS', 'Initializing permissions from org config');
+    log(
+      EPriority.Info,
+      'PERMISSIONS',
+      'Initializing permissions from org config'
+    );
 
     // Map organization roles to permission strings
     for (const member of config.members) {
@@ -138,7 +150,11 @@ export class PermissionManager
       this.setPermissions(member.user_id, [orgPermission]);
     }
 
-    log(6, 'PERMISSIONS', `Initialized ${config.members.length} org members`);
+    log(
+      EPriority.Info,
+      'PERMISSIONS',
+      `Initialized ${config.members.length} org members`
+    );
   }
 
   /**
@@ -159,7 +175,11 @@ export class PermissionManager
    */
   removeUser(user_id: string): void {
     delete this.data.permissions[user_id];
-    log(7, 'PERMISSIONS', `Removed all permissions for user: ${user_id}`);
+    log(
+      EPriority.Debug,
+      'PERMISSIONS',
+      `Removed all permissions for user: ${user_id}`
+    );
   }
 
   /**

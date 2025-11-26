@@ -44,7 +44,7 @@ export class PowerDNSClient {
     });
 
     log(
-      6,
+      EPriority.Info,
       'POWERDNS',
       `Initialized PowerDNS client for zone: ${this.zoneName}`
     );
@@ -58,7 +58,7 @@ export class PowerDNSClient {
     const fqdn = `org-${orgId}.${this.domain}.`;
     const ip = process.env.DEV_CONTAINER_IP || '127.0.0.1';
 
-    log(6, 'POWERDNS', `Registering gateway: ${fqdn} → ${ip}`);
+    log(EPriority.Info, 'POWERDNS', `Registering gateway: ${fqdn} → ${ip}`);
 
     try {
       await this.client.patch(`/servers/localhost/zones/${this.zoneName}`, {
@@ -78,7 +78,7 @@ export class PowerDNSClient {
         ],
       });
 
-      log(6, 'POWERDNS', `✅ Gateway registered: ${fqdn}`);
+      log(EPriority.Info, 'POWERDNS', `✅ Gateway registered: ${fqdn}`);
     } catch (error: any) {
       log(
         EPriority.Error,
@@ -96,7 +96,7 @@ export class PowerDNSClient {
   async deregisterGateway(orgId: string): Promise<void> {
     const fqdn = `org-${orgId}.${this.domain}.`;
 
-    log(6, 'POWERDNS', `Deregistering gateway: ${fqdn}`);
+    log(EPriority.Info, 'POWERDNS', `Deregistering gateway: ${fqdn}`);
 
     try {
       await this.client.patch(`/servers/localhost/zones/${this.zoneName}`, {
@@ -109,7 +109,7 @@ export class PowerDNSClient {
         ],
       });
 
-      log(6, 'POWERDNS', `✅ Gateway deregistered: ${fqdn}`);
+      log(EPriority.Info, 'POWERDNS', `✅ Gateway deregistered: ${fqdn}`);
     } catch (error: any) {
       log(
         EPriority.Error,
@@ -130,7 +130,11 @@ export class PowerDNSClient {
     // Ensure FQDN ends with trailing dot
     const fqdnWithDot = fqdn.endsWith('.') ? fqdn : `${fqdn}.`;
 
-    log(6, 'POWERDNS', `Registering DNS record: ${fqdnWithDot} → ${ip}`);
+    log(
+      EPriority.Info,
+      'POWERDNS',
+      `Registering DNS record: ${fqdnWithDot} → ${ip}`
+    );
 
     try {
       await this.client.patch(`/servers/localhost/zones/${this.zoneName}`, {
@@ -150,7 +154,11 @@ export class PowerDNSClient {
         ],
       });
 
-      log(6, 'POWERDNS', `✅ DNS record registered: ${fqdnWithDot}`);
+      log(
+        EPriority.Info,
+        'POWERDNS',
+        `✅ DNS record registered: ${fqdnWithDot}`
+      );
     } catch (error: any) {
       log(
         EPriority.Error,
@@ -170,7 +178,7 @@ export class PowerDNSClient {
     // Ensure FQDN ends with trailing dot
     const fqdnWithDot = fqdn.endsWith('.') ? fqdn : `${fqdn}.`;
 
-    log(6, 'POWERDNS', `Deregistering DNS record: ${fqdnWithDot}`);
+    log(EPriority.Info, 'POWERDNS', `Deregistering DNS record: ${fqdnWithDot}`);
 
     try {
       await this.client.patch(`/servers/localhost/zones/${this.zoneName}`, {
@@ -183,7 +191,11 @@ export class PowerDNSClient {
         ],
       });
 
-      log(6, 'POWERDNS', `✅ DNS record deregistered: ${fqdnWithDot}`);
+      log(
+        EPriority.Info,
+        'POWERDNS',
+        `✅ DNS record deregistered: ${fqdnWithDot}`
+      );
     } catch (error: any) {
       log(
         EPriority.Error,

@@ -10,7 +10,7 @@ import {
   Response,
 } from '@node-oauth/oauth2-server';
 
-import { error, log } from '@monorepo/log';
+import { EPriority, error, log } from '@monorepo/log';
 import { makeUuid } from '@monorepo/simple-types';
 import { development, generateJwtToken } from '@monorepo/backend-engine';
 import { GLOBAL_CLIENT_ID, TJwtUser } from '@monorepo/demiurge-types';
@@ -34,7 +34,7 @@ type OauthModelUser = UserSerializedInfo & {
 //
 
 const debug = (msg: string, o: any) => {
-  log(7, 'OAUTH_MODEL', msg, o);
+  log(EPriority.Debug, 'OAUTH_MODEL', msg, o);
 };
 
 //

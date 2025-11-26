@@ -1,7 +1,7 @@
 //
 //
 
-import { log } from '@monorepo/log';
+import { EPriority, log } from '@monorepo/log';
 
 const DEV =
   process.env['NODE_ENV'] === 'development' ||
@@ -20,4 +20,4 @@ export const development = (f: () => any) => {
   return undefined;
 };
 
-log(7, '', `environement: `, { DEV, DEBUG });
+log(EPriority.Debug, '', `environement: `, { DEV, DEBUG });

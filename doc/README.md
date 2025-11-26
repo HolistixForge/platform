@@ -15,6 +15,7 @@ Welcome to the Demiurge documentation! This hub will guide you to the right reso
 - 🏗️ **[Architecture Overview](architecture/OVERVIEW.md)** - System design and components
 - 📐 **[System Architecture](architecture/SYSTEM_ARCHITECTURE.md)** - Complete architecture diagram
 - 📊 **[Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md)** - Multi-gateway pool architecture
+- 📡 **[Logging & Observability](architecture/LOGGING_AND_OBSERVABILITY.md)** - Logs, traces, error categories, and OTel stack
 - 🔧 **[Gateway Implementation](current-works/GATEWAY_WORK.md)** - 7-phase implementation (78 tasks)
 - 🎨 **[Layer System Architecture](../packages/modules/space/src/lib/layer.md)** - Modular whiteboard layers (Excalidraw integration)
 

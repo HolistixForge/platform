@@ -1,4 +1,4 @@
-import { log } from '@monorepo/log';
+import { EPriority, log } from '@monorepo/log';
 import { sleep } from '@monorepo/simple-types';
 import { CONFIG } from '../config';
 
@@ -13,14 +13,14 @@ export async function signalGatewayReady(gateway_id: string): Promise<void> {
 
   if (!ganymedeFqdn) {
     log(
-      5,
+      EPriority.Warning,
       'GATEWAY_READY',
       'GANYMEDE_FQDN not configured - skipping ready signal'
     );
     return;
   }
 
-  log(6, 'GATEWAY_READY', 'Signaling ready status to Ganymede...');
+  log(EPriority.Info, 'GATEWAY_READY', 'Signaling ready status to Ganymede...');
 
   while (true) {
     try {
@@ -35,7 +35,7 @@ export async function signalGatewayReady(gateway_id: string): Promise<void> {
 
       if (!response.ok) {
         log(
-          5,
+          EPriority.Warning,
           'GATEWAY_READY',
           `Failed to signal ready: ${response.status}. Retrying in 5s...`
         );
@@ -43,11 +43,15 @@ export async function signalGatewayReady(gateway_id: string): Promise<void> {
         continue;
       }
 
-      log(6, 'GATEWAY_READY', 'Successfully signaled ready to Ganymede');
+      log(
+        EPriority.Info,
+        'GATEWAY_READY',
+        'Successfully signaled ready to Ganymede'
+      );
       break;
     } catch (error: any) {
       log(
-        5,
+        EPriority.Warning,
         'GATEWAY_READY',
         `Failed to signal ready: ${error.message}. Retrying in 5s...`
       );

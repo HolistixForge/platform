@@ -37,3 +37,4 @@ export type {
 //
 
 export { StoryApiContext } from './lib/story-api-context';
+export { browserLog } from './lib/browser-log';

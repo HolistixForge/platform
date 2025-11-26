@@ -1,4 +1,10 @@
-export { EPriority, EColor, Logger, log, error } from './lib/log';
+export {
+  EPriority,
+  Logger,
+  log,
+  error,
+  type LoggerInitOptions,
+} from './lib/log';
 export {
   showDebugComponent,
   useDebugComponent,

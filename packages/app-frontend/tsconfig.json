@@ -3,10 +3,22 @@
   "include": [],
   "references": [
     {
-      "path": "../simple-types"
+      "path": "../collab-engine"
     },
     {
-      "path": "../api-fetch"
+      "path": "../observability"
+    },
+    {
+      "path": "../modules/jupyter"
+    },
+    {
+      "path": "../modules/gateway"
+    },
+    {
+      "path": "../modules/chats"
+    },
+    {
+      "path": "../modules/socials"
     },
     {
       "path": "../modules/excalidraw"
@@ -15,31 +27,13 @@
       "path": "../modules/airtable"
     },
     {
-      "path": "../modules/module"
-    },
-    {
       "path": "../modules/notion"
     },
     {
-      "path": "../modules/socials"
-    },
-    {
-      "path": "../modules/jupyter"
-    },
-    {
-      "path": "../modules/chats"
-    },
-    {
-      "path": "../modules/gateway"
-    },
-    {
-      "path": "../modules/reducers"
+      "path": "../modules/user-containers"
     },
     {
       "path": "../modules/tabs"
-    },
-    {
-      "path": "../collab-engine"
     },
     {
       "path": "../modules/space"
@@ -48,7 +42,16 @@
       "path": "../modules/core-graph"
     },
     {
-      "path": "../modules/user-containers"
+      "path": "../modules/reducers"
+    },
+    {
+      "path": "../modules/module"
+    },
+    {
+      "path": "../simple-types"
+    },
+    {
+      "path": "../api-fetch"
     },
     {
       "path": "../modules/collab"

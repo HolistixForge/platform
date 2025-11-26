@@ -1,6 +1,5 @@
 import { EventSourcePolyfill } from 'event-source-polyfill';
 import { ApiFetch } from '@monorepo/api-fetch';
-import { log } from '@monorepo/log';
 import { TJson, TMyfetchRequest } from '@monorepo/simple-types';
 import { Tokens, doOauthCode } from './oauth-client';
 import {
@@ -8,11 +7,13 @@ import {
   GLOBAL_CLIENT_SECRET,
 } from '@monorepo/demiurge-types';
 import { Key, LocalStorageStore } from './local-storage-store';
+import { browserLog } from './browser-log';
 
 //
 //
 
-const debug = (msg: string, ...args: any) => log(7, 'API_CALL', msg, ...args);
+const debug = (msg: string, ...args: any) =>
+  browserLog('debug', 'API_CALL', msg, { data: { args } });
 
 type TokenStoreValue = {
   token: Tokens;

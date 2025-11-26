@@ -7,7 +7,7 @@
 import { Router } from 'express';
 import { EPriority, log } from '@monorepo/log';
 import {
-  authenticateOrganizationToken,
+  authenticateJwtOrganization,
   OrganizationAuthRequest,
 } from '../../middleware/auth';
 import { asyncHandler } from '../../middleware/route-handler';
@@ -28,7 +28,7 @@ export const setupGatewayDNSRoutes = (router: Router) => {
    */
   router.post(
     '/gateway/dns/register',
-    authenticateOrganizationToken,
+    authenticateJwtOrganization,
     asyncHandler(async (req: OrganizationAuthRequest, res) => {
       const { fqdn, ip } = req.body;
       const organization_id = req.organization.id;
@@ -41,7 +41,7 @@ export const setupGatewayDNSRoutes = (router: Router) => {
       }
 
       log(
-        6,
+        EPriority.Info,
         'GATEWAY_DNS',
         `Registering DNS record: ${fqdn} → ${ip} (org ${organization_id})`
       );
@@ -49,7 +49,7 @@ export const setupGatewayDNSRoutes = (router: Router) => {
       try {
         await powerDNS.registerRecord(fqdn, ip);
 
-        log(6, 'GATEWAY_DNS', `✅ DNS record registered: ${fqdn}`);
+        log(EPriority.Info, 'GATEWAY_DNS', `✅ DNS record registered: ${fqdn}`);
 
         return res.json({
           success: true,
@@ -84,7 +84,7 @@ export const setupGatewayDNSRoutes = (router: Router) => {
    */
   router.delete(
     '/gateway/dns/deregister',
-    authenticateOrganizationToken,
+    authenticateJwtOrganization,
     asyncHandler(async (req: OrganizationAuthRequest, res) => {
       const { fqdn } = req.body;
       const organization_id = req.organization.id;
@@ -97,7 +97,7 @@ export const setupGatewayDNSRoutes = (router: Router) => {
       }
 
       log(
-        6,
+        EPriority.Info,
         'GATEWAY_DNS',
         `Deregistering DNS record: ${fqdn} (org ${organization_id})`
       );
@@ -105,7 +105,11 @@ export const setupGatewayDNSRoutes = (router: Router) => {
       try {
         await powerDNS.deregisterRecord(fqdn);
 
-        log(6, 'GATEWAY_DNS', `✅ DNS record deregistered: ${fqdn}`);
+        log(
+          EPriority.Info,
+          'GATEWAY_DNS',
+          `✅ DNS record deregistered: ${fqdn}`
+        );
 
         return res.json({
           success: true,

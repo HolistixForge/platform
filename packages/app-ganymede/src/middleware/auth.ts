@@ -2,6 +2,12 @@ import { Request, Response, NextFunction, RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
 import { CONFIG } from '../config';
 import { ForbiddenException } from '@monorepo/log';
+import { trace } from '@opentelemetry/api';
+import {
+  TJwtGateway,
+  TJwtOrganization,
+  TJwtUser,
+} from '@monorepo/demiurge-types';
 
 export interface AuthRequest extends Request {
   user: {
@@ -56,7 +62,7 @@ function verifyJwtToken(
   }
 }
 
-export const authenticateJwt: RequestHandler = (
+export const authenticateJwtUser: RequestHandler = (
   req: Request,
   res: Response,
   next: NextFunction
@@ -64,12 +70,26 @@ export const authenticateJwt: RequestHandler = (
   const authReq = req as AuthRequest;
 
   try {
-    const payload = verifyJwtToken(authReq.headers.authorization, ['token ']);
+    const payload: TJwtUser = verifyJwtToken(authReq.headers.authorization, [
+      'token ',
+    ]) as TJwtUser;
+
+    // Validate it's a user token
+    if (payload.type !== 'access_token') {
+      return next(new ForbiddenException([{ message: 'Invalid token type' }]));
+    }
 
     authReq.user = {
       id: payload.user.id,
       username: payload.user.username,
     };
+
+    // Enrich span with user context
+    const span = trace.getActiveSpan();
+    if (span) {
+      span.setAttribute('user.id', payload.user.id);
+      span.setAttribute('user.username', payload.user.username);
+    }
 
     next();
   } catch (error: any) {
@@ -86,7 +106,7 @@ export const authenticateJwt: RequestHandler = (
  *   scope: string
  * }
  */
-export const authenticateGatewayToken: RequestHandler = (
+export const authenticateJwtGateway: RequestHandler = (
   req: Request,
   res: Response,
   next: NextFunction
@@ -94,7 +114,9 @@ export const authenticateGatewayToken: RequestHandler = (
   const authReq = req as GatewayAuthRequest;
 
   try {
-    const payload = verifyJwtToken(authReq.headers.authorization, ['Bearer ']);
+    const payload: TJwtGateway = verifyJwtToken(authReq.headers.authorization, [
+      'Bearer ',
+    ]) as TJwtGateway;
 
     // Validate it's a gateway token
     if (payload.type !== 'gateway_token') {
@@ -106,6 +128,12 @@ export const authenticateGatewayToken: RequestHandler = (
       type: payload.type,
       scope: payload.scope,
     };
+
+    // Enrich span with user context
+    const span = trace.getActiveSpan();
+    if (span) {
+      span.setAttribute('gateway.id', payload.gateway_id);
+    }
 
     next();
   } catch (error: any) {
@@ -123,7 +151,7 @@ export const authenticateGatewayToken: RequestHandler = (
  *   scope: string
  * }
  */
-export const authenticateOrganizationToken: RequestHandler = (
+export const authenticateJwtOrganization: RequestHandler = (
   req: Request,
   res: Response,
   next: NextFunction
@@ -131,7 +159,10 @@ export const authenticateOrganizationToken: RequestHandler = (
   const authReq = req as OrganizationAuthRequest;
 
   try {
-    const payload = verifyJwtToken(authReq.headers.authorization, ['Bearer ']);
+    const payload: TJwtOrganization = verifyJwtToken(
+      authReq.headers.authorization,
+      ['Bearer ']
+    ) as TJwtOrganization;
 
     // Validate it's an organization token
     if (payload.type !== 'organization_token') {
@@ -144,6 +175,13 @@ export const authenticateOrganizationToken: RequestHandler = (
       type: payload.type,
       scope: payload.scope,
     };
+
+    // Enrich span with organization context
+    const span = trace.getActiveSpan();
+    if (span) {
+      span.setAttribute('organization.id', payload.organization_id);
+      span.setAttribute('gateway.id', payload.gateway_id);
+    }
 
     next();
   } catch (error: any) {

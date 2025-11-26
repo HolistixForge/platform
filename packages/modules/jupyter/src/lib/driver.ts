@@ -2,7 +2,7 @@ import { KernelManager, ServerConnection } from '@jupyterlab/services';
 import { IKernelConnection } from '@jupyterlab/services/lib/kernel/kernel';
 import isEqual from 'lodash/isEqual';
 
-import { log } from '@monorepo/log';
+import { EPriority, log } from '@monorepo/log';
 
 import {
   IOutput,
@@ -35,7 +35,7 @@ export class JupyterlabDriver {
   private kernelResources: Kernel[] = [];
   private terminalResources: Terminal[] = [];
   private resourceListeners: Set<ResourceListener> = new Set();
-  private pollingInterval: number = 10000; // 10 seconds
+  private pollingInterval = 10000; // 10 seconds
   private pollingTimer: any = null;
 
   //
@@ -118,7 +118,7 @@ export class JupyterlabDriver {
   //
 
   execute = async (kid: string, code: string): Promise<IOutput[]> => {
-    log(7, 'JUPYTERLAB', '_execute', kid);
+    log(EPriority.Debug, 'JUPYTERLAB', '_execute', kid);
     const virtualOutputArea = makeVirtualOutputArea();
     const kernel = await this.getKernel(kid);
     const shellFuture = kernel.requestExecute({ code });

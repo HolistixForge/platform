@@ -1,4 +1,4 @@
-import { log } from '@monorepo/log';
+import { EPriority, log } from '@monorepo/log';
 import { TokenManager as AbstractTokenManager } from '@monorepo/gateway';
 import { makeHmacToken, generateJwtToken } from '@monorepo/backend-engine';
 import { TJson } from '@monorepo/simple-types';
@@ -23,7 +23,7 @@ export class TokenManager extends AbstractTokenManager {
       'default-secret-change-me';
     if (this.defaultSecret === 'default-secret-change-me') {
       log(
-        3,
+        EPriority.Warning,
         'TOKEN_MANAGER',
         'WARNING: Using default HMAC secret! Set GATEWAY_HMAC_SECRET env var!'
       );

@@ -2,7 +2,7 @@ import { generateJwtToken, jwtPayload } from '@monorepo/backend-engine';
 import { TJwtGateway } from '@monorepo/demiurge-types';
 import { ONE_YEAR_MS } from '@monorepo/simple-types';
 import { pg } from './pg';
-import { log } from '@monorepo/log';
+import { EPriority, log } from '@monorepo/log';
 
 //
 
@@ -40,7 +40,7 @@ export const addGateway = async (
   const token = gatewayGlobalToken(gwId);
 
   const payload = jwtPayload(token);
-  log(6, 'NEW_GATEWAY', `payload:`, payload);
+  log(EPriority.Info, 'NEW_GATEWAY', `payload:`, payload);
 
   console.log('');
   console.log('gateway_id:', gwId);

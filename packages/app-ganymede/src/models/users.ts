@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { Req, UserSerializedInfo } from '../types';
 import { myfetch } from '@monorepo/backend-engine';
-import { log } from '@monorepo/log';
+import { EPriority, log } from '@monorepo/log';
 import { pg } from '../database/pg';
 import { CurrentUserDetails } from '@monorepo/demiurge-types';
 
@@ -40,7 +40,11 @@ const registerUser = async (u: {
   const user_id = row['user_id'] as string;
   const organization_id = row['organization_id'] as string;
 
-  log(6, 'NEW_USER', `${user_id} (org: ${organization_id}): ${JSON.stringify(u)}`);
+  log(
+    EPriority.Info,
+    'NEW_USER',
+    `${user_id} (org: ${organization_id}): ${JSON.stringify(u)}`
+  );
 
   return user_id;
 };
@@ -387,14 +391,14 @@ export const totpSuccess = async (
 
 export const totpSaveKey = async (id: string, key: string): Promise<void> => {
   await pg.query('call proc_totp_set_key($1, $2)', [id, key]);
-  log(6, 'TOTP', `new key for user [${id}]`);
+  log(EPriority.Info, 'TOTP', `new key for user [${id}]`);
 };
 
 //
 
 export const passwordFlagReset = async (user_id: string) => {
   await pg.query('call proc_passwords_flag_reset($1)', [user_id]);
-  log(6, 'PASSWORD', `reset flag for user [${user_id}]`);
+  log(EPriority.Info, 'PASSWORD', `reset flag for user [${user_id}]`);
 };
 
 //
@@ -421,7 +425,7 @@ export const userIsAuthenticated = async (req: Req) => {
   */ else if (userNeedTotpAuthentication(d)) r = false;
   else r = true;
   log(
-    7,
+    EPriority.Info,
     'USER_MODEL',
     r ? `user is authenticated [${d!.user_id}]` : 'user is not authenticated'
   );

@@ -23,7 +23,7 @@ export class DNSManagerImpl extends DNSManager {
    * Register a DNS record (FQDN → IP)
    */
   async registerRecord(fqdn: string, ip: string): Promise<void> {
-    log(6, 'DNS_MANAGER', `Registering DNS record: ${fqdn} → ${ip}`);
+    log(EPriority.Info, 'DNS_MANAGER', `Registering DNS record: ${fqdn} → ${ip}`);
 
     try {
       await this.toGanymede({
@@ -35,7 +35,7 @@ export class DNSManagerImpl extends DNSManager {
         },
       });
 
-      log(6, 'DNS_MANAGER', `✅ DNS record registered: ${fqdn}`);
+      log(EPriority.Info, 'DNS_MANAGER', `✅ DNS record registered: ${fqdn}`);
     } catch (error: any) {
       log(
         EPriority.Error,
@@ -51,7 +51,7 @@ export class DNSManagerImpl extends DNSManager {
    * Deregister a DNS record
    */
   async deregisterRecord(fqdn: string): Promise<void> {
-    log(6, 'DNS_MANAGER', `Deregistering DNS record: ${fqdn}`);
+    log(EPriority.Info, 'DNS_MANAGER', `Deregistering DNS record: ${fqdn}`);
 
     try {
       await this.toGanymede({
@@ -62,7 +62,7 @@ export class DNSManagerImpl extends DNSManager {
         },
       });
 
-      log(6, 'DNS_MANAGER', `✅ DNS record deregistered: ${fqdn}`);
+      log(EPriority.Info, 'DNS_MANAGER', `✅ DNS record deregistered: ${fqdn}`);
     } catch (error: any) {
       log(
         EPriority.Error,

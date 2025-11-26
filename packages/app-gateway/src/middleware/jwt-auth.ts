@@ -3,6 +3,7 @@ import { jwtPayload } from '@monorepo/backend-engine';
 import { ForbiddenException } from '@monorepo/log';
 import { asyncHandler } from './route-handler';
 import type { TJwtUser, TJwtGateway } from '@monorepo/demiurge-types';
+import { trace } from '@opentelemetry/api';
 
 // Import TJwtOrganization directly from the file since it's not exported from index
 import type { TJwtOrganization } from '@monorepo/demiurge-types/src/lib/jwt/jwt';
@@ -102,6 +103,26 @@ export const authenticateJwt = asyncHandler(
 
     // Store full JWT payload for routes that need it
     authReq.jwt = jwtPayloadData;
+
+    // Enrich span with JWT context
+    const span = trace.getActiveSpan();
+    if (span) {
+      if (user_id) {
+        span.setAttribute('user.id', user_id);
+      }
+      if ((jwtPayloadData as any).organization_id) {
+        span.setAttribute(
+          'organization.id',
+          (jwtPayloadData as TJwtOrganization).organization_id
+        );
+      }
+      if ((jwtPayloadData as any).gateway_id) {
+        span.setAttribute(
+          'gateway.id',
+          (jwtPayloadData as TJwtGateway).gateway_id
+        );
+      }
+    }
 
     return next();
   }

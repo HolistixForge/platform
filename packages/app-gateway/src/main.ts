@@ -10,7 +10,7 @@ import express from 'express';
 import * as http from 'http';
 import * as https from 'https';
 import * as fs from 'fs';
-import { log } from '@monorepo/log';
+import { EPriority, log } from '@monorepo/log';
 import {
   setupBasicExpressApp,
   setupErrorsHandler,
@@ -107,7 +107,7 @@ const startServer = (
     : http.createServer({}, app);
 
   server.listen(port, host, undefined, function () {
-    log(6, 'GATEWAY', `Express server listening [${url}]`);
+    log(EPriority.Info, 'GATEWAY', `Express server listening [${url}]`);
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -124,17 +124,26 @@ const startServer = (
 
 function setupShutdownHandlers() {
   const shutdown = async (signal: string) => {
-    log(6, 'GATEWAY', `Received ${signal}, initiating graceful shutdown...`);
+    log(
+      EPriority.Info,
+      'GATEWAY',
+      `Received ${signal}, initiating graceful shutdown...`
+    );
 
     try {
       await shutdownGateway();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      log(2, 'GATEWAY', 'Failed to shutdown gateway:', error.message);
+      log(
+        EPriority.Critical,
+        'GATEWAY',
+        'Failed to shutdown gateway:',
+        error.message
+      );
       // Continue with exit even if shutdown fails
     }
 
-    log(6, 'GATEWAY', 'Shutdown complete, exiting');
+    log(EPriority.Info, 'GATEWAY', 'Shutdown complete, exiting');
     process.exit(0);
   };
 
@@ -170,7 +179,7 @@ function setupShutdownHandlers() {
     if (orgConfig) {
       // NEW: Initialize gateway with organization config
       log(
-        6,
+        EPriority.Info,
         'GATEWAY',
         `Initializing gateway for organization: ${orgConfig.organization_name}`
       );
@@ -179,9 +188,13 @@ function setupShutdownHandlers() {
         orgConfig.gateway_id,
         orgConfig.gateway_token
       );
-      log(6, 'GATEWAY', 'Gateway ready and serving organization');
+      log(EPriority.Info, 'GATEWAY', 'Gateway ready and serving organization');
     } else {
-      log(6, 'GATEWAY', 'Gateway idle, waiting for organization allocation...');
+      log(
+        EPriority.Info,
+        'GATEWAY',
+        'Gateway idle, waiting for organization allocation...'
+      );
       // Gateway is registered via app-ganymede-cmd CLI tool
       // Then allocated to organizations via /gateway/start API
       // Initialization happens via /collab/start
@@ -191,7 +204,11 @@ function setupShutdownHandlers() {
     setupShutdownHandlers();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
-    log(1, 'GATEWAY', `Fatal error during startup: ${error.message}`);
+    log(
+      EPriority.Alert,
+      'GATEWAY',
+      `Fatal error during startup: ${error.message}`
+    );
     console.error(error);
     process.exit(1);
   }

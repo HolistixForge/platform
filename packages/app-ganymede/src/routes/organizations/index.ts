@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authenticateJwt } from '../../middleware/auth';
+import { authenticateJwtUser } from '../../middleware/auth';
 import { pg } from '../../database/pg';
 import { asyncHandler, AuthRequest } from '../../middleware/route-handler';
 import { makeOrgGatewayHostname } from '../../lib/url-helpers';
@@ -8,7 +8,7 @@ export const setupOrganizationRoutes = (router: Router) => {
   // GET /orgs - List user's organizations
   router.get(
     '/orgs',
-    authenticateJwt,
+    authenticateJwtUser,
     asyncHandler(async (req: AuthRequest, res) => {
       const result = await pg.query(
         'SELECT * FROM func_organizations_list_by_user($1)',
@@ -22,7 +22,7 @@ export const setupOrganizationRoutes = (router: Router) => {
   // POST /orgs - Create organization
   router.post(
     '/orgs',
-    authenticateJwt,
+    authenticateJwtUser,
     asyncHandler(async (req: AuthRequest, res) => {
       const { name } = req.body;
       const result = await pg.query('CALL proc_organizations_new($1, $2, $3)', [
@@ -40,7 +40,7 @@ export const setupOrganizationRoutes = (router: Router) => {
   // GET /orgs/:org_id - Get organization
   router.get(
     '/orgs/:org_id',
-    authenticateJwt,
+    authenticateJwtUser,
     asyncHandler(async (req: AuthRequest, res) => {
       // Check user is org member (owner or member)
       const roleCheck = await pg.query(
@@ -67,7 +67,7 @@ export const setupOrganizationRoutes = (router: Router) => {
   // DELETE /orgs/:org_id - Delete organization
   router.delete(
     '/orgs/:org_id',
-    authenticateJwt,
+    authenticateJwtUser,
     asyncHandler(async (req: AuthRequest, res) => {
       // Check user is owner
       const roleCheck = await pg.query(
@@ -96,7 +96,7 @@ export const setupOrganizationRoutes = (router: Router) => {
   // GET /orgs/:org_id/members - List organization members
   router.get(
     '/orgs/:org_id/members',
-    authenticateJwt,
+    authenticateJwtUser,
     asyncHandler(async (req: AuthRequest, res) => {
       // Check user is org member (owner or member)
       const roleCheck = await pg.query(
@@ -120,7 +120,7 @@ export const setupOrganizationRoutes = (router: Router) => {
   // POST /orgs/:org_id/members - Add member
   router.post(
     '/orgs/:org_id/members',
-    authenticateJwt,
+    authenticateJwtUser,
     asyncHandler(async (req: AuthRequest, res) => {
       // Check user is org owner or admin
       const roleCheck = await pg.query(
@@ -147,7 +147,7 @@ export const setupOrganizationRoutes = (router: Router) => {
   // DELETE /orgs/:org_id/members/:user_id - Remove member
   router.delete(
     '/orgs/:org_id/members/:user_id',
-    authenticateJwt,
+    authenticateJwtUser,
     asyncHandler(async (req: AuthRequest, res) => {
       // Check user is org owner or admin
       const roleCheck = await pg.query(
@@ -172,7 +172,7 @@ export const setupOrganizationRoutes = (router: Router) => {
   // PUT /orgs/:org_id/members/:user_id - Update member role
   router.put(
     '/orgs/:org_id/members/:user_id',
-    authenticateJwt,
+    authenticateJwtUser,
     asyncHandler(async (req: AuthRequest, res) => {
       // Check user is org owner (only owner can update roles)
       const roleCheck = await pg.query(
@@ -198,7 +198,7 @@ export const setupOrganizationRoutes = (router: Router) => {
   // GET /orgs/:org_id/gateway - Get gateway hostname for organization
   router.get(
     '/orgs/:org_id/gateway',
-    authenticateJwt,
+    authenticateJwtUser,
     asyncHandler(async (req: AuthRequest, res) => {
       // Check user is org member (owner or member)
       const roleCheck = await pg.query(

@@ -1,4 +1,4 @@
-import { EColor, log } from '@monorepo/log';
+import { EPriority, log } from '@monorepo/log';
 import {
   TJson,
   TJsonWithDate,
@@ -114,7 +114,6 @@ export const respond = (
 ) => {
   if (r.type !== 'stream' || r.isFirst) headers(req, res, r);
 
-  let color = EColor.BgGreen;
   let logMsg = '';
   let status = 200;
   let fu = '';
@@ -123,12 +122,10 @@ export const respond = (
       res.status(r.status).json(r.json);
       status = r.status;
       logMsg = `${JSON.stringify(r.json)}`;
-      color = r.status === 200 ? EColor.BgGreen : EColor.BgMagenta;
       break;
 
     case 'options':
       res.send('');
-      color = EColor.BgGreen;
       break;
 
     case 'redirect':
@@ -136,13 +133,11 @@ export const respond = (
       res.redirect(fu);
       status = 302;
       logMsg = fu;
-      color = EColor.BgCyan;
       break;
 
     case 'stream':
       res.write(r.events.join('\n') + '\n\n');
       logMsg = r.events.join('\n');
-      color = EColor.BgGray;
       break;
   }
 
@@ -158,5 +153,10 @@ export const respond = (
     }
   }
 
-  log(6, 'RESPONSE', `[${status}:${r.type}] ${logMsg}`, null, color);
+  // Enhanced response logging with structured data (trace_id/span_id automatically included by Logger)
+  log(EPriority.Info, 'RESPONSE', `[${status}:${r.type}] ${logMsg}`, {
+    http_status: status,
+    response_type: r.type,
+    response_length: logMsg.length,
+  });
 };

@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { asyncHandler } from '../middleware/route-handler';
 import { getGatewayInstances } from '../initialization/gateway-instances';
 import { createOAuth2Server } from '../oauth';
-import { log } from '@monorepo/log';
+import { EPriority, log } from '@monorepo/log';
 
 const router = Router();
 
@@ -52,7 +52,7 @@ router.get(
         },
       });
 
-      log(7, 'OAUTH', `Authorization code created for user: ${req.user.id}`);
+      log(EPriority.Debug, 'OAUTH', `Authorization code created for user: ${req.user.id}`);
 
       // Redirect back to client with code
       const redirectUri = req.query.redirect_uri as string;
@@ -64,7 +64,7 @@ router.get(
       }`;
       return res.redirect(redirectUrl);
     } catch (error: any) {
-      log(3, 'OAUTH', `Authorization error: ${error.message}`);
+      log(EPriority.Error, 'OAUTH', `Authorization error: ${error.message}`);
       return res.status(error.code || 500).json({ error: error.message });
     }
   })
@@ -92,7 +92,7 @@ router.post(
     try {
       const token = await oauth2Server.token(request, response);
 
-      log(7, 'OAUTH', `Token issued: ${token.accessToken.substring(0, 10)}...`);
+      log(EPriority.Debug, 'OAUTH', `Token issued: ${token.accessToken.substring(0, 10)}...`);
 
       return res.json({
         access_token: token.accessToken,
@@ -106,7 +106,7 @@ router.post(
         scope: Array.isArray(token.scope) ? token.scope.join(' ') : token.scope,
       });
     } catch (error: any) {
-      log(3, 'OAUTH', `Token error: ${error.message}`);
+      log(EPriority.Error, 'OAUTH', `Token error: ${error.message}`);
       return res.status(error.code || 500).json({ error: error.message });
     }
   })
@@ -129,7 +129,7 @@ router.post(
     try {
       const token = await oauth2Server.authenticate(request, response);
 
-      log(7, 'OAUTH', `Token authenticated for user: ${token.user?.id}`);
+      log(EPriority.Debug, 'OAUTH', `Token authenticated for user: ${token.user?.id}`);
 
       return res.json({
         user_id: token.user?.id,
@@ -137,7 +137,7 @@ router.post(
         client_id: token.client?.clientId,
       });
     } catch (error: any) {
-      log(5, 'OAUTH', `Authentication failed: ${error.message}`);
+      log(EPriority.Notice, 'OAUTH', `Authentication failed: ${error.message}`);
       return res.status(401).json({ error: 'Invalid token' });
     }
   })

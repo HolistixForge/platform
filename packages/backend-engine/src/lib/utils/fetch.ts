@@ -113,7 +113,7 @@ export const myfetch: TMyfetch = (request: TMyfetchRequest) => {
     req.end();
 
     /*
-    log(7, '', `======> call`, {
+    // log(7, '', `======> call`, {
       options,
       'form-data': serialize(formData),
       'form-urlencoded': _xFormBody,

@@ -4,6 +4,7 @@ import * as passportLocal from 'passport-local';
 import { JwtPayload } from 'jsonwebtoken';
 
 import {
+  EPriority,
   log,
   Exception,
   ForbiddenException,
@@ -49,7 +50,7 @@ export const setupLocalRoutes = (router: express.Router) => {
       let user_id = '';
       try {
         const { email, password, username, firstname, lastname } = req.body;
-        log(6, 'SIGNUP', `/signup: ${JSON.stringify({ email, username })}`);
+        log(EPriority.Info, 'SIGNUP', `/signup: ${JSON.stringify({ email, username })}`);
         user_id = await signup({
           email,
           password,
@@ -232,7 +233,7 @@ export const setupLocalRoutes = (router: express.Router) => {
 
         const { password } = req.body;
         await passwordChange(d.user_id, password);
-        log(6, 'PASSWORD', `new password for [${d.user_id}]`);
+        log(EPriority.Info, 'PASSWORD', `new password for [${d.user_id}]`);
         respond(req, res, {
           type: 'json',
           json: {},

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authenticateJwt } from '../../middleware/auth';
+import { authenticateJwtUser } from '../../middleware/auth';
 import { pg } from '../../database/pg';
 import { asyncHandler, AuthRequest } from '../../middleware/route-handler';
 
@@ -7,7 +7,7 @@ export const setupProjectRoutes = (router: Router) => {
   // GET /projects - List user's projects
   router.get(
     '/projects',
-    authenticateJwt,
+    authenticateJwtUser,
     asyncHandler(async (req: AuthRequest, res) => {
       // Support optional search by owner username and project name
       const { owner, name } = req.query;
@@ -66,7 +66,7 @@ export const setupProjectRoutes = (router: Router) => {
   // POST /projects - Create project
   router.post(
     '/projects',
-    authenticateJwt,
+    authenticateJwtUser,
     asyncHandler(async (req: AuthRequest, res) => {
       const { organization_id, name, public: isPublic } = req.body;
 
@@ -94,7 +94,7 @@ export const setupProjectRoutes = (router: Router) => {
   // GET /projects/:project_id - Get project
   router.get(
     '/projects/:project_id',
-    authenticateJwt,
+    authenticateJwtUser,
     asyncHandler(async (req: AuthRequest, res) => {
       // Check user has project access
       const accessCheck = await pg.query(
@@ -120,7 +120,7 @@ export const setupProjectRoutes = (router: Router) => {
   // DELETE /projects/:project_id - Delete project
   router.delete(
     '/projects/:project_id',
-    authenticateJwt,
+    authenticateJwtUser,
     asyncHandler(async (req: AuthRequest, res) => {
       // Get project to find organization_id
       const projectResult = await pg.query(
@@ -152,7 +152,7 @@ export const setupProjectRoutes = (router: Router) => {
   // GET /projects/:project_id/members - List project members
   router.get(
     '/projects/:project_id/members',
-    authenticateJwt,
+    authenticateJwtUser,
     asyncHandler(async (req: AuthRequest, res) => {
       // Check user has project access
       const accessCheck = await pg.query(
@@ -175,7 +175,7 @@ export const setupProjectRoutes = (router: Router) => {
   // POST /projects/:project_id/members - Add member to project
   router.post(
     '/projects/:project_id/members',
-    authenticateJwt,
+    authenticateJwtUser,
     asyncHandler(async (req: AuthRequest, res) => {
       // Get project to find organization_id
       const projectResult = await pg.query(
@@ -212,7 +212,7 @@ export const setupProjectRoutes = (router: Router) => {
   // DELETE /projects/:project_id/members/:user_id - Remove member
   router.delete(
     '/projects/:project_id/members/:user_id',
-    authenticateJwt,
+    authenticateJwtUser,
     asyncHandler(async (req: AuthRequest, res) => {
       // Get project to find organization_id
       const projectResult = await pg.query(

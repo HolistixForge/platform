@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import base32 from 'thirty-two';
 
 import { respond } from '@monorepo/backend-engine';
-import { log, Exception, ForbiddenException } from '@monorepo/log';
+import { EPriority, log, Exception, ForbiddenException } from '@monorepo/log';
 import { TJsonWithDate } from '@monorepo/simple-types';
 
 import { Req } from '../../types';
@@ -52,7 +52,7 @@ passport.serializeUser(function (
 ) {
   process.nextTick(function () {
     log(
-      7,
+      EPriority.Debug,
       'SESSION_STORE',
       `serialize user [${(user as UserSerializedInfo).username}]`
     );
@@ -65,7 +65,11 @@ passport.deserializeUser(function (
   cb: SerializeCallback
 ) {
   process.nextTick(function () {
-    log(7, 'SESSION_STORE', `deserialize user [${user.username}]`);
+    log(
+      EPriority.Debug,
+      'SESSION_STORE',
+      `deserialize user [${user.username}]`
+    );
     return cb(null, user);
   });
 });

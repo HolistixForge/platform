@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import OAuth2Server from '@node-oauth/oauth2-server';
 import { OAuthManager } from './OAuthManager';
 import { PermissionManager } from '../permissions/PermissionManager';
-import { log } from '@monorepo/log';
+import { EPriority, log } from '@monorepo/log';
 import { makeUuid } from '@monorepo/simple-types';
 
 /**
@@ -27,13 +27,17 @@ export class OAuth2Model implements OAuth2Server.AuthorizationCodeModel {
     const client = this.oauthManager.getClient(clientId);
 
     if (!client) {
-      log(5, 'OAUTH_MODEL', `Client not found: ${clientId}`);
+      log(EPriority.Notice, 'OAUTH_MODEL', `Client not found: ${clientId}`);
       return null;
     }
 
     // If client_secret is provided, validate it
     if (clientSecret && client.client_secret !== clientSecret) {
-      log(5, 'OAUTH_MODEL', `Invalid client_secret for: ${clientId}`);
+      log(
+        EPriority.Notice,
+        'OAUTH_MODEL',
+        `Invalid client_secret for: ${clientId}`
+      );
       return null;
     }
 
@@ -75,7 +79,11 @@ export class OAuth2Model implements OAuth2Server.AuthorizationCodeModel {
       created_at: new Date().toISOString(),
     });
 
-    log(7, 'OAUTH_MODEL', `Saved authorization code for user: ${user.id}`);
+    log(
+      EPriority.Debug,
+      'OAUTH_MODEL',
+      `Saved authorization code for user: ${user.id}`
+    );
     return code;
   }
 
@@ -88,20 +96,24 @@ export class OAuth2Model implements OAuth2Server.AuthorizationCodeModel {
     const code = this.oauthManager.getCode(authorizationCode);
 
     if (!code) {
-      log(5, 'OAUTH_MODEL', `Authorization code not found`);
+      log(EPriority.Notice, 'OAUTH_MODEL', `Authorization code not found`);
       return null;
     }
 
     // Check expiration
     if (new Date(code.expires_at) < new Date()) {
-      log(5, 'OAUTH_MODEL', `Authorization code expired`);
+      log(EPriority.Notice, 'OAUTH_MODEL', `Authorization code expired`);
       this.oauthManager.deleteCode(authorizationCode);
       return null;
     }
 
     const client = this.oauthManager.getClient(code.client_id);
     if (!client) {
-      log(3, 'OAUTH_MODEL', `Client not found for code: ${code.client_id}`);
+      log(
+        EPriority.Error,
+        'OAUTH_MODEL',
+        `Client not found for code: ${code.client_id}`
+      );
       return null;
     }
 
@@ -130,7 +142,7 @@ export class OAuth2Model implements OAuth2Server.AuthorizationCodeModel {
     code: OAuth2Server.AuthorizationCode
   ): Promise<boolean> {
     this.oauthManager.deleteCode(code.authorizationCode);
-    log(7, 'OAUTH_MODEL', `Revoked authorization code`);
+    log(EPriority.Debug, 'OAUTH_MODEL', `Revoked authorization code`);
     return true;
   }
 
@@ -167,7 +179,7 @@ export class OAuth2Model implements OAuth2Server.AuthorizationCodeModel {
       created_at: new Date().toISOString(),
     });
 
-    log(7, 'OAUTH_MODEL', `Saved token for user: ${user.id}`);
+    log(EPriority.Debug, 'OAUTH_MODEL', `Saved token for user: ${user.id}`);
     return token;
   }
 
@@ -180,19 +192,23 @@ export class OAuth2Model implements OAuth2Server.AuthorizationCodeModel {
     const token = this.oauthManager.getToken(accessToken);
 
     if (!token) {
-      log(5, 'OAUTH_MODEL', `Access token not found`);
+      log(EPriority.Notice, 'OAUTH_MODEL', `Access token not found`);
       return null;
     }
 
     // Check expiration
     if (new Date(token.access_token_expires_at) < new Date()) {
-      log(5, 'OAUTH_MODEL', `Access token expired`);
+      log(EPriority.Notice, 'OAUTH_MODEL', `Access token expired`);
       return null;
     }
 
     const client = this.oauthManager.getClient(token.client_id);
     if (!client) {
-      log(3, 'OAUTH_MODEL', `Client not found for token: ${token.client_id}`);
+      log(
+        EPriority.Error,
+        'OAUTH_MODEL',
+        `Client not found for token: ${token.client_id}`
+      );
       return null;
     }
 
@@ -226,20 +242,20 @@ export class OAuth2Model implements OAuth2Server.AuthorizationCodeModel {
     const token = this.oauthManager.getTokenByRefresh(refreshToken);
 
     if (!token) {
-      log(5, 'OAUTH_MODEL', `Refresh token not found`);
+      log(EPriority.Notice, 'OAUTH_MODEL', `Refresh token not found`);
       return null;
     }
 
     // Check expiration
     if (new Date(token.refresh_token_expires_at) < new Date()) {
-      log(5, 'OAUTH_MODEL', `Refresh token expired`);
+      log(EPriority.Notice, 'OAUTH_MODEL', `Refresh token expired`);
       return null;
     }
 
     const client = this.oauthManager.getClient(token.client_id);
     if (!client) {
       log(
-        3,
+        EPriority.Error,
         'OAUTH_MODEL',
         `Client not found for refresh token: ${token.client_id}`
       );
@@ -271,14 +287,14 @@ export class OAuth2Model implements OAuth2Server.AuthorizationCodeModel {
   ): Promise<boolean> {
     const refreshToken = 'refreshToken' in token ? token.refreshToken : null;
     if (!refreshToken) {
-      log(5, 'OAUTH_MODEL', `No refresh token to revoke`);
+      log(EPriority.Notice, 'OAUTH_MODEL', `No refresh token to revoke`);
       return false;
     }
 
     const storedToken = this.oauthManager.getTokenByRefresh(refreshToken);
     if (storedToken) {
       this.oauthManager.deleteToken(storedToken.token_id);
-      log(7, 'OAUTH_MODEL', `Revoked refresh token`);
+      log(EPriority.Debug, 'OAUTH_MODEL', `Revoked refresh token`);
       return true;
     }
 
@@ -307,14 +323,18 @@ export class OAuth2Model implements OAuth2Server.AuthorizationCodeModel {
     const hasAllScopes = requestedScopes.every((s) => tokenScopes.includes(s));
 
     if (!hasAllScopes) {
-      log(5, 'OAUTH_MODEL', `Scope verification failed`);
+      log(EPriority.Notice, 'OAUTH_MODEL', `Scope verification failed`);
       return false;
     }
 
     // Additional permission check via PermissionManager
     const userId = String(token.user?.id || '');
     if (!userId) {
-      log(5, 'OAUTH_MODEL', `No user ID in token for scope verification`);
+      log(
+        EPriority.Notice,
+        'OAUTH_MODEL',
+        `No user ID in token for scope verification`
+      );
       return false;
     }
 
@@ -322,7 +342,7 @@ export class OAuth2Model implements OAuth2Server.AuthorizationCodeModel {
     for (const requestedScope of requestedScopes) {
       if (!this.permissionManager.hasPermission(userId, requestedScope)) {
         log(
-          5,
+          EPriority.Debug,
           'OAUTH_MODEL',
           `User ${userId} lacks permission: ${requestedScope}`
         );

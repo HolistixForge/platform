@@ -1,6 +1,6 @@
 import { spawnSync } from 'child_process';
 import { TJson } from '@monorepo/simple-types';
-import { log } from '@monorepo/log';
+import { EPriority, log } from '@monorepo/log';
 import type { TModule } from '@monorepo/module';
 import { TMyfetchRequest } from '@monorepo/simple-types';
 import { myfetch } from '@monorepo/backend-engine';
@@ -75,7 +75,7 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
         ...request.pathParameters,
       };
       const response = await myfetch(request);
-      log(6, 'GATEWAY', `${request.url} response: ${response.statusCode}`);
+      log(EPriority.Info, 'GATEWAY', `${request.url} response: ${response.statusCode}`);
       if (response.statusCode !== 200) {
         const error = new Error(
           `Request to ${request.url} failed with status ${response.statusCode}`

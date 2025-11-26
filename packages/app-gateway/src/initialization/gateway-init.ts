@@ -1,4 +1,4 @@
-import { log } from '@monorepo/log';
+import { EPriority, log } from '@monorepo/log';
 import { loadModules } from '@monorepo/module';
 import { GatewayState } from '../state/GatewayState';
 import { PermissionManager } from '../permissions';
@@ -47,7 +47,7 @@ export async function initializeGatewayForOrganization(
   organizationToken: string
 ): Promise<GatewayInstances> {
   log(
-    6,
+    EPriority.Info,
     'GATEWAY_INIT',
     `Initializing gateway for organization: ${organizationId}`
   );
@@ -80,7 +80,11 @@ export async function initializeGatewayForOrganization(
 
   // 5. Store instances in registry for route access + start auto-save
   gatewayState.startAutosave();
-  log(6, 'GATEWAY_INIT', 'Started auto-save (pushes to Ganymede every 5min)');
+  log(
+    EPriority.Info,
+    'GATEWAY_INIT',
+    'Started auto-save (pushes to Ganymede every 5min)'
+  );
   const instances: GatewayInstances = {
     gatewayState,
     permissionManager,
@@ -102,9 +106,13 @@ export async function initializeGatewayForOrganization(
     tokenManager,
     permissionRegistry
   );
-  log(6, 'GATEWAY_INIT', `Loading ${modulesConfig.length} backend modules...`);
+  log(
+    EPriority.Info,
+    'GATEWAY_INIT',
+    `Loading ${modulesConfig.length} backend modules...`
+  );
   loadModules(modulesConfig);
-  log(6, 'GATEWAY_INIT', 'Backend modules loaded successfully');
+  log(EPriority.Info, 'GATEWAY_INIT', 'Backend modules loaded successfully');
 
   // 7. Start periodic OAuth cleanup (every hour)
   if (oauthCleanupInterval) {
@@ -113,12 +121,16 @@ export async function initializeGatewayForOrganization(
   oauthCleanupInterval = setInterval(() => {
     oauthManager.cleanupExpired();
   }, 60 * 60 * 1000); // 1 hour = 60 minutes * 60 seconds * 1000 ms
-  log(6, 'GATEWAY_INIT', 'Started OAuth cleanup timer (runs every hour)');
+  log(
+    EPriority.Info,
+    'GATEWAY_INIT',
+    'Started OAuth cleanup timer (runs every hour)'
+  );
 
   // 8. Log statistics
   const oauthStats = oauthManager.getStats();
   log(
-    6,
+    EPriority.Info,
     'GATEWAY_INIT',
     `Gateway initialized: ${projectRooms.getProjectCount()} projects, ` +
       `${oauthStats.clients} OAuth clients`
@@ -134,18 +146,18 @@ export async function initializeGatewayForOrganization(
  * Gets instances from the registry.
  */
 export async function shutdownGateway(): Promise<void> {
-  log(6, 'GATEWAY_SHUTDOWN', 'Initiating graceful shutdown...');
+  log(EPriority.Info, 'GATEWAY_SHUTDOWN', 'Initiating graceful shutdown...');
 
   // Stop OAuth cleanup timer
   if (oauthCleanupInterval) {
     clearInterval(oauthCleanupInterval);
     oauthCleanupInterval = null;
-    log(6, 'GATEWAY_SHUTDOWN', 'Stopped OAuth cleanup timer');
+    log(EPriority.Info, 'GATEWAY_SHUTDOWN', 'Stopped OAuth cleanup timer');
   }
 
   const instances = getGatewayInstances();
   if (!instances) {
-    log(6, 'GATEWAY_SHUTDOWN', 'No gateway instances to shutdown');
+    log(EPriority.Info, 'GATEWAY_SHUTDOWN', 'No gateway instances to shutdown');
     return;
   }
 
@@ -155,5 +167,5 @@ export async function shutdownGateway(): Promise<void> {
   // Shutdown GatewayState (stops autosave and pushes final data)
   await instances.gatewayState.shutdown();
 
-  log(6, 'GATEWAY_SHUTDOWN', 'Gateway shutdown complete');
+  log(EPriority.Info, 'GATEWAY_SHUTDOWN', 'Gateway shutdown complete');
 }

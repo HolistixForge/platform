@@ -3,6 +3,7 @@ import { apiContext, TApiContext } from './api-context';
 import { useMemo } from 'react';
 import { TJson, TMyfetchRequest } from '@monorepo/simple-types';
 import { GanymedeApi } from './api-ganymede';
+import { browserLog } from './browser-log';
 
 //
 
@@ -19,7 +20,9 @@ class FakeGanymedeApi extends GanymedeApi {
   }
 
   override async fetch(r: TMyfetchRequest, host?: string): Promise<TJson> {
-    console.warn('Story Api Context: ganymedeApi: fetch', r, host);
+    browserLog('debug', 'STORY_API_CONTEXT', 'ganymedeApi: fetch', {
+      data: { request: r, host },
+    });
     if (this.ganymedeApiMock) {
       return this.ganymedeApiMock(r);
     }

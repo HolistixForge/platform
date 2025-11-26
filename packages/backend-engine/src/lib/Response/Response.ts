@@ -1,4 +1,4 @@
-import { log } from '@monorepo/log';
+import { EPriority, log } from '@monorepo/log';
 import { TJson, TStringMap } from '@monorepo/simple-types';
 
 //
@@ -74,7 +74,7 @@ export class Response {
   }
 
   addCookies(cookies: Array<TCookie>): void {
-    log(7, '', 'adding cookies', cookies);
+    log(EPriority.Debug, '', 'adding cookies', cookies);
     this._cookies = this._cookies.concat(
       cookies.map((c) => ({
         ...c,

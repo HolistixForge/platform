@@ -1,5 +1,5 @@
 import * as Y from 'yjs';
-import { log } from '@monorepo/log';
+import { EPriority, log } from '@monorepo/log';
 import { makeUuid } from '@monorepo/simple-types';
 import {
   getAllSharedDataAsJSON,
@@ -38,7 +38,7 @@ export class ProjectRoomsManager implements IPersistenceProvider {
 
   loadFromSerialized(data: Record<string, unknown> | null | undefined): void {
     if (!data) {
-      log(6, 'PROJECT_ROOMS', 'No project snapshot data to load');
+      log(EPriority.Info, 'PROJECT_ROOMS', 'No project snapshot data to load');
       return;
     }
 
@@ -47,7 +47,11 @@ export class ProjectRoomsManager implements IPersistenceProvider {
       const projects = data as TProjectSnapshotCollection;
       this.applyProjectSnapshots(projects);
     } else {
-      log(5, 'PROJECT_ROOMS', 'Invalid project snapshot data format');
+      log(
+        EPriority.Notice,
+        'PROJECT_ROOMS',
+        'Invalid project snapshot data format'
+      );
     }
   }
 
@@ -62,7 +66,11 @@ export class ProjectRoomsManager implements IPersistenceProvider {
   async initializeProject(project_id: string): Promise<string> {
     const existingRoom = this.rooms.get(project_id);
     if (existingRoom) {
-      log(5, 'PROJECT_ROOMS', `Project ${project_id} already initialized`);
+      log(
+        EPriority.Notice,
+        'PROJECT_ROOMS',
+        `Project ${project_id} already initialized`
+      );
       return existingRoom.room_id;
     }
 
@@ -74,7 +82,11 @@ export class ProjectRoomsManager implements IPersistenceProvider {
     if (pending) {
       setAllSharedDataFromJSON(ydoc, pending);
       this.pendingSnapshots.delete(project_id);
-      log(6, 'PROJECT_ROOMS', `Applied pending snapshot for ${project_id}`);
+      log(
+        EPriority.Info,
+        'PROJECT_ROOMS',
+        `Applied pending snapshot for ${project_id}`
+      );
     }
 
     this.rooms.set(project_id, {
@@ -84,7 +96,7 @@ export class ProjectRoomsManager implements IPersistenceProvider {
     });
 
     log(
-      6,
+      EPriority.Info,
       'PROJECT_ROOMS',
       `Initialized project: ${project_id}, room: ${room_id}`
     );
@@ -184,11 +196,15 @@ export class ProjectRoomsManager implements IPersistenceProvider {
       const room = this.rooms.get(project_id);
       if (room) {
         setAllSharedDataFromJSON(room.ydoc, snapshot);
-        log(6, 'PROJECT_ROOMS', `Applied snapshot for project: ${project_id}`);
+        log(
+          EPriority.Info,
+          'PROJECT_ROOMS',
+          `Applied snapshot for project: ${project_id}`
+        );
       } else {
         this.pendingSnapshots.set(project_id, snapshot);
         log(
-          6,
+          EPriority.Info,
           'PROJECT_ROOMS',
           `Queued snapshot for project ${project_id} (room not initialized yet)`
         );

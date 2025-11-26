@@ -33,10 +33,22 @@
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "references": [
     {
-      "path": "../simple-types/tsconfig.lib.json"
+      "path": "../collab-engine/tsconfig.lib.json"
     },
     {
-      "path": "../api-fetch/tsconfig.lib.json"
+      "path": "../observability/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/jupyter/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/gateway/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/chats/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/socials/tsconfig.lib.json"
     },
     {
       "path": "../modules/excalidraw/tsconfig.lib.json"
@@ -45,31 +57,13 @@
       "path": "../modules/airtable/tsconfig.lib.json"
     },
     {
-      "path": "../modules/module/tsconfig.lib.json"
-    },
-    {
       "path": "../modules/notion/tsconfig.lib.json"
     },
     {
-      "path": "../modules/socials/tsconfig.lib.json"
-    },
-    {
-      "path": "../modules/jupyter/tsconfig.lib.json"
-    },
-    {
-      "path": "../modules/chats/tsconfig.lib.json"
-    },
-    {
-      "path": "../modules/gateway/tsconfig.lib.json"
-    },
-    {
-      "path": "../modules/reducers/tsconfig.lib.json"
+      "path": "../modules/user-containers/tsconfig.lib.json"
     },
     {
       "path": "../modules/tabs/tsconfig.lib.json"
-    },
-    {
-      "path": "../collab-engine/tsconfig.lib.json"
     },
     {
       "path": "../modules/space/tsconfig.lib.json"
@@ -78,7 +72,16 @@
       "path": "../modules/core-graph/tsconfig.lib.json"
     },
     {
-      "path": "../modules/user-containers/tsconfig.lib.json"
+      "path": "../modules/reducers/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/module/tsconfig.lib.json"
+    },
+    {
+      "path": "../simple-types/tsconfig.lib.json"
+    },
+    {
+      "path": "../api-fetch/tsconfig.lib.json"
     },
     {
       "path": "../modules/collab/tsconfig.lib.json"

@@ -2,7 +2,7 @@ import { QueryResult, Pool, PoolClient } from 'pg';
 import { TSqlApi } from '../Connections';
 import { Row, Sql, SqlResult, SqlResultsSet, TSqlConfig } from '../Sql';
 import { TJsonWithDate } from '@monorepo/simple-types';
-import { log } from '@monorepo/log';
+import { EPriority, log } from '@monorepo/log';
 
 //
 
@@ -82,7 +82,14 @@ export class PostgreSQL extends Sql {
   ): Promise<PostgresResultsSet> {
     let reconnect = false;
 
-    log(7, 'POSTGRE', 'query', { query, args });
+    const startTime = Date.now();
+
+    // Enhanced query logging with sanitized args (trace_id/span_id automatically included by Logger)
+    log(EPriority.Debug, 'POSTGRE', 'query', {
+      query: query.substring(0, 500), // Limit query length
+      args: args,
+      query_length: query.length,
+    });
 
     do {
       reconnect = false;
@@ -100,8 +107,28 @@ export class PostgreSQL extends Sql {
         const data = c;
 
         const resultSets = new PostgresResultsSet(data);
+        const duration = Date.now() - startTime;
+
+        // Log successful query with duration (trace_id/span_id automatically included)
+        if (duration > 1000) {
+          // Log slow queries at warning level
+          log(EPriority.Warning, 'POSTGRE', `Slow query (${duration}ms)`, {
+            query: query.substring(0, 200),
+            duration_ms: duration,
+          });
+        }
+
         return resultSets;
       } catch (err: any) {
+        const duration = Date.now() - startTime;
+
+        // Log query error with duration (trace_id/span_id automatically included)
+        log(EPriority.Error, 'POSTGRE', `Query error: ${err.message}`, {
+          query: query.substring(0, 200),
+          duration_ms: duration,
+          error_message: err.message,
+        });
+
         if (err.message.includes('terminating connection')) {
           this._connection = null;
           reconnect = true;

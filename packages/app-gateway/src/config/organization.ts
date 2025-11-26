@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { log } from '@monorepo/log';
+import { EPriority, log } from '@monorepo/log';
 import { TJson } from '@monorepo/simple-types';
 import { TOrganizationConfig } from '../types/organization-config';
 
@@ -15,10 +15,10 @@ const readJsonFileOrNull = (filename: string) => {
   try {
     const fileData = fs.readFileSync(filename, 'utf-8');
     const jsonObj = JSON.parse(fileData as string);
-    log(7, 'CONFIG', `loaded config ${filename}`);
+    log(EPriority.Debug, 'CONFIG', `loaded config ${filename}`);
     return jsonObj;
   } catch (error) {
-    log(7, 'CONFIG', `No config file ${filename}`);
+    log(EPriority.Debug, 'CONFIG', `No config file ${filename}`);
     return null;
   }
 };
@@ -32,18 +32,22 @@ export function loadOrganizationConfig(): TOrganizationConfig | null {
   if (fs.existsSync(configPath)) {
     try {
       const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-      log(6, 'CONFIG', `Loaded organization config from ${configPath}`);
+      log(
+        EPriority.Info,
+        'CONFIG',
+        `Loaded organization config from ${configPath}`
+      );
       return config;
     } catch (e: any) {
       log(
-        3,
+        EPriority.Error,
         'CONFIG',
         `Failed to load config from ${configPath}: ${e.message}`
       );
     }
   }
 
-  log(3, 'CONFIG', 'No organization config found');
+  log(EPriority.Error, 'CONFIG', 'No organization config found');
   return null;
 }
 
@@ -54,7 +58,7 @@ export function loadOrganizationConfig(): TOrganizationConfig | null {
 export function setOrganizationConfig(config: TOrganizationConfig): void {
   const configPath = ORGANIZATION_CONFIG_FILE;
   writeJsonFile(configPath, config as unknown as TJson);
-  log(6, 'CONFIG', `Saved organization config to ${configPath}`);
+  log(EPriority.Info, 'CONFIG', `Saved organization config to ${configPath}`);
 }
 
 /**

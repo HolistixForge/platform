@@ -9,9 +9,6 @@
       "path": "../simple-types"
     },
     {
-      "path": "../log"
-    },
-    {
       "path": "../api-fetch"
     },
     {

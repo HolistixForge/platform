@@ -1,4 +1,4 @@
-import { log } from '@monorepo/log';
+import { EPriority, log } from '@monorepo/log';
 import { IPersistenceProvider } from '../state/IPersistenceProvider';
 import type { TOAuthClient, TOAuthCode, TOAuthToken } from '@monorepo/gateway';
 import { OAuthManager as AbstractOAuthManager } from '@monorepo/gateway';
@@ -50,7 +50,7 @@ export class OAuthManager
 
   loadFromSerialized(data: Record<string, unknown> | null | undefined): void {
     if (!data) {
-      log(6, 'OAUTH', 'No OAuth data to load');
+      log(EPriority.Info, 'OAUTH', 'No OAuth data to load');
       return;
     }
 
@@ -69,7 +69,7 @@ export class OAuthManager
       this.data.oauth_tokens = data.oauth_tokens as TOAuthData['oauth_tokens'];
     }
 
-    log(6, 'OAUTH', 'Loaded OAuth data');
+    log(EPriority.Info, 'OAUTH', 'Loaded OAuth data');
   }
 
   saveToSerializable(): Record<string, unknown> {
@@ -86,7 +86,7 @@ export class OAuthManager
 
   override addClient(client: TOAuthClient): void {
     this.data.oauth_clients[client.client_id] = client;
-    log(7, 'OAUTH', `Added client: ${client.client_id}`);
+    log(EPriority.Debug, 'OAUTH', `Added client: ${client.client_id}`);
   }
 
   override getClient(client_id: string): TOAuthClient | null {
@@ -95,7 +95,7 @@ export class OAuthManager
 
   override deleteClient(client_id: string): void {
     delete this.data.oauth_clients[client_id];
-    log(7, 'OAUTH', `Deleted client: ${client_id}`);
+    log(EPriority.Debug, 'OAUTH', `Deleted client: ${client_id}`);
   }
 
   getAllClients(): TOAuthClient[] {
@@ -108,7 +108,11 @@ export class OAuthManager
 
   override saveCode(code: TOAuthCode): void {
     this.data.oauth_authorization_codes[code.code] = code;
-    log(7, 'OAUTH', `Saved authorization code for user: ${code.user_id}`);
+    log(
+      EPriority.Debug,
+      'OAUTH',
+      `Saved authorization code for user: ${code.user_id}`
+    );
   }
 
   override getCode(code_string: string): TOAuthCode | null {
@@ -117,7 +121,7 @@ export class OAuthManager
 
   override deleteCode(code_string: string): void {
     delete this.data.oauth_authorization_codes[code_string];
-    log(7, 'OAUTH', `Deleted authorization code: ${code_string}`);
+    log(EPriority.Debug, 'OAUTH', `Deleted authorization code: ${code_string}`);
   }
 
   //
@@ -127,7 +131,7 @@ export class OAuthManager
   override saveToken(token: TOAuthToken): void {
     this.data.oauth_tokens[token.token_id] = token;
     log(
-      7,
+      EPriority.Debug,
       'OAUTH',
       `Saved token: ${token.token_id} for user: ${token.user_id}`
     );
@@ -151,7 +155,7 @@ export class OAuthManager
 
   override deleteToken(token_id: string): void {
     delete this.data.oauth_tokens[token_id];
-    log(7, 'OAUTH', `Deleted token: ${token_id}`);
+    log(EPriority.Debug, 'OAUTH', `Deleted token: ${token_id}`);
   }
 
   //
@@ -183,7 +187,11 @@ export class OAuthManager
     }
 
     if (cleaned > 0) {
-      log(6, 'OAUTH', `Cleaned up ${cleaned} expired codes/tokens`);
+      log(
+        EPriority.Info,
+        'OAUTH',
+        `Cleaned up ${cleaned} expired codes/tokens`
+      );
     }
   }
 

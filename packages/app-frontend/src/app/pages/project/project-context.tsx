@@ -15,7 +15,7 @@ import {
   useMutationStartOrganization,
   useQueryProjectByName,
 } from '@monorepo/frontend-data';
-import { log } from '@monorepo/log';
+import { browserLog } from '@monorepo/frontend-data';
 
 import { ProjectState, ProjectData, ProjectUser } from './project-types';
 import { ProjectLoading, ProjectError } from './project-loading';
@@ -150,7 +150,9 @@ export const ProjectContext = ({
   const projectState = useProjectState(ownerId, projectName, ganymedeApi);
   const user = useProjectUser();
 
-  log(7, 'PROJECT_CONTEXT', 'update', { projectState, user });
+  browserLog('debug', 'PROJECT_CONTEXT', 'update', {
+    data: { projectState, user },
+  });
 
   if (user.username === 'anonymous') {
     return (

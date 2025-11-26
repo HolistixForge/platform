@@ -125,6 +125,28 @@ body {
     color: white;
 }
 
+.nav-links a.btn-github {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    background-color: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: background-color 0.2s, transform 0.1s;
+    font-size: 1rem;
+}
+
+.btn-github:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.btn-github svg {
+    display: inline-block;
+}
+
 /* Hero Section */
 .hero {
     padding: 6rem 0;
@@ -192,6 +214,15 @@ body {
     gap: 1rem;
     justify-content: center;
     margin-top: 3rem;
+}
+
+.hero-cta .btn-primary {
+    display: inline-flex;
+    align-items: center;
+}
+
+.hero-cta .btn-primary svg {
+    display: inline-block;
 }
 
 /* Sections */
@@ -516,6 +547,12 @@ section {
 .cta .btn-primary {
     background-color: white;
     color: var(--primary-color);
+    display: inline-flex;
+    align-items: center;
+}
+
+.cta .btn-primary svg {
+    display: inline-block;
 }
 
 .cta .btn-primary:hover {

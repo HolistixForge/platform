@@ -1,6 +1,6 @@
 import { Router, Request } from 'express';
 import { BackendEventProcessor } from '@monorepo/reducers';
-import { log, NotFoundException } from '@monorepo/log';
+import { EPriority, log, NotFoundException } from '@monorepo/log';
 import { myfetch } from '@monorepo/backend-engine';
 import { asyncHandler } from '../middleware/route-handler';
 import { VPN } from '../config/organization';
@@ -58,7 +58,7 @@ export const setupCollabRoutes = (router: Router) => {
     asyncHandler(async (req: Request, res) => {
       const { tmp_handshake_token } = req.body;
 
-      log(6, 'GATEWAY', 'Starting collab with handshake token');
+      log(EPriority.Info, 'GATEWAY', 'Starting collab with handshake token');
 
       // Call ganymede to get config
       const response = await myfetch({
@@ -74,7 +74,7 @@ export const setupCollabRoutes = (router: Router) => {
         gateway_id: string;
       };
 
-      log(6, 'GATEWAY', 'Received config from Ganymede', { config });
+      log(EPriority.Info, 'GATEWAY', 'Received config from Ganymede', { config });
 
       // Initialize gateway with organization context
       if (
@@ -89,7 +89,7 @@ export const setupCollabRoutes = (router: Router) => {
           config.organization_token
         );
 
-        log(6, 'GATEWAY', 'Gateway initialized from /collab/start');
+        log(EPriority.Info, 'GATEWAY', 'Gateway initialized from /collab/start');
       }
 
       return res.json({});

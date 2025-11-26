@@ -3,13 +3,14 @@ import nocache from 'nocache';
 import cookieParser from 'cookie-parser';
 
 import {
-  EColor,
   error,
   log,
   Exception,
   NotFoundException,
   UnknownException,
+  EPriority,
 } from '@monorepo/log';
+import { TJson } from '@monorepo/simple-types';
 
 import { respond } from './responses';
 import { trace, SpanStatusCode } from '@opentelemetry/api';
@@ -37,9 +38,21 @@ export const setupBasicExpressApp = (app: express.Express) => {
 
   app.use(cookieParser());
 
+  // Enrich span with basic request context (runs early, before authentication)
+  app.use((req, res, next) => {
+    const span = trace.getActiveSpan();
+    if (span) {
+      // Add basic HTTP context
+      span.setAttribute('http.method', req.method);
+      span.setAttribute('http.route', req.path);
+      span.setAttribute('http.url', req.originalUrl || req.url);
+    }
+    next();
+  });
+
   // log any request
   app.use((req, res, next) => {
-    log(6, 'REQUEST', `${req.method}: ${req.path}`, null, EColor.BgYellow);
+    log(EPriority.Info, 'REQUEST', `${req.method}: ${req.path}`, null);
     const { headers, method, params, query } = req;
 
     const rd = {
@@ -49,7 +62,7 @@ export const setupBasicExpressApp = (app: express.Express) => {
       headers,
       params,
     };
-    log(6, 'REQUEST', ``, rd, EColor.FgYellow);
+    log(EPriority.Info, 'REQUEST', ``, rd);
     next();
   });
 };
@@ -89,7 +102,13 @@ export const setupErrorsHandler = (app: express.Express) => {
     // if it is not our standard Exception
     // something bad happen
     else if (!(err instanceof Exception)) {
-      console.log(err);
+      // Log unknown error with structured logging (replaces console.log)
+      error('Error', `Unknown error: ${err.message}`, {
+        error_type: 'UNKNOWN_ERROR',
+        error_message: err.message,
+        error_stack: err.stack,
+        raw_error: String(err),
+      });
       exception = new UnknownException(err.message);
     }
     //
@@ -98,7 +117,13 @@ export const setupErrorsHandler = (app: express.Express) => {
     const json = exception.toJson();
 
     const serialized = JSON.stringify(json, null, 4);
-    error('Error', serialized, exception.stack);
+    // Enhanced error logging with error category
+    error('Error', serialized, {
+      error_uuid: exception._uuid,
+      error_category: exception.errorCategory,
+      error_stack: exception.stack || '',
+      http_status: exception.httpStatus || 500,
+    } as TJson);
 
     // Record exception in active span (if OpenTelemetry is initialized)
     const span = trace.getActiveSpan();

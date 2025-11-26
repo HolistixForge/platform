@@ -5,7 +5,7 @@ import { respond } from '@monorepo/backend-engine';
 import { Req, UserSerializedInfo } from '../../types';
 import { setEmailValidated, passwordFlagReset } from '../../models/users';
 import * as passportMagicLink from 'passport-magic-link';
-import { log } from '@monorepo/log';
+import { EPriority, log } from '@monorepo/log';
 import { sendMail } from '../../lib/send-mail';
 import { MagicLinkModel } from '../../models/magic-link';
 import { userGetLocalByEmail } from '../../models/users';
@@ -45,7 +45,7 @@ passport.use(
      * It returns a promise indicating whether the token has been sent or not.
      */
     async (req: Req, user: MagicLinkUser, token: string) => {
-      log(6, 'ACCOUNT', `Send email to user ${user.email}`);
+      log(EPriority.Info, 'ACCOUNT', `Send email to user ${user.email}`);
       const sent = await sendMail({
         from: 'noreply@demiurge.co',
         to: user.email,
