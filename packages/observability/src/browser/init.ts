@@ -12,7 +12,6 @@ import {
   SEMRESATTRS_DEPLOYMENT_ENVIRONMENT,
   SEMRESATTRS_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { getWebAutoInstrumentations } from '@opentelemetry/auto-instrumentations-web';
 
 export interface BrowserObservabilityOptions {
@@ -35,20 +34,6 @@ export interface BrowserObservabilityOptions {
 }
 
 let tracerProvider: WebTracerProvider | null = null;
-
-/**
- * Read OTLP endpoint from environment or use default
- * In browser, we can't use process.env directly, so we check for
- * a global variable or use a default
- */
-function getOtlpEndpoint(): string {
-  // Check for global variable (set by build process or runtime)
-  if (typeof window !== 'undefined' && (window as any).OTLP_ENDPOINT_HTTP) {
-    return (window as any).OTLP_ENDPOINT_HTTP;
-  }
-  // Default to localhost (for local development)
-  return 'http://localhost:4318';
-}
 
 /**
  * Read deployment environment from environment or use default
@@ -89,7 +74,6 @@ export function initializeBrowserObservability(
     return tracerProvider;
   }
 
-  const otlpEndpoint = getOtlpEndpoint();
   const deploymentEnvironment = getDeploymentEnvironment();
 
   // Build resource attributes
@@ -102,24 +86,10 @@ export function initializeBrowserObservability(
 
   const resource = resourceFromAttributes(resourceAttributes);
 
-  // Create OTLP trace exporter
-  const traceExporter = new OTLPTraceExporter({
-    url: `${otlpEndpoint}/v1/traces`,
-  });
-
   // Create tracer provider with resource
   tracerProvider = new WebTracerProvider({
     resource,
   });
-
-  // Add span processor
-  // Note: WebTracerProvider may not expose addSpanProcessor in TypeScript types,
-  // but we can access it via the prototype chain or use a type assertion
-  const { BatchSpanProcessor } = require('@opentelemetry/sdk-trace-base');
-  // Use type assertion to access addSpanProcessor which exists at runtime
-  (tracerProvider as any).addSpanProcessor(
-    new BatchSpanProcessor(traceExporter)
-  );
 
   // Register the tracer provider
   tracerProvider.register();

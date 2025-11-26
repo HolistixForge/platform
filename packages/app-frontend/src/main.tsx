@@ -1,6 +1,6 @@
 // Initialize OpenTelemetry BEFORE any other imports
 // This ensures auto-instrumentation works correctly
-import { initializeBrowserObservability } from '@monorepo/observability';
+import { initializeBrowserObservability } from '@monorepo/observability/browser';
 import { Logger } from '@monorepo/log';
 
 import * as ReactDOM from 'react-dom/client';
