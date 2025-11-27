@@ -18,6 +18,7 @@ export type TUserContainersExports = {
     id: string,
     containerRunner: ContainerRunner
   ) => void;
+  getRunner: (id: string) => ContainerRunner | undefined;
 };
 
 type TRequired = {
@@ -84,6 +85,7 @@ export const moduleBackend: TModule<TRequired, TUserContainersExports> = {
     moduleExports({
       imageRegistry: registry,
       registerContainerRunner,
+      getRunner: (id: string) => containerRunners.get(id),
     });
 
     // Load reducers

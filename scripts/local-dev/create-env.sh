@@ -1,23 +1,22 @@
 #!/bin/bash
 # Create a new local development environment with multi-gateway support
-# Usage: ./create-env.sh <env-name> [domain] [workspace-path] [database-path]
+# Usage: ./create-env.sh <env-name> [domain] [workspace-path]
 # Usage: ./create-env.sh dev-001
 # Usage: ./create-env.sh dev-001 domain.local
-# Usage: ./create-env.sh dev-001 demiurge.local /root/workspace-feat /root/database-feat
+# Usage: ./create-env.sh dev-001 demiurge.local /root/workspace-feat/monorepo
 
 set -e
 
 ENV_NAME=$1
 DOMAIN=${2:-"domain.local"}
 WORKSPACE_PATH=${3:-"/root/workspace/monorepo"}
-DATABASE_PATH=${4:-"/root/workspace/database"}
 GATEWAY_POOL_SIZE=${GATEWAY_POOL_SIZE:-3}  # Default: 3 gateways in pool
 
 if [ -z "$ENV_NAME" ]; then
-  echo "Usage: $0 <env-name> [domain] [workspace-path] [database-path]"
+  echo "Usage: $0 <env-name> [domain] [workspace-path]"
   echo "Example: $0 dev-001"
   echo "Example: $0 dev-001 domain.local"
-  echo "Example: $0 dev-001 demiurge.mycompany.local /root/workspace-feat /root/database-feat"
+  echo "Example: $0 dev-001 demiurge.mycompany.local /root/workspace-feat/monorepo"
   echo ""
   echo "Gateway pool size can be set via environment variable:"
   echo "  GATEWAY_POOL_SIZE=5 $0 dev-001"
@@ -30,10 +29,6 @@ if [ ! -d "$WORKSPACE_PATH" ]; then
   exit 1
 fi
 
-if [ ! -d "$DATABASE_PATH" ]; then
-  echo "❌ Database path not found: $DATABASE_PATH"
-  exit 1
-fi
 
 # Validate environment name (alphanumeric + dash only)
 if ! [[ "$ENV_NAME" =~ ^[a-z0-9-]+$ ]]; then
@@ -95,7 +90,6 @@ LOGS_DIR="${ENV_DIR}/logs"
 echo "📦 Creating environment: ${ENV_NAME}"
 echo "   Domain: ${DOMAIN}"
 echo "   Workspace: ${WORKSPACE_PATH}"
-echo "   Database repo: ${DATABASE_PATH}"
 echo "   Database: ${DB_NAME}"
 echo "   Ganymede port: ${GANYMEDE_PORT}"
 echo "   Gateway pool size: ${GATEWAY_POOL_SIZE}"
@@ -139,7 +133,7 @@ echo "   ✅ Application user created: ${APP_DB_USER}"
 
 # 3. Deploy database schema (using postgres superuser)
 echo "📊 Deploying database schema..."
-cd "${DATABASE_PATH}"
+cd "${WORKSPACE_PATH}/packages/app-ganymede/database"
 # Set locale to avoid warnings
 export LANGUAGE=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
@@ -230,7 +224,7 @@ FRONTEND_FQDN=${DOMAIN}
 
 # Domain configuration
 DOMAIN=${DOMAIN}
-ENVIRONMENT_NAME=${ENV_NAME}
+ENV_NAME=${ENV_NAME}
 
 # Server binding
 GANYMEDE_SERVER_BIND='[{"host":"127.0.0.1","port":${GANYMEDE_PORT}}]'
@@ -239,9 +233,6 @@ ALLOWED_ORIGINS='["https://${DOMAIN}"]'
 # PowerDNS configuration
 POWERDNS_API_URL=http://localhost:8081
 POWERDNS_API_KEY=local-dev-api-key
-
-# Gateway pool scripts directory
-GATEWAY_SCRIPTS_DIR=${WORKSPACE_PATH}/scripts/local-dev
 
 # Magic link email (optional)
 MAILING_HOST=xxxxx
@@ -428,8 +419,10 @@ mkdir -p "${ENV_DIR}/org-data"
 chmod 755 "${ENV_DIR}/org-data"
 
 # Run gateway-pool.sh script with environment variables
-ENV_NAME="${ENV_NAME}" DOMAIN="${DOMAIN}" WORKSPACE_VOLUME="demiurge-workspace" \
-  "${WORKSPACE_PATH}/scripts/local-dev/gateway-pool.sh" create ${GATEWAY_POOL_SIZE}
+# Always uses bind mount (WORKSPACE_PATH is required)
+# This allows multiple environments to use different repository directories
+ENV_NAME="${ENV_NAME}" DOMAIN="${DOMAIN}" \
+  "${WORKSPACE_PATH}/scripts/local-dev/gateway-pool.sh" create ${GATEWAY_POOL_SIZE} "${WORKSPACE_PATH}"
 
 # 12. Environment ready!
 echo ""

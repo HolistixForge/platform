@@ -62,11 +62,11 @@ BrowserRouter
 
 ## Gateway Access Pattern
 
-### Gateway Hostname Management
+### Gateway FQDN Management
 
-- `GanymedeApi` stores a map of `organization_id -> gateway_hostname`.
-- `OrganizationContext` keeps gateway hostname up-to-date by calling `ganymedeApi.setGatewayHostname(organization_id, hostname)`.
-- Gateway hostname is cleared when `ganymedeApi.reset()` executes (e.g., logout).
+- `GanymedeApi` stores a map of `organization_id -> gateway_fqdn`.
+- `OrganizationContext` keeps gateway FQDN up-to-date by calling `ganymedeApi.setGatewayHostname(organization_id, fqdn)`.
+- Gateway FQDN is cleared when `ganymedeApi.reset()` executes (e.g., logout).
 
 ### `fetchGateway()` Method
 
@@ -78,8 +78,8 @@ BrowserRouter
 ### Gateway Polling Strategy
 
 - `useQueryOrganizationGateway()` polls `GET /orgs/{organization_id}/gateway` with adaptive intervals:
-  - 30 seconds when a hostname exists (detect deallocation quickly).
-  - 2 minutes when hostname is null (avoid unnecessary load while waiting for allocation).
+  - 30 seconds when an FQDN exists (detect deallocation quickly).
+  - 2 minutes when FQDN is null (avoid unnecessary load while waiting for allocation).
 - Polling continues in the background to keep UI state accurate, even if the browser tab loses focus.
 
 ---
@@ -94,15 +94,15 @@ BrowserRouter
 
 ### Gateway Fetch Helper
 
-- `createGatewayFetch(ganymedeApi, gateway_hostname)` returns an `ApiFetch` subclass that proxies all requests through `ganymedeApi.fetchGateway`.
+- `createGatewayFetch(ganymedeApi, gateway_fqdn)` returns an `ApiFetch` subclass that proxies all requests through `ganymedeApi.fetchGateway`.
 - Reducers module receives this helper via its config rather than calling `setFetch()` manually.
 - Pattern ensures every module shares the same token lifecycle and error handling.
 
 ### Module Availability States
 
-- Loading UI: Displayed while gateway hostname is being retrieved.
+- Loading UI: Displayed while gateway FQDN is being retrieved.
 - Unavailable UI: Displayed when gateway is idle or deallocated.
-- Ready State: Modules render only when gateway hostname exists and module exports are available.
+- Ready State: Modules render only when gateway FQDN exists and module exports are available.
 
 ---
 

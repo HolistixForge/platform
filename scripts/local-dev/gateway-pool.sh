@@ -1,27 +1,68 @@
 #!/bin/bash
 # Gateway pool management
-# Usage: ./gateway-pool.sh <count> <workspace-path>
+# Usage: ./gateway-pool.sh [create] <count> <workspace-path>
 # Example: ./gateway-pool.sh 3 /root/workspace/monorepo
+# Example: ./gateway-pool.sh create 3 /root/workspace-feat/monorepo
+# 
+# Always uses bind mount to mount the repository directory.
+# The workspace-path must point to the monorepo root directory.
 
 set -e
 
-COUNT=$1
-WORKSPACE_PATH=${2:-"/root/workspace/monorepo"}
+# Parse arguments - support both "create <count> <path>" and "<count> <path>" formats
+if [ "$1" = "create" ]; then
+  COUNT=$2
+  WORKSPACE_PATH=$3
+else
+  COUNT=$1
+  WORKSPACE_PATH=$2
+fi
 
 # Configuration (can be overridden by environment variables)
 ENV_NAME=${ENV_NAME:-"dev-001"}
 DOMAIN=${DOMAIN:-"domain.local"}
-WORKSPACE_VOLUME=${WORKSPACE_VOLUME:-"demiurge-workspace"}
+WORKSPACE_MOUNT=${WORKSPACE_MOUNT:-"/home/dev/workspace"}
 
-# Directories
-ENV_DIR="/root/.local-dev/${ENV_NAME}"
-
-# Colors for output
+# Colors for output (define early for error messages)
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
+
+# Validate WORKSPACE_PATH is provided
+if [ -z "$WORKSPACE_PATH" ]; then
+  echo -e "${RED}❌ WORKSPACE_PATH is required${NC}"
+  echo ""
+  echo "Usage: $0 [create] <count> <workspace-path>"
+  echo "   create: Optional command (for compatibility)"
+  echo "   count: Number of gateways to create (e.g., 3)"
+  echo "   workspace-path: Path to monorepo root directory (required)"
+  echo ""
+  echo "Examples:"
+  echo "   $0 3 /root/workspace/monorepo"
+  echo "   $0 create 3 /root/workspace-feat/monorepo"
+  exit 1
+fi
+
+# Validate WORKSPACE_PATH exists
+if [ ! -d "$WORKSPACE_PATH" ]; then
+  echo -e "${RED}❌ Workspace path not found: ${WORKSPACE_PATH}${NC}"
+  exit 1
+fi
+
+# Get parent directory of monorepo (e.g., /root/workspace-feat from /root/workspace-feat/monorepo)
+# Mount parent directory so gateway can access: ${WORKSPACE_MOUNT}/monorepo
+WORKSPACE_PARENT=$(dirname "$WORKSPACE_PATH")
+if [ ! -d "$WORKSPACE_PARENT" ]; then
+  echo -e "${RED}❌ Workspace parent directory not found: ${WORKSPACE_PARENT}${NC}"
+  exit 1
+fi
+
+BIND_MOUNT_SOURCE="$WORKSPACE_PARENT"
+
+# Directories
+ENV_DIR="/root/.local-dev/${ENV_NAME}"
 
 # Validate Docker is available
 check_docker() {
@@ -32,11 +73,13 @@ check_docker() {
     fi
 }
 
-# Create gateway pool
+# Validate count
 if [ -z "$COUNT" ] || ! [[ "$COUNT" =~ ^[0-9]+$ ]]; then
-  echo -e "${RED}Usage: $0 <count> [workspace-path]${NC}"
+  echo -e "${RED}❌ Invalid count: ${COUNT}${NC}"
+  echo ""
+  echo "Usage: $0 [create] <count> <workspace-path>"
   echo "   count: Number of gateways to create (e.g., 3)"
-  echo "   workspace-path: Path to monorepo (default: /root/workspace/monorepo)"
+  echo "   workspace-path: Path to monorepo root directory (required)"
   exit 1
 fi
 
@@ -67,7 +110,7 @@ fi
 echo -e "${BLUE}📦 Creating $COUNT gateways in pool...${NC}"
 echo "   Environment: ${ENV_NAME}"
 echo "   Domain: ${DOMAIN}"
-echo "   Workspace volume: ${WORKSPACE_VOLUME}"
+echo "   Workspace: ${WORKSPACE_PATH} (bind mount: ${BIND_MOUNT_SOURCE})"
 echo ""
 
 for i in $(seq 1 $COUNT); do
@@ -77,7 +120,7 @@ for i in $(seq 1 $COUNT); do
   GW_VPN_PORT=$((49100 + GATEWAY_COUNT))
   
   GATEWAY_NAME="gw-pool-${GATEWAY_COUNT}"
-  GATEWAY_HOSTNAME="gw-pool-${GATEWAY_COUNT}.${DOMAIN}"
+  GATEWAY_FQDN="gw-pool-${GATEWAY_COUNT}.${DOMAIN}"
   GATEWAY_VERSION="0.0.1"
   
   echo -e "${BLUE}  Creating ${GATEWAY_NAME}...${NC}"
@@ -87,7 +130,7 @@ for i in $(seq 1 $COUNT); do
   set +e
   REGISTER_OUTPUT=$(LOG_LEVEL=6 \
     node "${WORKSPACE_PATH}/dist/packages/app-ganymede-cmds/main.js" add-gateway \
-      -h "${GATEWAY_HOSTNAME}" \
+      -h "${GATEWAY_FQDN}" \
       -gv "${GATEWAY_VERSION}" \
       -c "${GATEWAY_NAME}" \
       -hp "${GW_HTTP_PORT}" \
@@ -117,25 +160,28 @@ for i in $(seq 1 $COUNT); do
   # State is managed in PostgreSQL (gateways.ready, organizations_gateways)
   # No SSL - all SSL termination in stage 1 nginx
   # No org-specific data - data stored in Ganymede
+  # Always uses bind mount: parent directory mounted to WORKSPACE_MOUNT
+  # Gateway accesses repo at: ${WORKSPACE_MOUNT}/monorepo
   docker run -d \
     --name "${GATEWAY_NAME}" \
     --label "environment=${ENV_NAME}" \
     --label "gateway_id=${GATEWAY_ID}" \
     --network bridge \
-    -v ${WORKSPACE_VOLUME}:/home/dev/workspace \
+    -v "${BIND_MOUNT_SOURCE}:${WORKSPACE_MOUNT}" \
     -p ${GW_HTTP_PORT}:${GW_HTTP_PORT} \
     -p ${GW_VPN_PORT}:${GW_VPN_PORT}/udp \
     --cap-add=NET_ADMIN \
     --device /dev/net/tun \
-    -e ENVIRONMENT_NAME="${ENV_NAME}" \
+    -e ENV_NAME="${ENV_NAME}" \
     -e GATEWAY_ID="${GATEWAY_ID}" \
-    -e GATEWAY_HOSTNAME="${GATEWAY_HOSTNAME}" \
+    -e GATEWAY_FQDN="${GATEWAY_FQDN}" \
     -e GATEWAY_TOKEN="${GATEWAY_TOKEN}" \
     -e GATEWAY_HTTP_PORT="${GW_HTTP_PORT}" \
     -e GATEWAY_VPN_PORT="${GW_VPN_PORT}" \
-    -e GANYMEDE_FQDN="ganymede.${DOMAIN}" \
+    -e SERVER_BIND="[{\"host\": \"127.0.0.1\", \"port\": ${GW_HTTP_PORT}}]" \
+    -e GANYMEDE_FQDN="ganymede.${ENV_NAME}.${DOMAIN}" \
     -e DOMAIN="${DOMAIN}" \
-    -e WORKSPACE="/home/dev/workspace" \
+    -e WORKSPACE="${WORKSPACE_MOUNT}" \
     gateway:latest > /dev/null
   
   if [ $? -ne 0 ]; then

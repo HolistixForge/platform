@@ -21,7 +21,7 @@ export class NginxManager {
   private sslKeyPath: string;
 
   constructor() {
-    this.envName = process.env.ENVIRONMENT_NAME || 'dev-001';
+    this.envName = process.env.ENV_NAME || 'dev-001';
     this.envDir = `/root/.local-dev/${this.envName}`;
     this.nginxGatewaysDir = `${this.envDir}/nginx-gateways.d`;
     this.sslCertPath = `${this.envDir}/ssl-cert.pem`;

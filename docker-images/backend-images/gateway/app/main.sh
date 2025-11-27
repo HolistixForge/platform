@@ -3,7 +3,10 @@
 # Source the configuration file
 source "${BASH_SOURCE%/*}/config.conf"
 
-cd "${GATEWAY_SCRIPTS_DIR}"
+# Scripts directory is always the same as this script's directory
+# (main.sh is in docker-images/backend-images/gateway/app/)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "${SCRIPT_DIR}"
 
 # Function to set -x if not already set
 set_x_if_not_set() {

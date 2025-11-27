@@ -43,10 +43,16 @@ export type TEventSelectRunner = {
   runner_id: string;
 };
 
+export type TEventStart = {
+  type: 'user-container:start';
+  user_container_id: string;
+};
+
 export type TUserContainersEvents =
   | TEventNew
   | TEventDelete
   | TEventWatchdog
   | TEventMapHttpService
   | TEventActivity
-  | TEventSelectRunner;
+  | TEventSelectRunner
+  | TEventStart;

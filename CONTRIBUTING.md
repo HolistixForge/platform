@@ -13,14 +13,6 @@ Thank you for your interest in contributing! This guide will help you set up you
 
 ## 🚀 Development Setup
 
-### Prerequisites
-
-- **Node.js** 20+ (LTS recommended)
-- **npm** 10+
-- **Docker** 24+ (for containers)
-- **PostgreSQL** 15+ (for local database)
-- **Git** 2.40+
-
 ### Quick Setup
 
 See **[doc/guides/LOCAL_DEVELOPMENT.md](doc/guides/LOCAL_DEVELOPMENT.md)** for comprehensive setup instructions.
@@ -83,21 +75,8 @@ git checkout -b fix/bug-description
 # Build specific package
 npx nx run app-ganymede:build
 
-# Run in watch mode
-npx nx run app-ganymede:serve
-
 # Build all packages
 npx nx run-many -t build
-```
-
-### 3. Test Your Changes
-
-```bash
-# Run tests for specific package
-npx nx run app-ganymede:test
-
-# Run all tests
-npx nx run-many -t test
 ```
 
 ### 4. Commit Your Changes
@@ -151,117 +130,15 @@ git push origin feature/your-feature-name
 
 Then create a Pull Request on GitHub.
 
-## 💅 Coding Standards
-
-### TypeScript
-
-- **Strict mode enabled** - No implicit `any`
-- **Use interfaces** for data structures
-- **Use types** for unions and utility types
-- **Explicit return types** for public functions
-- **Use `const`** by default, `let` when needed, avoid `var`
-
-**Example:**
-
-```typescript
-// ✅ Good
-export interface UserContainer {
-  id: string;
-  name: string;
-  imageId: string;
-}
-
-export async function createContainer(
-  data: UserContainer
-): Promise<UserContainer> {
-  // Implementation
-}
-
-// ❌ Bad
-export function createContainer(data) {
-  // No types
-  // Implementation
-}
-```
-
-### React/Frontend
-
-- **Functional components** with hooks
-- **TypeScript props interfaces**
-- **SCSS modules** for styling
-- **Descriptive component names** (PascalCase)
-
-**Example:**
-
-```tsx
-interface UserContainerCardProps {
-  container: UserContainer;
-  onDelete: (id: string) => void;
-}
-
-export const UserContainerCard: React.FC<UserContainerCardProps> = ({
-  container,
-  onDelete,
-}) => {
-  return (
-    <div className={styles.card}>
-      <h3>{container.name}</h3>
-      <button onClick={() => onDelete(container.id)}>Delete</button>
-    </div>
-  );
-};
-```
-
-### Backend/Express
-
-- **Use `asyncHandler`** for async routes
-- **OpenAPI validation** for all endpoints
-- **Consistent error handling**
-- **Logging** with `@monorepo/log`
-
-**Example:**
-
-```typescript
-import { asyncHandler } from '../middleware/route-handler';
-
-router.post(
-  '/user-containers',
-  asyncHandler(async (req: Req, res) => {
-    const container = await createContainer(req.body);
-    return res.status(201).json(container);
-  })
-);
-```
-
-### File Naming
-
-- **TypeScript:** `kebab-case.ts`
-- **React:** `PascalCase.tsx` for components
-- **Tests:** `*.spec.ts` or `*.test.ts`
-- **Styles:** `kebab-case.module.scss`
-
 ## 🧪 Testing
-
-### Unit Tests
-
-```bash
-# Run tests for specific package
-npx nx run user-containers:test
-
-# Run tests in watch mode
-npx nx run user-containers:test --watch
-
-# Run all tests
-npx nx run-many -t test
-```
 
 ### Module Testing (Storybook)
 
 See [doc/guides/MODULES_TESTING.md](doc/guides/MODULES_TESTING.md) for testing modules in isolation.
 
 ```bash
-# Run storybook for UI components
-npx nx run demiurge-ui-components:storybook
+# Run storybook
+npx nx run [package]:storybook
 ```
 
 ### Integration Testing
@@ -294,32 +171,6 @@ doc/
 - **Use examples** - Code examples for clarity
 - **Keep updated** - Remove outdated info
 - **Link references** - Link to related docs
-
-## 🔍 Code Review Process
-
-### Before Requesting Review
-
-- [ ] Tests pass locally
-- [ ] Code follows style guidelines
-- [ ] Documentation updated
-- [ ] Commit messages are clear
-- [ ] No merge conflicts
-
-### Review Guidelines
-
-**Reviewers should check:**
-
-- Code correctness and logic
-- Test coverage
-- Performance implications
-- Security concerns
-- Documentation completeness
-
-**Review comments should be:**
-
-- Constructive and specific
-- Include suggestions when possible
-- Distinguish between blocking and non-blocking issues
 
 ## 🐛 Reporting Bugs
 

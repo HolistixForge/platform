@@ -21,7 +21,6 @@ import { DNSManagerImpl } from '../dns/DNSManager';
  * Passed to gateway module load() function
  */
 import { PermissionRegistry } from '@monorepo/gateway';
-import { CONFIG } from '../config';
 
 export type GatewayModuleConfig = {
   organization_id: string;
@@ -129,16 +128,6 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
     };
 
     moduleExports(myExports);
-
-    // Update GatewayReducer with actual gateway exports
-    // This is a bit hacky but necessary since reducer needs gateway exports
-    const reducer = depsExports.reducers as any;
-    const reducers = reducer._reducers || [];
-    for (const r of reducers) {
-      if (r instanceof GatewayReducer) {
-        (r as any).depsExports.gateway = myExports;
-      }
-    }
   },
 };
 
@@ -147,7 +136,10 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
 type EScripts = 'update-nginx-locations' | 'reset-gateway';
 
 export const runScript = (name: EScripts, inputString?: string) => {
-  const DIR = CONFIG.GATEWAY_SCRIPTS_DIR;
+  // Scripts are always at fixed location: ${WORKSPACE}/monorepo/docker-images/backend-images/gateway/app
+  // WORKSPACE is always /home/dev/workspace (set by container)
+  const WORKSPACE = '/home/dev/workspace';
+  const DIR = `${WORKSPACE}/monorepo/docker-images/backend-images/gateway/app`;
   const cmd = `${DIR}/main.sh`;
   const args = ['-r', `bin/${name}.sh`];
 

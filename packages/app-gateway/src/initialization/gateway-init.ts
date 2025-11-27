@@ -66,7 +66,7 @@ export async function initializeGatewayForOrganization(
   // 3. Create manager instances
   const permissionManager = new PermissionManager();
   const oauthManager = new OAuthManager();
-  const tokenManager = new TokenManager(process.env.GATEWAY_HMAC_SECRET);
+  const tokenManager = new TokenManager();
   const projectRooms = new ProjectRoomsManager();
 
   // 4. Register all managers with GatewayState

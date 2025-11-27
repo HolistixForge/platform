@@ -1,11 +1,9 @@
 ⚠️ Antoine's stuffs
 
+/root/.local-dev
 user-containers default runner, jupyter
 mv docker image to theur module
-modules docs and links
 credentials
-docs with FL features upcoming: collab, graph, layers, DNS, containers, logs, IA, automation and reporting language, formal process management, new example modules
-website
 
 sharedata nodeView purge
 cmd generator lowercase

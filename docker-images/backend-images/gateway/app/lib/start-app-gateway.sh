@@ -40,10 +40,8 @@ while true; do
         "GATEWAY_FQDN=${GATEWAY_FQDN}"
         "GANYMEDE_FQDN=${GANYMEDE_FQDN}"
         "ALLOWED_ORIGINS=${ALLOWED_ORIGINS}"
-        "GATEWAY_SCRIPTS_DIR=${GATEWAY_SCRIPTS_DIR}"
         "GATEWAY_ID=${GATEWAY_ID}"
         "GATEWAY_TOKEN=${GATEWAY_TOKEN}"
-        "GATEWAY_HMAC_SECRET=${GATEWAY_HMAC_SECRET}"
     )
 
     # Start app-gateway in background

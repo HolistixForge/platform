@@ -120,7 +120,8 @@ export const runScript = (
   name: 'update-nginx-locations' | 'reset-gateway',
   inputString?: string
 ) => {
-  // Executes: ${GATEWAY_SCRIPTS_DIR}/main.sh -r bin/${name}.sh
+  // Executes: ${WORKSPACE}/monorepo/docker-images/backend-images/gateway/app/main.sh -r bin/${name}.sh
+  // Scripts path is hardcoded relative to WORKSPACE (always /home/dev/workspace in containers)
   // Uses child_process.spawnSync()
   // Returns parsed JSON output
 };
@@ -384,7 +385,7 @@ This prevents `start-app-gateway.sh` from restarting when the process was intent
 **How it works:**
 
 1. Sources `config.conf` for environment variables
-2. Changes directory to `GATEWAY_SCRIPTS_DIR`
+2. Changes directory to script's own directory
 3. Executes specified script
 4. Scripts must output JSON to stdout
 
@@ -392,7 +393,7 @@ This prevents `start-app-gateway.sh` from restarting when the process was intent
 
 - `GATEWAY_DEV` - Set to "1" for development
 - `ENV_NAME` - Environment name (e.g., "dev-001")
-- `DOMAIN_NAME` - Domain name (e.g., "domain.local")
+- `DOMAIN` - Domain name (e.g., "domain.local")
 - `GANYMEDE_FQDN` - Ganymede API FQDN
 - `ALLOWED_ORIGINS` - CORS allowed origins
 - `IF` - Network interface (default: "enX0")
@@ -410,7 +411,16 @@ This prevents `start-app-gateway.sh` from restarting when the process was intent
 - **Derived from env:** `GANYMEDE_FQDN`, `ALLOWED_ORIGINS`
 - **Fixed:** `IF`, `NGINX_CONFIG`
 
-**Note:** Many variables reference `ENV_NAME` and `DOMAIN_NAME` which should be set by container environment.
+**Note:** Many variables reference `ENV_NAME` and `DOMAIN` which should be set by container environment.
+
+**Important:** The following variables are NOT set in `config.conf` because they are unique per gateway container instance and are set by `gateway-pool.sh` when creating containers:
+
+- `GATEWAY_ID` - Unique gateway UUID
+- `GATEWAY_TOKEN` - JWT token for this gateway
+- `SERVER_BIND` - Server bindings with gateway-specific port
+- `GATEWAY_FQDN` - FQDN for this gateway instance
+
+These are passed as environment variables to the container via `docker run -e` in `gateway-pool.sh`.
 
 ---
 
@@ -521,30 +531,30 @@ This prevents `start-app-gateway.sh` from restarting when the process was intent
 
 ### Required by Entrypoint
 
-| Variable            | Description               | Example                            |
-| ------------------- | ------------------------- | ---------------------------------- |
-| `GATEWAY_HTTP_PORT` | HTTP port for app-gateway | `7100`                             |
-| `GATEWAY_VPN_PORT`  | OpenVPN UDP port          | `49100`                            |
-| `WORKSPACE`         | Workspace mount path      | `/home/dev/workspace`              |
-| `RELOAD_TRIGGER`    | Hot-reload trigger file   | `/path/to/.gateway-reload-trigger` |
+| Variable            | Description                                     | Example                            |
+| ------------------- | ----------------------------------------------- | ---------------------------------- |
+| `GATEWAY_HTTP_PORT` | HTTP port for app-gateway                       | `7100`                             |
+| `GATEWAY_VPN_PORT`  | OpenVPN UDP port                                | `49100`                            |
+| `WORKSPACE`         | Workspace mount path                            | `/home/dev/workspace`              |
+| `RELOAD_TRIGGER`    | Hot-reload trigger file (optional, has default) | `/path/to/.gateway-reload-trigger` |
 
 ### Required by App-Gateway
 
-| Variable              | Description            | Example                              |
-| --------------------- | ---------------------- | ------------------------------------ |
-| `GATEWAY_ID`          | Gateway UUID           | `550e8400-...`                       |
-| `GATEWAY_TOKEN`       | JWT token for Ganymede | `eyJhbGc...`                         |
-| `GATEWAY_HMAC_SECRET` | HMAC secret            | `random-secret`                      |
-| `SERVER_BIND`         | Server bindings JSON   | `[{"host":"127.0.0.1","port":8888}]` |
-| `GANYMEDE_FQDN`       | Ganymede API FQDN      | `ganymede.domain.local`              |
-| `GATEWAY_SCRIPTS_DIR` | Path to this directory | `/path/to/gateway/app`               |
+| Variable          | Description            | Example                              |
+| ----------------- | ---------------------- | ------------------------------------ |
+| `GATEWAY_ID`      | Gateway UUID           | `550e8400-...`                       |
+| `GATEWAY_TOKEN`   | JWT token for Ganymede | `eyJhbGc...`                         |
+| `SERVER_BIND`     | Server bindings JSON   | `[{"host":"127.0.0.1","port":8888}]` |
+| `GANYMEDE_FQDN`   | Ganymede API FQDN      | `ganymede.dev-001.domain.local`      |
+| `GATEWAY_FQDN`    | Gateway FQDN           | `gw-pool-0.domain.local`             |
+| `ALLOWED_ORIGINS` | CORS allowed origins   | `["https://dev-001.domain.local"]`   |
 
 ### Used by Scripts
 
 | Variable           | Description                                 | Example                                |
 | ------------------ | ------------------------------------------- | -------------------------------------- |
 | `ENV_NAME`         | Environment name                            | `dev-001`                              |
-| `DOMAIN_NAME`      | Domain name                                 | `domain.local`                         |
+| `DOMAIN`           | Domain name                                 | `domain.local`                         |
 | `OPENVPN_PORT`     | OpenVPN port (from `GATEWAY_VPN_PORT`)      | `49100`                                |
 | `APP_GATEWAY_PORT` | App-gateway port (from `GATEWAY_HTTP_PORT`) | `7100`                                 |
 | `NGINX_CONFIG`     | Nginx config path                           | `/etc/nginx/conf.d/reverse-proxy.conf` |

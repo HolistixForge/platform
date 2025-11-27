@@ -33,22 +33,16 @@ Before creating environments, you need a development container. This is a one-ti
 ### 1. Run Development Container
 
 ```bash
-# Create named volume for shared workspace
-docker volume create demiurge-workspace
-
-# Run Ubuntu container with Docker socket and named volume
+# Run Ubuntu container with Docker socket
 docker run -d \
   --name demiurge-dev \
   -p 80:80 \
   -p 443:443 \
   -p 53:53/udp \
   -p 53:53/tcp \
-  -p 7100-7199:7100-7199 \
-  -p 49100-49199:49100-49199/udp \
   --cap-add=NET_ADMIN \
   --device /dev/net/tun \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  -v demiurge-workspace:/root/workspace \
   -it ubuntu:24.04 \
   /bin/bash
 
@@ -60,11 +54,10 @@ docker exec -it demiurge-dev /bin/bash
 
 - `-p 80:80 -p 443:443` - HTTP/HTTPS for Nginx (Stage 1)
 - `-p 53:53/udp -p 53:53/tcp` - PowerDNS server
-- `-p 7100-7199:7100-7199` - Gateway pool HTTP ports
-- `-p 49100-49199:49100-49199/udp` - Gateway pool OpenVPN ports
-- `--cap-add=NET_ADMIN --device /dev/net/tun` - For OpenVPN in gateways
+- `--cap-add=NET_ADMIN --device /dev/net/tun` - For OpenVPN in gateway containers (required for gateway containers to create VPN interfaces)
 - `-v /var/run/docker.sock:/var/run/docker.sock` - Docker socket (manage gateway containers)
-- `-v demiurge-workspace:/root/workspace` - Named volume (shared with gateways)
+
+**Note:** Gateway containers handle their own port mappings (7100-7199 for HTTP, 49100-49199/udp for OpenVPN) via `gateway-pool.sh`. The main container accesses gateway services via the Docker host's localhost (e.g., `127.0.0.1:7100`), so it doesn't need to expose these ports.
 
 ### 2. Inside Container: Install Dependencies
 
@@ -75,16 +68,10 @@ apt update && apt upgrade -y
 # Install basic tools
 apt install -y git curl sudo
 
-# Clone repositories
+# Clone monorepo
 mkdir -p /root/workspace
 cd /root/workspace
-
-# Clone main monorepo
 git clone https://github.com/YourOrg/monorepo.git
-
-# Clone database repo
-cd /root/workspace
-git clone https://github.com/YourOrg/database.git
 ```
 
 ## Quick Start (TL;DR)
@@ -97,7 +84,8 @@ cd /root/workspace/monorepo
 ./scripts/local-dev/setup-all.sh
 
 # Create environment with gateway pool
-./scripts/local-dev/create-env.sh dev-001 domain.local
+# WORKSPACE_PATH is optional (defaults to /root/workspace/monorepo)
+./scripts/local-dev/create-env.sh dev-001 domain.local /root/workspace/monorepo
 ./scripts/local-dev/build-frontend.sh dev-001 /root/workspace/monorepo
 
 # Start environment
@@ -315,20 +303,26 @@ Creates a complete isolated environment with:
 **Usage:**
 
 ```bash
-# Create environment with default domain (domain.local)
+# Create environment with default domain (domain.local) and default workspace
 ./scripts/local-dev/create-env.sh dev-001
 
 # Create environment with custom domain
 ./scripts/local-dev/create-env.sh dev-001 mycompany.local
 
+# Create environment with custom workspace path (for multiple environments with different repos)
+./scripts/local-dev/create-env.sh dev-001 domain.local /root/workspace-feat/monorepo
+
 # Specify custom gateway pool size
-GATEWAY_POOL_SIZE=5 ./scripts/local-dev/create-env.sh dev-001 domain.local
+GATEWAY_POOL_SIZE=5 ./scripts/local-dev/create-env.sh dev-001 domain.local /root/workspace/monorepo
 ```
 
 **Arguments:**
 
 1. `env-name` (required) - Environment name
 2. `domain` (optional) - Domain name (default: `domain.local`)
+3. `workspace-path` (optional) - Path to monorepo root (default: `/root/workspace/monorepo`)
+
+**Note:** Gateway containers use bind mounts to access the repository. Each environment can use a different repository directory, allowing multiple environments to work with different branches or forks simultaneously.
 
 **What it does:**
 
@@ -417,9 +411,13 @@ Creates additional gateway containers in the pool:
 **Usage:**
 
 ```bash
-# Create 2 more gateways
+# Create 2 more gateways (workspace-path is required)
 ENV_NAME=dev-001 DOMAIN=domain.local \
-  ./scripts/local-dev/gateway-pool.sh 2
+  ./scripts/local-dev/gateway-pool.sh 2 /root/workspace/monorepo
+
+# Create gateways with custom workspace path
+ENV_NAME=dev-001 DOMAIN=domain.local \
+  ./scripts/local-dev/gateway-pool.sh 2 /root/workspace-feat/monorepo
 ```
 
 **Note:** Gateway allocation and deallocation is managed automatically by Ganymede. This script is only for creating additional pool capacity.

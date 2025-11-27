@@ -67,12 +67,11 @@
 │  │                                                                           │ │
 │  │  Volumes:                                                                │ │
 │  │  • /var/run/docker.sock (host Docker socket)                            │ │
-│  │  • demiurge-workspace (named volume, shared with gateways)              │ │
 │  └──────────────────────────────────────────────────────────────────────────┘ │
 │                                     │                                         │
-│                                     │ Named Volume                           │
-│                                     │ demiurge-workspace                     │
-│                                     │ (/home/dev/workspace)                  │
+│                                     │ Bind Mount                             │
+│                                     │ (parent of monorepo)                   │
+│                                     │ → /home/dev/workspace                  │
 │  ┌──────────────────────────────────┴──────────────────────────────────────┐ │
 │  │                Gateway Pool (Docker Containers)                          │ │
 │  │                Managed by Ganymede via Docker socket                     │ │
@@ -101,8 +100,8 @@
 │  │  │ • 172.16.x.x/16  │  │ • 172.16.x.x/16  │  │ • 172.16.x.x/16  │      │ │
 │  │  └────────┬─────────┘  └────────┬─────────┘  └────────┬─────────┘      │ │
 │  │           │ VPN                  │ VPN                  │ VPN            │ │
-│  │  Shared workspace via named volume:                                      │ │
-│  │  /home/dev/workspace → /root/workspace/monorepo                         │ │
+│  │  Shared workspace via bind mount:                                        │ │
+│  │  /home/dev/workspace/monorepo (from parent directory bind mount)         │ │
 │  │  Hot-reload: watches .gateway-reload-trigger file                        │ │
 │  │  State in PostgreSQL: gateways.ready, organizations_gateways             │ │
 │  └───────────┬──────────────────────┬──────────────────────┬───────────────┘ │
@@ -165,7 +164,7 @@ Access URLs (from host OS browser via DNS delegation):
 - **Multiple gateway containers** (`gw-pool-0`, `gw-pool-1`, ...)
   - Allocated to organizations on-demand
   - State managed in PostgreSQL (`ready` flag)
-  - Shared workspace via named volume (hot-reload)
+  - Shared workspace via bind mount (hot-reload, supports multiple repos)
 - **Each Gateway Contains:**
   - **app-gateway** (Express.js + Yjs)
     - Real-time collaboration engine (CRDT)

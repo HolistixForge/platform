@@ -27,6 +27,7 @@ import {
   TEventMapHttpService,
   TEventDelete,
   TEventSelectRunner,
+  TEventStart,
 } from './servers-events';
 import { TOAuthClient } from './container-image';
 import { TUserContainersExports } from '..';
@@ -71,6 +72,8 @@ export class UserContainersReducer extends Reducer<
         return this._Activity(event, requestData);
       case 'user-container:set-runner':
         return this._setRunner(event, requestData);
+      case 'user-container:start':
+        return this._start(event, requestData);
 
       case 'reducers:periodic':
         return this._periodic(event);
@@ -127,7 +130,6 @@ export class UserContainersReducer extends Reducer<
       oauthManager.addClient({
         client_id,
         client_secret,
-        container_id: containerId,
         project_id: projectId,
         service_name: oauthClient.serviceName,
         redirect_uris: oauthClient.redirectUris || [],
@@ -537,6 +539,58 @@ export class UserContainersReducer extends Reducer<
       ]);
     }
 
+    // Verify runner exists
+    const runner = this.depsExports['user-containers'].getRunner(runnerId);
+    if (!runner) {
+      throw new NotFoundException([
+        { message: `Runner ${runnerId} not found` },
+      ]);
+    }
+
+    // Update container with runner ID only (no token storage)
+    sduc.set(containerId, {
+      ...container,
+      runner: { id: runnerId },
+    });
+  }
+
+  //
+  async _start(event: TEventStart, requestData: RequestData) {
+    // Extract user_id from JWT (TJwtUser)
+    const jwt = requestData.jwt as TJwtUser;
+    const user_id = jwt?.user?.id;
+
+    if (!user_id) {
+      throw new ForbiddenException([
+        { message: 'User authentication required' },
+      ]);
+    }
+
+    const containerId = event.user_container_id;
+
+    const sduc =
+      this.depsExports.collab.collab.sharedData['user-containers:containers'];
+    const container = sduc.get(containerId);
+
+    if (!container) {
+      throw new NotFoundException([
+        { message: `Container ${containerId} not found` },
+      ]);
+    }
+
+    // Check that runner is set
+    if (
+      !container.runner ||
+      !container.runner.id ||
+      container.runner.id === 'none'
+    ) {
+      throw new ForbiddenException([
+        { message: 'Runner must be set before starting container' },
+      ]);
+    }
+
+    const runnerId = container.runner.id;
+
     // Generate hosting token (TJwtUserContainer) for the container
     // Get project_id from JWT or container context
     const project_id =
@@ -555,13 +609,18 @@ export class UserContainersReducer extends Reducer<
       scope: 'container:access',
     });
 
-    // Update runner with hosting token
-    // Token can be used for Docker command generation or container authentication
-    // Note: Token is stored but not yet exposed via API - may need to add endpoint later
-    sduc.set(containerId, {
-      ...container,
-      runner: { id: runnerId, hosting_token: hostingToken },
-    });
+    // Get runner from registry
+    const runner = this.depsExports['user-containers'].getRunner(runnerId);
+    if (!runner) {
+      throw new NotFoundException([
+        { message: `Runner ${runnerId} not found` },
+      ]);
+    }
+
+    // Call runner's start method with container and JWT token
+    // Token is NOT stored in shared data - it's only passed to runner
+    // The runner will use generateCommand internally if needed
+    await runner.start(container, hostingToken);
   }
 
   //

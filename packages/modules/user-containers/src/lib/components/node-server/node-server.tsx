@@ -38,7 +38,7 @@ export type UseContainerProps = {
   image: TContainerImageInfo | undefined;
   onDelete: () => Promise<void>;
   onOpenService: (name: string) => void;
-  onSelectRunner: (runner_id: string) => void;
+  onSelectRunner: (runner_id: string) => Promise<void>;
 };
 
 export const useContainerProps = (
@@ -72,12 +72,18 @@ export const useContainerProps = (
   //
 
   const onSelectRunner = useCallback(
-    (runner_id: string) => {
+    async (runner_id: string) => {
       if (uc) {
-        dispatcher.dispatch({
+        // First set the runner
+        await dispatcher.dispatch({
           type: 'user-container:set-runner',
           user_container_id: container_id,
           runner_id,
+        });
+        // Then start the container
+        await dispatcher.dispatch({
+          type: 'user-container:start',
+          user_container_id: container_id,
         });
       }
     },

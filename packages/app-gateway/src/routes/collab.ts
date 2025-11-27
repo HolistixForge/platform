@@ -151,7 +151,7 @@ export const setupCollabRoutes = (router: Router) => {
         config: `client
 dev tun
 proto udp
-remote GATEWAY_HOSTNAME ${VPN.port}
+remote GATEWAY_FQDN ${VPN.port}
 resolv-retry infinite
 nobind
 cipher AES-256-GCM

@@ -57,6 +57,13 @@ body {
     font-weight: 700;
     color: var(--text-primary);
     letter-spacing: -0.02em;
+    display: inline-flex;
+    align-items: center;
+}
+
+.logo svg {
+    color: var(--primary-color);
+    flex-shrink: 0;
 }
 
 .nav-links {
@@ -152,12 +159,68 @@ body {
     padding: 6rem 0;
     background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
     border-bottom: 1px solid var(--border-color);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.hero::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    left: -10%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.08) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
 }
 
 .hero-content {
     text-align: center;
     max-width: 900px;
     margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+.hero-icon {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    border-radius: 1.25rem;
+    margin: 0 auto 2rem;
+    color: white;
+    box-shadow: 0 10px 30px rgba(37, 99, 235, 0.3);
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.hero-icon svg {
+    width: 40px;
+    height: 40px;
 }
 
 .hero-title {
@@ -182,6 +245,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    min-height: 100px;
 }
 
 .carousel {
@@ -267,6 +331,24 @@ section {
     border: 1px solid var(--border-color);
 }
 
+.problem-icon {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #ef4444, #f87171);
+    border-radius: 0.625rem;
+    margin-bottom: 1.25rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.problem-icon svg {
+    width: 22px;
+    height: 22px;
+}
+
 .problem-item h3 {
     font-size: 1.25rem;
     font-weight: 600;
@@ -313,6 +395,24 @@ section {
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
+.benefit-icon {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    border-radius: 0.625rem;
+    margin-bottom: 1.25rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.benefit-icon svg {
+    width: 22px;
+    height: 22px;
+}
+
 .benefit-item h3 {
     font-size: 1.25rem;
     font-weight: 600;
@@ -351,6 +451,24 @@ section {
     border-color: var(--primary-color);
 }
 
+.feature-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    border-radius: 0.75rem;
+    margin-bottom: 1.5rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.feature-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
 .feature-card h3 {
     font-size: 1.25rem;
     font-weight: 600;
@@ -386,6 +504,24 @@ section {
 .use-case-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.use-case-icon {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    border-radius: 0.625rem;
+    margin-bottom: 1.25rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.use-case-icon svg {
+    width: 22px;
+    height: 22px;
 }
 
 .use-case-card h3 {

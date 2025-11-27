@@ -93,11 +93,13 @@ see [psql schema](../../packages/app-ganymede/database/schema/02-schema.sql)
 **Module System:**
 Extensible architecture where features are implemented as modules:
 
-- `core` - Graph/node system
+- `core-graph` - Graph/node system
 - `user-containers` - Container management
 - `jupyter` - JupyterLab integration
 - `chats` - Chat functionality
-- `tabs`, `space`, etc.
+- `tabs`, `space`, `gateway`, `collab`, `reducers`, and more
+
+See [Module Reference](../../packages/modules/README.md) for detailed documentation on each module.
 
 ### 3. app-frontend (React SPA)
 
@@ -280,7 +282,7 @@ container:{id}:delete        - Can delete specific container
 
 - **VPN:** Containers communicate via private VPN (172.16.0.0/16)
 - **OAuth:** Containers authenticate users via gateway OAuth provider
-- **HMAC tokens:** Gateway validates container identity
+- **JWT tokens:** Gateway validates container identity via JWT tokens
 
 ## Deployment Architecture
 

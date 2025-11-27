@@ -52,7 +52,7 @@ Hardcoded `/root/.local-dev/...` paths in many places.
 
 ```typescript
 function getDataDir(): string {
-  const envName = process.env.ENVIRONMENT_NAME || 'dev-001';
+  const envName = process.env.ENV_NAME || 'dev-001';
   return `/root/.local-dev/${envName}/org-data`; // Hardcoded!
 }
 ```

@@ -309,7 +309,7 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
 
 - **PermissionManager** - Manages string-based permissions per user, exact matching (`hasPermission(user_id, permission)`), uses GatewayState for persistence
 - **OAuthManager** - Manages OAuth clients, authorization codes, and tokens for container applications, implements OAuth2Server model interface
-- **TokenManager** - Generates and validates HMAC and JWT tokens (`generateHMACToken()`, `generateJWTToken()`, `validateToken()`), uses GatewayState for storage
+- **TokenManager** - Generates JWT tokens (`generateJWTToken()`), used for container authentication tokens
 - **ProjectRoomsManager** - Manages multiple YJS rooms (one per project), handles per-project persistence and WebSocket routing
 - **DNSManager** - Generic DNS record management (FQDN → IP mapping), container-agnostic abstraction over Ganymede API
 
@@ -419,7 +419,7 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
 
 - `PermissionManager` - Permissions with `IPersistenceProvider`
 - `OAuthManager` - OAuth data with `IPersistenceProvider`
-- `TokenManager` - Token management (HMAC and JWT tokens) with `IPersistenceProvider`
+- `TokenManager` - Token management (JWT tokens) for container authentication
 - `ProjectRoomsManager` - YJS rooms with `IPersistenceProvider`
 - `DNSManager` - Generic DNS record management (FQDN → IP mapping) - no container awareness
 

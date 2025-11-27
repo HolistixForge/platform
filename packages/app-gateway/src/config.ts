@@ -3,10 +3,8 @@ const undefinedValues: string[] = [];
 const envVars = [
   'GATEWAY_ID',
   'GATEWAY_TOKEN',
-  'GATEWAY_HMAC_SECRET',
   'SERVER_BIND',
   'GANYMEDE_FQDN',
-  'GATEWAY_SCRIPTS_DIR',
 ] as const;
 
 type EnvVars = (typeof envVars)[number];

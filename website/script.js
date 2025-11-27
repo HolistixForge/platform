@@ -17,7 +17,7 @@ function rotateCarousel() {
 if (carouselItems.length > 0) {
     // Initial delay before first rotation
     setTimeout(() => {
-        setInterval(rotateCarousel, 4000); // Rotate every 4 seconds
+        setInterval(rotateCarousel, 3000); // Rotate every 4 seconds
     }, 3000); // Wait 3 seconds before starting
 }
 

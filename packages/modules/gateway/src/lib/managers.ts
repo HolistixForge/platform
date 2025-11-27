@@ -10,17 +10,9 @@ import { TJson } from '@monorepo/simple-types';
 
 /**
  * Abstract TokenManager interface
- * Provides generic token generation for JWT and HMAC
+ * Provides generic token generation for JWT
  */
 export abstract class TokenManager {
-  /**
-   * Generate HMAC token for any payload
-   * @param payload - Payload string to hash
-   * @param secret - Optional secret (uses default if not provided)
-   * @returns HMAC token string
-   */
-  abstract generateHMACToken(payload: string, secret?: string): string;
-
   /**
    * Generate JWT token for any payload
    * @param payload - Payload object to encode

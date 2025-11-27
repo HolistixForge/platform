@@ -45,7 +45,6 @@ Total: 11 tables
    - Permissions (org, project, container levels)
    - OAuth clients (for container apps)
    - OAuth tokens (access + refresh)
-   - Container tokens (HMAC)
 
 **Features:**
 

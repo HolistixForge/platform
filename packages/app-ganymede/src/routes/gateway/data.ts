@@ -27,7 +27,7 @@ import { pg } from '../../database/pg';
  * Get data directory path for environment
  */
 function getDataDir(): string {
-  const envName = process.env.ENVIRONMENT_NAME || 'dev-001';
+  const envName = process.env.ENV_NAME || 'dev-001';
   return `/root/.local-dev/${envName}/org-data`;
 }
 

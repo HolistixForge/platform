@@ -62,6 +62,14 @@ start_service() {
     local pid_file="${env_dir}/pids/${service}.pid"
     local log_file="${env_dir}/logs/${service}.log"
     
+    # Gateways are Docker containers, not Node.js processes
+    if [ "$service" = "gateway" ]; then
+        echo -e "${YELLOW}⚠️  Gateways are Docker containers managed by gateway-pool${NC}"
+        echo -e "${GRAY}   Use 'docker ps' to see running gateway containers${NC}"
+        echo -e "${GRAY}   Use '$0 restart ${env_name} gateway' to restart all gateways${NC}"
+        return 0
+    fi
+    
     # Check if already running
     local existing_pid=$(get_service_pid "$env_name" "$service")
     if is_process_running "$existing_pid"; then
@@ -124,6 +132,14 @@ stop_service() {
     local env_dir="${LOCAL_DEV_DIR}/${env_name}"
     local pid_file="${env_dir}/pids/${service}.pid"
     
+    # Gateways are Docker containers, not Node.js processes
+    if [ "$service" = "gateway" ]; then
+        echo -e "${YELLOW}⚠️  Gateways are Docker containers managed by gateway-pool${NC}"
+        echo -e "${GRAY}   Use 'docker stop <container-name>' to stop specific containers${NC}"
+        echo -e "${GRAY}   Use '$0 restart ${env_name} gateway' to restart all gateways${NC}"
+        return 0
+    fi
+    
     local pid=$(get_service_pid "$env_name" "$service")
     
     if [ -z "$pid" ]; then
@@ -159,17 +175,31 @@ stop_service() {
 # Function to restart gateway containers (triggers hot-reload)
 restart_gateway_containers() {
     local env_name=$1
-    local workspace_path="${WORKSPACE_PATH:-/root/workspace/monorepo}"
-    local trigger_file="${workspace_path}/.gateway-reload-trigger"
+    local env_dir="${LOCAL_DEV_DIR}/${env_name}"
+    
+    # Load environment variables to get WORKSPACE path
+    local env_file="${env_dir}/.env.ganymede"
+    if [ ! -f "$env_file" ]; then
+        echo -e "${RED}❌ Config file not found: ${env_file}${NC}"
+        return 1
+    fi
+    
+    set -a
+    source "$env_file"
+    set +a
+    
+    # Trigger file is at ${WORKSPACE}/monorepo/.gateway-reload-trigger
+    # (matches entrypoint-dev.sh default: ${REPO_ROOT}/.gateway-reload-trigger)
+    local trigger_file="${WORKSPACE}/monorepo/.gateway-reload-trigger"
     
     echo -e "${BLUE}♻️  Triggering hot-reload for all gateway containers...${NC}"
+    echo -e "${GRAY}   Trigger file: ${trigger_file}${NC}"
    
     # Touch reload trigger file (watched by all gateways via shared volume)
     touch "$trigger_file"
     
     echo -e "${GREEN}✅ Reload triggered for all gateways${NC}"
-    echo -e "${GRAY}   Containers will rebuild and restart app-gateway${NC}"
-    echo -e "${GRAY}   Watch logs: docker logs gw-pool-0 -f${NC}"
+    echo -e "${GRAY}   All gateway containers will reset and restart app-gateway${NC}"
 }
 
 # Function to restart a service

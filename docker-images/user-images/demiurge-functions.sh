@@ -42,7 +42,7 @@ start_vpn() {
             value=$(printf "%s" "$certificates" | jq -r ".[\"${filename}\"]")
             echo "$value" >"$filename"
         done
-        printf "%s" "${CONFIG}" | jq -r '.config' | sed "s/GATEWAY_HOSTNAME/${GATEWAY_FQDN}/g" >client.ovpn
+        printf "%s" "${CONFIG}" | jq -r '.config' | sed "s/GATEWAY_FQDN/${GATEWAY_FQDN}/g" >client.ovpn
         openvpn --config client.ovpn &
     else
         echo "Gateway Down ?"

@@ -4,6 +4,8 @@
 
 Modules can be tested in isolation using Storybook, running both backend and frontend code entirely in the browser without needing the full stack (Ganymede, Gateway, containers, VPN, etc.).
 
+> **📚 Module Documentation:** Each module has its own README documenting its features, API, dependencies, and exports. See the [Module Reference](../../packages/modules/README.md) for individual module documentation.
+
 ## How Module Stories Work
 
 ### Architecture
