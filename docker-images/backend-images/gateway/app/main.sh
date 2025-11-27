@@ -30,13 +30,6 @@ execute_script() {
     fi
 }
 
-# Function to execute all scripts in the "install" directory
-execute_all_scripts() {
-    while IFS= read -r -d '' script; do
-        execute_script "$script"
-    done < <(find ./install -type f -name '*.sh' -print0 | sort -z)
-}
-
 # Trap to unset -x when the script exits
 trap 'unset_x' EXIT
 
@@ -53,10 +46,6 @@ while [[ $# -gt 0 ]]; do
     key="$1"
 
     case $key in
-    -a | --all)
-        execute_all_scripts
-        shift # past argument
-        ;;
     -r | --run)
         script="$2"
         execute_script "$script"

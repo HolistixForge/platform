@@ -17,7 +17,7 @@ echo "  - Nginx web server"
 echo "  - mkcert (SSL certificates)"
 echo "  - PowerDNS (DNS server)"
 echo "  - Observability stack (OTLP Collector, Loki, Tempo, Grafana)"
-echo "  - Docker images (dev-pod, gateway)"
+echo "  - Docker images (gateway)"
 echo "  - Other dependencies"
 echo ""
 read -p "Continue? (yes/no): " confirm

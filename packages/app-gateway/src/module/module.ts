@@ -21,6 +21,7 @@ import { DNSManagerImpl } from '../dns/DNSManager';
  * Passed to gateway module load() function
  */
 import { PermissionRegistry } from '@monorepo/gateway';
+import { CONFIG } from '../config';
 
 export type GatewayModuleConfig = {
   organization_id: string;
@@ -29,7 +30,6 @@ export type GatewayModuleConfig = {
   gatewayFQDN: string;
   ganymedeFQDN: string;
   gatewayToken: string;
-  gatewayScriptsDir: string;
   permissionManager: PermissionManager;
   oauthManager: OAuthManager;
   tokenManager: TokenManager;
@@ -75,7 +75,11 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
         ...request.pathParameters,
       };
       const response = await myfetch(request);
-      log(EPriority.Info, 'GATEWAY', `${request.url} response: ${response.statusCode}`);
+      log(
+        EPriority.Info,
+        'GATEWAY',
+        `${request.url} response: ${response.statusCode}`
+      );
       if (response.statusCode !== 200) {
         const error = new Error(
           `Request to ${request.url} failed with status ${response.statusCode}`
@@ -84,49 +88,6 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
       }
 
       return response.json as T;
-    };
-
-    type EScripts = 'update-nginx-locations' | 'reset-gateway';
-
-    const runScript = (name: EScripts, inputString?: string) => {
-      const DIR = gatewayConfig.gatewayScriptsDir;
-      const cmd = `${DIR}/main.sh`;
-      const args = ['-r', `bin/${name}.sh`];
-
-      const fcmd = `${cmd} ${args.join(' ')}`;
-
-      let output;
-
-      try {
-        const result = spawnSync(
-          cmd,
-          args,
-          inputString ? { input: inputString } : undefined
-        );
-        if (result.error) {
-          throw new Error(`Error executing [${fcmd}]: ${result.error.message}`);
-        }
-        output = result.stdout.toString();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (err: any) {
-        throw new Error(`Error executing [${fcmd}]: ${err.message}`);
-      }
-      let json;
-      try {
-        json = JSON.parse(output);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (err) {
-        throw new Error(
-          `Error executing [${fcmd}]: not a JSON output [[[${output}]]]`
-        );
-      }
-      if (json.status === 'error') {
-        throw new Error(`Error executing script [${name}]: ${json.error}`);
-      } else if (json.status === 'ok') return json as TJson;
-      else
-        throw new Error(
-          `Error executing [${fcmd}]: invalid output status format [${json.status}]`
-        );
     };
 
     // Register gateway module permissions
@@ -151,6 +112,7 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
         const config = services
           .map((s) => `${s.host} ${s.ip} ${s.port}\n`)
           .join('');
+        log(EPriority.Info, 'GATEWAY', 'update-nginx-locations', config);
         throw new Error('fix update-nginx-locations script');
         runScript('update-nginx-locations', config);
       },
@@ -178,4 +140,49 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
       }
     }
   },
+};
+
+//
+
+type EScripts = 'update-nginx-locations' | 'reset-gateway';
+
+export const runScript = (name: EScripts, inputString?: string) => {
+  const DIR = CONFIG.GATEWAY_SCRIPTS_DIR;
+  const cmd = `${DIR}/main.sh`;
+  const args = ['-r', `bin/${name}.sh`];
+
+  const fcmd = `${cmd} ${args.join(' ')}`;
+
+  let output;
+
+  try {
+    const result = spawnSync(
+      cmd,
+      args,
+      inputString ? { input: inputString } : undefined
+    );
+    if (result.error) {
+      throw new Error(`Error executing [${fcmd}]: ${result.error.message}`);
+    }
+    output = result.stdout.toString();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    throw new Error(`Error executing [${fcmd}]: ${err.message}`);
+  }
+  let json;
+  try {
+    json = JSON.parse(output);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (err) {
+    throw new Error(
+      `Error executing [${fcmd}]: not a JSON output [[[${output}]]]`
+    );
+  }
+  if (json.status === 'error') {
+    throw new Error(`Error executing script [${name}]: ${json.error}`);
+  } else if (json.status === 'ok') return json as TJson;
+  else
+    throw new Error(
+      `Error executing [${fcmd}]: invalid output status format [${json.status}]`
+    );
 };

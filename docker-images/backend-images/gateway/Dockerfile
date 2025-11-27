@@ -1,12 +1,21 @@
-FROM dev-pod:latest
+FROM ubuntu:24.04
 
 USER root 
 
-RUN apt update && apt install -y \
+# Install Node.js 24.x
+RUN apt-get update && apt-get install -y ca-certificates curl gnupg && \
+  curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
+  echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_24.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list && \
+  apt-get update && apt-get install -y nodejs
+
+# Install gateway dependencies
+RUN apt-get update && apt-get install -y \
   openvpn \
   easy-rsa \
   nginx \
-  inotify-tools
+  inotify-tools \
+  sudo \
+  inetutils-ping
 
 # Copy and set entrypoint
 COPY --chmod=755 ./app/entrypoint-dev.sh /entrypoint.sh

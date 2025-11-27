@@ -44,7 +44,6 @@ export function createBackendModulesConfig(
     gatewayFQDN,
     ganymedeFQDN: CONFIG.GANYMEDE_FQDN,
     gatewayToken: CONFIG.GATEWAY_TOKEN,
-    gatewayScriptsDir: CONFIG.GATEWAY_SCRIPTS_DIR,
     permissionManager,
     oauthManager,
     tokenManager,
@@ -65,4 +64,3 @@ export function createBackendModulesConfig(
     { module: userContainersBackend, config: {} },
   ];
 }
-

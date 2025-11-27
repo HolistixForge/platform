@@ -1,7 +1,7 @@
 ⚠️ Antoine's stuffs
 
 user-containers default runner, jupyter
-logs
+mv docker image to theur module
 modules docs and links
 credentials
 docs with FL features upcoming: collab, graph, layers, DNS, containers, logs, IA, automation and reporting language, formal process management, new example modules

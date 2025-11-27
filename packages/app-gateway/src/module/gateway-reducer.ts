@@ -8,6 +8,8 @@ import type {
   TEventLoad,
   TEventDisableShutdown,
 } from '@monorepo/gateway';
+import { shutdownGateway } from '../initialization/gateway-init';
+import { runScript } from './module';
 
 type TGatewayMeta = {
   projectActivity: {
@@ -95,7 +97,11 @@ export class GatewayReducer extends Reducer<TGatewayEvents | TEventPeriodic> {
     const prevLast = new Date(curMeta?.projectActivity.last_activity || '');
 
     if (prevLast.getTime() < now.getTime()) {
-      log(EPriority.Info, 'META', `last project activity: ${now.toISOString()}`);
+      log(
+        EPriority.Info,
+        'META',
+        `last project activity: ${now.toISOString()}`
+      );
 
       const newMeta: TGatewayMeta = {
         ...curMeta,
@@ -132,14 +138,15 @@ export class GatewayReducer extends Reducer<TGatewayEvents | TEventPeriodic> {
         if (isPassed(gateway_shutdown)) {
           if (shouldIBeDead === false) {
             log(EPriority.Info, 'GATEWAY', 'shutdown');
-            // Import shutdownGateway dynamically to avoid circular dependency
-            const { shutdownGateway } = await import(
-              '../initialization/gateway-init'
-            );
             await shutdownGateway();
+            await runScript('reset-gateway');
             shouldIBeDead = true;
           } else {
-            log(EPriority.Info, 'GATEWAY', 'shutdown failed process still alive');
+            log(
+              EPriority.Info,
+              'GATEWAY',
+              'shutdown failed process still alive'
+            );
           }
         }
       }

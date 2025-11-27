@@ -276,8 +276,7 @@ Installs and configures PowerDNS for dynamic DNS management:
 
 Builds Docker images for gateway containers:
 
-- `dev-pod:latest` - Base image with dev tools
-- `demiurge-gateway:latest` - Gateway image with hot-reload
+- `gateway:latest` - Gateway image with hot-reload
 
 ```bash
 ./scripts/local-dev/build-images.sh

@@ -18,24 +18,9 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-# Build dev-pod (base image)
+# Build gateway
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "📦 Building dev-pod (base image)..."
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-cd "${DOCKER_IMAGES_DIR}/dev-pod"
-docker build -t dev-pod:latest .
-
-if [ $? -ne 0 ]; then
-    echo "❌ Failed to build dev-pod image"
-    exit 1
-fi
-
-echo "✅ dev-pod:latest built successfully"
-echo ""
-
-# Build gateway (depends on dev-pod)
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "📦 Building gateway (depends on dev-pod)..."
+echo "📦 Building gateway..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 cd "${DOCKER_IMAGES_DIR}/gateway"
 docker build -t gateway:latest .
@@ -53,7 +38,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "✅ All Docker images built successfully!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-docker images | grep -E "REPOSITORY|dev-pod|gateway"
+docker images | grep -E "REPOSITORY|gateway"
 echo ""
 echo "🎉 Ready for gateway pool deployment!"
 
