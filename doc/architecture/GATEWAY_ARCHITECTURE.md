@@ -8,6 +8,11 @@
 
 Demiurge uses a **pool-based multi-gateway architecture** where gateway containers are dynamically allocated to organizations on-demand.
 
+> **Related Documentation:**
+>
+> - [Gateway Container](../../docker-images/backend-images/gateway/README.md) - Shell scripts that manage OpenVPN, Nginx, and container lifecycle
+> - [App-Gateway README](../../packages/app-gateway/README.md) - Node.js application that orchestrates gateway scripts
+
 **Key Principles:**
 
 - **Production Parity** - Dev environment mirrors production (same containers, same scripts, only SSL differs)
@@ -188,6 +193,7 @@ Permissions are Managed by PermissionManager, that maintains a set of string def
 The **PermissionRegistry** allows modules to register their permissions during module loading. Permissions are compiled and can be retrieved via gateway API endpoints.
 
 **Permission Format:**
+
 - Format: `{module}:[{resource-path}]:{action}`
 - Resource path supports hierarchical resources: `{type}:{id|*}(/{type}:{id|*})*`
 - Examples:
@@ -196,6 +202,7 @@ The **PermissionRegistry** allows modules to register their permissions during m
   - `gateway:[permissions:*]:read`
 
 **How It Works:**
+
 1. During gateway initialization, a `PermissionRegistry` instance is created
 2. When modules are loaded, they can access the registry via `depsExports.gateway.permissionRegistry`
 3. Modules register their permissions in their `load()` function
@@ -203,6 +210,7 @@ The **PermissionRegistry** allows modules to register their permissions during m
 5. Gateway API endpoints (`GET /permissions`, etc.) retrieve compiled permissions from the registry
 
 **Example Module Registration:**
+
 ```typescript
 // In user-containers module load() function
 const permissionRegistry = depsExports.gateway.permissionRegistry;
@@ -477,6 +485,8 @@ export ENV_NAME="prod" DOMAIN="demiurge.co" GATEWAY_POOL_SIZE=10
 
 **Entrypoint:** `docker-images/backend-images/gateway/app/entrypoint-dev.sh`
 
+> **See:** [Gateway Container Scripts](../../docker-images/backend-images/gateway/README.md#flow-4-hot-reload) for detailed hot-reload flow and implementation.
+
 ---
 
 ## Database Schema (Gateways)
@@ -643,3 +653,10 @@ See [TODO.md](../../TODO.md) for detailed improvement tasks.
 
 - `docker-images/backend-images/gateway/Dockerfile`
 - `docker-images/backend-images/gateway/app/entrypoint-dev.sh`
+
+---
+
+## Related Documentation
+
+- **[Gateway Container Scripts](../../docker-images/backend-images/gateway/README.md)** - Detailed documentation of shell scripts that manage OpenVPN, Nginx, and container lifecycle
+- **[App-Gateway README](../../packages/app-gateway/README.md)** - Node.js application that orchestrates gateway scripts and handles collaboration

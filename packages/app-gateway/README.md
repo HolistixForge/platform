@@ -53,13 +53,6 @@ See [doc/guides/LOCAL_DEVELOPMENT.md](../../doc/guides/LOCAL_DEVELOPMENT.md) for
 npx nx run app-gateway:build
 ```
 
-**Run locally:**
-
-```bash
-# Gateway runs as part of local dev environment
-/root/.local-dev/dev-001/start.sh
-```
-
 ## Deployment
 
 Gateway containers are deployed on-demand when organizations start projects.
@@ -68,9 +61,9 @@ See [doc/guides/PRODUCTION_DEPLOYMENT.md](../../doc/guides/PRODUCTION_DEPLOYMENT
 
 ## Related Documentation
 
-- [Architecture Overview](../../doc/architecture/OVERVIEW.md)
-- [Gateway Implementation Details](../../doc/current-works/GATEWAY_WORK.md)
-- [Gateway Architecture](../../doc/architecture/GATEWAY_ARCHITECTURE.md)
-- [System Architecture](../../doc/architecture/SYSTEM_ARCHITECTURE.md)
-- [Module System & Layer Architecture](../modules/space/src/lib/layer.md)
-- [Local Development](../../doc/guides/LOCAL_DEVELOPMENT.md)
+- **[Gateway Architecture](../../doc/architecture/GATEWAY_ARCHITECTURE.md)** - Complete system architecture, lifecycle, and design decisions
+- **[Gateway Container](../../docker-images/backend-images/gateway/README.md)** - Shell scripts that manage OpenVPN, Nginx, and container lifecycle
+- [Architecture Overview](../../doc/architecture/OVERVIEW.md) - High-level system architecture
+- [System Architecture](../../doc/architecture/SYSTEM_ARCHITECTURE.md) - Complete system diagram
+- [Module System & Layer Architecture](../modules/space/src/lib/layer.md) - Module architecture details
+- [Local Development](../../doc/guides/LOCAL_DEVELOPMENT.md) - Setup and development workflow

@@ -1,6 +1,11 @@
 # Gateway Container Scripts
 
-This directory contains shell scripts that manage the gateway container infrastructure (OpenVPN, Nginx) and interact with the `app-gateway` Node.js process.
+app directory contains shell scripts that manage the gateway container infrastructure (OpenVPN, Nginx) and interact with the `app-gateway` Node.js process.
+
+> **Related Documentation:**
+>
+> - [Gateway Architecture](../../../doc/architecture/GATEWAY_ARCHITECTURE.md) - Complete system architecture and design decisions
+> - [App-Gateway README](../../../packages/app-gateway/README.md) - Node.js application that orchestrates these scripts
 
 ## Overview
 
@@ -548,7 +553,6 @@ This prevents `start-app-gateway.sh` from restarting when the process was intent
 
 ## Related Documentation
 
-- [Gateway Architecture](../../../doc/architecture/GATEWAY_ARCHITECTURE.md)
-- [Gateway Docker Requirements](../../../doc/requirements/GATEWAY_DOCKER_REQUIREMENTS.md)
-- [Local Development Guide](../../../doc/guides/LOCAL_DEVELOPMENT.md)
-- [App-Gateway README](../../../packages/app-gateway/README.md)
+- **[Gateway Architecture](../../../doc/architecture/GATEWAY_ARCHITECTURE.md)** - Complete system architecture, lifecycle, and design decisions
+- **[App-Gateway README](../../../packages/app-gateway/README.md)** - Node.js application that orchestrates these scripts
+- [Local Development Guide](../../../doc/guides/LOCAL_DEVELOPMENT.md) - Setup and development workflow
