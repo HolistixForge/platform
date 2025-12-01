@@ -111,9 +111,19 @@ EOF
 echo "✅ PowerDNS configuration written to /etc/powerdns/pdns.conf"
 echo ""
 
-# Start PowerDNS service (using 'service' for better compatibility)
-echo "🚀 Starting PowerDNS service..."
-sudo service pdns restart
+# Start PowerDNS
+echo "🚀 Starting PowerDNS..."
+
+# On typical Ubuntu hosts we can use the 'service' wrapper, but in minimal
+# containers (like our local-dev DNS container) there is no init system.
+# In that case, start the pdns_server process directly.
+if command -v service >/dev/null 2>&1; then
+    sudo service pdns restart
+else
+    echo "   'service' command not found, starting pdns_server directly..."
+    # Run PowerDNS in the background with our config
+    sudo pdns_server --daemon=yes --guardian=yes --config-dir=/etc/powerdns
+fi
 
 # Wait for PowerDNS to be ready
 echo "⏳ Waiting for PowerDNS to start..."

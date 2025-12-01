@@ -1,7 +1,6 @@
 ## Logging & Observability Architecture
 
-This document describes the **current, implemented** logging and observability design (backend + frontend).  
-It replaces the temporary design notes that lived in `doc/current-works/*`.
+This document describes the **current, implemented** logging and observability design (backend + frontend).
 
 ---
 
