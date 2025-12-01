@@ -361,6 +361,5 @@ See [guides/PRODUCTION_DEPLOYMENT.md](../guides/PRODUCTION_DEPLOYMENT.md) for de
 
 - **[System Architecture](SYSTEM_ARCHITECTURE.md)** - Complete system diagram
 - **[Gateway Architecture](GATEWAY_ARCHITECTURE.md)** - Multi-gateway pool architecture
-- **[Gateway Implementation](../current-works/GATEWAY_WORK.md)** - Implementation details
 - **[Local Development](../guides/LOCAL_DEVELOPMENT.md)** - Dev environment setup
 - **[Contributing](../../CONTRIBUTING.md)** - Development workflow

@@ -16,7 +16,6 @@ Welcome to the Demiurge documentation! This hub will guide you to the right reso
 - 📐 **[System Architecture](architecture/SYSTEM_ARCHITECTURE.md)** - Complete architecture diagram
 - 📊 **[Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md)** - Multi-gateway pool architecture
 - 📡 **[Logging & Observability](architecture/LOGGING_AND_OBSERVABILITY.md)** - Logs, traces, error categories, and OTel stack
-- 🔧 **[Gateway Implementation](current-works/GATEWAY_WORK.md)** - 7-phase implementation (78 tasks)
 - 🎨 **[Layer System Architecture](../packages/modules/space/src/lib/layer.md)** - Modular whiteboard layers (Excalidraw integration)
 
 ### Learn How To
@@ -35,7 +34,7 @@ Welcome to the Demiurge documentation! This hub will guide you to the right reso
 
 ### Internal/WIP
 
-- 📝 **[TODO](internal/TODO.md)** - Antoine's task list
+- 📝 **[TODO](internal/TODO.md)** - task list
 - 🤖 **[AI Summary](internal/AI-summary.md)** - Context for AI tools
 
 ### Historical
@@ -66,10 +65,8 @@ doc/
 │   └── GPU_HOST_SETUP.md     - GPU configuration
 │
 ├── current-works/            # Active Work & Tracking
-│   ├── GATEWAY_WORK.md       - Gateway implementation details
 │   ├── TODO.md               - Task tracking
-│   ├── TODO_ANTOINE.md       - Antoine's task list
-│   └── DOCUMENTATION_AUDIT_REPORT.md  - Doc audit status
+│   └── TODO_ANTOINE.md       - Antoine's task list
 │
 ├── internal/                 # Internal Notes
 │   └── AI-summary.md         - AI context notes
@@ -121,9 +118,8 @@ doc/
 - **Collaboration:** [Architecture](architecture/OVERVIEW.md#collaboration), [Modules Testing](guides/MODULES_TESTING.md)
 - **Containers:** [System Architecture](architecture/SYSTEM_ARCHITECTURE.md#layer-4-user-containers), [Archive](archive/2024-container-refactor/)
 - **Database:** [Architecture](architecture/OVERVIEW.md#database), [Schema](architecture/SYSTEM_ARCHITECTURE.md#database-schema-gateways)
-- **Gateway:** [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md), [System View](architecture/SYSTEM_ARCHITECTURE.md#layer-3-gateway-pool-containers), [Implementation](current-works/GATEWAY_WORK.md)
+- **Gateway:** [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md), [System View](architecture/SYSTEM_ARCHITECTURE.md#layer-3-gateway-pool-containers)
 - **Modules:** [Modules Testing](guides/MODULES_TESTING.md), [Architecture](architecture/OVERVIEW.md#modules), [Layer System](../packages/modules/space/src/lib/layer.md), [Module Reference](../packages/modules/README.md)
-- **Permissions:** [Gateway Work](current-works/GATEWAY_WORK.md)
 
 ### Search Tips
 

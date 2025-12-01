@@ -1,7 +1,5 @@
 # Gateway Architecture
 
-> **Remaining Work:** See [TODO.md](../../TODO.md)
-
 ---
 
 ## Overview
@@ -599,8 +597,6 @@ ENV_NAME=dev-001 DOMAIN=domain.local \
 ---
 
 ## Known Limitations
-
-See [TODO.md](../../TODO.md) for detailed improvement tasks.
 
 **Main Gaps:**
 

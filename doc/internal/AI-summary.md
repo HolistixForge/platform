@@ -259,7 +259,7 @@ See [`doc/architecture/SYSTEM_ARCHITECTURE.md#database-schema-gateways`](../arch
 - [Overview](../architecture/OVERVIEW.md) - System design
 - [System Architecture](../architecture/SYSTEM_ARCHITECTURE.md) - Complete system diagram
 - [Gateway Architecture](../architecture/GATEWAY_ARCHITECTURE.md) - Multi-gateway architecture
-- [Gateway Work](../current-works/GATEWAY_WORK.md) - Implementation details
+- [TODO](../current-works/TODO.md) - tasks
 - [Layer System](../../packages/modules/space/src/lib/layer.md) - Whiteboard layers ⭐
 
 **Guides:**

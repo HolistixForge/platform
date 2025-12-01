@@ -146,6 +146,7 @@ error('CATEGORY', 'message', { ... }); // convenience wrapper
 ```
 
 - **What `log()` does in Node:**
+
   - Uses the OpenTelemetry **logs SDK** with an OTLP exporter.
   - Extracts the **active span** (`trace.getActiveSpan()`):
     - Attaches `trace_id` and `span_id` to log attributes (if a span exists).
@@ -190,6 +191,7 @@ This gives Grafana/Loki clear dimensions to filter and aggregate by category.
 **Key idea:** enrich spans progressively as middleware learns more context (sequential enrichment).
 
 - In `setupBasicExpressApp` (shared backend engine):
+
   - We set **generic HTTP attributes** early:
     - `http.method`
     - `http.route`
@@ -197,6 +199,7 @@ This gives Grafana/Loki clear dimensions to filter and aggregate by category.
   - Optionally, we can infer `project.id` from URL/body when obvious.
 
 - In authentication middleware:
+
   - `app-gateway` (`jwt-auth.ts`):
     - Sets span attributes:
       - `user.id`
@@ -314,40 +317,3 @@ If we later decide certain frontend failures are critical (e.g. global error bou
 
 - Switch those specific calls to `asSpanEvent: true`.
 - Or implement a small OTLP logs exporter on top of `browserLog` without touching call sites.
-
----
-
-## What We Did *Not* Implement (Yet)
-
-- No dedicated **logs/trace query API** for AI agents:
-  - The endpoints sketched in `LOGGING_STRATEGY.md` (e.g. `/api/logs`, `/api/traces/:traceId`) are **not yet implemented**.
-  - When we build them, they should sit on top of Loki/Tempo and return JSON in the log/trace schema outlined there.
-- No **browser OTLP logs exporter**:
-  - We deliberately avoided shipping `@opentelemetry/sdk-logs` + log exporters in the browser bundle due to Node‑specific dependencies and complexity.
-  - `browserLog` is the future integration point for that, if needed.
-
----
-
-## Relationship to the Temporary Docs
-
-The following design / thinking documents were used to drive this implementation and are now considered **superseded by this file and the code**:
-
-- `doc/current-works/LOGGING_STRATEGY.md`
-  - Most relevant parts preserved here:
-    - goals
-    - stack choice (OTel + Loki + Tempo + Grafana)
-    - log/trace schema concepts
-    - phased implementation idea (we are mid‑Phase 1 / early Phase 2).
-- `doc/current-works/LOGGING_AUDIT.md`
-  - Translated into:
-    - concrete changes in `backend-engine`, `app-gateway`, `app-ganymede`.
-    - the logger’s trace‑aware design.
-    - WebSocket and DB logging improvements.
-- `doc/current-works/MIDDLEWARE_ANALYSIS.md`
-  - Distilled into the **span enrichment** section above (where context lives and how it is set).
-- `doc/current-works/OBSERVABILITY_PACKAGE_DESIGN.md`
-  - Materialized as the actual `@monorepo/observability` package and the usage patterns described here.
-
-Those files can be safely removed; this document is the canonical overview of logging & observability behavior going forward.
-
-
