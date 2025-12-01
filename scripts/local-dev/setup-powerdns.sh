@@ -37,34 +37,46 @@ EOF
 echo "   ✅ Database 'pdns' created (or already exists)"
 echo ""
 
-# Apply official PowerDNS schema
-echo "📜 Applying official PowerDNS PostgreSQL schema..."
+# Apply official PowerDNS schema (idempotent)
+echo "📜 Applying official PowerDNS PostgreSQL schema (if needed)..."
 
-# The schema file comes with pdns-backend-pgsql package
-SCHEMA_FILE="/usr/share/doc/pdns-backend-pgsql/schema.pgsql.sql"
+# First, check if the schema appears to be applied already (check for 'domains' table)
+SCHEMA_APPLIED=$(
+  PGPASSWORD=${PG_PASSWORD} psql -U ${PG_USER} -h ${PG_HOST} -p ${PG_PORT} -d pdns -tAc \
+    "SELECT 1 FROM information_schema.tables WHERE table_name = 'domains' LIMIT 1;" 2>/dev/null || echo ""
+)
 
-if [ ! -f "$SCHEMA_FILE" ]; then
-    # Try alternate location (some distros compress it)
-    if [ -f "${SCHEMA_FILE}.gz" ]; then
-        echo "   Found compressed schema, decompressing..."
-        sudo gunzip -k "${SCHEMA_FILE}.gz" 2>/dev/null || true
+if [ "$SCHEMA_APPLIED" = "1" ]; then
+    echo "   ✅ PowerDNS schema already applied (found 'domains' table), skipping."
+else
+    echo "   Schema not detected, applying official PowerDNS schema..."
+
+    # The schema file comes with pdns-backend-pgsql package
+    SCHEMA_FILE="/usr/share/doc/pdns-backend-pgsql/schema.pgsql.sql"
+
+    if [ ! -f "$SCHEMA_FILE" ]; then
+        # Try alternate location (some distros compress it)
+        if [ -f "${SCHEMA_FILE}.gz" ]; then
+            echo "   Found compressed schema, decompressing..."
+            sudo gunzip -k "${SCHEMA_FILE}.gz" 2>/dev/null || true
+        fi
     fi
-fi
 
-if [ -f "$SCHEMA_FILE" ]; then
-    echo "   Using official schema: $SCHEMA_FILE"
-    PGPASSWORD=${PG_PASSWORD} psql -U ${PG_USER} -h ${PG_HOST} -p ${PG_PORT} -d pdns < "$SCHEMA_FILE"
-    
-    if [ $? -ne 0 ]; then
-        echo "❌ Failed to apply PowerDNS schema"
+    if [ -f "$SCHEMA_FILE" ]; then
+        echo "   Using official schema: $SCHEMA_FILE"
+        PGPASSWORD=${PG_PASSWORD} psql -U ${PG_USER} -h ${PG_HOST} -p ${PG_PORT} -d pdns < "$SCHEMA_FILE"
+        
+        if [ $? -ne 0 ]; then
+            echo "❌ Failed to apply PowerDNS schema"
+            exit 1
+        fi
+        
+        echo "   ✅ Official PowerDNS schema applied successfully"
+    else
+        echo "❌ PowerDNS schema file not found at: $SCHEMA_FILE"
+        echo "   This usually means pdns-backend-pgsql was not installed correctly."
         exit 1
     fi
-    
-    echo "   ✅ Official PowerDNS schema applied successfully"
-else
-    echo "❌ PowerDNS schema file not found at: $SCHEMA_FILE"
-    echo "   This usually means pdns-backend-pgsql was not installed correctly."
-    exit 1
 fi
 
 echo ""
@@ -111,17 +123,13 @@ EOF
 echo "✅ PowerDNS configuration written to /etc/powerdns/pdns.conf"
 echo ""
 
-# Start PowerDNS
+# Start or restart PowerDNS safely
 echo "🚀 Starting PowerDNS..."
 
-# On typical Ubuntu hosts we can use the 'service' wrapper, but in minimal
-# containers (like our local-dev DNS container) there is no init system.
-# In that case, start the pdns_server process directly.
-if command -v service >/dev/null 2>&1; then
-    sudo service pdns restart
+# Start daemon only if not already running
+if pgrep -x pdns_server >/dev/null 2>&1; then
+    echo "   PowerDNS already running (pdns_server process found), not starting a second instance."
 else
-    echo "   'service' command not found, starting pdns_server directly..."
-    # Run PowerDNS in the background with our config
     sudo pdns_server --daemon=yes --guardian=yes --config-dir=/etc/powerdns
 fi
 

@@ -29,7 +29,40 @@ OTLP_COLLECTOR_HTTP_PORT=4318      # OTLP HTTP receiver (apps send here)
 OTLP_COLLECTOR_GRPC_PORT=4317      # OTLP gRPC receiver (apps send here)
 LOKI_HTTP_PORT=3100                # Loki API
 TEMPO_HTTP_PORT=3200               # Tempo API (for queries)
-GRAFANA_PORT=3000                 # Grafana UI
+GRAFANA_PORT=3000                  # Grafana UI
+
+# If all observability containers already exist, assume setup is done and exit
+ALL_CONTAINERS_EXIST=true
+for c in observability-otlp-collector observability-loki observability-tempo observability-grafana; do
+  if ! docker container inspect "$c" >/dev/null 2>&1; then
+    ALL_CONTAINERS_EXIST=false
+    break
+  fi
+done
+
+if [ "$ALL_CONTAINERS_EXIST" = true ]; then
+  echo "✅ Observability infrastructure already set up (containers exist). Nothing to do."
+  echo ""
+  echo "📊 Services:"
+  echo ""
+  echo "   OTLP Collector:"
+  echo "     HTTP: http://localhost:${OTLP_COLLECTOR_HTTP_PORT}"
+  echo "     gRPC: http://localhost:${OTLP_COLLECTOR_GRPC_PORT}"
+  echo ""
+  echo "   Loki (Log Storage):"
+  echo "     API: http://localhost:${LOKI_HTTP_PORT}"
+  echo ""
+  echo "   Tempo (Trace Storage):"
+  echo "     API: http://localhost:${TEMPO_HTTP_PORT}"
+  echo "     (Traces received via OTLP Collector)"
+  echo ""
+  echo "   Grafana (UI):"
+  echo "     URL: http://localhost:${GRAFANA_PORT}"
+  echo "     Username: admin"
+  echo "     Password: admin"
+  echo ""
+  exit 0
+fi
 
 # Storage directories
 OBSERVABILITY_DIR="/root/.local-dev/observability"

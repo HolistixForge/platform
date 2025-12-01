@@ -17,8 +17,9 @@ RUN apt-get update && apt-get install -y \
   sudo \
   inetutils-ping
 
-# Copy and set entrypoint
-COPY --chmod=755 ./app/entrypoint-dev.sh /entrypoint.sh
+# Copy and set entrypoint (avoid BuildKit-specific --chmod flag)
+COPY ./app/entrypoint-dev.sh /entrypoint.sh
+RUN chmod 755 /entrypoint.sh
 
 # Entrypoint will handle hot-reloading via trigger file
 ENTRYPOINT ["/entrypoint.sh"]
