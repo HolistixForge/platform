@@ -40,8 +40,6 @@ docker run -d \
   -p 443:443 \
   -p 53:53/udp \
   -p 53:53/tcp \
-  --cap-add=NET_ADMIN \
-  --device /dev/net/tun \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -it ubuntu:24.04 \
   /bin/bash
@@ -54,7 +52,6 @@ docker exec -it demiurge-dev /bin/bash
 
 - `-p 80:80 -p 443:443` - HTTP/HTTPS for Nginx (Stage 1)
 - `-p 53:53/udp -p 53:53/tcp` - PowerDNS server
-- `--cap-add=NET_ADMIN --device /dev/net/tun` - For OpenVPN in gateway containers (required for gateway containers to create VPN interfaces)
 - `-v /var/run/docker.sock:/var/run/docker.sock` - Docker socket (manage gateway containers)
 
 **Note:** Gateway containers handle their own port mappings (7100-7199 for HTTP, 49100-49199/udp for OpenVPN) via `gateway-pool.sh`. The main container accesses gateway services via the Docker host's localhost (e.g., `127.0.0.1:7100`), so it doesn't need to expose these ports.
