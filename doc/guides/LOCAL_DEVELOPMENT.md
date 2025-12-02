@@ -541,7 +541,7 @@ Or if using Docker Desktop with port forwarding, you can use `127.0.0.1`.
 
 #### Windows 11
 
-**Method 1: Network Adapter Settings (Recommended)**
+**Network Adapter Settings:**
 
 1. Open **Settings** → **Network & Internet** → **Properties** (for your active network)
 2. Scroll to **DNS server assignment** → Click **Edit**
@@ -549,20 +549,6 @@ Or if using Docker Desktop with port forwarding, you can use `127.0.0.1`.
 4. Enable **IPv4**
 5. Enter your dev container IP (e.g., `172.17.0.2`)
 6. Click **Save**
-
-**Method 2: Hosts File (Fallback)**
-
-If DNS delegation doesn't work, add static entries:
-
-```powershell
-# Open as Administrator
-notepad C:\Windows\System32\drivers\etc\hosts
-
-# Add:
-<dev-container-ip>  domain.local
-<dev-container-ip>  ganymede.domain.local
-# Note: Wildcards don't work in hosts file, you'll need to add each gateway manually
-```
 
 **Verify:**
 

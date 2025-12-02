@@ -58,13 +58,6 @@ EOF
 echo "   ✅ Database dropped: ${DB_NAME}"
 echo "   ✅ User dropped: ${APP_DB_USER}"
 
-# Remove /etc/hosts entries
-echo "📝 Removing /etc/hosts entries..."
-TMP_HOSTS=$(mktemp)
-sudo grep -v "local-dev-${ENV_NAME}" /etc/hosts | sudo grep -v "${ENV_NAME}.local" > "$TMP_HOSTS"
-sudo cp "$TMP_HOSTS" /etc/hosts
-rm "$TMP_HOSTS"
-
 # Remove directory
 echo "🗑️  Removing directory..."
 rm -rf "${ENV_DIR}"
@@ -72,10 +65,6 @@ rm -rf "${ENV_DIR}"
 echo ""
 echo "✅ Environment '${ENV_NAME}' deleted"
 echo ""
-echo "⚠️  Don't forget to remove entries from your host OS hosts file:"
-echo "   - Windows: C:\\Windows\\System32\\drivers\\etc\\hosts"
-echo "   - macOS/Linux: /etc/hosts"
-echo ""
-echo "   Remove lines containing: ${ENV_NAME}.local"
+echo "ℹ️  DNS records are managed by PowerDNS. No manual cleanup needed."
 echo ""
 

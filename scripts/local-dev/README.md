@@ -74,12 +74,6 @@ cd /root/workspace/monorepo/scripts/local-dev
 ./create-env.sh feat-a /root/workspace/monorepo-feat-a /root/workspace/database-feat-a
 ```
 
-### Host OS Helpers
-
-| Script                  | Purpose           | OS      |
-| ----------------------- | ----------------- | ------- |
-| `windows-add-hosts.ps1` | Add hosts entries | Windows |
-
 ## Environment File Locations
 
 ```
