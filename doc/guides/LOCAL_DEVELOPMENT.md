@@ -499,7 +499,7 @@ User containers work exactly like production:
 1. **Build images** (if needed):
 
 ```bash
-cd /root/workspace/monorepo/docker-images/user-images/jupyterlab
+cd /root/workspace/monorepo/packages/modules/jupyter/docker-image
 docker build -t jupyterlab:local -f Dockerfile-minimal .
 ```
 
@@ -876,7 +876,7 @@ Each container gets a distinct FQDN that routes directly to its VPN IP:
 
 ## Related Documentation
 
-- [MODULES_TESTING.md](MODULES_TESTING.md) - Testing modules in Storybook
-- [PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md) - Production deployment guide
+- [Modules Testing](MODULES_TESTING.md) - Testing modules in Storybook
 - [System Architecture](../architecture/SYSTEM_ARCHITECTURE.md) - Complete system diagram
 - [Gateway Architecture](../architecture/GATEWAY_ARCHITECTURE.md) - Multi-gateway architecture
+- [Protected Services](../architecture/PROTECTED_SERVICES.md) - Terminal access and protected endpoints

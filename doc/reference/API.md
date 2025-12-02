@@ -458,4 +458,4 @@ These specs include:
 
 - **[Architecture Overview](../architecture/OVERVIEW.md)** - System architecture
 - **[Local Development](../guides/LOCAL_DEVELOPMENT.md)** - Testing APIs locally
-- **[Contributing](../../CONTRIBUTING.md)** - Adding new endpoints
+- **[Contributing](../../CONTRIBUTING.md)** - Development workflow

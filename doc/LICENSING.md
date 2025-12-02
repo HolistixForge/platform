@@ -98,7 +98,7 @@ When you contribute code to Demiurge:
 - You grant us the right to use your contributions under both the PolyForm Noncommercial License and Commercial License
 - You retain copyright to your contributions
 
-See [CONTRIBUTING.md](../../CONTRIBUTING.md) for more details.
+See [CONTRIBUTING.md](../CONTRIBUTING.md) for more details.
 
 ### Third-Party Dependencies
 

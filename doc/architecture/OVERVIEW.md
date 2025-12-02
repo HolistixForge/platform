@@ -368,7 +368,9 @@ See [guides/PRODUCTION_DEPLOYMENT.md](../guides/PRODUCTION_DEPLOYMENT.md) for de
 
 ## Related Documentation
 
-- **[System Architecture](SYSTEM_ARCHITECTURE.md)** - Complete system diagram
-- **[Gateway Architecture](GATEWAY_ARCHITECTURE.md)** - Multi-gateway pool architecture
-- **[Local Development](../guides/LOCAL_DEVELOPMENT.md)** - Dev environment setup
-- **[Contributing](../../CONTRIBUTING.md)** - Development workflow
+- [System Architecture](SYSTEM_ARCHITECTURE.md) - Complete system diagram
+- [Gateway Architecture](GATEWAY_ARCHITECTURE.md) - Multi-gateway pool architecture
+- [Protected Services](PROTECTED_SERVICES.md) - Module-driven protected endpoints
+- [Frontend Architecture](FRONTEND_ARCHITECTURE.md) - React app and module system
+- [Permission System](PERMISSION_SYSTEM.md) - Authorization model
+- [Local Development](../guides/LOCAL_DEVELOPMENT.md) - Dev environment setup

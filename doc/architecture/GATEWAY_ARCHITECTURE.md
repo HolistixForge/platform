@@ -674,5 +674,8 @@ ENV_NAME=dev-001 DOMAIN=domain.local \
 
 ## Related Documentation
 
-- **[Gateway Container Scripts](../../docker-images/backend-images/gateway/README.md)** - Detailed documentation of shell scripts that manage OpenVPN, Nginx, and container lifecycle
-- **[App-Gateway README](../../packages/app-gateway/README.md)** - Node.js application that orchestrates gateway scripts and handles collaboration
+- [Gateway Container Scripts](../../docker-images/backend-images/gateway/README.md) - Shell scripts for OpenVPN, Nginx, and container lifecycle
+- [App-Gateway](../../packages/app-gateway/README.md) - Node.js application
+- [Protected Services](./PROTECTED_SERVICES.md) - Module-driven protected endpoints
+- [System Architecture](./SYSTEM_ARCHITECTURE.md) - Complete system diagram
+- [User Containers Module](../../packages/modules/user-containers/README.md) - Container management and terminal access
