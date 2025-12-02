@@ -1,4 +1,4 @@
-# Demiurge Landing Page Copywriting
+# Kosmoforge Landing Page Copywriting
 
 ## Project Descriptions
 
@@ -68,13 +68,13 @@
 
 ### Paragraph Description
 
-Stop switching between apps. Stop losing context in email threads. Stop compromising with tools that don't fit. Demiurge provides a modular platform where UI components from integrated apps become reusable LEGO blocks that you can reassemble into a tailor-made interface that fits your organization perfectly. Connect your entire tool stack—SaaS, containers, cloud, on-premise, even personal PCs—through one integration backbone. Modules plug into Demiurge, providing UI components that you can place exactly where they make sense in your workflow. Have conversations embedded directly in your documents, data, and components, not lost in separate email or chat apps. Provide complete project context to AI agents and watch them become exponentially more effective. Enforce quality through automated formal process checking. All in one unified platform where your work, your tools, and your conversations live together—contextually connected, not fragmented across silos. Whether you're building software, conducting research, or managing complex projects, Demiurge transforms how teams collaborate, verify, and deliver.
+Stop switching between apps. Stop losing context in email threads. Stop compromising with tools that don't fit. Kosmoforge provides a modular platform where UI components from integrated apps become reusable LEGO blocks that you can reassemble into a tailor-made interface that fits your organization perfectly. Connect your entire tool stack—SaaS, containers, cloud, on-premise, even personal PCs—through one integration backbone. Modules plug into Kosmoforge, providing UI components that you can place exactly where they make sense in your workflow. Have conversations embedded directly in your documents, data, and components, not lost in separate email or chat apps. Provide complete project context to AI agents and watch them become exponentially more effective. Enforce quality through automated formal process checking. All in one unified platform where your work, your tools, and your conversations live together—contextually connected, not fragmented across silos. Whether you're building software, conducting research, or managing complex projects, Kosmoforge transforms how teams collaborate, verify, and deliver.
 
 ### Page-Length Description
 
-**Demiurge: Where Modular UI Components Become Your Perfect Tool**
+**Kosmoforge: Where Modular UI Components Become Your Perfect Tool**
 
-Imagine this: Instead of switching between JupyterLab, Notion, Airtable, and a dozen other apps, you have access to their UI components as reusable LEGO blocks. Modules plug into Demiurge, providing UI components from integrated apps and you reassemble them into one perfect interface that matches exactly how your team works. That's Demiurge: modules provide UI components like LEGO blocks, you place them where they make sense, automate the connections, and build the tool your organization actually needs. You're not just using features from different apps—you're assembling their UI components into your own custom interface.
+Imagine this: Instead of switching between JupyterLab, Notion, Airtable, and a dozen other apps, you have access to their UI components as reusable LEGO blocks. Modules plug into Kosmoforge, providing UI components from integrated apps and you reassemble them into one perfect interface that matches exactly how your team works. That's Kosmoforge: modules provide UI components like LEGO blocks, you place them where they make sense, automate the connections, and build the tool your organization actually needs. You're not just using features from different apps—you're assembling their UI components into your own custom interface.
 
 **The Problem: Fragmentation Kills Productivity**
 
@@ -82,21 +82,21 @@ In today's project landscape, teams are drowning in fragmentation. Critical proj
 
 **The Solution: One Platform, Infinite Possibilities**
 
-Demiurge solves this fundamental problem by creating a unified collaborative platform designed for teams working on complex projects. At its core, Demiurge provides a Single Source of Truth (SSoT) that consolidates all project data—specifications, design decisions, artifacts, containerized applications, and team communications—into one discoverable, navigable workspace. While particularly powerful for engineering and software development teams, Demiurge serves any team managing complex, interconnected projects that require collaboration, traceability, and quality assurance.
+Kosmoforge solves this fundamental problem by creating a unified collaborative platform designed for teams working on complex projects. At its core, Kosmoforge provides a Single Source of Truth (SSoT) that consolidates all project data—specifications, design decisions, artifacts, containerized applications, and team communications—into one discoverable, navigable workspace. While particularly powerful for engineering and software development teams, Kosmoforge serves any team managing complex, interconnected projects that require collaboration, traceability, and quality assurance.
 
 **Real-Time Collaboration Without Conflicts**
 
-Demiurge leverages YJS CRDT (Conflict-Free Replicated Data Types) technology to enable true real-time collaboration. Multiple team members can edit simultaneously without the fear of conflicts or data loss. Changes propagate instantly across all connected clients, ensuring everyone always sees the latest state. This isn't just shared documents—it's synchronized project state, container configurations, whiteboard elements, and collaborative data structures, all updated in real-time.
+Kosmoforge leverages YJS CRDT (Conflict-Free Replicated Data Types) technology to enable true real-time collaboration. Multiple team members can edit simultaneously without the fear of conflicts or data loss. Changes propagate instantly across all connected clients, ensuring everyone always sees the latest state. This isn't just shared documents—it's synchronized project state, container configurations, whiteboard elements, and collaborative data structures, all updated in real-time.
 
 **Visual Workspace That Matches Your Mental Model**
 
-Unlike traditional file-based systems that force data into rigid folder hierarchies, Demiurge uses a graph-based data model that naturally represents how complex projects actually work. The interactive whiteboard interface lets you visualize relationships between components, requirements, tests, and implementations. Nodes represent entities, edges show connections, and the entire graph is navigable, searchable, and collaborative. Zoom in for details, filter by type, and share your view with teammates—all in real-time. Whether you're mapping software architecture, research workflows, data pipelines, or organizational processes, the graph model adapts to your domain.
+Unlike traditional file-based systems that force data into rigid folder hierarchies, Kosmoforge uses a graph-based data model that naturally represents how complex projects actually work. The interactive whiteboard interface lets you visualize relationships between components, requirements, tests, and implementations. Nodes represent entities, edges show connections, and the entire graph is navigable, searchable, and collaborative. Zoom in for details, filter by type, and share your view with teammates—all in real-time. Whether you're mapping software architecture, research workflows, data pipelines, or organizational processes, the graph model adapts to your domain.
 
 **Cross-Tool Communication: Where Conversations Live With Your Work**
 
 Here's what's broken with traditional communication: You discuss a design decision in email, but the email thread exists separately from the actual design. You chat about a bug in Slack, but the conversation is disconnected from the code. Context gets lost. Decisions get forgotten. You spend time searching through email threads and chat history trying to remember "where did we decide that?"
 
-Demiurge fixes this. Cross-tool communication embeds conversations directly within your project context. Have discussions within specific documents, linked to particular data points, attached to components, or connected to any part of your project graph. These conversations are accessible across your entire organization's tool stack, ensuring that context is never lost. The discussion is part of your project's living data, not dead data in a parallel tool. No more searching—the conversation is right where the work happens, and it stays connected to the exact context where it matters. When someone asks "why did we make this decision?" the answer is right there, embedded in the work itself.
+Kosmoforge fixes this. Cross-tool communication embeds conversations directly within your project context. Have discussions within specific documents, linked to particular data points, attached to components, or connected to any part of your project graph. These conversations are accessible across your entire organization's tool stack, ensuring that context is never lost. The discussion is part of your project's living data, not dead data in a parallel tool. No more searching—the conversation is right where the work happens, and it stays connected to the exact context where it matters. When someone asks "why did we make this decision?" the answer is right there, embedded in the work itself.
 
 **Containerized Applications, Simplified**
 
@@ -104,11 +104,11 @@ Deploy and manage containerized tools with unprecedented ease. JupyterLab for da
 
 **Modular Architecture: LEGO Blocks for Apps**
 
-Demiurge's modular architecture provides UI components from integrated apps as reusable LEGO blocks that you can reassemble into a tailor-made interface that fits your organization. Modules plug into Demiurge, each providing UI components from different applications—whether it's data visualization from JupyterLab, form builders from Notion or Airtable. Instead of switching between multiple applications, Demiurge lets you place these modular UI components exactly where they make sense in your workflow, creating a single, integrated, custom interface built from the best parts of all your tools.
+Kosmoforge's modular architecture provides UI components from integrated apps as reusable LEGO blocks that you can reassemble into a tailor-made interface that fits your organization. Modules plug into Kosmoforge, each providing UI components from different applications—whether it's data visualization from JupyterLab, form builders from Notion or Airtable. Instead of switching between multiple applications, Kosmoforge lets you place these modular UI components exactly where they make sense in your workflow, creating a single, integrated, custom interface built from the best parts of all your tools.
 
 **Core Features for Modularized App Integration**
 
-Demiurge provides essential core features that enable this modular app assembly:
+Kosmoforge provides essential core features that enable this modular app assembly:
 
 - **Collaborative Whiteboard**: Interactive visual workspace where you can place and connect UI components from any integrated app
 - **Container Management**: Deploy and manage containerized applications with stable URLs, automatic networking, and seamless integration
@@ -123,47 +123,47 @@ These core features work together to enable the LEGO-like assembly concept: modu
 
 **Organization-Centric Multi-Tenancy**
 
-Every aspect of Demiurge is scoped to organizations, providing clear multi-tenancy and resource isolation. Users belong to organizations, projects belong to organizations, and gateways are allocated per organization. This model enables secure collaboration within teams while maintaining clear boundaries between different organizational contexts. Fine-grained permissions control access at the organization, project, and resource levels.
+Every aspect of Kosmoforge is scoped to organizations, providing clear multi-tenancy and resource isolation. Users belong to organizations, projects belong to organizations, and gateways are allocated per organization. This model enables secure collaboration within teams while maintaining clear boundaries between different organizational contexts. Fine-grained permissions control access at the organization, project, and resource levels.
 
 **The Backbone of Your Tool Stack Integration**
 
-Demiurge is the integration backbone for your entire tool ecosystem. Whether you're using SaaS applications, containerized tools deployed in the cloud, on-premise infrastructure, or even applications running on personal PCs—Demiurge unifies them all. The platform integrates with your software stack through industry-standard APIs and formats, creating a 1:1 bridge architecture that eliminates the need for N×N integrations. CAD tools, IDEs, simulation software, project management systems, cloud services, on-premise applications—all connect to Demiurge's unified data model. Third-party software providers can build integration plugins, making Demiurge the central hub that connects everything. No matter where your tools live, Demiurge brings them together into one cohesive workspace.
+Kosmoforge is the integration backbone for your entire tool ecosystem. Whether you're using SaaS applications, containerized tools deployed in the cloud, on-premise infrastructure, or even applications running on personal PCs—Kosmoforge unifies them all. The platform integrates with your software stack through industry-standard APIs and formats, creating a 1:1 bridge architecture that eliminates the need for N×N integrations. CAD tools, IDEs, simulation software, project management systems, cloud services, on-premise applications—all connect to Kosmoforge's unified data model. Third-party software providers can build integration plugins, making Kosmoforge the central hub that connects everything. No matter where your tools live, Kosmoforge brings them together into one cohesive workspace.
 
 **The LEGO Approach: Modular UI Components from Integrated Apps**
 
-But Demiurge goes beyond simple integration—it enables true modular UI assembly. Modules plug into Demiurge, providing UI components from integrated applications. Instead of using apps as monolithic blocks, you get access to their UI components as reusable LEGO blocks. Place the data visualization component from one module, the form builder from another—and assemble them into a completely custom interface that matches your organization's workflow. It's like LEGO blocks for apps—modules provide the UI components, you place them where they make sense, and build your perfect workspace. No more switching between applications, no more context switching, no more compromises—just a tailor-made interface built from modular UI components provided by your integrated tools.
+But Kosmoforge goes beyond simple integration—it enables true modular UI assembly. Modules plug into Kosmoforge, providing UI components from integrated applications. Instead of using apps as monolithic blocks, you get access to their UI components as reusable LEGO blocks. Place the data visualization component from one module, the form builder from another—and assemble them into a completely custom interface that matches your organization's workflow. It's like LEGO blocks for apps—modules provide the UI components, you place them where they make sense, and build your perfect workspace. No more switching between applications, no more context switching, no more compromises—just a tailor-made interface built from modular UI components provided by your integrated tools.
 
 **Automated Infrastructure Management**
 
-Gone are the days of manual DNS configuration, nginx setup, and container orchestration. Demiurge automates infrastructure management through dynamic DNS (PowerDNS), automatic reverse proxy configuration, and intelligent gateway allocation. Gateways are allocated on-demand from a pool, automatically deallocated when idle, and seamlessly handle multiple projects within an organization. SSL certificates, VPN configurations, and routing—all managed automatically.
+Gone are the days of manual DNS configuration, nginx setup, and container orchestration. Kosmoforge automates infrastructure management through dynamic DNS (PowerDNS), automatic reverse proxy configuration, and intelligent gateway allocation. Gateways are allocated on-demand from a pool, automatically deallocated when idle, and seamlessly handle multiple projects within an organization. SSL certificates, VPN configurations, and routing—all managed automatically.
 
 **Exponentializing AI Potential: Give AI the Full Picture**
 
 Here's the problem with AI today: It sees fragments. A file here, a document there, maybe a chat message somewhere else. It's like asking someone to solve a puzzle when they can only see three pieces at a time.
 
-Demiurge changes everything. By consolidating all project data—requirements, designs, code, tests, containers, communications, and processes—into one unified graph, Demiurge gives AI the full picture. AI agents can understand relationships between components, trace dependencies across the entire project, analyze impact of changes, and provide intelligent suggestions based on complete project context—not just isolated files or fragments. They can even understand the conversations that happened in context, not lost in separate email threads. This complete context exponentializes AI potential, enabling automation, code analysis, risk identification, and intelligent assistance that would be impossible with fragmented data. When AI has the complete picture, it becomes exponentially more effective.
+Kosmoforge changes everything. By consolidating all project data—requirements, designs, code, tests, containers, communications, and processes—into one unified graph, Kosmoforge gives AI the full picture. AI agents can understand relationships between components, trace dependencies across the entire project, analyze impact of changes, and provide intelligent suggestions based on complete project context—not just isolated files or fragments. They can even understand the conversations that happened in context, not lost in separate email threads. This complete context exponentializes AI potential, enabling automation, code analysis, risk identification, and intelligent assistance that would be impossible with fragmented data. When AI has the complete picture, it becomes exponentially more effective.
 
 **Formal Process Checking: Quality Without the Overhead**
 
 Quality assurance is essential, but the overhead is killing teams. Manual compliance checking, endless documentation, processes that everyone knows are important but nobody has time to follow rigorously.
 
-Demiurge changes the equation. Through formal process description languages, you can define quality assurance processes, enforce standards (ISO-9001, DO-178, MIL-STD, etc.), automate compliance checking, and ensure traceability from requirements to implementation. The platform automatically verifies that processes are followed, detects deviations, and generates compliance reports—all without the manual overhead. This formal approach to quality assurance preserves the value of rigorous processes while eliminating the significant effort currently required. You get the quality assurance you need, without the overhead that kills productivity.
+Kosmoforge changes the equation. Through formal process description languages, you can define quality assurance processes, enforce standards (ISO-9001, DO-178, MIL-STD, etc.), automate compliance checking, and ensure traceability from requirements to implementation. The platform automatically verifies that processes are followed, detects deviations, and generates compliance reports—all without the manual overhead. This formal approach to quality assurance preserves the value of rigorous processes while eliminating the significant effort currently required. You get the quality assurance you need, without the overhead that kills productivity.
 
 **The Future: Your Perfect Tool, Assembled From the Best Parts**
 
-Demiurge is more than a tool—it's a vision for how teams should work on complex projects. The platform is designed to evolve with your needs, growing from a collaboration tool into a comprehensive project lifecycle management system. With complete project context and formal process capabilities, Demiurge enables AI-powered automation, automated change impact analysis, early risk identification, and intelligent process enforcement. The platform transforms complex project work—whether engineering, research, data science, or cross-functional initiatives—from a collection of disconnected activities into a unified, intelligent, and quality-assured workflow.
+Kosmoforge is more than a tool—it's a vision for how teams should work on complex projects. The platform is designed to evolve with your needs, growing from a collaboration tool into a comprehensive project lifecycle management system. With complete project context and formal process capabilities, Kosmoforge enables AI-powered automation, automated change impact analysis, early risk identification, and intelligent process enforcement. The platform transforms complex project work—whether engineering, research, data science, or cross-functional initiatives—from a collection of disconnected activities into a unified, intelligent, and quality-assured workflow.
 
-Most importantly, Demiurge gives you the power to build your perfect tool. Modules provide UI components from integrated apps as reusable LEGO blocks. Place them where they make sense in an interface that fits your organization. Have conversations where your work lives. Give AI the complete context it needs. Enforce quality automatically. Connect everything. Understand everything. Control everything. That's Demiurge: where modular UI components from your integrated apps become your perfect tool.
+Most importantly, Kosmoforge gives you the power to build your perfect tool. Modules provide UI components from integrated apps as reusable LEGO blocks. Place them where they make sense in an interface that fits your organization. Have conversations where your work lives. Give AI the complete context it needs. Enforce quality automatically. Connect everything. Understand everything. Control everything. That's Kosmoforge: where modular UI components from your integrated apps become your perfect tool.
 
 **Built for Teams, Designed for Scale**
 
-Whether you're a startup with a small team or an enterprise with hundreds of team members, Demiurge scales to your needs. The architecture supports horizontal scaling, efficient resource utilization through gateway pooling, and can run on-premises or in the cloud. Your data stays secure, your infrastructure remains under your control, and your team gains unprecedented productivity. From engineering teams building software to research teams conducting experiments, from data science teams analyzing datasets to cross-functional teams coordinating complex projects—Demiurge adapts to your scale and domain. No matter your size or your domain, you get the same power: modules provide UI components from integrated apps, place them where they make sense in your perfect interface, and work the way your team actually works.
+Whether you're a startup with a small team or an enterprise with hundreds of team members, Kosmoforge scales to your needs. The architecture supports horizontal scaling, efficient resource utilization through gateway pooling, and can run on-premises or in the cloud. Your data stays secure, your infrastructure remains under your control, and your team gains unprecedented productivity. From engineering teams building software to research teams conducting experiments, from data science teams analyzing datasets to cross-functional teams coordinating complex projects—Kosmoforge adapts to your scale and domain. No matter your size or your domain, you get the same power: modules provide UI components from integrated apps, place them where they make sense in your perfect interface, and work the way your team actually works.
 
 **Open Source, Commercial Support Available**
 
-Demiurge is available under a dual licensing model: free for non-commercial use (personal projects, education, research, non-profits) and commercial licenses available for for-profit businesses, SaaS offerings, and enterprise deployments. The codebase is open, the architecture is documented, and the community is growing.
+Kosmoforge is available under a dual licensing model: free for non-commercial use (personal projects, education, research, non-profits) and commercial licenses available for for-profit businesses, SaaS offerings, and enterprise deployments. The codebase is open, the architecture is documented, and the community is growing.
 
-Stop switching between apps. Stop losing context. Stop compromising. Assemble your perfect tool from modular UI components. Experience Demiurge.
+Stop switching between apps. Stop losing context. Stop compromising. Assemble your perfect tool from modular UI components. Experience Kosmoforge.
 
 ---
 
@@ -205,10 +205,10 @@ Your project data lives everywhere—requirements in one tool, designs in anothe
 ### Solution Overview Section
 
 **Headline:**
-**Demiurge: The Integration Backbone for Your Entire Tool Stack**
+**Kosmoforge: The Integration Backbone for Your Entire Tool Stack**
 
 **Body:**
-Demiurge is the backbone that connects everything—SaaS applications, containerized tools in the cloud or on-premise, even applications on personal PCs. By creating a Single Source of Truth with complete project context, Demiurge exponentializes AI potential and enables formal process checking for quality assurance. Perfect for engineering teams, software developers, data scientists, researchers, and any team managing complex projects.
+Kosmoforge is the backbone that connects everything—SaaS applications, containerized tools in the cloud or on-premise, even applications on personal PCs. By creating a Single Source of Truth with complete project context, Kosmoforge exponentializes AI potential and enables formal process checking for quality assurance. Perfect for engineering teams, software developers, data scientists, researchers, and any team managing complex projects.
 
 **Key Benefits:**
 
@@ -236,7 +236,7 @@ Demiurge is the backbone that connects everything—SaaS applications, container
 #### Feature 2: Visual Workspace
 
 **Headline:** **Navigate Your Project as a Graph**
-**Description:** Projects aren't folders—they're interconnected graphs of requirements, designs, implementations, and tests. Demiurge's whiteboard interface lets you visualize these relationships, zoom into details, filter by type, and discover connections you never knew existed. The data structure matches how complex projects actually work—whether you're building software, conducting research, managing data pipelines, or coordinating initiatives.
+**Description:** Projects aren't folders—they're interconnected graphs of requirements, designs, implementations, and tests. Kosmoforge's whiteboard interface lets you visualize these relationships, zoom into details, filter by type, and discover connections you never knew existed. The data structure matches how complex projects actually work—whether you're building software, conducting research, managing data pipelines, or coordinating initiatives.
 
 #### Feature 3: Containerized Applications
 
@@ -246,17 +246,17 @@ Demiurge is the backbone that connects everything—SaaS applications, container
 #### Feature 4: LEGO-Like UI Assembly
 
 **Headline:** **Modular UI Components, Reassemble Your Perfect Interface**
-**Description:** Demiurge's modular architecture provides UI components from integrated apps as reusable LEGO blocks that you can reassemble into a tailor-made interface. Modules plug into Demiurge, each providing UI components from different applications. Place the data visualization component from JupyterLab, the form builder from Notion, the collaboration features from Airtable—exactly where they make sense in your workflow. Connect them with automation. Build the perfect interface for your team—no compromises, no switching between apps. You're not just using features from different apps—you're assembling their UI components into your own custom interface.
+**Description:** Kosmoforge's modular architecture provides UI components from integrated apps as reusable LEGO blocks that you can reassemble into a tailor-made interface. Modules plug into Kosmoforge, each providing UI components from different applications. Place the data visualization component from JupyterLab, the form builder from Notion, the collaboration features from Airtable—exactly where they make sense in your workflow. Connect them with automation. Build the perfect interface for your team—no compromises, no switching between apps. You're not just using features from different apps—you're assembling their UI components into your own custom interface.
 
 #### Feature 4b: Core Integration Features
 
 **Headline:** **Essential Building Blocks for Modular UI Assembly**
-**Description:** Demiurge provides core features that enable modular UI assembly: collaborative whiteboard for visual assembly, container management for deploying apps, permissions system for access control, centralized authentication for seamless login, real-time collaboration engine for synchronization, graph/node system for connections, and cross-tool communication for contextual discussions. Most importantly, cross-tool communication lets you have conversations embedded directly within documents, data, and components—across your entire organization's tool stack—not in separate dead data silos like email or chat apps. Modules plug into Demiurge, providing UI components from integrated apps. These building blocks let you place modular UI components exactly where they make sense in your perfect workspace, with communication that stays connected to your work.
+**Description:** Kosmoforge provides core features that enable modular UI assembly: collaborative whiteboard for visual assembly, container management for deploying apps, permissions system for access control, centralized authentication for seamless login, real-time collaboration engine for synchronization, graph/node system for connections, and cross-tool communication for contextual discussions. Most importantly, cross-tool communication lets you have conversations embedded directly within documents, data, and components—across your entire organization's tool stack—not in separate dead data silos like email or chat apps. Modules plug into Kosmoforge, providing UI components from integrated apps. These building blocks let you place modular UI components exactly where they make sense in your perfect workspace, with communication that stays connected to your work.
 
 #### Feature 5: Automated Infrastructure
 
 **Headline:** **Infrastructure That Manages Itself**
-**Description:** Dynamic DNS, automatic reverse proxy configuration, intelligent gateway allocation—Demiurge handles the infrastructure so you don't have to. Gateways allocate on-demand, deallocate when idle, and seamlessly scale with your organization.
+**Description:** Dynamic DNS, automatic reverse proxy configuration, intelligent gateway allocation—Kosmoforge handles the infrastructure so you don't have to. Gateways allocate on-demand, deallocate when idle, and seamlessly scale with your organization.
 
 #### Feature 6: Fine-Grained Permissions
 
@@ -266,22 +266,22 @@ Demiurge is the backbone that connects everything—SaaS applications, container
 #### Feature 7: Tool Stack Integration Backbone
 
 **Headline:** **Connect Everything, Everywhere**
-**Description:** Demiurge is the integration backbone for your entire tool ecosystem. Connect SaaS applications, cloud services, on-premise infrastructure, containerized tools, and even applications running on personal PCs. One platform, infinite integrations. No more N×N integration complexity—just 1:1 bridges to Demiurge. But it doesn't stop at connection—Demiurge lets you break down each app into modular components and assemble them into your perfect interface.
+**Description:** Kosmoforge is the integration backbone for your entire tool ecosystem. Connect SaaS applications, cloud services, on-premise infrastructure, containerized tools, and even applications running on personal PCs. One platform, infinite integrations. No more N×N integration complexity—just 1:1 bridges to Kosmoforge. But it doesn't stop at connection—Kosmoforge lets you break down each app into modular components and assemble them into your perfect interface.
 
 #### Feature 8: Complete AI Context
 
 **Headline:** **Exponentialize AI Potential**
-**Description:** By providing complete project context—requirements, designs, code, tests, containers, communications—Demiurge gives AI agents the full picture they need to be truly effective. AI can understand relationships, trace dependencies, analyze impact, and provide intelligent automation based on complete context, not isolated fragments.
+**Description:** By providing complete project context—requirements, designs, code, tests, containers, communications—Kosmoforge gives AI agents the full picture they need to be truly effective. AI can understand relationships, trace dependencies, analyze impact, and provide intelligent automation based on complete context, not isolated fragments.
 
 #### Feature 9: Formal Process Checking
 
 **Headline:** **Automated Quality Assurance**
-**Description:** Define formal processes for quality assurance, compliance, and standards enforcement. Demiurge automatically checks that processes are followed, detects deviations, generates compliance reports, and ensures traceability—all without manual overhead. Preserve the value of rigorous QA processes while eliminating the effort.
+**Description:** Define formal processes for quality assurance, compliance, and standards enforcement. Kosmoforge automatically checks that processes are followed, detects deviations, generates compliance reports, and ensures traceability—all without manual overhead. Preserve the value of rigorous QA processes while eliminating the effort.
 
 #### Feature 10: Cross-Tool Communication
 
 **Headline:** **Contextual Communication, Not Dead Data Silos**
-**Description:** Unlike traditional communication tools that create separate dead data silos—email threads and chat apps that exist apart from your work—Demiurge's cross-tool communication embeds conversations directly within your project context. Have discussions within specific documents, linked to particular data points, attached to components, or connected to any part of your project graph. These conversations are accessible across your entire organization's tool stack, ensuring that context is never lost. The discussion is part of your project's living data, not dead data in a parallel tool. No more searching through email threads or chat history—the conversation is right where the work happens, and it stays connected to the exact context where it matters.
+**Description:** Unlike traditional communication tools that create separate dead data silos—email threads and chat apps that exist apart from your work—Kosmoforge's cross-tool communication embeds conversations directly within your project context. Have discussions within specific documents, linked to particular data points, attached to components, or connected to any part of your project graph. These conversations are accessible across your entire organization's tool stack, ensuring that context is never lost. The discussion is part of your project's living data, not dead data in a parallel tool. No more searching through email threads or chat history—the conversation is right where the work happens, and it stays connected to the exact context where it matters.
 
 ---
 
@@ -303,7 +303,7 @@ Demiurge is the backbone that connects everything—SaaS applications, container
 #### Use Case 3: DevOps & Infrastructure
 
 **Title:** **Infrastructure as Collaborative Data**
-**Description:** Manage infrastructure configurations, deploy containerized services, monitor systems, and coordinate deployments—all through Demiurge's visual interface. Infrastructure becomes part of your project graph, not a separate concern.
+**Description:** Manage infrastructure configurations, deploy containerized services, monitor systems, and coordinate deployments—all through Kosmoforge's visual interface. Infrastructure becomes part of your project graph, not a separate concern.
 
 #### Use Case 4: Cross-Functional Teams
 
@@ -352,7 +352,7 @@ Demiurge is the backbone that connects everything—SaaS applications, container
 **Exponentialize AI Potential with Complete Context**
 
 **Body:**
-Demiurge provides AI agents with complete project context—something impossible with fragmented tools. By consolidating all project data into one unified graph, AI can:
+Kosmoforge provides AI agents with complete project context—something impossible with fragmented tools. By consolidating all project data into one unified graph, AI can:
 
 - **Understand Full Context**: See relationships between requirements, designs, code, tests, and deployments
 - **Trace Dependencies**: Follow connections across the entire project, not just isolated files
@@ -367,7 +367,7 @@ Demiurge provides AI agents with complete project context—something impossible
 **Formal Process Checking for Quality Assurance**
 
 **Body:**
-Demiurge enables formal process checking (QA) that ensures quality and compliance:
+Kosmoforge enables formal process checking (QA) that ensures quality and compliance:
 
 - **Define Formal Processes**: Use process description languages to specify QA requirements, standards, and compliance rules
 - **Automated Enforcement**: The platform automatically checks that processes are followed, detects deviations, and flags issues
@@ -382,7 +382,7 @@ Demiurge enables formal process checking (QA) that ensures quality and complianc
 **Headline:**
 **The Future of Collaborative Work**
 
-Demiurge is evolving into a comprehensive project lifecycle management platform. With complete project context, formal process capabilities, and modular app assembly, the platform enables:
+Kosmoforge is evolving into a comprehensive project lifecycle management platform. With complete project context, formal process capabilities, and modular app assembly, the platform enables:
 
 - **Advanced AI Automation**: Intelligent process automation, code analysis, and suggestions powered by complete context
 - **Automated Change Impact Analysis**: Understand how changes propagate through your project automatically
@@ -404,7 +404,7 @@ The platform is designed to grow from a collaboration tool into your complete pr
 **Ready to Transform How Your Team Works?**
 
 **Body:**
-Join teams already using Demiurge to eliminate fragmentation, boost productivity, and focus on what matters—whether you're building software, conducting research, analyzing data, or managing complex projects.
+Join teams already using Kosmoforge to eliminate fragmentation, boost productivity, and focus on what matters—whether you're building software, conducting research, analyzing data, or managing complex projects.
 
 **CTAs:**
 
@@ -447,9 +447,9 @@ Join teams already using Demiurge to eliminate fragmentation, boost productivity
 
 **Contact:**
 
-- General: contact@demiurge.co
-- Licensing: licensing@demiurge.co
-- Support: support@demiurge.co
+- General: contact@Kosmoforge.co
+- Licensing: licensing@Kosmoforge.co
+- Support: support@Kosmoforge.co
 
 ---
 
@@ -492,16 +492,16 @@ Join teams already using Demiurge to eliminate fragmentation, boost productivity
 ## Value Propositions
 
 **For Software Development & Engineering Teams:**
-"Spend less time managing tools, more time building software. Demiurge unifies your entire workflow—SaaS, containers, cloud, on-premise—in one collaborative platform with complete AI context. Have discussions embedded directly in your code, designs, and documentation—not lost in separate email threads or chat apps. Perfect for engineering teams building software, hardware, or complex systems."
+"Spend less time managing tools, more time building software. Kosmoforge unifies your entire workflow—SaaS, containers, cloud, on-premise—in one collaborative platform with complete AI context. Have discussions embedded directly in your code, designs, and documentation—not lost in separate email threads or chat apps. Perfect for engineering teams building software, hardware, or complex systems."
 
 **For Project Managers & Team Leads:**
 "Gain complete visibility into your projects. See progress, identify risks, and ensure quality through formal process checking—all from one unified dashboard with AI-powered insights. Communication happens within the context of your projects, not in separate email threads or chat apps that lose context. Works for any team managing complex, interconnected projects."
 
 **For DevOps Teams:**
-"Deploy and manage containerized applications anywhere—cloud, on-premise, or PC—with zero-config infrastructure. Stable URLs, automatic networking, seamless scaling. Connect everything through Demiurge's integration backbone."
+"Deploy and manage containerized applications anywhere—cloud, on-premise, or PC—with zero-config infrastructure. Stable URLs, automatic networking, seamless scaling. Connect everything through Kosmoforge's integration backbone."
 
 **For AI/ML Teams:**
-"Exponentialize your AI potential. Demiurge provides complete project context—requirements, code, tests, containers, communications—giving AI agents the full picture they need to be truly effective. No more fragmented data, no more incomplete context."
+"Exponentialize your AI potential. Kosmoforge provides complete project context—requirements, code, tests, containers, communications—giving AI agents the full picture they need to be truly effective. No more fragmented data, no more incomplete context."
 
 **For Quality Assurance Teams:**
 "Automate quality assurance through formal process checking. Define processes once, enforce automatically. Generate compliance reports, ensure traceability, detect deviations—all without manual overhead."
@@ -513,17 +513,17 @@ Join teams already using Demiurge to eliminate fragmentation, boost productivity
 "Connect data sources, analysis pipelines, models, and visualizations in one collaborative graph. Share notebooks, deploy analysis tools, and provide complete context to AI agents. Have discussions embedded directly within your data analysis, models, and visualizations—not in separate chat apps that disconnect from your work. Perfect for data science teams, analytics groups, and ML/AI projects."
 
 **For Organizations:**
-"Eliminate tool fragmentation, reduce coordination overhead, and accelerate delivery. Connect your entire tool stack—SaaS, cloud, on-premise—through Demiurge's integration backbone. Modules provide UI components from integrated apps as reusable LEGO blocks—place them where they make sense and build a tailor-made interface that fits your organization perfectly. Enable contextual communication across your entire tool stack—discussions embedded in your work, not lost in separate email threads or chat apps. Exponentialize AI potential. Ensure quality through formal processes. Demiurge pays for itself in productivity gains—whether you're building software, conducting research, or managing complex projects."
+"Eliminate tool fragmentation, reduce coordination overhead, and accelerate delivery. Connect your entire tool stack—SaaS, cloud, on-premise—through Kosmoforge's integration backbone. Modules provide UI components from integrated apps as reusable LEGO blocks—place them where they make sense and build a tailor-made interface that fits your organization perfectly. Enable contextual communication across your entire tool stack—discussions embedded in your work, not lost in separate email threads or chat apps. Exponentialize AI potential. Ensure quality through formal processes. Kosmoforge pays for itself in productivity gains—whether you're building software, conducting research, or managing complex projects."
 
 **For Teams Building Custom Solutions:**
-"Stop compromising with off-the-shelf tools. Demiurge's modular architecture provides UI components from integrated apps as reusable LEGO blocks. Modules plug into Demiurge, providing components from different applications—place the data visualization component from one module, the form builder from another, the collaboration features from a third—exactly where they make sense. It's like LEGO blocks for apps—modules provide the UI components, you place them where they make sense, and build your own custom interface. Build the perfect tool for your team from modular UI components provided by your integrated tools."
+"Stop compromising with off-the-shelf tools. Kosmoforge's modular architecture provides UI components from integrated apps as reusable LEGO blocks. Modules plug into Kosmoforge, providing components from different applications—place the data visualization component from one module, the form builder from another, the collaboration features from a third—exactly where they make sense. It's like LEGO blocks for apps—modules provide the UI components, you place them where they make sense, and build your own custom interface. Build the perfect tool for your team from modular UI components provided by your integrated tools."
 
 ---
 
 ## Social Proof Placeholders
 
 **Testimonial Format:**
-"[Quote about how Demiurge solved a specific problem]"
+"[Quote about how Kosmoforge solved a specific problem]"
 — [Name], [Title], [Company]
 
 **Metrics Format:**
@@ -533,7 +533,7 @@ Join teams already using Demiurge to eliminate fragmentation, boost productivity
 - "Z fewer tools needed"
 
 **Case Study Format:**
-"How [Company] eliminated tool fragmentation and accelerated delivery with Demiurge"
+"How [Company] eliminated tool fragmentation and accelerated delivery with Kosmoforge"
 
 ---
 
@@ -602,13 +602,13 @@ Join teams already using Demiurge to eliminate fragmentation, boost productivity
 ## Meta Descriptions
 
 **Homepage:**
-"Demiurge: Modules provide UI components from integrated apps as LEGO blocks—assemble your perfect interface. Contextual communication embedded in your work, not in separate email or chat apps. Integration backbone for SaaS, containers, cloud, and on-premise. Perfect for engineering, research, data science, and complex projects."
+"Kosmoforge: Modules provide UI components from integrated apps as LEGO blocks—assemble your perfect interface. Contextual communication embedded in your work, not in separate email or chat apps. Integration backbone for SaaS, containers, cloud, and on-premise. Perfect for engineering, research, data science, and complex projects."
 
 **Features Page:**
-"Discover Demiurge: LEGO-like UI assembly—modules provide UI components from integrated apps, tool stack integration backbone, complete AI context, formal process checking, real-time collaboration, visual workspace, and containerized apps. Built for teams managing complex projects—from engineering to research to data science."
+"Discover Kosmoforge: LEGO-like UI assembly—modules provide UI components from integrated apps, tool stack integration backbone, complete AI context, formal process checking, real-time collaboration, visual workspace, and containerized apps. Built for teams managing complex projects—from engineering to research to data science."
 
 **Documentation:**
-"Complete Demiurge documentation: architecture guides, API reference, deployment guides, and contribution guidelines."
+"Complete Kosmoforge documentation: architecture guides, API reference, deployment guides, and contribution guidelines."
 
 ---
 
@@ -616,20 +616,20 @@ Join teams already using Demiurge to eliminate fragmentation, boost productivity
 
 **Newsletter:**
 
-- "Demiurge Monthly: Latest Features & Updates"
+- "Kosmoforge Monthly: Latest Features & Updates"
 - "Engineering Collaboration Tips & Tricks"
-- "How Teams Are Using Demiurge"
+- "How Teams Are Using Kosmoforge"
 
 **Product Updates:**
 
-- "New in Demiurge: [Feature Name]"
-- "Demiurge Update: What's Changed"
+- "New in Kosmoforge: [Feature Name]"
+- "Kosmoforge Update: What's Changed"
 - "Introducing [Feature]: Transform Your Workflow"
 
 **Onboarding:**
 
-- "Welcome to Demiurge: Get Started in 5 Minutes"
-- "Your Demiurge Workspace Awaits"
+- "Welcome to Kosmoforge: Get Started in 5 Minutes"
+- "Your Kosmoforge Workspace Awaits"
 - "Let's Set Up Your First Project"
 
 ---
@@ -637,56 +637,56 @@ Join teams already using Demiurge to eliminate fragmentation, boost productivity
 ## Press Release Headlines
 
 **Product Launch:**
-"Demiurge Launches Unified Collaborative Development Platform to Eliminate Engineering Tool Fragmentation"
+"Kosmoforge Launches Unified Collaborative Development Platform to Eliminate Engineering Tool Fragmentation"
 
 **Feature Announcement:**
-"Demiurge Introduces [Feature] to Streamline [Workflow]"
+"Kosmoforge Introduces [Feature] to Streamline [Workflow]"
 
 **Partnership:**
-"Demiurge Partners with [Company] to Integrate [Tool]"
+"Kosmoforge Partners with [Company] to Integrate [Tool]"
 
 ---
 
 ## FAQ Section
 
-**Q: What is Demiurge?**
-A: Demiurge is the integration backbone for your entire tool stack—unifying SaaS applications, containerized tools (deployed in cloud, on-premise, or on PCs), and team collaboration into one platform. It provides complete project context to AI agents, exponentializing their potential, and enables formal process checking for quality assurance. While particularly powerful for engineering and software development teams, Demiurge serves any team managing complex, interconnected projects—from research and data science to cross-functional initiatives.
+**Q: What is Kosmoforge?**
+A: Kosmoforge is the integration backbone for your entire tool stack—unifying SaaS applications, containerized tools (deployed in cloud, on-premise, or on PCs), and team collaboration into one platform. It provides complete project context to AI agents, exponentializing their potential, and enables formal process checking for quality assurance. While particularly powerful for engineering and software development teams, Kosmoforge serves any team managing complex, interconnected projects—from research and data science to cross-functional initiatives.
 
-**Q: How does Demiurge integrate with my existing tools?**
-A: Demiurge connects to your entire tool ecosystem—SaaS applications, cloud services, on-premise infrastructure, containerized applications, and even applications running on personal PCs. Through industry-standard APIs and a modular architecture, you can build 1:1 integration bridges to Demiurge, eliminating the need for N×N integrations between every tool. Modules plug into Demiurge, providing UI components from integrated applications. These components become reusable LEGO blocks that you can place anywhere in your workspace, letting you assemble the best parts of all your tools into a completely custom interface that matches your workflow.
+**Q: How does Kosmoforge integrate with my existing tools?**
+A: Kosmoforge connects to your entire tool ecosystem—SaaS applications, cloud services, on-premise infrastructure, containerized applications, and even applications running on personal PCs. Through industry-standard APIs and a modular architecture, you can build 1:1 integration bridges to Kosmoforge, eliminating the need for N×N integrations between every tool. Modules plug into Kosmoforge, providing UI components from integrated applications. These components become reusable LEGO blocks that you can place anywhere in your workspace, letting you assemble the best parts of all your tools into a completely custom interface that matches your workflow.
 
-**Q: How does Demiurge's UI assembly work?**
-A: Demiurge's modular architecture provides UI components from integrated apps as reusable LEGO blocks. Modules plug into Demiurge, each providing UI components from different applications. Instead of using apps as monolithic blocks, you get access to their UI components—place the data visualization component from one module, the form builder from another, the collaboration features from a third—exactly where they make sense in your workflow. It's like LEGO blocks for apps—modules provide the UI components, you place them where they make sense, and build your own custom interface. The result? A completely customized application experience built from modular UI components provided by your integrated tools.
+**Q: How does Kosmoforge's UI assembly work?**
+A: Kosmoforge's modular architecture provides UI components from integrated apps as reusable LEGO blocks. Modules plug into Kosmoforge, each providing UI components from different applications. Instead of using apps as monolithic blocks, you get access to their UI components—place the data visualization component from one module, the form builder from another, the collaboration features from a third—exactly where they make sense in your workflow. It's like LEGO blocks for apps—modules provide the UI components, you place them where they make sense, and build your own custom interface. The result? A completely customized application experience built from modular UI components provided by your integrated tools.
 
 **Q: How do modules provide UI components?**
-A: Modules are pluggable components that integrate with Demiurge. Each module can provide UI components from integrated applications. For example, a JupyterLab module might provide data visualization components, a Notion module might provide form builder components, and an Airtable module might provide collaboration features. These UI components become reusable LEGO blocks that you can place anywhere in your Demiurge workspace, creating a custom interface built from the best parts of all your integrated tools.
+A: Modules are pluggable components that integrate with Kosmoforge. Each module can provide UI components from integrated applications. For example, a JupyterLab module might provide data visualization components, a Notion module might provide form builder components, and an Airtable module might provide collaboration features. These UI components become reusable LEGO blocks that you can place anywhere in your Kosmoforge workspace, creating a custom interface built from the best parts of all your integrated tools.
 
 **Q: How does cross-tool communication work?**
-A: Unlike traditional communication tools that create separate silos (email, chat apps), Demiurge's cross-tool communication embeds conversations directly within your work context. You can have discussions within specific documents, linked to particular data points, attached to components, or connected to any part of your project graph. These conversations are accessible across your entire organization's tool stack, ensuring that context is never lost. No more searching through email threads or chat history—the discussion is right where the work happens, and it's part of your project's living data, not dead data in a parallel tool.
+A: Unlike traditional communication tools that create separate silos (email, chat apps), Kosmoforge's cross-tool communication embeds conversations directly within your work context. You can have discussions within specific documents, linked to particular data points, attached to components, or connected to any part of your project graph. These conversations are accessible across your entire organization's tool stack, ensuring that context is never lost. No more searching through email threads or chat history—the discussion is right where the work happens, and it's part of your project's living data, not dead data in a parallel tool.
 
-**Q: How does Demiurge "exponentialize AI potential"?**
-A: By consolidating all project data—requirements, designs, code, tests, containers, communications, processes—into one unified graph, Demiurge provides AI agents with complete context on your complex projects. Instead of working with isolated files or fragments, AI can understand relationships, trace dependencies, analyze impact, and provide intelligent automation based on the complete picture. This complete context makes AI exponentially more effective.
+**Q: How does Kosmoforge "exponentialize AI potential"?**
+A: By consolidating all project data—requirements, designs, code, tests, containers, communications, processes—into one unified graph, Kosmoforge provides AI agents with complete context on your complex projects. Instead of working with isolated files or fragments, AI can understand relationships, trace dependencies, analyze impact, and provide intelligent automation based on the complete picture. This complete context makes AI exponentially more effective.
 
 **Q: What is "formal process checking"?**
-A: Demiurge enables you to define formal quality assurance processes using process description languages. The platform automatically checks that processes are followed, detects deviations, generates compliance reports, and ensures traceability—all without manual overhead. This allows you to maintain rigorous QA standards (ISO-9001, DO-178, MIL-STD, etc.) while eliminating the significant effort typically required.
+A: Kosmoforge enables you to define formal quality assurance processes using process description languages. The platform automatically checks that processes are followed, detects deviations, generates compliance reports, and ensures traceability—all without manual overhead. This allows you to maintain rigorous QA standards (ISO-9001, DO-178, MIL-STD, etc.) while eliminating the significant effort typically required.
 
 **Q: How does real-time collaboration work?**
-A: Demiurge uses YJS CRDT (Conflict-Free Replicated Data Types) technology to enable simultaneous editing without conflicts. Changes sync instantly across all connected clients.
+A: Kosmoforge uses YJS CRDT (Conflict-Free Replicated Data Types) technology to enable simultaneous editing without conflicts. Changes sync instantly across all connected clients.
 
 **Q: What containerized applications are supported?**
 A: Any Docker container works! Common examples include JupyterLab, pgAdmin, n8n, VSCode Server, and custom applications.
 
-**Q: Is Demiurge open source?**
-A: Yes, Demiurge is open source and available under a dual licensing model: free for non-commercial use, commercial licenses available for businesses.
+**Q: Is Kosmoforge open source?**
+A: Yes, Kosmoforge is open source and available under a dual licensing model: free for non-commercial use, commercial licenses available for businesses.
 
-**Q: Can I self-host Demiurge?**
-A: Absolutely. Demiurge can be deployed on-premises or in the cloud. Full deployment documentation is available.
+**Q: Can I self-host Kosmoforge?**
+A: Absolutely. Kosmoforge can be deployed on-premises or in the cloud. Full deployment documentation is available.
 
 **Q: How does pricing work?**
-A: Demiurge is free for non-commercial use (personal projects, education, research, non-profits). Commercial licenses are available for for-profit businesses—contact us for pricing.
+A: Kosmoforge is free for non-commercial use (personal projects, education, research, non-profits). Commercial licenses are available for for-profit businesses—contact us for pricing.
 
-**Q: Is Demiurge only for engineering teams?**
-A: No! While Demiurge is particularly powerful for engineering and software development teams, it's designed for any team managing complex, interconnected projects. Research teams use it for managing experiments and data. Data science teams use it for analysis pipelines and models. Cross-functional teams use it to break down silos. The graph-based model and modular architecture adapt to your domain and workflow.
+**Q: Is Kosmoforge only for engineering teams?**
+A: No! While Kosmoforge is particularly powerful for engineering and software development teams, it's designed for any team managing complex, interconnected projects. Research teams use it for managing experiments and data. Data science teams use it for analysis pipelines and models. Cross-functional teams use it to break down silos. The graph-based model and modular architecture adapt to your domain and workflow.
 
 ---
 
@@ -698,7 +698,7 @@ This copywriting is designed to be:
 - **Technical but accessible**: Speaks to technical teams without overwhelming non-technical stakeholders
 - **Benefit-focused**: Emphasizes outcomes (productivity, efficiency) over features
 - **Problem-aware**: Acknowledges real pain points teams face across domains
-- **Future-oriented**: Positions Demiurge as an evolving platform, not just a tool
+- **Future-oriented**: Positions Kosmoforge as an evolving platform, not just a tool
 - **Action-oriented**: Clear CTAs and next steps throughout
 - **Domain-agnostic**: Uses language that works for engineering, research, data science, and beyond
 

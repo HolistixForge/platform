@@ -6,6 +6,20 @@ set -e
 
 echo "📦 Installing Node.js..."
 
+# Check if Node.js is already installed with the desired major version (24.x)
+if command -v node >/dev/null 2>&1; then
+  CURRENT_NODE_VERSION=$(node --version 2>/dev/null || echo "")
+  if echo "$CURRENT_NODE_VERSION" | grep -qE '^v24\.'; then
+    echo "✅ Node.js already installed with desired version (${CURRENT_NODE_VERSION}). Nothing to do."
+    echo ""
+    echo "📊 Versions:"
+    echo "   Node.js: ${CURRENT_NODE_VERSION}"
+    echo "   npm:     $(npm --version 2>/dev/null || echo 'unknown')"
+    echo ""
+    exit 0
+  fi
+fi
+
 # Install prerequisites
 sudo apt-get update
 sudo apt-get install -y ca-certificates curl gnupg

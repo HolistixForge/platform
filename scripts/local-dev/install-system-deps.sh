@@ -16,6 +16,9 @@ sudo apt install -y postgresql postgresql-contrib
 sudo apt install -y nginx
 sudo service nginx start
 
+# Install Docker client (for building/running images from the container)
+sudo apt install -y docker.io
+
 # Install other utilities
 sudo apt install -y jq curl git
 

@@ -29,11 +29,40 @@ OTLP_COLLECTOR_HTTP_PORT=4318      # OTLP HTTP receiver (apps send here)
 OTLP_COLLECTOR_GRPC_PORT=4317      # OTLP gRPC receiver (apps send here)
 LOKI_HTTP_PORT=3100                # Loki API
 TEMPO_HTTP_PORT=3200               # Tempo API (for queries)
-GRAFANA_PORT=3000                 # Grafana UI
+GRAFANA_PORT=3000                  # Grafana UI
 
-# Storage directories
-OBSERVABILITY_DIR="/root/.local-dev/observability"
-mkdir -p "${OBSERVABILITY_DIR}"/{loki,tempo,grafana}
+# If all observability containers already exist, assume setup is done and exit
+ALL_CONTAINERS_EXIST=true
+for c in observability-otlp-collector observability-loki observability-tempo observability-grafana; do
+  if ! docker container inspect "$c" >/dev/null 2>&1; then
+    ALL_CONTAINERS_EXIST=false
+    break
+  fi
+done
+
+if [ "$ALL_CONTAINERS_EXIST" = true ]; then
+  echo "✅ Observability infrastructure already set up (containers exist). Nothing to do."
+  echo ""
+  echo "📊 Services:"
+  echo ""
+  echo "   OTLP Collector:"
+  echo "     HTTP: http://localhost:${OTLP_COLLECTOR_HTTP_PORT}"
+  echo "     gRPC: http://localhost:${OTLP_COLLECTOR_GRPC_PORT}"
+  echo ""
+  echo "   Loki (Log Storage):"
+  echo "     API: http://localhost:${LOKI_HTTP_PORT}"
+  echo ""
+  echo "   Tempo (Trace Storage):"
+  echo "     API: http://localhost:${TEMPO_HTTP_PORT}"
+  echo "     (Traces received via OTLP Collector)"
+  echo ""
+  echo "   Grafana (UI):"
+  echo "     URL: http://localhost:${GRAFANA_PORT}"
+  echo "     Username: admin"
+  echo "     Password: admin"
+  echo ""
+  exit 0
+fi
 
 # Create Docker network for observability services
 echo "🌐 Creating Docker network for observability services..."
@@ -43,6 +72,11 @@ echo "📦 Creating Docker volumes for persistent storage..."
 docker volume create observability-loki-data 2>/dev/null || echo "   Volume observability-loki-data already exists"
 docker volume create observability-tempo-data 2>/dev/null || echo "   Volume observability-tempo-data already exists"
 docker volume create observability-grafana-data 2>/dev/null || echo "   Volume observability-grafana-data already exists"
+
+echo "📦 Creating Docker volumes for configurations..."
+docker volume create observability-otel-config 2>/dev/null || echo "   Volume observability-otel-config already exists"
+docker volume create observability-tempo-config 2>/dev/null || echo "   Volume observability-tempo-config already exists"
+docker volume create observability-grafana-config 2>/dev/null || echo "   Volume observability-grafana-config already exists"
 
 echo "✅ Volumes created"
 echo ""
@@ -55,9 +89,13 @@ docker rm observability-otlp-collector observability-loki observability-tempo ob
 echo "✅ Cleaned up existing containers"
 echo ""
 
+# Note: We use Docker volumes for configs instead of bind mounts because this dev container
+# uses the host's Docker daemon (via socket mount). Bind mounts from the dev container's
+# filesystem aren't accessible to the host's Docker daemon. We pipe configs via stdin instead.
+
 # Create OTLP Collector configuration
 echo "⚙️  Creating OTLP Collector configuration..."
-cat > "${OBSERVABILITY_DIR}/otlp-collector-config.yaml" <<'EOF'
+cat <<'EOF' | docker run --rm -i -v observability-otel-config:/config alpine sh -c "cat > /config/config.yaml"
 receivers:
   otlp:
     protocols:
@@ -70,45 +108,33 @@ processors:
   batch:
     timeout: 1s
     send_batch_size: 1024
-  resource:
-    attributes:
-      - key: environment
-        from_attribute: deployment.environment
-        action: upsert
 
 exporters:
-  logging:
-    loglevel: info
-  loki:
-    endpoint: http://observability-loki:3100/loki/api/v1/push
-    labels:
-      resource:
-        service.name: "service_name"
-        deployment.environment: "environment"
-      attributes:
-        http.method: "http_method"
-        http.status_code: "http_status_code"
+  debug:
+    verbosity: detailed
   otlp/tempo:
     endpoint: observability-tempo:4317
     tls:
       insecure: true
+  otlphttp/loki:
+    endpoint: http://observability-loki:3100/otlp
 
 service:
   pipelines:
     logs:
       receivers: [otlp]
-      processors: [batch, resource]
-      exporters: [loki, logging]
+      processors: [batch]
+      exporters: [otlphttp/loki, debug]
     traces:
       receivers: [otlp]
-      processors: [batch, resource]
-      exporters: [otlp/tempo, logging]
+      processors: [batch]
+      exporters: [otlp/tempo, debug]
 EOF
 
 echo "✅ OTLP Collector config created"
 echo ""
 
-# Start OTLP Collector
+# Start OTLP Collector (using contrib image for Loki support)
 echo "🚀 Starting OTLP Collector..."
 docker run -d \
   --name observability-otlp-collector \
@@ -116,9 +142,9 @@ docker run -d \
   --network observability-network \
   -p ${OTLP_COLLECTOR_HTTP_PORT}:4318 \
   -p ${OTLP_COLLECTOR_GRPC_PORT}:4317 \
-  -v "${OBSERVABILITY_DIR}/otlp-collector-config.yaml:/etc/otlp-collector-config.yaml" \
-  otel/opentelemetry-collector:latest \
-  --config=/etc/otlp-collector-config.yaml
+  -v observability-otel-config:/config:ro \
+  otel/opentelemetry-collector-contrib:latest \
+  --config=/config/config.yaml
 
 if [ $? -ne 0 ]; then
     echo "❌ Failed to start OTLP Collector"
@@ -156,7 +182,7 @@ sleep 5
 
 # Create Tempo configuration
 echo "⚙️  Creating Tempo configuration..."
-cat > "${OBSERVABILITY_DIR}/tempo-config.yaml" <<'EOF'
+cat <<'EOF' | docker run --rm -i -v observability-tempo-config:/config alpine sh -c "cat > /config/config.yaml"
 server:
   http_listen_port: 3200
 
@@ -175,7 +201,6 @@ ingester:
 compactor:
   compaction:
     block_retention: 1h
-    compacted_block_retention: 10m
 
 storage:
   trace:
@@ -185,11 +210,6 @@ storage:
     pool:
       max_workers: 100
       queue_depth: 10000
-
-overrides:
-  defaults:
-    ingestion_rate_limit_bytes: 15000000
-    ingestion_burst_size_bytes: 20000000
 EOF
 
 # Start Tempo (OTLP ports exposed internally via Docker network only)
@@ -200,9 +220,9 @@ docker run -d \
   --network observability-network \
   -p ${TEMPO_HTTP_PORT}:3200 \
   -v observability-tempo-data:/var/tempo \
-  -v "${OBSERVABILITY_DIR}/tempo-config.yaml:/etc/tempo.yaml" \
+  -v observability-tempo-config:/config:ro \
   grafana/tempo:latest \
-  -config.file=/etc/tempo.yaml
+  -config.file=/config/config.yaml
 
 if [ $? -ne 0 ]; then
     echo "❌ Failed to start Tempo"
@@ -221,8 +241,7 @@ sleep 5
 
 # Create Grafana datasources configuration
 echo "⚙️  Creating Grafana datasources configuration..."
-mkdir -p "${OBSERVABILITY_DIR}/grafana/provisioning/datasources"
-cat > "${OBSERVABILITY_DIR}/grafana/provisioning/datasources/datasources.yaml" <<'EOF'
+docker run --rm -i -v observability-grafana-config:/config alpine sh -c "mkdir -p /config/provisioning/datasources && cat > /config/provisioning/datasources/datasources.yaml" <<'EOF'
 apiVersion: 1
 
 datasources:
@@ -261,7 +280,8 @@ docker run -d \
   --network observability-network \
   -p ${GRAFANA_PORT}:3000 \
   -v observability-grafana-data:/var/lib/grafana \
-  -v "${OBSERVABILITY_DIR}/grafana/provisioning:/etc/grafana/provisioning" \
+  -v observability-grafana-config:/config:ro \
+  -e GF_PATHS_PROVISIONING=/config/provisioning \
   -e GF_AUTH_ANONYMOUS_ENABLED=true \
   -e GF_AUTH_ANONYMOUS_ORG_ROLE=Admin \
   -e GF_SECURITY_ADMIN_PASSWORD=admin \
@@ -332,6 +352,9 @@ echo ""
 echo "   All environments will use these endpoints automatically."
 echo "   OTLP endpoints will be added to .env.ganymede when you create environments."
 echo ""
+echo "   Note: Configs are stored in Docker volumes (not bind mounts) due to"
+echo "   Docker-in-Docker architecture. Use 'docker run' commands to inspect configs."
+echo ""
 echo "📝 Next steps:"
 echo ""
 echo "   1. Access Grafana: http://localhost:${GRAFANA_PORT}"
@@ -361,10 +384,11 @@ echo "   Remove services (data preserved in volumes):"
 echo "     docker stop observability-otlp-collector observability-loki observability-tempo observability-grafana"
 echo "     docker rm observability-otlp-collector observability-loki observability-tempo observability-grafana"
 echo ""
-echo "   Remove everything (including data):"
+echo "   Remove everything (including data and configs):"
 echo "     docker stop observability-otlp-collector observability-loki observability-tempo observability-grafana"
 echo "     docker rm observability-otlp-collector observability-loki observability-tempo observability-grafana"
 echo "     docker volume rm observability-loki-data observability-tempo-data observability-grafana-data"
+echo "     docker volume rm observability-otel-config observability-tempo-config observability-grafana-config"
 echo "     docker network rm observability-network"
 echo ""
 
