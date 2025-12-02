@@ -25,8 +25,8 @@ export const spaceMenuEntrie: TSpaceMenuEntries = ({
   >;
 
   const node = from && tsd.nodes.get(from?.node);
-  const project_server_id = node?.data?.project_server_id as number;
-  const jupyter = tsd['jupyter:servers'].get(`${project_server_id}`);
+  const user_container_id = node?.data?.user_container_id as number;
+  const jupyter = tsd['jupyter:servers'].get(`${user_container_id}`);
 
   const d = dispatcher as FrontendDispatcher<TJupyterEvent>;
 
@@ -41,7 +41,7 @@ export const spaceMenuEntrie: TSpaceMenuEntries = ({
           onClick: () => {
             renderForm(
               <NewKernelForm
-                project_server_id={project_server_id}
+                user_container_id={user_container_id}
                 viewId={viewId}
                 position={position()}
                 closeForm={() => {
@@ -73,7 +73,7 @@ export const spaceMenuEntrie: TSpaceMenuEntries = ({
           onClick: () => {
             renderForm(
               <NewTerminalForm
-                project_server_id={project_server_id}
+                user_container_id={user_container_id}
                 viewId={viewId}
                 position={position()}
                 closeForm={() => {

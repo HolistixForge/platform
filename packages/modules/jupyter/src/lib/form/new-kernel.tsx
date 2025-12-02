@@ -29,12 +29,12 @@ type NewKernelFormData = { kernel_id: string };
  */
 
 export const NewKernelForm = ({
-  project_server_id,
+  user_container_id,
   position,
   viewId,
   closeForm,
 }: {
-  project_server_id: number;
+  user_container_id: number;
   position: TPosition;
   viewId: string;
   closeForm: () => void;
@@ -51,11 +51,11 @@ export const NewKernelForm = ({
   );
 
   const server: TServer | undefined = sd['user-containers:containers'].get(
-    project_server_id.toString()
+    user_container_id.toString()
   );
 
   const jupyter: TJupyterServerData | undefined = sd['jupyter:servers'].get(
-    project_server_id.toString()
+    user_container_id.toString()
   );
 
   useEffect(() => {
@@ -70,7 +70,7 @@ export const NewKernelForm = ({
         return dispatcher.dispatch({
           type: 'jupyter:new-kernel-node',
           kernel_id: d.kernel_id as string,
-          project_server_id: project_server_id,
+          user_container_id: user_container_id,
           origin: {
             viewId: viewId,
             position,
@@ -78,7 +78,7 @@ export const NewKernelForm = ({
         });
       } else throw new Error('No such server');
     },
-    [dispatcher, position, project_server_id, jupyter, viewId],
+    [dispatcher, position, user_container_id, jupyter, viewId],
     {
       startOpened: true,
       checkForm: (d, e) => {

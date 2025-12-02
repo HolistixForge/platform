@@ -78,7 +78,7 @@ export class CollaborationProbe {
     this.globalAwareness = this.connectRoom('JupyterLab:globalAwareness', {});
     this.globalAwareness.provider.awareness.on('change', () => {
       debug(
-        `[server: ${this.server.project_server_id}, globalAwareness]: change:`,
+        `[server: ${this.server.user_container_id}, globalAwareness]: change:`,
         this.globalAwareness.provider.awareness.getStates()
       );
     });

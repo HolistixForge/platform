@@ -21,12 +21,12 @@ import { TServer, TServersSharedData } from '@monorepo/user-containers';
 type NewTerminalFormData = { terminal_id: string };
 
 export const NewTerminalForm = ({
-  project_server_id,
+  user_container_id,
   position,
   viewId,
   closeForm,
 }: {
-  project_server_id: number;
+  user_container_id: number;
   position: TPosition;
   viewId: string;
   closeForm: () => void;
@@ -40,11 +40,11 @@ export const NewTerminalForm = ({
   );
 
   const server: TServer | undefined = sd['user-containers:containers'].get(
-    project_server_id.toString()
+    user_container_id.toString()
   );
 
   const jupyter: TJupyterServerData | undefined = sd['jupyter:servers'].get(
-    project_server_id.toString()
+    user_container_id.toString()
   );
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export const NewTerminalForm = ({
         if (d.terminal_id === 'new') {
           return dispatcher.dispatch({
             type: 'jupyter:new-terminal',
-            project_server_id: project_server_id,
+            user_container_id: user_container_id,
             client_id: 'not needed here in storybook',
             origin: {
               viewId: viewId,
@@ -69,7 +69,7 @@ export const NewTerminalForm = ({
         } else {
           return dispatcher.dispatch({
             type: 'jupyter:new-terminal-node',
-            project_server_id: project_server_id,
+            user_container_id: user_container_id,
             client_id: 'not needed here in storybook',
             terminal_id: d.terminal_id,
             origin: {
@@ -80,7 +80,7 @@ export const NewTerminalForm = ({
         }
       } else throw new Error('No such server');
     },
-    [dispatcher, position, project_server_id, jupyter, viewId],
+    [dispatcher, position, user_container_id, jupyter, viewId],
     {
       startOpened: true,
       checkForm: (d, e) => {

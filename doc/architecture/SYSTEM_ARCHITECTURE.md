@@ -91,10 +91,11 @@
 │  │  │ • Permissions    │  │ • Permissions    │  │ • Permissions    │      │ │
 │  │  │ • OAuth provider │  │ • OAuth provider │  │ • OAuth provider │      │ │
 │  │  │ • Container mgmt │  │ • Container mgmt │  │ • Container mgmt │      │ │
+│  │  │ • Protected svc  │  │ • Protected svc  │  │ • Protected svc  │      │ │
 │  │  │                  │  │                  │  │                  │      │ │
 │  │  │ Nginx (Stage 2)  │  │ Nginx (Stage 2)  │  │ Nginx (Stage 2)  │      │ │
-│  │  │ • Proxy to user  │  │ • Proxy to user  │  │ • Proxy to user  │      │ │
-│  │  │   containers     │  │   containers     │  │   containers     │      │ │
+│  │  │ • Routes uc-*.   │  │ • Routes uc-*.   │  │ • Routes uc-*.   │      │ │
+│  │  │   to VPN IPs     │  │   to VPN IPs     │  │   to VPN IPs     │      │ │
 │  │  │                  │  │                  │  │                  │      │ │
 │  │  │ OpenVPN Server   │  │ OpenVPN Server   │  │ OpenVPN Server   │      │ │
 │  │  │ • 172.16.x.x/16  │  │ • 172.16.x.x/16  │  │ • 172.16.x.x/16  │      │ │

@@ -9,6 +9,7 @@ import type {
   OAuthManager,
   TokenManager,
   PermissionRegistry,
+  ProtectedServiceRegistry,
 } from '@monorepo/gateway';
 import { CONFIG } from '../config';
 
@@ -25,7 +26,8 @@ export function createBackendModulesConfig(
   permissionManager: PermissionManager,
   oauthManager: OAuthManager,
   tokenManager: TokenManager,
-  permissionRegistry: PermissionRegistry
+  permissionRegistry: PermissionRegistry,
+  protectedServiceRegistry: ProtectedServiceRegistry
 ): { module: TModule<never, object>; config: object }[] {
   // Collab config - uses YjsServerCollab for server-side (Yjs WebSocket server)
   // The room_id is not used in server mode, but required by config type
@@ -51,6 +53,7 @@ export function createBackendModulesConfig(
     oauthManager,
     tokenManager,
     permissionRegistry,
+    protectedServiceRegistry,
   };
 
   // Return modules in dependency order:

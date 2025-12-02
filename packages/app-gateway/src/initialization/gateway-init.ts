@@ -5,7 +5,7 @@ import { PermissionManager } from '../permissions';
 import { ProjectRoomsManager } from '../state/ProjectRooms';
 import { OAuthManager } from '../oauth';
 import { TokenManager } from '../tokens';
-import { PermissionRegistry } from '@monorepo/gateway';
+import { PermissionRegistry, ProtectedServiceRegistry } from '@monorepo/gateway';
 
 export interface GatewayInstances {
   gatewayState: GatewayState;
@@ -14,20 +14,13 @@ export interface GatewayInstances {
   tokenManager: TokenManager;
   projectRooms: ProjectRoomsManager;
   permissionRegistry: PermissionRegistry;
+  protectedServiceRegistry: ProtectedServiceRegistry;
 }
 import { setGatewayInstances, getGatewayInstances } from './gateway-instances';
 import { createBackendModulesConfig } from '../config/modules';
 
 // Cleanup interval reference (stored to clear on shutdown)
 let oauthCleanupInterval: NodeJS.Timeout | null = null;
-
-export interface GatewayInstances {
-  gatewayState: GatewayState;
-  permissionManager: PermissionManager;
-  oauthManager: OAuthManager;
-  tokenManager: TokenManager;
-  projectRooms: ProjectRoomsManager;
-}
 
 /**
  * Initialize Gateway for Organization
@@ -77,6 +70,7 @@ export async function initializeGatewayForOrganization(
 
   // 5.5 Create PermissionRegistry instance
   const permissionRegistry = new PermissionRegistry();
+  const protectedServiceRegistry = new ProtectedServiceRegistry();
 
   // 5. Store instances in registry for route access + start auto-save
   gatewayState.startAutosave();
@@ -92,6 +86,7 @@ export async function initializeGatewayForOrganization(
     tokenManager,
     projectRooms,
     permissionRegistry,
+    protectedServiceRegistry,
   };
   setGatewayInstances(instances);
 
@@ -104,7 +99,8 @@ export async function initializeGatewayForOrganization(
     permissionManager,
     oauthManager,
     tokenManager,
-    permissionRegistry
+    permissionRegistry,
+    protectedServiceRegistry
   );
   log(
     EPriority.Info,

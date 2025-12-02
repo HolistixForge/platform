@@ -9,18 +9,14 @@ import { TCollabBackendExports } from '@monorepo/collab';
 import type { TGatewayExports, TGatewaySharedData } from '@monorepo/gateway';
 
 import { GatewayReducer } from './gateway-reducer';
-import type {
-  PermissionManager,
-  OAuthManager,
-  TokenManager,
-} from '@monorepo/gateway';
+import type { PermissionManager, OAuthManager, TokenManager } from '@monorepo/gateway';
 import { DNSManagerImpl } from '../dns/DNSManager';
 
 /**
  * Gateway Module Configuration
  * Passed to gateway module load() function
  */
-import { PermissionRegistry } from '@monorepo/gateway';
+import { PermissionRegistry, ProtectedServiceRegistry } from '@monorepo/gateway';
 
 export type GatewayModuleConfig = {
   organization_id: string;
@@ -33,6 +29,7 @@ export type GatewayModuleConfig = {
   oauthManager: OAuthManager;
   tokenManager: TokenManager;
   permissionRegistry: PermissionRegistry;
+  protectedServiceRegistry: ProtectedServiceRegistry;
 };
 
 type TRequired = {
@@ -108,11 +105,12 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
       updateReverseProxy: async (
         services: { host: string; ip: string; port: number }[]
       ) => {
+        // Input format: fqdn ip port (one per line)
+        // Each service has a distinct FQDN (uc-{uuid}.org-{uuid}.domain.local)
         const config = services
           .map((s) => `${s.host} ${s.ip} ${s.port}\n`)
           .join('');
         log(EPriority.Info, 'GATEWAY', 'update-nginx-locations', config);
-        throw new Error('fix update-nginx-locations script');
         runScript('update-nginx-locations', config);
       },
 
@@ -125,6 +123,7 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
       oauthManager: gatewayConfig.oauthManager,
       dnsManager: new DNSManagerImpl(toGanymede),
       permissionRegistry: gatewayConfig.permissionRegistry,
+      protectedServiceRegistry: gatewayConfig.protectedServiceRegistry,
     };
 
     moduleExports(myExports);

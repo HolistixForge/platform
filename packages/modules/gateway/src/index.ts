@@ -2,16 +2,17 @@ import type { TModule } from '@monorepo/module';
 import { TMyfetchRequest } from '@monorepo/simple-types';
 import { TCollabFrontendExports } from '@monorepo/collab/frontend';
 
-import {
-  TokenManager,
-  PermissionManager,
-  OAuthManager,
-  DNSManager,
-} from './lib/managers';
+import { TokenManager, PermissionManager, OAuthManager, DNSManager } from './lib/managers';
 
 //
 
 import { PermissionRegistry } from './lib/permission-registry';
+import {
+  ProtectedServiceRegistry,
+  type ProtectedServiceHandler,
+  type ProtectedServiceRequestContext,
+  type ProtectedServiceResolution,
+} from './lib/protected-service-registry';
 
 export type TGatewayExports = {
   toGanymede: <T>(r: TMyfetchRequest) => Promise<T>;
@@ -25,6 +26,7 @@ export type TGatewayExports = {
   oauthManager: OAuthManager;
   dnsManager: DNSManager;
   permissionRegistry: PermissionRegistry;
+  protectedServiceRegistry: ProtectedServiceRegistry;
 };
 
 //
@@ -64,5 +66,13 @@ export {
   PermissionRegistry,
   type PermissionDefinition,
 } from './lib/permission-registry';
+
+// Export ProtectedServiceRegistry and related types
+export {
+  ProtectedServiceRegistry,
+  type ProtectedServiceHandler,
+  type ProtectedServiceRequestContext,
+  type ProtectedServiceResolution,
+} from './lib/protected-service-registry';
 
 export type { TEventDisableShutdown } from './lib/gateway-events';

@@ -97,6 +97,10 @@ export const UserContainerCardInternal = ({
     firstServiceName &&
     serviceUrl(container, firstServiceName);
 
+  // Terminal URL: use serviceUrl helper to construct proper FQDN-based URL
+  const terminalService = container.httpServices.find(s => s.name === 'terminal');
+  const terminalUrl = terminalService ? serviceUrl(container, 'terminal') : null;
+
   //
 
   return (
@@ -162,6 +166,18 @@ export const UserContainerCardInternal = ({
                         onClick={() => window.open(firstServiceUrl, '_blank')}
                       >
                         Open in new Tab
+                        <div className="RightSlot">
+                          <OpenInNewWindowIcon />
+                        </div>
+                      </Menubar.Item>
+                    )}
+
+                    {terminalUrl && (
+                      <Menubar.Item
+                        className="MenubarItem"
+                        onClick={() => window.open(terminalUrl, '_blank')}
+                      >
+                        Open Terminal
                         <div className="RightSlot">
                           <OpenInNewWindowIcon />
                         </div>

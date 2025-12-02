@@ -536,6 +536,37 @@ done
 nginx -t && nginx -s reload
 ```
 
+### Protected Services for Container-Terminals
+
+To avoid coupling app-gateway to specific container concepts (like user-containers) while still enforcing permissions, we introduce a **generic protected service mechanism**:
+
+- **ProtectedServiceRegistry (gateway module)**:
+  - Modules register services with:
+    - `id` (e.g., `"user-containers:terminal"`),
+    - `checkPermission(ctx, { permissionManager })` callback,
+    - `resolve(ctx)` callback that returns a generic metadata object (`ProtectedServiceResolution`).
+  - app-gateway exposes a single HTTP entrypoint:
+    - `ALL /svc/{serviceId}`
+    - Authenticates JWT (typically `TJwtUser`).
+    - Looks up the handler by `serviceId` in the registry.
+    - Runs `checkPermission` and, if allowed, returns `resolve(ctx)` as JSON.
+
+- **Example: user-containers terminal service**:
+  - `user-containers` module registers:
+    - `id: "user-containers:terminal"`.
+    - `checkPermission` that requires:
+      - `ctx.userId` to be present, and
+      - permission string `user-containers:[user-container:{id}]:terminal` where `{id}` is taken from `ctx.query.user_container_id`.
+    - `resolve` that:
+      - Looks up the user-container in shared state.
+      - Finds the `httpService` named `"terminal"`.
+      - Returns metadata like `{ user_container_id, service: "terminal", host, port, secure }`.
+  - Frontend opens:
+    - `/svc/user-containers%3Aterminal?user_container_id={id}`
+    - and uses the returned metadata to connect to the in-container ttyd terminal UI.
+
+This keeps **permission checks and routing logic in the gateway**, but modules own the semantics of individual services (e.g. terminals, admin UIs) without introducing container-specific code in app-gateway itself.
+
 ### Local Development Setup
 
 #### DNS Configuration

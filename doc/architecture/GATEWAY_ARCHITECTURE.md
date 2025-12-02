@@ -63,11 +63,16 @@ All domains managed by PowerDNS with single DNS delegation on host OS:
 
 ### Stage 2: Gateway Container Nginx
 
-- **Purpose:** User container routing via VPN
-- **Protocol:** Plain HTTP (SSL already terminated)
-- **Routes:** `uc-{uuid}.org-{uuid}.domain.local` → User container IP:port
+- **Purpose:** Route traffic to app-gateway and user containers
+- **Protocol:** Plain HTTP (SSL already terminated by Stage 1)
+- **Server blocks:**
+  - Gateway FQDN (`org-{uuid}.domain.local`) → app-gateway :8888 for all paths
+  - VPN IP (`172.16.0.1`) → app-gateway :8888 for all paths (used by containers)
+  - Each user container FQDN (`uc-{uuid}.org-{uuid}.domain.local`) → container VPN IP:port (dynamic)
 
-**Why 2 stages?** Stage 1 doesn't know user container IPs (managed inside gateway via VPN).
+**Why 2 stages?** Stage 1 doesn't know user container VPN IPs (managed inside gateway). Stage 2 nginx is inside the gateway and can route to VPN IPs directly.
+
+**Path routing:** /collab, /svc, /oauth, /permissions are Express routes inside app-gateway, not nginx location blocks.
 
 ---
 
@@ -420,12 +425,14 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
 - `TokenManager` - Token management (JWT tokens) for container authentication
 - `ProjectRoomsManager` - YJS rooms with `IPersistenceProvider`
 - `DNSManager` - Generic DNS record management (FQDN → IP mapping) - no container awareness
+- `PermissionRegistry` - Registry of permission definitions registered by modules (used by `/permissions` routes)
+- `ProtectedServiceRegistry` - Registry of generic "protected services" registered by modules (used by `/svc/*` routes)
 
 **Initialization (`initialization/gateway-init.ts`):**
 
 - `initializeGateway(org_id, gateway_id, token)` - Creates all instances, pulls data, registers providers
 - `shutdownGateway()` - Gracefully shutdown (gets instances from registry)
-- `GatewayInstances` registry - Stores instances for route access
+- `GatewayInstances` registry - Stores instances for route access (GatewayState, managers, PermissionRegistry, ProtectedServiceRegistry)
 
 ### API Endpoints
 
@@ -443,6 +450,17 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
 **Gateway:**
 
 - `POST /collab/start` (called by Ganymede) - Handshake, pull data, initialize
+- `GET /collab/ping` - Health check
+- `POST /collab/event` (TJwtUser or TJwtUserContainer) - Process collaborative events
+- `GET /collab/room-id` (TJwtUser with project access) - Get YJS room ID for project
+- `GET /collab/vpn-config` (JWT with `org:{org_id}:connect-vpn` scope) - Get OpenVPN config
+- `GET /permissions` (TJwtUser) - List all permissions
+- `GET /permissions/projects/{id}` (TJwtUser) - Get project user permissions
+- `PATCH /permissions/projects/{id}/users/{id}` (TJwtUser) - Update user permissions
+- `GET /oauth/authorize` (TJwtUser) - OAuth authorization for container apps
+- `POST /oauth/token` - OAuth token exchange
+- `POST /oauth/authenticate` (OAuth Bearer token) - Validate OAuth token
+- `ALL /svc/{serviceId}` (TJwtUser usually) - Resolve module-defined protected service
 
 ---
 

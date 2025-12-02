@@ -48,14 +48,14 @@ export const useJLsManager = () =>
 //
 
 export const useKernelPack = (
-  project_server_id: number,
+  user_container_id: number,
   kernel_id: string
 ): TKernelPack | false => {
   const { jupyter } = useJLsManager();
   useRegisterListener(jupyter.jlsManager, kernel_id);
 
   const kernelPack = jupyter.jlsManager.getKernelPack(
-    project_server_id,
+    user_container_id,
     kernel_id
   );
 
