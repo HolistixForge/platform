@@ -271,11 +271,17 @@ cmd_start() {
             ;;
     esac
     
+    # Load domain from environment config
+    local domain="domain.local"
+    if [ -f "${LOCAL_DEV_DIR}/${env_name}/.env.ganymede" ]; then
+        domain=$(grep "^DOMAIN=" "${LOCAL_DEV_DIR}/${env_name}/.env.ganymede" | cut -d= -f2 || echo "domain.local")
+    fi
+    
     echo ""
     echo -e "${GREEN}🎉 Environment started: ${env_name}${NC}"
-    echo -e "${CYAN}   Frontend:  https://${env_name}.local${NC}"
-    echo -e "${CYAN}   Ganymede:  https://ganymede.${env_name}.local${NC}"
-    echo -e "${CYAN}   Gateway:   https://gateway.${env_name}.local${NC}"
+    echo -e "${CYAN}   Frontend:  https://${domain}${NC}"
+    echo -e "${CYAN}   Ganymede:  https://ganymede.${domain}${NC}"
+    echo -e "${CYAN}   Gateway:   https://org-{organization-uuid}.${domain} (allocated on demand)${NC}"
 }
 
 # Command: stop

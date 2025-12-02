@@ -183,7 +183,6 @@ CREATE INDEX idx_projects_members_user ON public.projects_members(user_id);
 CREATE TABLE IF NOT EXISTS public.gateways
 (
     gateway_id uuid NOT NULL DEFAULT gen_random_uuid(),
-    hostname character varying(256) NOT NULL,
     version character varying(15) NOT NULL,
     ready boolean NOT NULL DEFAULT false,
     container_name character varying(100),
