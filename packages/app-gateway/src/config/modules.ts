@@ -40,8 +40,11 @@ export function createBackendModulesConfig(
   };
 
   // Gateway module config
-  // Gateway FQDN is provided via GATEWAY_FQDN env var (set by container startup)
-  const gatewayFQDN = process.env.GATEWAY_FQDN || CONFIG.GATEWAY_ID;
+  // Gateway FQDN is the organization's public URL: org-{uuid}.domain.local
+  // This is used for VPN config and service URLs
+  const domain = process.env.DOMAIN || 'domain.local';
+  const gatewayFQDN = `org-${organizationId}.${domain}`;
+  
   const gatewayConfig = {
     organization_id: organizationId,
     organization_token: organizationToken,

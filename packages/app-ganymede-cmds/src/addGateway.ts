@@ -22,14 +22,12 @@ const gatewayGlobalToken = (gateway_id: string) => {
 //
 
 export const addGateway = async (
-  fqdn: string,
   version: string,
   containerName: string,
   httpPort: number,
   vpnPort: number
 ) => {
-  const r = await pg.query('call proc_gateway_new($1, $2, $3, $4, $5, NULL)', [
-    fqdn,
+  const r = await pg.query('call proc_gateway_new($1, $2, $3, $4, NULL)', [
     version,
     containerName,
     httpPort,

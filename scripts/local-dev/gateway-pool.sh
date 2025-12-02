@@ -115,22 +115,21 @@ echo ""
 
 for i in $(seq 1 $COUNT); do
   # Calculate ports based on existing gateway count
-  GATEWAY_COUNT=$(docker ps -a --filter "name=gw-pool-" --filter "label=environment=${ENV_NAME}" --format "{{.Names}}" | wc -l)
+  GATEWAY_COUNT=$(docker ps -a --filter "name=gw-pool-${ENV_NAME}-" --filter "label=environment=${ENV_NAME}" --format "{{.Names}}" | wc -l)
   GW_HTTP_PORT=$((7100 + GATEWAY_COUNT))
   GW_VPN_PORT=$((49100 + GATEWAY_COUNT))
   
-  GATEWAY_NAME="gw-pool-${GATEWAY_COUNT}"
-  GATEWAY_FQDN="gw-pool-${GATEWAY_COUNT}.${DOMAIN}"
+  GATEWAY_NAME="gw-pool-${ENV_NAME}-${GATEWAY_COUNT}"
   GATEWAY_VERSION="0.0.1"
   
   echo -e "${BLUE}  Creating ${GATEWAY_NAME}...${NC}"
   
   # Register gateway in database and get token
   echo "     Registering in database..."
+  echo "     Gateway: ${GATEWAY_NAME}, HTTP: ${GW_HTTP_PORT}, VPN: ${GW_VPN_PORT}"
   set +e
   REGISTER_OUTPUT=$(LOG_LEVEL=6 \
     node "${WORKSPACE_PATH}/dist/packages/app-ganymede-cmds/main.js" add-gateway \
-      -h "${GATEWAY_FQDN}" \
       -gv "${GATEWAY_VERSION}" \
       -c "${GATEWAY_NAME}" \
       -hp "${GW_HTTP_PORT}" \
@@ -174,12 +173,11 @@ for i in $(seq 1 $COUNT); do
     --device /dev/net/tun \
     -e ENV_NAME="${ENV_NAME}" \
     -e GATEWAY_ID="${GATEWAY_ID}" \
-    -e GATEWAY_FQDN="${GATEWAY_FQDN}" \
     -e GATEWAY_TOKEN="${GATEWAY_TOKEN}" \
     -e GATEWAY_HTTP_PORT="${GW_HTTP_PORT}" \
     -e GATEWAY_VPN_PORT="${GW_VPN_PORT}" \
     -e SERVER_BIND="[{\"host\": \"127.0.0.1\", \"port\": ${GW_HTTP_PORT}}]" \
-    -e GANYMEDE_FQDN="ganymede.${ENV_NAME}.${DOMAIN}" \
+    -e GANYMEDE_FQDN="ganymede.${DOMAIN}" \
     -e DOMAIN="${DOMAIN}" \
     -e WORKSPACE="${WORKSPACE_MOUNT}" \
     gateway:latest > /dev/null
@@ -197,8 +195,8 @@ echo -e "${GREEN}🎉 Gateway pool created successfully!${NC}"
 echo ""
 
 # Show status
-TOTAL=$(docker ps -a --filter "name=gw-pool-" --filter "label=environment=${ENV_NAME}" --format "{{.Names}}" | wc -l)
-RUNNING=$(docker ps --filter "name=gw-pool-" --filter "label=environment=${ENV_NAME}" --format "{{.Names}}" | wc -l)
+TOTAL=$(docker ps -a --filter "name=gw-pool-${ENV_NAME}-" --filter "label=environment=${ENV_NAME}" --format "{{.Names}}" | wc -l)
+RUNNING=$(docker ps --filter "name=gw-pool-${ENV_NAME}-" --filter "label=environment=${ENV_NAME}" --format "{{.Names}}" | wc -l)
 
 echo -e "${BLUE}Gateway Pool Status:${NC}"
 echo "  Environment: ${ENV_NAME}"
