@@ -1,11 +1,14 @@
 # Local Development Scripts
 
-Quick reference for local development environment scripts. For complete setup instructions, see **[LOCAL_DEVELOPMENT.md](../../doc/LOCAL_DEVELOPMENT.md)**.
+Quick reference for local development environment scripts. For complete setup instructions, see **[doc/guides/LOCAL_DEVELOPMENT.md](../../doc/guides/LOCAL_DEVELOPMENT.md)**.
 
 ## Quick Start
 
 ```bash
 cd /root/workspace/monorepo/scripts/local-dev
+
+# 0. Ensure services are running
+./start-services.sh
 
 # 1. One-time setup (run once)
 ./setup-all.sh
@@ -25,11 +28,17 @@ cd /root/workspace/monorepo/scripts/local-dev
 
 # 6. Configure host OS (see LOCAL_DEVELOPMENT.md)
 # - Install SSL root CA
-# - Add hosts entries
-# - Access: https://dev-001.local
+# - Configure DNS delegation
+# - Access: https://domain.local
 ```
 
 ## Scripts Overview
+
+### Service Management
+
+| Script              | Purpose                       | Run Once    |
+| ------------------- | ----------------------------- | ----------- |
+| `start-services.sh` | Start PostgreSQL and PowerDNS | Per session |
 
 ### One-Time Setup (Development Container)
 
@@ -40,16 +49,18 @@ cd /root/workspace/monorepo/scripts/local-dev
 | `install-system-deps.sh` | Install PostgreSQL, Nginx, utilities     | ✅       |
 | `install-mkcert.sh`      | Install mkcert for SSL certificates      | ✅       |
 | `setup-postgres.sh`      | Configure PostgreSQL server              | ✅       |
+| `setup-powerdns.sh`      | Configure PowerDNS server                | ✅       |
+| `build-images.sh`        | Build gateway Docker image               | ✅       |
 
 ### Environment Management
 
-| Script                                        | Purpose                     | Usage                             |
-| --------------------------------------------- | --------------------------- | --------------------------------- |
-| `create-env.sh <name> [workspace] [database]` | Create new environment      | `./create-env.sh dev-001`         |
-| `delete-env.sh <name>`                        | Delete environment          | `./delete-env.sh dev-001`         |
-| `build-frontend.sh <name> [workspace]`        | Build frontend for env      | `./build-frontend.sh dev-001`     |
-| **`envctl.sh <command> [args]`**              | **Main controller**         | **See Environment Control below** |
-| **`envctl-monitor.sh [watch]`**               | **Monitoring (no flicker)** | `./envctl-monitor.sh watch`       |
+| Script                                      | Purpose                     | Usage                             |
+| ------------------------------------------- | --------------------------- | --------------------------------- |
+| `create-env.sh <name> [domain] [workspace]` | Create new environment      | `./create-env.sh dev-001`         |
+| `delete-env.sh <name>`                      | Delete environment          | `./delete-env.sh dev-001`         |
+| `build-frontend.sh <name> [workspace]`      | Build frontend for env      | `./build-frontend.sh dev-001`     |
+| **`envctl.sh <command> [args]`**            | **Main controller**         | **See Environment Control below** |
+| **`envctl-monitor.sh [watch]`**             | **Monitoring (no flicker)** | `./envctl-monitor.sh watch`       |
 
 ### Environment Control (envctl.sh)
 
@@ -88,19 +99,30 @@ cd /root/workspace/monorepo/scripts/local-dev
       ├── pids/                  # 🆕 Process IDs (managed by envctl)
       │   ├── ganymede.pid
       │   └── gateway.pid
-      ├── data/                  # Gateway persistent data
-      │   ├── gateway-state-*.json
-      │   └── project-*/
+      ├── org-data/              # Organization data snapshots
+      ├── nginx-gateways.d/      # Dynamic gateway Nginx configs
       └── logs/                  # Application logs
           ├── ganymede.log
           ├── gateway.log
           └── *-access/error.log
 ```
 
-**Note:** Scripts are no longer generated in each environment. Use `envctl.sh` for all management.
+## Container Restart
+
+When the dev container restarts, PostgreSQL and PowerDNS need to be restarted.
+
+**Auto-start (recommended):** Already configured in `~/.bashrc`
+
+**Manual start:**
+
+```bash
+./start-services.sh
+```
+
+See [Container Restart Services Guide](../../doc/guides/CONTAINER_RESTART_SERVICES.md) for details.
 
 ## Related Documentation
 
-- **[LOCAL_DEVELOPMENT.md](../../doc/LOCAL_DEVELOPMENT.md)** - Complete setup guide (host OS config, SSL, workflows)
-- [MODULES_TESTING.md](../../doc/MODULES_TESTING.md) - Testing modules in Storybook
-- [INSTALL.md](../../doc/INSTALL.md) - Production deployment guide
+- **[LOCAL_DEVELOPMENT.md](../../doc/guides/LOCAL_DEVELOPMENT.md)** - Complete setup guide (host OS config, SSL, workflows)
+- **[CONTAINER_RESTART_SERVICES.md](../../doc/guides/CONTAINER_RESTART_SERVICES.md)** - Auto-start services on container restart
+- [MODULES_TESTING.md](../../doc/guides/MODULES_TESTING.md) - Testing modules in Storybook

@@ -51,12 +51,27 @@ DB_NAME="ganymede_${ENV_NAME//-/_}"
 APP_DB_USER="ganymede_app_${ENV_NAME//-/_}"
 
 echo "🐘 Dropping database and user..."
-PGPASSWORD=devpassword psql -U postgres -h localhost << EOF 2>/dev/null || true
-DROP DATABASE IF EXISTS ${DB_NAME};
-DROP USER IF EXISTS ${APP_DB_USER};
-EOF
-echo "   ✅ Database dropped: ${DB_NAME}"
-echo "   ✅ User dropped: ${APP_DB_USER}"
+
+# Check if PostgreSQL is running
+if ! service postgresql status 2>/dev/null | grep -q "online"; then
+  echo "   ⚠️  PostgreSQL is not running. Starting it..."
+  service postgresql start
+  sleep 2
+fi
+
+# Drop database (must be separate command, cannot be in transaction block)
+if PGPASSWORD=devpassword psql -U postgres -h localhost -c "DROP DATABASE IF EXISTS ${DB_NAME};" 2>&1 | grep -q "DROP DATABASE"; then
+  echo "   ✅ Database dropped: ${DB_NAME}"
+else
+  echo "   ℹ️  Database ${DB_NAME} did not exist or already dropped"
+fi
+
+# Drop user
+if PGPASSWORD=devpassword psql -U postgres -h localhost -c "DROP USER IF EXISTS ${APP_DB_USER};" 2>&1 | grep -q "DROP ROLE"; then
+  echo "   ✅ User dropped: ${APP_DB_USER}"
+else
+  echo "   ℹ️  User ${APP_DB_USER} did not exist or already dropped"
+fi
 
 # Remove directory
 echo "🗑️  Removing directory..."
