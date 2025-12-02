@@ -46,10 +46,10 @@ RUN pip install --no-cache-dir jupyter-collaboration
 
 USER root
 
-COPY --chmod=755 ./demiurge-functions.sh /usr/local/bin/
+COPY --chmod=755 ../../docker-images/user-images/demiurge-functions.sh /usr/local/bin/
 
-COPY --chmod=755 jupyterlab/page_config.json /etc/jupyter/labconfig/
-COPY --chmod=755 jupyterlab/start-singleuser.sh jupyterlab/activity-server.py jupyterlab/demiurge-entrypoint.sh /usr/local/bin/
+COPY --chmod=755 ./page_config.json /etc/jupyter/labconfig/
+COPY --chmod=755 ./start-singleuser.sh ./activity-server.py ./demiurge-entrypoint.sh /usr/local/bin/
 
 # Configure container entrypoint
 # ENTRYPOINT was ["tini", "-g", "--", "start.sh"]

@@ -4,6 +4,7 @@ USER root
 
 RUN apk add --no-cache tini jq curl iputils openvpn util-linux pciutils
 
-COPY --chmod=755 ./demiurge-functions.sh n8n/demiurge-entrypoint.sh /usr/local/bin/
+COPY --chmod=755 ../../docker-images/user-images/demiurge-functions.sh /usr/local/bin/
+COPY --chmod=755 ./demiurge-entrypoint.sh /usr/local/bin/
 
 ENTRYPOINT ["tini", "-g", "--", "demiurge-entrypoint.sh"]

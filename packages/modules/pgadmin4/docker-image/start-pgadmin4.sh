@@ -18,11 +18,11 @@ export PGADMIN_CONFIG_ALLOWED_HOSTS="[]"
 export PGADMIN_DEFAULT_EMAIL="none@noway.com"
 export PGADMIN_DEFAULT_PASSWORD="xxx"
 
-OAUTH2_API_BASE_URL="'https://${ACCOUNT_FQDN}/'"
+OAUTH2_API_BASE_URL="'https://${GATEWAY_FQDN}/'"
 OAUTH2_CLIENT_ID="'$(echo "$JSON_SETTINGS" | jq -r '.oauth_clients.pgadmin4.client_id')'"
 OAUTH2_CLIENT_SECRET="'$(echo "$JSON_SETTINGS" | jq -r '.oauth_clients.pgadmin4.client_secret')'"
-OAUTH2_TOKEN_URL="'https://${ACCOUNT_FQDN}/oauth/token'"
-OAUTH2_AUTHORIZATION_URL="'https://${ACCOUNT_FQDN}/oauth/authorize'"
+OAUTH2_TOKEN_URL="'https://${GATEWAY_FQDN}/oauth/token'"
+OAUTH2_AUTHORIZATION_URL="'https://${GATEWAY_FQDN}/oauth/authorize'"
 
 cat > /pgadmin4/config_local.py <<EOF
 OAUTH2_CONFIG = [

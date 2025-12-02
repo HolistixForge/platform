@@ -8,6 +8,7 @@
 
 import axios, { AxiosInstance } from 'axios';
 import { EPriority, log } from '@monorepo/log';
+import { makeOrgGatewayHostname } from '../lib/url-helpers';
 
 export interface PowerDNSRecord {
   content: string; // IP address
@@ -55,7 +56,7 @@ export class PowerDNSClient {
    * Points to the dev container IP (127.0.0.1 for local dev)
    */
   async registerGateway(orgId: string): Promise<void> {
-    const fqdn = `org-${orgId}.${this.domain}.`;
+    const fqdn = makeOrgGatewayHostname(orgId);
     const ip = process.env.DEV_CONTAINER_IP || '127.0.0.1';
 
     log(EPriority.Info, 'POWERDNS', `Registering gateway: ${fqdn} → ${ip}`);

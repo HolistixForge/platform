@@ -7,7 +7,6 @@ Welcome to the Demiurge documentation! This hub will guide you to the right reso
 ### Get Started
 
 - 🚀 **[Set up local development](guides/LOCAL_DEVELOPMENT.md)** - Multi-environment dev setup
-- 🏭 **[Deploy to production](guides/PRODUCTION_DEPLOYMENT.md)** - VPS deployment guide
 - 🤝 **[Contribute](../CONTRIBUTING.md)** - Development workflow and standards
 
 ### Understand the System
@@ -23,7 +22,7 @@ Welcome to the Demiurge documentation! This hub will guide you to the right reso
 
 - 🧪 **[Test Modules](guides/MODULES_TESTING.md)** - Module stories and fake collab
 - 📦 **[Use Nx Workspace](guides/NX_WORKSPACE.md)** - Monorepo commands and workflows
-- 🎨 **[Build UI Components](guides/MODULES_TESTING.md#frontend-components)** - React components with Storybook
+- 🎨 **[Build UI Components](guides/MODULES_TESTING.md)** - Module development with Storybook
 - 🔌 **[Module Reference](../packages/modules/README.md)** - Individual module documentation
 
 ### Quick Reference
@@ -35,7 +34,7 @@ Welcome to the Demiurge documentation! This hub will guide you to the right reso
 
 ### Internal/WIP
 
-- 📝 **[TODO](internal/TODO.md)** - task list
+- 📝 **[TODO](current-works/TODO.md)** - Task tracking
 - 🤖 **[AI Summary](internal/AI-summary.md)** - Context for AI tools
 
 ### Historical
@@ -56,7 +55,6 @@ doc/
 │
 ├── guides/                   # How-To Guides
 │   ├── LOCAL_DEVELOPMENT.md  - Multi-env local setup
-│   ├── PRODUCTION_DEPLOYMENT.md  - VPS deployment
 │   ├── MODULES_TESTING.md    - Module development & testing
 │   └── NX_WORKSPACE.md       - Nx monorepo workflows
 │
@@ -106,23 +104,23 @@ doc/
 
 ### DevOps/SRE
 
-1. [Production Deployment](guides/PRODUCTION_DEPLOYMENT.md)
-2. [Architecture Overview](architecture/OVERVIEW.md)
-3. [Local Development](guides/LOCAL_DEVELOPMENT.md) (for understanding)
-4. [GPU Host Setup](reference/GPU_HOST_SETUP.md)
+1. [Architecture Overview](architecture/OVERVIEW.md)
+2. [Local Development](guides/LOCAL_DEVELOPMENT.md)
+3. [GPU Host Setup](reference/GPU_HOST_SETUP.md)
+4. [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md)
 
 ## 🔍 Finding Information
 
 ### By Topic
 
-- **Authentication:** [Architecture](architecture/OVERVIEW.md#authentication), [API](reference/API.md#authentication)
-- **Collaboration:** [Architecture](architecture/OVERVIEW.md#collaboration), [Modules Testing](guides/MODULES_TESTING.md)
-- **Containers:** [System Architecture](architecture/SYSTEM_ARCHITECTURE.md#layer-4-user-containers), [User Containers Module](../packages/modules/user-containers/README.md), [Docker Images](../docker-images/README.md)
+- **Authentication:** [Overview](architecture/OVERVIEW.md), [API Reference](reference/API.md)
+- **Collaboration:** [Overview](architecture/OVERVIEW.md), [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md), [Modules Testing](guides/MODULES_TESTING.md)
+- **Containers:** [System Architecture](architecture/SYSTEM_ARCHITECTURE.md), [User Containers Module](../packages/modules/user-containers/README.md), [Docker Images](../docker-images/README.md)
 - **Protected Services:** [Protected Services Architecture](architecture/PROTECTED_SERVICES.md)
 - **Terminal Access:** [User Containers Module](../packages/modules/user-containers/README.md#terminal-access)
-- **Database:** [Architecture](architecture/OVERVIEW.md#database), [Schema](architecture/SYSTEM_ARCHITECTURE.md#database-schema-gateways)
-- **Gateway:** [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md), [System View](architecture/SYSTEM_ARCHITECTURE.md#layer-3-gateway-pool-containers)
-- **Modules:** [Modules Testing](guides/MODULES_TESTING.md), [Architecture](architecture/OVERVIEW.md#modules), [Layer System](../packages/modules/space/src/lib/layer.md), [Module Reference](../packages/modules/README.md)
+- **Database:** [Overview](architecture/OVERVIEW.md), [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md)
+- **Gateway:** [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md), [System Architecture](architecture/SYSTEM_ARCHITECTURE.md)
+- **Modules:** [Module Reference](../packages/modules/README.md), [Modules Testing](guides/MODULES_TESTING.md), [Overview](architecture/OVERVIEW.md)
 
 ### Search Tips
 

@@ -179,9 +179,20 @@ Access URLs (from host OS browser via DNS delegation):
 ### Layer 4: User Containers
 
 - **Docker containers** started by users
-  - JupyterLab, pgAdmin, VSCode, n8n, custom images
+  - JupyterLab, pgAdmin, n8n, custom images
   - Connected to gateway via VPN (private IPs)
-  - Accessible via stable DNS URLs
+  - Accessible via stable DNS URLs (uc-{uuid}.org-{uuid}.domain.local)
   - Authenticate via gateway OAuth2 provider
+  - Optional terminal access via ttyd
+
+---
+
+## Related Documentation
+
+- [Gateway Architecture](./GATEWAY_ARCHITECTURE.md) - Multi-gateway pool architecture
+- [Protected Services](./PROTECTED_SERVICES.md) - Terminal access and protected endpoints
+- [Overview](./OVERVIEW.md) - High-level system design
+- [User Containers Module](../../packages/modules/user-containers/README.md) - Container management
+- [Docker Images](../../docker-images/README.md) - Container image development
 
 ---
