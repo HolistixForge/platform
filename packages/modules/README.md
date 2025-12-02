@@ -25,12 +25,19 @@ See [Module System](module/README.md) for details on the module architecture.
 
 ### Infrastructure Modules
 
-- **[Gateway](gateway/README.md)** - Gateway services (OAuth, tokens, permissions, DNS)
-- **[User Containers](user-containers/README.md)** - Docker container management
+- **[Gateway](gateway/README.md)** - Gateway services (OAuth, tokens, permissions, DNS, protected services)
+- **[User Containers](user-containers/README.md)** - Container lifecycle, image registry, terminal access
+
+### Container Image Modules
+
+These modules provide both UI integration and Docker images:
+
+- **[Jupyter](jupyter/README.md)** - JupyterLab notebook environments (with container image)
+- **[pgAdmin4](pgadmin4/README.md)** - PostgreSQL administration (with container image)
+- **[n8n](n8n/README.md)** - Workflow automation (with container image)
 
 ### Integration Modules
 
-- **[Jupyter](jupyter/README.md)** - JupyterLab integration
 - **[Notion](notion/README.md)** - Notion API integration
 - **[Airtable](airtable/README.md)** - Airtable API integration
 - **[Excalidraw](excalidraw/README.md)** - Collaborative drawing integration

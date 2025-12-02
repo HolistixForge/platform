@@ -66,13 +66,15 @@ All domains managed by PowerDNS with single DNS delegation on host OS:
 - **Purpose:** Route traffic to app-gateway and user containers
 - **Protocol:** Plain HTTP (SSL already terminated by Stage 1)
 - **Server blocks:**
-  - Gateway FQDN (`org-{uuid}.domain.local`) → app-gateway :8888 for all paths
-  - VPN IP (`172.16.0.1`) → app-gateway :8888 for all paths (used by containers)
-  - Each user container FQDN (`uc-{uuid}.org-{uuid}.domain.local`) → container VPN IP:port (dynamic)
+  - Wildcard on gateway HTTP port → app-gateway :8888 (accepts all org-{uuid}.domain.local)
+  - VPN IP (172.16.0.1) → app-gateway :8888 (used by containers over VPN)
+  - Each user container FQDN (uc-{uuid}.org-{uuid}.domain.local) → container VPN IP:port (dynamic)
 
-**Why 2 stages?** Stage 1 doesn't know user container VPN IPs (managed inside gateway). Stage 2 nginx is inside the gateway and can route to VPN IPs directly.
+**Why 2 stages?** Stage 1 doesn't know user container VPN IPs (managed inside gateway). Stage 2 nginx is inside gateway and routes to VPN IPs directly.
 
-**Path routing:** /collab, /svc, /oauth, /permissions are Express routes inside app-gateway, not nginx location blocks.
+**Why wildcard?** Stage 1 already routed org-{uuid}.domain.local to this specific gateway port. Only one gateway listens on each port, so no server_name filtering needed.
+
+**Path routing:** /collab, /svc, /oauth, /permissions are Express routes inside app-gateway.
 
 ---
 

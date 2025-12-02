@@ -3,6 +3,9 @@ import { moduleBackend as collabBackend } from '@monorepo/collab';
 import { moduleBackend as reducersBackend } from '@monorepo/reducers';
 import { moduleBackend as coreGraphBackend } from '@monorepo/core-graph';
 import { moduleBackend as userContainersBackend } from '@monorepo/user-containers';
+import { moduleBackend as jupyterBackend } from '@monorepo/jupyter';
+import { moduleBackend as n8nBackend } from '@monorepo/n8n';
+import { moduleBackend as pgadmin4Backend } from '@monorepo/pgadmin4';
 import { moduleBackend as gatewayBackend } from '../module/module';
 import type {
   PermissionManager,
@@ -59,11 +62,15 @@ export function createBackendModulesConfig(
   // 3. core-graph (depends on collab, reducers)
   // 4. gateway (depends on collab, reducers)
   // 5. user-containers (depends on core-graph, collab, reducers, gateway)
+  // 6. Container image modules (depend on user-containers)
   return [
     { module: collabBackend, config: collabConfig },
     { module: reducersBackend, config: {} },
     { module: coreGraphBackend, config: {} },
     { module: gatewayBackend, config: gatewayConfig },
     { module: userContainersBackend, config: {} },
+    { module: jupyterBackend, config: {} },
+    { module: n8nBackend, config: {} },
+    { module: pgadmin4Backend, config: {} },
   ];
 }

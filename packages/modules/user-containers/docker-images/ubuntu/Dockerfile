@@ -14,8 +14,8 @@ RUN apt-get update --yes && apt-get install --yes --no-install-recommends \
     ttyd \
   && rm -rf /var/lib/apt/lists/*
 
-COPY --chmod=755 ./demiurge-functions.sh /usr/local/bin/
+COPY --chmod=755 ../../../docker-images/user-images/demiurge-functions.sh /usr/local/bin/
 
-COPY --chmod=755 ubuntu/demiurge-entrypoint.sh /usr/local/bin/
+COPY --chmod=755 ./demiurge-entrypoint.sh /usr/local/bin/
 
 ENTRYPOINT ["tini", "-g", "--", "demiurge-entrypoint.sh"]
