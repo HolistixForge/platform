@@ -1,4 +1,4 @@
-import { TServer, serviceUrl } from '@monorepo/user-containers';
+import { TUserContainer, serviceUrl } from '@monorepo/user-containers';
 
 import { TJupyterServerData, TServerSettings } from './jupyter-types';
 import { JupyterlabDriver } from './driver';
@@ -9,7 +9,7 @@ export type TOnNewDriverCb = (s: TJupyterServerData) => Promise<void>;
 
 //
 
-export const jupyterlabIsReachable = async (s: TServer) => {
+export const jupyterlabIsReachable = async (s: TUserContainer) => {
   let r = false;
   const url = serviceUrl(s, 'jupyterlab');
   if (url)
@@ -38,14 +38,14 @@ export class DriversStoreBackend {
   //
   _drivers: Map<string, JupyterlabDriver> = new Map();
   _jupyterServers: Map<string, TJupyterServerData>;
-  _servers: Map<string, TServer>;
+  _servers: Map<string, TUserContainer>;
   _onNewDriver?: TOnNewDriverCb;
 
   //
 
   constructor(
     jss: Map<string, TJupyterServerData>,
-    pss: Map<string, TServer>,
+    pss: Map<string, TUserContainer>,
     onNewDriver?: TOnNewDriverCb
   ) {
     this._jupyterServers = jss;
@@ -56,13 +56,13 @@ export class DriversStoreBackend {
   //
   //
 
-  getServerSetting(psid: number, token: string): TServerSettings {
+  getServerSetting(psid: string, token: string): TServerSettings {
     const server = this._servers.get(`${psid}`);
     if (server) {
       const url = serviceUrl(server, 'jupyterlab');
       if (!url)
         throw new Error(
-          `no such server or is down [${psid}, ${server.server_name}]`
+          `no such server or is down [${psid}, ${server.container_name}]`
         );
       return {
         baseUrl: url,
@@ -75,7 +75,7 @@ export class DriversStoreBackend {
   //
   //
 
-  async getDriver(user_container_id: number, token: string) {
+  async getDriver(user_container_id: string, token: string) {
     /*
      * get server and kernel information from share data by dkid
      */
@@ -84,7 +84,9 @@ export class DriversStoreBackend {
     if (!server) throw new Error(`server [${user_container_id}] is unknown`);
 
     if (!jupyterlabIsReachable(server))
-      throw new Error(`jupyterlab not ready on server [${server.server_name}]`);
+      throw new Error(
+        `jupyterlab not ready on server [${server.container_name}]`
+      );
 
     /*
      * get the corresponding driver, (dedicated jupyterlab server driver)

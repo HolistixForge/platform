@@ -3,6 +3,12 @@
   "include": [],
   "references": [
     {
+      "path": "../user-containers"
+    },
+    {
+      "path": "../module"
+    },
+    {
       "path": "./tsconfig.lib.json"
     },
     {

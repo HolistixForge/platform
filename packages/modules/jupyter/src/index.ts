@@ -1,5 +1,5 @@
 import { PageConfig } from '@jupyterlab/coreutils';
-import { TServersSharedData } from '@monorepo/user-containers';
+import { TUserContainersSharedData } from '@monorepo/user-containers';
 import { JupyterReducer } from './lib/jupyter-reducer';
 import type { TModule } from '@monorepo/module';
 import type { TCollabBackendExports } from '@monorepo/collab';
@@ -12,13 +12,11 @@ import type { TCoreSharedData } from '@monorepo/core-graph';
 
 PageConfig.setOption('terminalsAvailable', 'true');
 
-export type TJupyterExports = {
-  containerImages: any[];
-};
+export type TJupyterExports = never;
 
 type TRequired = {
   collab: TCollabBackendExports<
-    TServersSharedData & TJupyterSharedData & TCoreSharedData
+    TUserContainersSharedData & TJupyterSharedData & TCoreSharedData
   >;
   reducers: TReducersBackendExports;
   'user-containers': TUserContainersExports;
@@ -92,12 +90,7 @@ export const moduleBackend: TModule<TRequired, TJupyterExports> = {
     depsExports['user-containers'].imageRegistry.register(containerImagesData);
 
     // Load reducers
-    depsExports.reducers.loadReducers(new JupyterReducer());
-
-    // Export container images
-    moduleExports({
-      containerImages: containerImagesData,
-    });
+    depsExports.reducers.loadReducers(new JupyterReducer(depsExports));
   },
 };
 

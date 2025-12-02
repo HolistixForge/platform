@@ -22,10 +22,16 @@
       "path": "../log"
     },
     {
-      "path": "../observability"
+      "path": "../modules/gateway"
     },
     {
-      "path": "../modules/gateway"
+      "path": "../modules/pgadmin4"
+    },
+    {
+      "path": "../modules/n8n"
+    },
+    {
+      "path": "../modules/jupyter"
     },
     {
       "path": "../modules/user-containers"

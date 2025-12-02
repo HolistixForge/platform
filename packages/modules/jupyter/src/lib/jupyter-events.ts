@@ -32,7 +32,7 @@ export type TEventClearNodeOutput = {
 
 export type TEventNewKernelNode = {
   type: 'jupyter:new-kernel-node';
-  user_container_id: number;
+  user_container_id: string;
   kernel_id: string;
   origin?: TEventOrigin;
 };
@@ -55,7 +55,7 @@ export type TEventDeleteCell = {
 
 export type TEventNewTerminal = {
   type: 'jupyter:new-terminal';
-  user_container_id: number;
+  user_container_id: string;
   origin?: TEventOrigin;
   /** not use directly but force to pass specific jwt token (see GanymedeApi._getTokenKeyForRequest) */
   client_id: string;
@@ -63,7 +63,7 @@ export type TEventNewTerminal = {
 
 export type TEventNewTerminalNode = {
   type: 'jupyter:new-terminal-node';
-  user_container_id: number;
+  user_container_id: string;
   origin?: TEventOrigin;
   /** not use directly but force to pass specific jwt token (see GanymedeApi._getTokenKeyForRequest) */
   client_id: string;

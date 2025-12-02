@@ -268,7 +268,7 @@ export const useInitStoryJupyterServer =
         // Step 1: Create server if it doesn't exist
         else if (!jupyter) {
           await dispatcher.dispatch({
-            type: 'user-containers:new',
+            type: 'user-container:new',
             from: {
               new: {
                 userContainerName: 'story-user-container',
@@ -287,7 +287,7 @@ export const useInitStoryJupyterServer =
         // Step 2: Map service if server exists but service doesn't
         else if (jupyter && !service) {
           await dispatcher.dispatch({
-            type: 'server:map-http-service',
+            type: 'user-container:map-http-service',
             port: STORY_JUPYTER_PORT,
             name: 'jupyterlab',
           });
