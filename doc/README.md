@@ -15,6 +15,7 @@ Welcome to the Demiurge documentation! This hub will guide you to the right reso
 - 🏗️ **[Architecture Overview](architecture/OVERVIEW.md)** - System design and components
 - 📐 **[System Architecture](architecture/SYSTEM_ARCHITECTURE.md)** - Complete architecture diagram
 - 📊 **[Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md)** - Multi-gateway pool architecture
+- 🔒 **[Protected Services](architecture/PROTECTED_SERVICES.md)** - Module-driven protected endpoints
 - 📡 **[Logging & Observability](architecture/LOGGING_AND_OBSERVABILITY.md)** - Logs, traces, error categories, and OTel stack
 - 🎨 **[Layer System Architecture](../packages/modules/space/src/lib/layer.md)** - Modular whiteboard layers (Excalidraw integration)
 
@@ -116,7 +117,9 @@ doc/
 
 - **Authentication:** [Architecture](architecture/OVERVIEW.md#authentication), [API](reference/API.md#authentication)
 - **Collaboration:** [Architecture](architecture/OVERVIEW.md#collaboration), [Modules Testing](guides/MODULES_TESTING.md)
-- **Containers:** [System Architecture](architecture/SYSTEM_ARCHITECTURE.md#layer-4-user-containers), [Archive](archive/2024-container-refactor/)
+- **Containers:** [System Architecture](architecture/SYSTEM_ARCHITECTURE.md#layer-4-user-containers), [User Containers Module](../packages/modules/user-containers/README.md), [Docker Images](../docker-images/README.md)
+- **Protected Services:** [Protected Services Architecture](architecture/PROTECTED_SERVICES.md)
+- **Terminal Access:** [User Containers Module](../packages/modules/user-containers/README.md#terminal-access)
 - **Database:** [Architecture](architecture/OVERVIEW.md#database), [Schema](architecture/SYSTEM_ARCHITECTURE.md#database-schema-gateways)
 - **Gateway:** [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md), [System View](architecture/SYSTEM_ARCHITECTURE.md#layer-3-gateway-pool-containers)
 - **Modules:** [Modules Testing](guides/MODULES_TESTING.md), [Architecture](architecture/OVERVIEW.md#modules), [Layer System](../packages/modules/space/src/lib/layer.md), [Module Reference](../packages/modules/README.md)

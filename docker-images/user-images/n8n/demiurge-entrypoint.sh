@@ -2,10 +2,12 @@
 
 . /usr/local/bin/demiurge-functions.sh
 
-sh -c '. /usr/local/bin/demiurge-functions.sh && vpn_loop true' &
+sh -c '. /usr/local/bin/demiurge-functions.sh && vpn_loop' &
 
-sh -c '. /usr/local/bin/demiurge-functions.sh && map_http_service "$@"' _ n8n 8888 &
+# Map n8n service on its default port
+sh -c '. /usr/local/bin/demiurge-functions.sh && map_http_service n8n 5678' &
 
-N8N_PATH=/${PROJECT_SERVER_ID}/n8n/ /docker-entrypoint.sh &
+# Start n8n without path prefix (distinct FQDN routing)
+/docker-entrypoint.sh &
 
 tail -f /dev/null

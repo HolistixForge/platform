@@ -38,7 +38,7 @@ const STORY_JUPYTERLAB_CLIENT_ID = 'jupyterlab-story';
 
 export const STORY_PROJECT_ID = 0;
 
-export const STORY_PROJECT_SERVER_ID = 0;
+export const STORY_USER_CONTAINER_ID = 0;
 
 const STORY_JUPYTER_PORT = 36666;
 const STORY_JUPYTER_IP = '127.0.0.1';
@@ -71,7 +71,7 @@ const modulesBackend = [
             ) {
               const psid = mock_servers.length;
               mock_servers.push({
-                project_server_id: psid,
+                user_container_id: psid,
                 server_name: (req.jsonBody as any)?.name || 'story-server',
                 image_id: (req.jsonBody as any)?.imageId || 2,
                 project_id: STORY_PROJECT_ID,
@@ -86,7 +86,7 @@ const modulesBackend = [
               });
               return {
                 _0: {
-                  new_project_server_id: psid,
+                  new_user_container_id: psid,
                 },
               } as T;
             }
@@ -230,10 +230,10 @@ export const useInitStoryJupyterServer =
     const dispatcher = useDispatcher<TServerEvents | TJupyterEvent>();
 
     const server = sd['user-containers:containers'].get(
-      STORY_PROJECT_SERVER_ID.toString()
+      STORY_USER_CONTAINER_ID.toString()
     );
     const jupyter = sd['jupyter:servers'].get(
-      STORY_PROJECT_SERVER_ID.toString()
+      STORY_USER_CONTAINER_ID.toString()
     );
     const service = server?.httpServices.find(
       (s: { name: string }) => s.name === 'jupyterlab'

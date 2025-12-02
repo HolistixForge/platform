@@ -856,6 +856,22 @@ User Container:   https://uc-{uuid}.org-{uuid}.mycompany.local
 
 **Note:** Gateway and user container URLs are created dynamically when organizations start projects. DNS records are registered automatically by Ganymede.
 
+**User Container Routing:**
+
+Each container gets a distinct FQDN that routes directly to its VPN IP:
+- Stage 1 Nginx terminates SSL and routes to gateway
+- Gateway Nginx routes FQDN to container VPN IP:port
+- No path prefixes or internal nginx needed in containers
+
+**Accessing Container Services:**
+
+- Main service: `https://uc-{uuid}.org-{uuid}.domain.local/`
+- Terminal (if ttyd enabled): Same URL (ttyd serves at root path)
+- Gateway internal paths:
+  - `/collab/*` - Collaboration, events, VPN config (used by containers over VPN)
+  - `/svc/*` - Protected services (JWT-protected module endpoints)
+  - `/oauth/*` - OAuth2 provider for container apps
+
 ---
 
 ## Related Documentation

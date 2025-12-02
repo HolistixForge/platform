@@ -408,19 +408,21 @@ export class UserContainersReducer extends Reducer<
   //
 
   async _updateNginx(sduc: SharedMap<TUserContainer>) {
-    const locations: { host: string; ip: string; port: number }[] = [];
+    // With distinct FQDNs, we route: uc-{uuid}.org-{uuid}.domain.local → VPN IP:port
+    // Each container's httpServices contain the FQDN in "host" field
+    const services: { host: string; ip: string; port: number }[] = [];
     sduc.forEach((container) => {
       if (container.ip) {
         container.httpServices.forEach((hs) => {
-          locations.push({
-            host: hs.host,
+          services.push({
+            host: hs.host, // FQDN: uc-{uuid}.org-{uuid}.domain.local
             ip: container.ip as string,
             port: hs.port,
           });
         });
       }
     });
-    this.depsExports.gateway.updateReverseProxy(locations);
+    this.depsExports.gateway.updateReverseProxy(services);
   }
 
   //

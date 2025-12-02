@@ -93,10 +93,10 @@ const connectTerminal = async (
 
 export const JupyterTerminal = ({
   terminalId,
-  projectServerId,
+  userContainerId,
 }: {
   terminalId: string;
-  projectServerId: number;
+  userContainerId: number;
 }) => {
   //
   const [isReachable, setIsReachable] = useState<boolean | undefined>(
@@ -106,7 +106,7 @@ export const JupyterTerminal = ({
   const terminal: MyTerminal = useLocalSharedData<TJupyterSharedData>(
     ['jupyter:servers'],
     (sd) => {
-      return sd['jupyter:servers'].get(`${projectServerId}`)?.terminals[
+      return sd['jupyter:servers'].get(`${userContainerId}`)?.terminals[
         terminalId
       ];
     }
@@ -115,7 +115,7 @@ export const JupyterTerminal = ({
   const server: TServer = useLocalSharedData<TServersSharedData>(
     ['user-containers:containers'],
     (sd) => {
-      return sd['user-containers:containers'].get(`${projectServerId}`);
+      return sd['user-containers:containers'].get(`${userContainerId}`);
     }
   );
 
@@ -204,7 +204,7 @@ export const NodeTerminal = ({
 }: {
   node: TGraphNode<TTerminalNodeDataPayload>;
 }) => {
-  const { terminal_id, project_server_id } = node.data!;
+  const { terminal_id, user_container_id } = node.data!;
 
   const { id, isOpened, open, selected } = useNodeContext();
 
@@ -240,7 +240,7 @@ export const NodeTerminal = ({
           >
             <JupyterTerminal
               terminalId={terminal_id}
-              projectServerId={project_server_id}
+              userContainerId={user_container_id}
             />
           </div>
         </DisableZoomDragPan>

@@ -237,16 +237,10 @@ export const moduleBackend: ModuleBackend = {
 
 ### 4. Stable URLs via DNS
 
-Containers get permanent URLs that survive gateway changes:
+Containers get permanent URLs with distinct FQDNs:
 
 ```
-{slug}.containers.domain.com → PowerDNS → Gateway → Container
-```
-
-Instead of:
-
-```
-{gateway-host}/{container-id}/{service}  ❌ Changes when gateway reassigned
+uc-{uuid}.org-{uuid}.domain.local → PowerDNS → Stage 1 Nginx → Gateway (Stage 2 Nginx) → Container (VPN IP)
 ```
 
 **Benefits:**
@@ -254,6 +248,21 @@ Instead of:
 - Bookmarkable URLs
 - Shareable links
 - No broken URLs after gateway changes
+- Direct routing (no path prefixes needed)
+
+### 5. Protected Services
+
+Modules can register protected HTTP/WebSocket endpoints with custom permission logic:
+
+- **Generic registry** - `ProtectedServiceRegistry` in gateway module
+- **Module-defined** - Each module owns permission checks and resolution
+- **Gateway endpoint** - `/svc/{serviceId}` validates JWT and calls module logic
+
+**Example:** User container terminals via ttyd
+- Module: `user-containers`
+- Service ID: `user-containers:terminal`
+- Permission: `user-containers:[user-container:*]:terminal`
+- Resolution: Returns terminal service metadata (FQDN, port)
 
 ## Security Model
 

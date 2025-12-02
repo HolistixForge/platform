@@ -75,13 +75,13 @@ export class DriversStoreBackend {
   //
   //
 
-  async getDriver(project_server_id: number, token: string) {
+  async getDriver(user_container_id: number, token: string) {
     /*
      * get server and kernel information from share data by dkid
      */
 
-    const server = this._servers.get(`${project_server_id}`);
-    if (!server) throw new Error(`server [${project_server_id}] is unknown`);
+    const server = this._servers.get(`${user_container_id}`);
+    if (!server) throw new Error(`server [${user_container_id}] is unknown`);
 
     if (!jupyterlabIsReachable(server))
       throw new Error(`jupyterlab not ready on server [${server.server_name}]`);
@@ -92,9 +92,9 @@ export class DriversStoreBackend {
      * or build it if it doesn't exist yet
      */
 
-    const jupyterServer = this._jupyterServers.get(`${project_server_id}`);
+    const jupyterServer = this._jupyterServers.get(`${user_container_id}`);
     if (!jupyterServer)
-      throw new Error(`server [${project_server_id}] is unknown`);
+      throw new Error(`server [${user_container_id}] is unknown`);
 
     const KEY = token;
 
@@ -102,7 +102,7 @@ export class DriversStoreBackend {
     if (!driver) {
       await this._onNewDriver?.(jupyterServer);
       driver = new JupyterlabDriver(
-        this.getServerSetting(server.project_server_id, token)
+        this.getServerSetting(server.user_container_id, token)
       );
       this._drivers.set(KEY, driver);
     }

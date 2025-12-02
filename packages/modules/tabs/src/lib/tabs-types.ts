@@ -9,7 +9,7 @@ export type TabPayload =
   | { type: 'group' }
   | { type: 'node-editor'; viewId: string }
   | { type: 'resources-grid' }
-  | { type: 'resource-ui'; project_server_id: number; service_name: string };
+  | { type: 'resource-ui'; user_container_id: number; service_name: string };
 
 //
 

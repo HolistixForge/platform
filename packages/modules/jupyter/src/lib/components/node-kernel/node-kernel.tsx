@@ -33,16 +33,16 @@ export const NodeKernel = ({
 
   const { id, isOpened, open, selected } = useNodeContext();
 
-  const { kernel_id, project_server_id } = node.data!;
+  const { kernel_id, user_container_id } = node.data!;
 
-  const kernelPack = useKernelPack(project_server_id, kernel_id);
+  const kernelPack = useKernelPack(user_container_id, kernel_id);
 
   const s: { ps: TServer; js: TJupyterServerData } = useLocalSharedData<
     TServersSharedData & TJupyterSharedData
   >(['jupyter:servers', 'user-containers:containers'], (sd) => {
     return {
-      js: sd['jupyter:servers'].get(`${project_server_id}`),
-      ps: sd['user-containers:containers'].get(`${project_server_id}`),
+      js: sd['jupyter:servers'].get(`${user_container_id}`),
+      ps: sd['user-containers:containers'].get(`${user_container_id}`),
     };
   });
 

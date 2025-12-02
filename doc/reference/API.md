@@ -215,12 +215,16 @@ Gateway pushes state updates via Yjs synchronization protocol.
 | `GET`  | `/collab/room-id`    | `TJwtUser` with `project_id` + project access | Get room ID for a project               |
 | `POST` | `/collab/event`      | `TJwtUser` with `project_id` + project access | Process collaborative event             |
 | `GET`  | `/collab/vpn-config` | JWT with `org:{org_id}:connect-vpn` scope     | Get OpenVPN configuration               |
+| `ALL`  | `/svc/{serviceId}`   | `TJwtUser` (or other JWT types as defined by modules) | Resolve a module-defined protected service (returns metadata) |
 
 **Authentication Details:**
 
 - **`GET /collab/room-id`**: Requires `TJwtUser` token. The `project_id` can be provided in JWT payload or as a query parameter (`?project_id=...`). The user must have project access (member, admin, or org admin/owner). Returns the room_id for the specified project.
 - **`POST /collab/event`**: Requires `TJwtUser` token with `project_id` in the JWT payload. The user must have project access (member, admin, or org admin/owner).
 - **`GET /collab/vpn-config`**: Requires any JWT token with `org:{org_id}:connect-vpn` scope, where `{org_id}` is the gateway's organization ID. The scope must match exactly (organization-scoped). The gateway resolves `{org_id}` at runtime and verifies the token contains the matching scope.
+- **`ALL /svc/{serviceId}`**: Requires a valid JWT (usually `TJwtUser`) and uses the module-registered `ProtectedServiceRegistry` entry for `serviceId` to:
+  - Run a module-defined permission check, and
+  - Return a generic `resolution` object describing how to reach the protected service (URL, protocol, tickets, etc.).
 
 ### OAuth2 Provider (Container Applications)
 

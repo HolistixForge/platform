@@ -10,7 +10,7 @@ import { ButtonBase, SelectFieldset, SelectItem } from '@monorepo/ui-base';
 import { TJupyterEvent } from '../../jupyter-events';
 import {
   JupyterStoryCollabContext,
-  STORY_PROJECT_SERVER_ID,
+  STORY_USER_CONTAINER_ID,
 } from '../../stories/module-stories-utils';
 import { JupyterTerminal } from './terminal';
 import { useJLsManager } from '../../jupyter-shared-model-front';
@@ -42,10 +42,10 @@ const Terminals = () => {
     (sd) => sd
   );
   const server = sd['user-containers:containers'].get(
-    STORY_PROJECT_SERVER_ID.toString()
+    STORY_USER_CONTAINER_ID.toString()
   );
   const jupyter: TJupyterServerData | undefined = sd['jupyter:servers'].get(
-    STORY_PROJECT_SERVER_ID.toString()
+    STORY_USER_CONTAINER_ID.toString()
   );
   const service = server?.httpServices.find(
     (s: { name: string }) => s.name === 'jupyterlab'
@@ -65,7 +65,7 @@ const Terminals = () => {
   const handleNewTerminal = () => {
     dispatcher.dispatch({
       type: 'jupyter:new-terminal',
-      project_server_id: STORY_PROJECT_SERVER_ID,
+      project_server_id: STORY_USER_CONTAINER_ID,
       client_id: 'not needed here in storybook',
     });
   };
@@ -98,7 +98,7 @@ const Terminals = () => {
         >
           <JupyterTerminal
             terminalId={terminalId}
-            projectServerId={STORY_PROJECT_SERVER_ID}
+            userContainerId={STORY_USER_CONTAINER_ID}
           />
         </div>
       )}

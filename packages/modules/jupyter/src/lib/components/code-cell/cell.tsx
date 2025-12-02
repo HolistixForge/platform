@@ -40,11 +40,11 @@ import './cell.scss';
 //
 
 export const useCellLogic = ({
-  projectServerId,
+  userContainerId,
   cellId,
   selected,
 }: {
-  projectServerId: number;
+  userContainerId: number;
   cellId: string;
   selected: boolean;
 }) => {
@@ -54,14 +54,14 @@ export const useCellLogic = ({
 
   const jupyter: TJupyterServerData | undefined =
     useLocalSharedData<TJupyterSharedData>(['jupyter:servers'], (sd) =>
-      sd['jupyter:servers'].get(`${projectServerId}`)
+      sd['jupyter:servers'].get(`${userContainerId}`)
     );
 
   const cell = jupyter?.cells[cellId];
 
   const ps: TServer | undefined = useLocalSharedData<TServersSharedData>(
     ['user-containers:containers'],
-    (sd) => sd['user-containers:containers'].get(`${projectServerId}`)
+    (sd) => sd['user-containers:containers'].get(`${userContainerId}`)
   );
 
   const client_id = ps?.oauth?.find(
@@ -129,7 +129,7 @@ export const useCellLogic = ({
   );
 
   return {
-    projectServerId,
+    userContainerId,
     cell,
     handleEditorMount,
     handleClearOutput,
@@ -142,12 +142,12 @@ export const useCellLogic = ({
 
 export const CellStory = ({
   cellId,
-  projectServerId,
+  userContainerId,
 }: {
   cellId: string;
-  projectServerId: number;
+  userContainerId: number;
 }) => {
-  const props = useCellLogic({ cellId, projectServerId, selected: false });
+  const props = useCellLogic({ cellId, userContainerId, selected: false });
   return <CellInternal {...props} />;
 };
 
@@ -176,17 +176,17 @@ const CellInternal = (props: ReturnType<typeof useCellLogic>) => {
       >
         <CodeEditorMonaco code={''} onMount={handleEditorMount} />
       </div>
-      <CellOutput cell={props.cell} projectServerId={props.projectServerId} />
+      <CellOutput cell={props.cell} userContainerId={props.userContainerId} />
     </>
   );
 };
 
 //
 
-const CellOutput = (props: { cell: Cell; projectServerId: number }) => {
+const CellOutput = (props: { cell: Cell; userContainerId: number }) => {
   const { outputs } = props.cell;
 
-  const kernelPack = useKernelPack(props.projectServerId, props.cell.kernel_id);
+  const kernelPack = useKernelPack(props.userContainerId, props.cell.kernel_id);
 
   const { uuid, uuidInject } = useMemo(() => uuidInjecter(), []);
 
@@ -263,7 +263,7 @@ export const NodeCell = ({
 
   const cellLogic = useCellLogic({
     cellId: node.data!.cell_id as string,
-    projectServerId: node.data!.project_server_id,
+    userContainerId: node.data!.user_container_id,
     selected,
   });
 

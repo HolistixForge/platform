@@ -23,6 +23,7 @@ import { VPN } from './config/organization';
 import { CONFIG } from './config';
 import { setupCollabRoutes, setBackendEventProcessor } from './routes/collab';
 import { setupPermissionsRoutes } from './routes/permissions';
+import { setupProtectedServicesRoutes } from './routes/protected-services';
 import oauthRoutes from './routes/oauth';
 import oas from './oas30.json';
 import {
@@ -74,6 +75,7 @@ const setupExpressApp = () => {
   const router = express.Router();
   setupCollabRoutes(router);
   setupPermissionsRoutes(router);
+  setupProtectedServicesRoutes(router);
   app.use('/', router);
 
   // OAuth routes

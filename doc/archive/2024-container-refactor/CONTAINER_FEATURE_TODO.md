@@ -71,10 +71,10 @@ This document tracks all tasks for refactoring the container management system.
   - [ ] Define `pgadmin:latest` image
   - [ ] Set `containerType: "pgadmin"`
 
-- [ ] **Ubuntu image** (user-containers module)
+- [x] **Ubuntu image** (user-containers module)
 
-  - [ ] Define `ubuntu:24.04` image
-  - [ ] Set `containerType: "generic"`
+- [x] Define `ubuntu:24.04` image (registered as built-in imageId `ubuntu:terminal` in user-containers module)
+-- [x] Set `containerType: "generic"` / utility (terminal-only) image
 
 - [ ] **n8n image** (create module or add to existing)
   - [ ] Define `n8n:latest` image

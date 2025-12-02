@@ -52,7 +52,7 @@ export const stateToLabel = (state: number) => {
 //
 
 export type TKernelPack = {
-  project_server_id: number;
+  user_container_id: number;
   kernel_id: string;
   state: number;
   widgetManager: BrowserWidgetManager | null;
@@ -98,10 +98,10 @@ export class JLsManager extends Listenable {
 
   private async _updateKernelPack(kp: TKernelPack) {
     const server = this._sd['user-containers:containers'].get(
-      `${kp.project_server_id}`
+      `${kp.user_container_id}`
     );
     const jupyterServer = this._sd['jupyter:servers'].get(
-      `${kp.project_server_id}`
+      `${kp.user_container_id}`
     );
 
     if (!server || !jupyterServer) {
@@ -170,7 +170,7 @@ export class JLsManager extends Listenable {
     const url = serviceUrl(server, 'jupyterlab', websocket);
     if (!url)
       throw new Error(
-        `no such server or is down [${server.project_server_id}, ${server.server_name}]`
+        `no such server or is down [${server.user_container_id}, ${server.container_name}]`
       );
 
     const r = {
@@ -184,7 +184,7 @@ export class JLsManager extends Listenable {
   //
 
   private _getDriver(server: TServer): Promise<JupyterlabDriver> {
-    const p = this._drivers.get(server.project_server_id);
+    const p = this._drivers.get(server.user_container_id);
     if (!p) {
       const np = new Promise<JupyterlabDriver>((resolve, reject) => {
         this._onNewDriver(server).then(() => {
@@ -199,7 +199,7 @@ export class JLsManager extends Listenable {
               // that will trig _onChange() and update kernel packs and UI
               this._dispatcher.dispatch({
                 type: 'jupyter:resources-changed',
-                project_server_id: server.project_server_id,
+                user_container_id: server.user_container_id,
                 resources,
               });
             });
@@ -207,7 +207,7 @@ export class JLsManager extends Listenable {
           });
         });
       });
-      this._drivers.set(server.project_server_id, np);
+      this._drivers.set(server.user_container_id, np);
       return np;
     }
     return p;
@@ -230,14 +230,14 @@ export class JLsManager extends Listenable {
   //
 
   public getKernelPack(
-    project_server_id: number,
+    user_container_id: number,
     kernel_id: string
   ): TKernelPack | false {
     const pack = this._kernelPacks.get(kernel_id);
 
     if (!pack) {
       const newPack: TKernelPack = {
-        project_server_id,
+        user_container_id,
         kernel_id,
         state: SERVER_DOES_NOT_EXIST,
         widgetManager: null,
