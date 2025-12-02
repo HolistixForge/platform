@@ -92,6 +92,12 @@
     },
     {
       "path": "./packages/observability"
+    },
+    {
+      "path": "./packages/modules/n8n"
+    },
+    {
+      "path": "./packages/modules/pgadmin4"
     }
   ],
   "ts-node": {
