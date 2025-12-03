@@ -31,19 +31,14 @@ Based on codebase analysis:
 
 - [x] **1.1** GitHub organization name: **`Holistix`**
   - Full URL: `github.com/Holistix`
-  
 - [x] **1.2** Main repository name: **`platform`**
   - Full URL: `github.com/Holistix/platform`
-  
 - [x] **1.3** Package namespace: **`@holistix/*`**
   - All packages: `@holistix/app-frontend`, `@holistix/app-gateway`, etc.
-  
 - [x] **1.4** Docker image prefix: **`holistix/*`**
   - All images: `holistix/jupyterlab-minimal`, `holistix/ubuntu-terminal`, etc.
-  
 - [x] **1.5** Primary domain: **`holistix.so`** ✅ ACQUIRED
   - Alternative domains to consider: `holistix.io`, `holistix.com`, `holistix.cloud`
-  
 - [ ] **1.6** Finalize license model: **TBD**
   - Current: PolyForm Noncommercial + Commercial dual license
   - Options: MIT, Apache 2.0, AGPL, or keep current
@@ -51,6 +46,7 @@ Based on codebase analysis:
   - Update LICENSE and COMMERCIAL_LICENSE.md accordingly
 
 ### 📝 Decision Summary
+
 ```
 GitHub:    github.com/Holistix/platform
 Packages:  @holistix/*
@@ -239,7 +235,7 @@ Website:   https://holistix.so
 
   - Shared Libraries (4+ packages):
     - [ ] `@monorepo/backend-engine` → `@holistix/backend-engine`
-    - [ ] `@monorepo/demiurge-types` → `@holistix/types` (also rename!)
+    - [x] `@monorepo/demiurge-types` → `@holistix/types` (also rename!)
     - [ ] `@monorepo/observability` → `@holistix/observability`
     - [ ] `@monorepo/frontend-data` → `@holistix/frontend-data`
     - [ ] `@monorepo/log` → `@holistix/log`
@@ -335,9 +331,9 @@ git mv packages/modules/jupyter/docker-image/demiurge-entrypoint.sh \
 
 ### 5.4 Type Definitions
 
-- [ ] **5.4.1** Rename package: `@monorepo/demiurge-types` → `@holistix/types`
-  - [ ] Update package.json
-  - [ ] Update all imports
+- [x] **5.4.1** Rename package: `@monorepo/demiurge-types` → `@holistix/types`
+  - [x] Update package.json
+  - [x] Update all imports
 
 ### 5.5 Test Files & Storybook Stories
 
@@ -435,7 +431,7 @@ git mv packages/modules/jupyter/docker-image/demiurge-entrypoint.sh \
 - [ ] **8.2.1** Update OAuth client names:
   - [ ] `packages/app-ganymede/src/models/oauth.ts`
   - [ ] `packages/app-ganymede/src/routes/auth/oauth.ts`
-  - [ ] `packages/demiurge-types/src/lib/ganymede-api/oauth.ts`
+  - [ ] `packages/types/src/lib/ganymede-api/oauth.ts`
   - [ ] Replace "demiurge-global" client name with "holistix-global"
 
 ### 8.3 API Specifications
@@ -638,15 +634,12 @@ git mv packages/modules/jupyter/docker-image/demiurge-entrypoint.sh \
     - [ ] `docs.holistix.so` → documentation
     - [ ] `blog.holistix.so` → blog (optional)
     - [ ] `status.holistix.so` → status page (optional)
-  
 - [ ] **13.1.2** Set up SSL certificates
   - [ ] Automatic via hosting provider
   - [ ] Or use Let's Encrypt
   - [ ] Wildcard cert: `*.holistix.so`
-  
 - [ ] **13.1.3** Configure redirects from old domain (if applicable)
   - [ ] If `holistix.so` is owned, set up 301 redirects
-  
 - [ ] **13.1.4** Consider acquiring additional domains (optional)
   - [ ] `holistix.io` (for ".io" preference in tech community)
   - [ ] `holistix.com` (most common TLD)
@@ -924,10 +917,10 @@ After rebranding:
   - [ ] This is a breaking change for existing users
   - [ ] May need migration path or backward compatibility
 
-- [ ] **Package type definitions** - `@monorepo/demiurge-types` → `@holistix/types`
+- [x] **Package type definitions** - `@monorepo/demiurge-types` → `@holistix/types`
 
-  - [ ] Also removing "demiurge" from package name
-  - [ ] Update ALL imports across codebase
+  - [x] Also removing "demiurge" from package name
+  - [x] Update ALL imports across codebase
 
 - [ ] **Docker entrypoint scripts** - Sourcing `demiurge-functions.sh`
 
@@ -943,7 +936,7 @@ After rebranding:
 
 - [ ] Component names: `DemiurgeSpace` → `HolistixSpace` (PascalCase)
 - [ ] File names: `demiurge-space.tsx` → `holistix-space.tsx` (kebab-case)
-- [ ] Package names: `@monorepo/demiurge-types` → `@holistix/types` (lowercase)
+- [x] Package names: `@monorepo/demiurge-types` → `@holistix/types` (lowercase)
 - [ ] CSS classes: `.demiurge-space` → `.holistix-space` (kebab-case)
 
 ### Testing Critical Paths
@@ -971,7 +964,7 @@ After rebranding, test these workflows end-to-end:
 | Files with "demiurge" in name             | 7       | Rename with `git mv`         |
 | Docker image references                   | 8       | Update in Dockerfiles + code |
 | Domain references (.holistix.so)          | 14      | Replace in 7 files           |
-| "Holistix" placeholders                    | 6 files | Replace with actual org name |
+| "Holistix" placeholders                   | 6 files | Replace with actual org name |
 | "DemiurgeGalaxie" references              | 2 files | Replace with new org name    |
 | Logo files to replace                     | 2 files | Delete + create new          |
 
@@ -1003,7 +996,8 @@ After rebranding, test these workflows end-to-end:
 
 **Last Updated**: 2025-12-03  
 **Status**: ✅ Phase 1 Complete - Ready to Execute  
-**Next Action**: 
+**Next Action**:
+
 1. Reserve GitHub organization "Holistix" immediately
 2. Create Holistix logo (SVG files)
 3. Begin Phase 2 - Website updates
@@ -1016,16 +1010,16 @@ After rebranding, test these workflows end-to-end:
 Brand:
   Name: Holistix
   Tagline: "Unified Project Intelligence"
-  
+
 GitHub:
   Organization: Holistix
   Repository: platform
   URL: https://github.com/Holistix/platform
-  
+
 Packages:
   Namespace: @holistix/*
   Root: @holistix/source
-  
+
 Docker:
   Registry: Docker Hub (or ghcr.io/holistix/*)
   Prefix: holistix/*
@@ -1033,18 +1027,18 @@ Docker:
     - holistix/jupyterlab-minimal
     - holistix/ubuntu-terminal
     - holistix/pgadmin4
-  
+
 Domain:
   Primary: holistix.so
-  Email: 
+  Email:
     - contact@holistix.so
     - licensing@holistix.so
     - support@holistix.so
-  
+
 Website:
   Main: https://holistix.so
   Docs: https://docs.holistix.so (or holistix.so/docs)
-  
+
 License:
   Status: TBD (decide before open source release)
   Options:

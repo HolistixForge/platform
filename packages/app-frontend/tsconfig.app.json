@@ -93,7 +93,7 @@
       "path": "../ui-views/tsconfig.lib.json"
     },
     {
-      "path": "../demiurge-types/tsconfig.lib.json"
+      "path": "../types/tsconfig.lib.json"
     },
     {
       "path": "../ui-base/tsconfig.lib.json"

@@ -7,7 +7,7 @@
       "path": "../collab-engine"
     },
     {
-      "path": "../demiurge-types"
+      "path": "../types"
     },
     {
       "path": "../backend-engine"

@@ -9,13 +9,13 @@
       "path": "../../api-fetch"
     },
     {
-      "path": "../../collab-engine"
-    },
-    {
       "path": "../../log"
     },
     {
-      "path": "../../demiurge-types"
+      "path": "../../types"
+    },
+    {
+      "path": "../../collab-engine"
     },
     {
       "path": "../../simple-types"

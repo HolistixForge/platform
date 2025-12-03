@@ -3,10 +3,10 @@
   "include": [],
   "references": [
     {
-      "path": "../demiurge-types"
+      "path": "../simple-types"
     },
     {
-      "path": "../simple-types"
+      "path": "../types"
     },
     {
       "path": "../log"
@@ -16,9 +16,6 @@
     },
     {
       "path": "../backend-engine"
-    },
-    {
-      "path": "../observability"
     },
     {
       "path": "./tsconfig.app.json"

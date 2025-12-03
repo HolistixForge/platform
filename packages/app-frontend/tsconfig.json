@@ -63,7 +63,7 @@
       "path": "../ui-views"
     },
     {
-      "path": "../demiurge-types"
+      "path": "../types"
     },
     {
       "path": "../ui-base"

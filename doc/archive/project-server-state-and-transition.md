@@ -4,7 +4,7 @@ WARNING: obsolete, not up to date
 
 ## Data model
 
-[project server types](../packages/demiurge-types/src/lib/project-server.ts)
+[project server types](../packages/types/src/lib/project-server.ts)
 
 ## CASES
 

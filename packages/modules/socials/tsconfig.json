@@ -3,10 +3,10 @@
   "include": [],
   "references": [
     {
-      "path": "../../log"
+      "path": "../../collab-engine"
     },
     {
-      "path": "../../collab-engine"
+      "path": "../../log"
     },
     {
       "path": "../../simple-types"
@@ -15,7 +15,7 @@
       "path": "../../frontend-data"
     },
     {
-      "path": "../../demiurge-types"
+      "path": "../../types"
     },
     {
       "path": "../collab"

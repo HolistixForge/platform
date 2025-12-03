@@ -45,13 +45,13 @@
       "path": "../../api-fetch/tsconfig.lib.json"
     },
     {
-      "path": "../../collab-engine/tsconfig.lib.json"
-    },
-    {
       "path": "../../log/tsconfig.lib.json"
     },
     {
-      "path": "../../demiurge-types/tsconfig.lib.json"
+      "path": "../../types/tsconfig.lib.json"
+    },
+    {
+      "path": "../../collab-engine/tsconfig.lib.json"
     },
     {
       "path": "../../simple-types/tsconfig.lib.json"

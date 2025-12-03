@@ -3,13 +3,13 @@
   "include": [],
   "references": [
     {
-      "path": "../../ui-toolkit"
-    },
-    {
       "path": "../../log"
     },
     {
-      "path": "../../demiurge-types"
+      "path": "../../ui-toolkit"
+    },
+    {
+      "path": "../../types"
     },
     {
       "path": "../gateway"

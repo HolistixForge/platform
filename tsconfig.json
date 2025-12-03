@@ -13,7 +13,7 @@
       "path": "./packages/api-fetch"
     },
     {
-      "path": "./packages/demiurge-types"
+      "path": "./packages/types"
     },
     {
       "path": "./packages/ui-toolkit"
