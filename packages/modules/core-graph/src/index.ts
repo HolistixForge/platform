@@ -1,7 +1,7 @@
 import type { TModule } from '@monorepo/module';
 import type { TCollabBackendExports } from '@monorepo/collab';
 import type { TReducersBackendExports } from '@monorepo/reducers';
-import { TCollabFrontendExports } from '@monorepo/collab/frontend';
+import type { TCollabFrontendExports } from '@monorepo/collab/frontend';
 
 import { CoreReducer } from './lib/core-reducer';
 import { TCoreSharedData } from './lib/core-types';
@@ -52,7 +52,6 @@ export type {
 } from './lib/core-types';
 
 export type { TCoreSharedData } from './lib/core-types';
-export { useNodeEdges } from './lib/core-hooks';
 
 export type {
   TEventDeleteEdge,

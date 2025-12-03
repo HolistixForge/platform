@@ -1,7 +1,7 @@
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { Route, Routes, useLocation } from 'react-router-dom';
 
-import { DebugComponentKeyboardShortcut } from '@monorepo/log';
+import { DebugComponentKeyboardShortcut } from '@monorepo/ui-toolkit/frontend';
 import { ApiContext } from '@monorepo/frontend-data';
 
 import {

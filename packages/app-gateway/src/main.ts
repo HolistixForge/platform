@@ -20,7 +20,6 @@ import {
 import { BackendEventProcessor } from '@monorepo/reducers';
 
 import { VPN } from './config/organization';
-import { CONFIG } from './config';
 import { setupCollabRoutes, setBackendEventProcessor } from './routes/collab';
 import { setupPermissionsRoutes } from './routes/permissions';
 import { setupProtectedServicesRoutes } from './routes/protected-services';
@@ -166,7 +165,8 @@ function setupShutdownHandlers() {
 
     // Setup Express server
     const app = setupExpressApp();
-    const bindings: TStart[] = JSON.parse(CONFIG.SERVER_BIND);
+    // Gateway always listens on port 8888 internally (Nginx proxies from external port)
+    const bindings: TStart[] = [{ host: '127.0.0.1', port: 8888 }];
     bindings.map((b) => startServer(app, b));
 
     // Signal gateway is ready (if GATEWAY_ID is set)

@@ -25,8 +25,8 @@ Demiurge is a collaborative workspace that combines real-time editing, whiteboar
 **Production Deployment:**
 
 ```bash
-# See deployment guide
-👉 doc/guides/PRODUCTION_DEPLOYMENT.md
+# See architecture documentation
+👉 doc/architecture/OVERVIEW.md
 ```
 
 ## 📚 Documentation

@@ -1,3 +1,8 @@
+// Frontend-only exports (React/DOM-dependent)
+export { buildUserCss } from './lib/frontend/YjsCssStylesheet';
+export { bindEditor } from './lib/frontend/bind-editor';
+
+// Re-export all backend-safe exports
 export type {
   _PositionAwareness,
   _AwarenessListenerArgs,

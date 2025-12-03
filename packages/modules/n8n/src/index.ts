@@ -1,2 +1,2 @@
-export * from './lib/n8n';
+// Backend-only exports
 export { moduleBackend } from './backend';

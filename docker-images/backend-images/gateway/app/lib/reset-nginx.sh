@@ -13,7 +13,7 @@ env
 sudo tee "${NGINX_CONFIG}" >/dev/null <<EOF
 
 server {
-    listen ${APP_GATEWAY_PORT};
+    listen ${GATEWAY_HTTP_PORT};
     server_name _;  # Accept all hostnames (org-{uuid}.domain.local routes here via Stage 1)
 
     error_page 502 /502.html;

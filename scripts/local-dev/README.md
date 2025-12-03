@@ -1,6 +1,10 @@
 # Local Development Scripts
 
-Quick reference for local development environment scripts. For complete setup instructions, see **[doc/guides/LOCAL_DEVELOPMENT.md](../../doc/guides/LOCAL_DEVELOPMENT.md)**.
+Quick reference for local development environment scripts. 
+
+**See also:**
+- **[doc/guides/GATEWAY_BUILD_DISTRIBUTION.md](../../doc/guides/GATEWAY_BUILD_DISTRIBUTION.md)** - Build distribution, validation, reload mechanism
+- **[doc/guides/LOCAL_DEVELOPMENT.md](../../doc/guides/LOCAL_DEVELOPMENT.md)** - Complete setup instructions
 
 ## Quick Start
 
@@ -119,10 +123,20 @@ When the dev container restarts, PostgreSQL and PowerDNS need to be restarted.
 ./start-services.sh
 ```
 
-See [Container Restart Services Guide](../../doc/guides/CONTAINER_RESTART_SERVICES.md) for details.
+See [Gateway Build Distribution](../../doc/guides/GATEWAY_BUILD_DISTRIBUTION.md) for reload details.
+
+## Build Distribution & Validation
+
+- **`serve-builds.sh`** - HTTP server for gateway builds (port 8090)
+- **`pack-gateway-build.sh`** - Pack gateway build into tarball
+- **`../../scripts/validate-node-bundles.sh`** - Validate bundles for React dependencies
+- **`../../scripts/analyze-bundle.js`** - Detailed bundle analyzer
+
+See **[doc/guides/GATEWAY_BUILD_DISTRIBUTION.md](../../doc/guides/GATEWAY_BUILD_DISTRIBUTION.md)** for architecture details.
 
 ## Related Documentation
 
-- **[LOCAL_DEVELOPMENT.md](../../doc/guides/LOCAL_DEVELOPMENT.md)** - Complete setup guide (host OS config, SSL, workflows)
-- **[CONTAINER_RESTART_SERVICES.md](../../doc/guides/CONTAINER_RESTART_SERVICES.md)** - Auto-start services on container restart
+- **[GATEWAY_BUILD_DISTRIBUTION.md](../../doc/guides/GATEWAY_BUILD_DISTRIBUTION.md)** - Build distribution, reload mechanism
+- **[PACKAGE_ARCHITECTURE.md](../../doc/guides/PACKAGE_ARCHITECTURE.md)** - React validation, package patterns
+- **[LOCAL_DEVELOPMENT.md](../../doc/guides/LOCAL_DEVELOPMENT.md)** - Complete setup guide
 - [MODULES_TESTING.md](../../doc/guides/MODULES_TESTING.md) - Testing modules in Storybook

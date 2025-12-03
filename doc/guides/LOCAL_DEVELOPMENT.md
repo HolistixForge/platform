@@ -319,7 +319,7 @@ GATEWAY_POOL_SIZE=5 ./scripts/local-dev/create-env.sh dev-001 domain.local /root
 2. `domain` (optional) - Domain name (default: `domain.local`)
 3. `workspace-path` (optional) - Path to monorepo root (default: `/root/workspace/monorepo`)
 
-**Note:** Gateway containers use bind mounts to access the repository. Each environment can use a different repository directory, allowing multiple environments to work with different branches or forks simultaneously.
+**Note:** Gateway containers fetch their builds via HTTP from the dev container. See [GATEWAY_BUILD_DISTRIBUTION.md](GATEWAY_BUILD_DISTRIBUTION.md) for the build distribution architecture.
 
 **What it does:**
 
@@ -845,6 +845,7 @@ User Container:   https://uc-{uuid}.org-{uuid}.mycompany.local
 **User Container Routing:**
 
 Each container gets a distinct FQDN that routes directly to its VPN IP:
+
 - Stage 1 Nginx terminates SSL and routes to gateway
 - Gateway Nginx routes FQDN to container VPN IP:port
 - No path prefixes or internal nginx needed in containers

@@ -4,7 +4,7 @@ import type { TModule } from '@monorepo/module';
 import type { TCollabFrontendExports } from '@monorepo/collab/frontend';
 import type { TSpaceFrontendExports } from '@monorepo/space/frontend';
 import { serversMenuEntries } from './lib/servers-menu';
-import { localRunnerFrontend } from './lib/local-runner';
+import { localRunnerFrontend } from './lib/local-runner-frontend';
 
 //
 

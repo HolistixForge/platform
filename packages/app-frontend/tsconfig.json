@@ -6,6 +6,9 @@
       "path": "../collab-engine"
     },
     {
+      "path": "../log"
+    },
+    {
       "path": "../observability"
     },
     {
@@ -69,7 +72,7 @@
       "path": "../frontend-data"
     },
     {
-      "path": "../log"
+      "path": "../ui-toolkit"
     },
     {
       "path": "./tsconfig.app.json"

@@ -60,4 +60,8 @@ echo "📋 Service Status:"
 echo "   PostgreSQL: $(service postgresql status | grep -o 'online\|down')"
 echo "   PowerDNS:   $(pgrep -x pdns_server > /dev/null && echo 'running' || echo 'stopped')"
 echo ""
+echo "💡 Optional: Start build server for gateway hot-reload:"
+echo "   cd /root/workspace/monorepo/scripts/local-dev"
+echo "   ./serve-builds.sh &"
+echo ""
 

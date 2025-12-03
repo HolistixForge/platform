@@ -22,8 +22,7 @@
           "bundle": true,
           "thirdParty": true,
           "external": [
-            "react",
-            "react-dom"
+   
           ],
           "main": "packages/app-ganymede-cmds/src/main.ts",
           "tsConfig": "packages/app-ganymede-cmds/tsconfig.app.json",

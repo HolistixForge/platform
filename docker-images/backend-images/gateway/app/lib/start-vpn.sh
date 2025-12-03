@@ -50,12 +50,12 @@ openvpn --genkey secret "${TA_KEY}" || error_exit "Failed to generate TLS key"
 EASYRSA_BATCH=1 ./easyrsa gen-req clients nopass || error_exit "Failed to generate clients request"
 EASYRSA_BATCH=1 ./easyrsa sign-req client clients || error_exit "Failed to sign clients request"
 
-# Update OpenVPN configuration file with new paths and random port
+# Update OpenVPN configuration file with new paths and gateway VPN port
 cat <<EOF >"${TEMP_DIR}/server.conf" || error_exit "Failed to write to config file"
 dev tun
 proto udp
-# Use random port
-port ${OPENVPN_PORT}
+# Use gateway VPN port
+port ${GATEWAY_VPN_PORT}
 server 172.16.0.0 255.255.0.0
 
 ca ${CA_CERT}
@@ -98,6 +98,6 @@ echo "${OPENVPN_PID}" >"${OPENVPN_PID_FILE}" || error_exit "Failed to write Open
 HOSTNAME=$(hostname -f)
 
 # Output success message
-write_config "${OPENVPN_PID}" "${TEMP_DIR}" "${OPENVPN_PORT}" "${HOSTNAME}" "$(cat "${CLIENTS_CERT}")" "$(cat "${CLIENTS_KEY}")" "$(cat "${CA_CERT}")" "$(cat "${TA_KEY}")"
+write_config "${OPENVPN_PID}" "${TEMP_DIR}" "${GATEWAY_VPN_PORT}" "${HOSTNAME}" "$(cat "${CLIENTS_CERT}")" "$(cat "${CLIENTS_KEY}")" "$(cat "${CA_CERT}")" "$(cat "${TA_KEY}")"
 
 sudo nginx -s reload

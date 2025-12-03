@@ -1,11 +1,6 @@
 const undefinedValues: string[] = [];
 
-const envVars = [
-  'GATEWAY_ID',
-  'GATEWAY_TOKEN',
-  'SERVER_BIND',
-  'GANYMEDE_FQDN',
-] as const;
+const envVars = ['GATEWAY_ID', 'GATEWAY_TOKEN', 'GANYMEDE_FQDN'] as const;
 
 type EnvVars = (typeof envVars)[number];
 

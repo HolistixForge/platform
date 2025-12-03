@@ -57,7 +57,7 @@ npx nx run app-gateway:build
 
 Gateway containers are deployed on-demand when organizations start projects.
 
-See [doc/guides/PRODUCTION_DEPLOYMENT.md](../../doc/guides/PRODUCTION_DEPLOYMENT.md) for deployment details.
+See [doc/architecture/SYSTEM_ARCHITECTURE.md](../../doc/architecture/SYSTEM_ARCHITECTURE.md) for system architecture.
 
 ## Related Documentation
 

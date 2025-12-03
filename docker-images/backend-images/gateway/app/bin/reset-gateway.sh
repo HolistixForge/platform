@@ -15,8 +15,9 @@ function success_exit {
 }
 
 function reset_gateway {
-    # Get script directory (this script is in bin/, lib/ is sibling)
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    # Get script directory using GATEWAY_ROOT
+    GATEWAY_ROOT=${GATEWAY_ROOT:-"/opt/gateway"}
+    SCRIPT_DIR="${GATEWAY_ROOT}/app"
     
     # Create marker file to signal that reset is in progress
     # This tells start-app-gateway.sh to exit instead of restarting when process dies

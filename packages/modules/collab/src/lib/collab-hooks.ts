@@ -4,8 +4,8 @@ import {
   TAwarenessUser,
   TValidSharedData,
   TUserSelection,
-  bindEditor,
 } from '@monorepo/collab-engine';
+import { bindEditor } from '@monorepo/collab-engine/frontend';
 import { useModuleExports } from '@monorepo/module/frontend';
 
 import { LocalOverrider, TValidSharedDataToCopy } from './overrider';

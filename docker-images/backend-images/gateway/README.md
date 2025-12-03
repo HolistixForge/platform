@@ -22,7 +22,7 @@ The Node.js process orchestrates the infrastructure by executing shell scripts w
 
 ```
 app/
-├── entrypoint-dev.sh          # Container entrypoint (starts app-gateway, hot-reload)
+├── entrypoint-dev.sh          # Container entrypoint (fetches build, starts infrastructure)
 ├── main.sh                     # Script runner (executes lib/bin scripts)
 ├── config.conf                 # Configuration variables
 ├── lib/                        # Library scripts (called by other scripts)
@@ -58,22 +58,21 @@ entrypoint-dev.sh
    - Stop app-gateway (if running)
    - Reset Nginx configuration
    - Start VPN server
-   - Start app-gateway with hot-reload loop
-4. Block on app-gateway hot-reload loop
+   - Start app-gateway with auto-restart loop
+4. Block with `tail -f /dev/null` (keep container alive)
 ```
 
 **Key Features:**
 
 - **Infrastructure Setup:** Calls `reset-gateway.sh` to set up VPN and Nginx
 - **Delegates to reset-gateway:** All infrastructure management handled by reset-gateway
-- **Hot-reload in start-app-gateway:** Hot-reload loop is in `start-app-gateway.sh`, not entrypoint
+- **Auto-restart in start-app-gateway:** Simple restart loop handles crashes, reload via `docker exec`
 
 **Environment Variables Required:**
 
-- `GATEWAY_HTTP_PORT` - HTTP port for app-gateway
-- `GATEWAY_VPN_PORT` - OpenVPN UDP port
-- `WORKSPACE` - Workspace mount path (contains monorepo)
-- `RELOAD_TRIGGER` - Path to hot-reload trigger file
+- `GATEWAY_HTTP_PORT` - HTTP port for Nginx (7100-7199)
+- `GATEWAY_VPN_PORT` - OpenVPN UDP port (49100-49199)
+- `ENV_NAME` - Environment identifier (e.g., "dev-001")
 
 **Logs:**
 
@@ -231,39 +230,30 @@ These scripts are called by other scripts (not directly by app-gateway).
 
 ### `lib/start-app-gateway.sh`
 
-**Purpose:** Start app-gateway Node.js process with hot-reload support.
+**Purpose:** Start app-gateway Node.js process with auto-restart on crash.
 
-**Usage:**
-
-- **Called by:** `bin/reset-gateway.sh`
+**Called by:** `bin/reset-gateway.sh`
 
 **What it does:**
 
-1. Validates workspace exists
-2. Sets up environment variables for app-gateway
-3. Enters hot-reload loop:
-   - Starts Node.js process: `node --enable-source-maps ./dist/packages/app-gateway/main.js`
-   - Watches `.gateway-reload-trigger` file via `inotifywait`
-   - Restarts app-gateway on trigger file change
-   - Auto-recovers if process crashes
-4. Runs in foreground (blocks until process exits or container stops)
+- Simple `while true` loop that runs Node.js
+- Immediate restart on reload (detects `/tmp/gateway-reloading` marker)
+- 3-second delay on unexpected crash
+- Exits gracefully during full reset (detects `/tmp/gateway-resetting` marker)
 
 **Environment Variables:**
 
-- `WORKSPACE` - Required, workspace mount path
-- `GATEWAY_HTTP_PORT` - HTTP port (default: 8888)
-- `LOG_FILE` - Log file path (default: `/logs/gateway.log`)
-- `RELOAD_TRIGGER` - Path to hot-reload trigger file
-- All app-gateway env vars (GATEWAY_ID, GATEWAY_TOKEN, etc.) should be set by container
+- `GATEWAY_ROOT` - Build extraction path (default: `/opt/gateway`)
+- `LOG_FILE` - Log file path (default: `/tmp/gateway.log`)
+- App-gateway vars: `GATEWAY_ID`, `GATEWAY_TOKEN`, `GANYMEDE_FQDN`
 
-**Hot-Reload Mechanism:**
+**Manual Reload:**
 
-- Watches `RELOAD_TRIGGER` file for modifications
-- On change: gracefully stops app-gateway (SIGTERM, wait up to 10s), then restarts
-- Checks process health every 30s (inotifywait timeout)
-- **Smart restart logic:**
-  - If process dies and `/tmp/gateway-resetting` marker exists: Exit (reset-gateway.sh will start new process)
-  - If process dies without marker: Restart (unexpected crash/error)
+```bash
+docker exec <container> /opt/gateway/app/lib/reload-gateway.sh
+```
+
+> **See script:** `lib/start-app-gateway.sh` for implementation details
 
 ---
 
@@ -342,7 +332,7 @@ await runScript('reset-gateway');
 3. Stop app-gateway (`lib/stop-app-gateway.sh`) - **This kills the calling process!**
 4. Reset Nginx (`lib/reset-nginx.sh`)
 5. Start OpenVPN (`lib/start-vpn.sh`)
-6. Start app-gateway (`lib/start-app-gateway.sh`) with hot-reload (in background)
+6. Start app-gateway (`lib/start-app-gateway.sh`) with auto-restart loop (in background)
 7. Remove marker file (after new process starts)
 
 **Execution:**
@@ -417,10 +407,14 @@ This prevents `start-app-gateway.sh` from restarting when the process was intent
 
 - `GATEWAY_ID` - Unique gateway UUID
 - `GATEWAY_TOKEN` - JWT token for this gateway
-- `SERVER_BIND` - Server bindings with gateway-specific port
 - `GATEWAY_FQDN` - FQDN for this gateway instance
 
 These are passed as environment variables to the container via `docker run -e` in `gateway-pool.sh`.
+
+**Port Configuration:**
+
+- Node.js app-gateway always listens on **port 8888** (hardcoded, no configuration)
+- Nginx proxies from `GATEWAY_HTTP_PORT` (7100-7199) to port 8888
 
 ---
 
@@ -442,11 +436,11 @@ These are passed as environment variables to the container via `docker run -e` i
    - Stops app-gateway (if running)
    - Resets Nginx
    - Starts VPN
-   - Starts app-gateway with hot-reload loop (background)
+   - Starts app-gateway with auto-restart loop (background)
    ↓
 6. Entrypoint keeps container alive: tail -f /dev/null
    ↓
-7. start-app-gateway.sh runs hot-reload loop (background)
+7. start-app-gateway.sh runs auto-restart loop (background)
    ↓
 8. App-gateway initializes, waits for allocation
 ```
@@ -481,22 +475,26 @@ These are passed as environment variables to the container via `docker run -e` i
 6. Nginx reloaded, container accessible via gateway
 ```
 
-### Flow 4: Hot Reload
+### Flow 4: Manual Reload (Docker Exec)
 
 ```
-1. Developer: touch .gateway-reload-trigger
+1. Developer: Edit code, build, trigger reload
+   ./scripts/local-dev/envctl.sh restart dev-001 gateway
    ↓
-2. start-app-gateway.sh detects file change (inotifywait)
+2. envctl.sh: Rebuild → Validate → Repack build
    ↓
-3. Sends SIGTERM to app-gateway process
+3. docker exec reload-gateway.sh (on each container)
    ↓
-4. Waits up to 10s for graceful shutdown
+4. reload-gateway.sh:
+   - Fetches new build from HTTP server
+   - Creates marker: /tmp/gateway-reloading
+   - Sends SIGTERM to Node.js process
    ↓
-5. Restarts: node dist/packages/app-gateway/main.js
+5. start-app-gateway.sh detects graceful exit (marker exists)
    ↓
-6. App-gateway reinitializes (may load saved state)
+6. Restarts immediately: node /opt/gateway/app-gateway/main.js
    ↓
-7. Hot-reload loop continues
+7. App-gateway running with new code (~10 seconds total)
 ```
 
 ### Flow 5: Gateway Shutdown (Inactivity)
@@ -518,7 +516,7 @@ These are passed as environment variables to the container via `docker run -e` i
    - Stops app-gateway (kills calling process!)
    - Resets Nginx
    - Starts VPN
-   - Starts app-gateway with hot-reload (background)
+   - Starts app-gateway with auto-restart loop (background)
    ↓
 6. Gateway returns to pool, ready for next organization
 ```
@@ -531,23 +529,27 @@ These are passed as environment variables to the container via `docker run -e` i
 
 ### Required by Entrypoint
 
-| Variable            | Description                                     | Example                            |
-| ------------------- | ----------------------------------------------- | ---------------------------------- |
-| `GATEWAY_HTTP_PORT` | HTTP port for app-gateway                       | `7100`                             |
-| `GATEWAY_VPN_PORT`  | OpenVPN UDP port                                | `49100`                            |
-| `WORKSPACE`         | Workspace mount path                            | `/home/dev/workspace`              |
-| `RELOAD_TRIGGER`    | Hot-reload trigger file (optional, has default) | `/path/to/.gateway-reload-trigger` |
+| Variable            | Description                    | Example      |
+| ------------------- | ------------------------------ | ------------ |
+| `GATEWAY_HTTP_PORT` | HTTP port for Nginx (external) | `7100`       |
+| `GATEWAY_VPN_PORT`  | OpenVPN UDP port               | `49100`      |
+| `ENV_NAME`          | Environment identifier         | `dev-001`    |
+| `BUILD_SERVER_IP`   | Dev container IP (optional)    | `172.17.0.2` |
 
 ### Required by App-Gateway
 
-| Variable          | Description            | Example                              |
-| ----------------- | ---------------------- | ------------------------------------ |
-| `GATEWAY_ID`      | Gateway UUID           | `550e8400-...`                       |
-| `GATEWAY_TOKEN`   | JWT token for Ganymede | `eyJhbGc...`                         |
-| `SERVER_BIND`     | Server bindings JSON   | `[{"host":"127.0.0.1","port":8888}]` |
-| `GANYMEDE_FQDN`   | Ganymede API FQDN      | `ganymede.dev-001.domain.local`      |
-| `GATEWAY_FQDN`    | Gateway FQDN           | `gw-pool-0.domain.local`             |
-| `ALLOWED_ORIGINS` | CORS allowed origins   | `["https://dev-001.domain.local"]`   |
+| Variable          | Description            | Example                    |
+| ----------------- | ---------------------- | -------------------------- |
+| `GATEWAY_ID`      | Gateway UUID           | `550e8400-...`             |
+| `GATEWAY_TOKEN`   | JWT token for Ganymede | `eyJhbGc...`               |
+| `GANYMEDE_FQDN`   | Ganymede API FQDN      | `ganymede.domain.local`    |
+| `GATEWAY_FQDN`    | Gateway FQDN           | `org-{uuid}.domain.local`  |
+| `ALLOWED_ORIGINS` | CORS allowed origins   | `["https://domain.local"]` |
+
+**Port Configuration:**
+
+- Node.js always listens on `127.0.0.1:8888` (hardcoded)
+- Nginx proxies from `GATEWAY_HTTP_PORT` (7100-7199) to port 8888
 
 ### Used by Scripts
 

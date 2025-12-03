@@ -23,6 +23,8 @@ Welcome to the Demiurge documentation! This hub will guide you to the right reso
 - 🧪 **[Test Modules](guides/MODULES_TESTING.md)** - Module stories and fake collab
 - 📦 **[Use Nx Workspace](guides/NX_WORKSPACE.md)** - Monorepo commands and workflows
 - 🎨 **[Build UI Components](guides/MODULES_TESTING.md)** - Module development with Storybook
+- 🔧 **[Package Architecture](guides/PACKAGE_ARCHITECTURE.md)** - React dependency management and package patterns
+- 🚀 **[Gateway Build Distribution](guides/GATEWAY_BUILD_DISTRIBUTION.md)** - HTTP build distribution system
 - 🔌 **[Module Reference](../packages/modules/README.md)** - Individual module documentation
 
 ### Quick Reference
@@ -117,7 +119,7 @@ doc/
 - **Collaboration:** [Overview](architecture/OVERVIEW.md), [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md), [Modules Testing](guides/MODULES_TESTING.md)
 - **Containers:** [System Architecture](architecture/SYSTEM_ARCHITECTURE.md), [User Containers Module](../packages/modules/user-containers/README.md), [Docker Images](../docker-images/README.md)
 - **Protected Services:** [Protected Services Architecture](architecture/PROTECTED_SERVICES.md)
-- **Terminal Access:** [User Containers Module](../packages/modules/user-containers/README.md#terminal-access)
+- **Terminal Access:** [User Containers Module](../packages/modules/user-containers/README.md#terminal-access) (Web-based terminals)
 - **Database:** [Overview](architecture/OVERVIEW.md), [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md)
 - **Gateway:** [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md), [System Architecture](architecture/SYSTEM_ARCHITECTURE.md)
 - **Modules:** [Module Reference](../packages/modules/README.md), [Modules Testing](guides/MODULES_TESTING.md), [Overview](architecture/OVERVIEW.md)
@@ -138,7 +140,7 @@ When updating documentation:
 4. **Link related docs** - Help readers navigate
 5. **Update this hub** - Add links for new documents
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md#documentation) for more details.
+See [CONTRIBUTING.md](../CONTRIBUTING.md#documentation-structure) for more details.
 
 ## 🙋 Need Help?
 

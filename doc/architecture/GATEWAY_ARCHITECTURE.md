@@ -489,21 +489,24 @@ export ENV_NAME="prod" DOMAIN="demiurge.co" GATEWAY_POOL_SIZE=10
 
 ---
 
-## Hot-Reload Mechanism
-
-**Trigger File:** `/root/workspace/monorepo/.gateway-reload-trigger`
+## Reload Mechanism
 
 **How it works:**
 
-1. Developer: `envctl.sh restart gateway`
-2. Script touches trigger file
-3. All gateways watch trigger via `inotifywait`
-4. Trigger detected → rebuild app-gateway → restart process
-5. All gateways reload simultaneously
+1. Developer: `./scripts/local-dev/envctl.sh restart dev-001 gateway`
+2. envctl.sh: Rebuild → Validate → Repack build
+3. docker exec reload-gateway.sh (on each container)
+4. Each gateway fetches new build and restarts Node.js
+5. New code running (~10 seconds total)
+
+**Implementation:**
+- No file watching - triggered via `docker exec`
+- Fetch new build from HTTP server
+- Restart Node.js process automatically
 
 **Entrypoint:** `docker-images/backend-images/gateway/app/entrypoint-dev.sh`
 
-> **See:** [Gateway Container Scripts](../../docker-images/backend-images/gateway/README.md#flow-4-hot-reload) for detailed hot-reload flow and implementation.
+> **See:** [Gateway Container Scripts](../../docker-images/backend-images/gateway/README.md#flow-4-manual-reload-docker-exec) and [Build Distribution Guide](../guides/GATEWAY_BUILD_DISTRIBUTION.md) for detailed implementation.
 
 ---
 
@@ -598,11 +601,11 @@ cat /root/.local-dev/dev-001/nginx-gateways.d/org-550e8400-e29b-41d4-a716-446655
 ### Manually Trigger Gateway Reload
 
 ```bash
-# Reload all gateways in environment
+# Reload all gateways in environment (recommended)
 ./scripts/local-dev/envctl.sh restart dev-001 gateway
 
-# Or manually touch trigger
-touch /root/workspace/monorepo/.gateway-reload-trigger
+# Or reload single container directly
+docker exec gw-pool-dev-001-0 /opt/gateway/app/lib/reload-gateway.sh
 ```
 
 ### Add More Gateways to Pool

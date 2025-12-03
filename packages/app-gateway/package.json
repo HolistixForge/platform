@@ -22,8 +22,6 @@
           "bundle": true,
           "thirdParty": true,
           "external": [
-            "react",
-            "react-dom",
             "*.css",
             "*.svg",
             "*.woff",

@@ -1,3 +1,7 @@
+// Frontend-only exports (React-dependent hooks)
+export { useRegisterListener } from './lib/useRegisterListener';
+
+// Re-export all backend-safe exports
 export type {
   TJson,
   TJsonObject,
@@ -16,10 +20,6 @@ export type {
 } from './lib/my-fetch';
 
 export { fullUri, serialize } from './lib/my-fetch';
-
 export { makeUuid, makeShortUuid, isUuid, toUuid } from './lib/uuid';
-
 export { secondAgo, inSeconds, isPassed, sleep, ONE_YEAR_MS } from './lib/date';
-
-// Listenable class only (backend-safe, no React hooks)
 export { Listenable } from './lib/listenable';

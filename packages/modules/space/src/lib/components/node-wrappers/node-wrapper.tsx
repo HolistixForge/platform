@@ -17,7 +17,7 @@ import {
 } from '@xyflow/react';
 import { useHotkeys } from 'react-hotkeys-hook';
 
-import { useDebugComponent } from '@monorepo/log';
+import { useDebugComponent } from '@monorepo/ui-toolkit/frontend';
 
 import {
   useAwarenessSelections,

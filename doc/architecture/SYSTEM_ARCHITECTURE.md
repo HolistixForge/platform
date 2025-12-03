@@ -101,9 +101,9 @@
 │  │  │ • 172.16.x.x/16  │  │ • 172.16.x.x/16  │  │ • 172.16.x.x/16  │      │ │
 │  │  └────────┬─────────┘  └────────┬─────────┘  └────────┬─────────┘      │ │
 │  │           │ VPN                  │ VPN                  │ VPN            │ │
-│  │  Shared workspace via bind mount:                                        │ │
-│  │  /home/dev/workspace/monorepo (from parent directory bind mount)         │ │
-│  │  Hot-reload: watches .gateway-reload-trigger file                        │ │
+│  │  Build distribution via HTTP:                                            │ │
+│  │  Fetches app-gateway build from dev container on startup/reload         │ │
+│  │  Reload: via docker exec reload-gateway.sh (fetch + restart)            │ │
 │  │  State in PostgreSQL: gateways.ready, organizations_gateways             │ │
 │  └───────────┬──────────────────────┬──────────────────────┬───────────────┘ │
 │              │                      │                      │                 │
@@ -165,7 +165,7 @@ Access URLs (from host OS browser via DNS delegation):
 - **Multiple gateway containers** (`gw-pool-0`, `gw-pool-1`, ...)
   - Allocated to organizations on-demand
   - State managed in PostgreSQL (`ready` flag)
-  - Shared workspace via bind mount (hot-reload, supports multiple repos)
+  - HTTP-based build distribution (hot-reload via rebuild + signal)
 - **Each Gateway Contains:**
   - **app-gateway** (Express.js + Yjs)
     - Real-time collaboration engine (CRDT)

@@ -1,3 +1,4 @@
+// Backend-safe exports only (no React dependencies)
 export {
   EPriority,
   Logger,
@@ -5,11 +6,6 @@ export {
   error,
   type LoggerInitOptions,
 } from './lib/log';
-export {
-  showDebugComponent,
-  useDebugComponent,
-  DebugComponentKeyboardShortcut,
-} from './lib/useDebugComponent';
 
 export {
   Exception,

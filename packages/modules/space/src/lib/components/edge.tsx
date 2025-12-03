@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { EdgeProps } from '@xyflow/react';
 
-import { useDebugComponent } from '@monorepo/log';
+import { useDebugComponent } from '@monorepo/ui-toolkit/frontend';
 
 import {
   EdgeComponent,

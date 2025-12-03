@@ -172,34 +172,46 @@ stop_service() {
     rm -f "$pid_file"
 }
 
-# Function to restart gateway containers (triggers hot-reload)
+# Function to restart gateway containers (triggers hot-reload via HTTP)
 restart_gateway_containers() {
     local env_name=$1
     local env_dir="${LOCAL_DEV_DIR}/${env_name}"
-    
+
     # Load environment variables to get WORKSPACE path
     local env_file="${env_dir}/.env.ganymede"
     if [ ! -f "$env_file" ]; then
         echo -e "${RED}❌ Config file not found: ${env_file}${NC}"
         return 1
     fi
-    
+
     set -a
     source "$env_file"
     set +a
+
+    # Pack the latest gateway build
+    echo -e "${BLUE}📦 Packing latest gateway build for ${env_name}...${NC}"
+    "${WORKSPACE}/scripts/local-dev/pack-gateway-build.sh" "${env_name}" "${WORKSPACE}"
+
+    echo -e "${BLUE}🔄 Triggering reload for all gateway containers...${NC}"
+    echo ""
+
+    # Execute reload script in each container via docker exec
+    local success_count=0
+    local fail_count=0
     
-    # Trigger file is at ${WORKSPACE}/monorepo/.gateway-reload-trigger
-    # (matches entrypoint-dev.sh default: ${REPO_ROOT}/.gateway-reload-trigger)
-    local trigger_file="${WORKSPACE}/monorepo/.gateway-reload-trigger"
-    
-    echo -e "${BLUE}♻️  Triggering hot-reload for all gateway containers...${NC}"
-    echo -e "${GRAY}   Trigger file: ${trigger_file}${NC}"
-   
-    # Touch reload trigger file (watched by all gateways via shared volume)
-    touch "$trigger_file"
-    
-    echo -e "${GREEN}✅ Reload triggered for all gateways${NC}"
-    echo -e "${GRAY}   All gateway containers will reset and restart app-gateway${NC}"
+    docker ps -q --filter label=environment="${env_name}" | while read -r container_id; do
+        local container_name=$(docker inspect --format='{{.Name}}' "$container_id" | sed 's/\///')
+        echo -e "${GRAY}   Reloading ${container_name}...${NC}"
+        
+        if docker exec "$container_id" /opt/gateway/app/lib/reload-gateway.sh 2>&1 | sed 's/^/      /'; then
+            echo -e "${GREEN}   ✅ ${container_name} reloaded${NC}"
+        else
+            echo -e "${RED}   ❌ ${container_name} reload failed${NC}"
+        fi
+        echo ""
+    done
+
+    echo -e "${GREEN}✅ Gateway reload triggered${NC}"
 }
 
 # Function to restart a service
@@ -424,6 +436,14 @@ cmd_build() {
         gateway)
             echo -e "${BLUE}🔨 Building app-gateway...${NC}"
             npx nx run app-gateway:build
+            
+            # Validate bundles
+            echo -e "${BLUE}🔍 Validating bundles...${NC}"
+            "${WORKSPACE}/scripts/validate-node-bundles.sh"
+            
+            # Pack gateway build
+            echo -e "${BLUE}📦 Packing gateway build...${NC}"
+            "${WORKSPACE}/scripts/local-dev/pack-gateway-build.sh" "$env_name" "${WORKSPACE}"
             ;;
         frontend)
             echo -e "${BLUE}🔨 Building frontend...${NC}"
@@ -433,6 +453,15 @@ cmd_build() {
             echo -e "${BLUE}🔨 Building all apps...${NC}"
             npx nx run app-ganymede:build
             npx nx run app-gateway:build
+            
+            # Validate bundles
+            echo -e "${BLUE}🔍 Validating bundles...${NC}"
+            "${WORKSPACE}/scripts/validate-node-bundles.sh"
+            
+            # Pack gateway build
+            echo -e "${BLUE}📦 Packing gateway build...${NC}"
+            "${WORKSPACE}/scripts/local-dev/pack-gateway-build.sh" "$env_name" "${WORKSPACE}"
+            
             "${SCRIPT_DIR}/build-frontend.sh" "$env_name" "${WORKSPACE}"
             ;;
         *)

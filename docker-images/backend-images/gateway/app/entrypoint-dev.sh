@@ -18,37 +18,33 @@ if [ -z "$GATEWAY_HTTP_PORT" ] || [ -z "$GATEWAY_VPN_PORT" ]; then
     exit 1
 fi
 
-# Ensure workspace exists
-if [ ! -d "$WORKSPACE" ]; then
-    echo "❌ Workspace not found: $WORKSPACE"
+# Fetch gateway build from HTTP server
+echo "📥 Fetching gateway build from dev container..."
+/app/lib/fetch-gateway-build.sh
+
+# Set gateway root (extracted build location)
+export GATEWAY_ROOT="/opt/gateway"
+
+# Verify build was extracted
+if [ ! -d "$GATEWAY_ROOT" ]; then
+    echo "❌ Gateway build not found at: $GATEWAY_ROOT"
     exit 1
 fi
 
-# Navigate to workspace repository root
-REPO_ROOT="${WORKSPACE}/monorepo"
-if [ ! -d "$REPO_ROOT" ]; then
-    echo "❌ Repository not found: $REPO_ROOT"
-    exit 1
-fi
-
-cd "$REPO_ROOT"
-echo "📂 Working directory: $(pwd)"
-echo ""
-
-# Get script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# Call reset-gateway to set up infrastructure and start app-gateway
-# reset-gateway will start app-gateway with hot-reload loop in background
-echo "🔧 Setting up gateway infrastructure (VPN, Nginx, app-gateway)..."
+echo "📂 Gateway root: $GATEWAY_ROOT"
 echo ""
 
 # Set environment for reset-gateway
-export RELOAD_TRIGGER=${RELOAD_TRIGGER:-"${REPO_ROOT}/.gateway-reload-trigger"}
-export LOG_FILE="/logs/gateway.log"
+export LOG_FILE="/tmp/gateway.log"
+
+# Call reset-gateway to set up infrastructure and start app-gateway
+# reset-gateway starts app-gateway with simple auto-restart loop
+echo "🔧 Setting up gateway infrastructure (VPN, Nginx, app-gateway)..."
+echo ""
 
 # Call reset-gateway via main.sh (runs in background via nohup)
-"${SCRIPT_DIR}/main.sh" -r bin/reset-gateway.sh
+cd "$GATEWAY_ROOT"
+./app/main.sh -r bin/reset-gateway.sh
 
 echo "✅ Gateway infrastructure setup initiated"
 echo "📊 App-gateway logs: ${LOG_FILE}"

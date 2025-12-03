@@ -306,7 +306,7 @@ See [guides/LOCAL_DEVELOPMENT.md](../guides/LOCAL_DEVELOPMENT.md) for complete s
 
 ### Production
 
-See [guides/PRODUCTION_DEPLOYMENT.md](../guides/PRODUCTION_DEPLOYMENT.md) for deployment.
+See [guides/PRODUCTION_DEPLOYMENT.md](../guides/PRODUCTION_DEPLOYMENT.md) for production deployment (WIP).
 
 - Ganymede on persistent VPS
 - PostgreSQL database

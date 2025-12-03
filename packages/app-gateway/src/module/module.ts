@@ -9,14 +9,21 @@ import { TCollabBackendExports } from '@monorepo/collab';
 import type { TGatewayExports, TGatewaySharedData } from '@monorepo/gateway';
 
 import { GatewayReducer } from './gateway-reducer';
-import type { PermissionManager, OAuthManager, TokenManager } from '@monorepo/gateway';
+import type {
+  PermissionManager,
+  OAuthManager,
+  TokenManager,
+} from '@monorepo/gateway';
 import { DNSManagerImpl } from '../dns/DNSManager';
 
 /**
  * Gateway Module Configuration
  * Passed to gateway module load() function
  */
-import { PermissionRegistry, ProtectedServiceRegistry } from '@monorepo/gateway';
+import {
+  PermissionRegistry,
+  ProtectedServiceRegistry,
+} from '@monorepo/gateway';
 
 export type GatewayModuleConfig = {
   organization_id: string;
@@ -135,11 +142,12 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
 type EScripts = 'update-nginx-locations' | 'reset-gateway';
 
 export const runScript = (name: EScripts, inputString?: string) => {
-  // Scripts are always at fixed location: ${WORKSPACE}/monorepo/docker-images/backend-images/gateway/app
-  // WORKSPACE is always /home/dev/workspace (set by container)
-  const WORKSPACE = '/home/dev/workspace';
-  const DIR = `${WORKSPACE}/monorepo/docker-images/backend-images/gateway/app`;
-  const cmd = `${DIR}/main.sh`;
+  // Scripts are at /opt/gateway/app/ (standard app location in containers)
+  // In dev: extracted from build tarball
+  // In prod: built into image at same location
+  const GATEWAY_ROOT = process.env.GATEWAY_ROOT || '/opt/gateway';
+  const SCRIPTS_DIR = `${GATEWAY_ROOT}/app`;
+  const cmd = `${SCRIPTS_DIR}/main.sh`;
   const args = ['-r', `bin/${name}.sh`];
 
   const fcmd = `${cmd} ${args.join(' ')}`;

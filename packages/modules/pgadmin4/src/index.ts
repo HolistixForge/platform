@@ -1,2 +1,2 @@
-export * from './lib/pgadmin4';
+// Backend-only exports
 export { moduleBackend } from './backend';

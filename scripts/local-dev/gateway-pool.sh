@@ -114,8 +114,9 @@ echo "   Workspace: ${WORKSPACE_PATH} (bind mount: ${BIND_MOUNT_SOURCE})"
 echo ""
 
 for i in $(seq 1 $COUNT); do
-  # Calculate ports based on existing gateway count
-  GATEWAY_COUNT=$(docker ps -a --filter "name=gw-pool-${ENV_NAME}-" --filter "label=environment=${ENV_NAME}" --format "{{.Names}}" | wc -l)
+  # Calculate ports based on ALL existing gateway containers (across all environments)
+  # to avoid port conflicts between different environments
+  GATEWAY_COUNT=$(docker ps -a --filter "name=gw-pool-" --format "{{.Names}}" | wc -l)
   GW_HTTP_PORT=$((7100 + GATEWAY_COUNT))
   GW_VPN_PORT=$((49100 + GATEWAY_COUNT))
   
@@ -155,18 +156,24 @@ for i in $(seq 1 $COUNT); do
   
   echo "     Gateway ID: ${GATEWAY_ID}"
   
+  # No workspace mount needed!
+  # Gateway fetches its build from HTTP server on startup
+  echo -e "${GREEN}   ✓ Gateway will fetch build from HTTP server${NC}"
+  
+  # Get build server IP (dev container IP on bridge network)
+  BUILD_SERVER_IP=$(hostname -I | awk '{print $1}')
+  
   # Start gateway container
+  # Gateway fetches its build from HTTP server on dev container
+  # No workspace mount needed - production-like deployment
   # State is managed in PostgreSQL (gateways.ready, organizations_gateways)
-  # No SSL - all SSL termination in stage 1 nginx
+  # No SSL - all SSL termination in stage 1 nginx  
   # No org-specific data - data stored in Ganymede
-  # Always uses bind mount: parent directory mounted to WORKSPACE_MOUNT
-  # Gateway accesses repo at: ${WORKSPACE_MOUNT}/monorepo
   docker run -d \
     --name "${GATEWAY_NAME}" \
     --label "environment=${ENV_NAME}" \
     --label "gateway_id=${GATEWAY_ID}" \
     --network bridge \
-    -v "${BIND_MOUNT_SOURCE}:${WORKSPACE_MOUNT}" \
     -p ${GW_HTTP_PORT}:${GW_HTTP_PORT} \
     -p ${GW_VPN_PORT}:${GW_VPN_PORT}/udp \
     --cap-add=NET_ADMIN \
@@ -176,10 +183,9 @@ for i in $(seq 1 $COUNT); do
     -e GATEWAY_TOKEN="${GATEWAY_TOKEN}" \
     -e GATEWAY_HTTP_PORT="${GW_HTTP_PORT}" \
     -e GATEWAY_VPN_PORT="${GW_VPN_PORT}" \
-    -e SERVER_BIND="[{\"host\": \"127.0.0.1\", \"port\": ${GW_HTTP_PORT}}]" \
     -e GANYMEDE_FQDN="ganymede.${DOMAIN}" \
     -e DOMAIN="${DOMAIN}" \
-    -e WORKSPACE="${WORKSPACE_MOUNT}" \
+    -e BUILD_SERVER_IP="${BUILD_SERVER_IP}" \
     gateway:latest > /dev/null
   
   if [ $? -ne 0 ]; then
