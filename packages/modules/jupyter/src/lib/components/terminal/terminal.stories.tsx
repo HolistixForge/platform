@@ -1,8 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useEffect, useState } from 'react';
 
-import { Logger } from '@holistix/log';
-import { TServerEvents, TServersSharedData } from '@holistix/user-containers';
+import { EPriority, Logger } from '@holistix/log';
+import {
+  TServerEvents,
+  TUserContainersSharedData,
+} from '@holistix/user-containers';
 import { useLocalSharedData } from '@holistix/collab/frontend';
 import { useDispatcher } from '@holistix/reducers/frontend';
 import { ButtonBase, SelectFieldset, SelectItem } from '@holistix/ui-base';
@@ -19,7 +22,7 @@ import { TJupyterServerData } from '../../jupyter-types';
 
 //
 
-Logger.setPriority(7);
+Logger.setPriority(EPriority.Debug);
 
 //
 
@@ -37,7 +40,7 @@ const Terminals = () => {
   const dispatcher = useDispatcher<TJupyterEvent | TServerEvents>();
   const { jupyter: jmc } = useJLsManager();
 
-  const sd = useLocalSharedData<TServersSharedData & TJupyterSharedData>(
+  const sd = useLocalSharedData<TUserContainersSharedData & TJupyterSharedData>(
     ['user-containers:containers', 'jupyter:servers'],
     (sd) => sd
   );
@@ -65,7 +68,7 @@ const Terminals = () => {
   const handleNewTerminal = () => {
     dispatcher.dispatch({
       type: 'jupyter:new-terminal',
-      project_server_id: STORY_USER_CONTAINER_ID,
+      user_container_id: STORY_USER_CONTAINER_ID,
       client_id: 'not needed here in storybook',
     });
   };

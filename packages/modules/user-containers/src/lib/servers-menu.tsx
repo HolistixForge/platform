@@ -8,6 +8,7 @@ export const serversMenuEntries: TSpaceMenuEntries = ({
   from,
   position,
   renderForm,
+  projectId,
 }) => {
   return [
     {
@@ -20,6 +21,7 @@ export const serversMenuEntries: TSpaceMenuEntries = ({
           onClick: () => {
             renderForm(
               <NewContainerForm
+                projectId={projectId}
                 viewId={viewId}
                 position={position()}
                 closeForm={() => {

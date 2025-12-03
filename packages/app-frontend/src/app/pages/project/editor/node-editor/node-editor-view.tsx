@@ -1,6 +1,7 @@
 import { DemiurgeSpace } from '@holistix/space/frontend';
 
 import './node-editor.scss';
+import { useProject } from '../../project-context';
 
 /**
  *
@@ -8,9 +9,11 @@ import './node-editor.scss';
 export const NodeEditorView = ({ viewId }: { viewId: string }) => {
   //
 
+  const project = useProject();
+
   return (
     <div style={{ height: '100%', backgroundColor: 'var(--color-background)' }}>
-      <DemiurgeSpace viewId={viewId} />
+      <DemiurgeSpace viewId={viewId} projectId={project.project.project_id} />
     </div>
   );
 };

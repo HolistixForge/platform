@@ -36,10 +36,12 @@ export const NewContainerForm = ({
   viewId,
   position,
   closeForm,
+  projectId,
 }: {
   position?: TPosition;
   viewId?: string;
   closeForm: () => void;
+  projectId: string;
 }) => {
   //
 
@@ -55,6 +57,7 @@ export const NewContainerForm = ({
     (d) => {
       return dispatcher.dispatch({
         type: 'user-container:new',
+        project_id: projectId,
         containerName: d.containerName,
         imageId: d.imageId,
         origin:

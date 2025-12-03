@@ -96,7 +96,7 @@ export const JupyterTerminal = ({
   userContainerId,
 }: {
   terminalId: string;
-  userContainerId: number;
+  userContainerId: string;
 }) => {
   //
   const [isReachable, setIsReachable] = useState<boolean | undefined>(

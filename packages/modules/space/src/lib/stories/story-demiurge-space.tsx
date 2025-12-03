@@ -39,5 +39,5 @@ export const StoryDemiurgeSpace = () => {
     return <div>Loading story space...</div>;
   }
 
-  return <DemiurgeSpace viewId={STORY_VIEW_ID} />;
+  return <DemiurgeSpace viewId={STORY_VIEW_ID} projectId={'story-project'} />;
 };

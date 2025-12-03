@@ -294,7 +294,7 @@ const ProxyCheckWrapper = ({ children }) => {
 
 ```typescript
 import { Logger } from '@holistix/log';
-Logger.setPriority(7); // Debug level
+Logger.setPriority(EPriority.Debug); // Debug level
 ```
 
 2. **Inspect shared state:**

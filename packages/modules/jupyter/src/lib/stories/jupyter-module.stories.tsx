@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { Logger } from '@holistix/log';
+import { EPriority, Logger } from '@holistix/log';
 import { StoryDemiurgeSpace } from '@holistix/space/stories';
 import { StoryApiContext } from '@holistix/frontend-data';
-import { TSpaceMenuEntries, TSpaceMenuEntry } from '@holistix/module/frontend';
+import { TSpaceMenuEntries } from '@holistix/space/frontend';
 
 import {
   JupyterStoryCollabContext,
@@ -12,7 +12,7 @@ import {
 
 //
 
-Logger.setPriority(7);
+Logger.setPriority(EPriority.Debug);
 
 //
 

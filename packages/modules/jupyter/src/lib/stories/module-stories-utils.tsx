@@ -38,7 +38,7 @@ const STORY_JUPYTERLAB_CLIENT_ID = 'jupyterlab-story';
 
 export const STORY_PROJECT_ID = 0;
 
-export const STORY_USER_CONTAINER_ID = 0;
+export const STORY_USER_CONTAINER_ID = '0';
 
 const STORY_JUPYTER_PORT = 36666;
 const STORY_JUPYTER_IP = '127.0.0.1';

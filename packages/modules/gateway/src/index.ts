@@ -12,12 +12,7 @@ import {
 //
 
 import { PermissionRegistry } from './lib/permission-registry';
-import {
-  ProtectedServiceRegistry,
-  type ProtectedServiceHandler,
-  type ProtectedServiceRequestContext,
-  type ProtectedServiceResolution,
-} from './lib/protected-service-registry';
+import { ProtectedServiceRegistry } from './lib/protected-service-registry';
 
 export type TGatewayExports = {
   toGanymede: <T>(r: TMyfetchRequest) => Promise<T>;

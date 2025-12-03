@@ -69,6 +69,7 @@ const StoryWrapper = () => {
   return (
     <ModuleProvider exports={frontendModules}>
       <NewContainerForm
+        projectId={''}
         viewId={''}
         position={{ x: 0, y: 0 }}
         closeForm={() => null}

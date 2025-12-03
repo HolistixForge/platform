@@ -75,7 +75,7 @@ export class BackendEventProcessor<TE extends TBaseEvent> {
       const b = sequence.addEvent(event as SequenceEvent);
       if (!event.sequenceRevertPoint && (sequence.isFailed() || !b)) {
         log(
-          6,
+          EPriority.Info,
           'SKIP_SEQUENCE_EVENT',
           `[${event.sequenceId}, ${event.sequenceCounter}]`
         );

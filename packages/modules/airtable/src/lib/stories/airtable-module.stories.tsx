@@ -1,7 +1,7 @@
 import { useState, useEffect, ReactNode, useMemo } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { Logger } from '@holistix/log';
+import { EPriority, Logger } from '@holistix/log';
 import { StoryApiContext } from '@holistix/frontend-data';
 import { StoryDemiurgeSpace } from '@holistix/space/stories';
 
@@ -32,7 +32,7 @@ import { moduleFrontend as airtableFrontend } from '../../frontend';
 
 //
 
-Logger.setPriority(7);
+Logger.setPriority(EPriority.Debug);
 // Proxy check wrapper component
 const ProxyInstructions = ({ loading }: { loading?: boolean }) => (
   <div

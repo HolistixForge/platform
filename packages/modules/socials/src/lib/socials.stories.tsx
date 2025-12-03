@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { SharedTypes } from '@holistix/collab-engine';
-import { Logger } from '@holistix/log';
+import { EPriority, Logger } from '@holistix/log';
 import { TCoreSharedData } from '@holistix/core-graph';
 import { TSpaceSharedData, defaultGraphView } from '@holistix/space';
 import { STORY_VIEW_ID, StoryDemiurgeSpace } from '@holistix/space/stories';
@@ -35,7 +35,7 @@ import { moduleFrontend as socialsFrontend } from '../frontend';
 
 //
 
-Logger.setPriority(7);
+Logger.setPriority(EPriority.Debug);
 
 const collabConfig = {
   type: 'none',

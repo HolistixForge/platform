@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { Logger } from '@holistix/log';
+import { EPriority, Logger } from '@holistix/log';
 
 //
 import { loadModules, TModule } from '@holistix/module';
@@ -37,7 +37,7 @@ import { moduleFrontend as spaceFrontend } from '../../../frontend';
 
 //
 
-Logger.setPriority(7);
+Logger.setPriority(EPriority.Debug);
 
 const initModule: TModule<
   { collab: TCollabBackendExports<TSpaceSharedData & TCoreSharedData> },
@@ -113,7 +113,7 @@ const StoryWrapper = () => {
   return (
     <ModuleProvider exports={frontendModules}>
       <div style={{ height: '100vh', width: '100vw' }}>
-        <DemiurgeSpace viewId={STORY_VIEW_ID} />
+        <DemiurgeSpace viewId={STORY_VIEW_ID} projectId={'story-project'} />
       </div>
     </ModuleProvider>
   );

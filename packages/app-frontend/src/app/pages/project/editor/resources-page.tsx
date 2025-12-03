@@ -13,6 +13,7 @@ import {
 import { useLocalSharedData } from '@holistix/collab/frontend';
 
 import { ProjectSidebar } from '../sidebar';
+import { useProject } from '../project-context';
 
 //
 
@@ -22,6 +23,8 @@ export const ResourcePage = () => {
       ['user-containers:containers'],
       (sd) => sd['user-containers:containers']
     );
+
+  const project = useProject();
 
   const [displayNewServerForm, setDisplayNewServerForm] = useState(false);
 
@@ -52,7 +55,7 @@ export const ResourcePage = () => {
                 onOpenService={function (name: string): void {
                   throw new Error('Function not implemented.');
                 }}
-                onSelectRunner={function (runner_id: string): void {
+                onSelectRunner={function (runner_id: string): Promise<void> {
                   throw new Error('Function not implemented.');
                 }}
                 runners={new Map<string, TContainerRunnerFrontend>()}
@@ -64,7 +67,10 @@ export const ResourcePage = () => {
       <ProjectSidebar active="project-main" />
 
       {displayNewServerForm && (
-        <NewContainerForm closeForm={() => setDisplayNewServerForm(false)} />
+        <NewContainerForm
+          projectId={project.project.project_id}
+          closeForm={() => setDisplayNewServerForm(false)}
+        />
       )}
     </>
   );

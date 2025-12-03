@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { useMemo } from 'react';
 
 import { randomGuys } from '@holistix/ui-base';
-import { Logger } from '@holistix/log';
+import { EPriority, Logger } from '@holistix/log';
 import { StoryApiContext } from '@holistix/frontend-data';
 import { StoryDemiurgeSpace } from '@holistix/space/stories';
 
@@ -37,7 +37,7 @@ import { TMyfetchRequest } from '@holistix/simple-types';
 
 //
 
-Logger.setPriority(7);
+Logger.setPriority(EPriority.Debug);
 
 const collabConfig = {
   type: 'none',

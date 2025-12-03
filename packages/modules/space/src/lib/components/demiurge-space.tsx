@@ -44,6 +44,7 @@ import { ModeIndicator } from './ModeIndicator';
 import { LayersTreePanel } from './panels/layers-tree-panel';
 import { LayerContextProvider } from './layer-context';
 import { buildNodeTree } from '../layer-tree-utils';
+import { TGraphView } from '../space-types';
 import {
   TLayerTreeOperation,
   TLayerTreeItem,
@@ -124,7 +125,13 @@ const useOpenRadixContextMenu = () => {
  * @returns
  */
 
-export const DemiurgeSpace = ({ viewId }: { viewId: string }) => {
+export const DemiurgeSpace = ({
+  viewId,
+  projectId,
+}: {
+  viewId: string;
+  projectId: string;
+}) => {
   const { space } = useModuleExports<{ space: TSpaceFrontendExports }>(
     'DemiurgeSpace'
   );
@@ -132,6 +139,7 @@ export const DemiurgeSpace = ({ viewId }: { viewId: string }) => {
   return (
     <RightPanels panelsDefs={uies.panels}>
       <DemiurgeSpaceWhiteboard
+        projectId={projectId}
         viewId={viewId}
         nodeTypes={uies.nodes}
         spaceMenuEntries={uies.getMenuEntries}
@@ -149,6 +157,7 @@ export const DemiurgeSpace = ({ viewId }: { viewId: string }) => {
  */
 
 export type DemiurgeSpaceWhiteboardProps = {
+  projectId: string;
   viewId: string;
   nodeTypes: TNodeTypes;
   spaceMenuEntries: TSpaceMenuEntries;
@@ -157,6 +166,7 @@ export type DemiurgeSpaceWhiteboardProps = {
 };
 
 const DemiurgeSpaceWhiteboard = ({
+  projectId,
   viewId,
   nodeTypes,
   spaceMenuEntries,
@@ -326,7 +336,7 @@ const DemiurgeSpaceWhiteboard = ({
   const [renderForm, setRenderForm] = useState<ReactNode | null>(null);
   const [showLayersPanel, setShowLayersPanel] = useState<boolean>(true);
 
-  const gv = useLocalSharedData<TSpaceSharedData>(
+  const gv: TGraphView | undefined = useLocalSharedData<TSpaceSharedData>(
     ['space:graphViews'],
     (sd) => {
       return sd['space:graphViews']?.get(viewId);
@@ -449,6 +459,7 @@ const DemiurgeSpaceWhiteboard = ({
               viewId,
               from,
               sharedData: lsdm.getData(),
+              projectId: projectId,
               position: () => rcc.current,
               renderForm: setRenderForm,
               renderPanel: openPanel,

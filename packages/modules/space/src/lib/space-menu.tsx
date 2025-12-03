@@ -39,6 +39,7 @@ export type TSpaceMenuEntries = (a: {
   viewId: string;
   from?: { node: string; connectorName: string; pinName?: string };
   sharedData: TValidSharedDataToCopy<TValidSharedData>;
+  projectId: string;
   position: () => { x: number; y: number };
   renderForm: (form: ReactNode) => void;
   renderPanel: (panel: TPanel) => void;
