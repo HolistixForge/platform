@@ -7,7 +7,6 @@ import { ResourceBar } from '../components/resource-bar';
 import { ResourceDescription } from '../components/resource-description';
 import { SummaryAccesses } from '../components/summary-accesses';
 import { menuItems } from './access-role';
-import { awsInstanceTypes } from '@holistix/user-containers/frontend';
 
 //
 
@@ -89,7 +88,9 @@ export const NotebookView = ({ updateDescription }: NotebookViewProps) => {
                 <SelectFieldset
                   name={''}
                   value={'Python 3.10.12 modele'}
-                  onChange={function (v: string): void {}}
+                  onChange={function (v: string): void {
+                    /* noop */
+                  }}
                   placeholder={''}
                   style={{
                     background: '#2A2A3F',
@@ -113,7 +114,7 @@ export const NotebookView = ({ updateDescription }: NotebookViewProps) => {
                 <div className="relative group w-full">
                   <SelectFieldset
                     name="instanceType"
-                    value={awsInstanceTypes[0].Instance}
+                    value={''}
                     onChange={(s) => null}
                     placeholder="Select an instance type…"
                     integrated
@@ -126,12 +127,14 @@ export const NotebookView = ({ updateDescription }: NotebookViewProps) => {
                       padding: '0 var(--form-input-padding-x)',
                     }}
                   >
-                    {awsInstanceTypes.map((type) => (
-                      <SelectItem key={type.Instance} value={type.Instance}>
-                        <b>{type.Instance}</b> (vCPUs <b>{type.vCPU}</b> Memory{' '}
-                        <b>{type.Memory_GiB}</b> GiB)
-                      </SelectItem>
-                    ))}
+                    {[{ Instance: 't3.micro', vCPU: 2, Memory_GiB: 1 }].map(
+                      (type) => (
+                        <SelectItem key={type.Instance} value={type.Instance}>
+                          <b>{type.Instance}</b> (vCPUs <b>{type.vCPU}</b>{' '}
+                          Memory <b>{type.Memory_GiB}</b> GiB)
+                        </SelectItem>
+                      )
+                    )}
                   </SelectFieldset>
                 </div>
                 <div className="w-[120px] h-[47px] rounded-lg border-white/40 border flex items-center justify-center">

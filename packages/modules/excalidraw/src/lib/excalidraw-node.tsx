@@ -20,7 +20,7 @@ import './excalidraw-node.scss';
 
 //
 
-export const ExcalidrawNode: FC<{ node: TGraphNode }> = ({ node }) => {
+export const ExcalidrawNode: FC<{ node: TGraphNode<never> }> = ({ node }) => {
   const { id, isOpened, open, selected } = useNodeContext();
   const { activeLayerId, activeLayerPayload, activateLayer } =
     useLayerContext();
