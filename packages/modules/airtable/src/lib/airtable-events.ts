@@ -1,6 +1,6 @@
 import { TEventOrigin } from '@holistix/core-graph';
 import { TAirtableViewMode } from './airtable-types';
-import { TJsonObject } from '@holistix/simple-types';
+import { TJsonObject } from '@holistix/shared-types';
 
 export type TEventInitBase = {
   type: 'airtable:init-base';

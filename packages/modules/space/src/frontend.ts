@@ -15,7 +15,7 @@ import {
   TLayerProvider,
   LayerViewportAdapter,
 } from './lib/components/layer-types';
-import { TJsonObject } from '@holistix/simple-types';
+import { TJsonObject } from '@holistix/shared-types';
 
 import './lib/components/css/index.scss';
 

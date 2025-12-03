@@ -6,10 +6,10 @@
       "path": "../../log"
     },
     {
-      "path": "../../api-fetch"
+      "path": "../../simple-types"
     },
     {
-      "path": "../../simple-types"
+      "path": "../../api-fetch"
     },
     {
       "path": "../module"

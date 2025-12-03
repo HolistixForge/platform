@@ -11,7 +11,7 @@ import {
   UnknownException,
 } from '@holistix/log';
 import { jwtPayload, respond } from '@holistix/backend-engine';
-import { TJson } from '@holistix/simple-types';
+import { TJson } from '@holistix/shared-types';
 
 import { verifyPassword } from '../../models/users';
 import {

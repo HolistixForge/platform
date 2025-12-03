@@ -1,6 +1,6 @@
 //
 
-import { TJson } from '@holistix/simple-types';
+import { TJson } from '@holistix/shared-types';
 
 //
 

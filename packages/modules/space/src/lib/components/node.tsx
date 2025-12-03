@@ -1,4 +1,4 @@
-import { TJsonObject } from '@holistix/simple-types';
+import { TJsonObject } from '@holistix/shared-types';
 
 import { InputsAndOutputs } from './assets/inputsOutputs/inputsOutputs';
 import { useNodeContext } from './node-wrappers/node-wrapper';

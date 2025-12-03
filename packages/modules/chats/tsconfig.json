@@ -9,10 +9,10 @@
       "path": "../../frontend-data"
     },
     {
-      "path": "../../simple-types"
+      "path": "../../collab-engine"
     },
     {
-      "path": "../../collab-engine"
+      "path": "../../simple-types"
     },
     {
       "path": "../core-graph"

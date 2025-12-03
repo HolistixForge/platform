@@ -3,7 +3,7 @@ import { FC, ReactNode } from 'react';
 import { TValidSharedData } from '@holistix/collab-engine';
 import { TValidSharedDataToCopy } from '@holistix/collab/frontend';
 import { FrontendDispatcher } from '@holistix/reducers/frontend';
-import { makeUuid, TJsonObject } from '@holistix/simple-types';
+import { makeUuid, TJsonObject } from '@holistix/shared-types';
 
 import { SHAPE_TYPES, TEventNewShape, TSpaceEvent } from './space-events';
 

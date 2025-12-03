@@ -41,10 +41,10 @@
       "path": "../../log/tsconfig.lib.json"
     },
     {
-      "path": "../reducers/tsconfig.lib.json"
+      "path": "../../frontend-data/tsconfig.lib.json"
     },
     {
-      "path": "../../frontend-data/tsconfig.lib.json"
+      "path": "../../collab-engine/tsconfig.lib.json"
     },
     {
       "path": "../../simple-types/tsconfig.lib.json"
@@ -53,7 +53,7 @@
       "path": "../core-graph/tsconfig.lib.json"
     },
     {
-      "path": "../../collab-engine/tsconfig.lib.json"
+      "path": "../reducers/tsconfig.lib.json"
     },
     {
       "path": "../collab/tsconfig.lib.json"

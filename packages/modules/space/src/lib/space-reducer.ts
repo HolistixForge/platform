@@ -11,7 +11,7 @@ import {
 } from '@holistix/core-graph';
 import { TGraphNode } from '@holistix/core-graph';
 import { error, UserException } from '@holistix/log';
-import { TJsonObject } from '@holistix/simple-types';
+import { TJsonObject } from '@holistix/shared-types';
 
 import { TSpaceSharedData } from '../index';
 import {

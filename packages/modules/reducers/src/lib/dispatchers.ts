@@ -1,7 +1,7 @@
 import { ApiFetch } from '@holistix/api-fetch';
-import { TJson } from '@holistix/simple-types';
+import { TJson } from '@holistix/shared-types';
 import { TBaseEvent } from '..';
-import { log } from '@holistix/log';
+import { log, EPriority } from '@holistix/log';
 
 //
 
@@ -14,10 +14,10 @@ export class FrontendDispatcher<TE extends TBaseEvent> {
 
   async dispatch(event: TE): Promise<void> {
     if (!this._fetch) {
-      log(3, 'DISPATCH_BROWSER', 'No fetch set', event);
+      log(EPriority.Error, 'DISPATCH_BROWSER', 'No fetch set', event);
       return;
     }
-    log(7, 'DISPATCH_BROWSER', '', event);
+    log(EPriority.Debug, 'DISPATCH_BROWSER', '', event);
     await this._fetch.fetch({
       url: 'event',
       method: 'POST',

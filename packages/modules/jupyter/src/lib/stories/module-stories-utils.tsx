@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useLocalSharedData } from '@holistix/collab/frontend';
 import { useDispatcher } from '@holistix/reducers/frontend';
-import { TJsonObject, TMyfetchRequest } from '@holistix/simple-types';
+import { TJsonObject, TMyfetchRequest } from '@holistix/shared-types';
 import { TServersSharedData, TServerEvents } from '@holistix/user-containers';
 import { TCoreSharedData } from '@holistix/core-graph';
 

@@ -1,5 +1,5 @@
 import { EPriority, log } from '@holistix/log';
-import { TJson, TStringMap } from '@holistix/simple-types';
+import { TJson, TStringMap } from '@holistix/shared-types';
 
 //
 //

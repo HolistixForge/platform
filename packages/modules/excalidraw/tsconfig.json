@@ -6,10 +6,10 @@
       "path": "../../log"
     },
     {
-      "path": "../reducers"
+      "path": "../../frontend-data"
     },
     {
-      "path": "../../frontend-data"
+      "path": "../../collab-engine"
     },
     {
       "path": "../../simple-types"
@@ -18,7 +18,7 @@
       "path": "../core-graph"
     },
     {
-      "path": "../../collab-engine"
+      "path": "../reducers"
     },
     {
       "path": "../collab"

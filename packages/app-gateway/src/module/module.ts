@@ -1,8 +1,8 @@
 import { spawnSync } from 'child_process';
-import { TJson } from '@holistix/simple-types';
+import { TJson } from '@holistix/shared-types';
 import { EPriority, log } from '@holistix/log';
 import type { TModule } from '@holistix/module';
-import { TMyfetchRequest } from '@holistix/simple-types';
+import { TMyfetchRequest } from '@holistix/shared-types';
 import { myfetch } from '@holistix/backend-engine';
 import { TReducersBackendExports } from '@holistix/reducers';
 import { TCollabBackendExports } from '@holistix/collab';

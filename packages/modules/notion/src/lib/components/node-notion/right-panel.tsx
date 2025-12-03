@@ -5,7 +5,7 @@ import { useLocalSharedData } from '@holistix/collab/frontend';
 import { NotionDatabase } from './notion-database';
 import { TNotionSharedData } from '../../notion-shared-model';
 import { TPanel } from '@holistix/space/frontend';
-import { toUuid } from '@holistix/simple-types';
+import { toUuid } from '@holistix/shared-types';
 
 //
 

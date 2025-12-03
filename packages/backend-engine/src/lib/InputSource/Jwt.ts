@@ -1,5 +1,5 @@
 import * as jwt from 'jsonwebtoken';
-import { TJson } from '@holistix/simple-types';
+import { TJson } from '@holistix/shared-types';
 
 /**
  * Generate a JWT token with the given payload

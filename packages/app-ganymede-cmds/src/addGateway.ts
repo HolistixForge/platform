@@ -1,6 +1,6 @@
 import { generateJwtToken, jwtPayload } from '@holistix/backend-engine';
 import { TJwtGateway } from '@holistix/types';
-import { ONE_YEAR_MS } from '@holistix/simple-types';
+import { ONE_YEAR_MS } from '@holistix/shared-types';
 import { pg } from './pg';
 import { EPriority, log } from '@holistix/log';
 

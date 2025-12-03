@@ -33,7 +33,7 @@ import { moduleFrontend as spaceFrontend } from '@holistix/space/frontend';
 
 import { moduleFrontend } from '../frontend';
 import { moduleBackend, TChatSharedData } from '../';
-import { TMyfetchRequest } from '@holistix/simple-types';
+import { TMyfetchRequest } from '@holistix/shared-types';
 
 //
 

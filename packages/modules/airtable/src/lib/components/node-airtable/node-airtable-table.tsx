@@ -22,7 +22,7 @@ import {
   detectStatusField,
   detectPriorityField,
 } from '../../utils/field-detection';
-import { TJsonObject } from '@holistix/simple-types';
+import { TJsonObject } from '@holistix/shared-types';
 
 //
 

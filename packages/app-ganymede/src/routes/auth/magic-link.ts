@@ -10,7 +10,7 @@ import { sendMail } from '../../lib/send-mail';
 import { MagicLinkModel } from '../../models/magic-link';
 import { userGetLocalByEmail } from '../../models/users';
 import { CONFIG } from '../../config';
-import { makeUuid } from '@holistix/simple-types';
+import { makeUuid } from '@holistix/shared-types';
 
 const CALLBACK_PATH = '/magiclink/callback';
 

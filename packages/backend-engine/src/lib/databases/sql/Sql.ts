@@ -1,6 +1,6 @@
 import { DeepReadonly } from 'ts-essentials';
 import { TSqlApi, TSqlQueryDefinition } from './Connections';
-import { TJsonWithDate } from '@holistix/simple-types';
+import { TJsonWithDate } from '@holistix/shared-types';
 
 export type TSqlConfig = {
   host: string;

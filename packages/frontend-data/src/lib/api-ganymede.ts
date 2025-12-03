@@ -1,6 +1,6 @@
 import { EventSourcePolyfill } from 'event-source-polyfill';
 import { ApiFetch } from '@holistix/api-fetch';
-import { TJson, TMyfetchRequest } from '@holistix/simple-types';
+import { TJson, TMyfetchRequest } from '@holistix/shared-types';
 import { Tokens, doOauthCode } from './oauth-client';
 import {
   GLOBAL_CLIENT_ID,

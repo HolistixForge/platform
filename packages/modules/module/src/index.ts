@@ -1,4 +1,4 @@
-import { log } from '@holistix/log';
+import { log, EPriority } from '@holistix/log';
 
 export type TModule<TRequired = object, TExports = object> = {
   name: string;
@@ -28,7 +28,7 @@ export const loadModules = (
         );
       }
     });
-    log(6, 'MODULES', `Loading module ${m.module.name}`);
+    log(EPriority.Info, 'MODULES', `Loading module ${m.module.name}`);
     m.module.load({
       depsExports: depsExports as never,
       moduleExports: (e) => {
@@ -38,6 +38,6 @@ export const loadModules = (
     });
     loadedModules.push(m.module.name);
   }
-  log(6, 'MODULES', `Loaded ${modules.length} modules`, { depsExports });
+  log(EPriority.Info, 'MODULES', `Loaded ${modules.length} modules`, { depsExports });
   return depsExports;
 };

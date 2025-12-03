@@ -45,6 +45,9 @@
       "path": "../../ui-toolkit/tsconfig.lib.json"
     },
     {
+      "path": "../../collab-engine/tsconfig.lib.json"
+    },
+    {
       "path": "../../api-fetch/tsconfig.lib.json"
     },
     {
@@ -52,9 +55,6 @@
     },
     {
       "path": "../../simple-types/tsconfig.lib.json"
-    },
-    {
-      "path": "../../collab-engine/tsconfig.lib.json"
     },
     {
       "path": "../core-graph/tsconfig.lib.json"

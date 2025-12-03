@@ -1,4 +1,4 @@
-import { TJsonObject } from '@holistix/simple-types';
+import { TJsonObject } from '@holistix/shared-types';
 
 export type xyz = { x: number; y: number; z: number };
 

@@ -7,7 +7,7 @@ import {
   TrashIcon,
 } from '@radix-ui/react-icons';
 
-import { sleep } from '@holistix/simple-types';
+import { sleep } from '@holistix/shared-types';
 import {
   icons,
   ButtonIcon,

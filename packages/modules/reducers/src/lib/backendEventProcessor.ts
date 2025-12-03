@@ -1,4 +1,4 @@
-import { log } from '@holistix/log';
+import { log, EPriority } from '@holistix/log';
 import { BackendEventSequence, SequenceEvent } from './backendEventSequence';
 import { Reducer, RequestData, TBaseEvent } from '..';
 
@@ -83,7 +83,7 @@ export class BackendEventProcessor<TE extends TBaseEvent> {
       }
     }
 
-    log(7, 'PROCESS_EVENT', '', event);
+    log(EPriority.Debug, 'PROCESS_EVENT', '', event);
     try {
       for (let i = 0; i < this._reducers.length; i++) {
         await this._reducers[i].reduce(event, requestData);

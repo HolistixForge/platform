@@ -1,5 +1,5 @@
 import type { TModule } from '@holistix/module';
-import { TMyfetchRequest } from '@holistix/simple-types';
+import { TMyfetchRequest } from '@holistix/shared-types';
 import type { TCollabFrontendExports } from '@holistix/collab/frontend';
 
 import { TokenManager, PermissionManager, OAuthManager, DNSManager } from './lib/managers';

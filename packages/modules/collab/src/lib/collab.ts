@@ -2,8 +2,8 @@ import * as u from 'y-websocket/bin/utils';
 import { Doc } from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 
-import { log } from '@holistix/log';
-import { TJson } from '@holistix/simple-types';
+import { log, EPriority } from '@holistix/log';
+import { TJson } from '@holistix/shared-types';
 import {
   SharedEditor,
   SharedTypes,
@@ -150,19 +150,19 @@ export class YjsClientCollab extends Collab<TValidSharedData> {
     this.awareness.setUser(config.user);
 
     provider.on('connection-error', (event: Event) => {
-      log(7, 'COLLAB', `provider.connection-error`, event);
+      log(EPriority.Debug, 'COLLAB', `provider.connection-error`, event);
       this.addError(event);
     });
 
     provider.on('connection-close', (event: CloseEvent | null) => {
-      log(7, 'COLLAB', `provider.connection-close`, event);
+      log(EPriority.Debug, 'COLLAB', `provider.connection-close`, event);
       if (event?.code === 3003) {
         this.addError(event);
       }
     });
 
     provider.on('sync', (state: boolean) => {
-      log(7, 'COLLAB', `provider.sync`, state);
+      log(EPriority.Debug, 'COLLAB', `provider.sync`, state);
       if (state) {
         this.resetErrors();
       }
@@ -170,7 +170,7 @@ export class YjsClientCollab extends Collab<TValidSharedData> {
 
     this._synced = new Promise((resolve) => {
       this.ydoc.once('update', () => {
-        log(7, 'COLLAB', `ydoc.update`);
+        log(EPriority.Debug, 'COLLAB', `ydoc.update`);
         resolve(true);
       });
     });
@@ -248,7 +248,7 @@ class MyWebSocket extends WebSocket {
 
     // catch refresh token error
     this.addEventListener('close', (event: CloseEvent) => {
-      log(7, 'COLLAB', `MyWebSocket.close: ${url} [${event.code}]`);
+      log(EPriority.Debug, 'COLLAB', `MyWebSocket.close: ${url} [${event.code}]`);
       if (event.code === 4001) {
         this.close();
         args?.refreshToken();

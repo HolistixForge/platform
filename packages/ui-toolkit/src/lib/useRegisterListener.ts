@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Listenable } from '@holistix/simple-types';
+import { Listenable } from '@holistix/shared-types';
 
 //
 

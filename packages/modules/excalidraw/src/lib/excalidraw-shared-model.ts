@@ -1,4 +1,4 @@
-import { TJsonObject } from '@holistix/simple-types';
+import { TJsonObject } from '@holistix/shared-types';
 import { SharedMap } from '@holistix/collab-engine';
 
 export type TExcalidrawDrawing = {

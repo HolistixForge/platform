@@ -3,7 +3,7 @@ import OAuth2Server from '@node-oauth/oauth2-server';
 import { OAuthManager } from './OAuthManager';
 import { PermissionManager } from '../permissions/PermissionManager';
 import { EPriority, log } from '@holistix/log';
-import { makeUuid } from '@holistix/simple-types';
+import { makeUuid } from '@holistix/shared-types';
 
 /**
  * OAuth2Server Model Implementation

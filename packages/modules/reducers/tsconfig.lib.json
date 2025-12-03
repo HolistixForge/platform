@@ -37,10 +37,10 @@
       "path": "../../log/tsconfig.lib.json"
     },
     {
-      "path": "../../api-fetch/tsconfig.lib.json"
+      "path": "../../simple-types/tsconfig.lib.json"
     },
     {
-      "path": "../../simple-types/tsconfig.lib.json"
+      "path": "../../api-fetch/tsconfig.lib.json"
     },
     {
       "path": "../module/tsconfig.lib.json"

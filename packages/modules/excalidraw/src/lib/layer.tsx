@@ -6,7 +6,7 @@ import { OrderedExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 import { AppState, Collaborator, SocketId } from '@excalidraw/excalidraw/types';
 import { BinaryFiles } from '@excalidraw/excalidraw/types';
 
-import { TJsonObject } from '@holistix/simple-types';
+import { TJsonObject } from '@holistix/shared-types';
 import { LayerViewportAdapter, TLayerProvider } from '@holistix/space/frontend';
 import {
   useAwarenessUserList,

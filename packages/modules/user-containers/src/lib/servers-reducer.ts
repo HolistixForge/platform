@@ -1,6 +1,6 @@
 import { TJwtUser } from '@holistix/types';
 import { TJwtUserContainer } from './servers-types';
-import { secondAgo } from '@holistix/simple-types';
+import { secondAgo } from '@holistix/shared-types';
 import { ForbiddenException, NotFoundException } from '@holistix/log';
 import {
   TCoreSharedData,

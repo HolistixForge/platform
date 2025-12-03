@@ -18,7 +18,7 @@ import {
   useNodeContext,
   useNodeHeaderButtons,
 } from '@holistix/space/frontend';
-import { makeUuid } from '@holistix/simple-types';
+import { makeUuid } from '@holistix/shared-types';
 import { TServersSharedData, TServer } from '@holistix/user-containers';
 import { useDispatcher } from '@holistix/reducers/frontend';
 

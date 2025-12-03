@@ -5,7 +5,7 @@
  */
 
 import { DNSManager } from '@holistix/gateway';
-import { TMyfetchRequest } from '@holistix/simple-types';
+import { TMyfetchRequest } from '@holistix/shared-types';
 import { log, EPriority } from '@holistix/log';
 
 /**

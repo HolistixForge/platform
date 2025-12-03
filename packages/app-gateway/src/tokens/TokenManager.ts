@@ -1,6 +1,6 @@
 import { TokenManager as AbstractTokenManager } from '@holistix/gateway';
 import { generateJwtToken } from '@holistix/backend-engine';
-import { TJson } from '@holistix/simple-types';
+import { TJson } from '@holistix/shared-types';
 
 /**
  * TokenManager - Generic Token Generation

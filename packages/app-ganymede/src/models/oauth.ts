@@ -11,7 +11,7 @@ import {
 } from '@node-oauth/oauth2-server';
 
 import { EPriority, error, log } from '@holistix/log';
-import { makeUuid } from '@holistix/simple-types';
+import { makeUuid } from '@holistix/shared-types';
 import { development, generateJwtToken } from '@holistix/backend-engine';
 import { GLOBAL_CLIENT_ID, TJwtUser } from '@holistix/types';
 

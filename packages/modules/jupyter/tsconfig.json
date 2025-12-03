@@ -9,6 +9,9 @@
       "path": "../../ui-toolkit"
     },
     {
+      "path": "../../collab-engine"
+    },
+    {
       "path": "../../api-fetch"
     },
     {
@@ -16,9 +19,6 @@
     },
     {
       "path": "../../simple-types"
-    },
-    {
-      "path": "../../collab-engine"
     },
     {
       "path": "../core-graph"

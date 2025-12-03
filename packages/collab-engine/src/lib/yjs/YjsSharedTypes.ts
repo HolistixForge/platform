@@ -1,4 +1,4 @@
-import { TJson } from '@holistix/simple-types';
+import { TJson } from '@holistix/shared-types';
 
 import { SharedTypes, SharedArray, SharedMap } from '../SharedTypes';
 import { Doc, Array } from 'yjs';

@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import { EPriority, log } from '@holistix/log';
-import { TJson } from '@holistix/simple-types';
+import { TJson } from '@holistix/shared-types';
 import { TOrganizationConfig } from '../types/organization-config';
 
 const VPN_CONFIG_FILE = '/tmp/vpn-config.json';

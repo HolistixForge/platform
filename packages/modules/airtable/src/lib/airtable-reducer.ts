@@ -4,7 +4,7 @@ import {
   TEventPeriodic,
   TReducersBackendExports,
 } from '@holistix/reducers';
-import { makeUuid } from '@holistix/simple-types';
+import { makeUuid } from '@holistix/shared-types';
 import { TCollabBackendExports } from '@holistix/collab';
 import { TCoreSharedData } from '@holistix/core-graph';
 

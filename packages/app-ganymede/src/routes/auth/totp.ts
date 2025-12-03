@@ -5,7 +5,7 @@ import base32 from 'thirty-two';
 
 import { respond } from '@holistix/backend-engine';
 import { EPriority, log, Exception, ForbiddenException } from '@holistix/log';
-import { TJsonWithDate } from '@holistix/simple-types';
+import { TJsonWithDate } from '@holistix/shared-types';
 
 import { Req } from '../../types';
 import { findKeyForUserId, totpSaveKey, totpSuccess } from '../../models/users';

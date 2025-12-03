@@ -1,5 +1,5 @@
 import { SessionData, Store } from 'express-session';
-import { TJson, TJsonObject } from '@holistix/simple-types';
+import { TJson, TJsonObject } from '@holistix/shared-types';
 import { SESSION_MAX_AGE } from '../main';
 import { EPriority, log } from '@holistix/log';
 import { pg } from '../database/pg';
