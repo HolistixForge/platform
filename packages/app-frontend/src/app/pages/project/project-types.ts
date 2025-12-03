@@ -1,4 +1,4 @@
-import { TApi_Project } from '@holistix/demiurge-types';
+import { TApi_Project } from '@holistix/types';
 
 export type ProjectState =
   | {

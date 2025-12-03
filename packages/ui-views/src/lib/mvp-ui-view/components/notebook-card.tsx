@@ -9,7 +9,7 @@ import {
   SelectItem,
 } from '@holistix/ui-base';
 import { StatusLed } from '@holistix/user-containers/frontend';
-import { TF_User } from '@holistix/demiurge-types';
+import { TF_User } from '@holistix/types';
 
 //
 

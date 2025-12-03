@@ -2,7 +2,7 @@
   "name": "@holistix/jupyter",
   "version": "0.0.1",
   "nx": {
-    "name": "jupyter",
+    "name": "@holistix/jupyter",
     "projectType": "library",
     "sourceRoot": "packages/modules/jupyter/src"
   },

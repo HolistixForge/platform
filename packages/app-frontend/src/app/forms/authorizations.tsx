@@ -11,7 +11,7 @@ import {
 } from '@holistix/ui-base';
 import { useCallback, useState } from 'react';
 import { useProject } from '../pages/project/project-context';
-import { TCollaborator, TF_User } from '@holistix/demiurge-types';
+import { TCollaborator, TF_User } from '@holistix/types';
 
 //
 

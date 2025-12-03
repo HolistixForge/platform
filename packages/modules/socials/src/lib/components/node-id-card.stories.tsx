@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { IDCard } from './node-id-card';
 import { randomGuy } from '@holistix/ui-base';
-import { TG_User } from '@holistix/demiurge-types';
+import { TG_User } from '@holistix/types';
 
 const IDCardStory = ({
   user,

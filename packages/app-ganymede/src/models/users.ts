@@ -3,7 +3,7 @@ import { Req, UserSerializedInfo } from '../types';
 import { myfetch } from '@holistix/backend-engine';
 import { EPriority, log } from '@holistix/log';
 import { pg } from '../database/pg';
-import { CurrentUserDetails } from '@holistix/demiurge-types';
+import { CurrentUserDetails } from '@holistix/types';
 
 //
 //

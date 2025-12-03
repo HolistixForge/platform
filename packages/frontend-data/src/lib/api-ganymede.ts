@@ -5,7 +5,7 @@ import { Tokens, doOauthCode } from './oauth-client';
 import {
   GLOBAL_CLIENT_ID,
   GLOBAL_CLIENT_SECRET,
-} from '@holistix/demiurge-types';
+} from '@holistix/types';
 import { Key, LocalStorageStore } from './local-storage-store';
 import { browserLog } from './browser-log';
 

@@ -1,4 +1,4 @@
-import { TJwtUser } from '@holistix/demiurge-types';
+import { TJwtUser } from '@holistix/types';
 import { TJwtUserContainer } from './servers-types';
 import { secondAgo } from '@holistix/simple-types';
 import { ForbiddenException, NotFoundException } from '@holistix/log';

@@ -2,7 +2,7 @@
   "name": "@holistix/notion",
   "version": "0.0.1",
   "nx": {
-    "name": "notion",
+    "name": "@holistix/notion",
     "projectType": "library",
     "sourceRoot": "packages/modules/notion/src"
   },

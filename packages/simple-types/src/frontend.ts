@@ -1,6 +1,3 @@
-// Frontend-only exports (React-dependent hooks)
-export { useRegisterListener } from './lib/useRegisterListener';
-
 // Re-export all backend-safe exports
 export type {
   TJson,

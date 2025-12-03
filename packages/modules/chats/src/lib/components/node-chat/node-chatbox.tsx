@@ -8,7 +8,7 @@ import {
   useNodeContext,
 } from '@holistix/space/frontend';
 
-import { useNodeEdges } from '@holistix/core-graph';
+import { useNodeEdges } from '@holistix/core-graph/frontend';
 import { TGraphNode } from '@holistix/core-graph';
 import { useCurrentUser, useQueriesUsers } from '@holistix/frontend-data';
 import {

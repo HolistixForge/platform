@@ -2,7 +2,7 @@
   "name": "@holistix/ui-base",
   "version": "0.0.1",
   "nx": {
-    "name": "ui-base",
+    "name": "@holistix/ui-base",
     "projectType": "library",
     "sourceRoot": "packages/ui-base/src"
   },

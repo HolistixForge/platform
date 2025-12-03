@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { TF_User } from '@holistix/demiurge-types';
+import { TF_User } from '@holistix/types';
 import { UserAvatar, UserUsername, icons } from '@holistix/ui-base';
 
 //

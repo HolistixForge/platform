@@ -15,3 +15,4 @@ export {
   insertScriptsSynchronously,
 } from './lib/script-tag/script-tag';
 export { injectCssClass } from './lib/css/inject';
+export { useRegisterListener } from './lib/useRegisterListener';

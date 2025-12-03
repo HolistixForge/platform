@@ -7,7 +7,7 @@ import {
 import { useAction } from '@holistix/ui-base';
 import { Header } from '@holistix/ui-views';
 import { useAwarenessUserList } from '@holistix/collab/frontend';
-import { TF_User, TG_User } from '@holistix/demiurge-types';
+import { TF_User, TG_User } from '@holistix/types';
 
 //
 

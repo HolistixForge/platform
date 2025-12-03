@@ -24,7 +24,8 @@ import {
   OnMove,
 } from '@xyflow/react';
 
-import { TJsonObject, useRegisterListener } from '@holistix/simple-types';
+import { TJsonObject } from '@holistix/simple-types';
+import { useRegisterListener } from '@holistix/ui-toolkit/frontend';
 import { clientXY } from '@holistix/ui-toolkit';
 import {
   TPosition,

@@ -1,5 +1,5 @@
 import { generateJwtToken, jwtPayload } from '@holistix/backend-engine';
-import { TJwtGateway } from '@holistix/demiurge-types';
+import { TJwtGateway } from '@holistix/types';
 import { ONE_YEAR_MS } from '@holistix/simple-types';
 import { pg } from './pg';
 import { EPriority, log } from '@holistix/log';

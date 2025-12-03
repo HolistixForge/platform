@@ -13,7 +13,7 @@ import {
 import { EPriority, error, log } from '@holistix/log';
 import { makeUuid } from '@holistix/simple-types';
 import { development, generateJwtToken } from '@holistix/backend-engine';
-import { GLOBAL_CLIENT_ID, TJwtUser } from '@holistix/demiurge-types';
+import { GLOBAL_CLIENT_ID, TJwtUser } from '@holistix/types';
 
 import { CONFIG } from '../config';
 import { pg } from '../database/pg';

@@ -3,7 +3,7 @@ import React, { useCallback } from 'react';
 import { TGraphNode } from '@holistix/core-graph';
 import { useQueryUser } from '@holistix/frontend-data';
 import { UserAvatar, UserUsername } from '@holistix/ui-base';
-import { TG_User } from '@holistix/demiurge-types';
+import { TG_User } from '@holistix/types';
 import { useAwarenessUserList } from '@holistix/collab/frontend';
 import { useDispatcher } from '@holistix/reducers/frontend';
 import {

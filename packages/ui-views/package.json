@@ -2,7 +2,7 @@
   "name": "@holistix/ui-views",
   "version": "0.0.1",
   "nx": {
-    "name": "ui-views",
+    "name": "@holistix/ui-views",
     "projectType": "library",
     "sourceRoot": "packages/ui-views/src"
   },

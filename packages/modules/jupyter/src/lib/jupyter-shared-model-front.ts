@@ -5,7 +5,7 @@ import {
 } from '@holistix/collab-engine';
 import { TServersSharedData } from '@holistix/user-containers';
 import { TServersExtraContext } from '@holistix/user-containers/frontend';
-import { useRegisterListener } from '@holistix/simple-types';
+import { useRegisterListener } from '@holistix/ui-toolkit/frontend';
 
 import { JLsManager, TKernelPack } from './front/jls-manager';
 import { TJupyterSharedData } from './jupyter-shared-model';

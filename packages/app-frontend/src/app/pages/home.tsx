@@ -11,7 +11,7 @@ import {
 } from '@holistix/frontend-data';
 import { useAction, UserInline, DialogControlled } from '@holistix/ui-base';
 import { NewProjectForm } from '@holistix/ui-views';
-import { TApi_Project } from '@holistix/demiurge-types';
+import { TApi_Project } from '@holistix/types';
 
 import { HeaderLogic } from '../header/header-logic';
 import { DeleteProjectFormLogic } from '../forms/new-project-form';

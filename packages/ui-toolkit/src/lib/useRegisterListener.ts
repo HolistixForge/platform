@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Listenable } from './listenable-core';
+import { Listenable } from '@holistix/simple-types';
 
 //
 
@@ -10,8 +10,8 @@ export const useRegisterListener = (o: Listenable, ...args: any) => {
     _forceUpdate({});
   }, []);
   useEffect(() => {
-    o.addListener(forceUpdate);
-    return () => o.removeListener(forceUpdate);
-  }, [o, forceUpdate]);
+    o.addListener(() => forceUpdate(), ...args);
+    return () => o.removeListener?.(forceUpdate, ...args);
+  });
+  return forceUpdate;
 };
-

@@ -1,7 +1,7 @@
 import { UserUsername } from '@holistix/ui-base';
 
 import './cursor.scss';
-import { TF_User } from '@holistix/demiurge-types';
+import { TF_User } from '@holistix/types';
 
 type CursorProps = {
   fill: 'transparent' | 'color';

@@ -7,7 +7,7 @@ import {
   TJwtGateway,
   TJwtOrganization,
   TJwtUser,
-} from '@holistix/demiurge-types';
+} from '@holistix/types';
 
 export interface AuthRequest extends Request {
   user: {

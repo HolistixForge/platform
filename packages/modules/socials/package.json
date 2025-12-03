@@ -2,7 +2,7 @@
   "name": "@holistix/socials",
   "version": "0.0.1",
   "nx": {
-    "name": "socials",
+    "name": "@holistix/socials",
     "projectType": "library",
     "sourceRoot": "packages/modules/socials/src"
   },

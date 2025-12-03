@@ -2,7 +2,7 @@
   "name": "@holistix/chats",
   "version": "0.0.1",
   "nx": {
-    "name": "chats",
+    "name": "@holistix/chats",
     "projectType": "library",
     "sourceRoot": "packages/modules/chats/src"
   },

@@ -2,7 +2,7 @@
   "name": "@holistix/core-graph",
   "version": "0.0.1",
   "nx": {
-    "name": "core-graph",
+    "name": "@holistix/core-graph",
     "projectType": "library",
     "sourceRoot": "packages/modules/core-graph/src"
   },

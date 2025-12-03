@@ -2,7 +2,7 @@
   "name": "@holistix/space",
   "version": "0.0.1",
   "nx": {
-    "name": "space",
+    "name": "@holistix/space",
     "projectType": "library",
     "sourceRoot": "packages/modules/space/src"
   },

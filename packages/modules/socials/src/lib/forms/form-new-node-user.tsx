@@ -9,7 +9,7 @@ import {
 } from '@holistix/ui-base';
 import { useQueryUsersSearch } from '@holistix/frontend-data';
 import { UserListItem } from '@holistix/ui-base';
-import { TF_User } from '@holistix/demiurge-types';
+import { TF_User } from '@holistix/types';
 import { useDispatcher } from '@holistix/reducers/frontend';
 import { TEventSocials } from '../socials-events';
 import { TPosition } from '@holistix/core-graph';

@@ -11,7 +11,7 @@ import {
   ButtonIcon,
   UserBubble,
 } from '@holistix/ui-base';
-import { TF_User } from '@holistix/demiurge-types';
+import { TF_User } from '@holistix/types';
 
 import './header.scss';
 

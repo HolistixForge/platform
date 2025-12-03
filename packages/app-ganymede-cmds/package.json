@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "nx": {
-    "name": "app-ganymede-cmds",
+    "name": "@holistix/app-ganymede-cmds",
     "projectType": "application",
     "sourceRoot": "packages/app-ganymede-cmds/src",
     "targets": {

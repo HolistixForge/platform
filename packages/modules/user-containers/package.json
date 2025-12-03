@@ -2,7 +2,7 @@
   "name": "@holistix/user-containers",
   "version": "0.0.1",
   "nx": {
-    "name": "user-containers",
+    "name": "@holistix/user-containers",
     "projectType": "library",
     "sourceRoot": "packages/modules/user-containers/src"
   },

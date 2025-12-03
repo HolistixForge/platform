@@ -1,6 +1,6 @@
 import { icons } from '@holistix/ui-base';
 import { InputsAndOutputs, useNodeContext } from '@holistix/space/frontend';
-import { useNodeEdges } from '@holistix/core-graph';
+import { useNodeEdges } from '@holistix/core-graph/frontend';
 import { TGraphNode } from '@holistix/core-graph';
 import { useLocalSharedData } from '@holistix/collab/frontend';
 import { useDispatcher } from '@holistix/reducers/frontend';

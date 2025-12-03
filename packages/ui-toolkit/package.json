@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "nx": {
-    "name": "ui-toolkit",
+    "name": "@holistix/ui-toolkit",
     "projectType": "library",
     "sourceRoot": "packages/ui-toolkit/src"
   },

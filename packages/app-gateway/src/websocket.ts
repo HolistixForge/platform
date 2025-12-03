@@ -10,7 +10,7 @@ import {
   checkProjectAccess,
   type TAnyJwt,
 } from './middleware/jwt-auth';
-import type { TJwtUser } from '@holistix/demiurge-types';
+import type { TJwtUser } from '@holistix/types';
 import { trace, context, SpanStatusCode } from '@opentelemetry/api';
 
 //
