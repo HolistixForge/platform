@@ -5,7 +5,7 @@ import {
   TUri,
   fullUri,
   TStringMap,
-} from '@holistix/shared-types';
+} from '@holistix/simple-types';
 import express from 'express';
 import { trace, SpanStatusCode } from '@opentelemetry/api';
 

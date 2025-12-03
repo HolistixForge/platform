@@ -1,6 +1,6 @@
 import { TCoreSharedData } from '@holistix/core-graph';
 import { Reducer, RequestData } from '@holistix/reducers';
-import { makeUuid } from '@holistix/shared-types';
+import { makeUuid } from '@holistix/simple-types';
 import { UserException } from '@holistix/log';
 import type { TReducersBackendExports } from '@holistix/reducers';
 import { TCollabBackendExports } from '@holistix/collab';

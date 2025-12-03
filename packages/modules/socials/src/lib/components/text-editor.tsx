@@ -12,7 +12,7 @@ import {
   NodeHeader,
   useNodeHeaderButtons,
 } from '@holistix/space/frontend';
-import { makeUuid } from '@holistix/shared-types';
+import { makeUuid } from '@holistix/simple-types';
 
 import { TEventSocials } from '../socials-events';
 

@@ -12,7 +12,7 @@ import { useAwareness, useLocalSharedData } from '@holistix/collab/frontend';
 import { useDispatcher } from '@holistix/reducers/frontend';
 import { TPosition } from '@holistix/core-graph';
 import { TPanel } from '@holistix/space/frontend';
-import { makeUuid } from '@holistix/shared-types';
+import { makeUuid } from '@holistix/simple-types';
 
 import { TNotionEvent } from '../../notion-events';
 import { TNotionSharedData } from '../../notion-shared-model';

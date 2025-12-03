@@ -5,7 +5,7 @@ import {
   RequestData,
   TReducersBackendExports,
 } from '@holistix/reducers';
-import { TJsonArray, makeUuid } from '@holistix/shared-types';
+import { TJsonArray, makeUuid } from '@holistix/simple-types';
 import { NotFoundException } from '@holistix/log';
 import { TCollabBackendExports } from '@holistix/collab';
 import {

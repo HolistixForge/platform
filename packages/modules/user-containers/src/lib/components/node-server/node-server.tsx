@@ -11,7 +11,7 @@ import { TGraphNode } from '@holistix/core-graph';
 import { useLocalSharedData } from '@holistix/collab/frontend';
 import { useDispatcher } from '@holistix/reducers/frontend';
 import { TTabEvents } from '@holistix/tabs';
-import { TJsonObject } from '@holistix/shared-types';
+import { TJsonObject } from '@holistix/simple-types';
 import { useModuleExports } from '@holistix/module/frontend';
 
 import { UserContainerCardInternal } from '../server-card';

@@ -11,7 +11,7 @@ import {
   UnknownException,
 } from '@holistix/log';
 import { jwtPayload, respond } from '@holistix/backend-engine';
-import { TJson } from '@holistix/shared-types';
+import { TJson } from '@holistix/simple-types';
 
 import { verifyPassword } from '../../models/users';
 import {
@@ -50,7 +50,11 @@ export const setupLocalRoutes = (router: express.Router) => {
       let user_id = '';
       try {
         const { email, password, username, firstname, lastname } = req.body;
-        log(EPriority.Info, 'SIGNUP', `/signup: ${JSON.stringify({ email, username })}`);
+        log(
+          EPriority.Info,
+          'SIGNUP',
+          `/signup: ${JSON.stringify({ email, username })}`
+        );
         user_id = await signup({
           email,
           password,

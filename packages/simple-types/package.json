@@ -1,5 +1,5 @@
 {
-  "name": "@holistix/shared-types",
+  "name": "@holistix/simple-types",
   "version": "0.0.1",
   "type": "module",
   "private": true,
@@ -20,6 +20,6 @@
   "nx": {
     "sourceRoot": "packages/simple-types/src",
     "projectType": "library",
-    "name": "@holistix/shared-types"
+    "name": "@holistix/simple-types"
   }
 }

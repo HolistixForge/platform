@@ -1,7 +1,7 @@
 import { TSpaceMenuEntries, TSpaceMenuEntry } from '@holistix/space/frontend';
 import { TValidSharedDataToCopy } from '@holistix/collab/frontend';
 import { TCoreEvent } from '@holistix/core-graph';
-import { makeUuid } from '@holistix/shared-types';
+import { makeUuid } from '@holistix/simple-types';
 import { FrontendDispatcher } from '@holistix/reducers/frontend';
 
 import { NewNotionDatabaseForm } from './components/forms/new-database';

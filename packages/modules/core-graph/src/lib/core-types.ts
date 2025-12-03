@@ -1,6 +1,6 @@
 import { SharedMap } from '@holistix/collab-engine';
 import { SharedArray } from '@holistix/collab-engine';
-import { TJsonObject } from '@holistix/shared-types';
+import { TJsonObject } from '@holistix/simple-types';
 
 export type TPosition = {
   x: number;

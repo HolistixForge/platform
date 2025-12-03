@@ -13,7 +13,7 @@
  * between the generic gateway module and the app-gateway implementation.
  */
 
-import type { TJson, TJsonObject } from '@holistix/shared-types';
+import type { TJson, TJsonObject } from '@holistix/simple-types';
 import type { PermissionManager } from './managers';
 
 /**
@@ -90,7 +90,10 @@ export type ProtectedServiceHandler = {
    */
   resolve: (
     ctx: ProtectedServiceRequestContext
-  ) => ProtectedServiceResolution | Promise<ProtectedServiceResolution | null> | null;
+  ) =>
+    | ProtectedServiceResolution
+    | Promise<ProtectedServiceResolution | null>
+    | null;
 };
 
 /**
@@ -128,5 +131,3 @@ export class ProtectedServiceRegistry {
     return Array.from(this.services.values());
   }
 }
-
-

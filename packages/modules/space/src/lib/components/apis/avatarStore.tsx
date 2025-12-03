@@ -1,6 +1,6 @@
 import { ReactElement } from 'react';
 
-import { Listenable } from '@holistix/shared-types';
+import { Listenable } from '@holistix/simple-types';
 import { Awareness } from '@holistix/collab-engine';
 
 import { PointerTracker } from '../PointerTracker';

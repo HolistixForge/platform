@@ -4,7 +4,7 @@ import {
   TServersSharedData,
   serviceUrl,
 } from '@holistix/user-containers';
-import { Listenable } from '@holistix/shared-types';
+import { Listenable } from '@holistix/simple-types';
 import { FrontendDispatcher } from '@holistix/collab-engine';
 
 import { BrowserWidgetManager } from './browser-widget-manager';

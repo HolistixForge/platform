@@ -1,5 +1,5 @@
 import { TModule } from '@holistix/module';
-import { TJson, TJsonWithUndefined, TStringMap } from '@holistix/shared-types';
+import { TJson, TJsonWithUndefined, TStringMap } from '@holistix/simple-types';
 import { BackendEventProcessor } from './lib/backendEventProcessor';
 
 export type TBaseEvent = { type: string; [key: string]: TJsonWithUndefined };

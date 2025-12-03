@@ -5,7 +5,7 @@
  */
 
 import { DNSManager } from '@holistix/gateway';
-import { TMyfetchRequest } from '@holistix/shared-types';
+import { TMyfetchRequest } from '@holistix/simple-types';
 import { log, EPriority } from '@holistix/log';
 
 /**
@@ -23,7 +23,11 @@ export class DNSManagerImpl extends DNSManager {
    * Register a DNS record (FQDN → IP)
    */
   async registerRecord(fqdn: string, ip: string): Promise<void> {
-    log(EPriority.Info, 'DNS_MANAGER', `Registering DNS record: ${fqdn} → ${ip}`);
+    log(
+      EPriority.Info,
+      'DNS_MANAGER',
+      `Registering DNS record: ${fqdn} → ${ip}`
+    );
 
     try {
       await this.toGanymede({

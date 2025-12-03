@@ -6,7 +6,7 @@
  * import from app-gateway (which is not possible).
  */
 
-import { TJson } from '@holistix/shared-types';
+import { TJson } from '@holistix/simple-types';
 
 /**
  * Abstract TokenManager interface

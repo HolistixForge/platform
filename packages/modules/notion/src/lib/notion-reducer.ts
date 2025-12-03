@@ -1,7 +1,7 @@
 import { Client } from '@notionhq/client';
 
 import { TCoreSharedData } from '@holistix/core-graph';
-import { makeUuid, toUuid } from '@holistix/shared-types';
+import { makeUuid, toUuid } from '@holistix/simple-types';
 import {
   Reducer,
   RequestData,

@@ -3,7 +3,7 @@ import {
   RequestData,
   TReducersBackendExports,
 } from '@holistix/reducers';
-import { makeUuid } from '@holistix/shared-types';
+import { makeUuid } from '@holistix/simple-types';
 import { TCoreSharedData } from '@holistix/core-graph';
 import { TCollabBackendExports } from '@holistix/collab';
 import { TSpaceSharedData } from '@holistix/space';

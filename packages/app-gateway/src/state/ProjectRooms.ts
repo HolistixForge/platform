@@ -1,6 +1,6 @@
 import * as Y from 'yjs';
 import { EPriority, log } from '@holistix/log';
-import { makeUuid } from '@holistix/shared-types';
+import { makeUuid } from '@holistix/simple-types';
 import {
   getAllSharedDataAsJSON,
   setAllSharedDataFromJSON,

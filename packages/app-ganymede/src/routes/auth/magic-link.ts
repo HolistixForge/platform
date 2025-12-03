@@ -10,7 +10,7 @@ import { sendMail } from '../../lib/send-mail';
 import { MagicLinkModel } from '../../models/magic-link';
 import { userGetLocalByEmail } from '../../models/users';
 import { CONFIG } from '../../config';
-import { makeUuid } from '@holistix/shared-types';
+import { makeUuid } from '@holistix/simple-types';
 
 const CALLBACK_PATH = '/magiclink/callback';
 
@@ -61,17 +61,19 @@ passport.use(
      * It may be executed before the token creation or after the token confirmation.
      */
     (req: Req, user: { email: string }): Promise<MagicLinkUser | null> => {
-      return userGetLocalByEmail(user.email).then((u: UserSerializedInfo | null) => {
-        if (u) {
-          const r: MagicLinkUser = {
-            ...u,
-            magicLinkUuid: `${makeUuid()}`,
-            email: user.email,
-            context: req.body.context,
-          };
-          return r;
-        } else return null;
-      });
+      return userGetLocalByEmail(user.email).then(
+        (u: UserSerializedInfo | null) => {
+          if (u) {
+            const r: MagicLinkUser = {
+              ...u,
+              magicLinkUuid: `${makeUuid()}`,
+              email: user.email,
+              context: req.body.context,
+            };
+            return r;
+          } else return null;
+        }
+      );
     }
   )
 );

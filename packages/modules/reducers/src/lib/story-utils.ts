@@ -1,4 +1,4 @@
-import { TMyfetchRequest, TJson } from '@holistix/shared-types';
+import { TMyfetchRequest, TJson } from '@holistix/simple-types';
 import { ApiFetch } from '@holistix/api-fetch';
 
 import { TBaseEvent, TReducersBackendExports } from '..';

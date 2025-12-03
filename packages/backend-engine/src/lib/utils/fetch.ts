@@ -9,7 +9,7 @@ import {
   TMyfetchRequest,
   fullUri,
   serialize,
-} from '@holistix/shared-types';
+} from '@holistix/simple-types';
 
 //
 //

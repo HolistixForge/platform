@@ -3,7 +3,7 @@ import { Doc } from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 
 import { log, EPriority } from '@holistix/log';
-import { TJson } from '@holistix/shared-types';
+import { TJson } from '@holistix/simple-types';
 import {
   SharedEditor,
   SharedTypes,
@@ -248,7 +248,11 @@ class MyWebSocket extends WebSocket {
 
     // catch refresh token error
     this.addEventListener('close', (event: CloseEvent) => {
-      log(EPriority.Debug, 'COLLAB', `MyWebSocket.close: ${url} [${event.code}]`);
+      log(
+        EPriority.Debug,
+        'COLLAB',
+        `MyWebSocket.close: ${url} [${event.code}]`
+      );
       if (event.code === 4001) {
         this.close();
         args?.refreshToken();

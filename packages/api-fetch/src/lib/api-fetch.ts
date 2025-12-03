@@ -5,7 +5,7 @@ import {
   TMyfetchRequest,
   TUri,
   fullUri,
-} from '@holistix/shared-types';
+} from '@holistix/simple-types';
 
 /**
  * concatenate all errors messages, adding '.' between message

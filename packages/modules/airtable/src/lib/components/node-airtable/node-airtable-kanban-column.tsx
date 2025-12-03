@@ -17,7 +17,7 @@ import {
   useNodeContext,
   useNodeHeaderButtons,
 } from '@holistix/space/frontend';
-import { TJsonObject } from '@holistix/shared-types';
+import { TJsonObject } from '@holistix/simple-types';
 
 export type TNodeAirtableKanbanColumnDataPayload = {
   baseId: string;

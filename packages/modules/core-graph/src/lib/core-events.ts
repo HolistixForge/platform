@@ -1,4 +1,4 @@
-import { TJsonObject } from '@holistix/shared-types';
+import { TJsonObject } from '@holistix/simple-types';
 import { TGraphNode } from './core-types';
 import { TEdge, TPosition } from './core-types';
 

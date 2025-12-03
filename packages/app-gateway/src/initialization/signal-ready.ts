@@ -1,5 +1,5 @@
 import { EPriority, log } from '@holistix/log';
-import { sleep } from '@holistix/shared-types';
+import { sleep } from '@holistix/simple-types';
 import { CONFIG } from '../config';
 
 /**

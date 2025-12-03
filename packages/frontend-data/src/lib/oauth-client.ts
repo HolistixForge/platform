@@ -1,4 +1,4 @@
-import { TJson, TMyfetchRequest } from '@holistix/shared-types';
+import { TJson, TMyfetchRequest } from '@holistix/simple-types';
 
 export type Tokens = {
   access_token: string;

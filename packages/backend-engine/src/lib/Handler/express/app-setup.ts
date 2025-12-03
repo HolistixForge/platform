@@ -10,7 +10,7 @@ import {
   UnknownException,
   EPriority,
 } from '@holistix/log';
-import { TJson } from '@holistix/shared-types';
+import { TJson } from '@holistix/simple-types';
 
 import { respond } from './responses';
 import { trace, SpanStatusCode } from '@opentelemetry/api';

@@ -1,5 +1,5 @@
 import { EPriority, log } from '@holistix/log';
-import { inSeconds, isPassed } from '@holistix/shared-types';
+import { inSeconds, isPassed } from '@holistix/simple-types';
 import { Reducer, TEventPeriodic } from '@holistix/reducers';
 import { TCollabBackendExports } from '@holistix/collab';
 import type { TGatewayExports, TGatewaySharedData } from '@holistix/gateway';

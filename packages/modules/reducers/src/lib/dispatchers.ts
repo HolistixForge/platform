@@ -1,5 +1,5 @@
 import { ApiFetch } from '@holistix/api-fetch';
-import { TJson } from '@holistix/shared-types';
+import { TJson } from '@holistix/simple-types';
 import { TBaseEvent } from '..';
 import { log, EPriority } from '@holistix/log';
 

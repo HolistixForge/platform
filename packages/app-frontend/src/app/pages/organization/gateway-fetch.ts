@@ -1,6 +1,6 @@
 import { ApiFetch } from '@holistix/api-fetch';
 import { GanymedeApi } from '@holistix/frontend-data';
-import { TMyfetchRequest } from '@holistix/shared-types';
+import { TMyfetchRequest } from '@holistix/simple-types';
 
 /**
  * Create an ApiFetch instance that routes to gateway
@@ -19,4 +19,3 @@ export const createGatewayFetch = (
 
   return new GatewayFetch();
 };
-

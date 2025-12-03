@@ -1,5 +1,5 @@
 import * as jwt from 'jsonwebtoken';
-import { TJson } from '@holistix/shared-types';
+import { TJson } from '@holistix/simple-types';
 
 /**
  * Generate a JWT token with the given payload
@@ -9,7 +9,7 @@ export const generateJwtToken = (payload: TJson, expiresIn = '1h'): string => {
   if (!JWT_PRIVATE_KEY) {
     throw new Error('JWT_PRIVATE_KEY environment variable is not set');
   }
-  
+
   const token = jwt.sign(
     payload as object,
     JWT_PRIVATE_KEY as jwt.PrivateKey,
@@ -18,7 +18,7 @@ export const generateJwtToken = (payload: TJson, expiresIn = '1h'): string => {
       expiresIn,
     } as jwt.SignOptions
   );
-  
+
   return token;
 };
 

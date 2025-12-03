@@ -1,4 +1,4 @@
-import { TJson } from '@holistix/shared-types';
+import { TJson } from '@holistix/simple-types';
 import { trace } from '@opentelemetry/api';
 import {
   LoggerProvider,
