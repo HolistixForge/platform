@@ -1,5 +1,5 @@
 import * as RM from '@jupyterlab/rendermime';
-import { log } from '@monorepo/log';
+import { log } from '@holistix/log';
 
 //
 

@@ -1,5 +1,5 @@
-import type { TModule } from '@monorepo/module';
-import type { TUserContainersExports } from '@monorepo/user-containers';
+import type { TModule } from '@holistix/module';
+import type { TUserContainersExports } from '@holistix/user-containers';
 
 const containerImagesData = [
   {

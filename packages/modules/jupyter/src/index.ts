@@ -1,12 +1,12 @@
 import { PageConfig } from '@jupyterlab/coreutils';
-import { TUserContainersSharedData } from '@monorepo/user-containers';
+import { TUserContainersSharedData } from '@holistix/user-containers';
 import { JupyterReducer } from './lib/jupyter-reducer';
-import type { TModule } from '@monorepo/module';
-import type { TCollabBackendExports } from '@monorepo/collab';
-import type { TReducersBackendExports } from '@monorepo/reducers';
-import type { TUserContainersExports } from '@monorepo/user-containers';
+import type { TModule } from '@holistix/module';
+import type { TCollabBackendExports } from '@holistix/collab';
+import type { TReducersBackendExports } from '@holistix/reducers';
+import type { TUserContainersExports } from '@holistix/user-containers';
 import type { TJupyterSharedData } from './lib/jupyter-shared-model';
-import type { TCoreSharedData } from '@monorepo/core-graph';
+import type { TCoreSharedData } from '@holistix/core-graph';
 
 //
 

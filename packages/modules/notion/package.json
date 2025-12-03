@@ -1,5 +1,5 @@
 {
-  "name": "@monorepo/notion",
+  "name": "@holistix/notion",
   "version": "0.0.1",
   "nx": {
     "name": "notion",

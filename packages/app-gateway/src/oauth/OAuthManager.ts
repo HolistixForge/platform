@@ -1,7 +1,7 @@
-import { EPriority, log } from '@monorepo/log';
+import { EPriority, log } from '@holistix/log';
 import { IPersistenceProvider } from '../state/IPersistenceProvider';
-import type { TOAuthClient, TOAuthCode, TOAuthToken } from '@monorepo/gateway';
-import { OAuthManager as AbstractOAuthManager } from '@monorepo/gateway';
+import type { TOAuthClient, TOAuthCode, TOAuthToken } from '@holistix/gateway';
+import { OAuthManager as AbstractOAuthManager } from '@holistix/gateway';
 
 /**
  * OAuthManager - OAuth Data Management

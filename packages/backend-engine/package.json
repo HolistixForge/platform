@@ -1,5 +1,5 @@
 {
-  "name": "@monorepo/backend-engine",
+  "name": "@holistix/backend-engine",
   "version": "0.0.1",
   "type": "module",
   "private": true,

@@ -1,4 +1,4 @@
-import { TEdge, TEdgeEnd } from '@monorepo/core-graph';
+import { TEdge, TEdgeEnd } from '@holistix/core-graph';
 import { EdgeMarker } from '@xyflow/react';
 
 export const pinId = (ee: { connectorName: string; pinName?: string }) =>

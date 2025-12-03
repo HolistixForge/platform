@@ -8,9 +8,9 @@ import {
   TAction,
   icons,
   ButtonBase,
-} from '@monorepo/ui-base';
+} from '@holistix/ui-base';
 
-import { LoginFormData } from '@monorepo/frontend-data';
+import { LoginFormData } from '@holistix/frontend-data';
 
 import './login.scss';
 

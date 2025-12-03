@@ -1,13 +1,13 @@
 import { useCallback, useRef } from 'react';
 
-import { TGraphNode } from '@monorepo/core-graph';
-import { useDispatcher } from '@monorepo/reducers/frontend';
+import { TGraphNode } from '@holistix/core-graph';
+import { useDispatcher } from '@holistix/reducers/frontend';
 import {
   addAlphaToHexColor,
   ColorPicker,
   ColorValue,
   ButtonBase,
-} from '@monorepo/ui-base';
+} from '@holistix/ui-base';
 
 import { NodeHeader } from '../assets/node-header/node-header';
 import { useNodeHeaderButtons } from '../assets/node-header/node-main-toolbar';

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { randomGuy, randomGuys, TagsBarProps } from '@monorepo/ui-base';
+import { randomGuy, randomGuys, TagsBarProps } from '@holistix/ui-base';
 
 import { NotebookCard, NotebookCardProps } from './notebook-card';
 

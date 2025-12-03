@@ -1,5 +1,5 @@
-import { EPriority, log } from '@monorepo/log';
-import { TJson, TStringMap } from '@monorepo/simple-types';
+import { EPriority, log } from '@holistix/log';
+import { TJson, TStringMap } from '@holistix/simple-types';
 
 //
 //

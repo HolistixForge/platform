@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
-import { TGraphNode } from '@monorepo/core-graph';
-import { useLocalSharedData } from '@monorepo/collab/frontend';
-import { useDispatcher } from '@monorepo/reducers/frontend';
+import { TGraphNode } from '@holistix/core-graph';
+import { useLocalSharedData } from '@holistix/collab/frontend';
+import { useDispatcher } from '@holistix/reducers/frontend';
 import { TAirtableSharedData } from '../../airtable-shared-model';
 import {
   TAirtableTable,
@@ -16,8 +16,8 @@ import {
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@monorepo/space/frontend';
-import { TJsonObject } from '@monorepo/simple-types';
+} from '@holistix/space/frontend';
+import { TJsonObject } from '@holistix/simple-types';
 
 export type TNodeAirtableKanbanColumnDataPayload = {
   baseId: string;

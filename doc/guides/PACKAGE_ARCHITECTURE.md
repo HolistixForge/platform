@@ -207,19 +207,19 @@ export type { SomeType } from './lib/types';
 
 ```typescript
 // In backend file
-import { BackendClass } from '@monorepo/pkg'; // Value import
-import type { FrontendType } from '@monorepo/pkg/frontend'; // Type import
+import { BackendClass } from '@holistix/pkg'; // Value import
+import type { FrontendType } from '@holistix/pkg/frontend'; // Type import
 
 // In frontend file
-import { useSomeHook } from '@monorepo/pkg/frontend'; // Value import OK
-import { BackendClass } from '@monorepo/pkg'; // Also OK
+import { useSomeHook } from '@holistix/pkg/frontend'; // Value import OK
+import { BackendClass } from '@holistix/pkg'; // Also OK
 ```
 
 **❌ Wrong:**
 
 ```typescript
 // In backend file
-import { FrontendType } from '@monorepo/pkg/frontend'; // Missing 'type' keyword!
+import { FrontendType } from '@holistix/pkg/frontend'; // Missing 'type' keyword!
 ```
 
 ---
@@ -268,10 +268,10 @@ node scripts/analyze-bundle.js dist/packages/app-gateway/main.js
 
 ```typescript
 // Wrong
-import { TFrontendExports } from '@monorepo/collab/frontend';
+import { TFrontendExports } from '@holistix/collab/frontend';
 
 // Correct
-import type { TFrontendExports } from '@monorepo/collab/frontend';
+import type { TFrontendExports } from '@holistix/collab/frontend';
 ```
 
 **2. Backend exporting frontend code:**

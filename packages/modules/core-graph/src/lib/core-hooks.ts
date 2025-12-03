@@ -1,4 +1,4 @@
-import { useLocalSharedData } from '@monorepo/collab/frontend';
+import { useLocalSharedData } from '@holistix/collab/frontend';
 
 import { TEdge, TCoreSharedData } from './core-types';
 

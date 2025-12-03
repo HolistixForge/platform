@@ -4,9 +4,9 @@ import {
   TAwarenessUser,
   TValidSharedData,
   TUserSelection,
-} from '@monorepo/collab-engine';
-import { bindEditor } from '@monorepo/collab-engine/frontend';
-import { useModuleExports } from '@monorepo/module/frontend';
+} from '@holistix/collab-engine';
+import { bindEditor } from '@holistix/collab-engine/frontend';
+import { useModuleExports } from '@holistix/module/frontend';
 
 import { LocalOverrider, TValidSharedDataToCopy } from './overrider';
 import { TCollabFrontendExports } from '../frontend';

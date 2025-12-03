@@ -1,4 +1,4 @@
-import { TCollaborator, TF_User } from '@monorepo/demiurge-types';
+import { TCollaborator, TF_User } from '@holistix/demiurge-types';
 import { randomGuys } from '../utils/random-guys';
 import { useCallback, useEffect, useState } from 'react';
 

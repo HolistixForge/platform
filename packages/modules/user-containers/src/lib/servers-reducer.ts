@@ -1,20 +1,20 @@
-import { TJwtUser } from '@monorepo/demiurge-types';
+import { TJwtUser } from '@holistix/demiurge-types';
 import { TJwtUserContainer } from './servers-types';
-import { secondAgo } from '@monorepo/simple-types';
-import { ForbiddenException, NotFoundException } from '@monorepo/log';
+import { secondAgo } from '@holistix/simple-types';
+import { ForbiddenException, NotFoundException } from '@holistix/log';
 import {
   TCoreSharedData,
   TEventDeleteNode,
   TEventNewNode,
-} from '@monorepo/core-graph';
-import { TEventLoad, TGatewayExports } from '@monorepo/gateway';
+} from '@holistix/core-graph';
+import { TEventLoad, TGatewayExports } from '@holistix/gateway';
 import {
   Reducer,
   RequestData,
   TReducersBackendExports,
   TEventPeriodic,
-} from '@monorepo/reducers';
-import { TCollabBackendExports } from '@monorepo/collab';
+} from '@holistix/reducers';
+import { TCollabBackendExports } from '@holistix/collab';
 import crypto from 'crypto';
 
 import { TUserContainersSharedData } from './servers-shared-model';
@@ -31,7 +31,7 @@ import {
 } from './servers-events';
 import { TOAuthClient } from './container-image';
 import { TUserContainersExports } from '..';
-import { SharedMap } from '@monorepo/collab-engine';
+import { SharedMap } from '@holistix/collab-engine';
 
 //
 

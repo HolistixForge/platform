@@ -583,10 +583,10 @@ node scripts/analyze-bundle.js dist/packages/app-gateway/main.js
 1. **Missing `type` keyword:**
    ```typescript
    // Wrong
-   import { TFrontendExports } from '@monorepo/collab/frontend';
+   import { TFrontendExports } from '@holistix/collab/frontend';
    
    // Correct
-   import type { TFrontendExports } from '@monorepo/collab/frontend';
+   import type { TFrontendExports } from '@holistix/collab/frontend';
    ```
 
 2. **Backend exporting frontend code:**

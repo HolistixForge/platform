@@ -1,19 +1,19 @@
 import { spawnSync } from 'child_process';
-import { TJson } from '@monorepo/simple-types';
-import { EPriority, log } from '@monorepo/log';
-import type { TModule } from '@monorepo/module';
-import { TMyfetchRequest } from '@monorepo/simple-types';
-import { myfetch } from '@monorepo/backend-engine';
-import { TReducersBackendExports } from '@monorepo/reducers';
-import { TCollabBackendExports } from '@monorepo/collab';
-import type { TGatewayExports, TGatewaySharedData } from '@monorepo/gateway';
+import { TJson } from '@holistix/simple-types';
+import { EPriority, log } from '@holistix/log';
+import type { TModule } from '@holistix/module';
+import { TMyfetchRequest } from '@holistix/simple-types';
+import { myfetch } from '@holistix/backend-engine';
+import { TReducersBackendExports } from '@holistix/reducers';
+import { TCollabBackendExports } from '@holistix/collab';
+import type { TGatewayExports, TGatewaySharedData } from '@holistix/gateway';
 
 import { GatewayReducer } from './gateway-reducer';
 import type {
   PermissionManager,
   OAuthManager,
   TokenManager,
-} from '@monorepo/gateway';
+} from '@holistix/gateway';
 import { DNSManagerImpl } from '../dns/DNSManager';
 
 /**
@@ -23,7 +23,7 @@ import { DNSManagerImpl } from '../dns/DNSManager';
 import {
   PermissionRegistry,
   ProtectedServiceRegistry,
-} from '@monorepo/gateway';
+} from '@holistix/gateway';
 
 export type GatewayModuleConfig = {
   organization_id: string;

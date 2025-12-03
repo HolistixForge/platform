@@ -1,11 +1,11 @@
-import { serverUrl } from '@monorepo/api-fetch';
+import { serverUrl } from '@holistix/api-fetch';
 import {
   TServer,
   TServersSharedData,
   serviceUrl,
-} from '@monorepo/user-containers';
-import { Listenable } from '@monorepo/simple-types';
-import { FrontendDispatcher } from '@monorepo/collab-engine';
+} from '@holistix/user-containers';
+import { Listenable } from '@holistix/simple-types';
+import { FrontendDispatcher } from '@holistix/collab-engine';
 
 import { BrowserWidgetManager } from './browser-widget-manager';
 import { JupyterlabDriver } from '../driver';

@@ -1,6 +1,6 @@
-import { TModule } from '@monorepo/module';
-import { TCollabFrontendExports } from '@monorepo/collab/frontend';
-import { TSpaceFrontendExports } from '@monorepo/space/frontend';
+import { TModule } from '@holistix/module';
+import { TCollabFrontendExports } from '@holistix/collab/frontend';
+import { TSpaceFrontendExports } from '@holistix/space/frontend';
 
 import { layer } from './lib/layer';
 import { ExcalidrawNode } from './lib/excalidraw-node';

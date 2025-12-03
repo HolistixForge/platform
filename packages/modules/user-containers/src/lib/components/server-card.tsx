@@ -17,7 +17,7 @@ import {
   DialogControlled,
   ButtonBase,
   ClickStopPropagation,
-} from '@monorepo/ui-base';
+} from '@holistix/ui-base';
 
 import { UserContainerSystemInfo, serviceUrl } from '../servers-types';
 import { StatusLed } from './status-led';

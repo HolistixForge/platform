@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
-import { TPosition } from '@monorepo/core-graph';
+import { TPosition } from '@holistix/core-graph';
 import { Viewport } from './demiurge-space';
-import { Awareness } from '@monorepo/collab-engine';
+import { Awareness } from '@holistix/collab-engine';
 
 //
 

@@ -1,7 +1,7 @@
 import { SendMagicLinkFormLogic, LoginFormLogic } from '../forms/login-form';
 import { SignupFormLogic } from '../forms/signup-form';
 import { TotpLoginFormLogic, TotpSetupFormLogic } from '../forms/totp-form';
-import { useApi, useCurrentUser } from '@monorepo/frontend-data';
+import { useApi, useCurrentUser } from '@holistix/frontend-data';
 import { HeaderLogic } from '../header/header-logic';
 import { useLocation } from 'react-router-dom';
 import { ReactNode } from 'react';

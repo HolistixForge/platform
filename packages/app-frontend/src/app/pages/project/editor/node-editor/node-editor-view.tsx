@@ -1,4 +1,4 @@
-import { DemiurgeSpace } from '@monorepo/space/frontend';
+import { DemiurgeSpace } from '@holistix/space/frontend';
 
 import './node-editor.scss';
 

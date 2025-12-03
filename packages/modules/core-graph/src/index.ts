@@ -1,7 +1,7 @@
-import type { TModule } from '@monorepo/module';
-import type { TCollabBackendExports } from '@monorepo/collab';
-import type { TReducersBackendExports } from '@monorepo/reducers';
-import type { TCollabFrontendExports } from '@monorepo/collab/frontend';
+import type { TModule } from '@holistix/module';
+import type { TCollabBackendExports } from '@holistix/collab';
+import type { TReducersBackendExports } from '@holistix/reducers';
+import type { TCollabFrontendExports } from '@holistix/collab/frontend';
 
 import { CoreReducer } from './lib/core-reducer';
 import { TCoreSharedData } from './lib/core-types';

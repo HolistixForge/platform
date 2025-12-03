@@ -2,17 +2,17 @@ import { useEffect, useRef, useMemo, useCallback } from 'react';
 import Quill from 'quill';
 import QuillCursors from 'quill-cursors';
 
-import { useAwareness, useBindEditor } from '@monorepo/collab/frontend';
-import { useDispatcher } from '@monorepo/reducers/frontend';
-import { TGraphNode } from '@monorepo/core-graph';
+import { useAwareness, useBindEditor } from '@holistix/collab/frontend';
+import { useDispatcher } from '@holistix/reducers/frontend';
+import { TGraphNode } from '@holistix/core-graph';
 import {
   useNodeContext,
   DisableZoomDragPan,
   TNodeContext,
   NodeHeader,
   useNodeHeaderButtons,
-} from '@monorepo/space/frontend';
-import { makeUuid } from '@monorepo/simple-types';
+} from '@holistix/space/frontend';
+import { makeUuid } from '@holistix/simple-types';
 
 import { TEventSocials } from '../socials-events';
 

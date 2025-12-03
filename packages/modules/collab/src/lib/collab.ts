@@ -2,8 +2,8 @@ import * as u from 'y-websocket/bin/utils';
 import { Doc } from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 
-import { log } from '@monorepo/log';
-import { TJson } from '@monorepo/simple-types';
+import { log } from '@holistix/log';
+import { TJson } from '@holistix/simple-types';
 import {
   SharedEditor,
   SharedTypes,
@@ -18,7 +18,7 @@ import {
   TAwarenessUser,
   SharedMap,
   SharedArray,
-} from '@monorepo/collab-engine';
+} from '@holistix/collab-engine';
 
 //
 

@@ -9,7 +9,7 @@ import {
   TMyfetchRequest,
   fullUri,
   serialize,
-} from '@monorepo/simple-types';
+} from '@holistix/simple-types';
 
 //
 //

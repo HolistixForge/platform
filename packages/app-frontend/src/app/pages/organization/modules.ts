@@ -1,17 +1,17 @@
-import { TModule } from '@monorepo/module';
-import { ApiFetch } from '@monorepo/api-fetch';
-import { moduleFrontend as collabFrontend } from '@monorepo/collab/frontend';
-import { moduleFrontend as reducersFrontend } from '@monorepo/reducers/frontend';
-import { moduleFrontend as coreFrontend } from '@monorepo/core-graph';
-import { moduleFrontend as spaceFrontend } from '@monorepo/space/frontend';
-import { moduleFrontend as tabsFrontend } from '@monorepo/tabs';
-import { moduleFrontend as userContainersFrontend } from '@monorepo/user-containers/frontend';
-import { moduleFrontend as notionFrontend } from '@monorepo/notion/frontend';
-import { moduleFrontend as airtableFrontend } from '@monorepo/airtable/frontend';
-//import { moduleFrontend as jupyterFrontend } from '@monorepo/jupyter/frontend';
-import { moduleFrontend as excalidrawFrontend } from '@monorepo/excalidraw/frontend';
-import { moduleFrontend as socialsFrontend } from '@monorepo/socials/frontend';
-import { moduleFrontend as chatsFrontend } from '@monorepo/chats/frontend';
+import { TModule } from '@holistix/module';
+import { ApiFetch } from '@holistix/api-fetch';
+import { moduleFrontend as collabFrontend } from '@holistix/collab/frontend';
+import { moduleFrontend as reducersFrontend } from '@holistix/reducers/frontend';
+import { moduleFrontend as coreFrontend } from '@holistix/core-graph';
+import { moduleFrontend as spaceFrontend } from '@holistix/space/frontend';
+import { moduleFrontend as tabsFrontend } from '@holistix/tabs';
+import { moduleFrontend as userContainersFrontend } from '@holistix/user-containers/frontend';
+import { moduleFrontend as notionFrontend } from '@holistix/notion/frontend';
+import { moduleFrontend as airtableFrontend } from '@holistix/airtable/frontend';
+//import { moduleFrontend as jupyterFrontend } from '@holistix/jupyter/frontend';
+import { moduleFrontend as excalidrawFrontend } from '@holistix/excalidraw/frontend';
+import { moduleFrontend as socialsFrontend } from '@holistix/socials/frontend';
+import { moduleFrontend as chatsFrontend } from '@holistix/chats/frontend';
 
 /**
  * Organization-specific module configuration

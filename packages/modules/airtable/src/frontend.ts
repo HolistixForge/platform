@@ -1,8 +1,8 @@
 import { NodeAirtableRecord } from './lib/components/node-airtable/node-airtable-record';
 import { NodeAirtableKanbanColumn } from './lib/components/node-airtable/node-airtable-kanban-column';
-import type { TModule } from '@monorepo/module';
-import type { TCollabFrontendExports } from '@monorepo/collab/frontend';
-import type { TSpaceFrontendExports } from '@monorepo/space/frontend';
+import type { TModule } from '@holistix/module';
+import type { TCollabFrontendExports } from '@holistix/collab/frontend';
+import type { TSpaceFrontendExports } from '@holistix/space/frontend';
 import { airtableMenuEntries } from './lib/airtable-menu';
 import { AirtableRightPanel } from './lib/components/node-airtable/right-panel';
 import { NodeAirtableTable } from './lib/components/node-airtable/node-airtable-table';

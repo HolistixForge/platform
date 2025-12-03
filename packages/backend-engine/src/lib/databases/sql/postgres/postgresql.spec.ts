@@ -1,4 +1,4 @@
-import { Logger } from '@monorepo/log';
+import { Logger } from '@holistix/log';
 import { PostgreSQL } from './PostgreSQL';
 import { TSqlApi } from '../Connections';
 

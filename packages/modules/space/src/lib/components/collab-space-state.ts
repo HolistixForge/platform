@@ -1,6 +1,6 @@
-import { TCoreSharedData } from '@monorepo/core-graph';
-import { TGraphNode } from '@monorepo/core-graph';
-import { LocalOverrider } from '@monorepo/collab';
+import { TCoreSharedData } from '@holistix/core-graph';
+import { TGraphNode } from '@holistix/core-graph';
+import { LocalOverrider } from '@holistix/collab';
 
 import { TSpaceSharedData } from '../..';
 import { SpaceState } from './apis/spaceState';

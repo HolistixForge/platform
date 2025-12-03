@@ -1,11 +1,11 @@
 import { UserContainersReducer } from './lib/servers-reducer';
 import { ContainerImageRegistry } from './lib/image-registry';
-import type { TModule } from '@monorepo/module';
-import type { TCollabBackendExports } from '@monorepo/collab';
-import type { TReducersBackendExports } from '@monorepo/reducers';
-import type { TGatewayExports } from '@monorepo/gateway';
+import type { TModule } from '@holistix/module';
+import type { TCollabBackendExports } from '@holistix/collab';
+import type { TReducersBackendExports } from '@holistix/reducers';
+import type { TGatewayExports } from '@holistix/gateway';
 import type { TUserContainersSharedData } from './lib/servers-shared-model';
-import type { TCoreSharedData } from '@monorepo/core-graph';
+import type { TCoreSharedData } from '@holistix/core-graph';
 import type { TContainerImageInfo, TContainerImageDefinition } from './lib/container-image';
 import type { ContainerRunner } from './lib/runner';
 import { localRunnerBackend } from './lib/local-runner';

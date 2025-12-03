@@ -6,7 +6,7 @@ import {
 } from '../space-types';
 import { Edge as RfEdge, Node as RfNode } from '@xyflow/react';
 import { edgeId, ReactflowEdgePayload, pinId } from './apis/types/edge';
-import { TEdge } from '@monorepo/core-graph';
+import { TEdge } from '@holistix/core-graph';
 
 //
 //

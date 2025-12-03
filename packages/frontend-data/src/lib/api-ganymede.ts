@@ -1,11 +1,11 @@
 import { EventSourcePolyfill } from 'event-source-polyfill';
-import { ApiFetch } from '@monorepo/api-fetch';
-import { TJson, TMyfetchRequest } from '@monorepo/simple-types';
+import { ApiFetch } from '@holistix/api-fetch';
+import { TJson, TMyfetchRequest } from '@holistix/simple-types';
 import { Tokens, doOauthCode } from './oauth-client';
 import {
   GLOBAL_CLIENT_ID,
   GLOBAL_CLIENT_SECRET,
-} from '@monorepo/demiurge-types';
+} from '@holistix/demiurge-types';
 import { Key, LocalStorageStore } from './local-storage-store';
 import { browserLog } from './browser-log';
 

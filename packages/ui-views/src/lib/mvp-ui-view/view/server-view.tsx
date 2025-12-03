@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { Sidebar, icons } from '@monorepo/ui-base';
+import { Sidebar, icons } from '@holistix/ui-base';
 
 import { Header } from '../components/header';
 import { ResourceBar } from '../components/resource-bar';

@@ -1,5 +1,5 @@
 {
-  "name": "@monorepo/ui-views",
+  "name": "@holistix/ui-views",
   "version": "0.0.1",
   "nx": {
     "name": "ui-views",

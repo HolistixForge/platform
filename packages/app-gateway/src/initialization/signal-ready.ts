@@ -1,5 +1,5 @@
-import { EPriority, log } from '@monorepo/log';
-import { sleep } from '@monorepo/simple-types';
+import { EPriority, log } from '@holistix/log';
+import { sleep } from '@holistix/simple-types';
 import { CONFIG } from '../config';
 
 /**

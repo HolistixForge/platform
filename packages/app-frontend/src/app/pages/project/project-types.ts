@@ -1,4 +1,4 @@
-import { TApi_Project } from '@monorepo/demiurge-types';
+import { TApi_Project } from '@holistix/demiurge-types';
 
 export type ProjectState =
   | {

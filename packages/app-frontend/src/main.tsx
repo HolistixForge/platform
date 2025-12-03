@@ -1,25 +1,25 @@
 // Initialize OpenTelemetry BEFORE any other imports
 // This ensures auto-instrumentation works correctly
-import { initializeBrowserObservability } from '@monorepo/observability/browser';
-import { Logger } from '@monorepo/log';
+import { initializeBrowserObservability } from '@holistix/observability/browser';
+import { Logger } from '@holistix/log';
 
 import * as ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 
 import { App } from './app/app';
 
-import '@monorepo/collab-engine/style';
-import '@monorepo/ui-base/style';
-import '@monorepo/ui-views/style';
-import '@monorepo/user-containers/style';
-import '@monorepo/notion/style';
-import '@monorepo/airtable/style';
-import '@monorepo/space/style';
-import '@monorepo/tabs/style';
-import '@monorepo/chats/style';
-import '@monorepo/socials/style';
-import '@monorepo/jupyter/style';
-import '@monorepo/excalidraw/style';
+import '@holistix/collab-engine/style';
+import '@holistix/ui-base/style';
+import '@holistix/ui-views/style';
+import '@holistix/user-containers/style';
+import '@holistix/notion/style';
+import '@holistix/airtable/style';
+import '@holistix/space/style';
+import '@holistix/tabs/style';
+import '@holistix/chats/style';
+import '@holistix/socials/style';
+import '@holistix/jupyter/style';
+import '@holistix/excalidraw/style';
 import './index.scss';
 
 // Initialize observability for browser

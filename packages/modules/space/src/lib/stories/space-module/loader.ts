@@ -1,6 +1,6 @@
-import { TCoreSharedData } from '@monorepo/core-graph';
-import { TGraphNode } from '@monorepo/core-graph';
-import { TEdge } from '@monorepo/core-graph';
+import { TCoreSharedData } from '@holistix/core-graph';
+import { TGraphNode } from '@holistix/core-graph';
+import { TEdge } from '@holistix/core-graph';
 
 import { defaultGraphView, TGraphView } from '../../space-types';
 import { graph1 } from './graph-1';

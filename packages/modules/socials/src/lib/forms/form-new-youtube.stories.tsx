@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { ModuleProvider } from '@monorepo/module/frontend';
+import { ModuleProvider } from '@holistix/module/frontend';
 
 import { NewYoutubeForm } from './form-new-youtube';
 

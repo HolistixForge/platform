@@ -1,9 +1,9 @@
 import { AirtableReducer } from './lib/airtable-reducer';
-import type { TModule } from '@monorepo/module';
-import type { TCollabBackendExports } from '@monorepo/collab';
-import type { TReducersBackendExports } from '@monorepo/reducers';
+import type { TModule } from '@holistix/module';
+import type { TCollabBackendExports } from '@holistix/collab';
+import type { TReducersBackendExports } from '@holistix/reducers';
 import type { TAirtableSharedData } from './lib/airtable-shared-model';
-import type { TCoreSharedData } from '@monorepo/core-graph';
+import type { TCoreSharedData } from '@holistix/core-graph';
 
 type TRequired = {
   collab: TCollabBackendExports<TAirtableSharedData & TCoreSharedData>;

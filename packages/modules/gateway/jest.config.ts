@@ -1,5 +1,5 @@
 export default {
-  displayName: '@monorepo/gateway',
+  displayName: '@holistix/gateway',
   preset: '../../../jest.preset.js',
   transform: {
     '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',

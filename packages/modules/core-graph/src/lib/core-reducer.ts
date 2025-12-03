@@ -1,7 +1,7 @@
 import isEqual from 'lodash.isequal';
 
-import { Reducer } from '@monorepo/reducers';
-import { TCollabBackendExports } from '@monorepo/collab';
+import { Reducer } from '@holistix/reducers';
+import { TCollabBackendExports } from '@holistix/collab';
 
 import {
   TEventNewNode,

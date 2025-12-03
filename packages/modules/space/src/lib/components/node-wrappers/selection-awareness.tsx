@@ -1,5 +1,5 @@
 import { TNodeContext } from '../apis/types/node';
-import { UserUsername } from '@monorepo/ui-base';
+import { UserUsername } from '@holistix/ui-base';
 
 import './selection-awareness.scss';
 import { ReactNode } from 'react';

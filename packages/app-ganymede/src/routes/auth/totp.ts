@@ -3,9 +3,9 @@ import passport from 'passport';
 import crypto from 'crypto';
 import base32 from 'thirty-two';
 
-import { respond } from '@monorepo/backend-engine';
-import { EPriority, log, Exception, ForbiddenException } from '@monorepo/log';
-import { TJsonWithDate } from '@monorepo/simple-types';
+import { respond } from '@holistix/backend-engine';
+import { EPriority, log, Exception, ForbiddenException } from '@holistix/log';
+import { TJsonWithDate } from '@holistix/simple-types';
 
 import { Req } from '../../types';
 import { findKeyForUserId, totpSaveKey, totpSuccess } from '../../models/users';

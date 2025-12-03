@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 
-import { useLocalSharedData } from '@monorepo/collab/frontend';
+import { useLocalSharedData } from '@holistix/collab/frontend';
 
 import { NotionDatabase } from './notion-database';
 import { TNotionSharedData } from '../../notion-shared-model';
-import { TPanel } from '@monorepo/space/frontend';
-import { toUuid } from '@monorepo/simple-types';
+import { TPanel } from '@holistix/space/frontend';
+import { toUuid } from '@holistix/simple-types';
 
 //
 

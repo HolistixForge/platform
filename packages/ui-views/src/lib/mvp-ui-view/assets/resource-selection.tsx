@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-import { icons } from '@monorepo/ui-base';
+import { icons } from '@holistix/ui-base';
 
 //
 

@@ -141,8 +141,8 @@ Frontend                Backend
 ```typescript
 // packages/modules/jupyter/src/lib/stories/jupyter-module.stories.tsx
 
-import { collabBackend, collabFrontend } from '@monorepo/collab';
-import { reducersBackend, reducersFrontend } from '@monorepo/reducers';
+import { collabBackend, collabFrontend } from '@holistix/collab';
+import { reducersBackend, reducersFrontend } from '@holistix/reducers';
 import { jupyterBackend, jupyterFrontend } from '../index';
 
 // ... config setup ...
@@ -210,9 +210,9 @@ Browse to `http://localhost:4400` (or the port shown)
 2. **Import dependencies:**
 
 ```typescript
-import { loadModules, linkDispatchToProcessEvent } from '@monorepo/module';
-import { collabBackend, collabFrontend } from '@monorepo/collab';
-import { reducersBackend, reducersFrontend } from '@monorepo/reducers';
+import { loadModules, linkDispatchToProcessEvent } from '@holistix/module';
+import { collabBackend, collabFrontend } from '@holistix/collab';
+import { reducersBackend, reducersFrontend } from '@holistix/reducers';
 import { myModuleBackend, myModuleFrontend } from '../index';
 ```
 
@@ -293,7 +293,7 @@ const ProxyCheckWrapper = ({ children }) => {
 1. **Enable logging:**
 
 ```typescript
-import { Logger } from '@monorepo/log';
+import { Logger } from '@holistix/log';
 Logger.setPriority(7); // Debug level
 ```
 

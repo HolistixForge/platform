@@ -1,8 +1,8 @@
-import { TSpaceMenuEntries, TSpaceMenuEntry } from '@monorepo/space/frontend';
-import { TValidSharedDataToCopy } from '@monorepo/collab/frontend';
-import { TCoreEvent } from '@monorepo/core-graph';
-import { makeUuid } from '@monorepo/simple-types';
-import { FrontendDispatcher } from '@monorepo/reducers/frontend';
+import { TSpaceMenuEntries, TSpaceMenuEntry } from '@holistix/space/frontend';
+import { TValidSharedDataToCopy } from '@holistix/collab/frontend';
+import { TCoreEvent } from '@holistix/core-graph';
+import { makeUuid } from '@holistix/simple-types';
+import { FrontendDispatcher } from '@holistix/reducers/frontend';
 
 import { NewNotionDatabaseForm } from './components/forms/new-database';
 import { TNotionSharedData } from './notion-shared-model';

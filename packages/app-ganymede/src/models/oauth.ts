@@ -10,10 +10,10 @@ import {
   Response,
 } from '@node-oauth/oauth2-server';
 
-import { EPriority, error, log } from '@monorepo/log';
-import { makeUuid } from '@monorepo/simple-types';
-import { development, generateJwtToken } from '@monorepo/backend-engine';
-import { GLOBAL_CLIENT_ID, TJwtUser } from '@monorepo/demiurge-types';
+import { EPriority, error, log } from '@holistix/log';
+import { makeUuid } from '@holistix/simple-types';
+import { development, generateJwtToken } from '@holistix/backend-engine';
+import { GLOBAL_CLIENT_ID, TJwtUser } from '@holistix/demiurge-types';
 
 import { CONFIG } from '../config';
 import { pg } from '../database/pg';

@@ -1,8 +1,8 @@
 import { NodeNotionDatabase } from './lib/components/node-notion/node-notion-database';
 import { NodeNotionTask } from './lib/components/node-notion/node-notion-task';
-import type { TModule } from '@monorepo/module';
-import type { TCollabFrontendExports } from '@monorepo/collab/frontend';
-import type { TSpaceFrontendExports } from '@monorepo/space/frontend';
+import type { TModule } from '@holistix/module';
+import type { TCollabFrontendExports } from '@holistix/collab/frontend';
+import type { TSpaceFrontendExports } from '@holistix/space/frontend';
 import { notionMenuEntries } from './lib/notion-menu';
 import { NotionRightPanel } from './lib/components/node-notion/right-panel';
 import { NodeNotionKanbanColumn } from './lib/components/node-notion/node-notion-kanban-column';

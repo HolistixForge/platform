@@ -3,10 +3,10 @@ import {
   RequestData,
   TEventPeriodic,
   TReducersBackendExports,
-} from '@monorepo/reducers';
-import { makeUuid } from '@monorepo/simple-types';
-import { TCollabBackendExports } from '@monorepo/collab';
-import { TCoreSharedData } from '@monorepo/core-graph';
+} from '@holistix/reducers';
+import { makeUuid } from '@holistix/simple-types';
+import { TCollabBackendExports } from '@holistix/collab';
+import { TCoreSharedData } from '@holistix/core-graph';
 
 import {
   TEventCreateRecord,

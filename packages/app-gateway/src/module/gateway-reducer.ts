@@ -1,13 +1,13 @@
-import { EPriority, log } from '@monorepo/log';
-import { inSeconds, isPassed } from '@monorepo/simple-types';
-import { Reducer, TEventPeriodic } from '@monorepo/reducers';
-import { TCollabBackendExports } from '@monorepo/collab';
-import type { TGatewayExports, TGatewaySharedData } from '@monorepo/gateway';
+import { EPriority, log } from '@holistix/log';
+import { inSeconds, isPassed } from '@holistix/simple-types';
+import { Reducer, TEventPeriodic } from '@holistix/reducers';
+import { TCollabBackendExports } from '@holistix/collab';
+import type { TGatewayExports, TGatewaySharedData } from '@holistix/gateway';
 import type {
   TGatewayEvents,
   TEventLoad,
   TEventDisableShutdown,
-} from '@monorepo/gateway';
+} from '@holistix/gateway';
 import { shutdownGateway } from '../initialization/gateway-init';
 import { runScript } from './module';
 

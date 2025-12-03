@@ -1,5 +1,5 @@
-import { TMyfetchRequest, TJson } from '@monorepo/simple-types';
-import { ApiFetch } from '@monorepo/api-fetch';
+import { TMyfetchRequest, TJson } from '@holistix/simple-types';
+import { ApiFetch } from '@holistix/api-fetch';
 
 import { TBaseEvent, TReducersBackendExports } from '..';
 import { TReducersFrontendExports } from '../frontend';

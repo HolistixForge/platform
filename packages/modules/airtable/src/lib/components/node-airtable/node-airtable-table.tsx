@@ -1,18 +1,18 @@
 import './airtable-table.scss';
 import { TAirtableTable, TAirtableField } from '../../airtable-types';
 import React, { useCallback, useEffect, useMemo } from 'react';
-import { TGraphNode } from '@monorepo/core-graph';
+import { TGraphNode } from '@holistix/core-graph';
 import {
   TValidSharedDataToCopy,
   useLocalSharedData,
-} from '@monorepo/collab/frontend';
-import { useDispatcher } from '@monorepo/reducers/frontend';
+} from '@holistix/collab/frontend';
+import { useDispatcher } from '@holistix/reducers/frontend';
 import {
   DisableZoomDragPan,
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@monorepo/space/frontend';
+} from '@holistix/space/frontend';
 import { TAirtableSharedData } from '../../airtable-shared-model';
 import AirtableTableKanban from './airtable-table-kanban';
 import AirtableTableGallery from './airtable-table-gallery';
@@ -22,7 +22,7 @@ import {
   detectStatusField,
   detectPriorityField,
 } from '../../utils/field-detection';
-import { TJsonObject } from '@monorepo/simple-types';
+import { TJsonObject } from '@holistix/simple-types';
 
 //
 

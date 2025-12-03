@@ -1,10 +1,10 @@
-import { TCoreSharedData } from '@monorepo/core-graph';
-import { Reducer, RequestData } from '@monorepo/reducers';
-import { makeUuid } from '@monorepo/simple-types';
-import { UserException } from '@monorepo/log';
-import type { TReducersBackendExports } from '@monorepo/reducers';
-import { TCollabBackendExports } from '@monorepo/collab';
-import { TGatewayExports } from '@monorepo/gateway';
+import { TCoreSharedData } from '@holistix/core-graph';
+import { Reducer, RequestData } from '@holistix/reducers';
+import { makeUuid } from '@holistix/simple-types';
+import { UserException } from '@holistix/log';
+import type { TReducersBackendExports } from '@holistix/reducers';
+import { TCollabBackendExports } from '@holistix/collab';
+import { TGatewayExports } from '@holistix/gateway';
 
 import {
   TEventSocials,

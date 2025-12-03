@@ -16,17 +16,17 @@ import { MessageLoop } from '@lumino/messaging';
 import {
   useLocalSharedData,
   useSharedDataDirect,
-} from '@monorepo/collab/frontend';
-import { useDispatcher } from '@monorepo/reducers/frontend';
-import { TServer, TServersSharedData } from '@monorepo/user-containers';
-import { TGraphNode } from '@monorepo/core-graph';
+} from '@holistix/collab/frontend';
+import { useDispatcher } from '@holistix/reducers/frontend';
+import { TServer, TServersSharedData } from '@holistix/user-containers';
+import { TGraphNode } from '@holistix/core-graph';
 import {
   DisableZoomDragPan,
   InputsAndOutputs,
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@monorepo/space/frontend';
+} from '@holistix/space/frontend';
 
 import { TJupyterSharedData } from '../../jupyter-shared-model';
 import { useJLsManager } from '../../jupyter-shared-model-front';

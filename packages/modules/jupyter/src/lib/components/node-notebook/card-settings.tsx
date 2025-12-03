@@ -1,5 +1,5 @@
-import { icons, SelectFieldset, SelectItem } from '@monorepo/ui-base';
-import { NodeMainToolbar, useMakeButton } from '@monorepo/space/frontend';
+import { icons, SelectFieldset, SelectItem } from '@holistix/ui-base';
+import { NodeMainToolbar, useMakeButton } from '@holistix/space/frontend';
 
 type CardSettingsProps = {
   status: 'success' | 'error' | 'warning';

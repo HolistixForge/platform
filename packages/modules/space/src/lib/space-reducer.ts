@@ -2,16 +2,16 @@ import {
   Reducer,
   RequestData,
   TReducersBackendExports,
-} from '@monorepo/reducers';
+} from '@holistix/reducers';
 import {
   TCoreEvent,
   TCoreSharedData,
   TEdge,
   TEventNewNode,
-} from '@monorepo/core-graph';
-import { TGraphNode } from '@monorepo/core-graph';
-import { error, UserException } from '@monorepo/log';
-import { TJsonObject } from '@monorepo/simple-types';
+} from '@holistix/core-graph';
+import { TGraphNode } from '@holistix/core-graph';
+import { error, UserException } from '@holistix/log';
+import { TJsonObject } from '@holistix/simple-types';
 
 import { TSpaceSharedData } from '../index';
 import {
@@ -51,8 +51,8 @@ import {
 } from './space-types';
 import { getAbsolutePosition } from './utils/position-utils';
 import { edgeId } from './components/apis/types/edge';
-import { TCollabBackendExports } from '@monorepo/collab';
-import { TGatewayExports } from '@monorepo/gateway';
+import { TCollabBackendExports } from '@holistix/collab';
+import { TGatewayExports } from '@holistix/gateway';
 
 /**
  *

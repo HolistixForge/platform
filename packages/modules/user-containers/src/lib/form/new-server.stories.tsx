@@ -1,16 +1,16 @@
 import { useMemo } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { ModuleProvider } from '@monorepo/module/frontend';
-import { TModule, loadModules } from '@monorepo/module';
+import { ModuleProvider } from '@holistix/module/frontend';
+import { TModule, loadModules } from '@holistix/module';
 import {
   moduleFrontend as collabFrontend,
   TCollabFrontendExports,
-} from '@monorepo/collab/frontend';
-import { moduleFrontend as coreFrontend } from '@monorepo/core-graph';
-import { moduleFrontend as spaceFrontend } from '@monorepo/space/frontend';
-import { moduleFrontend as tabsFrontend } from '@monorepo/tabs';
-import { moduleFrontend as reducersFrontend } from '@monorepo/reducers/frontend';
+} from '@holistix/collab/frontend';
+import { moduleFrontend as coreFrontend } from '@holistix/core-graph';
+import { moduleFrontend as spaceFrontend } from '@holistix/space/frontend';
+import { moduleFrontend as tabsFrontend } from '@holistix/tabs';
+import { moduleFrontend as reducersFrontend } from '@holistix/reducers/frontend';
 
 import { NewContainerForm } from './new-server';
 import { TUserContainersSharedData } from '../servers-shared-model';

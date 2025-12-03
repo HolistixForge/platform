@@ -4,7 +4,7 @@ import { flattenLayerTreeCollection } from '../../layer-tree-utils';
 import {
   useAwareness,
   useAwarenessSelections,
-} from '@monorepo/collab/frontend';
+} from '@holistix/collab/frontend';
 
 export const LayersTreePanel: FC<{
   viewId: string;

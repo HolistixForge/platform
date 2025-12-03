@@ -1,5 +1,5 @@
-import { TEdge } from '@monorepo/core-graph';
-import { TGraphNode, TPin } from '@monorepo/core-graph';
+import { TEdge } from '@holistix/core-graph';
+import { TGraphNode, TPin } from '@holistix/core-graph';
 
 import { nodeViewDefaultStatus, TNodeView } from '../../space-types';
 import { pinId, TEdgeRenderProps } from '../../components/apis/types/edge';

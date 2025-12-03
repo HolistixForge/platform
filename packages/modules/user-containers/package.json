@@ -1,5 +1,5 @@
 {
-  "name": "@monorepo/user-containers",
+  "name": "@holistix/user-containers",
   "version": "0.0.1",
   "nx": {
     "name": "user-containers",

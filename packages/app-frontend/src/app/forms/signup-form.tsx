@@ -1,7 +1,7 @@
-import { useMutationSignup } from '@monorepo/frontend-data';
-import { useAction } from '@monorepo/ui-base';
-import { SignupForm } from '@monorepo/ui-views';
-import { SignupFormData } from '@monorepo/frontend-data';
+import { useMutationSignup } from '@holistix/frontend-data';
+import { useAction } from '@holistix/ui-base';
+import { SignupForm } from '@holistix/ui-views';
+import { SignupFormData } from '@holistix/frontend-data';
 import { useNavigate } from 'react-router-dom';
 
 //

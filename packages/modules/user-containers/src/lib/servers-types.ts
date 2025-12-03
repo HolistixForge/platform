@@ -1,5 +1,5 @@
-import { serverUrl } from '@monorepo/api-fetch';
-import { TJsonObject } from '@monorepo/simple-types';
+import { serverUrl } from '@holistix/api-fetch';
+import { TJsonObject } from '@holistix/simple-types';
 
 /**
  * token given to users's project server container

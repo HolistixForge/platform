@@ -1,6 +1,6 @@
-import { TModule } from '@monorepo/module';
+import { TModule } from '@holistix/module';
 import { TExcalidrawSharedData } from './lib/excalidraw-shared-model';
-import { TCollabBackendExports } from '@monorepo/collab';
+import { TCollabBackendExports } from '@holistix/collab';
 
 type TRequired = {
   collab: TCollabBackendExports<TExcalidrawSharedData>;

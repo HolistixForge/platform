@@ -1,9 +1,9 @@
-import { TJson } from '@monorepo/simple-types';
+import { TJson } from '@holistix/simple-types';
 import {
   TValidSharedData,
   SharedMap,
   SharedArray,
-} from '@monorepo/collab-engine';
+} from '@holistix/collab-engine';
 
 //
 

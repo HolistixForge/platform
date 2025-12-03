@@ -1,13 +1,13 @@
 import { useState } from 'react';
 
-import { Sidebar, icons, SelectFieldset, SelectItem } from '@monorepo/ui-base';
+import { Sidebar, icons, SelectFieldset, SelectItem } from '@holistix/ui-base';
 
 import { Header } from '../components/header';
 import { ResourceBar } from '../components/resource-bar';
 import { ResourceDescription } from '../components/resource-description';
 import { SummaryAccesses } from '../components/summary-accesses';
 import { menuItems } from './access-role';
-import { awsInstanceTypes } from '@monorepo/user-containers/frontend';
+import { awsInstanceTypes } from '@holistix/user-containers/frontend';
 
 //
 

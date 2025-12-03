@@ -1,7 +1,7 @@
-import type { TModule } from '@monorepo/module';
-import type { TCollabFrontendExports } from '@monorepo/collab/frontend';
-import type { TSpaceFrontendExports } from '@monorepo/space/frontend';
-import type { TUserContainersFrontendExports } from '@monorepo/user-containers/frontend';
+import type { TModule } from '@holistix/module';
+import type { TCollabFrontendExports } from '@holistix/collab/frontend';
+import type { TSpaceFrontendExports } from '@holistix/space/frontend';
+import type { TUserContainersFrontendExports } from '@holistix/user-containers/frontend';
 
 import { NodeTerminal } from './lib/components/terminal/terminal';
 import { NodeCell } from './lib/components/code-cell/cell';

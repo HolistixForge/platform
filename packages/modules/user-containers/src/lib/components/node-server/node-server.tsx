@@ -6,13 +6,13 @@ import {
   useNodeContext,
   InputsAndOutputs,
   useNodeHeaderButtons,
-} from '@monorepo/space/frontend';
-import { TGraphNode } from '@monorepo/core-graph';
-import { useLocalSharedData } from '@monorepo/collab/frontend';
-import { useDispatcher } from '@monorepo/reducers/frontend';
-import { TTabEvents } from '@monorepo/tabs';
-import { TJsonObject } from '@monorepo/simple-types';
-import { useModuleExports } from '@monorepo/module/frontend';
+} from '@holistix/space/frontend';
+import { TGraphNode } from '@holistix/core-graph';
+import { useLocalSharedData } from '@holistix/collab/frontend';
+import { useDispatcher } from '@holistix/reducers/frontend';
+import { TTabEvents } from '@holistix/tabs';
+import { TJsonObject } from '@holistix/simple-types';
+import { useModuleExports } from '@holistix/module/frontend';
 
 import { UserContainerCardInternal } from '../server-card';
 import { TUserContainer } from '../../servers-types';

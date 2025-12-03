@@ -13,7 +13,7 @@
  * between the generic gateway module and the app-gateway implementation.
  */
 
-import type { TJson, TJsonObject } from '@monorepo/simple-types';
+import type { TJson, TJsonObject } from '@holistix/simple-types';
 import type { PermissionManager } from './managers';
 
 /**

@@ -14,7 +14,7 @@
 import { Router, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
-import { EPriority, log } from '@monorepo/log';
+import { EPriority, log } from '@holistix/log';
 import {
   authenticateJwtOrganization,
   OrganizationAuthRequest,

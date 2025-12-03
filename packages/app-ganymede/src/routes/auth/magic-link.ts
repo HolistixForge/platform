@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import express from 'express';
 import passport from 'passport';
-import { respond } from '@monorepo/backend-engine';
+import { respond } from '@holistix/backend-engine';
 import { Req, UserSerializedInfo } from '../../types';
 import { setEmailValidated, passwordFlagReset } from '../../models/users';
 import * as passportMagicLink from 'passport-magic-link';
-import { EPriority, log } from '@monorepo/log';
+import { EPriority, log } from '@holistix/log';
 import { sendMail } from '../../lib/send-mail';
 import { MagicLinkModel } from '../../models/magic-link';
 import { userGetLocalByEmail } from '../../models/users';
 import { CONFIG } from '../../config';
-import { makeUuid } from '@monorepo/simple-types';
+import { makeUuid } from '@holistix/simple-types';
 
 const CALLBACK_PATH = '/magiclink/callback';
 

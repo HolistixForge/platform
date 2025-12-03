@@ -1,7 +1,7 @@
-import { useMutationChangePassword } from '@monorepo/frontend-data';
-import { useAction } from '@monorepo/ui-base';
-import { NewPasswordForm } from '@monorepo/ui-views';
-import { NewPasswordFormData } from '@monorepo/frontend-data';
+import { useMutationChangePassword } from '@holistix/frontend-data';
+import { useAction } from '@holistix/ui-base';
+import { NewPasswordForm } from '@holistix/ui-views';
+import { NewPasswordFormData } from '@holistix/frontend-data';
 
 //
 

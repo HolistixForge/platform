@@ -1,7 +1,7 @@
-import { UserUsername } from '@monorepo/ui-base';
+import { UserUsername } from '@holistix/ui-base';
 
 import './cursor.scss';
-import { TF_User } from '@monorepo/demiurge-types';
+import { TF_User } from '@holistix/demiurge-types';
 
 type CursorProps = {
   fill: 'transparent' | 'color';

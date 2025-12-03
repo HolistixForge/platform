@@ -1,11 +1,11 @@
-import { TModule } from '@monorepo/module';
-import { moduleBackend as collabBackend } from '@monorepo/collab';
-import { moduleBackend as reducersBackend } from '@monorepo/reducers';
-import { moduleBackend as coreGraphBackend } from '@monorepo/core-graph';
-import { moduleBackend as userContainersBackend } from '@monorepo/user-containers';
-import { moduleBackend as jupyterBackend } from '@monorepo/jupyter';
-import { moduleBackend as n8nBackend } from '@monorepo/n8n';
-import { moduleBackend as pgadmin4Backend } from '@monorepo/pgadmin4';
+import { TModule } from '@holistix/module';
+import { moduleBackend as collabBackend } from '@holistix/collab';
+import { moduleBackend as reducersBackend } from '@holistix/reducers';
+import { moduleBackend as coreGraphBackend } from '@holistix/core-graph';
+import { moduleBackend as userContainersBackend } from '@holistix/user-containers';
+import { moduleBackend as jupyterBackend } from '@holistix/jupyter';
+import { moduleBackend as n8nBackend } from '@holistix/n8n';
+import { moduleBackend as pgadmin4Backend } from '@holistix/pgadmin4';
 import { moduleBackend as gatewayBackend } from '../module/module';
 import type {
   PermissionManager,
@@ -13,7 +13,7 @@ import type {
   TokenManager,
   PermissionRegistry,
   ProtectedServiceRegistry,
-} from '@monorepo/gateway';
+} from '@holistix/gateway';
 import { CONFIG } from '../config';
 
 /**

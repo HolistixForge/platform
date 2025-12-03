@@ -1,8 +1,8 @@
 import express from 'express';
 import passport from 'passport';
 import * as passportGithub from 'passport-github2';
-import { respond } from '@monorepo/backend-engine';
-import { Exception } from '@monorepo/log';
+import { respond } from '@holistix/backend-engine';
+import { Exception } from '@holistix/log';
 
 import { githubFindOrCreate, TGithubReturnedProfile } from '../../models/users';
 import { UserSerializedInfo } from '../../types';

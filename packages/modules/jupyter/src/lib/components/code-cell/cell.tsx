@@ -7,8 +7,8 @@ import {
   useAwareness,
   useBindEditor,
   useLocalSharedData,
-} from '@monorepo/collab/frontend';
-import { TGraphNode, TCoreEvent } from '@monorepo/core-graph';
+} from '@holistix/collab/frontend';
+import { TGraphNode, TCoreEvent } from '@holistix/core-graph';
 import {
   DisableZoomDragPan,
   InputsAndOutputs,
@@ -17,10 +17,10 @@ import {
   useMakeButton,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@monorepo/space/frontend';
-import { makeUuid } from '@monorepo/simple-types';
-import { TServersSharedData, TServer } from '@monorepo/user-containers';
-import { useDispatcher } from '@monorepo/reducers/frontend';
+} from '@holistix/space/frontend';
+import { makeUuid } from '@holistix/simple-types';
+import { TServersSharedData, TServer } from '@holistix/user-containers';
+import { useDispatcher } from '@holistix/reducers/frontend';
 
 import { TJupyterEvent } from '../../jupyter-events';
 import {

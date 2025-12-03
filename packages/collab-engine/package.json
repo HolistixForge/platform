@@ -1,5 +1,5 @@
 {
-  "name": "@monorepo/collab-engine",
+  "name": "@holistix/collab-engine",
   "version": "0.0.1",
   "nx": {
     "name": "collab-engine",

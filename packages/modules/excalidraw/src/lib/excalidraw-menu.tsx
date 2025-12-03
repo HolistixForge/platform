@@ -1,8 +1,8 @@
-import { FrontendDispatcher } from '@monorepo/reducers/frontend';
-import { TSpaceMenuEntries } from '@monorepo/space/frontend';
-import { TGraphNode, TEventNewNode } from '@monorepo/core-graph';
-import { makeUuid } from '@monorepo/simple-types';
-import { TEventDisableFeature } from '@monorepo/space';
+import { FrontendDispatcher } from '@holistix/reducers/frontend';
+import { TSpaceMenuEntries } from '@holistix/space/frontend';
+import { TGraphNode, TEventNewNode } from '@holistix/core-graph';
+import { makeUuid } from '@holistix/simple-types';
+import { TEventDisableFeature } from '@holistix/space';
 
 export const excalidrawMenuEntries: TSpaceMenuEntries = ({
   viewId,

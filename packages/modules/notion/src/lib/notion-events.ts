@@ -1,4 +1,4 @@
-import { TEventOrigin } from '@monorepo/core-graph';
+import { TEventOrigin } from '@holistix/core-graph';
 import { TNotionProperty } from './notion-types';
 import { TNotionViewMode } from './components/node-notion/notion-database';
 

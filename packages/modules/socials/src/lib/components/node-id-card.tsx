@@ -1,16 +1,16 @@
 import React, { useCallback } from 'react';
 
-import { TGraphNode } from '@monorepo/core-graph';
-import { useQueryUser } from '@monorepo/frontend-data';
-import { UserAvatar, UserUsername } from '@monorepo/ui-base';
-import { TG_User } from '@monorepo/demiurge-types';
-import { useAwarenessUserList } from '@monorepo/collab/frontend';
-import { useDispatcher } from '@monorepo/reducers/frontend';
+import { TGraphNode } from '@holistix/core-graph';
+import { useQueryUser } from '@holistix/frontend-data';
+import { UserAvatar, UserUsername } from '@holistix/ui-base';
+import { TG_User } from '@holistix/demiurge-types';
+import { useAwarenessUserList } from '@holistix/collab/frontend';
+import { useDispatcher } from '@holistix/reducers/frontend';
 import {
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@monorepo/space/frontend';
+} from '@holistix/space/frontend';
 
 import { TEventSocials } from '../socials-events';
 

@@ -9,7 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { EPriority, log } from '@monorepo/log';
+import { EPriority, log } from '@holistix/log';
 
 const execAsync = promisify(exec);
 

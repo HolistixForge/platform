@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { randomGuy } from '@monorepo/ui-base';
+import { randomGuy } from '@holistix/ui-base';
 
 import { UserDisplayItem } from './user-display-item';
 

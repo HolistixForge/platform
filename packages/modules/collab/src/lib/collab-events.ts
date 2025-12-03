@@ -1,4 +1,4 @@
-import { _AwarenessState } from '@monorepo/collab-engine';
+import { _AwarenessState } from '@holistix/collab-engine';
 
 export type TEventUserLeave = {
   type: 'user-leave';

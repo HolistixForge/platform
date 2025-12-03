@@ -1,5 +1,5 @@
 export default {
-  displayName: '@monorepo/collab',
+  displayName: '@holistix/collab',
   preset: '../../../jest.preset.js',
   transform: {
     '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',

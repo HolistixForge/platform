@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { Logger } from '@monorepo/log';
-import { StoryDemiurgeSpace } from '@monorepo/space/stories';
-import { StoryApiContext } from '@monorepo/frontend-data';
-import { TSpaceMenuEntries, TSpaceMenuEntry } from '@monorepo/module/frontend';
+import { Logger } from '@holistix/log';
+import { StoryDemiurgeSpace } from '@holistix/space/stories';
+import { StoryApiContext } from '@holistix/frontend-data';
+import { TSpaceMenuEntries, TSpaceMenuEntry } from '@holistix/module/frontend';
 
 import {
   JupyterStoryCollabContext,

@@ -1,5 +1,5 @@
 {
-  "name": "@monorepo/app-ganymede-cmds",
+  "name": "@holistix/app-ganymede-cmds",
   "version": "0.0.1",
   "private": true,
   "nx": {

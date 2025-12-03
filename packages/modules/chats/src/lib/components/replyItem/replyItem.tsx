@@ -1,4 +1,4 @@
-import { icons, Datetime, UserUsername } from '@monorepo/ui-base';
+import { icons, Datetime, UserUsername } from '@holistix/ui-base';
 import {
   DiscussionItem,
   SimpleMessage,

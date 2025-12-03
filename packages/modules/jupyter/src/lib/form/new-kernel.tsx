@@ -8,15 +8,15 @@ import {
   DialogControlled,
   SelectFieldset,
   SelectItem,
-} from '@monorepo/ui-base';
-import { useLocalSharedData } from '@monorepo/collab/frontend';
-import { useDispatcher } from '@monorepo/reducers/frontend';
-import { TPosition } from '@monorepo/core-graph';
+} from '@holistix/ui-base';
+import { useLocalSharedData } from '@holistix/collab/frontend';
+import { useDispatcher } from '@holistix/reducers/frontend';
+import { TPosition } from '@holistix/core-graph';
 import { TEventNewKernelNode } from '../jupyter-events';
 import { TJupyterSharedData } from '../jupyter-shared-model';
 import { TJupyterServerData } from '../jupyter-types';
 import { useJLsManager } from '../jupyter-shared-model-front';
-import { TServer, TServersSharedData } from '@monorepo/user-containers';
+import { TServer, TServersSharedData } from '@holistix/user-containers';
 
 /**
  *

@@ -1,8 +1,8 @@
 import { FC } from 'react';
 
-import { TModule } from '@monorepo/module';
-import { TCollabFrontendExports } from '@monorepo/collab/frontend';
-import { TGraphNode } from '@monorepo/core-graph';
+import { TModule } from '@holistix/module';
+import { TCollabFrontendExports } from '@holistix/collab/frontend';
+import { TGraphNode } from '@holistix/core-graph';
 
 import { Group } from './lib/components/group/group';
 import { Shape } from './lib/components/shape/shape';
@@ -15,7 +15,7 @@ import {
   TLayerProvider,
   LayerViewportAdapter,
 } from './lib/components/layer-types';
-import { TJsonObject } from '@monorepo/simple-types';
+import { TJsonObject } from '@holistix/simple-types';
 
 import './lib/components/css/index.scss';
 

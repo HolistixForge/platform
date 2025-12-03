@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { IDCard } from './node-id-card';
-import { randomGuy } from '@monorepo/ui-base';
-import { TG_User } from '@monorepo/demiurge-types';
+import { randomGuy } from '@holistix/ui-base';
+import { TG_User } from '@holistix/demiurge-types';
 
 const IDCardStory = ({
   user,

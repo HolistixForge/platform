@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { useAction } from '@monorepo/ui-base';
-import { LoginFormData } from '@monorepo/frontend-data';
+import { useAction } from '@holistix/ui-base';
+import { LoginFormData } from '@holistix/frontend-data';
 
 import { LoginForm } from './login';
 

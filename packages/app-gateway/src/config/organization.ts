@@ -1,6 +1,6 @@
 import * as fs from 'fs';
-import { EPriority, log } from '@monorepo/log';
-import { TJson } from '@monorepo/simple-types';
+import { EPriority, log } from '@holistix/log';
+import { TJson } from '@holistix/simple-types';
 import { TOrganizationConfig } from '../types/organization-config';
 
 const VPN_CONFIG_FILE = '/tmp/vpn-config.json';

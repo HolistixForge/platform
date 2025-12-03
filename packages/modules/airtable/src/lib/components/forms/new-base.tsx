@@ -7,12 +7,12 @@ import {
   TextFieldset,
   useAction,
   DialogControlled,
-} from '@monorepo/ui-base';
-import { useAwareness, useLocalSharedData } from '@monorepo/collab/frontend';
-import { useDispatcher } from '@monorepo/reducers/frontend';
-import { TPosition } from '@monorepo/core-graph';
-import { TPanel } from '@monorepo/space/frontend';
-import { makeUuid } from '@monorepo/simple-types';
+} from '@holistix/ui-base';
+import { useAwareness, useLocalSharedData } from '@holistix/collab/frontend';
+import { useDispatcher } from '@holistix/reducers/frontend';
+import { TPosition } from '@holistix/core-graph';
+import { TPanel } from '@holistix/space/frontend';
+import { makeUuid } from '@holistix/simple-types';
 
 import { TAirtableEvent } from '../../airtable-events';
 import { TAirtableSharedData } from '../../airtable-shared-model';

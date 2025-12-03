@@ -1,12 +1,12 @@
-import { useSharedDataDirect } from '@monorepo/collab/frontend';
-import { useDispatcher } from '@monorepo/reducers/frontend';
-import { TGraphNode } from '@monorepo/core-graph';
+import { useSharedDataDirect } from '@holistix/collab/frontend';
+import { useDispatcher } from '@holistix/reducers/frontend';
+import { TGraphNode } from '@holistix/core-graph';
 import {
   DisableZoomDragPan,
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@monorepo/space/frontend';
+} from '@holistix/space/frontend';
 import { useCallback } from 'react';
 import { TNotionEvent } from '../../notion-events';
 import { NotionDatabaseKanbanColumn } from './notion-database-kanban';

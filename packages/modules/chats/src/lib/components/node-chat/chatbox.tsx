@@ -8,8 +8,8 @@ import {
   ButtonIcon,
   ButtonIconProps,
   useAction,
-} from '@monorepo/ui-base';
-import { DisableZoomDragPan, NodeMainToolbar } from '@monorepo/space/frontend';
+} from '@holistix/ui-base';
+import { DisableZoomDragPan, NodeMainToolbar } from '@holistix/space/frontend';
 
 import {
   DiscussionItem,

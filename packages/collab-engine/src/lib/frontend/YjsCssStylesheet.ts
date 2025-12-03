@@ -1,4 +1,4 @@
-import { injectCssClass } from '@monorepo/ui-toolkit';
+import { injectCssClass } from '@holistix/ui-toolkit';
 import './YjsAwareness.css';
 
 const userCss: {

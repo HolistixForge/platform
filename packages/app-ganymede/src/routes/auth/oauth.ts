@@ -7,8 +7,8 @@ import OAuth2Server, {
   AuthorizationCode,
 } from '@node-oauth/oauth2-server';
 
-import { respond } from '@monorepo/backend-engine';
-import { ForbiddenException } from '@monorepo/log';
+import { respond } from '@holistix/backend-engine';
+import { ForbiddenException } from '@holistix/log';
 
 import { authenticateHandler, model } from '../../models/oauth';
 import { userIsAuthenticated } from '../../models/users';

@@ -1,4 +1,4 @@
-import { TJson } from '@monorepo/simple-types';
+import { TJson } from '@holistix/simple-types';
 
 import { SharedTypes, SharedArray, SharedMap } from '../SharedTypes';
 import { Doc, Array } from 'yjs';

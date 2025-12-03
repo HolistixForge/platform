@@ -3,10 +3,10 @@ import {
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@monorepo/space/frontend';
-import { useLocalSharedData } from '@monorepo/collab/frontend';
-import { useDispatcher } from '@monorepo/reducers/frontend';
-import { TGraphNode } from '@monorepo/core-graph';
+} from '@holistix/space/frontend';
+import { useLocalSharedData } from '@holistix/collab/frontend';
+import { useDispatcher } from '@holistix/reducers/frontend';
+import { TGraphNode } from '@holistix/core-graph';
 import { TNotionSharedData } from '../../notion-shared-model';
 import { useCallback } from 'react';
 import { TEventUpdatePage, TNotionEvent } from '../../notion-events';

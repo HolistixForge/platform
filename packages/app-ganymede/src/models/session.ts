@@ -1,7 +1,7 @@
 import { SessionData, Store } from 'express-session';
-import { TJson, TJsonObject } from '@monorepo/simple-types';
+import { TJson, TJsonObject } from '@holistix/simple-types';
 import { SESSION_MAX_AGE } from '../main';
-import { EPriority, log } from '@monorepo/log';
+import { EPriority, log } from '@holistix/log';
 import { pg } from '../database/pg';
 
 type MySessionData = SessionData & { passport?: TJsonObject };

@@ -9,9 +9,9 @@ import {
   Exception,
   ForbiddenException,
   UnknownException,
-} from '@monorepo/log';
-import { jwtPayload, respond } from '@monorepo/backend-engine';
-import { TJson } from '@monorepo/simple-types';
+} from '@holistix/log';
+import { jwtPayload, respond } from '@holistix/backend-engine';
+import { TJson } from '@holistix/simple-types';
 
 import { verifyPassword } from '../../models/users';
 import {

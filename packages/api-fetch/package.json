@@ -1,5 +1,5 @@
 {
-  "name": "@monorepo/api-fetch",
+  "name": "@holistix/api-fetch",
   "version": "0.0.1",
   "type": "module",
   "private": true,

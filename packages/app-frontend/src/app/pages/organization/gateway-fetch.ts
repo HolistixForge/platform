@@ -1,6 +1,6 @@
-import { ApiFetch } from '@monorepo/api-fetch';
-import { GanymedeApi } from '@monorepo/frontend-data';
-import { TMyfetchRequest } from '@monorepo/simple-types';
+import { ApiFetch } from '@holistix/api-fetch';
+import { GanymedeApi } from '@holistix/frontend-data';
+import { TMyfetchRequest } from '@holistix/simple-types';
 
 /**
  * Create an ApiFetch instance that routes to gateway

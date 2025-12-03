@@ -7,15 +7,15 @@ import {
   paletteRandomColor,
   standardizeError,
   useAction,
-} from '@monorepo/ui-base';
+} from '@holistix/ui-base';
 import {
   GanymedeApi,
   useApi,
   useCurrentUser,
   useMutationStartOrganization,
   useQueryProjectByName,
-} from '@monorepo/frontend-data';
-import { browserLog } from '@monorepo/frontend-data';
+} from '@holistix/frontend-data';
+import { browserLog } from '@holistix/frontend-data';
 
 import { ProjectState, ProjectData, ProjectUser } from './project-types';
 import { ProjectLoading, ProjectError } from './project-loading';

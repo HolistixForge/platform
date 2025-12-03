@@ -9,13 +9,13 @@ import {
   TextFieldset,
   useAction,
   DialogControlled,
-} from '@monorepo/ui-base';
-import { useLocalSharedData } from '@monorepo/collab/frontend';
-import { useDispatcher } from '@monorepo/reducers/frontend';
+} from '@holistix/ui-base';
+import { useLocalSharedData } from '@holistix/collab/frontend';
+import { useDispatcher } from '@holistix/reducers/frontend';
 
 import { TUserContainersEvents } from '../servers-events';
 import { TUserContainersSharedData } from '../servers-shared-model';
-import { TPosition } from '@monorepo/core-graph';
+import { TPosition } from '@holistix/core-graph';
 import { useEffect } from 'react';
 import { TContainerImageInfo } from '../container-image';
 

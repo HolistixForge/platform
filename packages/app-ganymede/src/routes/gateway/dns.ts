@@ -5,7 +5,7 @@
  */
 
 import { Router } from 'express';
-import { EPriority, log } from '@monorepo/log';
+import { EPriority, log } from '@holistix/log';
 import {
   authenticateJwtOrganization,
   OrganizationAuthRequest,

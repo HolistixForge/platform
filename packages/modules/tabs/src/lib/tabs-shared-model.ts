@@ -1,4 +1,4 @@
-import { SharedMap } from '@monorepo/collab-engine';
+import { SharedMap } from '@holistix/collab-engine';
 import { TTabsTree } from './tabs-types';
 
 export type TTabsSharedData = {

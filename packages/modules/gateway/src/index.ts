@@ -1,6 +1,6 @@
-import type { TModule } from '@monorepo/module';
-import { TMyfetchRequest } from '@monorepo/simple-types';
-import type { TCollabFrontendExports } from '@monorepo/collab/frontend';
+import type { TModule } from '@holistix/module';
+import { TMyfetchRequest } from '@holistix/simple-types';
+import type { TCollabFrontendExports } from '@holistix/collab/frontend';
 
 import { TokenManager, PermissionManager, OAuthManager, DNSManager } from './lib/managers';
 

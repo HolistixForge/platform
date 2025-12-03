@@ -9,13 +9,13 @@ import {
   TabPayload,
   TTabsSharedData,
   TTabsTree,
-} from '@monorepo/tabs';
-import { useCurrentUser } from '@monorepo/frontend-data';
-import { useLocalSharedData } from '@monorepo/collab/frontend';
-import { serviceUrl } from '@monorepo/user-containers';
+} from '@holistix/tabs';
+import { useCurrentUser } from '@holistix/frontend-data';
+import { useLocalSharedData } from '@holistix/collab/frontend';
+import { serviceUrl } from '@holistix/user-containers';
 
 import { useDispatcher } from '../model/collab-model-chunk';
-import { TServer, TServersSharedData } from '@monorepo/user-containers';
+import { TServer, TServersSharedData } from '@holistix/user-containers';
 import { NodeEditorView } from './node-editor/node-editor-view';
 import { ResourcePage } from './resources-page';
 

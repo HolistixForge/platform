@@ -2,10 +2,10 @@ import {
   FrontendDispatcher,
   TValidSharedData,
   useExtraContext,
-} from '@monorepo/collab-engine';
-import { TServersSharedData } from '@monorepo/user-containers';
-import { TServersExtraContext } from '@monorepo/user-containers/frontend';
-import { useRegisterListener } from '@monorepo/simple-types';
+} from '@holistix/collab-engine';
+import { TServersSharedData } from '@holistix/user-containers';
+import { TServersExtraContext } from '@holistix/user-containers/frontend';
+import { useRegisterListener } from '@holistix/simple-types';
 
 import { JLsManager, TKernelPack } from './front/jls-manager';
 import { TJupyterSharedData } from './jupyter-shared-model';

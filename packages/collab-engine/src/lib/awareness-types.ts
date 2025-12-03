@@ -1,4 +1,4 @@
-import { TJsonObject } from '@monorepo/simple-types';
+import { TJsonObject } from '@holistix/simple-types';
 
 export type xyz = { x: number; y: number; z: number };
 

@@ -1,16 +1,16 @@
 import { useState } from 'react';
 
-import { ResourceBar, ServerStack } from '@monorepo/ui-views';
+import { ResourceBar, ServerStack } from '@holistix/ui-views';
 import {
   TUserContainer,
   TUserContainersSharedData,
-} from '@monorepo/user-containers';
+} from '@holistix/user-containers';
 import {
   NewContainerForm,
   TContainerRunnerFrontend,
   UserContainerCardInternal,
-} from '@monorepo/user-containers/frontend';
-import { useLocalSharedData } from '@monorepo/collab/frontend';
+} from '@holistix/user-containers/frontend';
+import { useLocalSharedData } from '@holistix/collab/frontend';
 
 import { ProjectSidebar } from '../sidebar';
 

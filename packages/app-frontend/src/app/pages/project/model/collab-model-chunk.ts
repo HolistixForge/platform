@@ -1,16 +1,16 @@
 import {
   useLocalSharedData as useLocalSharedDataOriginal,
   TValidSharedDataToCopy,
-} from '@monorepo/collab/frontend';
-import { useDispatcher as useDispatcherOriginal } from '@monorepo/reducers/frontend';
-import { TCoreSharedData, TCoreEvent } from '@monorepo/core-graph';
-import { TabPayload, TTabEvents, TTabsSharedData } from '@monorepo/tabs';
-import { TSpaceSharedData, TSpaceEvent } from '@monorepo/space';
-import { TChatEvent, TChatSharedData } from '@monorepo/chats';
-import { TServerEvents, TServersSharedData } from '@monorepo/user-containers';
-import { TJupyterEvent, TJupyterSharedData } from '@monorepo/jupyter';
-import { TEventSocials } from '@monorepo/socials';
-import { TNotionEvent } from '@monorepo/notion';
+} from '@holistix/collab/frontend';
+import { useDispatcher as useDispatcherOriginal } from '@holistix/reducers/frontend';
+import { TCoreSharedData, TCoreEvent } from '@holistix/core-graph';
+import { TabPayload, TTabEvents, TTabsSharedData } from '@holistix/tabs';
+import { TSpaceSharedData, TSpaceEvent } from '@holistix/space';
+import { TChatEvent, TChatSharedData } from '@holistix/chats';
+import { TServerEvents, TServersSharedData } from '@holistix/user-containers';
+import { TJupyterEvent, TJupyterSharedData } from '@holistix/jupyter';
+import { TEventSocials } from '@holistix/socials';
+import { TNotionEvent } from '@holistix/notion';
 
 //
 

@@ -1,8 +1,8 @@
 import { QueryResult, Pool, PoolClient } from 'pg';
 import { TSqlApi } from '../Connections';
 import { Row, Sql, SqlResult, SqlResultsSet, TSqlConfig } from '../Sql';
-import { TJsonWithDate } from '@monorepo/simple-types';
-import { EPriority, log } from '@monorepo/log';
+import { TJsonWithDate } from '@holistix/simple-types';
+import { EPriority, log } from '@holistix/log';
 
 //
 

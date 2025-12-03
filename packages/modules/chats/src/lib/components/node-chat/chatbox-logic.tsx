@@ -1,6 +1,6 @@
-import { useLocalSharedData } from '@monorepo/collab/frontend';
-import { useDispatcher } from '@monorepo/reducers/frontend';
-import { ButtonIconProps } from '@monorepo/ui-base';
+import { useLocalSharedData } from '@holistix/collab/frontend';
+import { useDispatcher } from '@holistix/reducers/frontend';
+import { ButtonIconProps } from '@holistix/ui-base';
 
 import { TChatSharedData } from '../../chats-shared-model';
 import { TChatEvent } from '../../chats-events';

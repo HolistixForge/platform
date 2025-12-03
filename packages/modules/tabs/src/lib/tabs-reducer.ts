@@ -1,9 +1,9 @@
-import { TEventLoad } from '@monorepo/gateway';
+import { TEventLoad } from '@holistix/gateway';
 import {
   Reducer,
   RequestData,
   TReducersBackendExports,
-} from '@monorepo/reducers';
+} from '@holistix/reducers';
 
 import {
   TEventActiveTabChange,
@@ -22,7 +22,7 @@ import {
 } from './tabs-types';
 import { TTabsSharedData } from './tabs-shared-model';
 import { ReadWriteTree } from './tree';
-import { TCollabBackendExports } from '@monorepo/collab';
+import { TCollabBackendExports } from '@holistix/collab';
 
 type TRequired = {
   collab: TCollabBackendExports<TTabsSharedData>;

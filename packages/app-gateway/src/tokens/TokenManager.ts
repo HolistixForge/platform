@@ -1,6 +1,6 @@
-import { TokenManager as AbstractTokenManager } from '@monorepo/gateway';
-import { generateJwtToken } from '@monorepo/backend-engine';
-import { TJson } from '@monorepo/simple-types';
+import { TokenManager as AbstractTokenManager } from '@holistix/gateway';
+import { generateJwtToken } from '@holistix/backend-engine';
+import { TJson } from '@holistix/simple-types';
 
 /**
  * TokenManager - Generic Token Generation

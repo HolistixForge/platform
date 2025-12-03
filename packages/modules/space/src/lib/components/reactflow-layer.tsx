@@ -24,24 +24,24 @@ import {
   OnMove,
 } from '@xyflow/react';
 
-import { TJsonObject, useRegisterListener } from '@monorepo/simple-types';
-import { clientXY } from '@monorepo/ui-toolkit';
+import { TJsonObject, useRegisterListener } from '@holistix/simple-types';
+import { clientXY } from '@holistix/ui-toolkit';
 import {
   TPosition,
   TEdge,
   TEdgeEnd,
   EEdgeSemanticType,
-} from '@monorepo/core-graph';
+} from '@holistix/core-graph';
 import {
   useAwareness,
   TValidSharedDataToCopy,
   useLocalSharedDataManager,
   TOverrideFunction,
-} from '@monorepo/collab/frontend';
+} from '@holistix/collab/frontend';
 import {
   FrontendEventSequence,
   useDispatcher,
-} from '@monorepo/reducers/frontend';
+} from '@holistix/reducers/frontend';
 
 import { PointerTracker } from './PointerTracker';
 import { NodeWrapper } from './node-wrappers/node-wrapper';

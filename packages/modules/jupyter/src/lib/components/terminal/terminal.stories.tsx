@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useEffect, useState } from 'react';
 
-import { Logger } from '@monorepo/log';
-import { TServerEvents, TServersSharedData } from '@monorepo/user-containers';
-import { useLocalSharedData } from '@monorepo/collab/frontend';
-import { useDispatcher } from '@monorepo/reducers/frontend';
-import { ButtonBase, SelectFieldset, SelectItem } from '@monorepo/ui-base';
+import { Logger } from '@holistix/log';
+import { TServerEvents, TServersSharedData } from '@holistix/user-containers';
+import { useLocalSharedData } from '@holistix/collab/frontend';
+import { useDispatcher } from '@holistix/reducers/frontend';
+import { ButtonBase, SelectFieldset, SelectItem } from '@holistix/ui-base';
 
 import { TJupyterEvent } from '../../jupyter-events';
 import {

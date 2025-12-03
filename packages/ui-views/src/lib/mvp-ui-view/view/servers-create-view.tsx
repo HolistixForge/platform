@@ -1,8 +1,8 @@
 import { CSSProperties, useState } from 'react';
 
-import { Sidebar, randomGuy } from '@monorepo/ui-base';
-import { ServerCardInternal } from '@monorepo/user-containers/frontend';
-import { TServerComponentProps } from '@monorepo/user-containers';
+import { Sidebar, randomGuy } from '@holistix/ui-base';
+import { ServerCardInternal } from '@holistix/user-containers/frontend';
+import { TServerComponentProps } from '@holistix/user-containers';
 
 import { Header } from '../components/header';
 import { ResourceBar } from '../components/resource-bar';

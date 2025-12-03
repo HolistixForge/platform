@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { useTestBoolean } from '@monorepo/ui-base';
-import { TNodeContext } from '@monorepo/space/frontend';
+import { useTestBoolean } from '@holistix/ui-base';
+import { TNodeContext } from '@holistix/space/frontend';
 import {
   StoryMockSpaceContextReactflowBgAndCss,
   MockNodeContext,
-} from '@monorepo/space/stories';
-import { ModuleProvider } from '@monorepo/module/frontend';
+} from '@holistix/space/stories';
+import { ModuleProvider } from '@holistix/module/frontend';
 
 import { NodeServerInternal } from './node-server';
 import {

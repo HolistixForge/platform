@@ -3,11 +3,11 @@ import {
   useCurrentUser,
   useMutationLogout,
   useQueriesUsers,
-} from '@monorepo/frontend-data';
-import { useAction } from '@monorepo/ui-base';
-import { Header } from '@monorepo/ui-views';
-import { useAwarenessUserList } from '@monorepo/collab/frontend';
-import { TF_User, TG_User } from '@monorepo/demiurge-types';
+} from '@holistix/frontend-data';
+import { useAction } from '@holistix/ui-base';
+import { Header } from '@holistix/ui-views';
+import { useAwarenessUserList } from '@holistix/collab/frontend';
+import { TF_User, TG_User } from '@holistix/demiurge-types';
 
 //
 

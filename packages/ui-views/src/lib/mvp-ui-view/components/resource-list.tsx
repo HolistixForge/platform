@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { icons, randomGuy, randomGuys } from '@monorepo/ui-base';
+import { icons, randomGuy, randomGuys } from '@holistix/ui-base';
 
 import { NotebookCard } from './notebook-card';
 import { Tabs } from './tabs';

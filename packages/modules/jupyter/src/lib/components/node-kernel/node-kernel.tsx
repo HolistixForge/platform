@@ -6,12 +6,12 @@ import {
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@monorepo/space/frontend';
-import { TGraphNode } from '@monorepo/core-graph';
-import { useLocalSharedData } from '@monorepo/collab/frontend';
-import { useDispatcher } from '@monorepo/reducers/frontend';
-import { TServersSharedData, TServer } from '@monorepo/user-containers';
-import { Datetime } from '@monorepo/ui-base';
+} from '@holistix/space/frontend';
+import { TGraphNode } from '@holistix/core-graph';
+import { useLocalSharedData } from '@holistix/collab/frontend';
+import { useDispatcher } from '@holistix/reducers/frontend';
+import { TServersSharedData, TServer } from '@holistix/user-containers';
+import { Datetime } from '@holistix/ui-base';
 
 import { KernelStateIndicator } from './kernel-state-indicator';
 import {

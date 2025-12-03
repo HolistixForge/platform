@@ -8,19 +8,19 @@ import {
   TCoreSharedData,
   TEventNewEdge,
   TEdgeEnd,
-} from '@monorepo/core-graph';
-import { TGraphNode } from '@monorepo/core-graph';
+} from '@holistix/core-graph';
+import { TGraphNode } from '@holistix/core-graph';
 import {
   useLocalSharedData,
   useLocalSharedDataManager,
   useAwareness,
   TOverrideFunction,
   TValidSharedDataToCopy,
-} from '@monorepo/collab/frontend';
+} from '@holistix/collab/frontend';
 import {
   useDispatcher,
   FrontendEventSequence,
-} from '@monorepo/reducers/frontend';
+} from '@holistix/reducers/frontend';
 
 import { PanelComponent, TSpaceFrontendExports } from '../../frontend';
 import { TSpaceMenuEntries } from '../space-menu';
@@ -49,7 +49,7 @@ import {
   TLayerTreeItem,
   TLayerTreeCollection,
 } from '../layer-tree-types';
-import { useModuleExports } from '@monorepo/module/frontend';
+import { useModuleExports } from '@holistix/module/frontend';
 
 //
 

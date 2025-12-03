@@ -1,4 +1,4 @@
-import { TJson } from '@monorepo/simple-types';
+import { TJson } from '@holistix/simple-types';
 import { trace } from '@opentelemetry/api';
 import {
   LoggerProvider,
@@ -124,7 +124,7 @@ export class Logger {
       );
 
       Logger._loggerProvider = loggerProvider;
-      Logger._otlpLogger = loggerProvider.getLogger('@monorepo/log');
+      Logger._otlpLogger = loggerProvider.getLogger('@holistix/log');
     } catch (error) {
       // Silently fail if SDK packages aren't available
       // Logger will still work but without OTLP export

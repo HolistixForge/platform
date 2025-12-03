@@ -1,9 +1,9 @@
 import { FC, ReactNode } from 'react';
 
-import { TValidSharedData } from '@monorepo/collab-engine';
-import { TValidSharedDataToCopy } from '@monorepo/collab/frontend';
-import { FrontendDispatcher } from '@monorepo/reducers/frontend';
-import { makeUuid, TJsonObject } from '@monorepo/simple-types';
+import { TValidSharedData } from '@holistix/collab-engine';
+import { TValidSharedDataToCopy } from '@holistix/collab/frontend';
+import { FrontendDispatcher } from '@holistix/reducers/frontend';
+import { makeUuid, TJsonObject } from '@holistix/simple-types';
 
 import { SHAPE_TYPES, TEventNewShape, TSpaceEvent } from './space-events';
 

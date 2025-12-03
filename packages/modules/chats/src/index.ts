@@ -1,8 +1,8 @@
-import type { TModule } from '@monorepo/module';
-import type { TCollabBackendExports } from '@monorepo/collab';
-import type { TReducersBackendExports } from '@monorepo/reducers';
-import type { TCoreSharedData } from '@monorepo/core-graph';
-import { TSpaceSharedData } from '@monorepo/space';
+import type { TModule } from '@holistix/module';
+import type { TCollabBackendExports } from '@holistix/collab';
+import type { TReducersBackendExports } from '@holistix/reducers';
+import type { TCoreSharedData } from '@holistix/core-graph';
+import { TSpaceSharedData } from '@holistix/space';
 
 import { ChatReducer } from './lib/chats-reducer';
 import type { TChatSharedData } from './lib/chats-shared-model';

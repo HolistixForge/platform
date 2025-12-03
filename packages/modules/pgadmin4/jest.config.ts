@@ -1,5 +1,5 @@
 export default {
-  displayName: '@monorepo/pgadmin4',
+  displayName: '@holistix/pgadmin4',
   preset: '../../../jest.preset.js',
   transform: {
     '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',

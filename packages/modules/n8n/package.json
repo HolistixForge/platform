@@ -1,5 +1,5 @@
 {
-  "name": "@monorepo/n8n",
+  "name": "@holistix/n8n",
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.js",

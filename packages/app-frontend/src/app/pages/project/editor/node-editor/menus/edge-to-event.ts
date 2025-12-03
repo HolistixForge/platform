@@ -1,5 +1,5 @@
-import { TServerEvents } from '@monorepo/user-containers';
-import { TCoreSharedData, TEdge } from '@monorepo/core-graph';
+import { TServerEvents } from '@holistix/user-containers';
+import { TCoreSharedData, TEdge } from '@holistix/core-graph';
 
 export const edgeToEvent = (
   edge: TEdge,

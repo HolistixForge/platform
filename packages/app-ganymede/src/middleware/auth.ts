@@ -1,13 +1,13 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
 import { CONFIG } from '../config';
-import { ForbiddenException } from '@monorepo/log';
+import { ForbiddenException } from '@holistix/log';
 import { trace } from '@opentelemetry/api';
 import {
   TJwtGateway,
   TJwtOrganization,
   TJwtUser,
-} from '@monorepo/demiurge-types';
+} from '@holistix/demiurge-types';
 
 export interface AuthRequest extends Request {
   user: {

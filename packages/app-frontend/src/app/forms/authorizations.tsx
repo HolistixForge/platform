@@ -3,15 +3,15 @@ import {
   useMutationUserScope as useMutationUserPermissions,
   useQueryScope,
   useQueryUsersSearch,
-} from '@monorepo/frontend-data';
+} from '@holistix/frontend-data';
 import {
   UsersScopes,
   UsersScopesLogicProps,
   UsersScopesProps,
-} from '@monorepo/ui-base';
+} from '@holistix/ui-base';
 import { useCallback, useState } from 'react';
 import { useProject } from '../pages/project/project-context';
-import { TCollaborator, TF_User } from '@monorepo/demiurge-types';
+import { TCollaborator, TF_User } from '@holistix/demiurge-types';
 
 //
 

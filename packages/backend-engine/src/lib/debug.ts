@@ -1,7 +1,7 @@
 //
 //
 
-import { EPriority, log } from '@monorepo/log';
+import { EPriority, log } from '@holistix/log';
 
 const DEV =
   process.env['NODE_ENV'] === 'development' ||

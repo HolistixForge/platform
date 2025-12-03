@@ -56,7 +56,7 @@ function getDeploymentEnvironment(): string {
  *
  * @example
  * ```typescript
- * import { initializeBrowserObservability } from '@monorepo/observability/browser';
+ * import { initializeBrowserObservability } from '@holistix/observability/browser';
  *
  * initializeBrowserObservability({
  *   serviceName: 'frontend',

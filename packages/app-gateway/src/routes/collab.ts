@@ -1,7 +1,7 @@
 import { Router, Request } from 'express';
-import { BackendEventProcessor } from '@monorepo/reducers';
-import { EPriority, log, NotFoundException } from '@monorepo/log';
-import { myfetch } from '@monorepo/backend-engine';
+import { BackendEventProcessor } from '@holistix/reducers';
+import { EPriority, log, NotFoundException } from '@holistix/log';
+import { myfetch } from '@holistix/backend-engine';
 import { asyncHandler } from '../middleware/route-handler';
 import { VPN } from '../config/organization';
 import { CONFIG } from '../config';

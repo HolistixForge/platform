@@ -1,5 +1,5 @@
-import { TModule } from '@monorepo/module';
-import { TValidSharedData } from '@monorepo/collab-engine';
+import { TModule } from '@holistix/module';
+import { TValidSharedData } from '@holistix/collab-engine';
 import {
   Collab,
   YjsServerCollab,

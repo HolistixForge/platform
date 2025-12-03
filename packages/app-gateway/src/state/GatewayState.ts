@@ -1,4 +1,4 @@
-import { EPriority, log } from '@monorepo/log';
+import { EPriority, log } from '@holistix/log';
 import { IPersistenceProvider } from './IPersistenceProvider';
 
 type TGatewayDataSnapshot = Record<string, unknown>;

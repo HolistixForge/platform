@@ -1,5 +1,5 @@
 import { AvatarStore } from './apis/avatarStore';
-import { useRegisterListener } from '@monorepo/simple-types';
+import { useRegisterListener } from '@holistix/simple-types';
 //
 
 export const AvatarsRenderer = ({

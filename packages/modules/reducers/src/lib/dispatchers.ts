@@ -1,7 +1,7 @@
-import { ApiFetch } from '@monorepo/api-fetch';
-import { TJson } from '@monorepo/simple-types';
+import { ApiFetch } from '@holistix/api-fetch';
+import { TJson } from '@holistix/simple-types';
 import { TBaseEvent } from '..';
-import { log } from '@monorepo/log';
+import { log } from '@holistix/log';
 
 //
 

@@ -1,4 +1,4 @@
-import { SharedMap } from '@monorepo/collab-engine';
+import { SharedMap } from '@holistix/collab-engine';
 import { TAirtableBase, TAirtableBaseSearchResult } from './airtable-types';
 import { TAirtableViewMode } from './components/node-airtable/node-airtable-table';
 

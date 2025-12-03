@@ -1,4 +1,4 @@
-import { makeUuid } from '@monorepo/simple-types';
+import { makeUuid } from '@holistix/simple-types';
 
 //
 

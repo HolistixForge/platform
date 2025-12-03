@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { useAction, DialogControlled } from '@monorepo/ui-base';
-import { NewProjectFormData } from '@monorepo/frontend-data';
+import { useAction, DialogControlled } from '@holistix/ui-base';
+import { NewProjectFormData } from '@holistix/frontend-data';
 
 import { NewProjectForm } from './new-project';
 

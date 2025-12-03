@@ -1,4 +1,4 @@
-import { TUserContainer, serviceUrl } from '@monorepo/user-containers';
+import { TUserContainer, serviceUrl } from '@holistix/user-containers';
 
 import { TJupyterServerData, TServerSettings } from './jupyter-types';
 import { JupyterlabDriver } from './driver';

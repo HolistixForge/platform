@@ -1,34 +1,34 @@
 import { useMemo } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { SharedTypes } from '@monorepo/collab-engine';
-import { Logger } from '@monorepo/log';
-import { TCoreSharedData } from '@monorepo/core-graph';
-import { TSpaceSharedData, defaultGraphView } from '@monorepo/space';
-import { STORY_VIEW_ID, StoryDemiurgeSpace } from '@monorepo/space/stories';
-import { StoryApiContext } from '@monorepo/frontend-data';
-import { TCollabBackendExports } from '@monorepo/collab';
+import { SharedTypes } from '@holistix/collab-engine';
+import { Logger } from '@holistix/log';
+import { TCoreSharedData } from '@holistix/core-graph';
+import { TSpaceSharedData, defaultGraphView } from '@holistix/space';
+import { STORY_VIEW_ID, StoryDemiurgeSpace } from '@holistix/space/stories';
+import { StoryApiContext } from '@holistix/frontend-data';
+import { TCollabBackendExports } from '@holistix/collab';
 
 //
-import { loadModules, TModule } from '@monorepo/module';
-import { ModuleProvider } from '@monorepo/module/frontend';
+import { loadModules, TModule } from '@holistix/module';
+import { ModuleProvider } from '@holistix/module/frontend';
 import {
   moduleBackend as coreBackend,
   moduleFrontend as coreFrontend,
-} from '@monorepo/core-graph';
-import { moduleBackend as collabBackend } from '@monorepo/collab';
-import { moduleFrontend as collabFrontend } from '@monorepo/collab/frontend';
+} from '@holistix/core-graph';
+import { moduleBackend as collabBackend } from '@holistix/collab';
+import { moduleFrontend as collabFrontend } from '@holistix/collab/frontend';
 import {
   moduleBackend as reducersBackend,
   TReducersBackendExports,
-} from '@monorepo/reducers';
+} from '@holistix/reducers';
 import {
   moduleFrontend as reducersFrontend,
   linkDispatchToProcessEvent,
   TReducersFrontendExports,
-} from '@monorepo/reducers/frontend';
-import { moduleBackend as spaceBackend } from '@monorepo/space';
-import { moduleFrontend as spaceFrontend } from '@monorepo/space/frontend';
+} from '@holistix/reducers/frontend';
+import { moduleBackend as spaceBackend } from '@holistix/space';
+import { moduleFrontend as spaceFrontend } from '@holistix/space/frontend';
 //
 import { moduleBackend as socialsBackend } from '../';
 import { moduleFrontend as socialsFrontend } from '../frontend';

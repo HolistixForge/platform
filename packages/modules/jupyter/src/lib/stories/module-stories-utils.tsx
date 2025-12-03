@@ -1,27 +1,27 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { useLocalSharedData } from '@monorepo/collab/frontend';
-import { useDispatcher } from '@monorepo/reducers/frontend';
-import { TJsonObject, TMyfetchRequest } from '@monorepo/simple-types';
-import { TServersSharedData, TServerEvents } from '@monorepo/user-containers';
-import { TCoreSharedData } from '@monorepo/core-graph';
+import { useLocalSharedData } from '@holistix/collab/frontend';
+import { useDispatcher } from '@holistix/reducers/frontend';
+import { TJsonObject, TMyfetchRequest } from '@holistix/simple-types';
+import { TServersSharedData, TServerEvents } from '@holistix/user-containers';
+import { TCoreSharedData } from '@holistix/core-graph';
 
 //
 
-import { moduleBackend as coreBackend } from '@monorepo/core-graph';
-import { moduleBackend as spaceBackend } from '@monorepo/space';
+import { moduleBackend as coreBackend } from '@holistix/core-graph';
+import { moduleBackend as spaceBackend } from '@holistix/space';
 import {
   moduleBackend as userContainersBackend,
   TServer,
-} from '@monorepo/user-containers';
+} from '@holistix/user-containers';
 //
-import { moduleFrontend as coreFrontend } from '@monorepo/core-graph';
-import { moduleFrontend as spaceFrontend } from '@monorepo/space/frontend';
-import { STORY_VIEW_ID } from '@monorepo/space/stories';
+import { moduleFrontend as coreFrontend } from '@holistix/core-graph';
+import { moduleFrontend as spaceFrontend } from '@holistix/space/frontend';
+import { STORY_VIEW_ID } from '@holistix/space/stories';
 import {
   moduleFrontend as userContainersFrontend,
   TAuthenticationExtraContext,
-} from '@monorepo/user-containers/frontend';
+} from '@holistix/user-containers/frontend';
 
 //
 

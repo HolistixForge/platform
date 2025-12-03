@@ -1,6 +1,6 @@
 // Airtable API Types - Mirrors Notion structure but adapted for Airtable
 
-import { TJson } from '@monorepo/simple-types';
+import { TJson } from '@holistix/simple-types';
 
 export type TAirtableFieldType =
   | 'singleLineText'

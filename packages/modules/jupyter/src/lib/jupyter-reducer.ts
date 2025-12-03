@@ -4,18 +4,18 @@ import {
   Reducer,
   RequestData,
   TReducersBackendExports,
-} from '@monorepo/reducers';
-import { TJsonArray, makeUuid } from '@monorepo/simple-types';
-import { NotFoundException } from '@monorepo/log';
-import { TCollabBackendExports } from '@monorepo/collab';
+} from '@holistix/reducers';
+import { TJsonArray, makeUuid } from '@holistix/simple-types';
+import { NotFoundException } from '@holistix/log';
+import { TCollabBackendExports } from '@holistix/collab';
 import {
   TUserContainersSharedData,
   userContainerNodeId,
   TEventNew,
   TEventDelete,
   TUserContainersExports,
-} from '@monorepo/user-containers';
-import { TCoreSharedData } from '@monorepo/core-graph';
+} from '@holistix/user-containers';
+import { TCoreSharedData } from '@holistix/core-graph';
 
 import {
   TJupyterEvent,

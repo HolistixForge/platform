@@ -1,7 +1,7 @@
-import { EPriority, log } from '@monorepo/log';
+import { EPriority, log } from '@holistix/log';
 import { IPersistenceProvider } from '../state/IPersistenceProvider';
 import type { TPermissionData } from './types';
-import { PermissionManager as AbstractPermissionManager } from '@monorepo/gateway';
+import { PermissionManager as AbstractPermissionManager } from '@holistix/gateway';
 
 /**
  * PermissionManager - Simple Permission Management

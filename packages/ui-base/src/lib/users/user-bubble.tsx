@@ -1,4 +1,4 @@
-import { TF_User } from '@monorepo/demiurge-types';
+import { TF_User } from '@holistix/demiurge-types';
 import { UserAvatar } from './users';
 
 export interface UserBubbleProps {

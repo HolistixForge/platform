@@ -1,5 +1,5 @@
 {
-  "name": "@monorepo/app-gateway",
+  "name": "@holistix/app-gateway",
   "version": "0.0.1",
   "private": true,
   "nx": {

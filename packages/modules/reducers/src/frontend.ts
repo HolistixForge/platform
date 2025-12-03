@@ -1,7 +1,7 @@
-import { TModule } from '@monorepo/module';
+import { TModule } from '@holistix/module';
 import { TBaseEvent } from '.';
 import { FrontendDispatcher } from './lib/dispatchers';
-import { ApiFetch } from '@monorepo/api-fetch';
+import { ApiFetch } from '@holistix/api-fetch';
 
 export type TReducersFrontendExports<TE extends TBaseEvent = TBaseEvent> = {
   dispatcher: FrontendDispatcher<TE>;

@@ -1,8 +1,8 @@
 import { ReactNode, useMemo } from 'react';
 
-import { TCoreSharedData, TGraphNode } from '@monorepo/core-graph';
-import { FrontendDispatcher } from '@monorepo/reducers/frontend';
-import { SharedTypes } from '@monorepo/collab-engine';
+import { TCoreSharedData, TGraphNode } from '@holistix/core-graph';
+import { FrontendDispatcher } from '@holistix/reducers/frontend';
+import { SharedTypes } from '@holistix/collab-engine';
 
 import {
   ReactflowLayerContext,

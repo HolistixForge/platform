@@ -1,6 +1,6 @@
-import { TModule } from '@monorepo/module';
+import { TModule } from '@holistix/module';
 import { LocalOverrider } from './lib/overrider';
-import { TValidSharedData } from '@monorepo/collab-engine';
+import { TValidSharedData } from '@holistix/collab-engine';
 import { Collab } from './lib/collab';
 import { YjsClientCollabConfig } from './lib/collab';
 import { NoneCollabConfig } from './lib/collab';

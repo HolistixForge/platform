@@ -1,9 +1,9 @@
 import {
   TValidSharedDataToCopy,
   FrontendDispatcher,
-} from '@monorepo/collab-engine';
-import { TCoreSharedData } from '@monorepo/core-graph';
-import { TSpaceMenuEntries } from '@monorepo/space/frontend';
+} from '@holistix/collab-engine';
+import { TCoreSharedData } from '@holistix/core-graph';
+import { TSpaceMenuEntries } from '@holistix/space/frontend';
 import { TJupyterSharedData } from './jupyter-shared-model';
 import { NewKernelForm } from './form/new-kernel';
 import { NewTerminalForm } from './form/new-terminal';

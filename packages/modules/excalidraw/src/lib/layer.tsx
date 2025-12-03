@@ -1,20 +1,20 @@
 import { useMemo, FC, useEffect, useRef, useState, useCallback } from 'react';
 import { debounce } from 'lodash';
 
-import { useCurrentUser } from '@monorepo/frontend-data';
+import { useCurrentUser } from '@holistix/frontend-data';
 import { OrderedExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 import { AppState, Collaborator, SocketId } from '@excalidraw/excalidraw/types';
 import { BinaryFiles } from '@excalidraw/excalidraw/types';
 
-import { TJsonObject } from '@monorepo/simple-types';
-import { LayerViewportAdapter, TLayerProvider } from '@monorepo/space/frontend';
+import { TJsonObject } from '@holistix/simple-types';
+import { LayerViewportAdapter, TLayerProvider } from '@holistix/space/frontend';
 import {
   useAwarenessUserList,
   useSharedDataDirect,
-} from '@monorepo/collab/frontend';
-import { useDispatcher, FrontendDispatcher } from '@monorepo/reducers/frontend';
-import { TSpaceEvent } from '@monorepo/space';
-import { useLayerContext, TLayerTreeItem } from '@monorepo/space/frontend';
+} from '@holistix/collab/frontend';
+import { useDispatcher, FrontendDispatcher } from '@holistix/reducers/frontend';
+import { TSpaceEvent } from '@holistix/space';
+import { useLayerContext, TLayerTreeItem } from '@holistix/space/frontend';
 
 import { TExcalidrawSharedData } from './excalidraw-shared-model';
 

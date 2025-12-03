@@ -8,10 +8,10 @@ import {
   useQueryUserProjects,
   useQueryOrganization,
   NewProjectFormData,
-} from '@monorepo/frontend-data';
-import { useAction, UserInline, DialogControlled } from '@monorepo/ui-base';
-import { NewProjectForm } from '@monorepo/ui-views';
-import { TApi_Project } from '@monorepo/demiurge-types';
+} from '@holistix/frontend-data';
+import { useAction, UserInline, DialogControlled } from '@holistix/ui-base';
+import { NewProjectForm } from '@holistix/ui-views';
+import { TApi_Project } from '@holistix/demiurge-types';
 
 import { HeaderLogic } from '../header/header-logic';
 import { DeleteProjectFormLogic } from '../forms/new-project-form';

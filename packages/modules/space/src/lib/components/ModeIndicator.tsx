@@ -1,4 +1,4 @@
-import { TPosition } from '@monorepo/core-graph';
+import { TPosition } from '@holistix/core-graph';
 import { WhiteboardMode } from './demiurge-space';
 import { LayerViewport } from './layer-types';
 

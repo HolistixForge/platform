@@ -1,4 +1,4 @@
-import { Sidebar, icons } from '@monorepo/ui-base';
+import { Sidebar, icons } from '@holistix/ui-base';
 
 //
 

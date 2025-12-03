@@ -7,9 +7,9 @@ import {
   TagsBarProps,
   SelectFieldset,
   SelectItem,
-} from '@monorepo/ui-base';
-import { StatusLed } from '@monorepo/user-containers/frontend';
-import { TF_User } from '@monorepo/demiurge-types';
+} from '@holistix/ui-base';
+import { StatusLed } from '@holistix/user-containers/frontend';
+import { TF_User } from '@holistix/demiurge-types';
 
 //
 

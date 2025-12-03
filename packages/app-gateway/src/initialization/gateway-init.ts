@@ -1,11 +1,11 @@
-import { EPriority, log } from '@monorepo/log';
-import { loadModules } from '@monorepo/module';
+import { EPriority, log } from '@holistix/log';
+import { loadModules } from '@holistix/module';
 import { GatewayState } from '../state/GatewayState';
 import { PermissionManager } from '../permissions';
 import { ProjectRoomsManager } from '../state/ProjectRooms';
 import { OAuthManager } from '../oauth';
 import { TokenManager } from '../tokens';
-import { PermissionRegistry, ProtectedServiceRegistry } from '@monorepo/gateway';
+import { PermissionRegistry, ProtectedServiceRegistry } from '@holistix/gateway';
 
 export interface GatewayInstances {
   gatewayState: GatewayState;

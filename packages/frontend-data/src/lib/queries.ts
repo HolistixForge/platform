@@ -3,7 +3,7 @@ import {
   CurrentUserDetails,
   TCollaborator,
   TG_User,
-} from '@monorepo/demiurge-types';
+} from '@holistix/demiurge-types';
 import { useApi } from './api-context';
 import {
   useQuery,

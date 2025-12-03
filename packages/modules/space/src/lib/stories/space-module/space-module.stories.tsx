@@ -1,32 +1,32 @@
 import { useMemo } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { Logger } from '@monorepo/log';
+import { Logger } from '@holistix/log';
 
 //
-import { loadModules, TModule } from '@monorepo/module';
-import { ModuleProvider } from '@monorepo/module/frontend';
+import { loadModules, TModule } from '@holistix/module';
+import { ModuleProvider } from '@holistix/module/frontend';
 import {
   moduleBackend as coreBackend,
   moduleFrontend as coreFrontend,
-} from '@monorepo/core-graph';
+} from '@holistix/core-graph';
 import {
   moduleBackend as collabBackend,
   TCollabBackendExports,
-} from '@monorepo/collab';
-import { moduleFrontend as collabFrontend } from '@monorepo/collab/frontend';
+} from '@holistix/collab';
+import { moduleFrontend as collabFrontend } from '@holistix/collab/frontend';
 import {
   moduleBackend as reducersBackend,
   TReducersBackendExports,
-} from '@monorepo/reducers';
+} from '@holistix/reducers';
 import {
   moduleFrontend as reducersFrontend,
   linkDispatchToProcessEvent,
   TReducersFrontendExports,
-} from '@monorepo/reducers/frontend';
+} from '@holistix/reducers/frontend';
 //
 
-import { TCoreSharedData } from '@monorepo/core-graph';
+import { TCoreSharedData } from '@holistix/core-graph';
 
 import { DemiurgeSpace } from '../../components/demiurge-space';
 import { STORY_VIEW_ID } from '../story-demiurge-space';

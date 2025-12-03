@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
-import { TGraphNode } from '@monorepo/core-graph';
-import { useLocalSharedData } from '@monorepo/collab/frontend';
-import { useDispatcher } from '@monorepo/reducers/frontend';
+import { TGraphNode } from '@holistix/core-graph';
+import { useLocalSharedData } from '@holistix/collab/frontend';
+import { useDispatcher } from '@holistix/reducers/frontend';
 import { TAirtableSharedData } from '../../airtable-shared-model';
 import { TAirtableRecordValue, TAirtableTable } from '../../airtable-types';
 import AirtableRecordCard from './AirtableRecordCard';
@@ -9,7 +9,7 @@ import {
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@monorepo/space/frontend';
+} from '@holistix/space/frontend';
 import { TAirtableEvent } from '../../airtable-events';
 
 export type TNodeAirtableRecordDataPayload = {

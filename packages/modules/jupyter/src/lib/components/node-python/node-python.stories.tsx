@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { playAdd__hover, useTestBoolean } from '@monorepo/ui-base';
-import { nodeViewDefaultStatus } from '@monorepo/space';
-import { StoryMockSpaceContextReactflowBgAndCss } from '@monorepo/space/stories';
+import { playAdd__hover, useTestBoolean } from '@holistix/ui-base';
+import { nodeViewDefaultStatus } from '@holistix/space';
+import { StoryMockSpaceContextReactflowBgAndCss } from '@holistix/space/stories';
 
 import { NodePython, NodePythonProps } from './node-python';
 

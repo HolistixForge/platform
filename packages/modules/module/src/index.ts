@@ -1,4 +1,4 @@
-import { log } from '@monorepo/log';
+import { log } from '@holistix/log';
 
 export type TModule<TRequired = object, TExports = object> = {
   name: string;

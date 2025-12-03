@@ -65,8 +65,8 @@ Grafana dashboards / APIs
 
 ### 3. One Shared Initialization per Platform
 
-- Node apps call a shared initializer from `@monorepo/observability`.
-- Browser app calls a shared initializer from `@monorepo/observability`.
+- Node apps call a shared initializer from `@holistix/observability`.
+- Browser app calls a shared initializer from `@holistix/observability`.
 - All apps share:
   - OTLP endpoint config
   - resource attributes (`service.name`, `deployment.environment`, version)
@@ -76,12 +76,12 @@ Grafana dashboards / APIs
 
 ## Backend: Observability & Logging
 
-### 1. Node Observability (`@monorepo/observability`)
+### 1. Node Observability (`@holistix/observability`)
 
 **Usage in apps (simplified):**
 
 ```ts
-import { initializeNodeObservability } from '@monorepo/observability';
+import { initializeNodeObservability } from '@holistix/observability';
 
 initializeNodeObservability({
   serviceName: 'ganymede' | 'gateway' | '...',
@@ -104,14 +104,14 @@ What it does (see `packages/observability/src/node/init.ts`):
   - Express, HTTP, PostgreSQL, etc.
 - Starts `NodeSDK` once per process.
 
-### 2. Logger (`@monorepo/log`)
+### 2. Logger (`@holistix/log`)
 
 **Key pieces (`packages/log/src/lib/log.ts`):**
 
 - **Initialization (Node‑only OTLP export):**
 
 ```ts
-import { Logger } from '@monorepo/log';
+import { Logger } from '@holistix/log';
 
 Logger.initialize({
   // optional; usually read from env
@@ -138,7 +138,7 @@ export enum EPriority {
 - **Core API:**
 
 ```ts
-import { EPriority, log, error } from '@monorepo/log';
+import { EPriority, log, error } from '@holistix/log';
 
 log(EPriority.Info, 'CATEGORY', 'message', { structured: 'data' });
 error('CATEGORY', 'message', { ... }); // convenience wrapper
@@ -242,12 +242,12 @@ This matches the **WebSocket cases** in `LOGGING_AUDIT.md` without repeating all
 
 ## Frontend: Traces, `browserLog`, and Limits
 
-### 1. Browser Observability (`@monorepo/observability`)
+### 1. Browser Observability (`@holistix/observability`)
 
 **Usage in `app-frontend/src/main.tsx`:**
 
 ```ts
-import { initializeBrowserObservability } from '@monorepo/observability';
+import { initializeBrowserObservability } from '@holistix/observability';
 
 initializeBrowserObservability({
   serviceName: 'frontend',
@@ -270,12 +270,12 @@ Implementation (`packages/observability/src/browser/init.ts`):
 
 Result: **frontend traces** exist and correlate with backend traces via `trace_id`.
 
-### 2. `browserLog` Helper (`@monorepo/frontend-data`)
+### 2. `browserLog` Helper (`@holistix/frontend-data`)
 
 We introduced a small, browser‑only logging shim that we can later hook into OTLP if needed.
 
 **Location:** `packages/frontend-data/src/lib/browser-log.ts`  
-**Exports:** `browserLog` via `@monorepo/frontend-data`.
+**Exports:** `browserLog` via `@holistix/frontend-data`.
 
 API:
 

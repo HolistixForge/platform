@@ -1,8 +1,8 @@
-import { generateJwtToken, jwtPayload } from '@monorepo/backend-engine';
-import { TJwtGateway } from '@monorepo/demiurge-types';
-import { ONE_YEAR_MS } from '@monorepo/simple-types';
+import { generateJwtToken, jwtPayload } from '@holistix/backend-engine';
+import { TJwtGateway } from '@holistix/demiurge-types';
+import { ONE_YEAR_MS } from '@holistix/simple-types';
 import { pg } from './pg';
-import { EPriority, log } from '@monorepo/log';
+import { EPriority, log } from '@holistix/log';
 
 //
 

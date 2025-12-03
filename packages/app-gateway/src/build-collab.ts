@@ -1,7 +1,7 @@
-import { BackendEventProcessor } from '@monorepo/reducers';
-import { TCoreEvent } from '@monorepo/core-graph';
-import { TabPayload, TTabEvents } from '@monorepo/tabs';
-import { TSpaceEvent } from '@monorepo/space';
+import { BackendEventProcessor } from '@holistix/reducers';
+import { TCoreEvent } from '@holistix/core-graph';
+import { TabPayload, TTabEvents } from '@holistix/tabs';
+import { TSpaceEvent } from '@holistix/space';
 
 //
 //

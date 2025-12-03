@@ -5,9 +5,9 @@ import {
   ColorValue,
   SelectFieldset,
   SelectItem,
-} from '@monorepo/ui-base';
-import { TGraphNode } from '@monorepo/core-graph';
-import { useDispatcher } from '@monorepo/reducers/frontend';
+} from '@holistix/ui-base';
+import { TGraphNode } from '@holistix/core-graph';
+import { useDispatcher } from '@holistix/reducers/frontend';
 
 import { NodeHeader } from '../assets/node-header/node-header';
 import { useNodeHeaderButtons } from '../assets/node-header/node-main-toolbar';

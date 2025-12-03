@@ -1,10 +1,10 @@
-import { icons } from '@monorepo/ui-base';
-import { InputsAndOutputs, useNodeContext } from '@monorepo/space/frontend';
-import { useNodeEdges } from '@monorepo/core-graph';
-import { TGraphNode } from '@monorepo/core-graph';
-import { useLocalSharedData } from '@monorepo/collab/frontend';
-import { useDispatcher } from '@monorepo/reducers/frontend';
-import { useCurrentUser } from '@monorepo/frontend-data';
+import { icons } from '@holistix/ui-base';
+import { InputsAndOutputs, useNodeContext } from '@holistix/space/frontend';
+import { useNodeEdges } from '@holistix/core-graph';
+import { TGraphNode } from '@holistix/core-graph';
+import { useLocalSharedData } from '@holistix/collab/frontend';
+import { useDispatcher } from '@holistix/reducers/frontend';
+import { useCurrentUser } from '@holistix/frontend-data';
 
 import { TChatSharedData } from '../../chats-shared-model';
 import { TChat } from '../../chats-types';

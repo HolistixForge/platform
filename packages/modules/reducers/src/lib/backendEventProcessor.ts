@@ -1,4 +1,4 @@
-import { log } from '@monorepo/log';
+import { log } from '@holistix/log';
 import { BackendEventSequence, SequenceEvent } from './backendEventSequence';
 import { Reducer, RequestData, TBaseEvent } from '..';
 

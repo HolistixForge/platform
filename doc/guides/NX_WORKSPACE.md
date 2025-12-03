@@ -252,7 +252,7 @@ In the app using the react lib, import the lib styles
 packages/_{APP_NAME}_/src/**main.tsx** :
 
 ```typescript
-import '@monorepo/{LIB_NAME}/style';
+import '@holistix/{LIB_NAME}/style';
 ```
 
 ### setup storybook

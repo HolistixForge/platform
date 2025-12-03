@@ -1,10 +1,10 @@
 import * as Y from 'yjs';
-import { EPriority, log } from '@monorepo/log';
-import { makeUuid } from '@monorepo/simple-types';
+import { EPriority, log } from '@holistix/log';
+import { makeUuid } from '@holistix/simple-types';
 import {
   getAllSharedDataAsJSON,
   setAllSharedDataFromJSON,
-} from '@monorepo/collab-engine';
+} from '@holistix/collab-engine';
 import { IPersistenceProvider } from './IPersistenceProvider';
 
 type TProjectSnapshot = Record<string, unknown>;

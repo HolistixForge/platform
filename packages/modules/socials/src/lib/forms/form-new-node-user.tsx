@@ -6,13 +6,13 @@ import {
   FormErrors,
   useAction,
   DialogControlled,
-} from '@monorepo/ui-base';
-import { useQueryUsersSearch } from '@monorepo/frontend-data';
-import { UserListItem } from '@monorepo/ui-base';
-import { TF_User } from '@monorepo/demiurge-types';
-import { useDispatcher } from '@monorepo/reducers/frontend';
+} from '@holistix/ui-base';
+import { useQueryUsersSearch } from '@holistix/frontend-data';
+import { UserListItem } from '@holistix/ui-base';
+import { TF_User } from '@holistix/demiurge-types';
+import { useDispatcher } from '@holistix/reducers/frontend';
 import { TEventSocials } from '../socials-events';
-import { TPosition } from '@monorepo/core-graph';
+import { TPosition } from '@holistix/core-graph';
 
 //
 

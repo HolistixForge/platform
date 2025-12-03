@@ -1,6 +1,6 @@
-import { TEventOrigin } from '@monorepo/core-graph';
+import { TEventOrigin } from '@holistix/core-graph';
 import { TAirtableViewMode } from './airtable-types';
-import { TJsonObject } from '@monorepo/simple-types';
+import { TJsonObject } from '@holistix/simple-types';
 
 export type TEventInitBase = {
   type: 'airtable:init-base';

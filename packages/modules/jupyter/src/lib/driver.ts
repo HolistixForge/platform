@@ -2,7 +2,7 @@ import { KernelManager, ServerConnection } from '@jupyterlab/services';
 import { IKernelConnection } from '@jupyterlab/services/lib/kernel/kernel';
 import isEqual from 'lodash/isEqual';
 
-import { EPriority, log } from '@monorepo/log';
+import { EPriority, log } from '@holistix/log';
 
 import {
   IOutput,

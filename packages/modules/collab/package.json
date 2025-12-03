@@ -1,5 +1,5 @@
 {
-  "name": "@monorepo/collab",
+  "name": "@holistix/collab",
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.js",

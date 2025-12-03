@@ -1,5 +1,5 @@
-import { icons, UserAvatar } from '@monorepo/ui-base';
-import { TF_User } from '@monorepo/demiurge-types';
+import { icons, UserAvatar } from '@holistix/ui-base';
+import { TF_User } from '@holistix/demiurge-types';
 
 //
 

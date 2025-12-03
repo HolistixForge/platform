@@ -1,9 +1,9 @@
 import './lib/index.scss';
 import { NodeChatbox } from './lib/components/node-chat/node-chatbox';
 import { NodeChatAnchor } from './lib/components/node-chat-anchor/node-chat-anchor';
-import type { TModule } from '@monorepo/module';
-import type { TCollabFrontendExports } from '@monorepo/collab/frontend';
-import type { TSpaceFrontendExports } from '@monorepo/space/frontend';
+import type { TModule } from '@holistix/module';
+import type { TCollabFrontendExports } from '@holistix/collab/frontend';
+import type { TSpaceFrontendExports } from '@holistix/space/frontend';
 
 type TRequired = {
   collab: TCollabFrontendExports;

@@ -1,5 +1,5 @@
 import { ServerConnection } from '@jupyterlab/services';
-import { TJsonArray, TJsonObject } from '@monorepo/simple-types';
+import { TJsonArray, TJsonObject } from '@holistix/simple-types';
 
 //
 

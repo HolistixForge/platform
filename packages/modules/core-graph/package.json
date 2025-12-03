@@ -1,5 +1,5 @@
 {
-  "name": "@monorepo/core-graph",
+  "name": "@holistix/core-graph",
   "version": "0.0.1",
   "nx": {
     "name": "core-graph",

@@ -1,6 +1,6 @@
-import { TEdge } from '@monorepo/core-graph';
-import { TGraphNode, TConnector } from '@monorepo/core-graph';
-import { Listenable } from '@monorepo/simple-types';
+import { TEdge } from '@holistix/core-graph';
+import { TGraphNode, TConnector } from '@holistix/core-graph';
+import { Listenable } from '@holistix/simple-types';
 
 import {
   TNodeView,

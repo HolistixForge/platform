@@ -1,4 +1,4 @@
-import { PostgreSQL } from '@monorepo/backend-engine';
+import { PostgreSQL } from '@holistix/backend-engine';
 import { CONFIG } from '../config';
 
 export const pg = new PostgreSQL(
