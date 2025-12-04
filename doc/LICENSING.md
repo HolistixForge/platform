@@ -122,7 +122,7 @@ Some dependencies may have different terms. See individual package `package.json
 
 ### Q: Is there a trial period for commercial use?
 
-**A:** Yes! We offer evaluation licenses for organizations evaluating Demiurge for commercial use. Contact licensing@demiurge.co to request an evaluation license.
+**A:** Yes! We offer evaluation licenses for organizations evaluating Demiurge for commercial use. Contact contact@holistix.so to request an evaluation license.
 
 ### Q: What about academic research?
 

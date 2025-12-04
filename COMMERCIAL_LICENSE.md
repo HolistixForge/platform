@@ -44,7 +44,7 @@ This license does not include:
 - Maintenance or updates
 - Warranty or indemnification
 
-Support and maintenance services may be available separately. Contact licensing@demiurge.co for details.
+Support and maintenance services may be available separately. Contact contact@holistix.so for details.
 
 ## 6. Term and Termination
 
@@ -60,7 +60,7 @@ IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, 
 
 ## 9. Payment Terms
 
-Commercial licenses are subject to payment terms as agreed upon in a separate commercial license agreement or purchase order. Contact licensing@demiurge.co for pricing and payment terms.
+Commercial licenses are subject to payment terms as agreed upon in a separate commercial license agreement or purchase order. Contact contact@holistix.so for pricing and payment terms.
 
 ## 10. Governing Law
 

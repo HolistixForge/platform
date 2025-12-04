@@ -103,15 +103,11 @@ export const setupOauthRoutes = (router: express.Router) => {
   }
 
   // Get authorization.
-  // https://account-local.demiurge.co/oauth/authorize?client_id=ganymede&redirect_uri=https%3A%2F%2Flocal.demiurge.co&state=caca&response_type=code&scope=email
-  // https://account-local.demiurge.co/oauth/authorize?client_id=ganymede&redirect_uri=https%3A%2F%2Fcaca.demyurge.com&state=caca&response_type=code&scope=email
   router.get('/oauth/authorize', handleAuthorize);
   router.post('/oauth/authorize', handleAuthorize);
 
   //
 
-  // code: curl -X POST http://localhost:8080/oauth/token -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=authorization_code' -d 'client_id=ganymede' -d 'client_secret=ganymede' -d 'code=code_76d93cfb-1031-4e88-a8a0-f4c5bccdb074' -d 'redirect_uri=https://local.demiurge.co' | json_pp
-  // refresh: curl -X POST http://localhost:8080/oauth/token -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=refresh_token' -d 'client_id=ganymede' -d 'client_secret=ganymede' -d 'refresh_token=refresh_token_49e6abbc-8926-49a9-935d-bbc4d4873aa1' | json_pp
   router.post(
     '/oauth/token',
     async function (

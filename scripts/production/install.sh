@@ -35,6 +35,6 @@ apt install -y \
 certbot \
 python3-certbot-nginx
 
-# certbot --nginx --non-interactive --agree-tos --email admin@demiurge.co ${DOMAINS}
+# certbot --nginx --non-interactive --agree-tos --email contact@holistix.so ${DOMAINS}
 
 exit 0

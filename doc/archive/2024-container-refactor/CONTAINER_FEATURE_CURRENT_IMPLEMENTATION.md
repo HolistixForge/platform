@@ -169,7 +169,7 @@ Each gateway is a Docker container running:
 
 **Gateway Hostname Format**: `gw-{instance_id}-{gw_id}.{env}.{domain}`
 
-- Example: `gw-1-2.dev-001.demiurge.co`
+- Example: `gw-1-2.dev-001.your-domain.com`
 
 **Gateway Allocation** (`database/procedures/proc_projects_start.sql`):
 
@@ -347,7 +347,7 @@ location /{project_server_id}/{service_name} {
 
 **Container Service URL**: `https://{gateway_hostname}/{project_server_id}/{service_name}/`
 
-- Example: `https://gw-1-2.dev-001.demiurge.co/42/jupyterlab/`
+- Example: `https://gw-1-2.dev-001.your-domain.com/42/jupyterlab/`
 
 **Problem**: Gateway hostname changes when project switches gateways!
 
@@ -508,11 +508,11 @@ export type TServer = {
 
 **Example Flow**:
 
-1. User creates JupyterLab server, gets URL: `https://gw-1-2.dev-001.demiurge.co/42/jupyterlab/`
+1. User creates JupyterLab server, gets URL: `https://gw-1-2.dev-001.your-domain.com/42/jupyterlab/`
 2. User bookmarks URL, shares with team
 3. Project goes inactive, gateway released
-4. User returns, new gateway assigned: `gw-1-3.dev-001.demiurge.co`
-5. Old URL broken, new URL: `https://gw-1-3.dev-001.demiurge.co/42/jupyterlab/`
+4. User returns, new gateway assigned: `gw-1-3.dev-001.your-domain.com`
+5. Old URL broken, new URL: `https://gw-1-3.dev-001.your-domain.com/42/jupyterlab/`
 6. All bookmarks and shared links invalid
 
 ### 10. Related Systems

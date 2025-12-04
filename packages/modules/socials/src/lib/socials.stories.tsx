@@ -5,7 +5,10 @@ import { SharedTypes } from '@holistix-forge/collab-engine';
 import { EPriority, Logger } from '@holistix-forge/log';
 import { TCoreSharedData } from '@holistix-forge/core-graph';
 import { TSpaceSharedData, defaultGraphView } from '@holistix-forge/space';
-import { STORY_VIEW_ID, StoryDemiurgeSpace } from '@holistix-forge/space/stories';
+import {
+  STORY_VIEW_ID,
+  StoryDemiurgeSpace,
+} from '@holistix-forge/space/stories';
 import { StoryApiContext } from '@holistix-forge/frontend-data';
 import { TCollabBackendExports } from '@holistix-forge/collab';
 
@@ -155,7 +158,7 @@ const loadStoryData = (
       id: 'node-3',
       type: 'iframe',
       data: {
-        src: 'https://www.demiurge.co',
+        src: 'https://www.google.com',
       },
       name: 'Node 3',
       root: true,

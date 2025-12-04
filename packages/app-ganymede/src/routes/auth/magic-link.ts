@@ -47,7 +47,7 @@ passport.use(
     async (req: Req, user: MagicLinkUser, token: string) => {
       log(EPriority.Info, 'ACCOUNT', `Send email to user ${user.email}`);
       const sent = await sendMail({
-        from: 'noreply@demiurge.co',
+        from: 'noreply@holistix.so',
         to: user.email,
         subject: 'Demiurge login link',
         html: mailContent(user, token),

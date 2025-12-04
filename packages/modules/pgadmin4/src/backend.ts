@@ -5,7 +5,7 @@ const containerImagesData = [
   {
     imageId: 'pgadmin:latest',
     imageName: 'pgAdmin 4',
-    imageUri: 'demiurge/pgadmin4',
+    imageUri: 'holistixforge/pgadmin4',
     imageTag: '8.12.0',
     description: 'PostgreSQL administration and development platform',
     category: 'database',

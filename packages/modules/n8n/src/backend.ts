@@ -5,7 +5,7 @@ const containerImagesData = [
   {
     imageId: 'n8n:latest',
     imageName: 'n8n Workflow Automation',
-    imageUri: 'demiurge/n8n',
+    imageUri: 'holistixforge/n8n',
     imageTag: '1.97.1',
     description: 'n8n workflow automation platform',
     category: 'automation',

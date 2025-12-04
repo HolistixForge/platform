@@ -141,7 +141,7 @@ Demiurge is available under a **dual licensing model**:
 - ✅ **Free for:** Personal use, education, research, non-profit organizations
 - ❌ **Requires commercial license:** For-profit businesses, SaaS offerings, government use, commercial integrations
 
-**Not sure which license applies?** See [doc/LICENSING.md](doc/LICENSING.md) for detailed information, or contact **licensing@demiurge.co**
+**Not sure which license applies?** See [doc/LICENSING.md](doc/LICENSING.md) for detailed information, or contact **contact@holistix.so**
 
 ## 🙋 Support
 

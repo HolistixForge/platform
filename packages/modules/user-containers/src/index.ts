@@ -84,7 +84,7 @@ export const moduleBackend: TModule<TRequired, TUserContainersExports> = {
       {
         imageId: 'ubuntu:terminal',
         imageName: 'Ubuntu Terminal',
-        imageUri: 'demiurge/ubuntu-terminal',
+        imageUri: 'holistixforge/ubuntu-terminal',
         imageTag: '24.04',
         description:
           'Minimal Ubuntu 24.04 container exposing only a web-based terminal',

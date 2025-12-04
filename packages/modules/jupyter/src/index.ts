@@ -26,7 +26,7 @@ const containerImagesData = [
   {
     imageId: 'jupyter:minimal',
     imageName: 'JupyterLab Minimal Notebook',
-    imageUri: 'public.ecr.aws/f3g9x7j4/demiurge-jmn',
+    imageUri: 'holistixforge/jupyterlab-minimal',
     imageTag: 'lab-4.2.0',
     imageSha256:
       '210a80d14fe0175c0fefc2b3c9b6ce25f28b58badb7bf80ce7ce2512d7d2f98b',
@@ -52,7 +52,7 @@ const containerImagesData = [
   {
     imageId: 'jupyter:pytorch',
     imageName: 'JupyterLab PyTorch Notebook',
-    imageUri: 'public.ecr.aws/f3g9x7j4/demiurge-jpn',
+    imageUri: 'holistixforge/jupyterlab-pytorch',
     imageTag: 'lab-4.2.0',
     imageSha256:
       '434d01e9b97ed704c366a7d66ea4f285aef3ab040d23761bb67d40749bddd5b0',

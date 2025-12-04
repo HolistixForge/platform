@@ -7,7 +7,7 @@ See [here](https://www.petergirnus.com/blog/how-to-sshfs-on-windows)
 Then
 
 ```powershell
-& 'C:\Program Files\SSHFS-Win\bin\sshfs-win.exe' svc \sshfs.k\ubuntu@dev.dev-001.demiurge.co X:
+& 'C:\Program Files\SSHFS-Win\bin\sshfs-win.exe' svc \sshfs.k\ubuntu@dev.dev-001.your-domain.com X:
 ```
 
 ## use curl (from git install) on windows powershell

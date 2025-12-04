@@ -470,7 +470,7 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
 
 | Aspect         | Development        | Production              |
 | -------------- | ------------------ | ----------------------- |
-| **Domain**     | `domain.local`     | `demiurge.co`           |
+| **Domain**     | `domain.local`     | `your-domain.com`       |
 | **SSL**        | mkcert wildcard    | Let's Encrypt wildcard  |
 | **DNS**        | PowerDNS (local)   | PowerDNS (same)         |
 | **Containers** | Docker (same host) | Docker (same/multi-VPS) |
@@ -480,7 +480,7 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
 **Production deployment:**
 
 ```bash
-export ENV_NAME="prod" DOMAIN="demiurge.co" GATEWAY_POOL_SIZE=10
+export ENV_NAME="prod" DOMAIN="your-domain.com" GATEWAY_POOL_SIZE=10
 ./scripts/local-dev/setup-all.sh
 ./scripts/local-dev/create-env.sh ${ENV_NAME} ${DOMAIN}
 # Update nginx SSL to Let's Encrypt certs
@@ -500,6 +500,7 @@ export ENV_NAME="prod" DOMAIN="demiurge.co" GATEWAY_POOL_SIZE=10
 5. New code running (~10 seconds total)
 
 **Implementation:**
+
 - No file watching - triggered via `docker exec`
 - Fetch new build from HTTP server
 - Restart Node.js process automatically
