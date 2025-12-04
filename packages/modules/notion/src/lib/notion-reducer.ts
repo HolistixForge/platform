@@ -1,14 +1,14 @@
 import { Client } from '@notionhq/client';
 
-import { TCoreSharedData } from '@holistix/core-graph';
-import { makeUuid, toUuid } from '@holistix/simple-types';
+import { TCoreSharedData } from '@holistix-forge/core-graph';
+import { makeUuid, toUuid } from '@holistix-forge/simple-types';
 import {
   Reducer,
   RequestData,
   TEventPeriodic,
   TReducersBackendExports,
-} from '@holistix/reducers';
-import { TCollabBackendExports } from '@holistix/collab';
+} from '@holistix-forge/reducers';
+import { TCollabBackendExports } from '@holistix-forge/collab';
 
 import {
   TEventCreatePage,

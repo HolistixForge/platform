@@ -1,4 +1,4 @@
-import { TApi_Project } from '@holistix/types';
+import { TApi_Project } from '@holistix-forge/types';
 
 export type ProjectState =
   | {

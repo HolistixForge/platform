@@ -1,19 +1,19 @@
 import { spawnSync } from 'child_process';
-import { TJson } from '@holistix/simple-types';
-import { EPriority, log } from '@holistix/log';
-import type { TModule } from '@holistix/module';
-import { TMyfetchRequest } from '@holistix/simple-types';
-import { myfetch } from '@holistix/backend-engine';
-import { TReducersBackendExports } from '@holistix/reducers';
-import { TCollabBackendExports } from '@holistix/collab';
-import type { TGatewayExports, TGatewaySharedData } from '@holistix/gateway';
+import { TJson } from '@holistix-forge/simple-types';
+import { EPriority, log } from '@holistix-forge/log';
+import type { TModule } from '@holistix-forge/module';
+import { TMyfetchRequest } from '@holistix-forge/simple-types';
+import { myfetch } from '@holistix-forge/backend-engine';
+import { TReducersBackendExports } from '@holistix-forge/reducers';
+import { TCollabBackendExports } from '@holistix-forge/collab';
+import type { TGatewayExports, TGatewaySharedData } from '@holistix-forge/gateway';
 
 import { GatewayReducer } from './gateway-reducer';
 import type {
   PermissionManager,
   OAuthManager,
   TokenManager,
-} from '@holistix/gateway';
+} from '@holistix-forge/gateway';
 import { DNSManagerImpl } from '../dns/DNSManager';
 
 /**
@@ -23,7 +23,7 @@ import { DNSManagerImpl } from '../dns/DNSManager';
 import {
   PermissionRegistry,
   ProtectedServiceRegistry,
-} from '@holistix/gateway';
+} from '@holistix-forge/gateway';
 
 export type GatewayModuleConfig = {
   organization_id: string;

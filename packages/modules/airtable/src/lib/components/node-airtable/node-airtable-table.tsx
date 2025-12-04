@@ -1,18 +1,18 @@
 import './airtable-table.scss';
 import { TAirtableTable, TAirtableField } from '../../airtable-types';
 import React, { useCallback, useEffect, useMemo } from 'react';
-import { TGraphNode } from '@holistix/core-graph';
+import { TGraphNode } from '@holistix-forge/core-graph';
 import {
   TValidSharedDataToCopy,
   useLocalSharedData,
-} from '@holistix/collab/frontend';
-import { useDispatcher } from '@holistix/reducers/frontend';
+} from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
 import {
   DisableZoomDragPan,
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@holistix/space/frontend';
+} from '@holistix-forge/space/frontend';
 import { TAirtableSharedData } from '../../airtable-shared-model';
 import AirtableTableKanban from './airtable-table-kanban';
 import AirtableTableGallery from './airtable-table-gallery';
@@ -22,7 +22,7 @@ import {
   detectStatusField,
   detectPriorityField,
 } from '../../utils/field-detection';
-import { TJsonObject } from '@holistix/simple-types';
+import { TJsonObject } from '@holistix-forge/simple-types';
 
 //
 

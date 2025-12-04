@@ -2,8 +2,8 @@ import { Router, Request } from 'express';
 import { asyncHandler } from '../middleware/route-handler';
 import { authenticateJwt } from '../middleware/jwt-auth';
 import { getGatewayInstances } from '../initialization/gateway-instances';
-import { EPriority, log } from '@holistix/log';
-import type { ProtectedServiceRequestContext } from '@holistix/gateway';
+import { EPriority, log } from '@holistix-forge/log';
+import type { ProtectedServiceRequestContext } from '@holistix-forge/gateway';
 
 /**
  * Build a generic ProtectedServiceRequestContext from an Express request.

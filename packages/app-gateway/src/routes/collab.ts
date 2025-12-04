@@ -1,7 +1,7 @@
 import { Router, Request } from 'express';
-import { BackendEventProcessor } from '@holistix/reducers';
-import { EPriority, log, NotFoundException } from '@holistix/log';
-import { myfetch } from '@holistix/backend-engine';
+import { BackendEventProcessor } from '@holistix-forge/reducers';
+import { EPriority, log, NotFoundException } from '@holistix-forge/log';
+import { myfetch } from '@holistix-forge/backend-engine';
 import { asyncHandler } from '../middleware/route-handler';
 import { VPN } from '../config/organization';
 import { CONFIG } from '../config';

@@ -7,7 +7,7 @@
  */
 
 import axios, { AxiosInstance } from 'axios';
-import { EPriority, log } from '@holistix/log';
+import { EPriority, log } from '@holistix-forge/log';
 import { makeOrgGatewayHostname } from '../lib/url-helpers';
 
 export interface PowerDNSRecord {

@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { useLocalSharedData } from '@holistix/collab/frontend';
-import { TUserContainersSharedData } from '@holistix/user-containers';
-import { TCoreSharedData } from '@holistix/core-graph';
-import type { TModule } from '@holistix/module';
-import type { TCollabBackendExports } from '@holistix/collab';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { TUserContainersSharedData } from '@holistix-forge/user-containers';
+import { TCoreSharedData } from '@holistix-forge/core-graph';
+import type { TModule } from '@holistix-forge/module';
+import type { TCollabBackendExports } from '@holistix-forge/collab';
 
 //
 

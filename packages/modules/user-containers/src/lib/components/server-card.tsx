@@ -17,7 +17,7 @@ import {
   DialogControlled,
   ButtonBase,
   ClickStopPropagation,
-} from '@holistix/ui-base';
+} from '@holistix-forge/ui-base';
 
 import { UserContainerSystemInfo, serviceUrl } from '../servers-types';
 import { StatusLed } from './status-led';

@@ -1,7 +1,7 @@
-import { useRegisterListener } from '@holistix/ui-toolkit/frontend';
+import { useRegisterListener } from '@holistix-forge/ui-toolkit/frontend';
 
 import { JLsManager, TKernelPack } from './front/jls-manager';
-import { useModuleExports } from '@holistix/module/frontend';
+import { useModuleExports } from '@holistix-forge/module/frontend';
 import { TJupyterFrontendExports } from '../frontend';
 
 //

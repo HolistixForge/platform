@@ -1,12 +1,12 @@
-import type { TModule } from '@holistix/module';
-import { SharedMap } from '@holistix/collab-engine';
+import type { TModule } from '@holistix-forge/module';
+import { SharedMap } from '@holistix-forge/collab-engine';
 
 import { SpaceReducer } from './lib/space-reducer';
 import { TGraphView } from './lib/space-types';
-import { TCollabBackendExports } from '@holistix/collab';
-import { TReducersBackendExports } from '@holistix/reducers';
-import { TGatewayExports } from '@holistix/gateway';
-import { TCoreSharedData } from '@holistix/core-graph';
+import { TCollabBackendExports } from '@holistix-forge/collab';
+import { TReducersBackendExports } from '@holistix-forge/reducers';
+import { TGatewayExports } from '@holistix-forge/gateway';
+import { TCoreSharedData } from '@holistix-forge/core-graph';
 
 export type TSpaceSharedData = {
   'space:graphViews': SharedMap<TGraphView>;

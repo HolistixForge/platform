@@ -1,9 +1,9 @@
 import crypto from 'crypto';
 import { Req, UserSerializedInfo } from '../types';
-import { myfetch } from '@holistix/backend-engine';
-import { EPriority, log } from '@holistix/log';
+import { myfetch } from '@holistix-forge/backend-engine';
+import { EPriority, log } from '@holistix-forge/log';
 import { pg } from '../database/pg';
-import { CurrentUserDetails } from '@holistix/types';
+import { CurrentUserDetails } from '@holistix-forge/types';
 
 //
 //

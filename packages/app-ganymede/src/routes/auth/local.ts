@@ -9,9 +9,9 @@ import {
   Exception,
   ForbiddenException,
   UnknownException,
-} from '@holistix/log';
-import { jwtPayload, respond } from '@holistix/backend-engine';
-import { TJson } from '@holistix/simple-types';
+} from '@holistix-forge/log';
+import { jwtPayload, respond } from '@holistix-forge/backend-engine';
+import { TJson } from '@holistix-forge/simple-types';
 
 import { verifyPassword } from '../../models/users';
 import {

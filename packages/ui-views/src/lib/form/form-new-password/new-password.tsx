@@ -4,8 +4,8 @@ import {
   FormError,
   FormErrors,
   TextFieldset,
-} from '@holistix/ui-base';
-import { NewPasswordFormData } from '@holistix/frontend-data';
+} from '@holistix-forge/ui-base';
+import { NewPasswordFormData } from '@holistix-forge/frontend-data';
 
 //
 

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { useAction } from '@holistix/ui-base';
-import { TotpEnableFormData, TotpLoginFormData } from '@holistix/frontend-data';
+import { useAction } from '@holistix-forge/ui-base';
+import { TotpEnableFormData, TotpLoginFormData } from '@holistix-forge/frontend-data';
 
 import { TotpSetupForm, TotpSetupFormProps } from './totp';
 

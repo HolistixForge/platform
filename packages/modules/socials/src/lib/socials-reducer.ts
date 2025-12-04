@@ -1,10 +1,10 @@
-import { TCoreSharedData } from '@holistix/core-graph';
-import { Reducer, RequestData } from '@holistix/reducers';
-import { makeUuid } from '@holistix/simple-types';
-import { UserException } from '@holistix/log';
-import type { TReducersBackendExports } from '@holistix/reducers';
-import { TCollabBackendExports } from '@holistix/collab';
-import { TGatewayExports } from '@holistix/gateway';
+import { TCoreSharedData } from '@holistix-forge/core-graph';
+import { Reducer, RequestData } from '@holistix-forge/reducers';
+import { makeUuid } from '@holistix-forge/simple-types';
+import { UserException } from '@holistix-forge/log';
+import type { TReducersBackendExports } from '@holistix-forge/reducers';
+import { TCollabBackendExports } from '@holistix-forge/collab';
+import { TGatewayExports } from '@holistix-forge/gateway';
 
 import {
   TEventSocials,

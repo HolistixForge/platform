@@ -2,11 +2,11 @@ import {
   Reducer,
   RequestData,
   TReducersBackendExports,
-} from '@holistix/reducers';
-import { makeUuid } from '@holistix/simple-types';
-import { TCoreSharedData } from '@holistix/core-graph';
-import { TCollabBackendExports } from '@holistix/collab';
-import { TSpaceSharedData } from '@holistix/space';
+} from '@holistix-forge/reducers';
+import { makeUuid } from '@holistix-forge/simple-types';
+import { TCoreSharedData } from '@holistix-forge/core-graph';
+import { TCollabBackendExports } from '@holistix-forge/collab';
+import { TSpaceSharedData } from '@holistix-forge/space';
 
 import {
   TChatEvent,

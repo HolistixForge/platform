@@ -1,5 +1,5 @@
 {
-  "name": "@holistix/log",
+  "name": "@holistix-forge/log",
   "version": "0.0.1",
   "type": "module",
   "private": true,
@@ -20,6 +20,6 @@
   "nx": {
     "sourceRoot": "packages/log/src",
     "projectType": "library",
-    "name": "@holistix/log"
+    "name": "@holistix-forge/log"
   }
 }

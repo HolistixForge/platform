@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 
-import { makeUuid } from '@holistix/simple-types';
+import { makeUuid } from '@holistix-forge/simple-types';
 import { FrontendDispatcher } from './dispatchers';
 import { SequenceEvent } from './backendEventSequence';
 import { TBaseEvent } from '..';

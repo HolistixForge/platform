@@ -1,5 +1,5 @@
-import { useMutationDeleteProject } from '@holistix/frontend-data';
-import { ButtonBase, useAction } from '@holistix/ui-base';
+import { useMutationDeleteProject } from '@holistix-forge/frontend-data';
+import { ButtonBase, useAction } from '@holistix-forge/ui-base';
 
 //
 

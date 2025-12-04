@@ -1,8 +1,8 @@
 {
-  "name": "@holistix/chats",
+  "name": "@holistix-forge/chats",
   "version": "0.0.1",
   "nx": {
-    "name": "@holistix/chats",
+    "name": "@holistix-forge/chats",
     "projectType": "library",
     "sourceRoot": "packages/modules/chats/src"
   },

@@ -1,14 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useEffect, useState } from 'react';
 
-import { EPriority, Logger } from '@holistix/log';
+import { EPriority, Logger } from '@holistix-forge/log';
 import {
   TUserContainersEvents,
   TUserContainersSharedData,
-} from '@holistix/user-containers';
-import { useLocalSharedData } from '@holistix/collab/frontend';
-import { useDispatcher } from '@holistix/reducers/frontend';
-import { ButtonBase, SelectFieldset, SelectItem } from '@holistix/ui-base';
+} from '@holistix-forge/user-containers';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
+import { ButtonBase, SelectFieldset, SelectItem } from '@holistix-forge/ui-base';
 
 import { TJupyterEvent } from '../../jupyter-events';
 import {

@@ -4,18 +4,18 @@ import {
   Reducer,
   RequestData,
   TReducersBackendExports,
-} from '@holistix/reducers';
-import { TJsonArray, makeUuid } from '@holistix/simple-types';
-import { NotFoundException } from '@holistix/log';
-import { TCollabBackendExports } from '@holistix/collab';
+} from '@holistix-forge/reducers';
+import { TJsonArray, makeUuid } from '@holistix-forge/simple-types';
+import { NotFoundException } from '@holistix-forge/log';
+import { TCollabBackendExports } from '@holistix-forge/collab';
 import {
   TUserContainersSharedData,
   userContainerNodeId,
   TEventNew,
   TEventDelete,
   TUserContainersExports,
-} from '@holistix/user-containers';
-import { TCoreSharedData } from '@holistix/core-graph';
+} from '@holistix-forge/user-containers';
+import { TCoreSharedData } from '@holistix-forge/core-graph';
 
 import {
   TJupyterEvent,

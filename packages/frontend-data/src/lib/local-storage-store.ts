@@ -1,4 +1,4 @@
-import { TJson } from '@holistix/simple-types';
+import { TJson } from '@holistix-forge/simple-types';
 import { browserLog } from './browser-log';
 
 const debug = (k: Key, msg: string, ...args: any) =>

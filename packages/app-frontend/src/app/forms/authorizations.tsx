@@ -3,15 +3,15 @@ import {
   useMutationUserScope as useMutationUserPermissions,
   useQueryScope,
   useQueryUsersSearch,
-} from '@holistix/frontend-data';
+} from '@holistix-forge/frontend-data';
 import {
   UsersScopes,
   UsersScopesLogicProps,
   UsersScopesProps,
-} from '@holistix/ui-base';
+} from '@holistix-forge/ui-base';
 import { useCallback, useState } from 'react';
 import { useProject } from '../pages/project/project-context';
-import { TCollaborator, TF_User } from '@holistix/types';
+import { TCollaborator, TF_User } from '@holistix-forge/types';
 
 //
 

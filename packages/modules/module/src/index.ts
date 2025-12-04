@@ -1,4 +1,4 @@
-import { log, EPriority } from '@holistix/log';
+import { log, EPriority } from '@holistix-forge/log';
 
 export type TModule<TRequired = object, TExports = object> = {
   name: string;

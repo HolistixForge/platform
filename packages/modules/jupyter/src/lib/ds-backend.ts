@@ -1,8 +1,8 @@
-import { TUserContainer, serviceUrl } from '@holistix/user-containers';
+import { TUserContainer, serviceUrl } from '@holistix-forge/user-containers';
 
 import { TJupyterServerData, TUserContainerSettings } from './jupyter-types';
 import { JupyterlabDriver } from './driver';
-import { SharedMap } from '@holistix/collab-engine';
+import { SharedMap } from '@holistix-forge/collab-engine';
 
 //
 

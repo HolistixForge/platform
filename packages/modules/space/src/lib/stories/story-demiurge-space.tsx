@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
-import { useLocalSharedData } from '@holistix/collab/frontend';
-import { useDispatcher } from '@holistix/reducers/frontend';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
 
 import { DemiurgeSpace } from '../components/demiurge-space';
 import { TSpaceSharedData } from '../..';

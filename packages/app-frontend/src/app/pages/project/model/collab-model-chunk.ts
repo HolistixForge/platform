@@ -1,19 +1,19 @@
 import {
   useLocalSharedData as useLocalSharedDataOriginal,
   TValidSharedDataToCopy,
-} from '@holistix/collab/frontend';
-import { useDispatcher as useDispatcherOriginal } from '@holistix/reducers/frontend';
-import { TCoreSharedData, TCoreEvent } from '@holistix/core-graph';
-import { TabPayload, TTabEvents, TTabsSharedData } from '@holistix/tabs';
-import { TSpaceSharedData, TSpaceEvent } from '@holistix/space';
-import { TChatEvent, TChatSharedData } from '@holistix/chats';
+} from '@holistix-forge/collab/frontend';
+import { useDispatcher as useDispatcherOriginal } from '@holistix-forge/reducers/frontend';
+import { TCoreSharedData, TCoreEvent } from '@holistix-forge/core-graph';
+import { TabPayload, TTabEvents, TTabsSharedData } from '@holistix-forge/tabs';
+import { TSpaceSharedData, TSpaceEvent } from '@holistix-forge/space';
+import { TChatEvent, TChatSharedData } from '@holistix-forge/chats';
 import {
   TUserContainersEvents,
   TUserContainersSharedData,
-} from '@holistix/user-containers';
-import { TJupyterEvent, TJupyterSharedData } from '@holistix/jupyter';
-import { TEventSocials } from '@holistix/socials';
-import { TNotionEvent } from '@holistix/notion';
+} from '@holistix-forge/user-containers';
+import { TJupyterEvent, TJupyterSharedData } from '@holistix-forge/jupyter';
+import { TEventSocials } from '@holistix-forge/socials';
+import { TNotionEvent } from '@holistix-forge/notion';
 
 //
 

@@ -1,6 +1,6 @@
 // Initialize OpenTelemetry BEFORE any other imports
 // This ensures auto-instrumentation works correctly
-import { initializeNodeObservability } from '@holistix/observability';
+import { initializeNodeObservability } from '@holistix-forge/observability';
 initializeNodeObservability({
   serviceName: process.env.OTEL_SERVICE_NAME || 'ganymede',
   environment: process.env.OTEL_DEPLOYMENT_ENVIRONMENT,
@@ -10,12 +10,12 @@ import './declarations.d.ts';
 import express from 'express';
 import expressSession from 'express-session';
 import passport from 'passport';
-import { NotFoundException } from '@holistix/log';
+import { NotFoundException } from '@holistix-forge/log';
 import {
   setupBasicExpressApp,
   setupErrorsHandler,
   setupValidator,
-} from '@holistix/backend-engine';
+} from '@holistix-forge/backend-engine';
 
 import { CONFIG } from './config';
 import { PgSessionModel } from './models/session';
@@ -40,7 +40,7 @@ import { setupUserRoutes } from './routes/users';
 const app = express();
 app.set('trust proxy', 1);
 
-// Observability is now handled by @holistix/observability package
+// Observability is now handled by @holistix-forge/observability package
 // Auto-instrumentation will automatically create spans for Express requests
 setupBasicExpressApp(app);
 

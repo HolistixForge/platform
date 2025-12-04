@@ -7,9 +7,9 @@ import {
   TagsBarProps,
   SelectFieldset,
   SelectItem,
-} from '@holistix/ui-base';
-import { StatusLed } from '@holistix/user-containers/frontend';
-import { TF_User } from '@holistix/types';
+} from '@holistix-forge/ui-base';
+import { StatusLed } from '@holistix-forge/user-containers/frontend';
+import { TF_User } from '@holistix-forge/types';
 
 //
 

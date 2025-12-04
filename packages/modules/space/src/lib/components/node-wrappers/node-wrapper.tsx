@@ -17,13 +17,13 @@ import {
 } from '@xyflow/react';
 import { useHotkeys } from 'react-hotkeys-hook';
 
-import { useDebugComponent } from '@holistix/ui-toolkit/frontend';
+import { useDebugComponent } from '@holistix-forge/ui-toolkit/frontend';
 
 import {
   useAwarenessSelections,
   useAwareness,
-} from '@holistix/collab/frontend';
-import { useDispatcher } from '@holistix/reducers/frontend';
+} from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
 
 import { TNodeContext } from '../apis/types/node';
 import { SelectionsAwareness } from './selection-awareness';

@@ -7,14 +7,14 @@ import {
   TrashIcon,
 } from '@radix-ui/react-icons';
 
-import { sleep } from '@holistix/simple-types';
+import { sleep } from '@holistix-forge/simple-types';
 import {
   icons,
   ButtonIcon,
   ButtonIconProps,
   useAction,
-} from '@holistix/ui-base';
-import { useDispatcher } from '@holistix/reducers/frontend';
+} from '@holistix-forge/ui-base';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
 
 import { icons as icons2 } from '../inputsOutputs/icons';
 import { DisableZoomDragPan } from '../../node-wrappers/disable-zoom-drag-pan';

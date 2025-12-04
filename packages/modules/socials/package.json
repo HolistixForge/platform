@@ -1,8 +1,8 @@
 {
-  "name": "@holistix/socials",
+  "name": "@holistix-forge/socials",
   "version": "0.0.1",
   "nx": {
-    "name": "@holistix/socials",
+    "name": "@holistix-forge/socials",
     "projectType": "library",
     "sourceRoot": "packages/modules/socials/src"
   },

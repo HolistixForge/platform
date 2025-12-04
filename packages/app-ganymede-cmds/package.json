@@ -1,9 +1,9 @@
 {
-  "name": "@holistix/app-ganymede-cmds",
+  "name": "@holistix-forge/app-ganymede-cmds",
   "version": "0.0.1",
   "private": true,
   "nx": {
-    "name": "@holistix/app-ganymede-cmds",
+    "name": "@holistix-forge/app-ganymede-cmds",
     "projectType": "application",
     "sourceRoot": "packages/app-ganymede-cmds/src",
     "targets": {

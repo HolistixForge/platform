@@ -1,5 +1,5 @@
 export default {
-  displayName: '@holistix/n8n',
+  displayName: '@holistix-forge/n8n',
   preset: '../../../jest.preset.js',
   transform: {
     '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',

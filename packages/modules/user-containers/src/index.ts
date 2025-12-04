@@ -1,11 +1,11 @@
 import { UserContainersReducer } from './lib/servers-reducer';
 import { ContainerImageRegistry } from './lib/image-registry';
-import type { TModule } from '@holistix/module';
-import type { TCollabBackendExports } from '@holistix/collab';
-import type { TReducersBackendExports } from '@holistix/reducers';
-import type { TGatewayExports } from '@holistix/gateway';
+import type { TModule } from '@holistix-forge/module';
+import type { TCollabBackendExports } from '@holistix-forge/collab';
+import type { TReducersBackendExports } from '@holistix-forge/reducers';
+import type { TGatewayExports } from '@holistix-forge/gateway';
 import type { TUserContainersSharedData } from './lib/servers-shared-model';
-import type { TCoreSharedData } from '@holistix/core-graph';
+import type { TCoreSharedData } from '@holistix-forge/core-graph';
 import type {
   TContainerImageInfo,
   TContainerImageDefinition,

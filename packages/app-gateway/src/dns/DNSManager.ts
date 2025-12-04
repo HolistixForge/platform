@@ -4,9 +4,9 @@
  * Manages DNS records via Ganymede API.
  */
 
-import { DNSManager } from '@holistix/gateway';
-import { TMyfetchRequest } from '@holistix/simple-types';
-import { log, EPriority } from '@holistix/log';
+import { DNSManager } from '@holistix-forge/gateway';
+import { TMyfetchRequest } from '@holistix-forge/simple-types';
+import { log, EPriority } from '@holistix-forge/log';
 
 /**
  * DNS Manager Implementation

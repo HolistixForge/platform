@@ -1,7 +1,7 @@
-import { UserUsername } from '@holistix/ui-base';
+import { UserUsername } from '@holistix-forge/ui-base';
 
 import './cursor.scss';
-import { TF_User } from '@holistix/types';
+import { TF_User } from '@holistix-forge/types';
 
 type CursorProps = {
   fill: 'transparent' | 'color';

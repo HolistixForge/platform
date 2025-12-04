@@ -1,13 +1,13 @@
-import { EPriority, log } from '@holistix/log';
-import { inSeconds, isPassed } from '@holistix/simple-types';
-import { Reducer, TEventPeriodic } from '@holistix/reducers';
-import { TCollabBackendExports } from '@holistix/collab';
-import type { TGatewayExports, TGatewaySharedData } from '@holistix/gateway';
+import { EPriority, log } from '@holistix-forge/log';
+import { inSeconds, isPassed } from '@holistix-forge/simple-types';
+import { Reducer, TEventPeriodic } from '@holistix-forge/reducers';
+import { TCollabBackendExports } from '@holistix-forge/collab';
+import type { TGatewayExports, TGatewaySharedData } from '@holistix-forge/gateway';
 import type {
   TGatewayEvents,
   TEventLoad,
   TEventDisableShutdown,
-} from '@holistix/gateway';
+} from '@holistix-forge/gateway';
 import { shutdownGateway } from '../initialization/gateway-init';
 import { runScript } from './module';
 

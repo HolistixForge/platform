@@ -1,4 +1,4 @@
-import { TCollaborator, TF_User } from '@holistix/types';
+import { TCollaborator, TF_User } from '@holistix-forge/types';
 import { randomGuys } from '../utils/random-guys';
 import { useCallback, useEffect, useState } from 'react';
 

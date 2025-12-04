@@ -10,7 +10,7 @@ const swcJestConfig = JSON.parse(
 swcJestConfig.swcrc = false;
 
 export default {
-  displayName: '@holistix/browser-proxy-app',
+  displayName: '@holistix-forge/browser-proxy-app',
   preset: '../../../jest.preset.js',
   testEnvironment: 'node',
   transform: {

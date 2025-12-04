@@ -1,6 +1,6 @@
-import { TEdge } from '@holistix/core-graph';
-import { TGraphNode, TConnector } from '@holistix/core-graph';
-import { Listenable } from '@holistix/simple-types';
+import { TEdge } from '@holistix-forge/core-graph';
+import { TGraphNode, TConnector } from '@holistix-forge/core-graph';
+import { Listenable } from '@holistix-forge/simple-types';
 
 import {
   TNodeView,

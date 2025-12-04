@@ -1,7 +1,7 @@
-import { TModule } from '@holistix/module';
+import { TModule } from '@holistix-forge/module';
 import { TBaseEvent } from '.';
 import { FrontendDispatcher } from './lib/dispatchers';
-import { ApiFetch } from '@holistix/api-fetch';
+import { ApiFetch } from '@holistix-forge/api-fetch';
 
 export type TReducersFrontendExports<TE extends TBaseEvent = TBaseEvent> = {
   dispatcher: FrontendDispatcher<TE>;

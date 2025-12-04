@@ -6,8 +6,8 @@ import {
   TextFieldset,
   TAction,
   ButtonBase,
-} from '@holistix/ui-base';
-import { SignupFormData } from '@holistix/frontend-data';
+} from '@holistix-forge/ui-base';
+import { SignupFormData } from '@holistix-forge/frontend-data';
 
 //
 

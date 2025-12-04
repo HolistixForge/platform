@@ -1,8 +1,8 @@
 {
-  "name": "@holistix/collab-engine",
+  "name": "@holistix-forge/collab-engine",
   "version": "0.0.1",
   "nx": {
-    "name": "@holistix/collab-engine",
+    "name": "@holistix-forge/collab-engine",
     "projectType": "library",
     "sourceRoot": "packages/collab-engine/src"
   },

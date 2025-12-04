@@ -13,7 +13,7 @@ import { UserInline } from '../users/users';
 import { TextFieldset } from '../form/form-fields/text-fieldset';
 import { useAction } from '../buttons/useAction';
 import { ButtonBase } from '../buttons/buttonBase';
-import { TCollaborator, TF_User } from '@holistix/types';
+import { TCollaborator, TF_User } from '@holistix-forge/types';
 
 import './users-scopes.scss';
 

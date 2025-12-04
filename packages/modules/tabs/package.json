@@ -1,8 +1,8 @@
 {
-  "name": "@holistix/tabs",
+  "name": "@holistix-forge/tabs",
   "version": "0.0.1",
   "nx": {
-    "name": "@holistix/tabs",
+    "name": "@holistix-forge/tabs",
     "projectType": "library",
     "sourceRoot": "packages/modules/tabs/src"
   },

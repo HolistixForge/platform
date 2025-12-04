@@ -6,13 +6,13 @@ import {
   FormErrors,
   useAction,
   DialogControlled,
-} from '@holistix/ui-base';
-import { useQueryUsersSearch } from '@holistix/frontend-data';
-import { UserListItem } from '@holistix/ui-base';
-import { TF_User } from '@holistix/types';
-import { useDispatcher } from '@holistix/reducers/frontend';
+} from '@holistix-forge/ui-base';
+import { useQueryUsersSearch } from '@holistix-forge/frontend-data';
+import { UserListItem } from '@holistix-forge/ui-base';
+import { TF_User } from '@holistix-forge/types';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
 import { TEventSocials } from '../socials-events';
-import { TPosition } from '@holistix/core-graph';
+import { TPosition } from '@holistix-forge/core-graph';
 
 //
 

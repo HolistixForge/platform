@@ -1,7 +1,7 @@
-import { EPriority, log } from '@holistix/log';
+import { EPriority, log } from '@holistix-forge/log';
 import { IPersistenceProvider } from '../state/IPersistenceProvider';
-import type { TOAuthClient, TOAuthCode, TOAuthToken } from '@holistix/gateway';
-import { OAuthManager as AbstractOAuthManager } from '@holistix/gateway';
+import type { TOAuthClient, TOAuthCode, TOAuthToken } from '@holistix-forge/gateway';
+import { OAuthManager as AbstractOAuthManager } from '@holistix-forge/gateway';
 
 /**
  * OAuthManager - OAuth Data Management

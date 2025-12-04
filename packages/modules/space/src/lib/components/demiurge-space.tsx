@@ -8,19 +8,19 @@ import {
   TCoreSharedData,
   TEventNewEdge,
   TEdgeEnd,
-} from '@holistix/core-graph';
-import { TGraphNode } from '@holistix/core-graph';
+} from '@holistix-forge/core-graph';
+import { TGraphNode } from '@holistix-forge/core-graph';
 import {
   useLocalSharedData,
   useLocalSharedDataManager,
   useAwareness,
   TOverrideFunction,
   TValidSharedDataToCopy,
-} from '@holistix/collab/frontend';
+} from '@holistix-forge/collab/frontend';
 import {
   useDispatcher,
   FrontendEventSequence,
-} from '@holistix/reducers/frontend';
+} from '@holistix-forge/reducers/frontend';
 
 import { PanelComponent, TSpaceFrontendExports } from '../../frontend';
 import { TSpaceMenuEntries } from '../space-menu';
@@ -50,7 +50,7 @@ import {
   TLayerTreeItem,
   TLayerTreeCollection,
 } from '../layer-tree-types';
-import { useModuleExports } from '@holistix/module/frontend';
+import { useModuleExports } from '@holistix-forge/module/frontend';
 
 //
 

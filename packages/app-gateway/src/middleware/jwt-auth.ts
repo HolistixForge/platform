@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
-import { jwtPayload } from '@holistix/backend-engine';
-import { ForbiddenException } from '@holistix/log';
+import { jwtPayload } from '@holistix-forge/backend-engine';
+import { ForbiddenException } from '@holistix-forge/log';
 import { asyncHandler } from './route-handler';
-import type { TJwtUser, TJwtGateway } from '@holistix/types';
+import type { TJwtUser, TJwtGateway } from '@holistix-forge/types';
 import { trace } from '@opentelemetry/api';
 
 // Import TJwtOrganization directly from the file since it's not exported from index
-import type { TJwtOrganization } from '@holistix/types/src/lib/jwt/jwt';
+import type { TJwtOrganization } from '@holistix-forge/types/src/lib/jwt/jwt';
 import { getGatewayInstances } from '../initialization/gateway-instances';
 
 /**

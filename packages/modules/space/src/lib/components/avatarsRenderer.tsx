@@ -1,5 +1,5 @@
 import { AvatarStore } from './apis/avatarStore';
-import { useRegisterListener } from '@holistix/ui-toolkit/frontend';
+import { useRegisterListener } from '@holistix-forge/ui-toolkit/frontend';
 //
 
 export const AvatarsRenderer = ({

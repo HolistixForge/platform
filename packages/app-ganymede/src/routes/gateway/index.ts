@@ -7,13 +7,13 @@ import {
   OrganizationAuthRequest,
 } from '../../middleware/auth';
 import { pg } from '../../database/pg';
-import { generateJwtToken } from '@holistix/backend-engine';
+import { generateJwtToken } from '@holistix-forge/backend-engine';
 import { asyncHandler, AuthRequest } from '../../middleware/route-handler';
 import { setupGatewayDataRoutes } from './data';
 import { setupGatewayDNSRoutes } from './dns';
 import { powerDNS } from '../../services/powerdns-client';
 import { nginxManager } from '../../services/nginx-manager';
-import { EPriority, log } from '@holistix/log';
+import { EPriority, log } from '@holistix-forge/log';
 import {
   makeOrgGatewayHostname,
   makeOrgGatewayUrl,

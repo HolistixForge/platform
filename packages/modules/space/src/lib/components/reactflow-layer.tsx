@@ -24,25 +24,25 @@ import {
   OnMove,
 } from '@xyflow/react';
 
-import { TJsonObject } from '@holistix/simple-types';
-import { useRegisterListener } from '@holistix/ui-toolkit/frontend';
-import { clientXY } from '@holistix/ui-toolkit';
+import { TJsonObject } from '@holistix-forge/simple-types';
+import { useRegisterListener } from '@holistix-forge/ui-toolkit/frontend';
+import { clientXY } from '@holistix-forge/ui-toolkit';
 import {
   TPosition,
   TEdge,
   TEdgeEnd,
   EEdgeSemanticType,
-} from '@holistix/core-graph';
+} from '@holistix-forge/core-graph';
 import {
   useAwareness,
   TValidSharedDataToCopy,
   useLocalSharedDataManager,
   TOverrideFunction,
-} from '@holistix/collab/frontend';
+} from '@holistix-forge/collab/frontend';
 import {
   FrontendEventSequence,
   useDispatcher,
-} from '@holistix/reducers/frontend';
+} from '@holistix-forge/reducers/frontend';
 
 import { PointerTracker } from './PointerTracker';
 import { NodeWrapper } from './node-wrappers/node-wrapper';

@@ -1,13 +1,13 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
 import { CONFIG } from '../config';
-import { ForbiddenException } from '@holistix/log';
+import { ForbiddenException } from '@holistix-forge/log';
 import { trace } from '@opentelemetry/api';
 import {
   TJwtGateway,
   TJwtOrganization,
   TJwtUser,
-} from '@holistix/types';
+} from '@holistix-forge/types';
 
 export interface AuthRequest extends Request {
   user: {

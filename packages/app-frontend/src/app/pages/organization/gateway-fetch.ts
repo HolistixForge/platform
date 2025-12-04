@@ -1,6 +1,6 @@
-import { ApiFetch } from '@holistix/api-fetch';
-import { GanymedeApi } from '@holistix/frontend-data';
-import { TMyfetchRequest } from '@holistix/simple-types';
+import { ApiFetch } from '@holistix-forge/api-fetch';
+import { GanymedeApi } from '@holistix-forge/frontend-data';
+import { TMyfetchRequest } from '@holistix-forge/simple-types';
 
 /**
  * Create an ApiFetch instance that routes to gateway

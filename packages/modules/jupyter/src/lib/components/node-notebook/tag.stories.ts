@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { playAdd__hover } from '@holistix/ui-base';
+import { playAdd__hover } from '@holistix-forge/ui-base';
 
 import { Tag } from './tag';
 

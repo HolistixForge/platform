@@ -5,14 +5,14 @@ import {
   DialogControlled,
   useAction,
   ButtonBase,
-} from '@holistix/ui-base';
-import { useLocalSharedData } from '@holistix/collab/frontend';
-import { useDispatcher } from '@holistix/reducers/frontend';
+} from '@holistix-forge/ui-base';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
 import {
   TGatewaySharedData,
   TGatewayMeta,
   TEventDisableShutdown,
-} from '@holistix/gateway';
+} from '@holistix-forge/gateway';
 //
 
 export const GatewayCountdown = () => {

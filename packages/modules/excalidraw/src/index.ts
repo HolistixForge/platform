@@ -1,6 +1,6 @@
-import { TModule } from '@holistix/module';
+import { TModule } from '@holistix-forge/module';
 import { TExcalidrawSharedData } from './lib/excalidraw-shared-model';
-import { TCollabBackendExports } from '@holistix/collab';
+import { TCollabBackendExports } from '@holistix-forge/collab';
 
 type TRequired = {
   collab: TCollabBackendExports<TExcalidrawSharedData>;

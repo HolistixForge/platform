@@ -4,7 +4,7 @@ import {
   FormError,
   FormErrors,
   TextFieldset,
-} from '@holistix/ui-base';
+} from '@holistix-forge/ui-base';
 import { CheckIcon } from '@radix-ui/react-icons';
 import * as Checkbox from '@radix-ui/react-checkbox';
 

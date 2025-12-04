@@ -1,9 +1,9 @@
-import { TJson } from '@holistix/simple-types';
+import { TJson } from '@holistix-forge/simple-types';
 import {
   TValidSharedData,
   SharedMap,
   SharedArray,
-} from '@holistix/collab-engine';
+} from '@holistix-forge/collab-engine';
 
 //
 

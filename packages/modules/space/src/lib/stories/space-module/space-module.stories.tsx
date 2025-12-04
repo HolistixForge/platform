@@ -1,32 +1,32 @@
 import { useMemo } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { EPriority, Logger } from '@holistix/log';
+import { EPriority, Logger } from '@holistix-forge/log';
 
 //
-import { loadModules, TModule } from '@holistix/module';
-import { ModuleProvider } from '@holistix/module/frontend';
+import { loadModules, TModule } from '@holistix-forge/module';
+import { ModuleProvider } from '@holistix-forge/module/frontend';
 import {
   moduleBackend as coreBackend,
   moduleFrontend as coreFrontend,
-} from '@holistix/core-graph';
+} from '@holistix-forge/core-graph';
 import {
   moduleBackend as collabBackend,
   TCollabBackendExports,
-} from '@holistix/collab';
-import { moduleFrontend as collabFrontend } from '@holistix/collab/frontend';
+} from '@holistix-forge/collab';
+import { moduleFrontend as collabFrontend } from '@holistix-forge/collab/frontend';
 import {
   moduleBackend as reducersBackend,
   TReducersBackendExports,
-} from '@holistix/reducers';
+} from '@holistix-forge/reducers';
 import {
   moduleFrontend as reducersFrontend,
   linkDispatchToProcessEvent,
   TReducersFrontendExports,
-} from '@holistix/reducers/frontend';
+} from '@holistix-forge/reducers/frontend';
 //
 
-import { TCoreSharedData } from '@holistix/core-graph';
+import { TCoreSharedData } from '@holistix-forge/core-graph';
 
 import { DemiurgeSpace } from '../../components/demiurge-space';
 import { STORY_VIEW_ID } from '../story-demiurge-space';

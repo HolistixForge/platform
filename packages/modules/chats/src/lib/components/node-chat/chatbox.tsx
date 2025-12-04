@@ -8,8 +8,8 @@ import {
   ButtonIcon,
   ButtonIconProps,
   useAction,
-} from '@holistix/ui-base';
-import { DisableZoomDragPan, NodeMainToolbar } from '@holistix/space/frontend';
+} from '@holistix-forge/ui-base';
+import { DisableZoomDragPan, NodeMainToolbar } from '@holistix-forge/space/frontend';
 
 import {
   DiscussionItem,

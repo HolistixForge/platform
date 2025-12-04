@@ -1,14 +1,14 @@
 import { FC, Suspense, useCallback } from 'react';
 
-import { TGraphNode } from '@holistix/core-graph';
-import { useDispatcher } from '@holistix/reducers/frontend';
+import { TGraphNode } from '@holistix-forge/core-graph';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
 import {
   DisableZoomDragPan,
   TNodeContext,
   NodeHeader,
   useNodeHeaderButtons,
   useNodeContext,
-} from '@holistix/space/frontend';
+} from '@holistix-forge/space/frontend';
 
 import { TEventSocials } from '../socials-events';
 

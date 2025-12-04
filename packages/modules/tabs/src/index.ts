@@ -1,10 +1,10 @@
 import { TabsReducer } from './lib/tabs-reducer';
-import type { TModule } from '@holistix/module';
-import type { TCollabBackendExports } from '@holistix/collab';
-import type { TCollabFrontendExports } from '@holistix/collab/frontend';
-import type { TReducersBackendExports } from '@holistix/reducers';
+import type { TModule } from '@holistix-forge/module';
+import type { TCollabBackendExports } from '@holistix-forge/collab';
+import type { TCollabFrontendExports } from '@holistix-forge/collab/frontend';
+import type { TReducersBackendExports } from '@holistix-forge/reducers';
 import type { TTabsSharedData } from './lib/tabs-shared-model';
-import type { TCoreSharedData } from '@holistix/core-graph';
+import type { TCoreSharedData } from '@holistix-forge/core-graph';
 
 type TBackendRequired = {
   collab: TCollabBackendExports<TTabsSharedData & TCoreSharedData>;

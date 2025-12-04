@@ -1,8 +1,8 @@
 {
-  "name": "@holistix/space",
+  "name": "@holistix-forge/space",
   "version": "0.0.1",
   "nx": {
-    "name": "@holistix/space",
+    "name": "@holistix-forge/space",
     "projectType": "library",
     "sourceRoot": "packages/modules/space/src"
   },

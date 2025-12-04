@@ -1,10 +1,10 @@
-import { icons } from '@holistix/ui-base';
-import { InputsAndOutputs, useNodeContext } from '@holistix/space/frontend';
-import { useNodeEdges } from '@holistix/core-graph/frontend';
-import { TGraphNode } from '@holistix/core-graph';
-import { useLocalSharedData } from '@holistix/collab/frontend';
-import { useDispatcher } from '@holistix/reducers/frontend';
-import { useCurrentUser } from '@holistix/frontend-data';
+import { icons } from '@holistix-forge/ui-base';
+import { InputsAndOutputs, useNodeContext } from '@holistix-forge/space/frontend';
+import { useNodeEdges } from '@holistix-forge/core-graph/frontend';
+import { TGraphNode } from '@holistix-forge/core-graph';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
+import { useCurrentUser } from '@holistix-forge/frontend-data';
 
 import { TChatSharedData } from '../../chats-shared-model';
 import { TChat } from '../../chats-types';

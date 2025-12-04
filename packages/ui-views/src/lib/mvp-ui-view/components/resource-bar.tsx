@@ -1,5 +1,5 @@
-import { UserAvatar, randomGuy, ResourceButtons } from '@holistix/ui-base';
-import { StatusLed } from '@holistix/user-containers/frontend';
+import { UserAvatar, randomGuy, ResourceButtons } from '@holistix-forge/ui-base';
+import { StatusLed } from '@holistix-forge/user-containers/frontend';
 
 import { Tabs } from './tabs';
 

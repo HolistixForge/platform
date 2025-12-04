@@ -1,25 +1,25 @@
 // Initialize OpenTelemetry BEFORE any other imports
 // This ensures auto-instrumentation works correctly
-import { initializeBrowserObservability } from '@holistix/observability/browser';
-import { Logger } from '@holistix/log';
+import { initializeBrowserObservability } from '@holistix-forge/observability/browser';
+import { Logger } from '@holistix-forge/log';
 
 import * as ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 
 import { App } from './app/app';
 
-import '@holistix/collab-engine/style';
-import '@holistix/ui-base/style';
-import '@holistix/ui-views/style';
-import '@holistix/user-containers/style';
-import '@holistix/notion/style';
-import '@holistix/airtable/style';
-import '@holistix/space/style';
-import '@holistix/tabs/style';
-import '@holistix/chats/style';
-import '@holistix/socials/style';
-import '@holistix/jupyter/style';
-import '@holistix/excalidraw/style';
+import '@holistix-forge/collab-engine/style';
+import '@holistix-forge/ui-base/style';
+import '@holistix-forge/ui-views/style';
+import '@holistix-forge/user-containers/style';
+import '@holistix-forge/notion/style';
+import '@holistix-forge/airtable/style';
+import '@holistix-forge/space/style';
+import '@holistix-forge/tabs/style';
+import '@holistix-forge/chats/style';
+import '@holistix-forge/socials/style';
+import '@holistix-forge/jupyter/style';
+import '@holistix-forge/excalidraw/style';
 import './index.scss';
 
 // Initialize observability for browser

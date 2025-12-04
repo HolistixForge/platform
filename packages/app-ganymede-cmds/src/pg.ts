@@ -1,4 +1,4 @@
-import { PostgreSQL } from '@holistix/backend-engine';
+import { PostgreSQL } from '@holistix-forge/backend-engine';
 
 const PG = {
   host: process.env.PG_HOST,

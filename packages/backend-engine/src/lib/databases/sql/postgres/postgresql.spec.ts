@@ -1,4 +1,4 @@
-import { EPriority, Logger } from '@holistix/log';
+import { EPriority, Logger } from '@holistix-forge/log';
 import { PostgreSQL } from './PostgreSQL';
 import { TSqlApi } from '../Connections';
 

@@ -7,11 +7,11 @@ import {
   NodeHeader,
   InputsAndOutputs,
   DisableZoomDragPan,
-} from '@holistix/space/frontend';
-import { useSharedDataDirect } from '@holistix/collab/frontend';
-import { useDispatcher } from '@holistix/reducers/frontend';
-import { ButtonBase } from '@holistix/ui-base';
-import { TCoreEvent, TGraphNode } from '@holistix/core-graph';
+} from '@holistix-forge/space/frontend';
+import { useSharedDataDirect } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
+import { ButtonBase } from '@holistix-forge/ui-base';
+import { TCoreEvent, TGraphNode } from '@holistix-forge/core-graph';
 
 import { TExcalidrawLayerPayload } from './layer';
 import { TExcalidrawSharedData } from './excalidraw-shared-model';

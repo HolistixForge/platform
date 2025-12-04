@@ -7,12 +7,12 @@ import {
   TextFieldset,
   useAction,
   DialogControlled,
-} from '@holistix/ui-base';
-import { useAwareness, useLocalSharedData } from '@holistix/collab/frontend';
-import { useDispatcher } from '@holistix/reducers/frontend';
-import { TPosition } from '@holistix/core-graph';
-import { TPanel } from '@holistix/space/frontend';
-import { makeUuid } from '@holistix/simple-types';
+} from '@holistix-forge/ui-base';
+import { useAwareness, useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
+import { TPosition } from '@holistix-forge/core-graph';
+import { TPanel } from '@holistix-forge/space/frontend';
+import { makeUuid } from '@holistix-forge/simple-types';
 
 import { TNotionEvent } from '../../notion-events';
 import { TNotionSharedData } from '../../notion-shared-model';

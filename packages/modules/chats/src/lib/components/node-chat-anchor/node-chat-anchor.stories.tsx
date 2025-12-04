@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { useTestBoolean } from '@holistix/ui-base';
-import { StoryMockSpaceContextReactflowBgAndCss } from '@holistix/space/stories';
-import { ModuleProvider } from '@holistix/module/frontend';
+import { useTestBoolean } from '@holistix-forge/ui-base';
+import { StoryMockSpaceContextReactflowBgAndCss } from '@holistix-forge/space/stories';
+import { ModuleProvider } from '@holistix-forge/module/frontend';
 
 import {
   NodeChatAnchorInternal,

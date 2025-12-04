@@ -6,15 +6,15 @@ import {
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@holistix/space/frontend';
-import { TGraphNode } from '@holistix/core-graph';
-import { useLocalSharedData } from '@holistix/collab/frontend';
-import { useDispatcher } from '@holistix/reducers/frontend';
+} from '@holistix-forge/space/frontend';
+import { TGraphNode } from '@holistix-forge/core-graph';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
 import {
   TUserContainersSharedData,
   TUserContainer,
-} from '@holistix/user-containers';
-import { Datetime } from '@holistix/ui-base';
+} from '@holistix-forge/user-containers';
+import { Datetime } from '@holistix-forge/ui-base';
 
 import { KernelStateIndicator } from './kernel-state-indicator';
 import {

@@ -3,7 +3,7 @@ import {
   CurrentUserDetails,
   TCollaborator,
   TG_User,
-} from '@holistix/types';
+} from '@holistix-forge/types';
 import { useApi } from './api-context';
 import {
   useQuery,

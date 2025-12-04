@@ -1,5 +1,5 @@
-import { TMyfetchRequest, TJson } from '@holistix/simple-types';
-import { ApiFetch } from '@holistix/api-fetch';
+import { TMyfetchRequest, TJson } from '@holistix-forge/simple-types';
+import { ApiFetch } from '@holistix-forge/api-fetch';
 
 import { TBaseEvent, TReducersBackendExports } from '..';
 import { TReducersFrontendExports } from '../frontend';

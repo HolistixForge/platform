@@ -1,20 +1,20 @@
-import { TJwtUser } from '@holistix/types';
+import { TJwtUser } from '@holistix-forge/types';
 import { TJwtUserContainer } from './servers-types';
-import { secondAgo } from '@holistix/simple-types';
-import { ForbiddenException, NotFoundException } from '@holistix/log';
+import { secondAgo } from '@holistix-forge/simple-types';
+import { ForbiddenException, NotFoundException } from '@holistix-forge/log';
 import {
   TCoreSharedData,
   TEventDeleteNode,
   TEventNewNode,
-} from '@holistix/core-graph';
-import { TEventLoad, TGatewayExports } from '@holistix/gateway';
+} from '@holistix-forge/core-graph';
+import { TEventLoad, TGatewayExports } from '@holistix-forge/gateway';
 import {
   Reducer,
   RequestData,
   TReducersBackendExports,
   TEventPeriodic,
-} from '@holistix/reducers';
-import { TCollabBackendExports } from '@holistix/collab';
+} from '@holistix-forge/reducers';
+import { TCollabBackendExports } from '@holistix-forge/collab';
 import crypto from 'crypto';
 
 import { TUserContainersSharedData } from './servers-shared-model';
@@ -31,7 +31,7 @@ import {
 } from './servers-events';
 import { TOAuthClient } from './container-image';
 import { TUserContainersExports } from '..';
-import { SharedMap } from '@holistix/collab-engine';
+import { SharedMap } from '@holistix-forge/collab-engine';
 
 //
 

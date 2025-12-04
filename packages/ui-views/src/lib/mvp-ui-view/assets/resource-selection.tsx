@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-import { icons } from '@holistix/ui-base';
+import { icons } from '@holistix-forge/ui-base';
 
 //
 

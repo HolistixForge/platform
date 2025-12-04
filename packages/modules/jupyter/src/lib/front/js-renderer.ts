@@ -1,5 +1,5 @@
 import * as RM from '@jupyterlab/rendermime';
-import { EPriority, log } from '@holistix/log';
+import { EPriority, log } from '@holistix-forge/log';
 
 //
 

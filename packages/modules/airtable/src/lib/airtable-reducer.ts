@@ -3,10 +3,10 @@ import {
   RequestData,
   TEventPeriodic,
   TReducersBackendExports,
-} from '@holistix/reducers';
-import { makeUuid } from '@holistix/simple-types';
-import { TCollabBackendExports } from '@holistix/collab';
-import { TCoreSharedData } from '@holistix/core-graph';
+} from '@holistix-forge/reducers';
+import { makeUuid } from '@holistix-forge/simple-types';
+import { TCollabBackendExports } from '@holistix-forge/collab';
+import { TCoreSharedData } from '@holistix-forge/core-graph';
 
 import {
   TEventCreateRecord,

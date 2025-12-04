@@ -1,5 +1,5 @@
-import type { TModule } from '@holistix/module';
-import type { TUserContainersExports } from '@holistix/user-containers';
+import type { TModule } from '@holistix-forge/module';
+import type { TUserContainersExports } from '@holistix-forge/user-containers';
 
 const containerImagesData = [
   {

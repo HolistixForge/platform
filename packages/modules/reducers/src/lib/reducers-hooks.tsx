@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 
-import { useModuleExports } from '@holistix/module/frontend';
+import { useModuleExports } from '@holistix-forge/module/frontend';
 
 import { TReducersFrontendExports } from '../frontend';
 import { TBaseEvent } from '..';

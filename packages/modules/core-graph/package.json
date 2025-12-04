@@ -1,8 +1,8 @@
 {
-  "name": "@holistix/core-graph",
+  "name": "@holistix-forge/core-graph",
   "version": "0.0.1",
   "nx": {
-    "name": "@holistix/core-graph",
+    "name": "@holistix-forge/core-graph",
     "projectType": "library",
     "sourceRoot": "packages/modules/core-graph/src"
   },

@@ -1,4 +1,4 @@
-import { makeUuid } from '@holistix/simple-types';
+import { makeUuid } from '@holistix-forge/simple-types';
 
 //
 

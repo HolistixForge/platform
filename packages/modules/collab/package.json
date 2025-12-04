@@ -1,5 +1,5 @@
 {
-  "name": "@holistix/collab",
+  "name": "@holistix-forge/collab",
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.js",

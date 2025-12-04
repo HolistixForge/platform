@@ -1,6 +1,6 @@
-import { TModule } from '@holistix/module';
+import { TModule } from '@holistix-forge/module';
 import { LocalOverrider } from './lib/overrider';
-import { TValidSharedData } from '@holistix/collab-engine';
+import { TValidSharedData } from '@holistix-forge/collab-engine';
 import { Collab } from './lib/collab';
 import { YjsClientCollabConfig } from './lib/collab';
 import { NoneCollabConfig } from './lib/collab';

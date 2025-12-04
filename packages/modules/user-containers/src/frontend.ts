@@ -1,8 +1,8 @@
 import './lib/index.scss';
 import { NodeServer } from './lib/components/node-server/node-server';
-import type { TModule } from '@holistix/module';
-import type { TCollabFrontendExports } from '@holistix/collab/frontend';
-import type { TSpaceFrontendExports } from '@holistix/space/frontend';
+import type { TModule } from '@holistix-forge/module';
+import type { TCollabFrontendExports } from '@holistix-forge/collab/frontend';
+import type { TSpaceFrontendExports } from '@holistix-forge/space/frontend';
 import { serversMenuEntries } from './lib/servers-menu';
 import { localRunnerFrontend } from './lib/local-runner-frontend';
 import { TUserContainersSharedData } from './lib/servers-shared-model';

@@ -1,8 +1,8 @@
 {
-  "name": "@holistix/ui-base",
+  "name": "@holistix-forge/ui-base",
   "version": "0.0.1",
   "nx": {
-    "name": "@holistix/ui-base",
+    "name": "@holistix-forge/ui-base",
     "projectType": "library",
     "sourceRoot": "packages/ui-base/src"
   },

@@ -1,4 +1,4 @@
-import { SharedMap } from '@holistix/collab-engine';
+import { SharedMap } from '@holistix-forge/collab-engine';
 import { TChat } from './chats-types';
 
 export type TChatSharedData = {

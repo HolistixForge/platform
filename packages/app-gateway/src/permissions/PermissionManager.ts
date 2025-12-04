@@ -1,7 +1,7 @@
-import { EPriority, log } from '@holistix/log';
+import { EPriority, log } from '@holistix-forge/log';
 import { IPersistenceProvider } from '../state/IPersistenceProvider';
 import type { TPermissionData } from './types';
-import { PermissionManager as AbstractPermissionManager } from '@holistix/gateway';
+import { PermissionManager as AbstractPermissionManager } from '@holistix-forge/gateway';
 
 /**
  * PermissionManager - Simple Permission Management

@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { StoryApiContext } from '@holistix/frontend-data';
-import { randomGuys } from '@holistix/ui-base';
-import { ModuleProvider } from '@holistix/module/frontend';
+import { StoryApiContext } from '@holistix-forge/frontend-data';
+import { randomGuys } from '@holistix-forge/ui-base';
+import { ModuleProvider } from '@holistix-forge/module/frontend';
 
 import { NewNodeUserForm } from './form-new-node-user';
 

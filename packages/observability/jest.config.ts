@@ -10,7 +10,7 @@ const swcJestConfig = JSON.parse(
 swcJestConfig.swcrc = false;
 
 export default {
-  displayName: '@holistix/observability',
+  displayName: '@holistix-forge/observability',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
   transform: {

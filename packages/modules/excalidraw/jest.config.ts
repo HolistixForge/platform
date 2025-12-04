@@ -1,5 +1,5 @@
 export default {
-  displayName: '@holistix/excalidraw',
+  displayName: '@holistix-forge/excalidraw',
   preset: '../../../jest.preset.js',
   transform: {
     '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',

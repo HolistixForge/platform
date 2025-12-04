@@ -1,8 +1,8 @@
-import type { TModule } from '@holistix/module';
-import type { TCollabBackendExports } from '@holistix/collab';
-import type { TReducersBackendExports } from '@holistix/reducers';
-import type { TCoreSharedData } from '@holistix/core-graph';
-import { TSpaceSharedData } from '@holistix/space';
+import type { TModule } from '@holistix-forge/module';
+import type { TCollabBackendExports } from '@holistix-forge/collab';
+import type { TReducersBackendExports } from '@holistix-forge/reducers';
+import type { TCoreSharedData } from '@holistix-forge/core-graph';
+import { TSpaceSharedData } from '@holistix-forge/space';
 
 import { ChatReducer } from './lib/chats-reducer';
 import type { TChatSharedData } from './lib/chats-shared-model';

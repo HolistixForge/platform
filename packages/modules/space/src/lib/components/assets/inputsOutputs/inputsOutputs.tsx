@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Handle, Position, useUpdateNodeInternals } from '@xyflow/react';
 
-import { useDispatcher } from '@holistix/reducers/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
 
 import { icons } from './icons';
 import { Slot } from '../slot/Slot';

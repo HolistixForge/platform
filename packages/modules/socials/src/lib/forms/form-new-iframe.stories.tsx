@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { ModuleProvider } from '@holistix/module/frontend';
+import { ModuleProvider } from '@holistix-forge/module/frontend';
 
 import { NewIframeForm } from './form-new-iframe';
 

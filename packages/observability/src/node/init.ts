@@ -46,7 +46,7 @@ let sdk: NodeSDK | null = null;
  *
  * @example
  * ```typescript
- * import { initializeNodeObservability } from '@holistix/observability/node';
+ * import { initializeNodeObservability } from '@holistix-forge/observability/node';
  *
  * initializeNodeObservability({
  *   serviceName: 'ganymede',

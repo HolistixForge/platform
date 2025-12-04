@@ -1,9 +1,9 @@
 {
-  "name": "@holistix/ui-toolkit",
+  "name": "@holistix-forge/ui-toolkit",
   "version": "0.0.1",
   "type": "module",
   "nx": {
-    "name": "@holistix/ui-toolkit",
+    "name": "@holistix-forge/ui-toolkit",
     "projectType": "library",
     "sourceRoot": "packages/ui-toolkit/src"
   },

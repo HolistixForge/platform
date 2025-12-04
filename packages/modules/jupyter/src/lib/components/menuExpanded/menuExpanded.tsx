@@ -3,8 +3,8 @@ import {
   ButtonIconProps,
   SelectFieldset,
   SelectItem,
-} from '@holistix/ui-base';
-import { NodeMainToolbar } from '@holistix/space/frontend';
+} from '@holistix-forge/ui-base';
+import { NodeMainToolbar } from '@holistix-forge/space/frontend';
 
 import './menuExpanded.scss';
 

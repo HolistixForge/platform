@@ -1,4 +1,4 @@
-import { PostgreSQL } from '@holistix/backend-engine';
+import { PostgreSQL } from '@holistix-forge/backend-engine';
 import { CONFIG } from '../config';
 
 export const pg = new PostgreSQL(

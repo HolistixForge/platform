@@ -3,14 +3,14 @@ import * as https from 'https';
 import ws from 'ws';
 const u = require('y-websocket/bin/utils');
 
-import { EPriority, log, ForbiddenException } from '@holistix/log';
+import { EPriority, log, ForbiddenException } from '@holistix-forge/log';
 import { ProjectRoomsManager } from './state/ProjectRooms';
 import {
   extractJwtPayload,
   checkProjectAccess,
   type TAnyJwt,
 } from './middleware/jwt-auth';
-import type { TJwtUser } from '@holistix/types';
+import type { TJwtUser } from '@holistix-forge/types';
 import { trace, context, SpanStatusCode } from '@opentelemetry/api';
 
 //

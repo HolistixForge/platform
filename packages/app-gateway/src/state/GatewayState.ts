@@ -1,4 +1,4 @@
-import { EPriority, log } from '@holistix/log';
+import { EPriority, log } from '@holistix-forge/log';
 import { IPersistenceProvider } from './IPersistenceProvider';
 
 type TGatewayDataSnapshot = Record<string, unknown>;

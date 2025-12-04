@@ -1,11 +1,11 @@
-import { EPriority, log } from '@holistix/log';
+import { EPriority, log } from '@holistix-forge/log';
 import {
   TJson,
   TJsonWithDate,
   TUri,
   fullUri,
   TStringMap,
-} from '@holistix/simple-types';
+} from '@holistix-forge/simple-types';
 import express from 'express';
 import { trace, SpanStatusCode } from '@opentelemetry/api';
 

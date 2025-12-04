@@ -1,5 +1,5 @@
-import { TModule } from '@holistix/module';
-import { TValidSharedData } from '@holistix/collab-engine';
+import { TModule } from '@holistix-forge/module';
+import { TValidSharedData } from '@holistix-forge/collab-engine';
 import {
   Collab,
   YjsServerCollab,

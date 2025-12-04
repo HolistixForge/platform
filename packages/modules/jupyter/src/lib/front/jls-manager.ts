@@ -1,11 +1,11 @@
-import { serverUrl } from '@holistix/api-fetch';
+import { serverUrl } from '@holistix-forge/api-fetch';
 import {
   TUserContainer,
   TUserContainersSharedData,
   serviceUrl,
-} from '@holistix/user-containers';
-import { Listenable } from '@holistix/simple-types';
-import { FrontendDispatcher } from '@holistix/reducers/frontend';
+} from '@holistix-forge/user-containers';
+import { Listenable } from '@holistix-forge/simple-types';
+import { FrontendDispatcher } from '@holistix-forge/reducers/frontend';
 
 import { BrowserWidgetManager } from './browser-widget-manager';
 import { JupyterlabDriver } from '../driver';

@@ -1,4 +1,4 @@
-import { TPosition, TEdge } from '@holistix/core-graph';
+import { TPosition, TEdge } from '@holistix-forge/core-graph';
 
 export type TSelectingUsers = {
   user: { username: string; color: string };

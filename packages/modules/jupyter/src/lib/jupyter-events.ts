@@ -1,5 +1,5 @@
 // TODO_DEM: move in plugin/jupyter
-import { TEventOrigin } from '@holistix/core-graph';
+import { TEventOrigin } from '@holistix-forge/core-graph';
 import { IOutput, Kernel, Terminal } from './jupyter-types';
 
 export type FormFieldsOnly<T extends TJupyterEvent> = Partial<

@@ -8,9 +8,9 @@ import {
   TAction,
   icons,
   ButtonBase,
-} from '@holistix/ui-base';
+} from '@holistix-forge/ui-base';
 
-import { LoginFormData } from '@holistix/frontend-data';
+import { LoginFormData } from '@holistix-forge/frontend-data';
 
 import './login.scss';
 

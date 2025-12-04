@@ -1,4 +1,4 @@
-import { SharedMap } from '@holistix/collab-engine';
+import { SharedMap } from '@holistix-forge/collab-engine';
 import { TUserContainer } from './servers-types';
 import { TContainerImageInfo } from './container-image';
 

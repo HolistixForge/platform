@@ -7,8 +7,8 @@ import {
   useAwareness,
   useBindEditor,
   useLocalSharedData,
-} from '@holistix/collab/frontend';
-import { TGraphNode, TCoreEvent } from '@holistix/core-graph';
+} from '@holistix-forge/collab/frontend';
+import { TGraphNode, TCoreEvent } from '@holistix-forge/core-graph';
 import {
   DisableZoomDragPan,
   InputsAndOutputs,
@@ -17,13 +17,13 @@ import {
   useMakeButton,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@holistix/space/frontend';
-import { makeUuid } from '@holistix/simple-types';
+} from '@holistix-forge/space/frontend';
+import { makeUuid } from '@holistix-forge/simple-types';
 import {
   TUserContainersSharedData,
   TUserContainer,
-} from '@holistix/user-containers';
-import { useDispatcher } from '@holistix/reducers/frontend';
+} from '@holistix-forge/user-containers';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
 
 import { TJupyterEvent } from '../../jupyter-events';
 import {

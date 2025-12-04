@@ -9,8 +9,8 @@ import {
   NotFoundException,
   UnknownException,
   EPriority,
-} from '@holistix/log';
-import { TJson } from '@holistix/simple-types';
+} from '@holistix-forge/log';
+import { TJson } from '@holistix-forge/simple-types';
 
 import { respond } from './responses';
 import { trace, SpanStatusCode } from '@opentelemetry/api';

@@ -2,8 +2,8 @@ import crypto from 'crypto';
 import OAuth2Server from '@node-oauth/oauth2-server';
 import { OAuthManager } from './OAuthManager';
 import { PermissionManager } from '../permissions/PermissionManager';
-import { EPriority, log } from '@holistix/log';
-import { makeUuid } from '@holistix/simple-types';
+import { EPriority, log } from '@holistix-forge/log';
+import { makeUuid } from '@holistix-forge/simple-types';
 
 /**
  * OAuth2Server Model Implementation

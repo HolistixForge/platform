@@ -1,39 +1,39 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useMemo } from 'react';
 
-import { randomGuys } from '@holistix/ui-base';
-import { EPriority, Logger } from '@holistix/log';
-import { StoryApiContext } from '@holistix/frontend-data';
-import { StoryDemiurgeSpace } from '@holistix/space/stories';
+import { randomGuys } from '@holistix-forge/ui-base';
+import { EPriority, Logger } from '@holistix-forge/log';
+import { StoryApiContext } from '@holistix-forge/frontend-data';
+import { StoryDemiurgeSpace } from '@holistix-forge/space/stories';
 
 //
-import { loadModules, TModule } from '@holistix/module';
-import { ModuleProvider } from '@holistix/module/frontend';
+import { loadModules, TModule } from '@holistix-forge/module';
+import { ModuleProvider } from '@holistix-forge/module/frontend';
 import {
   moduleBackend as coreBackend,
   moduleFrontend as coreFrontend,
-} from '@holistix/core-graph';
+} from '@holistix-forge/core-graph';
 import {
   moduleBackend as collabBackend,
   TCollabBackendExports,
-} from '@holistix/collab';
-import { moduleFrontend as collabFrontend } from '@holistix/collab/frontend';
+} from '@holistix-forge/collab';
+import { moduleFrontend as collabFrontend } from '@holistix-forge/collab/frontend';
 import {
   moduleBackend as reducersBackend,
   TReducersBackendExports,
-} from '@holistix/reducers';
+} from '@holistix-forge/reducers';
 import {
   moduleFrontend as reducersFrontend,
   linkDispatchToProcessEvent,
   TReducersFrontendExports,
-} from '@holistix/reducers/frontend';
-import { moduleBackend as spaceBackend } from '@holistix/space';
-import { moduleFrontend as spaceFrontend } from '@holistix/space/frontend';
+} from '@holistix-forge/reducers/frontend';
+import { moduleBackend as spaceBackend } from '@holistix-forge/space';
+import { moduleFrontend as spaceFrontend } from '@holistix-forge/space/frontend';
 //
 
 import { moduleFrontend } from '../frontend';
 import { moduleBackend, TChatSharedData } from '../';
-import { TMyfetchRequest } from '@holistix/simple-types';
+import { TMyfetchRequest } from '@holistix-forge/simple-types';
 
 //
 

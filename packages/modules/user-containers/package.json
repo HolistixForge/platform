@@ -1,8 +1,8 @@
 {
-  "name": "@holistix/user-containers",
+  "name": "@holistix-forge/user-containers",
   "version": "0.0.1",
   "nx": {
-    "name": "@holistix/user-containers",
+    "name": "@holistix-forge/user-containers",
     "projectType": "library",
     "sourceRoot": "packages/modules/user-containers/src"
   },

@@ -1,13 +1,13 @@
 import { useCallback, useRef } from 'react';
 
-import { TGraphNode } from '@holistix/core-graph';
-import { useDispatcher } from '@holistix/reducers/frontend';
+import { TGraphNode } from '@holistix-forge/core-graph';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
 import {
   addAlphaToHexColor,
   ColorPicker,
   ColorValue,
   ButtonBase,
-} from '@holistix/ui-base';
+} from '@holistix-forge/ui-base';
 
 import { NodeHeader } from '../assets/node-header/node-header';
 import { useNodeHeaderButtons } from '../assets/node-header/node-main-toolbar';

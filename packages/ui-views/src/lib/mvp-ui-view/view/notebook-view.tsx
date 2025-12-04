@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { Sidebar, icons, SelectFieldset, SelectItem } from '@holistix/ui-base';
+import { Sidebar, icons, SelectFieldset, SelectItem } from '@holistix-forge/ui-base';
 
 import { Header } from '../components/header';
 import { ResourceBar } from '../components/resource-bar';

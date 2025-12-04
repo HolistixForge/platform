@@ -56,7 +56,7 @@ function getDeploymentEnvironment(): string {
  *
  * @example
  * ```typescript
- * import { initializeBrowserObservability } from '@holistix/observability/browser';
+ * import { initializeBrowserObservability } from '@holistix-forge/observability/browser';
  *
  * initializeBrowserObservability({
  *   serviceName: 'frontend',

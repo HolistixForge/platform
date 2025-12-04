@@ -1,8 +1,8 @@
 import { ReactNode, useMemo, useEffect } from 'react';
 import { InfoCircledIcon } from '@radix-ui/react-icons';
-import { useApi, useQueryOrganizationGateway } from '@holistix/frontend-data';
-import { ModuleProvider } from '@holistix/module/frontend';
-import { loadModules } from '@holistix/module';
+import { useApi, useQueryOrganizationGateway } from '@holistix-forge/frontend-data';
+import { ModuleProvider } from '@holistix-forge/module/frontend';
+import { loadModules } from '@holistix-forge/module';
 import { getModulesFrontend } from './modules';
 import { createGatewayFetch } from './gateway-fetch';
 

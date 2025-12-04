@@ -1,13 +1,13 @@
 import { useState } from 'react';
 
-import { icons } from '@holistix/ui-base';
+import { icons } from '@holistix-forge/ui-base';
 import {
   NodeMainToolbar,
   useMakeButton,
   Inputs,
   Outputs,
   TNodeContext,
-} from '@holistix/space/frontend';
+} from '@holistix-forge/space/frontend';
 
 import { DisplayMenu } from './display-menu';
 import { Tag } from './tag';

@@ -1,6 +1,6 @@
-import { useLocalSharedData } from '@holistix/collab/frontend';
-import { useDispatcher } from '@holistix/reducers/frontend';
-import { ButtonIconProps } from '@holistix/ui-base';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
+import { ButtonIconProps } from '@holistix-forge/ui-base';
 
 import { TChatSharedData } from '../../chats-shared-model';
 import { TChatEvent } from '../../chats-events';

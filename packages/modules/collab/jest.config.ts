@@ -1,5 +1,5 @@
 export default {
-  displayName: '@holistix/collab',
+  displayName: '@holistix-forge/collab',
   preset: '../../../jest.preset.js',
   transform: {
     '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',

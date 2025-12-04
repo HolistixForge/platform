@@ -1,4 +1,4 @@
-import { SharedMap } from '@holistix/collab-engine';
+import { SharedMap } from '@holistix-forge/collab-engine';
 import { TNotionDatabase, TNotionDatabaseSearchResult } from './notion-types';
 import { TNotionViewMode } from './components/node-notion/notion-database';
 

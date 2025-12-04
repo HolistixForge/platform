@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { apiContext, TApiContext } from './api-context';
 import { useMemo } from 'react';
-import { TJson, TMyfetchRequest } from '@holistix/simple-types';
+import { TJson, TMyfetchRequest } from '@holistix-forge/simple-types';
 import { GanymedeApi } from './api-ganymede';
 import { browserLog } from './browser-log';
 

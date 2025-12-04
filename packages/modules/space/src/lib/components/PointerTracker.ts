@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
-import { TPosition } from '@holistix/core-graph';
+import { TPosition } from '@holistix-forge/core-graph';
 import { Viewport } from './demiurge-space';
-import { Awareness } from '@holistix/collab-engine';
+import { Awareness } from '@holistix-forge/collab-engine';
 
 //
 

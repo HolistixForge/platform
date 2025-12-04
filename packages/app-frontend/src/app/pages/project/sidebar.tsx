@@ -1,4 +1,4 @@
-import { Sidebar, icons } from '@holistix/ui-base';
+import { Sidebar, icons } from '@holistix-forge/ui-base';
 
 //
 

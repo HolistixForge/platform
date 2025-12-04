@@ -1,7 +1,7 @@
-import { ApiFetch } from '@holistix/api-fetch';
-import { TJson } from '@holistix/simple-types';
+import { ApiFetch } from '@holistix-forge/api-fetch';
+import { TJson } from '@holistix-forge/simple-types';
 import { TBaseEvent } from '..';
-import { log, EPriority } from '@holistix/log';
+import { log, EPriority } from '@holistix-forge/log';
 
 //
 

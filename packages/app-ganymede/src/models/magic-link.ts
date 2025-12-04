@@ -1,4 +1,4 @@
-import { UnknownException } from '@holistix/log';
+import { UnknownException } from '@holistix-forge/log';
 import { pg } from '../database/pg';
 
 export class MagicLinkModel {

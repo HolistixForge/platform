@@ -1,7 +1,7 @@
-import { useMutationChangePassword } from '@holistix/frontend-data';
-import { useAction } from '@holistix/ui-base';
-import { NewPasswordForm } from '@holistix/ui-views';
-import { NewPasswordFormData } from '@holistix/frontend-data';
+import { useMutationChangePassword } from '@holistix-forge/frontend-data';
+import { useAction } from '@holistix-forge/ui-base';
+import { NewPasswordForm } from '@holistix-forge/ui-views';
+import { NewPasswordFormData } from '@holistix-forge/frontend-data';
 
 //
 

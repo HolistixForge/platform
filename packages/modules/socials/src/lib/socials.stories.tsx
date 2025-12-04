@@ -1,34 +1,34 @@
 import { useMemo } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { SharedTypes } from '@holistix/collab-engine';
-import { EPriority, Logger } from '@holistix/log';
-import { TCoreSharedData } from '@holistix/core-graph';
-import { TSpaceSharedData, defaultGraphView } from '@holistix/space';
-import { STORY_VIEW_ID, StoryDemiurgeSpace } from '@holistix/space/stories';
-import { StoryApiContext } from '@holistix/frontend-data';
-import { TCollabBackendExports } from '@holistix/collab';
+import { SharedTypes } from '@holistix-forge/collab-engine';
+import { EPriority, Logger } from '@holistix-forge/log';
+import { TCoreSharedData } from '@holistix-forge/core-graph';
+import { TSpaceSharedData, defaultGraphView } from '@holistix-forge/space';
+import { STORY_VIEW_ID, StoryDemiurgeSpace } from '@holistix-forge/space/stories';
+import { StoryApiContext } from '@holistix-forge/frontend-data';
+import { TCollabBackendExports } from '@holistix-forge/collab';
 
 //
-import { loadModules, TModule } from '@holistix/module';
-import { ModuleProvider } from '@holistix/module/frontend';
+import { loadModules, TModule } from '@holistix-forge/module';
+import { ModuleProvider } from '@holistix-forge/module/frontend';
 import {
   moduleBackend as coreBackend,
   moduleFrontend as coreFrontend,
-} from '@holistix/core-graph';
-import { moduleBackend as collabBackend } from '@holistix/collab';
-import { moduleFrontend as collabFrontend } from '@holistix/collab/frontend';
+} from '@holistix-forge/core-graph';
+import { moduleBackend as collabBackend } from '@holistix-forge/collab';
+import { moduleFrontend as collabFrontend } from '@holistix-forge/collab/frontend';
 import {
   moduleBackend as reducersBackend,
   TReducersBackendExports,
-} from '@holistix/reducers';
+} from '@holistix-forge/reducers';
 import {
   moduleFrontend as reducersFrontend,
   linkDispatchToProcessEvent,
   TReducersFrontendExports,
-} from '@holistix/reducers/frontend';
-import { moduleBackend as spaceBackend } from '@holistix/space';
-import { moduleFrontend as spaceFrontend } from '@holistix/space/frontend';
+} from '@holistix-forge/reducers/frontend';
+import { moduleBackend as spaceBackend } from '@holistix-forge/space';
+import { moduleFrontend as spaceFrontend } from '@holistix-forge/space/frontend';
 //
 import { moduleBackend as socialsBackend } from '../';
 import { moduleFrontend as socialsFrontend } from '../frontend';

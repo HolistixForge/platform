@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { InputsOutputs } from './inputsOutputs';
 import { StoryMockSpaceContextReactflowBgAndCss } from '../../../stories/story-context-mocks';
-import { ModuleProvider } from '@holistix/module/frontend';
+import { ModuleProvider } from '@holistix-forge/module/frontend';
 
 //
 

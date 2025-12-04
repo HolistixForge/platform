@@ -1,4 +1,4 @@
-import { icons, Datetime, UserUsername } from '@holistix/ui-base';
+import { icons, Datetime, UserUsername } from '@holistix-forge/ui-base';
 import {
   DiscussionItem,
   SimpleMessage,

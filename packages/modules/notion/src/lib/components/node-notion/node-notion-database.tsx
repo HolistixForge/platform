@@ -3,10 +3,10 @@ import {
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@holistix/space/frontend';
-import { useLocalSharedData } from '@holistix/collab/frontend';
-import { useDispatcher } from '@holistix/reducers/frontend';
-import { TGraphNode } from '@holistix/core-graph';
+} from '@holistix-forge/space/frontend';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
+import { TGraphNode } from '@holistix-forge/core-graph';
 import { useCallback } from 'react';
 
 import { TNotionSharedData } from '../../notion-shared-model';

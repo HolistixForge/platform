@@ -1,8 +1,8 @@
 {
-  "name": "@holistix/ui-views",
+  "name": "@holistix-forge/ui-views",
   "version": "0.0.1",
   "nx": {
-    "name": "@holistix/ui-views",
+    "name": "@holistix-forge/ui-views",
     "projectType": "library",
     "sourceRoot": "packages/ui-views/src"
   },

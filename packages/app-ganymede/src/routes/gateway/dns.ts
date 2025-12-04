@@ -5,7 +5,7 @@
  */
 
 import { Router } from 'express';
-import { EPriority, log } from '@holistix/log';
+import { EPriority, log } from '@holistix-forge/log';
 import {
   authenticateJwtOrganization,
   OrganizationAuthRequest,

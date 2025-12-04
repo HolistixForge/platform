@@ -1,16 +1,16 @@
 import React, { useCallback } from 'react';
 
-import { TGraphNode } from '@holistix/core-graph';
-import { useQueryUser } from '@holistix/frontend-data';
-import { UserAvatar, UserUsername } from '@holistix/ui-base';
-import { TG_User } from '@holistix/types';
-import { useAwarenessUserList } from '@holistix/collab/frontend';
-import { useDispatcher } from '@holistix/reducers/frontend';
+import { TGraphNode } from '@holistix-forge/core-graph';
+import { useQueryUser } from '@holistix-forge/frontend-data';
+import { UserAvatar, UserUsername } from '@holistix-forge/ui-base';
+import { TG_User } from '@holistix-forge/types';
+import { useAwarenessUserList } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
 import {
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@holistix/space/frontend';
+} from '@holistix-forge/space/frontend';
 
 import { TEventSocials } from '../socials-events';
 

@@ -1,21 +1,21 @@
 import { useEffect, useState } from 'react';
 
-import { TSpaceEvent } from '@holistix/space';
+import { TSpaceEvent } from '@holistix-forge/space';
 
 import {
   InputsAndOutputs,
   useMakeButton,
   useNodeContext,
-} from '@holistix/space/frontend';
+} from '@holistix-forge/space/frontend';
 
-import { useNodeEdges } from '@holistix/core-graph/frontend';
-import { TGraphNode } from '@holistix/core-graph';
-import { useCurrentUser, useQueriesUsers } from '@holistix/frontend-data';
+import { useNodeEdges } from '@holistix-forge/core-graph/frontend';
+import { TGraphNode } from '@holistix-forge/core-graph';
+import { useCurrentUser, useQueriesUsers } from '@holistix-forge/frontend-data';
 import {
   useAwarenessUserList,
   useLocalSharedData,
-} from '@holistix/collab/frontend';
-import { useDispatcher } from '@holistix/reducers/frontend';
+} from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
 
 import { ChatboxLogic } from './chatbox-logic';
 import { TChatSharedData } from '../../chats-shared-model';

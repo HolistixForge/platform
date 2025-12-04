@@ -2,7 +2,7 @@ import { useSpring, animated } from '@react-spring/web';
 import { useEffect } from 'react';
 import { Cursor } from './assets/cursor/Cursor';
 import { SpringRef as SpringRefWeb } from '@react-spring/web';
-import { TUserPosition } from '@holistix/collab-engine';
+import { TUserPosition } from '@holistix-forge/collab-engine';
 
 //
 //

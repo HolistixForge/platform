@@ -1,8 +1,8 @@
-import type { TModule } from '@holistix/module';
-import type { TReducersBackendExports } from '@holistix/reducers';
-import { TCoreSharedData } from '@holistix/core-graph';
-import { TGatewayExports } from '@holistix/gateway';
-import { TCollabBackendExports } from '@holistix/collab';
+import type { TModule } from '@holistix-forge/module';
+import type { TReducersBackendExports } from '@holistix-forge/reducers';
+import { TCoreSharedData } from '@holistix-forge/core-graph';
+import { TGatewayExports } from '@holistix-forge/gateway';
+import { TCollabBackendExports } from '@holistix-forge/collab';
 
 import { SocialsReducer } from './lib/socials-reducer';
 

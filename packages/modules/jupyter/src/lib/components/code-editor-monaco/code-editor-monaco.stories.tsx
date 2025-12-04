@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { editor } from 'monaco-editor';
 
-import { cssVar } from '@holistix/ui-base';
+import { cssVar } from '@holistix-forge/ui-base';
 
 import {
   CodeEditorMonaco,

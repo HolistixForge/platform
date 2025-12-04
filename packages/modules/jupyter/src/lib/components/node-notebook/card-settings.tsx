@@ -1,5 +1,5 @@
-import { icons, SelectFieldset, SelectItem } from '@holistix/ui-base';
-import { NodeMainToolbar, useMakeButton } from '@holistix/space/frontend';
+import { icons, SelectFieldset, SelectItem } from '@holistix-forge/ui-base';
+import { NodeMainToolbar, useMakeButton } from '@holistix-forge/space/frontend';
 
 type CardSettingsProps = {
   status: 'success' | 'error' | 'warning';

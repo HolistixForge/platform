@@ -1,4 +1,4 @@
-import { DemiurgeSpace } from '@holistix/space/frontend';
+import { DemiurgeSpace } from '@holistix-forge/space/frontend';
 
 import './node-editor.scss';
 import { useProject } from '../../project-context';

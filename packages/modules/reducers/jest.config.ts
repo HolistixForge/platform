@@ -1,5 +1,5 @@
 export default {
-  displayName: '@holistix/reducers',
+  displayName: '@holistix-forge/reducers',
   preset: '../../../jest.preset.js',
   transform: {
     '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',

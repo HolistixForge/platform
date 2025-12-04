@@ -1,5 +1,5 @@
-import { TUserContainersEvents } from '@holistix/user-containers';
-import { TCoreSharedData, TEdge } from '@holistix/core-graph';
+import { TUserContainersEvents } from '@holistix-forge/user-containers';
+import { TCoreSharedData, TEdge } from '@holistix-forge/core-graph';
 
 export const edgeToEvent = (
   edge: TEdge,

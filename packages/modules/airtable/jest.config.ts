@@ -1,5 +1,5 @@
 export default {
-  displayName: '@holistix/airtable',
+  displayName: '@holistix-forge/airtable',
   preset: '../../../jest.preset.js',
   transform: {
     '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',

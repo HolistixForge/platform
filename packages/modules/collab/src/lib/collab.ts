@@ -2,8 +2,8 @@ import * as u from 'y-websocket/bin/utils';
 import { Doc } from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 
-import { log, EPriority } from '@holistix/log';
-import { TJson } from '@holistix/simple-types';
+import { log, EPriority } from '@holistix-forge/log';
+import { TJson } from '@holistix-forge/simple-types';
 import {
   SharedEditor,
   SharedTypes,
@@ -18,7 +18,7 @@ import {
   TAwarenessUser,
   SharedMap,
   SharedArray,
-} from '@holistix/collab-engine';
+} from '@holistix-forge/collab-engine';
 
 //
 

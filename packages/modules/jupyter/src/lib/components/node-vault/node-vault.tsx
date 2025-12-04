@@ -1,4 +1,4 @@
-import { icons } from '@holistix/ui-base';
+import { icons } from '@holistix-forge/ui-base';
 import {
   Inputs,
   Outputs,
@@ -6,7 +6,7 @@ import {
   useConnector,
   NodeMainToolbar,
   useMakeButton,
-} from '@holistix/space/frontend';
+} from '@holistix-forge/space/frontend';
 
 import { MenuExpanded } from '../menuExpanded/menuExpanded';
 

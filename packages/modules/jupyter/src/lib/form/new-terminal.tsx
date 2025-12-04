@@ -8,10 +8,10 @@ import {
   DialogControlled,
   SelectFieldset,
   SelectItem,
-} from '@holistix/ui-base';
-import { useLocalSharedData } from '@holistix/collab/frontend';
-import { useDispatcher } from '@holistix/reducers/frontend';
-import { TPosition } from '@holistix/core-graph';
+} from '@holistix-forge/ui-base';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
+import { TPosition } from '@holistix-forge/core-graph';
 import { TJupyterEvent } from '../jupyter-events';
 import { TJupyterSharedData } from '../jupyter-shared-model';
 import { TJupyterServerData } from '../jupyter-types';
@@ -19,7 +19,7 @@ import { useJLsManager } from '../jupyter-hooks';
 import {
   TUserContainer,
   TUserContainersSharedData,
-} from '@holistix/user-containers';
+} from '@holistix-forge/user-containers';
 
 type NewTerminalFormData = { terminal_id: string };
 

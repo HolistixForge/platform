@@ -3,11 +3,11 @@ import {
   useCurrentUser,
   useMutationLogout,
   useQueriesUsers,
-} from '@holistix/frontend-data';
-import { useAction } from '@holistix/ui-base';
-import { Header } from '@holistix/ui-views';
-import { useAwarenessUserList } from '@holistix/collab/frontend';
-import { TF_User, TG_User } from '@holistix/types';
+} from '@holistix-forge/frontend-data';
+import { useAction } from '@holistix-forge/ui-base';
+import { Header } from '@holistix-forge/ui-views';
+import { useAwarenessUserList } from '@holistix-forge/collab/frontend';
+import { TF_User, TG_User } from '@holistix-forge/types';
 
 //
 

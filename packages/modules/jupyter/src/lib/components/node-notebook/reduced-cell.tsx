@@ -1,4 +1,4 @@
-import { icons } from '@holistix/ui-base';
+import { icons } from '@holistix-forge/ui-base';
 
 export interface ReducedCellProps {
   type: 'normal' | 'validate' | 'error' | 'running' | 'selected' | 'glow';

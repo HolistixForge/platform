@@ -8,10 +8,10 @@ import {
   useQueryUserProjects,
   useQueryOrganization,
   NewProjectFormData,
-} from '@holistix/frontend-data';
-import { useAction, UserInline, DialogControlled } from '@holistix/ui-base';
-import { NewProjectForm } from '@holistix/ui-views';
-import { TApi_Project } from '@holistix/types';
+} from '@holistix-forge/frontend-data';
+import { useAction, UserInline, DialogControlled } from '@holistix-forge/ui-base';
+import { NewProjectForm } from '@holistix-forge/ui-views';
+import { TApi_Project } from '@holistix-forge/types';
 
 import { HeaderLogic } from '../header/header-logic';
 import { DeleteProjectFormLogic } from '../forms/new-project-form';

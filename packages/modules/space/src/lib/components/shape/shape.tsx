@@ -5,9 +5,9 @@ import {
   ColorValue,
   SelectFieldset,
   SelectItem,
-} from '@holistix/ui-base';
-import { TGraphNode } from '@holistix/core-graph';
-import { useDispatcher } from '@holistix/reducers/frontend';
+} from '@holistix-forge/ui-base';
+import { TGraphNode } from '@holistix-forge/core-graph';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
 
 import { NodeHeader } from '../assets/node-header/node-header';
 import { useNodeHeaderButtons } from '../assets/node-header/node-main-toolbar';

@@ -1,11 +1,11 @@
-import { TModule } from '@holistix/module';
-import { moduleBackend as collabBackend } from '@holistix/collab';
-import { moduleBackend as reducersBackend } from '@holistix/reducers';
-import { moduleBackend as coreGraphBackend } from '@holistix/core-graph';
-import { moduleBackend as userContainersBackend } from '@holistix/user-containers';
-import { moduleBackend as jupyterBackend } from '@holistix/jupyter';
-import { moduleBackend as n8nBackend } from '@holistix/n8n';
-import { moduleBackend as pgadmin4Backend } from '@holistix/pgadmin4';
+import { TModule } from '@holistix-forge/module';
+import { moduleBackend as collabBackend } from '@holistix-forge/collab';
+import { moduleBackend as reducersBackend } from '@holistix-forge/reducers';
+import { moduleBackend as coreGraphBackend } from '@holistix-forge/core-graph';
+import { moduleBackend as userContainersBackend } from '@holistix-forge/user-containers';
+import { moduleBackend as jupyterBackend } from '@holistix-forge/jupyter';
+import { moduleBackend as n8nBackend } from '@holistix-forge/n8n';
+import { moduleBackend as pgadmin4Backend } from '@holistix-forge/pgadmin4';
 import { moduleBackend as gatewayBackend } from '../module/module';
 import type {
   PermissionManager,
@@ -13,7 +13,7 @@ import type {
   TokenManager,
   PermissionRegistry,
   ProtectedServiceRegistry,
-} from '@holistix/gateway';
+} from '@holistix-forge/gateway';
 import { CONFIG } from '../config';
 
 /**

@@ -9,16 +9,16 @@ import {
   TabPayload,
   TTabsSharedData,
   TTabsTree,
-} from '@holistix/tabs';
-import { useCurrentUser } from '@holistix/frontend-data';
-import { useLocalSharedData } from '@holistix/collab/frontend';
-import { serviceUrl } from '@holistix/user-containers';
+} from '@holistix-forge/tabs';
+import { useCurrentUser } from '@holistix-forge/frontend-data';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { serviceUrl } from '@holistix-forge/user-containers';
 
 import { useDispatcher } from '../model/collab-model-chunk';
 import {
   TUserContainer,
   TUserContainersSharedData,
-} from '@holistix/user-containers';
+} from '@holistix-forge/user-containers';
 import { NodeEditorView } from './node-editor/node-editor-view';
 import { ResourcePage } from './resources-page';
 

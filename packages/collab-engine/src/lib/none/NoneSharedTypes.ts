@@ -1,4 +1,4 @@
-import { makeUuid, TJson } from '@holistix/simple-types';
+import { makeUuid, TJson } from '@holistix-forge/simple-types';
 
 import { SharedTypes, SharedMap, SharedArray } from '../SharedTypes';
 

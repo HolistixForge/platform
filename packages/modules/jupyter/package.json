@@ -1,8 +1,8 @@
 {
-  "name": "@holistix/jupyter",
+  "name": "@holistix-forge/jupyter",
   "version": "0.0.1",
   "nx": {
-    "name": "@holistix/jupyter",
+    "name": "@holistix-forge/jupyter",
     "projectType": "library",
     "sourceRoot": "packages/modules/jupyter/src"
   },

@@ -1,7 +1,7 @@
 import { ReactElement } from 'react';
 
-import { Listenable } from '@holistix/simple-types';
-import { Awareness } from '@holistix/collab-engine';
+import { Listenable } from '@holistix-forge/simple-types';
+import { Awareness } from '@holistix-forge/collab-engine';
 
 import { PointerTracker } from '../PointerTracker';
 

@@ -1,7 +1,7 @@
-import { FrontendDispatcher } from '@holistix/reducers/frontend';
-import { TCoreSharedData } from '@holistix/core-graph';
-import { TSpaceMenuEntries } from '@holistix/space/frontend';
-import { TValidSharedDataToCopy } from '@holistix/collab/frontend';
+import { FrontendDispatcher } from '@holistix-forge/reducers/frontend';
+import { TCoreSharedData } from '@holistix-forge/core-graph';
+import { TSpaceMenuEntries } from '@holistix-forge/space/frontend';
+import { TValidSharedDataToCopy } from '@holistix-forge/collab/frontend';
 
 import { TJupyterSharedData } from './jupyter-shared-model';
 import { NewKernelForm } from './form/new-kernel';

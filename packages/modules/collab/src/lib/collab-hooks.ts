@@ -4,9 +4,9 @@ import {
   TAwarenessUser,
   TValidSharedData,
   TUserSelection,
-} from '@holistix/collab-engine';
-import { bindEditor } from '@holistix/collab-engine/frontend';
-import { useModuleExports } from '@holistix/module/frontend';
+} from '@holistix-forge/collab-engine';
+import { bindEditor } from '@holistix-forge/collab-engine/frontend';
+import { useModuleExports } from '@holistix-forge/module/frontend';
 
 import { LocalOverrider, TValidSharedDataToCopy } from './overrider';
 import { TCollabFrontendExports } from '../frontend';

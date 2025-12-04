@@ -1,5 +1,5 @@
 {
-    "name": "@holistix/notion",
+    "name": "@holistix-forge/notion",
     "$schema": "../../../node_modules/nx/schemas/project-schema.json",
     "sourceRoot": "packages/modules/notion/src",
     "projectType": "library",

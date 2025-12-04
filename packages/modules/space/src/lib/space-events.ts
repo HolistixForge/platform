@@ -1,4 +1,4 @@
-import { TEventOrigin, TPosition } from '@holistix/core-graph';
+import { TEventOrigin, TPosition } from '@holistix-forge/core-graph';
 import { TEdgeRenderProps } from './components/apis/types/edge';
 
 export type TEventMoveNode = {

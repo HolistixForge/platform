@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { useAction, DialogControlled } from '@holistix/ui-base';
+import { useAction, DialogControlled } from '@holistix-forge/ui-base';
 
 import { DockerOptionsForm, DockerOptionsFormData } from './docker-options';
 

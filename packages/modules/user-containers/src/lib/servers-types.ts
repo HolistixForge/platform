@@ -1,5 +1,5 @@
-import { serverUrl } from '@holistix/api-fetch';
-import { TJsonObject } from '@holistix/simple-types';
+import { serverUrl } from '@holistix-forge/api-fetch';
+import { TJsonObject } from '@holistix-forge/simple-types';
 
 /**
  * token given to users's project server container

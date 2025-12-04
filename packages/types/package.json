@@ -1,5 +1,5 @@
 {
-  "name": "@holistix/types",
+  "name": "@holistix-forge/types",
   "version": "0.0.1",
   "type": "module",
   "private": true,
@@ -20,6 +20,6 @@
   "nx": {
     "sourceRoot": "packages/demiurge-types/src",
     "projectType": "library",
-    "name": "@holistix/types"
+    "name": "@holistix-forge/types"
   }
 }

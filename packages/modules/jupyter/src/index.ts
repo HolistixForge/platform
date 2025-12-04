@@ -1,12 +1,12 @@
 import { PageConfig } from '@jupyterlab/coreutils';
-import { TUserContainersSharedData } from '@holistix/user-containers';
+import { TUserContainersSharedData } from '@holistix-forge/user-containers';
 import { JupyterReducer } from './lib/jupyter-reducer';
-import type { TModule } from '@holistix/module';
-import type { TCollabBackendExports } from '@holistix/collab';
-import type { TReducersBackendExports } from '@holistix/reducers';
-import type { TUserContainersExports } from '@holistix/user-containers';
+import type { TModule } from '@holistix-forge/module';
+import type { TCollabBackendExports } from '@holistix-forge/collab';
+import type { TReducersBackendExports } from '@holistix-forge/reducers';
+import type { TUserContainersExports } from '@holistix-forge/user-containers';
 import type { TJupyterSharedData } from './lib/jupyter-shared-model';
-import type { TCoreSharedData } from '@holistix/core-graph';
+import type { TCoreSharedData } from '@holistix-forge/core-graph';
 
 //
 

@@ -1,5 +1,5 @@
 {
-  "name": "@holistix/api-fetch",
+  "name": "@holistix-forge/api-fetch",
   "version": "0.0.1",
   "type": "module",
   "private": true,
@@ -20,6 +20,6 @@
   "nx": {
     "sourceRoot": "packages/api-fetch/src",
     "projectType": "library",
-    "name": "@holistix/api-fetch"
+    "name": "@holistix-forge/api-fetch"
   }
 }

@@ -12,7 +12,7 @@ import {
 
 import '@xyflow/react/dist/style.css';
 
-import { EEdgeSemanticType, TEdge } from '@holistix/core-graph';
+import { EEdgeSemanticType, TEdge } from '@holistix-forge/core-graph';
 
 import { EdgeComponent, LabelEnd, LabelMiddle, LabelStart } from './edge';
 import { EdgeShape, TEdgeRenderProps } from '../../apis/types/edge';

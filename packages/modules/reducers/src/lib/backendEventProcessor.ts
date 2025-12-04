@@ -1,4 +1,4 @@
-import { log, EPriority } from '@holistix/log';
+import { log, EPriority } from '@holistix-forge/log';
 import { BackendEventSequence, SequenceEvent } from './backendEventSequence';
 import { Reducer, RequestData, TBaseEvent } from '..';
 

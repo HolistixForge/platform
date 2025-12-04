@@ -1,9 +1,9 @@
 {
-  "name": "@holistix/app-gateway",
+  "name": "@holistix-forge/app-gateway",
   "version": "0.0.1",
   "private": true,
   "nx": {
-    "name": "@holistix/app-gateway",
+    "name": "@holistix-forge/app-gateway",
     "projectType": "application",
     "sourceRoot": "packages/app-gateway/src",
     "targets": {

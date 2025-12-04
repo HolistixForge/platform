@@ -2,10 +2,10 @@ import {
   useCurrentUser,
   useMutationTotpLogin,
   useMutationTotpSetup,
-} from '@holistix/frontend-data';
-import { useAction } from '@holistix/ui-base';
-import { TotpSetupForm, TotpLoginForm } from '@holistix/ui-views';
-import { TotpEnableFormData, TotpLoginFormData } from '@holistix/frontend-data';
+} from '@holistix-forge/frontend-data';
+import { useAction } from '@holistix-forge/ui-base';
+import { TotpSetupForm, TotpLoginForm } from '@holistix-forge/ui-views';
+import { TotpEnableFormData, TotpLoginFormData } from '@holistix-forge/frontend-data';
 import { useState } from 'react';
 
 //

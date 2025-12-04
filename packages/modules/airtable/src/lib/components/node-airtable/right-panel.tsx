@@ -3,8 +3,8 @@ import React, { useEffect, useState } from 'react';
 import {
   TValidSharedDataToCopy,
   useLocalSharedData,
-} from '@holistix/collab/frontend';
-import { TPanel } from '@holistix/space/frontend';
+} from '@holistix-forge/collab/frontend';
+import { TPanel } from '@holistix-forge/space/frontend';
 import { TAirtableSharedData } from '../../airtable-shared-model';
 import { AirtableBaseTableList } from './airtable-base-table-list';
 

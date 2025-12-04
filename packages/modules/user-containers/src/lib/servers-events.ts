@@ -1,4 +1,4 @@
-import { TEventOrigin } from '@holistix/core-graph';
+import { TEventOrigin } from '@holistix-forge/core-graph';
 
 import { UserContainerSystemInfo, TUserContainer } from './servers-types';
 

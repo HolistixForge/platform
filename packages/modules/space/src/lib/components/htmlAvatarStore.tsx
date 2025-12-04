@@ -3,7 +3,7 @@ import { SpringRef as SpringRefWeb } from '@react-spring/web';
 import { Avatar } from './avatar';
 import { AvatarStore } from './apis/avatarStore';
 import { PointerTracker } from './PointerTracker';
-import { Awareness, TUserPosition } from '@holistix/collab-engine';
+import { Awareness, TUserPosition } from '@holistix-forge/collab-engine';
 
 //
 

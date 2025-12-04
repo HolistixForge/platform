@@ -1,7 +1,7 @@
 //
 //
 
-import { EPriority, log } from '@holistix/log';
+import { EPriority, log } from '@holistix-forge/log';
 
 const DEV =
   process.env['NODE_ENV'] === 'development' ||

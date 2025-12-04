@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { sleep } from '@holistix/simple-types';
+import { sleep } from '@holistix-forge/simple-types';
 
 import { SimpleMessage } from '../discussionItem/discussionItem';
 import { ReplyMessage } from '../replyItem/replyItem';

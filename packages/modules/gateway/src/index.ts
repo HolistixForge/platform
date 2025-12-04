@@ -1,6 +1,6 @@
-import type { TModule } from '@holistix/module';
-import { TMyfetchRequest } from '@holistix/simple-types';
-import type { TCollabFrontendExports } from '@holistix/collab/frontend';
+import type { TModule } from '@holistix-forge/module';
+import { TMyfetchRequest } from '@holistix-forge/simple-types';
+import type { TCollabFrontendExports } from '@holistix-forge/collab/frontend';
 
 import {
   TokenManager,

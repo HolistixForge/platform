@@ -1,5 +1,5 @@
 import { TNodeContext } from '../apis/types/node';
-import { UserUsername } from '@holistix/ui-base';
+import { UserUsername } from '@holistix-forge/ui-base';
 
 import './selection-awareness.scss';
 import { ReactNode } from 'react';

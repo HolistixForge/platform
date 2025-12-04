@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { useNotImplemented, randomGuy, randomGuys } from '@holistix/ui-base';
+import { useNotImplemented, randomGuy, randomGuys } from '@holistix-forge/ui-base';
 
 import { Header, HeaderProps } from './header';
 

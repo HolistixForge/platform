@@ -1,4 +1,4 @@
-import { TEventOrigin } from '@holistix/core-graph';
+import { TEventOrigin } from '@holistix-forge/core-graph';
 
 export type TEventNewYoutube = {
   type: 'socials:new-youtube';

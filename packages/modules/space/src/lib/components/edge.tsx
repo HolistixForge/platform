@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { EdgeProps } from '@xyflow/react';
 
-import { useDebugComponent } from '@holistix/ui-toolkit/frontend';
+import { useDebugComponent } from '@holistix-forge/ui-toolkit/frontend';
 
 import {
   EdgeComponent,

@@ -1,11 +1,11 @@
-import { EPriority, log } from '@holistix/log';
-import { loadModules } from '@holistix/module';
+import { EPriority, log } from '@holistix-forge/log';
+import { loadModules } from '@holistix-forge/module';
 import { GatewayState } from '../state/GatewayState';
 import { PermissionManager } from '../permissions';
 import { ProjectRoomsManager } from '../state/ProjectRooms';
 import { OAuthManager } from '../oauth';
 import { TokenManager } from '../tokens';
-import { PermissionRegistry, ProtectedServiceRegistry } from '@holistix/gateway';
+import { PermissionRegistry, ProtectedServiceRegistry } from '@holistix-forge/gateway';
 
 export interface GatewayInstances {
   gatewayState: GatewayState;

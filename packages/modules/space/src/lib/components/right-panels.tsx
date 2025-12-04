@@ -9,7 +9,7 @@ import React, {
   useMemo,
 } from 'react';
 import { PanelComponent, TPanel } from '../../frontend';
-import { icons } from '@holistix/ui-base';
+import { icons } from '@holistix-forge/ui-base';
 
 // Panel Context
 interface PanelContextValue {

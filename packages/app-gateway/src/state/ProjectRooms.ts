@@ -1,10 +1,10 @@
 import * as Y from 'yjs';
-import { EPriority, log } from '@holistix/log';
-import { makeUuid } from '@holistix/simple-types';
+import { EPriority, log } from '@holistix-forge/log';
+import { makeUuid } from '@holistix-forge/simple-types';
 import {
   getAllSharedDataAsJSON,
   setAllSharedDataFromJSON,
-} from '@holistix/collab-engine';
+} from '@holistix-forge/collab-engine';
 import { IPersistenceProvider } from './IPersistenceProvider';
 
 type TProjectSnapshot = Record<string, unknown>;

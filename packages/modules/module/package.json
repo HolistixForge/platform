@@ -1,8 +1,8 @@
 {
-  "name": "@holistix/module",
+  "name": "@holistix-forge/module",
   "version": "0.0.1",
   "nx": {
-    "name": "@holistix/module",
+    "name": "@holistix-forge/module",
     "projectType": "library",
     "sourceRoot": "packages/modules/module/src"
   },

@@ -13,20 +13,20 @@ import { Terminal } from '@jupyterlab/terminal';
 import { Widget } from '@lumino/widgets';
 import { MessageLoop } from '@lumino/messaging';
 
-import { useLocalSharedData } from '@holistix/collab/frontend';
-import { useDispatcher } from '@holistix/reducers/frontend';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
 import {
   TUserContainer,
   TUserContainersSharedData,
-} from '@holistix/user-containers';
-import { TGraphNode } from '@holistix/core-graph';
+} from '@holistix-forge/user-containers';
+import { TGraphNode } from '@holistix-forge/core-graph';
 import {
   DisableZoomDragPan,
   InputsAndOutputs,
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@holistix/space/frontend';
+} from '@holistix-forge/space/frontend';
 
 import { TJupyterSharedData } from '../../jupyter-shared-model';
 import { useJLsManager } from '../../jupyter-hooks';

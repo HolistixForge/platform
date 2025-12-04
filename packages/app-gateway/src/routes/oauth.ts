@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { asyncHandler } from '../middleware/route-handler';
 import { getGatewayInstances } from '../initialization/gateway-instances';
 import { createOAuth2Server } from '../oauth';
-import { EPriority, log } from '@holistix/log';
+import { EPriority, log } from '@holistix-forge/log';
 
 const router = Router();
 

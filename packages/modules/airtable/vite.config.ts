@@ -35,7 +35,7 @@ export default defineConfig({
         index: 'src/index.ts',
         frontend: 'src/frontend.ts',
       },
-      name: '@holistix/airtable',
+      name: '@holistix-forge/airtable',
       fileName: (format, entryName) => `${entryName}.js`,
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.

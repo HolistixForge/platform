@@ -1,9 +1,9 @@
 import { CSSProperties } from 'react';
 
-import { ColorPicker } from '@holistix/ui-base';
-import { SelectFieldset, SelectItem, SliderFieldset } from '@holistix/ui-base';
-import { useLocalSharedData } from '@holistix/collab/frontend';
-import { TCoreSharedData } from '@holistix/core-graph';
+import { ColorPicker } from '@holistix-forge/ui-base';
+import { SelectFieldset, SelectItem, SliderFieldset } from '@holistix-forge/ui-base';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { TCoreSharedData } from '@holistix-forge/core-graph';
 
 import { edgeId, TEdgeRenderProps } from '../../apis/types/edge';
 

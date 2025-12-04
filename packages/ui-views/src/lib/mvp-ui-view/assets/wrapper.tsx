@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-import { TF_User } from '@holistix/types';
-import { UserAvatar, UserUsername, icons } from '@holistix/ui-base';
+import { TF_User } from '@holistix-forge/types';
+import { UserAvatar, UserUsername, icons } from '@holistix-forge/ui-base';
 
 //
 

@@ -3,9 +3,9 @@ import passport from 'passport';
 import crypto from 'crypto';
 import base32 from 'thirty-two';
 
-import { respond } from '@holistix/backend-engine';
-import { EPriority, log, Exception, ForbiddenException } from '@holistix/log';
-import { TJsonWithDate } from '@holistix/simple-types';
+import { respond } from '@holistix-forge/backend-engine';
+import { EPriority, log, Exception, ForbiddenException } from '@holistix-forge/log';
+import { TJsonWithDate } from '@holistix-forge/simple-types';
 
 import { Req } from '../../types';
 import { findKeyForUserId, totpSaveKey, totpSuccess } from '../../models/users';

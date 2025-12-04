@@ -1,9 +1,9 @@
-import { TEventLoad } from '@holistix/gateway';
+import { TEventLoad } from '@holistix-forge/gateway';
 import {
   Reducer,
   RequestData,
   TReducersBackendExports,
-} from '@holistix/reducers';
+} from '@holistix-forge/reducers';
 
 import {
   TEventActiveTabChange,
@@ -22,7 +22,7 @@ import {
 } from './tabs-types';
 import { TTabsSharedData } from './tabs-shared-model';
 import { ReadWriteTree } from './tree';
-import { TCollabBackendExports } from '@holistix/collab';
+import { TCollabBackendExports } from '@holistix-forge/collab';
 
 type TRequired = {
   collab: TCollabBackendExports<TTabsSharedData>;

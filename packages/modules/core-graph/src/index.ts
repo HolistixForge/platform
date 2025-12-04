@@ -1,7 +1,7 @@
-import type { TModule } from '@holistix/module';
-import type { TCollabBackendExports } from '@holistix/collab';
-import type { TReducersBackendExports } from '@holistix/reducers';
-import type { TCollabFrontendExports } from '@holistix/collab/frontend';
+import type { TModule } from '@holistix-forge/module';
+import type { TCollabBackendExports } from '@holistix-forge/collab';
+import type { TReducersBackendExports } from '@holistix-forge/reducers';
+import type { TCollabFrontendExports } from '@holistix-forge/collab/frontend';
 
 import { CoreReducer } from './lib/core-reducer';
 import { TCoreSharedData } from './lib/core-types';

@@ -1,5 +1,5 @@
 {
-  "name": "@holistix/pgadmin4",
+  "name": "@holistix-forge/pgadmin4",
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.js",

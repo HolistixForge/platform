@@ -1,9 +1,9 @@
-import type { TModule } from '@holistix/module';
-import type { TCollabFrontendExports } from '@holistix/collab/frontend';
-import type { TSpaceFrontendExports } from '@holistix/space/frontend';
-import type { TUserContainersFrontendExports } from '@holistix/user-containers/frontend';
-import { TUserContainersSharedData } from '@holistix/user-containers';
-import { TReducersFrontendExports } from '@holistix/reducers/frontend';
+import type { TModule } from '@holistix-forge/module';
+import type { TCollabFrontendExports } from '@holistix-forge/collab/frontend';
+import type { TSpaceFrontendExports } from '@holistix-forge/space/frontend';
+import type { TUserContainersFrontendExports } from '@holistix-forge/user-containers/frontend';
+import { TUserContainersSharedData } from '@holistix-forge/user-containers';
+import { TReducersFrontendExports } from '@holistix-forge/reducers/frontend';
 
 import { NodeTerminal } from './lib/components/terminal/terminal';
 import { NodeCell } from './lib/components/code-cell/cell';

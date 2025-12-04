@@ -4,7 +4,7 @@ import { flattenLayerTreeCollection } from '../../layer-tree-utils';
 import {
   useAwareness,
   useAwarenessSelections,
-} from '@holistix/collab/frontend';
+} from '@holistix-forge/collab/frontend';
 
 export const LayersTreePanel: FC<{
   viewId: string;

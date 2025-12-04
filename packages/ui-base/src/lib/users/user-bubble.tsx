@@ -1,4 +1,4 @@
-import { TF_User } from '@holistix/types';
+import { TF_User } from '@holistix-forge/types';
 import { UserAvatar } from './users';
 
 export interface UserBubbleProps {

@@ -1,4 +1,4 @@
-import { injectCssClass } from '@holistix/ui-toolkit';
+import { injectCssClass } from '@holistix-forge/ui-toolkit';
 import './YjsAwareness.css';
 
 const userCss: {

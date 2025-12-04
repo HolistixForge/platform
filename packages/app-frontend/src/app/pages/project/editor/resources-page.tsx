@@ -1,16 +1,16 @@
 import { useState } from 'react';
 
-import { ResourceBar, ServerStack } from '@holistix/ui-views';
+import { ResourceBar, ServerStack } from '@holistix-forge/ui-views';
 import {
   TUserContainer,
   TUserContainersSharedData,
-} from '@holistix/user-containers';
+} from '@holistix-forge/user-containers';
 import {
   NewContainerForm,
   TContainerRunnerFrontend,
   UserContainerCardInternal,
-} from '@holistix/user-containers/frontend';
-import { useLocalSharedData } from '@holistix/collab/frontend';
+} from '@holistix-forge/user-containers/frontend';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
 
 import { ProjectSidebar } from '../sidebar';
 import { useProject } from '../project-context';
