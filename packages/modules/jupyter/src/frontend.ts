@@ -2,12 +2,15 @@ import type { TModule } from '@holistix/module';
 import type { TCollabFrontendExports } from '@holistix/collab/frontend';
 import type { TSpaceFrontendExports } from '@holistix/space/frontend';
 import type { TUserContainersFrontendExports } from '@holistix/user-containers/frontend';
+import { TUserContainersSharedData } from '@holistix/user-containers';
+import { TReducersFrontendExports } from '@holistix/reducers/frontend';
 
 import { NodeTerminal } from './lib/components/terminal/terminal';
 import { NodeCell } from './lib/components/code-cell/cell';
 import { NodeKernel } from './lib/components/node-kernel/node-kernel';
-import { Jupyter_Load_Frontend_ExtraContext } from './lib/jupyter-shared-model-front';
 import { spaceMenuEntrie } from './lib/jupyter-menu';
+import { TJupyterSharedData } from './lib/jupyter-shared-model';
+import { JLsManager } from './lib/front/jls-manager';
 
 import './lib/index.scss';
 
@@ -17,6 +20,11 @@ type TRequired = {
   collab: TCollabFrontendExports;
   space: TSpaceFrontendExports;
   'user-containers': TUserContainersFrontendExports;
+  reducers: TReducersFrontendExports;
+};
+
+export type TJupyterFrontendExports = {
+  jlsManager: JLsManager;
 };
 
 export const moduleFrontend: TModule<TRequired> = {
@@ -27,11 +35,6 @@ export const moduleFrontend: TModule<TRequired> = {
   load: ({ depsExports, moduleExports }) => {
     depsExports.collab.collab.loadSharedData('map', 'jupyter', 'servers');
 
-    // Load extra context if needed
-    const extraContext = Jupyter_Load_Frontend_ExtraContext({
-      extraContext: depsExports,
-    });
-
     depsExports.space.registerMenuEntries(spaceMenuEntrie);
     depsExports.space.registerNodes({
       'jupyter-cell': NodeCell,
@@ -39,8 +42,13 @@ export const moduleFrontend: TModule<TRequired> = {
       'jupyter-terminal': NodeTerminal,
     });
 
-    if (extraContext) {
-      moduleExports(extraContext);
-    }
+    moduleExports({
+      jlsManager: new JLsManager(
+        depsExports.collab.collab.sharedData as TJupyterSharedData &
+          TUserContainersSharedData,
+        depsExports.reducers.dispatcher,
+        depsExports['user-containers'].getToken
+      ),
+    });
   },
 };

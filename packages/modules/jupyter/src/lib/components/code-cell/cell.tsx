@@ -19,7 +19,10 @@ import {
   useNodeHeaderButtons,
 } from '@holistix/space/frontend';
 import { makeUuid } from '@holistix/simple-types';
-import { TServersSharedData, TServer } from '@holistix/user-containers';
+import {
+  TUserContainersSharedData,
+  TUserContainer,
+} from '@holistix/user-containers';
 import { useDispatcher } from '@holistix/reducers/frontend';
 
 import { TJupyterEvent } from '../../jupyter-events';
@@ -30,21 +33,25 @@ import {
   TJupyterServerData,
 } from '../../jupyter-types';
 import { TJupyterSharedData } from '../../jupyter-shared-model';
-import { useKernelPack } from '../../jupyter-shared-model-front';
+import { useKernelPack } from '../../jupyter-hooks';
 import CodeEditorMonaco from '../code-editor-monaco/code-editor-monaco';
 import { BrowserWidgetManager } from '../../front/browser-widget-manager';
 import { KernelStateIndicator } from '../node-kernel/kernel-state-indicator';
+import * as nbformat from '@jupyterlab/nbformat';
 
 import './cell.scss';
 
 //
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type TEditor = any;
 
 export const useCellLogic = ({
   userContainerId,
   cellId,
   selected,
 }: {
-  userContainerId: number;
+  userContainerId: string;
   cellId: string;
   selected: boolean;
 }) => {
@@ -59,10 +66,11 @@ export const useCellLogic = ({
 
   const cell = jupyter?.cells[cellId];
 
-  const ps: TServer | undefined = useLocalSharedData<TServersSharedData>(
-    ['user-containers:containers'],
-    (sd) => sd['user-containers:containers'].get(`${userContainerId}`)
-  );
+  const ps: TUserContainer | undefined =
+    useLocalSharedData<TUserContainersSharedData>(
+      ['user-containers:containers'],
+      (sd) => sd['user-containers:containers'].get(`${userContainerId}`)
+    );
 
   const client_id = ps?.oauth?.find(
     (o) => o.service_name === 'jupyterlab'
@@ -70,7 +78,7 @@ export const useCellLogic = ({
 
   const dispatcher = useDispatcher<TJupyterEvent | TCoreEvent>();
 
-  const editorRef = useRef<any>(null);
+  const editorRef = useRef<TEditor | null>(null);
 
   //
 
@@ -86,11 +94,11 @@ export const useCellLogic = ({
   const bindEditor = useBindEditor();
 
   const handleEditorMount = useCallback(
-    (editor: any) => {
+    (editor: TEditor) => {
       editorRef.current = editor;
       awareness && bindEditor('monaco', cellId, editor);
     },
-    [awareness, cellId]
+    [awareness, bindEditor, cellId]
   );
 
   //
@@ -145,7 +153,7 @@ export const CellStory = ({
   userContainerId,
 }: {
   cellId: string;
-  userContainerId: number;
+  userContainerId: string;
 }) => {
   const props = useCellLogic({ cellId, userContainerId, selected: false });
   return <CellInternal {...props} />;
@@ -183,7 +191,7 @@ const CellInternal = (props: ReturnType<typeof useCellLogic>) => {
 
 //
 
-const CellOutput = (props: { cell: Cell; userContainerId: number }) => {
+const CellOutput = (props: { cell: Cell; userContainerId: string }) => {
   const { outputs } = props.cell;
 
   const kernelPack = useKernelPack(props.userContainerId, props.cell.kernel_id);
@@ -218,7 +226,7 @@ const CellOutput = (props: { cell: Cell; userContainerId: number }) => {
       const customOutput: IOutput[] = uuidInject(
         outputs as unknown as IOutput[]
       );
-      oa.model.fromJSON(customOutput as any);
+      oa.model.fromJSON(customOutput as unknown as nbformat.IOutput[]);
     }
   }, [oa, outputs, uuidInject]);
 
@@ -261,9 +269,11 @@ export const NodeCell = ({
   //
   const { id, isOpened, open, selected } = useNodeContext();
 
+  const { cell_id, user_container_id } = node.data as TCellNodeDataPayload;
+
   const cellLogic = useCellLogic({
-    cellId: node.data!.cell_id as string,
-    userContainerId: node.data!.user_container_id,
+    cellId: cell_id,
+    userContainerId: user_container_id,
     selected,
   });
 

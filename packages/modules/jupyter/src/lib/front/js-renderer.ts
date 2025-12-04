@@ -1,5 +1,5 @@
 import * as RM from '@jupyterlab/rendermime';
-import { log } from '@holistix/log';
+import { EPriority, log } from '@holistix/log';
 
 //
 
@@ -32,14 +32,14 @@ class FrontendJsRenderer extends RM.RenderedJavaScript {
 
         if (outputAreaUid) {
           log(
-            7,
+            EPriority.Debug,
             'MY_JAVASCRIPT_RENDERER',
             `mock document.getElementById for [${outputAreaUid}]`
           );
           Document.prototype.getElementById = (id: string) => {
             const container = old(outputAreaUid);
             log(
-              7,
+              EPriority.Debug,
               'MY_JAVASCRIPT_RENDERER',
               `document.getElementById("${outputAreaUid}.querySelector('[id="${id}"]')`
             );
@@ -53,7 +53,7 @@ class FrontendJsRenderer extends RM.RenderedJavaScript {
 
         if (outputAreaUid) {
           log(
-            7,
+            EPriority.Debug,
             'MY_JAVASCRIPT_RENDERER',
             `restore original document.getElementById ([${outputAreaUid}])`
           );

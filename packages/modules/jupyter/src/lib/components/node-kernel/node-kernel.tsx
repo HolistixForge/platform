@@ -10,7 +10,10 @@ import {
 import { TGraphNode } from '@holistix/core-graph';
 import { useLocalSharedData } from '@holistix/collab/frontend';
 import { useDispatcher } from '@holistix/reducers/frontend';
-import { TServersSharedData, TServer } from '@holistix/user-containers';
+import {
+  TUserContainersSharedData,
+  TUserContainer,
+} from '@holistix/user-containers';
 import { Datetime } from '@holistix/ui-base';
 
 import { KernelStateIndicator } from './kernel-state-indicator';
@@ -19,7 +22,7 @@ import {
   TKernelNodeDataPayload,
 } from '../../jupyter-types';
 import { TJupyterSharedData } from '../../jupyter-shared-model';
-import { useKernelPack } from '../../jupyter-shared-model-front';
+import { useKernelPack } from '../../jupyter-hooks';
 import { TJupyterEvent } from '../../jupyter-events';
 
 //
@@ -37,8 +40,8 @@ export const NodeKernel = ({
 
   const kernelPack = useKernelPack(user_container_id, kernel_id);
 
-  const s: { ps: TServer; js: TJupyterServerData } = useLocalSharedData<
-    TServersSharedData & TJupyterSharedData
+  const s: { ps: TUserContainer; js: TJupyterServerData } = useLocalSharedData<
+    TUserContainersSharedData & TJupyterSharedData
   >(['jupyter:servers', 'user-containers:containers'], (sd) => {
     return {
       js: sd['jupyter:servers'].get(`${user_container_id}`),

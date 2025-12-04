@@ -15,8 +15,11 @@ import { TPosition } from '@holistix/core-graph';
 import { TJupyterEvent } from '../jupyter-events';
 import { TJupyterSharedData } from '../jupyter-shared-model';
 import { TJupyterServerData } from '../jupyter-types';
-import { useJLsManager } from '../jupyter-shared-model-front';
-import { TServer, TServersSharedData } from '@holistix/user-containers';
+import { useJLsManager } from '../jupyter-hooks';
+import {
+  TUserContainer,
+  TUserContainersSharedData,
+} from '@holistix/user-containers';
 
 type NewTerminalFormData = { terminal_id: string };
 
@@ -26,32 +29,30 @@ export const NewTerminalForm = ({
   viewId,
   closeForm,
 }: {
-  user_container_id: number;
+  user_container_id: string;
   position: TPosition;
   viewId: string;
   closeForm: () => void;
 }) => {
   const dispatcher = useDispatcher<TJupyterEvent>();
-  const { jupyter: jmc } = useJLsManager();
+  const jlsManager = useJLsManager();
 
-  const sd = useLocalSharedData<TServersSharedData & TJupyterSharedData>(
+  const sd = useLocalSharedData<TUserContainersSharedData & TJupyterSharedData>(
     ['user-containers:containers', 'jupyter:servers'],
     (sd) => sd
   );
 
-  const server: TServer | undefined = sd['user-containers:containers'].get(
-    user_container_id.toString()
-  );
+  const server: TUserContainer | undefined =
+    sd['user-containers:containers'].get(user_container_id);
 
-  const jupyter: TJupyterServerData | undefined = sd['jupyter:servers'].get(
-    user_container_id.toString()
-  );
+  const jupyter: TJupyterServerData | undefined =
+    sd['jupyter:servers'].get(user_container_id);
 
   useEffect(() => {
     if (jupyter && server) {
-      jmc.jlsManager.startPollingResources(server);
+      jlsManager.startPollingResources(server);
     }
-  }, [jupyter, jmc, server]);
+  }, [jupyter, jlsManager, server]);
 
   const action = useAction<NewTerminalFormData>(
     (d) => {
@@ -93,7 +94,7 @@ export const NewTerminalForm = ({
     if (!action.isOpened) {
       closeForm();
     }
-  }, [action.isOpened]);
+  }, [action.isOpened, closeForm]);
 
   return (
     <DialogControlled

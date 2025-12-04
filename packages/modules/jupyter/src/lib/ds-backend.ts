@@ -1,7 +1,8 @@
 import { TUserContainer, serviceUrl } from '@holistix/user-containers';
 
-import { TJupyterServerData, TServerSettings } from './jupyter-types';
+import { TJupyterServerData, TUserContainerSettings } from './jupyter-types';
 import { JupyterlabDriver } from './driver';
+import { SharedMap } from '@holistix/collab-engine';
 
 //
 
@@ -19,6 +20,7 @@ export const jupyterlabIsReachable = async (s: TUserContainer) => {
       const response = await fetch(`${url}/api`, { signal: controller.signal });
       clearTimeout(timeoutId);
       if (response.status === 200) r = true;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       //
     }
@@ -37,15 +39,15 @@ export const jupyterlabIsReachable = async (s: TUserContainer) => {
 export class DriversStoreBackend {
   //
   _drivers: Map<string, JupyterlabDriver> = new Map();
-  _jupyterServers: Map<string, TJupyterServerData>;
-  _servers: Map<string, TUserContainer>;
+  _jupyterServers: SharedMap<TJupyterServerData>;
+  _servers: SharedMap<TUserContainer>;
   _onNewDriver?: TOnNewDriverCb;
 
   //
 
   constructor(
-    jss: Map<string, TJupyterServerData>,
-    pss: Map<string, TUserContainer>,
+    jss: SharedMap<TJupyterServerData>,
+    pss: SharedMap<TUserContainer>,
     onNewDriver?: TOnNewDriverCb
   ) {
     this._jupyterServers = jss;
@@ -56,7 +58,7 @@ export class DriversStoreBackend {
   //
   //
 
-  getServerSetting(psid: string, token: string): TServerSettings {
+  getServerSetting(psid: string, token: string): TUserContainerSettings {
     const server = this._servers.get(`${psid}`);
     if (server) {
       const url = serviceUrl(server, 'jupyterlab');

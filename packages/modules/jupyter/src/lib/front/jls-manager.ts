@@ -1,11 +1,11 @@
 import { serverUrl } from '@holistix/api-fetch';
 import {
-  TServer,
-  TServersSharedData,
+  TUserContainer,
+  TUserContainersSharedData,
   serviceUrl,
 } from '@holistix/user-containers';
 import { Listenable } from '@holistix/simple-types';
-import { FrontendDispatcher } from '@holistix/collab-engine';
+import { FrontendDispatcher } from '@holistix/reducers/frontend';
 
 import { BrowserWidgetManager } from './browser-widget-manager';
 import { JupyterlabDriver } from '../driver';
@@ -52,32 +52,32 @@ export const stateToLabel = (state: number) => {
 //
 
 export type TKernelPack = {
-  user_container_id: number;
+  user_container_id: string;
   kernel_id: string;
   state: number;
   widgetManager: BrowserWidgetManager | null;
   listeners: (() => void)[];
 };
 
-export type TOnNewDriverCb = (s: TServer) => Promise<void>;
+export type TOnNewDriverCb = (s: TUserContainer) => Promise<void>;
 
 /**
  * JupyterLabs Manager
  */
 
 export class JLsManager extends Listenable {
-  _drivers: Map<number, Promise<JupyterlabDriver>> = new Map();
+  _drivers: Map<string, Promise<JupyterlabDriver>> = new Map();
   _kernelPacks: Map<string, TKernelPack> = new Map();
 
-  _sd: TJupyterSharedData & TServersSharedData;
+  _sd: TJupyterSharedData & TUserContainersSharedData;
   _dispatcher: FrontendDispatcher<TJupyterEvent>;
 
-  getToken: (s: TServer, serviceName: string) => Promise<string>;
+  getToken: (s: TUserContainer, serviceName: string) => Promise<string>;
 
   constructor(
-    sd: TJupyterSharedData & TServersSharedData,
+    sd: TJupyterSharedData & TUserContainersSharedData,
     dispatcher: FrontendDispatcher<TJupyterEvent>,
-    getToken: (s: TServer, serviceName: string) => Promise<string>
+    getToken: (s: TUserContainer, serviceName: string) => Promise<string>
   ) {
     super();
     this._sd = sd;
@@ -146,8 +146,8 @@ export class JLsManager extends Listenable {
 
   //
 
-  private _onNewDriver(server: TServer) {
-    if (server.type === 'jupyter') {
+  private _onNewDriver(server: TUserContainer) {
+    if (server.image_id.includes('jupyter:')) {
       const service = server.httpServices.find(
         (srv) => srv.name === 'jupyterlab'
       );
@@ -155,7 +155,7 @@ export class JLsManager extends Listenable {
         injectWidgetsScripts(
           serverUrl({
             host: service.host,
-            location: service.location,
+            location: '',
           })
         );
       }
@@ -164,7 +164,7 @@ export class JLsManager extends Listenable {
   }
   //
 
-  public async getServerSetting(server: TServer, websocket?: boolean) {
+  public async getServerSetting(server: TUserContainer, websocket?: boolean) {
     const token = await this.getToken(server, 'jupyterlab');
 
     const url = serviceUrl(server, 'jupyterlab', websocket);
@@ -183,7 +183,7 @@ export class JLsManager extends Listenable {
 
   //
 
-  private _getDriver(server: TServer): Promise<JupyterlabDriver> {
+  private _getDriver(server: TUserContainer): Promise<JupyterlabDriver> {
     const p = this._drivers.get(server.user_container_id);
     if (!p) {
       const np = new Promise<JupyterlabDriver>((resolve, reject) => {
@@ -216,7 +216,7 @@ export class JLsManager extends Listenable {
   //
 
   // just ensure a driver is created, it will start polling resources
-  public startPollingResources(server: TServer) {
+  public startPollingResources(server: TUserContainer) {
     this._getDriver(server);
   }
 
@@ -230,7 +230,7 @@ export class JLsManager extends Listenable {
   //
 
   public getKernelPack(
-    user_container_id: number,
+    user_container_id: string,
     kernel_id: string
   ): TKernelPack | false {
     const pack = this._kernelPacks.get(kernel_id);

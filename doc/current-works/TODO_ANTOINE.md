@@ -1,5 +1,6 @@
 ⚠️ Antoine's stuffs
 
+ci cd : npx nx run-many -t build --verbose | grep error. check bundles, compile storybooks
 /root/.local-dev
 user-containers default runner, jupyter
 mv docker image to theur module

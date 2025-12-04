@@ -3,16 +3,19 @@
   "include": [],
   "references": [
     {
+      "path": "../tabs"
+    },
+    {
       "path": "../../frontend-data"
     },
     {
       "path": "../../ui-toolkit"
     },
     {
-      "path": "../../collab-engine"
+      "path": "../../api-fetch"
     },
     {
-      "path": "../../api-fetch"
+      "path": "../../collab-engine"
     },
     {
       "path": "../../log"

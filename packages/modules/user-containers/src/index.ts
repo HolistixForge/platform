@@ -6,7 +6,10 @@ import type { TReducersBackendExports } from '@holistix/reducers';
 import type { TGatewayExports } from '@holistix/gateway';
 import type { TUserContainersSharedData } from './lib/servers-shared-model';
 import type { TCoreSharedData } from '@holistix/core-graph';
-import type { TContainerImageInfo, TContainerImageDefinition } from './lib/container-image';
+import type {
+  TContainerImageInfo,
+  TContainerImageDefinition,
+} from './lib/container-image';
 import type { ContainerRunner } from './lib/runner';
 import { localRunnerBackend } from './lib/local-runner';
 
@@ -83,7 +86,8 @@ export const moduleBackend: TModule<TRequired, TUserContainersExports> = {
         imageName: 'Ubuntu Terminal',
         imageUri: 'demiurge/ubuntu-terminal',
         imageTag: '24.04',
-        description: 'Minimal Ubuntu 24.04 container exposing only a web-based terminal',
+        description:
+          'Minimal Ubuntu 24.04 container exposing only a web-based terminal',
         category: 'utility',
         oauthClients: [],
       },
@@ -184,7 +188,7 @@ export type { TUserContainer } from './lib/servers-types';
 export { serviceUrl } from './lib/servers-types';
 
 export type {
-  TUserContainersEvents as TServerEvents,
+  TUserContainersEvents,
   TEventNew,
   TEventDelete,
 } from './lib/servers-events';

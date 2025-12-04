@@ -40,7 +40,7 @@ export type TJupyterServerData = {
   cells: Record<string, Cell>;
 };
 
-export type TServerSettings = {
+export type TUserContainerSettings = {
   baseUrl: ServerConnection.ISettings['baseUrl'];
   token?: ServerConnection.ISettings['token'];
 };

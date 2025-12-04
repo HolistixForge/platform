@@ -13,12 +13,12 @@ import { Terminal } from '@jupyterlab/terminal';
 import { Widget } from '@lumino/widgets';
 import { MessageLoop } from '@lumino/messaging';
 
-import {
-  useLocalSharedData,
-  useSharedDataDirect,
-} from '@holistix/collab/frontend';
+import { useLocalSharedData } from '@holistix/collab/frontend';
 import { useDispatcher } from '@holistix/reducers/frontend';
-import { TServer, TServersSharedData } from '@holistix/user-containers';
+import {
+  TUserContainer,
+  TUserContainersSharedData,
+} from '@holistix/user-containers';
 import { TGraphNode } from '@holistix/core-graph';
 import {
   DisableZoomDragPan,
@@ -29,10 +29,10 @@ import {
 } from '@holistix/space/frontend';
 
 import { TJupyterSharedData } from '../../jupyter-shared-model';
-import { useJLsManager } from '../../jupyter-shared-model-front';
+import { useJLsManager } from '../../jupyter-hooks';
 import { jupyterlabIsReachable } from '../../ds-backend';
 import {
-  TServerSettings,
+  TUserContainerSettings,
   TTerminalNodeDataPayload,
   Terminal as MyTerminal,
 } from '../../jupyter-types';
@@ -50,7 +50,8 @@ const Xterm_Loading_Workaround = async () => {
       canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
     try {
       return gl instanceof WebGLRenderingContext;
-    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_e) {
       return false;
     }
   }
@@ -71,7 +72,7 @@ const Xterm_Loading_Workaround = async () => {
 //
 
 const connectTerminal = async (
-  s: TServerSettings,
+  s: TUserContainerSettings,
   sessionModel: { name: string }
 ) => {
   // At least in storybook. if we don't preload xterm, the terminal will not load
@@ -112,17 +113,17 @@ export const JupyterTerminal = ({
     }
   );
 
-  const server: TServer = useLocalSharedData<TServersSharedData>(
+  const server: TUserContainer = useLocalSharedData<TUserContainersSharedData>(
     ['user-containers:containers'],
     (sd) => {
       return sd['user-containers:containers'].get(`${userContainerId}`);
     }
   );
 
-  const { jupyter } = useJLsManager();
+  const jlsManager = useJLsManager();
 
   const ref = useRef<HTMLDivElement>(null);
-  const terminalWidgetRef = useRef<any>(null); // Store the Terminal widget instance
+  const terminalWidgetRef = useRef<Terminal | null>(null); // Store the Terminal widget instance
 
   //
 
@@ -145,14 +146,14 @@ export const JupyterTerminal = ({
         clearInterval(interval);
       }
     };
-  }, [isReachable]);
+  }, [isReachable, server]);
 
   //
 
   useEffect(() => {
     if (isReachable) {
       if (server) {
-        jupyter.jlsManager.getServerSetting(server).then((ss) => {
+        jlsManager.getServerSetting(server).then((ss) => {
           connectTerminal(ss, terminal.sessionModel).then((terminalWidget) => {
             if (terminalWidgetRef.current) {
               terminalWidgetRef.current.dispose();
@@ -165,7 +166,7 @@ export const JupyterTerminal = ({
         });
       }
     }
-  }, [server, jupyter.jlsManager, terminalId, isReachable]);
+  }, [server, jlsManager, terminalId, isReachable, terminal.sessionModel]);
 
   // ResizeObserver to auto-fit terminal on container resize
   useEffect(() => {
@@ -204,7 +205,8 @@ export const NodeTerminal = ({
 }: {
   node: TGraphNode<TTerminalNodeDataPayload>;
 }) => {
-  const { terminal_id, user_container_id } = node.data!;
+  const { terminal_id, user_container_id } =
+    node.data as TTerminalNodeDataPayload;
 
   const { id, isOpened, open, selected } = useNodeContext();
 

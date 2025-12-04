@@ -82,7 +82,7 @@ export type TEventDeleteTerminalNode = {
 
 export type TEventJupyterResourcesChanged = {
   type: 'jupyter:resources-changed';
-  user_container_id: number;
+  user_container_id: string;
   resources: {
     kernels: Kernel[];
     terminals: Terminal[];

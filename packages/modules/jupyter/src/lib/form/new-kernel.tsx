@@ -15,8 +15,11 @@ import { TPosition } from '@holistix/core-graph';
 import { TEventNewKernelNode } from '../jupyter-events';
 import { TJupyterSharedData } from '../jupyter-shared-model';
 import { TJupyterServerData } from '../jupyter-types';
-import { useJLsManager } from '../jupyter-shared-model-front';
-import { TServer, TServersSharedData } from '@holistix/user-containers';
+import { useJLsManager } from '../jupyter-hooks';
+import {
+  TUserContainer,
+  TUserContainersSharedData,
+} from '@holistix/user-containers';
 
 /**
  *
@@ -34,7 +37,7 @@ export const NewKernelForm = ({
   viewId,
   closeForm,
 }: {
-  user_container_id: number;
+  user_container_id: string;
   position: TPosition;
   viewId: string;
   closeForm: () => void;
@@ -43,26 +46,24 @@ export const NewKernelForm = ({
 
   const dispatcher = useDispatcher<TEventNewKernelNode>();
 
-  const { jupyter: jmc } = useJLsManager();
+  const jlsManager = useJLsManager();
 
-  const sd = useLocalSharedData<TServersSharedData & TJupyterSharedData>(
+  const sd = useLocalSharedData<TUserContainersSharedData & TJupyterSharedData>(
     ['user-containers:containers', 'jupyter:servers'],
     (sd) => sd
   );
 
-  const server: TServer | undefined = sd['user-containers:containers'].get(
-    user_container_id.toString()
-  );
+  const server: TUserContainer | undefined =
+    sd['user-containers:containers'].get(user_container_id);
 
-  const jupyter: TJupyterServerData | undefined = sd['jupyter:servers'].get(
-    user_container_id.toString()
-  );
+  const jupyter: TJupyterServerData | undefined =
+    sd['jupyter:servers'].get(user_container_id);
 
   useEffect(() => {
     if (jupyter && server) {
-      jmc.jlsManager.startPollingResources(server);
+      jlsManager.startPollingResources(server);
     }
-  }, [jupyter, jmc, server]);
+  }, [jupyter, jlsManager, server]);
 
   const action = useAction<NewKernelFormData>(
     (d) => {
@@ -93,9 +94,11 @@ export const NewKernelForm = ({
     if (!action.isOpened) {
       closeForm();
     }
-  }, [action.isOpened]);
+  }, [action.isOpened, closeForm]);
 
   //
+
+  if (!jupyter) return null;
 
   return (
     <DialogControlled
@@ -115,7 +118,7 @@ export const NewKernelForm = ({
         {Object.keys(jupyter?.kernels || {}).map((k) => (
           <SelectItem key={k} value={k}>
             {k.substring(0, 8)}{' '}
-            <b>{jupyter!.kernels[k].notebooks.map((n) => n.path).join(', ')}</b>
+            <b>{jupyter.kernels[k].notebooks.map((n) => n.path).join(', ')}</b>
           </SelectItem>
         ))}
       </SelectFieldset>

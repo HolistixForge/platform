@@ -75,8 +75,8 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
 
     const sd = depsExports.collab.collab.sharedData;
     this._drivers = new DriversStoreBackend(
-      sd['jupyter:servers'] as any,
-      sd['user-containers:containers'] as any
+      sd['jupyter:servers'],
+      sd['user-containers:containers']
     );
   }
 
@@ -87,6 +87,7 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
   private isJupyterImage(imageId: string): boolean {
     const imageDef =
       this.depsExports['user-containers'].imageRegistry.get(imageId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (imageDef as any)?.options?.containerType === 'jupyter';
   }
 
@@ -106,7 +107,7 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
 
   // Helper to find the server containing a given kernel/cell/terminal id
   private findServerByKernelId(
-    jupyterServers: Iterable<any>,
+    jupyterServers: Iterable<TJupyterServerData>,
     kernelId: string
   ) {
     for (const server of jupyterServers) {
@@ -115,7 +116,10 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
     return undefined;
   }
 
-  private findServerByCellId(jupyterServers: Iterable<any>, cellId: string) {
+  private findServerByCellId(
+    jupyterServers: Iterable<TJupyterServerData>,
+    cellId: string
+  ) {
     for (const server of jupyterServers) {
       if (server.cells && server.cells[cellId]) return server;
     }
@@ -123,7 +127,7 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
   }
 
   private findServerByTerminalId(
-    jupyterServers: Iterable<any>,
+    jupyterServers: Iterable<TJupyterServerData>,
     terminalId: string
   ) {
     for (const server of jupyterServers) {
@@ -419,11 +423,12 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
     if (server && server.cells[cell_id]) {
       server.cells[cell_id].outputs = output as unknown as TJsonArray;
       server.cells[cell_id].busy = false;
+      this.sharedData['jupyter:servers'].set(
+        `${server.user_container_id}`,
+        server
+      );
     }
-    this.sharedData['jupyter:servers'].set(
-      `${server.user_container_id}`,
-      server
-    );
+
     return Promise.resolve();
   }
 
@@ -439,11 +444,12 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
     if (server && server.cells[cell_id]) {
       server.cells[cell_id].outputs = [];
       server.cells[cell_id].busy = false;
+      this.sharedData['jupyter:servers'].set(
+        `${server.user_container_id}`,
+        server
+      );
     }
-    this.sharedData['jupyter:servers'].set(
-      `${server.user_container_id}`,
-      server
-    );
+
     return Promise.resolve();
   }
 
@@ -596,9 +602,9 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
     event: TEventDelete,
     requestData: RequestData
   ): Promise<void> {
-    const projectServerId = event.user_container_id;
+    const projecTUserContainerId = event.user_container_id;
     const jupyterServer = this.sharedData['jupyter:servers'].get(
-      `${projectServerId}`
+      `${projecTUserContainerId}`
     );
 
     if (jupyterServer) {
@@ -634,7 +640,7 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
       }
 
       // Remove the server from jupyterServers
-      this.sharedData['jupyter:servers'].delete(`${projectServerId}`);
+      this.sharedData['jupyter:servers'].delete(`${projecTUserContainerId}`);
     }
   }
 

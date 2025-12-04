@@ -1,10 +1,10 @@
-import { TServerEvents } from '@holistix/user-containers';
+import { TUserContainersEvents } from '@holistix/user-containers';
 import { TCoreSharedData, TEdge } from '@holistix/core-graph';
 
 export const edgeToEvent = (
   edge: TEdge,
   nodes: TCoreSharedData['nodes']
-): Partial<TServerEvents> => {
+): Partial<TUserContainersEvents> => {
   const n1 = nodes.get(edge.from.node);
   const n2 = nodes.get(edge.to.node);
 

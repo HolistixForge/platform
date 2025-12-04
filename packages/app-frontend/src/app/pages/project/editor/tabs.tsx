@@ -15,7 +15,10 @@ import { useLocalSharedData } from '@holistix/collab/frontend';
 import { serviceUrl } from '@holistix/user-containers';
 
 import { useDispatcher } from '../model/collab-model-chunk';
-import { TServer, TServersSharedData } from '@holistix/user-containers';
+import {
+  TUserContainer,
+  TUserContainersSharedData,
+} from '@holistix/user-containers';
 import { NodeEditorView } from './node-editor/node-editor-view';
 import { ResourcePage } from './resources-page';
 
@@ -118,7 +121,7 @@ const TabTypeRouter: FC<PanelProps & TabPayload> = (props) => {
     return <ResourcePage />;
   } else if (props.type === 'resource-ui') {
     return (
-      <ProjectServerUIView
+      <ProjecTUserContainerUIView
         project_server_id={props.project_server_id}
         service_name={props.service_name}
       />
@@ -132,11 +135,11 @@ const TabTypeRouter: FC<PanelProps & TabPayload> = (props) => {
 
 //
 
-const ProjectServerUIView = (props: {
+const ProjecTUserContainerUIView = (props: {
   project_server_id: number;
   service_name: string;
 }) => {
-  const server: TServer = useSharedData<TServersSharedData>(
+  const server: TUserContainer = useSharedData<TUserContainersSharedData>(
     ['user-containers:containers'],
     (sd) => sd['user-containers:containers'].get(`${props.project_server_id}`)
   );

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 
 import { EPriority, Logger } from '@holistix/log';
 import {
-  TServerEvents,
+  TUserContainersEvents,
   TUserContainersSharedData,
 } from '@holistix/user-containers';
 import { useLocalSharedData } from '@holistix/collab/frontend';
@@ -16,7 +16,7 @@ import {
   STORY_USER_CONTAINER_ID,
 } from '../../stories/module-stories-utils';
 import { JupyterTerminal } from './terminal';
-import { useJLsManager } from '../../jupyter-shared-model-front';
+import { useJLsManager } from '../../jupyter-hooks';
 import { TJupyterSharedData } from '../../jupyter-shared-model';
 import { TJupyterServerData } from '../../jupyter-types';
 
@@ -37,7 +37,7 @@ const StoryWrapper = () => {
 //
 
 const Terminals = () => {
-  const dispatcher = useDispatcher<TJupyterEvent | TServerEvents>();
+  const dispatcher = useDispatcher<TJupyterEvent | TUserContainersEvents>();
   const { jupyter: jmc } = useJLsManager();
 
   const sd = useLocalSharedData<TUserContainersSharedData & TJupyterSharedData>(

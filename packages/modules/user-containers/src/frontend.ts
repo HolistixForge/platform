@@ -5,6 +5,8 @@ import type { TCollabFrontendExports } from '@holistix/collab/frontend';
 import type { TSpaceFrontendExports } from '@holistix/space/frontend';
 import { serversMenuEntries } from './lib/servers-menu';
 import { localRunnerFrontend } from './lib/local-runner-frontend';
+import { TUserContainersSharedData } from './lib/servers-shared-model';
+import { TUserContainer } from './lib/servers-types';
 
 //
 
@@ -15,6 +17,10 @@ export type TContainerRunnerFrontend = {
 };
 
 export type TUserContainersFrontendExports = {
+  getToken: (
+    userContainer: TUserContainer,
+    serviceName: string
+  ) => Promise<string>;
   registerContainerRunner: (
     id: string,
     containerRunner: TContainerRunnerFrontend
@@ -23,7 +29,7 @@ export type TUserContainersFrontendExports = {
 };
 
 type TRequired = {
-  collab: TCollabFrontendExports;
+  collab: TCollabFrontendExports<TUserContainersSharedData>;
   space: TSpaceFrontendExports;
 };
 
@@ -60,10 +66,21 @@ export const moduleFrontend: TModule<TRequired> = {
 
     registerContainerRunner('local', localRunnerFrontend);
 
-    moduleExports({
+    const exports: TUserContainersFrontendExports = {
+      getToken: async (userContainer, serviceName) => {
+        const service = userContainer.httpServices.find(
+          (s) => s.name === serviceName
+        );
+        if (!service) {
+          throw new Error(`Service ${serviceName} not found`);
+        }
+        throw new Error('Not implemented');
+      },
       registerContainerRunner,
       getRunners: () => containerRunners,
-    });
+    };
+
+    moduleExports(exports);
   },
 };
 

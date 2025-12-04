@@ -7,7 +7,10 @@ import { TCoreSharedData, TCoreEvent } from '@holistix/core-graph';
 import { TabPayload, TTabEvents, TTabsSharedData } from '@holistix/tabs';
 import { TSpaceSharedData, TSpaceEvent } from '@holistix/space';
 import { TChatEvent, TChatSharedData } from '@holistix/chats';
-import { TServerEvents, TServersSharedData } from '@holistix/user-containers';
+import {
+  TUserContainersEvents,
+  TUserContainersSharedData,
+} from '@holistix/user-containers';
 import { TJupyterEvent, TJupyterSharedData } from '@holistix/jupyter';
 import { TEventSocials } from '@holistix/socials';
 import { TNotionEvent } from '@holistix/notion';
@@ -17,14 +20,14 @@ import { TNotionEvent } from '@holistix/notion';
 export type AllSharedData = TCoreSharedData &
   TTabsSharedData &
   TSpaceSharedData &
-  TServersSharedData &
+  TUserContainersSharedData &
   TJupyterSharedData &
   TChatSharedData;
 
 type AllEvents =
   | TCoreEvent
   | TSpaceEvent
-  | TServerEvents
+  | TUserContainersEvents
   | TJupyterEvent
   | TTabEvents<TabPayload>
   | TChatEvent

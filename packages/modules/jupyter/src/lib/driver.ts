@@ -7,7 +7,7 @@ import { EPriority, log } from '@holistix/log';
 import {
   IOutput,
   TKernelType,
-  TServerSettings,
+  TUserContainerSettings,
   Kernel,
   Terminal,
 } from './jupyter-types';
@@ -41,7 +41,7 @@ export class JupyterlabDriver {
   //
   //
 
-  constructor(server_settings: TServerSettings) {
+  constructor(server_settings: TUserContainerSettings) {
     this._ss = ServerConnection.makeSettings(server_settings);
     this.km = new KernelManager({ serverSettings: this._ss });
   }
