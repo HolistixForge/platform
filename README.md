@@ -1,12 +1,16 @@
 <div align="center">
-  <img src="holistix.svg" alt="Holistix Forge Logo" width="200">
+  <img src="website/holistix-logo.svg" alt="Holistix Forge Logo" width="200">
 </div>
 
-# Holistix Forge
+# Holistix Forge : Platform
 
 > **The Integration Backbone That Exponentializes Your Team Potential**
 
 Stop switching between apps. Stop losing context in email threads. Stop compromising with tools that don't fit your workflow. **Holistix Forge** unifies your entire tool stack—SaaS, containers, cloud, on-premise—into one collaborative platform where modular UI components become LEGO blocks for your perfect interface.
+
+<div align="center">
+  <img src="website/holistix-hive.svg" alt="Holistix Forge bee hive" width="100">
+</div>
 
 ## 🎯 What Makes Holistix Forge Different?
 

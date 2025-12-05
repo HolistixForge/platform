@@ -35,6 +35,45 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
+// Mobile menu toggle
+const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+const navLinks = document.querySelector('.nav-links');
+const mobileMenuOverlay = document.querySelector('.mobile-menu-overlay');
+
+function toggleMobileMenu(isOpen) {
+    if (mobileMenuToggle && navLinks && mobileMenuOverlay) {
+        mobileMenuToggle.setAttribute('aria-expanded', isOpen);
+        if (isOpen) {
+            navLinks.classList.add('active');
+            mobileMenuOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        } else {
+            navLinks.classList.remove('active');
+            mobileMenuOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+}
+
+if (mobileMenuToggle && navLinks && mobileMenuOverlay) {
+    mobileMenuToggle.addEventListener('click', () => {
+        const isExpanded = mobileMenuToggle.getAttribute('aria-expanded') === 'true';
+        toggleMobileMenu(!isExpanded);
+    });
+    
+    // Close menu when clicking on overlay
+    mobileMenuOverlay.addEventListener('click', () => {
+        toggleMobileMenu(false);
+    });
+    
+    // Close menu when clicking on a link
+    navLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            toggleMobileMenu(false);
+        });
+    });
+}
+
 // Add scroll effect to navbar
 let lastScroll = 0;
 const navbar = document.querySelector('.navbar');
