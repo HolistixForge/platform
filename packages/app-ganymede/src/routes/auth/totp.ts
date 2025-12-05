@@ -121,7 +121,7 @@ export const setupTOTPRoutes = (router: express.Router) => {
         key = existingKey.key;
         const encodedKey = base32.encode(existingKey.key);
         // generate QR code for scanning into Google Authenticator, etc
-        otpUrl = `otpauth://totp/demiurge:${username}?secret=${encodedKey}&period=${TOTP_PERIOD}`;
+        otpUrl = `otpauth://totp/HolistixForge:${username}?secret=${encodedKey}&period=${TOTP_PERIOD}`;
       }
 
       respond(req, res, {

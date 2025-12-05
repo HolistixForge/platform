@@ -287,7 +287,7 @@ print_env_details() {
 # Function to list all environments
 list_environments() {
     echo -e "${BOLD}╔════════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BOLD}║  Demiurge Local Development Environments                       ║${NC}"
+    echo -e "${BOLD}║  Holistix Forge Local Development Environments               ║${NC}"
     echo -e "${BOLD}║  $(date '+%Y-%m-%d %H:%M:%S')                                           ║${NC}"
     echo -e "${BOLD}╚════════════════════════════════════════════════════════════════╝${NC}"
     echo ""

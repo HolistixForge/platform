@@ -1,6 +1,6 @@
 # Docker Images
 
-This directory contains Docker image definitions for the Demiurge platform.
+This directory contains Docker image definitions for the Holistix Forge platform.
 
 ## Directory Structure
 
@@ -9,7 +9,7 @@ docker-images/
 ├── backend-images/      # Platform infrastructure images
 │   └── gateway/         # Gateway container (app-gateway + OpenVPN + Nginx)
 └── user-images/         # Shared user container bootstrap
-    └── demiurge-functions.sh  # Common bootstrap functions
+    └── container-functions.sh  # Common bootstrap functions
 ```
 
 ---

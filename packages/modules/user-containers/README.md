@@ -21,7 +21,7 @@ Exports `imageRegistry` for managing container images, `registerContainerRunner`
 The module provides a built-in Ubuntu terminal image:
 
 - **`ubuntu:terminal`** - Minimal Ubuntu 24.04 container with only ttyd web terminal
-  - Image URI: `demiurge/ubuntu-terminal:24.04`
+  - Image URI: `holistixforge/ubuntu-terminal:24.04`
   - Category: utility
   - Services: `terminal` on port 7681
   - No OAuth clients (terminal-only utility)

@@ -1,6 +1,6 @@
 # Modules Reference
 
-This directory contains all Demiurge modules. Each module is a self-contained feature that can be loaded into the gateway and frontend.
+This directory contains all Holistix modules. Each module is a self-contained feature that can be loaded into the gateway and frontend.
 
 ## Module System
 

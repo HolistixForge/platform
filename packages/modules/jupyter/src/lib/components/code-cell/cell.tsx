@@ -308,7 +308,7 @@ export const NodeCell = ({
 //
 
 /**
- * create and return a function that inject a `_demiurge_outputArea_uid` field
+ * create and return a function that inject a `__outputArea_uid` field
  * in all object of an array.
  * it is use to wrap output area in a div with a known unique id.
  * this div is used by Javascript widget renderer to owerload
@@ -322,7 +322,7 @@ const uuidInjecter = () => {
       return output.map((o) => ({
         ...o,
         // injected uid for use by js-renderer
-        _demiurge_outputArea_uid: id,
+        __outputArea_uid: id,
       }));
     },
     uuid: id,

@@ -118,6 +118,6 @@ echo ""
 echo "   ./create-env.sh dev-001 domain.local"
 echo ""
 echo "   Or with custom domain:"
-echo "   ./create-env.sh dev-001 demiurge.local"
+echo "   ./create-env.sh dev-001 mycompany.local"
 echo ""
 

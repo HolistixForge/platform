@@ -4,7 +4,7 @@ This directory contains shared bootstrap functions used by all user container im
 
 ## Files
 
-**demiurge-functions.sh** - Common bootstrap functions
+**container-functions.sh** - Common bootstrap functions
 
 **Functions:**
 - `extract_settings` - Parse SETTINGS env var (base64 JSON)
@@ -47,7 +47,7 @@ All user containers follow this startup sequence:
 1. Create module directory: `packages/modules/yourmodule/`
 2. Add `docker-image/` subdirectory with Dockerfile and entrypoint
 3. Install required packages: tini, jq, curl, openvpn, iputils-ping, pciutils
-4. Copy demiurge-functions.sh using relative path: `../../docker-images/user-images/demiurge-functions.sh`
+4. Copy container-functions.sh using relative path: `../../docker-images/user-images/container-functions.sh`
 5. Create entrypoint: start VPN loop, start application, map HTTP services
 6. Create `src/backend.ts` to register image via imageRegistry
 7. Export moduleBackend from `src/index.ts`

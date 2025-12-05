@@ -85,7 +85,7 @@ echo ""
 echo "⚙️  Configuring PowerDNS..."
 
 sudo tee /etc/powerdns/pdns.conf > /dev/null <<EOF
-# PowerDNS Configuration for Demiurge Local Development
+# PowerDNS Configuration for Holistix Forge Local Development
 
 # Database backend
 launch=gpgsql

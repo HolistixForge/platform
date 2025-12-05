@@ -1,11 +1,11 @@
 # pgAdmin4 Module
 
-PostgreSQL administration and development platform integration for Demiurge.
+PostgreSQL administration and development platform integration for Holistix.
 
 ## Features
 
 - Registers pgAdmin4 container image with user-containers module
-- OAuth integration for user authentication  
+- OAuth integration for user authentication
 - Database management and query tools
 
 ## Container Image
@@ -25,6 +25,5 @@ From the module directory:
 
 ```bash
 cd packages/modules/pgadmin4/docker-image
-docker build -t demiurge/pgadmin4:8.12.0 .
+docker build -t holistixforge/pgadmin4:8.12.0 .
 ```
-

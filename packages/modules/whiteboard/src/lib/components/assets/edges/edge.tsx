@@ -102,17 +102,17 @@ export const EdgeComponent: FC<EdgeProps & Labels> = ({
 
   const payload: ReactflowEdgePayload = data as ReactflowEdgePayload;
 
-  const demiurgeEdge: TEdge & {
+  const holistixEdge: TEdge & {
     renderProps?: TEdgeRenderProps;
   } = payload?.edge;
 
-  const semanticType = demiurgeEdge.semanticType;
+  const semanticType = holistixEdge.semanticType;
 
   const {
     edgeShape = 'bezier',
     style,
     className,
-  } = demiurgeEdge.renderProps || {};
+  } = holistixEdge.renderProps || {};
 
   let calculatedPath: ReturnType<typeof calculateEdgePath>;
 
@@ -171,14 +171,14 @@ export const EdgeComponent: FC<EdgeProps & Labels> = ({
   const allClassNames = [
     'react-flow__edge',
     'whiteboard-edge',
-    demiurgeEdge.semanticType,
+    holistixEdge.semanticType,
     ...(className || []),
   ];
 
-  if (demiurgeEdge.highlighted || hovered) {
+  if (holistixEdge.highlighted || hovered) {
     allClassNames.push('highlighted');
   }
-  if (demiurgeEdge.group) {
+  if (holistixEdge.group) {
     allClassNames.push('edges-group');
   }
 

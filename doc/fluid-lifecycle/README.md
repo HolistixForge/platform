@@ -1,6 +1,6 @@
 # Fluid Lifecycle Documentation
 
-This folder contains a comprehensive white paper describing the rationales that led to the start of Demiurge. These reflections were conducted under the name "fluid-lifecycle" and from an engineering background and perspective.
+This folder contains a comprehensive white paper describing the rationales that led to the start of Holistix. These reflections were conducted under the name "fluid-lifecycle" and from an engineering background and perspective.
 
 ## Contents
 

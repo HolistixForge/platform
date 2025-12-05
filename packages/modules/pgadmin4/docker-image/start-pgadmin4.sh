@@ -28,9 +28,9 @@ cat > /pgadmin4/config_local.py <<EOF
 OAUTH2_CONFIG = [
     {
         # The name of the of the oauth provider, ex: github, google
-        'OAUTH2_NAME': 'Demiurge',
+        'OAUTH2_NAME': 'HolistixForge',
         # The display name, ex: Google
-        'OAUTH2_DISPLAY_NAME': 'Demiurge',
+        'OAUTH2_DISPLAY_NAME': 'HolistixForge',
         # Oauth client id
         'OAUTH2_CLIENT_ID': ${OAUTH2_CLIENT_ID},
         # Oauth secret

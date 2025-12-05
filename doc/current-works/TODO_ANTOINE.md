@@ -10,6 +10,11 @@ credentials
 
 sharedata nodeView purge
 
+module federation
+virtual file id
+automation and reporting language
+tests and ci cd, packahe publish, whole strategy
+
 hidden node in search bar
 const filterOutNodes = gv?.params.filterOutNodes?.map((n) => sd.nodes.get(n));
 const getHiddenNodesByType = (type: string) => {

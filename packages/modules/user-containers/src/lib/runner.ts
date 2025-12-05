@@ -60,7 +60,7 @@ export abstract class ContainerRunner {
 
     // Generate container name
     const shortUuid = container.user_container_id.substring(0, 8);
-    const fullname = `demiurge_${container.container_name}_${shortUuid}`;
+    const fullname = `holistix_${container.container_name}_${shortUuid}`;
 
     // Return Docker run command
     return `docker run --restart unless-stopped --name ${fullname} -e SETTINGS=${env} --cap-add=NET_ADMIN --device /dev/net/tun ${imageDef.imageUri}:${imageDef.imageTag}`;

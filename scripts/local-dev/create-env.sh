@@ -3,7 +3,7 @@
 # Usage: ./create-env.sh <env-name> [domain] [workspace-path]
 # Usage: ./create-env.sh dev-001
 # Usage: ./create-env.sh dev-001 domain.local
-# Usage: ./create-env.sh dev-001 demiurge.local /root/workspace-feat/monorepo
+# Usage: ./create-env.sh dev-001 mycompany.local /root/workspace-feat/monorepo
 
 set -e
 
@@ -16,7 +16,7 @@ if [ -z "$ENV_NAME" ]; then
   echo "Usage: $0 <env-name> [domain] [workspace-path]"
   echo "Example: $0 dev-001"
   echo "Example: $0 dev-001 domain.local"
-  echo "Example: $0 dev-001 demiurge.mycompany.local /root/workspace-feat/monorepo"
+  echo "Example: $0 dev-001 mycompany.local /root/workspace-feat/monorepo"
   echo ""
   echo "Gateway pool size can be set via environment variable:"
   echo "  GATEWAY_POOL_SIZE=5 $0 dev-001"

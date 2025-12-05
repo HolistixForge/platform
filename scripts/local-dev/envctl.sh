@@ -476,7 +476,7 @@ cmd_build() {
 
 # Command: help
 cmd_help() {
-    echo -e "${BOLD}Demiurge Environment Controller${NC}"
+    echo -e "${BOLD}Holistix Forge Environment Controller${NC}"
     echo ""
     echo -e "${BOLD}Usage:${NC}"
     echo "  $0 <command> [args...]"

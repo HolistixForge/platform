@@ -49,7 +49,7 @@ passport.use(
       const sent = await sendMail({
         from: 'noreply@holistix.so',
         to: user.email,
-        subject: 'Demiurge login link',
+        subject: 'Holistix Forge login link',
         html: mailContent(user, token),
       });
       return sent;
@@ -84,7 +84,7 @@ passport.use(
 const mailContent = (user: MagicLinkUser, token: string) => {
   return `
   <p>Dear ${user.username}</p>
-  <p>We have received a request to perform the following Demiurge user account operation</p>
+  <p>We have received a request to perform the following Holistix Forge user account operation</p>
   <p><b>${
     user.context === 'reset-password'
       ? 'Reset your password'

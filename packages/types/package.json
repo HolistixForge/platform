@@ -18,7 +18,7 @@
   },
   "module": "./dist/index.js",
   "nx": {
-    "sourceRoot": "packages/demiurge-types/src",
+    "sourceRoot": "packages/types/src",
     "projectType": "library",
     "name": "@holistix-forge/types"
   }

@@ -5,7 +5,7 @@ import { EPriority, log } from '@holistix-forge/log';
 
 interface IHasRawData {
   _raw: {
-    _demiurge_outputArea_uid: string;
+    __outputArea_uid: string;
   };
   _rawData: {
     [key: string]: string;
@@ -24,7 +24,7 @@ class FrontendJsRenderer extends RM.RenderedJavaScript {
   override render = (model: RM.IRenderMime.IMimeModel) => {
     const m = model as RM.IRenderMime.IMimeModel & IHasRawData;
 
-    const outputAreaUid = m._raw._demiurge_outputArea_uid;
+    const outputAreaUid = m._raw.__outputArea_uid;
 
     for (const mime in m._rawData) {
       if (mime === 'application/javascript') {

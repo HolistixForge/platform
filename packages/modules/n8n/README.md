@@ -1,6 +1,6 @@
 # n8n Module
 
-n8n workflow automation platform integration for Demiurge.
+n8n workflow automation platform integration for Holistix Forge.
 
 ## Features
 
@@ -25,6 +25,5 @@ From the module directory:
 
 ```bash
 cd packages/modules/n8n/docker-image
-docker build -t demiurge/n8n:1.97.1 .
+docker build -t holistixforge/n8n:1.97.1 .
 ```
-

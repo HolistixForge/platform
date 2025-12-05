@@ -1,5 +1,5 @@
 export default {
-  displayName: 'demiurge-types',
+  displayName: 'types',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
   transform: {

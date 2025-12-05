@@ -1,6 +1,6 @@
 # Module System
 
-The base module system provides the foundation for all Demiurge modules. It defines the module interface, dependency resolution, and loading mechanism.
+The base module system provides the foundation for all Holistix modules. It defines the module interface, dependency resolution, and loading mechanism.
 
 ## Features
 
@@ -21,4 +21,3 @@ No dependencies - this is the base module system.
 
 - `TModule`: Type definition for module interface
 - `loadModules`: Function to load and initialize modules with dependency resolution
-
