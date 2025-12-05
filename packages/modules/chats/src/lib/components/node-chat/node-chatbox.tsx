@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { TSpaceEvent } from '@holistix-forge/whiteboard';
+import { TWhiteboardEvent } from '@holistix-forge/whiteboard';
 
 import {
   InputsAndOutputs,
@@ -31,7 +31,7 @@ export const NodeChatbox = ({ node }: { node: TGraphNode }) => {
     (sd) => sd['chats:chats'].get(chatId)
   );
 
-  const dispatcher = useDispatcher<TChatEvent | TSpaceEvent>();
+  const dispatcher = useDispatcher<TChatEvent | TWhiteboardEvent>();
 
   const useNodeValue = useNodeContext();
 
@@ -109,7 +109,7 @@ export const NodeChatbox = ({ node }: { node: TGraphNode }) => {
   const handleClose = () => {
     anchorNodeId &&
       dispatcher.dispatch({
-        type: 'space:close-node',
+        type: 'whiteboard:close-node',
         nid: anchorNodeId,
         viewId: useNodeValue.viewId,
       });
@@ -118,7 +118,7 @@ export const NodeChatbox = ({ node }: { node: TGraphNode }) => {
   const handleFilterOut = () => {
     anchorNodeId &&
       dispatcher.dispatch({
-        type: 'space:filter-out-node',
+        type: 'whiteboard:filter-out-node',
         nid: anchorNodeId,
         viewId: useNodeValue.viewId,
       });

@@ -1,6 +1,6 @@
 import type { TModule } from '@holistix-forge/module';
 import type { TCollabFrontendExports } from '@holistix-forge/collab/frontend';
-import type { TSpaceFrontendExports } from '@holistix-forge/whiteboard/frontend';
+import type { TWhiteboardFrontendExports } from '@holistix-forge/whiteboard/frontend';
 import type { TUserContainersFrontendExports } from '@holistix-forge/user-containers/frontend';
 import { TUserContainersSharedData } from '@holistix-forge/user-containers';
 import { TReducersFrontendExports } from '@holistix-forge/reducers/frontend';
@@ -18,7 +18,7 @@ import './lib/index.scss';
 
 type TRequired = {
   collab: TCollabFrontendExports;
-  space: TSpaceFrontendExports;
+  whiteboard: TWhiteboardFrontendExports;
   'user-containers': TUserContainersFrontendExports;
   reducers: TReducersFrontendExports;
 };
@@ -31,12 +31,12 @@ export const moduleFrontend: TModule<TRequired> = {
   name: 'jupyter',
   version: '0.0.1',
   description: 'Jupyter module',
-  dependencies: ['core-graph', 'collab', 'space', 'user-containers'],
+  dependencies: ['core-graph', 'collab', 'whiteboard', 'user-containers'],
   load: ({ depsExports, moduleExports }) => {
     depsExports.collab.collab.loadSharedData('map', 'jupyter', 'servers');
 
-    depsExports.space.registerMenuEntries(spaceMenuEntrie);
-    depsExports.space.registerNodes({
+    depsExports.whiteboard.registerMenuEntries(spaceMenuEntrie);
+    depsExports.whiteboard.registerNodes({
       'jupyter-cell': NodeCell,
       'jupyter-kernel': NodeKernel,
       'jupyter-terminal': NodeTerminal,

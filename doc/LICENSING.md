@@ -1,142 +1,171 @@
 # Licensing
 
-Demiurge is available under a **dual licensing model**:
+Demiurge is licensed under the **GNU Affero General Public License v3.0** (AGPL-3.0).
 
-1. **PolyForm Noncommercial License 1.0.0** - For non-commercial use (free)
-2. **Commercial License** - For commercial use (requires purchase)
+## What is AGPL-3.0?
 
-## Non-Commercial Use (Free)
+The AGPL-3.0 is a strong copyleft license that guarantees end users the freedom to run, study, share, and modify the software. It is specifically designed for software that runs over a network (like web services and SaaS applications).
 
-The Software is available free of charge for **Noncommercial Purposes** under the [PolyForm Noncommercial License 1.0.0](../LICENSE).
+### Key Features
 
-### What is "Noncommercial Purpose"?
+✅ **Permissions:**
+- **Commercial use** - You can use this software for commercial purposes
+- **Distribution** - You can distribute this software
+- **Modification** - You can modify this software
+- **Patent use** - You get an express grant of patent rights from contributors
+- **Private use** - You can use and modify the software privately
 
-Noncommercial purposes include:
+⚠️ **Conditions:**
+- **Disclose source** - When you distribute the software, you must make the source code available
+- **License and copyright notice** - You must include the original license and copyright notice
+- **Network use is distribution** - If you run a modified version as a service over a network, you must make the source code available to users of that service
+- **Same license** - Derivative works must be licensed under AGPL-3.0
+- **State changes** - You must document significant changes you make to the software
 
-- ✅ **Personal use** - Using Demiurge for your personal projects
-- ✅ **Research and development** - Academic research, experimentation, learning
-- ✅ **Educational use** - Teaching, training, educational institutions
-- ✅ **Open source projects** - Non-profit open source initiatives
-- ✅ **Non-profit organizations** - Charitable organizations, foundations
+❌ **Limitations:**
+- **Liability** - The software comes with no liability protection for the authors
+- **Warranty** - The software comes with no warranty
 
-### What is NOT "Noncommercial Purpose"?
+## Network Use Clause
 
-The following uses are considered **Commercial Purposes** and require a commercial license:
+The key feature that distinguishes AGPL-3.0 from GPL-3.0 is the **network use clause** (Section 13):
 
-- ❌ **For-profit businesses** - Any organization engaged in commercial business
-- ❌ **SaaS offerings** - Hosting Demiurge as a service for customers
-- ❌ **Managed services** - Providing Demiurge hosting or maintenance for payment
-- ❌ **Government agencies** - Use by government departments or agencies (except educational institutions)
-- ❌ **Commercial integrations** - Integrating Demiurge into commercial products or services
-- ❌ **Internal use by for-profit companies** - Using Demiurge within a commercial organization
+> If you modify this software and provide it as a service over a network (like a web service or SaaS), you must make your modified source code available to users of that service.
 
-### Still Unsure?
+This means:
+- If you host Demiurge as a service and modify it, you must provide the source code to your users
+- Simply using the software internally doesn't trigger this requirement
+- You must provide source code access via a prominent notice in your user interface
 
-If you're not sure whether your use case qualifies as non-commercial, please contact us:
+## Use Cases
 
-- We're happy to help clarify licensing requirements for your specific situation
+### ✅ You Can (No Additional Requirements)
 
-## Commercial Use (Paid License)
+1. **Personal Use**
+   - Use Demiurge for your personal projects
+   - Modify it for your own use
+   - No need to share your modifications if you don't distribute
 
-For any use that constitutes a **Commercial Purpose**, you must obtain a **Commercial License**.
+2. **Internal Business Use**
+   - Use Demiurge internally in your organization
+   - Modify it for internal use only
+   - No need to share modifications if not providing as a service to others
 
-### What's Included in Commercial License?
+3. **Learning and Research**
+   - Study the code
+   - Use it for educational purposes
+   - Experiment and learn
 
-- ✅ Full rights to use, modify, and distribute for commercial purposes
-- ✅ Use in production environments
-- ✅ SaaS and managed service offerings
-- ✅ Commercial integrations
-- ✅ Government and enterprise use
-- ✅ Priority support options (available separately)
+### ✅ You Can (With Source Code Disclosure)
 
-### How to Obtain a Commercial License
+1. **SaaS/Hosted Service**
+   - Host Demiurge as a service for your customers
+   - You must make your modified source code available to your users
+   - Include a prominent way for users to access the source code
 
-2. **Provide details:**
+2. **Commercial Product**
+   - Integrate Demiurge into a commercial product
+   - Distribute modified versions
+   - You must provide source code to your users/customers
+   - The entire work must be licensed under AGPL-3.0
 
-   - Your organization name
-   - Intended use case
-   - Number of users/deployments
-   - Any specific requirements
+3. **Modified Versions**
+   - Create and distribute modified versions
+   - You must license them under AGPL-3.0
+   - You must provide source code
+   - You must state what changes you made
 
-3. **We'll provide:**
-   - Customized commercial license agreement
-   - Pricing information
-   - Support options (if needed)
+### ❌ You Cannot
 
-### Commercial License Pricing
+1. **Use Proprietary License**
+   - You cannot relicense Demiurge or derivative works under a proprietary license
+   - All derivatives must be AGPL-3.0
 
-Pricing is determined based on:
+2. **Remove License Notices**
+   - You cannot remove copyright notices
+   - You cannot remove license information
 
-- Number of users or deployments
-- Use case (SaaS, internal, integration, etc.)
-- Support requirements
-- Custom terms needed
+3. **Provide Service Without Source**
+   - You cannot run a modified version as a service without providing source code access
 
-Contact us for a quote tailored to your needs.
+## Contributing
 
-## License Comparison
+When you contribute to Demiurge:
 
-| Feature                     | Non-Commercial (Free)    | Commercial (Paid)       |
-| --------------------------- | ------------------------ | ----------------------- |
-| **Personal use**            | ✅                       | ✅                      |
-| **Educational use**         | ✅                       | ✅                      |
-| **Non-profit use**          | ✅                       | ✅                      |
-| **For-profit business use** | ❌                       | ✅                      |
-| **SaaS/hosting services**   | ❌                       | ✅                      |
-| **Government use**          | ❌                       | ✅                      |
-| **Commercial integrations** | ❌                       | ✅                      |
-| **Modify and distribute**   | ✅ (non-commercial only) | ✅ (commercial allowed) |
-| **Support**                 | Community                | Available separately    |
-
-## Contributing and License Compatibility
-
-### Contributing Code
-
-When you contribute code to Demiurge:
-
-- Your contributions are accepted under the same dual licensing model
-- You grant us the right to use your contributions under both the PolyForm Noncommercial License and Commercial License
+- Your contributions will be licensed under AGPL-3.0
+- You grant everyone the rights specified in the AGPL-3.0 license
 - You retain copyright to your contributions
+- You must have the right to contribute the code
 
 See [CONTRIBUTING.md](../CONTRIBUTING.md) for more details.
 
-### Third-Party Dependencies
+## Third-Party Dependencies
 
-Demiurge includes third-party dependencies with their own licenses. Most dependencies use permissive licenses (MIT, Apache 2.0) that are compatible with our dual licensing model.
+Demiurge includes third-party dependencies with their own licenses. Most dependencies use permissive licenses (MIT, Apache 2.0, BSD) that are compatible with AGPL-3.0.
 
-Some dependencies may have different terms. See individual package `package.json` files for dependency license information.
+Some important notes about dependencies:
+- AGPL-3.0 is compatible with GPL-3.0
+- AGPL-3.0 can incorporate code under permissive licenses (MIT, Apache, BSD)
+- AGPL-3.0 cannot incorporate code under incompatible copyleft licenses (GPL-2.0 without the "or later" clause)
+
+See individual package `package.json` files for dependency license information.
 
 ## Frequently Asked Questions
 
-### Q: Can I use Demiurge for my startup?
+### Q: Can I use Demiurge for my commercial business?
 
-**A:** If your startup is a for-profit business, you need a commercial license. However, if you're in early stages and not yet generating revenue, contact us - we may offer special terms for early-stage startups.
+**A:** Yes! AGPL-3.0 allows commercial use. However, if you modify it and provide it as a service, you must make your source code available to your users.
 
 ### Q: Can I host Demiurge for my clients?
 
-**A:** Yes, but this is a commercial use case and requires a commercial license. Contact us for SaaS/hosting licensing options.
+**A:** Yes, but if you modify it, you must provide the source code to your clients through a prominent link in the application's user interface.
 
-### Q: Can I modify Demiurge and sell it?
+### Q: Can I create a proprietary SaaS based on Demiurge?
 
-**A:** You can modify Demiurge, but selling it or services based on it requires a commercial license. You must also include original copyright notices and make source code available.
+**A:** No. Any service based on Demiurge must be licensed under AGPL-3.0, and you must provide source code access to your users. You can charge for your service, but you cannot make it proprietary.
 
-### Q: Is there a trial period for commercial use?
+### Q: Do I need to share my modifications?
 
-**A:** Yes! We offer evaluation licenses for organizations evaluating Demiurge for commercial use. Contact contact@holistix.so to request an evaluation license.
+**A:** Only if you distribute the software or run it as a network service. If you just use it internally without providing access to others, you don't need to share your modifications.
 
-### Q: What about academic research?
+### Q: Can I integrate Demiurge with proprietary software?
 
-**A:** Academic research and educational use are covered under the non-commercial license. No commercial license needed.
+**A:** It depends. AGPL-3.0's copyleft is "strong," meaning it can extend to works that interact with AGPL-licensed software over a network. Consult with a lawyer if you're unsure about your specific use case.
 
-### Q: Can I use Demiurge in my open source project?
+### Q: What counts as "providing as a service"?
 
-**A:** If your open source project is non-profit and doesn't generate commercial revenue, yes - the non-commercial license applies. If your project is commercial or generates revenue, you need a commercial license.
+**A:** If users interact with your modified version of Demiurge over a network (web, API, etc.), that counts as providing a service. The network use clause applies.
 
-## License Files
+### Q: What if I want a different license?
 
-- **[LICENSE](../LICENSE)** - Full text of PolyForm Noncommercial License 1.0.0
-- **[COMMERCIAL_LICENSE.md](../COMMERCIAL_LICENSE.md)** - Commercial license template and terms
+**A:** The maintainers hold the copyright and can offer alternative licenses. However, any contributions from others would require agreement from all contributors or would need to be removed. Contact the maintainers if you have special licensing needs.
+
+### Q: Can I sell support or services for Demiurge?
+
+**A:** Yes! You can charge for support, consulting, hosting, or other services. The license doesn't restrict your ability to make money from services, only from making the software proprietary.
+
+## Compliance Checklist
+
+If you're distributing Demiurge or running it as a service with modifications:
+
+- [ ] Include the full AGPL-3.0 license text
+- [ ] Include copyright notices
+- [ ] Document the changes you made
+- [ ] Provide source code access (via download link, git repository, etc.)
+- [ ] If providing as a network service, include a prominent link for users to access the source code
+- [ ] Ensure all modifications are also licensed under AGPL-3.0
+
+## Resources
+
+- **Full License Text:** [LICENSE](../LICENSE)
+- **AGPL-3.0 on Choose A License:** https://choosealicense.com/licenses/agpl-3.0/
+- **GNU's AGPL-3.0 Page:** https://www.gnu.org/licenses/agpl-3.0.html
+- **FSF's AGPL FAQ:** https://www.gnu.org/licenses/gpl-faq.html
 
 ## Contact
 
-We're here to help! Don't hesitate to reach out if you have questions about licensing for your specific use case.
+If you have questions about licensing or need clarification about your specific use case, please:
+- Open an issue on GitHub
+- Contact the maintainers
+
+**Note:** This document provides general information about AGPL-3.0 and is not legal advice. For specific legal questions, consult with a qualified attorney.

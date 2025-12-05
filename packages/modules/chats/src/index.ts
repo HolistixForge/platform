@@ -2,14 +2,14 @@ import type { TModule } from '@holistix-forge/module';
 import type { TCollabBackendExports } from '@holistix-forge/collab';
 import type { TReducersBackendExports } from '@holistix-forge/reducers';
 import type { TCoreSharedData } from '@holistix-forge/core-graph';
-import { TSpaceSharedData } from '@holistix-forge/whiteboard';
+import { TWhiteboardSharedData } from '@holistix-forge/whiteboard';
 
 import { ChatReducer } from './lib/chats-reducer';
 import type { TChatSharedData } from './lib/chats-shared-model';
 
 type TRequired = {
   collab: TCollabBackendExports<
-    TChatSharedData & TCoreSharedData & TSpaceSharedData
+    TChatSharedData & TCoreSharedData & TWhiteboardSharedData
   >;
   reducers: TReducersBackendExports;
 };

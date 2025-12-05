@@ -13,7 +13,7 @@ import {
   useSharedDataDirect,
 } from '@holistix-forge/collab/frontend';
 import { useDispatcher, FrontendDispatcher } from '@holistix-forge/reducers/frontend';
-import { TSpaceEvent } from '@holistix-forge/whiteboard';
+import { TWhiteboardEvent } from '@holistix-forge/whiteboard';
 import { useLayerContext, TLayerTreeItem } from '@holistix-forge/whiteboard/frontend';
 
 import { TExcalidrawSharedData } from './excalidraw-shared-model';
@@ -82,7 +82,7 @@ const debouncedHandleChange = debounce(
   async (
     sharedData: TExcalidrawSharedData,
     viewId: string,
-    dispatcher: FrontendDispatcher<TSpaceEvent>,
+    dispatcher: FrontendDispatcher<TWhiteboardEvent>,
     nodeId: string,
     elements: readonly OrderedExcalidrawElement[],
     files: BinaryFiles,
@@ -129,7 +129,7 @@ const debouncedHandleChange = debounce(
 
         // move the excalidraw node to the xmin, ymin
         dispatcher.dispatch({
-          type: 'space:move-node',
+          type: 'whiteboard:move-node',
           viewId: viewId,
           nid: nodeId,
           position: {
@@ -138,7 +138,7 @@ const debouncedHandleChange = debounce(
           },
         });
         dispatcher.dispatch({
-          type: 'space:resize-node',
+          type: 'whiteboard:resize-node',
           viewId: viewId,
           nid: nodeId,
           size: {
@@ -179,7 +179,7 @@ export const ExcalidrawLayerComponent: FC<{
 
   const { nodeId = '', viewId = '' } = payload || {};
 
-  const dispatcher = useDispatcher<TSpaceEvent>();
+  const dispatcher = useDispatcher<TWhiteboardEvent>();
   const { updateLayerTree } = useLayerContext();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

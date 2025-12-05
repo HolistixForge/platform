@@ -1,10 +1,10 @@
 import { FrontendDispatcher } from '@holistix-forge/reducers/frontend';
-import { TSpaceMenuEntries } from '@holistix-forge/whiteboard/frontend';
+import { TWhiteboardMenuEntries } from '@holistix-forge/whiteboard/frontend';
 import { TGraphNode, TEventNewNode } from '@holistix-forge/core-graph';
 import { makeUuid } from '@holistix-forge/simple-types';
 import { TEventDisableFeature } from '@holistix-forge/whiteboard';
 
-export const excalidrawMenuEntries: TSpaceMenuEntries = ({
+export const excalidrawMenuEntries: TWhiteboardMenuEntries = ({
   viewId,
   position,
   dispatcher,
@@ -44,14 +44,14 @@ export const excalidrawMenuEntries: TSpaceMenuEntries = ({
 
             // Disable grouping and move-node features for Excalidraw nodes
             await d.dispatch({
-              type: 'space:disable-feature',
+              type: 'whiteboard:disable-feature',
               viewId: viewId,
               nid: nodeId,
               feature: 'grouping',
             });
 
             await d.dispatch({
-              type: 'space:disable-feature',
+              type: 'whiteboard:disable-feature',
               viewId: viewId,
               nid: nodeId,
               feature: 'frontend-move-node',

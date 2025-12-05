@@ -1,6 +1,6 @@
 import { TModule } from '@holistix-forge/module';
 import { TCollabFrontendExports } from '@holistix-forge/collab/frontend';
-import { TSpaceFrontendExports } from '@holistix-forge/whiteboard/frontend';
+import { TWhiteboardFrontendExports } from '@holistix-forge/whiteboard/frontend';
 
 import { layer } from './lib/layer';
 import { ExcalidrawNode } from './lib/excalidraw-node';
@@ -13,7 +13,7 @@ import './lib/style.scss';
 
 type TRequired = {
   collab: TCollabFrontendExports<TExcalidrawSharedData>;
-  space: TSpaceFrontendExports;
+  whiteboard: TWhiteboardFrontendExports;
 };
 
 export const moduleFrontend: TModule<TRequired> = {
@@ -24,10 +24,10 @@ export const moduleFrontend: TModule<TRequired> = {
   load: ({ depsExports, moduleExports, config }) => {
     depsExports.collab.collab.loadSharedData('map', 'excalidraw', 'drawing');
 
-    depsExports.space.registerMenuEntries(excalidrawMenuEntries);
-    depsExports.space.registerNodes({
+    depsExports.whiteboard.registerMenuEntries(excalidrawMenuEntries);
+    depsExports.whiteboard.registerNodes({
       ExcalidrawNode,
     });
-    depsExports.space.registerLayer(layer);
+    depsExports.whiteboard.registerLayer(layer);
   },
 };

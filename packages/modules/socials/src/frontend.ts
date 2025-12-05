@@ -1,5 +1,5 @@
 import type { TModule } from '@holistix-forge/module';
-import type { TSpaceFrontendExports } from '@holistix-forge/whiteboard/frontend';
+import type { TWhiteboardFrontendExports } from '@holistix-forge/whiteboard/frontend';
 
 import { NodeYoutube } from './lib/components/node-video';
 import { NodeTextEditor } from './lib/components/text-editor';
@@ -9,17 +9,17 @@ import { socialsMenuEntries } from './lib/socials-menu';
 import { NodeReservation } from './lib/components/node-reservation';
 
 type TRequired = {
-  space: TSpaceFrontendExports;
+  whiteboard: TWhiteboardFrontendExports;
 };
 
 export const moduleFrontend: TModule<TRequired> = {
   name: 'socials',
   version: '0.0.1',
   description: 'Socials module',
-  dependencies: ['space', 'collab', 'gateway'],
+  dependencies: ['whiteboard', 'collab', 'gateway'],
   load: ({ depsExports }) => {
-    depsExports.space.registerMenuEntries(socialsMenuEntries);
-    depsExports.space.registerNodes({
+    depsExports.whiteboard.registerMenuEntries(socialsMenuEntries);
+    depsExports.whiteboard.registerNodes({
       youtube: NodeYoutube,
       'text-editor': NodeTextEditor,
       'node-user': NodeIdCard,

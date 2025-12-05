@@ -1,6 +1,6 @@
 import { FrontendDispatcher } from '@holistix-forge/reducers/frontend';
 import { TCoreSharedData } from '@holistix-forge/core-graph';
-import { TSpaceMenuEntries } from '@holistix-forge/whiteboard/frontend';
+import { TWhiteboardMenuEntries } from '@holistix-forge/whiteboard/frontend';
 import { TValidSharedDataToCopy } from '@holistix-forge/collab/frontend';
 
 import { TJupyterSharedData } from './jupyter-shared-model';
@@ -11,7 +11,7 @@ import { TJupyterEvent } from './jupyter-events';
 
 //
 
-export const spaceMenuEntrie: TSpaceMenuEntries = ({
+export const spaceMenuEntrie: TWhiteboardMenuEntries = ({
   viewId,
   from,
   sharedData,

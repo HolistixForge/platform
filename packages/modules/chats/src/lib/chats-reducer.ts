@@ -6,7 +6,7 @@ import {
 import { makeUuid } from '@holistix-forge/simple-types';
 import { TCoreSharedData } from '@holistix-forge/core-graph';
 import { TCollabBackendExports } from '@holistix-forge/collab';
-import { TSpaceSharedData } from '@holistix-forge/whiteboard';
+import { TWhiteboardSharedData } from '@holistix-forge/whiteboard';
 
 import {
   TChatEvent,
@@ -27,7 +27,7 @@ import { TChat } from './chats-types';
 
 type TRequired = {
   collab: TCollabBackendExports<
-    TChatSharedData & TCoreSharedData & TSpaceSharedData
+    TChatSharedData & TCoreSharedData & TWhiteboardSharedData
   >;
   reducers: TReducersBackendExports;
 };
@@ -174,11 +174,11 @@ export class ChatReducer extends Reducer<TChatEvent> {
       requestData
     );
 
-    this.exports.collab.collab.sharedData['space:graphViews'].forEach(
+    this.exports.collab.collab.sharedData['whiteboard:graphViews'].forEach(
       async (gv, k) => {
         await this.exports.reducers.processEvent(
           {
-            type: 'space:resize-node',
+            type: 'whiteboard:resize-node',
             nid: chatNodeId,
             size: {
               width: 550,

@@ -161,7 +161,7 @@ Whether you're a startup with a small team or an enterprise with hundreds of tea
 
 **Open Source, Commercial Support Available**
 
-Holistix Forge is available under a dual licensing model: free for non-commercial use (personal projects, education, research, non-profits) and commercial licenses available for for-profit businesses, SaaS offerings, and enterprise deployments. The codebase is open, the architecture is documented, and the community is growing.
+Holistix Forge is available under the GNU Affero General Public License v3.0 (AGPL-3.0), a strong copyleft license that ensures the software remains free and open source. You can use, modify, and distribute it freely for both commercial and non-commercial purposes. If you provide it as a service over a network, you must make your source code available. The codebase is open, the architecture is documented, and the community is growing.
 
 Stop switching between apps. Stop losing context. Stop compromising. Assemble your perfect tool from modular UI components. Experience Holistix Forge.
 
@@ -414,9 +414,9 @@ Join teams already using Holistix Forge to eliminate fragmentation, boost produc
 
 **Trust Indicators:**
 
-- Free for non-commercial use
+- Free and open source (AGPL-3.0)
 - Open source codebase
-- Commercial support available
+- Community and commercial support available
 - Self-hosted or cloud options
 
 ---
@@ -442,7 +442,6 @@ Join teams already using Holistix Forge to eliminate fragmentation, boost produc
 
 - Privacy Policy
 - Terms of Service
-- Commercial License
 - Security
 
 **Contact:**
@@ -677,13 +676,13 @@ A: Holistix Forge uses YJS CRDT (Conflict-Free Replicated Data Types) technology
 A: Any Docker container works! Common examples include JupyterLab, pgAdmin, n8n, VSCode Server, and custom applications.
 
 **Q: Is Holistix Forge open source?**
-A: Yes, Holistix Forge is open source and available under a dual licensing model: free for non-commercial use, commercial licenses available for businesses.
+A: Yes, Holistix Forge is open source and available under the GNU Affero General Public License v3.0 (AGPL-3.0). You can use it freely for both commercial and non-commercial purposes, with the requirement that if you provide it as a service, you must make your source code available.
 
 **Q: Can I self-host Holistix Forge?**
 A: Absolutely. Holistix Forge can be deployed on-premises or in the cloud. Full deployment documentation is available.
 
 **Q: How does pricing work?**
-A: Holistix Forge is free for non-commercial use (personal projects, education, research, non-profits). Commercial licenses are available for for-profit businesses—contact us for pricing.
+A: Holistix Forge is free and open source under the AGPL-3.0 license. You can use it for both commercial and non-commercial purposes at no cost. The license requires that if you modify and provide the software as a service, you must make your source code available to users. Optional support and consulting services are available—contact us for details.
 
 **Q: Is Holistix Forge only for engineering teams?**
 A: No! While Holistix Forge is particularly powerful for engineering and software development teams, it's designed for any team managing complex, interconnected projects. Research teams use it for managing experiments and data. Data science teams use it for analysis pipelines and models. Cross-functional teams use it to break down silos. The graph-based model and modular architecture adapt to your domain and workflow.

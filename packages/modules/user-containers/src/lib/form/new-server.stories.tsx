@@ -19,7 +19,7 @@ import { moduleFrontend as userContainersFrontend } from '../../frontend';
 //
 const collabConfig = {
   type: 'none',
-  room_id: 'space-story',
+  room_id: 'whiteboard-story',
   simulateUsers: true,
   user: { username: 'test', color: 'red' },
 };

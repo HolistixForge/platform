@@ -40,9 +40,6 @@
       "path": "./packages/modules/core-graph"
     },
     {
-      "path": "./packages/modules/space"
-    },
-    {
       "path": "./packages/modules/user-containers"
     },
     {
@@ -98,6 +95,9 @@
     },
     {
       "path": "./packages/modules/pgadmin4"
+    },
+    {
+      "path": "./packages/modules/whiteboard"
     }
   ],
   "ts-node": {

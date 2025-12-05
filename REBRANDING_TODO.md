@@ -40,11 +40,10 @@ Based on codebase analysis:
   - All images: `holistix/jupyterlab-minimal`, `holistix/ubuntu-terminal`, etc.
 - [x] **1.5** Primary domain: **`holistix.so`** ✅ ACQUIRED
   - Alternative domains to consider: `holistix.io`, `holistix.com`, `holistix.cloud`
-- [ ] **1.6** Finalize license model: **TBD**
-  - Current: PolyForm Noncommercial + Commercial dual license
-  - Options: MIT, Apache 2.0, AGPL, or keep current
-  - ⚠️ MUST decide before public release
-  - Update LICENSE and COMMERCIAL_LICENSE.md accordingly
+- [x] **1.6** Finalize license model: **AGPL-3.0**
+  - Current: AGPL-3.0 (GNU Affero General Public License v3.0)
+  - Changed from PolyForm Noncommercial + Commercial dual license to AGPL-3.0
+  - ✅ Changed to AGPL-3.0, LICENSE file updated, COMMERCIAL_LICENSE.md removed
 
 ### 📝 Decision Summary
 
@@ -116,7 +115,6 @@ Email:     contact@holistix.so
 
 - [ ] **3.1.1** `README.md` (7 occurrences)
 
-  - [ ] Update project name in header
   - [ ] Update description
   - [ ] Update GitHub links
   - [ ] Update issue tracker links
@@ -125,7 +123,6 @@ Email:     contact@holistix.so
 
 - [ ] **3.1.2** `CONTRIBUTING.md` (4 occurrences)
 
-  - [ ] Update project name references
   - [ ] Update repository clone URLs
   - [ ] Update GitHub links
 
@@ -134,10 +131,7 @@ Email:     contact@holistix.so
   - [ ] Review and update if changing license model
   - [ ] Update copyright holder if needed
 
-- [ ] **3.1.4** `COMMERCIAL_LICENSE.md` (4 occurrences)
-
-  - [ ] Update project name
-  - [ ] Update contact email domain (from @holistix.so)
+- [x] **3.1.4** `COMMERCIAL_LICENSE.md` - DELETED (no longer applicable with AGPL-3.0)
 
 - [ ] **3.1.5** `README_NEXT_STEPS.md` (3 occurrences)
   - [ ] Update all brand references
@@ -147,12 +141,11 @@ Email:     contact@holistix.so
 
 - [ ] **3.2.1** `doc/README.md` (2 occurrences)
 
-  - [ ] Update project name in header
   - [ ] Update description
 
 - [ ] **3.2.2** `doc/LICENSING.md` (14 occurrences)
   - [ ] Update all "Demiurge" references to "Holistix"
-  - [ ] Update contact email (@holistix.so → @holistix.io)
+  - [ ] Update contact email ( → @holistix.so)
   - [ ] Update license file references
 
 ### 3.3 Architecture Docs (`doc/architecture/`)
@@ -330,7 +323,119 @@ git mv packages/modules/jupyter/docker-image/demiurge-entrypoint.sh \
 
 ---
 
-## 🐳 PHASE 6: DOCKER IMAGES
+## 🎨 PHASE 5.5: SPACE → WHITEBOARD MODULE RENAME ✅ DONE
+
+**Status**: ✅ **COMPLETED**  
+**Date**: Dec 5, 2025  
+**Time**: 1.5 hours  
+**Priority**: High
+
+Complete rename of "space" module to "whiteboard" - brand-neutral naming aligned with functionality.
+
+### Changes Completed
+
+#### 5.5.1 Directory & Package Structure
+
+- [x] Renamed directory: `packages/modules/space` → `packages/modules/whiteboard`
+- [x] Updated package name: `@holistix-forge/space` → `@holistix-forge/whiteboard`
+- [x] Updated `sourceRoot`: `packages/modules/space/src` → `packages/modules/whiteboard/src`
+- [x] Updated config files: `jest.config.ts`, `vite.config.ts`
+- [x] Updated `package.json` style exports: `dist/space.css` → `dist/whiteboard.css`
+
+#### 5.5.2 File Renames (10 files)
+
+- [x] `space-reducer.ts` → `whiteboard-reducer.ts`
+- [x] `space-events.ts` → `whiteboard-events.ts`
+- [x] `space-types.ts` → `whiteboard-types.ts`
+- [x] `space-menu.tsx` → `whiteboard-menu.tsx`
+- [x] `collab-space-state.ts` → `collab-whiteboard-state.ts`
+- [x] `spaceState.ts` → `whiteboardState.ts`
+- [x] `space-module/` directory → `whiteboard-module/`
+- [x] All internal imports updated (150+ references)
+
+#### 5.5.3 Type System Updates (8 types)
+
+- [x] `TSpaceSharedData` → `TWhiteboardSharedData`
+- [x] `TSpaceMenuEntry` → `TWhiteboardMenuEntry`
+- [x] `TSpaceMenuEntries` → `TWhiteboardMenuEntries`
+- [x] `TSpaceFrontendExports` → `TWhiteboardFrontendExports`
+- [x] `TSpaceEvent` → `TWhiteboardEvent`
+- [x] `TSpaceContext` → `TWhiteboardContext`
+- [x] Story types: `StoryMockSpaceContext` → `StoryMockWhiteboardContext`
+
+#### 5.5.4 Classes & Functions
+
+- [x] `SpaceReducer` class → `WhiteboardReducer`
+- [x] `SpaceState` class → `WhiteboardState`
+- [x] `spaceMenuEntries` function → `whiteboardMenuEntries`
+- [x] Component names in stories updated
+
+#### 5.5.5 Shared Data Keys ⚠️ BREAKING CHANGE
+
+All Yjs shared data event types renamed from `'space:*'` to `'whiteboard:*'`:
+
+- [x] `'space:graphViews'` → `'whiteboard:graphViews'`
+- [x] `'space:new-view'` → `'whiteboard:new-view'`
+- [x] `'space:new-group'` → `'whiteboard:new-group'`
+- [x] `'space:new-shape'` → `'whiteboard:new-shape'`
+- [x] `'space:move-node'` → `'whiteboard:move-node'`
+- [x] `'space:lock-node'` → `'whiteboard:lock-node'`
+- [x] `'space:disable-feature'` → `'whiteboard:disable-feature'`
+- [x] `'space:shape-property-change'` → `'whiteboard:shape-property-change'`
+
+⚠️ **Note**: This is a breaking change - existing user data with 'space:' keys will need migration.
+
+#### 5.5.6 Module Metadata
+
+- [x] Module name: `'space'` → `'whiteboard'`
+- [x] Module description: `'Space module'` → `'Whiteboard module'`
+- [x] Frontend module exports updated
+
+#### 5.5.7 Cross-Module Updates (9 modules affected)
+
+- [x] **airtable**: Updated `TSpaceMenuEntries` imports and usage
+- [x] **chats**: Updated `TSpaceEvent` to `TWhiteboardEvent`
+- [x] **excalidraw**: Updated menu entries and event types
+- [x] **jupyter**: Updated menu entries
+- [x] **notion**: Updated menu entries
+- [x] **socials**: Updated menu entries
+- [x] **user-containers**: Updated menu entries (servers-menu.tsx)
+- [x] **n8n**: Updated menu entries
+- [x] **app-frontend**: Updated style imports (`@holistix-forge/whiteboard/style`)
+- [x] **app-gateway**: Updated event types in `build-collab.ts`
+
+#### 5.5.8 Documentation
+
+- [x] `README.md`: Updated all references from "Space" to "Whiteboard"
+- [x] Type documentation updated
+- [x] API documentation updated
+
+#### 5.5.9 Build & Verification
+
+- [x] Cleared Nx cache: `npx nx reset`
+- [x] Synced workspace: `npx nx sync`
+- [x] Regenerated `package-lock.json`
+- [x] Full build test: **ALL 32 PROJECTS BUILD SUCCESSFULLY**
+- [x] Fixed all TypeScript linter errors
+- [x] Verified verbose build: **NO ERRORS REMAINING**
+
+### Statistics
+
+- **135 files modified**
+- **~300 text replacements** (types, imports, references)
+- **10 files renamed** (with git history preserved)
+- **1 directory renamed** (with git history preserved)
+- **9 modules updated** (cross-module references)
+- **8 shared data keys renamed** (breaking change)
+
+### Next Steps
+
+- User to commit changes (user handles all commits)
+- Consider data migration script for existing users (if needed)
+
+---
+
+## 🐳 PHASE 6: DOCKER IMAGES ✅ DONE
 
 ### 6.1 Docker Image Names (8 occurrences of `demiurge/`)
 
@@ -387,11 +492,10 @@ git mv packages/modules/jupyter/docker-image/demiurge-entrypoint.sh \
   - [ ] Any other config files with domain references
 
 - [ ] **7.1.3** Update email addresses:
-  - [ ] `licensing@holistix.so` → `licensing@holistix.so`
+  - [ ] `licensing@holistix.so` → `contact@holistix.so`
   - [ ] `contact@holistix.so` → `contact@holistix.so`
-  - [ ] `support@holistix.so` → `support@holistix.so`
-  - [ ] Optional: `hello@holistix.so` (friendly alternative)
-  - [ ] Check: `COMMERCIAL_LICENSE.md`, `LICENSING.md`, website
+  - [ ] `support@holistix.so` → `contact@holistix.so`
+  - [ ] Check: `LICENSING.md`, website (COMMERCIAL_LICENSE.md has been removed)
 
 ### 7.2 Environment Variables & Configuration
 

@@ -63,7 +63,7 @@
       "path": "../module/tsconfig.lib.json"
     },
     {
-      "path": "../space/tsconfig.lib.json"
+      "path": "../whiteboard/tsconfig.lib.json"
     },
     {
       "path": "../../ui-base/tsconfig.lib.json"

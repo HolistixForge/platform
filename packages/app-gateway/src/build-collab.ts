@@ -1,13 +1,13 @@
 import { BackendEventProcessor } from '@holistix-forge/reducers';
 import { TCoreEvent } from '@holistix-forge/core-graph';
 import { TabPayload, TTabEvents } from '@holistix-forge/tabs';
-import { TSpaceEvent } from '@holistix-forge/whiteboard';
+import { TWhiteboardEvent } from '@holistix-forge/whiteboard';
 
 //
 //
 
 export async function initProjectCollaboration(
-  bep: BackendEventProcessor<TCoreEvent | TSpaceEvent | TTabEvents<TabPayload>>
+  bep: BackendEventProcessor<TCoreEvent | TWhiteboardEvent | TTabEvents<TabPayload>>
 ) {
   // TODO: load data from saved file
   // const loaded = extraContext.gateway.loadDoc();
@@ -26,7 +26,7 @@ export async function initProjectCollaboration(
     console.log('new project initialization');
     // TODO: Implement new project initialization with proper requestData
     // await bep.processEvent({
-    //   type: 'space:new-view',
+    //   type: 'whiteboard:new-view',
     //   viewId: DEFAULT_VIEW_1,
     // }, requestData);
     // await bep.processEvent({

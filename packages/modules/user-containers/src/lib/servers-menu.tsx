@@ -1,9 +1,9 @@
-import { TSpaceMenuEntries } from '@holistix-forge/whiteboard/frontend';
+import { TWhiteboardMenuEntries } from '@holistix-forge/whiteboard/frontend';
 import { NewContainerForm } from './form/new-server';
 
 //
 
-export const serversMenuEntries: TSpaceMenuEntries = ({
+export const serversMenuEntries: TWhiteboardMenuEntries = ({
   viewId,
   from,
   position,

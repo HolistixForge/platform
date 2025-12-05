@@ -1,4 +1,4 @@
-import { TSpaceMenuEntries, TSpaceMenuEntry } from '@holistix-forge/whiteboard/frontend';
+import { TWhiteboardMenuEntries, TWhiteboardMenuEntry } from '@holistix-forge/whiteboard/frontend';
 import { TValidSharedDataToCopy } from '@holistix-forge/collab/frontend';
 import { TCoreEvent } from '@holistix-forge/core-graph';
 import { makeUuid } from '@holistix-forge/simple-types';
@@ -11,7 +11,7 @@ import { TNodeAirtableTableDataPayload } from './components/node-airtable/node-a
 
 //
 
-export const airtableMenuEntries: TSpaceMenuEntries = ({
+export const airtableMenuEntries: TWhiteboardMenuEntries = ({
   from,
   viewId,
   position,
@@ -23,7 +23,7 @@ export const airtableMenuEntries: TSpaceMenuEntries = ({
   const tsd = sharedData as TValidSharedDataToCopy<TAirtableSharedData>;
   const d = dispatcher as FrontendDispatcher<TAirtableEvent | TCoreEvent>;
 
-  const bases: TSpaceMenuEntry[] = Array.from(
+  const bases: TWhiteboardMenuEntry[] = Array.from(
     tsd['airtable:bases']?.entries() ?? []
   ).map(([id, base]) => {
     // Create table entries for the embed submenu

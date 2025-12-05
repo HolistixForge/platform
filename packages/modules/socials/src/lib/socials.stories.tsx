@@ -4,7 +4,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { SharedTypes } from '@holistix-forge/collab-engine';
 import { EPriority, Logger } from '@holistix-forge/log';
 import { TCoreSharedData } from '@holistix-forge/core-graph';
-import { TSpaceSharedData, defaultGraphView } from '@holistix-forge/whiteboard';
+import { TWhiteboardSharedData, defaultGraphView } from '@holistix-forge/whiteboard';
 import {
   STORY_VIEW_ID,
   StoryWhiteboard,
@@ -42,7 +42,7 @@ Logger.setPriority(EPriority.Debug);
 
 const collabConfig = {
   type: 'none',
-  room_id: 'space-story',
+  room_id: 'whiteboard-story',
   simulateUsers: true,
   user: { username: 'test', color: 'red' },
 };
@@ -90,7 +90,7 @@ const modulesBackend: { module: TModule<never, object>; config: object }[] = [
         depsExports,
       }: {
         depsExports: {
-          collab: TCollabBackendExports<TSpaceSharedData & TCoreSharedData>;
+          collab: TCollabBackendExports<TWhiteboardSharedData & TCoreSharedData>;
         };
       }) => {
         loadStoryData(
@@ -127,11 +127,11 @@ const modulesFrontend: { module: TModule<never, object>; config: object }[] = [
 ];
 
 const loadStoryData = (
-  sd: TSpaceSharedData & TCoreSharedData,
+  sd: TWhiteboardSharedData & TCoreSharedData,
   sharedTypes: SharedTypes
 ) => {
   sharedTypes.transaction(async () => {
-    const graphViews = sd['space:graphViews'];
+    const graphViews = sd['whiteboard:graphViews'];
     const gv = defaultGraphView();
 
     sd['core-graph:nodes'].set('node-1', {

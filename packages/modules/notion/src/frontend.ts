@@ -2,7 +2,7 @@ import { NodeNotionDatabase } from './lib/components/node-notion/node-notion-dat
 import { NodeNotionTask } from './lib/components/node-notion/node-notion-task';
 import type { TModule } from '@holistix-forge/module';
 import type { TCollabFrontendExports } from '@holistix-forge/collab/frontend';
-import type { TSpaceFrontendExports } from '@holistix-forge/whiteboard/frontend';
+import type { TWhiteboardFrontendExports } from '@holistix-forge/whiteboard/frontend';
 import { notionMenuEntries } from './lib/notion-menu';
 import { NotionRightPanel } from './lib/components/node-notion/right-panel';
 import { NodeNotionKanbanColumn } from './lib/components/node-notion/node-notion-kanban-column';
@@ -11,14 +11,14 @@ import { NodeNotionKanbanColumn } from './lib/components/node-notion/node-notion
 
 type TRequired = {
   collab: TCollabFrontendExports;
-  space: TSpaceFrontendExports;
+  whiteboard: TWhiteboardFrontendExports;
 };
 
 export const moduleFrontend: TModule<TRequired> = {
   name: 'notion',
   version: '0.0.1',
   description: 'Notion module',
-  dependencies: ['core-graph', 'collab', 'space'],
+  dependencies: ['core-graph', 'collab', 'whiteboard'],
   load: ({ depsExports }) => {
     depsExports.collab.collab.loadSharedData('map', 'notion', 'databases');
     depsExports.collab.collab.loadSharedData('map', 'notion', 'node-views');
@@ -28,13 +28,13 @@ export const moduleFrontend: TModule<TRequired> = {
       'database-search-results'
     );
 
-    depsExports.space.registerMenuEntries(notionMenuEntries);
-    depsExports.space.registerNodes({
+    depsExports.whiteboard.registerMenuEntries(notionMenuEntries);
+    depsExports.whiteboard.registerNodes({
       'notion-database': NodeNotionDatabase,
       'notion-page': NodeNotionTask,
       'notion-kanban-column': NodeNotionKanbanColumn,
     });
-    depsExports.space.registerPanel({
+    depsExports.whiteboard.registerPanel({
       'notion-database': NotionRightPanel,
     });
   },

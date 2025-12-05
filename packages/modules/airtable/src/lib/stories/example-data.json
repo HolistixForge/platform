@@ -10,7 +10,7 @@
     "nodes": {},
     "edges": [],
     "graphViews": {
-        "space-story": {
+        "whiteboard-story": {
             "params": {
                 "maxRank": 2,
                 "roots": [],
@@ -26,7 +26,7 @@
         }
     },
     "drawing": {
-        "space-story": {
+        "whiteboard-story": {
             "elements": [],
             "hash": "2914"
         }

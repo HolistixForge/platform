@@ -36,7 +36,7 @@ export const NodeChatAnchor = ({ node }: { node: TGraphNode }) => {
     useNodeValue.open();
     chatNodeId &&
       dispatcher.dispatch({
-        type: 'space:open-node',
+        type: 'whiteboard:open-node',
         nid: chatNodeId,
         viewId: useNodeValue.viewId,
       });
@@ -46,7 +46,7 @@ export const NodeChatAnchor = ({ node }: { node: TGraphNode }) => {
     useNodeValue.close();
     chatNodeId &&
       dispatcher.dispatch({
-        type: 'space:close-node',
+        type: 'whiteboard:close-node',
         nid: chatNodeId,
         viewId: useNodeValue.viewId,
       });

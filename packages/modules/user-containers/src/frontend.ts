@@ -2,7 +2,7 @@ import './lib/index.scss';
 import { NodeServer } from './lib/components/node-server/node-server';
 import type { TModule } from '@holistix-forge/module';
 import type { TCollabFrontendExports } from '@holistix-forge/collab/frontend';
-import type { TSpaceFrontendExports } from '@holistix-forge/whiteboard/frontend';
+import type { TWhiteboardFrontendExports } from '@holistix-forge/whiteboard/frontend';
 import { serversMenuEntries } from './lib/servers-menu';
 import { localRunnerFrontend } from './lib/local-runner-frontend';
 import { TUserContainersSharedData } from './lib/servers-shared-model';
@@ -30,14 +30,14 @@ export type TUserContainersFrontendExports = {
 
 type TRequired = {
   collab: TCollabFrontendExports<TUserContainersSharedData>;
-  space: TSpaceFrontendExports;
+  whiteboard: TWhiteboardFrontendExports;
 };
 
 export const moduleFrontend: TModule<TRequired> = {
   name: 'user-containers',
   version: '0.0.1',
   description: 'User containers module',
-  dependencies: ['core-graph', 'collab', 'space', 'tabs'],
+  dependencies: ['core-graph', 'collab', 'whiteboard', 'tabs'],
   load: ({ depsExports, moduleExports }) => {
     depsExports.collab.collab.loadSharedData(
       'map',
@@ -50,8 +50,8 @@ export const moduleFrontend: TModule<TRequired> = {
       'images'
     );
 
-    depsExports.space.registerMenuEntries(serversMenuEntries);
-    depsExports.space.registerNodes({
+    depsExports.whiteboard.registerMenuEntries(serversMenuEntries);
+    depsExports.whiteboard.registerNodes({
       'user-container': NodeServer,
     });
 

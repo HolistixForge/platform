@@ -150,7 +150,7 @@ const ProxyCheckWrapper = ({ children }: { children: ReactNode }) => {
 
 const collabConfig = {
   type: 'none',
-  room_id: 'space-story',
+  room_id: 'whiteboard-story',
   simulateUsers: true,
   user: { username: 'test', color: 'red' },
 };

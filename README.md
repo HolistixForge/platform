@@ -66,7 +66,7 @@ Quick Links:
 
 ## 🏗️ Architecture
 
-```
+\`\`\`
 ┌─────────────────────────────────────────────────────────────┐
 │                     Demiurge Platform                        │
 ├─────────────────────────────────────────────────────────────┤
@@ -99,13 +99,13 @@ Quick Links:
 │  │  - VPN connected to gateway          │                  │
 │  └──────────────────────────────────────┘                  │
 └─────────────────────────────────────────────────────────────┘
-```
+\`\`\`
 
 See [doc/architecture/OVERVIEW.md](doc/architecture/OVERVIEW.md) for detailed architecture.
 
 ## 📦 Repository Structure
 
-```
+\`\`\`
 monorepo/
 ├── packages/
 │   ├── app-ganymede/        # Main API server
@@ -123,7 +123,7 @@ monorepo/
 ├── docker-images/           # Docker image definitions
 ├── scripts/                 # Utility scripts
 └── doc/                     # Documentation
-```
+\`\`\`
 
 ## 🤝 Contributing
 
@@ -131,17 +131,21 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow, coding standard
 
 ## 📄 License
 
-Demiurge is available under a **dual licensing model**:
+Demiurge is licensed under the **[GNU Affero General Public License v3.0](LICENSE)** (AGPL-3.0).
 
-- **Non-Commercial Use:** [PolyForm Noncommercial License 1.0.0](LICENSE) (free)
-- **Commercial Use:** [Commercial License](COMMERCIAL_LICENSE.md) (requires purchase)
+This is a strong copyleft license that:
+- ✅ Allows commercial use, distribution, modification, and private use
+- ✅ Provides an express grant of patent rights from contributors
+- ⚠️ Requires disclosure of source code when distributing the software
+- ⚠️ Requires that modified versions used over a network must make source code available
+- ⚠️ Requires derivative works to be licensed under the same terms
 
-**Quick Guide:**
+**Key Points:**
+- You are free to use, modify, and distribute this software
+- If you modify this software and provide it as a service over a network, you must make your modified source code available
+- All derivative works must also be licensed under AGPL-3.0
 
-- ✅ **Free for:** Personal use, education, research, non-profit organizations
-- ❌ **Requires commercial license:** For-profit businesses, SaaS offerings, government use, commercial integrations
-
-**Not sure which license applies?** See [doc/LICENSING.md](doc/LICENSING.md) for detailed information, or contact **contact@holistix.so**
+For more information about the AGPL-3.0 license, see https://choosealicense.com/licenses/agpl-3.0/
 
 ## 🙋 Support
 

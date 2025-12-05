@@ -1,4 +1,4 @@
-import { TSpaceMenuEntries, TSpaceMenuEntry } from '@holistix-forge/whiteboard/frontend';
+import { TWhiteboardMenuEntries, TWhiteboardMenuEntry } from '@holistix-forge/whiteboard/frontend';
 import { TValidSharedDataToCopy } from '@holistix-forge/collab/frontend';
 import { TCoreEvent } from '@holistix-forge/core-graph';
 import { makeUuid } from '@holistix-forge/simple-types';
@@ -11,7 +11,7 @@ import { TNodeNotionDatabaseDataPayload } from './components/node-notion/node-no
 
 //
 
-export const notionMenuEntries: TSpaceMenuEntries = ({
+export const notionMenuEntries: TWhiteboardMenuEntries = ({
   from,
   viewId,
   position,
@@ -23,7 +23,7 @@ export const notionMenuEntries: TSpaceMenuEntries = ({
   const tsd = sharedData as TValidSharedDataToCopy<TNotionSharedData>;
   const d = dispatcher as FrontendDispatcher<TNotionEvent | TCoreEvent>;
 
-  const databases: TSpaceMenuEntry[] = Array.from(
+  const databases: TWhiteboardMenuEntry[] = Array.from(
     tsd['notion:databases']?.entries() || []
   ).map(([id, db]) => {
     const title = db.title?.[0]?.plain_text;

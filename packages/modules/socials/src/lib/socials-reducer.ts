@@ -282,7 +282,7 @@ export class SocialsReducer extends Reducer<TEventSocials> {
     if (event.origin) {
       this.depsExports.reducers.processEvent(
         {
-          type: 'space:lock-node',
+          type: 'whiteboard:lock-node',
           viewId: event.origin?.viewId,
           nid: id,
         },

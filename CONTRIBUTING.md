@@ -204,12 +204,10 @@ Create an issue with:
 
 By contributing code to Demiurge, you agree that:
 
-- Your contributions will be licensed under the same dual licensing model as the project
-- You grant the project maintainers the right to use your contributions under both:
-  - PolyForm Noncommercial License 1.0.0 (for non-commercial use)
-  - Commercial License (for commercial licensing)
+- Your contributions will be licensed under the GNU Affero General Public License v3.0 (AGPL-3.0)
 - You retain copyright to your contributions
-- You have the right to grant these licenses
+- You have the right to grant this license
+- Your contributions are your original work or you have permission to contribute them
 
 ### License Compatibility
 
@@ -217,9 +215,15 @@ When contributing, ensure that:
 
 - Your code doesn't include third-party code with incompatible licenses
 - You have the right to contribute the code (it's your original work or you have permission)
-- Any third-party code you include is compatible with our dual licensing model
+- Any third-party code you include is compatible with AGPL-3.0
+- You comply with the copyleft requirements of AGPL-3.0
 
-See [doc/LICENSING.md](doc/LICENSING.md) for more information about licensing.
+The AGPL-3.0 license requires that:
+- All derivative works must be licensed under AGPL-3.0
+- Source code must be made available when distributing the software
+- If you run a modified version as a service over a network, you must make the source code available to users
+
+For more information about AGPL-3.0, see https://choosealicense.com/licenses/agpl-3.0/
 
 ## 🙋 Questions?
 

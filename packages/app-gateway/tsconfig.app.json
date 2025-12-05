@@ -60,7 +60,7 @@
       "path": "../modules/module/tsconfig.lib.json"
     },
     {
-      "path": "../modules/space/tsconfig.lib.json"
+      "path": "../modules/whiteboard/tsconfig.lib.json"
     },
     {
       "path": "../modules/tabs/tsconfig.lib.json"
