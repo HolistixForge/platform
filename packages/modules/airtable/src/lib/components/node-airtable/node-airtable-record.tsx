@@ -9,7 +9,7 @@ import {
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@holistix-forge/space/frontend';
+} from '@holistix-forge/whiteboard/frontend';
 import { TAirtableEvent } from '../../airtable-events';
 
 export type TNodeAirtableRecordDataPayload = {

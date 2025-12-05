@@ -8,7 +8,7 @@ import {
   useConnector,
   NodeMainToolbar,
   useMakeButton,
-} from '@holistix-forge/space/frontend';
+} from '@holistix-forge/whiteboard/frontend';
 
 import { CellsHive, CellsHiveProps } from '../node-notebook/cells-hive';
 import { NodeNotebook } from '../node-notebook/node-notebook';

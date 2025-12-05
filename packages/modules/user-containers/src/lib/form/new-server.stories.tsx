@@ -8,7 +8,7 @@ import {
   TCollabFrontendExports,
 } from '@holistix-forge/collab/frontend';
 import { moduleFrontend as coreFrontend } from '@holistix-forge/core-graph';
-import { moduleFrontend as spaceFrontend } from '@holistix-forge/space/frontend';
+import { moduleFrontend as spaceFrontend } from '@holistix-forge/whiteboard/frontend';
 import { moduleFrontend as tabsFrontend } from '@holistix-forge/tabs';
 import { moduleFrontend as reducersFrontend } from '@holistix-forge/reducers/frontend';
 

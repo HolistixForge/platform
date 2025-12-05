@@ -4,7 +4,7 @@ export { StoryMockSpaceContextReactflowBgAndCss } from './lib/stories/story-cont
 
 export {
   STORY_VIEW_ID,
-  StoryDemiurgeSpace,
-} from './lib/stories/story-demiurge-space';
+  StoryWhiteboard,
+} from './lib/stories/story-whiteboard';
 
 export { MockNodeContext } from './lib/components/node-wrappers/node-wrapper';

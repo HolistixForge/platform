@@ -9,7 +9,7 @@ import {
   ButtonIconProps,
   useAction,
 } from '@holistix-forge/ui-base';
-import { DisableZoomDragPan, NodeMainToolbar } from '@holistix-forge/space/frontend';
+import { DisableZoomDragPan, NodeMainToolbar } from '@holistix-forge/whiteboard/frontend';
 
 import {
   DiscussionItem,

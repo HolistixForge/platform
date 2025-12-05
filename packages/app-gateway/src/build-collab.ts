@@ -1,7 +1,7 @@
 import { BackendEventProcessor } from '@holistix-forge/reducers';
 import { TCoreEvent } from '@holistix-forge/core-graph';
 import { TabPayload, TTabEvents } from '@holistix-forge/tabs';
-import { TSpaceEvent } from '@holistix-forge/space';
+import { TSpaceEvent } from '@holistix-forge/whiteboard';
 
 //
 //

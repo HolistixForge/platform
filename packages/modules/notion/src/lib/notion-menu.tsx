@@ -1,4 +1,4 @@
-import { TSpaceMenuEntries, TSpaceMenuEntry } from '@holistix-forge/space/frontend';
+import { TSpaceMenuEntries, TSpaceMenuEntry } from '@holistix-forge/whiteboard/frontend';
 import { TValidSharedDataToCopy } from '@holistix-forge/collab/frontend';
 import { TCoreEvent } from '@holistix-forge/core-graph';
 import { makeUuid } from '@holistix-forge/simple-types';

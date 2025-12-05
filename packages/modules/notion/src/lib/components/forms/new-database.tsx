@@ -11,7 +11,7 @@ import {
 import { useAwareness, useLocalSharedData } from '@holistix-forge/collab/frontend';
 import { useDispatcher } from '@holistix-forge/reducers/frontend';
 import { TPosition } from '@holistix-forge/core-graph';
-import { TPanel } from '@holistix-forge/space/frontend';
+import { TPanel } from '@holistix-forge/whiteboard/frontend';
 import { makeUuid } from '@holistix-forge/simple-types';
 
 import { TNotionEvent } from '../../notion-events';

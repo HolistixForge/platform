@@ -1,5 +1,5 @@
 import { TPosition } from '@holistix-forge/core-graph';
-import { WhiteboardMode } from './demiurge-space';
+import { WhiteboardMode } from './whiteboard';
 import { LayerViewport } from './layer-types';
 
 /**

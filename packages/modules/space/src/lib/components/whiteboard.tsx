@@ -120,12 +120,12 @@ const useOpenRadixContextMenu = () => {
 
 /**
  * #########################################################
- * DemiurgeSpace
+ * Whiteboard
  * @param param0
  * @returns
  */
 
-export const DemiurgeSpace = ({
+export const Whiteboard = ({
   viewId,
   projectId,
 }: {
@@ -133,12 +133,12 @@ export const DemiurgeSpace = ({
   projectId: string;
 }) => {
   const { space } = useModuleExports<{ space: TSpaceFrontendExports }>(
-    'DemiurgeSpace'
+    'Whiteboard'
   );
   const uies = space.uiElements;
   return (
     <RightPanels panelsDefs={uies.panels}>
-      <DemiurgeSpaceWhiteboard
+      <WhiteboardWhiteboard
         projectId={projectId}
         viewId={viewId}
         nodeTypes={uies.nodes}
@@ -151,12 +151,12 @@ export const DemiurgeSpace = ({
 
 /**
  * #########################################################
- * DemiurgeSpaceContent
+ * WhiteboardContent
  * @param param0
  * @returns
  */
 
-export type DemiurgeSpaceWhiteboardProps = {
+export type WhiteboardWhiteboardProps = {
   projectId: string;
   viewId: string;
   nodeTypes: TNodeTypes;
@@ -165,13 +165,13 @@ export type DemiurgeSpaceWhiteboardProps = {
   layersProviders?: TLayerProvider[];
 };
 
-const DemiurgeSpaceWhiteboard = ({
+const WhiteboardWhiteboard = ({
   projectId,
   viewId,
   nodeTypes,
   spaceMenuEntries,
   layersProviders,
-}: DemiurgeSpaceWhiteboardProps) => {
+}: WhiteboardWhiteboardProps) => {
   //
 
   const dispatcher = useDispatcher<TEventEdgePropertyChange | TEventNewEdge>();

@@ -2,7 +2,7 @@ import type { TModule } from '@holistix-forge/module';
 import type { TCollabBackendExports } from '@holistix-forge/collab';
 import type { TReducersBackendExports } from '@holistix-forge/reducers';
 import type { TCoreSharedData } from '@holistix-forge/core-graph';
-import { TSpaceSharedData } from '@holistix-forge/space';
+import { TSpaceSharedData } from '@holistix-forge/whiteboard';
 
 import { ChatReducer } from './lib/chats-reducer';
 import type { TChatSharedData } from './lib/chats-shared-model';

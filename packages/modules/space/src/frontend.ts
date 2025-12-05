@@ -45,7 +45,7 @@ export {
 
 export type { TNodeContext } from './lib/components/apis/types/node';
 
-export { DemiurgeSpace } from './lib/components/demiurge-space';
+export { Whiteboard } from './lib/components/whiteboard';
 
 export { useLayerContext } from './lib/components/layer-context';
 

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { useTestBoolean } from '@holistix-forge/ui-base';
-import { StoryMockSpaceContextReactflowBgAndCss } from '@holistix-forge/space/stories';
+import { StoryMockSpaceContextReactflowBgAndCss } from '@holistix-forge/whiteboard/stories';
 import { ModuleProvider } from '@holistix-forge/module/frontend';
 
 import {

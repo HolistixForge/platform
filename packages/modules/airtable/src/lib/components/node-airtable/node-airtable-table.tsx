@@ -12,7 +12,7 @@ import {
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@holistix-forge/space/frontend';
+} from '@holistix-forge/whiteboard/frontend';
 import { TAirtableSharedData } from '../../airtable-shared-model';
 import AirtableTableKanban from './airtable-table-kanban';
 import AirtableTableGallery from './airtable-table-gallery';

@@ -7,7 +7,7 @@ import {
   Inputs,
   Outputs,
   TNodeContext,
-} from '@holistix-forge/space/frontend';
+} from '@holistix-forge/whiteboard/frontend';
 
 import { DisplayMenu } from './display-menu';
 import { Tag } from './tag';

@@ -1,4 +1,4 @@
-import { TSpaceMenuEntries } from '@holistix-forge/space/frontend';
+import { TSpaceMenuEntries } from '@holistix-forge/whiteboard/frontend';
 import { NewYoutubeForm } from './forms/form-new-youtube';
 import { NewNodeUserForm } from './forms/form-new-node-user';
 import { NewIframeForm } from './forms/form-new-iframe';

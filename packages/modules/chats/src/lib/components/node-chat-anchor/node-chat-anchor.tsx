@@ -1,5 +1,5 @@
 import { icons } from '@holistix-forge/ui-base';
-import { InputsAndOutputs, useNodeContext } from '@holistix-forge/space/frontend';
+import { InputsAndOutputs, useNodeContext } from '@holistix-forge/whiteboard/frontend';
 import { useNodeEdges } from '@holistix-forge/core-graph/frontend';
 import { TGraphNode } from '@holistix-forge/core-graph';
 import { useLocalSharedData } from '@holistix-forge/collab/frontend';

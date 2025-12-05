@@ -4,7 +4,7 @@ import {
   useMakeButton,
   TNodeContext,
   Outputs,
-} from '@holistix-forge/space/frontend';
+} from '@holistix-forge/whiteboard/frontend';
 
 import { MenuExpanded } from '../menuExpanded/menuExpanded';
 

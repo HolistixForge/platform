@@ -6,7 +6,7 @@ import {
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@holistix-forge/space/frontend';
+} from '@holistix-forge/whiteboard/frontend';
 import { useCallback } from 'react';
 import { TNotionEvent } from '../../notion-events';
 import { NotionDatabaseKanbanColumn } from './notion-database-kanban';

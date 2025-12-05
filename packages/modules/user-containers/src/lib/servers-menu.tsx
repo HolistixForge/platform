@@ -1,4 +1,4 @@
-import { TSpaceMenuEntries } from '@holistix-forge/space/frontend';
+import { TSpaceMenuEntries } from '@holistix-forge/whiteboard/frontend';
 import { NewContainerForm } from './form/new-server';
 
 //

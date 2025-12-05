@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { randomGuys } from '@holistix-forge/ui-base';
 import { EPriority, Logger } from '@holistix-forge/log';
 import { StoryApiContext } from '@holistix-forge/frontend-data';
-import { StoryDemiurgeSpace } from '@holistix-forge/space/stories';
+import { StoryWhiteboard } from '@holistix-forge/whiteboard/stories';
 
 //
 import { loadModules, TModule } from '@holistix-forge/module';
@@ -27,8 +27,8 @@ import {
   linkDispatchToProcessEvent,
   TReducersFrontendExports,
 } from '@holistix-forge/reducers/frontend';
-import { moduleBackend as spaceBackend } from '@holistix-forge/space';
-import { moduleFrontend as spaceFrontend } from '@holistix-forge/space/frontend';
+import { moduleBackend as spaceBackend } from '@holistix-forge/whiteboard';
+import { moduleFrontend as spaceFrontend } from '@holistix-forge/whiteboard/frontend';
 //
 
 import { moduleFrontend } from '../frontend';
@@ -221,7 +221,7 @@ const Story = () => {
     <StoryApiContext ganymedeApiMock={ganymedeApiMock}>
       <ModuleProvider exports={frontendModules}>
         <div style={{ height: '100vh', width: '100vw' }}>
-          <StoryDemiurgeSpace />
+          <StoryWhiteboard />
         </div>
       </ModuleProvider>
     </StoryApiContext>

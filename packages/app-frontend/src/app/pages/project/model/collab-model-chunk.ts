@@ -5,7 +5,7 @@ import {
 import { useDispatcher as useDispatcherOriginal } from '@holistix-forge/reducers/frontend';
 import { TCoreSharedData, TCoreEvent } from '@holistix-forge/core-graph';
 import { TabPayload, TTabEvents, TTabsSharedData } from '@holistix-forge/tabs';
-import { TSpaceSharedData, TSpaceEvent } from '@holistix-forge/space';
+import { TSpaceSharedData, TSpaceEvent } from '@holistix-forge/whiteboard';
 import { TChatEvent, TChatSharedData } from '@holistix-forge/chats';
 import {
   TUserContainersEvents,

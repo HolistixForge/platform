@@ -3,7 +3,7 @@ import { NodeChatbox } from './lib/components/node-chat/node-chatbox';
 import { NodeChatAnchor } from './lib/components/node-chat-anchor/node-chat-anchor';
 import type { TModule } from '@holistix-forge/module';
 import type { TCollabFrontendExports } from '@holistix-forge/collab/frontend';
-import type { TSpaceFrontendExports } from '@holistix-forge/space/frontend';
+import type { TSpaceFrontendExports } from '@holistix-forge/whiteboard/frontend';
 
 type TRequired = {
   collab: TCollabFrontendExports;

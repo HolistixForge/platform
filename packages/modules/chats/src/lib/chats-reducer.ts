@@ -6,7 +6,7 @@ import {
 import { makeUuid } from '@holistix-forge/simple-types';
 import { TCoreSharedData } from '@holistix-forge/core-graph';
 import { TCollabBackendExports } from '@holistix-forge/collab';
-import { TSpaceSharedData } from '@holistix-forge/space';
+import { TSpaceSharedData } from '@holistix-forge/whiteboard';
 
 import {
   TChatEvent,

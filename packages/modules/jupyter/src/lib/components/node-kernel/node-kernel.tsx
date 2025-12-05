@@ -6,7 +6,7 @@ import {
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@holistix-forge/space/frontend';
+} from '@holistix-forge/whiteboard/frontend';
 import { TGraphNode } from '@holistix-forge/core-graph';
 import { useLocalSharedData } from '@holistix-forge/collab/frontend';
 import { useDispatcher } from '@holistix-forge/reducers/frontend';

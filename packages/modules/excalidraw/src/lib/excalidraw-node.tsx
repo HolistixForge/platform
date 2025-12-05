@@ -7,7 +7,7 @@ import {
   NodeHeader,
   InputsAndOutputs,
   DisableZoomDragPan,
-} from '@holistix-forge/space/frontend';
+} from '@holistix-forge/whiteboard/frontend';
 import { useSharedDataDirect } from '@holistix-forge/collab/frontend';
 import { useDispatcher } from '@holistix-forge/reducers/frontend';
 import { ButtonBase } from '@holistix-forge/ui-base';

@@ -170,7 +170,7 @@ export const EdgeComponent: FC<EdgeProps & Labels> = ({
 
   const allClassNames = [
     'react-flow__edge',
-    'demiurge-space-edge',
+    'whiteboard-edge',
     demiurgeEdge.semanticType,
     ...(className || []),
   ];

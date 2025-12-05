@@ -11,7 +11,7 @@ import {
   TNodeContext,
   NodeHeader,
   useNodeHeaderButtons,
-} from '@holistix-forge/space/frontend';
+} from '@holistix-forge/whiteboard/frontend';
 import { makeUuid } from '@holistix-forge/simple-types';
 
 import { TEventSocials } from '../socials-events';

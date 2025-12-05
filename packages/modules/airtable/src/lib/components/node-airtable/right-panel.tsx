@@ -4,7 +4,7 @@ import {
   TValidSharedDataToCopy,
   useLocalSharedData,
 } from '@holistix-forge/collab/frontend';
-import { TPanel } from '@holistix-forge/space/frontend';
+import { TPanel } from '@holistix-forge/whiteboard/frontend';
 import { TAirtableSharedData } from '../../airtable-shared-model';
 import { AirtableBaseTableList } from './airtable-base-table-list';
 

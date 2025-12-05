@@ -1,6 +1,6 @@
 import { TModule } from '@holistix-forge/module';
 import { TCollabFrontendExports } from '@holistix-forge/collab/frontend';
-import { TSpaceFrontendExports } from '@holistix-forge/space/frontend';
+import { TSpaceFrontendExports } from '@holistix-forge/whiteboard/frontend';
 
 import { layer } from './lib/layer';
 import { ExcalidrawNode } from './lib/excalidraw-node';

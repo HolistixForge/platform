@@ -8,7 +8,7 @@ import {
   NodeHeader,
   useNodeHeaderButtons,
   useNodeContext,
-} from '@holistix-forge/space/frontend';
+} from '@holistix-forge/whiteboard/frontend';
 
 import { TEventSocials } from '../socials-events';
 

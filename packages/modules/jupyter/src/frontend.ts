@@ -1,6 +1,6 @@
 import type { TModule } from '@holistix-forge/module';
 import type { TCollabFrontendExports } from '@holistix-forge/collab/frontend';
-import type { TSpaceFrontendExports } from '@holistix-forge/space/frontend';
+import type { TSpaceFrontendExports } from '@holistix-forge/whiteboard/frontend';
 import type { TUserContainersFrontendExports } from '@holistix-forge/user-containers/frontend';
 import { TUserContainersSharedData } from '@holistix-forge/user-containers';
 import { TReducersFrontendExports } from '@holistix-forge/reducers/frontend';

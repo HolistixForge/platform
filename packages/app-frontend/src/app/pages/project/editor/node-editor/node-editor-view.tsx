@@ -1,4 +1,4 @@
-import { DemiurgeSpace } from '@holistix-forge/space/frontend';
+import { Whiteboard } from '@holistix-forge/whiteboard/frontend';
 
 import './node-editor.scss';
 import { useProject } from '../../project-context';
@@ -13,7 +13,7 @@ export const NodeEditorView = ({ viewId }: { viewId: string }) => {
 
   return (
     <div style={{ height: '100%', backgroundColor: 'var(--color-background)' }}>
-      <DemiurgeSpace viewId={viewId} projectId={project.project.project_id} />
+      <Whiteboard viewId={viewId} projectId={project.project.project_id} />
     </div>
   );
 };

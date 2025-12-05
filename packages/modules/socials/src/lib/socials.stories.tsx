@@ -4,11 +4,11 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { SharedTypes } from '@holistix-forge/collab-engine';
 import { EPriority, Logger } from '@holistix-forge/log';
 import { TCoreSharedData } from '@holistix-forge/core-graph';
-import { TSpaceSharedData, defaultGraphView } from '@holistix-forge/space';
+import { TSpaceSharedData, defaultGraphView } from '@holistix-forge/whiteboard';
 import {
   STORY_VIEW_ID,
-  StoryDemiurgeSpace,
-} from '@holistix-forge/space/stories';
+  StoryWhiteboard,
+} from '@holistix-forge/whiteboard/stories';
 import { StoryApiContext } from '@holistix-forge/frontend-data';
 import { TCollabBackendExports } from '@holistix-forge/collab';
 
@@ -30,8 +30,8 @@ import {
   linkDispatchToProcessEvent,
   TReducersFrontendExports,
 } from '@holistix-forge/reducers/frontend';
-import { moduleBackend as spaceBackend } from '@holistix-forge/space';
-import { moduleFrontend as spaceFrontend } from '@holistix-forge/space/frontend';
+import { moduleBackend as spaceBackend } from '@holistix-forge/whiteboard';
+import { moduleFrontend as spaceFrontend } from '@holistix-forge/whiteboard/frontend';
 //
 import { moduleBackend as socialsBackend } from '../';
 import { moduleFrontend as socialsFrontend } from '../frontend';
@@ -253,7 +253,7 @@ const Story = () => {
     <StoryApiContext>
       <ModuleProvider exports={frontendModules}>
         <div style={{ height: '100vh', width: '100vw' }}>
-          <StoryDemiurgeSpace />
+          <StoryWhiteboard />
         </div>
       </ModuleProvider>
     </StoryApiContext>

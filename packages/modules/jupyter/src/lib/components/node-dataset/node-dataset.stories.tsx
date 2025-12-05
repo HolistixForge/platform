@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { playAdd__hover, useTestBoolean } from '@holistix-forge/ui-base';
-import { nodeViewDefaultStatus } from '@holistix-forge/space';
-import { StoryMockSpaceContextReactflowBgAndCss } from '@holistix-forge/space/stories';
+import { nodeViewDefaultStatus } from '@holistix-forge/whiteboard';
+import { StoryMockSpaceContextReactflowBgAndCss } from '@holistix-forge/whiteboard/stories';
 
 import { NodeDataset, NodeDatasetProps } from './node-dataset';
 

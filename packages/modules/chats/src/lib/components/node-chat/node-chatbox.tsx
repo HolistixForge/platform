@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 
-import { TSpaceEvent } from '@holistix-forge/space';
+import { TSpaceEvent } from '@holistix-forge/whiteboard';
 
 import {
   InputsAndOutputs,
   useMakeButton,
   useNodeContext,
-} from '@holistix-forge/space/frontend';
+} from '@holistix-forge/whiteboard/frontend';
 
 import { useNodeEdges } from '@holistix-forge/core-graph/frontend';
 import { TGraphNode } from '@holistix-forge/core-graph';

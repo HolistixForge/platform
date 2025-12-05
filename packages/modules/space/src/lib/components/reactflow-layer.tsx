@@ -51,7 +51,7 @@ import { translateEdges, translateNodes } from './to-rf-nodes';
 import { TEventMoveNode } from '../space-events';
 import { getAbsolutePosition } from '../utils/position-utils';
 import { TSpaceSharedData } from '../..';
-import { INITIAL_VIEWPORT } from './demiurge-space';
+import { INITIAL_VIEWPORT } from './whiteboard';
 import { useSpaceContext } from './reactflow-layer-context';
 import { LayerViewport, LayerViewportAdapter } from './layer-types';
 
@@ -113,7 +113,7 @@ export const ReactflowLayer = ({
 }: ReactflowLayerProps) => {
   const reactflowRef = useRef<ReactFlowInstance | null>(null);
 
-  useRegisterListener(spaceState, 'DemiurgeSpace', viewId);
+  useRegisterListener(spaceState, 'Whiteboard', viewId);
 
   //
   // ***************  ***************

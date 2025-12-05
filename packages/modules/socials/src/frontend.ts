@@ -1,5 +1,5 @@
 import type { TModule } from '@holistix-forge/module';
-import type { TSpaceFrontendExports } from '@holistix-forge/space/frontend';
+import type { TSpaceFrontendExports } from '@holistix-forge/whiteboard/frontend';
 
 import { NodeYoutube } from './lib/components/node-video';
 import { NodeTextEditor } from './lib/components/text-editor';

@@ -5,11 +5,11 @@ USER root
 
 RUN apk add --no-cache tini jq curl iputils openvpn util-linux pciutils
 
-COPY --chmod=755 ../../docker-images/user-images/demiurge-functions.sh /usr/local/bin/
+COPY --chmod=755 ../../docker-images/user-images/container-functions.sh /usr/local/bin/
 
-COPY --chmod=755 ./start-pgadmin4.sh ./demiurge-entrypoint.sh /usr/local/bin/
+COPY --chmod=755 ./start-pgadmin4.sh ./container-entrypoint.sh /usr/local/bin/
 
 RUN touch /pgadmin4/config_local.py && \
     chown 5050:5050 /pgadmin4/config_local.py
 
-ENTRYPOINT ["tini", "-g", "--", "demiurge-entrypoint.sh"]
+ENTRYPOINT ["tini", "-g", "--", "container-entrypoint.sh"]

@@ -1,7 +1,7 @@
 import { TrashIcon } from '@radix-ui/react-icons';
 
 import { icons, Datetime, UserAvatar, UserUsername } from '@holistix-forge/ui-base';
-import { NodeMainToolbar } from '@holistix-forge/space/frontend';
+import { NodeMainToolbar } from '@holistix-forge/whiteboard/frontend';
 
 import './discussionItem.scss';
 

@@ -17,7 +17,7 @@ import {
   useMakeButton,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@holistix-forge/space/frontend';
+} from '@holistix-forge/whiteboard/frontend';
 import { makeUuid } from '@holistix-forge/simple-types';
 import {
   TUserContainersSharedData,

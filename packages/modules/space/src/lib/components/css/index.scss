@@ -2,7 +2,7 @@
 @use './nodes';
 @use './edges';
 
-.demiurge-space-whiteboard {
+.whiteboard-canvas {
   // remove minimap on small screens
   @media (max-width: 640px) {
     .react-flow__panel.react-flow__minimap.bottom.right {

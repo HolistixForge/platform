@@ -1,13 +1,15 @@
 ⚠️ Antoine's stuffs
 
+license
+repo rename and main
+convert all this to issue and PR
+
 ci cd : npx nx run-many -t build --verbose | grep error. check bundles, compile storybooks
 /root/.local-dev
-user-containers default runner, jupyter
-mv docker image to theur module
+user-containers default runner, jupyter: cmd generator lowercase
 credentials
 
 sharedata nodeView purge
-cmd generator lowercase
 
 hidden node in search bar
 const filterOutNodes = gv?.params.filterOutNodes?.map((n) => sd.nodes.get(n));

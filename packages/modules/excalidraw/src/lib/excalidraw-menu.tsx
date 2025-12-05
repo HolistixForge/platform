@@ -1,8 +1,8 @@
 import { FrontendDispatcher } from '@holistix-forge/reducers/frontend';
-import { TSpaceMenuEntries } from '@holistix-forge/space/frontend';
+import { TSpaceMenuEntries } from '@holistix-forge/whiteboard/frontend';
 import { TGraphNode, TEventNewNode } from '@holistix-forge/core-graph';
 import { makeUuid } from '@holistix-forge/simple-types';
-import { TEventDisableFeature } from '@holistix-forge/space';
+import { TEventDisableFeature } from '@holistix-forge/whiteboard';
 
 export const excalidrawMenuEntries: TSpaceMenuEntries = ({
   viewId,

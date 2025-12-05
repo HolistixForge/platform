@@ -26,7 +26,7 @@ import {
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@holistix-forge/space/frontend';
+} from '@holistix-forge/whiteboard/frontend';
 
 import { TJupyterSharedData } from '../../jupyter-shared-model';
 import { useJLsManager } from '../../jupyter-hooks';

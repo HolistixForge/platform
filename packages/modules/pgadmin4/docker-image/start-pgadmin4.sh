@@ -2,7 +2,7 @@
 
 id
 
-. /usr/local/bin/demiurge-functions.sh
+. /usr/local/bin/container-functions.sh
 
 echo
 JSON_SETTINGS="$(echo $SETTINGS | base64 -d)"

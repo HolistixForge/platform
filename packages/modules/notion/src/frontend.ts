@@ -2,7 +2,7 @@ import { NodeNotionDatabase } from './lib/components/node-notion/node-notion-dat
 import { NodeNotionTask } from './lib/components/node-notion/node-notion-task';
 import type { TModule } from '@holistix-forge/module';
 import type { TCollabFrontendExports } from '@holistix-forge/collab/frontend';
-import type { TSpaceFrontendExports } from '@holistix-forge/space/frontend';
+import type { TSpaceFrontendExports } from '@holistix-forge/whiteboard/frontend';
 import { notionMenuEntries } from './lib/notion-menu';
 import { NotionRightPanel } from './lib/components/node-notion/right-panel';
 import { NodeNotionKanbanColumn } from './lib/components/node-notion/node-notion-kanban-column';

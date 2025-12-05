@@ -2,7 +2,7 @@ import type { Preview } from '@storybook/react';
 import { GlobalWrapper } from './global-wrapper';
 
 import '@holistix-forge/ui-base/style';
-import '@holistix-forge/space/style';
+import '@holistix-forge/whiteboard/style';
 
 const preview: Preview = {
   parameters: {

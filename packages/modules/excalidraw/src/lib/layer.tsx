@@ -7,14 +7,14 @@ import { AppState, Collaborator, SocketId } from '@excalidraw/excalidraw/types';
 import { BinaryFiles } from '@excalidraw/excalidraw/types';
 
 import { TJsonObject } from '@holistix-forge/simple-types';
-import { LayerViewportAdapter, TLayerProvider } from '@holistix-forge/space/frontend';
+import { LayerViewportAdapter, TLayerProvider } from '@holistix-forge/whiteboard/frontend';
 import {
   useAwarenessUserList,
   useSharedDataDirect,
 } from '@holistix-forge/collab/frontend';
 import { useDispatcher, FrontendDispatcher } from '@holistix-forge/reducers/frontend';
-import { TSpaceEvent } from '@holistix-forge/space';
-import { useLayerContext, TLayerTreeItem } from '@holistix-forge/space/frontend';
+import { TSpaceEvent } from '@holistix-forge/whiteboard';
+import { useLayerContext, TLayerTreeItem } from '@holistix-forge/whiteboard/frontend';
 
 import { TExcalidrawSharedData } from './excalidraw-shared-model';
 

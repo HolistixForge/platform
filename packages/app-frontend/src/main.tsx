@@ -14,7 +14,7 @@ import '@holistix-forge/ui-views/style';
 import '@holistix-forge/user-containers/style';
 import '@holistix-forge/notion/style';
 import '@holistix-forge/airtable/style';
-import '@holistix-forge/space/style';
+import '@holistix-forge/whiteboard/style';
 import '@holistix-forge/tabs/style';
 import '@holistix-forge/chats/style';
 import '@holistix-forge/socials/style';

@@ -6,7 +6,7 @@ import {
   useConnector,
   NodeMainToolbar,
   useMakeButton,
-} from '@holistix-forge/space/frontend';
+} from '@holistix-forge/whiteboard/frontend';
 
 import { MenuExpanded } from '../menuExpanded/menuExpanded';
 import { NodeInputsOutputsGrid } from '../node-vault/node-vault';

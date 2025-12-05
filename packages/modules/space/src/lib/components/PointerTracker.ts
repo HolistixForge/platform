@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { TPosition } from '@holistix-forge/core-graph';
-import { Viewport } from './demiurge-space';
+import { Viewport } from './whiteboard';
 import { Awareness } from '@holistix-forge/collab-engine';
 
 //

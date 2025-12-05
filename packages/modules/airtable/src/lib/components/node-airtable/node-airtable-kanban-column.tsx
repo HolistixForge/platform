@@ -16,7 +16,7 @@ import {
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@holistix-forge/space/frontend';
+} from '@holistix-forge/whiteboard/frontend';
 import { TJsonObject } from '@holistix-forge/simple-types';
 
 export type TNodeAirtableKanbanColumnDataPayload = {

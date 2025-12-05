@@ -28,8 +28,8 @@ import {
 
 import { TCoreSharedData } from '@holistix-forge/core-graph';
 
-import { DemiurgeSpace } from '../../components/demiurge-space';
-import { STORY_VIEW_ID } from '../story-demiurge-space';
+import { Whiteboard } from '../../components/whiteboard';
+import { STORY_VIEW_ID } from '../story-whiteboard';
 import { loadStoryData } from './loader';
 
 import { moduleBackend as spaceBackend, TSpaceSharedData } from '../../..';
@@ -113,7 +113,7 @@ const StoryWrapper = () => {
   return (
     <ModuleProvider exports={frontendModules}>
       <div style={{ height: '100vh', width: '100vw' }}>
-        <DemiurgeSpace viewId={STORY_VIEW_ID} projectId={'story-project'} />
+        <Whiteboard viewId={STORY_VIEW_ID} projectId={'story-project'} />
       </div>
     </ModuleProvider>
   );
