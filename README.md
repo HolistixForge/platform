@@ -127,8 +127,6 @@ This is a strong copyleft license that:
 - If you modify this software and provide it as a service over a network, you must make your modified source code available
 - All derivative works must also be licensed under AGPL-3.0
 
-For more information about the AGPL-3.0 license, see https://choosealicense.com/licenses/agpl-3.0/
-
 ## 🙋 Support
 
 - **Documentation:** [doc/README.md](doc/README.md)

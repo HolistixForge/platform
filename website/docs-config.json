@@ -47,11 +47,6 @@
           "label": "Module Testing",
           "path": "doc/guides/MODULES_TESTING.md",
           "source": "doc/guides/MODULES_TESTING.md"
-        },
-        {
-          "label": "Nx Workspace",
-          "path": "doc/guides/NX_WORKSPACE.md",
-          "source": "doc/guides/NX_WORKSPACE.md"
         }
       ]
     },
@@ -94,9 +89,9 @@
           "source": "packages/modules/core-graph/README.md"
         },
         {
-          "label": "Space",
-          "path": "packages/modules/space/README.md",
-          "source": "packages/modules/space/README.md"
+          "label": "Whiteboard",
+          "path": "packages/modules/whiteboard/README.md",
+          "source": "packages/modules/whiteboard/README.md"
         },
         {
           "label": "Gateway",

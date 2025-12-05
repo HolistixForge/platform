@@ -223,8 +223,6 @@ The AGPL-3.0 license requires that:
 - Source code must be made available when distributing the software
 - If you run a modified version as a service over a network, you must make the source code available to users
 
-For more information about AGPL-3.0, see https://choosealicense.com/licenses/agpl-3.0/
-
 ## 🙋 Questions?
 
 - Check [doc/README.md](doc/README.md) for documentation hub
