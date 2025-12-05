@@ -1,12 +1,12 @@
 {
-  "name": "@monorepo/collab-engine",
+  "name": "@holistix-forge/collab-engine",
   "version": "0.0.1",
   "nx": {
-    "name": "collab-engine",
+    "name": "@holistix-forge/collab-engine",
     "projectType": "library",
     "sourceRoot": "packages/collab-engine/src"
   },
-  "style": "./dist/style.css",
+  "style": "./dist/collab-engine.css",
   "exports": {
     "./package.json": "./package.json",
     ".": {
@@ -14,7 +14,12 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./style": "./dist/style.css"
+    "./frontend": {
+      "types": "./dist/frontend.d.ts",
+      "import": "./dist/frontend.js",
+      "default": "./dist/frontend.js"
+    },
+    "./style": "./dist/collab-engine.css"
   },
   "types": "./dist/index.d.ts",
   "module": "./dist/index.js",

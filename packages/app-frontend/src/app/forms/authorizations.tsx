@@ -1,27 +1,30 @@
 import {
   useCollaborators,
-  useMutationUserScope,
+  useMutationUserScope as useMutationUserPermissions,
   useQueryScope,
   useQueryUsersSearch,
-} from '@monorepo/frontend-data';
+} from '@holistix-forge/frontend-data';
 import {
   UsersScopes,
   UsersScopesLogicProps,
   UsersScopesProps,
-} from '@monorepo/ui-base';
+} from '@holistix-forge/ui-base';
 import { useCallback, useState } from 'react';
 import { useProject } from '../pages/project/project-context';
-import { TCollaborator, TF_User } from '@monorepo/demiurge-types';
+import { TCollaborator, TF_User } from '@holistix-forge/types';
 
 //
 
-export const useServerScopeEditorProps = (
+export const usePermissionsEditorProps = (
+  organization_id: string | null,
   project_id: string
 ): UsersScopesLogicProps => {
   //
 
-  const { collaborators, loading: collaboratorsLoading } =
-    useCollaborators(project_id);
+  const { collaborators, loading: collaboratorsLoading } = useCollaborators(
+    organization_id,
+    project_id
+  );
 
   //
 
@@ -34,7 +37,7 @@ export const useServerScopeEditorProps = (
 
   //
 
-  const shareUnshare = useMutationUserScope(project_id);
+  const shareUnshare = useMutationUserPermissions(organization_id, project_id);
 
   const onValidateUser = useCallback(
     (c: TCollaborator) => {
@@ -65,11 +68,16 @@ export const useServerScopeEditorProps = (
 
 //
 
-export const AuthorizationsFormLogic = () => {
+export const PermissionsEditor = () => {
   const p = useProject();
-  const logic = useServerScopeEditorProps(p.project.project_id);
+  const logic = usePermissionsEditorProps(
+    p.organization_id,
+    p.project.project_id
+  );
 
-  const { status: scopeStatus, data: scopeData } = useQueryScope();
+  const { status: scopeStatus, data: scopeData } = useQueryScope(
+    p.organization_id
+  );
   const scopes: UsersScopesProps['scopes'] = {};
   const scope = scopeStatus === 'success' ? scopeData : [];
   scope.forEach((s) => (scopes[s] = { title: s }));

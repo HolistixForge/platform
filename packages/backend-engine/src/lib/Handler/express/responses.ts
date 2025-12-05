@@ -1,8 +1,13 @@
-import { EColor, log } from '@monorepo/log';
-import { TJson, TJsonWithDate, TUri, fullUri } from '@monorepo/simple-types';
+import { EPriority, log } from '@holistix-forge/log';
+import {
+  TJson,
+  TJsonWithDate,
+  TUri,
+  fullUri,
+  TStringMap,
+} from '@holistix-forge/simple-types';
 import express from 'express';
-import { TStringMap } from '../../Request/Request';
-import { jaegerSetResponse } from '../../Logs/jaeger';
+import { trace, SpanStatusCode } from '@opentelemetry/api';
 
 type ExpressRequest = express.Request;
 type ExpressResponse = express.Response;
@@ -109,7 +114,6 @@ export const respond = (
 ) => {
   if (r.type !== 'stream' || r.isFirst) headers(req, res, r);
 
-  let color = EColor.BgGreen;
   let logMsg = '';
   let status = 200;
   let fu = '';
@@ -118,12 +122,10 @@ export const respond = (
       res.status(r.status).json(r.json);
       status = r.status;
       logMsg = `${JSON.stringify(r.json)}`;
-      color = r.status === 200 ? EColor.BgGreen : EColor.BgMagenta;
       break;
 
     case 'options':
       res.send('');
-      color = EColor.BgGreen;
       break;
 
     case 'redirect':
@@ -131,16 +133,30 @@ export const respond = (
       res.redirect(fu);
       status = 302;
       logMsg = fu;
-      color = EColor.BgCyan;
       break;
 
     case 'stream':
       res.write(r.events.join('\n') + '\n\n');
       logMsg = r.events.join('\n');
-      color = EColor.BgGray;
       break;
   }
 
-  jaegerSetResponse(req as any, { ...r, status });
-  log(6, 'RESPONSE', `[${status}:${r.type}] ${logMsg}`, null, color);
+  // Update span with response status (if OpenTelemetry is initialized)
+  const span = trace.getActiveSpan();
+  if (span) {
+    span.setAttribute('http.status_code', status);
+    if (status >= 400) {
+      span.setStatus({
+        code: SpanStatusCode.ERROR,
+        message: `HTTP ${status}`,
+      });
+    }
+  }
+
+  // Enhanced response logging with structured data (trace_id/span_id automatically included by Logger)
+  log(EPriority.Info, 'RESPONSE', `[${status}:${r.type}] ${logMsg}`, {
+    http_status: status,
+    response_type: r.type,
+    response_length: logMsg.length,
+  });
 };

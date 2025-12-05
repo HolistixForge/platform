@@ -1,10 +1,8 @@
-import { TSpaceMenuEntries, TSpaceMenuEntry } from '@monorepo/module/frontend';
-import {
-  FrontendDispatcher,
-  TValidSharedDataToCopy,
-} from '@monorepo/collab-engine';
-import { TCoreEvent } from '@monorepo/core';
-import { makeUuid } from '@monorepo/simple-types';
+import { TWhiteboardMenuEntries, TWhiteboardMenuEntry } from '@holistix-forge/whiteboard/frontend';
+import { TValidSharedDataToCopy } from '@holistix-forge/collab/frontend';
+import { TCoreEvent } from '@holistix-forge/core-graph';
+import { makeUuid } from '@holistix-forge/simple-types';
+import { FrontendDispatcher } from '@holistix-forge/reducers/frontend';
 
 import { NewNotionDatabaseForm } from './components/forms/new-database';
 import { TNotionSharedData } from './notion-shared-model';
@@ -13,7 +11,7 @@ import { TNodeNotionDatabaseDataPayload } from './components/node-notion/node-no
 
 //
 
-export const notionMenuEntries: TSpaceMenuEntries = ({
+export const notionMenuEntries: TWhiteboardMenuEntries = ({
   from,
   viewId,
   position,
@@ -25,8 +23,8 @@ export const notionMenuEntries: TSpaceMenuEntries = ({
   const tsd = sharedData as TValidSharedDataToCopy<TNotionSharedData>;
   const d = dispatcher as FrontendDispatcher<TNotionEvent | TCoreEvent>;
 
-  const databases: TSpaceMenuEntry[] = Array.from(
-    tsd.notionDatabases.entries()
+  const databases: TWhiteboardMenuEntry[] = Array.from(
+    tsd['notion:databases']?.entries() || []
   ).map(([id, db]) => {
     const title = db.title?.[0]?.plain_text;
     return {

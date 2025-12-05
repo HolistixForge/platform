@@ -1,5 +1,5 @@
 {
-  "name": "@monorepo/browser-proxy-app",
+  "name": "@holistix-forge/browser-proxy-app",
   "version": "0.0.1",
   "private": true,
   "nx": {
@@ -46,15 +46,15 @@
           "build"
         ],
         "options": {
-          "buildTarget": "@monorepo/browser-proxy-app:build",
+          "buildTarget": "@holistix-forge/browser-proxy-app:build",
           "runBuildTargetDependencies": true
         },
         "configurations": {
           "development": {
-            "buildTarget": "@monorepo/browser-proxy-app:build:development"
+            "buildTarget": "@holistix-forge/browser-proxy-app:build:development"
           },
           "production": {
-            "buildTarget": "@monorepo/browser-proxy-app:build:production"
+            "buildTarget": "@holistix-forge/browser-proxy-app:build:production"
           }
         }
       },

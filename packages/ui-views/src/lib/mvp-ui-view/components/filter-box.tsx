@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { icons, randomGuy } from '@monorepo/ui-base';
+import { icons, randomGuy } from '@holistix-forge/ui-base';
 
 import { Wrapper } from '../assets/wrapper';
 

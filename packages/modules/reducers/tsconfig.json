@@ -1,0 +1,25 @@
+{
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../../log"
+    },
+    {
+      "path": "../../simple-types"
+    },
+    {
+      "path": "../../api-fetch"
+    },
+    {
+      "path": "../module"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ],
+  "extends": "../../../tsconfig.base.json"
+}

@@ -1,0 +1,160 @@
+{
+  "sections": [
+    {
+      "title": "Getting Started",
+      "items": [
+        {
+          "label": "Overview",
+          "path": "README.md",
+          "source": "README.md"
+        },
+        {
+          "label": "Contributing",
+          "path": "CONTRIBUTING.md",
+          "source": "CONTRIBUTING.md"
+        }
+      ]
+    },
+    {
+      "title": "Architecture",
+      "items": [
+        {
+          "label": "Architecture Overview",
+          "path": "doc/architecture/OVERVIEW.md",
+          "source": "doc/architecture/OVERVIEW.md"
+        },
+        {
+          "label": "System Architecture",
+          "path": "doc/architecture/SYSTEM_ARCHITECTURE.md",
+          "source": "doc/architecture/SYSTEM_ARCHITECTURE.md"
+        },
+        {
+          "label": "Gateway Architecture",
+          "path": "doc/architecture/GATEWAY_ARCHITECTURE.md",
+          "source": "doc/architecture/GATEWAY_ARCHITECTURE.md"
+        }
+      ]
+    },
+    {
+      "title": "Guides",
+      "items": [
+        {
+          "label": "Local Development",
+          "path": "doc/guides/LOCAL_DEVELOPMENT.md",
+          "source": "doc/guides/LOCAL_DEVELOPMENT.md"
+        },
+        {
+          "label": "Module Testing",
+          "path": "doc/guides/MODULES_TESTING.md",
+          "source": "doc/guides/MODULES_TESTING.md"
+        },
+        {
+          "label": "Nx Workspace",
+          "path": "doc/guides/NX_WORKSPACE.md",
+          "source": "doc/guides/NX_WORKSPACE.md"
+        }
+      ]
+    },
+    {
+      "title": "Reference",
+      "items": [
+        {
+          "label": "API Reference",
+          "path": "doc/reference/API.md",
+          "source": "doc/reference/API.md"
+        }
+      ]
+    },
+    {
+      "title": "Modules",
+      "items": [
+        {
+          "label": "Modules Overview",
+          "path": "packages/modules/README.md",
+          "source": "packages/modules/README.md"
+        },
+        {
+          "label": "Module System",
+          "path": "packages/modules/module/README.md",
+          "source": "packages/modules/module/README.md"
+        },
+        {
+          "label": "Collaboration",
+          "path": "packages/modules/collab/README.md",
+          "source": "packages/modules/collab/README.md"
+        },
+        {
+          "label": "Reducers",
+          "path": "packages/modules/reducers/README.md",
+          "source": "packages/modules/reducers/README.md"
+        },
+        {
+          "label": "Core Graph",
+          "path": "packages/modules/core-graph/README.md",
+          "source": "packages/modules/core-graph/README.md"
+        },
+        {
+          "label": "Space",
+          "path": "packages/modules/space/README.md",
+          "source": "packages/modules/space/README.md"
+        },
+        {
+          "label": "Gateway",
+          "path": "packages/modules/gateway/README.md",
+          "source": "packages/modules/gateway/README.md"
+        },
+        {
+          "label": "User Containers",
+          "path": "packages/modules/user-containers/README.md",
+          "source": "packages/modules/user-containers/README.md"
+        },
+        {
+          "label": "Jupyter",
+          "path": "packages/modules/jupyter/README.md",
+          "source": "packages/modules/jupyter/README.md"
+        },
+        {
+          "label": "Chats",
+          "path": "packages/modules/chats/README.md",
+          "source": "packages/modules/chats/README.md"
+        },
+        {
+          "label": "Tabs",
+          "path": "packages/modules/tabs/README.md",
+          "source": "packages/modules/tabs/README.md"
+        },
+        {
+          "label": "Notion",
+          "path": "packages/modules/notion/README.md",
+          "source": "packages/modules/notion/README.md"
+        },
+        {
+          "label": "Airtable",
+          "path": "packages/modules/airtable/README.md",
+          "source": "packages/modules/airtable/README.md"
+        },
+        {
+          "label": "Excalidraw",
+          "path": "packages/modules/excalidraw/README.md",
+          "source": "packages/modules/excalidraw/README.md"
+        },
+        {
+          "label": "Socials",
+          "path": "packages/modules/socials/README.md",
+          "source": "packages/modules/socials/README.md"
+        }
+      ]
+    },
+    {
+      "title": "Research & Vision",
+      "items": [
+        {
+          "label": "White Paper",
+          "path": "doc/fluid-lifecycle/WHITE-PAPER.md",
+          "source": "doc/fluid-lifecycle/WHITE-PAPER.md"
+        }
+      ]
+    }
+  ]
+}
+

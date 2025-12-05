@@ -1,11 +1,10 @@
-import { FrontendDispatcher } from '@monorepo/collab-engine';
-import { TSpaceMenuEntries } from '@monorepo/module/frontend';
-import { TGraphNode } from '@monorepo/module';
-import { TEventNewNode } from '@monorepo/core';
-import { makeUuid } from '@monorepo/simple-types';
-import { TEventDisableFeature } from '@monorepo/space';
+import { FrontendDispatcher } from '@holistix-forge/reducers/frontend';
+import { TWhiteboardMenuEntries } from '@holistix-forge/whiteboard/frontend';
+import { TGraphNode, TEventNewNode } from '@holistix-forge/core-graph';
+import { makeUuid } from '@holistix-forge/simple-types';
+import { TEventDisableFeature } from '@holistix-forge/whiteboard';
 
-export const excalidrawMenuEntries: TSpaceMenuEntries = ({
+export const excalidrawMenuEntries: TWhiteboardMenuEntries = ({
   viewId,
   position,
   dispatcher,
@@ -22,7 +21,7 @@ export const excalidrawMenuEntries: TSpaceMenuEntries = ({
         {
           type: 'item',
           label: 'New Excalidraw Drawing',
-          onClick: () => {
+          onClick: async () => {
             const nodeId = makeUuid();
             const node: TGraphNode = {
               id: nodeId,
@@ -33,7 +32,7 @@ export const excalidrawMenuEntries: TSpaceMenuEntries = ({
               data: {},
             };
 
-            d.dispatch({
+            await d.dispatch({
               type: 'core:new-node',
               nodeData: node,
               edges: [],
@@ -44,15 +43,15 @@ export const excalidrawMenuEntries: TSpaceMenuEntries = ({
             });
 
             // Disable grouping and move-node features for Excalidraw nodes
-            d.dispatch({
-              type: 'space:disable-feature',
+            await d.dispatch({
+              type: 'whiteboard:disable-feature',
               viewId: viewId,
               nid: nodeId,
               feature: 'grouping',
             });
 
-            d.dispatch({
-              type: 'space:disable-feature',
+            await d.dispatch({
+              type: 'whiteboard:disable-feature',
               viewId: viewId,
               nid: nodeId,
               feature: 'frontend-move-node',

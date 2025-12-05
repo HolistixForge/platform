@@ -1,0 +1,64 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../collab-engine"
+    },
+    {
+      "path": "../types"
+    },
+    {
+      "path": "../backend-engine"
+    },
+    {
+      "path": "../observability"
+    },
+    {
+      "path": "../simple-types"
+    },
+    {
+      "path": "../log"
+    },
+    {
+      "path": "../modules/gateway"
+    },
+    {
+      "path": "../modules/pgadmin4"
+    },
+    {
+      "path": "../modules/n8n"
+    },
+    {
+      "path": "../modules/jupyter"
+    },
+    {
+      "path": "../modules/user-containers"
+    },
+    {
+      "path": "../modules/collab"
+    },
+    {
+      "path": "../modules/module"
+    },
+    {
+      "path": "../modules/whiteboard"
+    },
+    {
+      "path": "../modules/tabs"
+    },
+    {
+      "path": "../modules/core-graph"
+    },
+    {
+      "path": "../modules/reducers"
+    },
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
+}

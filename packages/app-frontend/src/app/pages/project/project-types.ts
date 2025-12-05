@@ -1,6 +1,4 @@
-import { TApi_Project } from '@monorepo/demiurge-types';
-import { FrontendDispatcher, TYjsCollabConfig } from '@monorepo/collab-engine';
-import { TJsonObject } from '@monorepo/simple-types';
+import { TApi_Project } from '@holistix-forge/types';
 
 export type ProjectState =
   | {
@@ -13,7 +11,7 @@ export type ProjectState =
     }
   | {
       status: 'not_started';
-      project_id: string;
+      organization_id: string;
     }
   | {
       status: 'ready';
@@ -22,9 +20,7 @@ export type ProjectState =
 
 export type ProjectData = {
   project: TApi_Project;
-  collabConfig: TYjsCollabConfig;
-  yjsDocId: string;
-  dispatcher: FrontendDispatcher<TJsonObject>;
+  organization_id: string;
   isOwner: boolean;
 };
 

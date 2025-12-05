@@ -3,34 +3,23 @@ import nocache from 'nocache';
 import cookieParser from 'cookie-parser';
 
 import {
-  EColor,
   error,
   log,
   Exception,
   NotFoundException,
   UnknownException,
-} from '@monorepo/log';
+  EPriority,
+} from '@holistix-forge/log';
+import { TJson } from '@holistix-forge/simple-types';
 
 import { respond } from './responses';
-import { OpenapiException } from '../../Exceptions/Exception';
-import { jaegerSetError, setupJaegerLog } from '../../Logs/jaeger';
+import { trace, SpanStatusCode } from '@opentelemetry/api';
 
 //
 
-export type BasicExpressAppOptions = {
-  jaeger?: {
-    serviceName: string;
-    serviceTag: string;
-    host: string;
-  };
-};
-
 //
 
-export const setupBasicExpressApp = (
-  app: express.Express,
-  options?: BasicExpressAppOptions
-) => {
+export const setupBasicExpressApp = (app: express.Express) => {
   app.disable('x-powered-by');
   app.use((req, res, next) => {
     res.setHeader('X-Powered-By', '');
@@ -49,14 +38,21 @@ export const setupBasicExpressApp = (
 
   app.use(cookieParser());
 
-  if (options?.jaeger) {
-    const { serviceName, serviceTag, host } = options.jaeger;
-    setupJaegerLog(app, serviceName, serviceTag, host);
-  }
+  // Enrich span with basic request context (runs early, before authentication)
+  app.use((req, res, next) => {
+    const span = trace.getActiveSpan();
+    if (span) {
+      // Add basic HTTP context
+      span.setAttribute('http.method', req.method);
+      span.setAttribute('http.route', req.path);
+      span.setAttribute('http.url', req.originalUrl || req.url);
+    }
+    next();
+  });
 
   // log any request
   app.use((req, res, next) => {
-    log(6, 'REQUEST', `${req.method}: ${req.path}`, null, EColor.BgYellow);
+    log(EPriority.Info, 'REQUEST', `${req.method}: ${req.path}`, null);
     const { headers, method, params, query } = req;
 
     const rd = {
@@ -66,7 +62,7 @@ export const setupBasicExpressApp = (
       headers,
       params,
     };
-    log(6, 'REQUEST', ``, rd, EColor.FgYellow);
+    log(EPriority.Info, 'REQUEST', ``, rd);
     next();
   });
 };
@@ -91,7 +87,10 @@ export const setupErrorsHandler = (app: express.Express) => {
       err.status === 400 &&
       Array.isArray(err.errors)
     )
-      exception = new OpenapiException(err);
+      exception = new Exception(
+        err.errors.map((e: any) => ({ message: e.message, public: true })),
+        400
+      );
     // if openapi validator not found ?
     else if (
       err.name === 'Not Found' &&
@@ -103,7 +102,13 @@ export const setupErrorsHandler = (app: express.Express) => {
     // if it is not our standard Exception
     // something bad happen
     else if (!(err instanceof Exception)) {
-      console.log(err);
+      // Log unknown error with structured logging (replaces console.log)
+      error('Error', `Unknown error: ${err.message}`, {
+        error_type: 'UNKNOWN_ERROR',
+        error_message: err.message,
+        error_stack: err.stack,
+        raw_error: String(err),
+      });
       exception = new UnknownException(err.message);
     }
     //
@@ -112,9 +117,23 @@ export const setupErrorsHandler = (app: express.Express) => {
     const json = exception.toJson();
 
     const serialized = JSON.stringify(json, null, 4);
-    error('Error', serialized, exception.stack);
+    // Enhanced error logging with error category
+    error('Error', serialized, {
+      error_uuid: exception._uuid,
+      error_category: exception.errorCategory,
+      error_stack: exception.stack || '',
+      http_status: exception.httpStatus || 500,
+    } as TJson);
 
-    jaegerSetError(req, exception);
+    // Record exception in active span (if OpenTelemetry is initialized)
+    const span = trace.getActiveSpan();
+    if (span) {
+      span.recordException(exception);
+      span.setStatus({
+        code: SpanStatusCode.ERROR,
+        message: exception.message,
+      });
+    }
 
     const { uuid, errors } = json;
 

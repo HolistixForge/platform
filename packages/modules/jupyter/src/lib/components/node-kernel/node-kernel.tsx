@@ -6,11 +6,15 @@ import {
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@monorepo/space/frontend';
-import { TGraphNode } from '@monorepo/module';
-import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
-import { TServersSharedData, TServer } from '@monorepo/servers';
-import { Datetime } from '@monorepo/ui-base';
+} from '@holistix-forge/whiteboard/frontend';
+import { TGraphNode } from '@holistix-forge/core-graph';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
+import {
+  TUserContainersSharedData,
+  TUserContainer,
+} from '@holistix-forge/user-containers';
+import { Datetime } from '@holistix-forge/ui-base';
 
 import { KernelStateIndicator } from './kernel-state-indicator';
 import {
@@ -18,7 +22,7 @@ import {
   TKernelNodeDataPayload,
 } from '../../jupyter-types';
 import { TJupyterSharedData } from '../../jupyter-shared-model';
-import { useKernelPack } from '../../jupyter-shared-model-front';
+import { useKernelPack } from '../../jupyter-hooks';
 import { TJupyterEvent } from '../../jupyter-events';
 
 //
@@ -32,16 +36,16 @@ export const NodeKernel = ({
 
   const { id, isOpened, open, selected } = useNodeContext();
 
-  const { kernel_id, project_server_id } = node.data!;
+  const { kernel_id, user_container_id } = node.data!;
 
-  const kernelPack = useKernelPack(project_server_id, kernel_id);
+  const kernelPack = useKernelPack(user_container_id, kernel_id);
 
-  const s: { ps: TServer; js: TJupyterServerData } = useSharedData<
-    TServersSharedData & TJupyterSharedData
-  >(['jupyterServers', 'projectServers'], (sd) => {
+  const s: { ps: TUserContainer; js: TJupyterServerData } = useLocalSharedData<
+    TUserContainersSharedData & TJupyterSharedData
+  >(['jupyter:servers', 'user-containers:containers'], (sd) => {
     return {
-      js: sd.jupyterServers.get(`${project_server_id}`),
-      ps: sd.projectServers.get(`${project_server_id}`),
+      js: sd['jupyter:servers'].get(`${user_container_id}`),
+      ps: sd['user-containers:containers'].get(`${user_container_id}`),
     };
   });
 

@@ -1,10 +1,10 @@
-import { TServerEvents } from '@monorepo/servers';
-import { TCoreSharedData, TEdge } from '@monorepo/core';
+import { TUserContainersEvents } from '@holistix-forge/user-containers';
+import { TCoreSharedData, TEdge } from '@holistix-forge/core-graph';
 
 export const edgeToEvent = (
   edge: TEdge,
   nodes: TCoreSharedData['nodes']
-): Partial<TServerEvents> => {
+): Partial<TUserContainersEvents> => {
   const n1 = nodes.get(edge.from.node);
   const n2 = nodes.get(edge.to.node);
 
@@ -12,10 +12,11 @@ export const edgeToEvent = (
 
   switch (n1?.type) {
     case 'volume':
-      if (n2.type === 'server')
+      if (n2.type === 'user-container')
         return {
-          type: 'servers:mount-volume',
-          project_server_id: n2.data!.project_server_id as number,
+          type: 'user-containers:mount-volume',
+          project_user_container_id: n2.data!
+            .project_user_container_id as number,
           volume_id: n1.data!.volume_id as number,
         };
       break;

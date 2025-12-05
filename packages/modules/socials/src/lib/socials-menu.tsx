@@ -1,9 +1,9 @@
-import { TSpaceMenuEntries } from '@monorepo/module/frontend';
+import { TWhiteboardMenuEntries } from '@holistix-forge/whiteboard/frontend';
 import { NewYoutubeForm } from './forms/form-new-youtube';
 import { NewNodeUserForm } from './forms/form-new-node-user';
 import { NewIframeForm } from './forms/form-new-iframe';
 
-export const socialsMenuEntries: TSpaceMenuEntries = ({
+export const socialsMenuEntries: TWhiteboardMenuEntries = ({
   viewId,
   from,
   sharedData,

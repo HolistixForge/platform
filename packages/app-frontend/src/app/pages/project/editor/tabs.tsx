@@ -9,13 +9,16 @@ import {
   TabPayload,
   TTabsSharedData,
   TTabsTree,
-} from '@monorepo/tabs';
-import { useCurrentUser } from '@monorepo/frontend-data';
-import { useSharedData } from '@monorepo/collab-engine';
-import { serviceUrl } from '@monorepo/servers';
+} from '@holistix-forge/tabs';
+import { useCurrentUser } from '@holistix-forge/frontend-data';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { serviceUrl } from '@holistix-forge/user-containers';
 
 import { useDispatcher } from '../model/collab-model-chunk';
-import { TServer, TServersSharedData } from '@monorepo/servers';
+import {
+  TUserContainer,
+  TUserContainersSharedData,
+} from '@holistix-forge/user-containers';
 import { NodeEditorView } from './node-editor/node-editor-view';
 import { ResourcePage } from './resources-page';
 
@@ -23,8 +26,9 @@ import { ResourcePage } from './resources-page';
 
 export const EditorTabsSystemLogic = () => {
   //
-  const sdTabs: TTabsTree = useSharedData<TTabsSharedData>(['tabs'], (d) =>
-    d.tabs.get('unique')
+  const sdTabs: TTabsTree = useLocalSharedData<TTabsSharedData>(
+    ['tabs:tabs'],
+    (d) => d['tabs:tabs'].get('unique')
   );
 
   const dispatcher = useDispatcher();
@@ -94,7 +98,11 @@ export const EditorTabsSystemLogic = () => {
           onTabRename={onTabRename}
         >
           {roTree.flat().map((tab) => (
-            <TabTypeRouter key={tab.path.join('.')} tabPath={tab.path} {...tab} />
+            <TabTypeRouter
+              key={tab.path.join('.')}
+              tabPath={tab.path}
+              {...tab}
+            />
           ))}
         </TabsRadix>
       </div>
@@ -113,7 +121,7 @@ const TabTypeRouter: FC<PanelProps & TabPayload> = (props) => {
     return <ResourcePage />;
   } else if (props.type === 'resource-ui') {
     return (
-      <ProjectServerUIView
+      <ProjecTUserContainerUIView
         project_server_id={props.project_server_id}
         service_name={props.service_name}
       />
@@ -127,13 +135,13 @@ const TabTypeRouter: FC<PanelProps & TabPayload> = (props) => {
 
 //
 
-const ProjectServerUIView = (props: {
+const ProjecTUserContainerUIView = (props: {
   project_server_id: number;
   service_name: string;
 }) => {
-  const server: TServer = useSharedData<TServersSharedData>(
-    ['projectServers'],
-    (sd) => sd.projectServers.get(`${props.project_server_id}`)
+  const server: TUserContainer = useSharedData<TUserContainersSharedData>(
+    ['user-containers:containers'],
+    (sd) => sd['user-containers:containers'].get(`${props.project_server_id}`)
   );
 
   const url = serviceUrl(server, props.service_name);

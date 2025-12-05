@@ -1,4 +1,4 @@
-import { icons } from '@monorepo/ui-base';
+import { icons } from '@holistix-forge/ui-base';
 
 import {
   Inputs,
@@ -6,7 +6,7 @@ import {
   useConnector,
   NodeMainToolbar,
   useMakeButton,
-} from '@monorepo/space/frontend';
+} from '@holistix-forge/whiteboard/frontend';
 
 import { MenuExpanded } from '../menuExpanded/menuExpanded';
 import { NodeInputsOutputsGrid } from '../node-vault/node-vault';

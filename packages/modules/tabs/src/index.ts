@@ -1,24 +1,39 @@
-import { Tabs_loadData } from './lib/tabs-shared-model';
 import { TabsReducer } from './lib/tabs-reducer';
-import type { ModuleBackend } from '@monorepo/module';
-import { ModuleFrontend } from '@monorepo/module/frontend';
+import type { TModule } from '@holistix-forge/module';
+import type { TCollabBackendExports } from '@holistix-forge/collab';
+import type { TCollabFrontendExports } from '@holistix-forge/collab/frontend';
+import type { TReducersBackendExports } from '@holistix-forge/reducers';
+import type { TTabsSharedData } from './lib/tabs-shared-model';
+import type { TCoreSharedData } from '@holistix-forge/core-graph';
 
-export const moduleBackend: ModuleBackend = {
-  collabChunk: {
-    name: 'tabs',
-    loadSharedData: Tabs_loadData,
-    loadReducers: (sd) => [new TabsReducer()],
+type TBackendRequired = {
+  collab: TCollabBackendExports<TTabsSharedData & TCoreSharedData>;
+  reducers: TReducersBackendExports;
+};
+
+export const moduleBackend: TModule<TBackendRequired> = {
+  name: 'tabs',
+  version: '0.0.1',
+  description: 'Tabs module',
+  dependencies: ['core-graph', 'collab', 'reducers'],
+  load: ({ depsExports }) => {
+    depsExports.collab.collab.loadSharedData('map', 'tabs', 'tabs');
+    depsExports.reducers.loadReducers(new TabsReducer(depsExports));
   },
 };
 
-export const moduleFrontend: ModuleFrontend = {
-  collabChunk: {
-    name: 'tabs',
-    loadSharedData: Tabs_loadData,
-    deps: [],
+type TFrontendRequired = {
+  collab: TCollabFrontendExports;
+};
+
+export const moduleFrontend: TModule<TFrontendRequired> = {
+  name: 'tabs',
+  version: '0.0.1',
+  description: 'Tabs module',
+  dependencies: ['collab'],
+  load: ({ depsExports }) => {
+    depsExports.collab.collab.loadSharedData('map', 'tabs', 'tabs');
   },
-  spaceMenuEntries: () => [],
-  nodes: {},
 };
 
 export type { TTabEvents } from './lib/tabs-event';

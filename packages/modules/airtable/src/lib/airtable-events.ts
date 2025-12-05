@@ -1,5 +1,6 @@
-import { TEventOrigin } from '@monorepo/core';
+import { TEventOrigin } from '@holistix-forge/core-graph';
 import { TAirtableViewMode } from './airtable-types';
+import { TJsonObject } from '@holistix-forge/simple-types';
 
 export type TEventInitBase = {
   type: 'airtable:init-base';
@@ -13,14 +14,14 @@ export type TEventUpdateRecord = {
   baseId: string;
   tableId: string;
   recordId: string;
-  fields: Record<string, unknown>;
+  fields: TJsonObject;
 };
 
 export type TEventCreateRecord = {
   type: 'airtable:create-record';
   baseId: string;
   tableId: string;
-  fields: Record<string, unknown>;
+  fields: TJsonObject;
 };
 
 export type TEventDeleteRecord = {

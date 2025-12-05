@@ -7,12 +7,7 @@
     "tsBuildInfoFile": "out-tsc/app-ganymede/tsconfig.app.tsbuildinfo",
     "resolveJsonModule": true
   },
-  "files": [
-    "src/oas30.json",
-    "src/exec-pipes.json",
-    "src/data-connections.json",
-    "src/sql-api-pg.json"
-  ],
+  "files": ["src/oas30.json"],
   "include": ["src/**/*.ts"],
   "exclude": [
     "out-tsc",
@@ -29,13 +24,13 @@
       "path": "../simple-types/tsconfig.lib.json"
     },
     {
-      "path": "../demiurge-types/tsconfig.lib.json"
-    },
-    {
-      "path": "../modules/servers/tsconfig.lib.json"
+      "path": "../types/tsconfig.lib.json"
     },
     {
       "path": "../log/tsconfig.lib.json"
+    },
+    {
+      "path": "../observability/tsconfig.lib.json"
     },
     {
       "path": "../backend-engine/tsconfig.lib.json"

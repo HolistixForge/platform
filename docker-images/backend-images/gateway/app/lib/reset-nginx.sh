@@ -1,25 +1,29 @@
 #!/bin/bash
 set -x
-# TODO: limit size of this logs
 sudo rm -rf /var/log/nginx/access.log /var/log/nginx/error.log
 
 env
 
-# base config
+# Base nginx config for gateway
+# Two server blocks:
+#   1. Gateway FQDN (from browser via Stage 1 nginx) - routes all to app-gateway
+#   2. VPN IP (from user containers) - routes all to app-gateway
+# Dynamic server blocks (added by update-nginx-locations.sh):
+#   - uc-{uuid}.org-{uuid}.domain.local → container VPN IP:port
 sudo tee "${NGINX_CONFIG}" >/dev/null <<EOF
 
 server {
-    listen ${APP_COLLAB_PORT};
-    server_name 127.0.0.1;
+    listen ${GATEWAY_HTTP_PORT};
+    server_name _;  # Accept all hostnames (org-{uuid}.domain.local routes here via Stage 1)
 
     error_page 502 /502.html;
     location /502.html {
         internal;
         add_header Content-Type text/html;
-        return 502 '<html><body><h1>502 Bad Gateway</h1><p>Something went wrong. Please try again later. (gw-container)</p></body></html>';
+        return 502 '<html><body><h1>502 Bad Gateway</h1><p>Something went wrong. Please try again later.</p></body></html>';
     }
 
-    location /collab {
+    location / {
         proxy_pass http://127.0.0.1:8888;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
@@ -39,10 +43,10 @@ server {
     location /502.html {
         internal;
         add_header Content-Type text/html;
-        return 502 '<html><body><h1>502 Bad Gateway</h1><p>Something went wrong. Please try again later. (gw-container)</p></body></html>';
+        return 502 '<html><body><h1>502 Bad Gateway</h1><p>Something went wrong. Please try again later.</p></body></html>';
     }
 
-    location /collab {
+    location / {
         proxy_pass http://127.0.0.1:8888;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;

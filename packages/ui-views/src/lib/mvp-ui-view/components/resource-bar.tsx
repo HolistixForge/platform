@@ -1,5 +1,5 @@
-import { UserAvatar, randomGuy, ResourceButtons } from '@monorepo/ui-base';
-import { StatusLed } from '@monorepo/servers/frontend';
+import { UserAvatar, randomGuy, ResourceButtons } from '@holistix-forge/ui-base';
+import { StatusLed } from '@holistix-forge/user-containers/frontend';
 
 import { Tabs } from './tabs';
 

@@ -1,11 +1,12 @@
-import { ReduceArgs, Reducer, SharedTypes } from '@monorepo/collab-engine';
-import { makeUuid } from '@monorepo/simple-types';
 import {
-  TCoreSharedData,
-  TEventDeleteNode,
-  TEventNewEdge,
-  TEventNewNode,
-} from '@monorepo/core';
+  Reducer,
+  RequestData,
+  TReducersBackendExports,
+} from '@holistix-forge/reducers';
+import { makeUuid } from '@holistix-forge/simple-types';
+import { TCoreSharedData } from '@holistix-forge/core-graph';
+import { TCollabBackendExports } from '@holistix-forge/collab';
+import { TWhiteboardSharedData } from '@holistix-forge/whiteboard';
 
 import {
   TChatEvent,
@@ -24,54 +25,47 @@ import { TChat } from './chats-types';
  *
  */
 
-type TExtraArgs = {
-  user_id: string;
+type TRequired = {
+  collab: TCollabBackendExports<
+    TChatSharedData & TCoreSharedData & TWhiteboardSharedData
+  >;
+  reducers: TReducersBackendExports;
 };
-
-type DispatchedEvents = TEventNewNode | TEventNewEdge | TEventDeleteNode;
-
-type Ra<T> = ReduceArgs<
-  TChatSharedData & TCoreSharedData,
-  T,
-  DispatchedEvents,
-  TExtraArgs,
-  undefined
->;
 
 /**
  *
  */
 
-export class ChatReducer extends Reducer<
-  TChatSharedData,
-  TChatEvent,
-  DispatchedEvents,
-  TExtraArgs, undefined
-> {
+export class ChatReducer extends Reducer<TChatEvent> {
   //
 
-  reduce(g: Ra<TChatEvent>): Promise<void> {
-    switch (g.event.type) {
+  constructor(private exports: TRequired) {
+    super();
+    this.exports = exports;
+  }
+
+  reduce(event: TChatEvent, requestData: RequestData): Promise<void> {
+    switch (event.type) {
       case 'chats:new-message':
-        return this._newMessage(g as Ra<TEventNewMessage>);
+        return this._newMessage(event, requestData);
 
       case 'chats:new-chat':
-        return this._newChat(g as Ra<TEventNewChat>);
+        return this._newChat(event, requestData);
 
       case 'chats:is-writing':
-        return this._isWriting(g as Ra<TEventIsWriting>);
+        return this._isWriting(event, requestData);
 
       case 'chats:user-has-read':
-        return this._userHasRead(g as Ra<TEventUserHasRead>);
+        return this._userHasRead(event, requestData);
 
       case 'chats:chat-resolve':
-        return this._chatResolve(g as Ra<TEventChatResolve>);
+        return this._chatResolve(event, requestData);
 
       case 'chats:delete-message':
-        return this._deleteMessage(g as Ra<TEventDeleteMessage>);
+        return this._deleteMessage(event, requestData);
 
       case 'chats:delete':
-        return this._deleteChat(g as Ra<TEventDeleteChat>);
+        return this._deleteChat(event, requestData);
 
       default:
         return Promise.resolve();
@@ -80,150 +74,200 @@ export class ChatReducer extends Reducer<
 
   //
 
-  __deepCopyEditAndApply(g: Ra<{ chatId: string }>, f: (chat: TChat) => void) {
-    const chat = g.sd.chats.get(g.event.chatId);
+  __deepCopyEditAndApply(event: { chatId: string }, f: (chat: TChat) => void) {
+    const chat = this.exports.collab.collab.sharedData['chats:chats'].get(
+      event.chatId
+    );
     if (chat) {
       const nchat = structuredClone(chat);
       f(nchat);
-      g.sd.chats.set(g.event.chatId, nchat);
+      this.exports.collab.collab.sharedData['chats:chats'].set(
+        event.chatId,
+        nchat
+      );
     }
   }
 
   //
 
-  _newMessage(g: Ra<TEventNewMessage>): Promise<void> {
-    this.__deepCopyEditAndApply(g, (chat) => {
+  _newMessage(
+    event: TEventNewMessage,
+    requestData: RequestData
+  ): Promise<void> {
+    this.__deepCopyEditAndApply(event, (chat) => {
       chat.messages.push({
-        user_id: g.extraArgs.user_id || g.event.__dev__user_id || 'unknown',
-        content: g.event.content,
+        user_id: requestData.user_id || 'unknown',
+        content: event.content,
         date: new Date().toISOString(),
-        replyIndex: g.event.replyToIndex,
+        replyIndex: event.replyToIndex,
       });
-      if (chat.lastRead[g.extraArgs.user_id] === chat.messages.length - 2)
-        chat.lastRead[g.extraArgs.user_id] = chat.messages.length - 1;
+      if (chat.lastRead[requestData.user_id] === chat.messages.length - 2)
+        chat.lastRead[requestData.user_id] = chat.messages.length - 1;
     });
     return Promise.resolve();
   }
 
   //
 
-  _newChat(g: Ra<TEventNewChat>): Promise<void> {
-    const nc = newChat(g.st);
-    g.sd.chats.set(nc.id, nc);
+  _newChat(event: TEventNewChat, requestData: RequestData): Promise<void> {
+    const nc = newChat();
+    this.exports.collab.collab.sharedData['chats:chats'].set(nc.id, nc);
 
     const anchorNodeId = makeUuid();
     const chatNodeId = makeUuid();
 
-    g.bep.process({
-      type: 'core:new-node',
-      nodeData: {
-        type: 'chat-anchor',
-        id: anchorNodeId,
-        name: `Chat Anchor ${nc.id}`,
-        root: true,
-        connectors: [{ connectorName: 'outputs', pins: [] }],
-        data: { chatId: nc.id },
-      },
-      edges: [],
-      origin: g.event.origin,
-    });
-
-    g.bep.process({
-      type: 'core:new-node',
-      nodeData: {
-        type: 'chat',
-        id: chatNodeId,
-        name: `Chat ${nc.id}`,
-        root: false,
-        connectors: [{ connectorName: 'inputs', pins: [] }],
-        data: { chatId: nc.id },
-      },
-      edges: [
-        {
-          from: {
-            node: anchorNodeId,
-            connectorName: 'outputs',
-          },
-          to: {
-            node: chatNodeId,
-            connectorName: 'inputs',
-          },
-          semanticType: 'referenced_by',
-          renderProps: {
-            className: ['chat-anchor'],
-            edgeShape: 'straight',
-          },
+    this.exports.reducers.processEvent(
+      {
+        type: 'core:new-node',
+        nodeData: {
+          type: 'chat-anchor',
+          id: anchorNodeId,
+          name: `Chat Anchor ${nc.id}`,
+          root: true,
+          connectors: [{ connectorName: 'outputs', pins: [] }],
+          data: { chatId: nc.id },
         },
-      ],
-      origin: g.event.origin
-        ? {
-          ...g.event.origin,
-          position: {
-            x: g.event.origin.position.x + 100,
-            y: g.event.origin.position.y + 100,
+        edges: [],
+        origin: event.origin,
+      },
+      requestData
+    );
+
+    this.exports.reducers.processEvent(
+      {
+        type: 'core:new-node',
+        nodeData: {
+          type: 'chat',
+          id: chatNodeId,
+          name: `Chat ${nc.id}`,
+          root: false,
+          connectors: [{ connectorName: 'inputs', pins: [] }],
+          data: { chatId: nc.id },
+        },
+        edges: [
+          {
+            from: {
+              node: anchorNodeId,
+              connectorName: 'outputs',
+            },
+            to: {
+              node: chatNodeId,
+              connectorName: 'inputs',
+            },
+            semanticType: 'referenced_by',
+            renderProps: {
+              className: ['chat-anchor'],
+              edgeShape: 'straight',
+            },
           },
-        }
-        : undefined,
-    });
+        ],
+        origin: event.origin
+          ? {
+              ...event.origin,
+              position: {
+                x: event.origin.position.x + 100,
+                y: event.origin.position.y + 100,
+              },
+            }
+          : undefined,
+      },
+      requestData
+    );
+
+    this.exports.collab.collab.sharedData['whiteboard:graphViews'].forEach(
+      async (gv, k) => {
+        await this.exports.reducers.processEvent(
+          {
+            type: 'whiteboard:resize-node',
+            nid: chatNodeId,
+            size: {
+              width: 550,
+              height: 350,
+            },
+            viewId: k,
+          },
+          requestData
+        );
+      }
+    );
 
     return Promise.resolve();
   }
 
   //
 
-  _isWriting(g: Ra<TEventIsWriting>): Promise<void> {
-    this.__deepCopyEditAndApply(g, (chat) => {
-      const userId = g.extraArgs.user_id || g.event.__dev__user_id || 'unknown';
-      chat.isWriting[userId] = g.event.value;
+  _isWriting(event: TEventIsWriting, requestData: RequestData): Promise<void> {
+    this.__deepCopyEditAndApply(event, (chat) => {
+      const userId = requestData.user_id || 'unknown';
+      chat.isWriting[userId] = event.value;
     });
     return Promise.resolve();
   }
 
   //
 
-  _userHasRead(g: Ra<TEventUserHasRead>): Promise<void> {
-    this.__deepCopyEditAndApply(g, (chat) => {
-      chat.lastRead[g.extraArgs.user_id] = g.event.index;
+  _userHasRead(
+    event: TEventUserHasRead,
+    requestData: RequestData
+  ): Promise<void> {
+    this.__deepCopyEditAndApply(event, (chat) => {
+      chat.lastRead[requestData.user_id] = event.index;
     });
     return Promise.resolve();
   }
 
   //
 
-  _chatResolve(g: Ra<TEventChatResolve>): Promise<void> {
-    this.__deepCopyEditAndApply(g, (chat) => {
-      chat.resolved = g.event.value;
+  _chatResolve(
+    event: TEventChatResolve,
+    requestData: RequestData
+  ): Promise<void> {
+    this.__deepCopyEditAndApply(event, (chat) => {
+      chat.resolved = event.value;
     });
     return Promise.resolve();
   }
 
   //
 
-  _deleteMessage(g: Ra<TEventDeleteMessage>): Promise<void> {
-    this.__deepCopyEditAndApply(g, (chat) => {
-      const m = chat.messages[g.event.index];
-      if (m.user_id === g.extraArgs.user_id) m.content = '[deleted]';
+  _deleteMessage(
+    event: TEventDeleteMessage,
+    requestData: RequestData
+  ): Promise<void> {
+    this.__deepCopyEditAndApply(event, (chat) => {
+      const m = chat.messages[event.index];
+      if (m.user_id === requestData.user_id) m.content = '[deleted]';
     });
     return Promise.resolve();
   }
 
   //
 
-  _deleteChat(g: Ra<TEventDeleteChat>): Promise<void> {
-    const chat = g.sd.chats.get(g.event.chatId);
+  _deleteChat(
+    event: TEventDeleteChat,
+    requestData: RequestData
+  ): Promise<void> {
+    const chat = this.exports.collab.collab.sharedData['chats:chats'].get(
+      event.chatId
+    );
     if (chat) {
-      g.sd.nodes.forEach((node) => {
-        if (
-          (node.type === 'chat' || node.type === 'chat-anchor') &&
-          node.data?.chatId === g.event.chatId
-        ) {
-          g.bep.process({
-            type: 'core:delete-node',
-            id: node.id,
-          });
+      this.exports.collab.collab.sharedData['core-graph:nodes'].forEach(
+        (node) => {
+          if (
+            (node.type === 'chat' || node.type === 'chat-anchor') &&
+            node.data?.chatId === event.chatId
+          ) {
+            this.exports.reducers.processEvent(
+              {
+                type: 'core:delete-node',
+                id: node.id,
+              },
+              requestData
+            );
+          }
         }
-      });
-      g.sd.chats.delete(g.event.chatId);
+      );
+      this.exports.collab.collab.sharedData['chats:chats'].delete(event.chatId);
     }
     return Promise.resolve();
   }
@@ -236,7 +280,7 @@ export class ChatReducer extends Reducer<
  *
  */
 
-const newChat = (st: SharedTypes): TChat => {
+const newChat = (): TChat => {
   return {
     id: makeUuid(),
     resolved: false,

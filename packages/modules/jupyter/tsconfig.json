@@ -3,6 +3,9 @@
   "include": [],
   "references": [
     {
+      "path": "../tabs"
+    },
+    {
       "path": "../../frontend-data"
     },
     {
@@ -12,25 +15,31 @@
       "path": "../../api-fetch"
     },
     {
-      "path": "../../simple-types"
-    },
-    {
-      "path": "../core"
+      "path": "../../collab-engine"
     },
     {
       "path": "../../log"
     },
     {
-      "path": "../../collab-engine"
+      "path": "../../simple-types"
     },
     {
-      "path": "../servers"
+      "path": "../core-graph"
+    },
+    {
+      "path": "../reducers"
+    },
+    {
+      "path": "../user-containers"
+    },
+    {
+      "path": "../collab"
     },
     {
       "path": "../module"
     },
     {
-      "path": "../space"
+      "path": "../whiteboard"
     },
     {
       "path": "../../ui-base"

@@ -1,4 +1,4 @@
-import { TF_User } from '@monorepo/demiurge-types';
+import { TF_User } from '@holistix-forge/types';
 import { randomColor } from '../css-utils/css-utils';
 
 const randomId = () => `${Math.floor(Math.random() * 1000000000)}`;

@@ -1,0 +1,26 @@
+{
+  "name": "@holistix-forge/core-graph",
+  "version": "0.0.1",
+  "nx": {
+    "name": "@holistix-forge/core-graph",
+    "projectType": "library",
+    "sourceRoot": "packages/modules/core-graph/src"
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./frontend": {
+      "types": "./dist/frontend.d.ts",
+      "import": "./dist/frontend.js",
+      "default": "./dist/frontend.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "module": "./dist/index.js",
+  "type": "module",
+  "main": "./dist/index.js"
+}

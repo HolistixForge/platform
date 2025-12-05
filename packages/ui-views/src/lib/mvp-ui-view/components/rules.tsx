@@ -1,4 +1,4 @@
-import { icons } from '@monorepo/ui-base';
+import { icons } from '@holistix-forge/ui-base';
 
 //
 

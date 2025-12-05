@@ -1,6 +1,6 @@
 //
 
-import { TJson } from '@monorepo/simple-types';
+import { TJson } from '@holistix-forge/simple-types';
 
 //
 

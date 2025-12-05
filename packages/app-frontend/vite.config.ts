@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     port: 4200,
     host: 'localhost',
-    allowedHosts: ['frontend.dev-002.demiurge.co'],
+    allowedHosts: [],
   },
   preview: {
     port: 4300,

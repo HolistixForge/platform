@@ -9,19 +9,25 @@
       "path": "../../log"
     },
     {
+      "path": "../../collab-engine"
+    },
+    {
       "path": "../../simple-types"
     },
     {
-      "path": "../core"
+      "path": "../core-graph"
     },
     {
-      "path": "../../collab-engine"
+      "path": "../reducers"
+    },
+    {
+      "path": "../collab"
     },
     {
       "path": "../module"
     },
     {
-      "path": "../space"
+      "path": "../whiteboard"
     },
     {
       "path": "../../ui-base"

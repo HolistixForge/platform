@@ -3,6 +3,8 @@ export type {
   TJsonObject,
   TJsonArray,
   TJsonWithDate,
+  TJsonWithUndefined,
+  TStringMap,
 } from './lib/simple-types';
 
 export type {
@@ -19,4 +21,5 @@ export { makeUuid, makeShortUuid, isUuid, toUuid } from './lib/uuid';
 
 export { secondAgo, inSeconds, isPassed, sleep, ONE_YEAR_MS } from './lib/date';
 
-export { Listenable, useRegisterListener } from './lib/listenable';
+// Listenable class only (backend-safe, no React hooks)
+export { Listenable } from './lib/listenable';

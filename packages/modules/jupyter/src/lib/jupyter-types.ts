@@ -1,5 +1,5 @@
 import { ServerConnection } from '@jupyterlab/services';
-import { TJsonArray, TJsonObject } from '@monorepo/simple-types';
+import { TJsonArray, TJsonObject } from '@holistix-forge/simple-types';
 
 //
 
@@ -34,13 +34,13 @@ export type Cell = {
 };
 
 export type TJupyterServerData = {
-  project_server_id: number;
+  user_container_id: string;
   kernels: Record<string, Kernel>;
   terminals: Record<string, Terminal>;
   cells: Record<string, Cell>;
 };
 
-export type TServerSettings = {
+export type TUserContainerSettings = {
   baseUrl: ServerConnection.ISettings['baseUrl'];
   token?: ServerConnection.ISettings['token'];
 };
@@ -48,16 +48,16 @@ export type TServerSettings = {
 //
 
 export type TKernelNodeDataPayload = {
-  project_server_id: number;
+  user_container_id: string;
   kernel_id: string;
 };
 
 export type TTerminalNodeDataPayload = {
-  project_server_id: number;
+  user_container_id: string;
   terminal_id: string;
 };
 
 export type TCellNodeDataPayload = {
-  project_server_id: number;
+  user_container_id: string;
   cell_id: string;
 };

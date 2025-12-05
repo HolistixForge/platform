@@ -1,7 +1,8 @@
-import { TServer, serviceUrl } from '@monorepo/servers';
+import { TUserContainer, serviceUrl } from '@holistix-forge/user-containers';
 
-import { TJupyterServerData, TServerSettings } from './jupyter-types';
+import { TJupyterServerData, TUserContainerSettings } from './jupyter-types';
 import { JupyterlabDriver } from './driver';
+import { SharedMap } from '@holistix-forge/collab-engine';
 
 //
 
@@ -9,7 +10,7 @@ export type TOnNewDriverCb = (s: TJupyterServerData) => Promise<void>;
 
 //
 
-export const jupyterlabIsReachable = async (s: TServer) => {
+export const jupyterlabIsReachable = async (s: TUserContainer) => {
   let r = false;
   const url = serviceUrl(s, 'jupyterlab');
   if (url)
@@ -19,6 +20,7 @@ export const jupyterlabIsReachable = async (s: TServer) => {
       const response = await fetch(`${url}/api`, { signal: controller.signal });
       clearTimeout(timeoutId);
       if (response.status === 200) r = true;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       //
     }
@@ -37,15 +39,15 @@ export const jupyterlabIsReachable = async (s: TServer) => {
 export class DriversStoreBackend {
   //
   _drivers: Map<string, JupyterlabDriver> = new Map();
-  _jupyterServers: Map<string, TJupyterServerData>;
-  _servers: Map<string, TServer>;
+  _jupyterServers: SharedMap<TJupyterServerData>;
+  _servers: SharedMap<TUserContainer>;
   _onNewDriver?: TOnNewDriverCb;
 
   //
 
   constructor(
-    jss: Map<string, TJupyterServerData>,
-    pss: Map<string, TServer>,
+    jss: SharedMap<TJupyterServerData>,
+    pss: SharedMap<TUserContainer>,
     onNewDriver?: TOnNewDriverCb
   ) {
     this._jupyterServers = jss;
@@ -56,13 +58,13 @@ export class DriversStoreBackend {
   //
   //
 
-  getServerSetting(psid: number, token: string): TServerSettings {
+  getServerSetting(psid: string, token: string): TUserContainerSettings {
     const server = this._servers.get(`${psid}`);
     if (server) {
       const url = serviceUrl(server, 'jupyterlab');
       if (!url)
         throw new Error(
-          `no such server or is down [${psid}, ${server.server_name}]`
+          `no such server or is down [${psid}, ${server.container_name}]`
         );
       return {
         baseUrl: url,
@@ -75,16 +77,18 @@ export class DriversStoreBackend {
   //
   //
 
-  async getDriver(project_server_id: number, token: string) {
+  async getDriver(user_container_id: string, token: string) {
     /*
      * get server and kernel information from share data by dkid
      */
 
-    const server = this._servers.get(`${project_server_id}`);
-    if (!server) throw new Error(`server [${project_server_id}] is unknown`);
+    const server = this._servers.get(`${user_container_id}`);
+    if (!server) throw new Error(`server [${user_container_id}] is unknown`);
 
     if (!jupyterlabIsReachable(server))
-      throw new Error(`jupyterlab not ready on server [${server.server_name}]`);
+      throw new Error(
+        `jupyterlab not ready on server [${server.container_name}]`
+      );
 
     /*
      * get the corresponding driver, (dedicated jupyterlab server driver)
@@ -92,9 +96,9 @@ export class DriversStoreBackend {
      * or build it if it doesn't exist yet
      */
 
-    const jupyterServer = this._jupyterServers.get(`${project_server_id}`);
+    const jupyterServer = this._jupyterServers.get(`${user_container_id}`);
     if (!jupyterServer)
-      throw new Error(`server [${project_server_id}] is unknown`);
+      throw new Error(`server [${user_container_id}] is unknown`);
 
     const KEY = token;
 
@@ -102,7 +106,7 @@ export class DriversStoreBackend {
     if (!driver) {
       await this._onNewDriver?.(jupyterServer);
       driver = new JupyterlabDriver(
-        this.getServerSetting(server.project_server_id, token)
+        this.getServerSetting(server.user_container_id, token)
       );
       this._drivers.set(KEY, driver);
     }

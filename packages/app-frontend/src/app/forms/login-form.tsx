@@ -1,7 +1,7 @@
-import { useApi, useMutationLogin } from '@monorepo/frontend-data';
-import { useAction } from '@monorepo/ui-base';
-import { SendMagicLinkForm, LoginForm } from '@monorepo/ui-views';
-import { LoginFormData } from '@monorepo/frontend-data';
+import { useApi, useMutationLogin } from '@holistix-forge/frontend-data';
+import { useAction } from '@holistix-forge/ui-base';
+import { SendMagicLinkForm, LoginForm } from '@holistix-forge/ui-views';
+import { LoginFormData } from '@holistix-forge/frontend-data';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 

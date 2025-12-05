@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { useAction } from '@monorepo/ui-base';
+import { useAction } from '@holistix-forge/ui-base';
 
 import { NewPasswordForm } from './new-password';
 

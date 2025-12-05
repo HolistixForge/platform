@@ -3,31 +3,37 @@
   "include": [],
   "references": [
     {
+      "path": "../../collab-engine"
+    },
+    {
       "path": "../../log"
     },
     {
       "path": "../../simple-types"
     },
     {
-      "path": "../../lazy-factory"
-    },
-    {
-      "path": "../../collab-engine"
-    },
-    {
       "path": "../../frontend-data"
     },
     {
-      "path": "../core"
+      "path": "../../types"
     },
     {
-      "path": "../../demiurge-types"
+      "path": "../collab"
+    },
+    {
+      "path": "../gateway"
+    },
+    {
+      "path": "../core-graph"
+    },
+    {
+      "path": "../reducers"
     },
     {
       "path": "../module"
     },
     {
-      "path": "../space"
+      "path": "../whiteboard"
     },
     {
       "path": "../../ui-base"

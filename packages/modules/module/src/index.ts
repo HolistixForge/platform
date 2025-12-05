@@ -1,30 +1,43 @@
-import { TCollaborativeChunk } from '@monorepo/collab-engine';
-import { TJsonObject } from '@monorepo/simple-types';
+import { log, EPriority } from '@holistix-forge/log';
+
+export type TModule<TRequired = object, TExports = object> = {
+  name: string;
+  version: string;
+  description: string;
+  dependencies: string[];
+  load: (args: {
+    depsExports: TRequired;
+    moduleExports: (e: TExports) => void;
+    config: object;
+  }) => void;
+};
 
 //
 
-export type ModuleBackend = {
-  collabChunk: TCollaborativeChunk;
-};
-
-export type TPin = {
-  id: string;
-  pinName: string;
-  disabled?: boolean;
-  type?: 'in' | 'out' | 'inout';
-};
-
-export type TConnector = {
-  connectorName: string;
-  disabled?: boolean;
-  pins: TPin[];
-};
-
-export type TGraphNode<TData = TJsonObject> = {
-  id: string;
-  name: string;
-  type: string;
-  root: boolean;
-  data?: TData;
-  connectors: TConnector[];
+export const loadModules = (
+  modules: { module: TModule<never, object>; config: object }[]
+) => {
+  const depsExports: object = {};
+  const loadedModules: string[] = [];
+  for (let i = 0; i < modules.length; i++) {
+    const m = modules[i];
+    m.module.dependencies.forEach((d) => {
+      if (!loadedModules.includes(d)) {
+        throw new Error(
+          `Module ${d} is not loaded, needed by [${m.module.name}]`
+        );
+      }
+    });
+    log(EPriority.Info, 'MODULES', `Loading module ${m.module.name}`);
+    m.module.load({
+      depsExports: depsExports as never,
+      moduleExports: (e) => {
+        Object.assign(depsExports, { [m.module.name]: e });
+      },
+      config: m.config,
+    });
+    loadedModules.push(m.module.name);
+  }
+  log(EPriority.Info, 'MODULES', `Loaded ${modules.length} modules`, { depsExports });
+  return depsExports;
 };

@@ -1,23 +1,31 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { ModuleProvider } from '@holistix-forge/module/frontend';
 
 import { NewIframeForm } from './form-new-iframe';
-import { MockCollaborativeContext } from '@monorepo/collab-engine';
 
 //
 
+const fakeFrontendModules = {
+  reducers: {
+    dispatcher: {
+      dispatch: () => {
+        /**/
+      },
+    },
+  },
+};
+
 const StoryWrapper = () => {
   return (
-    <MockCollaborativeContext
-      frontChunks={[]}
-      backChunks={[]}
-      getRequestContext={() => ({})}
-    >
+    <ModuleProvider exports={fakeFrontendModules}>
       <NewIframeForm
         viewId={''}
         position={{ x: 0, y: 0 }}
-        closeForm={() => {}}
+        closeForm={() => {
+          /**/
+        }}
       />
-    </MockCollaborativeContext>
+    </ModuleProvider>
   );
 };
 

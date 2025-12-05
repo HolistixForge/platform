@@ -1,4 +1,4 @@
-import { TJson, TMyfetchRequest } from '@monorepo/simple-types';
+import { TJson, TMyfetchRequest } from '@holistix-forge/simple-types';
 
 export type Tokens = {
   access_token: string;

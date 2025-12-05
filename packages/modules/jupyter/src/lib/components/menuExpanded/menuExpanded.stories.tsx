@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { useTestToolbarButtons } from '@monorepo/space/frontend';
+import { useTestToolbarButtons } from '@holistix-forge/whiteboard/frontend';
 
 import { MenuExpanded, MenuExpandedProps } from './menuExpanded';
 

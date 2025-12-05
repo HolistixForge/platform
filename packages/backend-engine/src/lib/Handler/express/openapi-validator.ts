@@ -1,4 +1,4 @@
-import { error } from '@monorepo/log';
+import { error } from '@holistix-forge/log';
 import express from 'express';
 import * as OpenApiValidator from 'express-openapi-validator';
 import {

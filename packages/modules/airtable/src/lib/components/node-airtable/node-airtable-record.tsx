@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
-import { TGraphNode } from '@monorepo/module';
-import { useSharedData, useDispatcher } from '@monorepo/collab-engine';
+import { TGraphNode } from '@holistix-forge/core-graph';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
 import { TAirtableSharedData } from '../../airtable-shared-model';
 import { TAirtableRecordValue, TAirtableTable } from '../../airtable-types';
 import AirtableRecordCard from './AirtableRecordCard';
@@ -8,7 +9,7 @@ import {
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@monorepo/space/frontend';
+} from '@holistix-forge/whiteboard/frontend';
 import { TAirtableEvent } from '../../airtable-events';
 
 export type TNodeAirtableRecordDataPayload = {
@@ -29,7 +30,10 @@ export const NodeAirtableRecord: React.FC<NodeAirtableRecordProps> = ({
 }) => {
   const data = node.data;
   const useNodeValue = useNodeContext();
-  const sd = useSharedData<TAirtableSharedData>(['airtableBases'], (sd) => sd);
+  const sd = useLocalSharedData<TAirtableSharedData>(
+    ['airtable:bases'],
+    (sd) => sd
+  );
   const dispatcher = useDispatcher<TAirtableEvent>();
 
   const handleDelete = useCallback(async () => {
@@ -54,7 +58,7 @@ export const NodeAirtableRecord: React.FC<NodeAirtableRecordProps> = ({
     );
   }
 
-  const base = sd.airtableBases.get(data.baseId);
+  const base = sd['airtable:bases'].get(data.baseId);
   const table = base?.tables.find((t: TAirtableTable) => t.id === data.tableId);
   const record = table?.records.find(
     (r: TAirtableRecordValue) => r.id === data.recordId

@@ -4,7 +4,7 @@ import {
   FormError,
   FormErrors,
   TextFieldset,
-} from '@monorepo/ui-base';
+} from '@holistix-forge/ui-base';
 
 /**
  *

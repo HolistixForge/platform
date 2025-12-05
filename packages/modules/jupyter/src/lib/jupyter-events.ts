@@ -1,5 +1,5 @@
 // TODO_DEM: move in plugin/jupyter
-import { TEventOrigin } from '@monorepo/core';
+import { TEventOrigin } from '@holistix-forge/core-graph';
 import { IOutput, Kernel, Terminal } from './jupyter-types';
 
 export type FormFieldsOnly<T extends TJupyterEvent> = Partial<
@@ -32,7 +32,7 @@ export type TEventClearNodeOutput = {
 
 export type TEventNewKernelNode = {
   type: 'jupyter:new-kernel-node';
-  project_server_id: number;
+  user_container_id: string;
   kernel_id: string;
   origin?: TEventOrigin;
 };
@@ -55,7 +55,7 @@ export type TEventDeleteCell = {
 
 export type TEventNewTerminal = {
   type: 'jupyter:new-terminal';
-  project_server_id: number;
+  user_container_id: string;
   origin?: TEventOrigin;
   /** not use directly but force to pass specific jwt token (see GanymedeApi._getTokenKeyForRequest) */
   client_id: string;
@@ -63,7 +63,7 @@ export type TEventNewTerminal = {
 
 export type TEventNewTerminalNode = {
   type: 'jupyter:new-terminal-node';
-  project_server_id: number;
+  user_container_id: string;
   origin?: TEventOrigin;
   /** not use directly but force to pass specific jwt token (see GanymedeApi._getTokenKeyForRequest) */
   client_id: string;
@@ -82,7 +82,7 @@ export type TEventDeleteTerminalNode = {
 
 export type TEventJupyterResourcesChanged = {
   type: 'jupyter:resources-changed';
-  project_server_id: number;
+  user_container_id: string;
   resources: {
     kernels: Kernel[];
     terminals: Terminal[];

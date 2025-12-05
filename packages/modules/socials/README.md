@@ -1,7 +1,25 @@
-# socials
+# Socials Module
 
-This library was generated with [Nx](https://nx.dev).
+Social features and user interaction capabilities within the collaborative workspace.
 
-## Running unit tests
+## Features
 
-Run `nx test socials` to execute the unit tests via [Vitest](https://vitest.dev/).
+- **Social Events**: Handles social interaction events between users
+- **Gateway Integration**: Uses gateway services for social features
+- **Event Processing**: Processes social events through the reducer system
+
+## API
+
+Processes social events through reducers. Integrates with gateway services for social functionality. Events are handled through the standard reducer pattern.
+
+## Dependencies
+
+- `reducers`: For event processing
+- `collab`: For shared data
+- `gateway`: For gateway services
+
+## Exports
+
+- `TEventSocials`: Social event type definitions
+- Social reducer for processing social interaction events
+

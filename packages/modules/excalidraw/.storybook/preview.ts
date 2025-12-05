@@ -1,9 +1,9 @@
 import type { Preview } from '@storybook/react';
 import { GlobalWrapper } from './global-wrapper';
 
-import '@monorepo/ui-base/style';
-import '@monorepo/space/style';
-// import '../src/lib/index.scss';
+import '@holistix-forge/ui-base/style';
+import '@holistix-forge/whiteboard/style';
+import '../src/lib/style.scss';
 
 const preview: Preview = {
   parameters: {

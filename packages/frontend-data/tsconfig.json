@@ -3,13 +3,10 @@
   "include": [],
   "references": [
     {
-      "path": "../demiurge-types"
+      "path": "../types"
     },
     {
       "path": "../simple-types"
-    },
-    {
-      "path": "../log"
     },
     {
       "path": "../api-fetch"

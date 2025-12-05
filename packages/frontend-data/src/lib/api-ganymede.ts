@@ -1,19 +1,16 @@
 import { EventSourcePolyfill } from 'event-source-polyfill';
-import { ApiFetch } from '@monorepo/api-fetch';
-import { log } from '@monorepo/log';
-import { TJson, TMyfetchRequest } from '@monorepo/simple-types';
+import { ApiFetch } from '@holistix-forge/api-fetch';
+import { TJson, TMyfetchRequest } from '@holistix-forge/simple-types';
 import { Tokens, doOauthCode } from './oauth-client';
-import {
-  GLOBAL_CLIENT_ID,
-  GLOBAL_CLIENT_SECRET,
-  makeProjectScopeString,
-} from '@monorepo/demiurge-types';
+import { GLOBAL_CLIENT_ID, GLOBAL_CLIENT_SECRET } from '@holistix-forge/types';
 import { Key, LocalStorageStore } from './local-storage-store';
+import { browserLog } from './browser-log';
 
 //
 //
 
-const debug = (msg: string, ...args: any) => log(7, 'API_CALL', msg, ...args);
+const debug = (msg: string, ...args: any) =>
+  browserLog('debug', 'API_CALL', msg, { data: { args } });
 
 type TokenStoreValue = {
   token: Tokens;
@@ -24,27 +21,16 @@ type TokenStoreValue = {
 
 //
 
-const getTokenConfig = (k: any): Omit<TokenStoreValue, 'token'> => {
-  let conf: Omit<TokenStoreValue, 'token'>;
-  if (k['project_id'])
-    conf = {
-      client_id: GLOBAL_CLIENT_ID,
-      client_secret: GLOBAL_CLIENT_SECRET,
-      scope: makeProjectScopeString(k['project_id']), // ask all owned authorizations for this project
-    };
-  else if (k['client_id'])
-    conf = {
-      client_id: k['client_id'],
-      client_secret: GLOBAL_CLIENT_SECRET,
-      scope: 'none',
-    };
-  else
-    conf = {
-      client_id: GLOBAL_CLIENT_ID,
-      client_secret: GLOBAL_CLIENT_SECRET,
-      scope: `none`,
-    };
-  return conf;
+/**
+ * Get token configuration for OAuth flow.
+ * Simplified to always return the same config since we only need a single user token.
+ */
+const getTokenConfig = (): Omit<TokenStoreValue, 'token'> => {
+  return {
+    client_id: GLOBAL_CLIENT_ID,
+    client_secret: GLOBAL_CLIENT_SECRET,
+    scope: 'none',
+  };
 };
 
 //
@@ -57,22 +43,22 @@ const getTokenConfig = (k: any): Omit<TokenStoreValue, 'token'> => {
  */
 export class GanymedeApi extends ApiFetch {
   //
-  _accountApi: ApiFetch;
   _frontendUrl: string;
   _ts: LocalStorageStore<TokenStoreValue>;
+  // Map of organization_id -> gateway_hostname
+  _organizationGateways: Map<string, string> = new Map();
 
-  constructor(baseUrl: string, frontendUrl: string, accountApi: ApiFetch) {
+  constructor(baseUrl: string, frontendUrl: string) {
     super(baseUrl);
-    this._accountApi = accountApi;
     this._frontendUrl = frontendUrl;
     this._ts = new LocalStorageStore<TokenStoreValue>({
       //
       get: (
         k: Key
       ): Promise<{ value: TokenStoreValue; expire: Date } | null> => {
-        const conf = getTokenConfig(k);
+        const conf = getTokenConfig();
         return doOauthCode({
-          fetch: this._accountApi.fetch.bind(this._accountApi),
+          fetch: this.fetch.bind(this),
           redirect_uri: this._frontendUrl,
           ...conf,
         }).then((t) => {
@@ -90,7 +76,7 @@ export class GanymedeApi extends ApiFetch {
         tokenData: TokenStoreValue
       ): Promise<{ value: TokenStoreValue; expire: Date } | null> => {
         return (
-          this._accountApi.fetch({
+          this.fetch({
             url: `oauth/token`,
             method: 'POST',
             formUrlencoded: {
@@ -132,25 +118,11 @@ export class GanymedeApi extends ApiFetch {
   }
 
   /**
-   * Choose a token based on the request content.
-   * If a project_id is present, choose the project token
-   * If a client_id is present, choose the pod token.
-   * @param r
-   * @returns
+   * Get token key for request.
+   * @returns Single token key
    */
-  private _getTokenKeyForRequest(
-    r: Pick<TMyfetchRequest, 'queryParameters' | 'pathParameters' | 'jsonBody'>
-  ): TJson {
-    const client_id: string =
-      (r.jsonBody && (r.jsonBody as any).event?.client_id) || null;
-    if (client_id) return { client_id };
-
-    const project_id = (r.queryParameters?.['project_id'] ||
-      r.pathParameters?.['project_id']) as string | undefined;
-    if (project_id) return { project_id };
-
-    // else : default general token
-    return { global: true };
+  private _getTokenKeyForRequest(): TJson {
+    return { user: true };
   }
 
   //
@@ -170,7 +142,7 @@ export class GanymedeApi extends ApiFetch {
   ) {
     let retried = 0;
     do {
-      const tokenKey = this._getTokenKeyForRequest(r);
+      const tokenKey = this._getTokenKeyForRequest();
 
       let v;
       do {
@@ -220,7 +192,66 @@ export class GanymedeApi extends ApiFetch {
 
   //
 
+  /**
+   * Set gateway hostname for an organization
+   * @param organization_id - Organization ID
+   * @param gateway_hostname - Gateway hostname (without protocol)
+   */
+  setGatewayHostname(organization_id: string, gateway_hostname: string): void {
+    this._organizationGateways.set(organization_id, gateway_hostname);
+  }
+
+  /**
+   * Get gateway hostname for an organization
+   * @param organization_id - Organization ID
+   * @returns Gateway hostname or null if not set
+   */
+  getGatewayHostname(organization_id: string): string | null {
+    return this._organizationGateways.get(organization_id) || null;
+  }
+
+  /**
+   * Fetch from gateway API for a specific organization
+   * Reuses all token management logic
+   * @param r - Request
+   * @param organization_id - Organization ID (used to get gateway hostname). If not provided, uses current organization.
+   * @param project_id - Optional project ID (for token selection)
+   */
+  async fetchGateway(
+    r: TMyfetchRequest,
+    organization_id?: string,
+    project_id?: string
+  ): Promise<TJson> {
+    // Use provided organization_id or fall back to current
+    const orgId = organization_id;
+    if (!orgId) {
+      throw new Error(
+        'Organization ID required. Either provide it as parameter or set gateway hostname first.'
+      );
+    }
+
+    const gateway_hostname = this.getGatewayHostname(orgId);
+    if (!gateway_hostname) {
+      throw new Error(
+        `Gateway hostname not set for organization ${orgId}. Organization may not have running projects.`
+      );
+    }
+
+    // Inject project_id if provided (for token selection)
+    if (project_id) {
+      if (!r.pathParameters) {
+        r.pathParameters = {};
+      }
+      r.pathParameters['project_id'] = project_id;
+    }
+
+    // Use existing token logic with gateway host
+    const gatewayUrl = `https://${gateway_hostname}`;
+    return this._doTokenLogic<TJson>(r, () => super.fetch(r, gatewayUrl));
+  }
+
   public reset() {
     this._ts.reset();
+    this._organizationGateways.clear();
   }
 }

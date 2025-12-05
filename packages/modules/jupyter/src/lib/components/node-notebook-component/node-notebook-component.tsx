@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-import { icons } from '@monorepo/ui-base';
+import { icons } from '@holistix-forge/ui-base';
 import {
   Inputs,
   Outputs,
@@ -8,7 +8,7 @@ import {
   useConnector,
   NodeMainToolbar,
   useMakeButton,
-} from '@monorepo/space/frontend';
+} from '@holistix-forge/whiteboard/frontend';
 
 import { CellsHive, CellsHiveProps } from '../node-notebook/cells-hive';
 import { NodeNotebook } from '../node-notebook/node-notebook';

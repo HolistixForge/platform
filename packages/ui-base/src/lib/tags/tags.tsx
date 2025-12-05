@@ -3,12 +3,70 @@ import { randomColor } from '../css-utils/css-utils';
 
 export type Tag = { text: string; color: string };
 
-export const Tags = ({ text, color }: { text: string; color?: string }) => {
+export const Tags = ({
+  text,
+  color,
+  onEdit,
+}: {
+  text: string;
+  color?: string;
+  onEdit?: (newText: string) => void;
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedText, setEditedText] = useState(text);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setEditedText(text);
+  }, [text]);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  const handleBlur = () => {
+    setIsEditing(false);
+    const trimmedText = editedText.trim();
+    if (trimmedText && trimmedText !== text) {
+      onEdit?.(trimmedText);
+    } else {
+      setEditedText(text);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleBlur();
+    } else if (e.key === 'Escape') {
+      setEditedText(text);
+      setIsEditing(false);
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <input
+        ref={inputRef}
+        value={editedText}
+        onChange={(e) => setEditedText(e.target.value)}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        className="uppercase bg-[#252546] rounded-[4px] px-2 py-1 text-[10px] font-medium leading-[14px] h-[22px] outline-none border border-[#A998DA]"
+        style={{ color }}
+      />
+    );
+  }
+
   return (
     <span
-      className={`uppercase bg-[#252546] rounded-[4px] px-2 py-1 text-[10px] font-medium leading-[14px] h-[22px] flex items-center`}
+      className={`uppercase bg-[#252546] rounded-[4px] px-2 py-1 text-[10px] font-medium leading-[14px] h-[22px] flex items-center ${
+        onEdit ? 'cursor-text hover:bg-[#2C2C47] transition-colors' : ''
+      }`}
       style={{ color: color }}
-      contentEditable={true}
+      onClick={() => onEdit && setIsEditing(true)}
     >
       {text}
     </span>
@@ -18,9 +76,10 @@ export const Tags = ({ text, color }: { text: string; color?: string }) => {
 export type TagsBarProps = {
   tags?: Tag[];
   addTag?: (arg: Tag) => void;
+  editTag?: (index: number, newText: string) => void;
 };
 
-export const TagsBar = ({ tags = [], addTag }: TagsBarProps) => {
+export const TagsBar = ({ tags = [], addTag, editTag }: TagsBarProps) => {
   const [otherTagsOpened, setOtherTagsOpened] = useState<boolean>(false);
   const [visibleTags, setVisibleTags] = useState<Tag[]>([]);
   const [otherTags, setOtherTags] = useState<Tag[]>([]);
@@ -74,14 +133,25 @@ export const TagsBar = ({ tags = [], addTag }: TagsBarProps) => {
         ref={containerRef}
         className="tags-container relative z-20 w-[80%] flex flex-wrap items-center mt-4 gap-1"
       >
-        {visibleTags.map((tag: Tag, index: number) => (
-          <span
-            key={index}
-            className="transition-opacity duration-300 opacity-100"
-          >
-            <Tags text={tag.text} color={tag.color} />
-          </span>
-        ))}
+        {visibleTags.map((tag: Tag, visibleIndex: number) => {
+          const originalIndex = tags.findIndex((t) => t === tag);
+          return (
+            <span
+              key={visibleIndex}
+              className="transition-opacity duration-300 opacity-100"
+            >
+              <Tags
+                text={tag.text}
+                color={tag.color}
+                onEdit={
+                  editTag
+                    ? (newText) => editTag(originalIndex, newText)
+                    : undefined
+                }
+              />
+            </span>
+          );
+        })}
 
         <button
           className={`border ${
@@ -102,16 +172,28 @@ export const TagsBar = ({ tags = [], addTag }: TagsBarProps) => {
                 : 'text-[#50506C]'
             }`}
           >
-            {otherTags.length > 0 ? <>{otherTagsOpened ? '-' : '...'}</> : '+'}
+            {otherTags.length > 0 ? (otherTagsOpened ? '-' : '...') : '+'}
           </span>
         </button>
       </div>
 
       {otherTagsOpened && (
         <div className="tags-container absolute px-2 py-2 flex-wrap top-full max-h-[200px] overflow-y-auto flex right-0 w-full bg-[#2C2C47] z-30 rounded-[4px] border border-[#833A9D] gap-[5px]">
-          {otherTags.map((tag: Tag, index: number) => (
-            <Tags key={index} text={tag.text} color={tag.color} />
-          ))}
+          {otherTags.map((tag: Tag, otherIndex: number) => {
+            const originalIndex = tags.findIndex((t) => t === tag);
+            return (
+              <Tags
+                key={otherIndex}
+                text={tag.text}
+                color={tag.color}
+                onEdit={
+                  editTag
+                    ? (newText) => editTag(originalIndex, newText)
+                    : undefined
+                }
+              />
+            );
+          })}
           <button
             onClick={(e) => {
               addTag?.({ text: `tag-${tags.length}`, color: randomColor() });

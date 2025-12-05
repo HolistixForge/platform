@@ -1,4 +1,4 @@
-import { Logger } from '@monorepo/log';
+import { EPriority, Logger } from '@holistix-forge/log';
 import { PostgreSQL } from './PostgreSQL';
 import { TSqlApi } from '../Connections';
 
@@ -49,7 +49,7 @@ const api: TSqlApi = {
 //
 
 describe('Testing PostgreSQL driver', () => {
-  Logger.setPriority(7);
+  Logger.setPriority(EPriority.Debug);
 
   const pg = new PostgreSQL(
     {

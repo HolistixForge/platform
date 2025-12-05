@@ -1,47 +1,46 @@
 import {
-  useDispatcher as useDispatcherCollab,
-  useSharedData as useSharedDataCollab,
+  useLocalSharedData as useLocalSharedDataOriginal,
   TValidSharedDataToCopy,
-} from '@monorepo/collab-engine';
-import { TCoreSharedData, TCoreEvent } from '@monorepo/core';
-import { TabPayload, TTabEvents, TTabsSharedData } from '@monorepo/tabs';
-import { TSpaceSharedData, TSpaceEvent } from '@monorepo/space';
-import { TChatEvent, TChatSharedData } from '@monorepo/chats';
-import { TServerEvents, TServersSharedData } from '@monorepo/servers';
-import { TJupyterEvent, TJupyterSharedData } from '@monorepo/jupyter';
-import { TEventSocials } from '@monorepo/socials';
-import { TNotionEvent } from '@monorepo/notion';
-
-import { modules } from './modules';
+} from '@holistix-forge/collab/frontend';
+import { useDispatcher as useDispatcherOriginal } from '@holistix-forge/reducers/frontend';
+import { TCoreSharedData, TCoreEvent } from '@holistix-forge/core-graph';
+import { TabPayload, TTabEvents, TTabsSharedData } from '@holistix-forge/tabs';
+import { TWhiteboardSharedData, TSpaceEvent } from '@holistix-forge/whiteboard';
+import { TChatEvent, TChatSharedData } from '@holistix-forge/chats';
+import {
+  TUserContainersEvents,
+  TUserContainersSharedData,
+} from '@holistix-forge/user-containers';
+import { TJupyterEvent, TJupyterSharedData } from '@holistix-forge/jupyter';
+import { TEventSocials } from '@holistix-forge/socials';
+import { TNotionEvent } from '@holistix-forge/notion';
 
 //
 
 export type AllSharedData = TCoreSharedData &
   TTabsSharedData &
-  TSpaceSharedData &
-  TServersSharedData &
+  TWhiteboardSharedData &
+  TUserContainersSharedData &
   TJupyterSharedData &
   TChatSharedData;
 
 type AllEvents =
   | TCoreEvent
   | TSpaceEvent
-  | TServerEvents
+  | TUserContainersEvents
   | TJupyterEvent
   | TTabEvents<TabPayload>
   | TChatEvent
   | TEventSocials
   | TNotionEvent;
 
-export const useDispatcher = useDispatcherCollab<AllEvents>;
-
-export const collabChunks = modules.map((module) => module.collabChunk);
+export const useDispatcher = useDispatcherOriginal<AllEvents>;
 
 //
 
-export const useSharedData: (
+export const useAppLocalSharedData: (
   deps: (keyof AllSharedData)[],
   f: (data: TValidSharedDataToCopy<AllSharedData>) => any
-) => ReturnType<typeof f> = useSharedDataCollab<AllSharedData>;
+) => ReturnType<typeof f> = useLocalSharedDataOriginal<AllSharedData>;
 
 //

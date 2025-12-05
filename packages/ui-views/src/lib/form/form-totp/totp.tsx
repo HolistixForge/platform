@@ -8,8 +8,8 @@ import {
   FormError,
   FormErrors,
   ButtonBase,
-} from '@monorepo/ui-base';
-import { TotpEnableFormData, TotpLoginFormData } from '@monorepo/frontend-data';
+} from '@holistix-forge/ui-base';
+import { TotpEnableFormData, TotpLoginFormData } from '@holistix-forge/frontend-data';
 
 import './totp.scss';
 

@@ -1,10 +1,8 @@
-import { TSpaceMenuEntries, TSpaceMenuEntry } from '@monorepo/module/frontend';
-import {
-  FrontendDispatcher,
-  TValidSharedDataToCopy,
-} from '@monorepo/collab-engine';
-import { TCoreEvent } from '@monorepo/core';
-import { makeUuid } from '@monorepo/simple-types';
+import { TWhiteboardMenuEntries, TWhiteboardMenuEntry } from '@holistix-forge/whiteboard/frontend';
+import { TValidSharedDataToCopy } from '@holistix-forge/collab/frontend';
+import { TCoreEvent } from '@holistix-forge/core-graph';
+import { makeUuid } from '@holistix-forge/simple-types';
+import { FrontendDispatcher } from '@holistix-forge/reducers/frontend';
 
 import { NewAirtableBaseForm } from './components/forms/new-base';
 import { TAirtableSharedData } from './airtable-shared-model';
@@ -13,7 +11,7 @@ import { TNodeAirtableTableDataPayload } from './components/node-airtable/node-a
 
 //
 
-export const airtableMenuEntries: TSpaceMenuEntries = ({
+export const airtableMenuEntries: TWhiteboardMenuEntries = ({
   from,
   viewId,
   position,
@@ -25,71 +23,71 @@ export const airtableMenuEntries: TSpaceMenuEntries = ({
   const tsd = sharedData as TValidSharedDataToCopy<TAirtableSharedData>;
   const d = dispatcher as FrontendDispatcher<TAirtableEvent | TCoreEvent>;
 
-  const bases: TSpaceMenuEntry[] = Array.from(tsd.airtableBases.entries()).map(
-    ([id, base]) => {
-      // Create table entries for the embed submenu
-      const tableEntries = base.tables.map((table) => ({
-        type: 'item' as const,
-        label: table.name,
-        onClick: () => {
-          const data: TNodeAirtableTableDataPayload = {
-            baseId: base.id,
-            tableId: table.id,
-          };
-          d.dispatch({
-            type: 'core:new-node',
-            nodeData: {
-              id: makeUuid(),
-              name: `Airtable Table ${table.name}`,
-              root: true,
-              type: 'airtable-table',
-              data,
-              connectors: [{ connectorName: 'outputs', pins: [] }],
-            },
-            edges: [],
-            origin: {
-              viewId,
-              position: position(),
-            },
-          });
-        },
-        disabled: from !== undefined,
-      }));
+  const bases: TWhiteboardMenuEntry[] = Array.from(
+    tsd['airtable:bases']?.entries() ?? []
+  ).map(([id, base]) => {
+    // Create table entries for the embed submenu
+    const tableEntries = base.tables.map((table) => ({
+      type: 'item' as const,
+      label: table.name,
+      onClick: () => {
+        const data: TNodeAirtableTableDataPayload = {
+          baseId: base.id,
+          tableId: table.id,
+        };
+        d.dispatch({
+          type: 'core:new-node',
+          nodeData: {
+            id: makeUuid(),
+            name: `Airtable Table ${table.name}`,
+            root: true,
+            type: 'airtable-table',
+            data,
+            connectors: [{ connectorName: 'outputs', pins: [] }],
+          },
+          edges: [],
+          origin: {
+            viewId,
+            position: position(),
+          },
+        });
+      },
+      disabled: from !== undefined,
+    }));
 
-      return {
-        label: base.name,
-        type: 'sub-menu',
-        entries: [
-          {
-            type: 'item',
-            label: 'Open',
-            onClick: () => {
-              renderPanel({
-                type: 'airtable-base',
-                uuid: makeUuid(),
-                data: {
-                  baseId: base.id,
-                },
-              });
-            },
+    return {
+      label: base.name,
+      type: 'sub-menu',
+      entries: [
+        {
+          type: 'item',
+          label: 'Open',
+          onClick: () => {
+            renderPanel({
+              type: 'airtable-base',
+              uuid: makeUuid(),
+              data: {
+                baseId: base.id,
+              },
+            });
           },
-          {
-            type: 'sub-menu',
-            label: 'Embed',
-            disabled: from !== undefined,
-            entries: tableEntries,
+        },
+        {
+          type: 'sub-menu',
+          label: 'Embed',
+          disabled: from !== undefined,
+          entries: tableEntries,
+        },
+        {
+          type: 'item',
+          label: 'Delete',
+          onClick: () => {
+            d.dispatch({ type: 'airtable:delete-base', baseId: base.id });
           },
-          {
-            type: 'item',
-            label: 'Delete',
-            onClick: () => {
-              d.dispatch({ type: 'airtable:delete-base', baseId: base.id });
-            },
-          },
-        ],
-      };
-    }
-  );
+        },
+      ],
+    };
+  });
 
   return [
     {

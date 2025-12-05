@@ -3,13 +3,10 @@
   "include": [],
   "references": [
     {
-      "path": "../core"
+      "path": "../../log"
     },
     {
       "path": "../../frontend-data"
-    },
-    {
-      "path": "../../log"
     },
     {
       "path": "../../collab-engine"
@@ -18,10 +15,19 @@
       "path": "../../simple-types"
     },
     {
+      "path": "../core-graph"
+    },
+    {
+      "path": "../reducers"
+    },
+    {
+      "path": "../collab"
+    },
+    {
       "path": "../module"
     },
     {
-      "path": "../space"
+      "path": "../whiteboard"
     },
     {
       "path": "../../ui-base"

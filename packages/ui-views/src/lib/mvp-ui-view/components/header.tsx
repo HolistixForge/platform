@@ -10,8 +10,8 @@ import {
   ButtonBase,
   ButtonIcon,
   UserBubble,
-} from '@monorepo/ui-base';
-import { TF_User } from '@monorepo/demiurge-types';
+} from '@holistix-forge/ui-base';
+import { TF_User } from '@holistix-forge/types';
 
 import './header.scss';
 

@@ -4,8 +4,8 @@ import {
   FormError,
   FormErrors,
   TextFieldset,
-} from '@monorepo/ui-base';
-import { NewPasswordFormData } from '@monorepo/frontend-data';
+} from '@holistix-forge/ui-base';
+import { NewPasswordFormData } from '@holistix-forge/frontend-data';
 
 //
 

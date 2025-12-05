@@ -1,9 +1,8 @@
-import {
-  TValidSharedDataToCopy,
-  FrontendDispatcher,
-} from '@monorepo/collab-engine';
-import { TCoreSharedData } from '@monorepo/core';
-import { TSpaceMenuEntries } from '@monorepo/module/frontend';
+import { FrontendDispatcher } from '@holistix-forge/reducers/frontend';
+import { TCoreSharedData } from '@holistix-forge/core-graph';
+import { TWhiteboardMenuEntries } from '@holistix-forge/whiteboard/frontend';
+import { TValidSharedDataToCopy } from '@holistix-forge/collab/frontend';
+
 import { TJupyterSharedData } from './jupyter-shared-model';
 import { NewKernelForm } from './form/new-kernel';
 import { NewTerminalForm } from './form/new-terminal';
@@ -12,7 +11,7 @@ import { TJupyterEvent } from './jupyter-events';
 
 //
 
-export const spaceMenuEntrie: TSpaceMenuEntries = ({
+export const spaceMenuEntrie: TWhiteboardMenuEntries = ({
   viewId,
   from,
   sharedData,
@@ -24,11 +23,13 @@ export const spaceMenuEntrie: TSpaceMenuEntries = ({
     TJupyterSharedData & TCoreSharedData
   >;
 
-  const node = from && tsd.nodes.get(from?.node);
-  const project_server_id = node?.data?.project_server_id as number;
-  const jupyter = tsd.jupyterServers.get(`${project_server_id}`);
+  const node = from && tsd['core-graph:nodes'].get(from?.node);
+  const user_container_id = node?.data?.user_container_id as string;
+  const jupyter = tsd['jupyter:servers'].get(`${user_container_id}`);
 
   const d = dispatcher as FrontendDispatcher<TJupyterEvent>;
+
+  if (!node) return [];
 
   return [
     {
@@ -41,7 +42,7 @@ export const spaceMenuEntrie: TSpaceMenuEntries = ({
           onClick: () => {
             renderForm(
               <NewKernelForm
-                project_server_id={project_server_id}
+                user_container_id={user_container_id}
                 viewId={viewId}
                 position={position()}
                 closeForm={() => {
@@ -58,7 +59,7 @@ export const spaceMenuEntrie: TSpaceMenuEntries = ({
           onClick: () => {
             d.dispatch({
               type: 'jupyter:new-cell',
-              kernel_id: (node!.data as TKernelNodeDataPayload).kernel_id,
+              kernel_id: (node.data as TKernelNodeDataPayload).kernel_id,
               origin: {
                 viewId: viewId,
                 position: position(),
@@ -73,7 +74,7 @@ export const spaceMenuEntrie: TSpaceMenuEntries = ({
           onClick: () => {
             renderForm(
               <NewTerminalForm
-                project_server_id={project_server_id}
+                user_container_id={user_container_id}
                 viewId={viewId}
                 position={position()}
                 closeForm={() => {

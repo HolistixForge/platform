@@ -1,15 +1,15 @@
-import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
-import { TGraphNode } from '@monorepo/module';
+import { useSharedDataDirect } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
+import { TGraphNode } from '@holistix-forge/core-graph';
 import {
   DisableZoomDragPan,
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@monorepo/space/frontend';
+} from '@holistix-forge/whiteboard/frontend';
 import { useCallback } from 'react';
 import { TNotionEvent } from '../../notion-events';
 import { NotionDatabaseKanbanColumn } from './notion-database-kanban';
-import { TNotionDatabase } from '../../notion-types';
 import { TNotionSharedData } from '../../notion-shared-model';
 import { useDatabaseMainProperties } from './notion-database';
 
@@ -46,10 +46,8 @@ export const NodeNotionKanbanColumn = ({
     onDelete: handleDeletePage,
   });
 
-  const database: TNotionDatabase = useSharedData<TNotionSharedData>(
-    ['notionDatabases'],
-    (sd) => sd.notionDatabases.get(databaseId)
-  );
+  const sd = useSharedDataDirect<TNotionSharedData>();
+  const database = sd['notion:databases'].get(databaseId)!;
 
   const { titleProperty, priorityProperty, statusProperty } =
     useDatabaseMainProperties(database);

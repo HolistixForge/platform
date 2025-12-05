@@ -1,12 +1,8 @@
-import { generateJwtToken, jwtPayload } from '@monorepo/backend-engine';
-import {
-  GATEWAY_SCOPE,
-  makeGatewayScopeString,
-  TJwtGateway,
-} from '@monorepo/demiurge-types';
-import { ONE_YEAR_MS } from '@monorepo/simple-types';
+import { generateJwtToken, jwtPayload } from '@holistix-forge/backend-engine';
+import { TJwtGateway } from '@holistix-forge/types';
+import { ONE_YEAR_MS } from '@holistix-forge/simple-types';
 import { pg } from './pg';
-import { log } from '@monorepo/log';
+import { EPriority, log } from '@holistix-forge/log';
 
 //
 
@@ -14,9 +10,7 @@ const gatewayGlobalToken = (gateway_id: string) => {
   const payload: TJwtGateway = {
     type: 'gateway_token',
     gateway_id,
-    scope: GATEWAY_SCOPE.map((s) =>
-      makeGatewayScopeString(gateway_id, s.name)
-    ).join(' '),
+    scope: `gateway:${gateway_id}:ready gateway:${gateway_id}:stop`,
   };
   return generateJwtToken(
     payload,
@@ -27,19 +21,26 @@ const gatewayGlobalToken = (gateway_id: string) => {
 //
 //
 
-export const addGateway = async (fqdn: string, version: string) => {
-  const r = await pg.query('call proc_gateway_new($1, $2, $3)', [
-    fqdn,
+export const addGateway = async (
+  version: string,
+  containerName: string,
+  httpPort: number,
+  vpnPort: number
+) => {
+  const r = await pg.query('call proc_gateway_new($1, $2, $3, $4, NULL)', [
     version,
-    null,
+    containerName,
+    httpPort,
+    vpnPort,
   ]);
   const gwId = r.next()!.oneRow()['gateway_id'] as string;
 
   const token = gatewayGlobalToken(gwId);
 
-  log(6, 'NEW_GATEWAY', `${fqdn}: ${gwId}`);
-  log(6, 'NEW_GATEWAY', `toekn: ${token}`);
-
   const payload = jwtPayload(token);
-  log(6, 'NEW_GATEWAY', `payload: `, payload);
+  log(EPriority.Info, 'NEW_GATEWAY', `payload:`, payload);
+
+  console.log('');
+  console.log('gateway_id:', gwId);
+  console.log('token:', token);
 };

@@ -7,15 +7,12 @@ import {
   TextFieldset,
   useAction,
   DialogControlled,
-} from '@monorepo/ui-base';
-import {
-  useDispatcher,
-  useSharedData,
-  useAwareness,
-} from '@monorepo/collab-engine';
-import { TPosition } from '@monorepo/core';
-import { TPanel } from '@monorepo/module/frontend';
-import { makeUuid } from '@monorepo/simple-types';
+} from '@holistix-forge/ui-base';
+import { useAwareness, useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
+import { TPosition } from '@holistix-forge/core-graph';
+import { TPanel } from '@holistix-forge/whiteboard/frontend';
+import { makeUuid } from '@holistix-forge/simple-types';
 
 import { TAirtableEvent } from '../../airtable-events';
 import { TAirtableSharedData } from '../../airtable-shared-model';
@@ -56,9 +53,9 @@ export const NewAirtableBaseForm = ({
 
   // Get search results from shared data for current user
   const searchResults: TAirtableBaseSearchResult[] =
-    useSharedData<TAirtableSharedData>(
-      ['airtableBaseSearchResults'],
-      (sd) => sd.airtableBaseSearchResults.get(currentUserId) || []
+    useLocalSharedData<TAirtableSharedData>(
+      ['airtable:base-search-results'],
+      (sd) => sd['airtable:base-search-results'].get(currentUserId) || []
     );
 
   const action = useAction<NewAirtableBaseFormData>(
@@ -93,18 +90,20 @@ export const NewAirtableBaseForm = ({
   // Search for bases on mount and when search query changes
   useEffect(() => {
     const searchBases = async () => {
-      setIsSearching(true);
-      try {
-        await dispatcher.dispatch({
-          type: 'airtable:search-bases',
-          query: searchQuery,
-          userId: currentUserId,
-          AIRTABLE_API_KEY: action.formData.apiKey,
-        });
-      } catch (error) {
-        console.error('Failed to search bases:', error);
-      } finally {
-        setIsSearching(false);
+      if (action.formData.apiKey) {
+        setIsSearching(true);
+        try {
+          await dispatcher.dispatch({
+            type: 'airtable:search-bases',
+            query: searchQuery,
+            userId: currentUserId,
+            AIRTABLE_API_KEY: action.formData.apiKey,
+          });
+        } catch (error) {
+          console.error('Failed to search bases:', error);
+        } finally {
+          setIsSearching(false);
+        }
       }
     };
 

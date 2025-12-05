@@ -5,9 +5,9 @@ import {
   TextFieldset,
   useAction,
   DialogControlled,
-} from '@monorepo/ui-base';
-import { TPosition } from '@monorepo/core';
-import { useDispatcher } from '@monorepo/collab-engine';
+} from '@holistix-forge/ui-base';
+import { TPosition } from '@holistix-forge/core-graph';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
 import { TEventSocials } from '../socials-events';
 import { useEffect } from 'react';
 

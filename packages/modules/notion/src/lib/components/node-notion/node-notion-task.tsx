@@ -3,9 +3,10 @@ import {
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@monorepo/space/frontend';
-import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
-import { TGraphNode } from '@monorepo/module';
+} from '@holistix-forge/whiteboard/frontend';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
+import { TGraphNode } from '@holistix-forge/core-graph';
 import { TNotionSharedData } from '../../notion-shared-model';
 import { useCallback } from 'react';
 import { TEventUpdatePage, TNotionEvent } from '../../notion-events';
@@ -41,8 +42,8 @@ export const NodeNotionTask = ({
   const dispatcher = useDispatcher<TNotionEvent>();
 
   const o: { database: TNotionDatabase; page: TNotionPage } =
-    useSharedData<TNotionSharedData>(['notionDatabases'], (sd) => {
-      const database = sd.notionDatabases.get(node.data!.databaseId);
+    useLocalSharedData<TNotionSharedData>(['notion:databases'], (sd) => {
+      const database = sd['notion:databases'].get(node.data!.databaseId);
       const page = database?.pages.find((p) => p.id === pageId);
       return { database, page };
     });

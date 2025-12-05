@@ -1,0 +1,58 @@
+{
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../../frontend-data"
+    },
+    {
+      "path": "../../api-fetch"
+    },
+    {
+      "path": "../../log"
+    },
+    {
+      "path": "../../types"
+    },
+    {
+      "path": "../../collab-engine"
+    },
+    {
+      "path": "../../simple-types"
+    },
+    {
+      "path": "../tabs"
+    },
+    {
+      "path": "../core-graph"
+    },
+    {
+      "path": "../gateway"
+    },
+    {
+      "path": "../reducers"
+    },
+    {
+      "path": "../collab"
+    },
+    {
+      "path": "../module"
+    },
+    {
+      "path": "../whiteboard"
+    },
+    {
+      "path": "../../ui-base"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    },
+    {
+      "path": "./tsconfig.storybook.json"
+    }
+  ],
+  "extends": "../../../tsconfig.base.json"
+}

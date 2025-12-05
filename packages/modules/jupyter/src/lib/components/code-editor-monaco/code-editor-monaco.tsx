@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import * as monaco from 'monaco-editor';
 import { editor } from 'monaco-editor';
 
-import { cssVar } from '@monorepo/ui-base';
+import { cssVar } from '@holistix-forge/ui-base';
 
 import { CodeEditorMonacoProps } from './code-editor-monaco-lazy';
 

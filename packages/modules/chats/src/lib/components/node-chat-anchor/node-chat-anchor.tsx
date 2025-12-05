@@ -1,9 +1,10 @@
-import { icons } from '@monorepo/ui-base';
-import { InputsAndOutputs, useNodeContext } from '@monorepo/space/frontend';
-import { useNodeEdges } from '@monorepo/core';
-import { TGraphNode } from '@monorepo/module';
-import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
-import { useCurrentUser } from '@monorepo/frontend-data';
+import { icons } from '@holistix-forge/ui-base';
+import { InputsAndOutputs, useNodeContext } from '@holistix-forge/whiteboard/frontend';
+import { useNodeEdges } from '@holistix-forge/core-graph/frontend';
+import { TGraphNode } from '@holistix-forge/core-graph';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
+import { useCurrentUser } from '@holistix-forge/frontend-data';
 
 import { TChatSharedData } from '../../chats-shared-model';
 import { TChat } from '../../chats-types';
@@ -15,8 +16,9 @@ import './node-chat-anchor.scss';
 export const NodeChatAnchor = ({ node }: { node: TGraphNode }) => {
   const chatId = node.data!.chatId as string;
 
-  const chat: TChat = useSharedData<TChatSharedData>(['chats'], (sd) =>
-    sd.chats.get(chatId)
+  const chat: TChat = useLocalSharedData<TChatSharedData>(
+    ['chats:chats'],
+    (sd) => sd['chats:chats'].get(chatId)
   );
 
   const dispatcher = useDispatcher();
@@ -34,7 +36,7 @@ export const NodeChatAnchor = ({ node }: { node: TGraphNode }) => {
     useNodeValue.open();
     chatNodeId &&
       dispatcher.dispatch({
-        type: 'space:open-node',
+        type: 'whiteboard:open-node',
         nid: chatNodeId,
         viewId: useNodeValue.viewId,
       });
@@ -44,7 +46,7 @@ export const NodeChatAnchor = ({ node }: { node: TGraphNode }) => {
     useNodeValue.close();
     chatNodeId &&
       dispatcher.dispatch({
-        type: 'space:close-node',
+        type: 'whiteboard:close-node',
         nid: chatNodeId,
         viewId: useNodeValue.viewId,
       });

@@ -1,73 +1,570 @@
-# Install Host
+# Gateway Container Scripts
 
-1. (Can be done on main dev server) ~~Create a AWS instance, **Ubuntu server 24.04 LTS 64 bits x86 (t2.medium)**~~
+app directory contains shell scripts that manage the gateway container infrastructure (OpenVPN, Nginx) and interact with the `app-gateway` Node.js process.
 
-2. add rule for incoming SSH, HTTP, HTTPS and [*$OPENVPN_PORTS*]/udp (49000-4900X)
+> **Related Documentation:**
+>
+> - [Gateway Architecture](../../../doc/architecture/GATEWAY_ARCHITECTURE.md) - Complete system architecture and design decisions
+> - [App-Gateway README](../../../packages/app-gateway/README.md) - Node.js application that orchestrates these scripts
 
-3. Create CNAME DNS entries (like gw-2-17.dev-001.demiurge.co)
+## Overview
 
-4. ~~mount main dev server workspace with nfs~~
+The gateway container runs two main components:
 
-   on main dev server : add a rule allowing this server incoming traffic using its private IPv4 dns
+1. **app-gateway** (Node.js) - The main application handling collaboration, permissions, OAuth, and container management
+2. **Infrastructure scripts** (Shell) - Manage OpenVPN server and Nginx reverse proxy
 
-   ```shell
-   $ sudo apt update && sudo apt upgrade
-   $ : "${NFS_SOURCE:=/home/ubuntu/workspace}"
-   $ cd && mkdir workspace
-   $ WORKSPACE=/home/ubuntu/workspace
-   $ NFS_SERVER=ec2-15-237-183-150.eu-west-3.compute.amazonaws.com
-   $ sudo apt install rpcbind nfs-common && sudo service rpcbind start
-   ```
+The Node.js process orchestrates the infrastructure by executing shell scripts when needed (e.g., when containers start/stop).
 
-5. Install
+---
 
-export all env var so that you don't need to set them for each command and to not mistake values
+## Directory Structure
 
-```shell
-export ENV_NAME=dev-001
-export GW_INSTANCE_ID=1
-export ...
+```
+app/
+├── entrypoint-dev.sh          # Container entrypoint (fetches build, starts infrastructure)
+├── main.sh                     # Script runner (executes lib/bin scripts)
+├── config.conf                 # Configuration variables
+├── lib/                        # Library scripts (called by other scripts)
+│   ├── start-vpn.sh           # Start OpenVPN server
+│   ├── stop-vpn.sh             # Stop OpenVPN server
+│   ├── start-app-gateway.sh   # Start app-gateway (used by entrypoint & reset-gateway)
+│   ├── stop-app-gateway.sh    # Stop app-gateway (used by reset-gateway)
+│   └── reset-nginx.sh         # Reset Nginx base configuration
+└── bin/                        # Executable scripts (called by app-gateway via main.sh)
+    ├── update-nginx-locations.sh  # Update Nginx routing for user containers
+    └── reset-gateway.sh            # Full gateway reset (VPN + Nginx + app)
 ```
 
-If you add gw instances to an existant server, run this to increase GW_COUNT and create nginx configs
+---
 
-```shell
-# install docker, nginx, certbot, AND setup nginx config
-$ sudo ENV_NAME=dev-001 DOMAIN_NAME=demiurge.co GW_INSTANCE_ID=1 GW_COUNT=2 ./host-install/install.sh
+## Container Lifecycle
+
+### 1. Container Startup (`entrypoint-dev.sh`)
+
+**Purpose:** Entrypoint script that sets up gateway infrastructure and starts `app-gateway`.
+
+**Flow:**
+
+```
+Container Start
+    ↓
+entrypoint-dev.sh
+    ↓
+1. Validate environment variables
+2. Check workspace exists
+3. Call reset-gateway.sh:
+   - Stop VPN (if running)
+   - Stop app-gateway (if running)
+   - Reset Nginx configuration
+   - Start VPN server
+   - Start app-gateway with auto-restart loop
+4. Block with `tail -f /dev/null` (keep container alive)
 ```
 
-Then get a token for each gw to add and start it
+**Key Features:**
 
-```shell
-# get a token with app-ganymede-cmd app
-$ npx nx run app-ganymede-cmds:build
-$ export JWT_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----
------END PUBLIC KEY-----"
-$ export JWT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----
------END PRIVATE KEY-----"
-$ export PG_HOST=127.0.0.1
-$ export PG_PORT=5432
-$ export PG_USER=test
-$ export PG_PASSWORD=test
-$ export PG_DATABASE=ganymede_db
-$ node ./dist/packages/app-ganymede-cmds/main.js add-gateway -h gw-1-1.dev-002.demiurge.co -gv 0.0.1
+- **Infrastructure Setup:** Calls `reset-gateway.sh` to set up VPN and Nginx
+- **Delegates to reset-gateway:** All infrastructure management handled by reset-gateway
+- **Auto-restart in start-app-gateway:** Simple restart loop handles crashes, reload via `docker exec`
 
-# copy the token value for next command
+**Environment Variables Required:**
 
-# start gateway container mounting workspace through NFS
-$ GW_INSTANCE_ID=1 \
-  GW_ID=1 \
-  ENV_NAME=dev-001 \
-  DOMAIN_NAME=demiurge.co \
-  NFS_SERVER=ip-172-31-12-139.eu-west-3.compute.internal \
-  ./host-install/start-gw-container.sh
+- `GATEWAY_HTTP_PORT` - HTTP port for Nginx (7100-7199)
+- `GATEWAY_VPN_PORT` - OpenVPN UDP port (49100-49199)
+- `ENV_NAME` - Environment identifier (e.g., "dev-001")
 
-# start gateway container mounting workspace through docker volume
-$ GW_INSTANCE_ID=1 \
-  GW_ID=1 \
-  ENV_NAME=dev-001 \
-  DOMAIN_NAME=demiurge.co \
-  WORKSPACE=/home/ubuntu/workspace \
-  GATEWAY_TOKEN=XXXXX \
-  ./host-install/start-gw-container.sh
+**Logs:**
+
+- App-gateway output: `/logs/gateway.log`
+- Entrypoint logs: stdout/stderr
+
+---
+
+### 2. App-Gateway Initialization
+
+When `app-gateway` starts, it:
+
+1. Reads configuration from environment variables
+2. Initializes gateway module
+3. Exports `runScript` function for executing gateway scripts
+4. Starts Express server and WebSocket server
+5. Waits for organization allocation
+
+**Script Execution:**
+
+The `runScript` function is exported from `packages/app-gateway/src/module/module.ts` and can be called directly:
+
+```typescript
+import { runScript } from './module';
+
+// Call reset-gateway script
+await runScript('reset-gateway');
 ```
+
+---
+
+## Script Execution Model
+
+### How App-Gateway Calls Scripts
+
+App-gateway executes scripts via the exported `runScript` function:
+
+**Location:** `packages/app-gateway/src/module/module.ts`
+
+**Function Signature:**
+
+```typescript
+export const runScript = (
+  name: 'update-nginx-locations' | 'reset-gateway',
+  inputString?: string
+) => {
+  // Executes: ${WORKSPACE}/monorepo/docker-images/backend-images/gateway/app/main.sh -r bin/${name}.sh
+  // Scripts path is hardcoded relative to WORKSPACE (always /home/dev/workspace in containers)
+  // Uses child_process.spawnSync()
+  // Returns parsed JSON output
+};
+```
+
+**Usage:**
+
+```typescript
+import { runScript } from './module';
+
+// Call reset-gateway (called from gateway-reducer.ts after shutdown)
+await runScript('reset-gateway');
+
+// Call update-nginx-locations (with input via stdin)
+await runScript('update-nginx-locations', 'jupyter-abc 172.16.1.2 8888\n');
+```
+
+**Script Requirements:**
+
+1. **Must output JSON** - Scripts must print JSON to stdout:
+
+   - Success: `{"status": "ok"}`
+   - Error: `{"status": "error", "error": "error message"}`
+
+2. **Exit codes** - Scripts should exit with code 0 on success
+
+3. **Input via stdin** - Scripts can read input from stdin (e.g., `update-nginx-locations.sh`)
+
+---
+
+## Library Scripts (`lib/`)
+
+These scripts are called by other scripts (not directly by app-gateway).
+
+### `lib/start-vpn.sh`
+
+**Purpose:** Start OpenVPN server for user container networking.
+
+**What it does:**
+
+1. Creates temporary directory for certificates and configs (`/tmp/ovpn-XXXXXXXXXX`)
+2. Generates CA, server, and client certificates using `easy-rsa`
+3. Creates OpenVPN server configuration
+4. Starts OpenVPN daemon
+5. Outputs JSON with VPN config (PID, temp dir, port, hostname, certificates)
+
+**Output Format:**
+
+```json
+{
+  "status": "ok",
+  "pid": 12345,
+  "temp_dir": "/tmp/ovpn-abc123",
+  "port": 49100,
+  "hostname": "gw-pool-0.domain.local",
+  "certificates": {
+    "clients.crt": "...",
+    "clients.key": "...",
+    "ca.crt": "...",
+    "ta.key": "..."
+  }
+}
+```
+
+**Environment Variables:**
+
+- `OPENVPN_PORT` - UDP port for OpenVPN (from `GATEWAY_VPN_PORT`)
+
+**VPN Network:** `172.16.0.0/16`
+
+---
+
+### `lib/stop-vpn.sh`
+
+**Purpose:** Stop all OpenVPN servers.
+
+**What it does:**
+
+1. Finds all OpenVPN temp directories (`/tmp/ovpn-*`)
+2. Reads PID from each directory's `openvpn.pid` file
+3. Kills OpenVPN processes
+4. Removes temp directories
+5. Force-kills any remaining OpenVPN processes
+
+**Output:** `{"status": "ok", "message": "OpenVPN servers stopped successfully"}`
+
+---
+
+### `lib/reset-nginx.sh`
+
+**Purpose:** Reset Nginx to base configuration (removes all user container routes).
+
+**What it does:**
+
+1. Clears Nginx logs
+2. Creates base Nginx config with:
+   - Server block on `APP_GATEWAY_PORT` (127.0.0.1) - proxies `/collab` to app-gateway :8888
+   - Server block on port 80 (172.16.0.1) - proxies `/collab` to app-gateway :8888
+3. Starts or reloads Nginx
+
+**Environment Variables:**
+
+- `APP_GATEWAY_PORT` - Port for app-gateway (from `GATEWAY_HTTP_PORT`)
+- `NGINX_CONFIG` - Path to Nginx config file (default: `/etc/nginx/conf.d/reverse-proxy.conf`)
+
+---
+
+### `lib/start-app-gateway.sh`
+
+**Purpose:** Start app-gateway Node.js process with auto-restart on crash.
+
+**Called by:** `bin/reset-gateway.sh`
+
+**What it does:**
+
+- Simple `while true` loop that runs Node.js
+- Immediate restart on reload (detects `/tmp/gateway-reloading` marker)
+- 3-second delay on unexpected crash
+- Exits gracefully during full reset (detects `/tmp/gateway-resetting` marker)
+
+**Environment Variables:**
+
+- `GATEWAY_ROOT` - Build extraction path (default: `/opt/gateway`)
+- `LOG_FILE` - Log file path (default: `/tmp/gateway.log`)
+- App-gateway vars: `GATEWAY_ID`, `GATEWAY_TOKEN`, `GANYMEDE_FQDN`
+
+**Manual Reload:**
+
+```bash
+docker exec <container> /opt/gateway/app/lib/reload-gateway.sh
+```
+
+> **See script:** `lib/start-app-gateway.sh` for implementation details
+
+---
+
+### `lib/stop-app-gateway.sh`
+
+**Purpose:** Stop app-gateway processes.
+
+**Used by:** `bin/reset-gateway.sh`
+
+**What it does:**
+
+- Finds all Node.js processes running `app-gateway/main.js`
+- Kills process groups (PGID) using SIGTERM
+- Removes `/tmp/project-config.json`
+
+**Note:** This script is used by `reset-gateway.sh` to stop app-gateway before resetting infrastructure. The entrypoint handles shutdown via signal handlers, not this script.
+
+---
+
+## Executable Scripts (`bin/`)
+
+These scripts are called by app-gateway via `main.sh`.
+
+### `bin/update-nginx-locations.sh`
+
+**Purpose:** Dynamically update Nginx routing for user containers.
+
+**How it's called:**
+
+```typescript
+// From app-gateway (currently disabled - see note below)
+gatewayExports.updateReverseProxy([
+  { host: 'jupyter-abc', ip: '172.16.1.2', port: 8888 },
+  { host: 'pgadmin-def', ip: '172.16.1.3', port: 5050 },
+]);
+```
+
+**Input Format (stdin):**
+
+```
+jupyter-abc 172.16.1.2 8888
+pgadmin-def 172.16.1.3 5050
+```
+
+**What it does:**
+
+1. Copies current Nginx config to temp file
+2. Removes all location blocks except `/collab` and `/502.html`
+3. Reads services from stdin (format: `host ip port`)
+4. Adds location block for each service: `location /{host} { proxy_pass http://{ip}:{port}; }`
+5. Updates Nginx config if changed
+6. Reloads Nginx
+
+**Output:** `{"status": "ok"}`
+
+**Note:** Currently disabled in code (`packages/app-gateway/src/module/module.ts:154`) with `throw new Error('fix update-nginx-locations script')`. Needs to be fixed before use.
+
+---
+
+### `bin/reset-gateway.sh`
+
+**Purpose:** Full gateway reset (stops everything, resets, restarts).
+
+**How it's called:**
+
+```typescript
+// From gateway-reducer.ts after shutdownGateway()
+import { runScript } from './module';
+await runScript('reset-gateway');
+```
+
+**What it does (in order):**
+
+1. Create marker file `/tmp/gateway-resetting` (signals reset in progress)
+2. Stop OpenVPN (`lib/stop-vpn.sh`)
+3. Stop app-gateway (`lib/stop-app-gateway.sh`) - **This kills the calling process!**
+4. Reset Nginx (`lib/reset-nginx.sh`)
+5. Start OpenVPN (`lib/start-vpn.sh`)
+6. Start app-gateway (`lib/start-app-gateway.sh`) with auto-restart loop (in background)
+7. Remove marker file (after new process starts)
+
+**Execution:**
+
+Always runs in background via `nohup setsid` wrapper. This ensures:
+
+- When called from app-gateway: Script completes even after calling process is killed
+- When called from entrypoint: Script runs in background, entrypoint keeps container alive with `tail -f /dev/null`
+
+**Why nohup/setsid is required:**
+
+When called from app-gateway, `stop-app-gateway.sh` will kill the calling process (the app-gateway Node.js process). Without `nohup setsid`, the script would be killed before it can complete the reset. The wrapper ensures the reset completes even after the calling process is terminated.
+
+**Marker File Mechanism:**
+
+The script creates `/tmp/gateway-resetting` before stopping app-gateway. When `start-app-gateway.sh` detects the process died, it checks for this marker:
+
+- **Marker exists:** Exit gracefully (reset-gateway.sh will start new process)
+- **Marker missing:** Restart (unexpected crash/error)
+
+This prevents `start-app-gateway.sh` from restarting when the process was intentionally killed by `reset-gateway.sh`.
+
+**Output:** `{"status": "ok"}` (returns immediately, reset happens in background)
+
+**Note:** This script is called automatically by `gateway-reducer.ts` after `shutdownGateway()` when the gateway becomes inactive (5 minutes of inactivity).
+
+---
+
+## Script Runner (`main.sh`)
+
+**Purpose:** Generic script executor used by app-gateway.
+
+**Usage:**
+
+```bash
+# Execute a single script
+./main.sh -r bin/update-nginx-locations.sh
+```
+
+**How it works:**
+
+1. Sources `config.conf` for environment variables
+2. Changes directory to script's own directory
+3. Executes specified script
+4. Scripts must output JSON to stdout
+
+**Environment Variables (from config.conf):**
+
+- `GATEWAY_DEV` - Set to "1" for development
+- `ENV_NAME` - Environment name (e.g., "dev-001")
+- `DOMAIN` - Domain name (e.g., "domain.local")
+- `GANYMEDE_FQDN` - Ganymede API FQDN
+- `ALLOWED_ORIGINS` - CORS allowed origins
+- `IF` - Network interface (default: "enX0")
+- `NGINX_CONFIG` - Nginx config path
+
+---
+
+## Configuration (`config.conf`)
+
+**Purpose:** Centralized configuration file for all scripts.
+
+**Variables:**
+
+- **Dev-only:** `GATEWAY_DEV="1"`
+- **Derived from env:** `GANYMEDE_FQDN`, `ALLOWED_ORIGINS`
+- **Fixed:** `IF`, `NGINX_CONFIG`
+
+**Note:** Many variables reference `ENV_NAME` and `DOMAIN` which should be set by container environment.
+
+**Important:** The following variables are NOT set in `config.conf` because they are unique per gateway container instance and are set by `gateway-pool.sh` when creating containers:
+
+- `GATEWAY_ID` - Unique gateway UUID
+- `GATEWAY_TOKEN` - JWT token for this gateway
+- `GATEWAY_FQDN` - FQDN for this gateway instance
+
+These are passed as environment variables to the container via `docker run -e` in `gateway-pool.sh`.
+
+**Port Configuration:**
+
+- Node.js app-gateway always listens on **port 8888** (hardcoded, no configuration)
+- Nginx proxies from `GATEWAY_HTTP_PORT` (7100-7199) to port 8888
+
+---
+
+## Interaction Flows
+
+### Flow 1: Container Startup
+
+```
+1. Docker starts container
+   ↓
+2. entrypoint-dev.sh runs
+   ↓
+3. Validates environment, checks workspace
+   ↓
+4. Calls reset-gateway.sh (via main.sh)
+   ↓
+5. reset-gateway.sh (runs in background via nohup):
+   - Stops VPN (if running)
+   - Stops app-gateway (if running)
+   - Resets Nginx
+   - Starts VPN
+   - Starts app-gateway with auto-restart loop (background)
+   ↓
+6. Entrypoint keeps container alive: tail -f /dev/null
+   ↓
+7. start-app-gateway.sh runs auto-restart loop (background)
+   ↓
+8. App-gateway initializes, waits for allocation
+```
+
+### Flow 2: Organization Allocation
+
+```
+1. Ganymede allocates gateway to organization
+   ↓
+2. Ganymede calls: POST /collab/start
+   ↓
+3. App-gateway initializes organization context
+   ↓
+4. App-gateway initializes
+   ↓
+5. VPN ready, user containers can connect
+```
+
+### Flow 3: User Container Starts
+
+```
+1. User starts container via frontend
+   ↓
+2. Container connects to gateway VPN (172.16.x.x)
+   ↓
+3. Container registers with gateway (watchdog)
+   ↓
+4. App-gateway calls: bin/update-nginx-locations.sh
+   ↓
+5. Script adds location block: /{service} → http://{ip}:{port}
+   ↓
+6. Nginx reloaded, container accessible via gateway
+```
+
+### Flow 4: Manual Reload (Docker Exec)
+
+```
+1. Developer: Edit code, build, trigger reload
+   ./scripts/local-dev/envctl.sh restart dev-001 gateway
+   ↓
+2. envctl.sh: Rebuild → Validate → Repack build
+   ↓
+3. docker exec reload-gateway.sh (on each container)
+   ↓
+4. reload-gateway.sh:
+   - Fetches new build from HTTP server
+   - Creates marker: /tmp/gateway-reloading
+   - Sends SIGTERM to Node.js process
+   ↓
+5. start-app-gateway.sh detects graceful exit (marker exists)
+   ↓
+6. Restarts immediately: node /opt/gateway/app-gateway/main.js
+   ↓
+7. App-gateway running with new code (~10 seconds total)
+```
+
+### Flow 5: Gateway Shutdown (Inactivity)
+
+```
+1. App-gateway detects inactivity (5min)
+   ↓
+2. GatewayReducer._periodic() detects shutdown time passed
+   ↓
+3. Calls: shutdownGateway()
+   - Stops OAuth cleanup timer
+   - Pushes final data to Ganymede
+   ↓
+4. Calls: runScript('reset-gateway')
+   ↓
+5. reset-gateway.sh (always wrapped in nohup setsid):
+   - Wrapped in nohup setsid (prevents script from being killed)
+   - Stops VPN
+   - Stops app-gateway (kills calling process!)
+   - Resets Nginx
+   - Starts VPN
+   - Starts app-gateway with auto-restart loop (background)
+   ↓
+6. Gateway returns to pool, ready for next organization
+```
+
+**Note:** The gateway doesn't actually shut down - it resets and restarts, returning to the pool for the next organization allocation.
+
+---
+
+## Environment Variables Summary
+
+### Required by Entrypoint
+
+| Variable            | Description                    | Example      |
+| ------------------- | ------------------------------ | ------------ |
+| `GATEWAY_HTTP_PORT` | HTTP port for Nginx (external) | `7100`       |
+| `GATEWAY_VPN_PORT`  | OpenVPN UDP port               | `49100`      |
+| `ENV_NAME`          | Environment identifier         | `dev-001`    |
+| `BUILD_SERVER_IP`   | Dev container IP (optional)    | `172.17.0.2` |
+
+### Required by App-Gateway
+
+| Variable          | Description            | Example                    |
+| ----------------- | ---------------------- | -------------------------- |
+| `GATEWAY_ID`      | Gateway UUID           | `550e8400-...`             |
+| `GATEWAY_TOKEN`   | JWT token for Ganymede | `eyJhbGc...`               |
+| `GANYMEDE_FQDN`   | Ganymede API FQDN      | `ganymede.domain.local`    |
+| `GATEWAY_FQDN`    | Gateway FQDN           | `org-{uuid}.domain.local`  |
+| `ALLOWED_ORIGINS` | CORS allowed origins   | `["https://domain.local"]` |
+
+**Port Configuration:**
+
+- Node.js always listens on `127.0.0.1:8888` (hardcoded)
+- Nginx proxies from `GATEWAY_HTTP_PORT` (7100-7199) to port 8888
+
+### Used by Scripts
+
+| Variable           | Description                                 | Example                                |
+| ------------------ | ------------------------------------------- | -------------------------------------- |
+| `ENV_NAME`         | Environment name                            | `dev-001`                              |
+| `DOMAIN`           | Domain name                                 | `domain.local`                         |
+| `OPENVPN_PORT`     | OpenVPN port (from `GATEWAY_VPN_PORT`)      | `49100`                                |
+| `APP_GATEWAY_PORT` | App-gateway port (from `GATEWAY_HTTP_PORT`) | `7100`                                 |
+| `NGINX_CONFIG`     | Nginx config path                           | `/etc/nginx/conf.d/reverse-proxy.conf` |
+
+---
+
+## Related Documentation
+
+- **[Gateway Architecture](../../../doc/architecture/GATEWAY_ARCHITECTURE.md)** - Complete system architecture, lifecycle, and design decisions
+- **[App-Gateway README](../../../packages/app-gateway/README.md)** - Node.js application that orchestrates these scripts
+- [Local Development Guide](../../../doc/guides/LOCAL_DEVELOPMENT.md) - Setup and development workflow

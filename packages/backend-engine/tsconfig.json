@@ -4,10 +4,10 @@
   "include": [],
   "references": [
     {
-      "path": "../log"
+      "path": "../simple-types"
     },
     {
-      "path": "../simple-types"
+      "path": "../log"
     },
     {
       "path": "./tsconfig.lib.json"

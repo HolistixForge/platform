@@ -1,0 +1,25 @@
+{
+  "name": "@holistix-forge/types",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "module": "./dist/index.js",
+  "nx": {
+    "sourceRoot": "packages/types/src",
+    "projectType": "library",
+    "name": "@holistix-forge/types"
+  }
+}

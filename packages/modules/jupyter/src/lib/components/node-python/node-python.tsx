@@ -1,4 +1,4 @@
-import { icons, SelectFieldset, SelectItem } from '@monorepo/ui-base';
+import { icons, SelectFieldset, SelectItem } from '@holistix-forge/ui-base';
 import {
   Inputs,
   Outputs,
@@ -6,7 +6,7 @@ import {
   useConnector,
   NodeMainToolbar,
   useMakeButton,
-} from '@monorepo/space/frontend';
+} from '@holistix-forge/whiteboard/frontend';
 
 import { MenuExpanded } from '../menuExpanded/menuExpanded';
 

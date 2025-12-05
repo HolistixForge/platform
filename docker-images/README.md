@@ -1,47 +1,52 @@
-# Install AWS cli
+# Docker Images
 
-```bash
-$ cd /tmp
-$ curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-$ sudo apt install -y unzip
-$ unzip awscliv2.zip
-$ sudo ./aws/install
-$ rm -rf aws awscliv2.zip
+This directory contains Docker image definitions for the Holistix Forge platform.
 
-$ aws configure
-AWS Access Key ID [None]: XXXXXXXXXXXXXXXX
-AWS Secret Access Key [None]: XXXXXXXXXXXXXXXXXXXXXXXXXX
-Default region name [None]: eu-west-3
-Default output format [None]:
+## Directory Structure
+
+```
+docker-images/
+├── backend-images/      # Platform infrastructure images
+│   └── gateway/         # Gateway container (app-gateway + OpenVPN + Nginx)
+└── user-images/         # Shared user container bootstrap
+    └── container-functions.sh  # Common bootstrap functions
 ```
 
-# Setup Docker Login
+---
 
-> [!IMPORTANT]
-> use AWS region us-east-1 in the following command.
->
-> ecr-public auth works only on this region.
+## Backend Images
 
-```bash
-$ aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
-```
+### Gateway Container
 
-# Build
+**Location:** `backend-images/gateway/`  
+**Purpose:** Gateway pool containers providing collaboration, OAuth, VPN, and routing
 
-```bash
-$ docker build -f ./xxxxx/Dockerfile . -t ${IMAGE_NAME}:${IMAGE_TAG}
-```
+**Components:**
+- app-gateway (Node.js) - Collaboration engine, OAuth provider, event processor
+- Nginx (Stage 2) - Routes user container FQDNs to VPN IPs
+- OpenVPN Server - VPN network for user containers (172.16.0.0/16)
 
-# Push
+**See:** `backend-images/gateway/README.md`
 
-```bash
-$ PUBLIC_REGISTRY_ID=f3g9x7j4
-$ docker tag ${IMAGE_NAME}:${IMAGE_TAG} public.ecr.aws/${PUBLIC_REGISTRY_ID}/${IMAGE_NAME}:${IMAGE_TAG}
-$ docker push public.ecr.aws/${PUBLIC_REGISTRY_ID}/${IMAGE_NAME}:${IMAGE_TAG}
-```
+---
 
-# Pull
+## User Container Images
 
-```bash
-$ docker pull public.ecr.aws/${PUBLIC_REGISTRY_ID}/${IMAGE_NAME}:${IMAGE_TAG}
-```
+User container images are located in their respective module directories. Each module owns its Docker image and registers it via the imageRegistry.
+
+**See:** `user-images/README.md` for complete documentation on:
+- Shared bootstrap functions
+- Container architecture and bootstrap flow
+- Distinct FQDN routing
+- Adding new container images
+
+
+---
+
+## Related Documentation
+
+- [User Container Bootstrap](user-images/README.md) - Complete user container guide
+- [Gateway Architecture](../doc/architecture/GATEWAY_ARCHITECTURE.md) - Gateway and VPN
+- [User Containers Module](../packages/modules/user-containers/README.md) - Image registry
+- [Local Development](../doc/guides/LOCAL_DEVELOPMENT.md) - Testing images
+

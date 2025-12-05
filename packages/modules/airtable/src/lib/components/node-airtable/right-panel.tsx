@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 
-import { useSharedData } from '@monorepo/collab-engine';
-import { TPanel } from '@monorepo/module/frontend';
+import {
+  TValidSharedDataToCopy,
+  useLocalSharedData,
+} from '@holistix-forge/collab/frontend';
+import { TPanel } from '@holistix-forge/whiteboard/frontend';
 import { TAirtableSharedData } from '../../airtable-shared-model';
 import { AirtableBaseTableList } from './airtable-base-table-list';
 
@@ -18,9 +21,10 @@ export const AirtableRightPanel: React.FC<AirtableRightPanelProps> = ({
 }) => {
   const baseId = panel.data.baseId as string;
 
-  const sd = useSharedData<TAirtableSharedData>(['airtableBases'], (sd) => sd);
+  const sd: TValidSharedDataToCopy<TAirtableSharedData> =
+    useLocalSharedData<TAirtableSharedData>(['airtable:bases'], (sd) => sd);
 
-  const base = sd.airtableBases.get(baseId);
+  const base = sd['airtable:bases'].get(baseId);
 
   const [loaded, setLoaded] = useState(false);
 

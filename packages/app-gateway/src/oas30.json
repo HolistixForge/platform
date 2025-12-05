@@ -1,0 +1,545 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Gateway API (Collaboration & Events)",
+    "version": "2.0",
+    "description": "Organization-level gateway for collaborative state and OAuth"
+  },
+  "paths": {
+    "/collab/ping": {
+      "get": {
+        "summary": "Health check",
+        "tags": ["Collab"],
+        "responses": {
+          "200": { "$ref": "#/components/responses/empty" }
+        }
+      }
+    },
+    "/collab/event": {
+      "post": {
+        "summary": "Process collaborative event",
+        "tags": ["Collab"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "event": {
+                    "type": "object",
+                    "properties": {
+                      "type": { "type": "string" }
+                    },
+                    "additionalProperties": true,
+                    "required": ["type"]
+                  }
+                },
+                "required": ["event"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/empty" },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/collab/start": {
+      "post": {
+        "summary": "Initialize gateway with organization handshake",
+        "tags": ["Collab"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "tmp_handshake_token": { "type": "string", "format": "uuid" }
+                },
+                "required": ["tmp_handshake_token"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/empty" },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/collab/room-id": {
+      "get": {
+        "summary": "Get room ID for a project",
+        "description": "Returns the room ID for a specific project. Requires project access permission.",
+        "tags": ["Collab"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "in": "query",
+            "name": "project_id",
+            "description": "Project ID (optional if provided in JWT)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Room ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "string", "format": "uuid" }
+                  },
+                  "required": ["data"]
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/collab/vpn-config": {
+      "get": {
+        "summary": "Get VPN configuration",
+        "tags": ["VPN"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" }
+        ],
+        "responses": {
+          "200": {
+            "description": "VPN configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "ca": { "type": "string" },
+                        "cert": { "type": "string" },
+                        "key": { "type": "string" },
+                        "ta": { "type": "string" },
+                        "port": { "type": "number" },
+                        "config": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/permissions": {
+      "get": {
+        "summary": "Get all compiled permissions from all modules",
+        "description": "Returns all permissions registered by modules. Requires gateway:[permissions:*]:read permission.",
+        "tags": ["Permissions"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of all permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "permissions": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/permission_definition"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/permissions/projects/{project_id}": {
+      "get": {
+        "summary": "Get user permissions for a project",
+        "description": "Returns permissions for all users in a project. Requires gateway:[permissions:*]:read permission and project access.",
+        "tags": ["Permissions"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Project ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User permissions for project",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "permissions": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": { "type": "string" }
+                      },
+                      "description": "Map of user_id to permissions array"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/permissions/projects/{project_id}/users/{user_id}": {
+      "patch": {
+        "summary": "Update user permissions for a project",
+        "description": "Updates permissions for a user in a project. Requires gateway:[permissions:*]:write permission and project access.",
+        "tags": ["Permissions"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Project ID"
+          },
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "User ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "permissions": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Array of permission strings"
+                  }
+                },
+                "required": ["permissions"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Permissions updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/oauth/authorize": {
+      "get": {
+        "summary": "OAuth2 authorization endpoint",
+        "description": "OAuth2 authorization code flow",
+        "tags": ["OAuth"],
+        "parameters": [
+          {
+            "name": "response_type",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "enum": ["code"] }
+          },
+          {
+            "name": "client_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "description": "OAuth client ID" }
+          },
+          {
+            "name": "redirect_uri",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "uri" }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "$ref": "#/components/parameters/headers_authorization" }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to redirect_uri with authorization code",
+            "headers": {
+              "Location": {
+                "schema": { "type": "string", "format": "uri" },
+                "description": "redirect_uri?code=...&state=..."
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/oauth/token": {
+      "post": {
+        "summary": "OAuth2 token endpoint)",
+        "description": "Exchange authorization code for access token, or refresh access token.",
+        "tags": ["OAuth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "grant_type": {
+                    "type": "string",
+                    "enum": ["authorization_code", "refresh_token"]
+                  },
+                  "code": {
+                    "type": "string",
+                    "description": "Authorization code (for authorization_code grant)"
+                  },
+                  "refresh_token": {
+                    "type": "string",
+                    "description": "Refresh token (for refresh_token grant)"
+                  },
+                  "client_id": { "type": "string", "description": "OAuth client ID" },
+                  "client_secret": { "type": "string", "description": "OAuth client secret" },
+                  "redirect_uri": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "Must match redirect_uri from authorization request"
+                  }
+                },
+                "required": ["grant_type", "client_id", "client_secret"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Access token response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": { "type": "string" },
+                    "token_type": { "type": "string", "example": "Bearer" },
+                    "expires_in": { "type": "integer" },
+                    "refresh_token": { "type": "string" },
+                    "scope": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" },
+          "5XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/oauth/authenticate": {
+      "post": {
+        "summary": "OAuth2 token authentication endpoint",
+        "description": "Validate OAuth2 access token.",
+        "tags": ["OAuth"],
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^Bearer\\s[-A-Za-z0-9_+./]*={0,3}$"
+            },
+            "description": "OAuth2 access token (Bearer token)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Token validated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user_id": { "type": "string", "format": "uuid" },
+                    "scope": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "client_id": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    }
+  },
+  "components": {
+    "responses": {
+      "empty": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          }
+        }
+      },
+      "errors": {
+        "description": "Error response",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/errors" }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "errors": {
+        "type": "object",
+        "properties": {
+          "uuid": { "type": "string" },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string" },
+                "public": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      },
+      "permission_definition": {
+        "type": "object",
+        "properties": {
+          "permission": {
+            "type": "string",
+            "description": "Full permission string (e.g., 'user-containers:[user-container:*]:create')"
+          },
+          "module": {
+            "type": "string",
+            "description": "Module name that registered this permission"
+          },
+          "resourcePath": {
+            "type": "string",
+            "description": "Resource path (e.g., 'user-container:*' or 'user-container:*/service:*')"
+          },
+          "action": {
+            "type": "string",
+            "description": "Action (e.g., 'create', 'delete', 'read')"
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description"
+          }
+        },
+        "required": ["permission", "module", "resourcePath", "action"]
+      }
+    },
+    "parameters": {
+      "headers_authorization": {
+        "in": "header",
+        "name": "authorization",
+        "description": "JWT access token",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^(?:token\\s)?[-A-Za-z0-9_+./]*={0,3}$"
+        }
+      }
+    }
+  }
+}

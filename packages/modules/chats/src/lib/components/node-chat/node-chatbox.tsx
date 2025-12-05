@@ -1,21 +1,21 @@
 import { useEffect, useState } from 'react';
 
-import { TSpaceEvent } from '@monorepo/space';
+import { TWhiteboardEvent } from '@holistix-forge/whiteboard';
 
 import {
   InputsAndOutputs,
   useMakeButton,
   useNodeContext,
-} from '@monorepo/space/frontend';
+} from '@holistix-forge/whiteboard/frontend';
 
-import { useNodeEdges } from '@monorepo/core';
-import { TGraphNode } from '@monorepo/module';
-import { useCurrentUser, useQueriesUsers } from '@monorepo/frontend-data';
+import { useNodeEdges } from '@holistix-forge/core-graph/frontend';
+import { TGraphNode } from '@holistix-forge/core-graph';
+import { useCurrentUser, useQueriesUsers } from '@holistix-forge/frontend-data';
 import {
   useAwarenessUserList,
-  useDispatcher,
-  useSharedData,
-} from '@monorepo/collab-engine';
+  useLocalSharedData,
+} from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
 
 import { ChatboxLogic } from './chatbox-logic';
 import { TChatSharedData } from '../../chats-shared-model';
@@ -26,11 +26,12 @@ import { TChatEvent } from '../../chats-events';
 export const NodeChatbox = ({ node }: { node: TGraphNode }) => {
   const chatId = node.data!.chatId as string;
 
-  const chat: TChat = useSharedData<TChatSharedData>(['chats'], (sd) =>
-    sd.chats.get(chatId)
+  const chat: TChat = useLocalSharedData<TChatSharedData>(
+    ['chats:chats'],
+    (sd) => sd['chats:chats'].get(chatId)
   );
 
-  const dispatcher = useDispatcher<TChatEvent | TSpaceEvent>();
+  const dispatcher = useDispatcher<TChatEvent | TWhiteboardEvent>();
 
   const useNodeValue = useNodeContext();
 
@@ -88,7 +89,7 @@ export const NodeChatbox = ({ node }: { node: TGraphNode }) => {
     picture: null,
   };
 
-  // fill each user's information (name, color) as they beacome ready
+  // fill each user's information (name, color) as they become ready
   usersId.users.forEach((uid, k) => {
     const q = usersQueries[k];
     const u =
@@ -108,7 +109,7 @@ export const NodeChatbox = ({ node }: { node: TGraphNode }) => {
   const handleClose = () => {
     anchorNodeId &&
       dispatcher.dispatch({
-        type: 'space:close-node',
+        type: 'whiteboard:close-node',
         nid: anchorNodeId,
         viewId: useNodeValue.viewId,
       });
@@ -117,7 +118,7 @@ export const NodeChatbox = ({ node }: { node: TGraphNode }) => {
   const handleFilterOut = () => {
     anchorNodeId &&
       dispatcher.dispatch({
-        type: 'space:filter-out-node',
+        type: 'whiteboard:filter-out-node',
         nid: anchorNodeId,
         viewId: useNodeValue.viewId,
       });

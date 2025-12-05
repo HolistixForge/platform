@@ -1,5 +1,5 @@
 {
-  "name": "@monorepo/backend-engine",
+  "name": "@holistix-forge/backend-engine",
   "version": "0.0.1",
   "type": "module",
   "private": true,
@@ -20,6 +20,6 @@
   "nx": {
     "sourceRoot": "packages/backend-engine/src",
     "projectType": "library",
-    "name": "backend-engine"
+    "name": "@holistix-forge/backend-engine"
   }
 }

@@ -1,4 +1,4 @@
-import { TJson } from '@monorepo/simple-types';
+import { makeUuid, TJson } from '@holistix-forge/simple-types';
 
 import { SharedTypes, SharedMap, SharedArray } from '../SharedTypes';
 
@@ -23,9 +23,16 @@ class Observable<TO> {
 
 class MyMap<T extends TJson>
   extends Observable<(event: TEvent) => void>
-  implements SharedMap<T> {
+  implements SharedMap<T>
+{
   _nsts: NoneSharedTypes[] = [];
   _map: Map<string, T> = new Map<string, T>();
+  uuid: string;
+
+  constructor() {
+    super();
+    this.uuid = makeUuid();
+  }
 
   registerNoneSharedTypeListener(nst: NoneSharedTypes) {
     this._nsts.push(nst);
@@ -76,7 +83,8 @@ class MyMap<T extends TJson>
 
 class MyArray<T extends TJson>
   extends Observable<(event: TEvent) => void>
-  implements SharedArray<T> {
+  implements SharedArray<T>
+{
   _array: Array<T> = [];
   _nsts: NoneSharedTypes[] = [];
 
@@ -152,14 +160,15 @@ export class NoneSharedTypes extends SharedTypes {
 
   flagChange(obs: Array<(e: TEvent) => void>) {
     obs.forEach((f) => {
-      if (!this._changes.includes(f)) this._changes.push(f);
+      // if (!this._changes.includes(f)) this._changes.push(f);
+      f({});
     });
   }
 
   async transaction(f: () => Promise<void>): Promise<void> {
     await f();
-    this._changes.forEach((o) => o({}));
-    this._changes = [];
+    // this._changes.forEach((o) => o({}));
+    // this._changes = [];
   }
 
   getSharedMap<T extends TJson>(name?: string): SharedMap<T> {

@@ -10,7 +10,7 @@ const StoryWrapper = () => {
   return (
     <JupyterStoryCollabContext>
       <NewKernelForm
-        project_server_id={1}
+        user_container_id={1}
         position={{ x: 0, y: 0 }}
         viewId={''}
         closeForm={() => null}

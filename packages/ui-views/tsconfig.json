@@ -3,13 +3,13 @@
   "include": [],
   "references": [
     {
-      "path": "../demiurge-types"
+      "path": "../types"
     },
     {
       "path": "../frontend-data"
     },
     {
-      "path": "../modules/servers"
+      "path": "../modules/user-containers"
     },
     {
       "path": "../ui-base"

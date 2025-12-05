@@ -6,7 +6,7 @@ import { TAwarenessUser, YjsAwareness } from '@monorepo/collab-engine';
 import { buildUserCss, getYDoc } from '@monorepo/collab-engine';
 import { ApiFetch } from '@monorepo/api-fetch';
 import { log } from '@monorepo/log';
-import { TG_Server } from '@monorepo/servers';
+import { TG_Server } from '@monorepo/user-containers';
 
 //
 
@@ -17,7 +17,7 @@ const debug = (msg: string, ...a: any) => log(7, 'JLS_PROBE', msg, ...a);
 
 const identity = (username: string, color: string) => {
   const name = username.split(':')[0];
-  const finalName = `${name} (from Demiurge)`;
+  const finalName = `${name} (from Holistix)`;
   const initials = name.charAt(0).toUpperCase();
   return {
     avatar_url: null,
@@ -78,7 +78,7 @@ export class CollaborationProbe {
     this.globalAwareness = this.connectRoom('JupyterLab:globalAwareness', {});
     this.globalAwareness.provider.awareness.on('change', () => {
       debug(
-        `[server: ${this.server.project_server_id}, globalAwareness]: change:`,
+        `[server: ${this.server.user_container_id}, globalAwareness]: change:`,
         this.globalAwareness.provider.awareness.getStates()
       );
     });
@@ -184,9 +184,9 @@ export class CollaborationProbe {
     );
 
     /////////// WORKAROUND ///////////
-    // cursors share from jupyterlab to demiurge and vice versa
+    // cursors share from jupyterlab to Holistix and vice versa
     // jupyterlab's codemirror binding use 'cursors' state field
-    // and demiurge's monaco binding use 'selection' state field
+    // and holistix's monaco binding use 'selection' state field
     // so we alias properties in both way
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -1,27 +1,33 @@
 import { FC, useCallback } from 'react';
-import { TGraphNode } from '@monorepo/module';
-import { useNodeContext, useNodeHeaderButtons } from '@monorepo/space/frontend';
-import { useLayerContext } from '@monorepo/space/frontend';
-import { useDispatcher, useSharedDataDirect } from '@monorepo/collab-engine';
-import { NodeHeader } from '@monorepo/space/frontend';
-import { InputsAndOutputs } from '@monorepo/space/frontend';
-import { DisableZoomDragPan } from '@monorepo/space/frontend';
-import { ButtonBase } from '@monorepo/ui-base';
-import { TCoreEvent } from '@monorepo/core';
+
+import {
+  useNodeContext,
+  useNodeHeaderButtons,
+  useLayerContext,
+  NodeHeader,
+  InputsAndOutputs,
+  DisableZoomDragPan,
+} from '@holistix-forge/whiteboard/frontend';
+import { useSharedDataDirect } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
+import { ButtonBase } from '@holistix-forge/ui-base';
+import { TCoreEvent, TGraphNode } from '@holistix-forge/core-graph';
 
 import { TExcalidrawLayerPayload } from './layer';
 import { TExcalidrawSharedData } from './excalidraw-shared-model';
 
 import './excalidraw-node.scss';
 
-export const ExcalidrawNode: FC<{ node: TGraphNode }> = ({ node }) => {
+//
+
+export const ExcalidrawNode: FC<{ node: TGraphNode<never> }> = ({ node }) => {
   const { id, isOpened, open, selected } = useNodeContext();
   const { activeLayerId, activeLayerPayload, activateLayer } =
     useLayerContext();
   const sharedData = useSharedDataDirect<TExcalidrawSharedData>();
 
   // Get the drawing data for this node
-  const drawing = sharedData.excalidrawDrawing.get(id);
+  const drawing = sharedData['excalidraw:drawing'].get(id);
 
   // Check if this node is currently being edited
   const isBeingEdited =

@@ -6,13 +6,13 @@
       "path": "../simple-types"
     },
     {
-      "path": "../demiurge-types"
-    },
-    {
-      "path": "../modules/servers"
+      "path": "../types"
     },
     {
       "path": "../log"
+    },
+    {
+      "path": "../observability"
     },
     {
       "path": "../backend-engine"

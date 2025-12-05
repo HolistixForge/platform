@@ -10,7 +10,7 @@
       "path": "../simple-types"
     },
     {
-      "path": "../demiurge-types"
+      "path": "../types"
     },
     {
       "path": "../backend-engine"

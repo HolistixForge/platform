@@ -1,73 +1,151 @@
+import { useMemo } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 
+import { SharedTypes } from '@holistix-forge/collab-engine';
+import { EPriority, Logger } from '@holistix-forge/log';
+import { TCoreSharedData } from '@holistix-forge/core-graph';
+import { TWhiteboardSharedData, defaultGraphView } from '@holistix-forge/whiteboard';
 import {
-  MockCollaborativeContext,
-  TCollaborativeChunk,
-  SharedTypes,
-} from '@monorepo/collab-engine';
-import { Logger } from '@monorepo/log';
-import { TCoreSharedData } from '@monorepo/core';
-import { TSpaceSharedData, defaultGraphView } from '@monorepo/space';
-import { STORY_VIEW_ID } from '@monorepo/space/stories';
-import { HolistixSpace } from '@monorepo/space/frontend';
-import {
-  ModuleFrontend,
-  TSpaceMenuEntries,
-  TSpaceMenuEntry,
-} from '@monorepo/module/frontend';
-import { ModuleBackend } from '@monorepo/module';
+  STORY_VIEW_ID,
+  StoryWhiteboard,
+} from '@holistix-forge/whiteboard/stories';
+import { StoryApiContext } from '@holistix-forge/frontend-data';
+import { TCollabBackendExports } from '@holistix-forge/collab';
 
+//
+import { loadModules, TModule } from '@holistix-forge/module';
+import { ModuleProvider } from '@holistix-forge/module/frontend';
 import {
   moduleBackend as coreBackend,
   moduleFrontend as coreFrontend,
-} from '@monorepo/core';
-import { moduleBackend as spaceBackend } from '@monorepo/space';
-import { moduleFrontend as spaceFrontend } from '@monorepo/space/frontend';
+} from '@holistix-forge/core-graph';
+import { moduleBackend as collabBackend } from '@holistix-forge/collab';
+import { moduleFrontend as collabFrontend } from '@holistix-forge/collab/frontend';
+import {
+  moduleBackend as reducersBackend,
+  TReducersBackendExports,
+} from '@holistix-forge/reducers';
+import {
+  moduleFrontend as reducersFrontend,
+  linkDispatchToProcessEvent,
+  TReducersFrontendExports,
+} from '@holistix-forge/reducers/frontend';
+import { moduleBackend as spaceBackend } from '@holistix-forge/whiteboard';
+import { moduleFrontend as spaceFrontend } from '@holistix-forge/whiteboard/frontend';
+//
 import { moduleBackend as socialsBackend } from '../';
 import { moduleFrontend as socialsFrontend } from '../frontend';
 
 //
 
-Logger.setPriority(7);
+Logger.setPriority(EPriority.Debug);
 
-const modulesBackend: ModuleBackend[] = [
+const collabConfig = {
+  type: 'none',
+  room_id: 'whiteboard-story',
+  simulateUsers: true,
+  user: { username: 'test', color: 'red' },
+};
+
+const modulesBackend: { module: TModule<never, object>; config: object }[] = [
   {
-    collabChunk: {
-      name: 'gateway',
-    },
+    module: collabBackend,
+    config: collabConfig,
   },
-  coreBackend,
-  spaceBackend,
-  socialsBackend,
-];
-const modulesFrontend: ModuleFrontend[] = [
-  coreFrontend,
-  spaceFrontend,
-  socialsFrontend,
+  { module: reducersBackend, config: {} },
+  {
+    module: {
+      name: 'gateway',
+      version: '0.0.1',
+      description: 'Gateway module',
+      dependencies: ['collab', 'reducers'],
+      load: ({ moduleExports }) => {
+        moduleExports({ project_id: 'test' });
+      },
+    },
+    config: {},
+  },
+  { module: coreBackend, config: {} },
+  {
+    module: {
+      name: 'gateway',
+      version: '0.0.1',
+      description: 'Gateway module',
+      dependencies: ['collab', 'reducers'],
+      load: () => {
+        //
+      },
+    },
+    config: {},
+  },
+  { module: spaceBackend, config: {} },
+  { module: socialsBackend, config: {} },
+  {
+    module: {
+      name: 'story-init',
+      version: '0.0.1',
+      description: 'Story init module',
+      dependencies: ['collab'],
+      load: ({
+        depsExports,
+      }: {
+        depsExports: {
+          collab: TCollabBackendExports<TWhiteboardSharedData & TCoreSharedData>;
+        };
+      }) => {
+        loadStoryData(
+          depsExports.collab.collab.sharedData,
+          depsExports.collab.collab.sharedTypes
+        );
+      },
+    },
+    config: {},
+  },
 ];
 
-//
+const modulesFrontend: { module: TModule<never, object>; config: object }[] = [
+  {
+    module: collabFrontend,
+    config: collabConfig,
+  },
+  { module: reducersFrontend, config: {} },
+  {
+    module: {
+      name: 'gateway',
+      version: '0.0.1',
+      description: 'Gateway module',
+      dependencies: [],
+      load: () => {
+        //
+      },
+    },
+    config: {},
+  },
+  { module: coreFrontend, config: {} },
+  { module: spaceFrontend, config: {} },
+  { module: socialsFrontend, config: {} },
+];
 
 const loadStoryData = (
-  sd: TSpaceSharedData & TCoreSharedData,
+  sd: TWhiteboardSharedData & TCoreSharedData,
   sharedTypes: SharedTypes
 ) => {
   sharedTypes.transaction(async () => {
-    const graphViews = sd.graphViews;
+    const graphViews = sd['whiteboard:graphViews'];
     const gv = defaultGraphView();
 
-    sd.nodes.set('node-1', {
+    sd['core-graph:nodes'].set('node-1', {
       id: 'node-1',
       type: 'youtube',
       data: {
-        youtubeId: 'P8JEm4d6Wu4',
+        youtubeId: 'y6120QOlsfU',
       },
       name: 'Node 1',
       root: true,
       connectors: [],
     });
 
-    sd.nodes.set('node-2', {
+    sd['core-graph:nodes'].set('node-2', {
       id: 'node-2',
       type: 'text-editor',
       data: {},
@@ -76,11 +154,11 @@ const loadStoryData = (
       connectors: [],
     });
 
-    sd.nodes.set('node-3', {
+    sd['core-graph:nodes'].set('node-3', {
       id: 'node-3',
       type: 'iframe',
       data: {
-        src: 'https://www.holistix.so',
+        src: 'https://www.google.com',
       },
       name: 'Node 3',
       root: true,
@@ -158,44 +236,27 @@ const loadStoryData = (
 
 //
 
-const nodeTypes = modulesFrontend.reduce((acc, module) => {
-  return { ...acc, ...module.nodes };
-}, {});
+const Story = () => {
+  const { frontendModules } = useMemo(() => {
+    const backendModules = loadModules(modulesBackend);
+    const frontendModules = loadModules(modulesFrontend);
 
-const spaceMenuEntries: TSpaceMenuEntries = (args) => {
-  return modulesFrontend.reduce((acc, module) => {
-    return [...acc, ...module.spaceMenuEntries(args)];
-  }, [] as TSpaceMenuEntry[]);
-};
+    linkDispatchToProcessEvent(
+      backendModules as { reducers: TReducersBackendExports },
+      frontendModules as { reducers: TReducersFrontendExports }
+    );
 
-const frontChunks: TCollaborativeChunk[] = modulesFrontend.map(
-  (module) => module.collabChunk
-);
-const backChunks: TCollaborativeChunk[] = modulesBackend.map(
-  (module) => module.collabChunk
-);
+    return { backendModules, frontendModules };
+  }, []);
 
-const StoryWrapper = () => {
   return (
-    <MockCollaborativeContext
-      frontChunks={frontChunks}
-      backChunks={backChunks}
-      getRequestContext={() => ({})}
-      callback={({ sharedData, sharedTypes }) => {
-        loadStoryData(
-          sharedData as TSpaceSharedData & TCoreSharedData,
-          sharedTypes
-        );
-      }}
-    >
-      <div style={{ height: '100vh', width: '100vw' }}>
-        <HolistixSpace
-          viewId={STORY_VIEW_ID}
-          nodeTypes={nodeTypes}
-          spaceMenuEntries={spaceMenuEntries}
-        />
-      </div>
-    </MockCollaborativeContext>
+    <StoryApiContext>
+      <ModuleProvider exports={frontendModules}>
+        <div style={{ height: '100vh', width: '100vw' }}>
+          <StoryWhiteboard />
+        </div>
+      </ModuleProvider>
+    </StoryApiContext>
   );
 };
 
@@ -203,17 +264,15 @@ const StoryWrapper = () => {
 
 const meta = {
   title: 'Modules/Socials/Main',
-  component: StoryWrapper,
+  component: Story,
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
   argTypes: {},
-} satisfies Meta<typeof StoryWrapper>;
+} satisfies Meta<typeof Story>;
 
 export default meta;
 
-type Story = StoryObj<typeof StoryWrapper>;
-
-export const Default: Story = {
+export const Default: StoryObj<typeof Story> = {
   args: {},
 };

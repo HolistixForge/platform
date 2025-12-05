@@ -1,8 +1,8 @@
 {
-  "name": "@monorepo/tabs",
+  "name": "@holistix-forge/tabs",
   "version": "0.0.1",
   "nx": {
-    "name": "tabs",
+    "name": "@holistix-forge/tabs",
     "projectType": "library",
     "sourceRoot": "packages/modules/tabs/src"
   },
@@ -13,7 +13,7 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./style": "./dist/style.css"
+    "./style": "./dist/index.css"
   },
   "types": "./dist/index.d.ts",
   "module": "./dist/index.js",

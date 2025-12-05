@@ -1,10 +1,9 @@
 import {
-  TApi_Authorization,
   TApi_Project,
   CurrentUserDetails,
   TCollaborator,
   TG_User,
-} from '@monorepo/demiurge-types';
+} from '@holistix-forge/types';
 import { useApi } from './api-context';
 import {
   useQuery,
@@ -26,41 +25,83 @@ import { GanymedeApi } from './api-ganymede';
 //
 //
 
-/** what is returned by Ganyemde API */
-export type TG_ServerImage = {
-  image_id: number;
-  image_name: string;
-  image_tag: string;
-  image_sha256: string | null;
-};
-
-export const useQueryServerImages = () => {
+export const useQueryOrganizationGateway = (organization_id: string) => {
   const { ganymedeApi } = useApi();
-
   return useQuery({
-    queryKey: ['images'],
+    queryKey: ['organization-gateway', organization_id],
     queryFn: () =>
       ganymedeApi.fetch({
-        url: `images`,
+        url: 'orgs/{organization_id}/gateway',
         method: 'GET',
+        pathParameters: { organization_id },
       }) as Promise<{
-        _0: TG_ServerImage[];
+        gateway_hostname: string | null;
       }>,
+    enabled: !!organization_id,
+    // Poll every 30 seconds to detect gateway deallocation
+    // Gateway can deallocate itself when idle, so we need to check periodically
+    refetchInterval: (query) => {
+      // Only poll if gateway was previously available (to detect deallocation)
+      // If gateway is null, we can poll less frequently (every 2 minutes)
+      const data = query.state.data;
+      if (data?.gateway_hostname) {
+        return 30000; // 30 seconds when gateway is active
+      } else {
+        return 120000; // 2 minutes when gateway is not available
+      }
+    },
+    // Continue polling even when window is not focused
+    refetchIntervalInBackground: true,
   });
 };
 
-//
+export const useQueryOrganization = (organization_id: string) => {
+  const { ganymedeApi } = useApi();
+  return useQuery<{
+    organization_id: string;
+    owner_user_id: string;
+    name: string;
+    created_at: string;
+  }>({
+    queryKey: ['organization', organization_id],
+    queryFn: () =>
+      ganymedeApi.fetch({
+        url: 'orgs/{organization_id}',
+        method: 'GET',
+        pathParameters: { organization_id },
+      }) as Promise<{
+        organization_id: string;
+        owner_user_id: string;
+        name: string;
+        created_at: string;
+      }>,
+    enabled: !!organization_id,
+  });
+};
 
-export const useQueryScope = () => {
+export const useQueryScope = (organization_id: string) => {
   const { ganymedeApi } = useApi();
 
   return useQuery({
-    queryKey: ['scope'],
+    queryKey: ['scope', organization_id],
     queryFn: () =>
-      ganymedeApi.fetch({
-        url: `scope`,
-        method: 'GET',
-      }) as Promise<string[]>,
+      ganymedeApi.fetchGateway(
+        {
+          url: `permissions`,
+          method: 'GET',
+        },
+        organization_id
+      ) as Promise<{
+        permissions: Array<{
+          permission: string;
+          module: string;
+          resourcePath: string;
+          action: string;
+          description?: string;
+        }>;
+      }>,
+    enabled: !!ganymedeApi.getGatewayHostname(organization_id),
+    select: (data) => data.permissions.map((p) => p.permission),
   });
 };
 
@@ -69,18 +110,14 @@ export const useQueryScope = () => {
 export const useQueryUser = (user_id: string | null) => {
   const { ganymedeApi } = useApi();
 
-  return useQuery({
+  return useQuery<TG_User>({
     queryKey: ['user', user_id],
     queryFn: () =>
-      (
-        ganymedeApi.fetch({
-          url: `user-by-id`,
-          method: 'GET',
-          queryParameters: { user_id: user_id as string },
-        }) as Promise<{
-          _0: TG_User[];
-        }>
-      ).then((us) => us._0[0]),
+      ganymedeApi.fetch({
+        url: `users/{user_id}`,
+        method: 'GET',
+        pathParameters: { user_id: user_id as string },
+      }) as Promise<TG_User>,
     enabled: !!user_id,
   });
 };
@@ -91,15 +128,11 @@ export const useQueriesUsers = (ids: string[]) => {
   const queries = ids.map((user_id) => ({
     queryKey: ['user', user_id],
     queryFn: () =>
-      (
-        ganymedeApi.fetch({
-          url: `user-by-id`,
-          method: 'GET',
-          queryParameters: { user_id },
-        }) as Promise<{
-          _0: TG_User[];
-        }>
-      ).then((us) => us._0[0]),
+      ganymedeApi.fetch({
+        url: `users/{user_id}`,
+        method: 'GET',
+        pathParameters: { user_id },
+      }) as Promise<TG_User>,
   }));
 
   return useQueries({ queries });
@@ -110,77 +143,116 @@ export const useQueriesUsers = (ids: string[]) => {
 export const useQueryUsersSearch = (token: string) => {
   const { ganymedeApi } = useApi();
 
-  return useQuery({
+  return useQuery<TG_User[]>({
     queryKey: ['search-users', token],
     queryFn: () =>
       token
         ? (
             ganymedeApi.fetch({
-              url: `users-search`,
+              url: `users/search`,
               method: 'GET',
-              queryParameters: { searched: token },
+              queryParameters: { query: token },
             }) as Promise<{
-              _0: TG_User[];
+              users: TG_User[];
             }>
-          ).then((o) => o._0)
+          ).then((o) => o.users)
         : [],
   });
 };
 
 //
 
-export const useQueryProjectUsersScopes = (project_id: string) => {
+export const useQueryProjectUsersScopes = (
+  organization_id: string | null,
+  project_id: string
+) => {
   const { ganymedeApi } = useApi();
 
   return useQuery({
-    queryKey: ['authorizations', project_id],
+    queryKey: ['authorizations', organization_id, project_id],
     queryFn: () =>
-      (
-        ganymedeApi.fetch({
-          url: `projects/{project_id}/authorizations`,
-          method: 'POST',
+      ganymedeApi.fetchGateway(
+        {
+          url: `permissions/projects/{project_id}`,
+          method: 'GET',
           pathParameters: {
             project_id,
           },
-        }) as Promise<{
-          _0: TApi_Authorization[];
-        }>
-      ).then((o) => o._0),
+        },
+        organization_id!,
+        project_id
+      ) as Promise<{
+        permissions: { [user_id: string]: string[] };
+      }>,
+    enabled:
+      !!organization_id &&
+      !!project_id &&
+      !!ganymedeApi.getGatewayHostname(organization_id),
   });
 };
 
 //
 
-export const useCollaborators = (project_id: string) => {
-  const authorizations = useQueryProjectUsersScopes(project_id);
+export const useCollaborators = (
+  organization_id: string | null,
+  project_id: string
+) => {
+  const { ganymedeApi } = useApi();
 
-  // all users id having any authorizations on the project
+  // Get project members from Ganymede
+  const membersQuery = useQuery({
+    queryKey: ['project-members', project_id],
+    queryFn: () =>
+      ganymedeApi.fetch({
+        url: 'projects/{project_id}/members',
+        method: 'GET',
+        pathParameters: { project_id },
+      }) as Promise<{
+        members: Array<{
+          user_id: string;
+          username: string;
+          email: string;
+          added_at: string;
+        }>;
+      }>,
+    enabled: !!project_id,
+  });
+
+  // Get permissions from Gateway
+  const permissionsQuery = useQueryProjectUsersScopes(
+    organization_id,
+    project_id
+  );
+
+  // Get user details for all members
   const users_ids =
-    authorizations.status === 'success'
-      ? authorizations.data.map((a) => a.user_id)
+    membersQuery.status === 'success' && membersQuery.data
+      ? membersQuery.data.members.map((m) => m.user_id)
       : [];
 
   const usersQueries = useQueriesUsers(users_ids);
 
   let collaborators: TCollaborator[] = [];
 
-  // when we have server users authorizations
-  if (authorizations.data) {
-    // we build an array of TCollaborator for those info are ready
+  // Combine members, user details, and permissions
+  if (
+    membersQuery.status === 'success' &&
+    membersQuery.data &&
+    permissionsQuery.status === 'success' &&
+    permissionsQuery.data
+  ) {
+    const permissionsMap = permissionsQuery.data.permissions;
+
     collaborators = usersQueries
       .filter((uq) => uq.status === 'success')
       .map((uq) => {
-        // we get the authorizations of this user
-        // (we known we have it)
-        const userAuths = authorizations.data.find(
-          (a) => a.user_id === (uq.data as TG_User).user_id
-        ) as TApi_Authorization;
+        const user = uq.data as TG_User;
+        const userPermissions = permissionsMap[user.user_id] || [];
         const c: TCollaborator = {
-          ...(uq.data as TG_User),
-          scope: userAuths.scope,
-          is_owner: userAuths.is_owner,
+          ...user,
+          scope: userPermissions,
+          is_owner: false, // TODO: Determine from organization ownership
         };
-
         return c;
       });
   }
@@ -188,32 +260,42 @@ export const useCollaborators = (project_id: string) => {
   const usersLoading = usersQueries.filter((q) => q.status !== 'success');
 
   const loading =
-    authorizations.status !== 'success' || usersLoading.length > 0;
+    membersQuery.status !== 'success' ||
+    permissionsQuery.status !== 'success' ||
+    usersLoading.length > 0;
 
   return { collaborators, loading };
 };
 
 //
 
-export const useMutationUserScope = (project_id: string) => {
+export const useMutationUserScope = (
+  organization_id: string | null,
+  project_id: string
+) => {
   const { ganymedeApi } = useApi();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (arg: { user_id: string; scope: string[] }) => {
       const { user_id, scope } = arg;
-      return ganymedeApi.fetch({
-        url: `projects/{project_id}/authorizations`,
-        method: 'PATCH',
-        pathParameters: {
-          project_id,
+      return ganymedeApi.fetchGateway(
+        {
+          url: `permissions/projects/{project_id}/users/{user_id}`,
+          method: 'PATCH',
+          pathParameters: {
+            project_id,
+            user_id,
+          },
+          jsonBody: { permissions: scope },
         },
-        jsonBody: { user_id, scope },
-      });
+        organization_id!,
+        project_id
+      );
     },
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['authorizations', project_id],
+        queryKey: ['authorizations', organization_id, project_id],
       });
     },
   });
@@ -222,13 +304,13 @@ export const useMutationUserScope = (project_id: string) => {
 //
 
 export const useCurrentUser = () => {
-  const { accountApi } = useApi();
+  const { ganymedeApi } = useApi();
   return useQuery({
     queryKey: ['current-user'],
     queryFn: () =>
-      accountApi.fetch({
+      ganymedeApi.fetch({
         method: 'POST',
-        url: 'me',
+        url: 'auth/local/me',
       }) as Promise<{
         user: CurrentUserDetails | { user_id: null };
       }>,
@@ -245,13 +327,13 @@ const invalidateCurrentUser = (qc: QueryClient, ga: GanymedeApi) => {
 //
 
 export const useMutationLogout = () => {
-  const { accountApi, ganymedeApi } = useApi();
+  const { ganymedeApi } = useApi();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => {
-      return accountApi.fetch({
+      return ganymedeApi.fetch({
         method: 'POST',
-        url: 'logout',
+        url: 'auth/local/logout',
       });
     },
 
@@ -262,13 +344,13 @@ export const useMutationLogout = () => {
 //
 
 export const useMutationSignup = () => {
-  const { accountApi, ganymedeApi } = useApi();
+  const { ganymedeApi } = useApi();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (d: SignupFormData) => {
-      return accountApi.fetch({
+      return ganymedeApi.fetch({
         method: 'POST',
-        url: 'signup',
+        url: 'auth/local/signup',
         jsonBody: d,
       });
     },
@@ -280,13 +362,13 @@ export const useMutationSignup = () => {
 //
 
 export const useMutationLogin = () => {
-  const { accountApi, ganymedeApi } = useApi();
+  const { ganymedeApi } = useApi();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (d: LoginFormData) => {
-      return accountApi.fetch({
+      return ganymedeApi.fetch({
         method: 'POST',
-        url: 'login',
+        url: 'auth/local/login',
         jsonBody: d,
       });
     },
@@ -297,13 +379,13 @@ export const useMutationLogin = () => {
 //
 
 export const useMutationTotpSetup = () => {
-  const { accountApi, ganymedeApi } = useApi();
+  const { ganymedeApi } = useApi();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (d: TotpEnableFormData) => {
-      return accountApi.fetch({
+      return ganymedeApi.fetch({
         method: 'POST',
-        url: 'totp/setup',
+        url: 'auth/totp/setup',
         jsonBody: d,
       });
     },
@@ -315,13 +397,13 @@ export const useMutationTotpSetup = () => {
 //
 
 export const useMutationTotpLogin = () => {
-  const { accountApi, ganymedeApi } = useApi();
+  const { ganymedeApi } = useApi();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (d: TotpLoginFormData) => {
-      return accountApi.fetch({
+      return ganymedeApi.fetch({
         method: 'POST',
-        url: 'totp/login',
+        url: 'auth/totp/verify',
         jsonBody: d,
       });
     },
@@ -333,13 +415,13 @@ export const useMutationTotpLogin = () => {
 //
 
 export const useMutationChangePassword = () => {
-  const { accountApi, ganymedeApi } = useApi();
+  const { ganymedeApi } = useApi();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (d: NewPasswordFormData) => {
-      return accountApi.fetch({
+      return ganymedeApi.fetch({
         method: 'POST',
-        url: 'password',
+        url: 'auth/local/password',
         jsonBody: d,
       });
     },
@@ -356,15 +438,17 @@ export const useMutationChangePassword = () => {
 export const useQueryUserProjects = () => {
   const { ganymedeApi } = useApi();
 
-  return useQuery({
+  return useQuery<TApi_Project[]>({
     queryKey: ['user-projects', 'me'],
     queryFn: () =>
-      ganymedeApi.fetch({
-        url: 'me/projects',
-        method: 'GET',
-      }) as Promise<{
-        _0: Pick<TApi_Project, 'name' | 'owner_id' | 'project_id'>[];
-      }>,
+      (
+        ganymedeApi.fetch({
+          url: 'projects',
+          method: 'GET',
+        }) as Promise<{
+          projects: TApi_Project[];
+        }>
+      ).then((data) => data.projects),
   });
 };
 
@@ -375,9 +459,11 @@ export const useMutationNewProject = () => {
     mutationFn: (d: NewProjectFormData) => {
       return ganymedeApi.fetch({
         method: 'POST',
-        url: 'projects/new',
+        url: 'projects',
         jsonBody: d,
-      });
+      }) as Promise<{
+        project_id: string;
+      }>;
     },
 
     onSuccess: () =>
@@ -408,43 +494,43 @@ export const useMutationDeleteProject = (project_id: string) => {
 
 export const useQueryProjectByName = (owner: string, project_name: string) => {
   const { ganymedeApi } = useApi();
-  return useQuery({
+  return useQuery<TApi_Project>({
     queryKey: ['projects', owner, project_name],
     queryFn: () =>
       ganymedeApi.fetch({
         url: `projects`,
         method: 'GET',
         queryParameters: {
-          user_id: owner,
-          project_name,
+          owner,
+          name: project_name,
         },
-      }) as Promise<{ _0: TApi_Project }>,
+      }) as Promise<TApi_Project>,
   });
 };
 
-export const useMutationStartProject = (
-  project_id: string,
-  owner: string,
-  project_name: string
-) => {
+export const useMutationStartOrganization = (organization_id: string) => {
   const { ganymedeApi } = useApi();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => {
       return ganymedeApi.fetch({
-        url: `projects/{project_id}/start`,
+        url: `gateway/start`,
         method: 'POST',
-        pathParameters: {
-          project_id,
+        jsonBody: {
+          organization_id,
         },
-      });
+      }) as Promise<{
+        gateway_hostname: string;
+      }>;
     },
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user-projects', 'me'] });
+    onSuccess: (data) => {
+      // Invalidate organization gateway query to refresh gateway hostname
       queryClient.invalidateQueries({
-        queryKey: ['projects', owner, project_name],
+        queryKey: ['organization-gateway', organization_id],
       });
+      // Also invalidate user projects in case gateway status affects project list
+      queryClient.invalidateQueries({ queryKey: ['user-projects', 'me'] });
     },
   });
 };

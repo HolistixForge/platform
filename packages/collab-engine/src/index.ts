@@ -9,7 +9,7 @@ export type {
 } from './lib/awareness-types';
 
 export { Awareness } from './lib/Awareness';
-export type { TUserPosition } from './lib/Awareness';
+export type { TUserPosition, TUserSelection } from './lib/Awareness';
 
 export { YjsAwareness } from './lib/yjs/YjsAwareness';
 export { YjsSharedTypes } from './lib/yjs/YjsSharedTypes';
@@ -22,63 +22,14 @@ export {
 export { NoneSharedTypes } from './lib/none/NoneSharedTypes';
 export { NoneAwareness } from './lib/none/NoneAwareness';
 
+export { NoneSharedEditor } from './lib/SharedEditor';
+
 export { SharedTypes } from './lib/SharedTypes';
 export type { SharedMap, SharedArray } from './lib/SharedTypes';
 
-export { compileChunks } from './lib/chunk';
-export type { TValidSharedData, TCollaborativeChunk } from './lib/chunk';
-
-export { Reducer } from './lib/reducer';
-export type { ReduceArgs } from './lib/reducer';
-
-export { BackendEventProcessor } from './lib/backendEventProcessor';
-
-export {
-  FrontendDispatcher,
-  JitterDispatcher,
-} from './lib/frontend/frontendDispatcher';
-export type { FrontendEventSequence } from './lib/frontend/frontendEventSequence';
-
-export type {
-  TEventUserLeave,
-  TEventPeriodic,
-  TCollabNativeEvent,
-} from './lib/events';
-
-//
-
-export {
-  CollaborativeContext,
-  useAwareness,
-  useAwarenessUserList,
-  useAwarenessSelections,
-  useSharedData,
-  useDispatcher,
-  useExtraContext,
-  useBindEditor,
-  useEventSequence,
-  useShareDataManager,
-  useSharedDataDirect,
-} from './lib/frontend/context';
-export type {
-  TCollabConfig,
-  TYjsCollabConfig,
-  TNoneCollabConfig,
-  TCollaborationContext,
-} from './lib/frontend/context';
-
-export type { SharedDataManager } from './lib/frontend/localOverrider';
-
-export type { TokenMethods } from './lib/frontend/ydocs';
-
-export { getYDoc } from './lib/frontend/ydocs';
-
-export { buildUserCss } from './lib/frontend/YjsCssStylesheet';
-
-export { sharedDataToJson } from './lib/chunk';
+export { sharedDataToJson } from './lib/sharedData';
+export type { TValidSharedData } from './lib/sharedData';
 
 export { EDITORS_YTEXT_YMAP_KEY } from './lib/yjs/YjsSharedEditor';
 
-export { MockCollaborativeContext } from './lib/frontend/mockCollaborativeContext';
-
-export type { TValidSharedDataToCopy } from './lib/frontend/localOverrider';
+export { SharedEditor } from './lib/SharedEditor';

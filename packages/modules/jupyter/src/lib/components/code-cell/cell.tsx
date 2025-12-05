@@ -5,12 +5,10 @@ import { Widget } from '@lumino/widgets';
 
 import {
   useAwareness,
-  useDispatcher,
   useBindEditor,
-  useSharedData,
-} from '@monorepo/collab-engine';
-import { TGraphNode } from '@monorepo/module';
-import { TCoreEvent } from '@monorepo/core';
+  useLocalSharedData,
+} from '@holistix-forge/collab/frontend';
+import { TGraphNode, TCoreEvent } from '@holistix-forge/core-graph';
 import {
   DisableZoomDragPan,
   InputsAndOutputs,
@@ -19,9 +17,13 @@ import {
   useMakeButton,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@monorepo/space/frontend';
-import { makeUuid } from '@monorepo/simple-types';
-import { TServersSharedData, TServer } from '@monorepo/servers';
+} from '@holistix-forge/whiteboard/frontend';
+import { makeUuid } from '@holistix-forge/simple-types';
+import {
+  TUserContainersSharedData,
+  TUserContainer,
+} from '@holistix-forge/user-containers';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
 
 import { TJupyterEvent } from '../../jupyter-events';
 import {
@@ -31,21 +33,25 @@ import {
   TJupyterServerData,
 } from '../../jupyter-types';
 import { TJupyterSharedData } from '../../jupyter-shared-model';
-import { useKernelPack } from '../../jupyter-shared-model-front';
+import { useKernelPack } from '../../jupyter-hooks';
 import CodeEditorMonaco from '../code-editor-monaco/code-editor-monaco';
 import { BrowserWidgetManager } from '../../front/browser-widget-manager';
 import { KernelStateIndicator } from '../node-kernel/kernel-state-indicator';
+import * as nbformat from '@jupyterlab/nbformat';
 
 import './cell.scss';
 
 //
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type TEditor = any;
+
 export const useCellLogic = ({
-  projectServerId,
+  userContainerId,
   cellId,
   selected,
 }: {
-  projectServerId: number;
+  userContainerId: string;
   cellId: string;
   selected: boolean;
 }) => {
@@ -54,16 +60,17 @@ export const useCellLogic = ({
   const { awareness } = useAwareness();
 
   const jupyter: TJupyterServerData | undefined =
-    useSharedData<TJupyterSharedData>(['jupyterServers'], (sd) =>
-      sd.jupyterServers.get(`${projectServerId}`)
+    useLocalSharedData<TJupyterSharedData>(['jupyter:servers'], (sd) =>
+      sd['jupyter:servers'].get(`${userContainerId}`)
     );
 
   const cell = jupyter?.cells[cellId];
 
-  const ps: TServer | undefined = useSharedData<TServersSharedData>(
-    ['projectServers'],
-    (sd) => sd.projectServers.get(`${projectServerId}`)
-  );
+  const ps: TUserContainer | undefined =
+    useLocalSharedData<TUserContainersSharedData>(
+      ['user-containers:containers'],
+      (sd) => sd['user-containers:containers'].get(`${userContainerId}`)
+    );
 
   const client_id = ps?.oauth?.find(
     (o) => o.service_name === 'jupyterlab'
@@ -71,7 +78,7 @@ export const useCellLogic = ({
 
   const dispatcher = useDispatcher<TJupyterEvent | TCoreEvent>();
 
-  const editorRef = useRef<any>(null);
+  const editorRef = useRef<TEditor | null>(null);
 
   //
 
@@ -87,11 +94,11 @@ export const useCellLogic = ({
   const bindEditor = useBindEditor();
 
   const handleEditorMount = useCallback(
-    (editor: any) => {
+    (editor: TEditor) => {
       editorRef.current = editor;
       awareness && bindEditor('monaco', cellId, editor);
     },
-    [awareness, cellId]
+    [awareness, bindEditor, cellId]
   );
 
   //
@@ -130,7 +137,7 @@ export const useCellLogic = ({
   );
 
   return {
-    projectServerId,
+    userContainerId,
     cell,
     handleEditorMount,
     handleClearOutput,
@@ -143,12 +150,12 @@ export const useCellLogic = ({
 
 export const CellStory = ({
   cellId,
-  projectServerId,
+  userContainerId,
 }: {
   cellId: string;
-  projectServerId: number;
+  userContainerId: string;
 }) => {
-  const props = useCellLogic({ cellId, projectServerId, selected: false });
+  const props = useCellLogic({ cellId, userContainerId, selected: false });
   return <CellInternal {...props} />;
 };
 
@@ -177,17 +184,17 @@ const CellInternal = (props: ReturnType<typeof useCellLogic>) => {
       >
         <CodeEditorMonaco code={''} onMount={handleEditorMount} />
       </div>
-      <CellOutput cell={props.cell} projectServerId={props.projectServerId} />
+      <CellOutput cell={props.cell} userContainerId={props.userContainerId} />
     </>
   );
 };
 
 //
 
-const CellOutput = (props: { cell: Cell; projectServerId: number }) => {
+const CellOutput = (props: { cell: Cell; userContainerId: string }) => {
   const { outputs } = props.cell;
 
-  const kernelPack = useKernelPack(props.projectServerId, props.cell.kernel_id);
+  const kernelPack = useKernelPack(props.userContainerId, props.cell.kernel_id);
 
   const { uuid, uuidInject } = useMemo(() => uuidInjecter(), []);
 
@@ -219,7 +226,7 @@ const CellOutput = (props: { cell: Cell; projectServerId: number }) => {
       const customOutput: IOutput[] = uuidInject(
         outputs as unknown as IOutput[]
       );
-      oa.model.fromJSON(customOutput as any);
+      oa.model.fromJSON(customOutput as unknown as nbformat.IOutput[]);
     }
   }, [oa, outputs, uuidInject]);
 
@@ -262,9 +269,11 @@ export const NodeCell = ({
   //
   const { id, isOpened, open, selected } = useNodeContext();
 
+  const { cell_id, user_container_id } = node.data as TCellNodeDataPayload;
+
   const cellLogic = useCellLogic({
-    cellId: node.data!.cell_id as string,
-    projectServerId: node.data!.project_server_id,
+    cellId: cell_id,
+    userContainerId: user_container_id,
     selected,
   });
 
@@ -299,7 +308,7 @@ export const NodeCell = ({
 //
 
 /**
- * create and return a function that inject a `_demiurge_outputArea_uid` field
+ * create and return a function that inject a `__outputArea_uid` field
  * in all object of an array.
  * it is use to wrap output area in a div with a known unique id.
  * this div is used by Javascript widget renderer to owerload
@@ -313,7 +322,7 @@ const uuidInjecter = () => {
       return output.map((o) => ({
         ...o,
         // injected uid for use by js-renderer
-        _demiurge_outputArea_uid: id,
+        __outputArea_uid: id,
       }));
     },
     uuid: id,

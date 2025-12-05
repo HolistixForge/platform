@@ -1,17 +1,25 @@
-FROM dev-pod:latest
+FROM ubuntu:24.04
 
 USER root 
 
-RUN apt update && apt install -y \
-openvpn \
-easy-rsa \
-nginx \
-inotify-tools
+# Install Node.js 24.x
+RUN apt-get update && apt-get install -y ca-certificates curl gnupg && \
+  curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
+  echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_24.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list && \
+  apt-get update && apt-get install -y nodejs
 
-CMD env && ls -l \
-    && /home/dev/main.sh \
-    && ls -l ${WORKSPACE} \
-    && echo ${SCRIPTS_DIR} && cd ${SCRIPTS_DIR} \
-    && pwd && ls -l \
-    && sudo -E -u ${DEV_USER} ./main.sh -r bin/reset-gateway.sh \
-    && tail -f /tmp/gateway.log
+# Install gateway dependencies
+RUN apt-get update && apt-get install -y \
+  openvpn \
+  easy-rsa \
+  nginx \
+  inotify-tools \
+  sudo \
+  inetutils-ping
+
+# Copy and set entrypoint (avoid BuildKit-specific --chmod flag)
+COPY ./app/entrypoint-dev.sh /entrypoint.sh
+RUN chmod 755 /entrypoint.sh
+
+# Entrypoint will handle hot-reloading via trigger file
+ENTRYPOINT ["/entrypoint.sh"]

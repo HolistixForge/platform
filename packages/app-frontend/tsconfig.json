@@ -3,10 +3,25 @@
   "include": [],
   "references": [
     {
-      "path": "../simple-types"
+      "path": "../collab-engine"
     },
     {
-      "path": "../api-fetch"
+      "path": "../log"
+    },
+    {
+      "path": "../observability"
+    },
+    {
+      "path": "../modules/jupyter"
+    },
+    {
+      "path": "../modules/gateway"
+    },
+    {
+      "path": "../modules/chats"
+    },
+    {
+      "path": "../modules/socials"
     },
     {
       "path": "../modules/excalidraw"
@@ -18,37 +33,37 @@
       "path": "../modules/notion"
     },
     {
-      "path": "../modules/socials"
-    },
-    {
-      "path": "../modules/jupyter"
-    },
-    {
-      "path": "../modules/chats"
+      "path": "../modules/user-containers"
     },
     {
       "path": "../modules/tabs"
     },
     {
+      "path": "../modules/whiteboard"
+    },
+    {
+      "path": "../modules/core-graph"
+    },
+    {
+      "path": "../modules/reducers"
+    },
+    {
       "path": "../modules/module"
     },
     {
-      "path": "../modules/space"
+      "path": "../simple-types"
     },
     {
-      "path": "../modules/core"
+      "path": "../api-fetch"
     },
     {
-      "path": "../modules/servers"
-    },
-    {
-      "path": "../collab-engine"
+      "path": "../modules/collab"
     },
     {
       "path": "../ui-views"
     },
     {
-      "path": "../demiurge-types"
+      "path": "../types"
     },
     {
       "path": "../ui-base"
@@ -57,7 +72,7 @@
       "path": "../frontend-data"
     },
     {
-      "path": "../log"
+      "path": "../ui-toolkit"
     },
     {
       "path": "./tsconfig.app.json"

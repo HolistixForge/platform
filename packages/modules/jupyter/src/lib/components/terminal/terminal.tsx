@@ -13,22 +13,26 @@ import { Terminal } from '@jupyterlab/terminal';
 import { Widget } from '@lumino/widgets';
 import { MessageLoop } from '@lumino/messaging';
 
-import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
-import { TServer, TServersSharedData } from '@monorepo/servers';
-import { TGraphNode } from '@monorepo/module';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
+import {
+  TUserContainer,
+  TUserContainersSharedData,
+} from '@holistix-forge/user-containers';
+import { TGraphNode } from '@holistix-forge/core-graph';
 import {
   DisableZoomDragPan,
   InputsAndOutputs,
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@monorepo/space/frontend';
+} from '@holistix-forge/whiteboard/frontend';
 
 import { TJupyterSharedData } from '../../jupyter-shared-model';
-import { useJLsManager } from '../../jupyter-shared-model-front';
+import { useJLsManager } from '../../jupyter-hooks';
 import { jupyterlabIsReachable } from '../../ds-backend';
 import {
-  TServerSettings,
+  TUserContainerSettings,
   TTerminalNodeDataPayload,
   Terminal as MyTerminal,
 } from '../../jupyter-types';
@@ -46,7 +50,8 @@ const Xterm_Loading_Workaround = async () => {
       canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
     try {
       return gl instanceof WebGLRenderingContext;
-    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_e) {
       return false;
     }
   }
@@ -67,7 +72,7 @@ const Xterm_Loading_Workaround = async () => {
 //
 
 const connectTerminal = async (
-  s: TServerSettings,
+  s: TUserContainerSettings,
   sessionModel: { name: string }
 ) => {
   // At least in storybook. if we don't preload xterm, the terminal will not load
@@ -89,34 +94,36 @@ const connectTerminal = async (
 
 export const JupyterTerminal = ({
   terminalId,
-  projectServerId,
+  userContainerId,
 }: {
   terminalId: string;
-  projectServerId: number;
+  userContainerId: string;
 }) => {
   //
   const [isReachable, setIsReachable] = useState<boolean | undefined>(
     undefined
   );
 
-  const terminal: MyTerminal = useSharedData<TJupyterSharedData>(
-    ['jupyterServers'],
+  const terminal: MyTerminal = useLocalSharedData<TJupyterSharedData>(
+    ['jupyter:servers'],
     (sd) => {
-      return sd.jupyterServers.get(`${projectServerId}`)?.terminals[terminalId];
+      return sd['jupyter:servers'].get(`${userContainerId}`)?.terminals[
+        terminalId
+      ];
     }
   );
 
-  const server: TServer = useSharedData<TServersSharedData>(
-    ['projectServers'],
+  const server: TUserContainer = useLocalSharedData<TUserContainersSharedData>(
+    ['user-containers:containers'],
     (sd) => {
-      return sd.projectServers.get(`${projectServerId}`);
+      return sd['user-containers:containers'].get(`${userContainerId}`);
     }
   );
 
-  const { jupyter } = useJLsManager();
+  const jlsManager = useJLsManager();
 
   const ref = useRef<HTMLDivElement>(null);
-  const terminalWidgetRef = useRef<any>(null); // Store the Terminal widget instance
+  const terminalWidgetRef = useRef<Terminal | null>(null); // Store the Terminal widget instance
 
   //
 
@@ -139,14 +146,14 @@ export const JupyterTerminal = ({
         clearInterval(interval);
       }
     };
-  }, [isReachable]);
+  }, [isReachable, server]);
 
   //
 
   useEffect(() => {
     if (isReachable) {
       if (server) {
-        jupyter.jlsManager.getServerSetting(server).then((ss) => {
+        jlsManager.getServerSetting(server).then((ss) => {
           connectTerminal(ss, terminal.sessionModel).then((terminalWidget) => {
             if (terminalWidgetRef.current) {
               terminalWidgetRef.current.dispose();
@@ -159,7 +166,7 @@ export const JupyterTerminal = ({
         });
       }
     }
-  }, [server, jupyter.jlsManager, terminalId, isReachable]);
+  }, [server, jlsManager, terminalId, isReachable, terminal.sessionModel]);
 
   // ResizeObserver to auto-fit terminal on container resize
   useEffect(() => {
@@ -198,7 +205,8 @@ export const NodeTerminal = ({
 }: {
   node: TGraphNode<TTerminalNodeDataPayload>;
 }) => {
-  const { terminal_id, project_server_id } = node.data!;
+  const { terminal_id, user_container_id } =
+    node.data as TTerminalNodeDataPayload;
 
   const { id, isOpened, open, selected } = useNodeContext();
 
@@ -234,7 +242,7 @@ export const NodeTerminal = ({
           >
             <JupyterTerminal
               terminalId={terminal_id}
-              projectServerId={project_server_id}
+              userContainerId={user_container_id}
             />
           </div>
         </DisableZoomDragPan>

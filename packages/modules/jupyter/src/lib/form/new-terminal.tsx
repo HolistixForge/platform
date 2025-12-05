@@ -8,49 +8,51 @@ import {
   DialogControlled,
   SelectFieldset,
   SelectItem,
-} from '@monorepo/ui-base';
-import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
-import { TPosition } from '@monorepo/core';
+} from '@holistix-forge/ui-base';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
+import { TPosition } from '@holistix-forge/core-graph';
 import { TJupyterEvent } from '../jupyter-events';
 import { TJupyterSharedData } from '../jupyter-shared-model';
 import { TJupyterServerData } from '../jupyter-types';
-import { useJLsManager } from '../jupyter-shared-model-front';
-import { TServer, TServersSharedData } from '@monorepo/servers';
+import { useJLsManager } from '../jupyter-hooks';
+import {
+  TUserContainer,
+  TUserContainersSharedData,
+} from '@holistix-forge/user-containers';
 
 type NewTerminalFormData = { terminal_id: string };
 
 export const NewTerminalForm = ({
-  project_server_id,
+  user_container_id,
   position,
   viewId,
   closeForm,
 }: {
-  project_server_id: number;
+  user_container_id: string;
   position: TPosition;
   viewId: string;
   closeForm: () => void;
 }) => {
   const dispatcher = useDispatcher<TJupyterEvent>();
-  const { jupyter: jmc } = useJLsManager();
+  const jlsManager = useJLsManager();
 
-  const sd = useSharedData<TServersSharedData & TJupyterSharedData>(
-    ['projectServers', 'jupyterServers'],
+  const sd = useLocalSharedData<TUserContainersSharedData & TJupyterSharedData>(
+    ['user-containers:containers', 'jupyter:servers'],
     (sd) => sd
   );
 
-  const server: TServer | undefined = sd.projectServers.get(
-    project_server_id.toString()
-  );
+  const server: TUserContainer | undefined =
+    sd['user-containers:containers'].get(user_container_id);
 
-  const jupyter: TJupyterServerData | undefined = sd.jupyterServers.get(
-    project_server_id.toString()
-  );
+  const jupyter: TJupyterServerData | undefined =
+    sd['jupyter:servers'].get(user_container_id);
 
   useEffect(() => {
     if (jupyter && server) {
-      jmc.jlsManager.startPollingResources(server);
+      jlsManager.startPollingResources(server);
     }
-  }, [jupyter, jmc, server]);
+  }, [jupyter, jlsManager, server]);
 
   const action = useAction<NewTerminalFormData>(
     (d) => {
@@ -58,7 +60,7 @@ export const NewTerminalForm = ({
         if (d.terminal_id === 'new') {
           return dispatcher.dispatch({
             type: 'jupyter:new-terminal',
-            project_server_id: project_server_id,
+            user_container_id: user_container_id,
             client_id: 'not needed here in storybook',
             origin: {
               viewId: viewId,
@@ -68,7 +70,7 @@ export const NewTerminalForm = ({
         } else {
           return dispatcher.dispatch({
             type: 'jupyter:new-terminal-node',
-            project_server_id: project_server_id,
+            user_container_id: user_container_id,
             client_id: 'not needed here in storybook',
             terminal_id: d.terminal_id,
             origin: {
@@ -79,7 +81,7 @@ export const NewTerminalForm = ({
         }
       } else throw new Error('No such server');
     },
-    [dispatcher, position, project_server_id, jupyter, viewId],
+    [dispatcher, position, user_container_id, jupyter, viewId],
     {
       startOpened: true,
       checkForm: (d, e) => {
@@ -92,7 +94,7 @@ export const NewTerminalForm = ({
     if (!action.isOpened) {
       closeForm();
     }
-  }, [action.isOpened]);
+  }, [action.isOpened, closeForm]);
 
   return (
     <DialogControlled

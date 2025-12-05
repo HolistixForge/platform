@@ -1,5 +1,6 @@
-import { useSharedData, useDispatcher } from '@monorepo/collab-engine';
-import { ButtonIconProps } from '@monorepo/ui-base';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
+import { ButtonIconProps } from '@holistix-forge/ui-base';
 
 import { TChatSharedData } from '../../chats-shared-model';
 import { TChatEvent } from '../../chats-events';
@@ -30,9 +31,9 @@ export const ChatboxLogic = ({
   usersInfo,
   buttons,
 }: ChatboxLogicProps) => {
-  const chat: TChat | undefined = useSharedData<TChatSharedData>(
-    ['chats'],
-    (sd) => sd.chats.get(chatId)
+  const chat: TChat | undefined = useLocalSharedData<TChatSharedData>(
+    ['chats:chats'],
+    (sd) => sd['chats:chats'].get(chatId)
   );
   const dispatcher = useDispatcher<TChatEvent>();
 
@@ -89,15 +90,14 @@ export const ChatboxLogic = ({
   };
 
   const writingUsers: { username: string; color?: string }[] = [];
+
   if (chat) {
     Object.keys(chat.isWriting).forEach((k) => {
-      if (userId) {
-        const u = chat.isWriting[k];
-        if (u) {
-          writingUsers.push(
-            usersInfo.get(k) || { username: 'unknown', color: '#ccc' }
-          );
-        }
+      const u = chat.isWriting[k];
+      if (u) {
+        writingUsers.push(
+          usersInfo.get(k) || { username: 'unknown', color: '#ccc' }
+        );
       }
     });
   }

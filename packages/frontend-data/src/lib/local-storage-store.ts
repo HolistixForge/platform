@@ -1,8 +1,10 @@
-import { log } from '@monorepo/log';
-import { TJson } from '@monorepo/simple-types';
+import { TJson } from '@holistix-forge/simple-types';
+import { browserLog } from './browser-log';
 
 const debug = (k: Key, msg: string, ...args: any) =>
-  log(7, 'LOCAL_STORAGE_STORE', `[${keyHash(k)}]: ${msg}`, ...args);
+  browserLog('debug', 'LOCAL_STORAGE_STORE', `[${keyHash(k)}]: ${msg}`, {
+    data: { key: k, args },
+  });
 
 //
 

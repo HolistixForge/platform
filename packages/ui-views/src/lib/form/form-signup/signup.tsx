@@ -6,8 +6,8 @@ import {
   TextFieldset,
   TAction,
   ButtonBase,
-} from '@monorepo/ui-base';
-import { SignupFormData } from '@monorepo/frontend-data';
+} from '@holistix-forge/ui-base';
+import { SignupFormData } from '@holistix-forge/frontend-data';
 
 //
 

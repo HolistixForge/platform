@@ -5,31 +5,32 @@ import {
   DialogControlled,
   useAction,
   ButtonBase,
-} from '@monorepo/ui-base';
-import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
+} from '@holistix-forge/ui-base';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
 import {
-  TCoreSharedData,
-  TProjectMeta,
-  TEventDisableGatewayShutdown,
-} from '@monorepo/core';
-
+  TGatewaySharedData,
+  TGatewayMeta,
+  TEventDisableShutdown,
+} from '@holistix-forge/gateway';
 //
 
 export const GatewayCountdown = () => {
-  const meta: TProjectMeta = useSharedData<TCoreSharedData>(['meta'], (sd) =>
-    sd.meta.get('meta')
+  const meta: TGatewayMeta = useLocalSharedData<TGatewaySharedData>(
+    ['gateway:gateway'],
+    (sd) => sd['gateway:gateway'].get('unique')
   );
 
   const cb = useCallback(() => {
     /*  */
   }, []);
 
-  const dispatcher = useDispatcher<TEventDisableGatewayShutdown>();
+  const dispatcher = useDispatcher<TEventDisableShutdown>();
 
   const confirmAction = useAction(
     async () => {
       dispatcher.dispatch({
-        type: 'core:disable-gateway-shutdown',
+        type: 'gateway:disable-shutdown',
       });
     },
     [dispatcher],

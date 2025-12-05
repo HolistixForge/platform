@@ -1,10 +1,10 @@
-import { icons } from '@monorepo/ui-base';
+import { icons } from '@holistix-forge/ui-base';
 import {
   NodeMainToolbar,
   useMakeButton,
   TNodeContext,
   Outputs,
-} from '@monorepo/space/frontend';
+} from '@holistix-forge/whiteboard/frontend';
 
 import { MenuExpanded } from '../menuExpanded/menuExpanded';
 

@@ -3,10 +3,7 @@
   "include": [],
   "references": [
     {
-      "path": "../../simple-types"
-    },
-    {
-      "path": "../../collab-engine"
+      "path": "../../log"
     },
     {
       "path": "./tsconfig.lib.json"

@@ -1,6 +1,5 @@
 import {
   _PositionAwareness,
-  _AwarenessListenerArgs,
   _AwarenessStates,
   TAwarenessUser,
   _AwarenessState,
@@ -19,6 +18,11 @@ export type TUserPosition = {
   inactive: boolean;
 };
 
+export type TUserSelection = {
+  user: TAwarenessUser;
+  viewId: string;
+};
+
 //
 //
 
@@ -29,7 +33,7 @@ export abstract class Awareness {
   protected _lastUserList: TAwarenessUser[] = [];
   protected _lastPointerTracking: Map<string, Map<number, TUserPosition>> =
     new Map();
-  protected _lastSelectionTracking: { [nodeId: string]: any[] } = {};
+  protected _lastSelectionTracking: { [nodeId: string]: TUserSelection[] } = {};
 
   setUser(user: TAwarenessUser): void {
     this._user = user;
@@ -107,12 +111,14 @@ export abstract class Awareness {
     );
   }
 
-  protected callSelectionListeners(selections: { [nodeId: string]: any[] }) {
+  protected callSelectionListeners(selections: {
+    [nodeId: string]: TUserSelection[];
+  }) {
     // console.log('callSelectionListeners', this.selectionListeners.length);
     this.selectionListeners.forEach((l) => l());
   }
 
-  getSelectionTracking(): { [nodeId: string]: any[] } {
+  getSelectionTracking(): { [nodeId: string]: TUserSelection[] } {
     return this._lastSelectionTracking;
   }
 
@@ -149,6 +155,7 @@ export abstract class Awareness {
         if (!pointers.has(viewId)) {
           pointers.set(viewId, new Map());
         }
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         pointers.get(viewId)!.set(k, {
           key: k,
           user: v.user,
@@ -188,17 +195,18 @@ export abstract class Awareness {
   }
 
   protected _extractSelectionTracking(states: _AwarenessStates): {
-    [nodeId: string]: any[];
+    [nodeId: string]: TUserSelection[];
   } {
-    const r: { [nodeId: string]: any[] } = {};
+    const r: { [nodeId: string]: TUserSelection[] } = {};
     states.forEach((s: _AwarenessState) => {
       if (s.selections && s.user) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const space = (s.selections as any).space;
         if (space && Array.isArray(space.nodes)) {
           space.nodes.forEach((nodeId: string) => {
             if (!r[nodeId]) r[nodeId] = [];
             r[nodeId].push({
-              user: s.user,
+              user: s.user as TAwarenessUser,
               viewId: space.viewId,
             });
           });
@@ -209,8 +217,8 @@ export abstract class Awareness {
   }
 
   protected _selectionTrackingEquals(
-    a: { [nodeId: string]: any[] },
-    b: { [nodeId: string]: any[] }
+    a: { [nodeId: string]: TUserSelection[] },
+    b: { [nodeId: string]: TUserSelection[] }
   ): boolean {
     const aKeys = Object.keys(a);
     const bKeys = Object.keys(b);

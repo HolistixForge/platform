@@ -1,7 +1,5 @@
-import { log } from '@monorepo/log';
-import { JsonValue } from '../JsonValue';
-import { TStringMap } from '../Request/Request';
-import { TJson, TUri } from '@monorepo/simple-types';
+import { EPriority, log } from '@holistix-forge/log';
+import { TJson, TStringMap } from '@holistix-forge/simple-types';
 
 //
 //
@@ -22,8 +20,8 @@ export type TCookie = {
 export class Response {
   _statusCode = 200;
   _headers: TStringMap = {};
-  _jsonBody = new JsonValue();
-  _redirection: TUri | null = null;
+  _jsonBody: TJson = {};
+  _redirection: string | null = null;
   _cookies: Array<TCookie> = [];
   _serverSentEvents: string[] = [];
 
@@ -35,8 +33,8 @@ export class Response {
     return this._headers;
   }
 
-  addHeaders(headers: TStringMap) {
-    this._headers = { ...this._headers, ...headers };
+  get body() {
+    return JSON.stringify(this._jsonBody);
   }
 
   get serverSentEvents(): string[] {
@@ -51,48 +49,42 @@ export class Response {
     this._serverSentEvents = [];
   }
 
-  get body() {
-    return JSON.stringify(this._jsonBody.value);
-  }
-
   bodyObject() {
-    return this._jsonBody.value;
+    return this._jsonBody;
   }
 
-  set(key: string, value: TJson) {
-    this._jsonBody.graft(key, value);
+  bodyJson() {
+    return JSON.stringify(this._jsonBody);
+  }
+
+  addJsonBodyField(key: string, value: any) {
+    (this._jsonBody as any)[key] = value;
   }
 
   setStatusCode(statusCode: number) {
     this._statusCode = statusCode;
   }
 
-  redirect(r: TUri) {
-    this._redirection = r;
+  setRedirection(uri: string) {
+    this._redirection = uri;
+  }
+
+  redirectionUrl(): string | null {
+    return this._redirection;
   }
 
   addCookies(cookies: Array<TCookie>): void {
-    log(7, '', 'adding cookies', cookies);
+    log(EPriority.Debug, '', 'adding cookies', cookies);
     this._cookies = this._cookies.concat(
-      cookies.map((c) => {
-        if (typeof c.value === 'object') c.value = JSON.stringify(c.value);
-        return c;
-      })
+      cookies.map((c) => ({
+        ...c,
+        options: {
+          ...c.options,
+          expires: c.options.expires
+            ? new Date(c.options.expires).toUTCString()
+            : undefined,
+        },
+      }))
     );
-  }
-
-  _log() {
-    if (this.serverSentEvents.length)
-      return {
-        serverSentEvents: this.serverSentEvents,
-      };
-    else
-      return {
-        statusCode: this._statusCode,
-        headers: this._headers,
-        body: this._jsonBody.value,
-        redirection: this._redirection,
-        cookies: this._cookies,
-      };
   }
 }

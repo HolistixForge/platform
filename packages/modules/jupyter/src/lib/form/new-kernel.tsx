@@ -8,14 +8,18 @@ import {
   DialogControlled,
   SelectFieldset,
   SelectItem,
-} from '@monorepo/ui-base';
-import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
-import { TPosition } from '@monorepo/core';
+} from '@holistix-forge/ui-base';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
+import { TPosition } from '@holistix-forge/core-graph';
 import { TEventNewKernelNode } from '../jupyter-events';
 import { TJupyterSharedData } from '../jupyter-shared-model';
 import { TJupyterServerData } from '../jupyter-types';
-import { useJLsManager } from '../jupyter-shared-model-front';
-import { TServer, TServersSharedData } from '@monorepo/servers';
+import { useJLsManager } from '../jupyter-hooks';
+import {
+  TUserContainer,
+  TUserContainersSharedData,
+} from '@holistix-forge/user-containers';
 
 /**
  *
@@ -28,12 +32,12 @@ type NewKernelFormData = { kernel_id: string };
  */
 
 export const NewKernelForm = ({
-  project_server_id,
+  user_container_id,
   position,
   viewId,
   closeForm,
 }: {
-  project_server_id: number;
+  user_container_id: string;
   position: TPosition;
   viewId: string;
   closeForm: () => void;
@@ -42,26 +46,24 @@ export const NewKernelForm = ({
 
   const dispatcher = useDispatcher<TEventNewKernelNode>();
 
-  const { jupyter: jmc } = useJLsManager();
+  const jlsManager = useJLsManager();
 
-  const sd = useSharedData<TServersSharedData & TJupyterSharedData>(
-    ['projectServers', 'jupyterServers'],
+  const sd = useLocalSharedData<TUserContainersSharedData & TJupyterSharedData>(
+    ['user-containers:containers', 'jupyter:servers'],
     (sd) => sd
   );
 
-  const server: TServer | undefined = sd.projectServers.get(
-    project_server_id.toString()
-  );
+  const server: TUserContainer | undefined =
+    sd['user-containers:containers'].get(user_container_id);
 
-  const jupyter: TJupyterServerData | undefined = sd.jupyterServers.get(
-    project_server_id.toString()
-  );
+  const jupyter: TJupyterServerData | undefined =
+    sd['jupyter:servers'].get(user_container_id);
 
   useEffect(() => {
     if (jupyter && server) {
-      jmc.jlsManager.startPollingResources(server);
+      jlsManager.startPollingResources(server);
     }
-  }, [jupyter, jmc, server]);
+  }, [jupyter, jlsManager, server]);
 
   const action = useAction<NewKernelFormData>(
     (d) => {
@@ -69,7 +71,7 @@ export const NewKernelForm = ({
         return dispatcher.dispatch({
           type: 'jupyter:new-kernel-node',
           kernel_id: d.kernel_id as string,
-          project_server_id: project_server_id,
+          user_container_id: user_container_id,
           origin: {
             viewId: viewId,
             position,
@@ -77,7 +79,7 @@ export const NewKernelForm = ({
         });
       } else throw new Error('No such server');
     },
-    [dispatcher, position, project_server_id, jupyter, viewId],
+    [dispatcher, position, user_container_id, jupyter, viewId],
     {
       startOpened: true,
       checkForm: (d, e) => {
@@ -92,9 +94,11 @@ export const NewKernelForm = ({
     if (!action.isOpened) {
       closeForm();
     }
-  }, [action.isOpened]);
+  }, [action.isOpened, closeForm]);
 
   //
+
+  if (!jupyter) return null;
 
   return (
     <DialogControlled
@@ -114,7 +118,7 @@ export const NewKernelForm = ({
         {Object.keys(jupyter?.kernels || {}).map((k) => (
           <SelectItem key={k} value={k}>
             {k.substring(0, 8)}{' '}
-            <b>{jupyter!.kernels[k].notebooks.map((n) => n.path).join(', ')}</b>
+            <b>{jupyter.kernels[k].notebooks.map((n) => n.path).join(', ')}</b>
           </SelectItem>
         ))}
       </SelectFieldset>

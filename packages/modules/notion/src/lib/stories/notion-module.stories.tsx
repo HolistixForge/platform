@@ -1,22 +1,36 @@
+import { useState, useEffect, ReactNode, useMemo } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { Logger } from '@monorepo/log';
-import { MockCollaborativeContext } from '@monorepo/collab-engine';
+import { EPriority, Logger } from '@holistix-forge/log';
+import { StoryApiContext } from '@holistix-forge/frontend-data';
+import { StoryWhiteboard } from '@holistix-forge/whiteboard/stories';
+
+//
+import { loadModules, TModule } from '@holistix-forge/module';
+import { ModuleProvider } from '@holistix-forge/module/frontend';
 import {
   moduleBackend as coreBackend,
   moduleFrontend as coreFrontend,
-} from '@monorepo/core';
-import { StoryApiContext } from '@monorepo/frontend-data';
-import { TSpaceMenuEntries, TSpaceMenuEntry } from '@monorepo/module/frontend';
+} from '@holistix-forge/core-graph';
+import { moduleBackend as collabBackend } from '@holistix-forge/collab';
+import { moduleFrontend as collabFrontend } from '@holistix-forge/collab/frontend';
+import {
+  moduleBackend as reducersBackend,
+  TReducersBackendExports,
+} from '@holistix-forge/reducers';
+import {
+  moduleFrontend as reducersFrontend,
+  linkDispatchToProcessEvent,
+  TReducersFrontendExports,
+} from '@holistix-forge/reducers/frontend';
+import { moduleBackend as spaceBackend } from '@holistix-forge/whiteboard';
+import { moduleFrontend as spaceFrontend } from '@holistix-forge/whiteboard/frontend';
+//
+
 import { moduleBackend as notionBackend } from '../..';
 import { moduleFrontend as notionFrontend } from '../../frontend';
-import { moduleBackend as spaceBackend } from '@monorepo/space';
-import { moduleFrontend as spaceFrontend } from '@monorepo/space/frontend';
-import { StoryHolistixSpace } from '@monorepo/space/stories';
-import type { ModuleBackend } from '@monorepo/module';
-import { useState, useEffect, ReactNode } from 'react';
 
-Logger.setPriority(7);
+Logger.setPriority(EPriority.Debug);
 
 // Proxy check wrapper component
 const ProxyInstructions = ({ loading }: { loading?: boolean }) => (
@@ -43,7 +57,10 @@ const ProxyInstructions = ({ loading }: { loading?: boolean }) => (
       }}
     >
       <h2 style={{ color: '#d32f2f', marginTop: 0 }}>
-        ❌ Browser Proxy Not Running
+        <span role="img" aria-label="cross mark">
+          ❌
+        </span>{' '}
+        Browser Proxy Not Running
       </h2>
       {loading && (
         <div
@@ -111,6 +128,7 @@ const ProxyCheckWrapper = ({ children }: { children: ReactNode }) => {
         });
 
         setIsProxyRunning(response.ok);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         setIsProxyRunning(false);
       } finally {
@@ -130,57 +148,70 @@ const ProxyCheckWrapper = ({ children }: { children: ReactNode }) => {
 
 //
 
-const modulesBackend: ModuleBackend[] = [
-  { collabChunk: { name: 'gateway' } },
-  coreBackend,
-  spaceBackend,
-  notionBackend,
-];
-
-const modulesFrontend = [coreFrontend, spaceFrontend, notionFrontend];
-
-//
-
-const nodeTypes = modulesFrontend.reduce((acc, module) => {
-  return { ...acc, ...module.nodes };
-}, {});
-
-//
-
-const spaceMenuEntries: TSpaceMenuEntries = (args) => {
-  console.log('spaceMenuEntries', args);
-  return modulesFrontend.reduce((acc, module) => {
-    return [...acc, ...module.spaceMenuEntries(args)];
-  }, [] as TSpaceMenuEntry[]);
+const collabConfig = {
+  type: 'none',
+  room_id: 'whiteboard-story',
+  simulateUsers: true,
+  user: { username: 'test', color: 'red' },
 };
 
-//
+const modulesBackend: { module: TModule<never, object>; config: object }[] = [
+  {
+    module: collabBackend,
+    config: collabConfig,
+  },
+  { module: reducersBackend, config: {} },
+  { module: coreBackend, config: {} },
+  {
+    module: {
+      name: 'gateway',
+      version: '0.0.1',
+      description: 'Gateway module',
+      dependencies: ['collab', 'reducers'],
+      load: () => {
+        //
+      },
+    },
+    config: {},
+  },
+  { module: spaceBackend, config: {} },
+  { module: notionBackend, config: {} },
+];
 
-const panelsDefs = modulesFrontend.reduce((acc, module) => {
-  return { ...acc, ...module.panels };
-}, {});
+const modulesFrontend: { module: TModule<never, object>; config: object }[] = [
+  {
+    module: collabFrontend,
+    config: collabConfig,
+  },
+  { module: reducersFrontend, config: {} },
+  { module: coreFrontend, config: {} },
+  { module: spaceFrontend, config: {} },
+  { module: notionFrontend, config: {} },
+];
 
 //
 
 const Story = () => {
-  //
+  const { frontendModules } = useMemo(() => {
+    const backendModules = loadModules(modulesBackend);
+    const frontendModules = loadModules(modulesFrontend);
+
+    linkDispatchToProcessEvent(
+      backendModules as { reducers: TReducersBackendExports },
+      frontendModules as { reducers: TReducersFrontendExports }
+    );
+
+    return { backendModules, frontendModules };
+  }, []);
 
   return (
     <ProxyCheckWrapper>
       <StoryApiContext>
-        <MockCollaborativeContext
-          frontChunks={modulesFrontend.map((m) => m.collabChunk)}
-          backChunks={modulesBackend.map((m) => m.collabChunk)}
-          getRequestContext={() => ({})}
-        >
+        <ModuleProvider exports={frontendModules}>
           <div style={{ height: '100vh', width: '100vw' }}>
-            <StoryHolistixSpace
-              nodeTypes={nodeTypes}
-              spaceMenuEntries={spaceMenuEntries}
-              panelsDefs={panelsDefs}
-            />
+            <StoryWhiteboard />
           </div>
-        </MockCollaborativeContext>
+        </ModuleProvider>
       </StoryApiContext>
     </ProxyCheckWrapper>
   );
@@ -201,8 +232,6 @@ const meta = {
 
 export default meta;
 
-type Story = StoryObj<typeof Story>;
-
-export const Default: Story = {
+export const Default: StoryObj<typeof Story> = {
   args: {},
 };

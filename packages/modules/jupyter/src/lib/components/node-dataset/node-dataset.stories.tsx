@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { playAdd__hover, useTestBoolean } from '@monorepo/ui-base';
-import { nodeViewDefaultStatus } from '@monorepo/space';
-import { StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss } from '@monorepo/space/stories';
+import { playAdd__hover, useTestBoolean } from '@holistix-forge/ui-base';
+import { nodeViewDefaultStatus } from '@holistix-forge/whiteboard';
+import { StoryMockSpaceContextReactflowBgAndCss } from '@holistix-forge/whiteboard/stories';
 
 import { NodeDataset, NodeDatasetProps } from './node-dataset';
 
@@ -23,7 +23,7 @@ const StoryWrapper = (
   } = useTestBoolean(props.expanded);
 
   return (
-    <StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss
+    <StoryMockSpaceContextReactflowBgAndCss
       outputs={5}
       selected={props.selected}
       isOpened={isOpened}
@@ -40,7 +40,7 @@ const StoryWrapper = (
           mode: isExpanded ? 'EXPANDED' : 'REDUCED',
         }}
       />
-    </StoryMock_CollaborativeContext_SpaceContext_ReactflowBgAndCss>
+    </StoryMockSpaceContextReactflowBgAndCss>
   );
 };
 

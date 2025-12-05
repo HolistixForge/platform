@@ -1,9 +1,9 @@
 {
-  "name": "@monorepo/ui-toolkit",
+  "name": "@holistix-forge/ui-toolkit",
   "version": "0.0.1",
   "type": "module",
   "nx": {
-    "name": "ui-toolkit",
+    "name": "@holistix-forge/ui-toolkit",
     "projectType": "library",
     "sourceRoot": "packages/ui-toolkit/src"
   },
@@ -13,6 +13,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./frontend": {
+      "types": "./dist/frontend.d.ts",
+      "import": "./dist/frontend.js",
+      "default": "./dist/frontend.js"
     }
   },
   "types": "./dist/index.d.ts",

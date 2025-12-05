@@ -1,4 +1,4 @@
-import { insertScriptsSynchronously } from '@monorepo/ui-toolkit';
+import { insertScriptsSynchronously } from '@holistix-forge/ui-toolkit';
 
 //
 //

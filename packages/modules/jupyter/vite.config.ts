@@ -42,25 +42,7 @@ export default defineConfig({
       formats: ['es'],
     },
     rollupOptions: {
-      // External packages that should not be bundled into your library.
-      /*
-      [
-        'react',
-        'react-dom',
-        'react/jsx-runtime',
-        'yjs',
-        'ydoc',
-        'y-monaco',
-        'y-protocols',
-        'y-websocket',
-        'monaco',
-        '@jupyterlab',
-        '@jupyter-widgets',
-      ],
-      */
-      external: (id) => {
-        return !id.startsWith('.') && !id.startsWith('/');
-      },
+      external: (id) => !id.startsWith('.') && !id.startsWith('/'),
     },
   },
   define: {

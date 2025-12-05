@@ -1,4 +1,4 @@
-import { TF_User } from '@monorepo/demiurge-types';
+import { TF_User } from '@holistix-forge/types';
 import * as Avatar from '@radix-ui/react-avatar';
 import { GitHubLogoIcon } from '@radix-ui/react-icons';
 import { icons } from '../assets/icons';

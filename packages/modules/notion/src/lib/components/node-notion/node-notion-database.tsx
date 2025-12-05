@@ -3,9 +3,10 @@ import {
   NodeHeader,
   useNodeContext,
   useNodeHeaderButtons,
-} from '@monorepo/space/frontend';
-import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
-import { TGraphNode } from '@monorepo/module';
+} from '@holistix-forge/whiteboard/frontend';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
+import { TGraphNode } from '@holistix-forge/core-graph';
 import { useCallback } from 'react';
 
 import { TNotionSharedData } from '../../notion-shared-model';
@@ -31,15 +32,15 @@ export const NodeNotionDatabase = ({
   const useNodeValue = useNodeContext();
   const dispatcher = useDispatcher<TNotionEvent>();
 
-  const database: TNotionDatabase = useSharedData<TNotionSharedData>(
-    ['notionDatabases'],
-    (sd) => sd.notionDatabases.get(databaseId)
+  const database: TNotionDatabase = useLocalSharedData<TNotionSharedData>(
+    ['notion:databases'],
+    (sd) => sd['notion:databases'].get(databaseId)
   );
 
-  const viewMode: TNotionViewMode = useSharedData<TNotionSharedData>(
-    ['notionNodeViews'],
+  const viewMode: TNotionViewMode = useLocalSharedData<TNotionSharedData>(
+    ['notion:node-views'],
     (sd) =>
-      Array.from(sd.notionNodeViews.values()).find(
+      Array.from(sd['notion:node-views'].values()).find(
         (v) => v.nodeId === node.id && v.viewId === useNodeValue.viewId
       )?.viewMode || {
         mode: 'kanban',

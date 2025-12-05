@@ -1,4 +1,4 @@
-import { Sidebar } from '@monorepo/ui-base';
+import { Sidebar } from '@holistix-forge/ui-base';
 
 import { Header } from '../components/header';
 import { ResourceBar } from '../components/resource-bar';

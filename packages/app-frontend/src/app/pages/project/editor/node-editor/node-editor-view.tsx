@@ -1,27 +1,7 @@
-import { HolistixSpace } from '@monorepo/space/frontend';
-import { TSpaceMenuEntries, TSpaceMenuEntry } from '@monorepo/module/frontend';
-
-import { modules } from '../../model/modules';
+import { Whiteboard } from '@holistix-forge/whiteboard/frontend';
 
 import './node-editor.scss';
-
-//
-
-const nodeTypes = modules.reduce((acc, module) => {
-  return { ...acc, ...module.nodes };
-}, {});
-
-const spaceMenuEntries: TSpaceMenuEntries = (args) => {
-  return modules.reduce((acc, module) => {
-    return [...acc, ...module.spaceMenuEntries(args)];
-  }, [] as TSpaceMenuEntry[]);
-};
-
-const panelsDefs = modules.reduce((acc, module) => {
-  return { ...acc, ...module.panels };
-}, {});
-
-const layersProviders = modules.flatMap((m) => m.layers || []);
+import { useProject } from '../../project-context';
 
 /**
  *
@@ -29,15 +9,11 @@ const layersProviders = modules.flatMap((m) => m.layers || []);
 export const NodeEditorView = ({ viewId }: { viewId: string }) => {
   //
 
+  const project = useProject();
+
   return (
     <div style={{ height: '100%', backgroundColor: 'var(--color-background)' }}>
-      <HolistixSpace
-        viewId={viewId}
-        nodeTypes={nodeTypes}
-        spaceMenuEntries={spaceMenuEntries}
-        panelsDefs={panelsDefs}
-        layersProviders={layersProviders}
-      />
+      <Whiteboard viewId={viewId} projectId={project.project.project_id} />
     </div>
   );
 };

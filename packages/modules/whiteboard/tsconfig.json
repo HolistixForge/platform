@@ -1,0 +1,49 @@
+{
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../../log"
+    },
+    {
+      "path": "../../ui-toolkit"
+    },
+    {
+      "path": "../../types"
+    },
+    {
+      "path": "../gateway"
+    },
+    {
+      "path": "../reducers"
+    },
+    {
+      "path": "../../collab-engine"
+    },
+    {
+      "path": "../../simple-types"
+    },
+    {
+      "path": "../core-graph"
+    },
+    {
+      "path": "../collab"
+    },
+    {
+      "path": "../module"
+    },
+    {
+      "path": "../../ui-base"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    },
+    {
+      "path": "./tsconfig.storybook.json"
+    }
+  ],
+  "extends": "../../../tsconfig.base.json"
+}

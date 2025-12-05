@@ -3,8 +3,8 @@ import {
   ButtonIconProps,
   SelectFieldset,
   SelectItem,
-} from '@monorepo/ui-base';
-import { NodeMainToolbar } from '@monorepo/space/frontend';
+} from '@holistix-forge/ui-base';
+import { NodeMainToolbar } from '@holistix-forge/whiteboard/frontend';
 
 import './menuExpanded.scss';
 

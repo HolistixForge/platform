@@ -1,9 +1,11 @@
-export { EPriority, EColor, Logger, log, error } from './lib/log';
+// Backend-safe exports only (no React dependencies)
 export {
-  showDebugComponent,
-  useDebugComponent,
-  DebugComponentKeyboardShortcut,
-} from './lib/useDebugComponent';
+  EPriority,
+  Logger,
+  log,
+  error,
+  type LoggerInitOptions,
+} from './lib/log';
 
 export {
   Exception,

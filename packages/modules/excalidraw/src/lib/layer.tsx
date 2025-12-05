@@ -1,24 +1,20 @@
 import { useMemo, FC, useEffect, useRef, useState, useCallback } from 'react';
 import { debounce } from 'lodash';
 
-import { useCurrentUser } from '@monorepo/frontend-data';
+import { useCurrentUser } from '@holistix-forge/frontend-data';
 import { OrderedExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 import { AppState, Collaborator, SocketId } from '@excalidraw/excalidraw/types';
 import { BinaryFiles } from '@excalidraw/excalidraw/types';
 
-import { TJsonObject } from '@monorepo/simple-types';
-import {
-  LayerViewportAdapter,
-  TLayerProvider,
-} from '@monorepo/module/frontend';
+import { TJsonObject } from '@holistix-forge/simple-types';
+import { LayerViewportAdapter, TLayerProvider } from '@holistix-forge/whiteboard/frontend';
 import {
   useAwarenessUserList,
-  useDispatcher,
-  FrontendDispatcher,
-} from '@monorepo/collab-engine';
-import { useSharedDataDirect } from '@monorepo/collab-engine';
-import { TSpaceEvent } from '@monorepo/space';
-import { useLayerContext, TLayerTreeItem } from '@monorepo/space/frontend';
+  useSharedDataDirect,
+} from '@holistix-forge/collab/frontend';
+import { useDispatcher, FrontendDispatcher } from '@holistix-forge/reducers/frontend';
+import { TWhiteboardEvent } from '@holistix-forge/whiteboard';
+import { useLayerContext, TLayerTreeItem } from '@holistix-forge/whiteboard/frontend';
 
 import { TExcalidrawSharedData } from './excalidraw-shared-model';
 
@@ -86,7 +82,7 @@ const debouncedHandleChange = debounce(
   async (
     sharedData: TExcalidrawSharedData,
     viewId: string,
-    dispatcher: FrontendDispatcher<TSpaceEvent>,
+    dispatcher: FrontendDispatcher<TWhiteboardEvent>,
     nodeId: string,
     elements: readonly OrderedExcalidrawElement[],
     files: BinaryFiles,
@@ -133,7 +129,7 @@ const debouncedHandleChange = debounce(
 
         // move the excalidraw node to the xmin, ymin
         dispatcher.dispatch({
-          type: 'space:move-node',
+          type: 'whiteboard:move-node',
           viewId: viewId,
           nid: nodeId,
           position: {
@@ -142,7 +138,7 @@ const debouncedHandleChange = debounce(
           },
         });
         dispatcher.dispatch({
-          type: 'space:resize-node',
+          type: 'whiteboard:resize-node',
           viewId: viewId,
           nid: nodeId,
           size: {
@@ -152,7 +148,7 @@ const debouncedHandleChange = debounce(
         });
       }
 
-      sharedData.excalidrawDrawing.set(nodeId, {
+      sharedData['excalidraw:drawing'].set(nodeId, {
         elements: elements as unknown as TJsonObject[],
         fromUser: userid,
         svg: svgString,
@@ -183,7 +179,7 @@ export const ExcalidrawLayerComponent: FC<{
 
   const { nodeId = '', viewId = '' } = payload || {};
 
-  const dispatcher = useDispatcher<TSpaceEvent>();
+  const dispatcher = useDispatcher<TWhiteboardEvent>();
   const { updateLayerTree } = useLayerContext();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -258,18 +254,18 @@ export const ExcalidrawLayerComponent: FC<{
   useEffect(() => {
     // On mount, ensure drawing entry exists or initialize it
     if (!nodeId) return;
-    const d = sharedData.excalidrawDrawing.get(nodeId);
+    const d = sharedData['excalidraw:drawing'].get(nodeId);
     if (!d) {
       const elements: TJsonObject[] = [];
-      sharedData.excalidrawDrawing.set(nodeId, {
+      sharedData['excalidraw:drawing'].set(nodeId, {
         elements,
         fromUser: userid,
         svg: '',
       });
     }
     // Observe remote changes
-    sharedData.excalidrawDrawing.observe(() => {
-      const d = sharedData.excalidrawDrawing.get(nodeId);
+    sharedData['excalidraw:drawing'].observe(() => {
+      const d = sharedData['excalidraw:drawing'].get(nodeId);
       if (d?.fromUser !== userid) {
         // update the drawing if it is from another user
         previousHash.current = simpleHash(d?.elements || []);
@@ -296,7 +292,7 @@ export const ExcalidrawLayerComponent: FC<{
 
         // Update tree data for the layer panel
         if (updateLayerTree && nodeId) {
-          console.log('elements', elements);
+          // console.log('elements', elements);
           const treeItems: TLayerTreeItem[] = elements
             .filter((e) => !e.isDeleted)
             .map((element, index) => ({
@@ -398,7 +394,7 @@ export const ExcalidrawLayerComponent: FC<{
           appState: { ...appState, ...toExcalidrawViewport(initialVp) },
           elements:
             (structuredClone(
-              sharedData.excalidrawDrawing.get(nodeId)?.elements
+              sharedData['excalidraw:drawing'].get(nodeId)?.elements
             ) as unknown as OrderedExcalidrawElement[]) || [],
         }}
         onChange={handleChange}
@@ -421,11 +417,9 @@ export const ExcalidrawLayerComponent: FC<{
   );
 };
 
-export const layers: TLayerProvider[] = [
-  {
-    id: 'excalidraw',
-    title: 'Excalidraw',
-    zIndexHint: 10,
-    Component: ExcalidrawLayerComponent,
-  },
-];
+export const layer: TLayerProvider = {
+  id: 'excalidraw',
+  title: 'Excalidraw',
+  zIndexHint: 10,
+  Component: ExcalidrawLayerComponent,
+};

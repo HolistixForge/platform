@@ -1,11 +1,11 @@
 import * as RM from '@jupyterlab/rendermime';
-import { log } from '@monorepo/log';
+import { EPriority, log } from '@holistix-forge/log';
 
 //
 
 interface IHasRawData {
   _raw: {
-    _demiurge_outputArea_uid: string;
+    __outputArea_uid: string;
   };
   _rawData: {
     [key: string]: string;
@@ -24,7 +24,7 @@ class FrontendJsRenderer extends RM.RenderedJavaScript {
   override render = (model: RM.IRenderMime.IMimeModel) => {
     const m = model as RM.IRenderMime.IMimeModel & IHasRawData;
 
-    const outputAreaUid = m._raw._demiurge_outputArea_uid;
+    const outputAreaUid = m._raw.__outputArea_uid;
 
     for (const mime in m._rawData) {
       if (mime === 'application/javascript') {
@@ -32,14 +32,14 @@ class FrontendJsRenderer extends RM.RenderedJavaScript {
 
         if (outputAreaUid) {
           log(
-            7,
+            EPriority.Debug,
             'MY_JAVASCRIPT_RENDERER',
             `mock document.getElementById for [${outputAreaUid}]`
           );
           Document.prototype.getElementById = (id: string) => {
             const container = old(outputAreaUid);
             log(
-              7,
+              EPriority.Debug,
               'MY_JAVASCRIPT_RENDERER',
               `document.getElementById("${outputAreaUid}.querySelector('[id="${id}"]')`
             );
@@ -53,7 +53,7 @@ class FrontendJsRenderer extends RM.RenderedJavaScript {
 
         if (outputAreaUid) {
           log(
-            7,
+            EPriority.Debug,
             'MY_JAVASCRIPT_RENDERER',
             `restore original document.getElementById ([${outputAreaUid}])`
           );

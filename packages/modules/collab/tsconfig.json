@@ -1,0 +1,25 @@
+{
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../../simple-types"
+    },
+    {
+      "path": "../../log"
+    },
+    {
+      "path": "../../collab-engine"
+    },
+    {
+      "path": "../module"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ],
+  "extends": "../../../tsconfig.base.json"
+}

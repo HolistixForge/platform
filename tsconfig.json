@@ -13,7 +13,7 @@
       "path": "./packages/api-fetch"
     },
     {
-      "path": "./packages/demiurge-types"
+      "path": "./packages/types"
     },
     {
       "path": "./packages/ui-toolkit"
@@ -25,46 +25,22 @@
       "path": "./packages/frontend-data"
     },
     {
-      "path": "./packages/lazy-factory"
-    },
-    {
-      "path": "./packages/social-embeds"
-    },
-    {
       "path": "./packages/backend-engine"
-    },
-    {
-      "path": "./packages/app-ganymede-e2e"
     },
     {
       "path": "./packages/app-ganymede"
     },
     {
-      "path": "./packages/app-account-e2e"
-    },
-    {
-      "path": "./packages/app-account"
-    },
-    {
-      "path": "./packages/app-ganymede-cmds-e2e"
-    },
-    {
       "path": "./packages/app-ganymede-cmds"
     },
     {
-      "path": "./packages/app-collab-e2e"
+      "path": "./packages/app-gateway"
     },
     {
-      "path": "./packages/app-collab"
+      "path": "./packages/modules/core-graph"
     },
     {
-      "path": "./packages/modules/core"
-    },
-    {
-      "path": "./packages/modules/space"
-    },
-    {
-      "path": "./packages/modules/servers"
+      "path": "./packages/modules/user-containers"
     },
     {
       "path": "./packages/modules/jupyter"
@@ -104,6 +80,24 @@
     },
     {
       "path": "./packages/modules/excalidraw"
+    },
+    {
+      "path": "./packages/modules/collab"
+    },
+    {
+      "path": "./packages/modules/reducers"
+    },
+    {
+      "path": "./packages/observability"
+    },
+    {
+      "path": "./packages/modules/n8n"
+    },
+    {
+      "path": "./packages/modules/pgadmin4"
+    },
+    {
+      "path": "./packages/modules/whiteboard"
     }
   ],
   "ts-node": {

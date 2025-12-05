@@ -1,24 +1,28 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useEffect, useState } from 'react';
 
-import { Logger } from '@monorepo/log';
-import { TServerEvents, TServersSharedData } from '@monorepo/servers';
-import { useDispatcher, useSharedData } from '@monorepo/collab-engine';
-import { ButtonBase, SelectFieldset, SelectItem } from '@monorepo/ui-base';
+import { EPriority, Logger } from '@holistix-forge/log';
+import {
+  TUserContainersEvents,
+  TUserContainersSharedData,
+} from '@holistix-forge/user-containers';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
+import { ButtonBase, SelectFieldset, SelectItem } from '@holistix-forge/ui-base';
 
 import { TJupyterEvent } from '../../jupyter-events';
 import {
   JupyterStoryCollabContext,
-  STORY_PROJECT_SERVER_ID,
+  STORY_USER_CONTAINER_ID,
 } from '../../stories/module-stories-utils';
 import { JupyterTerminal } from './terminal';
-import { useJLsManager } from '../../jupyter-shared-model-front';
+import { useJLsManager } from '../../jupyter-hooks';
 import { TJupyterSharedData } from '../../jupyter-shared-model';
 import { TJupyterServerData } from '../../jupyter-types';
 
 //
 
-Logger.setPriority(7);
+Logger.setPriority(EPriority.Debug);
 
 //
 
@@ -33,16 +37,18 @@ const StoryWrapper = () => {
 //
 
 const Terminals = () => {
-  const dispatcher = useDispatcher<TJupyterEvent | TServerEvents>();
+  const dispatcher = useDispatcher<TJupyterEvent | TUserContainersEvents>();
   const { jupyter: jmc } = useJLsManager();
 
-  const sd = useSharedData<TServersSharedData & TJupyterSharedData>(
-    ['projectServers', 'jupyterServers'],
+  const sd = useLocalSharedData<TUserContainersSharedData & TJupyterSharedData>(
+    ['user-containers:containers', 'jupyter:servers'],
     (sd) => sd
   );
-  const server = sd.projectServers.get(STORY_PROJECT_SERVER_ID.toString());
-  const jupyter: TJupyterServerData | undefined = sd.jupyterServers.get(
-    STORY_PROJECT_SERVER_ID.toString()
+  const server = sd['user-containers:containers'].get(
+    STORY_USER_CONTAINER_ID.toString()
+  );
+  const jupyter: TJupyterServerData | undefined = sd['jupyter:servers'].get(
+    STORY_USER_CONTAINER_ID.toString()
   );
   const service = server?.httpServices.find(
     (s: { name: string }) => s.name === 'jupyterlab'
@@ -62,7 +68,7 @@ const Terminals = () => {
   const handleNewTerminal = () => {
     dispatcher.dispatch({
       type: 'jupyter:new-terminal',
-      project_server_id: STORY_PROJECT_SERVER_ID,
+      user_container_id: STORY_USER_CONTAINER_ID,
       client_id: 'not needed here in storybook',
     });
   };
@@ -95,7 +101,7 @@ const Terminals = () => {
         >
           <JupyterTerminal
             terminalId={terminalId}
-            projectServerId={STORY_PROJECT_SERVER_ID}
+            userContainerId={STORY_USER_CONTAINER_ID}
           />
         </div>
       )}

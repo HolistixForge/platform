@@ -7,15 +7,12 @@ import {
   TextFieldset,
   useAction,
   DialogControlled,
-} from '@monorepo/ui-base';
-import {
-  useDispatcher,
-  useSharedData,
-  useAwareness,
-} from '@monorepo/collab-engine';
-import { TPosition } from '@monorepo/core';
-import { TPanel } from '@monorepo/module/frontend';
-import { makeUuid } from '@monorepo/simple-types';
+} from '@holistix-forge/ui-base';
+import { useAwareness, useLocalSharedData } from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
+import { TPosition } from '@holistix-forge/core-graph';
+import { TPanel } from '@holistix-forge/whiteboard/frontend';
+import { makeUuid } from '@holistix-forge/simple-types';
 
 import { TNotionEvent } from '../../notion-events';
 import { TNotionSharedData } from '../../notion-shared-model';
@@ -56,9 +53,9 @@ export const NewNotionDatabaseForm = ({
 
   // Get search results from shared data for current user
   const searchResults: TNotionDatabaseSearchResult[] =
-    useSharedData<TNotionSharedData>(
-      ['notionDatabaseSearchResults'],
-      (sd) => sd.notionDatabaseSearchResults.get(currentUserId) || []
+    useLocalSharedData<TNotionSharedData>(
+      ['notion:database-search-results'],
+      (sd) => sd['notion:database-search-results'].get(currentUserId) || []
     );
 
   const action = useAction<NewNotionDatabaseFormData>(
@@ -93,18 +90,20 @@ export const NewNotionDatabaseForm = ({
   // Search for databases on mount and when search query changes
   useEffect(() => {
     const searchDatabases = async () => {
-      setIsSearching(true);
-      try {
-        await dispatcher.dispatch({
-          type: 'notion:search-databases',
-          NOTION_API_KEY: action.formData.apiKey,
-          query: searchQuery,
-          userId: currentUserId,
-        });
-      } catch (error) {
-        console.error('Failed to search databases:', error);
-      } finally {
-        setIsSearching(false);
+      if (action.formData.apiKey) {
+        setIsSearching(true);
+        try {
+          await dispatcher.dispatch({
+            type: 'notion:search-databases',
+            NOTION_API_KEY: action.formData.apiKey,
+            query: searchQuery,
+            userId: currentUserId,
+          });
+        } catch (error) {
+          console.error('Failed to search databases:', error);
+        } finally {
+          setIsSearching(false);
+        }
       }
     };
 

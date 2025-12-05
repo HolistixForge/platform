@@ -6,11 +6,12 @@ import {
   useMutationNewProject,
   useQueryUser,
   useQueryUserProjects,
+  useQueryOrganization,
   NewProjectFormData,
-} from '@monorepo/frontend-data';
-import { useAction, UserInline, DialogControlled } from '@monorepo/ui-base';
-import { NewProjectForm } from '@monorepo/ui-views';
-import { TApi_Project } from '@monorepo/demiurge-types';
+} from '@holistix-forge/frontend-data';
+import { useAction, UserInline, DialogControlled } from '@holistix-forge/ui-base';
+import { NewProjectForm } from '@holistix-forge/ui-views';
+import { TApi_Project } from '@holistix-forge/types';
 
 import { HeaderLogic } from '../header/header-logic';
 import { DeleteProjectFormLogic } from '../forms/new-project-form';
@@ -25,9 +26,7 @@ export const HomePage = () => {
       <HeaderLogic />
 
       {ili ? (
-        <>
-          <ProjectsList />
-        </>
+        <ProjectsList />
       ) : (
         <div className="flex flex-col items-center justify-center h-[calc(100vh-80px)]">
           <div className="flex items-center gap-2 text-slate-400">
@@ -88,7 +87,7 @@ const ProjectsList = () => {
               </Table.Row>
             </Table.Header>
             <Table.Body>
-              {data._0.map((p) => (
+              {data?.map((p) => (
                 <ProjectsListItem key={p.project_id} project={p} />
               ))}
               <Table.Row className="border-t border-slate-700 hover:bg-slate-800/50">
@@ -130,9 +129,10 @@ const ProjectsList = () => {
 const ProjectsListItem = ({
   project,
 }: {
-  project: Pick<TApi_Project, 'name' | 'owner_id' | 'project_id'>;
+  project: Pick<TApi_Project, 'name' | 'project_id' | 'organization_id'>;
 }) => {
-  const { data, status } = useQueryUser(project.owner_id);
+  const { data: orgData } = useQueryOrganization(project.organization_id);
+  const { data, status } = useQueryUser(orgData?.owner_user_id || null);
   return (
     <Table.Row className="border-t border-slate-700 hover:bg-slate-800/50">
       <Table.Cell className="py-4 px-6" style={{ color: 'var(--c-white-1)' }}>
@@ -147,7 +147,7 @@ const ProjectsListItem = ({
       </Table.Cell>
       <Table.Cell className="py-4 px-6 text-center">
         <a
-          href={`/p/${project.owner_id}/${project.name}/editor`}
+          href={`/p/${project.organization_id}/${project.name}/editor`}
           target="_blank"
           rel="noreferrer"
           className="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium -bg--c-alt-blue-1 hover:-bg--c-alt-blue-2 text-white transition-colors"

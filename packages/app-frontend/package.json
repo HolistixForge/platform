@@ -1,9 +1,9 @@
 {
-  "name": "@monorepo/app-frontend",
+  "name": "@holistix-forge/app-frontend",
   "version": "0.0.1",
   "private": true,
   "nx": {
-    "name": "app-frontend",
+    "name": "@holistix-forge/app-frontend",
     "projectType": "application",
     "sourceRoot": "packages/app-frontend/src"
   }

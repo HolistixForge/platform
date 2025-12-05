@@ -1,8 +1,8 @@
 {
-  "name": "@monorepo/frontend-data",
+  "name": "@holistix-forge/frontend-data",
   "version": "0.0.1",
   "nx": {
-    "name": "frontend-data",
+    "name": "@holistix-forge/frontend-data",
     "projectType": "library",
     "sourceRoot": "packages/frontend-data/src"
   },

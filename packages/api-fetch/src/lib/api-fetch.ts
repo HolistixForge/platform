@@ -5,7 +5,7 @@ import {
   TMyfetchRequest,
   TUri,
   fullUri,
-} from '@monorepo/simple-types';
+} from '@holistix-forge/simple-types';
 
 /**
  * concatenate all errors messages, adding '.' between message

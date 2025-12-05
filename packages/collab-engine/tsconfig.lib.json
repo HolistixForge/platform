@@ -39,12 +39,6 @@
     },
     {
       "path": "../simple-types/tsconfig.lib.json"
-    },
-    {
-      "path": "../api-fetch/tsconfig.lib.json"
-    },
-    {
-      "path": "../log/tsconfig.lib.json"
     }
   ]
 }

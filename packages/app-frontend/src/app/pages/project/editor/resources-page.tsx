@@ -1,28 +1,36 @@
 import { useState } from 'react';
 
-import { ResourceBar, ServerStack } from '@monorepo/ui-views';
-import { ServerCard } from '@monorepo/servers/frontend';
-
-import { TServer, TServersSharedData } from '@monorepo/servers';
-import { NewServerForm } from '@monorepo/servers/frontend';
-import { useSharedData } from '@monorepo/collab-engine';
+import { ResourceBar, ServerStack } from '@holistix-forge/ui-views';
+import {
+  TUserContainer,
+  TUserContainersSharedData,
+} from '@holistix-forge/user-containers';
+import {
+  NewContainerForm,
+  TContainerRunnerFrontend,
+  UserContainerCardInternal,
+} from '@holistix-forge/user-containers/frontend';
+import { useLocalSharedData } from '@holistix-forge/collab/frontend';
 
 import { ProjectSidebar } from '../sidebar';
+import { useProject } from '../project-context';
 
 //
 
 export const ResourcePage = () => {
-  const projectServers: Map<string, TServer> =
-    useSharedData<TServersSharedData>(
-      ['projectServers'],
-      (sd) => sd.projectServers
+  const userContainers: Map<string, TUserContainer> =
+    useLocalSharedData<TUserContainersSharedData>(
+      ['user-containers:containers'],
+      (sd) => sd['user-containers:containers']
     );
+
+  const project = useProject();
 
   const [displayNewServerForm, setDisplayNewServerForm] = useState(false);
 
-  const array: number[] = [];
+  const array: string[] = [];
 
-  projectServers.forEach((p) => array.push(p.project_server_id));
+  userContainers.forEach((p) => array.push(p.user_container_id));
 
   return (
     <>
@@ -37,8 +45,21 @@ export const ResourcePage = () => {
         <ResourceBar title="Resources" />
         <div className="p-24">
           <ServerStack onNewServerClick={() => setDisplayNewServerForm(true)}>
-            {array.map((psid) => (
-              <ServerCard project_server_id={psid} />
+            {array.map((ucid) => (
+              <UserContainerCardInternal
+                container={userContainers.get(ucid) as TUserContainer}
+                image={undefined}
+                onDelete={function (): Promise<void> {
+                  throw new Error('Function not implemented.');
+                }}
+                onOpenService={function (name: string): void {
+                  throw new Error('Function not implemented.');
+                }}
+                onSelectRunner={function (runner_id: string): Promise<void> {
+                  throw new Error('Function not implemented.');
+                }}
+                runners={new Map<string, TContainerRunnerFrontend>()}
+              />
             ))}
           </ServerStack>
         </div>{' '}
@@ -46,7 +67,10 @@ export const ResourcePage = () => {
       <ProjectSidebar active="project-main" />
 
       {displayNewServerForm && (
-        <NewServerForm closeForm={() => setDisplayNewServerForm(false)} />
+        <NewContainerForm
+          projectId={project.project.project_id}
+          closeForm={() => setDisplayNewServerForm(false)}
+        />
       )}
     </>
   );

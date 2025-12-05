@@ -7,9 +7,9 @@ import {
   TagsBarProps,
   SelectFieldset,
   SelectItem,
-} from '@monorepo/ui-base';
-import { StatusLed } from '@monorepo/servers/frontend';
-import { TF_User } from '@monorepo/demiurge-types';
+} from '@holistix-forge/ui-base';
+import { StatusLed } from '@holistix-forge/user-containers/frontend';
+import { TF_User } from '@holistix-forge/types';
 
 //
 
@@ -99,7 +99,9 @@ export const NotebookCard = ({
             <SelectFieldset
               name={''}
               value={'python 3.10.12 modele'}
-              onChange={function (v: string): void {}}
+              onChange={function (v: string): void {
+                /* noop */
+              }}
               placeholder={''}
               className="small w-full"
               integrated

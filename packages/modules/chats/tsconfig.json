@@ -9,19 +9,25 @@
       "path": "../../frontend-data"
     },
     {
-      "path": "../../simple-types"
-    },
-    {
       "path": "../../collab-engine"
     },
     {
-      "path": "../core"
+      "path": "../../simple-types"
+    },
+    {
+      "path": "../core-graph"
+    },
+    {
+      "path": "../reducers"
+    },
+    {
+      "path": "../collab"
     },
     {
       "path": "../module"
     },
     {
-      "path": "../space"
+      "path": "../whiteboard"
     },
     {
       "path": "../../ui-base"

@@ -1,7 +1,6 @@
 import { createContext, useContext, ReactNode, useMemo } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GanymedeApi } from './api-ganymede';
-import { ApiFetch } from '@monorepo/api-fetch';
 
 //
 //
@@ -9,8 +8,6 @@ import { ApiFetch } from '@monorepo/api-fetch';
 
 export type TApiContext = {
   ganymedeApi: GanymedeApi;
-  accountApi: ApiFetch;
-  accountFQDN: string;
   ganymedeFQDN: string;
   queryClient: QueryClient;
 };
@@ -48,25 +45,17 @@ export const ApiContext = ({ env, domain, children }: ApiContextProps) => {
     const environment = env === 'production' || env === '' ? null : env;
 
     const frontendFQDN = fqdn(null, environment, domain);
-    const accountFQDN = fqdn('account', environment, domain);
     const ganymedeFQDN = fqdn('ganymede', environment, domain);
 
     const queryClient = new QueryClient();
 
-    const accountApi = new ApiFetch(`https://${accountFQDN}`, {
-      credentials: 'include',
-    });
     const ganymedeApi = new GanymedeApi(
       `https://${ganymedeFQDN}`,
-      `https://${frontendFQDN}`,
-      accountApi
+      `https://${frontendFQDN}`
     );
 
     return {
-      frontendFQDN,
       ganymedeApi,
-      accountApi,
-      accountFQDN,
       ganymedeFQDN,
       queryClient,
     };
