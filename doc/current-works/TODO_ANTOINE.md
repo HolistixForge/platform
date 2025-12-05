@@ -1,6 +1,5 @@
 ⚠️ Antoine's stuffs
 
-repo rename and main
 convert all this and ./TODO.md to issue and PR, remve current-work dir
 
 ci cd : npx nx run-many -t build --verbose | grep error. check bundles, compile storybooks
@@ -22,11 +21,6 @@ return filterOutNodes
 ?.filter((n) => n?.type === type)
 .map((n) => ({ id: n?.id as string, name: n?.name as string }));
 };
-
-servers module exports: register images
-
-TODO_CONNECTOR
-TODO_SPACE_STATE
 
 Daily backup
 
@@ -78,12 +72,10 @@ event sequence:
 
 - fallback logics: add a reset point or function if not exists when sequenceRevertPoint is set
 
-dns
 shut down button
 
 selected node zindex
 
-- DNS: https://chatgpt.com/share/67acc6e5-32e4-8011-a71b-e4d900e0f9e5
 - node positioning
 
 - close tab for down resource

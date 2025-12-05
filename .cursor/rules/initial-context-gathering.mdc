@@ -1,0 +1,146 @@
+---
+description: Initial context gathering workflow for Cursor agents
+globs:
+alwaysApply: true
+---
+
+# Initial Context Gathering Workflow
+
+**MANDATORY RULE:** Before handling any user's first request in a new session, Cursor agents MUST perform the following context gathering steps to ensure they have a complete understanding of the project state.
+
+## Step 1: Read All Project Documentation
+
+Before processing the first user request, the agent MUST:
+
+1. **Identify all markdown documentation files** in the project using:
+
+   ```bash
+   find . -name "*.md" -type f | grep -v node_modules | grep -v .git
+   ```
+
+2. **Read and understand key documentation files**, prioritizing:
+
+   - `README.md` (root level)
+   - `CONTRIBUTING.md` (if exists)
+   - All files in `doc/` directory (architecture, guides, reference, current-works)
+   - Package-level `README.md` files in `packages/`
+   - Any `TODO*.md` or `TODO_*.md` files in `doc/current-works/`
+
+3. **Focus on understanding**:
+   - Project architecture and structure
+   - Current work in progress (from TODO files)
+   - Development guidelines and best practices
+   - System design decisions
+   - Known issues or limitations
+
+## Step 2: Check Open GitHub Issues
+
+Before processing the first user request, the agent MUST:
+
+1. **Verify GitHub CLI is available**:
+
+   ```bash
+   which gh && gh auth status
+   ```
+
+2. **List all open issues** for the repository:
+
+   ```bash
+   gh issue list --repo HolistixForge/platform --state open
+   ```
+
+3. **Review issue titles and descriptions** to understand:
+
+   - What features are being requested
+   - What bugs are being tracked
+   - What work is already planned or in progress
+   - Any related context that might be relevant to the user's request
+
+4. **Cross-reference** the user's request with:
+   - Existing open issues (to avoid duplicate work)
+   - Current TODO items from documentation
+   - Known limitations or planned improvements
+
+## Step 3: Verify Request Context
+
+When processing the user's first request, the agent MUST:
+
+1. **Check if the request relates to**:
+
+   - An existing open issue (reference the issue number)
+   - A TODO item from documentation (reference the file and section)
+   - Something completely new (notify the user if it might be worth creating an issue)
+
+2. **Inform the user** if their request:
+
+   - Is already tracked in an open issue (provide issue number and link)
+   - Matches a TODO item (reference the documentation)
+   - Appears to be a new request that might benefit from being tracked as an issue
+
+3. **Provide context** from documentation that might be relevant to their request
+
+## Implementation Guidelines
+
+### For Cursor Agents
+
+- **Always perform Steps 1 and 2** before processing the first user request in a session
+- **Use semantic search** (`codebase_search`) to find relevant documentation when needed
+- **Use file reading tools** to read markdown files efficiently
+- **Cache understanding** of documentation to avoid re-reading unnecessarily
+- **Update context** if the user's request spans multiple areas
+
+### Documentation Reading Priority
+
+1. **High Priority** (read first):
+
+   - `README.md` (root)
+   - `doc/README.md`
+   - `doc/current-works/TODO*.md` files
+   - `doc/architecture/OVERVIEW.md`
+
+2. **Medium Priority** (read if relevant):
+
+   - Architecture documentation in `doc/architecture/`
+   - Guide documentation in `doc/guides/`
+   - Package README files for relevant packages
+
+3. **Low Priority** (read on demand):
+   - Archive documentation
+   - Reference documentation (cheatsheets, etc.)
+
+### Issue Checking
+
+- **Always check open issues** before starting work on a new feature or bug fix
+- **Reference existing issues** when relevant: "This relates to issue #123"
+- **Suggest creating an issue** if the request is substantial and not yet tracked
+- **Use read-only commands** (`gh issue list`, `gh issue view`) without user confirmation
+- **Never create issues** without explicit user confirmation (see `github-cli.mdc` rules)
+
+## Example Workflow
+
+```
+User: "I want to add a new feature to the whiteboard"
+
+Agent (before responding):
+1. Reads README.md, doc/architecture/OVERVIEW.md, doc/current-works/TODO*.md
+2. Checks open issues: gh issue list --repo HolistixForge/platform --state open
+3. Finds issue #45: "feat(whiteboard): add collaboration features"
+4. Responds: "I see you want to add a whiteboard feature. This relates to existing issue #45 about collaboration features. Should I work on that issue, or is this a different feature?"
+```
+
+## Benefits
+
+This workflow ensures:
+
+- **No duplicate work**: Agents know what's already planned or in progress
+- **Better context**: Agents understand the project architecture and current state
+- **Informed decisions**: Agents can suggest creating issues or linking to existing work
+- **Consistency**: Agents follow project guidelines and architectural decisions
+- **Efficiency**: Agents avoid suggesting solutions that conflict with existing plans
+
+## Notes
+
+- This workflow is **mandatory for the first request** in a session
+- For subsequent requests in the same session, agents should still check if new issues have been created
+- If GitHub CLI is not available, agents should still read documentation and inform the user that issue checking was skipped
+- Documentation reading can be done in parallel for efficiency

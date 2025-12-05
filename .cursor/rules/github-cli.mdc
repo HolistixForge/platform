@@ -1,0 +1,247 @@
+---
+description: GitHub CLI integration guide for Cursor IDE
+globs:
+alwaysApply: true
+---
+
+# GitHub CLI Integration for Cursor IDE
+
+This workspace uses GitHub CLI (`gh`) to interact with GitHub issues and pull requests directly from Cursor. This guide explains how to set it up and use it.
+
+## Checking if GitHub CLI is Installed
+
+Before using GitHub CLI commands, check if it's installed:
+
+```bash
+which gh && gh --version
+```
+
+If the command fails or `gh` is not found, follow the installation instructions below.
+
+## Installation
+
+### Linux (Ubuntu/Debian/WSL)
+
+```bash
+# Add GitHub CLI repository
+curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+
+# Add repository to sources
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+
+# Update and install
+sudo apt update
+sudo apt install gh -y
+```
+
+### macOS
+
+```bash
+brew install gh
+```
+
+### Windows
+
+```bash
+# Using winget
+winget install --id GitHub.cli
+
+# Or using Chocolatey
+choco install gh
+```
+
+### Verify Installation
+
+```bash
+gh --version
+```
+
+## Authentication
+
+After installation, authenticate with GitHub:
+
+```bash
+gh auth login
+```
+
+This will prompt you to:
+
+1. Choose GitHub.com or GitHub Enterprise Server
+2. Choose authentication method (web browser recommended)
+3. Authorize the CLI application
+
+### Check Authentication Status
+
+```bash
+gh auth status
+```
+
+## ⚠️ IMPORTANT: User Confirmation Required
+
+**CRITICAL RULE:** Before executing ANY GitHub CLI command that modifies data (creates issues, updates issues, creates PRs, etc.), you MUST:
+
+1. **Show the command** to the user first
+2. **Explain what it will do**
+3. **Wait for explicit user confirmation** before executing
+4. **Never execute destructive or modifying commands** without user approval
+
+This applies to all commands that:
+
+- Create issues (`gh issue create`)
+- Update issues (`gh issue edit`, `gh issue close`)
+- Create pull requests (`gh pr create`)
+- Any other command that modifies GitHub data
+
+Read-only commands (like `gh issue list`, `gh issue view`) can be executed without confirmation, but should still be explained to the user.
+
+## Repository Context
+
+This workspace is connected to: `HolistixForge/platform`
+
+Verify repository access:
+
+```bash
+gh repo view HolistixForge/platform
+```
+
+## Common Workflows
+
+### Creating GitHub Issues
+
+When the user wants to create a GitHub issue from Cursor:
+
+1. **Analyze the request** - Understand what the issue is about
+2. **Ask clarifying questions** - Gather context, acceptance criteria, labels
+3. **Draft the issue** - Create a well-documented issue with:
+   - Clear, descriptive title
+   - Detailed description with context
+   - Background information
+   - Acceptance criteria (if applicable)
+   - Relevant labels (if needed)
+4. **Show the command and get confirmation** - Display the `gh issue create` command with all parameters and wait for user approval
+5. **Create the issue** using GitHub CLI (only after user confirms):
+
+```bash
+gh issue create \
+  --title "Issue Title" \
+  --body "Issue description with markdown support" \
+  --label "bug,enhancement" \
+  --repo HolistixForge/platform
+```
+
+### Viewing Issues
+
+```bash
+# List all open issues
+gh issue list --repo HolistixForge/platform
+
+# View a specific issue
+gh issue view <issue-number> --repo HolistixForge/platform
+
+# View issues in web browser
+gh issue view <issue-number> --web --repo HolistixForge/platform
+```
+
+### Converting TODOs to Issues
+
+When converting TODO items to GitHub issues:
+
+1. **Read and understand** the TODO item
+2. **Ask the user** to explain the context and requirements
+3. **Analyze** the TODO to determine:
+   - Issue type (bug, feature, enhancement, etc.)
+   - Priority and labels
+   - Dependencies or related issues
+   - Technical details needed
+4. **Draft a comprehensive issue** with:
+   - Clear title following conventional format: `type(scope): description`
+   - Detailed description
+   - Code examples or references if applicable
+   - Acceptance criteria
+   - Related context or documentation links
+5. **Show the command and get user confirmation** - Display the complete `gh issue create` command and wait for explicit approval
+6. **Create the issue** (only after user confirms) and provide the issue number to the user
+
+### Example: Creating an Issue from a TODO
+
+```bash
+# Example: Create an issue for a feature request
+gh issue create \
+  --title "feat(ui): add responsive tab bar" \
+  --body "## Description
+The tab bar should be responsive to handle different screen sizes.
+
+## Context
+Currently, the tab bar doesn't adapt well to smaller screens or mobile devices.
+
+## Acceptance Criteria
+- [ ] Tab bar adapts to screen width
+- [ ] Tabs can scroll horizontally on small screens
+- [ ] Touch-friendly interactions on mobile
+
+## Related
+- Related to UI hierarchy work (see TODO_ANTOINE.md)" \
+  --label "enhancement,ui" \
+  --repo HolistixForge/platform
+```
+
+## Best Practices
+
+1. **ALWAYS get user confirmation** before executing any GitHub CLI command that modifies data
+2. **Always verify** GitHub CLI is installed before attempting to use it
+3. **Check authentication** status if commands fail
+4. **Use descriptive titles** following conventional commit message format
+5. **Include context** in issue descriptions - link to code, related issues, or documentation
+6. **Add appropriate labels** to help with issue organization
+7. **Reference issues** in commit messages using `Closes #123` or `Fixes #456`
+
+## Troubleshooting
+
+### GitHub CLI Not Found
+
+If `gh` command is not found:
+
+1. Check if it's installed: `which gh`
+2. If not installed, follow installation instructions above
+3. Verify PATH includes the installation directory
+
+### Authentication Errors
+
+If authentication fails:
+
+1. Check status: `gh auth status`
+2. Re-authenticate: `gh auth login`
+3. Verify repository permissions
+
+### Repository Access Issues
+
+If you can't access the repository:
+
+1. Verify repository name: `gh repo view HolistixForge/platform`
+2. Check if you have access to the repository
+3. Ensure authentication is for the correct GitHub account
+
+## Integration with Cursor
+
+Cursor agents can:
+
+- Check if GitHub CLI is installed and guide installation if needed
+- Help draft well-documented GitHub issues
+- Convert TODO items to structured GitHub issues
+- Create issues with proper formatting and labels
+- Link issues to code references and documentation
+
+**MANDATORY for Cursor Agents:**
+
+- **NEVER execute GitHub CLI commands that modify data without explicit user confirmation**
+- Always show the command and explain what it will do before asking for confirmation
+- Wait for the user to approve before running any `gh issue create`, `gh issue edit`, `gh pr create`, etc.
+- Read-only commands (`gh issue list`, `gh issue view`) can be executed but should still be explained
+
+When working with GitHub issues, always:
+
+- **Get user confirmation before creating or modifying issues**
+- Provide clear, actionable issue descriptions
+- Include code references when relevant
+- Link to related documentation or issues
+- Use appropriate labels and assignees when known
