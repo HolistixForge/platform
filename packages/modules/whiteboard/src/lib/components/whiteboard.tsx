@@ -132,9 +132,9 @@ export const Whiteboard = ({
   viewId: string;
   projectId: string;
 }) => {
-  const { whiteboard } = useModuleExports<{ whiteboard: TWhiteboardFrontendExports }>(
-    'whiteboard'
-  );
+  const { whiteboard } = useModuleExports<{
+    whiteboard: TWhiteboardFrontendExports;
+  }>('whiteboard');
   const uies = whiteboard.uiElements;
   return (
     <RightPanels panelsDefs={uies.panels}>
@@ -176,7 +176,9 @@ const WhiteboardWhiteboard = ({
 
   const dispatcher = useDispatcher<TEventEdgePropertyChange | TEventNewEdge>();
 
-  const lsdm = useLocalSharedDataManager<TWhiteboardSharedData & TCoreSharedData>();
+  const lsdm = useLocalSharedDataManager<
+    TWhiteboardSharedData & TCoreSharedData
+  >();
 
   const { awareness } = useAwareness();
 
@@ -636,7 +638,9 @@ const ReactFlowBaseLayer = ({
    * Space context
    */
 
-  const sdm = useLocalSharedDataManager<TWhiteboardSharedData & TCoreSharedData>();
+  const sdm = useLocalSharedDataManager<
+    TWhiteboardSharedData & TCoreSharedData
+  >();
 
   const ss = useMemo(() => new CollabSpaceState(viewId, sdm), [viewId, sdm]);
 

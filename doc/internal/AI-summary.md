@@ -1,10 +1,10 @@
-# AI Context: Demiurge Quick Start
+# AI Context: Holistix Forge Quick Start
 
-This document helps AI assistants quickly understand the Demiurge codebase and architecture.
+This document helps AI assistants quickly understand the Holistix Forge codebase and architecture.
 
 ## Project Overview
 
-**Demiurge** is a real-time collaborative development platform with:
+**Holistix Forge** is a real-time collaborative development platform with:
 
 - Interactive whiteboard (React Flow)
 - User-managed containerized applications (JupyterLab, pgAdmin, etc.)

@@ -16,7 +16,7 @@ INSERT INTO public.oauth_clients (
     redirect_uris,
     grants
 ) VALUES (
-    'demiurge-global',
+    'app-main-client-id',
     'none',
     '["https://example.com", "https://frontend.example.com"]'::json,
     '["authorization_code", "refresh_token"]'::json

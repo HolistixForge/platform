@@ -4,7 +4,7 @@
 
 ## Overview
 
-Demiurge uses a **pool-based multi-gateway architecture** where gateway containers are dynamically allocated to organizations on-demand.
+Holistix Forge uses a **pool-based multi-gateway architecture** where gateway containers are dynamically allocated to organizations on-demand.
 
 > **Related Documentation:**
 >
@@ -40,7 +40,7 @@ See: [../architecture/SYSTEM_ARCHITECTURE.md](../architecture/SYSTEM_ARCHITECTUR
 
 All domains managed by PowerDNS with single DNS delegation on host OS:
 
-- **Frontend:** `domain.local` (or custom: `demiurge.mycompany.local`)
+- **Frontend:** `domain.local` (or custom: `whatever.mycompany.local`)
 - **Ganymede API:** `ganymede.domain.local`
 - **Gateways:** `org-{organization-uuid}.domain.local` (dynamic)
 - **User Containers:** `uc-{container-uuid}.org-{org-uuid}.domain.local` (dynamic)

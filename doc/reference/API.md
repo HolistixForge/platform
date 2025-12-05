@@ -131,19 +131,19 @@ The gateway sometime uses scope-based authorization for fine-grained access cont
 
 ### OAuth2 Provider (User Authentication)
 
-Ganymede provides OAuth2 for **user authentication** only. This is used by the frontend to obtain user access tokens via the global `demiurge-global` client.
+Ganymede provides OAuth2 for **user authentication** only. This is used by the frontend to obtain user access tokens via the global `app-main-client-id` client.
 
-| Method | Endpoint              | Description                        |
-| ------ | --------------------- | ---------------------------------- |
-| `GET`  | `/oauth/authorize`    | OAuth2 authorization endpoint      |
-| `POST` | `/oauth/authorize`    | OAuth2 authorization endpoint (POST variant) |
-| `POST` | `/oauth/token`        | Exchange code for token or refresh token |
-| `GET`  | `/oauth/public-key`   | Get JWT public key                 |
+| Method | Endpoint            | Description                                  |
+| ------ | ------------------- | -------------------------------------------- |
+| `GET`  | `/oauth/authorize`  | OAuth2 authorization endpoint                |
+| `POST` | `/oauth/authorize`  | OAuth2 authorization endpoint (POST variant) |
+| `POST` | `/oauth/token`      | Exchange code for token or refresh token     |
+| `GET`  | `/oauth/public-key` | Get JWT public key                           |
 
 **Authentication Details:**
 
-- **`GET /oauth/authorize`**: User must be authenticated via session cookie. Used for OAuth2 authorization code flow where the user grants permission to the frontend application. Only supports the global `demiurge-global` client.
-- **`POST /oauth/token`**: No authentication required. Uses client credentials (client_id, client_secret) from request body. Supports `authorization_code` and `refresh_token` grant types. Only supports the global `demiurge-global` client.
+- **`GET /oauth/authorize`**: User must be authenticated via session cookie. Used for OAuth2 authorization code flow where the user grants permission to the frontend application. Only supports the global `app-main-client-id` client.
+- **`POST /oauth/token`**: No authentication required. Uses client credentials (client_id, client_secret) from request body. Supports `authorization_code` and `refresh_token` grant types. Only supports the global `app-main-client-id` client.
 - **`GET /oauth/public-key`**: No authentication required. Returns the public key used to verify JWT tokens issued by Ganymede.
 
 **Note:** Ganymede OAuth is **only for user authentication**. Container applications use Gateway OAuth (see Gateway API section).
@@ -208,13 +208,13 @@ Gateway pushes state updates via Yjs synchronization protocol.
 
 ### HTTP Endpoints
 
-| Method | Endpoint             | Authentication                                | Description                             |
-| ------ | -------------------- | --------------------------------------------- | --------------------------------------- |
-| `GET`  | `/collab/ping`       | None                                          | Health check                            |
-| `POST` | `/collab/start`      | None (handshake token in body)                | Initialize gateway (called by Ganymede) |
-| `GET`  | `/collab/room-id`    | `TJwtUser` with `project_id` + project access | Get room ID for a project               |
-| `POST` | `/collab/event`      | `TJwtUser` with `project_id` + project access | Process collaborative event             |
-| `GET`  | `/collab/vpn-config` | JWT with `org:{org_id}:connect-vpn` scope     | Get OpenVPN configuration               |
+| Method | Endpoint             | Authentication                                        | Description                                                   |
+| ------ | -------------------- | ----------------------------------------------------- | ------------------------------------------------------------- |
+| `GET`  | `/collab/ping`       | None                                                  | Health check                                                  |
+| `POST` | `/collab/start`      | None (handshake token in body)                        | Initialize gateway (called by Ganymede)                       |
+| `GET`  | `/collab/room-id`    | `TJwtUser` with `project_id` + project access         | Get room ID for a project                                     |
+| `POST` | `/collab/event`      | `TJwtUser` with `project_id` + project access         | Process collaborative event                                   |
+| `GET`  | `/collab/vpn-config` | JWT with `org:{org_id}:connect-vpn` scope             | Get OpenVPN configuration                                     |
 | `ALL`  | `/svc/{serviceId}`   | `TJwtUser` (or other JWT types as defined by modules) | Resolve a module-defined protected service (returns metadata) |
 
 **Authentication Details:**
@@ -230,11 +230,11 @@ Gateway pushes state updates via Yjs synchronization protocol.
 
 Gateway provides OAuth2 for **container applications** (JupyterLab, pgAdmin, n8n, etc.). Each container service gets its own OAuth client, allowing users to authenticate within those services.
 
-| Method | Endpoint              | Authentication                    | Description                             |
-| ------ | --------------------- | --------------------------------- | --------------------------------------- |
-| `GET`  | `/oauth/authorize`    | JWT (user token)                  | OAuth authorization endpoint            |
+| Method | Endpoint              | Authentication                    | Description                              |
+| ------ | --------------------- | --------------------------------- | ---------------------------------------- |
+| `GET`  | `/oauth/authorize`    | JWT (user token)                  | OAuth authorization endpoint             |
 | `POST` | `/oauth/token`        | None (client credentials in body) | Exchange code for token or refresh token |
-| `POST` | `/oauth/authenticate` | OAuth access token (Bearer)       | Validate OAuth token                    |
+| `POST` | `/oauth/authenticate` | OAuth access token (Bearer)       | Validate OAuth token                     |
 
 **Authentication Details:**
 

@@ -1,8 +1,7 @@
 ⚠️ Antoine's stuffs
 
-license
 repo rename and main
-convert all this to issue and PR
+convert all this and ./TODO.md to issue and PR, remve current-work dir
 
 ci cd : npx nx run-many -t build --verbose | grep error. check bundles, compile storybooks
 /root/.local-dev

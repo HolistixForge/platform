@@ -35,7 +35,7 @@ Before creating environments, you need a development container. This is a one-ti
 ```bash
 # Run Ubuntu container with Docker socket
 docker run -d \
-  --name demiurge-dev \
+  --name holistix-dev \
   -p 80:80 \
   -p 443:443 \
   -p 53:53/udp \
@@ -45,7 +45,7 @@ docker run -d \
   /bin/bash
 
 # Attach to the container
-docker exec -it demiurge-dev /bin/bash
+docker exec -it holistix-dev /bin/bash
 ```
 
 **Ports and mounts explained:**
@@ -68,7 +68,7 @@ apt install -y git curl sudo
 # Clone monorepo
 mkdir -p /root/workspace
 cd /root/workspace
-git clone https://github.com/YourOrg/monorepo.git
+git clone https://github.com/HolistixForge/platform.git
 ```
 
 ## Quick Start (TL;DR)

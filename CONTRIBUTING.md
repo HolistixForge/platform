@@ -1,4 +1,4 @@
-# Contributing to Demiurge
+# Contributing to Holistix Forge
 
 Thank you for your interest in contributing! This guide will help you set up your development environment and understand our workflow.
 
@@ -21,8 +21,8 @@ See **[doc/guides/LOCAL_DEVELOPMENT.md](doc/guides/LOCAL_DEVELOPMENT.md)** for c
 
 ```bash
 # Clone repository
-git clone https://github.com/YourOrg/demiurge.git
-cd demiurge
+git clone https://github.com/HolistixForge/platform.git
+cd holistix
 
 # Install dependencies
 npm install
@@ -202,7 +202,7 @@ Create an issue with:
 
 ### Contributor License Agreement
 
-By contributing code to Demiurge, you agree that:
+By contributing code to Holistix Forge, you agree that:
 
 - Your contributions will be licensed under the GNU Affero General Public License v3.0 (AGPL-3.0)
 - You retain copyright to your contributions

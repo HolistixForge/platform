@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Demiurge frontend is composed of two primary packages:
+The Holistix Forge frontend is composed of two primary packages:
 
 1. `app-frontend` — React SPA that renders the user interface, context hierarchy, and module views.
 2. `frontend-data` — Shared data layer that provides API clients, React Query hooks, and context providers.

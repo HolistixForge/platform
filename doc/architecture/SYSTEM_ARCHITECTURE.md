@@ -1,4 +1,4 @@
-# Demiurge Platform - System Architecture
+# Holistix Forge Platform - System Architecture
 
 **Complete architecture diagram combining infrastructure, components, and data flow.**
 

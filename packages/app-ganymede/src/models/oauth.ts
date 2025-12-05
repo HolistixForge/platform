@@ -48,7 +48,7 @@ export const model: AuthorizationCodeModel &
     clientSecret: string
   ): Promise<Client | Falsey> => {
     // TODO: OAuth moved to gateway - this is now a stub
-    // This is only used for the global 'demiurge-global' client
+    // This is only used for the global 'app-main-client-id' client
     if (clientId === GLOBAL_CLIENT_ID) {
       return {
         id: GLOBAL_CLIENT_ID,

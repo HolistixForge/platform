@@ -1,10 +1,10 @@
 # Architecture Overview
 
-This document provides a high-level overview of the Demiurge platform architecture.
+This document provides a high-level overview of the Holistix Forge platform architecture.
 
 ## System Components
 
-Demiurge is composed of three main applications plus supporting infrastructure.
+Holistix Forge is composed of three main applications plus supporting infrastructure.
 
 ---
 
@@ -53,7 +53,7 @@ see [psql schema](../../packages/app-ganymede/database/schema/02-schema.sql)
 - `organizations`, `organizations_members`
 - `projects`, `projects_members`
 - `gateways`, `organizations_gateways`
-- `oauth_clients`, `oauth_tokens` (for user authentication via global `demiurge-global` client)
+- `oauth_clients`, `oauth_tokens` (for user authentication via global `app-main-client-id` client)
 
 ### 2. app-gateway (Gateway)
 
@@ -259,6 +259,7 @@ Modules can register protected HTTP/WebSocket endpoints with custom permission l
 - **Gateway endpoint** - `/svc/{serviceId}` validates JWT and calls module logic
 
 **Example:** User container terminals via ttyd
+
 - Module: `user-containers`
 - Service ID: `user-containers:terminal`
 - Permission: `user-containers:[user-container:*]:terminal`

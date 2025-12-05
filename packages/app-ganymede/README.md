@@ -30,7 +30,7 @@ See [doc/architecture/OVERVIEW.md](../../doc/architecture/OVERVIEW.md) for syste
 Multiple authentication methods:
 
 - OAuth providers (GitHub, GitLab, Discord, LinkedIn) - external OAuth login
-- OAuth2 server for user authentication (global `demiurge-global` client) - frontend token issuance
+- OAuth2 server for user authentication (global `app-main-client-id` client) - frontend token issuance
 - TOTP (2FA)
 - Magic link (email)
 - Local (email/password)

@@ -1,6 +1,6 @@
 # Documentation Hub
 
-Welcome to the Demiurge documentation! This hub will guide you to the right resources.
+Welcome to the Holistix Forge documentation! This hub will guide you to the right resources.
 
 ## 🎯 I Want To...
 
@@ -156,4 +156,4 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md#documentation-structure) for more detai
 
 ## History and Rationale
 
-- 📖 **[Fluid Lifecycle Whitepaper](fluid-lifecycle/README.md)** – learn why Demiurge began, the pain points it targets, and the original engineering rationale.
+- 📖 **[Fluid Lifecycle Whitepaper](fluid-lifecycle/README.md)** – learn why Holistix Forge began, the pain points it targets, and the original engineering rationale.

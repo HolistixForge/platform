@@ -519,11 +519,10 @@ All Yjs shared data event types renamed from `'space:*'` to `'whiteboard:*'`:
 
 ### 8.2 OAuth Configuration
 
-- [ ] **8.2.1** Update OAuth client names:
-  - [ ] `packages/app-ganymede/src/models/oauth.ts`
-  - [ ] `packages/app-ganymede/src/routes/auth/oauth.ts`
-  - [ ] `packages/types/src/lib/ganymede-api/oauth.ts`
-  - [ ] Replace "demiurge-global" client name with "holistix-global"
+- [x] **8.2.1** Update OAuth client names:
+  - [x] `packages/app-ganymede/src/models/oauth.ts`
+  - [x] `packages/app-ganymede/src/routes/auth/oauth.ts`
+  - [x] `packages/types/src/lib/ganymede-api/oauth.ts`
 
 ### 8.3 API Specifications
 
@@ -899,10 +898,10 @@ git commit -m "Apply automated rebranding: text replacements"
 
 ### Special Attention Required
 
-- [ ] **OAuth client names** - "demiurge-global" → "holistix-global"
+- [x] **OAuth client names** - "demiurge-global" → "app-main-client-id"
 
-  - [ ] This is a breaking change for existing users
-  - [ ] May need migration path or backward compatibility
+  - [x] This is a breaking change for existing users
+  - [x] May need migration path or backward compatibility
 
 - [x] **Package type definitions** - `@monorepo/demiurge-types` → `@holistix/types`
 

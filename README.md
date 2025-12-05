@@ -1,8 +1,8 @@
-# Demiurge
+# Holistix Forge
 
 > Real-time collaborative development platform with containerized applications
 
-Demiurge is a collaborative workspace that combines real-time editing, whiteboard visualization, and user-managed containerized applications (JupyterLab, pgAdmin, n8n, etc.) in a single platform.
+Holistix Forge is a collaborative workspace that combines real-time editing, whiteboard visualization, and user-managed containerized applications (JupyterLab, pgAdmin, n8n, etc.) in a single platform.
 
 ## ✨ Key Features
 
@@ -68,7 +68,7 @@ Quick Links:
 
 \`\`\`
 ┌─────────────────────────────────────────────────────────────┐
-│                     Demiurge Platform                        │
+│                     Holistix Forge Platform                        │
 ├─────────────────────────────────────────────────────────────┤
 │                                                              │
 │  ┌──────────────┐     ┌──────────────┐                     │
@@ -131,7 +131,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow, coding standard
 
 ## 📄 License
 
-Demiurge is licensed under the **[GNU Affero General Public License v3.0](LICENSE)** (AGPL-3.0).
+Holistix Forge is licensed under the **[GNU Affero General Public License v3.0](LICENSE)** (AGPL-3.0).
 
 This is a strong copyleft license that:
 - ✅ Allows commercial use, distribution, modification, and private use
@@ -150,5 +150,5 @@ For more information about the AGPL-3.0 license, see https://choosealicense.com/
 ## 🙋 Support
 
 - **Documentation:** [doc/README.md](doc/README.md)
-- **Issues:** [GitHub Issues](https://github.com/YourOrg/demiurge/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/YourOrg/demiurge/discussions)
+- **Issues:** [GitHub Issues](https://github.com/HolistixForge/platform/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/HolistixForge/platform/discussions)
