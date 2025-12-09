@@ -23,6 +23,7 @@ Before processing the first user request, the agent MUST:
    - `README.md` (root level)
    - `CONTRIBUTING.md` (if exists)
    - All files in `doc/` directory (architecture, guides, reference, current-works)
+   - All files linked from the previous files
    - Package-level `README.md` files in `packages/`
    - Any `TODO*.md` or `TODO_*.md` files in `doc/current-works/`
 

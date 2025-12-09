@@ -1,13 +1,13 @@
 ⚠️ Antoine's stuffs
 
-convert all this and ./TODO.md to issue and PR, remve current-work dir
+GOAL: convert all this and ./TODO.md to issue and PR, THEN remve current-work dir
+
+---
 
 ci cd : npx nx run-many -t build --verbose | grep error. check bundles, compile storybooks
 /root/.local-dev
 user-containers default runner, jupyter: cmd generator lowercase
 credentials
-
-sharedata nodeView purge
 
 module federation
 virtual file id
