@@ -47,10 +47,6 @@ export function App() {
                   path="authorizations"
                   element={<ProjectAuthorizationsPage />}
                 />
-
-                {/* TODO_MENU
-              <Route path="jupyterlabs" element={<ProjectJupyterlabsPage />} />
-              */}
               </Route>
 
               <Route path="/account/signup" element={<SignupPage />} />

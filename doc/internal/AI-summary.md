@@ -259,7 +259,6 @@ See [`doc/architecture/SYSTEM_ARCHITECTURE.md#database-schema-gateways`](../arch
 - [Overview](../architecture/OVERVIEW.md) - System design
 - [System Architecture](../architecture/SYSTEM_ARCHITECTURE.md) - Complete system diagram
 - [Gateway Architecture](../architecture/GATEWAY_ARCHITECTURE.md) - Multi-gateway architecture
-- [TODO](../current-works/TODO.md) - tasks
 - [Layer System](../../packages/modules/space/src/lib/layer.md) - Whiteboard layers ⭐
 
 **Guides:**
@@ -272,6 +271,7 @@ See [`doc/architecture/SYSTEM_ARCHITECTURE.md#database-schema-gateways`](../arch
 
 - [API](../reference/API.md) - REST API endpoints
 - [Cheatsheet](../reference/CHEATSHEET.md) - Common commands
+- TODO, issue, work in progress: see github issues
 
 **Contributing:**
 

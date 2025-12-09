@@ -34,10 +34,13 @@ Welcome to the Holistix Forge documentation! This hub will guide you to the righ
 - 🖥️ **[GPU Host Setup](reference/GPU_HOST_SETUP.md)** - Configure GPU access for Docker
 - 📄 **[Licensing](LICENSING.md)** - License information and commercial licensing
 
-### Internal/WIP
+### Internal
 
-- 📝 **[TODO](current-works/TODO.md)** - Task tracking
 - 🤖 **[AI Summary](internal/AI-summary.md)** - Context for AI tools
+
+### Work In Progress
+
+see github issues
 
 ### Historical
 
@@ -64,10 +67,6 @@ doc/
 │   ├── CHEATSHEET.md         - Commands, aliases, tools
 │   ├── API.md                - REST API documentation
 │   └── GPU_HOST_SETUP.md     - GPU configuration
-│
-├── current-works/            # Active Work & Tracking
-│   ├── TODO.md               - Task tracking
-│   └── TODO_ANTOINE.md       - Antoine's task list
 │
 ├── internal/                 # Internal Notes
 │   └── AI-summary.md         - AI context notes
