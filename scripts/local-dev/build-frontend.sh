@@ -22,6 +22,19 @@ if [ ! -d "$ENV_DIR" ]; then
   exit 1
 fi
 
+# Read domain from environment configuration
+ENV_FILE="${ENV_DIR}/.env.ganymede"
+if [ ! -f "$ENV_FILE" ]; then
+  echo "❌ Environment config not found: $ENV_FILE"
+  exit 1
+fi
+
+DOMAIN=$(grep "^DOMAIN=" "$ENV_FILE" | cut -d= -f2 | tr -d '"' || echo "")
+if [ -z "$DOMAIN" ]; then
+  echo "❌ DOMAIN not found in $ENV_FILE"
+  exit 1
+fi
+
 if [ ! -d "$WORKSPACE_PATH" ]; then
   echo "❌ Workspace path not found: $WORKSPACE_PATH"
   exit 1
@@ -30,13 +43,13 @@ fi
 cd "${WORKSPACE_PATH}"
 
 echo "🏗️  Building frontend for ${ENV_NAME}..."
+echo "   Domain: ${DOMAIN}"
 
 # Create .env for frontend build
 cat > packages/app-frontend/.env <<EOF
 VITE_ENVIRONMENT=${ENV_NAME}
-VITE_DOMAIN_NAME=${ENV_NAME}.local
-VITE_GANYMEDE_URL=https://ganymede.${ENV_NAME}.local
-VITE_GATEWAY_URL=https://gateway.${ENV_NAME}.local
+VITE_DOMAIN_NAME=${DOMAIN}
+VITE_GANYMEDE_URL=https://ganymede.${DOMAIN}
 EOF
 
 # Build
@@ -44,8 +57,8 @@ npx nx run app-frontend:build
 
 echo ""
 echo "✅ Frontend built for ${ENV_NAME}"
-echo "   Output: dist/packages/app-frontend/"
-echo "   Served by Nginx at: https://${ENV_NAME}.local"
+echo "   Output: packages/app-frontend/dist/"
+echo "   Served by Nginx at: https://${DOMAIN}"
 echo ""
 echo "💡 Restart Nginx to pick up changes:"
 echo "   sudo service nginx reload"

@@ -15,7 +15,11 @@ RUN apt-get update && apt-get install -y \
   nginx \
   inotify-tools \
   sudo \
-  inetutils-ping
+  inetutils-ping \
+  curl
+
+# Copy app directory (contains scripts needed for startup)
+COPY ./app/ /app/
 
 # Copy and set entrypoint (avoid BuildKit-specific --chmod flag)
 COPY ./app/entrypoint-dev.sh /entrypoint.sh

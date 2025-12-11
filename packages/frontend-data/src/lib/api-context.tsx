@@ -19,33 +19,27 @@ export const apiContext = createContext<TApiContext | null>(null);
 //
 
 type ApiContextProps = {
-  env: string;
   domain: string;
   children: ReactNode;
 };
 
 //
 
-const fqdn = (
-  host: string | null,
-  env: string | null,
-  domain: string
-): string => {
+const fqdn = (host: string | null, domain: string): string => {
+  // Domain is already the full domain name (e.g., "domain.local")
+  // It should NOT be prefixed with environment name
+  // The env parameter is only used to determine if it's production, not for FQDN construction
   if (host === null) {
-    if (env === null) return domain;
-    else return `${env}.${domain}`;
+    return domain;
   } else {
-    if (env === null) return `${host}.${domain}`;
-    else return `${host}.${env}.${domain}`;
+    return `${host}.${domain}`;
   }
 };
 
-export const ApiContext = ({ env, domain, children }: ApiContextProps) => {
+export const ApiContext = ({ domain, children }: ApiContextProps) => {
   const v: TApiContext = useMemo(() => {
-    const environment = env === 'production' || env === '' ? null : env;
-
-    const frontendFQDN = fqdn(null, environment, domain);
-    const ganymedeFQDN = fqdn('ganymede', environment, domain);
+    const frontendFQDN = fqdn(null, domain);
+    const ganymedeFQDN = fqdn('ganymede', domain);
 
     const queryClient = new QueryClient();
 
@@ -59,7 +53,7 @@ export const ApiContext = ({ env, domain, children }: ApiContextProps) => {
       ganymedeFQDN,
       queryClient,
     };
-  }, [domain, env]);
+  }, [domain]);
 
   return (
     <apiContext.Provider value={v}>

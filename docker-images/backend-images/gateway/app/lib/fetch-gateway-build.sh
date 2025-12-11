@@ -5,7 +5,12 @@
 set -e
 
 # Configuration
-BUILD_SERVER_IP=${BUILD_SERVER_IP:-$(ip route | grep default | awk '{print $3}')}
+# BUILD_SERVER_IP must be provided via environment variable
+if [ -z "$BUILD_SERVER_IP" ]; then
+    echo "❌ BUILD_SERVER_IP environment variable is required"
+    exit 1
+fi
+
 BUILD_SERVER="http://${BUILD_SERVER_IP}:8090"
 BUILD_URL="${BUILD_SERVER}/gateway-${ENV_NAME}.tar.gz"
 EXTRACT_DIR="/opt"  # Extract to /opt (creates /opt/gateway/)
@@ -41,7 +46,9 @@ else
     echo "   2. Build is packed:"
     echo "      ./scripts/local-dev/pack-gateway-build.sh ${ENV_NAME}"
     echo ""
-    echo "   3. Build server is accessible:"
+    echo "   3. BUILD_SERVER_IP is correct (current: ${BUILD_SERVER_IP}):"
     echo "      curl -I ${BUILD_URL}"
+    echo ""
+    echo "   4. If dev container IP changed, restart gateways with new IP"
     exit 1
 fi

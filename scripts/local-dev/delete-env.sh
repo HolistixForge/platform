@@ -77,9 +77,16 @@ fi
 echo "🗑️  Removing directory..."
 rm -rf "${ENV_DIR}"
 
+# Update CoreDNS configuration to remove this domain
+echo "🌐 Updating CoreDNS configuration..."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+"${SCRIPT_DIR}/update-coredns.sh" || {
+    echo "   ⚠️  Failed to update CoreDNS. You may need to run ./update-coredns.sh manually."
+}
+
 echo ""
 echo "✅ Environment '${ENV_NAME}' deleted"
 echo ""
-echo "ℹ️  DNS records are managed by PowerDNS. No manual cleanup needed."
+echo "ℹ️  DNS records are managed by PowerDNS. CoreDNS configuration has been updated."
 echo ""
 

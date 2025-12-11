@@ -266,7 +266,7 @@ server {
     ssl_certificate ${ENV_DIR}/ssl-cert.pem;
     ssl_certificate_key ${ENV_DIR}/ssl-key.pem;
 
-    root ${WORKSPACE_PATH}/dist/packages/app-frontend;
+    root ${WORKSPACE_PATH}/packages/app-frontend/dist;
     index index.html;
 
     location / {
@@ -411,7 +411,13 @@ curl -X PATCH "http://localhost:8081/api/v1/servers/localhost/zones/${DOMAIN}." 
 
 echo "   ✅ DNS records registered in PowerDNS"
 
-# 11. Create gateway pool
+# 11. Update CoreDNS configuration to include this domain
+echo "🌐 Updating CoreDNS configuration..."
+"${WORKSPACE_PATH}/scripts/local-dev/update-coredns.sh" || {
+    echo "   ⚠️  Failed to update CoreDNS. You may need to run ./update-coredns.sh manually."
+}
+
+# 12. Create gateway pool
 echo "📦 Creating gateway pool (${GATEWAY_POOL_SIZE} gateways)..."
 
 # Create org-data directory for centralized data storage
@@ -423,7 +429,7 @@ chmod 755 "${ENV_DIR}/org-data"
 ENV_NAME="${ENV_NAME}" DOMAIN="${DOMAIN}" \
   "${WORKSPACE_PATH}/scripts/local-dev/gateway-pool.sh" create ${GATEWAY_POOL_SIZE} "${WORKSPACE_PATH}"
 
-# 14. Environment ready!
+# 13. Environment ready!
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║  ✅ Environment ${ENV_NAME} ready!                           ║"
@@ -456,8 +462,8 @@ echo "4. 🌐 Access from host OS browser (after DNS setup):"
 echo "      https://${DOMAIN}"
 echo "      https://ganymede.${DOMAIN}"
 echo ""
-echo "   ⚠️  ONE-TIME: Configure host OS DNS delegation"
-echo "   See: doc/guides/LOCAL_DEVELOPMENT.md"
+echo "   ⚠️  ONE-TIME: Configure host OS DNS"
+echo "   See: doc/guides/DNS_COMPLETE_GUIDE.md"
 echo ""
 echo "5. 🔄 After code changes:"
 echo "      ./envctl.sh build ${ENV_NAME} gateway  (or 'all' for everything)"

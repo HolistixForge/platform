@@ -106,7 +106,11 @@ webserver-allow-from=0.0.0.0/0
 
 # Listening
 local-address=0.0.0.0
-local-port=53
+local-port=5300
+
+# Note: PowerDNS Authoritative Server does NOT forward queries
+# It only answers for zones it manages (*.domain.local)
+# To forward external queries, use CoreDNS or PowerDNS Recursor
 
 # Logging
 loglevel=4
@@ -126,12 +130,20 @@ echo ""
 # Start or restart PowerDNS safely
 echo "🚀 Starting PowerDNS..."
 
-# Start daemon only if not already running
+# Check if PowerDNS is already running
 if pgrep -x pdns_server >/dev/null 2>&1; then
-    echo "   PowerDNS already running (pdns_server process found), not starting a second instance."
-else
-    sudo pdns_server --daemon=yes --guardian=yes --config-dir=/etc/powerdns
+    echo "   PowerDNS already running, restarting to apply config changes..."
+    sudo pkill pdns_server 2>/dev/null || true
+    sleep 2
+    # Force kill if still running
+    if pgrep -x pdns_server >/dev/null 2>&1; then
+        sudo pkill -9 pdns_server 2>/dev/null || true
+        sleep 1
+    fi
 fi
+
+# Start PowerDNS
+sudo pdns_server --daemon=yes --guardian=yes --config-dir=/etc/powerdns
 
 # Wait for PowerDNS to be ready
 echo "⏳ Waiting for PowerDNS to start..."
@@ -150,7 +162,8 @@ echo "✅ PowerDNS setup complete!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "📋 PowerDNS Information:"
-echo "   DNS Server: 0.0.0.0:53 (UDP/TCP)"
+echo "   DNS Server: 0.0.0.0:5300 (UDP/TCP) - Internal only"
+echo "   Note: CoreDNS will listen on port 53 for external access"
 echo "   API URL: http://localhost:8081"
 echo "   API Key: local-dev-api-key"
 echo "   Database: ${PG_HOST}:${PG_PORT}/pdns"

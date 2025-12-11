@@ -20,11 +20,23 @@ export async function signalGatewayReady(gateway_id: string): Promise<void> {
     return;
   }
 
-  log(EPriority.Info, 'GATEWAY_READY', 'Signaling ready status to Ganymede...');
+  // Use HTTPS by default (via Nginx on port 443)
+  // If GANYMEDE_PORT is explicitly set to a non-443 port, use HTTP for that port
+  const ganymedePort = process.env.GANYMEDE_PORT;
+  const useHttps = !ganymedePort || ganymedePort === '443';
+  const protocol = useHttps ? 'https' : 'http';
+  const port = ganymedePort && ganymedePort !== '443' ? `:${ganymedePort}` : '';
+  const ganymedeUrl = `${protocol}://${ganymedeFqdn}${port}`;
+
+  log(
+    EPriority.Info,
+    'GATEWAY_READY',
+    `Signaling ready status to Ganymede at ${ganymedeUrl}...`
+  );
 
   while (true) {
     try {
-      const response = await fetch(`https://${ganymedeFqdn}/gateway/ready`, {
+      const response = await fetch(`${ganymedeUrl}/gateway/ready`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

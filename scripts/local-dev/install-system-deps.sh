@@ -20,7 +20,7 @@ sudo service nginx start
 sudo apt install -y docker.io
 
 # Install other utilities
-sudo apt install -y jq curl git
+sudo apt install -y jq curl git dnsutils lsof net-tools psmisc
 
 echo "✅ System dependencies installed"
 echo ""

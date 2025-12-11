@@ -38,8 +38,7 @@ docker run -d \
   --name holistix-dev \
   -p 80:80 \
   -p 443:443 \
-  -p 53:53/udp \
-  -p 53:53/tcp \
+  -p 53:53/udp -p 53:53/tcp \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -it ubuntu:24.04 \
   /bin/bash
@@ -51,8 +50,10 @@ docker exec -it holistix-dev /bin/bash
 **Ports and mounts explained:**
 
 - `-p 80:80 -p 443:443` - HTTP/HTTPS for Nginx (Stage 1)
-- `-p 53:53/udp -p 53:53/tcp` - PowerDNS server
+- `-p 53:53/udp -p 53:53/tcp` - CoreDNS (DNS forwarder, handles local + external DNS)
 - `-v /var/run/docker.sock:/var/run/docker.sock` - Docker socket (manage gateway containers)
+
+**Note:** PowerDNS runs on port 5300 internally (not exposed). CoreDNS forwards queries to PowerDNS via `127.0.0.1:5300` within the container.
 
 **Note:** Gateway containers handle their own port mappings (7100-7199 for HTTP, 49100-49199/udp for OpenVPN) via `gateway-pool.sh`. The main container accesses gateway services via the Docker host's localhost (e.g., `127.0.0.1:7100`), so it doesn't need to expose these ports.
 
@@ -91,42 +92,9 @@ cd /root/workspace/monorepo
 
 **On host OS (ONE-TIME DNS Setup):**
 
-Get your dev container IP:
+The development environment uses **CoreDNS** as a DNS forwarder and **PowerDNS** as an authoritative DNS server.
 
-```bash
-# Inside dev container
-hostname -I
-# Example output: 172.17.0.2
-```
-
-Then configure DNS delegation on your host OS:
-
-**Windows:**
-
-```powershell
-# Network Adapter → Properties → IPv4 → DNS Server
-# Set to: 172.17.0.2 (your dev container IP)
-```
-
-**macOS:**
-
-```bash
-sudo mkdir -p /etc/resolver
-echo 'nameserver 172.17.0.2' | sudo tee /etc/resolver/domain
-```
-
-**Linux:**
-
-```bash
-# Edit /etc/systemd/resolved.conf
-sudo nano /etc/systemd/resolved.conf
-# Add:
-[Resolve]
-DNS=172.17.0.2
-Domains=~domain
-# Then restart:
-sudo systemctl restart systemd-resolved
-```
+**Complete DNS setup instructions:** See [DNS Architecture and Setup Guide](DNS_COMPLETE_GUIDE.md#host-os-configuration)
 
 **Access from host OS browser:**
 
@@ -136,7 +104,7 @@ https://ganymede.domain.local           → Ganymede API
 https://org-{uuid}.domain.local         → Gateway (when allocated)
 ```
 
-All DNS resolution happens automatically via PowerDNS!
+All DNS resolution happens automatically via CoreDNS and PowerDNS!
 
 ## Environment and Domain Structure
 
@@ -522,99 +490,11 @@ docker logs <container-id>
 
 These steps are performed **on your host OS** (Windows, macOS, or Linux), not in the development container.
 
-### Step 1: Get Development Container IP
+### DNS Configuration
 
-**In development container:**
+The development environment uses **CoreDNS** and **PowerDNS** for DNS resolution. You need to configure your host OS to use the dev container's DNS server.
 
-```bash
-hostname -I
-# Example output: 172.17.0.2
-```
-
-Or if using Docker Desktop with port forwarding, you can use `127.0.0.1`.
-
----
-
-### Step 2: Configure DNS Delegation
-
-**PowerDNS runs inside your dev container** and manages all domain records automatically. You only need to configure your host OS to delegate DNS queries to the dev container.
-
-#### Windows 11
-
-**Network Adapter Settings:**
-
-1. Open **Settings** → **Network & Internet** → **Properties** (for your active network)
-2. Scroll to **DNS server assignment** → Click **Edit**
-3. Select **Manual**
-4. Enable **IPv4**
-5. Enter your dev container IP (e.g., `172.17.0.2`)
-6. Click **Save**
-
-**Verify:**
-
-```powershell
-nslookup domain.local
-```
-
-#### macOS
-
-**DNS Resolver Configuration:**
-
-```bash
-# Create resolver directory
-sudo mkdir -p /etc/resolver
-
-# Create resolver file for your domain
-echo "nameserver <dev-container-ip>" | sudo tee /etc/resolver/domain
-
-# For custom domains, create additional files:
-# echo "nameserver <dev-container-ip>" | sudo tee /etc/resolver/mycompany
-```
-
-**Verify:**
-
-```bash
-dig @<dev-container-ip> domain.local
-scutil --dns  # Check resolver configuration
-```
-
-#### Linux (Ubuntu/Debian with systemd-resolved)
-
-**Edit systemd-resolved configuration:**
-
-```bash
-sudo nano /etc/systemd/resolved.conf
-```
-
-**Add:**
-
-```ini
-[Resolve]
-DNS=<dev-container-ip>
-Domains=~domain.local  # '~' means this server handles this domain
-```
-
-**Restart:**
-
-```bash
-sudo systemctl restart systemd-resolved
-```
-
-**Verify:**
-
-```bash
-resolvectl status
-dig @<dev-container-ip> domain.local
-```
-
-**Alternative (using NetworkManager):**
-
-```bash
-# Add DNS to your connection
-nmcli connection modify <connection-name> ipv4.dns "<dev-container-ip>"
-nmcli connection modify <connection-name> ipv4.dns-search "domain.local"
-nmcli connection up <connection-name>
-```
+**Complete DNS setup instructions:** See [DNS Architecture and Setup Guide](DNS_COMPLETE_GUIDE.md#host-os-configuration)
 
 ---
 
