@@ -1,5 +1,12 @@
 <div align="center">
-  <img src="website/holistix-logo.svg" alt="Holistix Forge Logo" width="200">
+  <a href="https://holistix.so" target="_blank" rel="noopener noreferrer">
+    <img src="website/holistix-logo.svg" alt="Holistix Forge Logo" width="200">
+  </a>
+  <br>
+  <br>
+  <a href="https://holistix.so" target="_blank" rel="noopener noreferrer">holistix.so</a>
+  <br>
+  <br>
 </div>
 
 # Holistix Forge : Platform
