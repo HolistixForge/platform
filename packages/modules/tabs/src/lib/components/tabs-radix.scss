@@ -8,34 +8,58 @@
   width: 100%;
   height: 100%;
 
-  .TabsList {
+  .TabsRow {
     flex-shrink: 0;
     display: flex;
     border-bottom: 1px solid var(--color-background);
     background: var(--c-blue-gray-5);
-    padding: 0 20px 0 40px;
-    gap: 15px;
-    overflow-x: auto;
-    justify-content: center;
+    padding: 0 12px;
     align-items: center;
     height: 30px;
+    gap: 10px;
+    position: relative;
+  }
+
+  .TabsScrollButton {
+    flex: 0 0 auto;
+    height: 100%;
+    min-width: 28px;
+    border: 0;
+    background: transparent;
+    color: var(--c-gray-7);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 0;
+
+    &:disabled {
+      opacity: 0.25;
+      cursor: default;
+    }
+  }
+
+  .TabsList {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    justify-content: flex-start;
+    align-items: center;
+    height: 100%;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-color: var(--c-blue-gray-4) var(--c-blue-gray-6);
 
     &::-webkit-scrollbar {
-      height: 5px;
-      width: 5px;
+      height: 8px;
+      width: 8px;
       background: var(--c-blue-gray-6);
     }
     &::-webkit-scrollbar-thumb {
       background: var(--c-blue-gray-4);
-      border-radius: 5px;
-    }
-
-    .line {
-      min-width: 2px;
-      border-radius: 2px;
-      height: 20px;
-      background: var(--c-blue-gray-4);
-      margin-left: 17px;
+      border-radius: 8px;
     }
 
     .TabsTrigger {
@@ -102,6 +126,7 @@
         justify-content: center;
         padding: 0 20px;
         position: relative;
+        border-radius: 6px;
         &:before,
         &:after {
           content: '';
@@ -149,6 +174,13 @@
           right: 2px;
         }
 
+        span[role='textbox'] {
+          max-width: 18ch;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
         span.editing {
           border-radius: 4px;
           box-sizing: border-box;
@@ -171,16 +203,109 @@
       }
     }
 
-    .add {
-      width: 12px;
-      height: 12px;
-      cursor: pointer;
-    }
+  }
 
-    .empty-space {
-      flex: 1 1 auto;
-      width: 100%;
+  .TabsRowActions {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+
+    .line {
+      width: 2px;
+      border-radius: 2px;
+      height: 20px;
+      background: var(--c-blue-gray-4);
     }
+  }
+
+  .TabsAddButton {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    height: 24px;
+    width: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+
+    .add {
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  .TabsOverflowButton {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    height: 24px;
+    width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--c-gray-7);
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .TabsOverflowMenu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    min-width: 180px;
+    max-width: min(320px, 90vw);
+    max-height: 60vh;
+    overflow: auto;
+    background: var(--c-blue-gray-6);
+    border: 1px solid var(--c-blue-gray-4);
+    border-radius: 10px;
+    padding: 6px;
+    z-index: 20;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  }
+
+  .TabsOverflowItem {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 10px;
+    border-radius: 8px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    color: var(--c-gray-7);
+    font-weight: 600;
+    font-size: 13px;
+    text-align: left;
+
+    &[data-state='active'] {
+      background: var(--color-background);
+    }
+  }
+
+  .TabsOverflowItemTitle {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .TabsOverflowItemCount {
+    flex: 0 0 auto;
+    background-color: var(--c-pink-3);
+    border-radius: 999px;
+    height: 18px;
+    min-width: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    padding: 0 6px;
   }
 
   .TabsContent {
@@ -193,6 +318,55 @@
     }
     &[data-state='active'] {
       display: block; /* Show active tab content */
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .TabsRoot {
+    .TabsRow {
+      height: 44px;
+      padding: 0 8px;
+      gap: 6px;
+    }
+
+    .TabsList {
+      gap: 8px;
+
+      .TabsTrigger {
+        font-size: 13px;
+
+        .trigger-active,
+        .trigger-terminal,
+        .trigger-non-active {
+          padding: 0 10px;
+          min-height: 44px;
+
+          &:before,
+          &:after {
+            display: none;
+          }
+
+          span[role='textbox'] {
+            max-width: 12ch;
+          }
+        }
+      }
+    }
+
+    .TabsAddButton,
+    .TabsOverflowButton {
+      height: 44px;
+      width: 44px;
+    }
+
+    .TabsOverflowButton {
+      font-size: 22px;
+    }
+
+    .TabsScrollButton {
+      min-width: 44px;
+      font-size: 22px;
     }
   }
 }

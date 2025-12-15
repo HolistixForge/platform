@@ -64,6 +64,18 @@ const tabsTree: TreeElement<Payload> = {
   ],
 };
 
+const overflowTree: TreeElement<Payload> = {
+  payload: { type: 'group' },
+  title: 'root',
+  children: Array.from({ length: 18 }).map((_, i) => ({
+    title: `tab-${i + 1}-very-long-name`,
+    payload: { type: 'group' },
+    children: [
+      { title: `panel-${i + 1}`, payload: { type: 'view' }, children: [] },
+    ],
+  })),
+};
+
 //
 //
 
@@ -79,6 +91,23 @@ const StoryWrapper = () => {
         newTabPayload={newTab}
         convertToGroupPayload={newGroup}
         maxRow={5}
+      />
+    </div>
+  );
+};
+
+const MobileOverflowWrapper = () => {
+  const newTab = (): Payload => ({ type: 'view' });
+  const newGroup = (): Payload => ({ type: 'group' });
+
+  return (
+    <div style={{ width: '320px', height: '400px' }}>
+      <TabsRadixLogic<Payload>
+        initialTree={overflowTree}
+        PanelComponent={TestPanel}
+        newTabPayload={newTab}
+        convertToGroupPayload={newGroup}
+        maxRow={2}
       />
     </div>
   );
@@ -108,4 +137,8 @@ type Story = StoryObj<typeof StoryWrapper>;
 
 export const Normal: Story = {
   args: {},
+};
+
+export const MobileOverflow: Story = {
+  render: () => <MobileOverflowWrapper />,
 };

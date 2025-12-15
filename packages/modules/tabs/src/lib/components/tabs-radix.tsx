@@ -1,4 +1,14 @@
-import { Children, FC, createRef, useCallback, useMemo, useState } from 'react';
+import {
+  Children,
+  FC,
+  createRef,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { CSSTransition } from 'react-transition-group';
 import * as Tabs from '@radix-ui/react-tabs';
 import { icons } from '@holistix-forge/ui-base';
@@ -124,38 +134,193 @@ const TabRow = ({
   onTabRename,
   onTabAdd,
 }: TabRowProps) => {
-  return (
-    <Tabs.List
-      key={levelPath.join(SEPARATOR)}
-      className="TabsList"
-      aria-label="Select space"
-    >
-      {tabs.map((t) => {
-        // make this tab absolute path by geting the path from
-        // root to this level and appending the tab title
-        const triggerPath = [...levelPath, t.title];
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const menuButtonRef = useRef<HTMLButtonElement | null>(null);
 
-        return (
-          <Trigger
-            key={triggerPath.join(SEPARATOR)}
-            childrenCount={t.children.length}
-            active={activeTitle === t.title}
-            title={t.title}
-            panelId={triggerPath.join(SEPARATOR)}
-            onDelete={() => onTabDelete?.(triggerPath)}
-            onTabRowAdd={
-              onTabRowAdd ? () => onTabRowAdd?.(triggerPath) : undefined
-            }
-            onRename={(name: string) => onTabRename?.(triggerPath, name)}
-          />
-        );
-      })}
-      <div className="line" />
-      <div>
-        <icons.Plus className="add" onClick={() => onTabAdd?.(levelPath)} />
+  const [hasOverflow, setHasOverflow] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [overflowOpen, setOverflowOpen] = useState(false);
+
+  const triggerItems = useMemo(() => {
+    return tabs.map((t) => {
+      // make this tab absolute path by geting the path from
+      // root to this level and appending the tab title
+      const triggerPath = [...levelPath, t.title];
+      const panelId = triggerPath.join(SEPARATOR);
+      return { t, triggerPath, panelId };
+    });
+  }, [levelPath, tabs]);
+
+  const recomputeOverflow = useCallback(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const overflow = el.scrollWidth - el.clientWidth > 1;
+    setHasOverflow(overflow);
+    setCanScrollLeft(el.scrollLeft > 0);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  }, []);
+
+  const scrollByAmount = useCallback((direction: 'left' | 'right') => {
+    const el = listRef.current;
+    if (!el) return;
+    const amount = Math.max(140, Math.floor(el.clientWidth * 0.8));
+    el.scrollBy({
+      left: direction === 'left' ? -amount : amount,
+      behavior: 'smooth',
+    });
+  }, []);
+
+  useLayoutEffect(() => {
+    recomputeOverflow();
+  }, [recomputeOverflow, triggerItems.length]);
+
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+
+    recomputeOverflow();
+
+    const onScroll = () => recomputeOverflow();
+    el.addEventListener('scroll', onScroll, { passive: true });
+
+    const ro = new ResizeObserver(() => recomputeOverflow());
+    ro.observe(el);
+    if (el.parentElement) ro.observe(el.parentElement);
+
+    return () => {
+      el.removeEventListener('scroll', onScroll);
+      ro.disconnect();
+    };
+  }, [recomputeOverflow]);
+
+  useEffect(() => {
+    if (!hasOverflow) setOverflowOpen(false);
+  }, [hasOverflow]);
+
+  useEffect(() => {
+    if (!overflowOpen) return;
+    const onPointerDown = (e: MouseEvent) => {
+      const target = e.target as Node | null;
+      if (!target) return;
+      if (
+        menuRef.current?.contains(target) ||
+        menuButtonRef.current?.contains(target)
+      )
+        return;
+      setOverflowOpen(false);
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    return () => document.removeEventListener('mousedown', onPointerDown);
+  }, [overflowOpen]);
+
+  // Keep the active tab visible when selection changes
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const activeEl = el.querySelector<HTMLElement>(
+      '.TabsTrigger[data-state="active"]'
+    );
+    activeEl?.scrollIntoView({ block: 'nearest', inline: 'center' });
+  }, [activeTitle, triggerItems.length, levelPath.join(SEPARATOR)]);
+
+  return (
+    <div className="TabsRow" data-overflow={hasOverflow ? 'true' : 'false'}>
+      {hasOverflow && (
+        <button
+          type="button"
+          className="TabsScrollButton TabsScrollButtonLeft"
+          onClick={() => scrollByAmount('left')}
+          disabled={!canScrollLeft}
+          aria-label="Scroll tabs left"
+        >
+          ‹
+        </button>
+      )}
+
+      <Tabs.List
+        key={levelPath.join(SEPARATOR)}
+        className="TabsList"
+        aria-label="Select space"
+        ref={listRef}
+      >
+        {triggerItems.map(({ t, triggerPath, panelId }) => {
+          return (
+            <Trigger
+              key={panelId}
+              childrenCount={t.children.length}
+              active={activeTitle === t.title}
+              title={t.title}
+              panelId={panelId}
+              onDelete={() => onTabDelete?.(triggerPath)}
+              onTabRowAdd={
+                onTabRowAdd ? () => onTabRowAdd?.(triggerPath) : undefined
+              }
+              onRename={(name: string) => onTabRename?.(triggerPath, name)}
+            />
+          );
+        })}
+      </Tabs.List>
+
+      <div className="TabsRowActions">
+        <div className="line" />
+        <button
+          type="button"
+          className="TabsAddButton"
+          onClick={() => onTabAdd?.(levelPath)}
+          aria-label="Add tab"
+        >
+          <icons.Plus className="add" />
+        </button>
+
+        {hasOverflow && (
+          <button
+            ref={menuButtonRef}
+            type="button"
+            className="TabsOverflowButton"
+            onClick={() => setOverflowOpen((v) => !v)}
+            aria-label="More tabs"
+            aria-expanded={overflowOpen}
+          >
+            …
+          </button>
+        )}
+
+        {hasOverflow && overflowOpen && (
+          <div ref={menuRef} className="TabsOverflowMenu" role="menu">
+            {triggerItems.map(({ t, panelId }) => (
+              <Tabs.Trigger
+                key={`overflow-${panelId}`}
+                className="TabsOverflowItem"
+                value={panelId}
+                role="menuitem"
+                onClick={() => setOverflowOpen(false)}
+              >
+                <span className="TabsOverflowItemTitle">{t.title}</span>
+                {t.children.length > 0 && (
+                  <span className="TabsOverflowItemCount">
+                    {t.children.length}
+                  </span>
+                )}
+              </Tabs.Trigger>
+            ))}
+          </div>
+        )}
       </div>
-      <div className="empty-space"></div>
-    </Tabs.List>
+
+      {hasOverflow && (
+        <button
+          type="button"
+          className="TabsScrollButton TabsScrollButtonRight"
+          onClick={() => scrollByAmount('right')}
+          disabled={!canScrollRight}
+          aria-label="Scroll tabs right"
+        >
+          ›
+        </button>
+      )}
+    </div>
   );
 };
 
