@@ -36,5 +36,9 @@ export type {
 
 //
 
+export { LocalStorageChannel } from './lib/local-storage-channel';
+export { LocalStorageStore } from './lib/local-storage-store';
+export type { Key } from './lib/local-storage-store';
+
 export { StoryApiContext } from './lib/story-api-context';
 export { browserLog } from './lib/browser-log';

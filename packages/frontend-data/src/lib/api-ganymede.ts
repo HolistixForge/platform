@@ -53,12 +53,16 @@ export class GanymedeApi extends ApiFetch {
     this._frontendUrl = frontendUrl;
     this._ts = new LocalStorageStore<TokenStoreValue>({
       //
+      // IMPORTANT: Use super.fetch (not this.fetch) to avoid circular dependency!
+      // this.fetch wraps calls in _doTokenLogic which tries to get a token,
+      // but we're already IN the process of getting/refreshing a token here.
+      //
       get: (
         k: Key
       ): Promise<{ value: TokenStoreValue; expire: Date } | null> => {
         const conf = getTokenConfig();
         return doOauthCode({
-          fetch: this.fetch.bind(this),
+          fetch: super.fetch.bind(this), // ← Use super.fetch to bypass _doTokenLogic
           redirect_uri: this._frontendUrl,
           ...conf,
         }).then((t) => {
@@ -76,7 +80,8 @@ export class GanymedeApi extends ApiFetch {
         tokenData: TokenStoreValue
       ): Promise<{ value: TokenStoreValue; expire: Date } | null> => {
         return (
-          this.fetch({
+          super.fetch({
+            // ← Use super.fetch to bypass _doTokenLogic
             url: `oauth/token`,
             method: 'POST',
             formUrlencoded: {
@@ -121,17 +126,24 @@ export class GanymedeApi extends ApiFetch {
    * Get token key for request.
    * @returns Single token key
    */
-  private _getTokenKeyForRequest(): TJson {
-    return { user: true };
+  private _getTokenKeyForRequest(): string {
+    return 'user';
   }
 
   //
 
   /**
-   * catch REFRESH_TOKEN error,
-   * do refresh the token and redo the initial request
-   * @param r
-   * @returns
+   * Acquire token and execute request with authorization.
+   *
+   * This wraps API calls with automatic token management:
+   * 1. Acquire/retrieve OAuth token (with retries if needed)
+   * 2. Execute the actual API call with token in headers
+   * 3. Handle token refresh errors if needed
+   *
+   * @param r - Request parameters
+   * @param func - The actual API call function
+   * @returns Promise with API response
+   * @throws Error if token acquisition fails after max retries
    */
   private async _doTokenLogic<T>(
     r: Pick<
@@ -140,14 +152,48 @@ export class GanymedeApi extends ApiFetch {
     >,
     func: () => Promise<T>
   ) {
+    // Max attempts to acquire token before giving up
+    // Each attempt waits for promise (which may include 30s retry delay)
+    const MAX_TOKEN_ATTEMPTS = 3;
+
     let retried = 0;
     do {
       const tokenKey = this._getTokenKeyForRequest();
 
       let v;
+      let tokenAttempts = 0;
+
+      // Keep trying to get token until we have a value or exceed max attempts
       do {
         v = this._ts.get(tokenKey);
-        if (v.promise) await v.promise;
+
+        // If we have a value, break out
+        if (v.value) {
+          break;
+        }
+
+        // No value yet, check if we've exceeded max attempts
+        if (tokenAttempts >= MAX_TOKEN_ATTEMPTS) {
+          const error = new Error(
+            `Failed to acquire authentication token after ${MAX_TOKEN_ATTEMPTS} attempts. ` +
+              `This usually means OAuth authorization is failing or timing out. ` +
+              `Check network connectivity and OAuth configuration.`
+          );
+          debug('token acquisition failed', {
+            tokenKey,
+            attempts: tokenAttempts,
+            lastState: v,
+          });
+          throw error;
+        }
+
+        // Wait for promise if available (token fetch or retry is in progress)
+        if (v.promise) {
+          debug('waiting for token', { tokenKey, attempt: tokenAttempts + 1 });
+          await v.promise;
+        }
+
+        tokenAttempts++;
       } while (!v.value);
 
       debug('fetch', { request: r, token: v.value });
@@ -156,14 +202,16 @@ export class GanymedeApi extends ApiFetch {
         r.headers = { ...r.headers, authorization: v.value.token.access_token };
         return await func();
       } catch (err) {
-        // if the request returned an error indicating need to refresh the user token
+        // If the request returned an error indicating need to refresh the user token
         if (this._isTokenRefreshError(err) && retried === 0) {
-          // todo ?
-          throw new Error('WTF');
-          // and retry the initial request only once
+          debug('token refresh needed, clearing cached token and retrying');
+          // Clear the cached token to force a refresh on next iteration
+          this._ts.reset();
+          // Retry the initial request only once
           retried++;
+          continue; // Loop back to acquire fresh token
         }
-        // any other error is thrown, so no retry
+        // Any other error is thrown, no retry
         else throw err;
       }
 

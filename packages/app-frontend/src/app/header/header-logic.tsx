@@ -22,17 +22,18 @@ export const HeaderLogic = () => {
     return logout.mutateAsync().then(() => navigate('/'));
   }, [logout, navigate]);
 
-  if (meStatus === 'success')
-    return (
-      <Header
-        user={me.user.user_id ? me.user : undefined}
-        logoutAction={logoutAction}
-        host
-        share
-        hasNotifications
-      />
-    );
-  return null;
+  // Always render Header - it will show login/signup buttons when user is not logged in
+  const user = meStatus === 'success' && me?.user.user_id ? me.user : undefined;
+  
+  return (
+    <Header
+      user={user}
+      logoutAction={user ? logoutAction : undefined}
+      host
+      share
+      hasNotifications
+    />
+  );
 };
 
 //
@@ -65,16 +66,17 @@ export const HeaderLogicProject = () => {
       color: users.find((u2) => u2.user_id === u.data?.user_id)?.color,
     }));
 
-  if (meStatus === 'success')
-    return (
-      <Header
-        user={me.user.user_id ? me.user : undefined}
-        otherUsers={otherUsers}
-        logoutAction={logoutAction}
-        host
-        share
-        hasNotifications
-      />
-    );
-  return null;
+  // Always render Header - it will show login/signup buttons when user is not logged in
+  const user = meStatus === 'success' && me?.user.user_id ? me.user : undefined;
+  
+  return (
+    <Header
+      user={user}
+      otherUsers={otherUsers}
+      logoutAction={user ? logoutAction : undefined}
+      host
+      share
+      hasNotifications
+    />
+  );
 };

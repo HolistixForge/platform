@@ -2,9 +2,10 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/packages/app-frontend',
+  mode: mode || 'production',
   server: {
     port: 4200,
     host: 'localhost',
@@ -14,7 +15,11 @@ export default defineConfig({
     port: 4300,
     host: 'localhost',
   },
-  plugins: [react()],
+  plugins: [
+    react({
+      jsxRuntime: 'automatic',
+    }),
+  ],
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
@@ -26,8 +31,10 @@ export default defineConfig({
     commonjsOptions: {
       transformMixedEsModules: true,
     },
+    minify: mode === 'production' ? 'esbuild' : false,
   },
   define: {
     __webpack_public_path__: '""',
+    'process.env.NODE_ENV': JSON.stringify(mode || 'production'),
   },
-});
+}));
