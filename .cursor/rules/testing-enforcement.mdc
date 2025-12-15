@@ -1,0 +1,250 @@
+---
+description: Testing enforcement and best practices for Cursor agents
+globs:
+alwaysApply: true
+---
+
+# Testing Enforcement Rule
+
+**MANDATORY RULE:** Whenever you modify or create code files, you MUST check for associated tests and create them if they don't exist.
+
+## 📚 Primary Reference
+
+**[Testing Guide](../doc/guides/TESTING_GUIDE.md)** - Comprehensive guide with examples for:
+
+- Frontend: LocalStorage, state management, React components
+- Backend: Express API endpoints (unit and integration tests)
+- Storybook: Component stories and play functions
+
+## 🎯 Core Principle
+
+**Every code change should have corresponding tests.** Tests ensure reliability, prevent regressions, and serve as living documentation.
+
+## ⚠️ Required Actions When Modifying Code
+
+### 1. **Check for Existing Tests**
+
+After modifying any source file, immediately check if tests exist:
+
+```bash
+# Look for test files in the same directory
+# Test files typically end with .spec.ts, .spec.tsx, .test.ts, or .test.tsx
+```
+
+**Common test locations:**
+
+- Same directory: `my-component.tsx` → `my-component.spec.tsx`
+- `__tests__/` subdirectory
+- Mirror structure in separate `test/` directory
+
+### 2. **If Tests Exist: Update Them**
+
+- Run the existing tests to ensure they still pass
+- Update tests to cover new functionality
+- Add new test cases for edge cases introduced
+- Verify coverage hasn't decreased
+
+### 3. **If Tests Don't Exist: Create Them**
+
+When tests are missing, you SHOULD create them unless:
+
+- ❌ The file is a pure type definition (`.d.ts`)
+- ❌ The file is configuration only (`.json`, `.yaml`)
+- ❌ The file is already covered by integration/E2E tests
+- ❌ The user explicitly asks not to create tests
+
+**For all other cases, create tests!**
+
+## 📋 What to Test Based on File Type
+
+### **React Components** (`.tsx`, `.jsx`)
+
+Create `ComponentName.spec.tsx` testing:
+
+- ✅ Component renders correctly
+- ✅ Props are handled properly
+- ✅ User interactions (clicks, typing)
+- ✅ State changes work as expected
+- ✅ Edge cases (empty data, errors)
+
+**Example reference:** `packages/ui-base/src/lib/sidebar/Sidebar-simple.spec.tsx`
+
+---
+
+### **Express Routes** (backend endpoints)
+
+Create `route-name.spec.ts` testing:
+
+- ✅ Happy path (successful requests)
+- ✅ Error cases (404, 400, 500)
+- ✅ Query parameters and request body
+- ✅ Authentication/authorization
+- ✅ Input validation and sanitization
+
+**Example references:**
+
+- Unit tests: `packages/app-ganymede/src/routes/users/users.spec.ts`
+- Simple example: `packages/app-ganymede/src/routes/users/users-simple.spec.ts`
+
+---
+
+### **State Management / Services** (`.ts`)
+
+Create `service-name.spec.ts` testing:
+
+- ✅ Core functionality
+- ✅ Error handling and recovery
+- ✅ Async operations
+- ✅ Edge cases and boundary conditions
+
+**Example references:**
+
+- `packages/frontend-data/src/lib/local-storage-channel.spec.ts`
+- `packages/frontend-data/src/lib/local-storage-store.spec.ts`
+
+---
+
+### **Utilities / Helper Functions** (`.ts`)
+
+Create `utility-name.spec.ts` testing:
+
+- ✅ Input/output validation
+- ✅ Edge cases (null, undefined, empty)
+- ✅ Error conditions
+- ✅ Type safety
+
+## 🚀 Workflow for Code Changes
+
+```
+1. Modify/Create code file
+   ↓
+2. Check for test file
+   ↓
+3. If tests exist:
+   - Update tests
+   - Run tests: npx nx test <package>
+   ↓
+4. If tests don't exist:
+   - Create test file
+   - Write comprehensive tests
+   - Run tests to verify they pass
+   ↓
+5. Verify test coverage
+   - npx nx test <package> --coverage
+```
+
+## 📊 Test Coverage Expectations
+
+| Code Type                           | Target Coverage |
+| ----------------------------------- | --------------- |
+| **Critical paths** (auth, payments) | 100%            |
+| **Business logic**                  | 90%+            |
+| **API routes**                      | 85%+            |
+| **UI components**                   | 70%+            |
+| **Utilities**                       | 90%+            |
+
+## 🎓 Testing Best Practices
+
+### 1. **Test File Naming**
+
+- Use `.spec.ts` or `.spec.tsx` for unit tests
+- Use `.integration.spec.ts` for integration tests
+- Place tests next to the code they test
+
+### 2. **Test Structure (AAA Pattern)**
+
+```typescript
+it('should do something', () => {
+  // Arrange: Setup test data
+  const input = { name: 'test' };
+
+  // Act: Perform action
+  const result = myFunction(input);
+
+  // Assert: Verify outcome
+  expect(result).toEqual(expected);
+});
+```
+
+### 3. **Descriptive Test Names**
+
+✅ **Good**: `should return 404 when user does not exist`  
+❌ **Bad**: `test user endpoint`
+
+### 4. **Test One Thing Per Test**
+
+Focus each test on a single behavior or outcome.
+
+### 5. **Mock External Dependencies**
+
+Always mock databases, APIs, localStorage, and other external dependencies.
+
+## 🔧 Running Tests
+
+```bash
+# Test a specific package
+npx nx test <package-name>
+
+# Test with coverage
+npx nx test <package-name> --coverage
+
+# Test specific file
+npx nx test <package-name> --testFile=<filename>
+
+# Test all packages
+npx nx run-many -t test
+
+# Watch mode (development)
+npx nx test <package-name> --watch
+```
+
+## 💡 When Tests Are Optional
+
+Tests may be skipped for:
+
+- Pure type definitions (`.d.ts`)
+- Configuration files (`.json`, `.yaml`, `.config.ts`)
+- Storybook stories (`.stories.tsx`) - though play functions are encouraged
+- Build/tooling scripts (when already tested by usage)
+- Prototypes or spike code (with user approval)
+
+**In all other cases, tests should be created.**
+
+## 🆘 Troubleshooting
+
+If you encounter issues while creating tests:
+
+1. **Check existing test files** in the same package for patterns
+2. **Consult the [Testing Guide](../doc/guides/TESTING_GUIDE.md)** for examples
+3. **Check package-specific jest.config.ts** for configuration
+4. **Verify dependencies** are installed (`@testing-library/react`, `supertest`, etc.)
+
+## 📖 Reference Examples
+
+All these examples are fully working and can be used as templates:
+
+| Example              | Location                                                      | What it demonstrates     |
+| -------------------- | ------------------------------------------------------------- | ------------------------ |
+| React Components     | `packages/ui-base/src/lib/sidebar/Sidebar-simple.spec.tsx`    | User interactions, state |
+| Express API (simple) | `packages/app-ganymede/src/routes/users/users-simple.spec.ts` | Basic patterns           |
+| Express API (real)   | `packages/app-ganymede/src/routes/users/users.spec.ts`        | Mocking DB & auth        |
+| State Management     | `packages/frontend-data/src/lib/local-storage-store.spec.ts`  | Async, timers, recovery  |
+
+## ✅ Enforcement Checklist
+
+Before completing any code modification task:
+
+- [ ] I have identified the files I modified
+- [ ] I have checked for existing test files
+- [ ] I have run existing tests and they pass
+- [ ] I have created tests for new code (if applicable)
+- [ ] I have verified test coverage is adequate
+- [ ] I have documented any cases where tests were not created
+
+---
+
+**Remember:** Tests are not optional extras—they are essential parts of the codebase. When you create code, you create tests. When you modify code, you update tests. This is non-negotiable for maintaining code quality and reliability.
+
+## if user asks
+
+if user simply ask to "do some tests..." or any not specific request for testing, pick a random file or module or piece of code not yet tested and create tests.

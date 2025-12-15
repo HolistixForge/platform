@@ -20,12 +20,14 @@ Welcome to the Holistix Forge documentation! This hub will guide you to the righ
 
 ### Learn How To
 
+- 🧪 **[Testing Guide](guides/TESTING_GUIDE.md)** - Comprehensive testing strategies for frontend, backend, and components
 - 🧪 **[Test Modules](guides/MODULES_TESTING.md)** - Module stories and fake collab
 - 📦 **[Use Nx Workspace](guides/NX_WORKSPACE.md)** - Monorepo commands and workflows
 - 🎨 **[Build UI Components](guides/MODULES_TESTING.md)** - Module development with Storybook
 - 🔧 **[Package Architecture](guides/PACKAGE_ARCHITECTURE.md)** - React dependency management and package patterns
 - 🚀 **[Gateway Build Distribution](guides/GATEWAY_BUILD_DISTRIBUTION.md)** - HTTP build distribution system
 - 🔌 **[Module Reference](../packages/modules/README.md)** - Individual module documentation
+- 🩹 **[Troubleshooting](guides/TROUBLESHOOTING.md)** - Common issues and solutions
 
 ### Quick Reference
 
@@ -60,6 +62,7 @@ doc/
 │
 ├── guides/                   # How-To Guides
 │   ├── LOCAL_DEVELOPMENT.md  - Multi-env local setup
+│   ├── TESTING_GUIDE.md      - Testing strategies & examples
 │   ├── MODULES_TESTING.md    - Module development & testing
 │   └── NX_WORKSPACE.md       - Nx monorepo workflows
 │
@@ -85,23 +88,26 @@ doc/
 2. Set up [Local Development](guides/LOCAL_DEVELOPMENT.md)
 3. Review [Contributing Guidelines](../CONTRIBUTING.md)
 4. Browse [Cheatsheet](reference/CHEATSHEET.md)
-5. Try [Module Testing](guides/MODULES_TESTING.md)
+5. Review [Testing Guide](guides/TESTING_GUIDE.md)
+6. Try [Module Testing](guides/MODULES_TESTING.md)
 
 ### Frontend Developer
 
 1. [Local Development Setup](guides/LOCAL_DEVELOPMENT.md)
-2. [Module Testing with Storybook](guides/MODULES_TESTING.md)
-3. [Nx Workspace Guide](guides/NX_WORKSPACE.md)
-4. [API Reference](reference/API.md) (for backend integration)
+2. [Testing Guide](guides/TESTING_GUIDE.md) (React components, LocalStorage)
+3. [Module Testing with Storybook](guides/MODULES_TESTING.md)
+4. [Nx Workspace Guide](guides/NX_WORKSPACE.md)
+5. [API Reference](reference/API.md) (for backend integration)
 
 ### Backend Developer
 
 1. [Architecture Overview](architecture/OVERVIEW.md)
 2. [Local Development Setup](guides/LOCAL_DEVELOPMENT.md)
-3. [API Reference](reference/API.md)
-4. [System Architecture](architecture/SYSTEM_ARCHITECTURE.md)
-5. [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md)
-6. [Nx Workspace Guide](guides/NX_WORKSPACE.md)
+3. [Testing Guide](guides/TESTING_GUIDE.md) (Express API testing)
+4. [API Reference](reference/API.md)
+5. [System Architecture](architecture/SYSTEM_ARCHITECTURE.md)
+6. [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md)
+7. [Nx Workspace Guide](guides/NX_WORKSPACE.md)
 
 ### DevOps/SRE
 
@@ -119,6 +125,7 @@ doc/
 - **Containers:** [System Architecture](architecture/SYSTEM_ARCHITECTURE.md), [User Containers Module](../packages/modules/user-containers/README.md), [Docker Images](../docker-images/README.md)
 - **Protected Services:** [Protected Services Architecture](architecture/PROTECTED_SERVICES.md)
 - **Terminal Access:** [User Containers Module](../packages/modules/user-containers/README.md#terminal-access) (Web-based terminals)
+- **Testing:** [Testing Guide](guides/TESTING_GUIDE.md), [Modules Testing](guides/MODULES_TESTING.md)
 - **Database:** [Overview](architecture/OVERVIEW.md), [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md)
 - **Gateway:** [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md), [System Architecture](architecture/SYSTEM_ARCHITECTURE.md)
 - **Modules:** [Module Reference](../packages/modules/README.md), [Modules Testing](guides/MODULES_TESTING.md), [Overview](architecture/OVERVIEW.md)

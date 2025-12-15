@@ -56,3 +56,5 @@ data/*
 .github/instructions/nx.instructions.md
 
 website/docs/*
+
+.venv
