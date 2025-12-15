@@ -3,10 +3,12 @@ import { TJson } from '@holistix-forge/simple-types';
 import { EPriority, log } from '@holistix-forge/log';
 import type { TModule } from '@holistix-forge/module';
 import { TMyfetchRequest } from '@holistix-forge/simple-types';
-import { myfetch } from '@holistix-forge/backend-engine';
 import { TReducersBackendExports } from '@holistix-forge/reducers';
 import { TCollabBackendExports } from '@holistix-forge/collab';
-import type { TGatewayExports, TGatewaySharedData } from '@holistix-forge/gateway';
+import type {
+  TGatewayExports,
+  TGatewaySharedData,
+} from '@holistix-forge/gateway';
 
 import { GatewayReducer } from './gateway-reducer';
 import type {
@@ -15,6 +17,7 @@ import type {
   TokenManager,
 } from '@holistix-forge/gateway';
 import { DNSManagerImpl } from '../dns/DNSManager';
+import { createGanymedeClient } from '../lib/ganymede-client';
 
 /**
  * Gateway Module Configuration
@@ -64,33 +67,18 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
 
     const gatewayConfig = config as GatewayModuleConfig;
 
-    const ganymede_api = `https://${gatewayConfig.ganymedeFQDN}`;
+    // Create centralized Ganymede client
+    const ganymedeClient = createGanymedeClient(
+      gatewayConfig.organization_token
+    );
 
+    // toGanymede function for backward compatibility with gateway module exports
     const toGanymede = async <T>(request: TMyfetchRequest): Promise<T> => {
-      if (!request.headers?.authorization) {
-        request.headers = {
-          ...request.headers,
-          authorization: gatewayConfig.organization_token,
-        };
-      }
-      request.url = `${ganymede_api}${request.url}`;
+      // Ensure pathParameters are preserved
       request.pathParameters = {
         ...request.pathParameters,
       };
-      const response = await myfetch(request);
-      log(
-        EPriority.Info,
-        'GATEWAY',
-        `${request.url} response: ${response.statusCode}`
-      );
-      if (response.statusCode !== 200) {
-        const error = new Error(
-          `Request to ${request.url} failed with status ${response.statusCode}`
-        );
-        throw error;
-      }
-
-      return response.json as T;
+      return ganymedeClient.request<T>(request);
     };
 
     // Register gateway module permissions

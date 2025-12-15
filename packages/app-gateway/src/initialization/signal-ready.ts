@@ -1,6 +1,7 @@
 import { EPriority, log } from '@holistix-forge/log';
 import { sleep } from '@holistix-forge/simple-types';
 import { CONFIG } from '../config';
+import { createGanymedeClient } from '../lib/ganymede-client';
 
 /**
  * Signal Gateway is Ready
@@ -20,40 +21,26 @@ export async function signalGatewayReady(gateway_id: string): Promise<void> {
     return;
   }
 
-  // Use HTTPS by default (via Nginx on port 443)
-  // If GANYMEDE_PORT is explicitly set to a non-443 port, use HTTP for that port
-  const ganymedePort = process.env.GANYMEDE_PORT;
-  const useHttps = !ganymedePort || ganymedePort === '443';
-  const protocol = useHttps ? 'https' : 'http';
-  const port = ganymedePort && ganymedePort !== '443' ? `:${ganymedePort}` : '';
-  const ganymedeUrl = `${protocol}://${ganymedeFqdn}${port}`;
+  // Use centralized Ganymede client (handles URL construction and container networking)
+  // /gateway/ready requires GATEWAY_TOKEN (gateway-level token), not organization token
+  const ganymedeClient = createGanymedeClient(undefined, CONFIG.GATEWAY_TOKEN);
 
   log(
     EPriority.Info,
     'GATEWAY_READY',
-    `Signaling ready status to Ganymede at ${ganymedeUrl}...`
+    `Signaling ready status to Ganymede at ${ganymedeClient.getBaseUrl()}...`
   );
 
   while (true) {
     try {
-      const response = await fetch(`${ganymedeUrl}/gateway/ready`, {
+      await ganymedeClient.request({
         method: 'POST',
+        url: '/gateway/ready',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${CONFIG.GATEWAY_TOKEN}`,
         },
-        body: JSON.stringify({ gateway_id }),
+        jsonBody: { gateway_id },
       });
-
-      if (!response.ok) {
-        log(
-          EPriority.Warning,
-          'GATEWAY_READY',
-          `Failed to signal ready: ${response.status}. Retrying in 5s...`
-        );
-        await sleep(5);
-        continue;
-      }
 
       log(
         EPriority.Info,
@@ -61,11 +48,13 @@ export async function signalGatewayReady(gateway_id: string): Promise<void> {
         'Successfully signaled ready to Ganymede'
       );
       break;
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       log(
         EPriority.Warning,
         'GATEWAY_READY',
-        `Failed to signal ready: ${error.message}. Retrying in 5s...`
+        `Failed to signal ready: ${errorMessage}. Retrying in 5s...`
       );
       await sleep(5);
     }

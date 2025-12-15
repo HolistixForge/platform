@@ -1,10 +1,8 @@
 import { Router, Request } from 'express';
 import { BackendEventProcessor } from '@holistix-forge/reducers';
 import { EPriority, log, NotFoundException } from '@holistix-forge/log';
-import { myfetch } from '@holistix-forge/backend-engine';
 import { asyncHandler } from '../middleware/route-handler';
 import { VPN } from '../config/organization';
-import { CONFIG } from '../config';
 import { initializeGatewayForOrganization } from '../initialization/gateway-init';
 import { authenticateJwt, requireScope } from '../middleware/jwt-auth';
 import { requireProjectAccess } from '../middleware/permissions';
@@ -60,21 +58,24 @@ export const setupCollabRoutes = (router: Router) => {
 
       log(EPriority.Info, 'GATEWAY', 'Starting collab with handshake token');
 
-      // Call ganymede to get config
-      const response = await myfetch({
-        url: `https://${CONFIG.GANYMEDE_FQDN}/gateway/config`,
+      // Call ganymede to get config using centralized client
+      const { createGanymedeClient } = await import('../lib/ganymede-client');
+      const ganymedeClient = createGanymedeClient();
+
+      const config = await ganymedeClient.request<{
+        organization_id: string;
+        organization_token: string;
+        gateway_id: string;
+      }>({
         method: 'POST',
+        url: '/gateway/config',
         headers: { 'Content-Type': 'application/json' },
         jsonBody: { tmp_handshake_token },
       });
 
-      const config = response.json as {
-        organization_id: string;
-        organization_token: string;
-        gateway_id: string;
-      };
-
-      log(EPriority.Info, 'GATEWAY', 'Received config from Ganymede', { config });
+      log(EPriority.Info, 'GATEWAY', 'Received config from Ganymede', {
+        config,
+      });
 
       // Initialize gateway with organization context
       if (
@@ -89,7 +90,11 @@ export const setupCollabRoutes = (router: Router) => {
           config.organization_token
         );
 
-        log(EPriority.Info, 'GATEWAY', 'Gateway initialized from /collab/start');
+        log(
+          EPriority.Info,
+          'GATEWAY',
+          'Gateway initialized from /collab/start'
+        );
       }
 
       return res.json({});

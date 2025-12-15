@@ -1,5 +1,7 @@
 import { EPriority, log } from '@holistix-forge/log';
 import { IPersistenceProvider } from './IPersistenceProvider';
+import { createGanymedeClient, GanymedeClient } from '../lib/ganymede-client';
+import { TJson } from '@holistix-forge/simple-types';
 
 type TGatewayDataSnapshot = Record<string, unknown>;
 
@@ -23,12 +25,13 @@ export class GatewayState {
   private organizationId = '';
   private gatewayId = '';
   private organizationToken: string | null = null;
-  private ganymedeFqdn: string;
+  private ganymedeClient: GanymedeClient | null = null;
   private autosaveTimer: NodeJS.Timeout | null = null;
   private pulledData: TGatewayDataSnapshot | null = null;
 
   constructor() {
-    this.ganymedeFqdn = process.env.GANYMEDE_FQDN || 'ganymede.domain.local';
+    // Initialize Ganymede client (will be updated with token when organization context is set)
+    this.ganymedeClient = createGanymedeClient();
   }
 
   /**
@@ -107,6 +110,11 @@ export class GatewayState {
     this.organizationId = organizationId;
     this.gatewayId = gatewayId;
     this.organizationToken = organizationToken;
+
+    // Update Ganymede client with organization token
+    if (this.ganymedeClient) {
+      this.ganymedeClient.setOrganizationToken(organizationToken);
+    }
 
     log(
       EPriority.Info,
@@ -227,30 +235,26 @@ export class GatewayState {
       `Pushing data to Ganymede for org ${this.organizationId}`
     );
 
+    if (!this.ganymedeClient) {
+      throw new Error('Ganymede client not initialized');
+    }
+
     try {
       const data = this.collectData();
 
-      const response = await fetch(
-        `https://${this.ganymedeFqdn}/gateway/data/push`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${this.organizationToken}`,
-          },
-          body: JSON.stringify({
-            timestamp: new Date().toISOString(),
-            data,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Push failed: ${response.status} ${errorText}`);
-      }
-
-      const result = await response.json();
+      const result = await this.ganymedeClient.request<{
+        size_bytes: number;
+      }>({
+        method: 'POST',
+        url: '/gateway/data/push',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        jsonBody: {
+          timestamp: new Date().toISOString(),
+          data: data as unknown as TJson,
+        },
+      });
 
       log(
         EPriority.Info,
@@ -288,24 +292,23 @@ export class GatewayState {
       `Pulling data from Ganymede for org ${this.organizationId}`
     );
 
+    if (!this.ganymedeClient) {
+      throw new Error('Ganymede client not initialized');
+    }
+
     try {
-      const response = await fetch(
-        `https://${this.ganymedeFqdn}/gateway/data/pull`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${this.organizationToken}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Pull failed: ${response.status} ${errorText}`);
-      }
-
-      const result = await response.json();
+      const result = await this.ganymedeClient.request<{
+        success: boolean;
+        exists: boolean;
+        data?: TGatewayDataSnapshot;
+        stored_at?: string;
+      }>({
+        method: 'POST',
+        url: '/gateway/data/pull',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!result.success) {
         throw new Error('Pull returned success=false');

@@ -289,6 +289,8 @@ cmd_create() {
         container_env[GATEWAY_HTTP_PORT]="${gw_http_port}"
         container_env[GATEWAY_VPN_PORT]="${gw_vpn_port}"
         container_env[GANYMEDE_FQDN]="ganymede.${DOMAIN}"
+        # GANYMEDE_API_URL: Use dev container IP with HTTPS (always add Host header)
+        container_env[GANYMEDE_API_URL]="https://${build_server_ip}"
         container_env[DOMAIN]="${DOMAIN}"
         container_env[BUILD_SERVER_IP]="${build_server_ip}"
         
