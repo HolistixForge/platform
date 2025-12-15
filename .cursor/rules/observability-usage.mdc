@@ -1,0 +1,482 @@
+# Observability Stack Usage for AI Agents
+
+**MANDATORY RULE:** When debugging issues, investigating errors, or analyzing application behavior, AI agents MUST use the observability stack to retrieve traces and logs for analysis.
+
+---
+
+## Overview
+
+The project has a complete observability infrastructure using:
+- **OTLP Collector** - Receives telemetry from applications
+- **Loki** - Log storage and querying
+- **Tempo** - Distributed trace storage and querying
+- **Grafana** - Web UI for visualization
+
+All applications (app-ganymede, app-gateway, app-frontend) are instrumented with OpenTelemetry and send traces/logs to this stack.
+
+---
+
+## Quick Start: Observability Query Tool
+
+A command-line tool is provided for AI agents to programmatically retrieve observability data:
+
+**Location:** `scripts/observability-query.sh`
+
+**Key Features:**
+- Automatically detects environment (inside/outside Docker)
+- Dynamically resolves container IPs (handles container restarts)
+- Direct API access to Loki and Tempo
+- No Grafana UI interaction needed
+
+---
+
+## Common Commands
+
+### Check Stack Health
+
+```bash
+./scripts/observability-query.sh health
+```
+
+**Use when:** Starting any debugging session to verify the stack is operational.
+
+**Output example:**
+```
+✅ Grafana is healthy
+✅ Loki is ready
+✅ Tempo is ready
+```
+
+---
+
+### List Services Sending Telemetry
+
+```bash
+./scripts/observability-query.sh services
+```
+
+**Use when:** 
+- Verifying which applications are instrumented
+- Checking if new services are sending data
+- Diagnosing "no data" issues
+
+**Output example:**
+```
+From Loki (logs):
+  ganymede-dev-001
+  gateway-dev-001
+  
+From Tempo (traces):
+  ganymede-dev-001
+  gateway-dev-001
+  frontend
+```
+
+---
+
+### Query Logs for a Service
+
+```bash
+# Specific service
+./scripts/observability-query.sh logs ganymede-dev-001
+
+# All services
+./scripts/observability-query.sh logs-all
+```
+
+**Use when:**
+- Investigating errors or exceptions
+- Checking application startup
+- Debugging API request/response issues
+- Analyzing application behavior
+
+**Output example:**
+```
+2025-12-15 14:30:45 [ganymede-dev-001] [ERROR] Database connection failed
+2025-12-15 14:30:46 [ganymede-dev-001] [INFO] Retrying connection...
+2025-12-15 14:30:47 [ganymede-dev-001] [INFO] Connected successfully
+```
+
+**Time range:** Last 5 minutes (configurable in script)
+
+---
+
+### Query Traces for a Service
+
+```bash
+# Specific service
+./scripts/observability-query.sh traces ganymede-dev-001
+
+# All traces
+./scripts/observability-query.sh traces-all
+```
+
+**Use when:**
+- Analyzing request flow across services
+- Finding slow endpoints or operations
+- Understanding service dependencies
+- Debugging distributed transactions
+
+**Output example:**
+```
+Found 3 traces:
+  TraceID: abc123...
+  Root: ganymede-dev-001
+  Duration: 245ms
+  Spans: 5
+  
+  TraceID: def456...
+  Root: gateway-dev-001
+  Duration: 1200ms
+  Spans: 12
+```
+
+**Time range:** Last hour (configurable in script)
+
+---
+
+### List Available Log Labels
+
+```bash
+./scripts/observability-query.sh labels
+```
+
+**Use when:**
+- Understanding what metadata is available
+- Building custom queries
+- Debugging label/tag issues
+
+**Output example:**
+```
+service_name
+deployment_environment
+log_level
+category
+trace_id
+span_id
+```
+
+---
+
+## When to Use Observability
+
+### ✅ ALWAYS Check Observability When:
+
+1. **User reports an error** - Check logs for error messages and stack traces
+2. **Debugging performance issues** - Check traces to find slow operations
+3. **Investigating "not working" issues** - Verify services are sending telemetry
+4. **After making changes** - Confirm new code is generating expected traces/logs
+5. **Analyzing request flow** - Use traces to understand multi-service interactions
+
+### ✅ Check Observability BEFORE:
+
+1. **Making assumptions** about application behavior
+2. **Asking the user for logs** (check stack first)
+3. **Concluding "no error occurred"** (verify in logs)
+
+---
+
+## Debugging Workflow
+
+### Step 1: Verify Stack is Running
+
+```bash
+./scripts/observability-query.sh health
+```
+
+If unhealthy, check Docker containers:
+```bash
+docker ps --filter "name=observability-"
+```
+
+---
+
+### Step 2: Check Which Services Are Sending Data
+
+```bash
+./scripts/observability-query.sh services
+```
+
+**If no services listed:**
+- Applications may not be running
+- OTLP endpoints may be misconfigured
+- OpenTelemetry SDK may not be initialized
+
+---
+
+### Step 3: Query Recent Logs
+
+```bash
+# Check all recent logs
+./scripts/observability-query.sh logs-all
+
+# Or specific service
+./scripts/observability-query.sh logs ganymede-dev-001
+```
+
+**Look for:**
+- Error messages and stack traces
+- Warning messages indicating issues
+- Unexpected behavior patterns
+- Missing expected log entries
+
+---
+
+### Step 4: Analyze Traces (if applicable)
+
+```bash
+./scripts/observability-query.sh traces-all
+```
+
+**Look for:**
+- Long-duration traces (performance issues)
+- Traces with error status
+- Missing spans (incomplete instrumentation)
+- Unexpected span relationships
+
+---
+
+### Step 5: Correlate Logs and Traces
+
+Logs include `trace_id` and `span_id` attributes for correlation:
+- Find error in logs → Get trace_id → Query full trace in Tempo
+- Find slow trace → Query logs for that trace_id → See detailed logs
+
+---
+
+## Common Patterns
+
+### Pattern: Service Not Sending Data
+
+**Symptoms:** `./scripts/observability-query.sh services` shows service missing
+
+**Check:**
+1. Service is running: `ps aux | grep <service>`
+2. OTLP environment variables set:
+   ```bash
+   cat /root/.local-dev/<env>/.env.ganymede | grep OTLP
+   ```
+3. OpenTelemetry initialized in logs:
+   ```bash
+   tail /root/.local-dev/<env>/logs/ganymede.log | grep Observability
+   ```
+4. OTLP endpoint is reachable from service container
+
+**Common fixes:**
+- Restart service to pick up new environment variables
+- Fix OTLP endpoint (use `172.17.0.1` for dev containers, not `localhost`)
+- Verify OpenTelemetry SDK is initialized before other imports
+
+---
+
+### Pattern: Analyzing Request Errors
+
+**Workflow:**
+1. Query recent logs: `./scripts/observability-query.sh logs <service>`
+2. Find error message and extract trace_id
+3. Query trace: Use Grafana UI or custom curl to Tempo API
+4. Analyze full request flow across services
+
+---
+
+### Pattern: Performance Investigation
+
+**Workflow:**
+1. Query traces: `./scripts/observability-query.sh traces-all`
+2. Identify traces with high duration
+3. Look at span breakdown to find slow operations
+4. Query logs for that trace_id to see detailed context
+5. Optimize identified bottleneck
+
+---
+
+## Direct API Usage (Advanced)
+
+If the script doesn't meet your needs, use APIs directly:
+
+### Loki API
+
+```bash
+# Health check
+curl -s http://172.18.0.5:3100/ready
+
+# List labels
+curl -s http://172.18.0.5:3100/loki/api/v1/labels | jq .
+
+# Query logs (last 5 minutes)
+NOW=$(date +%s)000000000
+START=$(($(date +%s) - 300))000000000
+curl -s "http://172.18.0.5:3100/loki/api/v1/query_range" \
+  -G \
+  --data-urlencode 'query={service_name="ganymede-dev-001"}' \
+  --data-urlencode "start=$START" \
+  --data-urlencode "end=$NOW" \
+  | jq .
+```
+
+### Tempo API
+
+```bash
+# Health check
+curl -s http://172.18.0.3:3200/ready
+
+# Search traces
+START=$(($(date +%s) - 3600))
+END=$(date +%s)
+curl -s "http://172.18.0.3:3200/api/search?start=$START&end=$END&limit=20" | jq .
+
+# Get specific trace
+curl -s "http://172.18.0.3:3200/api/traces/<trace-id>" | jq .
+```
+
+### Grafana API
+
+```bash
+# Health check
+curl -s -u admin:admin http://172.18.0.4:3000/api/health | jq .
+
+# List datasources
+curl -s -u admin:admin http://172.18.0.4:3000/api/datasources | jq .
+```
+
+**Note:** Container IPs (172.18.0.x) are dynamic. The script handles this automatically. For manual queries, resolve IPs first:
+```bash
+docker inspect observability-loki --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'
+```
+
+---
+
+## Troubleshooting
+
+### Issue: "No services found"
+
+**Possible causes:**
+1. Applications not running or not instrumented
+2. OTLP collector not receiving data
+3. Applications using wrong OTLP endpoint
+
+**Debug steps:**
+```bash
+# Check OTLP collector logs
+docker logs --tail 100 observability-otlp-collector
+
+# Check application logs for OpenTelemetry initialization
+tail -100 /root/.local-dev/*/logs/*.log | grep -i otel
+
+# Test OTLP endpoint connectivity
+curl -v http://172.17.0.1:4318
+```
+
+---
+
+### Issue: "No logs found" but service is listed
+
+**Possible causes:**
+1. Logs not being exported (only traces)
+2. Time range doesn't include recent logs
+3. Log filtering is too restrictive
+
+**Debug steps:**
+```bash
+# Check Loki directly for any logs
+curl -s "http://172.18.0.5:3100/loki/api/v1/query_range?query={service_name=~\".+\"}" | jq .
+
+# Check OTLP collector for log ingestion
+docker logs --tail 200 observability-otlp-collector 2>&1 | grep -i log
+```
+
+---
+
+### Issue: Script can't connect to services
+
+**Possible causes:**
+1. Containers stopped or restarted (IPs changed)
+2. Running from wrong environment
+3. Port conflicts
+
+**Debug steps:**
+```bash
+# Check containers are running
+docker ps --filter "name=observability-"
+
+# Verify port mappings
+docker port observability-grafana 3000
+docker port observability-loki 3100
+docker port observability-tempo 3200
+
+# Test script's IP resolution
+bash -x ./scripts/observability-query.sh health 2>&1 | grep -E "GRAFANA_URL|LOKI_URL|TEMPO_URL"
+```
+
+---
+
+## Best Practices
+
+### 1. Check observability EARLY in debugging
+Don't wait until you're stuck. Start with logs and traces.
+
+### 2. Use time ranges wisely
+The script queries recent data (5 min logs, 1 hour traces). If investigating older issues, modify the script or use APIs directly.
+
+### 3. Correlate across sources
+- Logs provide details
+- Traces provide flow
+- Together they give complete picture
+
+### 4. Understand the context
+Each service has:
+- `service_name` (e.g., `ganymede-dev-001`)
+- `deployment_environment` (e.g., `dev-001`)
+- These help filter to specific instances
+
+### 5. Don't assume localhost works
+The observability stack runs in Docker containers. IP addresses are dynamic. Always use the provided script or manually resolve container IPs.
+
+---
+
+## Environment-Specific Details
+
+### Development (Local)
+
+- **OTLP Endpoint:** `http://172.17.0.1:4318` (Docker gateway from dev container)
+- **Grafana UI:** `http://localhost:3000` (if accessing from host)
+- **Service Names:** Suffixed with environment (e.g., `ganymede-dev-001`)
+
+### Production
+
+- See production deployment documentation for endpoint configuration
+- Service discovery may use different mechanisms
+- TLS/authentication may be required
+
+---
+
+## Related Documentation
+
+- **Architecture:** `doc/architecture/LOGGING_AND_OBSERVABILITY.md` - Complete design doc
+- **Setup:** `scripts/local-dev/OBSERVABILITY_SETUP.md` - Infrastructure setup guide
+- **Testing:** Use observability to verify test scenarios execute correctly
+
+---
+
+## Summary for AI Agents
+
+**When to use:** Debugging, error investigation, performance analysis, behavior verification
+
+**Primary tool:** `./scripts/observability-query.sh`
+
+**Key commands:**
+- `health` - Verify stack
+- `services` - List instrumented services
+- `logs <service>` - Query logs
+- `traces <service>` - Query traces
+
+**Remember:**
+- ✅ Check observability BEFORE making assumptions
+- ✅ Correlate logs and traces for full picture
+- ✅ Container IPs are dynamic (script handles this)
+- ✅ Observability is your ground truth for runtime behavior
+
+---
+
+**Last updated:** 2025-12-15  
+**Maintained by:** Infrastructure team

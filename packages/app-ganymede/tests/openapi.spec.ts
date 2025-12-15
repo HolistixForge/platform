@@ -4,7 +4,9 @@ import oas from '../src/oas30.json';
 
 describe('OpenAPI Specification', () => {
   test('should validate using openapi-spec-validator', () => {
-    const scriptPath = `${process.env.NX_WORKSPACE_ROOT}/packages/app-ganymede/tests/openapi.sh`;
+    // This test uses Python's openapi-spec-validator
+    // The script will install Python if needed
+    const scriptPath = `${process.env.NX_WORKSPACE_ROOT}/packages/app-ganymede/tests/openapi.spec.install.sh`;
     execSync(`bash ${scriptPath}`, { encoding: 'utf8' });
     // If no error is thrown, the test passes
   });

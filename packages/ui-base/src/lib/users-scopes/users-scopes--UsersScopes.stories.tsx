@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { UsersScopes, UsersScopesProps } from './users-scopes';
-import { useTestUsersScopes, scopes } from './test';
+import { useTestUsersScopes, scopes } from './test-data';
 
 /**
  *

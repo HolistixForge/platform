@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { Chatbox, ChatboxProps } from './chatbox';
-import { testUsers, useTestChatBox } from './test';
+import { testUsers, useTestChatBox } from './test-data';
 
 //
 //
