@@ -228,7 +228,7 @@ describe('LocalStorageStore', () => {
       // Find the error write call (not the pending one)
       const writeCalls = (mockChannel.write as jest.Mock).mock.calls;
       const errorCall = writeCalls.find((call) => call[1].error === true);
-      
+
       expect(errorCall).toBeDefined();
       expect(errorCall[0]).toBe('test-key');
       expect(errorCall[1]).toMatchObject({
@@ -251,7 +251,7 @@ describe('LocalStorageStore', () => {
       // Find the error write call
       const writeCalls = (mockChannel.write as jest.Mock).mock.calls;
       const errorCall = writeCalls.find((call) => call[1].error === true);
-      
+
       expect(errorCall).toBeDefined();
       expect(errorCall[0]).toBe('test-key');
       expect(errorCall[1]).toMatchObject({
@@ -493,7 +493,7 @@ describe('LocalStorageStore', () => {
       // Should write error state with wait timestamp
       const writeCalls = (mockChannel.write as jest.Mock).mock.calls;
       const errorCall = writeCalls.find((call) => call[1].error === true);
-      
+
       expect(errorCall).toBeDefined();
       expect(errorCall[0]).toBe('null-key');
       expect(errorCall[1]).toMatchObject({
@@ -537,7 +537,7 @@ describe('LocalStorageStore', () => {
       // Should write error state with wait timestamp
       const writeCalls = (mockChannel.write as jest.Mock).mock.calls;
       const errorCall = writeCalls.find((call) => call[1].error === true);
-      
+
       expect(errorCall).toBeDefined();
       expect(errorCall[0]).toBe('refresh-null');
       expect(errorCall[1]).toMatchObject({
@@ -676,4 +676,3 @@ describe('LocalStorageStore', () => {
     });
   });
 });
-
