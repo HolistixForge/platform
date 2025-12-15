@@ -6,6 +6,8 @@
  */
 
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
+import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import {
   SEMRESATTRS_SERVICE_NAME,
@@ -28,6 +30,12 @@ export interface BrowserObservabilityOptions {
    */
   version?: string;
   /**
+   * OTLP endpoint URL (e.g., 'http://localhost:4318')
+   * If not provided, defaults to 'http://localhost:4318'
+   * The path '/v1/traces' will be automatically appended if not present
+   */
+  otlpEndpoint?: string;
+  /**
    * Enable auto-instrumentation (default: true)
    */
   enableAutoInstrumentation?: boolean;
@@ -46,6 +54,29 @@ function getDeploymentEnvironment(): string {
     return (window as any).OTEL_DEPLOYMENT_ENVIRONMENT;
   }
   return 'development';
+}
+
+/**
+ * Read OTLP endpoint from environment variables
+ *
+ * In browser context:
+ * - Vite injects import.meta.env at build time (not available at runtime in packages)
+ * - Application code passes OTLP endpoint via initializeBrowserObservability options
+ * - We use localhost (not 172.17.0.1) because browser runs on host, not in container
+ * - OTLP Collector is exposed on host's localhost:4318
+ */
+function getOtlpEndpoint(providedEndpoint?: string): string {
+  // Use provided endpoint from application
+  if (providedEndpoint) {
+    // Ensure endpoint includes /v1/traces path
+    if (!providedEndpoint.includes('/v1/traces')) {
+      return `${providedEndpoint}/v1/traces`;
+    }
+    return providedEndpoint;
+  }
+
+  // Fallback to localhost (browser runs on host, not in container)
+  return 'http://localhost:4318/v1/traces';
 }
 
 /**
@@ -86,13 +117,34 @@ export function initializeBrowserObservability(
 
   const resource = resourceFromAttributes(resourceAttributes);
 
-  // Create tracer provider with resource
+  // Get OTLP endpoint for exporting traces
+  const otlpEndpoint = getOtlpEndpoint(options.otlpEndpoint);
+
+  // Create OTLP exporter for sending traces to collector
+  const traceExporter = new OTLPTraceExporter({
+    url: otlpEndpoint,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  // Create span processor for batching and exporting traces
+  const spanProcessor = new BatchSpanProcessor(traceExporter);
+
+  // Create tracer provider with resource and span processor
+  // The span processor is configured in the constructor to ensure
+  // all spans are exported to OTLP Collector
   tracerProvider = new WebTracerProvider({
     resource,
+    spanProcessors: [spanProcessor],
   });
 
   // Register the tracer provider
   tracerProvider.register();
+
+  console.log(
+    `[Observability] Browser SDK configured to send traces to: ${otlpEndpoint}`
+  );
 
   // Add auto-instrumentation if enabled
   if (options.enableAutoInstrumentation !== false) {

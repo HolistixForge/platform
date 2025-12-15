@@ -91,7 +91,9 @@ export class ApiFetch {
 
     const json = await response.json();
 
-    if (response.status !== 200) {
+    // Accept all 2xx status codes as successful responses
+    // 2xx range includes: 200 OK, 201 Created, 204 No Content, 206 Partial Content, etc.
+    if (response.status < 200 || response.status >= 300) {
       const e = new Error('API error');
 
       (e as any).status = response.status;

@@ -482,7 +482,7 @@ describe('LocalStorageStore', () => {
   });
 
   describe('Edge cases', () => {
-    it('should handle null response from get()', async () => {
+    it('should handle null response from get() and schedule retry', async () => {
       mockGet.mockResolvedValue(null);
 
       store.get('null-key');
@@ -490,14 +490,34 @@ describe('LocalStorageStore', () => {
       jest.advanceTimersByTime(100);
       await Promise.resolve();
 
-      // Should write error state
-      expect(mockChannel.write).toHaveBeenCalledWith('null-key', {
+      // Should write error state with wait timestamp
+      const writeCalls = (mockChannel.write as jest.Mock).mock.calls;
+      const errorCall = writeCalls.find((call) => call[1].error === true);
+      
+      expect(errorCall).toBeDefined();
+      expect(errorCall[0]).toBe('null-key');
+      expect(errorCall[1]).toMatchObject({
         error: true,
         wait: expect.any(Number),
       });
+      expect(errorCall[1].wait).toBeGreaterThan(Date.now());
+
+      // Clear the mock to verify retry is scheduled
+      mockGet.mockClear();
+      mockGet.mockResolvedValue({
+        value: 'recovered',
+        expire: new Date(Date.now() + 60000),
+      });
+
+      // Fast-forward to retry time (ERROR_WAIT + jitter)
+      jest.advanceTimersByTime(35000);
+      await Promise.resolve();
+
+      // Should have automatically retried
+      expect(mockGet).toHaveBeenCalledWith('null-key');
     });
 
-    it('should handle null response from refresh()', async () => {
+    it('should handle null response from refresh() and schedule retry', async () => {
       const expiredValue = 'expired';
       const pastExpire = new Date(Date.now() - 1000);
 
@@ -514,11 +534,31 @@ describe('LocalStorageStore', () => {
       jest.advanceTimersByTime(100);
       await Promise.resolve();
 
-      // Should write error state
-      expect(mockChannel.write).toHaveBeenCalledWith('refresh-null', {
+      // Should write error state with wait timestamp
+      const writeCalls = (mockChannel.write as jest.Mock).mock.calls;
+      const errorCall = writeCalls.find((call) => call[1].error === true);
+      
+      expect(errorCall).toBeDefined();
+      expect(errorCall[0]).toBe('refresh-null');
+      expect(errorCall[1]).toMatchObject({
         error: true,
         wait: expect.any(Number),
       });
+
+      // Clear the mock to verify retry is scheduled
+      mockGet.mockClear();
+      mockGet.mockResolvedValue({
+        value: 'recovered',
+        expire: new Date(Date.now() + 60000),
+      });
+
+      // Fast-forward to retry time (ERROR_WAIT + jitter)
+      jest.advanceTimersByTime(35000);
+      await Promise.resolve();
+
+      // Should have automatically retried using get() (not refresh)
+      // because error recovery always uses start() which calls get()
+      expect(mockGet).toHaveBeenCalledWith('refresh-null');
     });
 
     it('should handle Date objects in deserialization', () => {

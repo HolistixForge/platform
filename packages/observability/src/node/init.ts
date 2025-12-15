@@ -8,13 +8,13 @@
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import {
-  SEMRESATTRS_SERVICE_NAME,
+  ATTR_SERVICE_NAME,
   SEMRESATTRS_DEPLOYMENT_ENVIRONMENT,
-  SEMRESATTRS_SERVICE_VERSION,
+  ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-proto';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { readObservabilityConfig } from '../shared/config';
 
 export interface NodeObservabilityOptions {
@@ -66,31 +66,31 @@ export function initializeNodeObservability(
 
   const config = readObservabilityConfig();
 
+  // Set environment variables for NodeSDK to use
+  // NodeSDK reads these automatically for OTLP exporters
+  process.env.OTEL_EXPORTER_OTLP_ENDPOINT = config.otlpEndpointHttp;
+  process.env.OTEL_EXPORTER_OTLP_PROTOCOL = 'http/protobuf';
+
   // Build resource attributes
   const resourceAttributes: Record<string, string> = {
-    [SEMRESATTRS_SERVICE_NAME]: options.serviceName,
+    [ATTR_SERVICE_NAME]: options.serviceName,
     [SEMRESATTRS_DEPLOYMENT_ENVIRONMENT]:
       options.environment || config.deploymentEnvironment,
-    [SEMRESATTRS_SERVICE_VERSION]: options.version || config.serviceVersion,
+    [ATTR_SERVICE_VERSION]: options.version || config.serviceVersion,
   };
 
   const resource = resourceFromAttributes(resourceAttributes);
 
   // Create OTLP exporters
-  const traceExporter = new OTLPTraceExporter({
-    url: `${config.otlpEndpointHttp}/v1/traces`,
-  });
-
-  const logExporter = new OTLPLogExporter({
-    url: `${config.otlpEndpointHttp}/v1/logs`,
-  });
+  const traceExporter = new OTLPTraceExporter();
+  const logExporter = new OTLPLogExporter();
 
   // Build SDK configuration
   const sdkConfig: {
     resource: ReturnType<typeof resourceFromAttributes>;
     traceExporter: OTLPTraceExporter;
     logExporter: OTLPLogExporter;
-    instrumentations?: ReturnType<typeof getNodeAutoInstrumentations>;
+    instrumentations?: any[];
   } = {
     resource,
     traceExporter,
@@ -98,35 +98,66 @@ export function initializeNodeObservability(
   };
 
   // Add auto-instrumentation if enabled
+  // MANUAL INSTRUMENTATION: Due to esbuild bundling, auto-instrumentation doesn't work reliably
+  // We use explicit manual instrumentation instead
+  const instrumentations: any[] = [];
+
   if (options.enableAutoInstrumentation !== false) {
-    sdkConfig.instrumentations = getNodeAutoInstrumentations({
-      // Enable Express instrumentation
-      '@opentelemetry/instrumentation-express': {
-        enabled: true,
-      },
-      // Enable HTTP instrumentation
-      '@opentelemetry/instrumentation-http': {
-        enabled: true,
-      },
-      // Enable PostgreSQL instrumentation
-      '@opentelemetry/instrumentation-pg': {
-        enabled: true,
-      },
-      // Enable fs instrumentation (optional, can be disabled if too verbose)
-      '@opentelemetry/instrumentation-fs': {
-        enabled: false,
-      },
+    // Import instrumentations manually to ensure they're loaded
+    const {
+      HttpInstrumentation,
+    } = require('@opentelemetry/instrumentation-http');
+    const {
+      ExpressInstrumentation,
+    } = require('@opentelemetry/instrumentation-express');
+
+    instrumentations.push(
+      new HttpInstrumentation(),
+      new ExpressInstrumentation()
+    );
+
+    console.log(
+      `[Observability] DEBUG: Loaded ${instrumentations.length} manual instrumentations`
+    );
+    instrumentations.forEach((inst: any) => {
+      console.log(
+        `[Observability] DEBUG: - ${
+          inst.instrumentationName || inst.constructor.name
+        }`
+      );
     });
+
+    sdkConfig.instrumentations = instrumentations;
   }
 
   // Create and start SDK
   sdk = new NodeSDK(sdkConfig);
+
+  // CRITICAL: Manually register instrumentations BEFORE SDK starts
+  // This ensures Express/HTTP are patched before they're loaded
+  console.log(
+    '[Observability] DEBUG: Manually registering instrumentations...'
+  );
+  registerInstrumentations({
+    instrumentations: sdkConfig.instrumentations || [],
+  });
+  console.log(
+    '[Observability] DEBUG: Instrumentations registered, starting SDK...'
+  );
+
   sdk.start();
 
   console.log(
     `[Observability] Initialized for service: ${
       options.serviceName
     }, environment: ${options.environment || config.deploymentEnvironment}`
+  );
+  console.log(`[Observability] OTLP endpoint: ${config.otlpEndpointHttp}`);
+  console.log(
+    `[Observability] Trace endpoint: ${config.otlpEndpointHttp}/v1/traces`
+  );
+  console.log(
+    `[Observability] Log endpoint: ${config.otlpEndpointHttp}/v1/logs`
   );
 
   return sdk;
@@ -143,4 +174,3 @@ export async function shutdownNodeObservability(): Promise<void> {
     sdk = null;
   }
 }
-

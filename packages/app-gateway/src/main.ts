@@ -1,10 +1,5 @@
-// Initialize OpenTelemetry BEFORE any other imports
-// This ensures auto-instrumentation works correctly
-import { initializeNodeObservability } from '@holistix-forge/observability';
-initializeNodeObservability({
-  serviceName: process.env.OTEL_SERVICE_NAME || 'gateway',
-  environment: process.env.OTEL_DEPLOYMENT_ENVIRONMENT,
-});
+// CRITICAL: Import tracing first to register instrumentations
+import './tracing';
 
 import express from 'express';
 import * as http from 'http';

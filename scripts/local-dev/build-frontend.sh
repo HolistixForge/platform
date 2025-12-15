@@ -50,6 +50,10 @@ cat > packages/app-frontend/.env <<EOF
 VITE_ENVIRONMENT=${ENV_NAME}
 VITE_DOMAIN_NAME=${DOMAIN}
 VITE_GANYMEDE_URL=https://ganymede.${DOMAIN}
+
+# OpenTelemetry / Observability
+# Browser SDK will use localhost (OTLP collector exposed on host)
+VITE_OTLP_ENDPOINT_HTTP=http://localhost:4318
 EOF
 
 # Build

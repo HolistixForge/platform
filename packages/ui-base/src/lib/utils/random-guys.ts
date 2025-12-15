@@ -1,7 +1,8 @@
 import { TF_User } from '@holistix-forge/types';
 import { randomColor } from '../css-utils/css-utils';
+import { makeUuid } from '@holistix-forge/simple-types';
 
-const randomId = () => `${Math.floor(Math.random() * 1000000000)}`;
+const randomId = () => `${makeUuid()}`;
 
 export const randomPP = () =>
   `https://i.pravatar.cc/${Math.round(Math.random() * 10000)}`;

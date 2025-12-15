@@ -1,6 +1,6 @@
 import { SessionData, Store } from 'express-session';
 import { TJson, TJsonObject } from '@holistix-forge/simple-types';
-import { SESSION_MAX_AGE } from '../main';
+import { SESSION_MAX_AGE } from '../app';
 import { EPriority, log } from '@holistix-forge/log';
 import { pg } from '../database/pg';
 

@@ -237,7 +237,10 @@ export class LocalStorageStore<T> {
       const { value, expire } = r;
       this.write(key, { value, expire, pending: false, wait: undefined });
     } else {
+      // When get() or refresh() resolves to null, treat it as an error
+      // Write error state AND schedule automatic retry (same as rejection handling)
       this.write(key, { error: true, wait: new Date().getTime() + ERROR_WAIT });
+      this.scheduleRetry(key);
     }
   };
 

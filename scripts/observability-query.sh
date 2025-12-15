@@ -6,14 +6,23 @@
 # - INSIDE a Docker container: Uses dynamic container IPs (resolved at runtime)
 # - OUTSIDE Docker (on host): Uses localhost with mapped ports
 #
-# Note: Container IPs are NOT static and change when containers restart.
-# This script dynamically resolves them each time it runs.
+# Why Dynamic IPs Instead of Hardcoded?
+# --------------------------------------
+# Container IPs on the Docker bridge network (e.g., 172.17.0.2, 172.17.0.3)
+# are NOT static and change when containers restart. This script dynamically
+# resolves them using `docker inspect` each time it runs.
+#
+# Note: 172.17.0.1 (the bridge gateway) IS static, which is why it's safe to
+# hardcode in .env files for reaching the Docker host from containers.
 
 # Dynamically resolve container IPs or use localhost
 # This works whether you're inside or outside the Docker network
 function get_container_ip() {
     local container_name=$1
     local fallback_host=$2
+    # Use docker inspect to get the CURRENT IP address of the container
+    # These IPs are allocated from the Docker bridge network (172.17.0.0/16)
+    # and can change on container restart
     local ip=$(docker inspect "$container_name" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' 2>/dev/null)
     if [ -n "$ip" ]; then
         echo "$ip"
@@ -25,11 +34,12 @@ function get_container_ip() {
 # Try to detect if we're inside a Docker container
 if [ -f /.dockerenv ] || grep -q docker /proc/1/cgroup 2>/dev/null; then
     # Inside Docker: use container IPs or DNS names
+    # These IPs are on the Docker bridge network (typically 172.17.0.x)
     GRAFANA_HOST=$(get_container_ip "observability-grafana" "observability-grafana")
     LOKI_HOST=$(get_container_ip "observability-loki" "observability-loki")
     TEMPO_HOST=$(get_container_ip "observability-tempo" "observability-tempo")
 else
-    # Outside Docker: use localhost (ports are mapped)
+    # Outside Docker: use localhost (ports are mapped 0.0.0.0:<port> on host)
     GRAFANA_HOST="localhost"
     LOKI_HOST="localhost"
     TEMPO_HOST="localhost"

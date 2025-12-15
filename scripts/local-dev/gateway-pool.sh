@@ -294,6 +294,17 @@ cmd_create() {
         container_env[DOMAIN]="${DOMAIN}"
         container_env[BUILD_SERVER_IP]="${build_server_ip}"
         
+        # OpenTelemetry configuration
+        # Gateway containers need to reach OTLP Collector on the Docker host.
+        # 172.17.0.1 is the Docker bridge gateway IP - it allows containers
+        # to reach services exposed on the host (OTLP ports 4317/4318).
+        # This is necessary because 'localhost' inside a container refers to
+        # the container itself, not the Docker host.
+        container_env[OTEL_SERVICE_NAME]="gateway-${gateway_name}"
+        container_env[OTEL_DEPLOYMENT_ENVIRONMENT]="${ENV_NAME}"
+        container_env[OTLP_ENDPOINT_HTTP]="http://172.17.0.1:4318"
+        container_env[OTLP_ENDPOINT_GRPC]="http://172.17.0.1:4317"
+        
         # Start container (ports map to themselves for new containers)
         if start_gateway_container \
             "$gateway_name" \

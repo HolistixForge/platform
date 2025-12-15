@@ -102,7 +102,9 @@ export class GanymedeClient {
         `${fullUrl} response: ${response.statusCode}`
       );
 
-      if (response.statusCode !== 200) {
+      // Accept all 2xx status codes as successful responses
+      // 2xx range includes: 200 OK, 201 Created, 204 No Content, 206 Partial Content, etc.
+      if (response.statusCode < 200 || response.statusCode >= 300) {
         const error = new Error(
           `Request to ${fullUrl} failed with status ${response.statusCode}`
         );
@@ -145,8 +147,7 @@ export function createGanymedeClient(
   // GANYMEDE_API_URL should be set in environment (e.g., 'https://172.17.0.2' or 'https://ganymede.domain.local')
   // If not set, fallback to constructing from GANYMEDE_FQDN
   const ganymedeApiUrl =
-    process.env.GANYMEDE_API_URL ||
-    `https://${CONFIG.GANYMEDE_FQDN}`;
+    process.env.GANYMEDE_API_URL || `https://${CONFIG.GANYMEDE_FQDN}`;
 
   return new GanymedeClient({
     ganymedeApiUrl,

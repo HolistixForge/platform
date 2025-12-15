@@ -1,10 +1,12 @@
-// Initialize OpenTelemetry BEFORE any other imports
-// This ensures auto-instrumentation works correctly
-import { initializeNodeObservability } from '@holistix-forge/observability';
-initializeNodeObservability({
-  serviceName: process.env.OTEL_SERVICE_NAME || 'ganymede',
-  environment: process.env.OTEL_DEPLOYMENT_ENVIRONMENT,
-});
+// CRITICAL: Import tracing first to register instrumentations
+import './tracing';
+
+// DEBUG: Test manual span creation
+import { trace } from '@opentelemetry/api';
+const tracer = trace.getTracer('ganymede-manual-test');
+const testSpan = tracer.startSpan('app-startup');
+console.log('[DEBUG] Manual test span created:', testSpan ? 'YES' : 'NO');
+testSpan.end();
 
 import './declarations.d.ts';
 import { createApp } from './app';

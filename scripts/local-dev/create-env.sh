@@ -246,8 +246,23 @@ SESSION_COOKIE_KEY=$(openssl rand -hex 32)
 
 # OpenTelemetry / Observability (OTLP Collector)
 # These endpoints are shared across all environments
-OTLP_ENDPOINT_HTTP=http://localhost:4318
-OTLP_ENDPOINT_GRPC=http://localhost:4317
+#
+# Why 172.17.0.1 instead of localhost?
+# ------------------------------------
+# Ganymede runs inside a dev container. The OTLP Collector runs on the Docker host
+# and exposes ports 4317 (gRPC) and 4318 (HTTP) to the host via 0.0.0.0:<port>.
+#
+# From inside the dev container:
+#   - localhost = the container itself (OTLP is NOT inside the dev container) ❌
+#   - 172.17.0.1 = Docker bridge gateway (reaches the Docker host) ✅
+#
+# 172.17.0.1 is the standard Docker bridge network gateway IP. It allows containers
+# to reach services exposed on the Docker host. This IP is consistent across Docker
+# installations and won't change unless you manually reconfigure Docker's bridge network.
+#
+# Verified by: docker network inspect bridge | jq '.[0].IPAM.Config[0].Gateway'
+OTLP_ENDPOINT_HTTP=http://172.17.0.1:4318
+OTLP_ENDPOINT_GRPC=http://172.17.0.1:4317
 # Service name for this environment (used in traces/logs)
 OTEL_SERVICE_NAME=ganymede-${ENV_NAME}
 # Deployment environment (used for filtering in Grafana)

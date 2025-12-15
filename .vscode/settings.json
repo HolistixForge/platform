@@ -1,0 +1,38 @@
+{
+  "remote.autoForwardPorts": false,
+  "remote.portsAttributes": {
+    "3000": {
+      "label": "Grafana (Docker)",
+      "onAutoForward": "ignore"
+    },
+    "3100": {
+      "label": "Loki (Docker)",
+      "onAutoForward": "ignore"
+    },
+    "3200": {
+      "label": "Tempo (Docker)",
+      "onAutoForward": "ignore"
+    },
+    "4317": {
+      "label": "OTLP Collector gRPC (Docker)",
+      "onAutoForward": "ignore"
+    },
+    "4318": {
+      "label": "OTLP Collector HTTP (Docker)",
+      "onAutoForward": "ignore"
+    },
+    "5432": {
+      "label": "PostgreSQL (Docker)",
+      "onAutoForward": "ignore"
+    },
+    "6000-6999": {
+      "label": "Ganymede Instances",
+      "onAutoForward": "ignore"
+    },
+    "7100-7199": {
+      "label": "Gateway Pool HTTP",
+      "onAutoForward": "ignore"
+    }
+  }
+}
+

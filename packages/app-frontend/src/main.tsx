@@ -23,17 +23,20 @@ import '@holistix-forge/excalidraw/style';
 import './index.scss';
 
 // Initialize observability for browser
-const otlpEndpoint =
-  typeof window !== 'undefined' && (window as any).OTLP_ENDPOINT_HTTP
-    ? (window as any).OTLP_ENDPOINT_HTTP
-    : 'http://localhost:4318';
+// Configuration is read from Vite environment variables
+const otlpEndpoint = import.meta.env.VITE_OTLP_ENDPOINT_HTTP || 'http://localhost:4318';
+const environment = import.meta.env.VITE_ENVIRONMENT || import.meta.env.MODE || 'development';
+
+console.log('[Observability] Browser SDK initializing:', {
+  serviceName: 'frontend',
+  environment,
+  otlpEndpoint,
+});
 
 initializeBrowserObservability({
   serviceName: 'frontend',
-  environment:
-    typeof window !== 'undefined' && (window as any).OTEL_DEPLOYMENT_ENVIRONMENT
-      ? (window as any).OTEL_DEPLOYMENT_ENVIRONMENT
-      : import.meta.env.VITE_ENVIRONMENT || 'development',
+  environment,
+  otlpEndpoint, // Pass OTLP endpoint from Vite env vars
 });
 
 // Initialize Logger for browser
