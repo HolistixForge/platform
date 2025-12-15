@@ -4,6 +4,10 @@ sudo rm -rf /var/log/nginx/access.log /var/log/nginx/error.log
 
 env
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ERROR_PAGES_DIR="$(cd "${SCRIPT_DIR}/../error-pages" && pwd)"
+
 # Base nginx config for gateway
 # Two server blocks:
 #   1. Gateway FQDN (from browser via Stage 1 nginx) - routes all to app-gateway
@@ -16,11 +20,13 @@ server {
     listen ${GATEWAY_HTTP_PORT};
     server_name _;  # Accept all hostnames (org-{uuid}.domain.local routes here via Stage 1)
 
-    error_page 502 /502.html;
-    location /502.html {
+    # Custom error pages
+    error_page 400 401 403 404 500 502 503 504 /error.html;
+    
+    location = /error.html {
+        ssi on;
         internal;
-        add_header Content-Type text/html;
-        return 502 '<html><body><h1>502 Bad Gateway</h1><p>Something went wrong. Please try again later.</p></body></html>';
+        root ${ERROR_PAGES_DIR};
     }
 
     location / {
@@ -39,11 +45,13 @@ server {
     listen 80;
     server_name 172.16.0.1;
 
-    error_page 502 /502.html;
-    location /502.html {
+    # Custom error pages
+    error_page 400 401 403 404 500 502 503 504 /error.html;
+    
+    location = /error.html {
+        ssi on;
         internal;
-        add_header Content-Type text/html;
-        return 502 '<html><body><h1>502 Bad Gateway</h1><p>Something went wrong. Please try again later.</p></body></html>';
+        root ${ERROR_PAGES_DIR};
     }
 
     location / {
