@@ -10,7 +10,7 @@
                 "{workspaceRoot}/coverage/{projectRoot}"
             ],
             "options": {
-                "jestConfig": "packages/modules/notion/jest.config.ts",
+                "jestConfig": "packages/modules/notion/jest.config.mjs",
                 "passWithNoTests": true
             }
         }
