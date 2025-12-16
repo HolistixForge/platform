@@ -226,7 +226,9 @@ FRONTEND_FQDN=${DOMAIN}
 DOMAIN=${DOMAIN}
 ENV_NAME=${ENV_NAME}
 
-# Server binding
+# Server binding (HTTP - nginx handles SSL termination)
+# Nginx terminates SSL and proxies to Ganymede over HTTP
+# X-Forwarded-Proto header indicates HTTPS to enable secure cookies
 GANYMEDE_SERVER_BIND='[{"host":"127.0.0.1","port":${GANYMEDE_PORT}}]'
 ALLOWED_ORIGINS='["https://${DOMAIN}"]'
 

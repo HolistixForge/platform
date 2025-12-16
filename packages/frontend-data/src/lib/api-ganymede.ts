@@ -49,7 +49,7 @@ export class GanymedeApi extends ApiFetch {
   _organizationGateways: Map<string, string> = new Map();
 
   constructor(baseUrl: string, frontendUrl: string) {
-    super(baseUrl);
+    super(baseUrl, { credentials: 'include' }); // Enable sending cookies cross-origin
     this._frontendUrl = frontendUrl;
     this._ts = new LocalStorageStore<TokenStoreValue>({
       //
@@ -221,7 +221,68 @@ export class GanymedeApi extends ApiFetch {
 
   //
 
+  /**
+   * Check if a URL requires authentication
+   * Public endpoints that don't need JWT tokens
+   *
+   * Based on backend route analysis:
+   * - Auth endpoints (signup, login, logout, etc.) - no JWT required
+   * - OAuth flow endpoints - no JWT required
+   * - OAuth provider callbacks - no JWT required
+   *
+   * Protected endpoints (require JWT):
+   * - /users/* - require JWT
+   * - /orgs/* - require JWT
+   * - /projects/* - require JWT
+   * - /gateway/* - require JWT
+   */
+  private _isPublicEndpoint(url: string): boolean {
+    const publicEndpoints = [
+      // Auth endpoints
+      'signup',
+      'login',
+      'logout',
+      'me',
+      'user', // GET /user - extract user from JWT (optional auth)
+      'password',
+
+      // TOTP / 2FA
+      'totp/setup',
+      'totp/verify',
+
+      // Magic Link
+      'magic-link/send',
+      'magic-link/',
+
+      // OAuth2 flow
+      'oauth/authorize',
+      'oauth/token',
+      'oauth/public-key',
+
+      // OAuth providers
+      'github',
+      'gitlab',
+      'discord',
+      'linkedin',
+    ];
+
+    // Check if URL matches any public endpoint
+    return publicEndpoints.some(
+      (endpoint) =>
+        url === endpoint ||
+        url.startsWith(endpoint + '/') ||
+        url.startsWith(endpoint + '?')
+    );
+  }
+
   override async fetch(r: TMyfetchRequest, host?: string): Promise<TJson> {
+    // Skip token logic for public endpoints
+    if (this._isPublicEndpoint(r.url)) {
+      debug('public endpoint, skipping token logic', { url: r.url });
+      return super.fetch(r, host);
+    }
+
+    // Use token logic for authenticated endpoints
     return this._doTokenLogic<TJson>(r, () => super.fetch(r, host));
   }
 
@@ -235,6 +296,14 @@ export class GanymedeApi extends ApiFetch {
     onMessage: (event: MessageEvent, es: EventSourcePolyfill) => void,
     host?: string
   ): Promise<EventSourcePolyfill> {
+    // EventSource typically needs authentication, but check just in case
+    if (this._isPublicEndpoint(r.url)) {
+      debug('public endpoint, skipping token logic for eventSource', {
+        url: r.url,
+      });
+      return super.eventSource(r, onMessage, host);
+    }
+
     return this._doTokenLogic(r, () => super.eventSource(r, onMessage, host));
   }
 

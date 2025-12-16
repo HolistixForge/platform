@@ -65,5 +65,5 @@ See [doc/architecture/SYSTEM_ARCHITECTURE.md](../../doc/architecture/SYSTEM_ARCH
 - **[Gateway Container](../../docker-images/backend-images/gateway/README.md)** - Shell scripts that manage OpenVPN, Nginx, and container lifecycle
 - [Architecture Overview](../../doc/architecture/OVERVIEW.md) - High-level system architecture
 - [System Architecture](../../doc/architecture/SYSTEM_ARCHITECTURE.md) - Complete system diagram
-- [Module System & Layer Architecture](../modules/space/src/lib/layer.md) - Module architecture details
+- [Module System & Layer Architecture](../modules/whiteboard/src/lib/layer.md) - Module architecture details
 - [Local Development](../../doc/guides/LOCAL_DEVELOPMENT.md) - Setup and development workflow

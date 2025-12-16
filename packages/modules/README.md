@@ -19,7 +19,7 @@ See [Module System](module/README.md) for details on the module architecture.
 
 ### Workspace Modules
 
-- **[Space](space/README.md)** - Whiteboard and workspace management
+- **[Whiteboard](whiteboard/README.md)** - Whiteboard and workspace management
 - **[Tabs](tabs/README.md)** - Tab management system
 - **[Chats](chats/README.md)** - Real-time chat functionality
 

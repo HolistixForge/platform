@@ -7,6 +7,7 @@ import {
   setupBasicExpressApp,
   setupErrorsHandler,
   setupValidator,
+  respond,
 } from '@holistix-forge/backend-engine';
 
 import { CONFIG } from './config';
@@ -47,9 +48,12 @@ export function createApp(
   // Basic Express setup (CORS, body parsing, etc.)
   setupBasicExpressApp(app);
 
-  // OPTIONS handler
+  // OPTIONS handler for CORS preflight requests
+  // Must set CORS headers including Access-Control-Allow-Origin
   app.options('*', (req, res) => {
-    res.status(200).end();
+    respond(req, res, {
+      type: 'options',
+    });
   });
 
   // OpenAPI Request/Response Validation
@@ -79,6 +83,15 @@ export function createApp(
 
   // Session setup (can be skipped in unit tests)
   if (!options.skipSession) {
+    // SSL/TLS Termination Architecture:
+    // - Nginx handles SSL termination (HTTPS → HTTP)
+    // - Nginx sets X-Forwarded-Proto: https header
+    // - Ganymede runs on HTTP (localhost:6100)
+    // - Trust proxy (line 46) detects HTTPS from X-Forwarded-Proto
+    // - Cookie secure flag works correctly
+    //
+    // Flow: Browser (HTTPS) → Nginx (SSL term) → Ganymede (HTTP, trusts proxy)
+
     app.use(
       expressSession({
         store: new PgSessionModel(),
@@ -87,12 +100,12 @@ export function createApp(
         saveUninitialized: false,
         name: 'sessid',
         cookie: {
-          secure: true,
-          domain: CONFIG.GANYMEDE_FQDN,
+          secure: true, // Works via X-Forwarded-Proto with trust proxy
+          domain: CONFIG.GANYMEDE_FQDN, // Explicitly set to ganymede.domain.local only
           maxAge: SESSION_MAX_AGE,
           httpOnly: true,
           path: '/',
-          sameSite: 'lax',
+          sameSite: 'none', // Required for cross-site cookies with credentials
         },
       })
     );

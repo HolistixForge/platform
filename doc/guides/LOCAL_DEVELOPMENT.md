@@ -149,7 +149,7 @@ All commands run **inside the development container** (Ubuntu).
 
 ### 1. Install System Dependencies
 
-**Script:** [`scripts/local-dev/install-system-deps.sh`](../scripts/local-dev/install-system-deps.sh)
+**Script:** [`scripts/local-dev/install-system-deps.sh`](../../scripts/local-dev/install-system-deps.sh)
 
 Installs:
 
@@ -176,7 +176,7 @@ docker ps
 
 ### 3. Install mkcert for SSL
 
-**Script:** [`scripts/local-dev/install-mkcert.sh`](../scripts/local-dev/install-mkcert.sh)
+**Script:** [`scripts/local-dev/install-mkcert.sh`](../../scripts/local-dev/install-mkcert.sh)
 
 Installs mkcert and creates a local Certificate Authority (CA).
 
@@ -196,7 +196,7 @@ cp $(mkcert -CAROOT)/rootCA.pem /root/workspace/monorepo/rootCA.pem
 
 ### 3. Setup PostgreSQL
 
-**Script:** [`scripts/local-dev/setup-postgres.sh`](../scripts/local-dev/setup-postgres.sh)
+**Script:** [`scripts/local-dev/setup-postgres.sh`](../../scripts/local-dev/setup-postgres.sh)
 
 Configures PostgreSQL for local development:
 
@@ -210,7 +210,7 @@ Configures PostgreSQL for local development:
 
 ### 4. Setup PowerDNS
 
-**Script:** [`scripts/local-dev/setup-powerdns.sh`](../scripts/local-dev/setup-powerdns.sh)
+**Script:** [`scripts/local-dev/setup-powerdns.sh`](../../scripts/local-dev/setup-powerdns.sh)
 
 Installs and configures PowerDNS for dynamic DNS management:
 
@@ -225,7 +225,7 @@ Installs and configures PowerDNS for dynamic DNS management:
 
 ### 5. Build Docker Images
 
-**Script:** [`scripts/local-dev/build-images.sh`](../scripts/local-dev/build-images.sh)
+**Script:** [`scripts/local-dev/build-images.sh`](../../scripts/local-dev/build-images.sh)
 
 Builds Docker images for gateway containers:
 
@@ -237,7 +237,7 @@ Builds Docker images for gateway containers:
 
 ### 6. Master Setup Script (All-in-One)
 
-**Script:** [`scripts/local-dev/setup-all.sh`](../scripts/local-dev/setup-all.sh)
+**Script:** [`scripts/local-dev/setup-all.sh`](../../scripts/local-dev/setup-all.sh)
 
 Runs all setup scripts in sequence:
 
@@ -251,7 +251,7 @@ This installs everything: system deps, Docker CLI, mkcert, PostgreSQL, PowerDNS,
 
 ### Create New Environment
 
-**Script:** [`scripts/local-dev/create-env.sh`](../scripts/local-dev/create-env.sh)
+**Script:** [`scripts/local-dev/create-env.sh`](../../scripts/local-dev/create-env.sh)
 
 Creates a complete isolated environment with:
 
@@ -324,21 +324,9 @@ You can create multiple environments with different domains:
 # Each has its own DNS zone, gateway pool, and SSL certificate
 ```
 
-### List Environments
-
-**Script:** [`scripts/local-dev/list-envs.sh`](../scripts/local-dev/list-envs.sh)
-
-Shows all environments with their status (running/stopped).
-
-**Usage:**
-
-```bash
-./scripts/local-dev/list-envs.sh
-```
-
 ### Delete Environment
 
-**Script:** [`scripts/local-dev/delete-env.sh`](../scripts/local-dev/delete-env.sh)
+**Script:** [`scripts/local-dev/delete-env.sh`](../../scripts/local-dev/delete-env.sh)
 
 Completely removes an environment:
 
@@ -357,7 +345,7 @@ Completely removes an environment:
 
 ### Build Frontend
 
-**Script:** [`scripts/local-dev/build-frontend.sh`](../scripts/local-dev/build-frontend.sh)
+**Script:** [`scripts/local-dev/build-frontend.sh`](../../scripts/local-dev/build-frontend.sh)
 
 Builds frontend with environment-specific configuration.
 
@@ -369,7 +357,7 @@ Builds frontend with environment-specific configuration.
 
 ### Manage Gateway Pool
 
-**Script:** [`scripts/local-dev/gateway-pool.sh`](../scripts/local-dev/gateway-pool.sh)
+**Script:** [`scripts/local-dev/gateway-pool.sh`](../../scripts/local-dev/gateway-pool.sh)
 
 Creates additional gateway containers in the pool:
 
