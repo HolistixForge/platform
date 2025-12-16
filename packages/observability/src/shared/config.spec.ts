@@ -1,6 +1,6 @@
 /**
  * Tests for observability configuration reader
- * 
+ *
  * Tests environment variable reading and default fallback values
  * for OpenTelemetry configuration.
  */
@@ -236,7 +236,9 @@ describe('readObservabilityConfig', () => {
 
       const config = readObservabilityConfig();
 
-      expect(config.otlpEndpointHttp).toBe('https://collector.example.com:4318');
+      expect(config.otlpEndpointHttp).toBe(
+        'https://collector.example.com:4318'
+      );
     });
 
     it('should accept URLs with paths', () => {
@@ -362,4 +364,3 @@ describe('readObservabilityConfig', () => {
     });
   });
 });
-

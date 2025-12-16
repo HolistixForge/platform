@@ -4,7 +4,7 @@ WARNING: obsolete, not up to date
 
 ## Data model
 
-[project server types](../packages/types/src/lib/project-server.ts)
+See project server types in `packages/types/src/lib/project-server.ts` (legacy reference)
 
 ## CASES
 

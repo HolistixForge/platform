@@ -310,7 +310,7 @@ export const useCurrentUser = () => {
     queryFn: () =>
       ganymedeApi.fetch({
         method: 'POST',
-        url: 'auth/local/me',
+        url: 'me',
       }) as Promise<{
         user: CurrentUserDetails | { user_id: null };
       }>,
@@ -333,7 +333,7 @@ export const useMutationLogout = () => {
     mutationFn: () => {
       return ganymedeApi.fetch({
         method: 'POST',
-        url: 'auth/local/logout',
+        url: 'logout',
       });
     },
 
@@ -350,7 +350,7 @@ export const useMutationSignup = () => {
     mutationFn: (d: SignupFormData) => {
       return ganymedeApi.fetch({
         method: 'POST',
-        url: 'auth/local/signup',
+        url: 'signup',
         jsonBody: d,
       });
     },
@@ -368,7 +368,7 @@ export const useMutationLogin = () => {
     mutationFn: (d: LoginFormData) => {
       return ganymedeApi.fetch({
         method: 'POST',
-        url: 'auth/local/login',
+        url: 'login',
         jsonBody: d,
       });
     },
@@ -385,7 +385,7 @@ export const useMutationTotpSetup = () => {
     mutationFn: (d: TotpEnableFormData) => {
       return ganymedeApi.fetch({
         method: 'POST',
-        url: 'auth/totp/setup',
+        url: 'totp/setup',
         jsonBody: d,
       });
     },
@@ -403,7 +403,7 @@ export const useMutationTotpLogin = () => {
     mutationFn: (d: TotpLoginFormData) => {
       return ganymedeApi.fetch({
         method: 'POST',
-        url: 'auth/totp/verify',
+        url: 'totp/login',
         jsonBody: d,
       });
     },
@@ -421,7 +421,7 @@ export const useMutationChangePassword = () => {
     mutationFn: (d: NewPasswordFormData) => {
       return ganymedeApi.fetch({
         method: 'POST',
-        url: 'auth/local/password',
+        url: 'password',
         jsonBody: d,
       });
     },

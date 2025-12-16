@@ -58,7 +58,9 @@ export const setupOauthRoutes = (router: express.Router) => {
       redirect_uri: req.query.redirect_uri as string,
     };
     // Redirect anonymous users to login page. propagating client id and redirect_uri
-    if (!(await userIsAuthenticated(req as Req))) {
+    const isAuthenticated = await userIsAuthenticated(req as Req);
+
+    if (!isAuthenticated) {
       if (req.method === 'GET')
         respond(req, res, {
           type: 'redirect',
@@ -84,7 +86,12 @@ export const setupOauthRoutes = (router: express.Router) => {
          * saveAuthorizationCode
          */
       } catch (err: any) {
-        return next(new ForbiddenException([], err));
+        return next(
+          new ForbiddenException(
+            [{ message: err.message || 'Authorization failed', public: false }],
+            err
+          )
+        );
       }
 
       const r = {

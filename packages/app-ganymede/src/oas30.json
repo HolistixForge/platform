@@ -1450,24 +1450,40 @@
       },
       "post": {
         "summary": "OAuth2 authorization endpoint (user authentication) - POST variant",
+        "description": "OAuth2 authorization code flow for user authentication. Used by the frontend to obtain user access tokens. Only supports the global 'app-main-client-id' client.",
         "tags": ["OAuth"],
-        "requestBody": {
-          "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "response_type": { "type": "string", "enum": ["code"] },
-                  "client_id": { "type": "string" },
-                  "redirect_uri": { "type": "string", "format": "uri" },
-                  "scope": { "type": "string" },
-                  "state": { "type": "string" }
-                },
-                "required": ["response_type", "client_id", "redirect_uri"]
-              }
-            }
+        "parameters": [
+          {
+            "name": "response_type",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "enum": ["code"] }
+          },
+          {
+            "name": "client_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "example": "app-main-client-id" }
+          },
+          {
+            "name": "redirect_uri",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "uri" }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
           }
-        },
+        ],
         "responses": {
           "200": {
             "description": "Authorization code",

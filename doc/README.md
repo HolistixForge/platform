@@ -16,7 +16,7 @@ Welcome to the Holistix Forge documentation! This hub will guide you to the righ
 - 📊 **[Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md)** - Multi-gateway pool architecture
 - 🔒 **[Protected Services](architecture/PROTECTED_SERVICES.md)** - Module-driven protected endpoints
 - 📡 **[Logging & Observability](architecture/LOGGING_AND_OBSERVABILITY.md)** - Logs, traces, error categories, and OTel stack
-- 🎨 **[Layer System Architecture](../packages/modules/space/src/lib/layer.md)** - Modular whiteboard layers (Excalidraw integration)
+- 🎨 **[Layer System Architecture](../packages/modules/whiteboard/src/lib/layer.md)** - Modular whiteboard layers (Excalidraw integration)
 
 ### Learn How To
 

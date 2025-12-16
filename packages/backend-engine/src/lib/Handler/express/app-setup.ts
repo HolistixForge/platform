@@ -86,11 +86,61 @@ export const setupErrorsHandler = (app: express.Express) => {
       err.name === 'Bad Request' &&
       err.status === 400 &&
       Array.isArray(err.errors)
-    )
+    ) {
+      // Structured logging for observability
+      error(
+        'OpenAPI Request Validation',
+        `Request validation failed: ${err.message}`,
+        {
+          validation_type: 'request',
+          url: req.originalUrl,
+          method: req.method,
+          route: err.path,
+          error_details: err.errors,
+          status_code: err.status,
+        }
+      );
+
+      // Add validation context to active span
+      const validationSpan = trace.getActiveSpan();
+      if (validationSpan) {
+        validationSpan.setAttribute('validation.type', 'request');
+        validationSpan.setAttribute('validation.failed', true);
+        validationSpan.setAttribute(
+          'validation.error_count',
+          err.errors.length
+        );
+        validationSpan.setAttribute('http.route', err.path);
+
+        // Add each validation error as span attributes
+        err.errors.forEach((e: any, idx: number) => {
+          validationSpan.setAttribute(
+            `validation.error.${idx}.path`,
+            e.path || 'unknown'
+          );
+          validationSpan.setAttribute(
+            `validation.error.${idx}.message`,
+            e.message || 'unknown'
+          );
+          validationSpan.setAttribute(
+            `validation.error.${idx}.code`,
+            e.errorCode || 'unknown'
+          );
+        });
+
+        // Add event to span for better tracing
+        validationSpan.addEvent('openapi_validation_failed', {
+          'validation.type': 'request',
+          'validation.error_count': err.errors.length,
+          'validation.errors': JSON.stringify(err.errors),
+        });
+      }
+
       exception = new Exception(
         err.errors.map((e: any) => ({ message: e.message, public: true })),
         400
       );
+    }
     // if openapi validator not found ?
     else if (
       err.name === 'Not Found' &&

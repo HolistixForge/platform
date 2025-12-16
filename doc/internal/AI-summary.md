@@ -130,7 +130,7 @@ export const moduleBackend: ModuleBackend = {
 
 - Module definition: `packages/modules/*/src/index.ts`
 - Frontend: `packages/modules/*/src/frontend.ts`
-- Layer system (advanced): `packages/modules/space/src/lib/layer.md` ⭐
+- Layer system (advanced): `packages/modules/whiteboard/src/lib/layer.md` ⭐
 
 ### 3. State Management
 
@@ -259,7 +259,7 @@ See [`doc/architecture/SYSTEM_ARCHITECTURE.md#database-schema-gateways`](../arch
 - [Overview](../architecture/OVERVIEW.md) - System design
 - [System Architecture](../architecture/SYSTEM_ARCHITECTURE.md) - Complete system diagram
 - [Gateway Architecture](../architecture/GATEWAY_ARCHITECTURE.md) - Multi-gateway architecture
-- [Layer System](../../packages/modules/space/src/lib/layer.md) - Whiteboard layers ⭐
+- [Layer System](../../packages/modules/whiteboard/src/lib/layer.md) - Whiteboard layers ⭐
 
 **Guides:**
 

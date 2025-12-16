@@ -119,4 +119,3 @@ If none of these solutions work:
 - [Local Development Setup](LOCAL_DEVELOPMENT.md)
 - [Observability Setup](../../scripts/local-dev/OBSERVABILITY_SETUP.md)
 - [DNS Setup Guide](DNS_COMPLETE_GUIDE.md)
-- [Windows Port Forwarding](../../scripts/windows/README.md)

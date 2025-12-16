@@ -30,21 +30,23 @@ This comprehensive guide provides practical examples for testing different types
 
 ### **When to Use Each Level**
 
-| Type | Speed | Setup | When to Use |
-|------|-------|-------|-------------|
-| **Unit** | ⚡ Fast | Minimal | Day-to-day development, TDD |
-| **Integration** | ⚙️ Slower | Real app | Critical paths, pre-deployment |
-| **E2E** | 🐢 Slowest | Full stack | User workflows, staging |
+| Type            | Speed      | Setup      | When to Use                    |
+| --------------- | ---------- | ---------- | ------------------------------ |
+| **Unit**        | ⚡ Fast    | Minimal    | Day-to-day development, TDD    |
+| **Integration** | ⚙️ Slower  | Real app   | Critical paths, pre-deployment |
+| **E2E**         | 🐢 Slowest | Full stack | User workflows, staging        |
 
 ---
 
 ## 🎨 Frontend: LocalStorage & State Management
 
 ### **Example Location**
+
 - `packages/frontend-data/src/lib/local-storage-channel.spec.ts` - **22 tests**
 - `packages/frontend-data/src/lib/local-storage-store.spec.ts` - **26 tests**
 
 ### **What's Tested**
+
 - Cross-tab communication (dual event system)
 - Cache management with expiration
 - Automatic error recovery with retry
@@ -80,6 +82,7 @@ describe('LocalStorageChannel', () => {
 ```
 
 ### **Advanced Topics Covered**
+
 - ✅ Mocking browser APIs (localStorage, events)
 - ✅ Simulating multiple browser tabs
 - ✅ Testing async operations with fake timers
@@ -90,9 +93,11 @@ describe('LocalStorageChannel', () => {
 ## ⚛️ Frontend: React Components
 
 ### **Example Location**
+
 `packages/ui-base/src/lib/sidebar/Sidebar-simple.spec.tsx` - **10 tests**
 
 ### **Key Technologies**
+
 - **@testing-library/react**: Component testing utilities
 - **@testing-library/jest-dom**: Custom matchers
 - **jest**: Test runner
@@ -108,23 +113,25 @@ describe('Sidebar Component', () => {
   it('should render and handle clicks', () => {
     const mockClick = jest.fn();
     render(<Sidebar items={items} onClick={mockClick} active="Home" />);
-    
+
     fireEvent.click(screen.getByTitle('Settings'));
-    
+
     expect(mockClick).toHaveBeenCalled();
-    expect(screen.getByTitle('Settings').querySelector('svg'))
-      .toHaveClass('active');
+    expect(screen.getByTitle('Settings').querySelector('svg')).toHaveClass(
+      'active'
+    );
   });
 });
 ```
 
 ### **What to Test**
+
 ✅ **Rendering**: Component appears in DOM  
 ✅ **Props**: Different prop combinations  
 ✅ **User Interactions**: Clicks, typing, hover  
 ✅ **State Changes**: Component updates correctly  
 ✅ **Edge Cases**: Empty data, loading states, errors  
-✅ **Accessibility**: Proper ARIA attributes, keyboard navigation  
+✅ **Accessibility**: Proper ARIA attributes, keyboard navigation
 
 ### **Running React Tests**
 
@@ -149,6 +156,7 @@ npx nx test ui-base --coverage
 > **Note**: This section is specific to Express applications like `app-ganymede` and `app-gateway`
 
 ### **Example Locations**
+
 - `packages/app-ganymede/src/routes/users/users-simple.spec.ts` - **15 tests** (Teaching example)
 - `packages/app-ganymede/src/routes/users/users.spec.ts` - **21 tests** (Real routes)
 
@@ -158,7 +166,7 @@ npx nx test ui-base --coverage
 
 **What**: Test individual routes with minimal setup  
 **When**: Day-to-day development, TDD, CI/CD  
-**Speed**: ⚡ Very fast (< 1 second)  
+**Speed**: ⚡ Very fast (< 1 second)
 
 ```typescript
 // Example: users.spec.ts
@@ -181,11 +189,9 @@ describe('User Routes - Unit Tests', () => {
 
   it('should return user by ID', async () => {
     mockDB.mockReturnValue(mockUser);
-    
-    const response = await request(app)
-      .get('/users/123')
-      .expect(200);
-    
+
+    const response = await request(app).get('/users/123').expect(200);
+
     expect(response.body).toEqual(mockUser);
   });
 });
@@ -200,7 +206,7 @@ describe('User Routes - Unit Tests', () => {
 
 **What**: Test with full app setup using `createApp()` factory  
 **When**: Critical user flows, before deployment  
-**Speed**: ⚙️ Slower (2-5 seconds)  
+**Speed**: ⚙️ Slower (2-5 seconds)
 
 ```typescript
 // Example: users.integration.spec.ts
@@ -222,10 +228,8 @@ describe('User Routes - Integration Tests', () => {
 
   it('should validate OpenAPI schema', async () => {
     // This catches schema validation errors
-    const res = await request(app)
-      .get('/users/invalid-format')
-      .expect(400);
-    
+    const res = await request(app).get('/users/invalid-format').expect(400);
+
     expect(res.body.errors).toBeDefined();
   });
 
@@ -235,7 +239,7 @@ describe('User Routes - Integration Tests', () => {
     });
 
     const res = await request(app).get('/users/123');
-    
+
     // Error is properly formatted by error handlers
     expect(res.status).toBe(500);
     expect(res.body.error).toBeDefined();
@@ -254,23 +258,21 @@ We've extracted app creation to `src/app.ts` in Express packages:
 
 ```typescript
 // packages/app-ganymede/src/app.ts
-export function createApp(options?: {
-  skipSession?: boolean;
-  skipOpenApiValidation?: boolean;
-}): Express {
+export function createApp(options?: { skipSession?: boolean }): Express {
   const app = express();
-  
+
   // Full production setup
   setupBasicExpressApp(app);
   setupValidator(app);
   setupRoutes(app);
   setupErrorHandlers(app);
-  
+
   return app;
 }
 ```
 
 **In Production:**
+
 ```typescript
 // src/main.ts
 import { createApp } from './app';
@@ -279,6 +281,7 @@ app.listen(3000);
 ```
 
 **In Tests:**
+
 ```typescript
 // src/**/*.integration.spec.ts
 import { createApp } from '../../app';
@@ -289,13 +292,13 @@ const app = createApp({ skipSession: true });
 
 ### **When to Use Each Approach**
 
-| Scenario | Approach | File Pattern |
-|----------|----------|--------------|
-| **Development** (TDD, quick feedback) | Unit | `*.spec.ts` |
-| **Pre-commit** (CI pipeline) | Unit | `*.spec.ts` |
-| **Critical paths** (auth, payments) | Integration | `*.integration.spec.ts` |
-| **Pre-deployment** (staging) | Integration + E2E | `*.integration.spec.ts` |
-| **User workflows** (full stack) | E2E | Separate test suite |
+| Scenario                              | Approach          | File Pattern            |
+| ------------------------------------- | ----------------- | ----------------------- |
+| **Development** (TDD, quick feedback) | Unit              | `*.spec.ts`             |
+| **Pre-commit** (CI pipeline)          | Unit              | `*.spec.ts`             |
+| **Critical paths** (auth, payments)   | Integration       | `*.integration.spec.ts` |
+| **Pre-deployment** (staging)          | Integration + E2E | `*.integration.spec.ts` |
+| **User workflows** (full stack)       | E2E               | Separate test suite     |
 
 ---
 
@@ -307,7 +310,7 @@ const app = createApp({ skipSession: true });
 ✅ **Request Body**: POST/PUT requests with JSON  
 ✅ **Edge Cases**: Empty data, special characters, SQL injection  
 ✅ **Authentication**: Protected routes, token validation  
-✅ **Middleware**: Error handlers, validators  
+✅ **Middleware**: Error handlers, validators
 
 ### **Running Express Tests**
 
@@ -437,10 +440,10 @@ npx nx test <package> --coverage
 it('should do something', () => {
   // Arrange: Setup test data
   const input = { name: 'test' };
-  
+
   // Act: Perform action
   const result = myFunction(input);
-  
+
   // Assert: Verify outcome
   expect(result).toEqual(expected);
 });
@@ -468,12 +471,12 @@ it('should validate form', () => {
 
 ```typescript
 // Prefer accessible queries (better for a11y)
-screen.getByRole('button', { name: /submit/i })
-screen.getByLabelText('Email')
-screen.getByText('Welcome')
+screen.getByRole('button', { name: /submit/i });
+screen.getByLabelText('Email');
+screen.getByText('Welcome');
 
 // Avoid when possible
-screen.getByTestId('submit-button') // Last resort
+screen.getByTestId('submit-button'); // Last resort
 ```
 
 ### **5. Mock External Dependencies**
@@ -481,7 +484,7 @@ screen.getByTestId('submit-button') // Last resort
 ```typescript
 // Mock API calls
 jest.mock('./api', () => ({
-  fetchUser: jest.fn()
+  fetchUser: jest.fn(),
 }));
 
 // Mock localStorage
@@ -496,7 +499,7 @@ Object.defineProperty(global, 'localStorage', {
 
 // Mock database (Express apps)
 jest.mock('../../database/pg', () => ({
-  pg: { query: jest.fn() }
+  pg: { query: jest.fn() },
 }));
 ```
 
@@ -510,12 +513,14 @@ afterEach(() => {
 ```
 
 ### **7. For Express Unit Tests**
+
 - ✅ Mock all external dependencies
 - ✅ Test one route at a time
 - ✅ Focus on business logic
 - ✅ Run frequently during development
 
 ### **8. For Express Integration Tests**
+
 - ✅ Use real app configuration (`createApp()`)
 - ✅ Mock only database/external services
 - ✅ Test middleware interactions
@@ -526,6 +531,7 @@ afterEach(() => {
 ## 📁 File Organization
 
 ### **Frontend Packages**
+
 ```
 packages/frontend-data/
 └── src/
@@ -537,6 +543,7 @@ packages/frontend-data/
 ```
 
 ### **React Component Packages**
+
 ```
 packages/ui-base/
 └── src/
@@ -549,6 +556,7 @@ packages/ui-base/
 ```
 
 ### **Express App Packages**
+
 ```
 packages/app-ganymede/
 ├── src/
@@ -569,31 +577,39 @@ packages/app-ganymede/
 All examples in this repository are **fully working** and can be used as templates!
 
 ### **1. LocalStorage with Cross-Tab Coordination**
+
 📁 `packages/frontend-data/src/lib/local-storage-store.spec.ts`  
 ✅ **48 tests passing**
+
 - Complex state management
 - Async operations with fake timers
 - Error recovery with automatic retry
 - Cross-tab synchronization
 
 ### **2. React Component Testing**
+
 📁 `packages/ui-base/src/lib/sidebar/Sidebar-simple.spec.tsx`  
 ✅ **10 tests passing**
+
 - Rendering tests
 - User interactions
 - State management
 - Edge cases
 
 ### **3. Express API - Teaching Example**
+
 📁 `packages/app-ganymede/src/routes/users/users-simple.spec.ts`  
 ✅ **15 tests passing**
+
 - Simple patterns for learning
 - Basic routes and error handling
 - Clean, easy-to-understand code
 
 ### **4. Express API - Real Application Tests**
+
 📁 `packages/app-ganymede/src/routes/users/users.spec.ts`  
 ✅ **21 tests passing**
+
 - Tests actual application routes
 - Database mocking
 - Authentication bypass
@@ -660,13 +676,13 @@ Object.defineProperty(global, 'localStorage', {
 
 ## 📊 Test Coverage Goals
 
-| Code Type | Target Coverage |
-|-----------|----------------|
-| **Critical paths** (auth, payments) | 100% |
-| **Business logic** | 90%+ |
-| **API routes** | 85%+ |
-| **UI components** | 70%+ |
-| **Utilities** | 90%+ |
+| Code Type                           | Target Coverage |
+| ----------------------------------- | --------------- |
+| **Critical paths** (auth, payments) | 100%            |
+| **Business logic**                  | 90%+            |
+| **API routes**                      | 85%+            |
+| **UI components**                   | 70%+            |
+| **Utilities**                       | 90%+            |
 
 ---
 
@@ -674,22 +690,22 @@ Object.defineProperty(global, 'localStorage', {
 
 ### **Common Commands**
 
-| Task | Command |
-|------|---------|
-| Run all tests | `npx nx run-many -t test` |
-| Run package tests | `npx nx test <package>` |
-| Watch mode | `npx nx test <package> --watch` |
-| Single file | `npx nx test <package> --testFile=<file>` |
-| Coverage | `npx nx test <package> --coverage` |
-| Specific pattern | `npx nx test <package> --testNamePattern="<pattern>"` |
+| Task              | Command                                               |
+| ----------------- | ----------------------------------------------------- |
+| Run all tests     | `npx nx run-many -t test`                             |
+| Run package tests | `npx nx test <package>`                               |
+| Watch mode        | `npx nx test <package> --watch`                       |
+| Single file       | `npx nx test <package> --testFile=<file>`             |
+| Coverage          | `npx nx test <package> --coverage`                    |
+| Specific pattern  | `npx nx test <package> --testNamePattern="<pattern>"` |
 
 ### **Test Status Summary**
 
-| Package | Tests | Status | Files |
-|---------|-------|--------|-------|
-| `frontend-data` | 48 | ✅ Passing | LocalStorage, cache management |
-| `ui-base` | 10 | ✅ Passing | Sidebar component |
-| `app-ganymede` | 36 | ✅ Passing | User routes (simple + real) |
+| Package         | Tests | Status     | Files                          |
+| --------------- | ----- | ---------- | ------------------------------ |
+| `frontend-data` | 48    | ✅ Passing | LocalStorage, cache management |
+| `ui-base`       | 10    | ✅ Passing | Sidebar component              |
+| `app-ganymede`  | 36    | ✅ Passing | User routes (simple + real)    |
 
 ---
 
@@ -705,18 +721,21 @@ Object.defineProperty(global, 'localStorage', {
 ## 🚦 Quick Decision Guide
 
 **Use Unit Tests when:**
+
 - ✅ Writing new features (TDD)
 - ✅ Debugging specific routes/components
 - ✅ Running in CI (fast feedback)
 - ✅ Testing edge cases
 
 **Use Integration Tests when:**
+
 - ✅ Testing critical user flows
 - ✅ Before deployments
 - ✅ Validating middleware interactions
 - ✅ Testing error handling end-to-end
 
 **Use Both when:**
+
 - ✅ High confidence needed
 - ✅ Business-critical features
 - ✅ Time allows thorough testing

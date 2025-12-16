@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { Req, UserSerializedInfo } from '../types';
 import { myfetch } from '@holistix-forge/backend-engine';
-import { EPriority, log } from '@holistix-forge/log';
+import { EPriority, log, UserException } from '@holistix-forge/log';
 import { pg } from '../database/pg';
 import { CurrentUserDetails } from '@holistix-forge/types';
 
@@ -348,10 +348,12 @@ export const signup = async (userInfo: {
     return user_id;
   } catch (error: any) {
     const emailExists = error.message.includes('unique_email');
-    if (emailExists) throw new Error('an account exists for this email yet');
+    if (emailExists)
+      throw new UserException('An account with this email already exists');
 
     const usernameUsed = error.message.includes('unique_username');
-    if (usernameUsed) throw new Error('this username is used yet');
+    if (usernameUsed)
+      throw new UserException('This username is already taken');
 
     throw error;
   }

@@ -152,7 +152,16 @@ export const model: AuthorizationCodeModel &
       'select * from func_oauth_tokens_get_refresh_token($1)',
       [refreshToken]
     );
-    const row = qr.next()!.oneRow();
+    const result = qr.next();
+    if (!result) {
+      debug(`getRefreshToken`, {
+        args: { refreshToken },
+        r: false,
+        reason: 'No result from query',
+      });
+      return false;
+    }
+    const row = result.oneRow();
     if (row)
       r = {
         refreshToken: row['refresh_token'] as string,
@@ -212,7 +221,16 @@ export const model: AuthorizationCodeModel &
     const qr = await pg.query('select * from func_oauth_tokens_get_code($1)', [
       authorizationCode,
     ]);
-    const row = qr.next()!.oneRow();
+    const result = qr.next();
+    if (!result) {
+      debug(`getAuthorizationCode`, {
+        args: { authorizationCode },
+        r: false,
+        reason: 'No result from query',
+      });
+      return false;
+    }
+    const row = result.oneRow();
     if (row) {
       const user: OauthModelUser = {
         id: row['user_id'] as string,

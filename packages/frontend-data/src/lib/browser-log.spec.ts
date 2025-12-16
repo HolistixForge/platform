@@ -1,6 +1,6 @@
 /**
  * Tests for browser logging utility
- * 
+ *
  * Tests browser-side logging helper that provides centralized logging
  * and optional OpenTelemetry span event integration.
  */
@@ -39,7 +39,9 @@ describe('browserLog', () => {
       addEvent: jest.fn(),
     };
 
-    getActiveSpanSpy = jest.spyOn(trace, 'getActiveSpan').mockReturnValue(mockSpan);
+    getActiveSpanSpy = jest
+      .spyOn(trace, 'getActiveSpan')
+      .mockReturnValue(mockSpan);
   });
 
   afterEach(() => {
@@ -402,7 +404,11 @@ describe('browserLog', () => {
     });
 
     it('should handle special characters in strings', () => {
-      browserLog('info', 'SPECIAL', 'Message with \n newlines \t tabs " quotes');
+      browserLog(
+        'info',
+        'SPECIAL',
+        'Message with \n newlines \t tabs " quotes'
+      );
 
       expect(consoleInfoSpy).toHaveBeenCalledWith(
         '[browserLog]',

@@ -1,6 +1,6 @@
 /**
  * Tests for cookie utility functions
- * 
+ *
  * Tests browser cookie parsing and retrieval utilities.
  */
 
@@ -13,7 +13,7 @@ describe('Cookie Utilities', () => {
   beforeEach(() => {
     // Save original cookies
     originalCookie = document.cookie;
-    
+
     // Clear all cookies before each test
     document.cookie.split(';').forEach((cookie) => {
       const name = cookie.split('=')[0].trim();
@@ -99,7 +99,8 @@ describe('Cookie Utilities', () => {
     beforeEach(() => {
       // Set up test cookies
       document.cookie = 'testCookie=testValue';
-      document.cookie = 'jsonCookie=' + encodeURIComponent(JSON.stringify({ key: 'value' }));
+      document.cookie =
+        'jsonCookie=' + encodeURIComponent(JSON.stringify({ key: 'value' }));
       document.cookie = 'numberCookie=123';
     });
 
@@ -157,7 +158,8 @@ describe('Cookie Utilities', () => {
         roles: ['admin', 'user'],
         metadata: { active: true },
       };
-      document.cookie = 'complexCookie=' + encodeURIComponent(JSON.stringify(complexObject));
+      document.cookie =
+        'complexCookie=' + encodeURIComponent(JSON.stringify(complexObject));
 
       const value = getCookie('complexCookie', true);
 
@@ -209,7 +211,8 @@ describe('Cookie Utilities', () => {
         token: 'abc-def-ghi',
         expiresAt: '2024-12-31T23:59:59Z',
       };
-      document.cookie = 'session=' + encodeURIComponent(JSON.stringify(sessionData));
+      document.cookie =
+        'session=' + encodeURIComponent(JSON.stringify(sessionData));
 
       const session = getCookie('session', true);
 
@@ -218,7 +221,8 @@ describe('Cookie Utilities', () => {
     });
 
     it('should handle authentication token cookie', () => {
-      document.cookie = 'authToken=Bearer%20eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
+      document.cookie =
+        'authToken=Bearer%20eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
 
       const token = getCookie('authToken');
 
@@ -232,7 +236,8 @@ describe('Cookie Utilities', () => {
         language: 'en',
         notifications: true,
       };
-      document.cookie = 'preferences=' + encodeURIComponent(JSON.stringify(preferences));
+      document.cookie =
+        'preferences=' + encodeURIComponent(JSON.stringify(preferences));
 
       const prefs = getCookie('preferences', true);
 
@@ -269,7 +274,7 @@ describe('Cookie Utilities', () => {
       // This shouldn't happen in practice, but testing the behavior
       // (browser typically prevents duplicate cookie names)
       document.cookie = 'duplicate=first';
-      
+
       const value = getCookie('duplicate');
 
       expect(value).toBe('first');
@@ -294,4 +299,3 @@ describe('Cookie Utilities', () => {
     });
   });
 });
-
