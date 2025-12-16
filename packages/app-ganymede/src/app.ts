@@ -1,7 +1,8 @@
 import express, { Express } from 'express';
 import expressSession from 'express-session';
 import passport from 'passport';
-import { NotFoundException } from '@holistix-forge/log';
+import { OpenAPIV3 } from 'express-openapi-validator/dist/framework/types';
+import { NotFoundException, error } from '@holistix-forge/log';
 import {
   setupBasicExpressApp,
   setupErrorsHandler,
@@ -28,17 +29,18 @@ export const SESSION_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 /**
  * Create and configure the Express application
- * 
+ *
  * This factory function centralizes all app configuration so it can be reused
  * in both production (main.ts) and tests (*.spec.ts)
- * 
+ *
  * @param options - Configuration options for testing vs production
  * @returns Configured Express app
  */
-export function createApp(options: {
-  skipSession?: boolean;
-  skipOpenApiValidation?: boolean;
-} = {}): Express {
+export function createApp(
+  options: {
+    skipSession?: boolean;
+  } = {}
+): Express {
   const app = express();
   app.set('trust proxy', 1);
 
@@ -51,21 +53,29 @@ export function createApp(options: {
   });
 
   // OpenAPI Request/Response Validation
-  if (!options.skipOpenApiValidation) {
-    setupValidator(app, {
-      apiSpec: oas as any,
-      validateRequests: true,
-      validateResponses: {
-        removeAdditional: 'failing',
-        onError: (err, body, req) => {
-          if (!err.message.includes(' must be string')) {
-            console.error('Response validation error:', err.message);
-            console.error('From:', req.originalUrl);
+
+  setupValidator(app, {
+    apiSpec: oas as OpenAPIV3.DocumentV3,
+    // Request validation errors are handled by Express error middleware, see setupErrorsHandler
+    validateRequests: true,
+    validateResponses: {
+      removeAdditional: 'failing',
+      onError: (err, body, req) => {
+        // Log to structured logger
+        error(
+          'OpenAPI Response Validation',
+          `Response validation failed: ${err.message}`,
+          {
+            validation_type: 'response',
+            url: req.originalUrl,
+            method: req.method,
+            error_path: err.path as string,
+            status_code: req.statusCode as number,
           }
-        },
+        );
       },
-    });
-  }
+    },
+  });
 
   // Session setup (can be skipped in unit tests)
   if (!options.skipSession) {
@@ -111,7 +121,7 @@ export function createApp(options: {
 
   // Error handlers
   app.use(function (req, res, next) {
-    const err: any = new NotFoundException();
+    const err = new NotFoundException();
     next(err);
   });
 
@@ -119,5 +129,3 @@ export function createApp(options: {
 
   return app;
 }
-
-
