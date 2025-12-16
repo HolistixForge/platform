@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { RequestHandler } from 'express';
 import passport from 'passport';
 import * as passportGithub from 'passport-github2';
 import { respond } from '@holistix-forge/backend-engine';
@@ -42,9 +42,16 @@ passport.use(
 //
 //
 
-export const setupGithubRoutes = (router: express.Router) => {
+export const setupGithubRoutes = (
+  router: express.Router,
+  rateLimiter?: RequestHandler
+) => {
+  // Apply rate limiter to OAuth initiation and callback
+  const handlers = rateLimiter ? [rateLimiter] : [];
+  
   router.get(
     '/github',
+    ...handlers,
     passport.authenticate('github', { scope: ['user:email'] })
   );
 

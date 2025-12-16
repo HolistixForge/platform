@@ -1,4 +1,4 @@
-import { Router, Request } from 'express';
+import { Router, Request, RequestHandler } from 'express';
 import { BackendEventProcessor } from '@holistix-forge/reducers';
 import { EPriority, log, NotFoundException } from '@holistix-forge/log';
 import { asyncHandler } from '../middleware/route-handler';
@@ -16,7 +16,13 @@ export const setBackendEventProcessor = (
   bep = processor;
 };
 
-export const setupCollabRoutes = (router: Router) => {
+export const setupCollabRoutes = (
+  router: Router,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  rateLimiter?: RequestHandler
+) => {
+  // Note: Rate limiter is applied globally at app level for API routes
+  // Individual endpoints use JWT authentication for access control
   // GET /collab/ping - Health check
   router.get('/collab/ping', ((_req: Request, res: any) => {
     return res.json({});

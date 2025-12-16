@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { RequestHandler } from 'express';
 import passport from 'passport';
 import * as passportLocal from 'passport-local';
 import { JwtPayload } from 'jsonwebtoken';
@@ -39,9 +39,16 @@ passport.use(
 //
 //
 
-export const setupLocalRoutes = (router: express.Router) => {
+export const setupLocalRoutes = (
+  router: express.Router,
+  rateLimiter?: RequestHandler
+) => {
+  // Apply rate limiter to sensitive endpoints
+  const handlers = rateLimiter ? [rateLimiter] : [];
+  
   router.post(
     '/signup',
+    ...handlers,
     async function (
       req: express.Request,
       res: express.Response,
@@ -90,6 +97,7 @@ export const setupLocalRoutes = (router: express.Router) => {
 
   router.post(
     '/login',
+    ...handlers,
     function (
       req: express.Request,
       res: express.Response,
@@ -214,6 +222,7 @@ export const setupLocalRoutes = (router: express.Router) => {
 
   router.post(
     '/password',
+    ...handlers,
     async function (
       req: express.Request,
       res: express.Response,

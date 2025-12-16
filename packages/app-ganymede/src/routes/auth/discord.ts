@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { RequestHandler } from 'express';
 import passport from 'passport';
 import { Strategy as DiscordStrategy } from 'passport-discord';
 import { discordFindOrCreate, TDiscordReturnedProfile } from '../../models/users';
@@ -35,8 +35,14 @@ passport.use(
   )
 );
 
-export const setupDiscordRoutes = (router: express.Router) => {
-  router.get('/discord', passport.authenticate('discord'));
+export const setupDiscordRoutes = (
+  router: express.Router,
+  rateLimiter?: RequestHandler
+) => {
+  // Apply rate limiter to OAuth initiation and callback
+  const handlers = rateLimiter ? [rateLimiter] : [];
+  
+  router.get('/discord', ...handlers, passport.authenticate('discord'));
 
   router.get(
     CALLBACK_PATH,

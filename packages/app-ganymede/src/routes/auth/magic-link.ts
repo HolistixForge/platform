@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import express from 'express';
+import express, { RequestHandler } from 'express';
 import passport from 'passport';
 import { respond } from '@holistix-forge/backend-engine';
 import { Req, UserSerializedInfo } from '../../types';
@@ -103,7 +103,13 @@ const mailContent = (user: MagicLinkUser, token: string) => {
 //
 //
 
-export const setupMagicLinkRoutes = (router: express.Router) => {
+export const setupMagicLinkRoutes = (
+  router: express.Router,
+  rateLimiter?: RequestHandler
+) => {
+  // Apply rate limiter to magic link request (prevents email flooding)
+  const requestHandlers = rateLimiter ? [rateLimiter] : [];
+  
   /**
    * request token:
    * In this situation the passport authenticate middleware will send a token produced
@@ -113,6 +119,7 @@ export const setupMagicLinkRoutes = (router: express.Router) => {
 
   router.post(
     '/magiclink/request',
+    ...requestHandlers,
     function (
       req: express.Request,
       res: express.Response,

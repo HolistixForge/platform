@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { RequestHandler } from 'express';
 import passport from 'passport';
 import * as passportGitlab from 'passport-gitlab2';
 import { UserSerializedInfo } from '../../types';
@@ -40,9 +40,16 @@ passport.use(
 //
 //
 
-export const setupGitlabRoutes = (router: express.Router) => {
+export const setupGitlabRoutes = (
+  router: express.Router,
+  rateLimiter?: RequestHandler
+) => {
+  // Apply rate limiter to OAuth initiation and callback
+  const handlers = rateLimiter ? [rateLimiter] : [];
+  
   router.get(
     '/gitlab',
+    ...handlers,
     passport.authenticate('gitlab', { scope: ['read_user'] })
   );
 

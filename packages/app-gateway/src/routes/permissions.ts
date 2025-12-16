@@ -1,4 +1,4 @@
-import { Router, Request } from 'express';
+import { Router, Request, RequestHandler } from 'express';
 import { asyncHandler } from '../middleware/route-handler';
 import { authenticateJwt } from '../middleware/jwt-auth';
 import { requirePermission, requireProjectAccess } from '../middleware/permissions';
@@ -7,7 +7,13 @@ import { getGatewayInstances } from '../initialization/gateway-instances';
 /**
  * Setup permission-related routes
  */
-export const setupPermissionsRoutes = (router: Router) => {
+export const setupPermissionsRoutes = (
+  router: Router,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  rateLimiter?: RequestHandler
+) => {
+  // Note: Rate limiter is applied globally at app level for API routes
+  // Individual endpoints use JWT authentication for access control
   /**
    * GET /permissions
    * Get all compiled permissions from all modules
