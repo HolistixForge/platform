@@ -9,6 +9,11 @@
           "source": "README.md"
         },
         {
+          "label": "Local Development",
+          "path": "doc/guides/LOCAL_DEVELOPMENT.md",
+          "source": "doc/guides/LOCAL_DEVELOPMENT.md"
+        },
+        {
           "label": "Contributing",
           "path": "CONTRIBUTING.md",
           "source": "CONTRIBUTING.md"
@@ -32,6 +37,36 @@
           "label": "Gateway Architecture",
           "path": "doc/architecture/GATEWAY_ARCHITECTURE.md",
           "source": "doc/architecture/GATEWAY_ARCHITECTURE.md"
+        },
+        {
+          "label": "Frontend Architecture",
+          "path": "doc/architecture/FRONTEND_ARCHITECTURE.md",
+          "source": "doc/architecture/FRONTEND_ARCHITECTURE.md"
+        },
+        {
+          "label": "Permission System",
+          "path": "doc/architecture/PERMISSION_SYSTEM.md",
+          "source": "doc/architecture/PERMISSION_SYSTEM.md"
+        },
+        {
+          "label": "Protected Services",
+          "path": "doc/architecture/PROTECTED_SERVICES.md",
+          "source": "doc/architecture/PROTECTED_SERVICES.md"
+        },
+        {
+          "label": "Logging & Observability",
+          "path": "doc/architecture/LOGGING_AND_OBSERVABILITY.md",
+          "source": "doc/architecture/LOGGING_AND_OBSERVABILITY.md"
+        },
+        {
+          "label": "Architectural Decisions",
+          "path": "doc/architecture/ARCHITECTURAL_DECISIONS.md",
+          "source": "doc/architecture/ARCHITECTURAL_DECISIONS.md"
+        },
+        {
+          "label": "Package Architecture",
+          "path": "doc/guides/PACKAGE_ARCHITECTURE.md",
+          "source": "doc/guides/PACKAGE_ARCHITECTURE.md"
         }
       ]
     },
@@ -39,14 +74,29 @@
       "title": "Guides",
       "items": [
         {
-          "label": "Local Development",
-          "path": "doc/guides/LOCAL_DEVELOPMENT.md",
-          "source": "doc/guides/LOCAL_DEVELOPMENT.md"
+          "label": "Testing Guide",
+          "path": "doc/guides/TESTING_GUIDE.md",
+          "source": "doc/guides/TESTING_GUIDE.md"
         },
         {
           "label": "Module Testing",
           "path": "doc/guides/MODULES_TESTING.md",
           "source": "doc/guides/MODULES_TESTING.md"
+        },
+        {
+          "label": "Production Deployment",
+          "path": "doc/guides/PRODUCTION_DEPLOYMENT.md",
+          "source": "doc/guides/PRODUCTION_DEPLOYMENT.md"
+        },
+        {
+          "label": "DNS Complete Guide",
+          "path": "doc/guides/DNS_COMPLETE_GUIDE.md",
+          "source": "doc/guides/DNS_COMPLETE_GUIDE.md"
+        },
+        {
+          "label": "Gateway Build & Distribution",
+          "path": "doc/guides/GATEWAY_BUILD_DISTRIBUTION.md",
+          "source": "doc/guides/GATEWAY_BUILD_DISTRIBUTION.md"
         }
       ]
     },
@@ -61,7 +111,7 @@
       ]
     },
     {
-      "title": "Modules",
+      "title": "Core Modules",
       "items": [
         {
           "label": "Modules Overview",
@@ -89,24 +139,24 @@
           "source": "packages/modules/core-graph/README.md"
         },
         {
+          "label": "Gateway",
+          "path": "packages/modules/gateway/README.md",
+          "source": "packages/modules/gateway/README.md"
+        }
+      ]
+    },
+    {
+      "title": "UI & Communication Modules",
+      "items": [
+        {
           "label": "Whiteboard",
           "path": "packages/modules/whiteboard/README.md",
           "source": "packages/modules/whiteboard/README.md"
         },
         {
-          "label": "Gateway",
-          "path": "packages/modules/gateway/README.md",
-          "source": "packages/modules/gateway/README.md"
-        },
-        {
-          "label": "User Containers",
-          "path": "packages/modules/user-containers/README.md",
-          "source": "packages/modules/user-containers/README.md"
-        },
-        {
-          "label": "Jupyter",
-          "path": "packages/modules/jupyter/README.md",
-          "source": "packages/modules/jupyter/README.md"
+          "label": "Excalidraw",
+          "path": "packages/modules/excalidraw/README.md",
+          "source": "packages/modules/excalidraw/README.md"
         },
         {
           "label": "Chats",
@@ -119,6 +169,41 @@
           "source": "packages/modules/tabs/README.md"
         },
         {
+          "label": "Socials",
+          "path": "packages/modules/socials/README.md",
+          "source": "packages/modules/socials/README.md"
+        }
+      ]
+    },
+    {
+      "title": "Development & Data Modules",
+      "items": [
+        {
+          "label": "User Containers",
+          "path": "packages/modules/user-containers/README.md",
+          "source": "packages/modules/user-containers/README.md"
+        },
+        {
+          "label": "Jupyter",
+          "path": "packages/modules/jupyter/README.md",
+          "source": "packages/modules/jupyter/README.md"
+        },
+        {
+          "label": "pgAdmin4",
+          "path": "packages/modules/pgadmin4/README.md",
+          "source": "packages/modules/pgadmin4/README.md"
+        },
+        {
+          "label": "n8n",
+          "path": "packages/modules/n8n/README.md",
+          "source": "packages/modules/n8n/README.md"
+        }
+      ]
+    },
+    {
+      "title": "Integration Modules",
+      "items": [
+        {
           "label": "Notion",
           "path": "packages/modules/notion/README.md",
           "source": "packages/modules/notion/README.md"
@@ -127,16 +212,6 @@
           "label": "Airtable",
           "path": "packages/modules/airtable/README.md",
           "source": "packages/modules/airtable/README.md"
-        },
-        {
-          "label": "Excalidraw",
-          "path": "packages/modules/excalidraw/README.md",
-          "source": "packages/modules/excalidraw/README.md"
-        },
-        {
-          "label": "Socials",
-          "path": "packages/modules/socials/README.md",
-          "source": "packages/modules/socials/README.md"
         }
       ]
     },
