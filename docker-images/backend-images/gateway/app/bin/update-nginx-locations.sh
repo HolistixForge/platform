@@ -19,6 +19,10 @@ function success_exit {
 CONFIG_FILE="/tmp/$(basename ${NGINX_CONFIG})-update"
 cp "${NGINX_CONFIG}" "${CONFIG_FILE}"
 
+# Get the directory where the error pages are located (relative to nginx script)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ERROR_PAGES_DIR="$(cd "${SCRIPT_DIR}/../error-pages" && pwd)"
+
 # Remove all server blocks except the base app-gateway blocks (listening on APP_GATEWAY_PORT and 80)
 # Keep only the two base server blocks defined in reset-nginx.sh
 awk '
@@ -59,6 +63,15 @@ while read -r fqdn ip port; do
 server {
     listen 80;
     server_name ${fqdn};
+
+    # Custom error pages
+    error_page 400 401 403 404 500 502 503 504 /error.html;
+    
+    location = /error.html {
+        ssi on;
+        internal;
+        root ${ERROR_PAGES_DIR};
+    }
 
     location / {
         proxy_pass http://${ip}:${port};

@@ -25,12 +25,16 @@ app/
 ├── entrypoint-dev.sh          # Container entrypoint (fetches build, starts infrastructure)
 ├── main.sh                     # Script runner (executes lib/bin scripts)
 ├── config.conf                 # Configuration variables
+├── error-pages/                # Custom nginx error pages
+│   ├── error.html             # Styled error page template (400, 401, 403, 404, 500, 502, 503, 504)
+│   ├── test-error-pages.sh    # Test script for error pages
+│   └── README.md              # Error pages documentation
 ├── lib/                        # Library scripts (called by other scripts)
 │   ├── start-vpn.sh           # Start OpenVPN server
 │   ├── stop-vpn.sh             # Stop OpenVPN server
 │   ├── start-app-gateway.sh   # Start app-gateway (used by entrypoint & reset-gateway)
 │   ├── stop-app-gateway.sh    # Stop app-gateway (used by reset-gateway)
-│   └── reset-nginx.sh         # Reset Nginx base configuration
+│   └── reset-nginx.sh         # Reset Nginx base configuration + error pages
 └── bin/                        # Executable scripts (called by app-gateway via main.sh)
     ├── update-nginx-locations.sh  # Update Nginx routing for user containers
     └── reset-gateway.sh            # Full gateway reset (VPN + Nginx + app)
