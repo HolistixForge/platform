@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Primary Meta Tags -->
+    <title>{{ metadata.title }} - Holistix Forge Documentation</title>
+    <meta name="title" content="{{ metadata.title }} - Holistix Forge Documentation">
+    <meta name="description" content="{{ metadata.description }}">
+    <meta name="keywords" content="{{ keywords }}">
+    <meta name="author" content="Holistix Forge">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ canonical_url }}">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="{{ canonical_url }}">
+    <meta property="og:title" content="{{ metadata.title }} - Holistix Forge Documentation">
+    <meta property="og:description" content="{{ metadata.description }}">
+    <meta property="og:image" content="{{ base_url }}/holistix-hive.svg">
+    <meta property="og:site_name" content="Holistix Forge">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ canonical_url }}">
+    <meta property="twitter:title" content="{{ metadata.title }} - Holistix Forge Documentation">
+    <meta property="twitter:description" content="{{ metadata.description }}">
+    <meta property="twitter:image" content="{{ base_url }}/holistix-hive.svg">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ base_url }}/holistix-hive.svg">
+    
+    <!-- Stylesheets (use relative paths calculated from page depth) -->
+    <link rel="stylesheet" href="{{ '../' * (canonical_url.count('/') - 3) if canonical_url.count('/') > 3 else '' }}styles.css">
+    <link rel="stylesheet" href="{{ '../' * (canonical_url.count('/') - 3) if canonical_url.count('/') > 3 else '' }}docs.css">
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7N7QDQ3BF9"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-7N7QDQ3BF9');
+    </script>
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+{{ structured_data }}
+    </script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <div class="logo">
+                    <a href="{{ base_url }}/index.html" style="text-decoration: none; color: inherit; display: inline-flex; align-items: center;">
+                        <img src="{{ base_url }}/holistix-hive.svg" alt="Holistix Forge logo" class="logo-mark">
+                        Holistix Forge
+                    </a>
+                </div>
+                <button class="mobile-menu-toggle" aria-label="Toggle menu" aria-expanded="false">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <div class="mobile-menu-overlay"></div>
+                <div class="nav-links">
+                    <a href="{{ base_url }}/index.html">Home</a>
+                    <a href="{{ base_url }}/index.html#features">Features</a>
+                    <a href="{{ base_url }}/index.html#use-cases">Use Cases</a>
+                    <a href="{{ base_url }}/index.html#contact">Contact</a>
+                    <a href="{{ base_url }}/README.html" class="active">Documentation</a>
+                    <a href="https://github.com/HolistixForge/platform" class="btn-github" target="_blank" rel="noopener noreferrer">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 0.5rem;">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                        GitHub
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Documentation Content -->
+    <div class="docs-container">
+        <!-- Sidebar Navigation -->
+        <aside class="docs-sidebar" id="docsSidebar">
+            <div class="sidebar-content">
+                <h3>Documentation</h3>
+                <nav class="docs-nav" id="docsNav">
+                    <div class="loading">Loading navigation...</div>
+                </nav>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="docs-main">
+            <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <div class="docs-content">
+                <article class="markdown-body">
+                    {{ content|safe }}
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ '../' * (canonical_url.count('/') - 3) if canonical_url.count('/') > 3 else '' }}script.js"></script>
+    <script>
+        // Load and display documentation navigation
+        (async function() {
+            const nav = document.getElementById('docsNav');
+            let relativePath = 'docs.json'; // Default
+            
+            try {
+                // Calculate relative path to docs.json from current page
+                const canonicalPath = '{{ canonical_url }}'.split('/').slice(3).join('/'); // Remove protocol and domain
+                const depth = canonicalPath.split('/').length - 1;
+                relativePath = depth > 0 ? '../'.repeat(depth) + 'docs.json' : 'docs.json';
+                
+                const response = await fetch(relativePath);
+                const data = await response.json();
+                // Get current page filename for highlighting
+                const fullPath = window.location.pathname;
+                const currentPage = fullPath.substring(fullPath.lastIndexOf('/') + 1);
+                
+                let html = '';
+                for (const section of data.sections) {
+                    html += `<div class="nav-section">`;
+                    html += `<h4 class="nav-section-title">${section.title}</h4>`;
+                    html += `<ul class="nav-items">`;
+                    
+                    for (const item of section.items) {
+                        const isActive = currentPage === item.path || 
+                                       window.location.pathname.endsWith(item.path);
+                        const activeClass = isActive ? ' class="active"' : '';
+                        
+                        // Better indentation: 20px per level
+                        const indentPx = item.level > 0 ? item.level * 20 + 10 : 10;
+                        const indent = `style="padding-left: ${indentPx}px"`;
+                        
+                        // Add depth indicator
+                        const depthClass = item.level > 0 ? ` depth-${item.level}` : '';
+                        
+                        // Visual indicator based on depth
+                        let indicator = '';
+                        if (item.level === 0) {
+                            indicator = '📄 ';
+                        } else if (item.level === 1) {
+                            indicator = '├─ ';
+                        } else if (item.level === 2) {
+                            indicator = '│ └─ ';
+                        } else {
+                            indicator = '│ '.repeat(item.level - 1) + '└─ ';
+                        }
+                        
+                        html += `<li${activeClass}${depthClass} ${indent}>`;
+                        html += `<a href="${relativePath.replace('docs.json', '')}${item.path}"${activeClass}>`;
+                        html += `<span class="nav-indicator">${indicator}</span>${item.title}`;
+                        html += `</a>`;
+                        html += `</li>`;
+                    }
+                    
+                    html += `</ul>`;
+                    html += `</div>`;
+                }
+                
+                nav.innerHTML = html;
+            } catch (error) {
+                console.error('Failed to load navigation:', error);
+                if (nav) {
+                    nav.innerHTML = `
+                        <div class="error" style="padding: 1rem; color: #dc2626;">
+                            <p><strong>Failed to load navigation</strong></p>
+                            <p style="font-size: 0.875rem;">${error.message}</p>
+                            <p style="font-size: 0.75rem; margin-top: 0.5rem;">
+                                Tried to fetch: ${relativePath || 'docs.json'}
+                            </p>
+                        </div>
+                    `;
+                }
+            }
+        })();
+        
+        // Sidebar toggle for mobile
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            const sidebar = document.getElementById('docsSidebar');
+            sidebar.classList.toggle('active');
+        });
+        
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('docsSidebar');
+            const toggle = document.getElementById('sidebarToggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(e.target) && 
+                !toggle.contains(e.target) &&
+                sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
+

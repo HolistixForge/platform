@@ -1,5 +1,7 @@
 # Holistix Forge Landing Page Copywriting
 
+`__DO_NOT_PUBLISH__`
+
 ## Project Descriptions
 
 ### One-Line Descriptions (Carousel Options)

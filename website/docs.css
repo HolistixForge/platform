@@ -8,7 +8,8 @@
 
 /* Sidebar */
 .docs-sidebar {
-    width: 280px;
+    width: 560px;
+    max-width: 35vw;
     background-color: var(--bg-secondary);
     border-right: 1px solid var(--border-color);
     position: sticky;
@@ -19,7 +20,8 @@
 }
 
 .sidebar-content {
-    padding: 2rem 1.5rem;
+    padding: 2rem 2rem;
+    max-width: 100%;
 }
 
 .sidebar-content h3 {
@@ -35,13 +37,20 @@
     gap: 2rem;
 }
 
-.nav-section h4 {
+.nav-section h4,
+.nav-section-title {
     font-size: 0.875rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-secondary);
     margin-bottom: 0.75rem;
+}
+
+.nav-items {
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
 
 .nav-section ul {
@@ -61,17 +70,124 @@
     text-decoration: none;
     border-radius: 0.375rem;
     font-size: 0.95rem;
-    transition: background-color 0.2s, color 0.2s;
+    transition: all 0.2s;
+    border-left: 2px solid transparent;
 }
 
 .nav-section a:hover {
     background-color: var(--bg-tertiary);
     color: var(--primary-color);
+    border-left-color: var(--primary-color);
+    transform: translateX(2px);
 }
 
 .nav-section a.active {
     background-color: var(--primary-color);
     color: white;
+    font-weight: 600;
+    border-left-color: var(--primary-color);
+}
+
+/* Depth indicators */
+.nav-section li[style*="padding-left"] a {
+    position: relative;
+}
+
+/* Add subtle background for nested items */
+.nav-section li[style*="padding-left"] {
+    position: relative;
+}
+
+.nav-section li[style*="padding-left"]::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: var(--border-color);
+}
+
+/* Different opacity for different depths */
+.nav-section li[style*="padding-left: 30px"],
+.nav-section li.depth-1 {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.nav-section li[style*="padding-left: 50px"],
+.nav-section li.depth-2 {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.nav-section li[style*="padding-left: 70px"],
+.nav-section li.depth-3 {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Navigation indicators */
+.nav-indicator {
+    display: inline-block;
+    font-family: monospace;
+    margin-right: 0.25rem;
+    opacity: 0.6;
+    font-size: 0.875rem;
+    user-select: none;
+}
+
+/* Make indicators more subtle on hover */
+.nav-section a:hover .nav-indicator {
+    opacity: 0.8;
+}
+
+/* Depth-specific styling */
+.nav-section li.depth-0 a {
+    font-weight: 500;
+}
+
+.nav-section li.depth-1 a {
+    font-size: 0.9rem;
+}
+
+.nav-section li.depth-2 a {
+    font-size: 0.875rem;
+    color: var(--text-tertiary, #6b7280);
+}
+
+.nav-section li.depth-3 a,
+.nav-section li.depth-4 a {
+    font-size: 0.85rem;
+    color: var(--text-tertiary, #6b7280);
+}
+
+/* Sidebar Toggle Button */
+.sidebar-toggle {
+    display: none;
+    position: fixed;
+    top: 100px;
+    left: 1rem;
+    z-index: 1000;
+    background: var(--primary-color);
+    border: none;
+    border-radius: 0.5rem;
+    width: 40px;
+    height: 40px;
+    padding: 0.5rem;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: background-color 0.2s;
+}
+
+.sidebar-toggle:hover {
+    background: var(--primary-dark);
+}
+
+.sidebar-toggle span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: white;
+    margin: 4px 0;
+    transition: 0.3s;
 }
 
 /* Main Content */
@@ -79,6 +195,7 @@
     flex: 1;
     background-color: var(--bg-primary);
     overflow-y: auto;
+    position: relative;
 }
 
 .docs-content {
@@ -258,6 +375,23 @@
     margin: 1.5rem 0;
 }
 
+/* Badge images (shields.io) should display inline */
+.markdown-body img[src*="shields.io"],
+.markdown-body img[src*="badge"],
+.markdown-body img[alt*="badge"],
+.markdown-body img[alt*="Badge"] {
+    display: inline-block;
+    margin: 0.25rem 0.25rem;
+    border-radius: 0.25rem;
+    vertical-align: middle;
+}
+
+/* Remove line breaks after badge images */
+.markdown-body img[src*="shields.io"] + br,
+.markdown-body img[src*="badge"] + br {
+    display: none;
+}
+
 .markdown-body hr {
     border: none;
     border-top: 1px solid var(--border-color);
@@ -265,25 +399,48 @@
 }
 
 /* Responsive Design */
+@media (max-width: 1440px) {
+    .docs-sidebar {
+        width: 480px;
+        max-width: 40vw;
+    }
+}
+
 @media (max-width: 1024px) {
     .docs-sidebar {
-        width: 240px;
+        width: 400px;
+        max-width: 45vw;
     }
 }
 
 @media (max-width: 768px) {
     .docs-container {
-        flex-direction: column;
+        flex-direction: row;
+        position: relative;
     }
     
     .docs-sidebar {
+        position: fixed;
+        left: -100%;
+        top: 80px;
         width: 100%;
-        position: relative;
-        top: 0;
-        height: auto;
-        max-height: 300px;
-        border-right: none;
-        border-bottom: 1px solid var(--border-color);
+        max-width: 100%;
+        height: calc(100vh - 80px);
+        z-index: 999;
+        background-color: var(--bg-secondary);
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .docs-sidebar.active {
+        left: 0;
+    }
+    
+    .sidebar-toggle {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
     }
     
     .sidebar-content {
@@ -292,6 +449,10 @@
     
     .docs-nav {
         gap: 1.5rem;
+    }
+    
+    .docs-main {
+        width: 100%;
     }
     
     .docs-content {
@@ -312,7 +473,9 @@
     font-weight: 600;
 }
 
+.loading,
 .loading-nav,
+.error,
 .error-nav {
     padding: 1rem;
     text-align: center;
@@ -320,6 +483,7 @@
     font-size: 0.9rem;
 }
 
+.error,
 .error-nav {
     color: #dc2626;
 }

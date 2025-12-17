@@ -1,5 +1,7 @@
 # Archived Documentation
 
+`__DO_NOT_PUBLISH__`
+
 This folder contains historical documentation that has been superseded but is preserved for reference.
 
 ## 2024 Container Feature Refactoring

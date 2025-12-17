@@ -51,6 +51,7 @@ data/*
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
-website/docs/*
-
 .venv
+
+# Static documentation site generator (md-file-graph output)
+website/static/
