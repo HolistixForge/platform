@@ -774,22 +774,22 @@
     },
     "/projects": {
       "get": {
-        "summary": "List user's projects or search by owner and name",
+        "summary": "List user's projects or search by organization_id and name",
         "tags": ["Projects"],
         "parameters": [
           { "$ref": "#/components/parameters/headers_authorization" },
           {
-            "name": "owner",
+            "name": "organization_id",
             "in": "query",
             "required": false,
-            "description": "Owner username (when searching with 'name')",
-            "schema": { "type": "string" }
+            "description": "Organization ID (when searching with 'name')",
+            "schema": { "type": "string", "format": "uuid" }
           },
           {
             "name": "name",
             "in": "query",
             "required": false,
-            "description": "Project name (when searching with 'owner')",
+            "description": "Project name (when searching with 'organization_id')",
             "schema": { "type": "string" }
           }
         ],

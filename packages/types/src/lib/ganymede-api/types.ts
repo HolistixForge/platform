@@ -3,4 +3,5 @@ export type TApi_Project = {
   organization_id: string;
   created: string;
   name: string;
+  public: boolean;
 };

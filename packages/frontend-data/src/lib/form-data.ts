@@ -7,7 +7,15 @@ export type NewPasswordFormData = {
   password: string;
 };
 
-export type NewProjectFormData = { name: string; public: boolean };
+export type NewOrganizationFormData = {
+  name: string;
+};
+
+export type NewProjectFormData = {
+  organization_id: string;
+  name: string;
+  public: boolean;
+};
 
 export type SignupFormData = {
   email: string;

@@ -11,6 +11,7 @@ export {
   useQueriesUsers,
   useMutationUserScope,
   useCollaborators,
+  useQueryUserOrganizations,
   useQueryUserProjects,
   useCurrentUser,
   useMutationLogout,
@@ -19,6 +20,7 @@ export {
   useMutationTotpSetup,
   useMutationTotpLogin,
   useMutationChangePassword,
+  useMutationNewOrganization,
   useMutationNewProject,
   useMutationDeleteProject,
   useQueryProjectByName,
@@ -28,6 +30,7 @@ export {
 export type {
   LoginFormData,
   NewPasswordFormData,
+  NewOrganizationFormData,
   NewProjectFormData,
   SignupFormData,
   TotpLoginFormData,

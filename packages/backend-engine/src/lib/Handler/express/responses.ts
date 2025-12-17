@@ -13,29 +13,11 @@ type ExpressRequest = express.Request;
 type ExpressResponse = express.Response;
 
 /**
+ * Header constants for different response types
  *
+ * Note: CORS and no-cache headers are handled by middleware in app-setup.ts
+ * These constants only define content-specific headers
  */
-
-const headersNoCache = {
-  'Cache-Control':
-    'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
-  Pragma: 'no-cache',
-  'Surrogate-Control': 'no-store',
-  Expires: 'Thu, 01 Jan 1970 00:00:00 GMT',
-};
-
-const headersCORS = (origin: string | undefined) => {
-  const allowedOrigins: string[] = JSON.parse(
-    process.env.ALLOWED_ORIGINS || '[]'
-  );
-  return {
-    // CORS
-    'Access-Control-Allow-Credentials': 'true',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Origin':
-      origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0],
-  };
-};
 
 const headersJSON = {
   'Content-Type': 'application/json',
@@ -46,6 +28,8 @@ const headersEventStream = {
   Connection: 'keep-alive',
 };
 
+// Only adds the Allow-Methods header for OPTIONS requests
+// (CORS origin/credentials/headers are set by middleware)
 const headersOptions = {
   'Access-Control-Allow-Methods':
     'DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT',
@@ -78,10 +62,10 @@ export const headers = (
   res: ExpressResponse,
   r: TResponse
 ): void => {
-  let h = {
-    ...headersNoCache,
-    ...headersCORS(req.headers.origin),
-  };
+  // CORS headers are set by middleware in app-setup.ts
+  // No-cache headers are set by nocache() middleware in app-setup.ts
+  // This function only sets content-specific headers
+  let h = {};
   switch (r.type) {
     case 'json':
       h = { ...h, ...headersJSON };

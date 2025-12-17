@@ -15,6 +15,7 @@ import {
 import {
   LoginFormData,
   NewPasswordFormData,
+  NewOrganizationFormData,
   NewProjectFormData,
   SignupFormData,
   TotpEnableFormData,
@@ -435,6 +436,33 @@ export const useMutationChangePassword = () => {
 //
 //
 
+export const useQueryUserOrganizations = () => {
+  const { ganymedeApi } = useApi();
+
+  return useQuery<Array<{
+    organization_id: string;
+    name: string;
+    owner_user_id: string;
+    created_at: string;
+  }>>({
+    queryKey: ['user-organizations', 'me'],
+    queryFn: () =>
+      (
+        ganymedeApi.fetch({
+          url: 'orgs',
+          method: 'GET',
+        }) as Promise<{
+          organizations: Array<{
+            organization_id: string;
+            name: string;
+            owner_user_id: string;
+            created_at: string;
+          }>;
+        }>
+      ).then((data) => data.organizations),
+  });
+};
+
 export const useQueryUserProjects = () => {
   const { ganymedeApi } = useApi();
 
@@ -449,6 +477,25 @@ export const useQueryUserProjects = () => {
           projects: TApi_Project[];
         }>
       ).then((data) => data.projects),
+  });
+};
+
+export const useMutationNewOrganization = () => {
+  const { ganymedeApi } = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (d: NewOrganizationFormData) => {
+      return ganymedeApi.fetch({
+        method: 'POST',
+        url: 'orgs',
+        jsonBody: d,
+      }) as Promise<{
+        organization_id: string;
+      }>;
+    },
+
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['user-organizations', 'me'] }),
   });
 };
 
@@ -492,16 +539,16 @@ export const useMutationDeleteProject = (project_id: string) => {
 
 //
 
-export const useQueryProjectByName = (owner: string, project_name: string) => {
+export const useQueryProjectByName = (organization_id: string, project_name: string) => {
   const { ganymedeApi } = useApi();
   return useQuery<TApi_Project>({
-    queryKey: ['projects', owner, project_name],
+    queryKey: ['projects', organization_id, project_name],
     queryFn: () =>
       ganymedeApi.fetch({
         url: `projects`,
         method: 'GET',
         queryParameters: {
-          owner,
+          organization_id,
           name: project_name,
         },
       }) as Promise<TApi_Project>,

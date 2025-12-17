@@ -10,6 +10,8 @@ export { TotpSetupForm, TotpLoginForm } from './lib/form/form-totp/totp';
 
 export { NewPasswordForm } from './lib/form/form-new-password/new-password';
 
+export { NewOrganizationForm } from './lib/form/form-new-organization/new-organization';
+
 export { NewProjectForm } from './lib/form/form-new-project/new-project';
 
 export { Header } from './lib/mvp-ui-view/components/header';

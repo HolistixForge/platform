@@ -4,10 +4,26 @@
   </a>
   <br>
   <br>
-  <a href="https://holistix.so" target="_blank" rel="noopener noreferrer">holistix.so</a>
-  <br>
   <br>
 </div>
+
+[![Website](https://img.shields.io/badge/Website-holistix.so-00ADD8?logo=googlechrome&logoColor=white)](https://holistix.so)
+[![Discord](https://img.shields.io/discord/1373408493993853000?color=5865F2&label=Discord&logo=discord&logoColor=white)](https://discord.gg/jAMe56WbRF)
+
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+![Last Commit](https://img.shields.io/github/last-commit/HolistixForge/platform)
+![Contributors](https://img.shields.io/github/contributors/HolistixForge/platform)
+![Maintained](https://img.shields.io/badge/Maintained%3F-yes-green.svg)
+
+![GitHub stars](https://img.shields.io/github/stars/HolistixForge/platform?style=social)
+![GitHub forks](https://img.shields.io/github/forks/HolistixForge/platform?style=social)
+
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white)
+![React](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=black)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+
+---
 
 # Holistix Forge : Platform
 

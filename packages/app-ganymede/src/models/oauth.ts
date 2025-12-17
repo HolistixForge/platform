@@ -279,7 +279,11 @@ export const model: AuthorizationCodeModel &
           client.id,
           user.session_id,
           code.authorizationCode,
-          code.expiresAt.toISOString(),
+          // Pass Date object directly instead of code.expiresAt.toISOString()
+          // toISOString() converts to "2025-12-16T17:03:50.507Z" which PostgreSQL
+          // stores in "timestamp without time zone" column, treating it as local time
+          // and losing UTC context. Passing Date object preserves timezone correctly.
+          code.expiresAt,
           JSON.stringify(code.scope),
           code.redirectUri,
         ]

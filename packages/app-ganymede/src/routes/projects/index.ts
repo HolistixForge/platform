@@ -9,48 +9,31 @@ export const setupProjectRoutes = (router: Router) => {
     '/projects',
     authenticateJwtUser,
     asyncHandler(async (req: AuthRequest, res) => {
-      // Support optional search by owner username and project name
-      const { owner, name } = req.query;
+      const { name, organization_id } = req.query;
 
-      if (owner && name) {
-        // Search for project by owner username and project name
-        // First, find user by username
-        const userResult = await pg.query(
-          'SELECT user_id FROM users WHERE username = $1',
-          [owner as string]
+      // Search by organization_id and name
+      if (organization_id && name) {
+        const projectResult = await pg.query(
+          'SELECT * FROM func_projects_get_by_org_and_name($1, $2)',
+          [organization_id as string, name as string]
         );
-        const user = userResult.next()?.oneRow();
-        if (!user) {
-          return res.status(404).json({ error: 'Owner not found' });
+        const project = projectResult.next()?.oneRow();
+
+        if (!project) {
+          return res.status(404).json({ error: 'Project not found' });
         }
 
-        // Find organizations owned by this user
-        const orgsResult = await pg.query(
-          'SELECT organization_id FROM organizations WHERE owner_user_id = $1',
-          [user['user_id']]
+        // Check if current user has access to this project
+        const accessCheck = await pg.query(
+          'SELECT func_user_has_project_access($1, $2) as has_access',
+          [req.user.id, project['project_id']]
         );
-        const orgs = orgsResult.next()?.allRows() || [];
 
-        // Search for project in each organization
-        for (const org of orgs) {
-          const projectResult = await pg.query(
-            'SELECT * FROM func_projects_get_by_org_and_name($1, $2)',
-            [org['organization_id'], name as string]
-          );
-          const project = projectResult.next()?.oneRow();
-          if (project) {
-            // Check if current user has access to this project
-            const accessCheck = await pg.query(
-              'SELECT func_user_has_project_access($1, $2) as has_access',
-              [req.user.id, project['project_id']]
-            );
-            if (accessCheck.next()?.oneRow()['has_access']) {
-              return res.json(project);
-            }
-          }
+        if (!accessCheck.next()?.oneRow()['has_access']) {
+          return res.status(403).json({ error: 'Access denied' });
         }
 
-        return res.status(404).json({ error: 'Project not found' });
+        return res.json(project);
       }
 
       // Default: list user's projects

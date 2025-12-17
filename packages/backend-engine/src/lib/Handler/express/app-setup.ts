@@ -26,6 +26,24 @@ export const setupBasicExpressApp = (app: express.Express) => {
     next();
   });
 
+  // CORS middleware - must run before routes
+  app.use((req, res, next) => {
+    const allowedOrigins: string[] = JSON.parse(
+      process.env.ALLOWED_ORIGINS || '[]'
+    );
+    const origin = req.headers.origin;
+    const allowedOrigin =
+      origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader(
+      'Access-Control-Allow-Headers',
+      'Content-Type, Authorization'
+    );
+    res.setHeader('Access-Control-Allow-Origin', allowedOrigin || '*');
+    next();
+  });
+
   // disable express caching
   app.use(nocache());
   app.set('etag', false);
