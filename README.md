@@ -11,6 +11,7 @@
 [![Discord](https://img.shields.io/discord/1373408493993853000?color=5865F2&label=Discord&logo=discord&logoColor=white)](https://discord.gg/jAMe56WbRF)
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![CI](https://github.com/HolistixForge/platform/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/HolistixForge/platform/actions/workflows/ci.yml)
 ![Last Commit](https://img.shields.io/github/last-commit/HolistixForge/platform)
 ![Contributors](https://img.shields.io/github/contributors/HolistixForge/platform)
 ![Maintained](https://img.shields.io/badge/Maintained%3F-yes-green.svg)
