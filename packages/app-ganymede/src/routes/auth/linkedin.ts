@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { RequestHandler } from 'express';
 import passport from 'passport';
 const LinkedInStrategy = require('../../lib/passport-linkedin-oauth2-v3');
 import { linkedinFindOrCreate, TLinkedinReturnedProfile } from '../../models/users';
@@ -36,8 +36,14 @@ const s = new LinkedInStrategy(
 
 passport.use(s);
 
-export const setupLinkedinRoutes = (router: express.Router) => {
-  router.get('/linkedin', passport.authenticate('linkedin'));
+export const setupLinkedinRoutes = (
+  router: express.Router,
+  rateLimiter?: RequestHandler
+) => {
+  // Apply rate limiter to OAuth initiation and callback
+  const handlers = rateLimiter ? [rateLimiter] : [];
+  
+  router.get('/linkedin', ...handlers, passport.authenticate('linkedin'));
 
   router.get(
     CALLBACK_PATH,

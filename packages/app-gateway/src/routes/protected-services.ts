@@ -1,4 +1,4 @@
-import { Router, Request } from 'express';
+import { Router, Request, RequestHandler } from 'express';
 import { asyncHandler } from '../middleware/route-handler';
 import { authenticateJwt } from '../middleware/jwt-auth';
 import { getGatewayInstances } from '../initialization/gateway-instances';
@@ -55,7 +55,13 @@ function buildContext(req: Request): ProtectedServiceRequestContext {
  * This gives modules a generic "protected service" mechanism without
  * coupling app-gateway to specific module concepts like user-containers.
  */
-export const setupProtectedServicesRoutes = (router: Router) => {
+export const setupProtectedServicesRoutes = (
+  router: Router,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  rateLimiter?: RequestHandler
+) => {
+  // Note: Rate limiter is applied globally at app level for API routes
+  // Individual endpoints use JWT authentication for access control
   // ALL /svc/:serviceId - Resolve a protected service
   router.all(
     '/svc/:serviceId',

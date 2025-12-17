@@ -3,7 +3,7 @@
 /**
  * Module dependencies.
  */
-var passport = require('passport-strategy'),
+const passport = require('passport-strategy'),
   totp = require('notp').totp,
   util = require('util');
 
@@ -69,29 +69,28 @@ util.inherits(Strategy, passport.Strategy);
  * @api protected
  */
 Strategy.prototype.authenticate = function (req, options) {
-  var value =
+  const value =
     lookup(req.body, this._codeField) || lookup(req.query, this._codeField);
 
-  var self = this;
-  this._setup(req.user, function (err, key, period) {
+  this._setup(req.user, (err, key, period) => {
     if (err) {
-      return self.error(err);
+      return this.error(err);
     }
 
-    var rv = totp.verify(value, key, { window: self._window, time: period });
+    const rv = totp.verify(value, key, { window: this._window, time: period });
     if (!rv) {
-      return self.fail();
+      return this.fail();
     }
-    return self.success(req.user);
+    return this.success(req.user);
   });
 
   function lookup(obj, field) {
     if (!obj) {
       return null;
     }
-    var chain = field.split(']').join('').split('[');
-    for (var i = 0, len = chain.length; i < len; i++) {
-      var prop = obj[chain[i]];
+    const chain = field.split(']').join('').split('[');
+    for (let i = 0, len = chain.length; i < len; i++) {
+      const prop = obj[chain[i]];
       if (typeof prop === 'undefined') {
         return null;
       }

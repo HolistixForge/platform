@@ -25,6 +25,14 @@ import { setupOrganizationRoutes } from './routes/organizations';
 import { setupProjectRoutes } from './routes/projects';
 import { setupGatewayRoutes } from './routes/gateway';
 import { setupUserRoutes } from './routes/users';
+import {
+  globalLimiter,
+  authStrictLimiter,
+  oauthLimiter,
+  sensitiveLimiter,
+  apiLimiter,
+  isRateLimitingEnabled,
+} from './middleware/rate-limiter';
 
 export const SESSION_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days
 
@@ -35,11 +43,26 @@ export const SESSION_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days
  * in both production (main.ts) and tests (*.spec.ts)
  *
  * @param options - Configuration options for testing vs production
+ * @param options.skipSession - Skip session configuration (for unit tests)
+ * @param options.skipRateLimiting - Skip rate limiting (for unit tests)
+ * @param options.skipValidation - Skip OpenAPI validation (for unit tests)
+ * @param options.setupAdditionalRoutes - Callback to setup additional routes (e.g., test routes)
  * @returns Configured Express app
  */
 export function createApp(
   options: {
     skipSession?: boolean;
+    skipRateLimiting?: boolean;
+    skipValidation?: boolean;
+    setupAdditionalRoutes?: (
+      router: express.Router,
+      rateLimiters: {
+        auth?: express.RequestHandler;
+        oauth?: express.RequestHandler;
+        sensitive?: express.RequestHandler;
+        api?: express.RequestHandler;
+      }
+    ) => void;
   } = {}
 ): Express {
   const app = express();
@@ -47,6 +70,12 @@ export function createApp(
 
   // Basic Express setup (CORS, body parsing, etc.)
   setupBasicExpressApp(app);
+
+  // Global rate limiter (apply to all routes as baseline protection)
+  // Can be disabled for testing or via environment variable
+  if (!options.skipRateLimiting && isRateLimitingEnabled()) {
+    app.use(globalLimiter);
+  }
 
   // OPTIONS handler for CORS preflight requests
   // Must set CORS headers including Access-Control-Allow-Origin
@@ -57,29 +86,30 @@ export function createApp(
   });
 
   // OpenAPI Request/Response Validation
-
-  setupValidator(app, {
-    apiSpec: oas as OpenAPIV3.DocumentV3,
-    // Request validation errors are handled by Express error middleware, see setupErrorsHandler
-    validateRequests: true,
-    validateResponses: {
-      removeAdditional: 'failing',
-      onError: (err, body, req) => {
-        // Log to structured logger
-        error(
-          'OpenAPI Response Validation',
-          `Response validation failed: ${err.message}`,
-          {
-            validation_type: 'response',
-            url: req.originalUrl,
-            method: req.method,
-            error_path: err.path as string,
-            status_code: req.statusCode as number,
-          }
-        );
+  if (!options.skipValidation) {
+    setupValidator(app, {
+      apiSpec: oas as OpenAPIV3.DocumentV3,
+      // Request validation errors are handled by Express error middleware, see setupErrorsHandler
+      validateRequests: true,
+      validateResponses: {
+        removeAdditional: 'failing',
+        onError: (err, body, req) => {
+          // Log to structured logger
+          error(
+            'OpenAPI Response Validation',
+            `Response validation failed: ${err.message}`,
+            {
+              validation_type: 'response',
+              url: req.originalUrl,
+              method: req.method,
+              error_path: err.path as string,
+              status_code: req.statusCode as number,
+            }
+          );
+        },
       },
-    },
-  });
+    });
+  }
 
   // Session setup (can be skipped in unit tests)
   if (!options.skipSession) {
@@ -109,26 +139,57 @@ export function createApp(
         },
       })
     );
+  }
 
-    // Passport setup (requires session)
+  // Passport setup (skip entirely for tests that don't need authentication)
+  if (!options.skipSession) {
     app.use(passport.initialize());
     app.use(passport.session());
   }
 
-  // Routes
+  // Routes with tiered rate limiting
   const router = express.Router();
-  setupGithubRoutes(router);
-  setupGitlabRoutes(router);
-  setupLinkedinRoutes(router);
-  setupDiscordRoutes(router);
-  setupLocalRoutes(router);
-  setupTOTPRoutes(router);
-  setupMagicLinkRoutes(router);
-  setupOauthRoutes(router);
-  setupOrganizationRoutes(router);
-  setupProjectRoutes(router);
-  setupGatewayRoutes(router);
-  setupUserRoutes(router);
+
+  // Determine which rate limiters to use (none if disabled)
+  const rateLimiters =
+    options.skipRateLimiting || !isRateLimitingEnabled()
+      ? {
+          auth: undefined,
+          oauth: undefined,
+          sensitive: undefined,
+          api: undefined,
+        }
+      : {
+          auth: authStrictLimiter,
+          oauth: oauthLimiter,
+          sensitive: sensitiveLimiter,
+          api: apiLimiter,
+        };
+
+  // OAuth provider routes - Moderate limits (sensitive operations)
+  setupGithubRoutes(router, rateLimiters.sensitive);
+  setupGitlabRoutes(router, rateLimiters.sensitive);
+  setupLinkedinRoutes(router, rateLimiters.sensitive);
+  setupDiscordRoutes(router, rateLimiters.sensitive);
+
+  // Authentication routes - Strict limits (brute-force protection)
+  setupLocalRoutes(router, rateLimiters.auth);
+  setupTOTPRoutes(router, rateLimiters.auth);
+  setupMagicLinkRoutes(router, rateLimiters.sensitive);
+
+  // OAuth routes - Token endpoint limits
+  setupOauthRoutes(router, rateLimiters.oauth);
+
+  // API routes - General limits
+  setupOrganizationRoutes(router, rateLimiters.api);
+  setupProjectRoutes(router, rateLimiters.api);
+  setupGatewayRoutes(router, rateLimiters.api);
+  setupUserRoutes(router, rateLimiters.api);
+
+  // Additional routes (e.g., test routes)
+  if (options.setupAdditionalRoutes) {
+    options.setupAdditionalRoutes(router, rateLimiters);
+  }
 
   app.use('/', router);
 

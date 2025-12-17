@@ -18,7 +18,7 @@ import { VPN } from './config/organization';
 import { setupCollabRoutes, setBackendEventProcessor } from './routes/collab';
 import { setupPermissionsRoutes } from './routes/permissions';
 import { setupProtectedServicesRoutes } from './routes/protected-services';
-import oauthRoutes from './routes/oauth';
+import { setupOauthRoutes } from './routes/oauth';
 import oas from './oas30.json';
 import {
   initializeGatewayForOrganization,
@@ -26,6 +26,12 @@ import {
 } from './initialization/gateway-init';
 import { loadOrganizationConfig } from './config/organization';
 import { signalGatewayReady } from './initialization/signal-ready';
+import {
+  globalLimiter,
+  oauthLimiter,
+  apiLimiter,
+  isRateLimitingEnabled,
+} from './middleware/rate-limiter';
 
 //
 // Global state
@@ -37,7 +43,16 @@ let bep: BackendEventProcessor<never>;
 // Express setup
 //
 
-const setupExpressApp = () => {
+export const setupExpressApp = (options?: {
+  skipValidation?: boolean;
+  setupAdditionalRoutes?: (
+    router: express.Router,
+    rateLimiters: {
+      api?: express.RequestHandler;
+      oauth?: express.RequestHandler;
+    }
+  ) => void;
+}) => {
   const app = express();
   app.set('trust proxy', 1);
 
@@ -45,35 +60,51 @@ const setupExpressApp = () => {
   // Auto-instrumentation will automatically create spans for Express requests
   setupBasicExpressApp(app);
 
+  // Global rate limiter (apply to all routes as baseline protection)
+  if (isRateLimitingEnabled()) {
+    app.use(globalLimiter);
+  }
+
   app.options('*', (req, res) => {
     res.status(200).end();
   });
 
   // OpenAPI validation
-  setupValidator(app, {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    apiSpec: oas as any,
-    validateRequests: true,
-    validateResponses: {
-      removeAdditional: 'failing',
-      onError: (err, body, req) => {
-        if (!err.message.includes(' must be string')) {
-          console.error('Response validation error:', err.message);
-          console.error('From:', req.originalUrl);
-        }
+  if (!options?.skipValidation) {
+    setupValidator(app, {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      apiSpec: oas as any,
+      validateRequests: true,
+      validateResponses: {
+        removeAdditional: 'failing',
+        onError: (err, body, req) => {
+          if (!err.message.includes(' must be string')) {
+            console.error('Response validation error:', err.message);
+            console.error('From:', req.originalUrl);
+          }
+        },
       },
-    },
-  });
+    });
+  }
 
-  // Routes
+  // Routes with rate limiting
   const router = express.Router();
-  setupCollabRoutes(router);
-  setupPermissionsRoutes(router);
-  setupProtectedServicesRoutes(router);
-  app.use('/', router);
+  const rateLimiters = {
+    api: isRateLimitingEnabled() ? apiLimiter : undefined,
+    oauth: isRateLimitingEnabled() ? oauthLimiter : undefined,
+  };
 
-  // OAuth routes
-  app.use('/oauth', oauthRoutes);
+  setupCollabRoutes(router, rateLimiters.api);
+  setupPermissionsRoutes(router, rateLimiters.api);
+  setupProtectedServicesRoutes(router, rateLimiters.api);
+  setupOauthRoutes(router, rateLimiters.oauth);
+
+  // Additional routes (e.g., test routes)
+  if (options?.setupAdditionalRoutes) {
+    options.setupAdditionalRoutes(router, rateLimiters);
+  }
+
+  app.use('/', router);
 
   // Error handler
   setupErrorsHandler(app);

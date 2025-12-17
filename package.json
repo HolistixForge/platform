@@ -142,6 +142,7 @@
     "event-source-polyfill": "^1.0.31",
     "express": "^4.21.2",
     "express-openapi-validator": "^5.6.0",
+    "express-rate-limit": "^8.2.1",
     "express-session": "^1.18.1",
     "form-data": "^4.0.1",
     "gsap": "^3.12.7",
