@@ -18,7 +18,7 @@ import { VPN } from './config/organization';
 import { setupCollabRoutes, setBackendEventProcessor } from './routes/collab';
 import { setupPermissionsRoutes } from './routes/permissions';
 import { setupProtectedServicesRoutes } from './routes/protected-services';
-import oauthRoutes from './routes/oauth';
+import { setupOauthRoutes } from './routes/oauth';
 import oas from './oas30.json';
 import {
   initializeGatewayForOrganization,
@@ -43,7 +43,16 @@ let bep: BackendEventProcessor<never>;
 // Express setup
 //
 
-const setupExpressApp = () => {
+export const setupExpressApp = (options?: {
+  skipValidation?: boolean;
+  setupAdditionalRoutes?: (
+    router: express.Router,
+    rateLimiters: {
+      api?: express.RequestHandler;
+      oauth?: express.RequestHandler;
+    }
+  ) => void;
+}) => {
   const app = express();
   app.set('trust proxy', 1);
 
@@ -61,36 +70,41 @@ const setupExpressApp = () => {
   });
 
   // OpenAPI validation
-  setupValidator(app, {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    apiSpec: oas as any,
-    validateRequests: true,
-    validateResponses: {
-      removeAdditional: 'failing',
-      onError: (err, body, req) => {
-        if (!err.message.includes(' must be string')) {
-          console.error('Response validation error:', err.message);
-          console.error('From:', req.originalUrl);
-        }
+  if (!options?.skipValidation) {
+    setupValidator(app, {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      apiSpec: oas as any,
+      validateRequests: true,
+      validateResponses: {
+        removeAdditional: 'failing',
+        onError: (err, body, req) => {
+          if (!err.message.includes(' must be string')) {
+            console.error('Response validation error:', err.message);
+            console.error('From:', req.originalUrl);
+          }
+        },
       },
-    },
-  });
+    });
+  }
 
   // Routes with rate limiting
   const router = express.Router();
-  const rateLimiter = isRateLimitingEnabled() ? apiLimiter : undefined;
-  
-  setupCollabRoutes(router, rateLimiter);
-  setupPermissionsRoutes(router, rateLimiter);
-  setupProtectedServicesRoutes(router, rateLimiter);
-  app.use('/', router);
+  const rateLimiters = {
+    api: isRateLimitingEnabled() ? apiLimiter : undefined,
+    oauth: isRateLimitingEnabled() ? oauthLimiter : undefined,
+  };
 
-  // OAuth routes - Apply OAuth-specific rate limiter
-  if (isRateLimitingEnabled()) {
-    app.use('/oauth', oauthLimiter, oauthRoutes);
-  } else {
-    app.use('/oauth', oauthRoutes);
+  setupCollabRoutes(router, rateLimiters.api);
+  setupPermissionsRoutes(router, rateLimiters.api);
+  setupProtectedServicesRoutes(router, rateLimiters.api);
+  setupOauthRoutes(router, rateLimiters.oauth);
+
+  // Additional routes (e.g., test routes)
+  if (options?.setupAdditionalRoutes) {
+    options.setupAdditionalRoutes(router, rateLimiters);
   }
+
+  app.use('/', router);
 
   // Error handler
   setupErrorsHandler(app);

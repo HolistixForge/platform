@@ -29,9 +29,14 @@ passport.use(
   new passportLocal.Strategy(
     { usernameField: 'email' },
     async (username, password, cb) => {
-      const user = await verifyPassword(username, password);
-      if (user) cb(null, user);
-      else return cb(new Error('Invalid username or password'));
+      try {
+        const user = await verifyPassword(username, password);
+        if (user) cb(null, user);
+        else
+          return cb(null, false, { message: 'Invalid username or password' });
+      } catch (error) {
+        return cb(error);
+      }
     }
   )
 );
@@ -45,7 +50,7 @@ export const setupLocalRoutes = (
 ) => {
   // Apply rate limiter to sensitive endpoints
   const handlers = rateLimiter ? [rateLimiter] : [];
-  
+
   router.post(
     '/signup',
     ...handlers,
@@ -112,13 +117,17 @@ export const setupLocalRoutes = (
           info: { message: string } | undefined,
           status: number | undefined
         ) {
-          console.log({ err, user, info, status });
           if (err) {
             return next(err);
           } else if (!user) {
             const e = new Exception(
-              [{ message: 'Please try again later', public: true }],
-              500
+              [
+                {
+                  message: info?.message || 'Invalid credentials',
+                  public: true,
+                },
+              ],
+              401
             );
             return next(e);
           } else {
