@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { RequestHandler } from 'express';
 import OAuth2Server, {
   AuthorizeOptions,
   TokenOptions,
@@ -44,7 +44,13 @@ const tokenOptions: TokenOptions = {
 //
 //
 
-export const setupOauthRoutes = (router: express.Router) => {
+export const setupOauthRoutes = (
+  router: express.Router,
+  rateLimiter?: RequestHandler
+) => {
+  // Apply rate limiter to token endpoint (most sensitive)
+  const tokenHandlers = rateLimiter ? [rateLimiter] : [];
+  
   //
 
   async function handleAuthorize(
@@ -117,6 +123,7 @@ export const setupOauthRoutes = (router: express.Router) => {
 
   router.post(
     '/oauth/token',
+    ...tokenHandlers,
     async function (
       req: express.Request,
       res: express.Response,

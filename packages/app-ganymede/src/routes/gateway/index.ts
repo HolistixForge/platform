@@ -1,4 +1,4 @@
-import { Router, Request } from 'express';
+import { Router, Request, RequestHandler } from 'express';
 import {
   authenticateJwtUser,
   authenticateJwtGateway,
@@ -19,7 +19,13 @@ import {
   makeOrgGatewayUrl,
 } from '../../lib/url-helpers';
 
-export const setupGatewayRoutes = (router: Router) => {
+export const setupGatewayRoutes = (
+  router: Router,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  rateLimiter?: RequestHandler
+) => {
+  // Note: Rate limiter is applied globally at app level for API routes
+  // Individual endpoints use JWT authentication for access control
   // Mount data push/pull endpoints
   setupGatewayDataRoutes(router);
   // Mount generic DNS management endpoints

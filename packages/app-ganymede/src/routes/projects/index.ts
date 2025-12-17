@@ -1,9 +1,15 @@
-import { Router } from 'express';
+import { Router, RequestHandler } from 'express';
 import { authenticateJwtUser } from '../../middleware/auth';
 import { pg } from '../../database/pg';
 import { asyncHandler, AuthRequest } from '../../middleware/route-handler';
 
-export const setupProjectRoutes = (router: Router) => {
+export const setupProjectRoutes = (
+  router: Router,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  rateLimiter?: RequestHandler
+) => {
+  // Note: Rate limiter is applied globally at app level for API routes
+  // Individual endpoints use JWT authentication for access control
   // GET /projects - List user's projects
   router.get(
     '/projects',

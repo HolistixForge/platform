@@ -26,6 +26,12 @@ import {
 } from './initialization/gateway-init';
 import { loadOrganizationConfig } from './config/organization';
 import { signalGatewayReady } from './initialization/signal-ready';
+import {
+  globalLimiter,
+  oauthLimiter,
+  apiLimiter,
+  isRateLimitingEnabled,
+} from './middleware/rate-limiter';
 
 //
 // Global state
@@ -44,6 +50,11 @@ const setupExpressApp = () => {
   // Observability is now handled by @holistix-forge/observability package
   // Auto-instrumentation will automatically create spans for Express requests
   setupBasicExpressApp(app);
+
+  // Global rate limiter (apply to all routes as baseline protection)
+  if (isRateLimitingEnabled()) {
+    app.use(globalLimiter);
+  }
 
   app.options('*', (req, res) => {
     res.status(200).end();
@@ -65,15 +76,21 @@ const setupExpressApp = () => {
     },
   });
 
-  // Routes
+  // Routes with rate limiting
   const router = express.Router();
-  setupCollabRoutes(router);
-  setupPermissionsRoutes(router);
-  setupProtectedServicesRoutes(router);
+  const rateLimiter = isRateLimitingEnabled() ? apiLimiter : undefined;
+  
+  setupCollabRoutes(router, rateLimiter);
+  setupPermissionsRoutes(router, rateLimiter);
+  setupProtectedServicesRoutes(router, rateLimiter);
   app.use('/', router);
 
-  // OAuth routes
-  app.use('/oauth', oauthRoutes);
+  // OAuth routes - Apply OAuth-specific rate limiter
+  if (isRateLimitingEnabled()) {
+    app.use('/oauth', oauthLimiter, oauthRoutes);
+  } else {
+    app.use('/oauth', oauthRoutes);
+  }
 
   // Error handler
   setupErrorsHandler(app);

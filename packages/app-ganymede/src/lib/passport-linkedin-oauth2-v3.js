@@ -1,8 +1,8 @@
-var util = require('util');
-var OAuth2Strategy = require('passport-oauth2');
-var InternalOAuthError = require('passport-oauth2').InternalOAuthError;
+const util = require('util');
+const OAuth2Strategy = require('passport-oauth2');
+const InternalOAuthError = require('passport-oauth2').InternalOAuthError;
 
-var profileUrl = 'https://api.linkedin.com/v2/userinfo';
+const profileUrl = 'https://api.linkedin.com/v2/userinfo';
 
 function Strategy(options, verify) {
   options = options || {};
@@ -39,7 +39,7 @@ Strategy.prototype.userProfile = function (accessToken, done) {
         );
       }
 
-      var profile;
+      let profile;
 
       try {
         profile = parseProfile(body);
@@ -55,7 +55,7 @@ Strategy.prototype.userProfile = function (accessToken, done) {
 };
 
 Strategy.prototype.authorizationParams = function (options) {
-  var params = {};
+  const params = {};
 
   // LinkedIn requires state parameter. It will return an error if not set.
   if (options.state) {
@@ -66,7 +66,7 @@ Strategy.prototype.authorizationParams = function (options) {
 };
 
 function parseProfile(body) {
-  var json = JSON.parse(body);
+  const json = JSON.parse(body);
 
   return {
     provider: 'linkedin',

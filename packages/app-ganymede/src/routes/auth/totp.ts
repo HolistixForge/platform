@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { RequestHandler } from 'express';
 import passport from 'passport';
 import crypto from 'crypto';
 import base32 from 'thirty-two';
@@ -88,7 +88,13 @@ const TOTP_KEY_LEN = 50;
 
 //
 
-export const setupTOTPRoutes = (router: express.Router) => {
+export const setupTOTPRoutes = (
+  router: express.Router,
+  rateLimiter?: RequestHandler
+) => {
+  // Apply rate limiter to sensitive endpoints
+  const handlers = rateLimiter ? [rateLimiter] : [];
+  
   router.post(
     '/totp/setup',
     async function (
@@ -139,6 +145,7 @@ export const setupTOTPRoutes = (router: express.Router) => {
 
   router.post(
     '/totp/login',
+    ...handlers,
     function (
       req: express.Request,
       res: express.Response,
