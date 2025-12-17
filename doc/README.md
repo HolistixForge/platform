@@ -7,6 +7,7 @@ Welcome to the Holistix Forge documentation! This hub will guide you to the righ
 ### Get Started
 
 - 🚀 **[Set up local development](guides/LOCAL_DEVELOPMENT.md)** - Multi-environment dev setup
+- 🏭 **[Production deployment](guides/PRODUCTION_DEPLOYMENT.md)** - Deploy on Ubuntu VPS
 - 🤝 **[Contribute](../CONTRIBUTING.md)** - Development workflow and standards
 
 ### Understand the System
@@ -17,6 +18,10 @@ Welcome to the Holistix Forge documentation! This hub will guide you to the righ
 - 🔒 **[Protected Services](architecture/PROTECTED_SERVICES.md)** - Module-driven protected endpoints
 - 📡 **[Logging & Observability](architecture/LOGGING_AND_OBSERVABILITY.md)** - Logs, traces, error categories, and OTel stack
 - 🎨 **[Layer System Architecture](../packages/modules/whiteboard/src/lib/layer.md)** - Modular whiteboard layers (Excalidraw integration)
+
+### Production Deployment
+
+- 📋 **[Production Deployment Guide](guides/PRODUCTION_DEPLOYMENT.md)** - Complete planning & reference (future work)
 
 ### Learn How To
 
@@ -113,8 +118,9 @@ doc/
 
 1. [Architecture Overview](architecture/OVERVIEW.md)
 2. [Local Development](guides/LOCAL_DEVELOPMENT.md)
-3. [GPU Host Setup](reference/GPU_HOST_SETUP.md)
-4. [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md)
+3. [Production Deployment](guides/PRODUCTION_DEPLOYMENT.md)
+4. [GPU Host Setup](reference/GPU_HOST_SETUP.md)
+5. [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md)
 
 ## 🔍 Finding Information
 

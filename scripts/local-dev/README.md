@@ -1,8 +1,9 @@
 # Local Development Scripts
 
-Quick reference for local development environment scripts. 
+Quick reference for local development environment scripts.
 
 **See also:**
+
 - **[doc/guides/GATEWAY_BUILD_DISTRIBUTION.md](../../doc/guides/GATEWAY_BUILD_DISTRIBUTION.md)** - Build distribution, validation, reload mechanism
 - **[doc/guides/LOCAL_DEVELOPMENT.md](../../doc/guides/LOCAL_DEVELOPMENT.md)** - Complete setup instructions
 
@@ -40,9 +41,9 @@ cd /root/workspace/monorepo/scripts/local-dev
 
 ### Service Management
 
-| Script              | Purpose                       | Run Once    |
-| ------------------- | ----------------------------- | ----------- |
-| `start-services.sh` | Start PostgreSQL and PowerDNS | Per session |
+| Script                    | Purpose                                                                   | Usage                       |
+| ------------------------- | ------------------------------------------------------------------------- | --------------------------- |
+| `restart-all-services.sh` | Restart all services (PostgreSQL, PowerDNS, Nginx, CoreDNS, build server) | `./restart-all-services.sh` |
 
 ### One-Time Setup (Development Container)
 
@@ -111,16 +112,53 @@ cd /root/workspace/monorepo/scripts/local-dev
           └── *-access/error.log
 ```
 
-## Container Restart
+## Container Restart & Service Management
 
-When the dev container restarts, PostgreSQL and PowerDNS need to be restarted.
+When the dev container restarts, you need to manually restart services.
 
-**Auto-start (recommended):** Already configured in `~/.bashrc`
-
-**Manual start:**
+### Restart All Services
 
 ```bash
-./start-services.sh
+cd /root/workspace/monorepo/scripts/local-dev
+./restart-all-services.sh
+```
+
+This will restart:
+
+- PostgreSQL
+- PowerDNS
+- Nginx
+- CoreDNS (DNS forwarder)
+- Build server (if running)
+
+### Restart Individual Services
+
+```bash
+# PostgreSQL
+sudo service postgresql restart
+
+# PowerDNS
+sudo killall pdns_server && sudo pdns_server --daemon=yes --guardian=yes --config-dir=/etc/powerdns
+
+# Nginx
+sudo service nginx restart
+
+# CoreDNS
+sudo killall coredns && sudo coredns -conf /etc/coredns/Corefile &
+
+# Build server
+cd /root/workspace/monorepo/scripts/local-dev
+./serve-builds.sh &
+```
+
+### Quick Aliases
+
+Use these shortcuts from any directory:
+
+```bash
+services-status      # Check all service statuses
+services-restart     # Restart all services
+dev-diagnostic       # Full infrastructure diagnostic
 ```
 
 See [Gateway Build Distribution](../../doc/guides/GATEWAY_BUILD_DISTRIBUTION.md) for reload details.

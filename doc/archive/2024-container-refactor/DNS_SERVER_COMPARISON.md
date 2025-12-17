@@ -1,5 +1,17 @@
 # DNS Server Comparison for Container Management
 
+> **⚠️ OBSOLETE** - This document is now obsolete.
+>
+> **Reason:** The architecture has evolved. We no longer need dynamic DNS management.
+>
+> **New Approach:** Using CoreDNS `file` plugin with wildcard DNS records (see GitHub Issue #30)
+>
+> **Historical Context:** This comparison led to choosing PowerDNS, but we later discovered that wildcard DNS (`*.domain`) eliminates the need for dynamic record management, making PowerDNS unnecessary.
+>
+> **Current Status:** See [GitHub Issue #30](https://github.com/HolistixForge/platform/issues/30) - "Simplify DNS Infrastructure - Replace PowerDNS with CoreDNS File Plugin"
+
+---
+
 ## Requirements Analysis
 
 For the container management feature, we need a DNS server that:
