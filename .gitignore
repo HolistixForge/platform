@@ -55,3 +55,10 @@ data/*
 
 # Static documentation site generator (md-file-graph output)
 website/static/
+
+# Playwright E2E test artifacts
+/test-results/
+/playwright-report/
+/e2e/**/*-actual.png
+/e2e/**/*-diff.png
+/playwright/.cache/

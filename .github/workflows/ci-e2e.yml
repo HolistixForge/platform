@@ -1,0 +1,154 @@
+name: CI - E2E Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+jobs:
+  # Job 1: Fast feedback - Lint & Unit Tests
+  unit-tests:
+    name: Unit Tests & Linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # For nx affected
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npx nx affected --target=lint --base=origin/main --parallel=3
+
+      - name: Run unit tests
+        run: npx nx affected --target=test --base=origin/main --parallel=3 --coverage
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: ./coverage/**/lcov.info
+          flags: unittests
+
+  # Job 2: E2E Tests - Full environment
+  e2e-tests:
+    name: E2E Tests (Full Stack)
+    runs-on: ubuntu-latest
+    needs: unit-tests # Only run if unit tests pass
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Step 1: One-time infrastructure setup
+      - name: Run setup-all.sh (infrastructure)
+        run: |
+          # Answer 'yes' to the setup prompt
+          echo "yes" | ./scripts/local-dev/setup-all.sh
+        env:
+          DEBIAN_FRONTEND: noninteractive
+
+      # Step 2: Create E2E test environment
+      - name: Create test environment
+        run: |
+          ./scripts/local-dev/create-env.sh e2e-test domain.local $GITHUB_WORKSPACE
+        env:
+          GATEWAY_POOL_SIZE: 2 # Only 2 gateways for CI
+
+      # Step 3: Build frontend
+      - name: Build frontend
+        run: |
+          ./scripts/local-dev/build-frontend.sh e2e-test $GITHUB_WORKSPACE
+
+      # Step 4: Start environment
+      - name: Start services
+        run: |
+          ./scripts/local-dev/envctl.sh start e2e-test
+
+      # Step 5: Wait for services to be ready
+      - name: Wait for services
+        run: |
+          # Wait for Ganymede
+          timeout 120 bash -c 'until curl -f http://localhost:6000/health 2>/dev/null; do sleep 2; done'
+
+          # Wait for Frontend (via Nginx)
+          timeout 120 bash -c 'until curl -f -k https://domain.local 2>/dev/null; do sleep 2; done'
+
+          echo "✅ All services ready"
+
+      # Step 6: Install Playwright
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      # Step 7: Run E2E tests
+      - name: Run Playwright tests
+        run: npx playwright test
+        env:
+          BASE_URL: https://domain.local
+          # Skip SSL verification for local mkcert certs in CI
+          NODE_TLS_REJECT_UNAUTHORIZED: 0
+
+      # Step 8: Upload test results
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Upload failure screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-failures
+          path: |
+            e2e/**/*-actual.png
+            e2e/**/*-diff.png
+          retention-days: 7
+
+      # Step 9: Collect logs on failure
+      - name: Collect service logs
+        if: failure()
+        run: |
+          echo "=== Ganymede logs ==="
+          sudo cat $HOME/.local-dev/e2e-test/logs/ganymede.log || true
+
+          echo "=== Gateway logs ==="
+          docker logs gw-pool-0 || true
+          docker logs gw-pool-1 || true
+
+          echo "=== Nginx error log ==="
+          sudo cat /var/log/nginx/error.log || true
+
+          echo "=== PowerDNS log ==="
+          sudo cat /var/log/pdns.log || true
+
+      # Step 10: Cleanup
+      - name: Stop services
+        if: always()
+        run: |
+          ./scripts/local-dev/envctl.sh stop e2e-test || true
+
+      - name: Delete test environment
+        if: always()
+        run: |
+          ./scripts/local-dev/delete-env.sh e2e-test || true
