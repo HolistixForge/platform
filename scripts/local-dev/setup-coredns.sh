@@ -1,11 +1,13 @@
 #!/bin/bash
-# Setup CoreDNS for DNS forwarding
-# Forwards *.domain.local to PowerDNS, everything else to upstream DNS
-# DNS forwarder that works well in Docker containers
+# Setup CoreDNS for DNS management with zone files
+# Serves zone files for local domains, forwards everything else to upstream DNS
 
 set -e
 
-echo "🌐 Setting up CoreDNS for DNS forwarding..."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/coredns-common.sh"
+
+echo "🌐 Setting up CoreDNS..."
 echo ""
 
 # Check if CoreDNS is installed
@@ -47,92 +49,21 @@ sudo mkdir -p /etc/coredns
 # Configure CoreDNS
 echo "⚙️  Configuring CoreDNS..."
 
-# Get list of domains from existing environments
-DOMAINS="domain.local"
-LOCAL_DEV_DIR="/root/.local-dev"
-if [ -d "$LOCAL_DEV_DIR" ]; then
-    domains_list=()
-    for env_dir in "${LOCAL_DEV_DIR}"/*/; do
-        if [ -d "$env_dir" ]; then
-            env_file="${env_dir}/.env.ganymede"
-            if [ -f "$env_file" ]; then
-                domain=$(grep "^DOMAIN=" "$env_file" | cut -d= -f2 | tr -d '"' || echo "")
-                if [ -n "$domain" ]; then
-                    # Check if domain is already in the list (avoid duplicates)
-                    if [[ ! " ${domains_list[@]} " =~ " ${domain} " ]]; then
-                        domains_list+=("$domain")
-                    fi
-                fi
-            fi
-        fi
-    done
-    if [ ${#domains_list[@]} -gt 0 ]; then
-        DOMAINS="${domains_list[*]}"
-    fi
-fi
+# Collect domains from existing environments
+domains=($(collect_domains))
+echo "   Found ${#domains[@]} domain(s): ${domains[*]}"
 
-# Build file plugin blocks for each domain
-FILE_BLOCKS=""
-for domain in $DOMAINS; do
-    # Check if zone file exists
-    if [ -f "/etc/coredns/zones/${domain}.zone" ]; then
-        FILE_BLOCKS="${FILE_BLOCKS}${domain}. {
-    file /etc/coredns/zones/${domain}.zone
-    log
-    errors
-}
-
-"
-    fi
-done
-
-sudo mkdir -p /etc/coredns/zones
-
-sudo tee /etc/coredns/Corefile > /dev/null <<EOF
-# Serve zone files for each environment domain
-${FILE_BLOCKS}
-# Forward everything else to upstream DNS
-. {
-    forward . 8.8.8.8 8.8.4.4 {
-        max_concurrent 1000
-    }
-    
-    # Cache responses
-    cache {
-        success 9984 30
-        denial 9984 5
-    }
-    
-    # Logging
-    log
-    errors
-}
-EOF
+# Generate Corefile
+generate_corefile "${domains[@]}"
 
 echo "✅ CoreDNS configuration written to /etc/coredns/Corefile"
 echo "   Note: Configuration will be updated automatically when environments are created/deleted"
 echo ""
 
-# Start or restart CoreDNS
+# Start CoreDNS
 echo "🚀 Starting CoreDNS..."
 
-if pgrep -x coredns >/dev/null 2>&1; then
-    echo "   CoreDNS already running, restarting..."
-    sudo killall coredns 2>/dev/null || true
-    sleep 1
-fi
-
-# Start CoreDNS as daemon (containers don't have systemd)
-echo "   Starting CoreDNS daemon..."
-sudo coredns -conf /etc/coredns/Corefile &
-sleep 2
-
-# Test CoreDNS
-if pgrep -x coredns >/dev/null 2>&1; then
-    echo "   ✅ CoreDNS started successfully"
-else
-    echo "   ❌ CoreDNS failed to start. Check configuration:"
-    echo "      sudo coredns -conf /etc/coredns/Corefile"
+if ! restart_coredns; then
     exit 1
 fi
 
@@ -160,4 +91,3 @@ echo "📊 View logs:"
 echo "   ps aux | grep coredns"
 echo "   (CoreDNS logs to stdout/stderr)"
 echo ""
-
