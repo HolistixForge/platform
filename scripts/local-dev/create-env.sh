@@ -267,6 +267,14 @@ OTLP_ENDPOINT_GRPC=http://172.17.0.1:4317
 OTEL_SERVICE_NAME=ganymede-${ENV_NAME}
 # Deployment environment (used for filtering in Grafana)
 OTEL_DEPLOYMENT_ENVIRONMENT=${ENV_NAME}
+
+# SSL/TLS Configuration (LOCAL DEVELOPMENT ONLY)
+# CRITICAL SECURITY WARNING: DO NOT USE IN PRODUCTION!
+# We disable certificate verification because we use self-signed certificates (mkcert)
+# for local development. Ganymede needs to make internal HTTPS requests to gateways
+# (e.g., https://org-{uuid}.domain.local/collab/start) and Node.js would reject
+# self-signed certificates by default.
+NODE_TLS_REJECT_UNAUTHORIZED=0
 EOF
 
 # 8. Create Nginx server blocks (Stage 1 - Main nginx with SSL termination)
@@ -401,7 +409,13 @@ chmod 755 "${ENV_DIR}/org-data"
 ENV_NAME="${ENV_NAME}" DOMAIN="${DOMAIN}" \
   "${WORKSPACE_PATH}/scripts/local-dev/gateway-pool.sh" create ${GATEWAY_POOL_SIZE} "${WORKSPACE_PATH}"
 
-# 13. Environment ready!
+# 13. Clear Nx and Vite caches to ensure fresh build with new domain
+echo "🧹 Clearing Nx and Vite caches for fresh build..."
+cd "${WORKSPACE_PATH}"
+npx nx reset
+echo "   ✅ Caches cleared"
+
+# 14. Environment ready!
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║  ✅ Environment ${ENV_NAME} ready!                           ║"

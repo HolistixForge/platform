@@ -56,7 +56,8 @@ VITE_GANYMEDE_URL=https://ganymede.${DOMAIN}
 VITE_OTLP_ENDPOINT_HTTP=http://localhost:4318
 EOF
 
-# Build
+# Build frontend
+echo "🔨 Building frontend..."
 npx nx run app-frontend:build
 
 echo ""

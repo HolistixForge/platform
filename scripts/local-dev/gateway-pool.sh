@@ -305,6 +305,11 @@ cmd_create() {
         container_env[OTLP_ENDPOINT_HTTP]="http://172.17.0.1:4318"
         container_env[OTLP_ENDPOINT_GRPC]="http://172.17.0.1:4317"
         
+        # SSL/TLS Configuration (LOCAL DEVELOPMENT ONLY)
+        # Disable certificate verification for self-signed certificates
+        # Gateways make HTTPS calls to Ganymede (signalGatewayReady, etc.)
+        container_env[NODE_TLS_REJECT_UNAUTHORIZED]="0"
+        
         # Start container (ports map to themselves for new containers)
         if start_gateway_container \
             "$gateway_name" \
