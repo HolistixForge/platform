@@ -14,6 +14,9 @@ describe('Rate Limiting', () => {
   let app: Express;
 
   beforeAll(() => {
+    // Set ALLOWED_ORIGINS for CSRF middleware
+    process.env.ALLOWED_ORIGINS = '["http://localhost:4200"]';
+
     // Create app with test routes
     app = createApp({
       skipSession: true,
@@ -93,7 +96,10 @@ describe('Rate Limiting', () => {
 
   describe('AUTH_STRICT Rate Limiter (max: 5 requests)', () => {
     it('should include rate limit headers in responses', async () => {
-      const res = await request(app).post('/test-rate-limit/auth').send({});
+      const res = await request(app)
+        .post('/test-rate-limit/auth')
+        .set('Origin', 'http://localhost:4200')
+        .send({});
 
       // Should have standard rate limit headers
       expect(res.headers['ratelimit-limit']).toBeDefined();
@@ -106,7 +112,10 @@ describe('Rate Limiting', () => {
       // This means successful (200) requests don't count toward the limit
       // So we can make many successful requests without being rate limited
       for (let i = 0; i < 10; i++) {
-        const res = await request(app).post('/test-rate-limit/auth').send({});
+        const res = await request(app)
+          .post('/test-rate-limit/auth')
+          .set('Origin', 'http://localhost:4200')
+          .send({});
 
         expect(res.status).toBe(200);
         expect(res.body.message).toBe('Auth rate limit test - success');
@@ -118,7 +127,10 @@ describe('Rate Limiting', () => {
     it('should allow up to 20 requests', async () => {
       // Make 20 requests - all should succeed
       for (let i = 0; i < 20; i++) {
-        const res = await request(app).post('/test-rate-limit/oauth').send({});
+        const res = await request(app)
+          .post('/test-rate-limit/oauth')
+          .set('Origin', 'http://localhost:4200')
+          .send({});
 
         expect(res.status).toBe(200);
       }
@@ -126,7 +138,10 @@ describe('Rate Limiting', () => {
 
     it('should block 21st request with 429', async () => {
       // 21st request should be rate limited
-      const res = await request(app).post('/test-rate-limit/oauth').send({});
+      const res = await request(app)
+        .post('/test-rate-limit/oauth')
+        .set('Origin', 'http://localhost:4200')
+        .send({});
 
       expect(res.status).toBe(429);
       expect(res.body.error).toContain('Too many requests');
@@ -139,6 +154,7 @@ describe('Rate Limiting', () => {
       for (let i = 0; i < 30; i++) {
         const res = await request(app)
           .post('/test-rate-limit/sensitive')
+          .set('Origin', 'http://localhost:4200')
           .send({});
 
         expect(res.status).toBe(200);
@@ -149,6 +165,7 @@ describe('Rate Limiting', () => {
       // 31st request should be rate limited
       const res = await request(app)
         .post('/test-rate-limit/sensitive')
+        .set('Origin', 'http://localhost:4200')
         .send({});
 
       expect(res.status).toBe(429);
@@ -160,7 +177,10 @@ describe('Rate Limiting', () => {
     it('should allow up to 100 requests', async () => {
       // Make 100 requests - all should succeed
       for (let i = 0; i < 100; i++) {
-        const res = await request(app).post('/test-rate-limit/api').send({});
+        const res = await request(app)
+          .post('/test-rate-limit/api')
+          .set('Origin', 'http://localhost:4200')
+          .send({});
 
         expect(res.status).toBe(200);
       }
@@ -168,7 +188,10 @@ describe('Rate Limiting', () => {
 
     it('should block 101st request with 429', async () => {
       // 101st request should be rate limited
-      const res = await request(app).post('/test-rate-limit/api').send({});
+      const res = await request(app)
+        .post('/test-rate-limit/api')
+        .set('Origin', 'http://localhost:4200')
+        .send({});
 
       expect(res.status).toBe(429);
       expect(res.body.error).toContain('Too many requests');
@@ -179,7 +202,10 @@ describe('Rate Limiting', () => {
     it('should allow unlimited requests', async () => {
       // Make many requests - all should succeed
       for (let i = 0; i < 150; i++) {
-        const res = await request(app).post('/test-rate-limit/none').send({});
+        const res = await request(app)
+          .post('/test-rate-limit/none')
+          .set('Origin', 'http://localhost:4200')
+          .send({});
 
         expect(res.status).toBe(200);
       }

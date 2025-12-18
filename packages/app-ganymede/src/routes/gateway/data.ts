@@ -33,9 +33,25 @@ function getDataDir(): string {
 
 /**
  * Get organization data file path
+ * Validates orgId to prevent path traversal attacks
  */
 function getOrgDataPath(orgId: string): string {
-  return path.join(getDataDir(), `${orgId}.json`);
+  // Validate orgId format (UUID)
+  if (!/^[a-f0-9-]{36}$/.test(orgId)) {
+    throw new Error(`Invalid organization ID format: ${orgId}`);
+  }
+
+  const dataPath = path.join(getDataDir(), `${orgId}.json`);
+
+  // Additional security: ensure resolved path is within data directory
+  const resolvedPath = path.resolve(dataPath);
+  const resolvedDataDir = path.resolve(getDataDir());
+
+  if (!resolvedPath.startsWith(resolvedDataDir)) {
+    throw new Error('Path traversal attempt detected');
+  }
+
+  return dataPath;
 }
 
 export const setupGatewayDataRoutes = (router: Router) => {

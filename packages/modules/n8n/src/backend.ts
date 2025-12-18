@@ -13,7 +13,7 @@ const containerImagesData = [
       {
         serviceName: 'n8n',
         accessTokenLifetime: 31536000,
-        redirectUris: [],
+        redirectPaths: [],
       },
     ],
   },
@@ -32,4 +32,3 @@ export const moduleBackend: TModule<TRequired> = {
     depsExports['user-containers'].imageRegistry.register(containerImagesData);
   },
 };
-

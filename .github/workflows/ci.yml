@@ -10,10 +10,20 @@ on:
       - main
       - develop
 
+# Explicitly define permissions for security
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   build-and-test:
     name: Build and Test All Packages
     runs-on: ubuntu-24.04
+
+    # Job-level permissions (most restrictive)
+    permissions:
+      contents: read
+      actions: read
 
     steps:
       - name: Checkout repository

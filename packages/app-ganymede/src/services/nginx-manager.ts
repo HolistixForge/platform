@@ -33,6 +33,11 @@ export class NginxManager {
    * Routes org-{uuid}.domain.local and *.org-{uuid}.domain.local to gateway HTTP port
    */
   async createGatewayConfig(orgId: string, httpPort: number): Promise<void> {
+    // Validate orgId to prevent path traversal
+    if (!/^[a-f0-9-]{36}$/.test(orgId)) {
+      throw new Error(`Invalid organization ID format: ${orgId}`);
+    }
+
     const domain = process.env.DOMAIN || 'domain.local';
     const orgDomain = `org-${orgId}.${domain}`;
     const configPath = path.join(this.nginxGatewaysDir, `org-${orgId}.conf`);
@@ -102,6 +107,11 @@ server {
    * Remove nginx config for organization gateway
    */
   async removeGatewayConfig(orgId: string): Promise<void> {
+    // Validate orgId to prevent path traversal
+    if (!/^[a-f0-9-]{36}$/.test(orgId)) {
+      throw new Error(`Invalid organization ID format: ${orgId}`);
+    }
+
     const configPath = path.join(this.nginxGatewaysDir, `org-${orgId}.conf`);
 
     log(EPriority.Info, 'NGINX', `Removing config for org ${orgId}`);

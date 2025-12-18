@@ -1,7 +1,12 @@
 import { TJwtUser } from '@holistix-forge/types';
 import { TJwtUserContainer } from './servers-types';
 import { secondAgo } from '@holistix-forge/simple-types';
-import { ForbiddenException, NotFoundException } from '@holistix-forge/log';
+import {
+  ForbiddenException,
+  NotFoundException,
+  log,
+  EPriority,
+} from '@holistix-forge/log';
 import {
   TCoreSharedData,
   TEventDeleteNode,
@@ -115,6 +120,12 @@ export class UserContainersReducer extends Reducer<
     if (!oauthClients || oauthClients.length === 0) return [];
 
     const oauthManager = this.depsExports.gateway.oauthManager;
+    const organizationId = this.depsExports.gateway.organization_id;
+    const containerFQDN = this.generateContainerFQDN(
+      containerId,
+      organizationId
+    );
+
     const createdClients: {
       client_id: string;
       client_secret: string;
@@ -122,6 +133,12 @@ export class UserContainersReducer extends Reducer<
     }[] = [];
 
     for (const oauthClient of oauthClients) {
+      // Build complete redirect URIs from paths
+      const redirectUris = this.buildRedirectUris(
+        oauthClient.redirectPaths || [],
+        containerFQDN
+      );
+
       // Generate unique client_id and client_secret
       const client_id = crypto.randomUUID();
       const client_secret = crypto.randomUUID();
@@ -132,10 +149,21 @@ export class UserContainersReducer extends Reducer<
         client_secret,
         project_id: projectId,
         service_name: oauthClient.serviceName,
-        redirect_uris: oauthClient.redirectUris || [],
+        redirect_uris: redirectUris,
         grants: ['authorization_code', 'refresh_token'],
         created_at: new Date().toISOString(),
       });
+
+      log(
+        EPriority.Debug,
+        'OAUTH_CLIENT',
+        `Created OAuth client for ${oauthClient.serviceName}`,
+        {
+          client_id,
+          service_name: oauthClient.serviceName,
+          redirect_uris: redirectUris,
+        }
+      );
 
       createdClients.push({
         client_id,
@@ -145,6 +173,31 @@ export class UserContainersReducer extends Reducer<
     }
 
     return createdClients;
+  }
+
+  /**
+   * Build complete redirect URIs from paths
+   *
+   * Constructs full redirect URIs by combining:
+   * - Protocol: https (or http for local dev)
+   * - FQDN: The container's FQDN (uc-{uuid}.org-{org-uuid}.domain.local)
+   * - Path: From the image definition (e.g., /oauth_callback)
+   *
+   * @param redirectPaths - Array of redirect paths from image definition (e.g., ['/oauth_callback'])
+   * @param containerFQDN - The container's FQDN
+   * @returns Array of complete redirect URIs
+   */
+  private buildRedirectUris(
+    redirectPaths: string[],
+    containerFQDN: string
+  ): string[] {
+    return redirectPaths
+      .filter((path) => path && path.trim() !== '')
+      .map((path) => {
+        // Ensure path starts with /
+        const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+        return `https://${containerFQDN}${normalizedPath}`;
+      });
   }
 
   private async deleteOAuthClients(containerId: string) {

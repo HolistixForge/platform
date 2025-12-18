@@ -1,7 +1,6 @@
 import FormData from 'form-data';
 import * as http from 'http';
 import * as https from 'https';
-import { development } from '../debug';
 import { IncomingHttpHeaders } from 'http';
 import {
   TJson,
@@ -93,10 +92,6 @@ export const myfetch: TMyfetch = (request: TMyfetchRequest) => {
     if (request.url.startsWith('http://'))
       req = http.request(full, options, callback);
     else if (request.url.startsWith('https://')) {
-      // allow self signed certificate only in development
-      development(() => {
-        (options as any).rejectUnauthorized = false;
-      });
       req = https.request(full, options, callback);
     } else throw new Error('protocol not supported');
 

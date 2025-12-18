@@ -84,6 +84,8 @@ const modulesBackend: { module: TModule<never, object>; config: object }[] = [
         setInterval(() => {
           const chats = depsExports.collab.collab.sharedData['chats:chats'];
           chats.forEach((c) => {
+            // Note: Using Math.random() for UI demo/story purposes only
+            // This is not used for any security-sensitive operations
             const randomGuy =
               randomGuys[Math.floor(Math.random() * randomGuys.length)].user_id;
 
@@ -109,6 +111,7 @@ const modulesBackend: { module: TModule<never, object>; config: object }[] = [
                   type: 'chats:new-message',
                   chatId: c.id,
                   content: makeLoremIpsum(),
+                  // Note: Using Math.random() for demo purposes only
                   replyToIndex: Math.floor(Math.random() * c.messages.length),
                 },
                 {
@@ -159,6 +162,8 @@ const li =
   'Lorem ipsum dolor sit amet consectetur adipiscing elit Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat';
 
 const makeLoremIpsum = () => {
+  // Note: Using Math.random() for generating demo text in Storybook only
+  // This is not used for any security-sensitive operations
   const words = li.split(' ');
   const numWords = Math.floor(Math.random() * 120) + 5; // Between 5-125 words
   const punctuation = [',', '.', '!', '?', '...'];

@@ -185,6 +185,188 @@ Currently, the tab bar doesn't adapt well to smaller screens or mobile devices.
   --repo HolistixForge/platform
 ```
 
+---
+
+### Working with Code Scanning Alerts
+
+GitHub Advanced Security provides code scanning alerts for security vulnerabilities and code quality issues. The GitHub CLI can fetch and analyze these alerts.
+
+#### Fetching Code Scanning Alerts
+
+```bash
+# Get all code scanning alerts
+gh api repos/HolistixForge/platform/code-scanning/alerts
+
+# Get summary statistics
+gh api repos/HolistixForge/platform/code-scanning/alerts | jq 'length'
+
+# Get breakdown by state (open/fixed/dismissed)
+gh api repos/HolistixForge/platform/code-scanning/alerts | jq '[group_by(.state)[] | {state: .[0].state, count: length}]'
+
+# Get breakdown of open alerts by severity
+gh api repos/HolistixForge/platform/code-scanning/alerts | jq '[.[] | select(.state == "open")] | [group_by(.rule.severity)[] | {severity: .[0].rule.severity, count: length}]'
+```
+
+#### Viewing Alert Details
+
+```bash
+# List all open alerts with key information
+gh api repos/HolistixForge/platform/code-scanning/alerts | jq '[.[] | select(.state == "open")] | sort_by(.rule.severity) | reverse | .[] | {number: .number, severity: .rule.severity, description: .rule.description, file: .most_recent_instance.location.path, line: .most_recent_instance.location.start_line}'
+
+# Get detailed information about a specific alert
+gh api repos/HolistixForge/platform/code-scanning/alerts/<alert-number>
+
+# Get full details including recommendation and examples
+gh api repos/HolistixForge/platform/code-scanning/alerts/<alert-number> | jq '{number: .number, severity: .rule.severity, description: .rule.description, help: .rule.help, file: .most_recent_instance.location.path, start_line: .most_recent_instance.location.start_line, end_line: .most_recent_instance.location.end_line}'
+```
+
+#### Workflow: Analyzing and Fixing Code Scanning Alerts
+
+When user asks to fetch or fix code scanning alerts:
+
+1. **Fetch alerts summary:**
+
+   ```bash
+   gh api repos/HolistixForge/platform/code-scanning/alerts | jq '[.[] | select(.state == "open")] | [group_by(.rule.severity)[] | {severity: .[0].rule.severity, count: length}]'
+   ```
+
+2. **List open alerts with details:**
+
+   ```bash
+   gh api repos/HolistixForge/platform/code-scanning/alerts | jq '[.[] | select(.state == "open")] | sort_by(.rule.severity) | reverse | .[] | {number: .number, severity: .rule.severity, description: .rule.description, file: .most_recent_instance.location.path, line: .most_recent_instance.location.start_line}'
+   ```
+
+3. **Prioritize alerts:**
+
+   - **Error/High severity** - Address immediately (SSRF, CSRF, path traversal, etc.)
+   - **Warning/Medium severity** - Address soon (insecure randomness, missing permissions, etc.)
+   - **Note/Low severity** - Address when convenient
+
+4. **For each alert to fix:**
+
+   a. **Get detailed information:**
+
+   ```bash
+   gh api repos/HolistixForge/platform/code-scanning/alerts/<alert-number> | jq .
+   ```
+
+   b. **Read the affected file:**
+
+   ```bash
+   # Note the file path and line number from the alert
+   # Use read_file tool to examine the code
+   ```
+
+   c. **Understand the vulnerability:**
+
+   - Read the `rule.help` field for explanation
+   - Check `rule.description` for summary
+   - Review the specific code location indicated
+
+   d. **Implement the fix:**
+
+   - Follow security best practices
+   - Address the root cause, not just the symptom
+   - Add appropriate validation, sanitization, or security controls
+
+   e. **Test the fix:**
+
+   - Run existing tests: `npx nx test <package>`
+   - Add new tests if needed (see `testing-enforcement.mdc`)
+   - Verify the fix doesn't break functionality
+
+   f. **Commit with reference:**
+
+   ```bash
+   git commit -m "fix(security): resolve code scanning alert #<alert-number>
+
+   Fixes code scanning alert: <description>
+   - <what was changed>
+   - <why it's now secure>
+
+   Code-Scanning-Alert: #<alert-number>"
+   ```
+
+5. **Verify alert is resolved:**
+   - After push, GitHub will re-scan
+   - Alert should automatically move to "fixed" state
+   - Check with: `gh api repos/HolistixForge/platform/code-scanning/alerts/<alert-number> | jq .state`
+
+#### Creating Issues for Code Scanning Alerts
+
+When you want to track fixing an alert as an issue:
+
+1. **Get alert details:**
+
+   ```bash
+   gh api repos/HolistixForge/platform/code-scanning/alerts/<alert-number>
+   ```
+
+2. **Draft the issue** (then get user confirmation):
+
+   ```bash
+   gh issue create \
+     --title "security: fix code scanning alert #<alert-number> - <description>" \
+     --body "## Code Scanning Alert #<alert-number>
+
+   **Severity:** <error/warning/note>
+   **Description:** <rule description>
+
+   **Location:**
+   - File: \`<file-path>\`
+   - Line: <line-number>
+
+   ## Issue
+   <Explain the security vulnerability>
+
+   ## Recommendation
+   <How to fix it securely>
+
+   ## Acceptance Criteria
+   - [ ] Vulnerability is fixed
+   - [ ] Tests added/updated
+   - [ ] Code scanning alert shows as 'fixed'
+   - [ ] No functionality broken
+
+   ## References
+   - Code Scanning Alert: https://github.com/HolistixForge/platform/security/code-scanning/<alert-number>" \
+     --label "security,bug" \
+     --repo HolistixForge/platform
+   ```
+
+#### Best Practices for Code Scanning Alerts
+
+1. **Regular monitoring** - Check alerts periodically: `gh api repos/HolistixForge/platform/code-scanning/alerts | jq '[.[] | select(.state == "open")] | length'`
+
+2. **Prioritize by severity** - Fix `error` level alerts first, then `warning`, then `note`
+
+3. **Don't dismiss without fixing** - Only dismiss if it's a false positive with clear justification
+
+4. **Add tests** - When fixing security issues, add tests to prevent regression
+
+5. **Reference in commits** - Always reference the alert number in commit messages
+
+6. **Verify fixes** - After pushing, verify the alert moves to "fixed" state
+
+7. **Document exceptions** - If an alert can't be fixed immediately, document why and create an issue
+
+#### When User Says "Fix Code Scanning Alerts"
+
+Follow this workflow:
+
+1. **Fetch and analyze** all open alerts
+2. **Present summary** with counts by severity
+3. **Ask user** which alerts to prioritize or if they want to fix all
+4. **For each alert:**
+   - Get details
+   - Read affected code
+   - Propose fix
+   - Get user confirmation
+   - Implement fix
+   - Run tests
+   - Commit with reference
+5. **Verify** all targeted alerts are resolved
+
 ## Best Practices
 
 1. **ALWAYS get user confirmation** before executing any GitHub CLI command that modifies data
@@ -230,6 +412,10 @@ Cursor agents can:
 - Convert TODO items to structured GitHub issues
 - Create issues with proper formatting and labels
 - Link issues to code references and documentation
+- **Fetch and analyze code scanning alerts**
+- **Propose fixes for security vulnerabilities**
+- **Track code scanning alerts as GitHub issues**
+- **Systematically work through security alerts by priority**
 
 **MANDATORY for Cursor Agents:**
 
@@ -245,3 +431,13 @@ When working with GitHub issues, always:
 - Include code references when relevant
 - Link to related documentation or issues
 - Use appropriate labels and assignees when known
+
+When working with code scanning alerts, always:
+
+- **Fetch and analyze alerts before making assumptions**
+- Prioritize by severity (error > warning > note)
+- Read the affected code to understand context
+- Propose secure fixes following best practices
+- Add tests to prevent regression
+- Reference alert numbers in commit messages
+- Verify alerts are resolved after fixes

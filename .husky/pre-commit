@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run linter on staged files
+npx lint-staged
+
+# Run tests for affected packages based on uncommitted changes
+echo "Running tests for affected packages..."
+npx nx affected:test --uncommitted --parallel=3 --maxParallel=3
+
+# Check if tests passed
+if [ $? -ne 0 ]; then
+  echo "❌ Tests failed. Commit aborted."
+  exit 1
+fi
+
+echo "✅ All checks passed!"
+

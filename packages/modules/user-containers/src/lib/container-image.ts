@@ -13,7 +13,12 @@ export type TContainerImageDefinition = {
 export type TOAuthClient = {
   serviceName: string;
   accessTokenLifetime?: number;
-  redirectUris?: string[];
+  /**
+   * Redirect URI paths (e.g., ['/oauth_callback', '/auth/complete'])
+   * Protocol and FQDN will be automatically constructed by the server
+   * Final URI: https://{container-fqdn}{path}
+   */
+  redirectPaths?: string[];
 };
 
 // Simplified image info for frontend (stored in shared data)

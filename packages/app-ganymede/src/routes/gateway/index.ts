@@ -41,6 +41,10 @@ export const setupGatewayRoutes = (
         return res.status(400).json({ error: 'Missing organization_id' });
       }
 
+      if (!/^[a-f0-9-]{36}$/.test(organization_id)) {
+        return res.status(400).json({ error: 'Invalid organization_id' });
+      }
+
       // Check user is org member
       const memberCheck = await pg.query(
         'SELECT 1 FROM organizations_members WHERE organization_id = $1 AND user_id = $2',

@@ -69,8 +69,93 @@ export const setupOauthRoutes = (
 
         // Redirect back to client with code
         const redirectUri = req.query.redirect_uri as string;
+        const clientId = req.query.client_id as string;
         const state = req.query.state as string;
         const authCode = code.authorizationCode;
+
+        // Validate redirect URI against registered redirect URIs for this client
+        // OAuth clients are registered for user-container services (e.g., JupyterLab)
+        // with specific redirect URIs like: https://uc-{uuid}.org-{org-uuid}.domain.local/oauth/callback
+        const instances = getGatewayInstances();
+        if (!instances) {
+          log(EPriority.Error, 'OAUTH', 'Gateway instances not initialized');
+          return res.status(500).json({ error: 'Internal server error' });
+        }
+
+        const client = instances.oauthManager.getClient(clientId);
+        if (!client) {
+          log(
+            EPriority.Warning,
+            'OAUTH',
+            `OAuth client not found: ${clientId}`
+          );
+          return res.status(400).json({
+            error: 'invalid_client',
+            error_description: 'Client not found',
+          });
+        }
+
+        // Validate redirect URI matches one of the registered URIs for this client
+        const isValidRedirect = client.redirect_uris.some(
+          (registeredUri) => registeredUri === redirectUri
+        );
+
+        if (!isValidRedirect) {
+          log(
+            EPriority.Warning,
+            'OAUTH',
+            `Rejected redirect URI not registered for client ${clientId}`,
+            {
+              attempted: redirectUri,
+              registered: client.redirect_uris,
+              service: client.service_name,
+            }
+          );
+          return res.status(400).json({
+            error: 'invalid_request',
+            error_description: 'redirect_uri is not registered for this client',
+          });
+        }
+
+        // Additional validation: ensure redirect URI follows expected pattern
+        // Pattern: https://<service>.org-{org-uuid}.domain.local/*
+        // This validates it's within the organization's gateway domain
+        try {
+          const parsedRedirect = new URL(redirectUri);
+          const domain = process.env.DOMAIN || 'domain.local';
+          const orgDomainPattern = new RegExp(
+            `\\.org-[a-f0-9-]{36}\\.${domain.replace('.', '\\.')}$`
+          );
+
+          if (!orgDomainPattern.test(parsedRedirect.hostname)) {
+            log(
+              EPriority.Warning,
+              'OAUTH',
+              `Redirect URI hostname does not match organization gateway domain pattern: ${parsedRedirect.hostname}`
+            );
+            return res.status(400).json({
+              error: 'invalid_request',
+              error_description:
+                'redirect_uri must be within organization gateway domain',
+            });
+          }
+        } catch {
+          log(
+            EPriority.Warning,
+            'OAUTH',
+            `Invalid redirect URI format: ${redirectUri}`
+          );
+          return res.status(400).json({
+            error: 'invalid_request',
+            error_description: 'Invalid redirect_uri format',
+          });
+        }
+
+        log(
+          EPriority.Debug,
+          'OAUTH',
+          `Validated redirect URI for client ${clientId} (${client.service_name}): ${redirectUri}`
+        );
 
         const redirectUrl = `${redirectUri}?code=${authCode}${
           state ? `&state=${state}` : ''

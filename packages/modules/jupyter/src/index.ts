@@ -40,9 +40,7 @@ const containerImagesData = [
         {
           serviceName: 'jupyterlab',
           accessTokenLifetime: 31536000,
-          redirectUris: [
-            'https://CONTAINER_SLUG.containers.yourdomain.com/oauth_callback',
-          ],
+          redirectPaths: ['/oauth_callback'],
         },
       ],
       capabilities: ['NET_ADMIN'],
@@ -66,9 +64,7 @@ const containerImagesData = [
         {
           serviceName: 'jupyterlab',
           accessTokenLifetime: 31536000,
-          redirectUris: [
-            'https://CONTAINER_SLUG.containers.yourdomain.com/oauth_callback',
-          ],
+          redirectPaths: ['/oauth_callback'],
         },
       ],
       capabilities: ['NET_ADMIN'],
