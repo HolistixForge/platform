@@ -10,6 +10,7 @@ import { moduleFrontend as notionFrontend } from '@holistix-forge/notion/fronten
 import { moduleFrontend as airtableFrontend } from '@holistix-forge/airtable/frontend';
 //import { moduleFrontend as jupyterFrontend } from '@holistix-forge/jupyter/frontend';
 import { moduleFrontend as excalidrawFrontend } from '@holistix-forge/excalidraw/frontend';
+import { moduleFrontend as gatewayFrontend } from '@holistix-forge/gateway';
 import { moduleFrontend as socialsFrontend } from '@holistix-forge/socials/frontend';
 import { moduleFrontend as chatsFrontend } from '@holistix-forge/chats/frontend';
 
@@ -48,6 +49,7 @@ export const getModulesFrontend = (
     { module: airtableFrontend, config: {} },
     //{ module: jupyterFrontend, config: {} },
     { module: excalidrawFrontend, config: {} },
+    { module: gatewayFrontend, config: {} },
     { module: socialsFrontend, config: {} },
     { module: chatsFrontend, config: {} },
     { module: tabsFrontend, config: {} },

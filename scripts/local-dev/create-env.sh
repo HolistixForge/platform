@@ -232,9 +232,7 @@ ENV_NAME=${ENV_NAME}
 GANYMEDE_SERVER_BIND='[{"host":"127.0.0.1","port":${GANYMEDE_PORT}}]'
 ALLOWED_ORIGINS='["https://${DOMAIN}"]'
 
-# PowerDNS configuration
-POWERDNS_API_URL=http://localhost:8081
-POWERDNS_API_KEY=local-dev-api-key
+
 
 # Magic link email (optional)
 MAILING_HOST=xxxxx
@@ -269,6 +267,14 @@ OTLP_ENDPOINT_GRPC=http://172.17.0.1:4317
 OTEL_SERVICE_NAME=ganymede-${ENV_NAME}
 # Deployment environment (used for filtering in Grafana)
 OTEL_DEPLOYMENT_ENVIRONMENT=${ENV_NAME}
+
+# SSL/TLS Configuration (LOCAL DEVELOPMENT ONLY)
+# CRITICAL SECURITY WARNING: DO NOT USE IN PRODUCTION!
+# We disable certificate verification because we use self-signed certificates (mkcert)
+# for local development. Ganymede needs to make internal HTTPS requests to gateways
+# (e.g., https://org-{uuid}.domain.local/collab/start) and Node.js would reject
+# self-signed certificates by default.
+NODE_TLS_REJECT_UNAUTHORIZED=0
 EOF
 
 # 8. Create Nginx server blocks (Stage 1 - Main nginx with SSL termination)
@@ -344,91 +350,48 @@ sudo ln -sf "/etc/nginx/sites-available/${ENV_NAME}" "/etc/nginx/sites-enabled/$
 sudo nginx -t
 sudo service nginx reload
 
-# 10. Register services in PowerDNS
-echo "🌐 Setting up DNS zone and registering services..."
+# 10. Create CoreDNS zone file
+echo "🌐 Creating CoreDNS zone file..."
 
 # Get container IP
 DEV_CONTAINER_IP="127.0.0.1"
 
-# Check if PowerDNS is running
-if ! curl -s -f "http://localhost:8081/api/v1/servers" -H "X-API-Key: local-dev-api-key" > /dev/null 2>&1; then
-    echo "❌ PowerDNS API not responding. Did you run setup-powerdns.sh?"
-    exit 1
-fi
+# Create zones directory if it doesn't exist
+sudo mkdir -p /etc/coredns/zones
 
-# Create DNS zone for this domain (if it doesn't exist)
-echo "   Creating DNS zone: ${DOMAIN}"
-ZONE_EXISTS=$(curl -s "http://localhost:8081/api/v1/servers/localhost/zones/${DOMAIN}." \
-    -H "X-API-Key: local-dev-api-key" 2>/dev/null | grep -c "\"name\":\"${DOMAIN}\"" || true)
+# Create zone file with wildcard DNS
+sudo tee "/etc/coredns/zones/${DOMAIN}.zone" > /dev/null <<EOF
+\$ORIGIN ${DOMAIN}.
+\$TTL 60
 
-if [ "$ZONE_EXISTS" -eq 0 ]; then
-    curl -X POST "http://localhost:8081/api/v1/servers/localhost/zones" \
-      -H "X-API-Key: local-dev-api-key" \
-      -H "Content-Type: application/json" \
-      -d "{
-        \"name\": \"${DOMAIN}.\",
-        \"kind\": \"Native\",
-        \"nameservers\": [\"ns1.${DOMAIN}.\"]
-      }" > /dev/null 2>&1
+; SOA record (required for valid zone)
+@       IN  SOA  ns1.${DOMAIN}. admin.${DOMAIN}. (
+            $(date +%Y%m%d%H) ; Serial (timestamp)
+            3600              ; Refresh
+            1800              ; Retry
+            604800            ; Expire
+            60 )              ; Minimum TTL
 
-    if [ $? -ne 0 ]; then
-        echo "❌ Failed to create DNS zone"
-        exit 1
-    fi
-    
-    echo "   ✅ DNS zone '${DOMAIN}' created"
-else
-    echo "   ✅ DNS zone '${DOMAIN}' already exists"
-fi
+; NS record (required)
+@       IN  NS   ns1.${DOMAIN}.
+ns1     IN  A    ${DEV_CONTAINER_IP}
 
-# Register main domain (frontend)
-echo "   Registering ${DOMAIN} → ${DEV_CONTAINER_IP}"
-curl -X PATCH "http://localhost:8081/api/v1/servers/localhost/zones/${DOMAIN}." \
-  -H "X-API-Key: local-dev-api-key" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"rrsets\": [{
-      \"name\": \"${DOMAIN}.\",
-      \"type\": \"A\",
-      \"changetype\": \"REPLACE\",
-      \"ttl\": 60,
-      \"records\": [{\"content\": \"${DEV_CONTAINER_IP}\", \"disabled\": false}]
-    }]
-  }" > /dev/null 2>&1
+; A records for specific services
+@           IN  A    ${DEV_CONTAINER_IP}   ; Apex domain (${DOMAIN})
+ganymede    IN  A    ${DEV_CONTAINER_IP}   ; Ganymede API
 
-# Register Ganymede
-echo "   Registering ganymede.${DOMAIN} → ${DEV_CONTAINER_IP}"
-curl -X PATCH "http://localhost:8081/api/v1/servers/localhost/zones/${DOMAIN}." \
-  -H "X-API-Key: local-dev-api-key" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"rrsets\": [{
-      \"name\": \"ganymede.${DOMAIN}.\",
-      \"type\": \"A\",
-      \"changetype\": \"REPLACE\",
-      \"ttl\": 60,
-      \"records\": [{\"content\": \"${DEV_CONTAINER_IP}\", \"disabled\": false}]
-    }]
-  }" > /dev/null 2>&1
+; Wildcard - catches ALL other subdomains
+; This handles org-{uuid}, uc-{uuid}.org-{uuid}, etc.
+*           IN  A    ${DEV_CONTAINER_IP}
+EOF
 
-# Register wildcard for all subdomains (will handle org-{uuid}.domain.com)
-echo "   Registering *.${DOMAIN} → ${DEV_CONTAINER_IP}"
-curl -X PATCH "http://localhost:8081/api/v1/servers/localhost/zones/${DOMAIN}." \
-  -H "X-API-Key: local-dev-api-key" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"rrsets\": [{
-      \"name\": \"*.${DOMAIN}.\",
-      \"type\": \"A\",
-      \"changetype\": \"REPLACE\",
-      \"ttl\": 60,
-      \"records\": [{\"content\": \"${DEV_CONTAINER_IP}\", \"disabled\": false}]
-    }]
-  }" > /dev/null 2>&1
+echo "   ✅ Zone file created: /etc/coredns/zones/${DOMAIN}.zone"
+echo "   📝 Zone contains:"
+echo "      ${DOMAIN} → ${DEV_CONTAINER_IP}"
+echo "      ganymede.${DOMAIN} → ${DEV_CONTAINER_IP}"
+echo "      *.${DOMAIN} → ${DEV_CONTAINER_IP} (wildcard)"
 
-echo "   ✅ DNS records registered in PowerDNS"
-
-# 11. Update CoreDNS configuration to include this domain
+# 11. Update CoreDNS configuration to serve this zone
 echo "🌐 Updating CoreDNS configuration..."
 "${WORKSPACE_PATH}/scripts/local-dev/update-coredns.sh" || {
     echo "   ⚠️  Failed to update CoreDNS. You may need to run ./update-coredns.sh manually."
@@ -446,7 +409,13 @@ chmod 755 "${ENV_DIR}/org-data"
 ENV_NAME="${ENV_NAME}" DOMAIN="${DOMAIN}" \
   "${WORKSPACE_PATH}/scripts/local-dev/gateway-pool.sh" create ${GATEWAY_POOL_SIZE} "${WORKSPACE_PATH}"
 
-# 13. Environment ready!
+# 13. Clear Nx and Vite caches to ensure fresh build with new domain
+echo "🧹 Clearing Nx and Vite caches for fresh build..."
+cd "${WORKSPACE_PATH}"
+npx nx reset
+echo "   ✅ Caches cleared"
+
+# 14. Environment ready!
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║  ✅ Environment ${ENV_NAME} ready!                           ║"

@@ -41,9 +41,9 @@ cd /root/workspace/monorepo/scripts/local-dev
 
 ### Service Management
 
-| Script                    | Purpose                                                                   | Usage                       |
-| ------------------------- | ------------------------------------------------------------------------- | --------------------------- |
-| `restart-all-services.sh` | Restart all services (PostgreSQL, PowerDNS, Nginx, CoreDNS, build server) | `./restart-all-services.sh` |
+| Script                    | Purpose                                                         | Usage                       |
+| ------------------------- | --------------------------------------------------------------- | --------------------------- |
+| `restart-all-services.sh` | Restart all services (PostgreSQL, Nginx, CoreDNS, build server) | `./restart-all-services.sh` |
 
 ### One-Time Setup (Development Container)
 
@@ -54,7 +54,7 @@ cd /root/workspace/monorepo/scripts/local-dev
 | `install-system-deps.sh` | Install PostgreSQL, Nginx, utilities     | ✅       |
 | `install-mkcert.sh`      | Install mkcert for SSL certificates      | ✅       |
 | `setup-postgres.sh`      | Configure PostgreSQL server              | ✅       |
-| `setup-powerdns.sh`      | Configure PowerDNS server                | ✅       |
+| `setup-coredns.sh`       | Configure CoreDNS server                 | ✅       |
 | `build-images.sh`        | Build gateway Docker image               | ✅       |
 
 ### Environment Management
@@ -126,9 +126,8 @@ cd /root/workspace/monorepo/scripts/local-dev
 This will restart:
 
 - PostgreSQL
-- PowerDNS
 - Nginx
-- CoreDNS (DNS forwarder)
+- CoreDNS (DNS server with zone files)
 - Build server (if running)
 
 ### Restart Individual Services
@@ -136,9 +135,6 @@ This will restart:
 ```bash
 # PostgreSQL
 sudo service postgresql restart
-
-# PowerDNS
-sudo killall pdns_server && sudo pdns_server --daemon=yes --guardian=yes --config-dir=/etc/powerdns
 
 # Nginx
 sudo service nginx restart

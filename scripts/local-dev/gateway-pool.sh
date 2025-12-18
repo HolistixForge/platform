@@ -102,10 +102,10 @@ start_gateway_container() {
         docker_env_args+=(-e "${var}=${env_ref[$var]}")
     done
     
-    # Get dev container IP for DNS resolution (PowerDNS on port 5300)
+    # Get dev container IP for DNS resolution (CoreDNS on port 53)
     local dev_container_ip=$(hostname -I | awk '{print $1}')
     
-    # Start container with DNS pointing to dev container's PowerDNS
+    # Start container with DNS pointing to dev container's CoreDNS
     docker run -d \
         --name "${container_name}" \
         --label "environment=${env_name}" \
@@ -304,6 +304,11 @@ cmd_create() {
         container_env[OTEL_DEPLOYMENT_ENVIRONMENT]="${ENV_NAME}"
         container_env[OTLP_ENDPOINT_HTTP]="http://172.17.0.1:4318"
         container_env[OTLP_ENDPOINT_GRPC]="http://172.17.0.1:4317"
+        
+        # SSL/TLS Configuration (LOCAL DEVELOPMENT ONLY)
+        # Disable certificate verification for self-signed certificates
+        # Gateways make HTTPS calls to Ganymede (signalGatewayReady, etc.)
+        container_env[NODE_TLS_REJECT_UNAUTHORIZED]="0"
         
         # Start container (ports map to themselves for new containers)
         if start_gateway_container \

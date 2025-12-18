@@ -240,7 +240,7 @@ export const moduleBackend: ModuleBackend = {
 Containers get permanent URLs with distinct FQDNs:
 
 ```
-uc-{uuid}.org-{uuid}.domain.local → PowerDNS → Stage 1 Nginx → Gateway (Stage 2 Nginx) → Container (VPN IP)
+uc-{uuid}.org-{uuid}.domain.local → CoreDNS (wildcard) → Stage 1 Nginx → Gateway (Stage 2 Nginx) → Container (VPN IP)
 ```
 
 **Benefits:**
@@ -313,7 +313,7 @@ See [guides/PRODUCTION_DEPLOYMENT.md](../guides/PRODUCTION_DEPLOYMENT.md) for pr
 - PostgreSQL database
 - Gateway containers allocated on-demand
 - Let's Encrypt SSL certificates
-- PowerDNS for stable container URLs
+- CoreDNS with wildcard DNS for stable container URLs
 
 ## Technology Choices
 
@@ -327,7 +327,7 @@ See [guides/PRODUCTION_DEPLOYMENT.md](../guides/PRODUCTION_DEPLOYMENT.md) for pr
 | **Monorepo**      | Nx            | Build caching, dependency graph     |
 | **Containers**    | Docker        | Standard containerization           |
 | **VPN**           | OpenVPN       | Mature, reliable                    |
-| **DNS**           | PowerDNS      | REST API, database backend          |
+| **DNS**           | CoreDNS       | Simple, zone files, wildcard DNS    |
 | **SSL**           | Let's Encrypt | Free, automated certificates        |
 
 ## Performance Considerations

@@ -2,12 +2,7 @@ import type { TModule } from '@holistix-forge/module';
 import { TMyfetchRequest } from '@holistix-forge/simple-types';
 import type { TCollabFrontendExports } from '@holistix-forge/collab/frontend';
 
-import {
-  TokenManager,
-  PermissionManager,
-  OAuthManager,
-  DNSManager,
-} from './lib/managers';
+import { TokenManager, PermissionManager, OAuthManager } from './lib/managers';
 
 //
 
@@ -24,7 +19,6 @@ export type TGatewayExports = {
   tokenManager: TokenManager;
   permissionManager: PermissionManager;
   oauthManager: OAuthManager;
-  dnsManager: DNSManager;
   permissionRegistry: PermissionRegistry;
   protectedServiceRegistry: ProtectedServiceRegistry;
 };
@@ -55,7 +49,6 @@ export {
   TokenManager,
   PermissionManager,
   OAuthManager,
-  DNSManager,
   type TOAuthClient,
   type TOAuthCode,
   type TOAuthToken,

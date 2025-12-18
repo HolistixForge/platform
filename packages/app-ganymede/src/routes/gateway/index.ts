@@ -10,8 +10,6 @@ import { pg } from '../../database/pg';
 import { generateJwtToken } from '@holistix-forge/backend-engine';
 import { asyncHandler, AuthRequest } from '../../middleware/route-handler';
 import { setupGatewayDataRoutes } from './data';
-import { setupGatewayDNSRoutes } from './dns';
-import { powerDNS } from '../../services/powerdns-client';
 import { nginxManager } from '../../services/nginx-manager';
 import { EPriority, log } from '@holistix-forge/log';
 import {
@@ -28,8 +26,6 @@ export const setupGatewayRoutes = (
   // Individual endpoints use JWT authentication for access control
   // Mount data push/pull endpoints
   setupGatewayDataRoutes(router);
-  // Mount generic DNS management endpoints
-  setupGatewayDNSRoutes(router);
   // POST /gateway/start - Start gateway for organization
   router.post(
     '/gateway/start',
@@ -99,16 +95,13 @@ export const setupGatewayRoutes = (
           `Allocated ${container_name} (port ${http_port}) to org ${organization_id}`
         );
 
-        // 2. Register DNS (org-{uuid}.domain.local → 127.0.0.1)
-        await powerDNS.registerGateway(organization_id);
-
-        // 3. Create Nginx config (routes org traffic to gateway HTTP port)
+        // 2. Create Nginx config (routes org traffic to gateway HTTP port)
         await nginxManager.createGatewayConfig(organization_id, http_port);
 
-        // 4. Reload Nginx
+        // 3. Reload Nginx
         await nginxManager.reloadNginx();
 
-        // 5. Construct gateway hostname and URL
+        // 4. Construct gateway hostname and URL
         const gateway_hostname = makeOrgGatewayHostname(organization_id);
         const gateway_url = makeOrgGatewayUrl(organization_id);
 
@@ -118,7 +111,7 @@ export const setupGatewayRoutes = (
           `Gateway accessible at: ${gateway_url}`
         );
 
-        // 6. Call gateway handshake
+        // 5. Call gateway handshake
         const handshakeUrl = `${gateway_url}/collab/start`;
         log(
           EPriority.Info,
@@ -274,13 +267,10 @@ export const setupGatewayRoutes = (
           gateway_id,
         ]);
 
-        // 2. Remove DNS records
-        await powerDNS.deregisterGateway(organization_id);
-
-        // 3. Remove Nginx config
+        // 2. Remove Nginx config
         await nginxManager.removeGatewayConfig(organization_id);
 
-        // 4. Reload Nginx
+        // 3. Reload Nginx
         await nginxManager.reloadNginx();
 
         log(

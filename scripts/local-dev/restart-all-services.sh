@@ -16,15 +16,6 @@ else
 fi
 echo "   ✅ PostgreSQL restarted"
 
-# Restart PowerDNS
-echo "🌐 Restarting PowerDNS..."
-if pgrep -x pdns_server >/dev/null 2>&1; then
-    sudo killall pdns_server 2>/dev/null || true
-    sleep 1
-fi
-sudo pdns_server --daemon=yes --guardian=yes --config-dir=/etc/powerdns
-echo "   ✅ PowerDNS restarted"
-
 # Restart Nginx
 echo "🌐 Restarting Nginx..."
 sudo service nginx restart
@@ -76,7 +67,6 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 echo "📋 Service Status:"
 echo "   PostgreSQL: $(service postgresql status 2>/dev/null | grep -o 'online\|down' || echo 'unknown')"
-echo "   PowerDNS:   $(pgrep -x pdns_server > /dev/null && echo 'running' || echo 'stopped')"
 echo "   Nginx:      $(pgrep -x nginx > /dev/null && echo 'running' || echo 'stopped')"
 echo "   CoreDNS:    $(pgrep -x coredns > /dev/null && echo 'running' || echo 'stopped')"
 echo "   Build Srv:  $(lsof -i :$BUILD_SERVER_PORT >/dev/null 2>&1 && echo 'running' || echo 'stopped')"

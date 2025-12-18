@@ -9,9 +9,9 @@ This guide sets up a **complete local development environment** inside your deve
 - ✅ Multiple isolated environments (e.g., `dev-001`, `dev-002` for different branches)
 - ✅ **Multi-gateway pool architecture** - Multiple containerized gateways, dynamically allocated
 - ✅ Real HTTPS with trusted certificates (wildcard `*.domain.local`)
-- ✅ **PowerDNS** - Dynamic DNS management via REST API
-- ✅ Real domain names with automatic DNS delegation
-- ✅ Full stack: PostgreSQL, Nginx, Ganymede, Gateway Pool, PowerDNS
+- ✅ **CoreDNS with zone files** - Simple wildcard DNS (no database, no API needed)
+- ✅ Real domain names with automatic wildcard DNS resolution
+- ✅ Full stack: PostgreSQL, Nginx, Ganymede, Gateway Pool, CoreDNS
 - ✅ User containers running in Docker (like production)
 - ✅ Everything scriptable and reproducible
 - ✅ Hot-reload support for rapid iteration
@@ -50,10 +50,10 @@ docker exec -it holistix-dev /bin/bash
 **Ports and mounts explained:**
 
 - `-p 80:80 -p 443:443` - HTTP/HTTPS for Nginx (Stage 1)
-- `-p 53:53/udp -p 53:53/tcp` - CoreDNS (DNS forwarder, handles local + external DNS)
+- `-p 53:53/udp -p 53:53/tcp` - CoreDNS (DNS server, serves zone files + forwards external queries)
 - `-v /var/run/docker.sock:/var/run/docker.sock` - Docker socket (manage gateway containers)
 
-**Note:** PowerDNS runs on port 5300 internally (not exposed). CoreDNS forwards queries to PowerDNS via `127.0.0.1:5300` within the container.
+**Note:** CoreDNS serves zone files from `/etc/coredns/zones/` for local domains and forwards all other queries to upstream DNS (8.8.8.8).
 
 **Note:** Gateway containers handle their own port mappings (7100-7199 for HTTP, 49100-49199/udp for OpenVPN) via `gateway-pool.sh`. The main container accesses gateway services via the Docker host's localhost (e.g., `127.0.0.1:7100`), so it doesn't need to expose these ports.
 
@@ -77,7 +77,7 @@ git clone https://github.com/HolistixForge/platform.git
 **In development container:**
 
 ```bash
-# One-time setup (installs PowerDNS, builds Docker images, etc.)
+# One-time setup (installs CoreDNS, builds Docker images, etc.)
 cd /root/workspace/monorepo
 ./scripts/local-dev/setup-all.sh
 
@@ -92,7 +92,7 @@ cd /root/workspace/monorepo
 
 **On host OS (ONE-TIME DNS Setup):**
 
-The development environment uses **CoreDNS** as a DNS forwarder and **PowerDNS** as an authoritative DNS server.
+The development environment uses **CoreDNS** with zone files and wildcard DNS.
 
 **Complete DNS setup instructions:** See [DNS Architecture and Setup Guide](DNS_COMPLETE_GUIDE.md#host-os-configuration)
 
@@ -104,7 +104,7 @@ https://ganymede.domain.local           → Ganymede API
 https://org-{uuid}.domain.local         → Gateway (when allocated)
 ```
 
-All DNS resolution happens automatically via CoreDNS and PowerDNS!
+All DNS resolution happens automatically via CoreDNS with static zone files!
 
 ## Environment and Domain Structure
 
@@ -128,7 +128,7 @@ Gateway containers are named sequentially:
 Gateways are dynamically allocated to organizations:
 
 - State managed in PostgreSQL (`gateways.ready` flag)
-- DNS registered automatically when allocated
+- DNS resolved via wildcard (`*.{domain}`)
 - Nginx config created dynamically
 - Returned to pool after 5 minutes of inactivity
 
@@ -208,19 +208,19 @@ Configures PostgreSQL for local development:
 ./scripts/local-dev/setup-postgres.sh
 ```
 
-### 4. Setup PowerDNS
+### 4. Setup CoreDNS
 
-**Script:** [`scripts/local-dev/setup-powerdns.sh`](../../scripts/local-dev/setup-powerdns.sh)
+**Script:** [`scripts/local-dev/setup-coredns.sh`](../../scripts/local-dev/setup-coredns.sh)
 
-Installs and configures PowerDNS for dynamic DNS management:
+Installs and configures CoreDNS for DNS resolution with static zone files:
 
-- Installs `pdns-server` and `pdns-backend-pgsql`
-- Uses existing PostgreSQL database
-- Enables REST API on port 8081
-- Applies official schema
+- Downloads and installs CoreDNS binary
+- Creates `/etc/coredns` configuration directory
+- Generates initial Corefile
+- Starts CoreDNS on port 53
 
 ```bash
-./scripts/local-dev/setup-powerdns.sh
+./scripts/local-dev/setup-coredns.sh
 ```
 
 ### 5. Build Docker Images
@@ -245,7 +245,7 @@ Runs all setup scripts in sequence:
 ./scripts/local-dev/setup-all.sh
 ```
 
-This installs everything: system deps, Docker CLI, mkcert, PostgreSQL, PowerDNS, and builds images.
+This installs everything: system deps, Docker CLI, mkcert, PostgreSQL, CoreDNS, and builds images.
 
 ## Environment Management Scripts
 
@@ -257,7 +257,7 @@ Creates a complete isolated environment with:
 
 1. **Domain configuration** (default: `domain.local`)
 2. **Database creation** and schema deployment
-3. **PowerDNS zone creation** and DNS records
+3. **CoreDNS zone file creation** with wildcard DNS
 4. **SSL certificates** (mkcert wildcard `*.{domain}`)
 5. **JWT keys** generation
 6. **Gateway pool creation** (default: 3 gateways)
@@ -292,11 +292,11 @@ GATEWAY_POOL_SIZE=5 ./scripts/local-dev/create-env.sh dev-001 domain.local /root
 **What it does:**
 
 - Creates PostgreSQL database: `ganymede_{env_name}` (dashes → underscores)
-- Creates PowerDNS zone for the specified domain
-- Registers DNS records:
-  - `{domain}` → Frontend
-  - `ganymede.{domain}` → Ganymede API
-  - `*.{domain}` → Wildcard for dynamic allocations
+- Creates CoreDNS zone file for the specified domain
+- Configures DNS records in zone file:
+  - `@` → Dev container IP (Frontend/Ganymede)
+  - `ganymede` → Dev container IP
+  - `*` → Wildcard for all dynamic allocations
 - Generates wildcard SSL certificate: `*.{domain}`
 - Creates gateway pool (3 containers by default):
   - Each gateway registers with Ganymede via `app-ganymede-cmd add-gateway`
@@ -321,7 +321,7 @@ You can create multiple environments with different domains:
 # Testing environment
 ./create-env.sh test-001 test.local
 
-# Each has its own DNS zone, gateway pool, and SSL certificate
+# Each has its own CoreDNS zone file, gateway pool, and SSL certificate
 ```
 
 ### Delete Environment
@@ -333,7 +333,8 @@ Completely removes an environment:
 - Stops Ganymede process
 - Stops and removes gateway pool containers
 - Drops PostgreSQL database
-- Removes PowerDNS zone (optional)
+- Removes CoreDNS zone file
+- Updates CoreDNS configuration
 - Removes Nginx config
 - Deletes environment directory
 
@@ -414,8 +415,8 @@ docker logs gw-pool-0
 docker logs gw-pool-1
 docker logs -f gw-pool-2  # Follow
 
-# PowerDNS logs
-sudo tail -f /var/log/pdns.log
+# CoreDNS logs (runs in foreground, check process)
+ps aux | grep coredns
 ```
 
 ### Rebuild and Restart
@@ -480,7 +481,7 @@ These steps are performed **on your host OS** (Windows, macOS, or Linux), not in
 
 ### DNS Configuration
 
-The development environment uses **CoreDNS** and **PowerDNS** for DNS resolution. You need to configure your host OS to use the dev container's DNS server.
+The development environment uses **CoreDNS** with static zone files for DNS resolution. You need to configure your host OS to use the dev container's DNS server.
 
 **Complete DNS setup instructions:** See [DNS Architecture and Setup Guide](DNS_COMPLETE_GUIDE.md#host-os-configuration)
 
@@ -669,7 +670,7 @@ PGPASSWORD=devpassword psql -U postgres -d ganymede_dev_001 -c \
 **Main Services:**
 
 - **Nginx (Stage 1):** 80, 443
-- **PowerDNS:** 53/udp, 53/tcp, 8081 (API)
+- **CoreDNS:** 53/udp, 53/tcp
 - **PostgreSQL:** 5432
 - **Ganymede:** 6000
 
@@ -707,8 +708,6 @@ Ganymede API:     https://ganymede.mycompany.local
 Gateway (org):    https://org-{uuid}.mycompany.local
 User Container:   https://uc-{uuid}.org-{uuid}.mycompany.local
 ```
-
-**Note:** Gateway and user container URLs are created dynamically when organizations start projects. DNS records are registered automatically by Ganymede.
 
 **User Container Routing:**
 
