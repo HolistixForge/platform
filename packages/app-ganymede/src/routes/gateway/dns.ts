@@ -1,7 +1,9 @@
 /**
  * Gateway DNS Management Endpoints
  *
- * Generic DNS management endpoints for FQDN to IP mapping.
+ * NOTE: These endpoints are now NO-OPs since we use wildcard DNS (*.domain.local).
+ * All subdomains (org-{uuid}, uc-{uuid}, etc.) automatically resolve via the wildcard.
+ * Kept for backward compatibility with existing gateways.
  */
 
 import { Router } from 'express';
@@ -11,7 +13,6 @@ import {
   OrganizationAuthRequest,
 } from '../../middleware/auth';
 import { asyncHandler } from '../../middleware/route-handler';
-import { powerDNS } from '../../services/powerdns-client';
 
 export const setupGatewayDNSRoutes = (router: Router) => {
   /**
@@ -40,34 +41,18 @@ export const setupGatewayDNSRoutes = (router: Router) => {
         });
       }
 
+      // NO-OP: Wildcard DNS (*.domain.local) automatically handles all subdomains
+      // No explicit DNS record creation needed
       log(
-        EPriority.Info,
+        EPriority.Debug,
         'GATEWAY_DNS',
-        `Registering DNS record: ${fqdn} → ${ip} (org ${organization_id})`
+        `DNS registration request received for ${fqdn} → ${ip} (org ${organization_id}) - no-op (wildcard DNS)`
       );
 
-      try {
-        await powerDNS.registerRecord(fqdn, ip);
-
-        log(EPriority.Info, 'GATEWAY_DNS', `✅ DNS record registered: ${fqdn}`);
-
-        return res.json({
-          success: true,
-          message: 'DNS record registered',
-        });
-      } catch (error: any) {
-        log(
-          EPriority.Error,
-          'GATEWAY_DNS',
-          `Failed to register DNS record ${fqdn}:`,
-          error.message
-        );
-        return res.status(500).json({
-          success: false,
-          error: 'Failed to register DNS record',
-          details: error.message,
-        });
-      }
+      return res.json({
+        success: true,
+        message: 'DNS record registered (via wildcard DNS)',
+      });
     })
   );
 
@@ -96,38 +81,17 @@ export const setupGatewayDNSRoutes = (router: Router) => {
         });
       }
 
+      // NO-OP: Wildcard DNS (*.domain.local) means no explicit records to remove
       log(
-        EPriority.Info,
+        EPriority.Debug,
         'GATEWAY_DNS',
-        `Deregistering DNS record: ${fqdn} (org ${organization_id})`
+        `DNS deregistration request received for ${fqdn} (org ${organization_id}) - no-op (wildcard DNS)`
       );
 
-      try {
-        await powerDNS.deregisterRecord(fqdn);
-
-        log(
-          EPriority.Info,
-          'GATEWAY_DNS',
-          `✅ DNS record deregistered: ${fqdn}`
-        );
-
-        return res.json({
-          success: true,
-          message: 'DNS record deregistered',
-        });
-      } catch (error: any) {
-        log(
-          EPriority.Error,
-          'GATEWAY_DNS',
-          `Failed to deregister DNS record ${fqdn}:`,
-          error.message
-        );
-        return res.status(500).json({
-          success: false,
-          error: 'Failed to deregister DNS record',
-          details: error.message,
-        });
-      }
+      return res.json({
+        success: true,
+        message: 'DNS record deregistered (via wildcard DNS)',
+      });
     })
   );
 };

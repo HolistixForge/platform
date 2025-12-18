@@ -11,7 +11,6 @@ import { generateJwtToken } from '@holistix-forge/backend-engine';
 import { asyncHandler, AuthRequest } from '../../middleware/route-handler';
 import { setupGatewayDataRoutes } from './data';
 import { setupGatewayDNSRoutes } from './dns';
-import { powerDNS } from '../../services/powerdns-client';
 import { nginxManager } from '../../services/nginx-manager';
 import { EPriority, log } from '@holistix-forge/log';
 import {
@@ -99,8 +98,8 @@ export const setupGatewayRoutes = (
           `Allocated ${container_name} (port ${http_port}) to org ${organization_id}`
         );
 
-        // 2. Register DNS (org-{uuid}.domain.local → 127.0.0.1)
-        await powerDNS.registerGateway(organization_id);
+        // 2. DNS registration no longer needed - wildcard DNS (*.domain.local) handles all subdomains
+        // The FQDN org-{uuid}.domain.local automatically resolves via the wildcard
 
         // 3. Create Nginx config (routes org traffic to gateway HTTP port)
         await nginxManager.createGatewayConfig(organization_id, http_port);
@@ -274,8 +273,7 @@ export const setupGatewayRoutes = (
           gateway_id,
         ]);
 
-        // 2. Remove DNS records
-        await powerDNS.deregisterGateway(organization_id);
+        // 2. DNS deregistration no longer needed - wildcard DNS means no explicit records to remove
 
         // 3. Remove Nginx config
         await nginxManager.removeGatewayConfig(organization_id);
