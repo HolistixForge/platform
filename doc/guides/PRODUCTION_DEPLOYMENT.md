@@ -419,22 +419,23 @@ This document provides comprehensive analysis and planning for Holistix Forge pr
 
 ---
 
-### DNS (⚠️ Architecture Changing)
+### DNS (✅ Simplified)
 
-> **See [Issue #30](https://github.com/HolistixForge/platform/issues/30)** for planned architecture changes.
+> **✅ COMPLETED:** [Issue #30](https://github.com/HolistixForge/platform/issues/30) has been implemented.
 
-**Current Plan (may be obsolete):**
-
-- PowerDNS on port 53
-- Remove CoreDNS
-
-**Future Plan (Issue #30):**
+**Current Architecture:**
 
 - CoreDNS with file plugin on port 53
-- Static zone files with wildcard DNS
-- Remove PowerDNS entirely
+- Static zone files with wildcard DNS (`*.yourdomain.com`)
+- No PowerDNS, no database for DNS
+- Simple and maintainable
 
-**Recommendation:** Wait for Issue #30 before implementing DNS in production
+**Production Setup:**
+
+1. Configure DNS zone delegation at your registrar (point NS records to VPS)
+2. Install CoreDNS on VPS
+3. Create zone file with wildcard record
+4. All subdomains automatically resolve via wildcard
 
 ---
 
@@ -658,9 +659,10 @@ location / {
 
 **Domain Requirements:**
 
-- Owned domain name
-- DNS registrar access
-- Ability to configure NS records
+- Owned domain name (e.g., `example.com`)
+- DNS registrar access (Cloudflare, Namecheap, GoDaddy, etc.)
+- Ability to configure NS (Name Server) records or A records for delegation
+- Note: You'll configure NS records to point to your VPS, making it the authoritative DNS server for your domain
 
 **DNS Provider API:**
 
@@ -678,14 +680,18 @@ location / {
 
 2. **DNS Configuration**
 
-   - Configure domain delegation
-   - Wait for propagation
+   - **DNS Zone Delegation** - Configure at domain registrar level
+     - Point your domain's NS (Name Server) records to your VPS IP address
+     - Done in your domain registrar's dashboard (e.g., Cloudflare, Namecheap, GoDaddy)
+     - Example: If your domain is `example.com`, create an A record for `ns.example.com` pointing to your VPS IP, then set `ns.example.com` as the nameserver
+     - Alternative: Some registrars allow direct IP-based delegation
+   - Wait for DNS propagation (24-48 hours typical)
 
 3. **Application Setup**
 
    - Install dependencies
    - Setup PostgreSQL
-   - Setup DNS (wait for Issue #30)
+   - Setup CoreDNS with zone files
    - Setup Let's Encrypt
 
 4. **Environment Creation**
@@ -886,10 +892,13 @@ Total:          ~10-20GB typical
 - `envctl.sh` - Add systemd support
 - `install-system-deps.sh` - Minor tweaks
 
+### Scripts That Work in Production (with minor changes)
+
+- `setup-coredns.sh` - Works for production (just update domain)
+- `update-coredns.sh` - Works for production (zone file management)
+
 ### Scripts Not Needed in Production
 
-- `setup-coredns.sh` - DNS architecture changing (Issue #30)
-- `update-coredns.sh` - DNS architecture changing
 - `install-mkcert.sh` - Using Let's Encrypt instead
 
 ### New Scripts Needed
@@ -958,14 +967,14 @@ Total:          ~10-20GB typical
 ### Before Starting Implementation
 
 1. ✅ **Read this document** - Understand architecture and decisions
-2. ⚠️ **Wait for Issue #30** - DNS architecture decision
+2. ✅ **DNS Simplified** - Issue #30 completed, architecture ready
 3. 📋 **Create GitHub issue** - Track production deployment work
 4. 🧪 **Plan testing strategy** - How to verify deployment
 
 ### Implementation Order
 
 1. **Phase 1:** Core infrastructure (VPS, security, dependencies)
-2. **Phase 2:** Script adaptation (after Issue #30)
+2. **Phase 2:** Script adaptation (DNS architecture ready)
 3. **Phase 3:** Deployment testing (staging environment)
 4. **Phase 4:** Operations setup (monitoring, backups)
 
@@ -992,7 +1001,7 @@ The Holistix Forge local development environment is **remarkably production-read
 5. **Implement security hardening** (firewall, SSH, etc.)
 6. **Setup operations** (monitoring, backups, alerts)
 
-**Key Insight:** 85% of development work transfers to production. The architecture is solid, the foundation is there. The main task is creating and testing the production-specific scripts and procedures.
+**Key Insight:** 85% of development work transfers to production. With DNS simplification complete (Issue #30), the architecture is production-ready. The main task is creating and testing the production-specific scripts and procedures.
 
 ---
 
@@ -1007,6 +1016,6 @@ The Holistix Forge local development environment is **remarkably production-read
 ---
 
 **Document Status:** 📋 Planning/Reference Only  
-**Implementation Status:** Not started - waiting for Issue #30  
+**Implementation Status:** Not started - DNS architecture ready (Issue #30 ✅)  
 **Next Action:** Create GitHub issue to track implementation work  
 **Maintainer:** Core team
