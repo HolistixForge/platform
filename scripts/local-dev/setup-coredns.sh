@@ -71,17 +71,28 @@ if [ -d "$LOCAL_DEV_DIR" ]; then
     fi
 fi
 
-# Build forward zones for each domain
-FORWARD_ZONES=""
+# Build file plugin blocks for each domain
+FILE_BLOCKS=""
 for domain in $DOMAINS; do
-    FORWARD_ZONES="${FORWARD_ZONES}    forward ${domain} 127.0.0.1:5300\n"
+    # Check if zone file exists
+    if [ -f "/etc/coredns/zones/${domain}.zone" ]; then
+        FILE_BLOCKS="${FILE_BLOCKS}${domain}. {
+    file /etc/coredns/zones/${domain}.zone
+    log
+    errors
+}
+
+"
+    fi
 done
 
+sudo mkdir -p /etc/coredns/zones
+
 sudo tee /etc/coredns/Corefile > /dev/null <<EOF
-.:53 {
-    # Forward environment domains to PowerDNS
-${FORWARD_ZONES}
-    # Forward everything else to upstream DNS
+# Serve zone files for each environment domain
+${FILE_BLOCKS}
+# Forward everything else to upstream DNS
+. {
     forward . 8.8.8.8 8.8.4.4 {
         max_concurrent 1000
     }
@@ -132,7 +143,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 echo "📋 CoreDNS Information:"
 echo "   DNS Server: 0.0.0.0:53 (UDP/TCP) - External access"
-echo "   Forwards environment domains → PowerDNS (127.0.0.1:5300)"
+echo "   Serves zone files from /etc/coredns/zones/"
 echo "   Forwards other queries → 8.8.8.8, 8.8.4.4"
 echo ""
 echo "   Note: CoreDNS config is auto-updated when environments are created/deleted"

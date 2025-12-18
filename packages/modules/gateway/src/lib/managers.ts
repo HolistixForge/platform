@@ -148,23 +148,10 @@ export abstract class OAuthManager {
 }
 
 /**
- * Abstract DNSManager interface
- * Provides DNS management methods needed by other modules
- * Generic FQDN to IP mapping - no container awareness
+ * DNSManager removed - no longer needed with wildcard DNS
+ *
+ * With wildcard DNS (*.domain.local), all subdomains automatically resolve
+ * to the same IP address. No dynamic DNS registration is required.
+ *
+ * Nginx server_name matching provides the routing layer.
  */
-export abstract class DNSManager {
-  /**
-   * Register a DNS record (FQDN → IP)
-   * @param fqdn - Fully qualified domain name (e.g., "uc-xyz.org-abc.domain.local")
-   * @param ip - IP address to point to (e.g., "127.0.0.1" or public IP)
-   * @returns Promise that resolves when DNS record is registered
-   */
-  abstract registerRecord(fqdn: string, ip: string): Promise<void>;
-
-  /**
-   * Deregister a DNS record
-   * @param fqdn - Fully qualified domain name to remove
-   * @returns Promise that resolves when DNS record is deregistered
-   */
-  abstract deregisterRecord(fqdn: string): Promise<void>;
-}

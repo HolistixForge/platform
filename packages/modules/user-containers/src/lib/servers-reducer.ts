@@ -283,22 +283,8 @@ export class UserContainersReducer extends Reducer<
       container
     );
 
-    // Register DNS entry via DNSManager
-    try {
-      const orgId = this.depsExports.gateway.organization_id;
-      const fqdn = this.generateContainerFQDN(containerId, orgId);
-      // Stage 1 Nginx IP (configurable via DEV_CONTAINER_IP env var)
-      const stage1NginxIp = process.env.DEV_CONTAINER_IP || '127.0.0.1';
-
-      await this.depsExports.gateway.dnsManager.registerRecord(
-        fqdn,
-        stage1NginxIp
-      );
-    } catch (error: any) {
-      // Log error but don't fail container creation if DNS registration fails
-      // DNS can be registered later if needed
-      console.error('Failed to register DNS for container:', error);
-    }
+    // DNS registration no longer needed - wildcard DNS (*.domain.local) automatically
+    // resolves all subdomains including uc-{uuid}.org-{uuid}.domain.local
 
     // Create graph node
     const e: TEventNewNode = {
@@ -538,16 +524,7 @@ export class UserContainersReducer extends Reducer<
     // Delete OAuth clients
     await this.deleteOAuthClients(containerId);
 
-    // Deregister DNS entry via DNSManager
-    try {
-      const orgId = this.depsExports.gateway.organization_id;
-      const fqdn = this.generateContainerFQDN(containerId, orgId);
-
-      await this.depsExports.gateway.dnsManager.deregisterRecord(fqdn);
-    } catch (error: any) {
-      // Log error but continue with deletion
-      console.error('Failed to deregister DNS for container:', error);
-    }
+    // DNS deregistration no longer needed - wildcard DNS means no explicit records to remove
 
     // Remove from shared state
     this.depsExports.collab.collab.sharedData[

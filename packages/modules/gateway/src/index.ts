@@ -24,7 +24,7 @@ export type TGatewayExports = {
   tokenManager: TokenManager;
   permissionManager: PermissionManager;
   oauthManager: OAuthManager;
-  dnsManager: DNSManager;
+  // dnsManager removed - wildcard DNS handles all subdomains automatically
   permissionRegistry: PermissionRegistry;
   protectedServiceRegistry: ProtectedServiceRegistry;
 };
@@ -55,7 +55,7 @@ export {
   TokenManager,
   PermissionManager,
   OAuthManager,
-  DNSManager,
+  // DNSManager removed - wildcard DNS handles all subdomains
   type TOAuthClient,
   type TOAuthCode,
   type TOAuthToken,

@@ -73,6 +73,17 @@ else
   echo "   ℹ️  User ${APP_DB_USER} did not exist or already dropped"
 fi
 
+# Remove CoreDNS zone file
+echo "🌐 Removing CoreDNS zone file..."
+# Get domain from .env.ganymede before deleting directory
+if [ -f "${ENV_DIR}/.env.ganymede" ]; then
+    DOMAIN=$(grep "^DOMAIN=" "${ENV_DIR}/.env.ganymede" | cut -d= -f2 | tr -d '"' || echo "")
+    if [ -n "$DOMAIN" ] && [ -f "/etc/coredns/zones/${DOMAIN}.zone" ]; then
+        sudo rm -f "/etc/coredns/zones/${DOMAIN}.zone"
+        echo "   ✅ Zone file removed: /etc/coredns/zones/${DOMAIN}.zone"
+    fi
+fi
+
 # Remove directory
 echo "🗑️  Removing directory..."
 rm -rf "${ENV_DIR}"
@@ -86,7 +97,5 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo ""
 echo "✅ Environment '${ENV_NAME}' deleted"
-echo ""
-echo "ℹ️  DNS records are managed by PowerDNS. CoreDNS configuration has been updated."
 echo ""
 

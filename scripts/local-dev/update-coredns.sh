@@ -1,6 +1,6 @@
 #!/bin/bash
 # Update CoreDNS configuration based on all existing environments
-# This script scans all environments and updates CoreDNS to forward all domains to PowerDNS
+# This script scans all environments and updates CoreDNS to serve zone files
 
 set -e
 
@@ -42,18 +42,29 @@ fi
 # Generate CoreDNS configuration
 echo "   Found ${#domains[@]} domain(s): ${domains[*]}"
 
-# Build forward zones for each domain
-FORWARD_ZONES=""
+# Build file plugin blocks for each domain
+FILE_BLOCKS=""
 for domain in "${domains[@]}"; do
-    FORWARD_ZONES="${FORWARD_ZONES}    forward ${domain} 127.0.0.1:5300\n"
+    # Check if zone file exists
+    if [ -f "/etc/coredns/zones/${domain}.zone" ]; then
+        FILE_BLOCKS="${FILE_BLOCKS}${domain}. {
+    file /etc/coredns/zones/${domain}.zone
+    log
+    errors
+}
+
+"
+    else
+        echo "   ⚠️  Zone file not found for ${domain}, skipping"
+    fi
 done
 
 sudo mkdir -p /etc/coredns
 sudo tee /etc/coredns/Corefile > /dev/null <<EOF
-.:53 {
-    # Forward environment domains to PowerDNS
-${FORWARD_ZONES}
-    # Forward everything else to upstream DNS
+# Serve zone files for each environment domain
+${FILE_BLOCKS}
+# Forward everything else to upstream DNS
+. {
     forward . 8.8.8.8 8.8.4.4 {
         max_concurrent 1000
     }

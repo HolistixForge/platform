@@ -16,7 +16,6 @@ import type {
   OAuthManager,
   TokenManager,
 } from '@holistix-forge/gateway';
-import { DNSManagerImpl } from '../dns/DNSManager';
 import { createGanymedeClient } from '../lib/ganymede-client';
 
 /**
@@ -116,7 +115,7 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
       tokenManager: gatewayConfig.tokenManager,
       permissionManager: gatewayConfig.permissionManager,
       oauthManager: gatewayConfig.oauthManager,
-      dnsManager: new DNSManagerImpl(toGanymede),
+      // dnsManager removed - wildcard DNS (*.domain.local) handles all subdomains automatically
       permissionRegistry: gatewayConfig.permissionRegistry,
       protectedServiceRegistry: gatewayConfig.protectedServiceRegistry,
     };

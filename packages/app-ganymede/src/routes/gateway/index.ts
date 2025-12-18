@@ -10,7 +10,6 @@ import { pg } from '../../database/pg';
 import { generateJwtToken } from '@holistix-forge/backend-engine';
 import { asyncHandler, AuthRequest } from '../../middleware/route-handler';
 import { setupGatewayDataRoutes } from './data';
-import { setupGatewayDNSRoutes } from './dns';
 import { nginxManager } from '../../services/nginx-manager';
 import { EPriority, log } from '@holistix-forge/log';
 import {
@@ -27,8 +26,7 @@ export const setupGatewayRoutes = (
   // Individual endpoints use JWT authentication for access control
   // Mount data push/pull endpoints
   setupGatewayDataRoutes(router);
-  // Mount generic DNS management endpoints
-  setupGatewayDNSRoutes(router);
+  // DNS management endpoints removed - wildcard DNS (*.domain.local) handles all subdomains automatically
   // POST /gateway/start - Start gateway for organization
   router.post(
     '/gateway/start',
