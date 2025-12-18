@@ -43,7 +43,6 @@
 │  │                            │  • User authentication        │             │ │
 │  │                            │  • Organizations/Projects     │             │ │
 │  │                            │  • Gateway allocation         │             │ │
-│  │                            │  • PowerDNS updates           │             │ │
 │  │                            │  • Nginx config management    │             │ │
 │  │                            │  • Org data storage           │             │ │
 │  │                            │  ┌──────────────────┐         │             │ │
@@ -53,17 +52,16 @@
 │  │                            └───────────┼───────────────────┘             │ │
 │  │                                        │                                  │ │
 │  │  ┌─────────────────────┐   ┌──────────▼──────────────────┐              │ │
-│  │  │  PowerDNS :53       │   │  PostgreSQL :5432            │              │ │
-│  │  │  API :8081          │   │                              │              │ │
-│  │  │                     │   │  Databases:                  │              │ │
-│  │  │  - DNS server       │   │  • ganymede_dev_001          │              │ │
-│  │  │  - REST API         │   │    - users, passwords        │              │ │
-│  │  │  - Dynamic records  │   │    - organizations           │              │ │
+│  │  │  CoreDNS :53        │   │  PostgreSQL :5432            │              │ │
+│  │  │                     │   │                              │              │ │
+│  │  │  - DNS server       │   │  Databases:                  │              │ │
+│  │  │  - Zone files       │   │  • ganymede_dev_001          │              │ │
+│  │  │  - Wildcard DNS     │   │    - users, passwords        │              │ │
+│  │  │                     │   │    - organizations           │              │ │
 │  │  │                     │   │    - projects                │              │ │
-│  │  │  Database: pdns ────┼───┼─▶│    - gateways              │              │ │
-│  │  │  (PostgreSQL)       │   │    - sessions, oauth_*       │              │ │
-│  │  └─────────────────────┘   │  • pdns (PowerDNS schema)   │              │ │
-│  │                             └─────────────────────────────┘              │ │
+│  │  │                     │   │    - gateways                │              │ │
+│  │  │                     │   │    - sessions, oauth_*       │              │ │
+│  │  └─────────────────────┘   └─────────────────────────────┘              │ │
 │  │                                                                           │ │
 │  │  Volumes:                                                                │ │
 │  │  • /var/run/docker.sock (host Docker socket)                            │ │
@@ -148,16 +146,14 @@ Access URLs (from host OS browser via DNS delegation):
 - **Ganymede API** - Central orchestrator
   - User/org/project management
   - Gateway allocation from pool
-  - PowerDNS updates (DNS records)
   - Nginx config management (dynamic server blocks)
   - Centralized data storage for organizations
-- **PowerDNS** - Dynamic DNS server
-  - Installed via apt, uses PostgreSQL backend
-  - REST API on port 8081
-  - Manages all domain records programmatically
-- **PostgreSQL** - Two databases
+- **CoreDNS** - DNS server with static zone files
+  - Wildcard DNS (`*.domain.local`) for all subdomains
+  - No database required
+  - Simple zone file configuration
+- **PostgreSQL** - Application database
   - `ganymede_{env}` - Application data
-  - `pdns` - PowerDNS records
 - **Docker Client** - Manages gateway containers via mounted socket
 
 ### Layer 3: Gateway Pool (Containers)

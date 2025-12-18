@@ -106,7 +106,7 @@ npx nx run-many -t build
 ```
 feat(user-containers): add DNS-based stable URLs
 
-- Implement PowerDNS integration
+- Use wildcard DNS for container resolution
 - Generate unique slugs for containers
 - Update nginx configuration for server blocks
 
@@ -219,6 +219,7 @@ When contributing, ensure that:
 - You comply with the copyleft requirements of AGPL-3.0
 
 The AGPL-3.0 license requires that:
+
 - All derivative works must be licensed under AGPL-3.0
 - Source code must be made available when distributing the software
 - If you run a modified version as a service over a network, you must make the source code available to users

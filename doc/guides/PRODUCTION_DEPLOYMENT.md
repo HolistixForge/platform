@@ -8,7 +8,10 @@
 >
 > **🚧 IMPORTANT NOTES:**
 >
-> 1. **DNS Architecture Changing:** See [GitHub Issue #30](https://github.com/HolistixForge/platform/issues/30) - PowerDNS will be replaced with CoreDNS file plugin
+> 1. **DNS Architecture Simplified:** See [GitHub Issue #30](https://github.com/Hol
+
+istixForge/platform/issues/30) - PowerDNS has been replaced with CoreDNS file plugin ✅ COMPLETED
+
 > 2. **Not Production Ready:** Scripts and procedures need to be created and tested
 > 3. **Architecture May Evolve:** Recommendations here based on current dev setup, may change
 > 4. **Use for Planning:** Use this as a reference when implementing production deployment
@@ -62,7 +65,7 @@ This document provides comprehensive analysis and planning for Holistix Forge pr
 **Main Differences:**
 
 1. ❌ No dev container - Install directly on Ubuntu VPS
-2. ⚠️ DNS: PowerDNS on port 53 (but changing to CoreDNS file plugin per [#30](https://github.com/HolistixForge/platform/issues/30))
+2. ✅ DNS: CoreDNS with static zone files on port 53 (simplified per [#30](https://github.com/HolistixForge/platform/issues/30))
 3. ✏️ SSL: Let's Encrypt with DNS-01 challenge (instead of mkcert)
 4. ➕ systemd services for process management
 5. ➕ Security hardening (firewall, SSH, passwords)
@@ -87,30 +90,28 @@ This document provides comprehensive analysis and planning for Holistix Forge pr
 
 ---
 
-### Decision 2: DNS Architecture ⚠️ CHANGING
+### Decision 2: DNS Architecture ✅ SIMPLIFIED
 
-> **⚠️ CRITICAL NOTE:** This decision will change when [Issue #30](https://github.com/HolistixForge/platform/issues/30) is implemented.
->
-> **Current Plan (in this doc):** PowerDNS on port 53  
-> **Future Plan (Issue #30):** CoreDNS file plugin with wildcard DNS  
-> **Result:** Production will be **even simpler** (no database, no dynamic DNS operations)
+> **✅ COMPLETED:** [Issue #30](https://github.com/HolistixForge/platform/issues/30) has been implemented.
 
-**Current Recommendation:** PowerDNS on port 53 directly
+**Recommendation:** CoreDNS with file plugin and wildcard DNS
 
-**Current Reasoning:**
+**Reasoning:**
 
-- Production has domain delegation (simpler than dev)
-- CoreDNS only needed for local dev forwarding
-- Single DNS server instead of two
-
-**Future Recommendation (after #30):**
-
-- Use CoreDNS with file plugin
 - Static zone files with wildcard DNS (`*.domain`)
-- No PowerDNS, no database, no dynamic operations
-- Even simpler architecture
+- No database required for DNS
+- No dynamic DNS operations needed
+- Simpler architecture and easier to maintain
+- Production has domain delegation (simpler than dev)
 
-**Impact:** Wait for Issue #30 before implementing DNS setup
+**Implementation:**
+
+- Use CoreDNS with `file` plugin
+- Create static zone file with wildcard record
+- All subdomains resolve via wildcard (`*.yourdomain.com`)
+- No PowerDNS, no PostgreSQL for DNS
+
+**Impact:** Much simpler DNS setup than originally planned
 
 ---
 
@@ -169,36 +170,37 @@ This document provides comprehensive analysis and planning for Holistix Forge pr
 
 ### Quick Reference Table
 
-| Component            | Development            | Production       | Changes Required                       |
-| -------------------- | ---------------------- | ---------------- | -------------------------------------- |
-| **Host Environment** | Dev Container (Ubuntu) | Ubuntu VPS       | ❌ Remove container layer              |
-| **PostgreSQL**       | `apt install`          | `apt install`    | ✅ Same install<br>✏️ Harden config    |
-| **Nginx**            | `apt install`          | `apt install`    | ✅ Same install<br>➕ Security headers |
-| **DNS**              | CoreDNS + PowerDNS     | ⚠️ TBD (see #30) | ⚠️ Wait for Issue #30                  |
-| **SSL**              | mkcert                 | Let's Encrypt    | ✏️ Change SSL automation               |
-| **Services**         | Manual start           | systemd          | ➕ Create service files                |
-| **Node.js**          | NodeSource 24.x        | NodeSource 24.x  | ✅ Same                                |
-| **Docker**           | Docker Desktop         | Docker Engine    | ✅ Same (for gateways)                 |
-| **Monitoring**       | Optional               | Required         | ✅ Same stack + alerts                 |
+| Component            | Development            | Production      | Changes Required                       |
+| -------------------- | ---------------------- | --------------- | -------------------------------------- |
+| **Host Environment** | Dev Container (Ubuntu) | Ubuntu VPS      | ❌ Remove container layer              |
+| **PostgreSQL**       | `apt install`          | `apt install`   | ✅ Same install<br>✏️ Harden config    |
+| **Nginx**            | `apt install`          | `apt install`   | ✅ Same install<br>➕ Security headers |
+| **DNS**              | CoreDNS (zone files)   | CoreDNS (same)  | ✅ Same setup, just update zone domain |
+| **SSL**              | mkcert                 | Let's Encrypt   | ✏️ Change SSL automation               |
+| **Services**         | Manual start           | systemd         | ➕ Create service files                |
+| **Node.js**          | NodeSource 24.x        | NodeSource 24.x | ✅ Same                                |
+| **Docker**           | Docker Desktop         | Docker Engine   | ✅ Same (for gateways)                 |
+| **Monitoring**       | Optional               | Required        | ✅ Same stack + alerts                 |
 
 ### DNS Architecture Comparison
 
-> **⚠️ NOTE:** This comparison assumes current architecture. See [Issue #30](https://github.com/HolistixForge/platform/issues/30) for planned changes.
+> **✅ NOTE:** Architecture simplified per [Issue #30](https://github.com/HolistixForge/platform/issues/30).
 
-| Aspect          | Development                   | Production (Current)    | Production (Future #30) |
-| --------------- | ----------------------------- | ----------------------- | ----------------------- |
-| **Tiers**       | Two-tier                      | Single-tier             | Single-tier             |
-| **DNS Servers** | CoreDNS + PowerDNS            | PowerDNS only           | CoreDNS only            |
-| **Port**        | 53 (CoreDNS), 5300 (PowerDNS) | 53 (PowerDNS)           | 53 (CoreDNS)            |
-| **Database**    | PostgreSQL for PowerDNS       | PostgreSQL for PowerDNS | None!                   |
-| **Dynamic DNS** | Yes (via API)                 | Yes (via API)           | No (wildcard)           |
-| **Complexity**  | Medium                        | Low                     | Very Low                |
+| Aspect          | Development          | Production           |
+| --------------- | -------------------- | -------------------- |
+| **Tiers**       | Single-tier          | Single-tier          |
+| **DNS Servers** | CoreDNS (zone files) | CoreDNS (zone files) |
+| **Port**        | 53 (CoreDNS)         | 53 (CoreDNS)         |
+| **Database**    | None for DNS         | None for DNS         |
+| **Dynamic DNS** | No (wildcard)        | No (wildcard)        |
+| **Complexity**  | Very Low             | Very Low             |
 
-**Why Different?**
+**Why Same?**
 
-- **Dev:** Need both local (`*.domain.local`) and external DNS forwarding
-- **Prod (current):** Domain delegation handles routing, no forwarding needed
-- **Prod (future):** Wildcard DNS eliminates need for dynamic records!
+- Both use CoreDNS with static zone files
+- Both use wildcard DNS (`*.domain`)
+- No database or dynamic operations needed
+- Production just uses real domain instead of `.local`
 
 ### SSL/TLS Comparison
 
@@ -271,7 +273,7 @@ This document provides comprehensive analysis and planning for Holistix Forge pr
 
 **Tasks:**
 
-- [ ] Wait for [Issue #30](https://github.com/HolistixForge/platform/issues/30) DNS architecture decision
+- [x] ✅ DNS architecture simplified ([Issue #30](https://github.com/HolistixForge/platform/issues/30) completed)
 - [ ] Create `scripts/production/setup-production.sh`
 - [ ] Create systemd service files
 - [ ] Adapt `create-env.sh` for production
@@ -351,7 +353,7 @@ This document provides comprehensive analysis and planning for Holistix Forge pr
 
 - Main dev container (Ubuntu 24.04)
 - PostgreSQL database
-- PowerDNS (port 5300) + CoreDNS (port 53)
+- CoreDNS (port 53) with static zone files
 - Nginx for SSL and routing
 - Ganymede API (Express.js)
 - Gateway pool (Docker containers)
@@ -378,8 +380,7 @@ This document provides comprehensive analysis and planning for Holistix Forge pr
 | Component        | Reusability | Notes                         |
 | ---------------- | ----------- | ----------------------------- |
 | PostgreSQL setup | 85%         | Add hardening steps           |
-| DNS (PowerDNS)   | ⚠️ TBD      | Wait for Issue #30            |
-| DNS (CoreDNS)    | ⚠️ TBD      | May keep with file plugin     |
+| DNS (CoreDNS)    | 95%         | Just update zone domain       |
 | Nginx config     | 85%         | Change SSL paths, add headers |
 | Ganymede app     | 95%         | No code changes               |
 | Gateway pool     | 100%        | Works as-is                   |

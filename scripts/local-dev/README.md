@@ -136,9 +136,6 @@ This will restart:
 # PostgreSQL
 sudo service postgresql restart
 
-# CoreDNS
-sudo killall pdns_server && sudo pdns_server --daemon=yes --guardian=yes --config-dir=/etc/powerdns
-
 # Nginx
 sudo service nginx restart
 

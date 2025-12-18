@@ -241,8 +241,6 @@ if [ $? -eq 0 ]; then
     fi
     TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
     
-    # PowerDNS removed - now using CoreDNS with zone files
-    # (no database check needed)
 fi
 
 # Nginx
@@ -252,19 +250,6 @@ check_port 443 "Port 443 (HTTPS)"
 # CoreDNS
 check_service "coredns" "pgrep -x coredns >/dev/null" "CoreDNS"
 check_port 53 "Port 53 (DNS)"
-
-# PowerDNS
-check_service "powerdns" "pgrep -x pdns_server >/dev/null" "PowerDNS"
-check_port 5300 "Port 5300 (PowerDNS)"
-echo -n "  PowerDNS API... "
-if curl -s -f "http://localhost:8081/api/v1/servers" -H "X-API-Key: local-dev-api-key" >/dev/null 2>&1; then
-    echo -e "${GREEN}✅ Responding${NC}"
-    PASSED_CHECKS=$((PASSED_CHECKS + 1))
-else
-    echo -e "${RED}❌ Not responding${NC}"
-    FAILED_CHECKS=$((FAILED_CHECKS + 1))
-fi
-TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
 
 # Build Server (for gateway builds)
 echo -n "  Build Server (port 8090)... "
@@ -331,42 +316,33 @@ else
 fi
 TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
 
-# Check PowerDNS zones for each environment
+# Check CoreDNS zone files for each environment
 if [ ${#VALID_ENVIRONMENTS[@]} -gt 0 ]; then
     for env_name in "${VALID_ENVIRONMENTS[@]}"; do
         env_dir="${LOCAL_DEV_DIR}/${env_name}"
         if [ -f "${env_dir}/.env.ganymede" ]; then
             domain=$(grep "^DOMAIN=" "${env_dir}/.env.ganymede" | cut -d= -f2 | tr -d '"' || echo "")
             if [ -n "$domain" ] && [ "$domain" != "unknown" ]; then
-                echo -n "  PowerDNS zone '${domain}'... "
-                ZONE_RESPONSE=$(curl -s "http://localhost:8081/api/v1/servers/localhost/zones/${domain}." \
-                    -H "X-API-Key: local-dev-api-key" 2>/dev/null || echo "")
-                if echo "$ZONE_RESPONSE" | grep -q "\"name\"" 2>/dev/null; then
+                zone_file="/etc/coredns/zones/${domain}.zone"
+                echo -n "  CoreDNS zone file '${domain}'... "
+                if [ -f "$zone_file" ]; then
                     echo -e "${GREEN}✅ Exists${NC}"
                     PASSED_CHECKS=$((PASSED_CHECKS + 1))
                     
-                    # Try to extract ganymede record from zone
-                    ganymede_fqdn="ganymede.${domain}"
-                    ZONE_DATA="$ZONE_RESPONSE"
-                    POWERDNS_IP=$(echo "$ZONE_DATA" | python3 -c "import sys, json; data=json.load(sys.stdin); \
-                        records=[r for r in data.get('rrsets', []) if 'ganymede' in r.get('name', '').lower()]; \
-                        print(records[0]['records'][0]['content'] if records and records[0].get('records') else '')" 2>/dev/null || echo "")
-                    if [ -z "$POWERDNS_IP" ]; then
-                        # Fallback: try sed extraction
-                        POWERDNS_IP=$(echo "$ZONE_DATA" | sed -n "s/.*\"name\":\"ganymede\.${domain}\.\".*\"content\":\"\([^\"]*\)\".*/\1/p" | head -1)
-                    fi
-                    if [ -n "$POWERDNS_IP" ]; then
-                        echo -n "    ${ganymede_fqdn} record... "
-                        echo -e "${GREEN}✅ ${POWERDNS_IP}${NC}"
+                    # Check for wildcard record
+                    echo -n "    Wildcard (*) record... "
+                    if grep -q "^\*.*IN.*A" "$zone_file"; then
+                        wildcard_ip=$(grep "^\*.*IN.*A" "$zone_file" | awk '{print $NF}')
+                        echo -e "${GREEN}✅ ${wildcard_ip}${NC}"
                         PASSED_CHECKS=$((PASSED_CHECKS + 1))
                     else
-                        echo -n "    ${ganymede_fqdn} record... "
-                        echo -e "${YELLOW}⚠️  Not found in zone${NC}"
+                        echo -e "${YELLOW}⚠️  Not found${NC}"
                         WARNING_CHECKS=$((WARNING_CHECKS + 1))
                     fi
                     TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
                 else
                     echo -e "${RED}❌ Not found${NC}"
+                    echo "        Run: ./create-env.sh ${env_name}"
                     FAILED_CHECKS=$((FAILED_CHECKS + 1))
                 fi
                 TOTAL_CHECKS=$((TOTAL_CHECKS + 1))

@@ -137,7 +137,7 @@ But Holistix Forge goes beyond simple integration—it enables true modular UI a
 
 **Automated Infrastructure Management**
 
-Gone are the days of manual DNS configuration, nginx setup, and container orchestration. Holistix Forge automates infrastructure management through dynamic DNS (PowerDNS), automatic reverse proxy configuration, and intelligent gateway allocation. Gateways are allocated on-demand from a pool, automatically deallocated when idle, and seamlessly handle multiple projects within an organization. SSL certificates, VPN configurations, and routing—all managed automatically.
+Gone are the days of manual DNS configuration, nginx setup, and container orchestration. Holistix Forge automates infrastructure management through simple DNS (CoreDNS with wildcard records), automatic reverse proxy configuration, and intelligent gateway allocation. Gateways are allocated on-demand from a pool, automatically deallocated when idle, and seamlessly handle multiple projects within an organization. SSL certificates, VPN configurations, and routing—all managed automatically.
 
 **Exponentializing AI Potential: Give AI the Full Picture**
 
@@ -334,7 +334,7 @@ Holistix Forge is the backbone that connects everything—SaaS applications, con
 - **Frontend**: React, TypeScript, React Flow for the whiteboard interface
 - **Backend**: Node.js, Express, YJS for real-time collaboration
 - **Database**: PostgreSQL for reliable data persistence
-- **Infrastructure**: Docker, Nginx, OpenVPN, PowerDNS for container orchestration
+- **Infrastructure**: Docker, Nginx, OpenVPN, CoreDNS for container orchestration
 - **Architecture**: Modular, event-driven, scalable design
 
 **Key Technical Features:**

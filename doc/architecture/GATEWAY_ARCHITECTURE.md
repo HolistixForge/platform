@@ -80,7 +80,7 @@ All domains resolved via CoreDNS with wildcard DNS (no dynamic registration need
 
 ---
 
-## DNS Architecture (Simplified)
+## DNS Architecture
 
 ### Wildcard DNS Approach
 
@@ -411,13 +411,6 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
 
 ### Services (Ganymede)
 
-**powerdns-client.ts:**
-
-- `registerGateway(org_id)` - Add DNS: `org-{uuid}.domain.local` → 127.0.0.1
-- `deregisterGateway(org_id)` - Remove DNS records
-- `registerRecord(fqdn, ip)` - Generic: Register any FQDN → IP mapping (container-agnostic)
-- `deregisterRecord(fqdn)` - Generic: Remove any DNS record (container-agnostic)
-
 **nginx-manager.ts:**
 
 - `createGatewayConfig(org_id, http_port)` - Create `/etc/nginx/.../org-{uuid}.conf`
@@ -489,14 +482,14 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
 
 ## Development vs Production
 
-| Aspect         | Development        | Production              |
-| -------------- | ------------------ | ----------------------- |
-| **Domain**     | `domain.local`     | `your-domain.com`       |
-| **SSL**        | mkcert wildcard    | Let's Encrypt wildcard  |
-| **DNS**        | PowerDNS (local)   | PowerDNS (same)         |
-| **Containers** | Docker (same host) | Docker (same/multi-VPS) |
-| **Scripts**    | `setup-all.sh`     | **Same scripts!**       |
-| **Workflow**   | Hot-reload enabled | Hot-reload enabled      |
+| Aspect         | Development          | Production              |
+| -------------- | -------------------- | ----------------------- |
+| **Domain**     | `domain.local`       | `your-domain.com`       |
+| **SSL**        | mkcert wildcard      | Let's Encrypt wildcard  |
+| **DNS**        | CoreDNS (zone files) | CoreDNS (zone files)    |
+| **Containers** | Docker (same host)   | Docker (same/multi-VPS) |
+| **Scripts**    | `setup-all.sh`       | **Same scripts!**       |
+| **Workflow**   | Hot-reload enabled   | Hot-reload enabled      |
 
 **Production deployment:**
 
@@ -602,12 +595,12 @@ PGPASSWORD=devpassword psql -U postgres -d ganymede_dev_001 -c "
 ### View DNS Records
 
 ```bash
-# All records
-curl http://localhost:8081/api/v1/servers/localhost/zones/domain.local. \
-  -H 'X-API-Key: local-dev-api-key' | jq '.rrsets[] | select(.type == "A")'
+# View zone file
+cat /etc/coredns/zones/domain.local.zone
 
 # Test resolution
 dig @localhost org-550e8400-e29b-41d4-a716-446655440000.domain.local
+dig @localhost ganymede.domain.local
 ```
 
 ### View Nginx Configs
@@ -659,7 +652,7 @@ ENV_NAME=dev-001 DOMAIN=domain.local \
 
 **Scripts:**
 
-- `scripts/local-dev/setup-powerdns.sh`
+- `scripts/local-dev/setup-coredns.sh`
 - `scripts/local-dev/build-images.sh`
 - `scripts/local-dev/gateway-pool.sh`
 - `scripts/local-dev/create-env.sh`
@@ -667,7 +660,6 @@ ENV_NAME=dev-001 DOMAIN=domain.local \
 
 **Ganymede Services:**
 
-- `packages/app-ganymede/src/services/powerdns-client.ts` - Generic DNS operations
 - `packages/app-ganymede/src/services/nginx-manager.ts`
 - `packages/app-ganymede/src/lib/url-helpers.ts`
 
@@ -675,7 +667,6 @@ ENV_NAME=dev-001 DOMAIN=domain.local \
 
 - `packages/app-ganymede/src/routes/gateway/index.ts`
 - `packages/app-ganymede/src/routes/gateway/data.ts`
-- `packages/app-ganymede/src/routes/gateway/dns.ts` - Generic DNS management endpoints
 
 **Gateway Services:**
 
