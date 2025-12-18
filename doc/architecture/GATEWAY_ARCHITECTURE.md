@@ -38,14 +38,16 @@ See: [../architecture/SYSTEM_ARCHITECTURE.md](../architecture/SYSTEM_ARCHITECTUR
 
 ## Domain Structure
 
-All domains managed by PowerDNS with single DNS delegation on host OS:
+All domains resolved via CoreDNS with wildcard DNS (no dynamic registration needed):
 
 - **Frontend:** `domain.local` (or custom: `whatever.mycompany.local`)
 - **Ganymede API:** `ganymede.domain.local`
-- **Gateways:** `org-{organization-uuid}.domain.local` (dynamic)
-- **User Containers:** `uc-{container-uuid}.org-{org-uuid}.domain.local` (dynamic)
+- **Gateways:** `org-{organization-uuid}.domain.local` (wildcard match)
+- **User Containers:** `uc-{container-uuid}.org-{org-uuid}.domain.local` (wildcard match)
 
-**SSL:** Single wildcard certificate (`*.domain.local`) handles all subdomains.
+**DNS:** Wildcard record (`*.domain.local → 127.0.0.1`) automatically resolves all subdomains.  
+**SSL:** Single wildcard certificate (`*.domain.local`) handles all subdomains.  
+**Routing:** Nginx `server_name` matching provides the routing layer.
 
 ---
 
@@ -78,28 +80,51 @@ All domains managed by PowerDNS with single DNS delegation on host OS:
 
 ---
 
-## DNS Management Architecture
+## DNS Architecture (Simplified)
 
-### Container-Agnostic Design
+### Wildcard DNS Approach
 
-handle generic FQDN → IP mapping, not container concepts.
+**No dynamic DNS management needed!** With wildcard DNS (`*.domain.local → 127.0.0.1`), all subdomains automatically resolve.
 
-**DNSManager Abstraction:**
+**DNS Setup:**
 
-- **Location:** `packages/app-gateway/src/dns/DNSManager.ts`
-- **Interface:** `packages/modules/gateway/src/lib/managers.ts` (abstract `DNSManager` class)
-- **Exposed via:** Gateway module exports (`TGatewayExports.dnsManager`)
+- **CoreDNS** serves zone files from `/etc/coredns/zones/`
+- Each environment has a zone file: `/etc/coredns/zones/{domain}.zone`
+- Zone file contains wildcard record: `* IN A 127.0.0.1`
 
-**Methods:**
+**Example zone file:**
 
-- `registerRecord(fqdn: string, ip: string): Promise<void>` - Generic DNS registration
-- `deregisterRecord(fqdn: string): Promise<void>` - Generic DNS deregistration
+```dns
+$ORIGIN domain.local.
+$TTL 60
 
-**Implementation:**
+@           IN  A    127.0.0.1   ; Apex domain
+ganymede    IN  A    127.0.0.1   ; Ganymede API
+*           IN  A    127.0.0.1   ; Wildcard - ALL subdomains
+```
 
-- DNSManager calls Ganymede API: `POST /gateway/dns/register` or `DELETE /gateway/dns/deregister`
-- Ganymede calls PowerDNS: `registerRecord(fqdn, ip)` or `deregisterRecord(fqdn)`
-- PowerDNS methods are generic (no container awareness)
+**What this means:**
+
+- `domain.local` → `127.0.0.1`
+- `ganymede.domain.local` → `127.0.0.1`
+- `org-abc123.domain.local` → `127.0.0.1` (wildcard match)
+- `uc-xyz.org-abc123.domain.local` → `127.0.0.1` (wildcard match)
+
+**Routing Layer:**
+
+- DNS resolves all subdomains to same IP
+- **Nginx `server_name` matching** provides the routing layer
+- Only valid patterns (`org-{uuid}`, `uc-{uuid}`) are routed
+- Invalid subdomains get 404 from Nginx
+
+**Benefits:**
+
+- ✅ No database for DNS
+- ✅ No API for DNS management
+- ✅ No dynamic registration/deregistration
+- ✅ Simpler, faster, more maintainable
+
+**See:** [DNS Complete Guide](../guides/DNS_COMPLETE_GUIDE.md) for detailed DNS architecture.
 
 ---
 
@@ -122,7 +147,7 @@ GATEWAY_POOL_SIZE=3 ./create-env.sh dev-001 domain.local
 ```
 Frontend → POST /gateway/start → Ganymede:
   1. Query PostgreSQL for available gateway (ready=true)
-  2. Register DNS: org-{uuid}.domain.local → 127.0.0.1
+  2. DNS already resolved (wildcard DNS handles org-{uuid}.domain.local)
   3. Create Nginx config: route org-{uuid} to gateway HTTP port
   4. Reload Nginx
   5. Call gateway handshake: POST /collab/start
@@ -316,7 +341,6 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
 - **OAuthManager** - Manages OAuth clients, authorization codes, and tokens for container applications, implements OAuth2Server model interface
 - **TokenManager** - Generates JWT tokens (`generateJWTToken()`), used for container authentication tokens
 - **ProjectRoomsManager** - Manages multiple YJS rooms (one per project), handles per-project persistence and WebSocket routing
-- **DNSManager** - Generic DNS record management (FQDN → IP mapping), container-agnostic abstraction over Ganymede API
 
 ### Centralized Storage (Stateless Gateways)
 
@@ -426,7 +450,6 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
 - `OAuthManager` - OAuth data with `IPersistenceProvider`
 - `TokenManager` - Token management (JWT tokens) for container authentication
 - `ProjectRoomsManager` - YJS rooms with `IPersistenceProvider`
-- `DNSManager` - Generic DNS record management (FQDN → IP mapping) - no container awareness
 - `PermissionRegistry` - Registry of permission definitions registered by modules (used by `/permissions` routes)
 - `ProtectedServiceRegistry` - Registry of generic "protected services" registered by modules (used by `/svc/*` routes)
 
@@ -446,8 +469,6 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
 - `POST /gateway/stop` (TJwtOrganization) - Deallocate, cleanup DNS/Nginx
 - `POST /gateway/data/push` (TJwtOrganization) - Save org data snapshot
 - `POST /gateway/data/pull` (TJwtOrganization) - Load org data snapshot
-- `POST /gateway/dns/register` (TJwtOrganization) - Generic DNS registration (FQDN → IP)
-- `DELETE /gateway/dns/deregister` (TJwtOrganization) - Generic DNS deregistration
 
 **Gateway:**
 
@@ -658,8 +679,7 @@ ENV_NAME=dev-001 DOMAIN=domain.local \
 
 **Gateway Services:**
 
-- `packages/app-gateway/src/dns/DNSManager.ts` - DNSManager implementation (calls Ganymede API)
-- `packages/app-gateway/src/module/module.ts` - Gateway module (exposes DNSManager)
+- `packages/app-gateway/src/module/module.ts` - Gateway module
 
 **Database:**
 

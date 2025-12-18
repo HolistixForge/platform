@@ -9,9 +9,9 @@ This guide sets up a **complete local development environment** inside your deve
 - ✅ Multiple isolated environments (e.g., `dev-001`, `dev-002` for different branches)
 - ✅ **Multi-gateway pool architecture** - Multiple containerized gateways, dynamically allocated
 - ✅ Real HTTPS with trusted certificates (wildcard `*.domain.local`)
-- ✅ **PowerDNS** - Dynamic DNS management via REST API
-- ✅ Real domain names with automatic DNS delegation
-- ✅ Full stack: PostgreSQL, Nginx, Ganymede, Gateway Pool, PowerDNS
+- ✅ **CoreDNS with zone files** - Simple wildcard DNS (no database, no API needed)
+- ✅ Real domain names with automatic wildcard DNS resolution
+- ✅ Full stack: PostgreSQL, Nginx, Ganymede, Gateway Pool, CoreDNS
 - ✅ User containers running in Docker (like production)
 - ✅ Everything scriptable and reproducible
 - ✅ Hot-reload support for rapid iteration
@@ -50,10 +50,10 @@ docker exec -it holistix-dev /bin/bash
 **Ports and mounts explained:**
 
 - `-p 80:80 -p 443:443` - HTTP/HTTPS for Nginx (Stage 1)
-- `-p 53:53/udp -p 53:53/tcp` - CoreDNS (DNS forwarder, handles local + external DNS)
+- `-p 53:53/udp -p 53:53/tcp` - CoreDNS (DNS server, serves zone files + forwards external queries)
 - `-v /var/run/docker.sock:/var/run/docker.sock` - Docker socket (manage gateway containers)
 
-**Note:** PowerDNS runs on port 5300 internally (not exposed). CoreDNS forwards queries to PowerDNS via `127.0.0.1:5300` within the container.
+**Note:** CoreDNS serves zone files from `/etc/coredns/zones/` for local domains and forwards all other queries to upstream DNS (8.8.8.8).
 
 **Note:** Gateway containers handle their own port mappings (7100-7199 for HTTP, 49100-49199/udp for OpenVPN) via `gateway-pool.sh`. The main container accesses gateway services via the Docker host's localhost (e.g., `127.0.0.1:7100`), so it doesn't need to expose these ports.
 
@@ -77,7 +77,7 @@ git clone https://github.com/HolistixForge/platform.git
 **In development container:**
 
 ```bash
-# One-time setup (installs PowerDNS, builds Docker images, etc.)
+# One-time setup (installs CoreDNS, builds Docker images, etc.)
 cd /root/workspace/monorepo
 ./scripts/local-dev/setup-all.sh
 
@@ -92,7 +92,7 @@ cd /root/workspace/monorepo
 
 **On host OS (ONE-TIME DNS Setup):**
 
-The development environment uses **CoreDNS** as a DNS forwarder and **PowerDNS** as an authoritative DNS server.
+The development environment uses **CoreDNS** with zone files and wildcard DNS (no PowerDNS needed).
 
 **Complete DNS setup instructions:** See [DNS Architecture and Setup Guide](DNS_COMPLETE_GUIDE.md#host-os-configuration)
 
