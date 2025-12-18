@@ -26,7 +26,6 @@ export const setupGatewayRoutes = (
   // Individual endpoints use JWT authentication for access control
   // Mount data push/pull endpoints
   setupGatewayDataRoutes(router);
-  // DNS management endpoints removed - wildcard DNS (*.domain.local) handles all subdomains automatically
   // POST /gateway/start - Start gateway for organization
   router.post(
     '/gateway/start',
@@ -96,16 +95,13 @@ export const setupGatewayRoutes = (
           `Allocated ${container_name} (port ${http_port}) to org ${organization_id}`
         );
 
-        // 2. DNS registration no longer needed - wildcard DNS (*.domain.local) handles all subdomains
-        // The FQDN org-{uuid}.domain.local automatically resolves via the wildcard
-
-        // 3. Create Nginx config (routes org traffic to gateway HTTP port)
+        // 2. Create Nginx config (routes org traffic to gateway HTTP port)
         await nginxManager.createGatewayConfig(organization_id, http_port);
 
-        // 4. Reload Nginx
+        // 3. Reload Nginx
         await nginxManager.reloadNginx();
 
-        // 5. Construct gateway hostname and URL
+        // 4. Construct gateway hostname and URL
         const gateway_hostname = makeOrgGatewayHostname(organization_id);
         const gateway_url = makeOrgGatewayUrl(organization_id);
 
@@ -115,7 +111,7 @@ export const setupGatewayRoutes = (
           `Gateway accessible at: ${gateway_url}`
         );
 
-        // 6. Call gateway handshake
+        // 5. Call gateway handshake
         const handshakeUrl = `${gateway_url}/collab/start`;
         log(
           EPriority.Info,
@@ -271,12 +267,10 @@ export const setupGatewayRoutes = (
           gateway_id,
         ]);
 
-        // 2. DNS deregistration no longer needed - wildcard DNS means no explicit records to remove
-
-        // 3. Remove Nginx config
+        // 2. Remove Nginx config
         await nginxManager.removeGatewayConfig(organization_id);
 
-        // 4. Reload Nginx
+        // 3. Reload Nginx
         await nginxManager.reloadNginx();
 
         log(

@@ -232,8 +232,7 @@ ENV_NAME=${ENV_NAME}
 GANYMEDE_SERVER_BIND='[{"host":"127.0.0.1","port":${GANYMEDE_PORT}}]'
 ALLOWED_ORIGINS='["https://${DOMAIN}"]'
 
-# DNS configuration (CoreDNS with zone files)
-# No PowerDNS needed - using CoreDNS file plugin with wildcard DNS
+
 
 # Magic link email (optional)
 MAILING_HOST=xxxxx

@@ -102,10 +102,10 @@ start_gateway_container() {
         docker_env_args+=(-e "${var}=${env_ref[$var]}")
     done
     
-    # Get dev container IP for DNS resolution (PowerDNS on port 5300)
+    # Get dev container IP for DNS resolution (CoreDNS on port 53)
     local dev_container_ip=$(hostname -I | awk '{print $1}')
     
-    # Start container with DNS pointing to dev container's PowerDNS
+    # Start container with DNS pointing to dev container's CoreDNS
     docker run -d \
         --name "${container_name}" \
         --label "environment=${env_name}" \

@@ -283,9 +283,6 @@ export class UserContainersReducer extends Reducer<
       container
     );
 
-    // DNS registration no longer needed - wildcard DNS (*.domain.local) automatically
-    // resolves all subdomains including uc-{uuid}.org-{uuid}.domain.local
-
     // Create graph node
     const e: TEventNewNode = {
       type: 'core:new-node',
@@ -523,8 +520,6 @@ export class UserContainersReducer extends Reducer<
 
     // Delete OAuth clients
     await this.deleteOAuthClients(containerId);
-
-    // DNS deregistration no longer needed - wildcard DNS means no explicit records to remove
 
     // Remove from shared state
     this.depsExports.collab.collab.sharedData[

@@ -115,7 +115,6 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
       tokenManager: gatewayConfig.tokenManager,
       permissionManager: gatewayConfig.permissionManager,
       oauthManager: gatewayConfig.oauthManager,
-      // dnsManager removed - wildcard DNS (*.domain.local) handles all subdomains automatically
       permissionRegistry: gatewayConfig.permissionRegistry,
       protectedServiceRegistry: gatewayConfig.protectedServiceRegistry,
     };

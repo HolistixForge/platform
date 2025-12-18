@@ -241,16 +241,8 @@ if [ $? -eq 0 ]; then
     fi
     TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
     
-    # Check PowerDNS database
-    echo -n "    PowerDNS database... "
-    if PGPASSWORD=devpassword psql -U postgres -h localhost -d pdns -c "SELECT 1" >/dev/null 2>&1; then
-        echo -e "${GREEN}✅ Accessible${NC}"
-        PASSED_CHECKS=$((PASSED_CHECKS + 1))
-    else
-        echo -e "${YELLOW}⚠️  Not accessible${NC}"
-        WARNING_CHECKS=$((WARNING_CHECKS + 1))
-    fi
-    TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
+    # PowerDNS removed - now using CoreDNS with zone files
+    # (no database check needed)
 fi
 
 # Nginx
@@ -630,7 +622,7 @@ else
     fi
 fi
 
-# Test PowerDNS resolution (via CoreDNS)
+# Test CoreDNS resolution (wildcard DNS)
 if [ ${#VALID_ENVIRONMENTS[@]} -gt 0 ]; then
     for env_name in "${VALID_ENVIRONMENTS[@]}"; do
         env_dir="${LOCAL_DEV_DIR}/${env_name}"

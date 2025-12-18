@@ -146,12 +146,3 @@ export abstract class OAuthManager {
    */
   abstract deleteToken(token_id: string): void;
 }
-
-/**
- * DNSManager removed - no longer needed with wildcard DNS
- *
- * With wildcard DNS (*.domain.local), all subdomains automatically resolve
- * to the same IP address. No dynamic DNS registration is required.
- *
- * Nginx server_name matching provides the routing layer.
- */
