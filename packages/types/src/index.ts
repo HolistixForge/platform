@@ -16,3 +16,15 @@ export {
 } from './lib/ganymede-api/oauth';
 
 export type { TJwtOrganization, TJwtGateway, TJwtUser } from './lib/jwt/jwt';
+
+// Credentials Wallet types
+export type {
+  TCredentialType,
+  TCredentialSummary,
+  TCredentialDetail,
+  TCredentialShare,
+  TCreateCredentialRequest,
+  TUpdateCredentialRequest,
+  TShareCredentialRequest,
+  TCredentialProvider,
+} from './lib/ganymede-api/credentials';

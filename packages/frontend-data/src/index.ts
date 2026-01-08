@@ -37,6 +37,22 @@ export type {
   TotpEnableFormData,
 } from './lib/form-data';
 
+// Credentials Wallet
+export {
+  credentialKeys,
+  useQueryCredentialTypes,
+  useMutationRegisterCredentialType,
+  useQueryCredentials,
+  useQueryCredential,
+  useMutationCreateCredential,
+  useMutationUpdateCredential,
+  useMutationDeleteCredential,
+  useMutationValidateCredential,
+  useQueryCredentialShares,
+  useMutationShareCredential,
+  useMutationRevokeCredentialShare,
+} from './lib/credentials-queries';
+
 //
 
 export { LocalStorageChannel } from './lib/local-storage-channel';

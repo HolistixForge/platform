@@ -84,3 +84,17 @@ export { TagsBar } from './lib/tags/tags';
 
 export type { ColorValue } from './lib/form/form-fields/color-picker';
 export { ColorPicker } from './lib/form/form-fields/color-picker';
+
+// Credentials Wallet UI
+export {
+  CredentialCard,
+  CredentialForm,
+  CredentialTypeSelector,
+  CredentialsList,
+} from './lib/credentials';
+export type {
+  CredentialCardProps,
+  CredentialFormProps,
+  CredentialTypeSelectorProps,
+  CredentialsListProps,
+} from './lib/credentials';

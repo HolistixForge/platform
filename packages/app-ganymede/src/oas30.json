@@ -56,9 +56,17 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "user_id": { "type": "string", "format": "uuid", "nullable": true },
+                    "user_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "nullable": true
+                    },
                     "username": { "type": "string", "nullable": true },
-                    "email": { "type": "string", "format": "email", "nullable": true }
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "nullable": true
+                    }
                   }
                 }
               }
@@ -97,11 +105,7 @@
                     "$ref": "#/components/schemas/user/properties/lastname"
                   }
                 },
-                "required": [
-                  "email",
-                  "password",
-                  "username"
-                ]
+                "required": ["email", "password", "username"]
               }
             }
           }
@@ -138,10 +142,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "email",
-                  "password"
-                ]
+                "required": ["email", "password"]
               }
             }
           }
@@ -194,9 +195,7 @@
                     "format": "password"
                   }
                 },
-                "required": [
-                  "password"
-                ]
+                "required": ["password"]
               }
             }
           }
@@ -352,9 +351,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "code"
-                ]
+                "required": ["code"]
               }
             }
           }
@@ -389,15 +386,10 @@
                   },
                   "context": {
                     "type": "string",
-                    "enum": [
-                      "reset-password",
-                      "validate-email"
-                    ]
+                    "enum": ["reset-password", "validate-email"]
                   }
                 },
-                "required": [
-                  "email"
-                ]
+                "required": ["email"]
               }
             }
           }
@@ -543,7 +535,9 @@
       "get": {
         "summary": "List user's organizations",
         "tags": ["Organizations"],
-        "parameters": [{ "$ref": "#/components/parameters/headers_authorization" }],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" }
+        ],
         "responses": {
           "200": {
             "description": "List of organizations",
@@ -567,7 +561,9 @@
       "post": {
         "summary": "Create organization",
         "tags": ["Organizations"],
-        "parameters": [{ "$ref": "#/components/parameters/headers_authorization" }],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -651,7 +647,9 @@
                   "properties": {
                     "members": {
                       "type": "array",
-                      "items": { "$ref": "#/components/schemas/organization_member" }
+                      "items": {
+                        "$ref": "#/components/schemas/organization_member"
+                      }
                     }
                   }
                 }
@@ -676,7 +674,10 @@
                 "type": "object",
                 "properties": {
                   "user_id": { "type": "string", "format": "uuid" },
-                  "role": { "type": "string", "enum": ["owner", "admin", "member"] }
+                  "role": {
+                    "type": "string",
+                    "enum": ["owner", "admin", "member"]
+                  }
                 },
                 "required": ["user_id", "role"]
               }
@@ -759,7 +760,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "role": { "type": "string", "enum": ["owner", "admin", "member"] }
+                  "role": {
+                    "type": "string",
+                    "enum": ["owner", "admin", "member"]
+                  }
                 },
                 "required": ["role"]
               }
@@ -821,7 +825,9 @@
       "post": {
         "summary": "Create project",
         "tags": ["Projects"],
-        "parameters": [{ "$ref": "#/components/parameters/headers_authorization" }],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -830,7 +836,11 @@
                 "type": "object",
                 "properties": {
                   "organization_id": { "type": "string", "format": "uuid" },
-                  "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
                   "public": { "type": "boolean" }
                 },
                 "required": ["organization_id", "name", "public"]
@@ -968,7 +978,9 @@
       "post": {
         "summary": "Start gateway for organization",
         "tags": ["Gateway"],
-        "parameters": [{ "$ref": "#/components/parameters/headers_authorization" }],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1030,7 +1042,10 @@
                     "organization_id": { "type": "string", "format": "uuid" },
                     "organization_name": { "type": "string" },
                     "gateway_id": { "type": "string", "format": "uuid" },
-                    "organization_token": { "type": "string", "description": "JWT token for organization-bound operations" },
+                    "organization_token": {
+                      "type": "string",
+                      "description": "JWT token for organization-bound operations"
+                    },
                     "projects": {
                       "type": "array",
                       "items": { "type": "string", "format": "uuid" }
@@ -1042,7 +1057,10 @@
                         "properties": {
                           "user_id": { "type": "string", "format": "uuid" },
                           "username": { "type": "string" },
-                          "role": { "type": "string", "enum": ["owner", "admin", "member"] }
+                          "role": {
+                            "type": "string",
+                            "enum": ["owner", "admin", "member"]
+                          }
                         }
                       }
                     }
@@ -1059,7 +1077,9 @@
       "post": {
         "summary": "Gateway signals it's ready to be allocated",
         "tags": ["Gateway"],
-        "parameters": [{ "$ref": "#/components/parameters/headers_authorization_bearer" }],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization_bearer" }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1097,7 +1117,9 @@
       "post": {
         "summary": "Stop gateway (deallocate from organization)",
         "tags": ["Gateway"],
-        "parameters": [{ "$ref": "#/components/parameters/headers_authorization_bearer" }],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization_bearer" }
+        ],
         "responses": {
           "200": {
             "description": "Gateway stopped",
@@ -1121,7 +1143,9 @@
       "post": {
         "summary": "Push organization data snapshot from gateway",
         "tags": ["Gateway"],
-        "parameters": [{ "$ref": "#/components/parameters/headers_authorization_bearer" }],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization_bearer" }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1166,7 +1190,9 @@
       "post": {
         "summary": "Pull organization data snapshot to gateway",
         "tags": ["Gateway"],
-        "parameters": [{ "$ref": "#/components/parameters/headers_authorization_bearer" }],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization_bearer" }
+        ],
         "responses": {
           "200": {
             "description": "Data retrieved successfully",
@@ -1182,8 +1208,16 @@
                       "nullable": true,
                       "additionalProperties": true
                     },
-                    "timestamp": { "type": "string", "format": "date-time", "nullable": true },
-                    "stored_at": { "type": "string", "format": "date-time", "nullable": true }
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    },
+                    "stored_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    }
                   }
                 }
               }
@@ -1231,7 +1265,9 @@
         "summary": "Register DNS record (FQDN → IP)",
         "description": "Generic DNS management endpoint. Called by gateway to register any DNS record.",
         "tags": ["Gateway"],
-        "parameters": [{ "$ref": "#/components/parameters/headers_authorization_bearer" }],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization_bearer" }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1239,8 +1275,15 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "fqdn": { "type": "string", "description": "Fully qualified domain name" },
-                  "ip": { "type": "string", "format": "ipv4", "description": "IP address" }
+                  "fqdn": {
+                    "type": "string",
+                    "description": "Fully qualified domain name"
+                  },
+                  "ip": {
+                    "type": "string",
+                    "format": "ipv4",
+                    "description": "IP address"
+                  }
                 },
                 "required": ["fqdn", "ip"]
               }
@@ -1273,7 +1316,9 @@
         "summary": "Deregister DNS record",
         "description": "Generic DNS management endpoint. Called by gateway to remove a DNS record.",
         "tags": ["Gateway"],
-        "parameters": [{ "$ref": "#/components/parameters/headers_authorization_bearer" }],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization_bearer" }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1281,7 +1326,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "fqdn": { "type": "string", "description": "Fully qualified domain name" }
+                  "fqdn": {
+                    "type": "string",
+                    "description": "Fully qualified domain name"
+                  }
                 },
                 "required": ["fqdn"]
               }
@@ -1543,7 +1591,10 @@
                     "type": "string",
                     "description": "Refresh token (for refresh_token grant)"
                   },
-                  "client_id": { "type": "string", "example": "app-main-client-id" },
+                  "client_id": {
+                    "type": "string",
+                    "example": "app-main-client-id"
+                  },
                   "client_secret": { "type": "string", "example": "none" },
                   "redirect_uri": {
                     "type": "string",
@@ -1599,6 +1650,462 @@
               }
             }
           }
+        }
+      }
+    },
+    "/credentials/types": {
+      "get": {
+        "summary": "List available credential types",
+        "description": "Returns all registered credential types with their metadata",
+        "tags": ["Credentials"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of credential types",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "types": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/credential_type"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      },
+      "post": {
+        "summary": "Register a credential type",
+        "description": "Register a new credential type (called by modules)",
+        "tags": ["Credentials"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "credential_type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "display_name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                  },
+                  "description": { "type": "string" },
+                  "icon_url": { "type": "string" },
+                  "validation_schema": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "required_fields": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  },
+                  "module_name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  }
+                },
+                "required": ["credential_type", "display_name", "module_name"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Credential type registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/credentials": {
+      "get": {
+        "summary": "List user credentials",
+        "description": "Returns user's own credentials and optionally shared credentials they have access to",
+        "tags": ["Credentials"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Filter by credential type",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "organization_id",
+            "in": "query",
+            "description": "Include org-shared credentials",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "project_id",
+            "in": "query",
+            "description": "Include project-shared credentials",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "resource_id",
+            "in": "query",
+            "description": "Include resource-shared credentials",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "include_shared",
+            "in": "query",
+            "description": "Include all accessible shared credentials",
+            "schema": { "type": "string", "enum": ["true", "false"] }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "credentials": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/credential_summary"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      },
+      "post": {
+        "summary": "Create a credential",
+        "description": "Store a new encrypted credential",
+        "tags": ["Credentials"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "credential_type": { "type": "string" },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                  },
+                  "value": { "type": "string", "minLength": 1 },
+                  "metadata": { "type": "object", "additionalProperties": true }
+                },
+                "required": ["credential_type", "name", "value"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Credential created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "credential": {
+                      "$ref": "#/components/schemas/credential_summary"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/credentials/{credential_id}": {
+      "get": {
+        "summary": "Get credential with decrypted value",
+        "description": "Returns credential details including decrypted value (requires ownership or share access)",
+        "tags": ["Credentials"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          { "$ref": "#/components/parameters/credential_id" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Credential details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "credential": {
+                      "$ref": "#/components/schemas/credential_detail"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Credential not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      },
+      "patch": {
+        "summary": "Update a credential",
+        "description": "Update credential name, value, metadata, or active status",
+        "tags": ["Credentials"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          { "$ref": "#/components/parameters/credential_id" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                  },
+                  "value": { "type": "string", "minLength": 1 },
+                  "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "is_active": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Credential updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      },
+      "delete": {
+        "summary": "Delete a credential",
+        "description": "Soft delete a credential (sets is_active to false)",
+        "tags": ["Credentials"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          { "$ref": "#/components/parameters/credential_id" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Credential deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/credentials/{credential_id}/validate": {
+      "post": {
+        "summary": "Validate a credential",
+        "description": "Test if a credential can be decrypted successfully",
+        "tags": ["Credentials"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          { "$ref": "#/components/parameters/credential_id" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Validation result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "valid": { "type": "boolean" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/credentials/{credential_id}/share": {
+      "post": {
+        "summary": "Share a credential",
+        "description": "Share a credential at organization, project, or resource level",
+        "tags": ["Credentials"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          { "$ref": "#/components/parameters/credential_id" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "share_scope": {
+                    "type": "string",
+                    "enum": ["organization", "project", "resource"]
+                  },
+                  "organization_id": { "type": "string", "format": "uuid" },
+                  "project_id": { "type": "string", "format": "uuid" },
+                  "resource_id": { "type": "string", "format": "uuid" }
+                },
+                "required": ["share_scope"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Share created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "share": { "$ref": "#/components/schemas/credential_share" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/credentials/{credential_id}/shares": {
+      "get": {
+        "summary": "List shares for a credential",
+        "description": "Get all shares for a credential (requires ownership)",
+        "tags": ["Credentials"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          { "$ref": "#/components/parameters/credential_id" }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of shares",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "shares": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/credential_share"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/credentials/{credential_id}/shares/{share_id}": {
+      "delete": {
+        "summary": "Revoke a credential share",
+        "description": "Revoke access to a shared credential",
+        "tags": ["Credentials"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          { "$ref": "#/components/parameters/credential_id" },
+          {
+            "in": "path",
+            "name": "share_id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Share revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
         }
       }
     }
@@ -1691,6 +2198,93 @@
           "email": { "type": "string", "format": "email" },
           "added_at": { "type": "string", "format": "date-time" }
         }
+      },
+      "credential_type": {
+        "type": "object",
+        "properties": {
+          "credential_type": { "type": "string" },
+          "display_name": { "type": "string" },
+          "description": { "type": "string", "nullable": true },
+          "icon_url": { "type": "string", "nullable": true },
+          "validation_schema": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": true
+          },
+          "required_fields": { "type": "array", "items": { "type": "string" } },
+          "module_name": { "type": "string" }
+        }
+      },
+      "credential_summary": {
+        "type": "object",
+        "properties": {
+          "credential_id": { "type": "string", "format": "uuid" },
+          "user_id": { "type": "string", "format": "uuid" },
+          "credential_type": { "type": "string" },
+          "name": { "type": "string" },
+          "metadata": { "type": "object", "additionalProperties": true },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "last_used_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "is_shared": { "type": "boolean" },
+          "share_scope": { "type": "string", "nullable": true }
+        }
+      },
+      "credential_detail": {
+        "type": "object",
+        "properties": {
+          "credential_id": { "type": "string", "format": "uuid" },
+          "user_id": { "type": "string", "format": "uuid" },
+          "credential_type": { "type": "string" },
+          "name": { "type": "string" },
+          "value": { "type": "string" },
+          "metadata": { "type": "object", "additionalProperties": true },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "last_used_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "credential_share": {
+        "type": "object",
+        "properties": {
+          "share_id": { "type": "string", "format": "uuid" },
+          "credential_id": { "type": "string", "format": "uuid" },
+          "share_scope": {
+            "type": "string",
+            "enum": ["organization", "project", "resource"]
+          },
+          "organization_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "resource_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "granted_by": { "type": "string", "format": "uuid" },
+          "granted_at": { "type": "string", "format": "date-time" },
+          "revoked_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "is_active": { "type": "boolean" }
+        }
       }
     },
     "parameters": {
@@ -1723,6 +2317,12 @@
       "project_id": {
         "in": "path",
         "name": "project_id",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "credential_id": {
+        "in": "path",
+        "name": "credential_id",
         "required": true,
         "schema": { "type": "string", "format": "uuid" }
       }

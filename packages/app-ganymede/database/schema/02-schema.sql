@@ -254,4 +254,94 @@ CREATE INDEX idx_oauth_tokens_code ON public.oauth_tokens(code) WHERE code IS NO
 CREATE INDEX idx_oauth_tokens_refresh_token ON public.oauth_tokens(refresh_token) WHERE refresh_token IS NOT NULL;
 CREATE INDEX idx_oauth_tokens_access_token ON public.oauth_tokens(access_token) WHERE access_token IS NOT NULL;
 
+-- =============================================================================
+-- CREDENTIALS WALLET
+-- =============================================================================
+
+-- Credential metadata table - defines available credential types (registered by modules)
+CREATE TABLE IF NOT EXISTS public.credential_metadata
+(
+    credential_type character varying(100) NOT NULL,
+    display_name character varying(255) NOT NULL,
+    description text,
+    icon_url character varying(512),
+    validation_schema jsonb,
+    required_fields jsonb DEFAULT '[]'::jsonb,
+    encryption_required boolean NOT NULL DEFAULT true,
+    module_name character varying(100) NOT NULL,
+    created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (credential_type)
+);
+
+-- Credentials table - stores user credentials (encrypted)
+CREATE TABLE IF NOT EXISTS public.credentials
+(
+    credential_id uuid NOT NULL DEFAULT gen_random_uuid(),
+    user_id uuid NOT NULL,
+    credential_type character varying(100) NOT NULL,
+    name character varying(255) NOT NULL,
+    encrypted_value text NOT NULL,
+    encryption_key_id character varying(50) NOT NULL DEFAULT 'v1',
+    metadata jsonb DEFAULT '{}'::jsonb,
+    created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_used_at timestamp without time zone,
+    is_active boolean NOT NULL DEFAULT true,
+    PRIMARY KEY (credential_id),
+    CONSTRAINT fk_credentials_users_user_id FOREIGN KEY (user_id)
+        REFERENCES public.users (user_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE,
+    CONSTRAINT fk_credentials_metadata_type FOREIGN KEY (credential_type)
+        REFERENCES public.credential_metadata (credential_type) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE RESTRICT
+);
+
+CREATE INDEX idx_credentials_user_id ON public.credentials(user_id, is_active);
+CREATE INDEX idx_credentials_type ON public.credentials(credential_type);
+
+-- Credential shares table - tracks shared credentials
+CREATE TABLE IF NOT EXISTS public.credential_shares
+(
+    share_id uuid NOT NULL DEFAULT gen_random_uuid(),
+    credential_id uuid NOT NULL,
+    share_scope character varying(50) NOT NULL,
+    organization_id uuid,
+    project_id uuid,
+    resource_id uuid,
+    granted_by uuid NOT NULL,
+    granted_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    revoked_at timestamp without time zone,
+    is_active boolean NOT NULL DEFAULT true,
+    PRIMARY KEY (share_id),
+    CONSTRAINT fk_credential_shares_credential_id FOREIGN KEY (credential_id)
+        REFERENCES public.credentials (credential_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE,
+    CONSTRAINT fk_credential_shares_granted_by FOREIGN KEY (granted_by)
+        REFERENCES public.users (user_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE,
+    CONSTRAINT fk_credential_shares_organization_id FOREIGN KEY (organization_id)
+        REFERENCES public.organizations (organization_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE,
+    CONSTRAINT fk_credential_shares_project_id FOREIGN KEY (project_id)
+        REFERENCES public.projects (project_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE,
+    CONSTRAINT chk_share_scope CHECK (
+        (share_scope = 'organization' AND organization_id IS NOT NULL AND project_id IS NULL AND resource_id IS NULL) OR
+        (share_scope = 'project' AND project_id IS NOT NULL AND organization_id IS NULL AND resource_id IS NULL) OR
+        (share_scope = 'resource' AND resource_id IS NOT NULL AND organization_id IS NULL AND project_id IS NULL)
+    )
+);
+
+CREATE INDEX idx_credential_shares_credential_id ON public.credential_shares(credential_id, is_active);
+CREATE INDEX idx_credential_shares_org ON public.credential_shares(organization_id, is_active) WHERE share_scope = 'organization';
+CREATE INDEX idx_credential_shares_project ON public.credential_shares(project_id, is_active) WHERE share_scope = 'project';
+CREATE INDEX idx_credential_shares_resource ON public.credential_shares(resource_id, is_active) WHERE share_scope = 'resource';
+
 END;
