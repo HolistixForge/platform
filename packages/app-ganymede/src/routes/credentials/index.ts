@@ -105,7 +105,7 @@ export const setupCredentialRoutes = (
       // Build query for user's own credentials
       let query = `
         SELECT 
-          c.credential_id,
+          c.id as credential_id,
           c.user_id,
           c.credential_type,
           c.name,
@@ -114,7 +114,7 @@ export const setupCredentialRoutes = (
           c.updated_at,
           c.last_used_at,
           FALSE as is_shared,
-          NULL as share_scope
+          NULL::varchar as share_scope
         FROM credentials c
         WHERE c.user_id = $1 AND c.is_active = true
       `;
@@ -132,7 +132,7 @@ export const setupCredentialRoutes = (
         query += `
           UNION ALL
           SELECT 
-            c.credential_id,
+            c.id as credential_id,
             c.user_id,
             c.credential_type,
             c.name,
@@ -143,7 +143,7 @@ export const setupCredentialRoutes = (
             TRUE as is_shared,
             cs.share_scope
           FROM credentials c
-          INNER JOIN credential_shares cs ON c.credential_id = cs.credential_id
+          INNER JOIN credential_shares cs ON c.id = cs.credential_id
           WHERE c.is_active = true 
             AND cs.is_active = true
             AND c.user_id != $1
@@ -194,7 +194,7 @@ export const setupCredentialRoutes = (
       // Check ownership or share access
       const result = await pg.query(
         `SELECT 
-          c.credential_id,
+          c.id as credential_id,
           c.user_id,
           c.credential_type,
           c.name,
@@ -205,13 +205,13 @@ export const setupCredentialRoutes = (
           c.updated_at,
           c.last_used_at
         FROM credentials c
-        WHERE c.credential_id = $1 
+        WHERE c.id = $1 
           AND c.is_active = true
           AND (
             c.user_id = $2
             OR EXISTS (
               SELECT 1 FROM credential_shares cs
-              WHERE cs.credential_id = c.credential_id
+              WHERE cs.credential_id = c.id
                 AND cs.is_active = true
                 AND (
                   (cs.share_scope = 'organization' AND EXISTS (
@@ -235,7 +235,7 @@ export const setupCredentialRoutes = (
         return res.status(404).json({ error: 'Credential not found' });
       }
 
-      // Decrypt the value
+      // Decrypt the value (iv is embedded in encrypted_value)
       const decryptedValue = decryptCredential(
         row['encrypted_value'] as string,
         row['encryption_key_id'] as string
@@ -243,7 +243,7 @@ export const setupCredentialRoutes = (
 
       // Update last_used_at
       await pg.query(
-        `UPDATE credentials SET last_used_at = CURRENT_TIMESTAMP WHERE credential_id = $1`,
+        `UPDATE credentials SET last_used_at = CURRENT_TIMESTAMP WHERE id = $1`,
         [credential_id]
       );
 
@@ -289,15 +289,16 @@ export const setupCredentialRoutes = (
       const result = await pg.query(
         `INSERT INTO credentials (
           user_id, credential_type, name, encrypted_value, 
-          encryption_key_id, metadata
-        ) VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING credential_id, created_at, updated_at`,
+          encryption_key_id, iv, metadata
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING id as credential_id, created_at, updated_at`,
         [
           userId,
           credential_type,
           name,
           encryptedValue,
           CURRENT_KEY_VERSION,
+          'embedded', // IV is embedded in encrypted_value
           metadata ? JSON.stringify(metadata) : '{}',
         ]
       );
@@ -335,7 +336,7 @@ export const setupCredentialRoutes = (
 
       // Verify ownership
       const ownerCheck = await pg.query(
-        `SELECT credential_id FROM credentials WHERE credential_id = $1 AND user_id = $2`,
+        `SELECT id FROM credentials WHERE id = $1 AND user_id = $2`,
         [credential_id, userId]
       );
       if (!ownerCheck.next()?.oneRow()) {
@@ -384,7 +385,7 @@ export const setupCredentialRoutes = (
       await pg.query(
         `UPDATE credentials SET ${updates.join(
           ', '
-        )} WHERE credential_id = $${paramIndex}`,
+        )} WHERE id = $${paramIndex}`,
         params
       );
 
@@ -406,8 +407,8 @@ export const setupCredentialRoutes = (
       const result = await pg.query(
         `UPDATE credentials 
         SET is_active = false, updated_at = CURRENT_TIMESTAMP 
-        WHERE credential_id = $1 AND user_id = $2
-        RETURNING credential_id`,
+        WHERE id = $1 AND user_id = $2
+        RETURNING id as credential_id`,
         [credential_id, userId]
       );
 
@@ -443,7 +444,7 @@ export const setupCredentialRoutes = (
 
       // Verify ownership
       const ownerCheck = await pg.query(
-        `SELECT credential_id FROM credentials WHERE credential_id = $1 AND user_id = $2 AND is_active = true`,
+        `SELECT id FROM credentials WHERE id = $1 AND user_id = $2 AND is_active = true`,
         [credential_id, userId]
       );
       if (!ownerCheck.next()?.oneRow()) {
@@ -496,7 +497,7 @@ export const setupCredentialRoutes = (
         `INSERT INTO credential_shares (
           credential_id, share_scope, organization_id, project_id, resource_id, granted_by
         ) VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING share_id, granted_at`,
+        RETURNING id as share_id, granted_at`,
         [
           credential_id,
           share_scope,
@@ -538,7 +539,7 @@ export const setupCredentialRoutes = (
 
       // Verify ownership
       const ownerCheck = await pg.query(
-        `SELECT credential_id FROM credentials WHERE credential_id = $1 AND user_id = $2`,
+        `SELECT id FROM credentials WHERE id = $1 AND user_id = $2`,
         [credential_id, userId]
       );
       if (!ownerCheck.next()?.oneRow()) {
@@ -549,7 +550,7 @@ export const setupCredentialRoutes = (
 
       const result = await pg.query(
         `SELECT 
-          share_id, credential_id, share_scope, 
+          id as share_id, credential_id, share_scope, 
           organization_id, project_id, resource_id,
           granted_by, granted_at, revoked_at, is_active
         FROM credential_shares 
@@ -575,7 +576,7 @@ export const setupCredentialRoutes = (
 
       // Verify ownership of the credential
       const ownerCheck = await pg.query(
-        `SELECT credential_id FROM credentials WHERE credential_id = $1 AND user_id = $2`,
+        `SELECT id FROM credentials WHERE id = $1 AND user_id = $2`,
         [credential_id, userId]
       );
       if (!ownerCheck.next()?.oneRow()) {
@@ -588,8 +589,8 @@ export const setupCredentialRoutes = (
       const result = await pg.query(
         `UPDATE credential_shares 
         SET is_active = false, revoked_at = CURRENT_TIMESTAMP 
-        WHERE share_id = $1 AND credential_id = $2
-        RETURNING share_id`,
+        WHERE id = $1 AND credential_id = $2
+        RETURNING id as share_id`,
         [share_id, credential_id]
       );
 
@@ -618,13 +619,13 @@ export const setupCredentialRoutes = (
           c.encrypted_value,
           c.encryption_key_id
         FROM credentials c
-        WHERE c.credential_id = $1 
+        WHERE c.id = $1 
           AND c.is_active = true
           AND (
             c.user_id = $2
             OR EXISTS (
               SELECT 1 FROM credential_shares cs
-              WHERE cs.credential_id = c.credential_id AND cs.is_active = true
+              WHERE cs.credential_id = c.id AND cs.is_active = true
             )
           )`,
         [credential_id, userId]

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { LockClosedIcon } from '@radix-ui/react-icons';
 
 import {
   icons,
@@ -157,7 +158,7 @@ export const Header = ({
 
               <div className="not-bellow-640 flex items-center gap-[5px]">
                 <Link to="/account/credentials" title="Credentials Wallet">
-                  <ButtonIcon Icon={icons.Vault} />
+                  <ButtonIcon Icon={LockClosedIcon} />
                 </Link>
                 <Link to="/account/settings" title="Settings">
                   <ButtonIcon Icon={icons.GearWheel} />
