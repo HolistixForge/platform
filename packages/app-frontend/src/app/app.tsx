@@ -17,6 +17,7 @@ import { HomePage } from './pages/home';
 import { ProjectRoot } from './pages/project/project-root';
 import { ProjectAuthorizationsPage } from './pages/project/authorizations';
 import { EditorPage } from './pages/project/editor/editor-page';
+import { CredentialsPage } from './pages/credentials';
 import { MobileBlockOverlay } from './MobileBlockOverlay';
 
 //
@@ -55,6 +56,10 @@ export function App() {
               <Route
                 path="/account/settings"
                 element={<AccountSettingsPage />}
+              />
+              <Route
+                path="/account/credentials"
+                element={<CredentialsPage />}
               />
               <Route
                 path="/account/forgot-password"

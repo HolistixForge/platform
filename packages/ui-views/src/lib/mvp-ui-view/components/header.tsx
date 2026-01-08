@@ -156,7 +156,10 @@ export const Header = ({
               )}
 
               <div className="not-bellow-640 flex items-center gap-[5px]">
-                <Link to="/account/settings">
+                <Link to="/account/credentials" title="Credentials Wallet">
+                  <ButtonIcon Icon={icons.Vault} />
+                </Link>
+                <Link to="/account/settings" title="Settings">
                   <ButtonIcon Icon={icons.GearWheel} />
                 </Link>
 
