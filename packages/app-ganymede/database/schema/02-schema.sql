@@ -274,6 +274,19 @@ CREATE TABLE IF NOT EXISTS public.credential_metadata
     PRIMARY KEY (credential_type)
 );
 
+-- Seed default credential types
+INSERT INTO public.credential_metadata (credential_type, display_name, description, required_fields, module_name) VALUES
+('openai_api_key', 'OpenAI API Key', 'API key for OpenAI services (GPT, DALL-E, Whisper)', '["api_key"]', 'ai'),
+('anthropic_api_key', 'Anthropic API Key', 'API key for Anthropic Claude models', '["api_key"]', 'ai'),
+('github_token', 'GitHub Token', 'Personal access token for GitHub API', '["token"]', 'vcs'),
+('gitlab_token', 'GitLab Token', 'Personal access token for GitLab API', '["token"]', 'vcs'),
+('aws_access_key', 'AWS Access Key', 'AWS access key ID and secret for AWS services', '["access_key_id", "secret_access_key"]', 'cloud'),
+('google_api_key', 'Google Cloud API Key', 'API key for Google Cloud services', '["api_key"]', 'cloud'),
+('slack_token', 'Slack Bot Token', 'Bot or user token for Slack API', '["token"]', 'communication'),
+('discord_token', 'Discord Bot Token', 'Bot token for Discord API', '["token"]', 'communication'),
+('generic_api_key', 'Generic API Key', 'A generic API key for any third-party service', '["api_key"]', 'generic')
+ON CONFLICT (credential_type) DO NOTHING;
+
 -- Credentials table - stores user credentials (encrypted)
 CREATE TABLE IF NOT EXISTS public.credentials
 (
