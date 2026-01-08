@@ -448,6 +448,10 @@ cmd_build() {
         frontend)
             echo -e "${BLUE}🔨 Building frontend...${NC}"
             "${SCRIPT_DIR}/build-frontend.sh" "$env_name" "${WORKSPACE}"
+            
+            # Validate frontend bundle
+            echo -e "${BLUE}🔍 Validating frontend bundle...${NC}"
+            cd "${WORKSPACE}" && npm run test:build
             ;;
         all)
             echo -e "${BLUE}🔨 Building all apps...${NC}"
@@ -463,6 +467,10 @@ cmd_build() {
             "${WORKSPACE}/scripts/local-dev/pack-gateway-build.sh" "$env_name" "${WORKSPACE}"
             
             "${SCRIPT_DIR}/build-frontend.sh" "$env_name" "${WORKSPACE}"
+            
+            # Validate frontend bundle
+            echo -e "${BLUE}🔍 Validating frontend bundle...${NC}"
+            cd "${WORKSPACE}" && npm run test:build
             ;;
         *)
             echo -e "${RED}Unknown build target: ${target}${NC}"

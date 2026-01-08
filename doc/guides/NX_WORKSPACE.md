@@ -13,12 +13,73 @@ npx nx g @nx/react:lib packages/{LIB_NAME} --linter eslint --bundler vite --styl
 npx nx run {LIB_NAME}:build
 ```
 
-in vite.config.js, set all dependencies external:
+### ⚠️ CRITICAL: Fix vite.config.ts after generation
 
-```js
+**Add mode parameter to prevent jsxDEV issues:**
+
+```typescript
+/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import dts from 'vite-plugin-dts';
+import * as path from 'path';
+
+export default defineConfig(({ mode }) => ({
+  // ← Add ({ mode }) here
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/packages/{LIB_NAME}',
+  plugins: [
+    react({
+      babel: {
+        // ← Add babel config
+        plugins: [
+          [
+            '@babel/plugin-transform-react-jsx',
+            {
+              runtime: 'automatic',
+              development: mode === 'development', // ← Use mode parameter
+            },
+          ],
+        ],
+      },
+    }),
+    dts({
+      entryRoot: 'src',
+      tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
+    }),
+  ],
+  build: {
+    outDir: './dist',
+    emptyOutDir: true,
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+    lib: {
+      entry: 'src/index.ts',
+      name: '{LIB_NAME}',
+      fileName: 'index',
+      formats: ['es'],
+    },
     rollupOptions: {
       external: (id) => !id.startsWith('.') && !id.startsWith('/'),
     },
+  },
+}));
+```
+
+**Why this is critical:**
+
+- Without the `mode` parameter, libraries may use development JSX transform
+- This causes "jsxDEV is not a function" runtime errors in production
+- Nx cache can reuse wrong builds, causing intermittent errors
+
+**Validation:**
+
+After creating a new library, validate all configs:
+
+```shell
+npm run validate:vite
 ```
 
 ## node lib
@@ -54,15 +115,11 @@ npx nx run {APP_NAME}:serve
 npx nx g @nx/node:app  packages/{APP_NAME} --linter eslint --e2eTestRunner jest --framework none --unitTestRunner jest
 ```
 
-In packages/_{APP_NAME}_/**package.json** :
+### Configuration
 
-- (optional) set **bundle** to true and **thirdParty** to true
-- set react and react-dom as **external** to not bundle them when importing a lib that use jsx
-- set **runBuildTargetDependencies** in **serve** target to force recompilation on file changes
+**In packages/_{APP_NAME}_/tsconfig.app.json:**
 
-In packages/_{APP_NAME}_/**tsconfig.app.json** :
-
-remove :
+Remove the following if present:
 
 ```json
 {
@@ -73,37 +130,32 @@ remove :
 }
 ```
 
-if necessary, in package.json
+### Build Configuration
 
+Node apps use ESBuild with these settings (automatically configured by Nx):
+
+- `bundle: true` - Bundle all dependencies
+- `thirdParty: true` - Include third-party dependencies
+- `platform: node` - Target Node.js runtime
+
+**Important:** Node apps should NOT import React components directly. Use the module backend/frontend separation pattern:
+
+- Backend modules: `import { moduleBackend } from '@holistix-forge/module'`
+- Frontend modules: Imported in React app only
+
+### Validation
+
+After building Node apps, validate that no React dependencies leaked into bundles:
+
+```bash
+# Build Node apps
+npx nx build app-ganymede app-gateway app-ganymede-cmds
+
+# Validate bundles
+./scripts/validate-node-bundles.sh
 ```
-"external": [
-    "react",
-    "react-dom",
-    "*.css",
-    "*.svg",
-    "*.woff",
-    "*.woff2",
-    "*.eot",
-    "*.ttf",
-    "*.otf"
-  ],
-  ...
-  "esbuildOptions": {
-    "sourcemap": true,
-    "outExtension": {
-      ".js": ".js"
-    },
-    "loader": {
-      ".css": "empty",
-      ".svg": "empty",
-      ".woff": "empty",
-      ".woff2": "empty",
-      ".eot": "empty",
-      ".ttf": "empty",
-      ".otf": "empty"
-    }
-  }
-```
+
+This ensures backend bundles don't contain frontend dependencies.
 
 ### app node ESM
 

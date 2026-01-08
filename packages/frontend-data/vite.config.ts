@@ -4,11 +4,25 @@ import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
 import * as path from 'path';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/packages/frontend-data',
   plugins: [
-    react(),
+    react({
+      babel: {
+        plugins: [
+          [
+            '@babel/plugin-transform-react-jsx',
+            {
+              runtime: 'automatic',
+              // Use production JSX for library builds (default mode is 'production')
+              // Only use development JSX when explicitly in development mode
+              development: mode === 'development',
+            },
+          ],
+        ],
+      },
+    }),
     dts({
       entryRoot: 'src',
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
@@ -40,4 +54,4 @@ export default defineConfig({
       external: (id) => !id.startsWith('.') && !id.startsWith('/'),
     },
   },
-});
+}));

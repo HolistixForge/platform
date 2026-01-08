@@ -5,7 +5,6 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => ({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/packages/app-frontend',
-  mode: mode || 'production',
   server: {
     port: 4200,
     host: 'localhost',
@@ -17,7 +16,19 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react({
-      jsxRuntime: 'automatic',
+      babel: {
+        plugins: [
+          [
+            '@babel/plugin-transform-react-jsx',
+            {
+              runtime: 'automatic',
+              // Use production JSX for builds (default mode is 'production')
+              // Use development JSX for dev server (mode is 'development')
+              development: mode === 'development',
+            },
+          ],
+        ],
+      },
     }),
   ],
   // Uncomment this if you are using workers.
@@ -31,10 +42,8 @@ export default defineConfig(({ mode }) => ({
     commonjsOptions: {
       transformMixedEsModules: true,
     },
-    minify: mode === 'production' ? 'esbuild' : false,
   },
   define: {
     __webpack_public_path__: '""',
-    'process.env.NODE_ENV': JSON.stringify(mode || 'production'),
   },
 }));
