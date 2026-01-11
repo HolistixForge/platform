@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  vscode-server:
+    build:
+      context: ../packages/modules/vscode-server/docker-image
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/workspace:cached
+      - vscode-server-extensions:/home/coder/.local/share/code-server/extensions
+      - vscode-server-data:/home/coder/.local/share/code-server
+    environment:
+      - PASSWORD=${PASSWORD:-}
+      - SUDO_PASSWORD=${SUDO_PASSWORD:-}
+    ports:
+      - "8080:8080"
+    command: /usr/bin/entrypoint.sh --bind-addr 0.0.0.0:8080 --auth none /workspace
+    user: coder
+
+volumes:
+  vscode-server-extensions:
+  vscode-server-data:
