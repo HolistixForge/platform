@@ -3,10 +3,10 @@ version: '3.8'
 services:
   vscode-server:
     build:
-      context: ../packages/modules/vscode-server/docker-image
+      context: ../../../packages/modules/vscode-server/docker-image
       dockerfile: Dockerfile
     volumes:
-      - ..:/workspace:cached
+      - ../../..:/workspace:cached
       - vscode-server-extensions:/home/coder/.local/share/code-server/extensions
       - vscode-server-data:/home/coder/.local/share/code-server
     environment:
