@@ -14,6 +14,9 @@ services:
       - SUDO_PASSWORD=${SUDO_PASSWORD:-}
     ports:
       - "8080:8080"
+    # Note: For local development, we bypass the VPN/gateway integration
+    # and directly start code-server. In production, user containers use
+    # the full container-entrypoint.sh with VPN and service registration.
     command: /usr/bin/entrypoint.sh --bind-addr 0.0.0.0:8080 --auth none /workspace
     user: coder
 

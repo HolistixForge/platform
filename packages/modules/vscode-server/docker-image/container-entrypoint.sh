@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 . /usr/local/bin/container-functions.sh
 
