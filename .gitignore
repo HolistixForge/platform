@@ -17,6 +17,9 @@ node_modules
 .settings/
 *.sublime-workspace
 
+# Optional devcontainer (use example from doc/examples/devcontainer/)
+/.devcontainer
+
 
 
 # misc
