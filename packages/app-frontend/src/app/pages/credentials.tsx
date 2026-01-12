@@ -2,12 +2,18 @@ import { useState } from 'react';
 import {
   useQueryCredentials,
   useQueryCredentialTypes,
+  useQueryCredentialShares,
   useMutationCreateCredential,
   useMutationDeleteCredential,
+  useMutationShareCredential,
+  useMutationRevokeCredentialShare,
+  useQueryUserOrganizations,
+  useQueryUserProjects,
 } from '@holistix-forge/frontend-data';
 import {
   CredentialsList,
   CredentialForm,
+  CredentialShareDialog,
   DialogControlled,
 } from '@holistix-forge/ui-base';
 import {
@@ -25,6 +31,9 @@ export const CredentialsPage = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [credentialToDelete, setCredentialToDelete] =
     useState<TCredentialSummary | null>(null);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [credentialToShare, setCredentialToShare] =
+    useState<TCredentialSummary | null>(null);
 
   // Queries
   const {
@@ -34,10 +43,21 @@ export const CredentialsPage = () => {
   } = useQueryCredentials({ include_shared: true });
   const { data: credentialTypes, isLoading: typesLoading } =
     useQueryCredentialTypes();
+  const { data: organizations, isLoading: orgsLoading } =
+    useQueryUserOrganizations();
+  const { data: projects, isLoading: projectsLoading } = useQueryUserProjects();
+  const { data: currentShares, refetch: refetchShares } =
+    useQueryCredentialShares(credentialToShare?.credential_id || null);
 
   // Mutations
   const createMutation = useMutationCreateCredential();
   const deleteMutation = useMutationDeleteCredential();
+  const shareMutation = useMutationShareCredential(
+    credentialToShare?.credential_id || ''
+  );
+  const revokeMutation = useMutationRevokeCredentialShare(
+    credentialToShare?.credential_id || ''
+  );
 
   const handleAdd = () => {
     setSelectedCredential(null);
@@ -64,9 +84,29 @@ export const CredentialsPage = () => {
   };
 
   const handleShare = (credential: TCredentialSummary) => {
-    // TODO: Implement sharing UI in Phase 2
-    console.log('Share credential:', credential.credential_id);
-    alert('Sharing functionality will be available in a future update.');
+    setCredentialToShare(credential);
+    setShareDialogOpen(true);
+  };
+
+  const handleShareSubmit = async (data: {
+    share_scope: 'organization' | 'project';
+    organization_id?: string;
+    project_id?: string;
+  }) => {
+    await shareMutation.mutateAsync(data);
+    refetchShares();
+    refetchCredentials();
+  };
+
+  const handleRevokeShare = async (shareId: string) => {
+    await revokeMutation.mutateAsync(shareId);
+    refetchShares();
+    refetchCredentials();
+  };
+
+  const closeShareDialog = () => {
+    setShareDialogOpen(false);
+    setCredentialToShare(null);
   };
 
   const handleCancel = () => {
@@ -81,6 +121,18 @@ export const CredentialsPage = () => {
   };
 
   const isLoading = credentialsLoading || typesLoading;
+
+  // Transform organizations and projects to the expected format
+  const orgsForDialog = (organizations || []).map((org) => ({
+    organization_id: org.organization_id,
+    name: org.name,
+  }));
+
+  const projectsForDialog = (projects || []).map((proj) => ({
+    project_id: proj.project_id,
+    name: proj.name,
+    organization_id: proj.organization_id,
+  }));
 
   return (
     <>
@@ -114,6 +166,7 @@ export const CredentialsPage = () => {
           />
         )}
 
+        {/* Delete Confirmation Dialog */}
         <DialogControlled
           open={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}
@@ -159,6 +212,21 @@ export const CredentialsPage = () => {
             </div>
           }
         />
+
+        {/* Share Dialog */}
+        {shareDialogOpen && credentialToShare && (
+          <CredentialShareDialog
+            credentialId={credentialToShare.credential_id}
+            credentialName={credentialToShare.name}
+            shares={currentShares || []}
+            organizations={orgsForDialog}
+            projects={projectsForDialog}
+            onShare={handleShareSubmit}
+            onRevoke={handleRevokeShare}
+            onClose={closeShareDialog}
+            isLoading={orgsLoading || projectsLoading}
+          />
+        )}
       </div>
     </>
   );

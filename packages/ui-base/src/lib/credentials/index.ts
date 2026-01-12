@@ -9,3 +9,10 @@ export type { CredentialTypeSelectorProps } from './CredentialTypeSelector';
 
 export { CredentialsList } from './CredentialsList';
 export type { CredentialsListProps } from './CredentialsList';
+
+export { CredentialShareDialog } from './CredentialShareDialog';
+export type {
+  CredentialShareDialogProps,
+  Organization,
+  Project,
+} from './CredentialShareDialog';

@@ -91,10 +91,14 @@ export {
   CredentialForm,
   CredentialTypeSelector,
   CredentialsList,
+  CredentialShareDialog,
 } from './lib/credentials';
 export type {
   CredentialCardProps,
   CredentialFormProps,
   CredentialTypeSelectorProps,
   CredentialsListProps,
+  CredentialShareDialogProps,
+  Organization as CredentialOrganization,
+  Project as CredentialProject,
 } from './lib/credentials';
