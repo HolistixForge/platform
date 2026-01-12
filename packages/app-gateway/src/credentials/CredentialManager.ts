@@ -5,14 +5,12 @@
  * - Manages the CredentialProviderRegistry (modules register providers here)
  * - Proxies credential CRUD operations to Ganymede API
  * - Handles OAuth flow state (temporary in-memory)
- * - Provides encryption/decryption key management
  *
- * Credentials are stored in Ganymede's database, not in gateway memory,
- * because they are user-owned and need to persist across gateway instances.
+ * NOTE: Encryption is handled by Ganymede, NOT here.
+ * Gateway sends plaintext to Ganymede, which encrypts before storage.
  */
 
 import { EPriority, log } from '@holistix-forge/log';
-import crypto from 'crypto';
 import { TJson } from '@holistix-forge/simple-types';
 import {
   CredentialManager as AbstractCredentialManager,
@@ -27,35 +25,19 @@ import {
 import type { GanymedeClient } from '../lib/ganymede-client';
 
 /**
- * Encryption configuration
- */
-const ALGORITHM = 'aes-256-gcm';
-const IV_LENGTH = 16;
-const AUTH_TAG_LENGTH = 16;
-const SALT_LENGTH = 32;
-
-/**
  * Credential Manager Implementation
+ *
+ * Acts as a proxy to Ganymede's credential API.
+ * Encryption/decryption happens in Ganymede, not here.
  */
 export class CredentialManagerImpl extends AbstractCredentialManager {
   private providerRegistry: CredentialProviderRegistry;
   private oauthStates: Map<string, TOAuthCredentialState> = new Map();
   private ganymedeClient: GanymedeClient | null = null;
-  private encryptionKey: string;
 
-  constructor(encryptionKey?: string) {
+  constructor() {
     super();
     this.providerRegistry = new CredentialProviderRegistry();
-    // Use provided key or generate one (in production, use env var)
-    this.encryptionKey =
-      encryptionKey || process.env.CREDENTIALS_ENCRYPTION_KEY || '';
-    if (!this.encryptionKey) {
-      log(
-        EPriority.Warning,
-        'CREDENTIALS',
-        'No encryption key provided - credentials will not be encrypted properly'
-      );
-    }
   }
 
   /**
@@ -91,56 +73,7 @@ export class CredentialManagerImpl extends AbstractCredentialManager {
   }
 
   // ==========================================================================
-  // ENCRYPTION HELPERS
-  // ==========================================================================
-
-  private deriveKey(salt: Buffer): Buffer {
-    return crypto.pbkdf2Sync(this.encryptionKey, salt, 100000, 32, 'sha256');
-  }
-
-  private encrypt(plaintext: string): string {
-    const salt = crypto.randomBytes(SALT_LENGTH);
-    const iv = crypto.randomBytes(IV_LENGTH);
-    const key = this.deriveKey(salt);
-
-    const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
-    const encrypted = Buffer.concat([
-      cipher.update(plaintext, 'utf8'),
-      cipher.final(),
-    ]);
-    const authTag = cipher.getAuthTag();
-
-    // Combine: salt + iv + authTag + ciphertext
-    const combined = Buffer.concat([salt, iv, authTag, encrypted]);
-    return combined.toString('base64');
-  }
-
-  private decrypt(encryptedValue: string): string {
-    const combined = Buffer.from(encryptedValue, 'base64');
-
-    const salt = combined.subarray(0, SALT_LENGTH);
-    const iv = combined.subarray(SALT_LENGTH, SALT_LENGTH + IV_LENGTH);
-    const authTag = combined.subarray(
-      SALT_LENGTH + IV_LENGTH,
-      SALT_LENGTH + IV_LENGTH + AUTH_TAG_LENGTH
-    );
-    const ciphertext = combined.subarray(
-      SALT_LENGTH + IV_LENGTH + AUTH_TAG_LENGTH
-    );
-
-    const key = this.deriveKey(salt);
-    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
-    decipher.setAuthTag(authTag);
-
-    const decrypted = Buffer.concat([
-      decipher.update(ciphertext),
-      decipher.final(),
-    ]);
-    return decrypted.toString('utf8');
-  }
-
-  // ==========================================================================
-  // CREDENTIAL STORAGE (via Ganymede API)
+  // CREDENTIAL STORAGE (via Ganymede API - Ganymede handles encryption)
   // ==========================================================================
 
   override async createApiKeyCredential(
@@ -162,16 +95,13 @@ export class CredentialManagerImpl extends AbstractCredentialManager {
       );
     }
 
-    // Encrypt the values
-    const encryptedValues = this.encrypt(JSON.stringify(request.values));
-
     log(
       EPriority.Info,
       'CREDENTIALS',
       `Creating API key credential for provider ${request.provider_id}`
     );
 
-    // Call Ganymede API to store
+    // Call Ganymede API - send plaintext, Ganymede encrypts
     const result = await this.ganymedeClient.request<{
       credential: TCredentialSummary;
     }>({
@@ -179,14 +109,11 @@ export class CredentialManagerImpl extends AbstractCredentialManager {
       url: '/credentials',
       headers: { 'Content-Type': 'application/json' },
       jsonBody: {
-        provider_id: request.provider_id,
+        type: request.provider_id,
         name: request.name,
-        collection_method: 'api_key',
-        encrypted_values: encryptedValues,
+        // Send as JSON string - Ganymede will encrypt this
+        value: JSON.stringify(request.values),
         metadata: request.metadata,
-        // These come from provider
-        provider_display_name: provider.displayName,
-        provider_icon: provider.icon,
       } as TJson,
     });
 
@@ -218,28 +145,19 @@ export class CredentialManagerImpl extends AbstractCredentialManager {
       throw new Error(`Provider ${provider_id} is not an OAuth provider`);
     }
 
-    // Encrypt tokens
-    const encryptedAccessToken = this.encrypt(tokens.access_token);
-    const encryptedRefreshToken = tokens.refresh_token
-      ? this.encrypt(tokens.refresh_token)
-      : undefined;
-
-    // Calculate expiration times
-    const now = new Date();
-    const accessTokenExpiresAt = tokens.expires_in
-      ? new Date(now.getTime() + tokens.expires_in * 1000).toISOString()
-      : undefined;
-    const refreshTokenExpiresAt = tokens.refresh_expires_in
-      ? new Date(now.getTime() + tokens.refresh_expires_in * 1000).toISOString()
-      : undefined;
-
     log(
       EPriority.Info,
       'CREDENTIALS',
       `Creating OAuth credential for provider ${provider_id}`
     );
 
-    // Call Ganymede API to store
+    // Calculate expiration times
+    const now = new Date();
+    const accessTokenExpiresAt = tokens.expires_in
+      ? new Date(now.getTime() + tokens.expires_in * 1000).toISOString()
+      : undefined;
+
+    // Call Ganymede API - send plaintext, Ganymede encrypts
     const result = await this.ganymedeClient.request<{
       credential: TCredentialSummary;
     }>({
@@ -247,17 +165,19 @@ export class CredentialManagerImpl extends AbstractCredentialManager {
       url: '/credentials',
       headers: { 'Content-Type': 'application/json' },
       jsonBody: {
-        provider_id,
+        type: provider_id,
         name,
-        collection_method: 'oauth',
-        encrypted_access_token: encryptedAccessToken,
-        encrypted_refresh_token: encryptedRefreshToken,
-        access_token_expires_at: accessTokenExpiresAt,
-        refresh_token_expires_at: refreshTokenExpiresAt,
-        scopes: tokens.scope ? tokens.scope.split(' ') : [],
-        // These come from provider
-        provider_display_name: provider.displayName,
-        provider_icon: provider.icon,
+        // Send tokens as JSON - Ganymede will encrypt this
+        value: JSON.stringify({
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
+          scope: tokens.scope,
+        }),
+        metadata: {
+          collection_method: 'oauth',
+          access_token_expires_at: accessTokenExpiresAt,
+          scopes: tokens.scope ? tokens.scope.split(' ') : [],
+        },
       } as TJson,
     });
 
@@ -293,27 +213,25 @@ export class CredentialManagerImpl extends AbstractCredentialManager {
   override async getCredentialSummary(
     credential_id: string
   ): Promise<TCredentialSummary | null> {
-    if (!this.ganymedeClient) {
-      throw new Error('Ganymede client not initialized');
-    }
+    // For summary, we just get the credential without the decrypted value
+    const credential = await this.getCredential(credential_id);
+    if (!credential) return null;
 
-    try {
-      const result = await this.ganymedeClient.request<{
-        credential: TCredentialSummary;
-      }>({
-        method: 'GET',
-        url: `/credentials/${credential_id}/summary`,
-      });
-      return result.credential;
-    } catch (error) {
-      log(
-        EPriority.Warning,
-        'CREDENTIALS',
-        `Failed to get credential summary ${credential_id}`,
-        error
-      );
-      return null;
-    }
+    // Return summary (without value)
+    return {
+      id: credential.id,
+      user_id: credential.user_id,
+      provider_id: credential.provider_id,
+      name: credential.name,
+      collection_method: credential.collection_method,
+      metadata: credential.metadata,
+      created_at: credential.created_at,
+      updated_at: credential.updated_at,
+      last_used_at: credential.last_used_at,
+      is_active: credential.is_active,
+      provider_display_name: '',
+      provider_icon: undefined,
+    };
   }
 
   override async listCredentials(
@@ -329,7 +247,7 @@ export class CredentialManagerImpl extends AbstractCredentialManager {
       }>({
         method: 'GET',
         url: '/credentials',
-        queryParameters: { user_id },
+        queryParameters: { include_shared: 'false' },
       });
       return result.credentials;
     } catch (error) {
@@ -399,62 +317,42 @@ export class CredentialManagerImpl extends AbstractCredentialManager {
   }
 
   // ==========================================================================
-  // CREDENTIAL USAGE (decryption happens here in gateway, not Ganymede)
+  // CREDENTIAL USAGE (decrypted value from Ganymede)
   // ==========================================================================
 
   override async useCredential(
     credential_id: string
   ): Promise<TDecryptedCredential | null> {
-    const credential = await this.getCredential(credential_id);
-    if (!credential) {
-      return null;
+    if (!this.ganymedeClient) {
+      throw new Error('Ganymede client not initialized');
     }
 
-    // Update last_used_at (fire and forget)
-    this.ganymedeClient
-      ?.request({
-        method: 'POST',
-        url: `/credentials/${credential_id}/use`,
-      })
-      .catch(() => {
-        /* ignore */
+    try {
+      // Call Ganymede's decrypt endpoint
+      const result = await this.ganymedeClient.request<{
+        credential: { id: string; type: string; value: string };
+      }>({
+        method: 'GET',
+        url: `/credentials/${credential_id}/value`,
       });
 
-    try {
-      if (credential.collection_method === 'api_key') {
-        const apiKeyCred =
-          credential as import('@holistix-forge/gateway').TStoredApiKeyCredential;
-        const decryptedValues = JSON.parse(
-          this.decrypt(apiKeyCred.encrypted_values)
-        );
-        return {
-          id: credential.id,
-          provider_id: credential.provider_id,
-          collection_method: 'api_key',
-          values: decryptedValues,
-        };
-      } else {
-        const oauthCred =
-          credential as import('@holistix-forge/gateway').TStoredOAuthCredential;
-        const accessToken = this.decrypt(oauthCred.encrypted_access_token);
-        const refreshToken = oauthCred.encrypted_refresh_token
-          ? this.decrypt(oauthCred.encrypted_refresh_token)
-          : undefined;
-        return {
-          id: credential.id,
-          provider_id: credential.provider_id,
-          collection_method: 'oauth',
-          values: {
-            access_token: accessToken,
-            ...(refreshToken && { refresh_token: refreshToken }),
-          },
-        };
-      }
+      const provider = this.providerRegistry.get(result.credential.type);
+      const collectionMethod = provider?.collectionMethod || 'api_key';
+
+      // Parse the decrypted value
+      const values = JSON.parse(result.credential.value);
+
+      return {
+        id: result.credential.id,
+        provider_id: result.credential.type,
+        collection_method: collectionMethod,
+        values,
+      };
     } catch (error) {
       log(
         EPriority.Error,
         'CREDENTIALS',
-        `Failed to decrypt credential ${credential_id}`,
+        `Failed to get credential ${credential_id}`,
         error
       );
       return null;
@@ -464,14 +362,17 @@ export class CredentialManagerImpl extends AbstractCredentialManager {
   override async refreshOAuthCredential(
     credential_id: string
   ): Promise<TDecryptedCredential | null> {
-    const credential = await this.getCredential(credential_id);
-    if (!credential || credential.collection_method !== 'oauth') {
+    // Get current credential
+    const decrypted = await this.useCredential(credential_id);
+    if (!decrypted || decrypted.collection_method !== 'oauth') {
       return null;
     }
 
-    const oauthCred =
-      credential as import('@holistix-forge/gateway').TStoredOAuthCredential;
-    if (!oauthCred.encrypted_refresh_token) {
+    const values = decrypted.values as {
+      access_token: string;
+      refresh_token?: string;
+    };
+    if (!values.refresh_token) {
       log(
         EPriority.Warning,
         'CREDENTIALS',
@@ -480,12 +381,12 @@ export class CredentialManagerImpl extends AbstractCredentialManager {
       return null;
     }
 
-    const provider = this.providerRegistry.get(credential.provider_id);
+    const provider = this.providerRegistry.get(decrypted.provider_id);
     if (!provider || provider.collectionMethod !== 'oauth') {
       log(
         EPriority.Error,
         'CREDENTIALS',
-        `Provider ${credential.provider_id} not found or not OAuth`
+        `Provider ${decrypted.provider_id} not found or not OAuth`
       );
       return null;
     }
@@ -499,14 +400,12 @@ export class CredentialManagerImpl extends AbstractCredentialManager {
       log(
         EPriority.Error,
         'CREDENTIALS',
-        `Missing OAuth credentials for provider ${credential.provider_id}`
+        `Missing OAuth credentials for provider ${decrypted.provider_id}`
       );
       return null;
     }
 
     try {
-      const refreshToken = this.decrypt(oauthCred.encrypted_refresh_token);
-
       // Make token refresh request
       const response = await fetch(oauth.tokenUrl, {
         method: 'POST',
@@ -517,7 +416,7 @@ export class CredentialManagerImpl extends AbstractCredentialManager {
           grant_type: 'refresh_token',
           client_id: clientId,
           client_secret: clientSecret,
-          refresh_token: refreshToken,
+          refresh_token: values.refresh_token,
         }),
       });
 
@@ -527,35 +426,27 @@ export class CredentialManagerImpl extends AbstractCredentialManager {
 
       const tokens = await response.json();
 
-      // Update stored credential with new tokens
-      const encryptedAccessToken = this.encrypt(tokens.access_token);
-      const encryptedRefreshToken = tokens.refresh_token
-        ? this.encrypt(tokens.refresh_token)
-        : oauthCred.encrypted_refresh_token;
-
-      const now = new Date();
-      const accessTokenExpiresAt = tokens.expires_in
-        ? new Date(now.getTime() + tokens.expires_in * 1000).toISOString()
-        : undefined;
-
+      // Update stored credential with new tokens via Ganymede
       await this.ganymedeClient?.request({
         method: 'PATCH',
         url: `/credentials/${credential_id}`,
         headers: { 'Content-Type': 'application/json' },
         jsonBody: {
-          encrypted_access_token: encryptedAccessToken,
-          encrypted_refresh_token: encryptedRefreshToken,
-          access_token_expires_at: accessTokenExpiresAt,
+          value: JSON.stringify({
+            access_token: tokens.access_token,
+            refresh_token: tokens.refresh_token || values.refresh_token,
+            scope: tokens.scope,
+          }),
         } as TJson,
       });
 
       return {
-        id: credential.id,
-        provider_id: credential.provider_id,
+        id: credential_id,
+        provider_id: decrypted.provider_id,
         collection_method: 'oauth',
         values: {
           access_token: tokens.access_token,
-          ...(tokens.refresh_token && { refresh_token: tokens.refresh_token }),
+          refresh_token: tokens.refresh_token || values.refresh_token,
         },
       };
     } catch (error) {
