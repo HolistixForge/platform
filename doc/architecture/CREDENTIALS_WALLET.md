@@ -1,59 +1,111 @@
 # Credentials Wallet Architecture
 
-> **Status**: v1 Implementation  
+> **Status**: v1 Implementation (In Progress)  
 > **Issue**: [#4 - feat: Credentials Wallet for Third-Party API Integration](https://github.com/HolistixForge/platform/issues/4)  
 > **Last Updated**: January 2026
 
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [Goals & Requirements](#goals--requirements)
+2. [User Features](#user-features)
 3. [Security Model](#security-model)
 4. [Architecture Decisions](#architecture-decisions)
 5. [Implementation](#implementation)
 6. [API Reference](#api-reference)
-7. [Future Improvements](#future-improvements)
+7. [Credential Usage Flows](#credential-usage-flows)
+8. [Future Improvements](#future-improvements)
 
 ---
 
 ## Overview
 
-The Credentials Wallet is a secure storage system for third-party API credentials (API keys, OAuth tokens) that enables:
+### Why a Credentials Wallet?
 
-- **Users** to store and manage their API credentials in one place
+Modern productivity platforms integrate with many third-party services (Notion, GitHub, OpenAI, etc.). Each user needs to store their own API credentials to:
+
+1. **Access their personal data** from third-party services
+2. **Maintain their permissions** - using their own tokens means their access level is respected
+3. **Not share sensitive credentials** - each user owns their own keys
+4. **Enable background operations** - scheduled tasks can act on behalf of users
+
+Without a credentials wallet, users would need to:
+
+- Re-enter credentials every time they use an integration
+- Share organization-level keys (security risk)
+- Lose access to features requiring third-party APIs
+
+### Core Capabilities
+
+The Credentials Wallet enables:
+
+- **Users** to securely store and manage their API credentials in one place
+- **Users** to assign credentials for use within specific organizations or projects
 - **Modules** to access third-party services on behalf of users
-- **Gateway** to proxy requests to third-party APIs without exposing credentials to the frontend
+- **Gateway** to proxy requests to third-party APIs, injecting credentials server-side
 
-### Core Use Cases
+### Supported Credential Types
 
-1. **AI Integrations**: Store OpenAI, Anthropic, etc. API keys
-2. **Version Control**: GitHub, GitLab personal access tokens
-3. **Productivity Tools**: Notion, Airtable API keys or OAuth connections
-4. **Cloud Services**: AWS, Google Cloud credentials
-5. **Communication**: Slack, Discord bot tokens
+| Category        | Examples                  | Collection Method         |
+| --------------- | ------------------------- | ------------------------- |
+| AI Services     | OpenAI, Anthropic, Cohere | API Key                   |
+| Version Control | GitHub, GitLab            | Personal Access Token     |
+| Productivity    | Notion, Airtable          | API Key or OAuth          |
+| Cloud Services  | AWS, Google Cloud         | API Key / Service Account |
+| Communication   | Slack, Discord            | Bot Token or OAuth        |
 
 ---
 
-## Goals & Requirements
+## User Features
 
-### What We Wanted to Achieve
+### 1. Credential Storage
 
-| Goal                                                        | Priority | Status                           |
-| ----------------------------------------------------------- | -------- | -------------------------------- |
-| Secure credential storage (encrypted at rest)               | P0       | ✅ Achieved                      |
-| Database dump protection (credentials unusable without key) | P0       | ✅ Achieved                      |
-| Support for API keys and OAuth flows                        | P0       | ✅ Achieved                      |
-| Credential sharing at org/project/resource level            | P1       | ✅ Achieved                      |
-| Background job support (cron, webhooks)                     | P1       | ✅ Achieved                      |
-| Per-user encryption isolation                               | P2       | ⏳ Deferred (see Security Model) |
-| Frontend-first credential usage (Gateway proxy)             | P1       | ✅ Achieved                      |
+Users can store credentials with:
 
-### Non-Goals (v1)
+- **Name**: User-defined label (e.g., "My OpenAI Key", "Work Notion")
+- **Type**: Selected from available providers
+- **Value**: The actual API key/token (encrypted at rest)
+- **Metadata**: Optional notes or configuration
 
-- End-to-end encryption (would break background jobs)
-- Hardware Security Module (HSM) integration
-- Multi-region key management
-- Credential rotation automation
+### 2. Credential Assignment (Sharing)
+
+Users can assign their credentials to be used from specific contexts:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    CREDENTIAL ASSIGNMENT MODEL                           │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  User's Credential: "My Notion API Key"                                  │
+│                                                                          │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │  Assigned to Organization: "Acme Corp"                          │    │
+│  │  → All org members can use this credential in org context       │    │
+│  │  → User still owns it, can revoke anytime                       │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                                                                          │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │  Assigned to Project: "Q1 Marketing"                            │    │
+│  │  → Only project members can use this credential                 │    │
+│  │  → Scoped to specific project work                              │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                                                                          │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │  Assigned to Resource: "Product Roadmap Board"                  │    │
+│  │  → Only usable for this specific resource                       │    │
+│  │  → Maximum access control granularity                           │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### 3. Credential Management UI
+
+The frontend provides:
+
+- **Wallet page** (`/account/credentials`): List all user's credentials
+- **Add credential form**: Select provider type, enter name and value
+- **Assignment panel**: Assign credentials to orgs/projects
+- **Revoke/Delete**: Remove assignments or delete credentials entirely
 
 ---
 
@@ -136,7 +188,7 @@ We explored several encryption strategies and discovered a fundamental trade-off
 | -------------------------- | --------------------------------------------------------- |
 | **Database dump**          | ✅ Protected - encryption key not in database             |
 | **SQL injection**          | ✅ Protected - credentials encrypted at rest              |
-| **Network sniffing**       | ✅ Protected - HTTPS + credentials never sent to frontend |
+| **Network sniffing**       | ✅ Protected - HTTPS throughout                           |
 | **Master key compromise**  | ⚠️ All credentials exposed (accepted trade-off)           |
 | **Single user compromise** | ⚠️ Only that user's credentials (no cross-user isolation) |
 
@@ -151,98 +203,64 @@ We explored several encryption strategies and discovered a fundamental trade-off
 
 ## Architecture Decisions
 
-### Decision 1: Encryption Responsibility
+### Decision 1: Ganymede as Single Source
 
-**Decision**: Ganymede is the single source of encryption/decryption.
-
-**Justification**:
-
-- Ganymede owns the database and credential storage
-- Gateway acts as a proxy, never handles raw credentials
-- Prevents code duplication and divergent encryption implementations
-- Clear separation of concerns
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      CREDENTIAL FLOW                                     │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                          │
-│   Frontend                Gateway                    Ganymede            │
-│   ┌──────┐               ┌──────┐                   ┌──────┐            │
-│   │      │───────────────│      │───────────────────│      │            │
-│   │      │  "Store my    │      │  Forward with     │      │            │
-│   │      │  API key"     │      │  user context     │      │            │
-│   │      │               │      │                   │      │            │
-│   │      │               │      │                   │ ENCRYPT           │
-│   │      │               │      │                   │ & STORE           │
-│   │      │               │      │                   │      │            │
-│   └──────┘               └──────┘                   └──────┘            │
-│                                                                          │
-│   Frontend                Gateway                    Ganymede            │
-│   ┌──────┐               ┌──────┐                   ┌──────┐            │
-│   │      │───────────────│      │───────────────────│      │            │
-│   │      │  "Call        │      │  "Get credential  │      │            │
-│   │      │  Notion API"  │      │   for user X"     │ DECRYPT           │
-│   │      │               │      │◄──────────────────│      │            │
-│   │      │               │      │  (decrypted)      │      │            │
-│   │      │               │ CALL │                   │      │            │
-│   │      │               │ API  │                   │      │            │
-│   │      │◄──────────────│      │                   │      │            │
-│   │      │  (result)     │      │                   │      │            │
-│   └──────┘               └──────┘                   └──────┘            │
-│                                                                          │
-│   ⚠️ Decrypted credentials NEVER reach the frontend                     │
-│                                                                          │
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
-### Decision 2: Credential Provider Definitions
-
-**Decision**: Credential providers are defined as database seed data, not registered by modules at runtime.
+**Decision**: All credential management (storage, encryption, OAuth, API) is in Ganymede.
 
 **Justification**:
 
-- **Prevents duplication**: Multiple module instances won't create duplicate providers
+- Ganymede owns the database and user authentication
+- Single source of truth prevents code duplication
+- Encryption happens where data is stored
+- Clear responsibility: Ganymede = credential management
+
+**What Gateway does NOT have**:
+
+- ❌ No credential API routes in Gateway
+- ❌ No credential encryption in Gateway
+- ❌ No CredentialManager class in Gateway
+- ❌ No OAuth callback handling in Gateway
+
+**What Gateway HAS**:
+
+- ✅ A thin client to fetch credentials from Ganymede (for use in reducers/proxying)
+- ✅ Proxy routes to call third-party APIs with injected credentials
+
+### Decision 2: Credential Providers as Database Seed Data
+
+**Decision**: Credential providers (types) are defined as database seed data, not registered by modules at runtime.
+
+**Justification**:
+
+- **Prevents duplication**: Multiple deployments won't create duplicate providers
 - **Versioning**: Provider definitions can be updated via database migrations
-- **Cross-module usage**: Different modules can use the same credential type (e.g., multiple modules using Notion API)
+- **Cross-module usage**: Different modules can use the same credential type
 - **Simplicity**: No complex registration lifecycle or conflict resolution
+- **Predictability**: Providers are known at deployment time
 
 **Implementation**:
 
 ```sql
--- Credential types defined in database schema
+-- Credential types seeded in database schema
 INSERT INTO public.credential_metadata
-  (credential_type, display_name, description, required_fields, module_name)
+  (credential_type, display_name, description, collection_method, required_fields, oauth_config)
 VALUES
-  ('openai_api_key', 'OpenAI API Key', 'API key for OpenAI services', '["api_key"]', 'ai'),
-  ('notion_api_key', 'Notion API Key', 'Integration token for Notion', '["api_key"]', 'productivity'),
+  ('openai_api_key', 'OpenAI API Key', 'API key for OpenAI services', 'api_key', '["api_key"]', NULL),
+  ('notion_api_key', 'Notion API Key', 'Integration token for Notion', 'api_key', '["api_key"]', NULL),
+  ('notion_oauth', 'Notion (OAuth)', 'Connect via Notion OAuth', 'oauth', NULL, '{"authorization_url": "...", "token_url": "...", "scopes": [...]}'),
   -- ... more providers
 ON CONFLICT (credential_type) DO NOTHING;
 ```
 
 ### Decision 3: Credential Sharing Model
 
-**Decision**: Hierarchical sharing at organization, project, and resource levels.
+**Decision**: Hierarchical assignment at organization, project, and resource levels.
 
 **Justification**:
 
 - **Organization level**: Admin shares API key for entire company
 - **Project level**: Team lead shares key for specific project
 - **Resource level**: User shares key for specific resource (e.g., a specific Notion database)
-
-```sql
-CREATE TABLE public.credential_shares (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    credential_id uuid NOT NULL REFERENCES credentials(id),
-    share_scope VARCHAR(50) NOT NULL, -- 'organization', 'project', 'resource'
-    organization_id uuid REFERENCES organizations(organization_id),
-    project_id uuid REFERENCES projects(project_id),
-    resource_id VARCHAR(255), -- For resource-level sharing
-    granted_by uuid NOT NULL REFERENCES users(user_id),
-    granted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    is_active BOOLEAN DEFAULT true
-);
-```
 
 ### Decision 4: OAuth vs API Key Support
 
@@ -255,61 +273,33 @@ CREATE TABLE public.credential_shares (
 - Some offer both (Notion, GitHub)
 - Unified storage simplifies credential management
 
-```typescript
-type TCredentialCollectionMethod = 'api_key' | 'oauth';
-
-type TCredentialProvider = {
-  id: string;
-  displayName: string;
-  description: string;
-  category: string;
-  collectionMethod: TCredentialCollectionMethod;
-  // OAuth-specific config (when method is 'oauth')
-  oauthConfig?: {
-    authorizationUrl: string;
-    tokenUrl: string;
-    scopes: string[];
-  };
-  // API key validation schema (when method is 'api_key')
-  validationSchema?: Record<string, unknown>;
-};
-```
-
 ---
 
 ## Implementation
 
-### Package Structure
+### Package Structure (Target State)
 
 ```
 packages/
-├── app-ganymede/
+├── app-ganymede/                        # ALL CREDENTIAL LOGIC HERE
 │   ├── src/
-│   │   ├── routes/credentials/     # REST API endpoints
-│   │   │   └── index.ts
+│   │   ├── routes/credentials/          # All credential API routes
+│   │   │   └── index.ts                 # CRUD, OAuth, sharing, types
 │   │   └── services/
-│   │       └── credentials-encryption.ts  # AES-256-GCM implementation
+│   │       └── credentials-encryption.ts # AES-256-GCM implementation
 │   └── database/schema/
-│       └── 02-schema.sql           # credentials, credential_shares, credential_metadata
+│       └── 02-schema.sql                # credentials, credential_shares, credential_metadata (with seed data)
 │
-├── app-gateway/
+├── app-gateway/                         # MINIMAL CREDENTIAL CODE
 │   └── src/
-│       ├── credentials/
-│       │   ├── CredentialManager.ts    # Orchestrates credential operations
-│       │   ├── providers.ts            # Provider definitions (runtime reference)
-│       │   └── index.ts
+│       ├── lib/
+│       │   └── credentials-client.ts    # Thin client to fetch credentials from Ganymede
 │       └── routes/
-│           └── credentials.ts          # Gateway credential routes
-│
-├── modules/gateway/
-│   └── src/lib/
-│       ├── credential-provider-types.ts    # Type definitions
-│       ├── credential-provider-registry.ts # In-memory provider registry
-│       └── managers.ts                     # CredentialManager abstract class
+│           └── proxy.ts                 # Proxy route for third-party API calls
 │
 ├── frontend-data/
 │   └── src/lib/
-│       └── credentials-queries.ts      # React Query hooks
+│       └── credentials-queries.ts       # React Query hooks (calls Ganymede API)
 │
 └── ui-base/
     └── src/lib/credentials/
@@ -317,6 +307,7 @@ packages/
         ├── CredentialForm.tsx
         ├── CredentialsList.tsx
         ├── CredentialTypeSelector.tsx
+        ├── CredentialAssignment.tsx     # Assign to org/project UI
         └── credentials.scss
 ```
 
@@ -338,11 +329,11 @@ CREATE TABLE public.credentials (
     is_active BOOLEAN DEFAULT true
 );
 
--- Sharing configuration
+-- Sharing/Assignment configuration
 CREATE TABLE public.credential_shares (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     credential_id uuid NOT NULL REFERENCES credentials(id) ON DELETE CASCADE,
-    share_scope VARCHAR(50) NOT NULL,
+    share_scope VARCHAR(50) NOT NULL,        -- 'organization', 'project', 'resource'
     organization_id uuid REFERENCES organizations(organization_id),
     project_id uuid REFERENCES projects(project_id),
     resource_id VARCHAR(255),
@@ -352,111 +343,209 @@ CREATE TABLE public.credential_shares (
     is_active BOOLEAN DEFAULT true
 );
 
--- Provider metadata (seed data)
+-- Provider metadata (seed data - NOT module-registered)
 CREATE TABLE public.credential_metadata (
     credential_type VARCHAR(100) PRIMARY KEY,
     display_name VARCHAR(255) NOT NULL,
     description TEXT,
     icon_url VARCHAR(512),
-    validation_schema JSONB,
-    required_fields JSONB,
-    encryption_required BOOLEAN DEFAULT true,
-    module_name VARCHAR(100)
+    collection_method VARCHAR(20) NOT NULL DEFAULT 'api_key', -- 'api_key' | 'oauth'
+    required_fields JSONB,                   -- For API key: ["api_key"] or ["access_key", "secret_key"]
+    oauth_config JSONB,                      -- For OAuth: { authorization_url, token_url, scopes, ... }
+    category VARCHAR(50),                    -- 'ai', 'vcs', 'productivity', etc.
+    encryption_required BOOLEAN NOT NULL DEFAULT true
 );
-```
 
-### Key Components
-
-#### Ganymede: Encryption Service
-
-```typescript
-// packages/app-ganymede/src/services/credentials-encryption.ts
-export function encryptCredential(
-  plaintext: string,
-  keyVersion: string
-): string {
-  const masterKey = getMasterKey(keyVersion);
-  const salt = crypto.randomBytes(32);
-  const iv = crypto.randomBytes(16);
-  const key = crypto.pbkdf2Sync(masterKey, salt, 100000, 32, 'sha256');
-  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
-  const encrypted = Buffer.concat([
-    cipher.update(plaintext, 'utf8'),
-    cipher.final(),
-  ]);
-  const authTag = cipher.getAuthTag();
-  return Buffer.concat([salt, iv, authTag, encrypted]).toString('base64');
-}
-
-export function decryptCredential(
-  encryptedValue: string,
-  keyVersion: string
-): string {
-  const masterKey = getMasterKey(keyVersion);
-  const combined = Buffer.from(encryptedValue, 'base64');
-  // Extract salt, iv, authTag, ciphertext and decrypt
-  // ...
-}
-```
-
-#### Gateway: Credential Manager
-
-```typescript
-// packages/app-gateway/src/credentials/CredentialManager.ts
-export class CredentialManagerImpl extends CredentialManager {
-  constructor(
-    private ganymedeClient: GanymedeClient,
-    private providerRegistry: CredentialProviderRegistry,
-    private organizationId: string,
-    private gatewayId: string
-  ) {
-    super();
-  }
-
-  async createApiKeyCredential(
-    request: TCreateApiKeyCredentialRequest
-  ): Promise<TStoredCredential> {
-    // Validate against provider schema
-    // Forward to Ganymede for storage (Ganymede handles encryption)
-    return this.ganymedeClient.post('/api/credentials', request);
-  }
-
-  async useCredential(credentialId: string): Promise<TDecryptedCredential> {
-    // Get decrypted credential from Ganymede
-    // Update last_used_at
-    // Return for Gateway to use in API calls
-  }
-}
+-- Seed default providers
+INSERT INTO public.credential_metadata
+  (credential_type, display_name, description, collection_method, required_fields, category)
+VALUES
+  ('openai_api_key', 'OpenAI API Key', 'API key for OpenAI services (GPT, DALL-E)', 'api_key', '["api_key"]', 'ai'),
+  ('anthropic_api_key', 'Anthropic API Key', 'API key for Claude models', 'api_key', '["api_key"]', 'ai'),
+  ('notion_api_key', 'Notion API Key', 'Internal integration token', 'api_key', '["api_key"]', 'productivity'),
+  ('github_token', 'GitHub Token', 'Personal access token', 'api_key', '["token"]', 'vcs'),
+  ('airtable_api_key', 'Airtable API Key', 'Personal access token for Airtable', 'api_key', '["api_key"]', 'productivity'),
+  ('slack_bot_token', 'Slack Bot Token', 'Bot token for Slack API', 'api_key', '["token"]', 'communication'),
+  ('generic_api_key', 'Generic API Key', 'Generic API key for any service', 'api_key', '["api_key"]', 'generic')
+ON CONFLICT (credential_type) DO NOTHING;
 ```
 
 ---
 
 ## API Reference
 
-### Ganymede API (Internal)
+### Ganymede API (All Credential Operations)
 
-| Method | Endpoint                               | Description                        |
-| ------ | -------------------------------------- | ---------------------------------- |
-| GET    | `/api/credentials`                     | List user's credentials            |
-| GET    | `/api/credentials/:id`                 | Get credential details (decrypted) |
-| POST   | `/api/credentials`                     | Create new credential              |
-| PATCH  | `/api/credentials/:id`                 | Update credential                  |
-| DELETE | `/api/credentials/:id`                 | Delete credential                  |
-| GET    | `/api/credentials/types`               | List available credential types    |
-| POST   | `/api/credentials/:id/shares`          | Share credential                   |
-| DELETE | `/api/credentials/:id/shares/:shareId` | Revoke share                       |
+| Method         | Endpoint                                | Description                                                 |
+| -------------- | --------------------------------------- | ----------------------------------------------------------- |
+| **Types**      |                                         |                                                             |
+| GET            | `/api/credentials/types`                | List available credential providers                         |
+| **CRUD**       |                                         |                                                             |
+| GET            | `/api/credentials`                      | List user's credentials (+ shared if `include_shared=true`) |
+| GET            | `/api/credentials/:id`                  | Get credential details (decrypted value)                    |
+| POST           | `/api/credentials`                      | Create new credential                                       |
+| PATCH          | `/api/credentials/:id`                  | Update credential (name, value, metadata)                   |
+| DELETE         | `/api/credentials/:id`                  | Delete credential (soft delete)                             |
+| **Sharing**    |                                         |                                                             |
+| GET            | `/api/credentials/:id/shares`           | List shares for a credential                                |
+| POST           | `/api/credentials/:id/share`            | Assign credential to org/project/resource                   |
+| DELETE         | `/api/credentials/:id/shares/:share_id` | Revoke assignment                                           |
+| **OAuth**      |                                         |                                                             |
+| GET            | `/api/credentials/oauth/start/:type`    | Start OAuth flow, returns authorization URL                 |
+| GET            | `/api/credentials/oauth/callback`       | OAuth callback, exchanges code for tokens                   |
+| **Validation** |                                         |                                                             |
+| POST           | `/api/credentials/:id/validate`         | Test if credential is valid                                 |
 
-### Gateway API (Frontend-facing)
+### Gateway API (Minimal - Proxy Only)
 
-| Method | Endpoint                             | Description                       |
-| ------ | ------------------------------------ | --------------------------------- |
-| GET    | `/credentials/providers`             | List available providers          |
-| GET    | `/credentials`                       | List user's credentials (summary) |
-| POST   | `/credentials/api-key`               | Store API key credential          |
-| GET    | `/credentials/oauth/start/:provider` | Start OAuth flow                  |
-| GET    | `/credentials/oauth/callback`        | OAuth callback                    |
-| POST   | `/credentials/:id/use`               | Use credential (internal)         |
-| DELETE | `/credentials/:id`                   | Delete credential                 |
+| Method | Endpoint              | Description                                                |
+| ------ | --------------------- | ---------------------------------------------------------- |
+| POST   | `/api/proxy/:service` | Proxy request to third-party API with credential injection |
+
+---
+
+## Credential Usage Flows
+
+### Flow 1: Frontend Direct API Call (Decrypted Credential)
+
+For services where the frontend needs to make direct API calls (e.g., fetching Notion data that should respect user's Notion permissions):
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                  FRONTEND DIRECT CALL (with decrypted credential)        │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│   Frontend                      Ganymede                 Notion API      │
+│   ┌──────┐                     ┌──────┐                 ┌──────┐        │
+│   │      │─────────────────────│      │                 │      │        │
+│   │  1.  │  GET /credentials/  │      │                 │      │        │
+│   │      │  :id                │  2.  │                 │      │        │
+│   │      │◄────────────────────│ DECRYPT                │      │        │
+│   │      │  { value: "sk-..." }│      │                 │      │        │
+│   │      │                     │      │                 │      │        │
+│   │  3.  │─────────────────────────────────────────────│      │        │
+│   │      │  Direct API call with credential            │      │        │
+│   │      │  Authorization: Bearer sk-...               │      │        │
+│   │      │◄────────────────────────────────────────────│      │        │
+│   │      │  { data: [...] }                            │      │        │
+│   └──────┘                     └──────┘                 └──────┘        │
+│                                                                          │
+│   ⚠️ Credential IS exposed to frontend (user's own credential)          │
+│   ✅ User's Notion permissions are respected                            │
+│   ✅ Data is fetched per-user, not shared                               │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**Use Case**: Display a Notion table where each user sees data according to their Notion permissions.
+
+### Flow 2: Gateway Proxy (Credential Injected Server-Side)
+
+For services where we don't want to expose credentials to the frontend, or where CORS prevents direct calls:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                  GATEWAY PROXY (credential injected server-side)         │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│   Frontend          Gateway            Ganymede          Third-Party     │
+│   ┌──────┐         ┌──────┐           ┌──────┐          ┌──────┐        │
+│   │      │─────────│      │           │      │          │      │        │
+│   │  1.  │ POST    │      │───────────│      │          │      │        │
+│   │      │ /proxy/ │  2.  │ GET cred  │  3.  │          │      │        │
+│   │      │ notion  │      │ for user  │ DECRYPT         │      │        │
+│   │      │ {query} │      │◄──────────│      │          │      │        │
+│   │      │         │      │ {value}   │      │          │      │        │
+│   │      │         │      │           │      │          │      │        │
+│   │      │         │  4.  │───────────────────────────│      │        │
+│   │      │         │      │ API call + credential     │      │        │
+│   │      │         │      │◄──────────────────────────│      │        │
+│   │      │         │      │ { data }                  │      │        │
+│   │      │◄────────│  5.  │           │      │          │      │        │
+│   │      │ {data}  │      │           │      │          │      │        │
+│   └──────┘         └──────┘           └──────┘          └──────┘        │
+│                                                                          │
+│   ✅ Credential NEVER reaches frontend                                  │
+│   ✅ Gateway handles CORS, rate limiting, caching                       │
+│   ✅ Can add request/response transformation                            │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**Use Case**: Call OpenAI API from frontend without exposing the API key.
+
+### Flow 3: Background Job (Cron/Webhook)
+
+For scheduled tasks that operate on behalf of users:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                  BACKGROUND JOB (no active user session)                 │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│   Cron Job              Ganymede                      Third-Party        │
+│   ┌──────┐             ┌──────┐                      ┌──────┐           │
+│   │      │─────────────│      │                      │      │           │
+│   │  1.  │ Get users   │      │                      │      │           │
+│   │      │ with sync   │      │                      │      │           │
+│   │      │◄────────────│      │                      │      │           │
+│   │      │             │      │                      │      │           │
+│   │  2.  │─────────────│      │                      │      │           │
+│   │      │ For each:   │  3.  │                      │      │           │
+│   │      │ GET cred    │ DECRYPT                     │      │           │
+│   │      │◄────────────│      │                      │      │           │
+│   │      │ {value}     │      │                      │      │           │
+│   │      │             │      │                      │      │           │
+│   │  4.  │───────────────────────────────────────────│      │           │
+│   │      │ API call with credential                  │      │           │
+│   │      │◄──────────────────────────────────────────│      │           │
+│   │      │             │      │                      │      │           │
+│   └──────┘             └──────┘                      └──────┘           │
+│                                                                          │
+│   ✅ Works without active user session                                  │
+│   ✅ Master key available to server process                             │
+│   ⚠️ This is why per-user encryption (password-derived) doesn't work   │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**Use Case**: Nightly sync of user's Notion data, scheduled report generation.
+
+---
+
+## Current Implementation Status
+
+### What's Done ✅
+
+- [x] Database schema (credentials, credential_shares, credential_metadata)
+- [x] Encryption service in Ganymede (`credentials-encryption.ts`)
+- [x] Basic CRUD routes in Ganymede (`/api/credentials/*`)
+- [x] Sharing routes in Ganymede
+- [x] Frontend page (`/account/credentials`)
+- [x] Frontend components (CredentialsList, CredentialForm, CredentialTypeSelector)
+
+### What Needs Refactoring 🔄
+
+Based on architecture decisions, the following code needs to be moved/removed:
+
+| Current Location                                               | Action | Target                            |
+| -------------------------------------------------------------- | ------ | --------------------------------- |
+| `app-gateway/src/routes/credentials.ts` (519 lines)            | DELETE | Routes should be in Ganymede only |
+| `app-gateway/src/credentials/CredentialManager.ts` (511 lines) | DELETE | Not needed, Ganymede handles all  |
+| `app-gateway/src/credentials/providers.ts` (285 lines)         | DELETE | Providers are DB seed data        |
+| `modules/gateway/src/lib/credential-provider-*.ts`             | DELETE | Not needed                        |
+| `modules/gateway/src/lib/managers.ts` (CredentialManager)      | DELETE | Not needed                        |
+| OAuth routes in Gateway                                        | MOVE   | To Ganymede                       |
+
+### What Needs Adding ➕
+
+| Component                                              | Description                                    |
+| ------------------------------------------------------ | ---------------------------------------------- |
+| `app-gateway/src/lib/credentials-client.ts`            | Thin client to fetch credentials from Ganymede |
+| `app-gateway/src/routes/proxy.ts`                      | Proxy route for third-party API calls          |
+| `app-ganymede/src/routes/credentials/oauth.ts`         | OAuth flow handling                            |
+| `ui-base/src/lib/credentials/CredentialAssignment.tsx` | UI for assigning to org/project                |
+| OAuth provider seed data                               | Add OAuth configs to credential_metadata       |
 
 ---
 
@@ -480,7 +569,7 @@ Users choose per-credential:
 
 ### v2: Hardware Security Module Integration
 
-For enterprise deployments:
+For enterprise deployments, integrate with external KMS:
 
 ```typescript
 interface KeyManagementService {
@@ -493,26 +582,18 @@ interface KeyManagementService {
 // - LocalKMS (current - env variable)
 // - VaultKMS (HashiCorp Vault)
 // - AwsKMS (AWS Key Management Service)
-// - AzureKeyVault (Azure)
 ```
 
-### v2: Credential Rotation
+### v2: Credential Rotation & Refresh
 
-Automated credential refresh for OAuth tokens:
+Automated OAuth token refresh and credential rotation:
 
 ```typescript
-interface CredentialRotationPolicy {
-  credentialId: string;
-  rotationInterval: Duration;
-  lastRotated: Date;
-  nextRotation: Date;
-}
-
 // Background job to refresh expiring OAuth tokens
 async function rotateExpiringCredentials() {
   const expiring = await getCredentialsExpiringWithin('24h');
   for (const cred of expiring) {
-    if (cred.type === 'oauth') {
+    if (cred.collection_method === 'oauth') {
       await refreshOAuthToken(cred);
     }
   }
@@ -536,43 +617,17 @@ CREATE TABLE public.credential_audit_log (
 );
 ```
 
-### v3: Zero-Knowledge Architecture
-
-For maximum security (significant complexity):
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│  Client-Side Encryption                                                  │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                          │
-│  Browser                              Server                             │
-│  ┌──────────────────────┐            ┌──────────────────────────────┐  │
-│  │ 1. Derive key from   │            │                              │  │
-│  │    user password     │            │  Only stores encrypted blob  │  │
-│  │                      │            │  Server CANNOT decrypt       │  │
-│  │ 2. Encrypt credential│────────────│                              │  │
-│  │    in browser        │            │  For API calls:              │  │
-│  │                      │            │  - User sends encrypted cred │  │
-│  │ 3. Send encrypted    │            │  - Server decrypts in memory │  │
-│  │    blob to server    │            │  - Makes API call            │  │
-│  └──────────────────────┘            │  - Forgets key immediately   │  │
-│                                       └──────────────────────────────┘  │
-│                                                                          │
-│  Trade-off: No background jobs possible, complex key management          │
-│                                                                          │
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
 ---
 
 ## Summary
 
-The Credentials Wallet v1 implements a **practical security model** that:
+The Credentials Wallet v1 implements a **practical architecture** that:
 
-1. ✅ Protects credentials from database dumps
-2. ✅ Supports all required use cases (API keys, OAuth, background jobs)
-3. ✅ Provides clear separation of concerns (Ganymede = storage, Gateway = proxy)
-4. ✅ Enables flexible sharing at multiple levels
-5. ⚠️ Accepts the trade-off that master key compromise affects all users
+1. ✅ Centralizes all credential logic in Ganymede (single source of truth)
+2. ✅ Protects credentials from database dumps (master key not in DB)
+3. ✅ Supports all use cases (API keys, OAuth, background jobs)
+4. ✅ Enables flexible assignment at org/project/resource level
+5. ✅ Allows frontend to use credentials (direct or proxy, depending on use case)
+6. ⚠️ Accepts the trade-off that master key compromise affects all users
 
-Future versions can add per-user isolation for users who need maximum security and are willing to accept the session-only limitation.
+The Gateway only has a thin client to retrieve credentials for proxy operations - all management is in Ganymede.
