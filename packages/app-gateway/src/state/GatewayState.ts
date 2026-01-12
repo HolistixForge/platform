@@ -35,6 +35,17 @@ export class GatewayState {
   }
 
   /**
+   * Get the Ganymede client for direct API calls
+   * Used by other components that need to communicate with Ganymede
+   */
+  getGanymedeClient(): GanymedeClient {
+    if (!this.ganymedeClient) {
+      throw new Error('Ganymede client not initialized');
+    }
+    return this.ganymedeClient;
+  }
+
+  /**
    * Register a persistence provider with an ID
    * Loads data from pulled snapshot if available
    * @param id - Unique identifier (e.g., 'permissions', 'oauth', 'containers', 'projects')
