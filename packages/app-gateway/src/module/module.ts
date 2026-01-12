@@ -17,7 +17,6 @@ import type {
   TokenManager,
 } from '@holistix-forge/gateway';
 import { createGanymedeClient } from '../lib/ganymede-client';
-import type { CredentialManagerImpl } from '../credentials';
 
 /**
  * Gateway Module Configuration
@@ -38,7 +37,6 @@ export type GatewayModuleConfig = {
   permissionManager: PermissionManager;
   oauthManager: OAuthManager;
   tokenManager: TokenManager;
-  credentialManager: CredentialManagerImpl;
   permissionRegistry: PermissionRegistry;
   protectedServiceRegistry: ProtectedServiceRegistry;
 };
@@ -117,11 +115,8 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
       tokenManager: gatewayConfig.tokenManager,
       permissionManager: gatewayConfig.permissionManager,
       oauthManager: gatewayConfig.oauthManager,
-      credentialManager: gatewayConfig.credentialManager,
       permissionRegistry: gatewayConfig.permissionRegistry,
       protectedServiceRegistry: gatewayConfig.protectedServiceRegistry,
-      credentialProviderRegistry:
-        gatewayConfig.credentialManager.getProviderRegistry(),
     };
 
     moduleExports(myExports);

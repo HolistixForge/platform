@@ -14,7 +14,6 @@ import type {
   PermissionRegistry,
   ProtectedServiceRegistry,
 } from '@holistix-forge/gateway';
-import type { CredentialManagerImpl } from '../credentials';
 import { CONFIG } from '../config';
 
 /**
@@ -31,8 +30,7 @@ export function createBackendModulesConfig(
   oauthManager: OAuthManager,
   tokenManager: TokenManager,
   permissionRegistry: PermissionRegistry,
-  protectedServiceRegistry: ProtectedServiceRegistry,
-  credentialManager: CredentialManagerImpl
+  protectedServiceRegistry: ProtectedServiceRegistry
 ): { module: TModule<never, object>; config: object }[] {
   // Collab config - uses YjsServerCollab for server-side (Yjs WebSocket server)
   // The room_id is not used in server mode, but required by config type
@@ -57,7 +55,6 @@ export function createBackendModulesConfig(
     permissionManager,
     oauthManager,
     tokenManager,
-    credentialManager,
     permissionRegistry,
     protectedServiceRegistry,
   };

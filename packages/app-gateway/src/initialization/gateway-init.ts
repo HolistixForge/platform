@@ -5,7 +5,6 @@ import { PermissionManager } from '../permissions';
 import { ProjectRoomsManager } from '../state/ProjectRooms';
 import { OAuthManager } from '../oauth';
 import { TokenManager } from '../tokens';
-import { CredentialManagerImpl, registerAllProviders } from '../credentials';
 import {
   PermissionRegistry,
   ProtectedServiceRegistry,
@@ -19,7 +18,6 @@ export interface GatewayInstances {
   projectRooms: ProjectRoomsManager;
   permissionRegistry: PermissionRegistry;
   protectedServiceRegistry: ProtectedServiceRegistry;
-  credentialManager: CredentialManagerImpl;
 }
 import { setGatewayInstances, getGatewayInstances } from './gateway-instances';
 import { createBackendModulesConfig } from '../config/modules';
@@ -66,7 +64,6 @@ export async function initializeGatewayForOrganization(
   const oauthManager = new OAuthManager();
   const tokenManager = new TokenManager();
   const projectRooms = new ProjectRoomsManager();
-  const credentialManager = new CredentialManagerImpl();
 
   // 4. Register all managers with GatewayState
   // Registration will automatically load data from pulled snapshot
@@ -93,21 +90,8 @@ export async function initializeGatewayForOrganization(
     projectRooms,
     permissionRegistry,
     protectedServiceRegistry,
-    credentialManager,
   };
   setGatewayInstances(instances);
-
-  // 5.6 Set up credential manager with Ganymede client
-  // The Ganymede client is created after GatewayState is initialized
-  credentialManager.setGanymedeClient(gatewayState.getGanymedeClient());
-
-  // 5.7 Register all credential providers
-  registerAllProviders(credentialManager);
-  log(
-    EPriority.Info,
-    'GATEWAY_INIT',
-    `Registered ${credentialManager.getProviders().length} credential providers`
-  );
 
   // 6. Load backend modules (collab, reducers, core-graph, gateway, user-containers)
   // Modules are loaded after managers are created so gateway module can access them
@@ -119,8 +103,7 @@ export async function initializeGatewayForOrganization(
     oauthManager,
     tokenManager,
     permissionRegistry,
-    protectedServiceRegistry,
-    credentialManager
+    protectedServiceRegistry
   );
   log(
     EPriority.Info,
