@@ -1,9 +1,9 @@
-import { TEventLoad } from '@holistix-forge/gateway';
 import {
-  Reducer,
   RequestData,
   TReducersBackendExports,
 } from '@holistix-forge/reducers';
+import { ReducerWithCollab } from '@holistix-forge/collab';
+import { log, EPriority } from '@holistix-forge/log';
 
 import {
   TEventActiveTabChange,
@@ -23,25 +23,43 @@ import {
 import { TTabsSharedData } from './tabs-shared-model';
 import { ReadWriteTree } from './tree';
 import { TCollabBackendExports } from '@holistix-forge/collab';
+import { TEventProjectInit } from '@holistix-forge/gateway';
 
 type TRequired = {
-  collab: TCollabBackendExports<TTabsSharedData>;
+  collab: TCollabBackendExports;
   reducers: TReducersBackendExports;
 };
 
-export class TabsReducer extends Reducer<TTabEvents<TabPayload> | TEventLoad> {
+type TTabsEvents = TTabEvents<TabPayload> | TEventProjectInit;
+
+// Note: Project initialization (default tabs, views) is now handled by
+// the project:init event dispatched when a user first opens a project.
+// This ensures data is written to the correct project-specific YJS doc.
+
+export class TabsReducer extends ReducerWithCollab<
+  TTabsEvents,
+  TTabsSharedData
+> {
   //
 
-  constructor(private readonly depsExports: TRequired) {
-    super();
+  constructor(depsExports: TRequired) {
+    super(depsExports.collab.registry, 'tabs');
+    this.depsExports = depsExports;
   }
+  
+  // Used by base class and event processing
+  // @ts-expect-error - TypeScript doesn't recognize usage in base class
+  private depsExports: TRequired;
 
   reduce(
-    event: TTabEvents<TabPayload> | TEventLoad,
+    event: TTabsEvents,
     requestData: RequestData
   ): Promise<void> {
     //
     switch (event.type) {
+      case 'project:init':
+        return this._initProject(event, requestData);
+
       case 'tabs:active-tab-change':
         return this._activeTabChange(event, requestData);
       case 'tabs:add-tab':
@@ -52,8 +70,6 @@ export class TabsReducer extends Reducer<TTabEvents<TabPayload> | TEventLoad> {
         return this._renameTab(event, requestData);
       case 'tabs:convert-tab-to-group':
         return this._convertTabToGroup(event, requestData);
-      case 'gateway:load':
-        return this._load(event, requestData);
 
       default:
         return Promise.resolve();
@@ -62,33 +78,17 @@ export class TabsReducer extends Reducer<TTabEvents<TabPayload> | TEventLoad> {
 
   //
 
-  _load(event: TEventLoad, requestData: RequestData) {
-    if (!this.depsExports.collab.collab.sharedData['tabs:tabs'].get('unique')) {
-      this.depsExports.collab.collab.sharedData['tabs:tabs'].set('unique', {
-        tree: {
-          payload: { type: 'group' },
-          title: 'root',
-          children: [],
-        },
-        actives: {},
-      });
-    }
-    return Promise.resolve();
-  }
-
-  //
-
   __deepCopyEditAndApply(
-    f: (t: ReadWriteTree<TabPayload>, a: TUsersActiveTabs) => void
+    f: (t: ReadWriteTree<TabPayload>, a: TUsersActiveTabs) => void,
+    requestData: RequestData
   ) {
-    const o = this.depsExports.collab.collab.sharedData['tabs:tabs'].get(
-      'unique'
-    ) as TTabsTree;
+    const collab = this.getCollab(requestData);
+    const o = collab.sharedData['tabs:tabs'].get('unique') as TTabsTree;
     if (o) {
       const no = structuredClone(o);
       const trw = new ReadWriteTree<TabPayload>(no.tree);
       f(trw, no.actives);
-      this.depsExports.collab.collab.sharedData['tabs:tabs'].set('unique', {
+      collab.sharedData['tabs:tabs'].set('unique', {
         tree: trw.get([], 0)!,
         actives: no.actives,
       });
@@ -118,7 +118,7 @@ export class TabsReducer extends Reducer<TTabEvents<TabPayload> | TEventLoad> {
     this.__deepCopyEditAndApply((t, actives) => {
       const { path } = event;
       this._setActive(actives, path, requestData.user_id);
-    });
+    }, requestData);
     return Promise.resolve();
   }
 
@@ -139,7 +139,7 @@ export class TabsReducer extends Reducer<TTabEvents<TabPayload> | TEventLoad> {
         t.insert([...path, title], payload || newTabPayload());
         this._setActive(actives, [...path, title], requestData.user_id);
       }
-    });
+    }, requestData);
     return Promise.resolve();
   }
 
@@ -151,7 +151,7 @@ export class TabsReducer extends Reducer<TTabEvents<TabPayload> | TEventLoad> {
       const newSelected = t.delete(path);
       if (newSelected)
         this._setActive(actives, newSelected, requestData.user_id, path);
-    });
+    }, requestData);
     return Promise.resolve();
   }
 
@@ -165,7 +165,7 @@ export class TabsReducer extends Reducer<TTabEvents<TabPayload> | TEventLoad> {
       const npath = [...path];
       npath[path.length - 1] = title;
       this._setActive(actives, npath, requestData.user_id, path);
-    });
+    }, requestData);
     return Promise.resolve();
   }
 
@@ -196,8 +196,56 @@ export class TabsReducer extends Reducer<TTabEvents<TabPayload> | TEventLoad> {
           );
         }
       }
-    });
+    }, requestData);
     return Promise.resolve();
+  }
+
+  /**
+   * Initialize project with default tab
+   * Called when a new project is created
+   */
+  private async _initProject(
+    event: TEventProjectInit,
+    requestData: RequestData
+  ): Promise<void> {
+    const collab = this.getCollab(requestData);
+    const tabsData = collab.sharedData['tabs:tabs'].get('unique');
+
+    // Check if already initialized (idempotent)
+    if (tabsData && tabsData.tree.children.length > 0) {
+      log(
+        EPriority.Info,
+        'TABS',
+        `Project ${event.project_id} already initialized`
+      );
+      return;
+    }
+
+    // Create default tab structure with "Default Dashboard" pointing to view-1
+    const defaultTab: TTabsTree = {
+      tree: {
+        title: 'Root',
+        payload: { type: 'group' },
+        children: [
+          {
+            title: 'Default Dashboard',
+            payload: {
+              type: 'node-editor',
+              viewId: 'view-1', // References whiteboard view-1
+            },
+            children: [],
+          },
+        ],
+      },
+      actives: {},
+    };
+
+    collab.sharedData['tabs:tabs'].set('unique', defaultTab);
+    log(
+      EPriority.Info,
+      'TABS',
+      `Created default tab for project ${event.project_id}`
+    );
   }
 }
 

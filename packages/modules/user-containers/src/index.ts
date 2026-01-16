@@ -4,14 +4,11 @@ import type { TModule } from '@holistix-forge/module';
 import type { TCollabBackendExports } from '@holistix-forge/collab';
 import type { TReducersBackendExports } from '@holistix-forge/reducers';
 import type { TGatewayExports } from '@holistix-forge/gateway';
-import type { TUserContainersSharedData } from './lib/servers-shared-model';
-import type { TCoreSharedData } from '@holistix-forge/core-graph';
-import type {
-  TContainerImageInfo,
-  TContainerImageDefinition,
-} from './lib/container-image';
+import type { TContainerImageDefinition } from './lib/container-image';
 import type { ContainerRunner } from './lib/runner';
 import { localRunnerBackend } from './lib/local-runner';
+import { TUserContainer } from './lib/servers-types';
+import { SharedMap } from '@holistix-forge/collab-engine';
 
 //
 
@@ -25,7 +22,7 @@ export type TUserContainersExports = {
 };
 
 type TRequired = {
-  collab: TCollabBackendExports<TUserContainersSharedData & TCoreSharedData>;
+  collab: TCollabBackendExports;
   reducers: TReducersBackendExports;
   gateway: TGatewayExports;
 };
@@ -62,21 +59,20 @@ export const moduleBackend: TModule<TRequired, TUserContainersExports> = {
     });
 
     // Load shared data
-    depsExports.collab.collab.loadSharedData(
+    depsExports.collab.registry.registerSharedData(
       'map',
       'user-containers',
       'containers'
     );
+    depsExports.collab.registry.registerSharedData(
+      'map',
+      'user-containers',
+      'images'
+    );
 
-    const iamgesSharedArray =
-      depsExports.collab.collab.loadSharedData<TContainerImageInfo>(
-        'map',
-        'user-containers',
-        'images'
-      );
-
-    // Setup image registry
-    const registry = new ContainerImageRegistry(iamgesSharedArray);
+    // Setup image registry (multi-project mode: images are per-project, registry is global)
+    // The registry will work with per-project data when containers are created
+    const registry = new ContainerImageRegistry(null);
 
     // Register built-in images owned by user-containers module itself.
     // These do not depend on other feature modules.
@@ -129,9 +125,17 @@ export const moduleBackend: TModule<TRequired, TUserContainersExports> = {
           return null;
         }
 
+        // Get project-specific collab instance
+        // TODO: Ensure ctx has project_id from request context
+        const project_id =
+          (ctx.query.project_id as string) || 'default-project';
+        const collab =
+          depsExports.collab.registry.getCollabForProject(project_id);
+
         // Access shared data through collab engine
-        const sduc =
-          depsExports.collab.collab.sharedData['user-containers:containers'];
+        const sduc = collab.sharedData[
+          'user-containers:containers'
+        ] as SharedMap<TUserContainer>;
         const container = sduc.get(containerId);
         if (!container) {
           return null;
@@ -139,7 +143,7 @@ export const moduleBackend: TModule<TRequired, TUserContainersExports> = {
 
         // Find a httpService named "terminal"
         const terminalService = container.httpServices.find(
-          (s) => s.name === 'terminal'
+          (s: { name: string }) => s.name === 'terminal'
         );
         if (!terminalService) {
           return null;

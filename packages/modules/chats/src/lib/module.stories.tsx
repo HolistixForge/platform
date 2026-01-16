@@ -32,7 +32,7 @@ import { moduleFrontend as spaceFrontend } from '@holistix-forge/whiteboard/fron
 //
 
 import { moduleFrontend } from '../frontend';
-import { moduleBackend, TChatSharedData } from '../';
+import { moduleBackend } from '../';
 import { TMyfetchRequest } from '@holistix-forge/simple-types';
 
 //
@@ -77,12 +77,14 @@ const modulesBackend: { module: TModule<never, object>; config: object }[] = [
         depsExports,
       }: {
         depsExports: {
-          collab: TCollabBackendExports<TChatSharedData>;
+          collab: TCollabBackendExports;
           reducers: TReducersBackendExports;
         };
       }) => {
+        const collab =
+          depsExports.collab.registry.getCollabForProject('story-project');
         setInterval(() => {
-          const chats = depsExports.collab.collab.sharedData['chats:chats'];
+          const chats = collab.sharedData['chats:chats'];
           chats.forEach((c) => {
             // Note: Using Math.random() for UI demo/story purposes only
             // This is not used for any security-sensitive operations
@@ -101,6 +103,7 @@ const modulesBackend: { module: TModule<never, object>; config: object }[] = [
                 user_id: randomGuy,
                 jwt: null,
                 headers: {},
+                project_id: 'story-project',
               }
             );
 
@@ -119,6 +122,7 @@ const modulesBackend: { module: TModule<never, object>; config: object }[] = [
                   user_id: randomGuy,
                   jwt: null,
                   headers: {},
+                  project_id: 'story-project',
                 }
               );
 
@@ -134,6 +138,7 @@ const modulesBackend: { module: TModule<never, object>; config: object }[] = [
                   user_id: randomGuy,
                   jwt: null,
                   headers: {},
+                  project_id: 'story-project',
                 }
               );
             }, 4000);

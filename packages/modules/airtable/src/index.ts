@@ -2,11 +2,9 @@ import { AirtableReducer } from './lib/airtable-reducer';
 import type { TModule } from '@holistix-forge/module';
 import type { TCollabBackendExports } from '@holistix-forge/collab';
 import type { TReducersBackendExports } from '@holistix-forge/reducers';
-import type { TAirtableSharedData } from './lib/airtable-shared-model';
-import type { TCoreSharedData } from '@holistix-forge/core-graph';
 
 type TRequired = {
-  collab: TCollabBackendExports<TAirtableSharedData & TCoreSharedData>;
+  collab: TCollabBackendExports;
   reducers: TReducersBackendExports;
 };
 
@@ -16,9 +14,14 @@ export const moduleBackend: TModule<TRequired> = {
   description: 'Airtable module',
   dependencies: ['core-graph', 'collab', 'reducers'],
   load: ({ depsExports }) => {
-    depsExports.collab.collab.loadSharedData('map', 'airtable', 'bases');
-    depsExports.collab.collab.loadSharedData('map', 'airtable', 'node-views');
-    depsExports.collab.collab.loadSharedData(
+    // Register shared data schema with registry
+    depsExports.collab.registry.registerSharedData('map', 'airtable', 'bases');
+    depsExports.collab.registry.registerSharedData(
+      'map',
+      'airtable',
+      'node-views'
+    );
+    depsExports.collab.registry.registerSharedData(
       'map',
       'airtable',
       'base-search-results'

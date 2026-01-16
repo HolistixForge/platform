@@ -6,7 +6,14 @@
     "prepare": "husky || true",
     "test:build": "node scripts/test-frontend-build.js",
     "validate:vite": "node scripts/validate-vite-configs.js",
-    "validate:node": "bash scripts/validate-node-bundles.sh"
+    "validate:node": "bash scripts/validate-node-bundles.sh",
+    "lint": "npx nx run-many -t lint --parallel=5",
+    "lint:fix": "npx nx run-many -t lint --parallel=5 -- --fix",
+    "typecheck": "npx nx run-many -t typecheck --parallel=5",
+    "test": "npx nx run-many -t test --parallel=3",
+    "validate": "npm run lint && npm run typecheck && npm run test",
+    "validate:affected": "npx nx affected -t lint,typecheck,test --parallel=3",
+    "pre-push": "npm run validate:affected"
   },
   "private": true,
   "devDependencies": {
@@ -97,6 +104,7 @@
     "tailwindcss": "^3.4.17",
     "ts-jest": "^29.1.0",
     "ts-node": "10.9.1",
+    "tsc-files": "^1.1.4",
     "tslib": "^2.3.0",
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.13.0",

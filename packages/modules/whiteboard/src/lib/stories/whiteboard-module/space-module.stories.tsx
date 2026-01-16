@@ -9,10 +9,12 @@ import { ModuleProvider } from '@holistix-forge/module/frontend';
 import {
   moduleBackend as coreBackend,
   moduleFrontend as coreFrontend,
+  TCoreSharedData,
 } from '@holistix-forge/core-graph';
 import {
   moduleBackend as collabBackend,
   TCollabBackendExports,
+  Collab,
 } from '@holistix-forge/collab';
 import { moduleFrontend as collabFrontend } from '@holistix-forge/collab/frontend';
 import {
@@ -26,8 +28,6 @@ import {
 } from '@holistix-forge/reducers/frontend';
 //
 
-import { TCoreSharedData } from '@holistix-forge/core-graph';
-
 import { Whiteboard } from '../../components/whiteboard';
 import { STORY_VIEW_ID } from '../story-whiteboard';
 import { loadStoryData } from './loader';
@@ -39,16 +39,15 @@ import { moduleFrontend as spaceFrontend } from '../../../frontend';
 
 Logger.setPriority(EPriority.Debug);
 
-const initModule: TModule<
-  { collab: TCollabBackendExports<TWhiteboardSharedData & TCoreSharedData> },
-  object
-> = {
+const initModule: TModule<{ collab: TCollabBackendExports }, object> = {
   name: 'story-init',
   version: '0.0.1',
   description: 'Story init module',
   dependencies: ['collab'],
   load: ({ depsExports }) => {
-    loadStoryData(depsExports.collab.collab.sharedData);
+    const collab =
+      depsExports.collab.registry.getCollabForProject('story-project');
+    loadStoryData(collab as Collab<TWhiteboardSharedData & TCoreSharedData>);
   },
 };
 

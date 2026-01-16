@@ -1,5 +1,9 @@
 import { TModule } from '@holistix-forge/module';
-import { TJson, TJsonWithUndefined, TStringMap } from '@holistix-forge/simple-types';
+import {
+  TJson,
+  TJsonWithUndefined,
+  TStringMap,
+} from '@holistix-forge/simple-types';
 import { BackendEventProcessor } from './lib/backendEventProcessor';
 
 export type TBaseEvent = { type: string; [key: string]: TJsonWithUndefined };
@@ -9,6 +13,11 @@ export abstract class RequestData {
   abstract get user_id(): string;
   abstract get jwt(): TJson;
   abstract get headers(): TStringMap;
+  /**
+   * Project ID for multi-project architecture
+   * Required when using registry mode
+   */
+  abstract get project_id(): string | undefined;
 }
 
 export abstract class Reducer<TEvents = TBaseEvent> {

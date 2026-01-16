@@ -1,0 +1,640 @@
+# Code Quality Enforcement - Zero Errors Policy
+
+**CRITICAL RULE:** AI agents MUST ensure that all code changes are error-free before completing any task. This is non-negotiable for maintaining codebase integrity.
+
+---
+
+## 🚨 Zero Errors Policy
+
+**MANDATORY:** Before completing ANY task that involves code changes, AI agents MUST:
+
+1. ✅ **Verify no TypeScript compilation errors**
+2. ✅ **Verify no ESLint errors** (warnings are acceptable but should be noted)
+3. ✅ **Verify no build errors**
+4. ✅ **Verify no test failures** (for affected code)
+5. ✅ **Verify no linter errors** in modified files
+
+**If ANY errors exist after your changes, you MUST fix them before completing the task.**
+
+---
+
+## 📋 Required Validation Workflow
+
+### Step 1: Before Making Changes
+
+Before modifying any code, check the current state:
+
+```bash
+# Check current error state
+npx nx run-many -t lint --parallel=5
+npx nx run-many -t typecheck --parallel=5
+```
+
+**Document any pre-existing errors** that are NOT caused by your changes.
+
+### Step 2: After Making Changes
+
+After modifying code, **IMMEDIATELY** validate:
+
+```bash
+# Validate only affected packages (fast)
+npm run validate:affected
+
+# Or validate specific package
+npx nx run <package-name>:lint
+npx nx run <package-name>:typecheck
+npx nx run <package-name>:test
+```
+
+### Step 3: Fix All Errors Introduced
+
+If validation fails:
+
+1. **Read the error messages carefully**
+2. **Fix each error** one by one
+3. **Re-run validation** after each fix
+4. **Repeat until all errors are resolved**
+
+**DO NOT COMPLETE THE TASK until all errors are fixed.**
+
+### Step 4: Verify with Linter Tool
+
+Use the `read_lints` tool to check for linter errors in modified files:
+
+```typescript
+// Check specific files
+read_lints(['path/to/file1.ts', 'path/to/file2.tsx']);
+
+// Check directory
+read_lints(['packages/my-package/']);
+```
+
+**Fix any linter errors reported by the tool.**
+
+---
+
+## 🔍 Error Detection Commands
+
+### Comprehensive Validation
+
+```bash
+# Full validation (lint + typecheck + test)
+npm run validate
+
+# Affected packages only (faster)
+npm run validate:affected
+```
+
+### Individual Checks
+
+```bash
+# ESLint (code quality)
+npm run lint                              # All packages
+npx nx run <package>:lint                 # Specific package
+npx nx affected -t lint                   # Affected packages
+
+# TypeScript (type checking)
+npm run typecheck                         # All packages
+npx nx run <package>:typecheck            # Specific package
+npx nx affected -t typecheck              # Affected packages
+
+# Tests
+npm run test                              # All packages
+npx nx run <package>:test                 # Specific package
+npx nx affected -t test                   # Affected packages
+
+# Build (compilation)
+npx nx run <package>:build                # Specific package
+npx nx run-many -t build --parallel=5     # All packages
+```
+
+### Build-Specific Validations
+
+```bash
+# Validate Vite configurations (React packages)
+npm run validate:vite
+
+# Validate Node.js bundles (no React in backend)
+npm run validate:node
+
+# Validate frontend build (production-ready)
+npm run test:build
+```
+
+---
+
+## 🎯 Common Error Types and How to Fix
+
+### TypeScript Errors
+
+**Symptom:** `error TS2322`, `error TS2345`, `error TS6133`, etc.
+
+**Detection:**
+
+```bash
+npx nx run <package>:typecheck
+```
+
+**Fix:**
+
+- Read error message carefully (file, line, column)
+- Fix type mismatches
+- Remove unused variables
+- Add missing type annotations
+- Ensure imports are correct
+
+**Example:**
+
+```typescript
+// ❌ Error: Type 'string' is not assignable to type 'number'
+const x: number = 'hello';
+
+// ✅ Fixed
+const x: number = 42;
+```
+
+### ESLint Errors
+
+**Symptom:** `error` (not `warning`) in ESLint output
+
+**Detection:**
+
+```bash
+npx nx run <package>:lint
+```
+
+**Fix:**
+
+- Auto-fix when possible: `npx nx run <package>:lint --fix`
+- Manually fix remaining errors
+- Follow ESLint rule suggestions
+
+**Example:**
+
+```typescript
+// ❌ Error: 'React' must be in scope when using JSX
+function MyComponent() {
+  return <div>Hello</div>;
+}
+
+// ✅ Fixed
+import React from 'react';
+function MyComponent() {
+  return <div>Hello</div>;
+}
+```
+
+### Build Errors
+
+**Symptom:** Build fails with compilation errors
+
+**Detection:**
+
+```bash
+npx nx run <package>:build
+```
+
+**Fix:**
+
+- Check TypeScript errors first
+- Check import paths
+- Ensure dependencies are installed
+- Check for circular dependencies
+
+### Test Failures
+
+**Symptom:** Tests fail after code changes
+
+**Detection:**
+
+```bash
+npx nx run <package>:test
+```
+
+**Fix:**
+
+- Read test failure messages
+- Update tests if API changed
+- Fix bugs if tests are correct
+- Ensure test setup is correct
+
+---
+
+## 🚦 Validation Checkpoints
+
+### Checkpoint 1: After File Creation
+
+When creating new files:
+
+1. ✅ Run `read_lints` on the new file
+2. ✅ Fix any linter errors
+3. ✅ Ensure imports are correct
+4. ✅ Ensure exports are used
+
+### Checkpoint 2: After File Modification
+
+When modifying existing files:
+
+1. ✅ Run `read_lints` on modified files
+2. ✅ Run typecheck on the package
+3. ✅ Run lint on the package
+4. ✅ Fix all errors introduced
+
+### Checkpoint 3: Before Completing Task
+
+Before marking task as complete:
+
+1. ✅ Run `npm run validate:affected`
+2. ✅ Verify all checks pass
+3. ✅ Run `read_lints` on all modified files
+4. ✅ Document any pre-existing errors (not caused by you)
+
+---
+
+## 🛡️ Pre-Commit Hook Integration
+
+The project has pre-commit hooks that automatically run:
+
+1. **TypeScript type checking** (tsc-files) on staged `.ts`/`.tsx` files
+2. **ESLint** (with auto-fix) on staged files
+3. **Prettier** formatting on staged files
+4. **Tests** for affected packages
+
+**These hooks will block commits with errors.**
+
+**AI agents should validate BEFORE committing to avoid hook failures.**
+
+---
+
+## 📊 Error Severity Levels
+
+### Critical (MUST FIX)
+
+- ❌ TypeScript compilation errors
+- ❌ ESLint errors (not warnings)
+- ❌ Build failures
+- ❌ Test failures (in affected code)
+- ❌ Pre-commit hook failures
+
+**Task CANNOT be completed with critical errors.**
+
+### High Priority (SHOULD FIX)
+
+- ⚠️ ESLint warnings in new code
+- ⚠️ TypeScript `@ts-ignore` or `@ts-expect-error` comments
+- ⚠️ Unused imports or variables
+- ⚠️ Console.log statements in production code
+
+**AI agents should fix these when possible.**
+
+### Low Priority (DOCUMENT)
+
+- ℹ️ Pre-existing errors not caused by current changes
+- ℹ️ Deprecation warnings
+- ℹ️ Style suggestions
+
+**Document these but don't block task completion.**
+
+---
+
+## 🔧 AI Agent Workflow
+
+### Standard Workflow for Code Changes
+
+```
+1. Read/Understand current code
+   ↓
+2. Make changes
+   ↓
+3. IMMEDIATELY validate with read_lints
+   ↓
+4. Fix any linter errors
+   ↓
+5. Run package-specific validation:
+   - npx nx run <package>:lint
+   - npx nx run <package>:typecheck
+   - npx nx run <package>:test (if tests exist)
+   ↓
+6. Fix ALL errors
+   ↓
+7. Run affected validation:
+   - npm run validate:affected
+   ↓
+8. If errors exist, go back to step 6
+   ↓
+9. Document results
+   ↓
+10. Complete task
+```
+
+### Workflow for Large Changes
+
+```
+1. Plan changes
+   ↓
+2. Make changes incrementally (file by file or feature by feature)
+   ↓
+3. Validate after EACH increment:
+   - read_lints on modified files
+   - Package-specific validation
+   ↓
+4. Fix errors immediately (don't accumulate errors)
+   ↓
+5. Continue to next increment
+   ↓
+6. Final validation:
+   - npm run validate:affected
+   ↓
+7. Complete task
+```
+
+---
+
+## 🚫 What NOT to Do
+
+### ❌ NEVER Complete Task with Errors
+
+**BAD:**
+
+```
+"I've made the changes you requested. Note: There are 3 TypeScript errors
+but they're minor and can be fixed later."
+```
+
+**GOOD:**
+
+```
+"I've made the changes you requested and fixed all 3 TypeScript errors.
+All validation checks pass."
+```
+
+### ❌ NEVER Ignore Validation Failures
+
+**BAD:**
+
+```
+"The lint check failed but the code should work."
+```
+
+**GOOD:**
+
+```
+"The lint check found 2 errors. I've fixed both and re-validated.
+All checks now pass."
+```
+
+### ❌ NEVER Use Quick Fixes Without Understanding
+
+**BAD:**
+
+```typescript
+// Adding @ts-ignore to suppress error
+// @ts-ignore
+const x: number = 'string';
+```
+
+**GOOD:**
+
+```typescript
+// Fix the actual issue
+const x: string = 'string';
+// Or if it should be a number:
+const x: number = 42;
+```
+
+### ❌ NEVER Assume Pre-Commit Hooks Will Catch Everything
+
+Pre-commit hooks only check **staged files**. You need to validate **all affected files**.
+
+**BAD:**
+
+```
+"I'll let the pre-commit hook catch any issues."
+```
+
+**GOOD:**
+
+```
+"I've validated all affected packages. Pre-commit hooks will provide
+an additional safety check."
+```
+
+---
+
+## 🎓 Best Practices
+
+### 1. Validate Early and Often
+
+Don't wait until the end to validate. Check after each significant change.
+
+### 2. Fix Errors Immediately
+
+Don't accumulate errors. Fix them as soon as they appear.
+
+### 3. Use the Right Tools
+
+- `read_lints` - For quick linter checks on specific files
+- `npm run validate:affected` - For comprehensive validation
+- Package-specific commands - For detailed error messages
+
+### 4. Understand Errors Before Fixing
+
+Read error messages carefully. Don't apply blind fixes.
+
+### 5. Document Pre-Existing Issues
+
+If errors existed before your changes, document them clearly:
+
+```
+"Note: Package X had 2 pre-existing TypeScript errors that were
+not caused by my changes. I've documented them in issue #123."
+```
+
+### 6. Test Your Fixes
+
+After fixing errors, re-run validation to ensure they're actually fixed.
+
+---
+
+## 📚 Validation Tools Reference
+
+### Built-in Tools
+
+| Tool                        | Purpose                    | When to Use              |
+| --------------------------- | -------------------------- | ------------------------ |
+| `read_lints`                | Check linter errors        | After modifying any file |
+| `npm run lint`              | Run ESLint on all packages | Before completing task   |
+| `npm run typecheck`         | Type check all packages    | Before completing task   |
+| `npm run validate:affected` | Validate affected packages | Before completing task   |
+| `npm run validate`          | Full validation            | For comprehensive check  |
+
+### Package-Specific
+
+| Command                      | Purpose                     |
+| ---------------------------- | --------------------------- |
+| `npx nx run <pkg>:lint`      | Lint specific package       |
+| `npx nx run <pkg>:typecheck` | Type check specific package |
+| `npx nx run <pkg>:test`      | Test specific package       |
+| `npx nx run <pkg>:build`     | Build specific package      |
+
+### Affected Commands
+
+| Command                        | Purpose                      |
+| ------------------------------ | ---------------------------- |
+| `npx nx affected -t lint`      | Lint affected packages       |
+| `npx nx affected -t typecheck` | Type check affected packages |
+| `npx nx affected -t test`      | Test affected packages       |
+
+---
+
+## 🔍 Example Validation Session
+
+### Scenario: Modifying a React Component
+
+```bash
+# 1. Check current state
+read_lints(["packages/ui-base/src/lib/Button.tsx"])
+
+# 2. Make changes to Button.tsx
+
+# 3. Immediately check linter
+read_lints(["packages/ui-base/src/lib/Button.tsx"])
+# Output: "No linter errors found."
+
+# 4. Validate package
+npx nx run ui-base:lint
+npx nx run ui-base:typecheck
+npx nx run ui-base:test
+
+# 5. If tests fail, fix and re-run
+# ... fix test ...
+npx nx run ui-base:test
+
+# 6. Final affected validation
+npm run validate:affected
+
+# 7. All checks pass - task complete!
+```
+
+### Scenario: Creating a New Utility Function
+
+```bash
+# 1. Create new file: packages/utils/src/lib/formatDate.ts
+
+# 2. Immediately check linter
+read_lints(["packages/utils/src/lib/formatDate.ts"])
+# Output: Error - missing export
+
+# 3. Fix the error (add export)
+
+# 4. Re-check linter
+read_lints(["packages/utils/src/lib/formatDate.ts"])
+# Output: "No linter errors found."
+
+# 5. Validate package
+npx nx run utils:lint
+npx nx run utils:typecheck
+
+# 6. Create tests (per testing-enforcement.mdc)
+# ... create formatDate.spec.ts ...
+
+# 7. Run tests
+npx nx run utils:test
+
+# 8. Final validation
+npm run validate:affected
+
+# 9. All checks pass - task complete!
+```
+
+---
+
+## 🆘 Troubleshooting
+
+### "Validation fails but I don't see the error"
+
+**Solution:**
+
+```bash
+# Run with verbose output
+npx nx run <package>:typecheck --verbose
+npx nx run <package>:lint --verbose
+
+# Or check specific file
+npx tsc --noEmit <file-path>
+npx eslint <file-path>
+```
+
+### "Pre-commit hook blocks commit"
+
+**Solution:**
+
+1. Don't bypass with `--no-verify` (tempting but wrong)
+2. Read the error message
+3. Fix the error
+4. Try committing again
+
+### "Validation passes locally but fails in CI"
+
+**Solution:**
+
+```bash
+# Run full validation (same as CI)
+npm run validate
+
+# Ensure dependencies are up to date
+npm ci
+
+# Check if issue is in a different package
+npx nx run-many -t lint,typecheck --all
+```
+
+---
+
+## 📖 Related Documentation
+
+- [Testing Enforcement](testing-enforcement.mdc) - When to create tests
+- [Code Quality Quick Reference](../doc/reference/CODE_QUALITY_QUICK_REFERENCE.md) - Quick commands
+- [Linting Analysis](../doc/current-works/LINTING_AND_PRE_COMMIT_ANALYSIS.md) - Detailed analysis
+- [Contributing Guide](../CONTRIBUTING.md) - Full workflow
+
+---
+
+## ✅ Validation Checklist
+
+Before completing ANY task involving code changes:
+
+- [ ] Ran `read_lints` on all modified files
+- [ ] Fixed all linter errors
+- [ ] Ran package-specific typecheck
+- [ ] Fixed all TypeScript errors
+- [ ] Ran package-specific tests (if applicable)
+- [ ] Fixed all test failures
+- [ ] Ran `npm run validate:affected`
+- [ ] All validation checks pass
+- [ ] Documented any pre-existing errors (not caused by me)
+- [ ] Ready to complete task
+
+**If any item is unchecked, DO NOT complete the task.**
+
+---
+
+## 🎯 Success Criteria
+
+A task involving code changes is ONLY complete when:
+
+1. ✅ All code changes are implemented as requested
+2. ✅ No TypeScript errors exist in affected code
+3. ✅ No ESLint errors exist in affected code
+4. ✅ No build errors exist in affected code
+5. ✅ No test failures exist in affected code
+6. ✅ All validation checks pass (`npm run validate:affected`)
+7. ✅ `read_lints` shows no errors in modified files
+
+**Anything less is incomplete work.**
+
+---
+
+**Remember:** Code quality is not optional. Errors break builds, CI, and production. As an AI agent, you have the tools and ability to ensure error-free code. Use them consistently and thoroughly.
+
+**Zero Errors. Every Time. No Exceptions.**

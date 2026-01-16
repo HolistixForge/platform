@@ -1,4 +1,4 @@
-import { ReactNode, useMemo, createContext, useContext, useRef } from 'react';
+import { ReactNode, useMemo, createContext, useContext, useRef, useEffect } from 'react';
 import { InfoCircledIcon } from '@radix-ui/react-icons';
 import { Link } from 'react-router-dom';
 
@@ -16,6 +16,7 @@ import {
   useQueryProjectByName,
 } from '@holistix-forge/frontend-data';
 import { browserLog } from '@holistix-forge/frontend-data';
+import { useModuleExports } from '@holistix-forge/module/frontend';
 
 import { ProjectState, ProjectData, ProjectUser } from './project-types';
 import { ProjectLoading, ProjectError } from './project-loading';
@@ -26,6 +27,33 @@ import { OrganizationContext } from '../organization/organization-context';
 //
 
 const projectContext = createContext<ProjectData | null>(null);
+
+/**
+ * ProjectDispatcherSync - Synchronizes project_id with the event dispatcher
+ * 
+ * This component ensures that all events dispatched from the frontend
+ * include the current project_id, enabling project-specific event handling
+ * on the backend.
+ */
+const ProjectDispatcherSync = ({ project_id }: { project_id: string }) => {
+  const moduleExports = useModuleExports<{ reducers: { dispatcher: { setProjectId: (id: string) => void } } }>('ProjectDispatcherSync');
+  const dispatcher = moduleExports.reducers.dispatcher;
+
+  useEffect(() => {
+    // Set the project_id on the dispatcher when it changes
+    dispatcher.setProjectId(project_id);
+    browserLog('debug', 'PROJECT_DISPATCHER_SYNC', 'project_id set', {
+      data: { project_id },
+    });
+
+    return () => {
+      // Optional: Clear project_id on unmount (if desired)
+      // dispatcher.setProjectId('');
+    };
+  }, [project_id, dispatcher]);
+
+  return null; // This component only manages side effects
+};
 
 //
 //
@@ -190,6 +218,9 @@ export const ProjectContext = ({
           organization_id={projectState.data.organization_id}
         >
           <projectContext.Provider value={projectState.data}>
+            <ProjectDispatcherSync
+              project_id={projectState.data.project.project_id}
+            />
             {children}
           </projectContext.Provider>
         </OrganizationContext>

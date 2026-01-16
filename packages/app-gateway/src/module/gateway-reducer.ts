@@ -1,7 +1,7 @@
 import { EPriority, log } from '@holistix-forge/log';
 import { inSeconds, isPassed } from '@holistix-forge/simple-types';
-import { Reducer, TEventPeriodic } from '@holistix-forge/reducers';
-import { TCollabBackendExports } from '@holistix-forge/collab';
+import { TEventPeriodic, RequestData } from '@holistix-forge/reducers';
+import { TCollabBackendExports, ReducerWithCollab } from '@holistix-forge/collab';
 import type { TGatewayExports, TGatewaySharedData } from '@holistix-forge/gateway';
 import type {
   TGatewayEvents,
@@ -28,41 +28,36 @@ export const GATEWAY_INACIVITY_SHUTDOWN_DELAY = 300; // secondes
 let shouldIBeDead = false;
 
 type RequiredExports = {
-  collab: TCollabBackendExports<TGatewaySharedData>;
+  collab: TCollabBackendExports;
   gateway: TGatewayExports;
 };
 
-export class GatewayReducer extends Reducer<TGatewayEvents | TEventPeriodic> {
-  private depsExports: RequiredExports;
-
+export class GatewayReducer extends ReducerWithCollab<TGatewayEvents | TEventPeriodic, TGatewaySharedData> {
   constructor(depsExports: RequiredExports) {
-    super();
-    this.depsExports = depsExports;
+    super(depsExports.collab.registry, 'gateway');
   }
 
   //
 
-  override reduce(event: TGatewayEvents | TEventPeriodic): Promise<void> {
-    this.rearmGatewayTimer(event);
+  override reduce(event: TGatewayEvents | TEventPeriodic, requestData: RequestData): Promise<void> {
+    this.rearmGatewayTimer(event, requestData);
 
     switch (event.type) {
       case 'gateway:load':
-        return this._load(event);
+        return this._load(event, requestData);
       case 'reducers:periodic':
-        return this._periodic(event);
+        return this._periodic(event, requestData);
       case 'gateway:disable-shutdown':
-        return this._disableGatewayShutdown(event);
+        return this._disableGatewayShutdown(event, requestData);
     }
     return Promise.resolve();
   }
 
   //
 
-  async _load(event: TEventLoad) {
-    const meta =
-      this.depsExports.collab.collab.sharedData['gateway:gateway'].get(
-        'unique'
-      );
+  async _load(event: TEventLoad, requestData: RequestData) {
+    const collab = this.getCollab(requestData);
+    const meta = collab.sharedData['gateway:gateway'].get('unique');
     const disable_gateway_shutdown =
       meta?.projectActivity.disable_gateway_shutdown || false;
 
@@ -77,22 +72,17 @@ export class GatewayReducer extends Reducer<TGatewayEvents | TEventPeriodic> {
       },
     };
 
-    this.depsExports.collab.collab.sharedData['gateway:gateway'].set(
-      'unique',
-      newMeta
-    );
+    collab.sharedData['gateway:gateway'].set('unique', newMeta);
     return Promise.resolve();
   }
 
   //
 
-  rearmGatewayTimer = (event: { type: string }) => {
+  rearmGatewayTimer = (event: { type: string }, requestData: RequestData) => {
+    const collab = this.getCollab(requestData);
     const now = new Date();
 
-    const curMeta =
-      this.depsExports.collab.collab.sharedData['gateway:gateway'].get(
-        'unique'
-      );
+    const curMeta = collab.sharedData['gateway:gateway'].get('unique');
 
     const prevLast = new Date(curMeta?.projectActivity.last_activity || '');
 
@@ -116,20 +106,15 @@ export class GatewayReducer extends Reducer<TGatewayEvents | TEventPeriodic> {
         },
       };
 
-      this.depsExports.collab.collab.sharedData['gateway:gateway'].set(
-        'unique',
-        newMeta
-      );
+      collab.sharedData['gateway:gateway'].set('unique', newMeta);
     }
   };
 
   //
 
-  async _periodic(event: TEventPeriodic): Promise<void> {
-    const meta =
-      this.depsExports.collab.collab.sharedData['gateway:gateway'].get(
-        'unique'
-      );
+  async _periodic(event: TEventPeriodic, requestData: RequestData): Promise<void> {
+    const collab = this.getCollab(requestData);
+    const meta = collab.sharedData['gateway:gateway'].get('unique');
     if (meta) {
       if (!meta.projectActivity.disable_gateway_shutdown) {
         const gateway_shutdown = new Date(
@@ -154,17 +139,12 @@ export class GatewayReducer extends Reducer<TGatewayEvents | TEventPeriodic> {
     return Promise.resolve();
   }
 
-  _disableGatewayShutdown(event: TEventDisableShutdown): Promise<void> {
-    const meta =
-      this.depsExports.collab.collab.sharedData['gateway:gateway'].get(
-        'unique'
-      );
+  _disableGatewayShutdown(event: TEventDisableShutdown, requestData: RequestData): Promise<void> {
+    const collab = this.getCollab(requestData);
+    const meta = collab.sharedData['gateway:gateway'].get('unique');
     if (meta) {
       meta.projectActivity.disable_gateway_shutdown = true;
-      this.depsExports.collab.collab.sharedData['gateway:gateway'].set(
-        'unique',
-        meta
-      );
+      collab.sharedData['gateway:gateway'].set('unique', meta);
     }
     return Promise.resolve();
   }

@@ -17,6 +17,7 @@ const internalRequestData: RequestData = {
   user_id: 'gateway',
   jwt: {},
   headers: {},
+  project_id: undefined, // Internal events are not project-specific
 };
 
 //
@@ -93,15 +94,5 @@ export class BackendEventProcessor<TE extends TBaseEvent> {
       if (sequence) sequence.setFailed();
       throw error; // Re-throw to let caller handle the error
     }
-  }
-
-  //
-
-  async batch(events: TE[]): Promise<void> {
-    for (let i = 0; i < events.length; i++)
-      await this.processEvent(
-        events[i] as TE & Partial<SequenceEvent>,
-        internalRequestData
-      );
   }
 }

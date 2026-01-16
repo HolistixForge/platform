@@ -1,4 +1,4 @@
-import * as Y from 'yjs';
+import type * as Y from 'yjs';
 import { EPriority, log } from '@holistix-forge/log';
 import { makeUuid } from '@holistix-forge/simple-types';
 import {
@@ -6,6 +6,12 @@ import {
   setAllSharedDataFromJSON,
 } from '@holistix-forge/collab-engine';
 import { IPersistenceProvider } from './IPersistenceProvider';
+import type { TReducersBackendExports } from '@holistix-forge/reducers';
+
+// y-websocket utils for accessing the shared YJS document store
+// This ensures we use the SAME docs that WebSocket clients connect to
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const ywsUtils = require('y-websocket/bin/utils');
 
 type TProjectSnapshot = Record<string, unknown>;
 type TProjectSnapshotCollection = Record<string, TProjectSnapshot>;
@@ -13,26 +19,42 @@ type TProjectSnapshotCollection = Record<string, TProjectSnapshot>;
 /**
  * ProjectRoomsManager - Manage Multiple YJS Rooms
  *
- * One gateway manages multiple projects.
+ * One gateway manages multiple projects within an organization.
  * Each project gets its own:
- * - YJS document (for collaborative state)
+ * - YJS document (shared with y-websocket for real-time collaboration)
  * - room_id (for WebSocket routing)
  *
+ * IMPORTANT: This manager uses y-websocket's internal docs map (via ywsUtils.getYDoc)
+ * to ensure that:
+ * - The docs we persist are the SAME docs that WebSocket clients edit
+ * - Changes made by clients are actually saved
+ * - Restored data is available to clients when they connect
+ *
  * Responsibilities:
- * - Create and manage YJS documents per project
- * - Track room_id for each project
+ * - Initialize projects with y-websocket managed YJS documents
+ * - Track project_id <-> room_id mapping
  * - Provide snapshots for persistence via IPersistenceProvider interface
- * - Provide access to rooms for WebSocket and modules
+ * - Apply snapshots when loading from Ganymede
  */
 export interface ProjectRoomData {
   project_id: string;
   room_id: string;
-  ydoc: Y.Doc;
+  // Note: We don't store ydoc here anymore - we get it from y-websocket
 }
 
 export class ProjectRoomsManager implements IPersistenceProvider {
+  // Map project_id -> room_id (no ydoc stored - we get it from y-websocket)
   private rooms: Map<string, ProjectRoomData> = new Map();
   private pendingSnapshots: Map<string, TProjectSnapshot> = new Map();
+  private eventProcessor: TReducersBackendExports | null = null;
+
+  /**
+   * Set the event processor for dispatching project:init events
+   */
+  setEventProcessor(processor: TReducersBackendExports): void {
+    this.eventProcessor = processor;
+    log(EPriority.Info, 'PROJECT_ROOMS', 'Event processor set');
+  }
 
   // IPersistenceProvider implementation
 
@@ -61,7 +83,9 @@ export class ProjectRoomsManager implements IPersistenceProvider {
 
   /**
    * Initialize a project room
-   * Creates YJS doc, generates room_id, loads saved state
+   * Gets YJS doc from y-websocket (creates it if needed), generates room_id, loads saved state
+   *
+   * IMPORTANT: Uses ywsUtils.getYDoc() to get the SAME doc that WebSocket clients will connect to
    */
   async initializeProject(project_id: string): Promise<string> {
     const existingRoom = this.rooms.get(project_id);
@@ -74,8 +98,12 @@ export class ProjectRoomsManager implements IPersistenceProvider {
       return existingRoom.room_id;
     }
 
+    // Generate a unique room_id for this project
     const room_id = makeUuid();
-    const ydoc = new Y.Doc();
+
+    // Get YJS doc from y-websocket (this creates it in y-websocket's internal map)
+    // This is the SAME doc that WebSocket clients will connect to
+    const ydoc: Y.Doc = ywsUtils.getYDoc(room_id);
 
     // Apply pending snapshot if we received one before initialization
     const pending = this.pendingSnapshots.get(project_id);
@@ -89,10 +117,10 @@ export class ProjectRoomsManager implements IPersistenceProvider {
       );
     }
 
+    // Store only the mapping (ydoc is managed by y-websocket)
     this.rooms.set(project_id, {
       project_id,
       room_id,
-      ydoc,
     });
 
     log(
@@ -100,6 +128,29 @@ export class ProjectRoomsManager implements IPersistenceProvider {
       'PROJECT_ROOMS',
       `Initialized project: ${project_id}, room: ${room_id}`
     );
+
+    // Dispatch project:init event for modules to create default data
+    if (this.eventProcessor) {
+      const systemRequestData = {
+        ip: 'system',
+        user_id: 'system',
+        jwt: {},
+        headers: {},
+        project_id,
+      };
+
+      this.eventProcessor
+        .processEvent({ type: 'project:init', project_id }, systemRequestData)
+        .catch((err) => {
+          log(
+            EPriority.Error,
+            'PROJECT_ROOMS',
+            `Failed to dispatch project:init for ${project_id}`,
+            err
+          );
+        });
+    }
+
     return room_id;
   }
 
@@ -112,9 +163,13 @@ export class ProjectRoomsManager implements IPersistenceProvider {
 
   /**
    * Get YJS document for a project
+   * Returns the y-websocket managed doc (same one that clients connect to)
    */
   getYDoc(project_id: string): Y.Doc | undefined {
-    return this.rooms.get(project_id)?.ydoc;
+    const room = this.rooms.get(project_id);
+    if (!room) return undefined;
+    // Get doc from y-websocket (never creates a new one since we already initialized)
+    return ywsUtils.getYDoc(room.room_id);
   }
 
   /**
@@ -173,17 +228,20 @@ export class ProjectRoomsManager implements IPersistenceProvider {
 
   /**
    * Serialize all project YJS docs to JSON
+   * Gets the actual docs from y-websocket (same ones clients are editing)
    */
   getProjectSnapshots(): TProjectSnapshotCollection {
     const snapshots: TProjectSnapshotCollection = {};
     for (const room of this.rooms.values()) {
-      snapshots[room.project_id] = getAllSharedDataAsJSON(room.ydoc);
+      // Get the y-websocket managed doc
+      const ydoc: Y.Doc = ywsUtils.getYDoc(room.room_id);
+      snapshots[room.project_id] = getAllSharedDataAsJSON(ydoc);
     }
     return snapshots;
   }
 
   /**
-   * Apply snapshots (either immediately or queue until project initializes)
+   * Apply snapshots (either immediately to y-websocket doc, or queue until project initializes)
    */
   applyProjectSnapshots(
     snapshots: TProjectSnapshotCollection | undefined | null
@@ -195,7 +253,9 @@ export class ProjectRoomsManager implements IPersistenceProvider {
     for (const [project_id, snapshot] of Object.entries(snapshots)) {
       const room = this.rooms.get(project_id);
       if (room) {
-        setAllSharedDataFromJSON(room.ydoc, snapshot);
+        // Get the y-websocket managed doc and apply snapshot
+        const ydoc: Y.Doc = ywsUtils.getYDoc(room.room_id);
+        setAllSharedDataFromJSON(ydoc, snapshot);
         log(
           EPriority.Info,
           'PROJECT_ROOMS',

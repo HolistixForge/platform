@@ -38,6 +38,7 @@ export const linkDispatchToProcessEvent = (
       user_id: '123',
       jwt: {},
       headers: {},
+      project_id: 'test-project', // Default project_id for stories/tests
     });
   };
 

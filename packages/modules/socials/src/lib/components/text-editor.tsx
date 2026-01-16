@@ -58,6 +58,7 @@ export const NodeTextEditorInternal = ({
   isOpened,
   id,
   selected,
+  open,
   onDelete,
 }: NodeTextEditorInternalProps) => {
   const { awareness } = useAwareness();

@@ -138,7 +138,9 @@ export const NodePython = ({
           <SelectFieldset
             name={''}
             value={'python 3.10.12 modele'}
-            onChange={function (v: string): void {}}
+            onChange={function (v: string): void {
+              // No-op: To be implemented
+            }}
             placeholder={''}
             className="small"
             integrated
@@ -166,7 +168,9 @@ export const NodePython = ({
           <SelectFieldset
             name={''}
             value={'master'}
-            onChange={function (v: string): void {}}
+            onChange={function (v: string): void {
+              // No-op: To be implemented
+            }}
             placeholder={''}
             className="small"
             integrated

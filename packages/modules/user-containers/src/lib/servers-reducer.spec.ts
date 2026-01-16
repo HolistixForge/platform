@@ -36,11 +36,13 @@ describe('UserContainersReducer - buildRedirectUris', () => {
     // Create minimal mock dependencies
     mockDepsExports = {
       collab: {
-        collab: {
-          sharedData: {
-            'user-containers:containers': new Map(),
-            'user-containers:oauth-clients': [],
-          },
+        registry: {
+          getCollabForProject: jest.fn(() => ({
+            sharedData: {
+              'user-containers:containers': new Map(),
+              'user-containers:oauth-clients': [],
+            },
+          })),
         },
       },
       gateway: {

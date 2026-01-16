@@ -9,6 +9,9 @@
       "path": "../../log"
     },
     {
+      "path": "../reducers"
+    },
+    {
       "path": "../../collab-engine"
     },
     {

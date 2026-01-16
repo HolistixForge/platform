@@ -6,9 +6,9 @@ import {
 
 export class ContainerImageRegistry {
   private images: Map<string, TContainerImageDefinition> = new Map();
-  private imagesSharedArray: SharedMap<TContainerImageInfo>;
+  private imagesSharedArray: SharedMap<TContainerImageInfo> | null;
 
-  constructor(imagesSharedArray: SharedMap<TContainerImageInfo>) {
+  constructor(imagesSharedArray: SharedMap<TContainerImageInfo> | null) {
     this.imagesSharedArray = imagesSharedArray;
   }
 
@@ -18,11 +18,14 @@ export class ContainerImageRegistry {
         throw new Error(`Image ${img.imageId} already registered`);
       }
       this.images.set(img.imageId, img);
-      this.imagesSharedArray.set(img.imageId, {
-        imageId: img.imageId,
-        imageName: img.imageName,
-        description: img.description,
-      });
+      // In multi-project mode, shared array is managed per-project, not at module load
+      if (this.imagesSharedArray) {
+        this.imagesSharedArray.set(img.imageId, {
+          imageId: img.imageId,
+          imageName: img.imageName,
+          description: img.description,
+        });
+      }
     });
   }
 

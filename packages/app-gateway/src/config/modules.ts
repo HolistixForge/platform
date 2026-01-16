@@ -1,5 +1,5 @@
 import { TModule } from '@holistix-forge/module';
-import { moduleBackend as collabBackend } from '@holistix-forge/collab';
+import { moduleBackend as collabBackend, ICollabRegistry } from '@holistix-forge/collab';
 import { moduleBackend as reducersBackend } from '@holistix-forge/reducers';
 import { moduleBackend as coreGraphBackend } from '@holistix-forge/core-graph';
 import { moduleBackend as userContainersBackend } from '@holistix-forge/user-containers';
@@ -21,6 +21,8 @@ import { CONFIG } from '../config';
  *
  * Returns list of modules to load in dependency order.
  * Modules are loaded sequentially and dependencies must be loaded first.
+ *
+ * @param collabRegistry - CollabRegistry for multi-project architecture
  */
 export function createBackendModulesConfig(
   organizationId: string,
@@ -30,13 +32,15 @@ export function createBackendModulesConfig(
   oauthManager: OAuthManager,
   tokenManager: TokenManager,
   permissionRegistry: PermissionRegistry,
-  protectedServiceRegistry: ProtectedServiceRegistry
+  protectedServiceRegistry: ProtectedServiceRegistry,
+  collabRegistry: ICollabRegistry
 ): { module: TModule<never, object>; config: object }[] {
-  // Collab config - uses YjsServerCollab for server-side (Yjs WebSocket server)
-  // The room_id is not used in server mode, but required by config type
+  // Collab config - multi-project architecture
+  // Each project has its own YJS document managed by ProjectRoomsManager
+  // Modules register their shared data schema with the registry at load time
+  // Reducers get project-specific collab instances via registry.getCollabForProject()
   const collabConfig = {
-    type: 'yjs-server' as const,
-    room_id: 'gateway',
+    registry: collabRegistry,
   };
 
   // Gateway module config

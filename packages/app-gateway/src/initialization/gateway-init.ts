@@ -3,9 +3,14 @@ import { loadModules } from '@holistix-forge/module';
 import { GatewayState } from '../state/GatewayState';
 import { PermissionManager } from '../permissions';
 import { ProjectRoomsManager } from '../state/ProjectRooms';
+import { CollabRegistry } from '../state/CollabRegistry';
 import { OAuthManager } from '../oauth';
 import { TokenManager } from '../tokens';
-import { PermissionRegistry, ProtectedServiceRegistry } from '@holistix-forge/gateway';
+import {
+  PermissionRegistry,
+  ProtectedServiceRegistry,
+} from '@holistix-forge/gateway';
+import type { TReducersBackendExports } from '@holistix-forge/reducers';
 
 export interface GatewayInstances {
   gatewayState: GatewayState;
@@ -13,6 +18,7 @@ export interface GatewayInstances {
   oauthManager: OAuthManager;
   tokenManager: TokenManager;
   projectRooms: ProjectRoomsManager;
+  collabRegistry: CollabRegistry;
   permissionRegistry: PermissionRegistry;
   protectedServiceRegistry: ProtectedServiceRegistry;
 }
@@ -28,6 +34,11 @@ let oauthCleanupInterval: NodeJS.Timeout | null = null;
  * This creates all instances and registers them with GatewayState.
  * GatewayState pulls data from Ganymede, and providers load their data
  * when they are registered.
+ *
+ * Multi-project Architecture:
+ * - Each project has its own YJS document (managed by ProjectRoomsManager)
+ * - CollabRegistry provides per-project collab instances to reducers
+ * - Reducers access project-specific data via requestData.project_id
  *
  * @param organizationId - Organization ID
  * @param gatewayId - Gateway ID
@@ -62,11 +73,19 @@ export async function initializeGatewayForOrganization(
   const tokenManager = new TokenManager();
   const projectRooms = new ProjectRoomsManager();
 
+  // 3.5 Create CollabRegistry for multi-project architecture
+  // Must be created before loading modules (modules register schema with it)
+  const collabRegistry = new CollabRegistry();
+
   // 4. Register all managers with GatewayState
   // Registration will automatically load data from pulled snapshot
   gatewayState.register('permissions', permissionManager);
   gatewayState.register('oauth', oauthManager);
   gatewayState.register('projects', projectRooms);
+
+  // 4.5 Wire up CollabRegistry to ProjectRoomsManager
+  // This allows registry to get room_id for projects
+  collabRegistry.setProjectRooms(projectRooms);
 
   // 5.5 Create PermissionRegistry instance
   const permissionRegistry = new PermissionRegistry();
@@ -85,6 +104,7 @@ export async function initializeGatewayForOrganization(
     oauthManager,
     tokenManager,
     projectRooms,
+    collabRegistry,
     permissionRegistry,
     protectedServiceRegistry,
   };
@@ -92,6 +112,7 @@ export async function initializeGatewayForOrganization(
 
   // 6. Load backend modules (collab, reducers, core-graph, gateway, user-containers)
   // Modules are loaded after managers are created so gateway module can access them
+  // Modules register their shared data schema with CollabRegistry at load time
   const modulesConfig = createBackendModulesConfig(
     organizationId,
     organizationToken,
@@ -100,15 +121,33 @@ export async function initializeGatewayForOrganization(
     oauthManager,
     tokenManager,
     permissionRegistry,
-    protectedServiceRegistry
+    protectedServiceRegistry,
+    collabRegistry
   );
   log(
     EPriority.Info,
     'GATEWAY_INIT',
     `Loading ${modulesConfig.length} backend modules...`
   );
-  loadModules(modulesConfig);
+  const moduleExports = loadModules(modulesConfig) as {
+    reducers: TReducersBackendExports;
+  };
   log(EPriority.Info, 'GATEWAY_INIT', 'Backend modules loaded successfully');
+
+  // 6.5 Wire up event processor to ProjectRoomsManager
+  // This allows ProjectRoomsManager to dispatch project:init events
+  projectRooms.setEventProcessor(moduleExports.reducers);
+  log(
+    EPriority.Info,
+    'GATEWAY_INIT',
+    'Event processor wired to ProjectRoomsManager'
+  );
+
+  // Note: gateway:load event is no longer dispatched here
+  // Project initialization (default tabs, views) happens when:
+  // 1. A project is first accessed (via project:init event)
+  // 2. Data is pulled from Ganymede and applied to project's Y.Doc
+  // This ensures initialization is project-specific, not global
 
   // 7. Start periodic OAuth cleanup (every hour)
   if (oauthCleanupInterval) {
@@ -129,6 +168,7 @@ export async function initializeGatewayForOrganization(
     EPriority.Info,
     'GATEWAY_INIT',
     `Gateway initialized: ${projectRooms.getProjectCount()} projects, ` +
+      `${collabRegistry.getSchemaSize()} shared data types registered, ` +
       `${oauthStats.clients} OAuth clients`
   );
 

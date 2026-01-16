@@ -1,10 +1,6 @@
 import { TabPath } from './tabs-types';
 
-export type TreeElement<
-  T = {
-    /* */
-  }
-> = {
+export type TreeElement<T = Record<string, unknown>> = {
   title: string;
   children: TreeElement<T>[];
   payload: T;
@@ -12,11 +8,7 @@ export type TreeElement<
 
 //
 
-export class ReadOnlyTree<
-  T = {
-    /* */
-  }
-> {
+export class ReadOnlyTree<T = Record<string, unknown>> {
   protected _root: TreeElement<T>;
 
   constructor(c: TreeElement<T>) {

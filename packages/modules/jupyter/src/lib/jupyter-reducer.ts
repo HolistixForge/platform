@@ -1,13 +1,12 @@
 import { ServerConnection, TerminalManager } from '@jupyterlab/services';
 
-import {
-  Reducer,
-  RequestData,
-  TReducersBackendExports,
-} from '@holistix-forge/reducers';
+import { RequestData, TReducersBackendExports } from '@holistix-forge/reducers';
 import { TJsonArray, makeUuid } from '@holistix-forge/simple-types';
 import { NotFoundException } from '@holistix-forge/log';
-import { TCollabBackendExports } from '@holistix-forge/collab';
+import {
+  TCollabBackendExports,
+  ReducerWithCollab,
+} from '@holistix-forge/collab';
 import {
   TUserContainersSharedData,
   userContainerNodeId,
@@ -15,7 +14,7 @@ import {
   TEventDelete,
   TUserContainersExports,
 } from '@holistix-forge/user-containers';
-import { TCoreSharedData } from '@holistix-forge/core-graph';
+import { TCoreSharedData, TGraphNode } from '@holistix-forge/core-graph';
 
 import {
   TJupyterEvent,
@@ -54,9 +53,7 @@ export type TExtraArgs = {
 type ReducedEvents = TJupyterEvent | TEventNew | TEventDelete;
 
 type TRequired = {
-  collab: TCollabBackendExports<
-    TUserContainersSharedData & TJupyterSharedData & TCoreSharedData
-  >;
+  collab: TCollabBackendExports;
   reducers: TReducersBackendExports;
   'user-containers': TUserContainersExports;
 };
@@ -65,19 +62,37 @@ type TRequired = {
  * Jupyter Reducer - Handles Jupyter-specific events
  */
 
-export class JupyterReducer extends Reducer<ReducedEvents> {
+export class JupyterReducer extends ReducerWithCollab<
+  ReducedEvents,
+  TUserContainersSharedData & TJupyterSharedData & TCoreSharedData
+> {
   private readonly depsExports: TRequired;
-  private _drivers: DriversStoreBackend;
+  private _drivers: Map<string, DriversStoreBackend> = new Map();
 
   constructor(depsExports: TRequired) {
-    super();
+    super(depsExports.collab.registry, 'jupyter');
     this.depsExports = depsExports;
+  }
 
-    const sd = depsExports.collab.collab.sharedData;
-    this._drivers = new DriversStoreBackend(
-      sd['jupyter:servers'],
-      sd['user-containers:containers']
-    );
+  /**
+   * Get or create DriversStoreBackend for a specific project
+   */
+  private _getDriversStore(requestData: RequestData): DriversStoreBackend {
+    const project_id = requestData.project_id || 'default';
+
+    if (!this._drivers.has(project_id)) {
+      const collab = this.getCollab(requestData);
+      const sd = collab.sharedData;
+      this._drivers.set(
+        project_id,
+        new DriversStoreBackend(
+          sd['jupyter:servers'],
+          sd['user-containers:containers']
+        )
+      );
+    }
+
+    return this._drivers.get(project_id)!;
   }
 
   /**
@@ -91,16 +106,13 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
     return (imageDef as any)?.options?.containerType === 'jupyter';
   }
 
-  private async _getDriver(user_container_id: string, token: string) {
-    return await this._drivers.getDriver(user_container_id, token);
-  }
-
-  private get sharedData() {
-    return this.depsExports.collab.collab.sharedData;
-  }
-
-  private get sharedEditor() {
-    return this.depsExports.collab.collab.sharedEditor;
+  private async _getDriver(
+    user_container_id: string,
+    token: string,
+    requestData: RequestData
+  ) {
+    const drivers = this._getDriversStore(requestData);
+    return await drivers.getDriver(user_container_id, token);
   }
 
   //
@@ -197,25 +209,21 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
       return; // Not a Jupyter container, ignore
     }
 
+    const collab = this.getCollab(requestData);
+    const servers = collab.sharedData['jupyter:servers'];
+
     // Check if server already exists
-    if (
-      this.sharedData['jupyter:servers'].get(
-        `${result.userContainer.user_container_id}`
-      )
-    ) {
+    if (servers.get(`${result.userContainer.user_container_id}`)) {
       return; // Already initialized
     }
 
     // Initialize Jupyter server data for this container
-    this.sharedData['jupyter:servers'].set(
-      `${result.userContainer.user_container_id}`,
-      {
-        user_container_id: result.userContainer.user_container_id,
-        kernels: {},
-        cells: {},
-        terminals: {},
-      }
-    );
+    servers.set(`${result.userContainer.user_container_id}`, {
+      user_container_id: result.userContainer.user_container_id,
+      kernels: {},
+      cells: {},
+      terminals: {},
+    });
   }
 
   async _resourcesChanged(
@@ -224,9 +232,9 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
   ): Promise<void> {
     const { resources } = event;
     const { kernels, terminals } = resources;
-    const server = this.sharedData['jupyter:servers'].get(
-      `${event.user_container_id}`
-    );
+    const collab = this.getCollab(requestData);
+    const servers = collab.sharedData['jupyter:servers'];
+    const server = servers.get(`${event.user_container_id}`);
     if (!server) return;
 
     const newKernels = kernels.reduce((acc, kernel) => {
@@ -243,10 +251,7 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
 
     server.terminals = newTerminals;
 
-    this.sharedData['jupyter:servers'].set(
-      `${server.user_container_id}`,
-      server
-    );
+    servers.set(`${server.user_container_id}`, server);
   }
 
   makeKernelNodeId(id: string) {
@@ -260,8 +265,10 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
     // TODO: TEventNewCell should include kernelId for the new model
     const kid = event.kernel_id;
     if (!kid) throw new Error('kernelId is required for new cell');
+    const collab = this.getCollab(requestData);
+    const servers = collab.sharedData['jupyter:servers'];
     const server: TJupyterServerData | undefined = this.findServerByKernelId(
-      Array.from(this.sharedData['jupyter:servers'].values()),
+      Array.from(servers.values()),
       kid
     );
     if (!server)
@@ -273,7 +280,7 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
 
     const id = makeUuid();
 
-    await this.sharedEditor.createEditor(cell_id, '');
+    await collab.sharedEditor.createEditor(cell_id, '');
 
     const data: TCellNodeDataPayload = {
       user_container_id: server.user_container_id,
@@ -316,10 +323,7 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
       outputs: [],
     };
 
-    this.sharedData['jupyter:servers'].set(
-      `${server.user_container_id}`,
-      server
-    );
+    servers.set(`${server.user_container_id}`, server);
   }
 
   async _deleteCell(
@@ -327,33 +331,34 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
     requestData: RequestData
   ): Promise<void> {
     const cellId = event.cell_id;
+    const collab = this.getCollab(requestData);
+    const servers = collab.sharedData['jupyter:servers'];
     const server = this.findServerByCellId(
-      Array.from(this.sharedData['jupyter:servers'].values()),
+      Array.from(servers.values()),
       cellId
     );
     if (server && server.cells[cellId]) {
       delete server.cells[cellId];
       // Delete node from graph
-      this.sharedData['core-graph:nodes'].forEach((node, id) => {
-        if (
-          node.type === 'jupyter-cell' &&
-          (node.data as TCellNodeDataPayload).cell_id === cellId
-        ) {
-          this.depsExports.reducers.processEvent(
-            {
-              type: 'core:delete-node',
-              id,
-            },
-            requestData
-          );
+      collab.sharedData['core-graph:nodes'].forEach(
+        (node: TGraphNode, id: string) => {
+          if (
+            node.type === 'jupyter-cell' &&
+            (node.data as TCellNodeDataPayload).cell_id === cellId
+          ) {
+            this.depsExports.reducers.processEvent(
+              {
+                type: 'core:delete-node',
+                id,
+              },
+              requestData
+            );
+          }
         }
-      });
-
-      this.sharedEditor.deleteEditor(cellId);
-      this.sharedData['jupyter:servers'].set(
-        `${server.user_container_id}`,
-        server
       );
+
+      collab.sharedEditor.deleteEditor(cellId);
+      servers.set(`${server.user_container_id}`, server);
     }
   }
 
@@ -362,8 +367,10 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
     requestData: RequestData
   ): Promise<void> {
     const { cell_id, code } = event;
+    const collab = this.getCollab(requestData);
+    const servers = collab.sharedData['jupyter:servers'];
     const server: TJupyterServerData | undefined = this.findServerByCellId(
-      Array.from(this.sharedData['jupyter:servers'].values()),
+      Array.from(servers.values()),
       cell_id
     );
     if (!server) return;
@@ -374,7 +381,8 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
 
       const driver = await this._getDriver(
         server.user_container_id,
-        authHeader
+        authHeader,
+        requestData
       );
 
       const kernel = server.kernels[cell.kernel_id];
@@ -394,20 +402,14 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
           })
           .catch((e) => {
             cell.outputs = [];
-            this.sharedData['jupyter:servers'].set(
-              `${server.user_container_id}`,
-              server
-            );
+            servers.set(`${server.user_container_id}`, server);
             throw e;
           });
       }
 
       cell.busy = true;
       cell.outputs = [];
-      this.sharedData['jupyter:servers'].set(
-        `${server.user_container_id}`,
-        server
-      );
+      servers.set(`${server.user_container_id}`, server);
     }
   }
 
@@ -416,17 +418,16 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
     requestData: RequestData
   ): Promise<void> {
     const { cell_id, output } = event;
+    const collab = this.getCollab(requestData);
+    const servers = collab.sharedData['jupyter:servers'];
     const server = this.findServerByCellId(
-      Array.from(this.sharedData['jupyter:servers'].values()),
+      Array.from(servers.values()),
       cell_id
     );
     if (server && server.cells[cell_id]) {
       server.cells[cell_id].outputs = output as unknown as TJsonArray;
       server.cells[cell_id].busy = false;
-      this.sharedData['jupyter:servers'].set(
-        `${server.user_container_id}`,
-        server
-      );
+      servers.set(`${server.user_container_id}`, server);
     }
 
     return Promise.resolve();
@@ -437,17 +438,16 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
     requestData: RequestData
   ): Promise<void> {
     const { cell_id } = event;
+    const collab = this.getCollab(requestData);
+    const servers = collab.sharedData['jupyter:servers'];
     const server = this.findServerByCellId(
-      Array.from(this.sharedData['jupyter:servers'].values()),
+      Array.from(servers.values()),
       cell_id
     );
     if (server && server.cells[cell_id]) {
       server.cells[cell_id].outputs = [];
       server.cells[cell_id].busy = false;
-      this.sharedData['jupyter:servers'].set(
-        `${server.user_container_id}`,
-        server
-      );
+      servers.set(`${server.user_container_id}`, server);
     }
 
     return Promise.resolve();
@@ -459,9 +459,9 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
     event: TEventNewTerminal,
     requestData: RequestData
   ): Promise<void> {
-    const server = this.sharedData['jupyter:servers'].get(
-      `${event.user_container_id}`
-    );
+    const collab = this.getCollab(requestData);
+    const servers = collab.sharedData['jupyter:servers'];
+    const server = servers.get(`${event.user_container_id}`);
     if (!server)
       throw new NotFoundException([
         { message: `No such project server [${event.user_container_id}]` },
@@ -470,10 +470,8 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
     // Extract authorization from requestData
     const authHeader = requestData.headers['authorization'] || '';
 
-    const ss = this._drivers.getServerSetting(
-      event.user_container_id,
-      authHeader
-    );
+    const drivers = this._getDriversStore(requestData);
+    const ss = drivers.getServerSetting(event.user_container_id, authHeader);
 
     const settings = ServerConnection.makeSettings(ss);
     const manager = new TerminalManager({
@@ -490,10 +488,7 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
       sessionModel: { name: terminal_id },
     };
 
-    this.sharedData['jupyter:servers'].set(
-      `${server.user_container_id}`,
-      server
-    );
+    servers.set(`${server.user_container_id}`, server);
 
     await this.depsExports.reducers.processEvent(
       {
@@ -557,31 +552,32 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
   ): Promise<void> {
     const { terminal_id } = event;
 
+    const collab = this.getCollab(requestData);
+    const servers = collab.sharedData['jupyter:servers'];
     const server = this.findServerByTerminalId(
-      Array.from(this.sharedData['jupyter:servers'].values()),
+      Array.from(servers.values()),
       terminal_id
     );
     if (server && server.terminals[terminal_id]) {
-      this.sharedData['core-graph:nodes'].forEach((node, id) => {
-        if (
-          node.type === 'jupyter-terminal' &&
-          (node.data as TTerminalNodeDataPayload).terminal_id === terminal_id
-        ) {
-          this.depsExports.reducers.processEvent(
-            {
-              type: 'core:delete-node',
-              id,
-            },
-            requestData
-          );
+      collab.sharedData['core-graph:nodes'].forEach(
+        (node: TGraphNode, id: string) => {
+          if (
+            node.type === 'jupyter-terminal' &&
+            (node.data as TTerminalNodeDataPayload).terminal_id === terminal_id
+          ) {
+            this.depsExports.reducers.processEvent(
+              {
+                type: 'core:delete-node',
+                id,
+              },
+              requestData
+            );
+          }
         }
-      });
+      );
 
       delete server.terminals[terminal_id];
-      this.sharedData['jupyter:servers'].set(
-        `${server.user_container_id}`,
-        server
-      );
+      servers.set(`${server.user_container_id}`, server);
     }
   }
 
@@ -603,9 +599,9 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
     requestData: RequestData
   ): Promise<void> {
     const projecTUserContainerId = event.user_container_id;
-    const jupyterServer = this.sharedData['jupyter:servers'].get(
-      `${projecTUserContainerId}`
-    );
+    const collab = this.getCollab(requestData);
+    const servers = collab.sharedData['jupyter:servers'];
+    const jupyterServer = servers.get(`${projecTUserContainerId}`);
 
     if (jupyterServer) {
       // Delete all kernels associated with this server
@@ -640,7 +636,7 @@ export class JupyterReducer extends Reducer<ReducedEvents> {
       }
 
       // Remove the server from jupyterServers
-      this.sharedData['jupyter:servers'].delete(`${projecTUserContainerId}`);
+      servers.delete(`${projecTUserContainerId}`);
     }
   }
 

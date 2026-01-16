@@ -9,7 +9,7 @@
       "path": "../gateway"
     },
     {
-      "path": "../core-graph"
+      "path": "../../log"
     },
     {
       "path": "../reducers"

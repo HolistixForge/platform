@@ -1,9 +1,8 @@
 import { TModule } from '@holistix-forge/module';
-import { TExcalidrawSharedData } from './lib/excalidraw-shared-model';
 import { TCollabBackendExports } from '@holistix-forge/collab';
 
 type TRequired = {
-  collab: TCollabBackendExports<TExcalidrawSharedData>;
+  collab: TCollabBackendExports;
 };
 
 export const moduleBackend: TModule<TRequired> = {
@@ -12,7 +11,12 @@ export const moduleBackend: TModule<TRequired> = {
   description: 'Excalidraw module',
   dependencies: [],
   load: ({ depsExports, moduleExports, config }) => {
-    depsExports.collab.collab.loadSharedData('map', 'excalidraw', 'drawing');
+    // Register shared data schema with registry
+    depsExports.collab.registry.registerSharedData(
+      'map',
+      'excalidraw',
+      'drawing'
+    );
   },
 };
 

@@ -4,7 +4,10 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { SharedTypes } from '@holistix-forge/collab-engine';
 import { EPriority, Logger } from '@holistix-forge/log';
 import { TCoreSharedData } from '@holistix-forge/core-graph';
-import { TWhiteboardSharedData, defaultGraphView } from '@holistix-forge/whiteboard';
+import {
+  TWhiteboardSharedData,
+  defaultGraphView,
+} from '@holistix-forge/whiteboard';
 import {
   STORY_VIEW_ID,
   StoryWhiteboard,
@@ -90,12 +93,14 @@ const modulesBackend: { module: TModule<never, object>; config: object }[] = [
         depsExports,
       }: {
         depsExports: {
-          collab: TCollabBackendExports<TWhiteboardSharedData & TCoreSharedData>;
+          collab: TCollabBackendExports;
         };
       }) => {
+        const collab =
+          depsExports.collab.registry.getCollabForProject('story-project');
         loadStoryData(
-          depsExports.collab.collab.sharedData,
-          depsExports.collab.collab.sharedTypes
+          collab.sharedData as TWhiteboardSharedData & TCoreSharedData,
+          collab.sharedTypes
         );
       },
     },

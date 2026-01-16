@@ -59,6 +59,32 @@ packages/
 
 See [doc/guides/NX_WORKSPACE.md](doc/guides/NX_WORKSPACE.md) for Nx commands and workflows.
 
+## 📏 Coding Standards
+
+### TypeScript
+
+- ✅ **Strict mode enabled** - No implicit any, strict null checks
+- ✅ **No unused variables** - Clean up unused imports and variables
+- ✅ **Explicit return types** - For public APIs and exported functions
+- ✅ **Type over `any`** - Use proper types or `unknown` instead of `any`
+
+### ESLint Rules
+
+Key enforced rules:
+- `@nx/enforce-module-boundaries` - Respect package dependencies
+- `@typescript-eslint/no-explicit-any` - Avoid `any` type
+- `@typescript-eslint/no-unused-vars` - No unused variables
+- Standard TypeScript and React best practices
+
+### Code Style
+
+- **Prettier** handles all formatting automatically
+- **2 spaces** for indentation
+- **Single quotes** for strings (enforced by Prettier)
+- **Semicolons** required (enforced by Prettier)
+
+**No need to manually format** - pre-commit hooks handle this!
+
 ## 🔄 Development Workflow
 
 ### 1. Create a Feature Branch
@@ -79,7 +105,34 @@ npx nx run app-ganymede:build
 npx nx run-many -t build
 ```
 
+### 3. Run Validation (Optional but Recommended)
+
+Before committing, you can manually validate your changes:
+
+```bash
+# Validate only affected packages (fast)
+npm run validate:affected
+
+# Or validate everything (slower)
+npm run validate
+```
+
+These commands run:
+- **ESLint** - Code linting
+- **TypeScript** - Type checking
+- **Jest** - Tests
+
 ### 4. Commit Your Changes
+
+**Pre-Commit Checks (Automatic):**
+
+When you commit, the following checks run automatically:
+1. ✅ **TypeScript type checking** on staged `.ts`/`.tsx` files
+2. ✅ **ESLint** with auto-fix on staged files
+3. ✅ **Prettier** formatting on staged files
+4. ✅ **Tests** for affected packages
+
+**If any check fails, the commit will be blocked.**
 
 **Commit Message Format:**
 
@@ -124,11 +177,91 @@ Fixes #456
 
 ### 5. Push and Create Pull Request
 
+**Before Pushing (Optional but Recommended):**
+
+```bash
+# Validate affected packages before pushing
+npm run pre-push
+```
+
+**Push your changes:**
+
 ```bash
 git push origin feature/your-feature-name
 ```
 
 Then create a Pull Request on GitHub.
+
+**CI/CD Validation:**
+
+Once you create a PR, GitHub Actions will automatically:
+1. ✅ Run ESLint on all packages
+2. ✅ Run TypeScript type checking on all packages
+3. ✅ Build all packages
+4. ✅ Run all tests
+
+**If CI fails, you'll need to fix the issues before merging.**
+
+## 🔍 Code Quality & Validation
+
+### Available Validation Commands
+
+```bash
+# Lint all packages
+npm run lint
+
+# Lint and auto-fix issues
+npm run lint:fix
+
+# Type check all packages
+npm run typecheck
+
+# Test all packages
+npm run test
+
+# Run all validations (lint + typecheck + test)
+npm run validate
+
+# Run validations only on affected packages (faster)
+npm run validate:affected
+
+# Pre-push validation (recommended before pushing)
+npm run pre-push
+```
+
+### Pre-Commit Hooks
+
+We use **Husky** and **lint-staged** to enforce code quality before commits.
+
+**What runs automatically on `git commit`:**
+
+1. **TypeScript type checking** - Staged `.ts`/`.tsx` files checked with `tsc-files`
+2. **ESLint** - Lints and auto-fixes staged files
+3. **Prettier** - Formats staged files
+4. **Tests** - Runs tests for affected packages
+
+**If any check fails, your commit will be blocked.**
+
+### Bypassing Pre-Commit Hooks
+
+In rare cases, you may need to bypass hooks:
+
+```bash
+git commit --no-verify
+```
+
+**⚠️ Use sparingly!** CI will still enforce all checks.
+
+### CI/CD Validation
+
+Our CI pipeline runs on every push and PR:
+
+1. **ESLint** - Lint all packages
+2. **TypeScript** - Type check all packages
+3. **Build** - Build all packages
+4. **Test** - Run all tests
+
+**All checks must pass before merging.**
 
 ## 🧪 Testing
 

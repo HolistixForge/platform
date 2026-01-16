@@ -12,7 +12,7 @@ export function getAbsolutePosition(
   parentId: string | undefined,
   gv: TGraphView
 ) {
-  let absolutePosition = { ...position };
+  const absolutePosition = { ...position };
   let currentParentId = parentId;
 
   while (currentParentId) {

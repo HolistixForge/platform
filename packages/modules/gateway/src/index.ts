@@ -34,6 +34,7 @@ export const moduleFrontend: TModule<
   description: 'Gateway module',
   dependencies: ['collab'],
   load: ({ depsExports }) => {
+    // Frontend collab connects to a specific project's YJS document via WebSocket
     depsExports.collab.collab.loadSharedData('map', 'gateway', 'gateway');
   },
 };
@@ -43,6 +44,7 @@ export const moduleFrontend: TModule<
 export type { TGatewayEvents } from './lib/gateway-events';
 export type { TEventLoad } from './lib/gateway-events';
 export type { TGatewaySharedData, TGatewayMeta } from './lib/gateway-types';
+export type { TProjectEvents, TEventProjectInit } from './lib/project-init-events';
 
 // Export manager interfaces and types
 export {

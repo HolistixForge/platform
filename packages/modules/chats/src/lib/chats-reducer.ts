@@ -1,11 +1,10 @@
-import {
-  Reducer,
-  RequestData,
-  TReducersBackendExports,
-} from '@holistix-forge/reducers';
+import { RequestData, TReducersBackendExports } from '@holistix-forge/reducers';
 import { makeUuid } from '@holistix-forge/simple-types';
 import { TCoreSharedData } from '@holistix-forge/core-graph';
-import { TCollabBackendExports } from '@holistix-forge/collab';
+import {
+  TCollabBackendExports,
+  ReducerWithCollab,
+} from '@holistix-forge/collab';
 import { TWhiteboardSharedData } from '@holistix-forge/whiteboard';
 
 import {
@@ -26,9 +25,7 @@ import { TChat } from './chats-types';
  */
 
 type TRequired = {
-  collab: TCollabBackendExports<
-    TChatSharedData & TCoreSharedData & TWhiteboardSharedData
-  >;
+  collab: TCollabBackendExports;
   reducers: TReducersBackendExports;
 };
 
@@ -36,11 +33,14 @@ type TRequired = {
  *
  */
 
-export class ChatReducer extends Reducer<TChatEvent> {
+export class ChatReducer extends ReducerWithCollab<
+  TChatEvent,
+  TChatSharedData & TCoreSharedData & TWhiteboardSharedData
+> {
   //
 
   constructor(private exports: TRequired) {
-    super();
+    super(exports.collab.registry, 'chats');
     this.exports = exports;
   }
 
@@ -74,17 +74,17 @@ export class ChatReducer extends Reducer<TChatEvent> {
 
   //
 
-  __deepCopyEditAndApply(event: { chatId: string }, f: (chat: TChat) => void) {
-    const chat = this.exports.collab.collab.sharedData['chats:chats'].get(
-      event.chatId
-    );
+  __deepCopyEditAndApply(
+    event: { chatId: string },
+    f: (chat: TChat) => void,
+    requestData: RequestData
+  ) {
+    const collab = this.getCollab(requestData);
+    const chat = collab.sharedData['chats:chats'].get(event.chatId);
     if (chat) {
       const nchat = structuredClone(chat);
       f(nchat);
-      this.exports.collab.collab.sharedData['chats:chats'].set(
-        event.chatId,
-        nchat
-      );
+      collab.sharedData['chats:chats'].set(event.chatId, nchat);
     }
   }
 
@@ -94,24 +94,29 @@ export class ChatReducer extends Reducer<TChatEvent> {
     event: TEventNewMessage,
     requestData: RequestData
   ): Promise<void> {
-    this.__deepCopyEditAndApply(event, (chat) => {
-      chat.messages.push({
-        user_id: requestData.user_id || 'unknown',
-        content: event.content,
-        date: new Date().toISOString(),
-        replyIndex: event.replyToIndex,
-      });
-      if (chat.lastRead[requestData.user_id] === chat.messages.length - 2)
-        chat.lastRead[requestData.user_id] = chat.messages.length - 1;
-    });
+    this.__deepCopyEditAndApply(
+      event,
+      (chat) => {
+        chat.messages.push({
+          user_id: requestData.user_id || 'unknown',
+          content: event.content,
+          date: new Date().toISOString(),
+          replyIndex: event.replyToIndex,
+        });
+        if (chat.lastRead[requestData.user_id] === chat.messages.length - 2)
+          chat.lastRead[requestData.user_id] = chat.messages.length - 1;
+      },
+      requestData
+    );
     return Promise.resolve();
   }
 
   //
 
   _newChat(event: TEventNewChat, requestData: RequestData): Promise<void> {
+    const collab = this.getCollab(requestData);
     const nc = newChat();
-    this.exports.collab.collab.sharedData['chats:chats'].set(nc.id, nc);
+    collab.sharedData['chats:chats'].set(nc.id, nc);
 
     const anchorNodeId = makeUuid();
     const chatNodeId = makeUuid();
@@ -174,8 +179,8 @@ export class ChatReducer extends Reducer<TChatEvent> {
       requestData
     );
 
-    this.exports.collab.collab.sharedData['whiteboard:graphViews'].forEach(
-      async (gv, k) => {
+    collab.sharedData['whiteboard:graphViews'].forEach(
+      async (gv: any, k: any) => {
         await this.exports.reducers.processEvent(
           {
             type: 'whiteboard:resize-node',
@@ -197,10 +202,14 @@ export class ChatReducer extends Reducer<TChatEvent> {
   //
 
   _isWriting(event: TEventIsWriting, requestData: RequestData): Promise<void> {
-    this.__deepCopyEditAndApply(event, (chat) => {
-      const userId = requestData.user_id || 'unknown';
-      chat.isWriting[userId] = event.value;
-    });
+    this.__deepCopyEditAndApply(
+      event,
+      (chat) => {
+        const userId = requestData.user_id || 'unknown';
+        chat.isWriting[userId] = event.value;
+      },
+      requestData
+    );
     return Promise.resolve();
   }
 
@@ -210,9 +219,13 @@ export class ChatReducer extends Reducer<TChatEvent> {
     event: TEventUserHasRead,
     requestData: RequestData
   ): Promise<void> {
-    this.__deepCopyEditAndApply(event, (chat) => {
-      chat.lastRead[requestData.user_id] = event.index;
-    });
+    this.__deepCopyEditAndApply(
+      event,
+      (chat) => {
+        chat.lastRead[requestData.user_id] = event.index;
+      },
+      requestData
+    );
     return Promise.resolve();
   }
 
@@ -222,9 +235,13 @@ export class ChatReducer extends Reducer<TChatEvent> {
     event: TEventChatResolve,
     requestData: RequestData
   ): Promise<void> {
-    this.__deepCopyEditAndApply(event, (chat) => {
-      chat.resolved = event.value;
-    });
+    this.__deepCopyEditAndApply(
+      event,
+      (chat) => {
+        chat.resolved = event.value;
+      },
+      requestData
+    );
     return Promise.resolve();
   }
 
@@ -234,10 +251,14 @@ export class ChatReducer extends Reducer<TChatEvent> {
     event: TEventDeleteMessage,
     requestData: RequestData
   ): Promise<void> {
-    this.__deepCopyEditAndApply(event, (chat) => {
-      const m = chat.messages[event.index];
-      if (m.user_id === requestData.user_id) m.content = '[deleted]';
-    });
+    this.__deepCopyEditAndApply(
+      event,
+      (chat) => {
+        const m = chat.messages[event.index];
+        if (m.user_id === requestData.user_id) m.content = '[deleted]';
+      },
+      requestData
+    );
     return Promise.resolve();
   }
 
@@ -247,27 +268,24 @@ export class ChatReducer extends Reducer<TChatEvent> {
     event: TEventDeleteChat,
     requestData: RequestData
   ): Promise<void> {
-    const chat = this.exports.collab.collab.sharedData['chats:chats'].get(
-      event.chatId
-    );
+    const collab = this.getCollab(requestData);
+    const chat = collab.sharedData['chats:chats'].get(event.chatId);
     if (chat) {
-      this.exports.collab.collab.sharedData['core-graph:nodes'].forEach(
-        (node) => {
-          if (
-            (node.type === 'chat' || node.type === 'chat-anchor') &&
-            node.data?.chatId === event.chatId
-          ) {
-            this.exports.reducers.processEvent(
-              {
-                type: 'core:delete-node',
-                id: node.id,
-              },
-              requestData
-            );
-          }
+      collab.sharedData['core-graph:nodes'].forEach((node: any) => {
+        if (
+          (node.type === 'chat' || node.type === 'chat-anchor') &&
+          node.data?.chatId === event.chatId
+        ) {
+          this.exports.reducers.processEvent(
+            {
+              type: 'core:delete-node',
+              id: node.id,
+            },
+            requestData
+          );
         }
-      );
-      this.exports.collab.collab.sharedData['chats:chats'].delete(event.chatId);
+      });
+      collab.sharedData['chats:chats'].delete(event.chatId);
     }
     return Promise.resolve();
   }

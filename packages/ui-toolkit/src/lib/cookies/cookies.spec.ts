@@ -7,12 +7,7 @@
 import { getCookies, getCookie } from './cookies';
 
 describe('Cookie Utilities', () => {
-  // Store original document.cookie
-  let originalCookie: string;
-
   beforeEach(() => {
-    // Save original cookies
-    originalCookie = document.cookie;
 
     // Clear all cookies before each test
     document.cookie.split(';').forEach((cookie) => {

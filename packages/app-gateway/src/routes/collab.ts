@@ -29,25 +29,35 @@ export const setupCollabRoutes = (
   }) as any);
 
   // POST /collab/event - Process collaborative event
+  // Requires project_id in request body for multi-project architecture
   router.post(
     '/collab/event',
     authenticateJwt,
-    requireProjectAccess(), // Check project access if project_id is in JWT
+    requireProjectAccess(), // Check project access if project_id is in JWT or body
     asyncHandler(async (req: Request, res) => {
       if (!bep) {
         throw new NotFoundException([{ message: 'Collab data not bound' }]);
       }
 
       const authReq = req as any;
-      const { event } = req.body;
+      const { event, project_id } = req.body;
       const user_id = authReq.user.id;
       const ip = (req.headers['x-real-ip'] as string) || req.ip || 'unknown';
+
+      // project_id is required for multi-project architecture
+      // It tells reducers which project's YJS doc to operate on
+      if (!project_id) {
+        throw new NotFoundException([
+          { message: 'project_id is required in request body' },
+        ]);
+      }
 
       const requestData = {
         ip,
         user_id,
         jwt: authReq.jwt || {},
         headers: req.headers as any,
+        project_id,
       };
 
       await bep.processEvent(event, requestData);
