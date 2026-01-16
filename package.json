@@ -3,7 +3,10 @@
   "version": "0.0.0",
   "license": "AGPL-3.0-or-later",
   "scripts": {
-    "prepare": "husky || true"
+    "prepare": "husky || true",
+    "test:build": "node scripts/test-frontend-build.js",
+    "validate:vite": "node scripts/validate-vite-configs.js",
+    "validate:node": "bash scripts/validate-node-bundles.sh"
   },
   "private": true,
   "devDependencies": {

@@ -5,11 +5,23 @@ import dts from 'vite-plugin-dts';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import * as path from 'path';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   root: __dirname,
   cacheDir: '../../../node_modules/.vite/packages/modules/notion',
   plugins: [
-    react(),
+    react({
+      babel: {
+        plugins: [
+          [
+            '@babel/plugin-transform-react-jsx',
+            {
+              runtime: 'automatic',
+              development: mode === 'development',
+            },
+          ],
+        ],
+      },
+    }),
     dts({
       entryRoot: 'src',
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
@@ -45,4 +57,4 @@ export default defineConfig({
       external: (id) => !id.startsWith('.') && !id.startsWith('/'),
     },
   },
-});
+}));

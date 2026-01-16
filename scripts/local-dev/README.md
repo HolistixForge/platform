@@ -161,10 +161,21 @@ See [Gateway Build Distribution](../../doc/guides/GATEWAY_BUILD_DISTRIBUTION.md)
 
 ## Build Distribution & Validation
 
+### Gateway/Backend Validation
+
 - **`serve-builds.sh`** - HTTP server for gateway builds (port 8090)
 - **`pack-gateway-build.sh`** - Pack gateway build into tarball
-- **`../../scripts/validate-node-bundles.sh`** - Validate bundles for React dependencies
+- **`../../scripts/validate-node-bundles.sh`** - Validate Node.js bundles for React dependencies
 - **`../../scripts/analyze-bundle.js`** - Detailed bundle analyzer
+
+### Frontend Validation
+
+- **`npm run test:build`** - Automated test suite for frontend build validation
+  - Runs `scripts/test-frontend-build.js`
+  - Checks for problematic `jsxDEV` calls (causes runtime errors)
+  - Validates library packages use production jsx-runtime
+  - Validates bundle sanity, sizes, and determinism
+  - Can be integrated into CI/CD pipelines
 
 See **[doc/guides/GATEWAY_BUILD_DISTRIBUTION.md](../../doc/guides/GATEWAY_BUILD_DISTRIBUTION.md)** for architecture details.
 
