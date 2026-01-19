@@ -1,7 +1,8 @@
 # Clean stale TypeScript build artifacts to prevent tsc-files errors
 echo "🧹 Cleaning stale TypeScript artifacts..."
-find packages -type f -path "*/out-tsc/*.d.ts" -delete 2>/dev/null || true
+find packages -type d -name "out-tsc" -exec rm -rf {} + 2>/dev/null || true
 rm -f tsconfig.*.tsbuildinfo 2>/dev/null || true
+find packages -name "*.tsbuildinfo" -delete 2>/dev/null || true
 
 # Run linter on staged files
 npx lint-staged

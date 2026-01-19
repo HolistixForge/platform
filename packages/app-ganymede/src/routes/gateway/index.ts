@@ -76,8 +76,8 @@ export const setupGatewayRoutes = (
       try {
         // 1. Allocate gateway from pool (database)
         const result = await pg.query(
-          'CALL proc_organizations_start_gateway($1, $2, $3, $4, $5, $6)',
-          [organization_id, null, null, null, null, null]
+          'CALL proc_organizations_start_gateway($1, $2, $3, $4, $5, $6, $7)',
+          [organization_id, null, null, null, null, null, null]
         );
         const row = result.next()?.oneRow();
 
@@ -85,18 +85,29 @@ export const setupGatewayRoutes = (
           throw new Error('Failed to allocate gateway from pool');
         }
 
-        const container_name = row['container_name'];
+        const container_name = row['container_name'] as string | null;
         const http_port = row['http_port'] as number;
+        const gateway_nginx_upstream = row['gateway_nginx_upstream'] as string;
         const tmp_handshake_token = row['tmp_handshake_token'];
+
+        // Validate that nginx_upstream was returned from database
+        if (!gateway_nginx_upstream) {
+          throw new Error(
+            'Gateway allocation failed: gateway_nginx_upstream is missing from database'
+          );
+        }
 
         log(
           EPriority.Info,
           'GATEWAY_ALLOC',
-          `Allocated ${container_name} (port ${http_port}) to org ${organization_id}`
+          `Allocated ${container_name} (port ${http_port}, upstream ${gateway_nginx_upstream}) to org ${organization_id}`
         );
 
-        // 2. Create Nginx config (routes org traffic to gateway HTTP port)
-        await nginxManager.createGatewayConfig(organization_id, http_port);
+        // 2. Create Nginx config (routes org traffic to gateway)
+        await nginxManager.createGatewayConfig(
+          organization_id,
+          gateway_nginx_upstream
+        );
 
         // 3. Reload Nginx
         await nginxManager.reloadNginx();
@@ -119,9 +130,17 @@ export const setupGatewayRoutes = (
           `Calling gateway handshake: ${handshakeUrl}`
         );
 
+        // Server-to-server call: Include Origin header to pass CSRF validation
+        // The gateway's CSRF protection accepts requests from allowed origins
+        const domain = process.env.DOMAIN || 'domain.local';
+        const origin = `https://${domain}`;
+
         const handshakeResponse = await fetch(handshakeUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Origin: origin,
+          },
           body: JSON.stringify({ tmp_handshake_token }),
         });
 

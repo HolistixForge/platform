@@ -188,6 +188,7 @@ CREATE TABLE IF NOT EXISTS public.gateways
     container_name character varying(100),
     http_port integer,
     vpn_port integer,
+    gateway_nginx_upstream character varying(255),
     PRIMARY KEY (gateway_id),
     CONSTRAINT unique_container_name UNIQUE (container_name)
 );

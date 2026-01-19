@@ -138,7 +138,8 @@ GATEWAY_POOL_SIZE=3 ./create-env.sh dev-001 domain.local
 ```
 
 - Creates N gateway containers (`gw-pool-0`, `gw-pool-1`, ...)
-- Registers in PostgreSQL with metadata (container_name, http_port, vpn_port)
+- Registers in PostgreSQL with metadata (container_name, http_port, vpn_port, gateway_nginx_upstream)
+- `gateway_nginx_upstream` stores the internal address Stage 1 Nginx uses to reach the gateway (e.g., `172.17.0.1:7100` for local dev)
 - Generates TJwtGateway tokens via `app-ganymede-cmd`
 - Containers start idle in `ready` state
 
@@ -146,11 +147,11 @@ GATEWAY_POOL_SIZE=3 ./create-env.sh dev-001 domain.local
 
 ```
 Frontend → POST /gateway/start → Ganymede:
-  1. Query PostgreSQL for available gateway (ready=true)
+  1. Query PostgreSQL for available gateway (ready=true), returns gateway_nginx_upstream
   2. DNS already resolved (wildcard DNS handles org-{uuid}.domain.local)
-  3. Create Nginx config: route org-{uuid} to gateway HTTP port
-  4. Reload Nginx
-  5. Call gateway handshake: POST /collab/start
+  3. Create Nginx config: route org-{uuid} to gateway_nginx_upstream address
+  4. Reload Nginx (using nginx -s reload for reliability)
+  5. Call gateway handshake: POST /collab/start (with Origin header for CSRF)
 ```
 
 ### 3. Handshake
@@ -399,13 +400,13 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
 
 **Tables:**
 
-- `gateways` - Pool registry (container_name, http_port, vpn_port, ready flag)
+- `gateways` - Pool registry (container_name, http_port, vpn_port, gateway_nginx_upstream, ready flag)
 - `organizations_gateways` - Active allocations (org_id, gateway_id, started_at, ended_at)
 
 **Procedures:**
 
-- `proc_gateway_new(hostname, version, container_name, http_port, vpn_port)` - Add to pool
-- `proc_organizations_start_gateway(org_id)` - Allocate gateway, returns metadata
+- `proc_gateway_new(version, container_name, http_port, vpn_port, gateway_nginx_upstream)` - Add to pool
+- `proc_organizations_start_gateway(org_id)` - Allocate gateway, returns metadata (including gateway_nginx_upstream)
 - `proc_organizations_gateways_stop(gateway_id)` - Deallocate, mark ready
 - `func_organizations_get_active_gateway(org_id)` - Check if org has gateway
 
@@ -413,9 +414,9 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
 
 **nginx-manager.ts:**
 
-- `createGatewayConfig(org_id, http_port)` - Create `/etc/nginx/.../org-{uuid}.conf`
+- `createGatewayConfig(org_id, nginx_upstream)` - Create `/etc/nginx/.../org-{uuid}.conf` using provided upstream address
 - `removeGatewayConfig(org_id)` - Delete config file
-- `reloadNginx()` - Test + reload nginx
+- `reloadNginx()` - Test + reload nginx (using `nginx -s reload`)
 
 **url-helpers.ts:**
 
@@ -538,6 +539,7 @@ CREATE TABLE gateways (
     container_name varchar(100),      -- NEW: gw-pool-0, gw-pool-1, etc.
     http_port integer,                -- NEW: 7100, 7101, etc.
     vpn_port integer,                 -- NEW: 49100, 49101, etc.
+    gateway_nginx_upstream varchar(255), -- NEW: Internal address for Stage 1 Nginx (e.g., 172.17.0.1:7100)
     UNIQUE (container_name)
 );
 ```
@@ -572,7 +574,7 @@ docker ps --filter label=environment=dev-001
 
 # Via PostgreSQL
 PGPASSWORD=devpassword psql -U postgres -d ganymede_dev_001 -c \
-  "SELECT gateway_id, ready, container_name, http_port FROM gateways;"
+  "SELECT gateway_id, ready, container_name, http_port, gateway_nginx_upstream FROM gateways;"
 ```
 
 ### Check Active Allocations
@@ -583,6 +585,7 @@ PGPASSWORD=devpassword psql -U postgres -d ganymede_dev_001 -c "
     o.name as org_name,
     g.container_name,
     g.http_port,
+    g.gateway_nginx_upstream,
     og.started_at,
     now() - og.started_at as duration
   FROM organizations_gateways og

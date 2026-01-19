@@ -25,14 +25,22 @@ export const addGateway = async (
   version: string,
   containerName: string,
   httpPort: number,
-  vpnPort: number
+  vpnPort: number,
+  nginxUpstream: string
 ) => {
-  const r = await pg.query('call proc_gateway_new($1, $2, $3, $4, NULL)', [
-    version,
-    containerName,
-    httpPort,
-    vpnPort,
-  ]);
+  // nginxUpstream MUST be explicitly provided
+  // This is the address that Stage 1 Nginx will use to reach this gateway
+  // Examples:
+  //   Development: '172.17.0.1:7103' (Docker host via bridge gateway)
+  //   Production: '10.0.0.20:7103' (internal network address)
+  if (!nginxUpstream) {
+    throw new Error('nginxUpstream is required');
+  }
+
+  const r = await pg.query(
+    'call proc_gateway_new($1, $2, $3, $4, $5, NULL)',
+    [version, containerName, httpPort, vpnPort, nginxUpstream]
+  );
   const gwId = r.next()!.oneRow()['gateway_id'] as string;
 
   const token = gatewayGlobalToken(gwId);

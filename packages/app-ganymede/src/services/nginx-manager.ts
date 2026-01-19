@@ -32,20 +32,37 @@ export class NginxManager {
    * Create nginx config for organization gateway
    * Routes org-{uuid}.domain.local and *.org-{uuid}.domain.local to gateway HTTP port
    */
-  async createGatewayConfig(orgId: string, httpPort: number): Promise<void> {
+  async createGatewayConfig(
+    orgId: string,
+    nginxUpstream: string
+  ): Promise<void> {
     // Validate orgId to prevent path traversal
     if (!/^[a-f0-9-]{36}$/.test(orgId)) {
       throw new Error(`Invalid organization ID format: ${orgId}`);
+    }
+
+    // Validate nginxUpstream is provided
+    if (!nginxUpstream || nginxUpstream.trim() === '') {
+      throw new Error(
+        `nginxUpstream is required for org ${orgId}. Must be explicitly provided from database.`
+      );
     }
 
     const domain = process.env.DOMAIN || 'domain.local';
     const orgDomain = `org-${orgId}.${domain}`;
     const configPath = path.join(this.nginxGatewaysDir, `org-${orgId}.conf`);
 
+    // The nginxUpstream is the address that Stage 1 Nginx (in main dev container or main VPS)
+    // uses to reach the gateway container. Examples:
+    //   Development: '172.17.0.1:7103' (Docker host via bridge gateway)
+    //   Production single-server: '172.17.0.1:7103' (same as dev)
+    //   Production multi-server: '10.0.0.20:7103' (cloud internal network)
+    const gatewayAddress = nginxUpstream;
+
     log(
       EPriority.Info,
       'NGINX',
-      `Creating config for ${orgDomain} → 127.0.0.1:${httpPort}`
+      `Creating config for ${orgDomain} → ${gatewayAddress}`
     );
 
     // Create nginx config (Stage 1: SSL termination, route to gateway)
@@ -54,7 +71,7 @@ export class NginxManager {
 # DO NOT EDIT MANUALLY
 
 upstream org-${orgId}-gw {
-    server 127.0.0.1:${httpPort};
+    server ${gatewayAddress};
 }
 
 server {
@@ -161,8 +178,11 @@ server {
         throw new Error(`Nginx config test failed: ${testError}`);
       }
 
-      // Reload nginx
-      await execAsync('sudo service nginx reload');
+      // Reload nginx using nginx -s reload (more reliable than service command)
+      await execAsync('sudo nginx -s reload');
+
+      // Small delay to ensure reload completes
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       log(EPriority.Info, 'NGINX', '✅ Nginx reloaded successfully');
     } catch (error: any) {

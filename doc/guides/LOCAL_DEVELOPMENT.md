@@ -419,6 +419,36 @@ docker logs -f gw-pool-2  # Follow
 ps aux | grep coredns
 ```
 
+### Check Infrastructure Status
+
+**Quick status check:**
+
+```bash
+# Shows Ganymede and Gateway status for all environments
+./scripts/local-dev/envctl.sh list
+
+# Status for specific environment
+./scripts/local-dev/envctl.sh status dev-001
+```
+
+**Comprehensive infrastructure diagnostic:**
+
+```bash
+# Complete health check of all services, containers, DNS, networking
+./scripts/local-dev/infra-diagnostic.sh
+```
+
+This diagnostic tool checks:
+
+- Core services (PostgreSQL, Nginx, CoreDNS, Build Server)
+- Observability stack (OTLP, Loki, Tempo, Grafana)
+- Gateway containers (status, DNS, ports)
+- DNS resolution (CoreDNS, wildcard domains)
+- HTTPS connectivity (frontend, Ganymede API)
+- Network configuration
+
+**Use `infra-diagnostic.sh` for troubleshooting** as it provides the most detailed status information.
+
 ### Rebuild and Restart
 
 ```bash
@@ -662,7 +692,7 @@ docker logs gw-pool-0
 
 # Check gateway status in database
 PGPASSWORD=devpassword psql -U postgres -d ganymede_dev_001 -c \
-  "SELECT gateway_id, ready, container_name, http_port FROM gateways;"
+  "SELECT gateway_id, ready, container_name, http_port, gateway_nginx_upstream FROM gateways;"
 ```
 
 ### Port Allocation

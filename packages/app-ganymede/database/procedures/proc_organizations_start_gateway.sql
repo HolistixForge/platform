@@ -6,6 +6,7 @@ CREATE OR REPLACE PROCEDURE public.proc_organizations_start_gateway(
     OUT container_name character varying(100),
     OUT http_port integer,
     OUT vpn_port integer,
+    OUT gateway_nginx_upstream character varying(255),
     OUT tmp_handshake_token uuid
 )
 LANGUAGE 'plpgsql'
@@ -16,8 +17,8 @@ BEGIN
     LOCK TABLE organizations_gateways IN ROW EXCLUSIVE MODE;
 
     -- Find an available gateway from pool
-    SELECT g.gateway_id, g.container_name, g.http_port, g.vpn_port
-    INTO gateway_id, container_name, http_port, vpn_port
+    SELECT g.gateway_id, g.container_name, g.http_port, g.vpn_port, g.gateway_nginx_upstream
+    INTO gateway_id, container_name, http_port, vpn_port, gateway_nginx_upstream
     FROM public.gateways g
     WHERE NOT EXISTS (
         SELECT 1
@@ -53,6 +54,7 @@ ALTER PROCEDURE public.proc_organizations_start_gateway(
     OUT character varying(100),
     OUT integer,
     OUT integer,
+    OUT character varying(255),
     OUT uuid
 ) OWNER TO postgres;
 

@@ -33,12 +33,17 @@ program
     'Gateway VPN port (e.g., 49100)',
     parseInt
   )
+  .requiredOption(
+    '-nu, --nginx-upstream <address>',
+    'Nginx upstream address (e.g., 172.17.0.1:7100 for dev, 10.0.0.20:7100 for prod)'
+  )
   .action(async (options) => {
     await addGateway(
       options.gwVersion,
       options.containerName,
       options.httpPort,
-      options.vpnPort
+      options.vpnPort,
+      options.nginxUpstream
     );
     process.exit(0);
   });

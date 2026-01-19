@@ -58,7 +58,7 @@ describe('NginxManager - Path Injection Protection', () => {
       const validUuid = '550e8400-e29b-41d4-a716-446655440000';
 
       await expect(
-        nginxManager.createGatewayConfig(validUuid, 7100)
+        nginxManager.createGatewayConfig(validUuid, '172.17.0.1:7100')
       ).resolves.not.toThrow();
 
       expect(fs.promises.writeFile).toHaveBeenCalled();
@@ -68,7 +68,7 @@ describe('NginxManager - Path Injection Protection', () => {
       const validUuid = '123e4567-e89b-12d3-a456-426614174000';
 
       await expect(
-        nginxManager.createGatewayConfig(validUuid, 7101)
+        nginxManager.createGatewayConfig(validUuid, '172.17.0.1:7101')
       ).resolves.not.toThrow();
 
       expect(fs.promises.writeFile).toHaveBeenCalled();
@@ -78,7 +78,7 @@ describe('NginxManager - Path Injection Protection', () => {
       const validUuid = 'abcdef01-2345-6789-abcd-ef0123456789';
 
       await expect(
-        nginxManager.createGatewayConfig(validUuid, 7102)
+        nginxManager.createGatewayConfig(validUuid, '172.17.0.1:7102')
       ).resolves.not.toThrow();
 
       expect(fs.promises.writeFile).toHaveBeenCalled();
@@ -90,7 +90,7 @@ describe('NginxManager - Path Injection Protection', () => {
       const maliciousId = '../../../etc/passwd';
 
       await expect(
-        nginxManager.createGatewayConfig(maliciousId, 7100)
+        nginxManager.createGatewayConfig(maliciousId, '172.17.0.1:7100')
       ).rejects.toThrow('Invalid organization ID format');
 
       expect(fs.promises.writeFile).not.toHaveBeenCalled();
@@ -100,7 +100,7 @@ describe('NginxManager - Path Injection Protection', () => {
       const maliciousId = '../../nginx.conf';
 
       await expect(
-        nginxManager.createGatewayConfig(maliciousId, 7100)
+        nginxManager.createGatewayConfig(maliciousId, '172.17.0.1:7100')
       ).rejects.toThrow('Invalid organization ID format');
 
       expect(fs.promises.writeFile).not.toHaveBeenCalled();
@@ -110,7 +110,7 @@ describe('NginxManager - Path Injection Protection', () => {
       const maliciousId = '550e8400/e29b/41d4/a716/446655440000';
 
       await expect(
-        nginxManager.createGatewayConfig(maliciousId, 7100)
+        nginxManager.createGatewayConfig(maliciousId, '172.17.0.1:7100')
       ).rejects.toThrow('Invalid organization ID format');
 
       expect(fs.promises.writeFile).not.toHaveBeenCalled();
@@ -120,7 +120,7 @@ describe('NginxManager - Path Injection Protection', () => {
       const maliciousId = '550e8400\\e29b\\41d4\\a716\\446655440000';
 
       await expect(
-        nginxManager.createGatewayConfig(maliciousId, 7100)
+        nginxManager.createGatewayConfig(maliciousId, '172.17.0.1:7100')
       ).rejects.toThrow('Invalid organization ID format');
 
       expect(fs.promises.writeFile).not.toHaveBeenCalled();
@@ -130,7 +130,7 @@ describe('NginxManager - Path Injection Protection', () => {
       const maliciousId = '/etc/nginx/nginx.conf';
 
       await expect(
-        nginxManager.createGatewayConfig(maliciousId, 7100)
+        nginxManager.createGatewayConfig(maliciousId, '172.17.0.1:7100')
       ).rejects.toThrow('Invalid organization ID format');
 
       expect(fs.promises.writeFile).not.toHaveBeenCalled();
@@ -140,7 +140,7 @@ describe('NginxManager - Path Injection Protection', () => {
       const maliciousId = '550e8400\0e29b-41d4-a716-446655440000';
 
       await expect(
-        nginxManager.createGatewayConfig(maliciousId, 7100)
+        nginxManager.createGatewayConfig(maliciousId, '172.17.0.1:7100')
       ).rejects.toThrow('Invalid organization ID format');
 
       expect(fs.promises.writeFile).not.toHaveBeenCalled();
@@ -152,7 +152,7 @@ describe('NginxManager - Path Injection Protection', () => {
       const invalidId = 'not-a-valid-uuid';
 
       await expect(
-        nginxManager.createGatewayConfig(invalidId, 7100)
+        nginxManager.createGatewayConfig(invalidId, '172.17.0.1:7100')
       ).rejects.toThrow('Invalid organization ID format');
 
       expect(fs.promises.writeFile).not.toHaveBeenCalled();
@@ -162,7 +162,7 @@ describe('NginxManager - Path Injection Protection', () => {
       const invalidId = '550E8400-E29B-41D4-A716-446655440000';
 
       await expect(
-        nginxManager.createGatewayConfig(invalidId, 7100)
+        nginxManager.createGatewayConfig(invalidId, '172.17.0.1:7100')
       ).rejects.toThrow('Invalid organization ID format');
 
       expect(fs.promises.writeFile).not.toHaveBeenCalled();
@@ -172,7 +172,7 @@ describe('NginxManager - Path Injection Protection', () => {
       const invalidId = '550e8400-e29b-41d4';
 
       await expect(
-        nginxManager.createGatewayConfig(invalidId, 7100)
+        nginxManager.createGatewayConfig(invalidId, '172.17.0.1:7100')
       ).rejects.toThrow('Invalid organization ID format');
 
       expect(fs.promises.writeFile).not.toHaveBeenCalled();
@@ -182,7 +182,7 @@ describe('NginxManager - Path Injection Protection', () => {
       const invalidId = '550e8400-e29b-41d4-a716-446655440000-extra';
 
       await expect(
-        nginxManager.createGatewayConfig(invalidId, 7100)
+        nginxManager.createGatewayConfig(invalidId, '172.17.0.1:7100')
       ).rejects.toThrow('Invalid organization ID format');
 
       expect(fs.promises.writeFile).not.toHaveBeenCalled();
@@ -192,7 +192,7 @@ describe('NginxManager - Path Injection Protection', () => {
       const invalidId = '';
 
       await expect(
-        nginxManager.createGatewayConfig(invalidId, 7100)
+        nginxManager.createGatewayConfig(invalidId, '172.17.0.1:7100')
       ).rejects.toThrow('Invalid organization ID format');
 
       expect(fs.promises.writeFile).not.toHaveBeenCalled();
@@ -202,7 +202,7 @@ describe('NginxManager - Path Injection Protection', () => {
       const invalidId = '550e8400-e29b-41d4-a716-44665544000!';
 
       await expect(
-        nginxManager.createGatewayConfig(invalidId, 7100)
+        nginxManager.createGatewayConfig(invalidId, '172.17.0.1:7100')
       ).rejects.toThrow('Invalid organization ID format');
 
       expect(fs.promises.writeFile).not.toHaveBeenCalled();
@@ -212,7 +212,7 @@ describe('NginxManager - Path Injection Protection', () => {
       const invalidId = '550e8400 e29b 41d4 a716 446655440000';
 
       await expect(
-        nginxManager.createGatewayConfig(invalidId, 7100)
+        nginxManager.createGatewayConfig(invalidId, '172.17.0.1:7100')
       ).rejects.toThrow('Invalid organization ID format');
 
       expect(fs.promises.writeFile).not.toHaveBeenCalled();
@@ -268,7 +268,7 @@ describe('NginxManager - Path Injection Protection', () => {
       const invalidId = '550e8400e29b41d4a716446655440000';
 
       await expect(
-        nginxManager.createGatewayConfig(invalidId, 7100)
+        nginxManager.createGatewayConfig(invalidId, '172.17.0.1:7100')
       ).rejects.toThrow('Invalid organization ID format');
 
       expect(fs.promises.writeFile).not.toHaveBeenCalled();
@@ -283,7 +283,7 @@ describe('NginxManager - Path Injection Protection', () => {
       // This actually passes current validation (length=36, all valid chars)
       // If we want strict UUID validation, we'd need a more complex regex
       await expect(
-        nginxManager.createGatewayConfig(invalidId, 7100)
+        nginxManager.createGatewayConfig(invalidId, '172.17.0.1:7100')
       ).resolves.not.toThrow();
 
       // The current validation is sufficient for security (prevents path traversal)
@@ -294,7 +294,7 @@ describe('NginxManager - Path Injection Protection', () => {
       const maliciousId = '..%2F..%2Fetc%2Fpasswd';
 
       await expect(
-        nginxManager.createGatewayConfig(maliciousId, 7100)
+        nginxManager.createGatewayConfig(maliciousId, '172.17.0.1:7100')
       ).rejects.toThrow('Invalid organization ID format');
 
       expect(fs.promises.writeFile).not.toHaveBeenCalled();
@@ -304,7 +304,7 @@ describe('NginxManager - Path Injection Protection', () => {
       const maliciousId = '550e8400-e29b-41d4-a716-44665544000あ';
 
       await expect(
-        nginxManager.createGatewayConfig(maliciousId, 7100)
+        nginxManager.createGatewayConfig(maliciousId, '172.17.0.1:7100')
       ).rejects.toThrow('Invalid organization ID format');
 
       expect(fs.promises.writeFile).not.toHaveBeenCalled();
