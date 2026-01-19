@@ -35,6 +35,9 @@ export class CollabRegistry implements ICollabRegistry {
    * Must be called before getCollabForProject()
    */
   setProjectRooms(projectRooms: ProjectRoomsManager): void {
+    if (this.projectRooms) {
+      throw new Error('CollabRegistry: ProjectRoomsManager already set');
+    }
     this.projectRooms = projectRooms;
     log(EPriority.Info, 'COLLAB_REGISTRY', 'ProjectRooms manager set');
   }
