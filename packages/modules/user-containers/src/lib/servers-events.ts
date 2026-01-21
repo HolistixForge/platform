@@ -24,6 +24,7 @@ export type TEventDelete = {
 export type TEventWatchdog = {
   type: 'user-container:watchdog';
   system?: UserContainerSystemInfo;
+  systemEvent: true;  // Automated health check from container
 };
 
 export type TEventActivity = {

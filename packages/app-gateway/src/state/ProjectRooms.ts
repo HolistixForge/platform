@@ -271,4 +271,51 @@ export class ProjectRoomsManager implements IPersistenceProvider {
       }
     }
   }
+
+  /**
+   * Cleanup/unload an idle project (aggressive cleanup)
+   * 
+   * IMPORTANT: Caller MUST save project data to Ganymede BEFORE calling this method!
+   * Once this method executes, the project is removed from this.rooms and will NOT
+   * be included in future saveToSerializable() calls (autosave won't save it).
+   * 
+   * Cleanup steps:
+   * - Closes WebSocket connections (TODO: implement)
+   * - Removes YJS doc from y-websocket (TODO: verify if needed)
+   * - Removes from ProjectRoomsManager
+   * 
+   * This is called when a project has been idle for extended period (5 min)
+   */
+  async cleanupProject(project_id: string): Promise<void> {
+    const room = this.rooms.get(project_id);
+    if (!room) {
+      log(EPriority.Notice, 'PROJECT_ROOMS', `Project ${project_id} not found for cleanup`);
+      return;
+    }
+
+    log(EPriority.Info, 'PROJECT_ROOMS', `Cleaning up idle project: ${project_id}`);
+
+    // Note: Final snapshot should have been saved by caller before calling this method
+    // No need to re-serialize the YJS doc here - that's expensive and wasteful
+
+    // TODO: Close all WebSocket connections for this project
+    // This requires access to the WebSocket server and filtering connections by room_id
+    // For now, connections will be closed when clients try to reconnect and room is gone
+
+    // Remove from ProjectRoomsManager
+    // NOTE: After this, the project won't be included in saveToSerializable()
+    this.rooms.delete(project_id);
+    this.pendingSnapshots.delete(project_id);
+
+    // Note: y-websocket docs are managed internally by y-websocket
+    // They may be garbage collected automatically when no longer referenced
+    // If we need explicit cleanup, we can call ywsUtils.getYDoc(room_id).destroy()
+    // but this might cause issues if clients try to reconnect
+
+    log(
+      EPriority.Info,
+      'PROJECT_ROOMS',
+      `Project ${project_id} cleaned up and removed from ProjectRoomsManager`
+    );
+  }
 }

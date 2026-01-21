@@ -31,7 +31,10 @@ export async function signalGatewayReady(gateway_id: string): Promise<void> {
     `Signaling ready status to Ganymede at ${ganymedeClient.getBaseUrl()}...`
   );
 
-  while (true) {
+  const maxRetries = 12; // 12 retries × 5s = 1 minute total
+  let attempt = 0;
+
+  while (attempt < maxRetries) {
     try {
       await ganymedeClient.request({
         method: 'POST',
@@ -47,16 +50,28 @@ export async function signalGatewayReady(gateway_id: string): Promise<void> {
         'GATEWAY_READY',
         'Successfully signaled ready to Ganymede'
       );
-      break;
+      return;
     } catch (error) {
+      attempt++;
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      log(
-        EPriority.Warning,
-        'GATEWAY_READY',
-        `Failed to signal ready: ${errorMessage}. Retrying in 5s...`
-      );
-      await sleep(5);
+      if (attempt < maxRetries) {
+        log(
+          EPriority.Warning,
+          'GATEWAY_READY',
+          `Failed to signal ready (attempt ${attempt}/${maxRetries}): ${errorMessage}. Retrying in 5s...`
+        );
+        await sleep(5);
+      } else {
+        log(
+          EPriority.Error,
+          'GATEWAY_READY',
+          `Failed to signal ready after ${maxRetries} attempts: ${errorMessage}. Giving up.`
+        );
+        throw new Error(
+          `Failed to signal gateway ready after ${maxRetries} attempts`
+        );
+      }
     }
   }
 }

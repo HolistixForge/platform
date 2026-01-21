@@ -8,6 +8,7 @@
 export type TEventProjectInit = {
   type: 'project:init';
   project_id: string;
+  systemEvent: true;  // Automatically fired on project creation
 };
 
 export type TProjectEvents = TEventProjectInit;

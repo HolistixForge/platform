@@ -182,6 +182,9 @@ function setupShutdownHandlers() {
 // Main
 //
 
+// Store server instances for WebSocket grafting
+let servers: (http.Server | https.Server)[] = [];
+
 (async function main() {
   try {
     bep = new BackendEventProcessor<never>();
@@ -193,12 +196,19 @@ function setupShutdownHandlers() {
     const app = setupExpressApp();
     // Gateway always listens on port 8888 internally (Nginx proxies from external port)
     const bindings: TStart[] = [{ host: '127.0.0.1', port: 8888 }];
-    bindings.map((b) => startServer(app, b));
+    servers = bindings.map((b) => startServer(app, b));
 
     // Signal gateway is ready (if GATEWAY_ID is set)
+    // Run in background - don't block gateway startup if Ganymede is unreachable
     const gatewayId = process.env.GATEWAY_ID;
     if (gatewayId) {
-      await signalGatewayReady(gatewayId);
+      signalGatewayReady(gatewayId).catch((err) => {
+        log(
+          EPriority.Warning,
+          'GATEWAY',
+          `Failed to signal ready to Ganymede: ${err.message}`
+        );
+      });
     }
 
     // Load organization configuration (for hot restart)
@@ -214,7 +224,8 @@ function setupShutdownHandlers() {
       await initializeGatewayForOrganization(
         orgConfig.organization_id,
         orgConfig.gateway_id,
-        orgConfig.gateway_token
+        orgConfig.gateway_token,
+        servers  // Pass servers for WebSocket initialization
       );
       log(EPriority.Info, 'GATEWAY', 'Gateway ready and serving organization');
     } else {

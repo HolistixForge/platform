@@ -87,6 +87,7 @@ export type TEventJupyterResourcesChanged = {
     kernels: Kernel[];
     terminals: Terminal[];
   };
+  systemEvent: true;  // Automatically fired when container resources change
 };
 
 export type TJupyterEvent =

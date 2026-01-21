@@ -1,3 +1,5 @@
+import * as http from 'http';
+import * as https from 'https';
 import { EPriority, log } from '@holistix-forge/log';
 import { loadModules } from '@holistix-forge/module';
 import { GatewayState } from '../state/GatewayState';
@@ -11,7 +13,22 @@ import {
   ProtectedServiceRegistry,
 } from '@holistix-forge/gateway';
 import type { TReducersBackendExports } from '@holistix-forge/reducers';
+import { graftYjsWebsocket } from '../websocket';
+import { GatewayPeriodicTimer } from '../timers/periodic-events';
+import { GatewayShutdownTimer } from '../timers/gateway-shutdown';
 
+/**
+ * GatewayInstances - Internal Service Registry
+ *
+ * This interface defines the INTERNAL registry of gateway infrastructure.
+ * These instances are stored in a global registry and accessed by:
+ * - Gateway routes (collab, permissions, OAuth, protected services)
+ * - Gateway middleware (authentication, authorization)
+ * - Gateway shutdown logic
+ *
+ * This is SEPARATE from the module config that gets passed TO modules.
+ * See createBackendModulesConfig() for the external API exposed to modules.
+ */
 export interface GatewayInstances {
   gatewayState: GatewayState;
   permissionManager: PermissionManager;
@@ -21,12 +38,11 @@ export interface GatewayInstances {
   collabRegistry: CollabRegistry;
   permissionRegistry: PermissionRegistry;
   protectedServiceRegistry: ProtectedServiceRegistry;
+  periodicTimer: GatewayPeriodicTimer;
+  shutdownTimer: GatewayShutdownTimer;
 }
 import { setGatewayInstances, getGatewayInstances } from './gateway-instances';
 import { createBackendModulesConfig } from '../config/modules';
-
-// Cleanup interval reference (stored to clear on shutdown)
-let oauthCleanupInterval: NodeJS.Timeout | null = null;
 
 /**
  * Initialize Gateway for Organization
@@ -40,15 +56,28 @@ let oauthCleanupInterval: NodeJS.Timeout | null = null;
  * - CollabRegistry provides per-project collab instances to reducers
  * - Reducers access project-specific data via requestData.project_id
  *
+ * Two Distribution Mechanisms:
+ * 1. Module Config (External API): Managers passed TO modules via load({ config })
+ *    - Purpose: Allow modules to integrate with gateway infrastructure
+ *    - Examples: Register permissions, handle OAuth, register protected services
+ *    - Distribution: createBackendModulesConfig() → modules receive via config parameter
+ *
+ * 2. GatewayInstances Registry (Internal API): Managers stored in registry for gateway use
+ *    - Purpose: Gateway routes, middleware, and shutdown access infrastructure
+ *    - Examples: Route handlers check permissions, middleware validates JWT
+ *    - Distribution: setGatewayInstances() → gateway code accesses via getGatewayInstances()
+ *
  * @param organizationId - Organization ID
  * @param gatewayId - Gateway ID
  * @param organizationToken - Organization token for Ganymede auth
+ * @param servers - HTTP/HTTPS servers for WebSocket grafting
  * @returns Gateway instances (state and managers)
  */
 export async function initializeGatewayForOrganization(
   organizationId: string,
   gatewayId: string,
-  organizationToken: string
+  organizationToken: string,
+  servers?: (http.Server | https.Server)[]
 ): Promise<GatewayInstances> {
   log(
     EPriority.Info,
@@ -98,31 +127,26 @@ export async function initializeGatewayForOrganization(
     'GATEWAY_INIT',
     'Started auto-save (pushes to Ganymede every 5min)'
   );
-  const instances: GatewayInstances = {
-    gatewayState,
-    permissionManager,
-    oauthManager,
-    tokenManager,
-    projectRooms,
-    collabRegistry,
-    permissionRegistry,
-    protectedServiceRegistry,
-  };
-  setGatewayInstances(instances);
+  
 
   // 6. Load backend modules (collab, reducers, core-graph, gateway, user-containers)
   // Modules are loaded after managers are created so gateway module can access them
   // Modules register their shared data schema with CollabRegistry at load time
+  //
+  // IMPORTANT: This creates the EXTERNAL API for modules
+  // These managers are passed TO modules via their load({ config }) function
+  // This is the PUBLIC interface that modules use to integrate with gateway infrastructure
+  // (e.g., register permissions, handle OAuth, register protected services)
   const modulesConfig = createBackendModulesConfig(
     organizationId,
     organizationToken,
     gatewayId,
-    permissionManager,
-    oauthManager,
-    tokenManager,
-    permissionRegistry,
-    protectedServiceRegistry,
-    collabRegistry
+    permissionManager,        // ← Passed to modules for permission registration
+    oauthManager,             // ← Passed to modules for OAuth integration
+    tokenManager,             // ← Passed to modules for token management
+    permissionRegistry,       // ← Passed to modules for permission registration
+    protectedServiceRegistry, // ← Passed to modules for protected service registration
+    collabRegistry            // ← Passed to modules for shared data schema registration
   );
   log(
     EPriority.Info,
@@ -143,23 +167,39 @@ export async function initializeGatewayForOrganization(
     'Event processor wired to ProjectRoomsManager'
   );
 
-  // Note: gateway:load event is no longer dispatched here
-  // Project initialization (default tabs, views) happens when:
-  // 1. A project is first accessed (via project:init event)
-  // 2. Data is pulled from Ganymede and applied to project's Y.Doc
-  // This ensures initialization is project-specific, not global
-
-  // 7. Start periodic OAuth cleanup (every hour)
-  if (oauthCleanupInterval) {
-    clearInterval(oauthCleanupInterval);
-  }
-  oauthCleanupInterval = setInterval(() => {
-    oauthManager.cleanupExpired();
-  }, 60 * 60 * 1000); // 1 hour = 60 minutes * 60 seconds * 1000 ms
+  // 6.5.1 Create and start gateway-specific timers
+  const periodicTimer = new GatewayPeriodicTimer(projectRooms, moduleExports.reducers);
+  periodicTimer.start();
   log(
     EPriority.Info,
     'GATEWAY_INIT',
-    'Started OAuth cleanup timer (runs every hour)'
+    'Started per-project periodic event timer (5s interval)'
+  );
+
+  const shutdownTimer = new GatewayShutdownTimer(projectRooms);
+  shutdownTimer.enable();
+  log(
+    EPriority.Info,
+    'GATEWAY_INIT',
+    'Enabled gateway shutdown timer (30 min idle threshold)'
+  );
+
+  // 6.6 Initialize WebSocket handler for YJS collaboration
+  if (servers && servers.length > 0) {
+    graftYjsWebsocket(servers, projectRooms);
+    log(
+      EPriority.Info,
+      'GATEWAY_INIT',
+      `WebSocket handler initialized for ${projectRooms.getProjectCount()} projects`
+    );
+  }
+
+  // 7. Start automatic OAuth cleanup (managed by OAuthManager)
+  oauthManager.startAutomaticCleanup();
+  log(
+    EPriority.Info,
+    'GATEWAY_INIT',
+    'OAuth automatic cleanup enabled'
   );
 
   // 8. Log statistics
@@ -171,6 +211,29 @@ export async function initializeGatewayForOrganization(
       `${collabRegistry.getSchemaSize()} shared data types registered, ` +
       `${oauthStats.clients} OAuth clients`
   );
+
+  // 9. Store instances in INTERNAL registry for gateway infrastructure
+  //
+  // IMPORTANT: This is the INTERNAL service locator for gateway's own use
+  // These instances are accessed by gateway routes, middleware, and shutdown logic
+  // via getGatewayInstances() - they are NOT passed to modules
+  //
+  // Note: Some managers appear in BOTH places:
+  // - Passed to modules: For module integration (e.g., register permissions)
+  // - Stored in registry: For gateway internal use (e.g., route handlers)
+  const instances: GatewayInstances = {
+    gatewayState,                  // ← Internal only (organization context)
+    permissionManager,             // ← Both (modules register, routes check)
+    oauthManager,                  // ← Both (modules integrate, routes handle OAuth)
+    tokenManager,                  // ← Both (modules use, routes validate)
+    projectRooms,                  // ← Internal only (project lifecycle management)
+    collabRegistry,                // ← Both (modules register, routes access)
+    permissionRegistry,            // ← Both (modules register, routes check)
+    protectedServiceRegistry,      // ← Both (modules register, routes handle)
+    periodicTimer,                 // ← Internal only (gateway timers)
+    shutdownTimer,                 // ← Internal only (gateway shutdown)
+  };
+  setGatewayInstances(instances);
 
   return instances;
 }
@@ -184,21 +247,19 @@ export async function initializeGatewayForOrganization(
 export async function shutdownGateway(): Promise<void> {
   log(EPriority.Info, 'GATEWAY_SHUTDOWN', 'Initiating graceful shutdown...');
 
-  // Stop OAuth cleanup timer
-  if (oauthCleanupInterval) {
-    clearInterval(oauthCleanupInterval);
-    oauthCleanupInterval = null;
-    log(EPriority.Info, 'GATEWAY_SHUTDOWN', 'Stopped OAuth cleanup timer');
-  }
-
   const instances = getGatewayInstances();
   if (!instances) {
     log(EPriority.Info, 'GATEWAY_SHUTDOWN', 'No gateway instances to shutdown');
     return;
   }
 
-  // Cleanup expired OAuth tokens/codes (final cleanup)
+  // Stop OAuth cleanup timer and do final cleanup
+  instances.oauthManager.stopAutomaticCleanup();
   instances.oauthManager.cleanupExpired();
+
+  // Stop gateway timers
+  instances.periodicTimer.stop();
+  instances.shutdownTimer.disable();
 
   // Shutdown GatewayState (stops autosave and pushes final data)
   await instances.gatewayState.shutdown();

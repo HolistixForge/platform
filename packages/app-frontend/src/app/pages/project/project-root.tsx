@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { HeaderLogicProject } from '../../header/header-logic';
 import { ProjectWrapper } from './project-wrapper';
-import { GatewayCountdown } from './gateway-countdown';
+import { ProjectCountdown } from './gateway-countdown';
 
 /**
  * ProjectRoot - Entry point for project pages
@@ -13,7 +13,7 @@ export const ProjectRoot = () => {
   return (
     <ProjectWrapper>
       <HeaderLogicProject />
-      <GatewayCountdown />
+      <ProjectCountdown />
       <Outlet />
     </ProjectWrapper>
   );

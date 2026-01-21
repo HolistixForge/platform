@@ -36,6 +36,8 @@ export class OAuthManager
   implements IPersistenceProvider
 {
   private data: TOAuthData;
+  private cleanupInterval: NodeJS.Timeout | null = null;
+  private cleanupIntervalMs = 60 * 60 * 1000; // 1 hour
 
   constructor() {
     super();
@@ -162,6 +164,46 @@ export class OAuthManager
   // Cleanup
   //
 
+  /**
+   * Start automatic cleanup of expired codes/tokens
+   * Runs every hour by default
+   */
+  startAutomaticCleanup(intervalMs?: number): void {
+    if (this.cleanupInterval) {
+      log(EPriority.Notice, 'OAUTH', 'Cleanup timer already running');
+      return;
+    }
+
+    if (intervalMs !== undefined) {
+      this.cleanupIntervalMs = intervalMs;
+    }
+
+    log(
+      EPriority.Info,
+      'OAUTH',
+      `Starting automatic cleanup (every ${this.cleanupIntervalMs / 1000}s)`
+    );
+
+    this.cleanupInterval = setInterval(() => {
+      this.cleanupExpired();
+    }, this.cleanupIntervalMs);
+  }
+
+  /**
+   * Stop automatic cleanup
+   */
+  stopAutomaticCleanup(): void {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
+      log(EPriority.Info, 'OAUTH', 'Stopped automatic cleanup');
+    }
+  }
+
+  /**
+   * Manually cleanup expired codes/tokens
+   * Also called automatically by the timer
+   */
   cleanupExpired(): void {
     const now = new Date().toISOString();
     let cleaned = 0;

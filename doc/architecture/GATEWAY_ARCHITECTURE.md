@@ -15,7 +15,8 @@ Holistix Forge uses a **pool-based multi-gateway architecture** where gateway co
 
 - **Production Parity** - Dev environment mirrors production (same containers, same scripts, only SSL differs)
 - **Stateless Gateways** - All data stored centrally in Ganymede (gateways are disposable)
-- **Dynamic Allocation** - Gateways allocated from pool when needed, returned after 5min idle
+- **Dynamic Allocation** - Gateways allocated from pool when needed, shutdown after 30min if all projects idle
+- **Per-Project Cleanup** - Idle projects cleaned up after 5min (gateway continues serving active projects)
 - **Automated Infrastructure** - DNS and Nginx managed programmatically (no manual config)
 - **Hot-Reload** - Code changes reload all gateways without rebuild
 
@@ -179,21 +180,43 @@ Gateway → initializeGateway():
 - OpenVPN for user containers
 - **Periodic autosave** (every 5min) → pushes data to Ganymede
 
-### 5. Deallocation (After 5min Idle)
+### 5. Resource Management (Idle Handling)
+
+#### Per-Project Cleanup (After 5min Idle)
 
 ```
-Gateway detects no activity:
-  1. Push data: POST /gateway/data/push
-  2. Call: POST /gateway/stop
-
-Ganymede:
-  3. Remove DNS records
-  4. Remove Nginx config
-  5. Reload Nginx
-  6. Mark gateway ready in PostgreSQL
-
-Gateway returns to pool, ready for next org.
+GatewayPeriodicTimer (every 5s):
+  1. Emit periodic event for each active project
+  2. GatewayReducer checks project activity timer
+  3. If project idle for 5min:
+     a. Save all data: POST /gateway/data/push
+     b. Call ProjectRoomsManager.cleanupProject(project_id)
+     c. Remove project from memory
+  4. Gateway continues serving other active projects
 ```
+
+**Benefit**: Efficient memory usage, inactive projects unloaded while gateway serves active ones
+
+#### Gateway Shutdown (After 30min if ALL Idle)
+
+```
+GatewayShutdownTimer (every 30s):
+  1. Check if ANY projects exist
+  2. If NO projects for 30 minutes:
+     a. Push final data: POST /gateway/data/push
+     b. Call shutdownGateway()
+     c. Process exits cleanly (exit code 0)
+  3. Docker/k8s restarts container → returns to pool
+
+Ganymede (on gateway crash/exit):
+  4. Detect gateway no longer serving organization
+  5. Remove DNS records
+  6. Remove Nginx config
+  7. Mark gateway as ready in PostgreSQL
+  8. Gateway available for next allocation
+```
+
+**Benefit**: Gateway resources freed when completely idle, auto-returns to pool
 
 ---
 

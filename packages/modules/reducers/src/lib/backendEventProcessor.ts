@@ -2,23 +2,8 @@ import { log, EPriority } from '@holistix-forge/log';
 import { BackendEventSequence, SequenceEvent } from './backendEventSequence';
 import { Reducer, RequestData, TBaseEvent } from '..';
 
-//
-
-export type TEventPeriodic = {
-  type: 'reducers:periodic';
-  date: Date;
-  interval: number;
-};
-
-//
-
-const internalRequestData: RequestData = {
-  ip: 'gateway',
-  user_id: 'gateway',
-  jwt: {},
-  headers: {},
-  project_id: undefined, // Internal events are not project-specific
-};
+// Re-export system events for convenience
+export type { TEventPeriodic } from './system-events';
 
 //
 
@@ -30,19 +15,7 @@ export class BackendEventProcessor<TE extends TBaseEvent> {
   //
 
   constructor() {
-    const interval = 5000;
-    setInterval(() => {
-      try {
-        const e: TEventPeriodic = {
-          type: 'reducers:periodic',
-          interval,
-          date: new Date(),
-        };
-        this.processEvent(e as unknown as TE, internalRequestData);
-      } catch (err) {
-        console.log(err);
-      }
-    }, interval);
+    log(EPriority.Info, 'EVENT_PROCESSOR', 'BackendEventProcessor created');
   }
 
   //

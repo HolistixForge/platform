@@ -1,9 +1,5 @@
-export type TEventLoad = {
-  type: 'gateway:load';
+export type TEventDisableProjectUnloading = {
+  type: 'gateway:disable-project-unloading';
 };
 
-export type TEventDisableShutdown = {
-  type: 'gateway:disable-shutdown';
-};
-
-export type TGatewayEvents = TEventLoad | TEventDisableShutdown;
+export type TGatewayEvents = TEventDisableProjectUnloading;

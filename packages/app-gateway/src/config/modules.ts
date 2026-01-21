@@ -17,12 +17,37 @@ import type {
 import { CONFIG } from '../config';
 
 /**
- * Create backend modules configuration for gateway
+ * Create backend modules configuration for gateway - EXTERNAL API for modules
+ *
+ * This function creates the PUBLIC interface that modules use to integrate
+ * with gateway infrastructure. Managers are passed TO modules via their
+ * load({ config }) function.
  *
  * Returns list of modules to load in dependency order.
  * Modules are loaded sequentially and dependencies must be loaded first.
  *
- * @param collabRegistry - CollabRegistry for multi-project architecture
+ * What gets passed to modules:
+ * - permissionManager: For checking permissions in reducers
+ * - oauthManager: For OAuth integration
+ * - tokenManager: For JWT token management
+ * - permissionRegistry: For registering module permissions
+ * - protectedServiceRegistry: For registering protected services
+ * - collabRegistry: For registering shared data schemas
+ *
+ * This is SEPARATE from GatewayInstances (internal registry):
+ * - This config: External API for module integration
+ * - GatewayInstances: Internal API for gateway routes/middleware
+ *
+ * @param organizationId - Organization ID
+ * @param organizationToken - Organization token for Ganymede
+ * @param gatewayId - Gateway ID
+ * @param permissionManager - Permission manager (passed to modules)
+ * @param oauthManager - OAuth manager (passed to modules)
+ * @param tokenManager - Token manager (passed to modules)
+ * @param permissionRegistry - Permission registry (passed to modules)
+ * @param protectedServiceRegistry - Protected service registry (passed to modules)
+ * @param collabRegistry - CollabRegistry for multi-project architecture (passed to modules)
+ * @returns Module configuration array in dependency order
  */
 export function createBackendModulesConfig(
   organizationId: string,

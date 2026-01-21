@@ -42,7 +42,6 @@ export const moduleFrontend: TModule<
 //
 
 export type { TGatewayEvents } from './lib/gateway-events';
-export type { TEventLoad } from './lib/gateway-events';
 export type { TGatewaySharedData, TGatewayMeta } from './lib/gateway-types';
 export type { TProjectEvents, TEventProjectInit } from './lib/project-init-events';
 
@@ -70,4 +69,4 @@ export {
   type ProtectedServiceResolution,
 } from './lib/protected-service-registry';
 
-export type { TEventDisableShutdown } from './lib/gateway-events';
+export type { TEventDisableProjectUnloading } from './lib/gateway-events';

@@ -12,7 +12,7 @@ import {
   TEventDeleteNode,
   TEventNewNode,
 } from '@holistix-forge/core-graph';
-import { TEventLoad, TGatewayExports } from '@holistix-forge/gateway';
+import { TGatewayExports } from '@holistix-forge/gateway';
 import {
   RequestData,
   TReducersBackendExports,
@@ -50,7 +50,7 @@ type TRequired = {
 };
 
 export class UserContainersReducer extends ReducerWithCollab<
-  TUserContainersEvents | TEventLoad | TEventPeriodic,
+  TUserContainersEvents | TEventPeriodic,
   TUserContainersSharedData & TCoreSharedData
 > {
   //
@@ -60,14 +60,10 @@ export class UserContainersReducer extends ReducerWithCollab<
   }
 
   reduce(
-    event: TUserContainersEvents | TEventLoad | TEventPeriodic,
+    event: TUserContainersEvents | TEventPeriodic,
     requestData: RequestData
   ): Promise<void> {
     switch (event.type) {
-      case 'gateway:load':
-        // TODO start polling state through runner API ?
-        return Promise.resolve();
-
       case 'user-container:new':
         return this._new(event, requestData);
       case 'user-container:delete':
@@ -467,9 +463,13 @@ export class UserContainersReducer extends ReducerWithCollab<
   //
 
   async _periodic(event: TEventPeriodic, requestData: RequestData) {
-    // Note: periodic events need project_id to access project-specific data
-    // For now, this method processes all containers across all projects
-    // TODO: Consider looping through all projects if project-specific logic is needed
+    const project_id = requestData.project_id;
+    if (!project_id) {
+      // Should not happen with per-project periodic events
+      return;
+    }
+    
+    // Process containers for this specific project
     const collab = this.getCollab(requestData);
     const sduc = collab.sharedData['user-containers:containers'];
     // remove declared http services for container that did not

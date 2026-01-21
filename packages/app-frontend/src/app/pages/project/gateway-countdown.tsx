@@ -11,26 +11,26 @@ import { useDispatcher } from '@holistix-forge/reducers/frontend';
 import {
   TGatewaySharedData,
   TGatewayMeta,
-  TEventDisableShutdown,
+  TEventDisableProjectUnloading,
 } from '@holistix-forge/gateway';
 //
 
-export const GatewayCountdown = () => {
+export const ProjectCountdown = () => {
   const meta: TGatewayMeta = useLocalSharedData<TGatewaySharedData>(
     ['gateway:gateway'],
-    (sd) => sd['gateway:gateway'].get('unique')
+    (sd) => sd['gateway:gateway'].get('meta')
   );
 
   const cb = useCallback(() => {
     /*  */
   }, []);
 
-  const dispatcher = useDispatcher<TEventDisableShutdown>();
+  const dispatcher = useDispatcher<TEventDisableProjectUnloading>();
 
   const confirmAction = useAction(
     async () => {
       dispatcher.dispatch({
-        type: 'gateway:disable-shutdown',
+        type: 'gateway:disable-project-unloading',
       });
     },
     [dispatcher],
@@ -39,14 +39,14 @@ export const GatewayCountdown = () => {
     }
   );
 
-  const disableGatewayShutdown = useCallback(() => {
+  const disableProjectUnloading = useCallback(() => {
     confirmAction.open();
   }, [confirmAction]);
 
   if (!meta) return null;
-  const { gateway_shutdown, disable_gateway_shutdown } = meta.projectActivity;
+  const { project_cleanup_time, disable_project_cleanup } = meta.projectActivity;
 
-  if (disable_gateway_shutdown) return null;
+  if (disable_project_cleanup) return null;
 
   return (
     <>
@@ -60,14 +60,14 @@ export const GatewayCountdown = () => {
           cursor: 'pointer',
           zIndex: '9',
         }}
-        onClick={disableGatewayShutdown}
+        onClick={disableProjectUnloading}
       >
-        <Countdown targetDate={new Date(gateway_shutdown)} onComplete={cb} />
+        <Countdown targetDate={new Date(project_cleanup_time)} onComplete={cb} />
       </div>
 
       <DialogControlled
-        title="Disable Gateway Shutdown"
-        description="Are you sure you want to disable the gateway shutdown timer?"
+        title="Disable Project Auto-Unload"
+        description="Are you sure you want to disable the project auto-unload timer? The project will stay loaded even if idle."
         open={confirmAction.isOpened}
         onOpenChange={confirmAction.close}
       >
@@ -81,7 +81,7 @@ export const GatewayCountdown = () => {
           />
           <ButtonBase
             className="red"
-            text="Disable"
+            text="Keep Project Loaded"
             callback={confirmAction.callback}
             loading={confirmAction.loading}
           />

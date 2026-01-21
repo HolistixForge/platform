@@ -519,25 +519,44 @@ export class MyReducer extends ReducerWithCollab<TMyEvents, TMySharedData> {
 
 ### Periodic Events (Multi-Project)
 
-For tasks that need to run across all projects:
+**Architecture**: Periodic events are emitted PER-PROJECT by `GatewayPeriodicTimer`:
 
 ```typescript
-private async _periodic(event: TEventPeriodic, requestData: RequestData) {
-  // Get all project IDs from ProjectRoomsManager
-  const projects = this.projectRooms.getAllProjectIds();
+// Location: packages/app-gateway/src/timers/periodic-events.ts
 
-  for (const project_id of projects) {
-    // Create project-specific request data
-    const projectRequestData = { ...requestData, project_id };
-
-    // Get project-specific collab
-    const collab = this.getCollab(projectRequestData);
-
-    // Process this project
-    // ... your logic here
+// GatewayPeriodicTimer loops through projects and emits once per project
+export class GatewayPeriodicTimer {
+  private emitPeriodicEvents(): void {
+    const projectIds = this.projectRooms.getAllProjectIds();
+    const event: TEventPeriodic = {
+      type: 'reducers:periodic',
+      date: new Date(),
+      interval: this.interval,
+      systemEvent: true,  // Don't rearm project activity timer
+    };
+    
+    // Emit event once per project
+    for (const project_id of projectIds) {
+      this.eventProcessor.processEvent(event, { project_id, ... });
+    }
   }
 }
 ```
+
+**Reducer Pattern**: Each reducer receives the event with `project_id` already set:
+
+```typescript
+// Reducers just handle the event - no looping needed!
+private async _periodic(event: TEventPeriodic, requestData: RequestData) {
+  // project_id is already in requestData from GatewayPeriodicTimer
+  const collab = this.getCollab(requestData);
+  
+  // Process this specific project
+  // ... your periodic logic here
+}
+```
+
+**Note**: The `systemEvent: true` flag prevents periodic events from rearming the project activity timer, allowing projects to become idle.
 
 ---
 
