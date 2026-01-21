@@ -51,8 +51,15 @@ export const HeaderLogicProject = () => {
 
   const users = useAwarenessUserList();
 
+  // Filter out guest user ID before fetching user details
+  // The guest user ID is used as a fallback in collab config and should not be fetched
+  const GUEST_USER_ID = '00000000-0000-0000-0000-000000000001';
+  const validUserIds = users
+    .map((u) => u.user_id)
+    .filter((id) => id !== GUEST_USER_ID);
+
   // queries for each needed user
-  const usersQueries = useQueriesUsers(users.map((u) => u.user_id));
+  const usersQueries = useQueriesUsers(validUserIds);
 
   const otherUsers: TF_User[] = usersQueries
     .filter(

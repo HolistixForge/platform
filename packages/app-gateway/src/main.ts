@@ -58,7 +58,14 @@ export const setupExpressApp = (options?: {
 
   // Observability is now handled by @holistix-forge/observability package
   // Auto-instrumentation will automatically create spans for Express requests
-  setupBasicExpressApp(app);
+  // Gateway-specific CSRF exemptions:
+  // - /collab/:project_id: WebSocket connections for YJS collaboration
+  //   (WebSocket upgrade requests use GET, but clients may POST to collab endpoint)
+  setupBasicExpressApp(app, {
+    csrfExemptPaths: [
+      '/collab/:project_id', // YJS collaboration endpoint (supports Express params)
+    ],
+  });
 
   // Global rate limiter (apply to all routes as baseline protection)
   if (isRateLimitingEnabled()) {
@@ -183,6 +190,7 @@ function setupShutdownHandlers() {
 //
 
 // Store server instances for WebSocket grafting
+import { setServers } from './servers';
 let servers: (http.Server | https.Server)[] = [];
 
 (async function main() {
@@ -197,6 +205,9 @@ let servers: (http.Server | https.Server)[] = [];
     // Gateway always listens on port 8888 internally (Nginx proxies from external port)
     const bindings: TStart[] = [{ host: '127.0.0.1', port: 8888 }];
     servers = bindings.map((b) => startServer(app, b));
+    
+    // Make servers available globally for WebSocket grafting
+    setServers(servers);
 
     // Signal gateway is ready (if GATEWAY_ID is set)
     // Run in background - don't block gateway startup if Ganymede is unreachable

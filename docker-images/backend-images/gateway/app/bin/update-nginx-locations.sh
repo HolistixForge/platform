@@ -79,9 +79,6 @@ done
 if ! cmp -s "$CONFIG_FILE" "$NGINX_CONFIG"; then
     sudo cp "$CONFIG_FILE" "$NGINX_CONFIG"
     sudo nginx -s reload
-    echo "Configuration updated and nginx reloaded"
-else
-    echo "No changes in configuration, nginx reload not needed"
 fi
 
 success_exit

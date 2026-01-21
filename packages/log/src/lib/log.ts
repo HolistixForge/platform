@@ -114,18 +114,21 @@ export class Logger {
         [SEMRESATTRS_SERVICE_NAME]: serviceName,
       });
 
+      const logRecordProcessor = new SimpleLogRecordProcessor(logExporter);
+
       const loggerProvider = new LoggerProvider({
         resource,
+        processors: [logRecordProcessor],
       });
-
-      // Add log record processor (method exists at runtime)
-      (loggerProvider as any).addLogRecordProcessor(
-        new SimpleLogRecordProcessor(logExporter)
-      );
 
       Logger._loggerProvider = loggerProvider;
       Logger._otlpLogger = loggerProvider.getLogger('@holistix-forge/log');
     } catch (error) {
+      // Log initialization failure in development
+      if (process.env.NODE_ENV === 'development' || process.env.DEBUG) {
+        console.error('[Logger] Failed to initialize OTLP export:', error);
+        console.error('[Logger] Stack:', (error as Error).stack);
+      }
       // Silently fail if SDK packages aren't available
       // Logger will still work but without OTLP export
       // Trace context will still be extracted from active spans for correlation

@@ -38,6 +38,7 @@ export const ModuleDataProvider = ({
   children,
   loadingUI,
   unavailableUI,
+  userInfo,
 }: {
   /** Organization ID to load modules for */
   organization_id: string;
@@ -49,6 +50,8 @@ export const ModuleDataProvider = ({
   loadingUI?: ReactNode;
   /** Optional custom UI when gateway is unavailable */
   unavailableUI?: (organization_id: string) => ReactNode;
+  /** User info from useCurrentUser hook (required for collab awareness) */
+  userInfo: { user_id: string; username: string };
 }) => {
   const { ganymedeApi } = useApi();
   const { status, data } = useQueryOrganizationGateway(organization_id);
@@ -72,6 +75,7 @@ export const ModuleDataProvider = ({
       organization_id,
       gateway_hostname,
       ganymedeApi,
+      userInfo,
     });
     
     // Apply configs to modules
@@ -83,7 +87,7 @@ export const ModuleDataProvider = ({
     }));
     
     return loadModules(modulesWithConfig);
-  }, [gateway_hostname, organization_id, ganymedeApi, modules]);
+  }, [gateway_hostname, organization_id, ganymedeApi, userInfo, modules]);
   
   // Loading state - waiting for gateway info
   if (status === 'pending') {

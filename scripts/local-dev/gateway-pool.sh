@@ -300,6 +300,9 @@ cmd_create() {
         container_env[DOMAIN]="${DOMAIN}"
         container_env[BUILD_SERVER_IP]="${build_server_ip}"
         
+        # JWT Keys for token verification
+        container_env[JWT_PUBLIC_KEY]="${JWT_PUBLIC_KEY}"
+        
         # OpenTelemetry configuration
         # Gateway containers need to reach OTLP Collector on the Docker host.
         # 172.17.0.1 is the Docker bridge gateway IP - it allows containers

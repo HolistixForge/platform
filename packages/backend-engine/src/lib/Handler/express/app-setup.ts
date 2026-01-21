@@ -19,7 +19,21 @@ import { trace, SpanStatusCode } from '@opentelemetry/api';
 
 //
 
-export const setupBasicExpressApp = (app: express.Express) => {
+/**
+ * Setup basic Express app middleware
+ *
+ * @param app - Express application instance
+ * @param options - Configuration options
+ * @param options.csrfExemptPaths - App-specific paths to exempt from CSRF validation
+ *                                   Supports both exact paths and Express-style params
+ *                                   Examples: ['/exact/path', '/collab/:project_id']
+ */
+export const setupBasicExpressApp = (
+  app: express.Express,
+  options?: {
+    csrfExemptPaths?: string[];
+  }
+) => {
   app.disable('x-powered-by');
   app.use((req, res, next) => {
     res.setHeader('X-Powered-By', '');
@@ -133,6 +147,29 @@ export const setupBasicExpressApp = (app: express.Express) => {
     const isHealthCheck = req.path === '/health' || req.path === '/ping';
     if (isHealthCheck) {
       return next();
+    }
+
+    // Skip CSRF check for app-specific exempt paths
+    // Each app (ganymede, gateway) declares its own exemptions
+    // Supports both exact paths and Express-style params (/path/:id)
+    if (options?.csrfExemptPaths && options.csrfExemptPaths.length > 0) {
+      const isExempt = options.csrfExemptPaths.some((pattern) => {
+        // Support Express-style params like /collab/:project_id
+        if (pattern.includes(':')) {
+          // Convert Express param pattern to regex
+          // Example: /collab/:id → /^\/collab\/[^/]+$/
+          const regexPattern =
+            '^' + pattern.replace(/:[^/]+/g, '[^/]+') + '$';
+          const regex = new RegExp(regexPattern);
+          return regex.test(req.path);
+        }
+        // Exact path match
+        return req.path === pattern;
+      });
+
+      if (isExempt) {
+        return next();
+      }
     }
 
     // For state-changing operations without JWT (cookie-based auth):

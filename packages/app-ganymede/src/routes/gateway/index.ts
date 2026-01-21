@@ -17,6 +17,82 @@ import {
   makeOrgGatewayUrl,
 } from '../../lib/url-helpers';
 
+/**
+ * Cleanup/rollback gateway allocation on failure
+ * Returns gateway to pool and removes nginx config
+ */
+async function cleanupFailedAllocation(
+  organization_id: string,
+  reason: string
+): Promise<void> {
+  log(
+    EPriority.Warning,
+    'GATEWAY_CLEANUP',
+    `Cleaning up failed allocation for org ${organization_id}: ${reason}`
+  );
+
+  try {
+    // 1. Check if gateway was allocated
+    const allocCheck = await pg.query(
+      'SELECT gateway_id FROM func_organizations_get_active_gateway($1)',
+      [organization_id]
+    );
+    const allocated = allocCheck.next()?.oneRow();
+
+    if (!allocated) {
+      log(
+        EPriority.Info,
+        'GATEWAY_CLEANUP',
+        'No allocation found - failure before DB commit'
+      );
+      return;
+    }
+
+    const gateway_id = allocated['gateway_id'];
+    log(
+      EPriority.Warning,
+      'GATEWAY_CLEANUP',
+      `Deallocating gateway ${gateway_id}`
+    );
+
+    // 2. Mark gateway allocation as ended (returns to pool)
+    await pg.query('CALL proc_organizations_gateways_stop($1)', [gateway_id]);
+    log(EPriority.Info, 'GATEWAY_CLEANUP', '✅ Gateway returned to pool');
+
+    // 3. Remove Nginx config (best-effort)
+    try {
+      await nginxManager.removeGatewayConfig(organization_id);
+      await nginxManager.reloadNginx();
+      log(EPriority.Info, 'GATEWAY_CLEANUP', '✅ Nginx config removed');
+    } catch (nginxError: any) {
+      // Non-critical - log and continue
+      log(
+        EPriority.Warning,
+        'GATEWAY_CLEANUP',
+        `Nginx cleanup warning: ${nginxError.message}`
+      );
+    }
+
+    log(
+      EPriority.Info,
+      'GATEWAY_CLEANUP',
+      `✅ Cleanup complete for org ${organization_id}`
+    );
+  } catch (error: any) {
+    log(
+      EPriority.Critical,
+      'GATEWAY_CLEANUP',
+      `❌ CLEANUP FAILED - Manual intervention required!`
+    );
+    log(
+      EPriority.Critical,
+      'GATEWAY_CLEANUP',
+      `Org ${organization_id}: ${error.message}`
+    );
+    throw new Error(`Cleanup failed: ${error.message}`);
+  }
+}
+
 export const setupGatewayRoutes = (
   router: Router,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -122,6 +198,51 @@ export const setupGatewayRoutes = (
           `Gateway accessible at: ${gateway_url}`
         );
 
+        // 4.5. Wait for gateway to be ready (health check with timeout)
+        log(
+          EPriority.Info,
+          'GATEWAY_ALLOC',
+          'Checking gateway health...'
+        );
+        
+        const healthCheckTimeout = 5000; // 5s max
+        const healthCheckInterval = 200; // Check every 200ms
+        const startTime = Date.now();
+        let isHealthy = false;
+
+        while (Date.now() - startTime < healthCheckTimeout) {
+          try {
+            // Try to reach gateway health endpoint
+            const healthUrl = `${gateway_url}/collab/ping`;
+            const healthResponse = await fetch(healthUrl, {
+              method: 'GET',
+              signal: AbortSignal.timeout(500), // 500ms timeout per request
+            });
+
+            if (healthResponse.ok) {
+              isHealthy = true;
+              const elapsed = Date.now() - startTime;
+              log(
+                EPriority.Info,
+                'GATEWAY_ALLOC',
+                `✅ Gateway healthy after ${elapsed}ms`
+              );
+              break;
+            }
+          } catch (error) {
+            // Health check failed, retry
+          }
+
+          // Wait before retry
+          await new Promise((resolve) => setTimeout(resolve, healthCheckInterval));
+        }
+
+        if (!isHealthy) {
+          throw new Error(
+            `Gateway health check failed after ${healthCheckTimeout}ms. Gateway may not be ready.`
+          );
+        }
+
         // 5. Call gateway handshake
         const handshakeUrl = `${gateway_url}/collab/start`;
         log(
@@ -166,8 +287,21 @@ export const setupGatewayRoutes = (
           error.message
         );
 
-        // TODO: Cleanup on failure (deallocate, remove DNS, remove nginx config)
+        // CRITICAL: Cleanup on failure to prevent inconsistent state
+        // If handshake or any step fails, we must rollback the allocation
+        try {
+          await cleanupFailedAllocation(organization_id, error.message);
+        } catch (cleanupError: any) {
+          // Cleanup failed - log critical error for manual intervention
+          log(
+            EPriority.Critical,
+            'GATEWAY_ALLOC',
+            `⚠️ ORPHANED ALLOCATION - Manual cleanup required!`,
+            { organization_id, error: cleanupError.message }
+          );
+        }
 
+        // Return appropriate error to user
         if (error.message.includes('no_gateway_available')) {
           return res
             .status(503)

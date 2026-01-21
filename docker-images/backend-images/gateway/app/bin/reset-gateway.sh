@@ -36,7 +36,9 @@ function reset_gateway {
     "${SCRIPT_DIR}/lib/start-vpn.sh"
 
     # Start app-gateway with hot-reload (always in background)
-    nohup setsid bash -c "${SCRIPT_DIR}/lib/start-app-gateway.sh" >/tmp/gateway.log 2>&1 &
+    # CRITICAL: Change to a stable directory before setsid to avoid uv_cwd errors
+    # setsid can lose the working directory context, so we explicitly cd to root first
+    (cd / && nohup setsid bash -c "${SCRIPT_DIR}/lib/start-app-gateway.sh" >/tmp/gateway.log 2>&1 &)
     
     # Remove marker file after starting new app-gateway
     # Small delay to ensure old process has exited and new one is starting

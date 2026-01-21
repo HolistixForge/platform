@@ -82,6 +82,8 @@ export const setupCollabRoutes = (
         organization_id: string;
         organization_token: string;
         gateway_id: string;
+        projects: string[];
+        members: Array<{ user_id: string; username: string; role: string }>;
       }>({
         method: 'POST',
         url: '/gateway/config',
@@ -99,18 +101,61 @@ export const setupCollabRoutes = (
         config.organization_id &&
         config.gateway_id
       ) {
+        // Get servers for WebSocket grafting
+        const { getServers } = await import('../servers');
+        const servers = getServers();
+        
         // Initialize gateway (this will pull data from Ganymede)
-        await initializeGatewayForOrganization(
+        const instances = await initializeGatewayForOrganization(
           config.organization_id,
           config.gateway_id,
-          config.organization_token
+          config.organization_token,
+          servers  // Pass servers for WebSocket grafting
         );
 
         log(
           EPriority.Info,
           'GATEWAY',
-          'Gateway initialized from /collab/start'
+          `Gateway initialized from /collab/start (${config.projects.length} projects, ${config.members.length} members)`
         );
+
+        // Initialize projects received from Ganymede
+        if (config.projects && config.projects.length > 0) {
+          log(
+            EPriority.Info,
+            'GATEWAY',
+            `Initializing ${config.projects.length} projects...`
+          );
+
+          for (const project_id of config.projects) {
+            try {
+              await instances.projectRooms.initializeProject(project_id);
+              log(
+                EPriority.Info,
+                'GATEWAY',
+                `✅ Project initialized: ${project_id}`
+              );
+            } catch (error: any) {
+              log(
+                EPriority.Error,
+                'GATEWAY',
+                `Failed to initialize project ${project_id}: ${error.message}`
+              );
+            }
+          }
+
+          log(
+            EPriority.Info,
+            'GATEWAY',
+            `✅ All projects initialized (${config.projects.length} projects)`
+          );
+        } else {
+          log(
+            EPriority.Warning,
+            'GATEWAY',
+            'No projects to initialize for this organization'
+          );
+        }
       }
 
       return res.json({});

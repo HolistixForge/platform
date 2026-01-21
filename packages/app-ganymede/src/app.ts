@@ -69,7 +69,17 @@ export function createApp(
   app.set('trust proxy', 1);
 
   // Basic Express setup (CORS, body parsing, etc.)
-  setupBasicExpressApp(app);
+  // Ganymede-specific CSRF exemptions:
+  // - /gateway/*: Gateway management endpoints (server-to-server or frontend-initiated)
+  // - /collab/start: Gateway calls during initialization
+  setupBasicExpressApp(app, {
+    csrfExemptPaths: [
+      '/gateway/start',   // Frontend initiates gateway allocation
+      '/gateway/config',  // Gateway fetches config from Ganymede
+      '/gateway/ready',   // Gateway signals ready status
+      '/collab/start',    // Gateway calls during initialization
+    ],
+  });
 
   // Global rate limiter (apply to all routes as baseline protection)
   // Can be disabled for testing or via environment variable

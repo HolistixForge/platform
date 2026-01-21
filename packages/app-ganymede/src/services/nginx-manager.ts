@@ -181,8 +181,9 @@ server {
       // Reload nginx using nginx -s reload (more reliable than service command)
       await execAsync('sudo nginx -s reload');
 
-      // Small delay to ensure reload completes
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Small delay to ensure reload command completes
+      // Note: Actual readiness is verified via gateway health check in allocation flow
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       log(EPriority.Info, 'NGINX', '✅ Nginx reloaded successfully');
     } catch (error: any) {

@@ -20,10 +20,12 @@ export function createModuleConfigs({
   organization_id,
   gateway_hostname,
   ganymedeApi,
+  userInfo,
 }: {
   organization_id: string;
   gateway_hostname: string;
   ganymedeApi: GanymedeApi;
+  userInfo: { user_id: string; username: string };
 }) {
   
   // Create gateway fetch for reducers and other modules
@@ -33,6 +35,7 @@ export function createModuleConfigs({
   const collabConfig = createCollabModuleConfig({
     gateway_hostname,
     ganymedeApi,
+    userInfo,
   });
   
   return {
