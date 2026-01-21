@@ -35,6 +35,12 @@
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "references": [
     {
+      "path": "../modules/module/tsconfig.lib.json"
+    },
+    {
+      "path": "../collab-engine/tsconfig.lib.json"
+    },
+    {
       "path": "../types/tsconfig.lib.json"
     },
     {

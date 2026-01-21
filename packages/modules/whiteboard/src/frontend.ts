@@ -114,7 +114,8 @@ export const moduleFrontend: TModule<TRequired, TWhiteboardFrontendExports> = {
   description: 'Whiteboard module',
   dependencies: ['core-graph'],
   load: ({ depsExports, moduleExports }) => {
-    depsExports.collab.collab.loadSharedData('map', 'whiteboard', 'graphViews');
+    // Register shared data schema with registry
+    depsExports.collab.registry.registerSharedData('map', 'whiteboard', 'graphViews');
 
     const exports: TWhiteboardFrontendExports = {
       registerMenuEntries: (entries) => {

@@ -31,7 +31,8 @@ export const moduleFrontend: TModule<TFrontendRequired> = {
   description: 'Tabs module',
   dependencies: ['collab'],
   load: ({ depsExports }) => {
-    depsExports.collab.collab.loadSharedData('map', 'tabs', 'tabs');
+    // Register shared data schema with registry
+    depsExports.collab.registry.registerSharedData('map', 'tabs', 'tabs');
   },
 };
 

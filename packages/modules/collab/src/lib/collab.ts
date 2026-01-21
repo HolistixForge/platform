@@ -180,6 +180,23 @@ export class YjsClientCollab extends Collab<TValidSharedData> {
     return this._synced;
   }
 
+  /**
+   * Destroy this collab instance
+   * Disconnects WebSocket and cleans up resources
+   */
+  public destroy(): void {
+    if (this.provider) {
+      this.provider.awareness.destroy();
+      this.provider.disconnect();
+      this.provider.destroy();
+      log(EPriority.Debug, 'COLLAB', 'Provider destroyed');
+    }
+    if (this.ydoc) {
+      this.ydoc.destroy();
+      log(EPriority.Debug, 'COLLAB', 'YDoc destroyed');
+    }
+  }
+
   private resetErrors(): void {
     this.errors = [];
   }

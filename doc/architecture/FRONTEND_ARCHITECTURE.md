@@ -2,12 +2,15 @@
 
 ## Overview
 
-The Holistix Forge frontend is composed of two primary packages:
+The Holistix Forge frontend is composed of three primary packages:
 
-1. `app-frontend` — React SPA that renders the user interface, context hierarchy, and module views.
+1. `collab` — Self-contained collaboration module with engine, context, and hooks.
 2. `frontend-data` — Shared data layer that provides API clients, React Query hooks, and context providers.
+3. `app-frontend` — React SPA that renders the user interface and wires contexts together.
 
 This document describes the architectural patterns that connect these packages, focusing on context nesting, gateway access, module loading, and query conventions.
+
+**For detailed architecture documentation, see:** [`FRONTEND_DATA_ARCHITECTURE.md`](./FRONTEND_DATA_ARCHITECTURE.md)
 
 ---
 
@@ -20,43 +23,56 @@ This document describes the architectural patterns that connect these packages, 
 - **Scope:** Entire application (wrapped around router)
 - **Purpose:** Centralizes API clients and React Query client so every component shares the same data cache and OAuth token management.
 
-### 2. ProjectContext (Project-Level)
+### 2. ModuleDataProvider (Organization-Level)
 
-- **Source:** `packages/app-frontend/src/app/pages/project/project-context.tsx`
-- **Provides:** `ProjectData` (project metadata, organization reference)
-- **Scope:** `/p/:owner/:project_name` routes
-- **Responsibilities:**
-  - Resolve project from URL (owner slug + project name)
-  - Handle project loading and error states
-  - Pass organization identifier downstream
-- **Non-Responsibilities:** No gateway management, modules, or collaboration logic (moved to OrganizationContext).
-
-### 3. OrganizationContext (Organization-Level)
-
-- **Source:** `packages/app-frontend/src/app/pages/organization/organization-context.tsx`
+- **Source:** `packages/frontend-data/src/lib/modules/module-data-provider.tsx`
 - **Provides:** Gateway lifecycle and module exports via `ModuleProvider`
-- **Scope:** Every project once project data is ready and organization ID is known
+- **Scope:** Every project once organization ID is known
 - **Responsibilities:**
   - Fetch gateway hostname via `useQueryOrganizationGateway(organization_id)`
   - Set gateway hostname on `ganymedeApi`
   - Load frontend modules with organization-specific configuration
   - Render module-provided UI only when gateway is available
+  - Provide `OrganizationProvider` context
   - Show dedicated states for loading/unavailable gateways
 
-### Context Nesting (Simplified)
+### 3. ProjectProvider (Project-Level)
+
+- **Source:** `packages/frontend-data/src/lib/contexts/project-context.tsx`
+- **Provides:** `ProjectData` (project metadata, organization reference, permissions)
+- **Scope:** `/p/:owner/:project_name` routes
+- **Hooks:** `useProject()`, `useProjectId()`
+- **Purpose:** Provides full project data for UI components
+
+### 4. CollabProjectProvider (Collaboration-Level)
+
+- **Source:** `packages/modules/collab/src/lib/collab-project-context.tsx`
+- **Provides:** `project_id` (only!) for collaboration hooks
+- **Scope:** Within project pages, nested inside `ProjectProvider`
+- **Hook:** `useCollabProjectId()` (used internally by collab hooks)
+- **Purpose:** Lightweight context that enables collab hooks to work without depending on app-level infrastructure
+
+### Context Nesting (Current)
 
 ```
 BrowserRouter
-└── ApiContext
+└── ApiContext (app-wide)
     └── Routes
-        └── ProjectContext (component)
-            └── OrganizationContext (when project ready)
-                └── ModuleProvider
-                    └── projectContext.Provider (React context)
-                        └── Project children (pages, components)
+        └── ProjectWrapper (UI component in app-frontend)
+            └── ModuleDataProvider (from frontend-data)
+                ├── OrganizationProvider (from frontend-data)
+                ├── ModuleProvider (loaded modules)
+                └── ProjectProvider (from frontend-data)
+                    └── CollabProjectProvider (from collab module)
+                        └── Project Pages & Components
 ```
 
-**Note:** `ProjectContext` manages project state and renders `OrganizationContext` when the project is ready. `ProjectContext` passes `projectContext.Provider` (the React context) as children to `OrganizationContext`. `OrganizationContext` then wraps those children with `ModuleProvider` to provide module exports. This ensures modules are available when project data is accessed via `useProject()`.
+**Key Points:**
+- `ModuleDataProvider` handles all data infrastructure
+- `ProjectProvider` provides full project data for UI
+- `CollabProjectProvider` provides ONLY `project_id` for collab hooks
+- Two separate contexts with different purposes (no overlap)
+- Collab module is self-contained (no dependency on frontend-data)
 
 ---
 
@@ -88,21 +104,42 @@ BrowserRouter
 
 ### Organization-Scoped Module Loading
 
-- Modules are declared via `getModulesFrontend(config)` in `packages/app-frontend/src/app/pages/organization/modules.ts`.
-- `OrganizationContext` maps these declarations into `loadModules()` only when a gateway hostname is present.
-- Module configuration receives organization-specific dependencies (e.g., a gateway-aware fetch instance).
+- Modules are declared via `getAllModules()` in `packages/app-frontend/src/app/modules.ts`.
+- Module configurations are created by `createModuleConfigs()` in `packages/frontend-data/src/lib/modules/modules-config.ts`.
+- `ModuleDataProvider` (from frontend-data) orchestrates:
+  1. Fetching gateway hostname
+  2. Creating module configurations
+  3. Loading modules with `loadModules()`
+  4. Providing modules via `ModuleProvider`
 
 ### Gateway Fetch Helper
 
-- `createGatewayFetch(ganymedeApi, gateway_fqdn)` returns an `ApiFetch` subclass that proxies all requests through `ganymedeApi.fetchGateway`.
-- Reducers module receives this helper via its config rather than calling `setFetch()` manually.
+- `createGatewayFetch(ganymedeApi, gateway_hostname, organization_id)` (in frontend-data) returns an `ApiFetch` subclass that proxies all requests through `ganymedeApi.fetchGateway`.
+- Reducers module receives this helper via its config.
 - Pattern ensures every module shares the same token lifecycle and error handling.
+
+### Collab Module Configuration
+
+- Collab module uses `CollabRegistryConfig` with a factory function:
+  ```typescript
+  {
+    type: 'registry',
+    createConfigForProject: (project_id) => ({
+      type: 'yjs-client',
+      ws_server: `wss://${gateway_hostname}`,
+      room_id: project_id,
+      token: { get: () => ganymedeApi.getAccessToken(), ... },
+      user: { ... }
+    })
+  }
+  ```
+- Factory enables lazy creation of project-specific collab instances
 
 ### Module Availability States
 
-- Loading UI: Displayed while gateway FQDN is being retrieved.
-- Unavailable UI: Displayed when gateway is idle or deallocated.
-- Ready State: Modules render only when gateway FQDN exists and module exports are available.
+- **Loading UI:** Displayed while gateway FQDN is being retrieved.
+- **Unavailable UI:** Displayed when gateway is idle or deallocated (with "Start Organization" button).
+- **Ready State:** Modules render only when gateway FQDN exists and module exports are available.
 
 ---
 
@@ -111,14 +148,21 @@ BrowserRouter
 ### Purpose
 
 - Unified data access layer for `app-frontend`.
-- Houses API clients, React Query hooks, and contexts so frontend components remain lean.
+- Houses API clients, React Query hooks, contexts, and module loading infrastructure.
+- Does NOT include collaboration hooks (those are in the `collab` module).
 
 ### Key Components
 
 1. **ApiContext** — Provides `ganymedeApi` and React Query client.
 2. **GanymedeApi** — Extends `ApiFetch` with OAuth token storage, gateway Map, and helper utilities.
 3. **React Query Hooks** — `useQuery*` and `useMutation*` helpers for users, projects, permissions, and gateway data.
-4. **Story API Context** — Lightweight mock context for Storybook.
+4. **Data Contexts:**
+   - `ProjectProvider` / `useProject()` — Full project data
+   - `OrganizationProvider` / `useOrganization()` — Organization ID
+5. **Module Infrastructure:**
+   - `ModuleDataProvider` — Orchestrates module loading and gateway management
+   - `createModuleConfigs()` — Creates configurations for modules
+6. **Story API Context** — Lightweight mock context for Storybook.
 
 ### Hook Conventions
 
@@ -126,6 +170,12 @@ BrowserRouter
 - Hooks return typed data.
 - Hooks that depend on gateway hostname handle `enabled` flags and background polling.
 - Mutations invalidate the minimal set of query keys to keep the cache consistent.
+
+### What's NOT in frontend-data
+
+- ❌ Collaboration hooks (in `collab` module)
+- ❌ UI components (in `app-frontend`)
+- ❌ Module implementations (in respective module packages)
 
 ---
 

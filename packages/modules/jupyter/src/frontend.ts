@@ -33,7 +33,8 @@ export const moduleFrontend: TModule<TRequired> = {
   description: 'Jupyter module',
   dependencies: ['core-graph', 'collab', 'whiteboard', 'user-containers'],
   load: ({ depsExports, moduleExports }) => {
-    depsExports.collab.collab.loadSharedData('map', 'jupyter', 'servers');
+    // Register shared data schema with registry
+    depsExports.collab.registry.registerSharedData('map', 'jupyter', 'servers');
 
     depsExports.whiteboard.registerMenuEntries(spaceMenuEntrie);
     depsExports.whiteboard.registerNodes({

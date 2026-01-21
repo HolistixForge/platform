@@ -39,16 +39,9 @@ export const moduleFrontend: TModule<TRequired> = {
   description: 'User containers module',
   dependencies: ['core-graph', 'collab', 'whiteboard', 'tabs'],
   load: ({ depsExports, moduleExports }) => {
-    depsExports.collab.collab.loadSharedData(
-      'map',
-      'user-containers',
-      'containers'
-    );
-    depsExports.collab.collab.loadSharedData(
-      'map',
-      'user-containers',
-      'images'
-    );
+    // Register shared data schema with registry
+    depsExports.collab.registry.registerSharedData('map', 'user-containers', 'containers');
+    depsExports.collab.registry.registerSharedData('map', 'user-containers', 'images');
 
     depsExports.whiteboard.registerMenuEntries(serversMenuEntries);
     depsExports.whiteboard.registerNodes({

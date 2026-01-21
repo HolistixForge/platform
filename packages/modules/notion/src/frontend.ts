@@ -20,13 +20,10 @@ export const moduleFrontend: TModule<TRequired> = {
   description: 'Notion module',
   dependencies: ['core-graph', 'collab', 'whiteboard'],
   load: ({ depsExports }) => {
-    depsExports.collab.collab.loadSharedData('map', 'notion', 'databases');
-    depsExports.collab.collab.loadSharedData('map', 'notion', 'node-views');
-    depsExports.collab.collab.loadSharedData(
-      'map',
-      'notion',
-      'database-search-results'
-    );
+    // Register shared data schema with registry
+    depsExports.collab.registry.registerSharedData('map', 'notion', 'databases');
+    depsExports.collab.registry.registerSharedData('map', 'notion', 'node-views');
+    depsExports.collab.registry.registerSharedData('map', 'notion', 'database-search-results');
 
     depsExports.whiteboard.registerMenuEntries(notionMenuEntries);
     depsExports.whiteboard.registerNodes({

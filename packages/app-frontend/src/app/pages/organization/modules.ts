@@ -13,13 +13,28 @@ import { moduleFrontend as excalidrawFrontend } from '@holistix-forge/excalidraw
 import { moduleFrontend as gatewayFrontend } from '@holistix-forge/gateway';
 import { moduleFrontend as socialsFrontend } from '@holistix-forge/socials/frontend';
 import { moduleFrontend as chatsFrontend } from '@holistix-forge/chats/frontend';
+import type { GanymedeApi } from '@holistix-forge/frontend-data';
+import type { TAwarenessUser } from '@holistix-forge/collab-engine';
+
+type YjsClientCollabConfig = {
+  type: 'yjs-client';
+  room_id: string;
+  ws_server: string;
+  token: {
+    get: () => string;
+    refresh: () => void;
+  };
+  user: TAwarenessUser;
+};
 
 /**
  * Organization-specific module configuration
  */
 export type OrganizationModuleConfig = {
   fetch?: ApiFetch; // Gateway fetch function for reducers module
-  // Add other organization-specific config here as needed
+  gateway_hostname?: string; // Gateway hostname for WebSocket
+  project_id?: string; // Project ID for WebSocket connection
+  ganymedeApi?: GanymedeApi; // API client for token management
 };
 
 /**
@@ -30,10 +45,39 @@ export type OrganizationModuleConfig = {
 export const getModulesFrontend = (
   orgConfig: OrganizationModuleConfig = {}
 ): { module: TModule<never, object>; config: object }[] => {
+  // Prepare collab config if we have all required data
+  let collabConfig: YjsClientCollabConfig | Record<string, never> = {};
+  
+  if (orgConfig.gateway_hostname && orgConfig.project_id && orgConfig.ganymedeApi) {
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//${orgConfig.gateway_hostname}/project/${orgConfig.project_id}`;
+    
+    collabConfig = {
+      type: 'yjs-client',
+      ws_server: wsUrl,
+      room_id: orgConfig.project_id, // Use project_id as room identifier for now
+      token: {
+        get: () => {
+          // Get the access token from GanymedeApi
+          return orgConfig.ganymedeApi!.getAccessToken();
+        },
+        refresh: () => {
+          // Trigger token refresh
+          orgConfig.ganymedeApi!.refreshAccessToken();
+        },
+      },
+      user: {
+        color: '#4A90E2',
+        username: 'User',
+        user_id: 'user_id',
+      },
+    };
+  }
+
   return [
     {
       module: collabFrontend,
-      config: {},
+      config: collabConfig,
     },
     {
       module: reducersFrontend,

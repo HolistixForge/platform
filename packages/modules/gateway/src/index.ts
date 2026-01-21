@@ -34,8 +34,8 @@ export const moduleFrontend: TModule<
   description: 'Gateway module',
   dependencies: ['collab'],
   load: ({ depsExports }) => {
-    // Frontend collab connects to a specific project's YJS document via WebSocket
-    depsExports.collab.collab.loadSharedData('map', 'gateway', 'gateway');
+    // Register shared data schema with registry
+    depsExports.collab.registry.registerSharedData('map', 'gateway', 'gateway');
   },
 };
 

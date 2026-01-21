@@ -10,7 +10,7 @@ import {
   UsersScopesProps,
 } from '@holistix-forge/ui-base';
 import { useCallback, useState } from 'react';
-import { useProject } from '../pages/project/project-context';
+import { useProject } from '@holistix-forge/frontend-data';
 import { TCollaborator, TF_User } from '@holistix-forge/types';
 
 //

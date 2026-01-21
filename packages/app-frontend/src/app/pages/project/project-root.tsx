@@ -1,17 +1,20 @@
-import { Outlet, useParams } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { HeaderLogicProject } from '../../header/header-logic';
-import { ProjectContext } from './project-context';
+import { ProjectWrapper } from './project-wrapper';
 import { GatewayCountdown } from './gateway-countdown';
 
+/**
+ * ProjectRoot - Entry point for project pages
+ * 
+ * Pure UI component that uses ProjectWrapper from frontend-data
+ * for all data infrastructure.
+ */
 export const ProjectRoot = () => {
-  const { owner, project_name } = useParams();
-  if (owner && project_name)
-    return (
-      <ProjectContext ownerId={owner} projectName={project_name}>
-        <HeaderLogicProject />
-        <GatewayCountdown />
-        <Outlet />
-      </ProjectContext>
-    );
-  return null;
+  return (
+    <ProjectWrapper>
+      <HeaderLogicProject />
+      <GatewayCountdown />
+      <Outlet />
+    </ProjectWrapper>
+  );
 };

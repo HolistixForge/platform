@@ -22,7 +22,8 @@ export const moduleFrontend: TModule<TRequired> = {
   description: 'Excalidraw module',
   dependencies: [],
   load: ({ depsExports, moduleExports, config }) => {
-    depsExports.collab.collab.loadSharedData('map', 'excalidraw', 'drawing');
+    // Register shared data schema with registry
+    depsExports.collab.registry.registerSharedData('map', 'excalidraw', 'drawing');
 
     depsExports.whiteboard.registerMenuEntries(excalidrawMenuEntries);
     depsExports.whiteboard.registerNodes({
