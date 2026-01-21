@@ -140,7 +140,36 @@ export class Logger {
   }
 
   log(p: EPriority, category: string, msg: string, data?: TJson): void {
-    // Export to OTLP (OpenTelemetry)
+    // 1. ALWAYS log to console (for debugging and docker logs visibility)
+    const timestamp = new Date().toISOString();
+    const priorityStr = p.toUpperCase().padEnd(9); // Align priority column
+    const categoryStr = category.padEnd(20); // Align category column
+    
+    // Build console message
+    let consoleMsg = `${timestamp} [${priorityStr}] [${categoryStr}] ${msg}`;
+    if (data) {
+      consoleMsg += ` ${JSON.stringify(data)}`;
+    }
+    
+    // Output to appropriate console method based on priority
+    switch (p) {
+      case EPriority.Emergency:
+      case EPriority.Alert:
+      case EPriority.Critical:
+      case EPriority.Error:
+        console.error(consoleMsg);
+        break;
+      case EPriority.Warning:
+        console.warn(consoleMsg);
+        break;
+      case EPriority.Debug:
+        console.debug(consoleMsg);
+        break;
+      default:
+        console.log(consoleMsg);
+    }
+
+    // 2. Export to OTLP (OpenTelemetry) if configured
     // Only export if logger has been initialized
     if (Logger._otlpLogger) {
       try {
