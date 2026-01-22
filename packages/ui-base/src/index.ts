@@ -19,6 +19,9 @@ export type {
 } from './lib/users-scopes/users-scopes';
 export { UserListItem } from './lib/users-scopes/users-scopes';
 
+export { RoleEditor } from './lib/role-editor/role-editor';
+export type { Role, RoleEditorProps } from './lib/role-editor/role-editor';
+
 export { WrapperCssCoordinates } from './lib/css-utils/wrapper-css-coordinates';
 export {
   addAlphaToHexColor,
