@@ -116,7 +116,7 @@ export const setupCollabRoutes = (
         log(
           EPriority.Info,
           'GATEWAY',
-          `Gateway initialized from /collab/start (${config.projects.length} projects, ${config.members.length} members)`
+          `Gateway initialized from /collab/start (${config.projects.length} projects)`
         );
 
         // Initialize projects received from Ganymede

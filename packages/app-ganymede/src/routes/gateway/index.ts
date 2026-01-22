@@ -343,13 +343,6 @@ export const setupGatewayRoutes = (
       );
       const org = orgResult.next()?.oneRow();
 
-      // Get organization members
-      const membersResult = await pg.query(
-        'SELECT * FROM func_organizations_members_list($1)',
-        [organization_id]
-      );
-      const members = membersResult.next()?.allRows() || [];
-
       // Get organization projects
       const projectsResult = await pg.query(
         'SELECT * FROM func_projects_list_by_organization($1)',
@@ -374,11 +367,6 @@ export const setupGatewayRoutes = (
         gateway_id: String(gateway_id),
         organization_token: organizationToken,
         projects: projects.map((p) => String(p['project_id'])),
-        members: members.map((m) => ({
-          user_id: String(m['user_id']),
-          username: String(m['username']),
-          role: String(m['role']),
-        })),
       });
     })
   );
