@@ -1,7 +1,6 @@
 import { Router, RequestHandler } from 'express';
 import { asyncHandler, AuthRequest } from '../middleware/route-handler';
 import { authenticateJwt } from '../middleware/jwt-auth';
-import { requirePermission } from '../middleware/permissions';
 import { getGatewayInstances } from '../initialization/gateway-instances';
 import { EPriority, log, ForbiddenException, NotFoundException } from '@holistix-forge/log';
 

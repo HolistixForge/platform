@@ -106,7 +106,7 @@ export const setupCollabRoutes = (
         const servers = getServers();
         
         // Initialize gateway (this will pull data from Ganymede)
-        const instances = await initializeGatewayForOrganization(
+        await initializeGatewayForOrganization(
           config.organization_id,
           config.gateway_id,
           config.organization_token,

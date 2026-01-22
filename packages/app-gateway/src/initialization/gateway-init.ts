@@ -4,6 +4,8 @@ import { EPriority, log } from '@holistix-forge/log';
 import { loadModules } from '@holistix-forge/module';
 import { GatewayState } from '../state/GatewayState';
 import { PermissionManager } from '../permissions';
+import { RoleManager } from '../permissions/RoleManager';
+import { UserRoleManager } from '../permissions/UserRoleManager';
 import { ProjectRoomsManager } from '../state/ProjectRooms';
 import { CollabRegistry } from '../state/CollabRegistry';
 import { OAuthManager } from '../oauth';

@@ -21,7 +21,8 @@ export const authenticateGatewayToken = (
       'GATEWAY_AUTH',
       'GATEWAY_TOKEN environment variable not configured'
     );
-    return res.status(500).json({ error: 'Server misconfigured' });
+    res.status(500).json({ error: 'Server misconfigured' });
+    return;
   }
 
   if (!providedToken) {
@@ -30,7 +31,8 @@ export const authenticateGatewayToken = (
       'GATEWAY_AUTH',
       `Gateway token missing from ${req.method} ${req.path}`
     );
-    return res.status(401).json({ error: 'Gateway token required' });
+    res.status(401).json({ error: 'Gateway token required' });
+    return;
   }
 
   if (providedToken !== expectedToken) {
@@ -39,7 +41,8 @@ export const authenticateGatewayToken = (
       'GATEWAY_AUTH',
       `Invalid gateway token from ${req.method} ${req.path}`
     );
-    return res.status(403).json({ error: 'Invalid gateway token' });
+    res.status(403).json({ error: 'Invalid gateway token' });
+    return;
   }
 
   // Token valid

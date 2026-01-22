@@ -35,40 +35,28 @@ export const setupPermissionsRoutes = (
   );
 
   /**
+   * DEPRECATED - Use /users/:user_id/roles instead
+   * 
    * GET /permissions/projects/:project_id
-   * Get user permissions for a project
-   * Requires: gateway:[permissions:*]:read + project access
+   * Get user permissions for a project (not compatible with RBAC)
+   * 
+   * ⚠️ This route is deprecated. Permissions are now resolved via roles.
+   * Use GET /users/:user_id/roles?project_id=:project_id instead.
    */
   router.get(
     '/permissions/projects/:project_id',
     authenticateJwt,
     requirePermission('gateway:[permissions:*]:read'),
-    requireProjectAccess(), // Checks project access
+    requireProjectAccess(),
     asyncHandler(async (req: Request, res) => {
-      const instances = getGatewayInstances();
-      if (!instances) {
-        return res.status(500).json({ error: 'Gateway not initialized' });
-      }
-
-      const { project_id } = req.params;
-      const permissionManager = instances.permissionManager;
-
-      // Get all users with permissions for this project
-      // PermissionManager stores permissions per user, so we need to filter
-      // by project-related permissions
-      const allPermissions = permissionManager.getAllPermissions();
-      const projectPermissions: { [user_id: string]: string[] } = {};
-
-      for (const [user_id, permissions] of Object.entries(allPermissions)) {
-        const projectPerms = permissions.filter((p: string) =>
-          p.includes(`project:${project_id}:`)
-        );
-        if (projectPerms.length > 0) {
-          projectPermissions[user_id] = projectPerms;
-        }
-      }
-
-      return res.json({ permissions: projectPermissions });
+      return res.status(410).json({
+        error: 'This endpoint is deprecated',
+        message: 'Permissions are now managed via roles in RBAC system',
+        alternatives: {
+          'Get user roles': 'GET /users/:user_id/roles?project_id=:project_id',
+          'List all roles': 'GET /roles',
+        },
+      });
     })
   );
 

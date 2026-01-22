@@ -1,5 +1,5 @@
 import { Router, Request, RequestHandler } from 'express';
-import { asyncHandler, AuthRequest } from '../middleware/route-handler';
+import { asyncHandler } from '../middleware/route-handler';
 import { authenticateJwt } from '../middleware/jwt-auth';
 import { requirePermission } from '../middleware/permissions';
 import { getGatewayInstances } from '../initialization/gateway-instances';

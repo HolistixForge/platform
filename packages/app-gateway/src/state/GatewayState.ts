@@ -418,6 +418,16 @@ export class GatewayState {
   }
 
   /**
+   * Get organization token
+   */
+  getOrganizationToken(): string {
+    if (!this.organizationToken) {
+      throw new Error('Organization token not set');
+    }
+    return this.organizationToken;
+  }
+
+  /**
    * Fetch fresh organization members from Ganymede
    * Used when initializing project permissions
    * 
@@ -440,7 +450,8 @@ export class GatewayState {
       `Fetching fresh organization members from Ganymede: ${url}`
     );
 
-    const response = await this.ganymedeClient.fetch(url, {
+    const ganymedeUrl = process.env.GANYMEDE_URL || 'http://app-ganymede:3000';
+    const response = await fetch(`${ganymedeUrl}${url}`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${this.organizationToken}`,
