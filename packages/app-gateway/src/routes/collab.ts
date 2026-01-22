@@ -113,47 +113,18 @@ export const setupCollabRoutes = (
           servers  // Pass servers for WebSocket grafting
         );
 
-        log(
-          EPriority.Info,
-          'GATEWAY',
-          `Gateway initialized from /collab/start (${config.projects.length} projects)`
-        );
-
-        // Initialize projects received from Ganymede
+        // Log project count (projects will initialize on demand)
         if (config.projects && config.projects.length > 0) {
           log(
             EPriority.Info,
             'GATEWAY',
-            `Initializing ${config.projects.length} projects...`
-          );
-
-          for (const project_id of config.projects) {
-            try {
-              await instances.projectRooms.initializeProject(project_id);
-              log(
-                EPriority.Info,
-                'GATEWAY',
-                `✅ Project initialized: ${project_id}`
-              );
-            } catch (error: any) {
-              log(
-                EPriority.Error,
-                'GATEWAY',
-                `Failed to initialize project ${project_id}: ${error.message}`
-              );
-            }
-          }
-
-          log(
-            EPriority.Info,
-            'GATEWAY',
-            `✅ All projects initialized (${config.projects.length} projects)`
+            `Gateway has ${config.projects.length} projects (will initialize on demand)`
           );
         } else {
           log(
-            EPriority.Warning,
+            EPriority.Info,
             'GATEWAY',
-            'No projects to initialize for this organization'
+            'No projects registered for this organization'
           );
         }
       }
@@ -187,14 +158,41 @@ export const setupCollabRoutes = (
         ]);
       }
 
-      const room_id = instances.projectRooms.getRoomId(project_id);
+      // Check if project is already initialized
+      let room_id = instances.projectRooms.getRoomId(project_id);
 
+      // If not initialized, initialize NOW (lazy initialization)
       if (!room_id) {
-        throw new NotFoundException([
-          {
-            message: `Project ${project_id} not initialized or room not found`,
-          },
-        ]);
+        log(
+          EPriority.Info,
+          'COLLAB',
+          `🔄 Lazy initializing project: ${project_id}`
+        );
+
+        const startTime = Date.now();
+
+        try {
+          room_id = await instances.projectRooms.initializeProject(project_id);
+
+          const duration = Date.now() - startTime;
+          log(
+            EPriority.Info,
+            'COLLAB',
+            `✅ Project initialized in ${duration}ms: ${project_id}, room: ${room_id}`
+          );
+        } catch (error: any) {
+          log(
+            EPriority.Error,
+            'COLLAB',
+            `Failed to initialize project ${project_id}: ${error.message}`,
+            error
+          );
+          throw new NotFoundException([
+            {
+              message: `Failed to initialize project ${project_id}: ${error.message}`,
+            },
+          ]);
+        }
       }
 
       return res.json({ data: room_id });
