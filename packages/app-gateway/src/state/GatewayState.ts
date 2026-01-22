@@ -6,6 +6,16 @@ import { TJson } from '@holistix-forge/simple-types';
 type TGatewayDataSnapshot = Record<string, unknown>;
 
 /**
+ * Organization member from Ganymede database
+ */
+export interface OrgMember {
+  user_id: string;
+  username: string;
+  email: string;
+  role: 'owner' | 'admin' | 'member';  // Database role (simple)
+}
+
+/**
  * GatewayState - Registry for Persistence Providers with Ganymede Sync
  *
  * Responsibilities:
@@ -405,6 +415,54 @@ export class GatewayState {
    */
   getGatewayId(): string {
     return this.gatewayId;
+  }
+
+  /**
+   * Fetch fresh organization members from Ganymede
+   * Used when initializing project permissions
+   * 
+   * @returns Array of organization members with their database roles
+   */
+  async fetchOrganizationMembers(): Promise<OrgMember[]> {
+    if (!this.organizationId || !this.organizationToken) {
+      throw new Error('Gateway not initialized with organization context');
+    }
+
+    if (!this.ganymedeClient) {
+      throw new Error('Ganymede client not initialized');
+    }
+
+    const url = `/orgs/${this.organizationId}/members`;
+
+    log(
+      EPriority.Debug,
+      'GATEWAY_STATE',
+      `Fetching fresh organization members from Ganymede: ${url}`
+    );
+
+    const response = await this.ganymedeClient.fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${this.organizationToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch org members: ${response.status} ${response.statusText}`
+      );
+    }
+
+    const data = (await response.json()) as { members: OrgMember[] };
+    
+    log(
+      EPriority.Info,
+      'GATEWAY_STATE',
+      `Fetched ${data.members.length} organization members`
+    );
+
+    return data.members;
   }
 
   /**
