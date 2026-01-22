@@ -73,56 +73,30 @@ export const setupPermissionsRoutes = (
   );
 
   /**
+   * DEPRECATED - Use /roles and /users/:user_id/roles instead
+   * 
    * PATCH /permissions/projects/:project_id/users/:user_id
-   * Update user permissions for a project
-   * Requires: gateway:[permissions:*]:write + project access
+   * Direct permission assignment (bypasses RBAC)
+   * 
+   * ⚠️ This route is deprecated. Use role-based assignment instead:
+   * 1. Create/assign roles via POST /roles
+   * 2. Assign roles to users via POST /users/:user_id/roles
    */
   router.patch(
     '/permissions/projects/:project_id/users/:user_id',
     authenticateJwt,
     requirePermission('gateway:[permissions:*]:write'),
-    requireProjectAccess(), // Checks project access
+    requireProjectAccess(),
     asyncHandler(async (req: Request, res) => {
-      const instances = getGatewayInstances();
-      if (!instances) {
-        return res.status(500).json({ error: 'Gateway not initialized' });
-      }
-
-      const { project_id, user_id } = req.params;
-      const { permissions } = req.body;
-
-      if (!Array.isArray(permissions)) {
-        return res.status(400).json({ error: 'permissions must be an array' });
-      }
-
-      const permissionManager = instances.permissionManager;
-
-      // Validate permissions format
-      const pattern =
-        /^[a-z0-9-]+:\[([a-z0-9-]+:(?:\*|[a-z0-9-]+)(?:\/[a-z0-9-]+:(?:\*|[a-z0-9-]+))*)\]:[a-z0-9-]+$/;
-      for (const perm of permissions) {
-        if (typeof perm !== 'string' || !pattern.test(perm)) {
-          return res.status(400).json({
-            error: `Invalid permission format: ${perm}`,
-          });
-        }
-      }
-
-      // Get current permissions for user
-      const currentPerms = permissionManager.getPermissions(user_id);
-
-      // Remove old project-specific permissions
-      const otherPerms = currentPerms.filter(
-        (p: string) => !p.includes(`project:${project_id}:`)
-      );
-
-      // Add new permissions
-      const newPerms = [...otherPerms, ...permissions];
-
-      // Update permissions
-      permissionManager.setPermissions(user_id, newPerms);
-
-      return res.json({ success: true });
+      return res.status(410).json({
+        error: 'This endpoint is deprecated',
+        message: 'Use role-based permission management instead',
+        alternatives: {
+          'Create role': 'POST /roles',
+          'Assign role': 'POST /users/:user_id/roles',
+          'View user roles': 'GET /users/:user_id/roles',
+        },
+      });
     })
   );
 };

@@ -402,7 +402,7 @@ export class AirtableReducer extends ReducerWithCollab<
 
     // Sync all bases in parallel for better performance
     const syncPromises = Array.from(
-      collab.sharedData['airtable:bases'].values()
+      this.collab.sharedData['airtable:bases'].values()
     ).map(async (base) => {
       try {
         await this._fetchAndUpdateBase(
@@ -430,7 +430,7 @@ export class AirtableReducer extends ReducerWithCollab<
 
       await this.makeAirtableRequest(
         `/${baseId}/${tableId}/${recordId}`,
-        collab.sharedData['airtable:bases'].get(baseId)?.AIRTABLE_API_KEY || '',
+        this.collab.sharedData['airtable:bases'].get(baseId)?.AIRTABLE_API_KEY || '',
         {
           method: 'PATCH',
           body: JSON.stringify({ fields }),
