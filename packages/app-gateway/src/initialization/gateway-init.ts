@@ -31,6 +31,8 @@ import { GatewayShutdownTimer } from '../timers/gateway-shutdown';
  */
 export interface GatewayInstances {
   gatewayState: GatewayState;
+  roleManager: RoleManager;
+  userRoleManager: UserRoleManager;
   permissionManager: PermissionManager;
   oauthManager: OAuthManager;
   tokenManager: TokenManager;
@@ -96,8 +98,15 @@ export async function initializeGatewayForOrganization(
     organizationToken
   );
 
-  // 3. Create manager instances
+  // 3. Create RBAC managers (order matters: RoleManager → UserRoleManager → PermissionManager)
+  const roleManager = new RoleManager();
+  const userRoleManager = new UserRoleManager(roleManager);
   const permissionManager = new PermissionManager();
+  
+  // 3.1 Wire up PermissionManager with UserRoleManager
+  permissionManager.setUserRoleManager(userRoleManager);
+  
+  // 3.2 Create other manager instances
   const oauthManager = new OAuthManager();
   const tokenManager = new TokenManager();
   const projectRooms = new ProjectRoomsManager();
@@ -108,9 +117,19 @@ export async function initializeGatewayForOrganization(
 
   // 4. Register all managers with GatewayState
   // Registration will automatically load data from pulled snapshot
+  gatewayState.register('roles', roleManager);
+  gatewayState.register('user_roles', userRoleManager);
   gatewayState.register('permissions', permissionManager);
   gatewayState.register('oauth', oauthManager);
   gatewayState.register('projects', projectRooms);
+  
+  // 4.1 Initialize default system roles (after registration so they can be persisted)
+  roleManager.initializeDefaultRoles();
+  log(
+    EPriority.Info,
+    'GATEWAY_INIT',
+    'Initialized default system roles (org:owner, org:admin)'
+  );
 
   // 4.5 Wire up CollabRegistry to ProjectRoomsManager
   // This allows registry to get room_id for projects
@@ -223,6 +242,8 @@ export async function initializeGatewayForOrganization(
   // - Stored in registry: For gateway internal use (e.g., route handlers)
   const instances: GatewayInstances = {
     gatewayState,                  // ← Internal only (organization context)
+    roleManager,                   // ← NEW: RBAC role management
+    userRoleManager,               // ← NEW: RBAC user-role assignments
     permissionManager,             // ← Both (modules register, routes check)
     oauthManager,                  // ← Both (modules integrate, routes handle OAuth)
     tokenManager,                  // ← Both (modules use, routes validate)
