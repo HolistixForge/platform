@@ -69,10 +69,11 @@ export const setupProjectRoutes = (
         return res.status(403).json({ error: 'Not organization member' });
       }
 
-      const result = await pg.query('CALL proc_projects_new($1, $2, $3, $4)', [
+      const result = await pg.query('CALL proc_projects_new($1, $2, $3, $4, $5)', [
         organization_id,
         name,
         isPublic,
+        req.user.id,  // Pass creator user_id
         null,
       ]);
       const new_project_id = result.next()?.oneRow()['new_project_id'];
