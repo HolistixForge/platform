@@ -18,6 +18,7 @@ import { VPN } from './config/organization';
 import { setupCollabRoutes, setBackendEventProcessor } from './routes/collab';
 import { setupPermissionsRoutes } from './routes/permissions';
 import { setupMembersRoutes } from './routes/members';
+import { setupRolesRoutes } from './routes/roles';
 import { setupProtectedServicesRoutes } from './routes/protected-services';
 import { setupOauthRoutes } from './routes/oauth';
 import oas from './oas30.json';
@@ -105,6 +106,7 @@ export const setupExpressApp = (options?: {
   setupCollabRoutes(router, rateLimiters.api);
   setupPermissionsRoutes(router, rateLimiters.api);
   setupMembersRoutes(router, rateLimiters.api);
+  setupRolesRoutes(router, rateLimiters.api);
   setupProtectedServicesRoutes(router, rateLimiters.api);
   setupOauthRoutes(router, rateLimiters.oauth);
 
