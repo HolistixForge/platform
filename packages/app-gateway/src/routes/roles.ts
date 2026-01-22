@@ -229,14 +229,14 @@ export const setupRolesRoutes = (
 
       const orgRoles = instances.userRoleManager.getUserOrgRoles(user_id);
 
-      let projectRoles: Record<string, any[]> = {};
-      if (project_id) {
-        const roles = instances.userRoleManager.getUserProjectRoles(
-          user_id,
-          project_id as string
-        );
-        projectRoles[project_id as string] = roles;
-      }
+      const projectRoles: Record<string, any[]> = project_id
+        ? {
+            [project_id as string]: instances.userRoleManager.getUserProjectRoles(
+              user_id,
+              project_id as string
+            ),
+          }
+        : {};
 
       return res.json({
         org_roles: orgRoles,
