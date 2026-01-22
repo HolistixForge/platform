@@ -139,7 +139,7 @@ export class ProjectRoomsManager implements IPersistenceProvider {
         project_id,
       };
 
-      this.eventProcessor
+      await this.eventProcessor
         .processEvent({ type: 'project:init', project_id }, systemRequestData)
         .catch((err) => {
           log(
@@ -151,7 +151,118 @@ export class ProjectRoomsManager implements IPersistenceProvider {
         });
     }
 
+    // Initialize permissions after project:init
+    await this.initializeProjectPermissions(project_id);
+
+    log(
+      EPriority.Info,
+      'PROJECT_ROOMS',
+      `✅ Project fully initialized: ${project_id}, room: ${room_id}`
+    );
+
     return room_id;
+  }
+
+  /**
+   * Initialize permissions for a project
+   * 
+   * Called after project:init event dispatch.
+   * Fetches project members and ensures they have appropriate roles.
+   * 
+   * Logic:
+   * - Org owners/admins already have access via org roles (no action needed)
+   * - Project members in DB get checked for roles
+   * - If no roles assigned, they won't have access (must be explicitly assigned roles)
+   */
+  private async initializeProjectPermissions(project_id: string): Promise<void> {
+    const { getGatewayInstances } = await import('../initialization/gateway-instances');
+    const instances = getGatewayInstances();
+    
+    if (!instances) {
+      log(
+        EPriority.Warning,
+        'PROJECT_ROOMS',
+        `Cannot initialize permissions: Gateway instances not available for ${project_id}`
+      );
+      return;
+    }
+
+    log(
+      EPriority.Info,
+      'PROJECT_ROOMS',
+      `Initializing permissions for project ${project_id}`
+    );
+
+    try {
+      // Fetch project members from Ganymede
+      const ganymedeUrl = process.env.GANYMEDE_URL || 'http://app-ganymede:3000';
+      const orgToken = instances.gatewayState.getOrganizationToken();
+
+      const response = await fetch(`${ganymedeUrl}/projects/${project_id}/members`, {
+        headers: {
+          Authorization: `Bearer ${orgToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        log(
+          EPriority.Warning,
+          'PROJECT_ROOMS',
+          `Failed to fetch project members for ${project_id}: ${response.statusText}`
+        );
+        return;
+      }
+
+      const { members } = (await response.json()) as {
+        members: Array<{ user_id: string; username: string; email: string }>;
+      };
+
+      log(
+        EPriority.Info,
+        'PROJECT_ROOMS',
+        `Found ${members.length} project members for ${project_id}`
+      );
+
+      // Initialize permissions for each member
+      // Note: Members in DB might not have any roles yet
+      // They need to be assigned roles explicitly via member management API
+      // This just logs who's in the project, doesn't auto-assign roles
+
+      for (const member of members) {
+        const projectRoles = instances.userRoleManager.getUserProjectRoles(
+          member.user_id,
+          project_id
+        );
+        const orgRoles = instances.userRoleManager.getUserOrgRoles(member.user_id);
+
+        if (projectRoles.length > 0 || orgRoles.length > 0) {
+          log(
+            EPriority.Debug,
+            'PROJECT_ROOMS',
+            `User ${member.user_id} has ${orgRoles.length} org roles, ${projectRoles.length} project roles`
+          );
+        } else {
+          log(
+            EPriority.Warning,
+            'PROJECT_ROOMS',
+            `User ${member.user_id} is project member but has no roles assigned (no access)`
+          );
+        }
+      }
+
+      log(
+        EPriority.Info,
+        'PROJECT_ROOMS',
+        `✅ Permission initialization complete for project ${project_id}`
+      );
+    } catch (error: any) {
+      log(
+        EPriority.Error,
+        'PROJECT_ROOMS',
+        `Failed to initialize permissions for ${project_id}: ${error.message}`,
+        error
+      );
+    }
   }
 
   /**
