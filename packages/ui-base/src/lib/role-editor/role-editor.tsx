@@ -1,6 +1,6 @@
 import * as Sa from '@radix-ui/react-scroll-area';
 import { PlusIcon, TrashIcon, Pencil1Icon, CheckIcon, Cross2Icon } from '@radix-ui/react-icons';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ButtonIcon } from '../buttons/buttonIcon';
 import { ButtonBase } from '../buttons/buttonBase';
 import { TextFieldset } from '../form/form-fields/text-fieldset';

@@ -26,6 +26,28 @@ export {
   useMutationDeleteProject,
   useQueryProjectByName,
   useMutationStartOrganization,
+  // RBAC hooks
+  useQueryRoles,
+  useQueryRole,
+  useQueryUserRoles,
+  useQueryOrgMembers,
+  useQueryPermissions,
+  useMutationCreateRole,
+  useMutationUpdateRole,
+  useMutationDeleteRole,
+  useMutationAssignRole,
+  useMutationRemoveRole,
+  useMutationAddProjectMember,
+  useMutationRemoveProjectMember,
+} from './lib/queries';
+
+// RBAC Types
+export type {
+  Role,
+  CreateRoleInput,
+  UserRoleAssignment,
+  OrgMember,
+  PermissionDefinition,
 } from './lib/queries';
 
 // Form Data Types

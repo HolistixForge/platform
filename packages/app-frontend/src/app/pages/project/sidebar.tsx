@@ -17,7 +17,7 @@ export const ProjectSidebar = ({ active }: { active: string }) => {
         // { title: 'seed', Icon: icons.Seed },
         // { title: 'artefact', Icon: icons.Artefact },
         // { title: 'agora', Icon: icons.Agora },
-        { title: 'authorizations', Icon: icons.Key, link: '../authorizations' },
+        // NOTE: Authorizations moved to org-level at /org/:organization_id/permissions
         // { title: 'jupyterlabs', Icon: icons.Jupyter, link: '../jupyterlabs' },
       ]}
     />

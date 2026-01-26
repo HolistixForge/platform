@@ -12,15 +12,17 @@ export { ButtonIcon } from './lib/buttons/buttonIcon';
 export type { ButtonIconProps } from './lib/buttons/buttonIcon';
 export { ResourceButtons } from './lib/buttons/resource-buttons';
 
-export { UsersScopes } from './lib/users-scopes/users-scopes';
-export type {
-  UsersScopesLogicProps,
-  UsersScopesProps,
-} from './lib/users-scopes/users-scopes';
-export { UserListItem } from './lib/users-scopes/users-scopes';
-
 export { RoleEditor } from './lib/role-editor/role-editor';
 export type { Role, RoleEditorProps } from './lib/role-editor/role-editor';
+
+export { PermissionsPage } from './lib/permissions-page/permissions-page';
+export type { PermissionsPageProps } from './lib/permissions-page/permissions-page';
+export { RolesTab } from './lib/permissions-page/roles-tab';
+export type { RolesTabProps } from './lib/permissions-page/roles-tab';
+export { UsersTab } from './lib/permissions-page/users-tab';
+export type { UsersTabProps, OrgMember, UserRoleAssignment } from './lib/permissions-page/users-tab';
+export { UserRoleEditor } from './lib/permissions-page/user-role-editor';
+export type { UserRoleEditorProps } from './lib/permissions-page/user-role-editor';
 
 export { WrapperCssCoordinates } from './lib/css-utils/wrapper-css-coordinates';
 export {
@@ -62,6 +64,8 @@ export { Countdown } from './lib/countdown/countdown';
 
 export { UserInline, UserAvatar, UserUsername } from './lib/users/users';
 export { UserBubble } from './lib/users/user-bubble';
+export { UserListItem } from './lib/users/user-list-item';
+export type { UserListItemProps } from './lib/users/user-list-item';
 
 export { DialogControlled } from './lib/dialog/dialog';
 
