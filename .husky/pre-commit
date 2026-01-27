@@ -1,21 +1,6 @@
-# Clean stale TypeScript build artifacts to prevent tsc-files errors
-echo "🧹 Cleaning stale TypeScript artifacts..."
-find packages -type d -name "out-tsc" -exec rm -rf {} + 2>/dev/null || true
-rm -f tsconfig.*.tsbuildinfo 2>/dev/null || true
-find packages -name "*.tsbuildinfo" -delete 2>/dev/null || true
-
-# Run linter on staged files
+# Run linter on staged files (includes ESLint TypeScript checking)
 npx lint-staged
 
-# Run tests for affected packages based on uncommitted changes
-echo "Running tests for affected packages..."
-npx nx affected:test --uncommitted --parallel=3 --maxParallel=3
-
-# Check if tests passed
-if [ $? -ne 0 ]; then
-  echo "❌ Tests failed. Commit aborted."
-  exit 1
-fi
-
-echo "✅ All checks passed!"
+# Note: Full TypeScript compilation and tests run in CI
+# Pre-commit hook is kept fast for better developer experience
 

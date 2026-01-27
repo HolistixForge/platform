@@ -10,6 +10,7 @@
 The permission system implements **Role-Based Access Control (RBAC)** where users are assigned roles, and roles contain collections of permissions. This enables gateway modules to describe their authorization requirements and provides scalable permission management for organizations.
 
 **Key Features:**
+
 - **Users → Roles → Permissions** (classic RBAC)
 - **Module-registered permissions** (dynamic, extensible)
 - **Wildcard permission matching** (e.g., `project:*:admin`)
@@ -48,17 +49,20 @@ Permissions (module-registered, string-based)
 - **Action:** Lowercase alphanumeric with hyphens
 
 **Examples:**
+
 - `org:my-org:admin` - Admin access to specific org
 - `project:abc-123:write` - Write access to specific project
 - `container:xyz:delete` - Delete specific container
 - `gateway:roles:write` - Write access to role management
 
 **Wildcards:**
+
 - `*` - Universal wildcard (matches everything)
 - `project:*:admin` - Admin access to ALL projects
 - `container:*:create` - Create ANY container
 
 **Characteristics:**
+
 - Modules register permissions with descriptive metadata
 - Roles contain permission strings (exact or wildcarded)
 - Permission checks resolve via roles at runtime
@@ -70,6 +74,7 @@ Permissions (module-registered, string-based)
 ### System Roles (Immutable)
 
 **`org:owner`**
+
 - **Permissions:** `["*"]` (universal wildcard)
 - **Scope:** Organization-level (applies to all projects)
 - **Grants:** Everything (all permissions, all modules)
@@ -77,6 +82,7 @@ Permissions (module-registered, string-based)
 - **Purpose:** Organization owner, full control
 
 **`org:admin`**
+
 - **Permissions:**
   ```
   org:*:admin
@@ -101,6 +107,7 @@ Permissions (module-registered, string-based)
 Administrators can create custom roles with specific permission sets.
 
 **Example:**
+
 ```json
 {
   "role_name": "developer",
@@ -121,11 +128,13 @@ Administrators can create custom roles with specific permission sets.
 ### Role Scope
 
 **Org-level roles** (`scope: "org"`):
+
 - Apply to ALL projects in the organization
 - Example: org:owner, org:admin
 - Use case: Core team members
 
 **Project-level roles** (`scope: "project"`):
+
 - Apply to specific projects only
 - Example: Custom "developer", "viewer" roles
 - Use case: External contractors, guest collaborators
@@ -139,12 +148,14 @@ Administrators can create custom roles with specific permission sets.
 Permissions are resolved **at CHECK time** (not edit time).
 
 **Flow:**
+
 1. Get user's roles (org-level + project-specific if applicable)
 2. Expand roles to get all permissions
 3. Check if any permission matches (with wildcard support)
 4. Special case: `org:owner` always grants access
 
 **Benefits:**
+
 - ✅ Dynamic: New module permissions automatically granted to roles with wildcards
 - ✅ Consistent: Role changes immediately affect all users
 - ✅ Auditable: Clear "user X accessed via role Y" in logs
@@ -170,6 +181,7 @@ hasPermission(user, "anything:you:want") → TRUE ✅
 ```
 
 **Rules:**
+
 - Permission parts are split by `:` (colon)
 - Each part must match exactly OR be a wildcard `*`
 - Number of parts must be the same
@@ -215,7 +227,7 @@ Modules check permissions in reducers using `PermissionManager`:
 // In module's reducer
 if (!permissionManager.hasPermission(user_id, 'container:create')) {
   throw new ForbiddenException([
-    { message: 'Permission denied: container:create' }
+    { message: 'Permission denied: container:create' },
   ]);
 }
 ```
@@ -236,28 +248,33 @@ if (!permissionManager.hasPermission(user_id, 'container:create')) {
 ### Role Management
 
 **GET /roles**
+
 - **Purpose:** List all roles (system + custom)
 - **Auth:** `gateway:roles:read`
 - **Response:** `{ roles: Role[] }`
 
 **GET /roles/:role_id**
+
 - **Purpose:** Get role by ID
 - **Auth:** `gateway:roles:read`
 - **Response:** `Role`
 
 **POST /roles**
+
 - **Purpose:** Create custom role
 - **Auth:** `gateway:roles:write`
 - **Body:** `{ role_name, display_name, description, permissions, scope }`
 - **Response:** `Role` (201 Created)
 
 **PATCH /roles/:role_id**
+
 - **Purpose:** Update custom role (system roles immutable)
 - **Auth:** `gateway:roles:write`
 - **Body:** `{ display_name?, description?, permissions? }`
 - **Response:** `Role`
 
 **DELETE /roles/:role_id**
+
 - **Purpose:** Delete custom role (system roles immutable)
 - **Auth:** `gateway:roles:write`
 - **Response:** `{ success: true }`
@@ -266,18 +283,21 @@ if (!permissionManager.hasPermission(user_id, 'container:create')) {
 ### User-Role Assignment
 
 **GET /users/:user_id/roles**
+
 - **Purpose:** Get user's roles
 - **Auth:** `gateway:roles:read`
 - **Query:** `?project_id=<uuid>` (optional)
 - **Response:** `{ org_roles: Role[], project_roles: { [project_id]: Role[] } }`
 
 **POST /users/:user_id/roles**
+
 - **Purpose:** Assign role to user
 - **Auth:** `gateway:roles:write`
 - **Body:** `{ role_id, scope: 'org' | 'project', project_id? }`
 - **Response:** `{ success: true }`
 
 **DELETE /users/:user_id/roles/:role_id**
+
 - **Purpose:** Remove role from user
 - **Auth:** `gateway:roles:write`
 - **Query:** `?project_id=<uuid>` (required for project-scoped roles)
@@ -286,6 +306,7 @@ if (!permissionManager.hasPermission(user_id, 'container:create')) {
 ### Member Management
 
 **POST /members/projects/:project_id/users**
+
 - **Purpose:** Add member to project with roles
 - **Auth:** `project:*:admin`
 - **Body:** `{ user_id, role_ids: string[] }`
@@ -294,6 +315,7 @@ if (!permissionManager.hasPermission(user_id, 'container:create')) {
 - **Side Effect:** Updates gateway state and Ganymede database
 
 **DELETE /members/projects/:project_id/users/:user_id**
+
 - **Purpose:** Remove member from project
 - **Auth:** `project:*:admin`
 - **Response:** `{ success: true }`
@@ -302,6 +324,7 @@ if (!permissionManager.hasPermission(user_id, 'container:create')) {
 ### Permission Registry
 
 **GET /permissions**
+
 - **Purpose:** List all module-registered permissions
 - **Auth:** `gateway:permissions:read`
 - **Response:** `{ permissions: PermissionDefinition[] }`
@@ -325,6 +348,7 @@ CREATE TABLE organizations_members (
 **Purpose:** Track organization membership with simple database roles.
 
 **Database roles:**
+
 - `owner` - Organization owner
 - `admin` - Organization administrator
 - `member` - Regular member
@@ -425,6 +449,7 @@ CREATE TABLE projects_members (
 Projects initialize **on first access** (not eagerly at gateway startup).
 
 **Flow:**
+
 ```
 1. User opens project page
    ↓
@@ -443,6 +468,7 @@ Projects initialize **on first access** (not eagerly at gateway startup).
 ```
 
 **Benefits:**
+
 - Fast gateway startup (< 10s vs minutes)
 - Only active projects consume resources
 - New projects discovered organically
@@ -466,37 +492,43 @@ When a project initializes:
 ### Hooks (from `frontend-data`)
 
 **Role Management:**
+
 - `useQueryRoles(organization_id)` - Fetch all roles
 - `useMutationCreateRole(organization_id)` - Create custom role
 - `useMutationUpdateRole(organization_id)` - Update role
 - `useMutationDeleteRole(organization_id)` - Delete role
 
 **User-Role Assignment:**
+
 - `useQueryUserRoles(user_id, project_id?)` - Get user's roles
 - `useMutationAssignRole(organization_id)` - Assign role to user
 - `useMutationRemoveRole(organization_id)` - Remove role from user
 
 **Member Management:**
+
 - `useMutationAddMember(organization_id)` - Add member to project with roles
 - `useMutationRemoveMember(organization_id)` - Remove member from project
 
 **Permissions:**
+
 - `useQueryPermissions(organization_id)` - List all registered permissions
 - `useCollaborators(organization_id, project_id)` - Get project members with roles
 
 ### UI Components
 
-**UsersScopes** (`packages/ui-base/src/lib/users-scopes`)
-- Display project collaborators
-- Show user roles
-- Preview permissions granted by roles
-- Assign/remove roles from users
+**PermissionsPage** (`packages/ui-base/src/lib/permissions-page`) ✅ Implemented
 
-**RoleEditor** (to be implemented)
-- List all roles (system + custom)
-- Create/edit/delete custom roles
-- Select permissions from all registered permissions
-- Preview which users have each role
+- Organization-level permissions management at `/org/:org_id/permissions`
+- **Roles Tab**: List all roles (system + custom), create/edit/delete custom roles, view role permissions
+- **Users Tab**: Display organization members, show user roles, assign/remove roles from users
+- **UserRoleEditor**: Modal for editing user role assignments with role preview
+
+**RoleEditor** (`packages/ui-base/src/lib/role-editor`) ✅ Implemented
+
+- Create/edit custom roles
+- Select permissions from all registered permissions (fetched from gateway)
+- Set role display name, description, and scope (org or project)
+- Validate role names and prevent conflicts with system roles
 
 ---
 
@@ -512,7 +544,7 @@ const permissionManager = this.depsExports.gateway.permissionManager;
 
 if (!permissionManager.hasPermission(user_id, 'container:create')) {
   throw new ForbiddenException([
-    { message: 'Permission denied: container:create' }
+    { message: 'Permission denied: container:create' },
   ]);
 }
 ```
@@ -528,7 +560,7 @@ protectedServiceRegistry.registerService({
   },
   resolve: async (ctx) => {
     // Return service metadata
-  }
+  },
 });
 ```
 
@@ -554,6 +586,7 @@ router.get(
 ### RoleManager (`packages/app-gateway/src/permissions/RoleManager.ts`)
 
 **Responsibilities:**
+
 - Store role definitions
 - CRUD operations for roles
 - Validation (immutable roles, unique names)
@@ -561,6 +594,7 @@ router.get(
 - Initialize default system roles
 
 **Key Methods:**
+
 - `createRole(roleData)` - Create custom role
 - `getRole(role_id)` - Get role by ID
 - `getRoleByName(role_name)` - Get role by name
@@ -571,12 +605,14 @@ router.get(
 ### UserRoleManager (`packages/app-gateway/src/permissions/UserRoleManager.ts`)
 
 **Responsibilities:**
+
 - Store user-role assignments
 - Support org-level and project-level assignments
 - Expand roles to permissions
 - Persistence via `IPersistenceProvider`
 
 **Key Methods:**
+
 - `assignOrgRole(user_id, role_id)` - Assign org role
 - `assignProjectRole(user_id, project_id, role_id)` - Assign project role
 - `removeOrgRole(user_id, role_id)` - Remove org role
@@ -589,15 +625,18 @@ router.get(
 ### PermissionManager (`packages/app-gateway/src/permissions/PermissionManager.ts`)
 
 **Responsibilities:**
+
 - Check if user has permission
 - Resolve permissions via roles
 - Support wildcard matching
 
 **Key Methods:**
+
 - `hasPermission(user_id, permission, project_id?)` - Main permission check
 - `getPermissions(user_id, project_id?)` - Get expanded permissions
 
 **Algorithm:**
+
 ```typescript
 hasPermission(user_id, permission, project_id?) {
   1. Get user's roles (org + project)
@@ -611,11 +650,13 @@ hasPermission(user_id, permission, project_id?) {
 ### PermissionRegistry (`packages/modules/gateway/src/lib/permission-registry.ts`)
 
 **Responsibilities:**
+
 - Store module-registered permission definitions
 - Validate permission format
 - Expose via API for UI
 
 **Key Methods:**
+
 - `register(permission, definition)` - Module registers permission
 - `getAll()` - Get all registered permissions
 - `getByModule(module)` - Get permissions for specific module
@@ -628,12 +669,14 @@ hasPermission(user_id, permission, project_id?) {
 ### System Role Protection
 
 **org:owner role:**
+
 - Cannot be edited or deleted
 - Always grants universal access (`*` permission)
 - At least one user should always have this role
 - Prevents permission lockout
 
 **org:admin role:**
+
 - Cannot be deleted (only assigned/unassigned)
 - Has predefined permissions
 - Cannot be modified
@@ -659,6 +702,7 @@ if (providedToken !== process.env.GATEWAY_TOKEN) {
 ### Permission Check Failures
 
 When permission check fails:
+
 - Reducer throws `ForbiddenException`
 - HTTP middleware returns `403 Forbidden`
 - Logged for audit trail
@@ -700,6 +744,7 @@ When permission check fails:
 The system previously supported direct user-to-permission assignments. This has been **completely removed** in favor of pure RBAC.
 
 **Old System (Removed):**
+
 ```typescript
 // Direct assignment
 permissionManager.addPermission(user_id, 'project:abc:admin');
@@ -709,12 +754,13 @@ hasPermission(user_id, 'project:abc:admin'); // true
 ```
 
 **New System (RBAC):**
+
 ```typescript
 // Create role
 roleId = roleManager.createRole({
   role_name: 'project-admin',
   permissions: ['project:*:admin'],
-  scope: 'project'
+  scope: 'project',
 });
 
 // Assign role
@@ -733,17 +779,21 @@ hasPermission(user_id, 'project:abc:admin'); // true
 ### User Cannot Access Project
 
 **Symptoms:**
+
 - User is in `projects_members` table
 - WebSocket shows `[WARNING] [WS_AUTH] No access to project`
 - Frontend shows permission denied error
 
 **Diagnosis:**
+
 1. Check if user has any roles:
+
    ```bash
    GET /users/:user_id/roles?project_id=<project_id>
    ```
 
 2. Check what permissions user has:
+
    ```typescript
    instances.permissionManager.getPermissions(user_id, project_id);
    ```
@@ -751,6 +801,7 @@ hasPermission(user_id, 'project:abc:admin'); // true
 3. Check gateway logs for permission initialization warnings
 
 **Solutions:**
+
 - **No roles assigned:** Assign appropriate role via member management API
 - **Org member but not project member:** Add to project via `POST /members/projects/:id/users`
 - **Has roles but wrong scope:** Ensure roles are project-scoped for project access
@@ -758,31 +809,39 @@ hasPermission(user_id, 'project:abc:admin'); // true
 ### Permission Check Always Fails
 
 **Symptoms:**
+
 - User has role assigned
 - Role has permission
 - `hasPermission()` returns false
 
 **Diagnosis:**
+
 1. Check role scope matches usage (org role for org permissions, project role for project permissions)
 2. Verify wildcard matching is correct
 3. Check permission string format (no brackets in actual checks)
 4. Verify UserRoleManager is wired to PermissionManager
 
 **Debug:**
+
 ```typescript
 const roles = userRoleManager.getAllUserRoles(user_id, project_id);
-const permissions = roles.flatMap(r => r.permissions);
-console.log('User roles:', roles.map(r => r.role_name));
+const permissions = roles.flatMap((r) => r.permissions);
+console.log(
+  'User roles:',
+  roles.map((r) => r.role_name)
+);
 console.log('User permissions:', permissions);
 ```
 
 ### Gateway Token Authentication Fails
 
 **Symptoms:**
+
 - Internal API returns `401 Unauthorized` or `403 Forbidden`
 - Logs show "Gateway token missing" or "Invalid gateway token"
 
 **Solutions:**
+
 - **Check GATEWAY_TOKEN is set** in both gateway and Ganymede
 - **Verify token matches** between services
 - **Check header name** is `X-Gateway-Token`

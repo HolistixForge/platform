@@ -199,12 +199,8 @@ export const setupGatewayRoutes = (
         );
 
         // 4.5. Wait for gateway to be ready (health check with timeout)
-        log(
-          EPriority.Info,
-          'GATEWAY_ALLOC',
-          'Checking gateway health...'
-        );
-        
+        log(EPriority.Info, 'GATEWAY_ALLOC', 'Checking gateway health...');
+
         const healthCheckTimeout = 5000; // 5s max
         const healthCheckInterval = 200; // Check every 200ms
         const startTime = Date.now();
@@ -234,7 +230,9 @@ export const setupGatewayRoutes = (
           }
 
           // Wait before retry
-          await new Promise((resolve) => setTimeout(resolve, healthCheckInterval));
+          await new Promise((resolve) =>
+            setTimeout(resolve, healthCheckInterval)
+          );
         }
 
         if (!isHealthy) {
@@ -350,6 +348,13 @@ export const setupGatewayRoutes = (
       );
       const projects = projectsResult.next()?.allRows() || [];
 
+      // Get organization members with roles (for Gateway RBAC initialization)
+      const membersResult = await pg.query(
+        'SELECT * FROM func_organizations_members_list($1)',
+        [organization_id]
+      );
+      const members = membersResult.next()?.allRows() || [];
+
       // Generate organization JWT token (gateway bound to org)
       const organizationToken = generateJwtToken(
         {
@@ -367,6 +372,11 @@ export const setupGatewayRoutes = (
         gateway_id: String(gateway_id),
         organization_token: organizationToken,
         projects: projects.map((p) => String(p['project_id'])),
+        members: members.map((m) => ({
+          user_id: String(m['user_id']),
+          username: String(m['username']),
+          role: String(m['role']), // 'owner', 'admin', or 'member'
+        })),
       });
     })
   );

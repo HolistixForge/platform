@@ -1,0 +1,489 @@
+# Gateway Deployment and Testing Workflow
+
+This document explains the correct workflow for deploying and testing Gateway code changes in the local development environment, including common pitfalls and their solutions.
+
+## Placeholders Used in This Guide
+
+Throughout this document, you'll see these placeholders that should be replaced with your actual values:
+
+- **`{env}`**: Your environment name (e.g., `apollo`, `staging`, `prod`)
+- **`{org_id}`**: Your organization UUID (from database)
+- **`{token}`**: Handshake token from `organizations_gateways` table
+
+**Example**: If your environment is `apollo` and organization is `9b886a5e-...`, replace:
+- `gw-pool-{env}-4` → `gw-pool-apollo-4`
+- `https://org-{org_id}.{env}.local` → `https://org-9b886a5e-....apollo.local`
+
+## Overview
+
+The Gateway deployment process involves multiple steps and has several timing-sensitive operations. Understanding this workflow prevents common issues like stale code, lost allocations, and connection failures.
+
+## Architecture Context
+
+### Gateway Container Lifecycle
+
+1. **Container startup**: Docker container runs `/entrypoint.sh`
+2. **Tarball fetch**: Container downloads `gateway-{env}.tar.gz` from local file server
+3. **Extract**: Tarball extracted to `/opt/gateway/`
+4. **VPN/Nginx setup**: Infrastructure components initialized
+5. **App start**: Node.js app starts via supervisor script
+6. **Ready**: Gateway ready to receive handshake
+
+### Critical Files
+
+- **Tarball**: `/root/.local-dev-builds/gateway-{env}.tar.gz` (served at `http://172.17.0.2:8090/`)
+- **Container path**: `/opt/gateway/` (app-gateway + scripts)
+- **Logs**: `/tmp/gateway.log` (inside container)
+- **Config**: `/config/organization.json` (lost on restart!)
+- **Allocation DB**: `ganymede.organizations_gateways` table
+
+**Note**: Replace `{env}` with your environment name (e.g., `apollo`, `staging`, `prod`)
+
+## Complete Deployment Workflow
+
+### When Gateway App Code Changes
+
+Follow this exact sequence when you modify code in `packages/app-gateway/`:
+
+```bash
+# 1. Build everything (apps + tarball)
+./scripts/local-dev/envctl.sh build {env}
+
+# 2. Restart environment (triggers refetch + restart)
+./scripts/local-dev/envctl.sh restart {env}
+
+# 3. Wait for gateway to start (30-60 seconds)
+sleep 30
+
+# 4. Verify gateway is running
+docker exec gw-pool-{env}-4 ps aux | grep node
+
+# 5. Trigger organization handshake
+# (fetch token and org subdomain from database first)
+curl -k -X POST https://org-{org_id}.{env}.local/collab/start \
+  -H "Content-Type: application/json" \
+  -H "Origin: https://{env}.local" \
+  -d '{"tmp_handshake_token":"{token}"}'
+
+# 6. Check initialization logs
+docker exec gw-pool-{env}-4 grep "GATEWAY_INIT\|Auto-assigned" /tmp/gateway.log | tail -20
+
+# 7. Test WebSocket connection from browser
+```
+
+**Placeholders:**
+- `{env}`: Your environment name (e.g., `apollo`, `staging`)
+- `{org_id}`: Your organization UUID
+- `{token}`: Handshake token from database
+
+### Getting Handshake Token
+
+```bash
+# Connect to Ganymede database
+docker exec -it ganymede psql -U ganymede -d ganymede
+
+# Get allocation info
+SELECT 
+  gateway_id,
+  organization_id,
+  tmp_handshake_token,
+  started_at,
+  ended_at
+FROM organizations_gateways
+WHERE organization_id = 'YOUR_ORG_ID'
+  AND ended_at IS NULL;
+```
+
+### Finding Active Gateway Container
+
+```bash
+# List gateway containers for your environment
+docker ps | grep gw-pool-{env}
+
+# Find which container has your organization
+docker exec gw-pool-{env}-4 cat /config/organization.json 2>/dev/null
+docker exec gw-pool-{env}-3 cat /config/organization.json 2>/dev/null
+
+# Or check logs for recent activity
+docker exec gw-pool-{env}-4 tail -5 /tmp/gateway.log
+```
+
+## Common Pitfalls and Solutions
+
+### ❌ Problem: Old Code Running After Build
+
+**Symptoms**:
+- Changes don't appear in Gateway behavior
+- `BUILD_INFO.txt` shows old timestamp
+
+**Cause**: Nx cache or container cached tarball
+
+**Solution**:
+```bash
+# Force rebuild without cache
+npx nx build app-gateway --skip-nx-cache
+
+# Or rebuild all with script (recommended)
+./scripts/local-dev/envctl.sh build {env}
+./scripts/local-dev/envctl.sh restart {env}
+```
+
+**Verification**:
+```bash
+# Check tarball timestamp (should be recent)
+ls -lh /root/.local-dev-builds/gateway-{env}.tar.gz
+
+# Check what container fetched
+docker exec gw-pool-{env}-4 cat /opt/gateway/BUILD_INFO.txt
+```
+
+---
+
+### ❌ Problem: Gateway Not Initialized After Restart
+
+**Symptoms**:
+- WebSocket fails with "No organization config found"
+- Gateway logs: `[ERROR] [CONFIG] No organization config found`
+- Gateway idle message in logs
+
+**Cause**: Gateway containers lose `/config/organization.json` on restart
+
+**Solution**: **Always trigger handshake after restart**
+```bash
+# Get handshake token from DB (see "Getting Handshake Token" above)
+
+# Trigger handshake
+curl -k -X POST https://org-{org_id}.{env}.local/collab/start \
+  -H "Content-Type: application/json" \
+  -H "Origin: https://{env}.local" \
+  -d '{"tmp_handshake_token":"{token}"}'
+
+# Should return: {}
+```
+
+**Why this happens**:
+- Docker container restarts clear ephemeral files
+- `/config/organization.json` is not persisted
+- Database still shows gateway as allocated
+- Handshake recreates config and re-initializes
+
+---
+
+### ❌ Problem: 502 Bad Gateway on Handshake
+
+**Symptoms**:
+- `curl` returns `<h1>502 Bad Gateway</h1>`
+- No response from Gateway
+
+**Causes & Solutions**:
+
+1. **Gateway app not started**:
+```bash
+# Check if Node.js is running
+docker exec gw-pool-{env}-4 ps aux | grep node
+
+# If not running, start manually
+docker exec gw-pool-{env}-4 /opt/gateway/app/lib/start-app-gateway.sh
+
+# Wait 10 seconds, try handshake again
+```
+
+2. **Gateway still initializing**:
+```bash
+# Check if OpenVPN/Nginx are setting up
+docker logs gw-pool-{env}-4 | tail -20
+
+# Wait longer (up to 60s for first start)
+sleep 30
+```
+
+3. **Container not restarted properly**:
+```bash
+# Force container restart
+docker restart gw-pool-{env}-4
+
+# Wait for full initialization
+sleep 60
+```
+
+---
+
+### ❌ Problem: WebSocket Connection Fails (1006)
+
+**Symptoms**:
+- Browser console: `WebSocket.close: wss://... [1006]`
+- Gateway logs: `[WARNING] [WS_AUTH] No access to project`
+
+**Diagnostic Steps**:
+
+1. **Check if gateway initialized**:
+```bash
+docker exec gw-pool-{env}-4 grep "Gateway initialized" /tmp/gateway.log | tail -1
+# Should show: "Gateway initialized: N projects, ..."
+```
+
+2. **Check user permissions**:
+```bash
+docker exec gw-pool-{env}-4 grep "Auto-assigned\|user_roles" /tmp/gateway.log | tail -10
+# Should show user roles assigned
+```
+
+3. **Check lazy initialization** (if project not loaded):
+```bash
+docker exec gw-pool-{env}-4 grep "Triggering lazy initialization\|Initialized project" /tmp/gateway.log | tail -5
+```
+
+**Common Solutions**:
+
+- **No permissions**: User needs `org:owner` or `org:admin` role (check RBAC)
+- **Project not loaded**: Fixed by lazy initialization (should happen automatically)
+- **Stale JWT**: Frontend needs to refresh token (reload page)
+
+---
+
+### ❌ Problem: "ENOENT: /opt/gateway/app/main.sh"
+
+**Symptoms**:
+- Gateway crashes with `spawnSync /opt/gateway/app/main.sh ENOENT`
+- Modules trying to run scripts fail
+
+**Cause**: Gateway running old/corrupted build or mid-reload
+
+**Solution**:
+```bash
+# Force clean reload
+docker exec gw-pool-{env}-4 /opt/gateway/app/lib/trigger-reload.sh
+
+# Or restart container entirely
+docker restart gw-pool-{env}-4
+sleep 60
+
+# Trigger handshake again
+```
+
+---
+
+### ❌ Problem: Changes to Ganymede Not Reflected
+
+**Symptoms**:
+- Gateway still uses old Ganymede API responses
+- Database changes not visible to Gateway
+
+**Cause**: Wrong service restarted or Ganymede not rebuilt
+
+**Solution**:
+```bash
+# Rebuild and restart Ganymede
+./scripts/local-dev/envctl.sh build {env}  # Builds both
+./scripts/local-dev/envctl.sh restart {env}  # Restarts both
+
+# Check Ganymede is running
+ps aux | grep ganymede | grep node
+
+# Check Ganymede logs
+tail -f /root/.local-dev/{env}/logs/ganymede.log
+```
+
+---
+
+### ❌ Problem: Can't Access Gateway Logs
+
+**Symptoms**:
+- `docker exec` fails
+- Log file not found
+
+**Solutions**:
+
+```bash
+# Standard log access (most reliable)
+docker exec gw-pool-{env}-4 tail -f /tmp/gateway.log
+
+# If container name wrong, find it
+docker ps | grep gw-pool-{env}
+
+# If log file missing (very early startup)
+docker logs gw-pool-{env}-4  # Container stdout
+
+# Real-time monitoring
+watch -n 2 "docker exec gw-pool-{env}-4 tail -20 /tmp/gateway.log"
+
+# Search logs
+docker exec gw-pool-{env}-4 grep "ERROR\|WARNING" /tmp/gateway.log | tail -30
+```
+
+---
+
+## Testing Checklist
+
+After deploying Gateway changes, verify:
+
+- [ ] **Build completed**: Check for errors in build output
+- [ ] **Tarball updated**: `ls -lh /root/.local-dev-builds/gateway-{env}.tar.gz` shows recent time
+- [ ] **Container restarted**: `docker ps` shows recent restart time
+- [ ] **Gateway process running**: `docker exec gw-pool-{env}-4 ps aux | grep node`
+- [ ] **Handshake successful**: `curl .../collab/start` returns `{}`
+- [ ] **Initialization logged**: `grep "Gateway initialized" /tmp/gateway.log`
+- [ ] **Permissions assigned**: `grep "Auto-assigned" /tmp/gateway.log`
+- [ ] **WebSocket connects**: Browser console shows connection
+- [ ] **No errors**: `grep ERROR /tmp/gateway.log` shows nothing new
+
+## Quick Reference Commands
+
+### Build and Deploy
+```bash
+./scripts/local-dev/envctl.sh build {env}    # Build + package
+./scripts/local-dev/envctl.sh restart {env}  # Restart all services
+```
+
+### Gateway Status
+```bash
+docker ps | grep gw-pool                                    # List containers
+docker exec gw-pool-{env}-4 ps aux | grep node           # Check process
+docker exec gw-pool-{env}-4 cat /opt/gateway/BUILD_INFO.txt  # Check version
+```
+
+### Logs
+```bash
+docker exec gw-pool-{env}-4 tail -f /tmp/gateway.log           # Follow logs
+docker exec gw-pool-{env}-4 grep ERROR /tmp/gateway.log        # Errors only
+docker exec gw-pool-{env}-4 grep GATEWAY_INIT /tmp/gateway.log # Init logs
+```
+
+### Handshake
+```bash
+# Get token from DB first, then:
+curl -k -X POST https://org-{org_id}.{env}.local/collab/start \
+  -H "Content-Type: application/json" \
+  -d '{"tmp_handshake_token":"{token}"}'
+```
+
+### Debug WebSocket
+```bash
+# Check auth logs
+docker exec gw-pool-{env}-4 grep "WS_AUTH\|WS_CONNECTION" /tmp/gateway.log | tail -20
+
+# Check permissions
+docker exec gw-pool-{env}-4 grep "org:owner\|org:admin" /tmp/gateway.log | tail -10
+
+# Check project initialization
+docker exec gw-pool-{env}-4 grep "Initialized project" /tmp/gateway.log
+```
+
+## Important Notes
+
+### Timing Considerations
+
+- **Gateway startup**: Allow 30-60 seconds after restart before handshake
+- **OpenVPN config**: First-time setup takes longer (~45s)
+- **Module loading**: Backend modules load in ~1-2 seconds
+- **WebSocket retry**: Browser retries every few seconds, watch logs
+
+### When NOT to Restart Gateway
+
+- **Frontend-only changes**: Just reload Nginx (`sudo service nginx reload`)
+- **Ganymede-only changes**: Restart Ganymede only
+- **Database schema**: No restart needed (Ganymede auto-reflects schema)
+
+### When to Clear Allocation
+
+Only clear allocation (`ended_at = NOW()`) when:
+- Gateway is stuck in bad state after multiple restart attempts
+- You need to test fresh allocation/initialization flow
+- Organization is moving to different gateway container
+
+**Never** clear allocation during normal deploy/restart cycles!
+
+## Advanced Debugging
+
+### Inspect Gateway State (Inside Container)
+
+```bash
+# Enter container
+docker exec -it gw-pool-{env}-4 /bin/bash
+
+# Check environment
+env | grep GATEWAY
+env | grep GANYMEDE
+
+# Check files
+ls -la /opt/gateway/
+ls -la /config/
+cat /config/organization.json
+
+# Check Nginx config
+cat /etc/nginx/sites-enabled/default
+nginx -t
+
+# Check supervisor
+ps aux
+```
+
+### Database Inspection
+
+```bash
+# Check allocation status
+docker exec -it ganymede psql -U ganymede -d ganymede -c \
+  "SELECT * FROM organizations_gateways WHERE ended_at IS NULL;"
+
+# Check organization members (for RBAC)
+docker exec -it ganymede psql -U ganymede -d ganymede -c \
+  "SELECT * FROM func_organizations_members_list('ORG_ID');"
+```
+
+### Network Debugging
+
+```bash
+# Test Ganymede connectivity from Gateway
+docker exec gw-pool-{env}-4 curl -H "Host: {env}.local" http://172.17.0.2/health
+
+# Test Gateway from host
+curl -k https://org-{org_id}.{env}.local/health
+
+# Check DNS resolution
+docker exec gw-pool-{env}-4 nslookup {env}.local
+```
+
+## Summary: Golden Path
+
+For routine Gateway code updates, follow this simple sequence:
+
+```bash
+# 1. Build and restart
+./scripts/local-dev/envctl.sh build {env}
+./scripts/local-dev/envctl.sh restart {env}
+
+# 2. Wait for startup
+sleep 30
+
+# 3. Trigger handshake (get token from DB first)
+curl -k -X POST https://org-{org_id}.{env}.local/collab/start \
+  -H "Content-Type: application/json" \
+  -d '{"tmp_handshake_token":"{token}"}'
+
+# 4. Verify in logs
+docker exec gw-pool-{env}-4 grep "Gateway initialized\|Auto-assigned" /tmp/gateway.log | tail -5
+
+# 5. Test in browser
+# Open https://{env}.local and check WebSocket connection
+```
+
+**That's it!** This workflow handles:
+- ✅ Code compilation
+- ✅ Tarball packaging
+- ✅ Container refetch
+- ✅ App restart
+- ✅ Organization config reload
+- ✅ RBAC initialization
+
+## For Cursor Agents
+
+When you modify Gateway code:
+
+1. **Always use the full workflow** (build → restart → wait → handshake)
+2. **Don't skip the handshake** after restart (config is lost!)
+3. **Wait before testing** (Gateway takes 30-60s to fully start)
+4. **Check logs first** when debugging (don't guess)
+5. **Verify build timestamp** if behavior seems stale
+6. **Read error messages carefully** (they're usually accurate)
+
+Remember: The Gateway deployment process is **multi-step and timing-sensitive**. Following this workflow prevents 90% of deployment issues.

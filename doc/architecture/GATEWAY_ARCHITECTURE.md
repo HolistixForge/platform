@@ -23,7 +23,9 @@ Holistix Forge uses a **pool-based multi-gateway architecture** where gateway co
 **Architectural Decisions:**
 
 - **Clean Separation of Concerns** - Each manager (PermissionManager, OAuthManager, TokenManager) is responsible for its own domain logic and uses GatewayState as a generic persistence coordinator
-- **Simple Permissions (MVP)** - Permission system uses string arrays per user with exact matching (e.g., `["org:admin", "container:123:delete"]`). No hierarchy/wildcards in MVP, but designed to be extensible
+- **Role-Based Access Control (RBAC)** - Full RBAC system with Users → Roles → Permissions model. Supports wildcard matching, org-level and project-level roles, system roles (immutable), and custom roles. See [PERMISSION_SYSTEM.md](./PERMISSION_SYSTEM.md) for details.
+- **Lazy Project Initialization** - Project rooms are initialized on-demand when first accessed (WebSocket connection or API call), not at gateway startup. Improves startup performance.
+- **Default Role Assignment** - Organization members automatically receive default RBAC roles during gateway initialization based on their Ganymede membership (owner → org:owner, admin → org:admin).
 - **One Gateway = One Organization** - A gateway manages ALL projects within an organization, sharing VPN network and permission system
 - **Separate YJS State Per Project** - Each project has its own YJS room with isolated state files, allowing concurrent multi-project collaboration
 
@@ -317,10 +319,19 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
 
 1. Create `GatewayState` instance and initialize with org/gateway IDs
 2. Set organization context → Automatically pulls data from Ganymede
-3. Create manager instances (PermissionManager, OAuthManager, etc.)
-4. Register providers with `GatewayState` → Providers automatically load their data from pulled snapshot
-5. Store instances in `GatewayInstances` registry for route access
-6. Start autosave → `GatewayState` pushes data to Ganymede every 5 minutes
+3. Create manager instances (RoleManager, UserRoleManager, PermissionManager, OAuthManager, etc.)
+4. Initialize default RBAC roles (org:owner, org:admin) and assign to organization members based on Ganymede membership
+5. Register providers with `GatewayState` → Providers automatically load their data from pulled snapshot
+6. Load backend modules (collab, reducers, gateway, user-containers, etc.)
+7. Store instances in `GatewayInstances` registry for route access
+8. Start autosave → `GatewayState` pushes data to Ganymede every 5 minutes
+9. Initialize WebSocket handler for 0 projects (projects initialized lazily on first access)
+
+**Note:** Projects are **not** initialized at startup. Project rooms are created on-demand when:
+
+- A WebSocket connection attempts to access the project
+- An API endpoint requires the project data
+  This improves gateway startup performance and reduces memory usage for inactive projects.
 
 ### Data Flow
 
@@ -361,10 +372,12 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
 
 **Manager Responsibilities:**
 
-- **PermissionManager** - Manages string-based permissions per user, exact matching (`hasPermission(user_id, permission)`), uses GatewayState for persistence
+- **PermissionManager** - Implements RBAC permission checking via role resolution. Works with RoleManager and UserRoleManager to check if users have required permissions (supports exact match and wildcard matching like `project:*:admin`). Uses GatewayState for persistence.
+- **RoleManager** - Manages role definitions (CRUD operations, system roles like org:owner/org:admin, custom roles). Handles role persistence and validation.
+- **UserRoleManager** - Manages user-role assignments at organization and project levels. Tracks which users have which roles and provides role lookup by user.
 - **OAuthManager** - Manages OAuth clients, authorization codes, and tokens for container applications, implements OAuth2Server model interface
 - **TokenManager** - Generates JWT tokens (`generateJWTToken()`), used for container authentication tokens
-- **ProjectRoomsManager** - Manages multiple YJS rooms (one per project), handles per-project persistence and WebSocket routing
+- **ProjectRoomsManager** - Manages multiple YJS rooms (one per project), handles per-project persistence and WebSocket routing. Projects initialized lazily on first access.
 
 ### Centralized Storage (Stateless Gateways)
 

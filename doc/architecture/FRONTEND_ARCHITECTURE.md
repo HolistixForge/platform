@@ -68,6 +68,7 @@ BrowserRouter
 ```
 
 **Key Points:**
+
 - `ModuleDataProvider` handles all data infrastructure
 - `ProjectProvider` provides full project data for UI
 - `CollabProjectProvider` provides ONLY `project_id` for collab hooks
@@ -187,17 +188,40 @@ BrowserRouter
 - `GET /permissions/projects/{project_id}` — Returns user-specific permission assignments.
 - `PATCH /permissions/projects/{project_id}/users/{user_id}` — Updates assigned permissions.
 
-### Frontend Hooks
+### Frontend Hooks (RBAC)
 
-- `useQueryScope(organization_id)` — Fetches the catalog of available permissions via `fetchGateway`.
-- `useQueryProjectUsersScopes(organization_id, project_id)` — Loads permission assignments.
-- `useCollaborators(project_id)` — Merges Ganymede project members with gateway permissions.
-- `useMutationUserScope(project_id)` — Updates user permissions and invalidates relevant queries.
+**Role Management:**
+
+- `useQueryRoles(organization_id)` — Fetches all roles (system + custom) from gateway
+- `useQueryRole(organization_id, role_id)` — Fetch specific role details
+- `useMutationCreateRole(organization_id)` — Create new custom role
+- `useMutationUpdateRole(organization_id, role_id)` — Update custom role
+- `useMutationDeleteRole(organization_id, role_id)` — Delete custom role
+
+**User Role Assignments:**
+
+- `useQueryUserRoles(organization_id, user_id)` — Get user's role assignments (org + project)
+- `useQueryOrgMembers(organization_id)` — Get organization members for user management
+- `useMutationAssignRole(organization_id)` — Assign role to user
+- `useMutationUnassignRole(organization_id)` — Remove role from user
+
+**Permissions:**
+
+- `useQueryPermissions(organization_id)` — Fetches registered permissions from gateway
+- `useCollaborators(organization_id, project_id)` — Merges Ganymede project members with gateway role data
+
+**Legacy (Deprecated):**
+
+- ~~`useQueryScope`~~ - Replaced by `useQueryPermissions`
+- ~~`useQueryProjectUsersScopes`~~ - Replaced by `useQueryUserRoles` + `useQueryOrgMembers`
+- ~~`useMutationUserScope`~~ - Replaced by `useMutationAssignRole` / `useMutationUnassignRole`
 
 ### Permission Format Awareness
 
-- Hooks treat permissions as opaque strings; formatting is documented separately in `PERMISSION_SYSTEM.md`.
-- UI components render human-readable labels by referencing module-provided metadata.
+- RBAC model: Users → Roles → Permissions
+- Permissions are opaque strings with format `{module}:{resource}:{action}`
+- Supports wildcard matching (e.g., `project:*:admin` matches all projects)
+- See [PERMISSION_SYSTEM.md](../architecture/PERMISSION_SYSTEM.md) for complete details
 
 ---
 

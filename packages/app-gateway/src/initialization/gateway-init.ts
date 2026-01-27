@@ -49,6 +49,104 @@ import { setGatewayInstances, getGatewayInstances } from './gateway-instances';
 import { createBackendModulesConfig } from '../config/modules';
 
 /**
+ * Initialize Default Permissions for Organization Members
+ *
+ * Syncs Ganymede membership (simple owner/admin/member roles) with Gateway RBAC.
+ * Auto-assigns default roles to users who don't have any RBAC roles yet.
+ *
+ * Called during gateway initialization with members from handshake config.
+ * Uses UserRoleManager to check existing assignments to avoid duplicates.
+ *
+ * @param members - Organization members with roles from Ganymede
+ * @param roleManager - RoleManager instance
+ * @param userRoleManager - UserRoleManager instance
+ */
+async function initializeDefaultPermissions(
+  members: Array<{
+    user_id: string;
+    username: string;
+    role: string; // 'owner', 'admin', or 'member'
+  }>,
+  roleManager: RoleManager,
+  userRoleManager: UserRoleManager
+): Promise<void> {
+  try {
+    log(
+      EPriority.Info,
+      'GATEWAY_INIT',
+      `Initializing default permissions for ${members.length} org members`
+    );
+
+    let assignedCount = 0;
+
+    for (const member of members) {
+      // Check if user already has org-level roles
+      const existingRoles = userRoleManager.getUserOrgRoles(member.user_id);
+
+      if (existingRoles.length > 0) {
+        // User already has roles, skip
+        log(
+          EPriority.Debug,
+          'GATEWAY_INIT',
+          `User ${member.user_id} already has ${existingRoles.length} org role(s), skipping default assignment`
+        );
+        continue;
+      }
+
+      // Auto-assign default role based on Ganymede membership role
+      let roleToAssign: string | null = null;
+
+      if (member.role === 'owner') {
+        const ownerRole = roleManager.getRoleByName('org:owner');
+        if (ownerRole) {
+          userRoleManager.assignOrgRole(member.user_id, ownerRole.role_id);
+          roleToAssign = 'org:owner';
+          assignedCount++;
+        }
+      } else if (member.role === 'admin') {
+        const adminRole = roleManager.getRoleByName('org:admin');
+        if (adminRole) {
+          userRoleManager.assignOrgRole(member.user_id, adminRole.role_id);
+          roleToAssign = 'org:admin';
+          assignedCount++;
+        }
+      }
+      // Note: Regular members ('member' role) get no default org-level role
+      // They need explicit project-level or custom role assignment
+
+      if (roleToAssign) {
+        log(
+          EPriority.Info,
+          'GATEWAY_INIT',
+          `Auto-assigned ${roleToAssign} to user ${member.user_id} (${member.username})`
+        );
+      }
+    }
+
+    if (assignedCount > 0) {
+      log(
+        EPriority.Info,
+        'GATEWAY_INIT',
+        `✅ Assigned default roles to ${assignedCount} user(s)`
+      );
+    } else {
+      log(
+        EPriority.Info,
+        'GATEWAY_INIT',
+        'All users already have roles assigned'
+      );
+    }
+  } catch (error: any) {
+    log(
+      EPriority.Error,
+      'GATEWAY_INIT',
+      `Failed to initialize default permissions: ${error.message}`
+    );
+    // Don't throw - gateway should still start even if this fails
+  }
+}
+
+/**
  * Initialize Gateway for Organization
  *
  * This creates all instances and registers them with GatewayState.
@@ -75,13 +173,15 @@ import { createBackendModulesConfig } from '../config/modules';
  * @param gatewayId - Gateway ID
  * @param organizationToken - Organization token for Ganymede auth
  * @param servers - HTTP/HTTPS servers for WebSocket grafting
+ * @param members - Organization members with roles (for RBAC initialization)
  * @returns Gateway instances (state and managers)
  */
 export async function initializeGatewayForOrganization(
   organizationId: string,
   gatewayId: string,
   organizationToken: string,
-  servers?: (http.Server | https.Server)[]
+  servers?: (http.Server | https.Server)[],
+  members?: Array<{ user_id: string; username: string; role: string }>
 ): Promise<GatewayInstances> {
   log(
     EPriority.Info,
@@ -104,10 +204,10 @@ export async function initializeGatewayForOrganization(
   const roleManager = new RoleManager();
   const userRoleManager = new UserRoleManager(roleManager);
   const permissionManager = new PermissionManager();
-  
+
   // 3.1 Wire up PermissionManager with UserRoleManager
   permissionManager.setUserRoleManager(userRoleManager);
-  
+
   // 3.2 Create other manager instances
   const oauthManager = new OAuthManager();
   const tokenManager = new TokenManager();
@@ -124,7 +224,7 @@ export async function initializeGatewayForOrganization(
   gatewayState.register('permissions', permissionManager);
   gatewayState.register('oauth', oauthManager);
   gatewayState.register('projects', projectRooms);
-  
+
   // 4.1 Initialize default system roles (after registration so they can be persisted)
   roleManager.initializeDefaultRoles();
   log(
@@ -132,6 +232,18 @@ export async function initializeGatewayForOrganization(
     'GATEWAY_INIT',
     'Initialized default system roles (org:owner, org:admin)'
   );
+
+  // 4.2 Initialize default permissions for organization members
+  // This syncs Ganymede membership (simple) with Gateway RBAC (rich)
+  if (members && members.length > 0) {
+    await initializeDefaultPermissions(members, roleManager, userRoleManager);
+  } else {
+    log(
+      EPriority.Warning,
+      'GATEWAY_INIT',
+      'No members provided for default permission initialization'
+    );
+  }
 
   // 4.5 Wire up CollabRegistry to ProjectRoomsManager
   // This allows registry to get room_id for projects
@@ -148,7 +260,6 @@ export async function initializeGatewayForOrganization(
     'GATEWAY_INIT',
     'Started auto-save (pushes to Ganymede every 5min)'
   );
-  
 
   // 6. Load backend modules (collab, reducers, core-graph, gateway, user-containers)
   // Modules are loaded after managers are created so gateway module can access them
@@ -162,12 +273,12 @@ export async function initializeGatewayForOrganization(
     organizationId,
     organizationToken,
     gatewayId,
-    permissionManager,        // ← Passed to modules for permission registration
-    oauthManager,             // ← Passed to modules for OAuth integration
-    tokenManager,             // ← Passed to modules for token management
-    permissionRegistry,       // ← Passed to modules for permission registration
+    permissionManager, // ← Passed to modules for permission registration
+    oauthManager, // ← Passed to modules for OAuth integration
+    tokenManager, // ← Passed to modules for token management
+    permissionRegistry, // ← Passed to modules for permission registration
     protectedServiceRegistry, // ← Passed to modules for protected service registration
-    collabRegistry            // ← Passed to modules for shared data schema registration
+    collabRegistry // ← Passed to modules for shared data schema registration
   );
   log(
     EPriority.Info,
@@ -189,7 +300,10 @@ export async function initializeGatewayForOrganization(
   );
 
   // 6.5.1 Create and start gateway-specific timers
-  const periodicTimer = new GatewayPeriodicTimer(projectRooms, moduleExports.reducers);
+  const periodicTimer = new GatewayPeriodicTimer(
+    projectRooms,
+    moduleExports.reducers
+  );
   periodicTimer.start();
   log(
     EPriority.Info,
@@ -217,11 +331,7 @@ export async function initializeGatewayForOrganization(
 
   // 7. Start automatic OAuth cleanup (managed by OAuthManager)
   oauthManager.startAutomaticCleanup();
-  log(
-    EPriority.Info,
-    'GATEWAY_INIT',
-    'OAuth automatic cleanup enabled'
-  );
+  log(EPriority.Info, 'GATEWAY_INIT', 'OAuth automatic cleanup enabled');
 
   // 8. Log statistics
   const oauthStats = oauthManager.getStats();
@@ -243,18 +353,18 @@ export async function initializeGatewayForOrganization(
   // - Passed to modules: For module integration (e.g., register permissions)
   // - Stored in registry: For gateway internal use (e.g., route handlers)
   const instances: GatewayInstances = {
-    gatewayState,                  // ← Internal only (organization context)
-    roleManager,                   // ← NEW: RBAC role management
-    userRoleManager,               // ← NEW: RBAC user-role assignments
-    permissionManager,             // ← Both (modules register, routes check)
-    oauthManager,                  // ← Both (modules integrate, routes handle OAuth)
-    tokenManager,                  // ← Both (modules use, routes validate)
-    projectRooms,                  // ← Internal only (project lifecycle management)
-    collabRegistry,                // ← Both (modules register, routes access)
-    permissionRegistry,            // ← Both (modules register, routes check)
-    protectedServiceRegistry,      // ← Both (modules register, routes handle)
-    periodicTimer,                 // ← Internal only (gateway timers)
-    shutdownTimer,                 // ← Internal only (gateway shutdown)
+    gatewayState, // ← Internal only (organization context)
+    roleManager, // ← NEW: RBAC role management
+    userRoleManager, // ← NEW: RBAC user-role assignments
+    permissionManager, // ← Both (modules register, routes check)
+    oauthManager, // ← Both (modules integrate, routes handle OAuth)
+    tokenManager, // ← Both (modules use, routes validate)
+    projectRooms, // ← Internal only (project lifecycle management)
+    collabRegistry, // ← Both (modules register, routes access)
+    permissionRegistry, // ← Both (modules register, routes check)
+    protectedServiceRegistry, // ← Both (modules register, routes handle)
+    periodicTimer, // ← Internal only (gateway timers)
+    shutdownTimer, // ← Internal only (gateway shutdown)
   };
   setGatewayInstances(instances);
 

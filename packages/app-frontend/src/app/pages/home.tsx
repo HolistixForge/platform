@@ -1,5 +1,6 @@
 import { InfoCircledIcon } from '@radix-ui/react-icons';
 import { Table } from '@radix-ui/themes';
+import { Link } from 'react-router-dom';
 
 import {
   useCurrentUser,
@@ -90,18 +91,95 @@ const ProjectsList = () => {
   if (status === 'success' && orgsStatus === 'success')
     return (
       <>
+        {/* Organizations Section */}
+        {orgsData && orgsData.length > 0 && (
+          <div
+            className="organizations-list w-[350px] sm:w-[900px] mx-auto mt-16"
+            style={{ '--avatar-width': '30px' } as React.CSSProperties}
+          >
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-2xl font-semibold">My Organizations</h2>
+              <button
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+                onClick={() => no_action.open()}
+              >
+                + New Organization
+              </button>
+            </div>
+            <Table.Root className="table-fixed border border-slate-700 rounded-md overflow-hidden mb-16">
+              <Table.Header className="w-[350px] sm:w-[900px] -bg--c-alt-blue-4">
+                <Table.Row>
+                  <Table.ColumnHeaderCell className="py-4 px-6 w-[50%]">
+                    Organization
+                  </Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell className="py-4 px-6 w-[25%] text-center">
+                    Projects
+                  </Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell className="py-4 px-6 w-[25%] text-center">
+                    Actions
+                  </Table.ColumnHeaderCell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {orgsData.map((org) => {
+                  const projectCount =
+                    data?.filter(
+                      (p) => p.organization_id === org.organization_id
+                    ).length || 0;
+
+                  return (
+                    <Table.Row
+                      key={org.organization_id}
+                      className="border-t border-slate-700 hover:bg-slate-800/50"
+                    >
+                      <Table.Cell className="py-4 px-6 text-white">
+                        <Link
+                          to={`/org/${org.organization_id}`}
+                          className="hover:text-blue-400 transition-colors"
+                        >
+                          {org.name}
+                        </Link>
+                      </Table.Cell>
+                      <Table.Cell className="py-4 px-6 text-center text-slate-300">
+                        {projectCount}
+                      </Table.Cell>
+                      <Table.Cell className="py-4 px-6 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <Link to={`/org/${org.organization_id}`}>
+                            <button className="px-3 py-1 text-sm -bg--c-alt-blue-1 hover:-bg--c-alt-blue-2 text-white rounded transition-colors">
+                              Dashboard
+                            </button>
+                          </Link>
+                          <Link to={`/org/${org.organization_id}/permissions`}>
+                            <button className="px-3 py-1 text-sm bg-purple-900/50 hover:bg-purple-800/50 text-purple-200 rounded transition-colors">
+                              Permissions
+                            </button>
+                          </Link>
+                        </div>
+                      </Table.Cell>
+                    </Table.Row>
+                  );
+                })}
+              </Table.Body>
+            </Table.Root>
+          </div>
+        )}
+
+        {/* Projects Section */}
         <div
           className="projects-list w-[350px] sm:w-[900px] mx-auto mt-16"
           style={{ '--avatar-width': '30px' } as React.CSSProperties}
         >
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl font-semibold">My Projects</h2>
-            <button
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
-              onClick={() => no_action.open()}
-            >
-              + New Organization
-            </button>
+            {(!orgsData || orgsData.length === 0) && (
+              <button
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+                onClick={() => no_action.open()}
+              >
+                + New Organization
+              </button>
+            )}
           </div>
           <Table.Root className="table-fixed border border-slate-700 rounded-md overflow-hidden">
             <Table.Header className="w-[350px] sm:w-[900px] -bg--c-alt-blue-4">
@@ -200,17 +278,26 @@ const ProjectsListItem = ({
     const orgName = orgData.name;
     const match = orgName.match(/^(.+)-org$/);
 
-    if (match && ownerStatus === 'success' && ownerData) {
-      // Pattern matches: "xxxx:yyyyy-org" → show UserInline"
-      return (
+    const content =
+      match && ownerStatus === 'success' && ownerData ? (
+        // Pattern matches: "xxxx:yyyyy-org" → show UserInline"
         <span className="flex items-center gap-1">
           <UserInline color="var(--c-white-1)" {...ownerData} />
         </span>
+      ) : (
+        // Regular organization name
+        <span className="text-slate-300">{orgName}</span>
       );
-    }
 
-    // Regular organization name
-    return <span className="text-slate-300">{orgName}</span>;
+    // Wrap in link to org dashboard
+    return (
+      <Link
+        to={`/org/${project.organization_id}`}
+        className="hover:text-blue-400 transition-colors"
+      >
+        {content}
+      </Link>
+    );
   };
 
   return (

@@ -56,9 +56,17 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "user_id": { "type": "string", "format": "uuid", "nullable": true },
+                    "user_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "nullable": true
+                    },
                     "username": { "type": "string", "nullable": true },
-                    "email": { "type": "string", "format": "email", "nullable": true }
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "nullable": true
+                    }
                   }
                 }
               }
@@ -97,11 +105,7 @@
                     "$ref": "#/components/schemas/user/properties/lastname"
                   }
                 },
-                "required": [
-                  "email",
-                  "password",
-                  "username"
-                ]
+                "required": ["email", "password", "username"]
               }
             }
           }
@@ -138,10 +142,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "email",
-                  "password"
-                ]
+                "required": ["email", "password"]
               }
             }
           }
@@ -194,9 +195,7 @@
                     "format": "password"
                   }
                 },
-                "required": [
-                  "password"
-                ]
+                "required": ["password"]
               }
             }
           }
@@ -352,9 +351,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "code"
-                ]
+                "required": ["code"]
               }
             }
           }
@@ -389,15 +386,10 @@
                   },
                   "context": {
                     "type": "string",
-                    "enum": [
-                      "reset-password",
-                      "validate-email"
-                    ]
+                    "enum": ["reset-password", "validate-email"]
                   }
                 },
-                "required": [
-                  "email"
-                ]
+                "required": ["email"]
               }
             }
           }
@@ -543,7 +535,9 @@
       "get": {
         "summary": "List user's organizations",
         "tags": ["Organizations"],
-        "parameters": [{ "$ref": "#/components/parameters/headers_authorization" }],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" }
+        ],
         "responses": {
           "200": {
             "description": "List of organizations",
@@ -567,7 +561,9 @@
       "post": {
         "summary": "Create organization",
         "tags": ["Organizations"],
-        "parameters": [{ "$ref": "#/components/parameters/headers_authorization" }],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -651,7 +647,9 @@
                   "properties": {
                     "members": {
                       "type": "array",
-                      "items": { "$ref": "#/components/schemas/organization_member" }
+                      "items": {
+                        "$ref": "#/components/schemas/organization_member"
+                      }
                     }
                   }
                 }
@@ -676,7 +674,10 @@
                 "type": "object",
                 "properties": {
                   "user_id": { "type": "string", "format": "uuid" },
-                  "role": { "type": "string", "enum": ["owner", "admin", "member"] }
+                  "role": {
+                    "type": "string",
+                    "enum": ["owner", "admin", "member"]
+                  }
                 },
                 "required": ["user_id", "role"]
               }
@@ -759,7 +760,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "role": { "type": "string", "enum": ["owner", "admin", "member"] }
+                  "role": {
+                    "type": "string",
+                    "enum": ["owner", "admin", "member"]
+                  }
                 },
                 "required": ["role"]
               }
@@ -821,7 +825,9 @@
       "post": {
         "summary": "Create project",
         "tags": ["Projects"],
-        "parameters": [{ "$ref": "#/components/parameters/headers_authorization" }],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -830,7 +836,11 @@
                 "type": "object",
                 "properties": {
                   "organization_id": { "type": "string", "format": "uuid" },
-                  "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
                   "public": { "type": "boolean" }
                 },
                 "required": ["organization_id", "name", "public"]
@@ -968,7 +978,9 @@
       "post": {
         "summary": "Start gateway for organization",
         "tags": ["Gateway"],
-        "parameters": [{ "$ref": "#/components/parameters/headers_authorization" }],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1030,7 +1042,10 @@
                     "organization_id": { "type": "string", "format": "uuid" },
                     "organization_name": { "type": "string" },
                     "gateway_id": { "type": "string", "format": "uuid" },
-                    "organization_token": { "type": "string", "description": "JWT token for organization-bound operations" },
+                    "organization_token": {
+                      "type": "string",
+                      "description": "JWT token for organization-bound operations"
+                    },
                     "projects": {
                       "type": "array",
                       "items": { "type": "string", "format": "uuid" }
@@ -1042,9 +1057,15 @@
                         "properties": {
                           "user_id": { "type": "string", "format": "uuid" },
                           "username": { "type": "string" },
-                          "role": { "type": "string", "enum": ["owner", "admin", "member"] }
-                        }
-                      }
+                          "role": {
+                            "type": "string",
+                            "enum": ["owner", "admin", "member"],
+                            "description": "User's role in the organization (from Ganymede membership)"
+                          }
+                        },
+                        "required": ["user_id", "username", "role"]
+                      },
+                      "description": "Organization members with roles for Gateway RBAC initialization"
                     }
                   }
                 }
@@ -1059,7 +1080,9 @@
       "post": {
         "summary": "Gateway signals it's ready to be allocated",
         "tags": ["Gateway"],
-        "parameters": [{ "$ref": "#/components/parameters/headers_authorization_bearer" }],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization_bearer" }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1097,7 +1120,9 @@
       "post": {
         "summary": "Stop gateway (deallocate from organization)",
         "tags": ["Gateway"],
-        "parameters": [{ "$ref": "#/components/parameters/headers_authorization_bearer" }],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization_bearer" }
+        ],
         "responses": {
           "200": {
             "description": "Gateway stopped",
@@ -1121,7 +1146,9 @@
       "post": {
         "summary": "Push organization data snapshot from gateway",
         "tags": ["Gateway"],
-        "parameters": [{ "$ref": "#/components/parameters/headers_authorization_bearer" }],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization_bearer" }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1166,7 +1193,9 @@
       "post": {
         "summary": "Pull organization data snapshot to gateway",
         "tags": ["Gateway"],
-        "parameters": [{ "$ref": "#/components/parameters/headers_authorization_bearer" }],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization_bearer" }
+        ],
         "responses": {
           "200": {
             "description": "Data retrieved successfully",
@@ -1182,8 +1211,16 @@
                       "nullable": true,
                       "additionalProperties": true
                     },
-                    "timestamp": { "type": "string", "format": "date-time", "nullable": true },
-                    "stored_at": { "type": "string", "format": "date-time", "nullable": true }
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    },
+                    "stored_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    }
                   }
                 }
               }
@@ -1231,7 +1268,9 @@
         "summary": "Register DNS record (FQDN → IP)",
         "description": "Generic DNS management endpoint. Called by gateway to register any DNS record.",
         "tags": ["Gateway"],
-        "parameters": [{ "$ref": "#/components/parameters/headers_authorization_bearer" }],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization_bearer" }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1239,8 +1278,15 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "fqdn": { "type": "string", "description": "Fully qualified domain name" },
-                  "ip": { "type": "string", "format": "ipv4", "description": "IP address" }
+                  "fqdn": {
+                    "type": "string",
+                    "description": "Fully qualified domain name"
+                  },
+                  "ip": {
+                    "type": "string",
+                    "format": "ipv4",
+                    "description": "IP address"
+                  }
                 },
                 "required": ["fqdn", "ip"]
               }
@@ -1273,7 +1319,9 @@
         "summary": "Deregister DNS record",
         "description": "Generic DNS management endpoint. Called by gateway to remove a DNS record.",
         "tags": ["Gateway"],
-        "parameters": [{ "$ref": "#/components/parameters/headers_authorization_bearer" }],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization_bearer" }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1281,7 +1329,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "fqdn": { "type": "string", "description": "Fully qualified domain name" }
+                  "fqdn": {
+                    "type": "string",
+                    "description": "Fully qualified domain name"
+                  }
                 },
                 "required": ["fqdn"]
               }
@@ -1543,7 +1594,10 @@
                     "type": "string",
                     "description": "Refresh token (for refresh_token grant)"
                   },
-                  "client_id": { "type": "string", "example": "app-main-client-id" },
+                  "client_id": {
+                    "type": "string",
+                    "example": "app-main-client-id"
+                  },
                   "client_secret": { "type": "string", "example": "none" },
                   "redirect_uri": {
                     "type": "string",

@@ -17,6 +17,7 @@ import { HomePage } from './pages/home';
 import { ProjectRoot } from './pages/project/project-root';
 import { EditorPage } from './pages/project/editor/editor-page';
 import { OrganizationPermissionsPage } from './pages/organization/permissions-page';
+import { OrganizationDashboard } from './pages/organization/dashboard';
 import { MobileBlockOverlay } from './MobileBlockOverlay';
 
 //
@@ -42,6 +43,10 @@ export function App() {
                 <Route path="editor" element={<EditorPage />} />
               </Route>
 
+              <Route
+                path="/org/:organization_id"
+                element={<OrganizationDashboard />}
+              />
               <Route
                 path="/org/:organization_id/permissions"
                 element={<OrganizationPermissionsPage />}

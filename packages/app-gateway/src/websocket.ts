@@ -260,7 +260,7 @@ export function graftYjsWebsocket(
  * - /collab/{room_id}?token=...
  * - /project/{project_id}?token=...
  */
-function authenticateAndRoute(
+async function authenticateAndRoute(
   request: http.IncomingMessage,
   projectRooms: ProjectRoomsManager,
   callback: (
@@ -334,7 +334,35 @@ function authenticateAndRoute(
   const projectMatch = pathname.match(/^\/project\/([^/]+)$/);
   if (projectMatch) {
     project_id = projectMatch[1];
+
+    // Try to get existing room, or initialize lazily
     room_id = projectRooms.getRoomId(project_id) || null;
+
+    if (!room_id) {
+      // Room doesn't exist yet - trigger lazy initialization
+      try {
+        log(
+          EPriority.Info,
+          'WS_AUTH',
+          `Triggering lazy initialization for project ${project_id}`
+        );
+        room_id = await projectRooms.initializeProject(project_id);
+        log(
+          EPriority.Info,
+          'WS_AUTH',
+          `Project ${project_id} initialized with room ${room_id}`
+        );
+      } catch (error) {
+        const err = new Error('Failed to initialize project room');
+        log(EPriority.Error, 'WS_AUTH', 'Failed to initialize project room', {
+          error_type: 'WS_ROOM_INIT_FAILED',
+          project_id,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        callback(err, null, null);
+        return;
+      }
+    }
   }
 
   if (!room_id) {

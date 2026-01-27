@@ -104,13 +104,14 @@ export const setupCollabRoutes = (
         // Get servers for WebSocket grafting
         const { getServers } = await import('../servers');
         const servers = getServers();
-        
+
         // Initialize gateway (this will pull data from Ganymede)
         await initializeGatewayForOrganization(
           config.organization_id,
           config.gateway_id,
           config.organization_token,
-          servers  // Pass servers for WebSocket grafting
+          servers, // Pass servers for WebSocket grafting
+          config.members // Pass members for RBAC initialization
         );
 
         // Log project count (projects will initialize on demand)
