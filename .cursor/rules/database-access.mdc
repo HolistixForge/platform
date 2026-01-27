@@ -1,0 +1,269 @@
+# Ganymede Database Access Guide
+
+This guide explains how to access and manage the PostgreSQL database for any environment in the platform.
+
+## Overview
+
+Each environment (e.g., `apollo`, `production`, etc.) has its own PostgreSQL database with dedicated credentials stored in the environment's configuration file.
+
+**Key Points:**
+
+- PostgreSQL is installed **locally** (not in Docker)
+- Each environment has its own database and user
+- Credentials are stored in `/root/.local-dev/{env}/.env.ganymede`
+- Database name pattern: `ganymede_{env}`
+- User name pattern: `ganymede_app_{env}`
+
+## Locating Database Credentials
+
+### 1. Find the Environment Configuration
+
+Environment configurations are stored in:
+
+```
+/root/.local-dev/{env}/.env.ganymede
+```
+
+**Examples:**
+
+- Apollo: `/root/.local-dev/apollo/.env.ganymede`
+- Production: `/root/.local-dev/production/.env.ganymede`
+
+### 2. Extract Database Credentials
+
+Use `grep` to quickly find database credentials:
+
+```bash
+grep PG /root/.local-dev/{env}/.env.ganymede
+```
+
+**Output will show:**
+
+```bash
+PG_HOST=localhost
+PG_PORT=5432
+PG_USER=ganymede_app_{env}
+PG_PASSWORD={generated_password}
+PG_DATABASE=ganymede_{env}
+```
+
+## Connecting to the Database
+
+### Recommended Method (Using Environment Variables)
+
+This is the cleanest and most secure approach:
+
+```bash
+# Source the credentials (or extract them)
+PG_HOST=localhost
+PG_PORT=5432
+PG_USER=ganymede_app_{env}
+PG_PASSWORD={password_from_env_file}
+PG_DATABASE=ganymede_{env}
+
+# Connect to database
+PGPASSWORD=${PG_PASSWORD} psql -U ${PG_USER} -h ${PG_HOST} -d ${PG_DATABASE}
+```
+
+**Example for Apollo:**
+
+```bash
+PGPASSWORD=LC0DgqZIGJRRO4Nk3xoXFUInAdehRNeQ psql -U ganymede_app_apollo -h localhost -d ganymede_apollo
+```
+
+### Quick One-Liner for Queries
+
+For running a single SQL command without entering the interactive shell:
+
+```bash
+PGPASSWORD=${PG_PASSWORD} psql -U ${PG_USER} -h ${PG_HOST} -d ${PG_DATABASE} -c "SELECT * FROM users LIMIT 5;"
+```
+
+## Common Database Operations
+
+### 1. Clear Gateway Allocation Table
+
+**When to use:** After restarting your computer or when you need to force gateway reallocation.
+
+```bash
+PGPASSWORD=${PG_PASSWORD} psql -U ${PG_USER} -h ${PG_HOST} -d ${PG_DATABASE} -c "DELETE FROM organizations_gateways;"
+```
+
+**Verify it's cleared:**
+
+```bash
+PGPASSWORD=${PG_PASSWORD} psql -U ${PG_USER} -h ${PG_HOST} -d ${PG_DATABASE} -c "SELECT COUNT(*) as remaining_allocations FROM organizations_gateways;"
+```
+
+### 2. View Organizations
+
+```bash
+PGPASSWORD=${PG_PASSWORD} psql -U ${PG_USER} -h ${PG_HOST} -d ${PG_DATABASE} -c "SELECT organization_id, name, created_at FROM organizations;"
+```
+
+### 3. View Organization Members
+
+```bash
+PGPASSWORD=${PG_PASSWORD} psql -U ${PG_USER} -h ${PG_HOST} -d ${PG_DATABASE} -c "SELECT * FROM organizations_members WHERE organization_id = '{org_id}';"
+```
+
+### 4. View Projects
+
+```bash
+PGPASSWORD=${PG_PASSWORD} psql -U ${PG_USER} -h ${PG_HOST} -d ${PG_DATABASE} -c "SELECT project_id, name, organization_id, created_at FROM projects;"
+```
+
+### 5. View Users
+
+```bash
+PGPASSWORD=${PG_PASSWORD} psql -U ${PG_USER} -h ${PG_HOST} -d ${PG_DATABASE} -c "SELECT user_id, username, email, created_at FROM users;"
+```
+
+### 6. Check Gateway Allocations
+
+```bash
+PGPASSWORD=${PG_PASSWORD} psql -U ${PG_USER} -h ${PG_HOST} -d ${PG_DATABASE} -c "SELECT organization_id, gateway_id, allocated_at FROM organizations_gateways;"
+```
+
+### 7. View Organization Data Snapshots
+
+```bash
+PGPASSWORD=${PG_PASSWORD} psql -U ${PG_USER} -h ${PG_HOST} -d ${PG_DATABASE} -c "SELECT organization_id, timestamp, stored_at FROM organizations_data ORDER BY stored_at DESC LIMIT 10;"
+```
+
+## Interactive Database Shell
+
+To enter an interactive PostgreSQL shell for manual exploration:
+
+```bash
+PGPASSWORD=${PG_PASSWORD} psql -U ${PG_USER} -h ${PG_HOST} -d ${PG_DATABASE}
+```
+
+**Useful Commands in psql:**
+
+- `\dt` - List all tables
+- `\d table_name` - Describe table structure
+- `\q` - Quit psql
+- `\h` - Help with SQL commands
+- `\?` - Help with psql commands
+- `\x` - Toggle expanded display (easier to read wide tables)
+
+## Database Schema Overview
+
+see [schema](../../packages/app-ganymede/database/schema/02-schema.sql)
+
+## Common Troubleshooting Scenarios
+
+### Scenario 1: "Gateway Won't Allocate After Computer Restart"
+
+**Solution:** Clear the gateway allocation table (see "Clear Gateway Allocation Table" above)
+
+**Why this happens:** Gateway processes may have stopped, but the database still shows them as allocated. Clearing forces reallocation.
+
+## Security Best Practices
+
+### 1. Use Environment Variables in Scripts
+
+When writing scripts that access the database:
+
+```bash
+# ✅ Good - uses variables
+PGPASSWORD=${PG_PASSWORD} psql -U ${PG_USER} -h ${PG_HOST} -d ${PG_DATABASE}
+
+# ❌ Bad - hardcoded password visible in history
+PGPASSWORD=actual_password_here psql -U ganymede_app_apollo -h localhost -d ganymede_apollo
+```
+
+### 2. Limit Database User Permissions
+
+The `ganymede_app_{env}` user has limited privileges:
+
+- Read/Write access to application tables
+- No access to PostgreSQL system tables
+- No superuser privileges
+
+For administrative tasks, use the PostgreSQL superuser account.
+
+## Backup and Restore
+
+### Creating a Backup
+
+```bash
+PGPASSWORD=${PG_PASSWORD} pg_dump -U ${PG_USER} -h ${PG_HOST} -d ${PG_DATABASE} -F c -f backup_$(date +%Y%m%d_%H%M%S).dump
+```
+
+### Restoring from Backup
+
+```bash
+PGPASSWORD=${PG_PASSWORD} pg_restore -U ${PG_USER} -h ${PG_HOST} -d ${PG_DATABASE} -c backup_file.dump
+```
+
+## Database Maintenance
+
+### Check Database Size
+
+```bash
+PGPASSWORD=${PG_PASSWORD} psql -U ${PG_USER} -h ${PG_HOST} -d ${PG_DATABASE} -c "SELECT pg_size_pretty(pg_database_size('${PG_DATABASE}'));"
+```
+
+### Check Table Sizes
+
+```bash
+PGPASSWORD=${PG_PASSWORD} psql -U ${PG_USER} -h ${PG_HOST} -d ${PG_DATABASE} -c "SELECT
+    schemaname,
+    tablename,
+    pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size
+FROM pg_tables
+WHERE schemaname = 'public'
+ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;"
+```
+
+### Vacuum Database (Cleanup)
+
+```bash
+PGPASSWORD=${PG_PASSWORD} psql -U ${PG_USER} -h ${PG_HOST} -d ${PG_DATABASE} -c "VACUUM ANALYZE;"
+```
+
+## Quick Reference Template
+
+Copy and customize this template for your environment:
+
+```bash
+# Environment: {env}
+export PG_HOST=localhost
+export PG_PORT=5432
+export PG_USER=ganymede_app_{env}
+export PG_PASSWORD={password_from_env_file}
+export PG_DATABASE=ganymede_{env}
+
+# Connect to database
+PGPASSWORD=${PG_PASSWORD} psql -U ${PG_USER} -h ${PG_HOST} -d ${PG_DATABASE}
+
+# Run a query
+PGPASSWORD=${PG_PASSWORD} psql -U ${PG_USER} -h ${PG_HOST} -d ${PG_DATABASE} -c "SELECT version();"
+
+# Clear gateway allocations
+PGPASSWORD=${PG_PASSWORD} psql -U ${PG_USER} -h ${PG_HOST} -d ${PG_DATABASE} -c "DELETE FROM organizations_gateways;"
+```
+
+## Notes for Cursor Agents
+
+When a user requests database operations:
+
+1. **Always read the environment's `.env.ganymede` file first** to get credentials
+2. **Use the PGPASSWORD environment variable syntax** (cleaner and more secure)
+3. **Use placeholders in documentation** but actual values when executing commands
+4. **Verify operations** after destructive commands (DELETE, DROP, etc.)
+5. **Never log or display sensitive credentials** in responses unless directly showing command execution
+
+**Example workflow:**
+
+```
+User: "Clear the gateway allocation table for apollo"
+Agent:
+  1. Read /root/.local-dev/apollo/.env.ganymede
+  2. Extract PG_* variables
+  3. Run: PGPASSWORD=${password} psql -U ${user} -h localhost -d ${database} -c "DELETE FROM organizations_gateways;"
+  4. Verify: Run SELECT COUNT(*) to confirm it's cleared
+  5. Report result to user
+```
