@@ -1,4 +1,4 @@
-import { Router, Request, RequestHandler } from 'express';
+import { Router, RequestHandler } from 'express';
 import {
   authenticateJwtUser,
   authenticateJwtGateway,
@@ -152,8 +152,8 @@ export const setupGatewayRoutes = (
       try {
         // 1. Allocate gateway from pool (database)
         const result = await pg.query(
-          'CALL proc_organizations_start_gateway($1, $2, $3, $4, $5, $6, $7)',
-          [organization_id, null, null, null, null, null, null]
+          'CALL proc_organizations_start_gateway($1, $2, $3, $4, $5, $6)',
+          [organization_id, null, null, null, null, null]
         );
         const row = result.next()?.oneRow();
 
@@ -164,7 +164,6 @@ export const setupGatewayRoutes = (
         const container_name = row['container_name'] as string | null;
         const http_port = row['http_port'] as number;
         const gateway_nginx_upstream = row['gateway_nginx_upstream'] as string;
-        const tmp_handshake_token = row['tmp_handshake_token'];
 
         // Validate that nginx_upstream was returned from database
         if (!gateway_nginx_upstream) {
@@ -241,16 +240,14 @@ export const setupGatewayRoutes = (
           );
         }
 
-        // 5. Call gateway handshake
+        // 5. Trigger gateway initialization
         const handshakeUrl = `${gateway_url}/collab/start`;
         log(
           EPriority.Info,
           'GATEWAY_ALLOC',
-          `Calling gateway handshake: ${handshakeUrl}`
+          `Triggering gateway initialization: ${handshakeUrl}`
         );
 
-        // Server-to-server call: Include Origin header to pass CSRF validation
-        // The gateway's CSRF protection accepts requests from allowed origins
         const domain = process.env.DOMAIN || 'domain.local';
         const origin = `https://${domain}`;
 
@@ -260,13 +257,13 @@ export const setupGatewayRoutes = (
             'Content-Type': 'application/json',
             Origin: origin,
           },
-          body: JSON.stringify({ tmp_handshake_token }),
+          body: JSON.stringify({}),
         });
 
         if (!handshakeResponse.ok) {
           const errorText = await handshakeResponse.text();
           throw new Error(
-            `Gateway handshake failed: ${handshakeResponse.status} ${errorText}`
+            `Gateway initialization failed: ${handshakeResponse.status} ${errorText}`
           );
         }
 
@@ -314,25 +311,25 @@ export const setupGatewayRoutes = (
     })
   );
 
-  // POST /gateway/config - Gateway calls this with handshake token
-  // NOTE: Uses temporary handshake token, not gateway JWT (token generated here)
   router.post(
     '/gateway/config',
-    asyncHandler(async (req: Request, res) => {
-      const { tmp_handshake_token } = req.body;
+    authenticateJwtGateway,
+    asyncHandler(async (req: GatewayAuthRequest, res) => {
+      const gateway_id = req.gateway.id;
 
-      // Get org from handshake token
       const result = await pg.query(
-        'SELECT * FROM func_organizations_gateways_get($1)',
-        [tmp_handshake_token]
+        'SELECT * FROM func_organizations_get_allocation_by_gateway_id($1)',
+        [gateway_id]
       );
       const row = result.next()?.oneRow();
+
       if (!row) {
-        return res.status(403).json({ error: 'Invalid handshake token' });
+        return res.status(404).json({
+          error: 'No active allocation for this gateway',
+        });
       }
 
       const organization_id = row['organization_id'];
-      const gateway_id = row['gateway_id'];
 
       // Get organization details
       const orgResult = await pg.query(
@@ -375,7 +372,7 @@ export const setupGatewayRoutes = (
         members: members.map((m) => ({
           user_id: String(m['user_id']),
           username: String(m['username']),
-          role: String(m['role']), // 'owner', 'admin', or 'member'
+          role: String(m['role']),
         })),
       });
     })

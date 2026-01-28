@@ -14,7 +14,6 @@ import {
 } from '@holistix-forge/backend-engine';
 import { BackendEventProcessor } from '@holistix-forge/reducers';
 
-import { VPN } from './config/organization';
 import { setupCollabRoutes, setBackendEventProcessor } from './routes/collab';
 import { setupPermissionsRoutes } from './routes/permissions';
 import { setupMembersRoutes } from './routes/members';
@@ -26,8 +25,14 @@ import {
   initializeGatewayForOrganization,
   shutdownGateway,
 } from './initialization/gateway-init';
-import { loadOrganizationConfig } from './config/organization';
+import { fetchConfigFromGanymede } from './initialization/fetch-config';
 import { signalGatewayReady } from './initialization/signal-ready';
+import {
+  loadVpnConfig,
+  isVpnValidForOrg,
+  stopVpn,
+  startVpnAsync,
+} from './vpn/vpn-manager';
 import {
   globalLimiter,
   oauthLimiter,
@@ -202,14 +207,12 @@ let servers: (http.Server | https.Server)[] = [];
     bep = new BackendEventProcessor<never>();
     setBackendEventProcessor(bep);
 
-    if (!VPN) throw new Error('VPN config read failed');
-
     // Setup Express server
     const app = setupExpressApp();
     // Gateway always listens on port 8888 internally (Nginx proxies from external port)
     const bindings: TStart[] = [{ host: '127.0.0.1', port: 8888 }];
     servers = bindings.map((b) => startServer(app, b));
-    
+
     // Make servers available globally for WebSocket grafting
     setServers(servers);
 
@@ -226,32 +229,56 @@ let servers: (http.Server | https.Server)[] = [];
       });
     }
 
-    // Load organization configuration (for hot restart)
-    const orgConfig = loadOrganizationConfig();
+    const orgConfig = await fetchConfigFromGanymede();
 
     if (orgConfig) {
-      // NEW: Initialize gateway with organization config
       log(
         EPriority.Info,
         'GATEWAY',
-        `Initializing gateway for organization: ${orgConfig.organization_name}`
+        `Allocated to organization: ${orgConfig.organization_name}`
       );
+
+      const existingVpn = loadVpnConfig();
+
+      if (isVpnValidForOrg(existingVpn, orgConfig.organization_id)) {
+        log(EPriority.Info, 'VPN', '✅ VPN config valid, reusing existing VPN');
+      } else {
+        if (existingVpn) {
+          log(
+            EPriority.Warning,
+            'VPN',
+            `VPN org mismatch (old: ${existingVpn.organization_id}, new: ${orgConfig.organization_id})`
+          );
+          stopVpn();
+        }
+
+        log(EPriority.Info, 'VPN', 'Starting VPN in background...');
+        startVpnAsync(orgConfig.organization_id).catch((err) => {
+          log(
+            EPriority.Error,
+            'VPN',
+            `VPN startup failed: ${err.message} (container features unavailable)`
+          );
+        });
+      }
+
       await initializeGatewayForOrganization(
         orgConfig.organization_id,
         orgConfig.gateway_id,
-        orgConfig.gateway_token,
-        servers  // Pass servers for WebSocket initialization
+        orgConfig.organization_token,
+        servers,
+        orgConfig.members
       );
-      log(EPriority.Info, 'GATEWAY', 'Gateway ready and serving organization');
-    } else {
+
       log(
         EPriority.Info,
         'GATEWAY',
-        'Gateway idle, waiting for organization allocation...'
+        '✅ Gateway ready and serving organization'
       );
-      // Gateway is registered via app-ganymede-cmd CLI tool
-      // Then allocated to organizations via /gateway/start API
-      // Initialization happens via /collab/start
+    } else {
+      log(EPriority.Info, 'GATEWAY', 'No active allocation - gateway idle');
+
+      stopVpn();
     }
 
     // Setup graceful shutdown

@@ -7,7 +7,7 @@ import {
   TEventNewNode,
 } from '@holistix-forge/core-graph';
 import { TGraphNode } from '@holistix-forge/core-graph';
-import { error, UserException } from '@holistix-forge/log';
+import { error, UserException, log, EPriority } from '@holistix-forge/log';
 import { TJsonObject } from '@holistix-forge/simple-types';
 
 import { TWhiteboardSharedData } from '../index';
@@ -778,7 +778,6 @@ export class WhiteboardReducer extends ReducerWithCollab<
       let currentNodeId = nodeId;
 
       while (true) {
-        // eslint-disable-next-line no-loop-func
         const nodeView = gv.nodeViews.find((n) => n.id === currentNodeId);
         if (!nodeView?.parentId) break;
 
@@ -1193,8 +1192,20 @@ export class WhiteboardReducer extends ReducerWithCollab<
     const collab = this.getCollab(requestData);
     const graphViews = collab.sharedData['whiteboard:graphViews'];
 
+    const currentSize = graphViews.copy().size;
+    log(
+      EPriority.Info,
+      'WHITEBOARD_INIT',
+      `project:init called for project ${event.project_id}, current graphViews size: ${currentSize}`
+    );
+
     // Check if already initialized (idempotent)
-    if (graphViews.size > 0) {
+    if (currentSize > 0) {
+      log(
+        EPriority.Info,
+        'WHITEBOARD_INIT',
+        `Skipping initialization - graphViews already has ${currentSize} view(s)`
+      );
       return;
     }
 
@@ -1203,5 +1214,10 @@ export class WhiteboardReducer extends ReducerWithCollab<
     const newView: TGraphView = defaultGraphView();
 
     graphViews.set(viewId, newView);
+    log(
+      EPriority.Info,
+      'WHITEBOARD_INIT',
+      `✅ Created default graphView '${viewId}' for project ${event.project_id}`
+    );
   }
 }

@@ -1,7 +1,4 @@
-import {
-  RequestData,
-  TReducersBackendExports,
-} from '@holistix-forge/reducers';
+import { RequestData, TReducersBackendExports } from '@holistix-forge/reducers';
 import { ReducerWithCollab } from '@holistix-forge/collab';
 import { log, EPriority } from '@holistix-forge/log';
 
@@ -46,15 +43,12 @@ export class TabsReducer extends ReducerWithCollab<
     super(depsExports.collab.registry, 'tabs');
     this.depsExports = depsExports;
   }
-  
+
   // Used by base class and event processing
   // @ts-expect-error - TypeScript doesn't recognize usage in base class
   private depsExports: TRequired;
 
-  reduce(
-    event: TTabsEvents,
-    requestData: RequestData
-  ): Promise<void> {
+  reduce(event: TTabsEvents, requestData: RequestData): Promise<void> {
     //
     switch (event.type) {
       case 'project:init':
@@ -211,12 +205,19 @@ export class TabsReducer extends ReducerWithCollab<
     const collab = this.getCollab(requestData);
     const tabsData = collab.sharedData['tabs:tabs'].get('unique');
 
+    const childrenCount = tabsData?.tree.children.length ?? 0;
+    log(
+      EPriority.Info,
+      'TABS_INIT',
+      `project:init called for project ${event.project_id}, current tabs children: ${childrenCount}`
+    );
+
     // Check if already initialized (idempotent)
     if (tabsData && tabsData.tree.children.length > 0) {
       log(
         EPriority.Info,
-        'TABS',
-        `Project ${event.project_id} already initialized`
+        'TABS_INIT',
+        `Skipping initialization - tabs already has ${tabsData.tree.children.length} child(ren)`
       );
       return;
     }
@@ -243,8 +244,8 @@ export class TabsReducer extends ReducerWithCollab<
     collab.sharedData['tabs:tabs'].set('unique', defaultTab);
     log(
       EPriority.Info,
-      'TABS',
-      `Created default tab for project ${event.project_id}`
+      'TABS_INIT',
+      `✅ Created default tab 'Default Dashboard' for project ${event.project_id}`
     );
   }
 }

@@ -197,11 +197,9 @@ CREATE TABLE IF NOT EXISTS public.organizations_gateways
 (
     organization_id uuid NOT NULL,
     gateway_id uuid NOT NULL,
-    tmp_handshake_token uuid NOT NULL,
     started_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     ended_at timestamp without time zone,
     PRIMARY KEY (organization_id, gateway_id, started_at),
-    CONSTRAINT unique_handshake_token UNIQUE (tmp_handshake_token),
     CONSTRAINT fk_organizations_gateways_organization_id FOREIGN KEY (organization_id)
         REFERENCES public.organizations (organization_id) MATCH SIMPLE
         ON UPDATE NO ACTION

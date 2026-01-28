@@ -2,11 +2,17 @@ import { Router, Request, RequestHandler } from 'express';
 import { BackendEventProcessor } from '@holistix-forge/reducers';
 import { EPriority, log, NotFoundException } from '@holistix-forge/log';
 import { asyncHandler } from '../middleware/route-handler';
-import { VPN } from '../config/organization';
 import { initializeGatewayForOrganization } from '../initialization/gateway-init';
+import { fetchConfigFromGanymede } from '../initialization/fetch-config';
 import { authenticateJwt, requireScope } from '../middleware/jwt-auth';
 import { requireProjectAccess } from '../middleware/permissions';
 import { getGatewayInstances } from '../initialization/gateway-instances';
+import {
+  loadVpnConfig,
+  isVpnValidForOrg,
+  stopVpn,
+  startVpnAsync,
+} from '../vpn/vpn-manager';
 
 let bep: BackendEventProcessor<any> | null = null;
 
@@ -66,69 +72,67 @@ export const setupCollabRoutes = (
     })
   );
 
-  // POST /collab/start - Initialize gateway with handshake
   router.post(
     '/collab/start',
     asyncHandler(async (req: Request, res) => {
-      const { tmp_handshake_token } = req.body;
+      log(EPriority.Info, 'COLLAB_START', 'Initialization trigger received');
 
-      log(EPriority.Info, 'GATEWAY', 'Starting collab with handshake token');
+      const config = await fetchConfigFromGanymede();
 
-      // Call ganymede to get config using centralized client
-      const { createGanymedeClient } = await import('../lib/ganymede-client');
-      const ganymedeClient = createGanymedeClient();
-
-      const config = await ganymedeClient.request<{
-        organization_id: string;
-        organization_token: string;
-        gateway_id: string;
-        projects: string[];
-        members: Array<{ user_id: string; username: string; role: string }>;
-      }>({
-        method: 'POST',
-        url: '/gateway/config',
-        headers: { 'Content-Type': 'application/json' },
-        jsonBody: { tmp_handshake_token },
-      });
-
-      log(EPriority.Info, 'GATEWAY', 'Received config from Ganymede', {
-        config,
-      });
-
-      // Initialize gateway with organization context
-      if (
-        config.organization_token &&
-        config.organization_id &&
-        config.gateway_id
-      ) {
-        // Get servers for WebSocket grafting
-        const { getServers } = await import('../servers');
-        const servers = getServers();
-
-        // Initialize gateway (this will pull data from Ganymede)
-        await initializeGatewayForOrganization(
-          config.organization_id,
-          config.gateway_id,
-          config.organization_token,
-          servers, // Pass servers for WebSocket grafting
-          config.members // Pass members for RBAC initialization
-        );
-
-        // Log project count (projects will initialize on demand)
-        if (config.projects && config.projects.length > 0) {
-          log(
-            EPriority.Info,
-            'GATEWAY',
-            `Gateway has ${config.projects.length} projects (will initialize on demand)`
-          );
-        } else {
-          log(
-            EPriority.Info,
-            'GATEWAY',
-            'No projects registered for this organization'
-          );
-        }
+      if (!config) {
+        return res.status(404).json({
+          error: 'Gateway not allocated to any organization',
+        });
       }
+
+      // Initialize gateway first (fast)
+      const { getServers } = await import('../servers');
+      const servers = getServers();
+
+      await initializeGatewayForOrganization(
+        config.organization_id,
+        config.gateway_id,
+        config.organization_token,
+        servers,
+        config.members
+      );
+
+      // Start VPN asynchronously AFTER gateway init (VPN not critical for frontend)
+      const existingVpn = loadVpnConfig();
+
+      if (!isVpnValidForOrg(existingVpn, config.organization_id)) {
+        if (existingVpn) {
+          log(EPriority.Info, 'VPN', `Stopping old VPN (org mismatch)`);
+          stopVpn();
+        }
+
+        log(
+          EPriority.Info,
+          'VPN',
+          `Starting VPN asynchronously for org ${config.organization_id}...`
+        );
+        startVpnAsync(config.organization_id).catch((err) => {
+          log(EPriority.Error, 'VPN', `VPN startup failed: ${err.message}`);
+        });
+      } else {
+        log(EPriority.Info, 'VPN', '✅ VPN already valid for organization');
+      }
+
+      if (config.projects && config.projects.length > 0) {
+        log(
+          EPriority.Info,
+          'COLLAB_START',
+          `Gateway has ${config.projects.length} projects (will initialize on demand)`
+        );
+      } else {
+        log(
+          EPriority.Info,
+          'COLLAB_START',
+          'No projects registered for this organization'
+        );
+      }
+
+      log(EPriority.Info, 'COLLAB_START', '✅ Gateway initialized');
 
       return res.json({});
     })
@@ -204,19 +208,21 @@ export const setupCollabRoutes = (
   // Requires JWT token with 'org:{org_id}:connect-vpn' scope (organization-specific)
   router.get(
     '/collab/vpn-config',
-    authenticateJwt, // Extract and attach JWT
-    requireScope('org:{org_id}:connect-vpn'), // Verify token has org-specific scope
+    authenticateJwt,
+    requireScope('org:{org_id}:connect-vpn'),
     asyncHandler(async (req: Request, res) => {
-      if (!VPN) {
-        return res.status(500).json({ error: 'VPN config not available' });
+      const vpn = loadVpnConfig();
+
+      if (!vpn) {
+        return res.status(503).json({ error: 'VPN not available' });
       }
 
       const vpnConfig = {
-        ...VPN,
+        ...vpn,
         config: `client
 dev tun
 proto udp
-remote GATEWAY_FQDN ${VPN.port}
+remote GATEWAY_FQDN ${vpn.port}
 resolv-retry infinite
 nobind
 cipher AES-256-GCM

@@ -15,10 +15,11 @@ Holistix Forge uses a **pool-based multi-gateway architecture** where gateway co
 
 - **Production Parity** - Dev environment mirrors production (same containers, same scripts, only SSL differs)
 - **Stateless Gateways** - All data stored centrally in Ganymede (gateways are disposable)
-- **Dynamic Allocation** - Gateways allocated from pool when needed, shutdown after 30min if all projects idle
+- **Dynamic Allocation** - Gateways allocated from pool when needed, auto-shutdown after 30min idle
 - **Per-Project Cleanup** - Idle projects cleaned up after 5min (gateway continues serving active projects)
 - **Automated Infrastructure** - DNS and Nginx managed programmatically (no manual config)
 - **Hot-Reload** - Code changes reload all gateways without rebuild
+- **Organization-Specific VPN** - Each organization gets its own VPN instance with unique certificates
 
 **Architectural Decisions:**
 
@@ -154,24 +155,32 @@ Frontend → POST /gateway/start → Ganymede:
   2. DNS already resolved (wildcard DNS handles org-{uuid}.domain.local)
   3. Create Nginx config: route org-{uuid} to gateway_nginx_upstream address
   4. Reload Nginx (using nginx -s reload for reliability)
-  5. Call gateway handshake: POST /collab/start (with Origin header for CSRF)
+  5. Call gateway trigger: POST /collab/start (trigger config fetch)
 ```
 
-### 3. Handshake
+### 3. Initialization
 
 ```
-Gateway → POST /gateway/config → Ganymede:
-  1. Exchange temp token for TJwtOrganization
-  2. Receive org config (organization_id, gateway_id, organization_token)
+Gateway startup → fetchConfigFromGanymede() (using TJwtGateway):
+  1. Query allocation by gateway_id
+  2. If allocated:
+     a. Receive org config (organization_id, gateway_id, organization_token, projects, members)
+     b. Check VPN validity for organization
+     c. Start/regenerate VPN with organization_id
+     d. Initialize gateway for organization
+  3. If not allocated:
+     a. Stop any existing VPN
+     b. Stay idle, wait for allocation
 
-Gateway → initializeGateway():
-  3. Create GatewayState instance
-  4. Set organization context → Automatically pulls data from Ganymede
-  5. Create manager instances (PermissionManager, OAuthManager, etc.)
-  6. Register providers → Providers automatically load their data from pulled snapshot
-  7. Store instances in GatewayInstances registry
-  8. Start autosave (pushes to Ganymede every 5min)
-  9. Start serving organization
+Gateway → initializeGatewayForOrganization():
+  1. Create GatewayState instance
+  2. Set organization context → Automatically pulls data from Ganymede
+  3. Create manager instances (PermissionManager, OAuthManager, etc.)
+  4. Initialize default RBAC roles and assign to members
+  5. Register providers → Providers automatically load their data
+  6. Store instances in GatewayInstances registry
+  7. Start autosave (pushes to Ganymede every 5min)
+  8. Start serving organization
 ```
 
 ### 4. Serving
@@ -179,7 +188,7 @@ Gateway → initializeGateway():
 - WebSocket connections from users
 - Real-time collaboration (YJS CRDT)
 - Container management
-- OpenVPN for user containers
+- Organization-specific OpenVPN for user containers
 - **Periodic autosave** (every 5min) → pushes data to Ganymede
 
 ### 5. Resource Management (Idle Handling)
@@ -199,26 +208,279 @@ GatewayPeriodicTimer (every 5s):
 
 **Benefit**: Efficient memory usage, inactive projects unloaded while gateway serves active ones
 
-#### Gateway Shutdown (After 30min if ALL Idle)
+#### Gateway Auto-Shutdown (After 30min if ALL Idle)
 
 ```
 GatewayShutdownTimer (every 30s):
   1. Check if ANY projects exist
   2. If NO projects for 30 minutes:
      a. Push final data: POST /gateway/data/push
-     b. Call shutdownGateway()
-     c. Process exits cleanly (exit code 0)
-  3. Docker/k8s restarts container → returns to pool
-
-Ganymede (on gateway crash/exit):
-  4. Detect gateway no longer serving organization
-  5. Remove DNS records
-  6. Remove Nginx config
-  7. Mark gateway as ready in PostgreSQL
-  8. Gateway available for next allocation
+     b. Notify Ganymede: POST /gateway/stop (deallocate, mark as available)
+     c. Stop VPN (organization-specific VPN stopped)
+     d. Call shutdownGateway()
+     e. Process exits cleanly (exit code 0)
+  3. Shell auto-restart loop detects exit
+  4. New Node.js process starts
+  5. Fetches config from Ganymede (finds no allocation)
+  6. Gateway stays idle (no VPN), waits for next allocation
 ```
 
 **Benefit**: Gateway resources freed when completely idle, auto-returns to pool
+
+**Auto-Restart Mechanism**: Gateway Docker container never stops, but the Node.js process inside restarts automatically via `start-app-gateway.sh` infinite loop.
+
+---
+
+## VPN Management (Organization-Specific)
+
+### Overview
+
+VPN is **organization-specific** and managed dynamically by TypeScript based on gateway allocation:
+
+- ✅ VPN starts when gateway is allocated to an organization
+- ✅ VPN includes `organization_id` in configuration
+- ✅ VPN regenerates when organization changes
+- ✅ VPN stops when gateway is idle (security)
+- ✅ Different certificates per organization (isolation)
+
+### VPN Lifecycle
+
+```
+┌─────────────────────────────────────────────────────┐
+│ Gateway Idle (No VPN)                               │
+│ • No organization allocated                         │
+│ • No VPN running                                    │
+│ • Waiting for allocation                            │
+└──────────────────┬──────────────────────────────────┘
+                   │
+        Allocated to Organization A
+                   │
+                   ▼
+┌─────────────────────────────────────────────────────┐
+│ VPN Started for Org A                               │
+│ • startVpnAsync(organization_id)                    │
+│ • Unique certificates generated                     │
+│ • Config: /tmp/vpn-config.json                      │
+└──────────────────┬──────────────────────────────────┘
+                   │
+        Org change OR 30min idle
+                   │
+                   ▼
+┌─────────────────────────────────────────────────────┐
+│ VPN Stopped                                         │
+│ • stopVpn() cleans up all resources                │
+│ • Removes config and temp directories               │
+└──────────────────┬──────────────────────────────────┘
+                   │
+                   ▼
+            Idle OR New Organization
+```
+
+### VPN Configuration
+
+**File**: `/tmp/vpn-config.json`
+
+```json
+{
+  "organization_id": "9b886a5e-2541-45c6-b92e-c5152dc8ceec",
+  "status": "ok",
+  "pid": 12345,
+  "temp_dir": "/tmp/ovpn-a1b2c3d4e5",
+  "port": 40001,
+  "hostname": "gw-pool-apollo-4",
+  "certificates": {
+    "clients.crt": "base64...",
+    "clients.key": "base64...",
+    "ca.crt": "base64...",
+    "ta.key": "base64..."
+  }
+}
+```
+
+### VPN Manager
+
+**File**: `packages/app-gateway/src/vpn/vpn-manager.ts`
+
+**Functions:**
+
+- `loadVpnConfig()` - Read VPN config from file
+- `isVpnValidForOrg(vpn, org_id)` - Check if VPN is valid for organization
+- `startVpnAsync(org_id)` - Start VPN with organization ID
+- `stopVpn()` - Stop VPN and cleanup (calls shell script)
+
+**Environment Requirements:**
+
+- `GATEWAY_VPN_PORT` - From container environment (set by `docker run -e`)
+- `ORGANIZATION_ID` - Passed explicitly by TypeScript
+
+**Shell Scripts:**
+
+- `docker-images/backend-images/gateway/app/lib/start-vpn.sh` - Setup OpenVPN server
+- `docker-images/backend-images/gateway/app/lib/stop-vpn.sh` - Stop OpenVPN and cleanup
+
+---
+
+## Shell Script Integration
+
+Gateway uses a **hybrid approach** where TypeScript orchestrates high-level logic while shell scripts handle low-level infrastructure.
+
+### Script Patterns
+
+#### Pattern 1: `runScript()` for JSON-Returning Scripts
+
+**When to use:**
+
+- Scripts in `bin/` directory
+- Return JSON to stdout: `{"status": "ok"}` or `{"status": "error", "error": "..."}`
+- Called via `main.sh` wrapper
+
+**Example:**
+
+```typescript
+runScript('update-nginx-locations', inputString);
+// Calls: /opt/gateway/app/main.sh -r bin/update-nginx-locations.sh
+```
+
+#### Pattern 2: Direct `spawnSync()` for Infrastructure Scripts
+
+**When to use:**
+
+- Scripts in `lib/` directory
+- Write output to files (not stdout)
+- Start daemon processes
+- Need custom environment variables
+
+**Example:**
+
+```typescript
+// VPN Scripts
+spawnSync('/opt/gateway/app/lib/start-vpn.sh', [], {
+  env: { ...process.env, ORGANIZATION_ID: organization_id },
+  stdio: 'pipe',
+  timeout: 60000,
+});
+```
+
+### Script Responsibilities
+
+| Script                      | Pattern              | Purpose                      |
+| --------------------------- | -------------------- | ---------------------------- |
+| `update-nginx-locations.sh` | `runScript()`        | Update user container routes |
+| `reset-gateway.sh`          | `runScript()`        | Full infrastructure reset    |
+| `start-vpn.sh`              | Direct `spawnSync()` | Start org-specific VPN       |
+| `stop-vpn.sh`               | Direct `spawnSync()` | Stop VPN and cleanup         |
+| `start-app-gateway.sh`      | Auto-restart loop    | Keep Node.js running         |
+
+---
+
+## Auto-Shutdown and Restart Flow
+
+### Complete Flow
+
+```
+1. TypeScript: 30min idle detected
+   └─ GatewayShutdownTimer triggers shutdownGateway()
+
+2. TypeScript: Graceful shutdown
+   └─ Stop timers, save state to Ganymede
+   └─ POST /gateway/stop (notify Ganymede)
+   └─ Stop VPN (stopVpn())
+   └─ process.exit(0)
+
+3. Shell: Auto-restart loop
+   └─ start-app-gateway.sh detects exit
+   └─ Sleep 3 seconds
+   └─ Restart: node main.js
+
+4. TypeScript: Fetch config on startup
+   └─ fetchConfigFromGanymede() using TJwtGateway
+
+5. Ganymede: Check allocation
+   └─ Returns config if allocated
+   └─ Returns 404 if not allocated
+
+6. TypeScript: Initialize or stay idle
+   └─ If allocated: Start VPN, initialize gateway
+   └─ If idle: Stop VPN, wait for allocation
+```
+
+### Auto-Restart Script
+
+**File**: `docker-images/backend-images/gateway/app/lib/start-app-gateway.sh`
+
+```bash
+while true; do
+    # Start Node.js (blocks until exit)
+    node main.js > /tmp/gateway.log 2>&1
+    EXIT_CODE=$?
+
+    # Check for marker files
+    if [ -f /tmp/gateway-reloading ]; then
+        # Graceful reload
+        continue
+    fi
+
+    if [ -f /tmp/gateway-resetting ]; then
+        # Full reset
+        exit 0
+    fi
+
+    # No markers → auto-shutdown or crash
+    echo "⚠️  app-gateway exited with code: $EXIT_CODE"
+    echo "   Restarting in 3 seconds..."
+    sleep 3
+done
+```
+
+**Key Points:**
+
+- Container never stops, only Node.js process restarts
+- Infinite loop ensures gateway always runs
+- Marker files signal intentional operations
+- 3-second delay prevents rapid restart loops
+
+---
+
+## Deployment Workflow
+
+### When Gateway Code Changes
+
+**Correct workflow when updating gateway code and testing:**
+
+```bash
+# 1. Build all packages (includes gateway)
+npx nx run-many -t build
+
+# 2. Package gateway build
+./scripts/local-dev/pack-gateway-build.sh <env-name>
+
+# 3. Restart environment (triggers gateway refetch and restart)
+./scripts/local-dev/envctl.sh restart <env-name>
+```
+
+**What happens:**
+
+1. `envctl.sh restart` → Ganymede container restarts
+2. Ganymede serves new gateway build via HTTP
+3. Each gateway container fetches new build
+4. Gateway Node.js processes restart with new code
+5. All gateways re-initialize and resume serving
+
+**Important:**
+
+- ❌ `npx nx build app-gateway` alone is NOT enough
+- ✅ Must package build and trigger environment restart
+- ✅ No Docker image rebuild needed for code changes
+
+### Manual Gateway Reload
+
+```bash
+# Reload all gateways in environment
+./scripts/local-dev/envctl.sh restart <env-name> gateway
+
+# Or reload single gateway directly
+docker exec gw-pool-<env>-<N> /opt/gateway/app/lib/reload-gateway.sh
+```
 
 ---
 
@@ -228,61 +490,28 @@ Ganymede (on gateway crash/exit):
 
 - **Generated:** During pool creation (`app-ganymede-cmd add-gateway`)
 - **Payload:** `{ type: 'gateway_token', gateway_id, scope }`
-- **Used for:** `/gateway/ready` (gateway signals ready after startup)
+- **Used for:** `/gateway/config` (fetch allocation info), `/gateway/ready` (signal ready)
 - **Lifetime:** 1 year
 
 ### TJwtOrganization (Allocation Token)
 
-- **Generated:** During handshake (`/gateway/config`)
+- **Generated:** During config fetch (`/gateway/config`)
 - **Payload:** `{ type: 'organization_token', organization_id, gateway_id, scope }`
 - **Used for:** `/gateway/data/push`, `/gateway/data/pull`, `/gateway/stop`
 - **Lifetime:** 1 year (while allocation exists)
 
 **Why separate?** Gateway can be ready without being allocated. Different scopes for different operations.
 
-### Gateway Authentication and permissions check
+### Gateway Authentication and Permissions
 
-Permissions are Managed by PermissionManager, that maintains a set of string defined fined grain permission for all users.
-
-#### Permission Registry System
-
-The **PermissionRegistry** allows modules to register their permissions during module loading. Permissions are compiled and can be retrieved via gateway API endpoints.
-
-**Permission Format:**
-
-- Format: `{module}:[{resource-path}]:{action}`
-- Resource path supports hierarchical resources: `{type}:{id|*}(/{type}:{id|*})*`
-- Examples:
-  - `user-containers:[user-container:*]:create`
-  - `user-containers:[user-container:{uuid}/service:*]:create`
-  - `gateway:[permissions:*]:read`
-
-**How It Works:**
-
-1. During gateway initialization, a `PermissionRegistry` instance is created
-2. When modules are loaded, they can access the registry via `depsExports.gateway.permissionRegistry`
-3. Modules register their permissions in their `load()` function
-4. The registry validates permission format and stores definitions
-5. Gateway API endpoints (`GET /permissions`, etc.) retrieve compiled permissions from the registry
-
-**Example Module Registration:**
-
-```typescript
-// In user-containers module load() function
-const permissionRegistry = depsExports.gateway.permissionRegistry;
-permissionRegistry.register('user-containers:[user-container:*]:create', {
-  resourcePath: 'user-container:*',
-  action: 'create',
-  description: 'Create user containers',
-});
-```
+Permissions are managed by PermissionManager, maintaining fine-grain permissions for all users with RBAC (Role-Based Access Control).
 
 The gateway also uses **scope-based authorization** with template variable substitution:
 
-- **Generic JWT handling:** `authenticateJwt` middleware accepts any JWT type (`TJwtUser`, `TJwtOrganization`, `TJwtGateway`)
-- **Scope-based authorization:** `requireScope()` middleware checks for required scopes in JWT tokens
-- **Template variables:** Scopes can include variables like `{org_id}`, `${params.key}`, `${body.key}`, `${query.key}`, `${jwt.key}`
-- **Organization-scoped endpoints:** VPN config endpoint requires `org:{org_id}:connect-vpn` scope (resolved at runtime)
+- **Generic JWT handling:** `authenticateJwt` middleware accepts any JWT type
+- **Scope-based authorization:** `requireScope()` middleware checks for required scopes
+- **Template variables:** Scopes can include `{org_id}`, `${params.key}`, `${body.key}`, `${query.key}`, `${jwt.key}`
+- **Organization-scoped endpoints:** VPN config requires `org:{org_id}:connect-vpn` scope (resolved at runtime)
 
 ---
 
@@ -299,85 +528,206 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
 - ✅ **Automatic Sync** - Data pulled on initialization, pushed periodically
 - ✅ **Instance-Based** - No singletons, all instances created per organization
 
-### Architecture
-
-**Key Components:**
-
-1. **GatewayState** - Registry and coordinator for all persistence providers, handles Ganymede sync
-2. **IPersistenceProvider** - Interface implemented by all managers that need persistence
-3. **GatewayInstances** - Registry storing all gateway instances for route access
-4. **Managers** - PermissionManager, OAuthManager, TokenManager, ProjectRoomsManager - each manages its own data
-
 ### Initialization Flow
 
-**Two initialization paths:**
+**Initialization:**
 
-1. **Hot Restart** - Gateway app restarted, loads organization config from `/config/organization.json`
-2. **Normal Allocation** - Gateway allocated via `/collab/start` endpoint
+Gateway always fetches config from Ganymede at startup using TJwtGateway. This happens:
+
+1. **Automatically** - On gateway startup (hot restart)
+2. **On trigger** - When Ganymede calls `/collab/start` after allocation
 
 **Initialization Steps:**
 
 1. Create `GatewayState` instance and initialize with org/gateway IDs
 2. Set organization context → Automatically pulls data from Ganymede
 3. Create manager instances (RoleManager, UserRoleManager, PermissionManager, OAuthManager, etc.)
-4. Initialize default RBAC roles (org:owner, org:admin) and assign to organization members based on Ganymede membership
-5. Register providers with `GatewayState` → Providers automatically load their data from pulled snapshot
+4. Initialize default RBAC roles (org:owner, org:admin) and assign to organization members
+5. Register providers with `GatewayState` → Providers automatically load their data
 6. Load backend modules (collab, reducers, gateway, user-containers, etc.)
-7. Store instances in `GatewayInstances` registry for route access
+7. Store instances in `GatewayInstances` registry
 8. Start autosave → `GatewayState` pushes data to Ganymede every 5 minutes
-9. Initialize WebSocket handler for 0 projects (projects initialized lazily on first access)
+9. Start VPN with organization_id (if allocated)
+10. Initialize WebSocket handler (projects initialized lazily on first access)
 
 **Note:** Projects are **not** initialized at startup. Project rooms are created on-demand when:
 
 - A WebSocket connection attempts to access the project
 - An API endpoint requires the project data
-  This improves gateway startup performance and reduces memory usage for inactive projects.
+
+This improves gateway startup performance and reduces memory usage for inactive projects.
 
 ### Data Flow
 
-**Pull Flow (Initialization):**
+#### Pull Flow (Initialization)
 
-- `GatewayState` pulls data snapshot from Ganymede
-- Data cached internally
-- When providers register, they automatically receive and load their data slice
+When a gateway is allocated to an organization:
 
-**Push Flow (Autosave/Shutdown):**
+1. `GatewayState.setOrganizationContext(org_id, gateway_id, token)` is called
+2. `GatewayState` calls `pullDataFromGanymede()` internally
+3. Data snapshot fetched from Ganymede via `POST /gateway/data/pull`
+4. Data cached internally in `GatewayState`
+5. When providers register via `register(id, provider)`, they automatically receive their data slice
+6. Each provider's `restoreData(data)` method is called with its slice
 
-- `GatewayState` collects data from all registered providers
-- Aggregates into single object
-- Pushes to Ganymede via `/gateway/data/push`
+**Result**: All managers have their persisted data loaded from Ganymede snapshot.
 
-**Automatic Triggers:**
+#### Push Flow (Autosave/Shutdown)
 
-- Periodic autosave every 5 minutes
-- Shutdown handlers (SIGTERM/SIGINT) push final data
+Periodically (every 5 minutes) and on shutdown:
 
-### Responsibilities
+1. `GatewayState` calls `collectData()` on all registered providers
+2. Each provider's `collectData()` method returns its current state
+3. `GatewayState` aggregates all data into a single object
+4. Data pushed to Ganymede via `POST /gateway/data/push`
+5. Ganymede saves snapshot to `/root/.local-dev/{env}/org-data/{org-uuid}.json`
 
-**GatewayState:**
+**Result**: All manager state synchronized to Ganymede (gateway crash-safe).
 
-- Registry for persistence providers
-- Data collection from providers
-- Data restoration to providers
-- Ganymede sync (push/pull)
-- Periodic autosave
-- Does NOT store data itself
+#### Automatic Triggers
 
-**Managers:**
+**Periodic Autosave** (every 5 minutes):
 
-- Store their own data internally
-- Implement `IPersistenceProvider` interface
-- Initialize from serialized data
-- Serialize their data for persistence
+- `GatewayState.startAutosave()` called during initialization
+- Interval timer pushes data to Ganymede
+- Non-blocking (continues serving requests)
+- Logs errors but doesn't crash
 
-**Manager Responsibilities:**
+**Shutdown Push** (on SIGTERM/SIGINT/exit):
 
-- **PermissionManager** - Implements RBAC permission checking via role resolution. Works with RoleManager and UserRoleManager to check if users have required permissions (supports exact match and wildcard matching like `project:*:admin`). Uses GatewayState for persistence.
-- **RoleManager** - Manages role definitions (CRUD operations, system roles like org:owner/org:admin, custom roles). Handles role persistence and validation.
-- **UserRoleManager** - Manages user-role assignments at organization and project levels. Tracks which users have which roles and provides role lookup by user.
-- **OAuthManager** - Manages OAuth clients, authorization codes, and tokens for container applications, implements OAuth2Server model interface
-- **TokenManager** - Generates JWT tokens (`generateJWTToken()`), used for container authentication tokens
-- **ProjectRoomsManager** - Manages multiple YJS rooms (one per project), handles per-project persistence and WebSocket routing. Projects initialized lazily on first access.
+- `GatewayState.shutdown()` called
+- Stops autosave timer
+- Pushes final data snapshot
+- Ensures no data loss on graceful shutdown
+
+### Core Architecture Components
+
+#### GatewayState
+
+**Purpose**: Central registry and coordinator for all persistence providers, handles Ganymede synchronization.
+
+**Key Methods**:
+
+- `register(id, provider)` - Register provider and auto-load its data
+- `collectData()` - Aggregate data from all providers
+- `restoreData(data)` - Restore data to all registered providers
+- `pullDataFromGanymede()` - Pull org data from Ganymede
+- `pushDataToGanymede()` - Push org data to Ganymede
+- `setOrganizationContext(org_id, gateway_id, token)` - Set context and pull data
+- `startAutosave()` - Start periodic push (every 5min)
+- `shutdown()` - Stop autosave and push final data
+
+#### IPersistenceProvider Interface
+
+**Purpose**: Interface implemented by all managers that need persistence.
+
+**Required Methods**:
+
+```typescript
+interface IPersistenceProvider {
+  collectData(): any; // Return data to be saved
+  restoreData(data: any): void; // Load data from snapshot
+}
+```
+
+**Providers** register with `GatewayState`, which automatically:
+
+- Loads their data on initialization
+- Collects their data during autosave/shutdown
+- Synchronizes with Ganymede
+
+#### GatewayInstances Registry
+
+**Purpose**: Central registry storing all gateway instances for route access.
+
+**Stored Instances**:
+
+- `gatewayState` - GatewayState instance
+- `roleManager` - RoleManager instance
+- `userRoleManager` - UserRoleManager instance
+- `permissionManager` - PermissionManager instance
+- `oauthManager` - OAuthManager instance
+- `tokenManager` - TokenManager instance
+- `projectRoomsManager` - ProjectRoomsManager instance
+- `permissionRegistry` - PermissionRegistry instance
+- `protectedServiceRegistry` - ProtectedServiceRegistry instance
+
+**Usage**: Routes access instances via `getGatewayInstances()` to avoid singletons.
+
+### Manager Responsibilities
+
+#### RoleManager
+
+Manages role definitions with persistence.
+
+- CRUD operations for roles
+- System roles (org:owner, org:admin, project:owner)
+- Custom role creation
+- Implements `IPersistenceProvider`
+
+#### UserRoleManager
+
+Manages user-role assignments with persistence.
+
+- Assign/revoke roles at org and project levels
+- Query user roles by scope
+- Support role inheritance (org roles → project roles)
+- Implements `IPersistenceProvider`
+
+#### PermissionManager
+
+Implements RBAC permission checking (read-only, no persistence).
+
+- Resolve user permissions via role resolution
+- Check permissions: `hasPermission(user_id, permission, scope?)`
+- Permission expansion from roles
+- Fine-grained permission strings
+
+#### OAuthManager
+
+Manages OAuth clients, codes, tokens for container apps.
+
+- Create/delete OAuth clients
+- Generate authorization codes
+- Exchange codes for tokens
+- Token validation
+- Implements `IPersistenceProvider`
+
+#### TokenManager
+
+Generates JWT tokens for container authentication (no persistence).
+
+- Create `TJwtUserContainer` tokens
+- Token signing and validation
+- Short-lived tokens (1 hour)
+
+#### ProjectRoomsManager
+
+Manages YJS collaboration rooms with persistence.
+
+- One room per project (lazy initialization)
+- Store YJS snapshots
+- Handle collaborative events
+- Cleanup idle projects
+- Implements `IPersistenceProvider`
+
+#### PermissionRegistry
+
+Registry of permission definitions registered by modules (no persistence).
+
+- Modules register permissions during load
+- Permission validation
+- Permission listing via `/permissions` endpoints
+- Used for UI permission management
+
+#### ProtectedServiceRegistry
+
+Registry of generic "protected services" registered by modules (no persistence).
+
+- Modules register custom services
+- Route matching: `/svc/{serviceId}`
+- Middleware injection
+- Dynamic service resolution
 
 ### Centralized Storage (Stateless Gateways)
 
@@ -397,24 +747,14 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
     "organization_id": "uuid",
     "gateway_id": "uuid",
     "saved_at": "2025-11-12T10:30:00Z",
-    "permissions": {
-      "user-123": ["org:admin", "project:abc:member"]
-    },
-    "oauth": {
-      "oauth_clients": {},
-      "oauth_authorization_codes": {},
-      "oauth_tokens": {}
-    },
-    "containers": {
-      "container_tokens": {}
-    },
+    "roles": { ... },
+    "user_roles": { ... },
+    "permissions": { ... },
+    "oauth": { ... },
+    "containers": { ... },
     "projects": {
-      "project-uuid-1": {
-        /* YJS snapshot */
-      },
-      "project-uuid-2": {
-        /* YJS snapshot */
-      }
+      "project-uuid-1": { /* YJS snapshot */ },
+      "project-uuid-2": { /* YJS snapshot */ }
     }
   }
 }
@@ -442,67 +782,25 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
 **Procedures:**
 
 - `proc_gateway_new(version, container_name, http_port, vpn_port, gateway_nginx_upstream)` - Add to pool
-- `proc_organizations_start_gateway(org_id)` - Allocate gateway, returns metadata (including gateway_nginx_upstream)
+- `proc_organizations_start_gateway(org_id)` - Allocate gateway, returns metadata
 - `proc_organizations_gateways_stop(gateway_id)` - Deallocate, mark ready
 - `func_organizations_get_active_gateway(org_id)` - Check if org has gateway
-
-### Services (Ganymede)
-
-**nginx-manager.ts:**
-
-- `createGatewayConfig(org_id, nginx_upstream)` - Create `/etc/nginx/.../org-{uuid}.conf` using provided upstream address
-- `removeGatewayConfig(org_id)` - Delete config file
-- `reloadNginx()` - Test + reload nginx (using `nginx -s reload`)
-
-**url-helpers.ts:**
-
-- `makeOrgGatewayHostname(org_id)` → `org-{uuid}.domain.local`
-- `makeOrgGatewayUrl(org_id)` → `https://org-{uuid}.domain.local`
-- `makeUserContainerHostname(container_id, org_id)` → `uc-{uuid}.org-{uuid}.domain.local`
-
-### Services (Gateway)
-
-**GatewayState (`state/GatewayState.ts`):**
-
-- Registry for persistence providers
-- `register(id, provider)` - Register provider and auto-load its data
-- `collectData()` - Aggregate data from all providers
-- `restoreData(data)` - Restore data to all registered providers
-- `pullDataFromGanymede()` - Pull org data from Ganymede
-- `pushDataToGanymede()` - Push org data to Ganymede
-- `setOrganizationContext(org_id, gateway_id, token)` - Set context and pull data
-- `startAutosave()` - Start periodic push (every 5min)
-- `shutdown()` - Stop autosave and push final data
-
-**Managers:**
-
-- `PermissionManager` - Permissions with `IPersistenceProvider`
-- `OAuthManager` - OAuth data with `IPersistenceProvider`
-- `TokenManager` - Token management (JWT tokens) for container authentication
-- `ProjectRoomsManager` - YJS rooms with `IPersistenceProvider`
-- `PermissionRegistry` - Registry of permission definitions registered by modules (used by `/permissions` routes)
-- `ProtectedServiceRegistry` - Registry of generic "protected services" registered by modules (used by `/svc/*` routes)
-
-**Initialization (`initialization/gateway-init.ts`):**
-
-- `initializeGateway(org_id, gateway_id, token)` - Creates all instances, pulls data, registers providers
-- `shutdownGateway()` - Gracefully shutdown (gets instances from registry)
-- `GatewayInstances` registry - Stores instances for route access (GatewayState, managers, PermissionRegistry, ProtectedServiceRegistry)
+- `func_organizations_get_allocation_by_gateway_id(gateway_id)` - Get allocation by gateway ID
 
 ### API Endpoints
 
 **Ganymede:**
 
-- `POST /gateway/start` (user auth) - Allocate gateway, register DNS/Nginx, call handshake
-- `POST /gateway/config` (temp handshake token) - Exchange for org token + config
+- `POST /gateway/start` (user auth) - Allocate gateway, configure Nginx, trigger init
+- `POST /gateway/config` (TJwtGateway) - Fetch org config and organization token
 - `POST /gateway/ready` (TJwtGateway) - Gateway signals ready to be allocated
-- `POST /gateway/stop` (TJwtOrganization) - Deallocate, cleanup DNS/Nginx
+- `POST /gateway/stop` (TJwtOrganization) - Deallocate, cleanup Nginx, mark as available
 - `POST /gateway/data/push` (TJwtOrganization) - Save org data snapshot
 - `POST /gateway/data/pull` (TJwtOrganization) - Load org data snapshot
 
 **Gateway:**
 
-- `POST /collab/start` (called by Ganymede) - Handshake, pull data, initialize
+- `POST /collab/start` (public trigger) - Trigger config fetch and initialization
 - `GET /collab/ping` - Health check
 - `POST /collab/event` (TJwtUser or TJwtUserContainer) - Process collaborative events
 - `GET /collab/room-id` (TJwtUser with project access) - Get YJS room ID for project
@@ -513,7 +811,7 @@ The gateway uses a **registry-based persistence pattern** where managers impleme
 - `GET /oauth/authorize` (TJwtUser) - OAuth authorization for container apps
 - `POST /oauth/token` - OAuth token exchange
 - `POST /oauth/authenticate` (OAuth Bearer token) - Validate OAuth token
-- `ALL /svc/{serviceId}` (TJwtUser usually) - Resolve module-defined protected service
+- `ALL /svc/{serviceId}` (TJwtUser usually) - Module-defined protected service
 
 ---
 
@@ -540,29 +838,7 @@ export ENV_NAME="prod" DOMAIN="your-domain.com" GATEWAY_POOL_SIZE=10
 
 ---
 
-## Reload Mechanism
-
-**How it works:**
-
-1. Developer: `./scripts/local-dev/envctl.sh restart dev-001 gateway`
-2. envctl.sh: Rebuild → Validate → Repack build
-3. docker exec reload-gateway.sh (on each container)
-4. Each gateway fetches new build and restarts Node.js
-5. New code running (~10 seconds total)
-
-**Implementation:**
-
-- No file watching - triggered via `docker exec`
-- Fetch new build from HTTP server
-- Restart Node.js process automatically
-
-**Entrypoint:** `docker-images/backend-images/gateway/app/entrypoint-dev.sh`
-
-> **See:** [Gateway Container Scripts](../../docker-images/backend-images/gateway/README.md#flow-4-manual-reload-docker-exec) and [Build Distribution Guide](../guides/GATEWAY_BUILD_DISTRIBUTION.md) for detailed implementation.
-
----
-
-## Database Schema (Gateways)
+## Database Schema
 
 ### gateways table
 
@@ -572,10 +848,10 @@ CREATE TABLE gateways (
     hostname varchar(256) NOT NULL,
     version varchar(15) NOT NULL,
     ready boolean NOT NULL DEFAULT false,
-    container_name varchar(100),      -- NEW: gw-pool-0, gw-pool-1, etc.
-    http_port integer,                -- NEW: 7100, 7101, etc.
-    vpn_port integer,                 -- NEW: 49100, 49101, etc.
-    gateway_nginx_upstream varchar(255), -- NEW: Internal address for Stage 1 Nginx (e.g., 172.17.0.1:7100)
+    container_name varchar(100),
+    http_port integer,
+    vpn_port integer,
+    gateway_nginx_upstream varchar(255),
     UNIQUE (container_name)
 );
 ```
@@ -586,13 +862,11 @@ CREATE TABLE gateways (
 CREATE TABLE organizations_gateways (
     organization_id uuid NOT NULL,
     gateway_id uuid NOT NULL,
-    tmp_handshake_token uuid NOT NULL UNIQUE,
     started_at timestamp NOT NULL DEFAULT now(),
-    ended_at timestamp,               -- NULL = active
+    ended_at timestamp,
     PRIMARY KEY (organization_id, gateway_id, started_at)
 );
 
--- Index for finding active allocations
 CREATE INDEX idx_organizations_gateways_active
   ON organizations_gateways (organization_id, gateway_id)
   WHERE ended_at IS NULL;
@@ -610,7 +884,7 @@ docker ps --filter label=environment=dev-001
 
 # Via PostgreSQL
 PGPASSWORD=devpassword psql -U postgres -d ganymede_dev_001 -c \
-  "SELECT gateway_id, ready, container_name, http_port, gateway_nginx_upstream FROM gateways;"
+  "SELECT gateway_id, ready, container_name, http_port FROM gateways;"
 ```
 
 ### Check Active Allocations
@@ -621,7 +895,6 @@ PGPASSWORD=devpassword psql -U postgres -d ganymede_dev_001 -c "
     o.name as org_name,
     g.container_name,
     g.http_port,
-    g.gateway_nginx_upstream,
     og.started_at,
     now() - og.started_at as duration
   FROM organizations_gateways og
@@ -631,25 +904,12 @@ PGPASSWORD=devpassword psql -U postgres -d ganymede_dev_001 -c "
 "
 ```
 
-### View DNS Records
+### Clear Gateway Allocation (Reset to Idle)
 
 ```bash
-# View zone file
-cat /etc/coredns/zones/domain.local.zone
-
-# Test resolution
-dig @localhost org-550e8400-e29b-41d4-a716-446655440000.domain.local
-dig @localhost ganymede.domain.local
-```
-
-### View Nginx Configs
-
-```bash
-# List gateway configs
-ls -la /root/.local-dev/dev-001/nginx-gateways.d/
-
-# View specific org config
-cat /root/.local-dev/dev-001/nginx-gateways.d/org-550e8400-e29b-41d4-a716-446655440000.conf
+# When testing allocation/deallocation
+PGPASSWORD=devpassword psql -U postgres -d ganymede_<env> -c \
+  "DELETE FROM organizations_gateways;"
 ```
 
 ### Manually Trigger Gateway Reload
@@ -662,13 +922,14 @@ cat /root/.local-dev/dev-001/nginx-gateways.d/org-550e8400-e29b-41d4-a716-446655
 docker exec gw-pool-dev-001-0 /opt/gateway/app/lib/reload-gateway.sh
 ```
 
-### Add More Gateways to Pool
+### Check VPN Status
 
 ```bash
-# Create 2 additional gateways
-cd /root/workspace/monorepo
-ENV_NAME=dev-001 DOMAIN=domain.local \
-  ./scripts/local-dev/gateway-pool.sh 2
+# Check VPN config
+docker exec gw-pool-dev-001-0 cat /tmp/vpn-config.json
+
+# Check OpenVPN process
+docker exec gw-pool-dev-001-0 ps aux | grep openvpn
 ```
 
 ---
@@ -696,6 +957,7 @@ ENV_NAME=dev-001 DOMAIN=domain.local \
 - `scripts/local-dev/gateway-pool.sh`
 - `scripts/local-dev/create-env.sh`
 - `scripts/local-dev/envctl.sh`
+- `scripts/local-dev/pack-gateway-build.sh`
 
 **Ganymede Services:**
 
@@ -709,7 +971,10 @@ ENV_NAME=dev-001 DOMAIN=domain.local \
 
 **Gateway Services:**
 
-- `packages/app-gateway/src/module/module.ts` - Gateway module
+- `packages/app-gateway/src/module/module.ts` - Gateway module and script execution
+- `packages/app-gateway/src/vpn/vpn-manager.ts` - VPN lifecycle management
+- `packages/app-gateway/src/initialization/fetch-config.ts` - Config fetching from Ganymede
+- `packages/app-gateway/src/initialization/gateway-init.ts` - Gateway initialization and shutdown
 
 **Database:**
 
@@ -718,11 +983,21 @@ ENV_NAME=dev-001 DOMAIN=domain.local \
 - `database/procedures/proc_organizations_start_gateway.sql`
 - `database/procedures/proc_organizations_gateways_stop.sql`
 - `database/procedures/func_organizations_get_active_gateway.sql`
+- `database/procedures/func_organizations_get_allocation_by_gateway_id.sql`
 
 **Docker:**
 
 - `docker-images/backend-images/gateway/Dockerfile`
 - `docker-images/backend-images/gateway/app/entrypoint-dev.sh`
+- `docker-images/backend-images/gateway/app/bin/reset-gateway.sh`
+- `docker-images/backend-images/gateway/app/lib/start-app-gateway.sh`
+- `docker-images/backend-images/gateway/app/lib/start-vpn.sh`
+- `docker-images/backend-images/gateway/app/lib/stop-vpn.sh`
+
+**Rules:**
+
+- `.cursor/rules/gateway-deployment-workflow.mdc` - Deployment workflow
+- `.cursor/rules/database-access.mdc` - Database access guide
 
 ---
 
@@ -731,5 +1006,6 @@ ENV_NAME=dev-001 DOMAIN=domain.local \
 - [Gateway Container Scripts](../../docker-images/backend-images/gateway/README.md) - Shell scripts for OpenVPN, Nginx, and container lifecycle
 - [App-Gateway](../../packages/app-gateway/README.md) - Node.js application
 - [Protected Services](./PROTECTED_SERVICES.md) - Module-driven protected endpoints
+- [Permission System](./PERMISSION_SYSTEM.md) - RBAC implementation details
 - [System Architecture](./SYSTEM_ARCHITECTURE.md) - Complete system diagram
-- [User Containers Module](../../packages/modules/user-containers/README.md) - Container management and terminal access
+- [User Containers Module](../../packages/modules/user-containers/README.md) - Container management

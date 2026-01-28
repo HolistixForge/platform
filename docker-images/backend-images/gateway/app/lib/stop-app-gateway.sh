@@ -13,5 +13,3 @@ else
         fi
     done
 fi
-
-rm -f /tmp/project-config.json

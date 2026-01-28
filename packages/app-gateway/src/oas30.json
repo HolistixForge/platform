@@ -52,7 +52,8 @@
     },
     "/collab/start": {
       "post": {
-        "summary": "Initialize gateway with organization handshake",
+        "summary": "Trigger gateway initialization",
+        "description": "Triggers gateway to fetch config from Ganymede and initialize. Public endpoint (no auth required).",
         "tags": ["Collab"],
         "requestBody": {
           "required": true,
@@ -60,16 +61,26 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "properties": {
-                  "tmp_handshake_token": { "type": "string", "format": "uuid" }
-                },
-                "required": ["tmp_handshake_token"]
+                "properties": {}
               }
             }
           }
         },
         "responses": {
           "200": { "$ref": "#/components/responses/empty" },
+          "404": {
+            "description": "Gateway not allocated to any organization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
           "4XX": { "$ref": "#/components/responses/errors" }
         }
       }
@@ -351,7 +362,12 @@
                     "description": "Role scope level"
                   }
                 },
-                "required": ["role_name", "display_name", "permissions", "scope"]
+                "required": [
+                  "role_name",
+                  "display_name",
+                  "permissions",
+                  "scope"
+                ]
               }
             }
           }
@@ -817,8 +833,14 @@
                     "type": "string",
                     "description": "Refresh token (for refresh_token grant)"
                   },
-                  "client_id": { "type": "string", "description": "OAuth client ID" },
-                  "client_secret": { "type": "string", "description": "OAuth client secret" },
+                  "client_id": {
+                    "type": "string",
+                    "description": "OAuth client ID"
+                  },
+                  "client_secret": {
+                    "type": "string",
+                    "description": "OAuth client secret"
+                  },
                   "redirect_uri": {
                     "type": "string",
                     "format": "uri",
@@ -1011,7 +1033,15 @@
             "description": "Whether this role can be modified or deleted"
           }
         },
-        "required": ["role_id", "role_name", "display_name", "permissions", "scope", "system", "immutable"]
+        "required": [
+          "role_id",
+          "role_name",
+          "display_name",
+          "permissions",
+          "scope",
+          "system",
+          "immutable"
+        ]
       }
     },
     "parameters": {

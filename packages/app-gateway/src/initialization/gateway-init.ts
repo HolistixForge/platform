@@ -18,6 +18,7 @@ import type { TReducersBackendExports } from '@holistix-forge/reducers';
 import { graftYjsWebsocket } from '../websocket';
 import { GatewayPeriodicTimer } from '../timers/periodic-events';
 import { GatewayShutdownTimer } from '../timers/gateway-shutdown';
+import { createGanymedeClient } from '../lib/ganymede-client';
 
 /**
  * GatewayInstances - Internal Service Registry
@@ -374,7 +375,7 @@ export async function initializeGatewayForOrganization(
 /**
  * Shutdown Gateway
  *
- * Gracefully shutdown the gateway, saving all state.
+ * Gracefully shutdown the gateway, saving all state and notifying Ganymede.
  * Gets instances from the registry.
  */
 export async function shutdownGateway(): Promise<void> {
@@ -396,6 +397,39 @@ export async function shutdownGateway(): Promise<void> {
 
   // Shutdown GatewayState (stops autosave and pushes final data)
   await instances.gatewayState.shutdown();
+
+  // Notify Ganymede to deallocate this gateway
+  try {
+    const organizationToken = instances.gatewayState.getOrganizationToken();
+    const gatewayId = instances.gatewayState.getGatewayId();
+    const organizationId = instances.gatewayState.getOrganizationId();
+
+    log(
+      EPriority.Info,
+      'GATEWAY_SHUTDOWN',
+      `Notifying Ganymede of deallocation for org ${organizationId}`
+    );
+
+    const ganymedeClient = createGanymedeClient(organizationToken);
+
+    await ganymedeClient.request({
+      url: '/gateway/stop',
+      method: 'POST',
+      jsonBody: {},
+    });
+
+    log(
+      EPriority.Info,
+      'GATEWAY_SHUTDOWN',
+      `✅ Gateway ${gatewayId} deallocated, returned to pool`
+    );
+  } catch (error: any) {
+    log(
+      EPriority.Warning,
+      'GATEWAY_SHUTDOWN',
+      `Failed to notify Ganymede of deallocation: ${error.message} (gateway will still shutdown)`
+    );
+  }
 
   log(EPriority.Info, 'GATEWAY_SHUTDOWN', 'Gateway shutdown complete');
 }
