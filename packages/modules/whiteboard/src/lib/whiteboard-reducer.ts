@@ -48,7 +48,7 @@ import {
   TNodeView,
 } from './whiteboard-types';
 import { getAbsolutePosition } from './utils/position-utils';
-import { edgeId } from './components/apis/types/edge';
+import { edgeId } from './whiteboard-edge-utils';
 import { TCollabBackendExports } from '@holistix-forge/collab';
 import { TGatewayExports } from '@holistix-forge/gateway';
 

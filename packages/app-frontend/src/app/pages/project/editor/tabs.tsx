@@ -1,8 +1,6 @@
 import { FC } from 'react';
 
 import {
-  PanelProps,
-  TabsRadix,
   MAX_TAB_ROW,
   ReadOnlyTree,
   TabPath,
@@ -10,6 +8,7 @@ import {
   TTabsSharedData,
   TTabsTree,
 } from '@holistix-forge/tabs';
+import { PanelProps, TabsRadix } from '@holistix-forge/tabs/frontend';
 import { useCurrentUser } from '@holistix-forge/frontend-data';
 import { useLocalSharedData } from '@holistix-forge/collab/frontend';
 import { serviceUrl } from '@holistix-forge/user-containers';
@@ -122,7 +121,7 @@ const TabTypeRouter: FC<PanelProps & TabPayload> = (props) => {
   } else if (props.type === 'resource-ui') {
     return (
       <ProjecTUserContainerUIView
-        project_server_id={props.project_server_id}
+        project_server_id={props.user_container_id}
         service_name={props.service_name}
       />
     );
@@ -139,7 +138,7 @@ const ProjecTUserContainerUIView = (props: {
   project_server_id: number;
   service_name: string;
 }) => {
-  const server: TUserContainer = useSharedData<TUserContainersSharedData>(
+  const server: TUserContainer = useLocalSharedData<TUserContainersSharedData>(
     ['user-containers:containers'],
     (sd) => sd['user-containers:containers'].get(`${props.project_server_id}`)
   );
@@ -148,7 +147,11 @@ const ProjecTUserContainerUIView = (props: {
 
   if (url)
     return (
-      <iframe style={{ width: '100%', height: '100%' }} src={url}></iframe>
+      <iframe
+        title={props.service_name}
+        style={{ width: '100%', height: '100%' }}
+        src={url}
+      ></iframe>
     );
   return null;
 };

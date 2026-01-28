@@ -1,7 +1,12 @@
 import { TModule } from '@holistix-forge/module';
-import { moduleBackend as collabBackend, ICollabRegistry } from '@holistix-forge/collab';
+import {
+  moduleBackend as collabBackend,
+  ICollabRegistry,
+} from '@holistix-forge/collab';
 import { moduleBackend as reducersBackend } from '@holistix-forge/reducers';
 import { moduleBackend as coreGraphBackend } from '@holistix-forge/core-graph';
+import { moduleBackend as whiteboardBackend } from '@holistix-forge/whiteboard';
+import { moduleBackend as tabsBackend } from '@holistix-forge/tabs';
 import { moduleBackend as userContainersBackend } from '@holistix-forge/user-containers';
 import { moduleBackend as jupyterBackend } from '@holistix-forge/jupyter';
 import { moduleBackend as n8nBackend } from '@holistix-forge/n8n';
@@ -73,7 +78,7 @@ export function createBackendModulesConfig(
   // This is used for VPN config and service URLs
   const domain = process.env.DOMAIN || 'domain.local';
   const gatewayFQDN = `org-${organizationId}.${domain}`;
-  
+
   const gatewayConfig = {
     organization_id: organizationId,
     organization_token: organizationToken,
@@ -91,15 +96,19 @@ export function createBackendModulesConfig(
   // Return modules in dependency order:
   // 1. collab (no dependencies)
   // 2. reducers (no dependencies)
-  // 3. core-graph (depends on collab, reducers)
-  // 4. gateway (depends on collab, reducers)
-  // 5. user-containers (depends on core-graph, collab, reducers, gateway)
-  // 6. Container image modules (depend on user-containers)
+  // 3. gateway (depends on collab, reducers) - must load before whiteboard for permissions
+  // 4. core-graph (depends on collab, reducers)
+  // 5. whiteboard (depends on collab, reducers, core-graph, gateway) - handles project:init
+  // 6. tabs (depends on collab, reducers) - handles project:init
+  // 7. user-containers (depends on core-graph, collab, reducers, gateway)
+  // 8. Container image modules (depend on user-containers)
   return [
     { module: collabBackend, config: collabConfig },
     { module: reducersBackend, config: {} },
-    { module: coreGraphBackend, config: {} },
     { module: gatewayBackend, config: gatewayConfig },
+    { module: coreGraphBackend, config: {} },
+    { module: whiteboardBackend, config: {} },
+    { module: tabsBackend, config: {} },
     { module: userContainersBackend, config: {} },
     { module: jupyterBackend, config: {} },
     { module: n8nBackend, config: {} },

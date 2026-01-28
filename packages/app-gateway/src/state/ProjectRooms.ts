@@ -10,7 +10,7 @@ import type { TReducersBackendExports } from '@holistix-forge/reducers';
 
 // y-websocket utils for accessing the shared YJS document store
 // This ensures we use the SAME docs that WebSocket clients connect to
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+
 const ywsUtils = require('y-websocket/bin/utils');
 
 type TProjectSnapshot = Record<string, unknown>;
@@ -131,6 +131,12 @@ export class ProjectRoomsManager implements IPersistenceProvider {
 
     // Dispatch project:init event for modules to create default data
     if (this.eventProcessor) {
+      log(
+        EPriority.Info,
+        'PROJECT_ROOMS',
+        `Dispatching project:init event for ${project_id}...`
+      );
+
       const systemRequestData = {
         ip: 'system',
         user_id: 'system',
@@ -141,6 +147,13 @@ export class ProjectRoomsManager implements IPersistenceProvider {
 
       await this.eventProcessor
         .processEvent({ type: 'project:init', project_id }, systemRequestData)
+        .then(() => {
+          log(
+            EPriority.Info,
+            'PROJECT_ROOMS',
+            `✅ project:init event processed successfully for ${project_id}`
+          );
+        })
         .catch((err) => {
           log(
             EPriority.Error,
@@ -149,6 +162,12 @@ export class ProjectRoomsManager implements IPersistenceProvider {
             err
           );
         });
+    } else {
+      log(
+        EPriority.Warning,
+        'PROJECT_ROOMS',
+        `No event processor set - skipping project:init for ${project_id}`
+      );
     }
 
     // Initialize permissions after project:init
@@ -165,19 +184,23 @@ export class ProjectRoomsManager implements IPersistenceProvider {
 
   /**
    * Initialize permissions for a project
-   * 
+   *
    * Called after project:init event dispatch.
    * Fetches project members and ensures they have appropriate roles.
-   * 
+   *
    * Logic:
    * - Org owners/admins already have access via org roles (no action needed)
    * - Project members in DB get checked for roles
    * - If no roles assigned, they won't have access (must be explicitly assigned roles)
    */
-  private async initializeProjectPermissions(project_id: string): Promise<void> {
-    const { getGatewayInstances } = await import('../initialization/gateway-instances');
+  private async initializeProjectPermissions(
+    project_id: string
+  ): Promise<void> {
+    const { getGatewayInstances } = await import(
+      '../initialization/gateway-instances'
+    );
     const instances = getGatewayInstances();
-    
+
     if (!instances) {
       log(
         EPriority.Warning,
@@ -195,14 +218,18 @@ export class ProjectRoomsManager implements IPersistenceProvider {
 
     try {
       // Fetch project members from Ganymede
-      const ganymedeUrl = process.env.GANYMEDE_URL || 'http://app-ganymede:3000';
+      const ganymedeUrl =
+        process.env.GANYMEDE_URL || 'http://app-ganymede:3000';
       const orgToken = instances.gatewayState.getOrganizationToken();
 
-      const response = await fetch(`${ganymedeUrl}/projects/${project_id}/members`, {
-        headers: {
-          Authorization: `Bearer ${orgToken}`,
-        },
-      });
+      const response = await fetch(
+        `${ganymedeUrl}/projects/${project_id}/members`,
+        {
+          headers: {
+            Authorization: `Bearer ${orgToken}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         log(
@@ -233,7 +260,9 @@ export class ProjectRoomsManager implements IPersistenceProvider {
           member.user_id,
           project_id
         );
-        const orgRoles = instances.userRoleManager.getUserOrgRoles(member.user_id);
+        const orgRoles = instances.userRoleManager.getUserOrgRoles(
+          member.user_id
+        );
 
         if (projectRoles.length > 0 || orgRoles.length > 0) {
           log(
@@ -385,26 +414,34 @@ export class ProjectRoomsManager implements IPersistenceProvider {
 
   /**
    * Cleanup/unload an idle project (aggressive cleanup)
-   * 
+   *
    * IMPORTANT: Caller MUST save project data to Ganymede BEFORE calling this method!
    * Once this method executes, the project is removed from this.rooms and will NOT
    * be included in future saveToSerializable() calls (autosave won't save it).
-   * 
+   *
    * Cleanup steps:
    * - Closes WebSocket connections (TODO: implement)
    * - Removes YJS doc from y-websocket (TODO: verify if needed)
    * - Removes from ProjectRoomsManager
-   * 
+   *
    * This is called when a project has been idle for extended period (5 min)
    */
   async cleanupProject(project_id: string): Promise<void> {
     const room = this.rooms.get(project_id);
     if (!room) {
-      log(EPriority.Notice, 'PROJECT_ROOMS', `Project ${project_id} not found for cleanup`);
+      log(
+        EPriority.Notice,
+        'PROJECT_ROOMS',
+        `Project ${project_id} not found for cleanup`
+      );
       return;
     }
 
-    log(EPriority.Info, 'PROJECT_ROOMS', `Cleaning up idle project: ${project_id}`);
+    log(
+      EPriority.Info,
+      'PROJECT_ROOMS',
+      `Cleaning up idle project: ${project_id}`
+    );
 
     // Note: Final snapshot should have been saved by caller before calling this method
     // No need to re-serialize the YJS doc here - that's expensive and wasteful
