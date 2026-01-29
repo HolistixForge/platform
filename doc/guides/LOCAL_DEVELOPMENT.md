@@ -247,6 +247,25 @@ Runs all setup scripts in sequence:
 
 This installs everything: system deps, Docker CLI, mkcert, PostgreSQL, CoreDNS, and builds images.
 
+### 7. Install Playwright (Browser Automation)
+
+Playwright is used for browser automation and debugging (e.g., capturing console logs, screenshots, executing JS in a headless browser). It is also configured as an MCP server for AI coding assistants (see `.mcp.json`).
+
+```bash
+# Install Playwright's Chromium browser
+npx playwright install chromium
+
+# Install system dependencies for headless Chromium
+npx playwright install-deps chromium
+```
+
+**Verify installation:**
+
+```bash
+# Should start and exit without errors
+timeout 5 npx @playwright/mcp@latest --headless || true
+```
+
 ## Environment Management Scripts
 
 ### Create New Environment
