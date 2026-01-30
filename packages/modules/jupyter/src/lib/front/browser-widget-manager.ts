@@ -3,7 +3,6 @@
  * ipywidgets\examples\web3\src\manager.ts
  */
 
-/* eslint-disable @typescript-eslint/no-empty-function */
 import { HTMLManager, requireLoader } from '@jupyter-widgets/html-manager';
 import * as base from '@jupyter-widgets/base';
 import { IKernelConnection } from '@jupyterlab/services/lib/kernel/kernel';

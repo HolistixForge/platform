@@ -11,9 +11,9 @@ import { menuItems } from './access-role';
 
 //
 
-export type ServerViewProps = {};
+export type ServerViewProps = Record<string, never>;
 
-export const ServerView = ({}: ServerViewProps) => {
+export const ServerView = (_props: ServerViewProps) => {
   const [tags, setTags] = useState<any>([
     {
       text: 'Boosting',

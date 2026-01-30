@@ -4,7 +4,13 @@
   "type": "module",
   "private": true,
   "dependencies": {
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "@holistix-forge/simple-types": "0.0.1",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/sdk-logs": "^0.208.0",
+    "@opentelemetry/exporter-logs-otlp-proto": "^0.208.0",
+    "@opentelemetry/resources": "^2.2.0",
+    "@opentelemetry/semantic-conventions": "^1.38.0"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

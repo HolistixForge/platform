@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
+
+import './countdown.scss';
 interface CountdownProps {
   targetDate: Date;
   onComplete: () => void;
 }
-
-import './countdown.scss';
 
 //
 

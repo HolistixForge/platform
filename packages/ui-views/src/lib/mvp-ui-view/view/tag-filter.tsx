@@ -11,9 +11,9 @@ import { menuItems } from './access-role';
 
 //
 
-export type TagFilterProps = {};
+export type TagFilterProps = Record<string, never>;
 
-export const TagFilter = ({}: TagFilterProps) => {
+export const TagFilter = (_props: TagFilterProps) => {
   const [tags, setTags] = useState<any>([
     {
       text: 'Boosting',

@@ -70,7 +70,6 @@ export const useLocalSharedData = <TSharedData extends TValidSharedData>(
   // Subscribe to changes
   useMemo(() => {
     localOverrider.observe(observe as string[], updateComponent.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [localOverrider, observe]);
 
   // Cleanup subscription
@@ -78,7 +77,6 @@ export const useLocalSharedData = <TSharedData extends TValidSharedData>(
     return () => {
       localOverrider.unobserve(observe as string[], updateComponent.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [localOverrider, observe]);
 
   return f(localOverrider.getData());

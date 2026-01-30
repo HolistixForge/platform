@@ -2,9 +2,9 @@ import { icons } from '@holistix-forge/ui-base';
 
 //
 
-type FilterBoxProps = {};
+type FilterBoxProps = Record<string, never>;
 
-export const Rules = ({}: FilterBoxProps) => {
+export const Rules = (_props: FilterBoxProps) => {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center bg-white/5 h-[28px] w-full rounded-[4px] py-1 px-3 gap-[20px]">

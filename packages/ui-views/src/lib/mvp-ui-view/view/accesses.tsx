@@ -8,9 +8,9 @@ import { menuItems } from './access-role';
 
 //
 
-export type AccessesProps = {};
+export type AccessesProps = Record<string, never>;
 
-export const Accesses = ({}: AccessesProps) => {
+export const Accesses = (_props: AccessesProps) => {
   return (
     <div className="w-[1920px] h-[1080px] border">
       <Header hasNotifications />

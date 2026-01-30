@@ -24,6 +24,18 @@
     }
   },
   "dependencies": {
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "@opentelemetry/sdk-trace-web": "^2.2.0",
+    "@opentelemetry/sdk-trace-base": "^2.2.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.208.0",
+    "@opentelemetry/resources": "^2.2.0",
+    "@opentelemetry/semantic-conventions": "^1.38.0",
+    "@opentelemetry/auto-instrumentations-web": "^0.54.0",
+    "@opentelemetry/sdk-node": "^0.208.0",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.208.0",
+    "@opentelemetry/exporter-logs-otlp-proto": "^0.208.0",
+    "@opentelemetry/instrumentation": "^0.208.0",
+    "@opentelemetry/instrumentation-http": "^0.208.0",
+    "@opentelemetry/instrumentation-express": "^0.57.0"
   }
 }

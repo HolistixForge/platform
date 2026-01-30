@@ -9,7 +9,7 @@ import { Rules } from '../components/rules';
 
 //
 
-export type AccessRoleProps = {};
+export type AccessRoleProps = Record<string, never>;
 
 //
 
@@ -28,7 +28,7 @@ export const menuItems = [
 
 //
 
-export const AccessRole = ({}: AccessRoleProps) => {
+export const AccessRole = (_props: AccessRoleProps) => {
   const [tags, setTags] = useState<any>([
     {
       text: 'Boosting',

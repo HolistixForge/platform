@@ -4,9 +4,9 @@ import { UserDisplayItem } from './user-display-item';
 
 //
 
-type UserDisplayProps = {};
+type UserDisplayProps = Record<string, never>;
 
-export const UserDisplay = ({}: UserDisplayProps) => {
+export const UserDisplay = (_props: UserDisplayProps) => {
   return (
     <div className="min-w-[600px] flex flex-col gap-5">
       <UserDisplayItem

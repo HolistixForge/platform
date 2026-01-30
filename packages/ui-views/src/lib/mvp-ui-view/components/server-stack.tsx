@@ -1,4 +1,6 @@
 import { Children, FC } from 'react';
+import { useEffect, useState } from 'react';
+import { useRef } from 'react';
 
 //
 type ChildProps = { key: string | number };
@@ -9,8 +11,6 @@ interface ServerStackProps {
   children: Child | Child[];
   onNewServerClick: () => void;
 }
-import { useEffect, useState } from 'react';
-import { useRef } from 'react';
 
 export const ServerStack = ({
   children,
@@ -26,7 +26,9 @@ export const ServerStack = ({
       setColumns(columns);
     });
 
-    containerRef.current && observer.observe(containerRef.current);
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
 
     return () => observer.disconnect();
   }, []);
