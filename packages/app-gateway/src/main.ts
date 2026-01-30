@@ -12,9 +12,7 @@ import {
   setupValidator,
   TStart,
 } from '@holistix-forge/backend-engine';
-import { BackendEventProcessor } from '@holistix-forge/reducers';
-
-import { setupCollabRoutes, setBackendEventProcessor } from './routes/collab';
+import { setupCollabRoutes } from './routes/collab';
 import { setupPermissionsRoutes } from './routes/permissions';
 import { setupMembersRoutes } from './routes/members';
 import { setupRolesRoutes } from './routes/roles';
@@ -41,14 +39,16 @@ import {
 } from './middleware/rate-limiter';
 
 //
-// Global state
-//
-
-let bep: BackendEventProcessor<never>;
-
-//
 // Express setup
 //
+
+// Derive ALLOWED_ORIGINS from DOMAIN if not explicitly set
+// Gateway containers have DOMAIN env var but may not have ALLOWED_ORIGINS
+if (!process.env.ALLOWED_ORIGINS && process.env.DOMAIN) {
+  process.env.ALLOWED_ORIGINS = JSON.stringify([
+    `https://${process.env.DOMAIN}`,
+  ]);
+}
 
 export const setupExpressApp = (options?: {
   skipValidation?: boolean;
@@ -204,9 +204,6 @@ let servers: (http.Server | https.Server)[] = [];
 
 (async function main() {
   try {
-    bep = new BackendEventProcessor<never>();
-    setBackendEventProcessor(bep);
-
     // Setup Express server
     const app = setupExpressApp();
     // Gateway always listens on port 8888 internally (Nginx proxies from external port)

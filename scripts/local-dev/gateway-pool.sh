@@ -299,6 +299,7 @@ cmd_create() {
         container_env[GANYMEDE_API_URL]="https://${build_server_ip}"
         container_env[DOMAIN]="${DOMAIN}"
         container_env[BUILD_SERVER_IP]="${build_server_ip}"
+        container_env[ALLOWED_ORIGINS]="[\"https://${DOMAIN}\"]"
         
         # JWT Keys for token verification
         container_env[JWT_PUBLIC_KEY]="${JWT_PUBLIC_KEY}"

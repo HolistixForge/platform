@@ -75,10 +75,13 @@ export function createApp(
   // - /collab/start: Gateway calls during initialization
   setupBasicExpressApp(app, {
     csrfExemptPaths: [
-      '/gateway/start',   // Frontend initiates gateway allocation
-      '/gateway/config',  // Gateway fetches config from Ganymede
-      '/gateway/ready',   // Gateway signals ready status
-      '/collab/start',    // Gateway calls during initialization
+      '/gateway/start', // Frontend initiates gateway allocation
+      '/gateway/config', // Gateway fetches config from Ganymede
+      '/gateway/ready', // Gateway signals ready status
+      '/gateway/stop', // Gateway signals shutdown/deallocation
+      '/collab/start', // Gateway calls during initialization
+      '/oauth/authorize', // OAuth authorization code flow (protected by client credentials)
+      '/oauth/token', // OAuth token exchange (protected by client credentials)
     ],
   });
 
@@ -196,7 +199,7 @@ export function createApp(
   setupProjectRoutes(router, rateLimiters.api);
   setupGatewayRoutes(router, rateLimiters.api);
   setupUserRoutes(router, rateLimiters.api);
-  
+
   // Internal API routes (gateway-only, protected by gateway token)
   setupInternalProjectRoutes(router, rateLimiters.api);
 

@@ -45,6 +45,7 @@ export interface GatewayInstances {
   protectedServiceRegistry: ProtectedServiceRegistry;
   periodicTimer: GatewayPeriodicTimer;
   shutdownTimer: GatewayShutdownTimer;
+  reducers: TReducersBackendExports;
 }
 import { setGatewayInstances, getGatewayInstances } from './gateway-instances';
 import { createBackendModulesConfig } from '../config/modules';
@@ -366,6 +367,7 @@ export async function initializeGatewayForOrganization(
     protectedServiceRegistry, // ← Both (modules register, routes handle)
     periodicTimer, // ← Internal only (gateway timers)
     shutdownTimer, // ← Internal only (gateway shutdown)
+    reducers: moduleExports.reducers, // ← Module event processor (used by HTTP route handler)
   };
   setGatewayInstances(instances);
 

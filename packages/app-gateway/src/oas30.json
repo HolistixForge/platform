@@ -36,9 +36,13 @@
                     },
                     "additionalProperties": true,
                     "required": ["type"]
+                  },
+                  "project_id": {
+                    "type": "string",
+                    "format": "uuid"
                   }
                 },
-                "required": ["event"],
+                "required": ["event", "project_id"],
                 "additionalProperties": false
               }
             }

@@ -47,11 +47,15 @@ export const getModulesFrontend = (
 ): { module: TModule<never, object>; config: object }[] => {
   // Prepare collab config if we have all required data
   let collabConfig: YjsClientCollabConfig | Record<string, never> = {};
-  
-  if (orgConfig.gateway_hostname && orgConfig.project_id && orgConfig.ganymedeApi) {
+
+  if (
+    orgConfig.gateway_hostname &&
+    orgConfig.project_id &&
+    orgConfig.ganymedeApi
+  ) {
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${wsProtocol}//${orgConfig.gateway_hostname}/project/${orgConfig.project_id}`;
-    
+
     collabConfig = {
       type: 'yjs-client',
       ws_server: wsUrl,
@@ -96,6 +100,5 @@ export const getModulesFrontend = (
     { module: gatewayFrontend, config: {} },
     { module: socialsFrontend, config: {} },
     { module: chatsFrontend, config: {} },
-    { module: tabsFrontend, config: {} },
   ];
 };

@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { InfoCircledIcon } from '@radix-ui/react-icons';
 
@@ -10,10 +10,29 @@ import {
   useMutationStartOrganization,
   useCurrentUser,
 } from '@holistix-forge/frontend-data';
-import { CollabProjectProvider } from '@holistix-forge/collab/frontend';
+import {
+  CollabProjectProvider,
+  useCollabProjectId,
+} from '@holistix-forge/collab/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
 
 import { ProjectLoading, ProjectError } from './project-loading';
 import { getAllModules } from '../../modules';
+
+/**
+ * Syncs the project_id from CollabProjectProvider into the dispatcher.
+ * Must be rendered inside both CollabProjectProvider and ModuleDataProvider.
+ */
+const ProjectDispatcherSync = () => {
+  const project_id = useCollabProjectId();
+  const dispatcher = useDispatcher();
+
+  useEffect(() => {
+    dispatcher.setProjectId(project_id);
+  }, [project_id, dispatcher]);
+
+  return null;
+};
 
 /**
  * StartOrganizationBox - UI for starting a stopped organization
@@ -50,7 +69,7 @@ const StartOrganizationBox = ({
 
 /**
  * ProjectWrapper - Lightweight wrapper for project pages
- * 
+ *
  * This component:
  * 1. Waits for current user data to be available
  * 2. Fetches project data from API
@@ -58,34 +77,35 @@ const StartOrganizationBox = ({
  * 4. Provides ModuleDataProvider (loads modules + gateway) - from frontend-data
  * 5. Provides ProjectProvider (project data context) - from frontend-data
  * 6. Provides CollabProjectProvider (project_id for collab hooks) - from collab module
- * 
+ *
  * All data infrastructure comes from frontend-data and collab module.
  * This is just UI orchestration.
  */
 export const ProjectWrapper = ({ children }: { children: ReactNode }) => {
   const { owner, project_name } = useParams();
-  
+
   // Wait for user data before rendering project
   // This ensures the collab config has the real user ID instead of guest fallback
   const { data: currentUserData, status: userStatus } = useCurrentUser();
-  
+
   // Always call hooks in the same order (Rules of Hooks)
   // Fetch project data unconditionally, but it won't be used until user is authenticated
-  const { data: project, status, error } = useQueryProjectByName(
-    owner || '',
-    project_name || ''
-  );
-  
+  const {
+    data: project,
+    status,
+    error,
+  } = useQueryProjectByName(owner || '', project_name || '');
+
   // Check for invalid URL first
   if (!owner || !project_name) {
     return <ProjectError message="Invalid project URL" />;
   }
-  
+
   // Loading user data
   if (userStatus === 'pending') {
     return <ProjectLoading message="Loading user data..." progress={10} />;
   }
-  
+
   // Check if user is authenticated
   if (userStatus === 'success' && !currentUserData?.user?.user_id) {
     return (
@@ -101,41 +121,48 @@ export const ProjectWrapper = ({ children }: { children: ReactNode }) => {
       </div>
     );
   }
-  
+
   // Loading project data
   if (status === 'pending') {
     return <ProjectLoading message="Loading project..." progress={30} />;
   }
-  
+
   // Error state
   if (status === 'error') {
-    return <ProjectError message={error?.message || 'Failed to load project'} />;
+    return (
+      <ProjectError message={error?.message || 'Failed to load project'} />
+    );
   }
-  
+
   // Project not found
   if (!project) {
     return <ProjectError message="Project not found" />;
   }
-  
+
   // Success - render with data providers
   // Extract user info from useCurrentUser to pass to ModuleDataProvider for collab config
   // At this point currentUserData is guaranteed to exist because we checked userStatus above
   // Color will be generated from username hash in collab-config.ts
-  const userInfo = currentUserData?.user?.user_id ? {
-    user_id: currentUserData.user.user_id,
-    username: currentUserData.user.username || currentUserData.user.email || 'User',
-  } : {
-    user_id: '00000000-0000-0000-0000-000000000001',
-    username: 'Guest User',
-  };
-  
+  const userInfo = currentUserData?.user?.user_id
+    ? {
+        user_id: currentUserData.user.user_id,
+        username:
+          currentUserData.user.username || currentUserData.user.email || 'User',
+      }
+    : {
+        user_id: '00000000-0000-0000-0000-000000000001',
+        username: 'Guest User',
+      };
+
   return (
     <ModuleDataProvider
       organization_id={project.organization_id}
       modules={getAllModules()}
       userInfo={userInfo}
       loadingUI={<ProjectLoading message="Loading modules..." progress={70} />}
-      unavailableUI={(org_id) => <StartOrganizationBox organization_id={org_id} />}
+      unavailableUI={(org_id) => (
+        <StartOrganizationBox organization_id={org_id} />
+      )}
     >
       <ProjectProvider
         project={project}
@@ -143,6 +170,7 @@ export const ProjectWrapper = ({ children }: { children: ReactNode }) => {
         isOwner={false} // TODO: Determine from organization ownership
       >
         <CollabProjectProvider project_id={project.project_id}>
+          <ProjectDispatcherSync />
           {children}
         </CollabProjectProvider>
       </ProjectProvider>

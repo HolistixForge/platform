@@ -1083,7 +1083,8 @@ export class WhiteboardReducer extends ReducerWithCollab<
     const collab = this.getCollab(requestData);
     collab.sharedData['whiteboard:graphViews'].forEach(
       (gv: TGraphView, k: string) => {
-        gv.nodeViews.push({
+        const gvc = structuredClone(gv);
+        gvc.nodeViews.push({
           id: event.nodeData.id,
           type: event.nodeData.type,
           position:
@@ -1092,6 +1093,7 @@ export class WhiteboardReducer extends ReducerWithCollab<
               : { x: 0, y: 0 },
           status: nodeViewDefaultStatus(),
         });
+        collab.sharedData['whiteboard:graphViews'].set(k, gvc);
       }
     );
   }

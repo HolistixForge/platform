@@ -1,5 +1,4 @@
 import { Router, Request, RequestHandler } from 'express';
-import { BackendEventProcessor } from '@holistix-forge/reducers';
 import { EPriority, log, NotFoundException } from '@holistix-forge/log';
 import { asyncHandler } from '../middleware/route-handler';
 import { initializeGatewayForOrganization } from '../initialization/gateway-init';
@@ -13,14 +12,6 @@ import {
   stopVpn,
   startVpnAsync,
 } from '../vpn/vpn-manager';
-
-let bep: BackendEventProcessor<any> | null = null;
-
-export const setBackendEventProcessor = (
-  processor: BackendEventProcessor<any>
-) => {
-  bep = processor;
-};
 
 export const setupCollabRoutes = (
   router: Router,
@@ -41,8 +32,9 @@ export const setupCollabRoutes = (
     authenticateJwt,
     requireProjectAccess(), // Check project access if project_id is in JWT or body
     asyncHandler(async (req: Request, res) => {
-      if (!bep) {
-        throw new NotFoundException([{ message: 'Collab data not bound' }]);
+      const instances = getGatewayInstances();
+      if (!instances) {
+        throw new NotFoundException([{ message: 'Gateway not initialized' }]);
       }
 
       const authReq = req as any;
@@ -66,7 +58,7 @@ export const setupCollabRoutes = (
         project_id,
       };
 
-      await bep.processEvent(event, requestData);
+      await instances.reducers.processEvent(event, requestData);
 
       return res.json({});
     })

@@ -28,7 +28,7 @@ export class FrontendDispatcher<TE extends TBaseEvent> {
     }
     log(EPriority.Debug, 'DISPATCH_BROWSER', '', event);
     await this._fetch.fetch({
-      url: 'event',
+      url: 'collab/event',
       method: 'POST',
       jsonBody: {
         event: event as TJson,
