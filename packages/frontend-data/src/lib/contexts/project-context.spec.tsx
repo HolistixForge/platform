@@ -4,11 +4,10 @@ import type { TApi_Project } from '@holistix-forge/types';
 
 const mockProject: TApi_Project = {
   project_id: 'project-123',
-  project_name: 'Test Project',
+  name: 'Test Project',
   organization_id: 'org-456',
-  owner_id: 'user-789',
-  created_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-01-01T00:00:00Z',
+  created: '2024-01-01T00:00:00Z',
+  public: false,
 };
 
 describe('ProjectContext', () => {

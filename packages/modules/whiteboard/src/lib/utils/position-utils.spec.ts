@@ -3,7 +3,7 @@ import { TGraphView } from '../whiteboard-types';
 
 /**
  * TESTING POSITION UTILITY FUNCTIONS
- * 
+ *
  * This test suite demonstrates:
  * - Testing coordinate transformation functions
  * - Testing recursive tree traversal for position calculation
@@ -17,7 +17,7 @@ describe('Position Utilities', () => {
       const position = { x: 100, y: 200 };
       const gv: TGraphView = {
         nodeViews: [],
-      } as TGraphView;
+      } as unknown as TGraphView;
 
       const result = getAbsolutePosition(position, undefined, gv);
 
@@ -34,7 +34,7 @@ describe('Position Utilities', () => {
             parentId: undefined,
           },
         ],
-      } as TGraphView;
+      } as unknown as TGraphView;
 
       const result = getAbsolutePosition(position, 'parent1', gv);
 
@@ -56,7 +56,7 @@ describe('Position Utilities', () => {
             parentId: 'grandparent',
           },
         ],
-      } as TGraphView;
+      } as unknown as TGraphView;
 
       const result = getAbsolutePosition(position, 'parent', gv);
 
@@ -85,7 +85,7 @@ describe('Position Utilities', () => {
             parentId: 'level2',
           },
         ],
-      } as TGraphView;
+      } as unknown as TGraphView;
 
       const result = getAbsolutePosition(position, 'level1', gv);
 
@@ -103,7 +103,7 @@ describe('Position Utilities', () => {
             parentId: undefined,
           },
         ],
-      } as TGraphView;
+      } as unknown as TGraphView;
 
       const result = getAbsolutePosition(position, 'nonexistent', gv);
 
@@ -121,7 +121,7 @@ describe('Position Utilities', () => {
             parentId: undefined,
           } as any,
         ],
-      } as TGraphView;
+      } as unknown as TGraphView;
 
       const result = getAbsolutePosition(position, 'parent1', gv);
 
@@ -139,7 +139,7 @@ describe('Position Utilities', () => {
             parentId: undefined,
           },
         ],
-      } as TGraphView;
+      } as unknown as TGraphView;
 
       const result = getAbsolutePosition(position, 'parent1', gv);
 
@@ -156,7 +156,7 @@ describe('Position Utilities', () => {
             parentId: undefined,
           },
         ],
-      } as TGraphView;
+      } as unknown as TGraphView;
 
       const result = getAbsolutePosition(position, 'parent1', gv);
 
@@ -173,7 +173,7 @@ describe('Position Utilities', () => {
             parentId: undefined,
           },
         ],
-      } as TGraphView;
+      } as unknown as TGraphView;
 
       const result = getAbsolutePosition(position, 'parent1', gv);
 
@@ -184,7 +184,7 @@ describe('Position Utilities', () => {
       const position = { x: 100, y: 200 };
       const originalX = position.x;
       const originalY = position.y;
-      
+
       const gv: TGraphView = {
         nodeViews: [
           {
@@ -193,7 +193,7 @@ describe('Position Utilities', () => {
             parentId: undefined,
           },
         ],
-      } as TGraphView;
+      } as unknown as TGraphView;
 
       getAbsolutePosition(position, 'parent1', gv);
 
@@ -206,7 +206,7 @@ describe('Position Utilities', () => {
       const position = { x: 100, y: 200 };
       const gv: TGraphView = {
         nodeViews: [],
-      } as TGraphView;
+      } as unknown as TGraphView;
 
       const result = getAbsolutePosition(position, 'parent1', gv);
 
@@ -223,7 +223,7 @@ describe('Position Utilities', () => {
             parentId: undefined,
           },
         ],
-      } as TGraphView;
+      } as unknown as TGraphView;
 
       const result = getAbsolutePosition(position, 'parent1', gv);
 
@@ -241,7 +241,7 @@ describe('Position Utilities', () => {
             parentId: undefined,
           },
         ],
-      } as TGraphView;
+      } as unknown as TGraphView;
 
       const result = getAbsolutePosition(position, 'parent1', gv);
 
@@ -263,7 +263,7 @@ describe('Position Utilities', () => {
             parentId: 'topParent',
           },
         ],
-      } as TGraphView;
+      } as unknown as TGraphView;
 
       const result = getAbsolutePosition(position, 'middleParent', gv);
 
@@ -281,7 +281,7 @@ describe('Position Utilities', () => {
           { id: 'leaf1', position: { x: 10, y: 20 }, parentId: 'branch1' },
           { id: 'leaf2', position: { x: 30, y: 40 }, parentId: 'branch2' },
         ],
-      } as TGraphView;
+      } as unknown as TGraphView;
 
       // Test position relative to leaf1
       const result1 = getAbsolutePosition(position, 'leaf1', gv);
@@ -302,7 +302,7 @@ describe('Position Utilities', () => {
             parentId: 'nonexistent',
           },
         ],
-      } as TGraphView;
+      } as unknown as TGraphView;
 
       const result = getAbsolutePosition(position, 'parent1', gv);
 
@@ -321,7 +321,7 @@ describe('Position Utilities', () => {
             parentId: undefined,
           },
         ],
-      } as TGraphView;
+      } as unknown as TGraphView;
 
       const child1Pos = getAbsolutePosition({ x: 10, y: 10 }, 'parent', gv);
       const child2Pos = getAbsolutePosition({ x: 20, y: 30 }, 'parent', gv);
@@ -341,7 +341,7 @@ describe('Position Utilities', () => {
           // Elements inside group
           { id: 'elem1', position: { x: 20, y: 30 }, parentId: 'group1' },
         ],
-      } as TGraphView;
+      } as unknown as TGraphView;
 
       const absolutePos = getAbsolutePosition({ x: 5, y: 10 }, 'elem1', gv);
 
@@ -351,4 +351,3 @@ describe('Position Utilities', () => {
     });
   });
 });
-

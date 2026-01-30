@@ -4,6 +4,7 @@ import {
   TCollaborator,
   TG_User,
 } from '@holistix-forge/types';
+import type { TJson } from '@holistix-forge/simple-types';
 import { useApi } from './api-context';
 import {
   useQuery,
@@ -439,12 +440,14 @@ export const useMutationChangePassword = () => {
 export const useQueryUserOrganizations = () => {
   const { ganymedeApi } = useApi();
 
-  return useQuery<Array<{
-    organization_id: string;
-    name: string;
-    owner_user_id: string;
-    created_at: string;
-  }>>({
+  return useQuery<
+    Array<{
+      organization_id: string;
+      name: string;
+      owner_user_id: string;
+      created_at: string;
+    }>
+  >({
     queryKey: ['user-organizations', 'me'],
     queryFn: () =>
       (
@@ -539,7 +542,10 @@ export const useMutationDeleteProject = (project_id: string) => {
 
 //
 
-export const useQueryProjectByName = (organization_id: string, project_name: string) => {
+export const useQueryProjectByName = (
+  organization_id: string,
+  project_name: string
+) => {
   const { ganymedeApi } = useApi();
   return useQuery<TApi_Project>({
     queryKey: ['projects', organization_id, project_name],
@@ -638,7 +644,7 @@ export const useQueryRoles = (organization_id: string) => {
           method: 'GET',
         },
         organization_id
-      ) as Promise<{ roles: Role[] }>,
+      ) as unknown as Promise<{ roles: Role[] }>,
     enabled: !!organization_id,
   });
 };
@@ -656,7 +662,7 @@ export const useQueryRole = (organization_id: string, role_id: string) => {
           pathParameters: { role_id },
         },
         organization_id
-      ) as Promise<Role>,
+      ) as unknown as Promise<Role>,
     enabled: !!organization_id && !!role_id,
   });
 };
@@ -680,7 +686,7 @@ export const useQueryUserRoles = (
           method: 'GET',
         },
         organization_id
-      ) as Promise<UserRoleAssignment>;
+      ) as unknown as Promise<UserRoleAssignment>;
     },
     enabled: !!organization_id && !!user_id,
   });
@@ -696,7 +702,7 @@ export const useQueryOrgMembers = (organization_id: string) => {
         url: 'orgs/{organization_id}/members',
         method: 'GET',
         pathParameters: { organization_id },
-      }) as Promise<{ members: OrgMember[] }>,
+      }) as unknown as Promise<{ members: OrgMember[] }>,
     enabled: !!organization_id,
   });
 };
@@ -713,7 +719,7 @@ export const useQueryPermissions = (organization_id: string) => {
           method: 'GET',
         },
         organization_id
-      ) as Promise<{ permissions: PermissionDefinition[] }>,
+      ) as unknown as Promise<{ permissions: PermissionDefinition[] }>,
     enabled: !!organization_id,
   });
 };
@@ -728,10 +734,10 @@ export const useMutationCreateRole = (organization_id: string) => {
         {
           url: 'roles',
           method: 'POST',
-          jsonBody: role,
+          jsonBody: role as unknown as TJson,
         },
         organization_id
-      ) as Promise<Role>,
+      ) as unknown as Promise<Role>,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roles', organization_id] });
     },
@@ -745,7 +751,9 @@ export const useMutationUpdateRole = (organization_id: string) => {
   return useMutation({
     mutationFn: (arg: {
       role_id: string;
-      updates: Partial<Pick<Role, 'display_name' | 'description' | 'permissions'>>;
+      updates: Partial<
+        Pick<Role, 'display_name' | 'description' | 'permissions'>
+      >;
     }) =>
       ganymedeApi.fetchGateway(
         {
@@ -755,7 +763,7 @@ export const useMutationUpdateRole = (organization_id: string) => {
           jsonBody: arg.updates,
         },
         organization_id
-      ) as Promise<Role>,
+      ) as unknown as Promise<Role>,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roles', organization_id] });
     },
@@ -778,7 +786,9 @@ export const useMutationDeleteRole = (organization_id: string) => {
       ) as Promise<{ success: boolean }>,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roles', organization_id] });
-      queryClient.invalidateQueries({ queryKey: ['user-roles', organization_id] });
+      queryClient.invalidateQueries({
+        queryKey: ['user-roles', organization_id],
+      });
     },
   });
 };
@@ -803,7 +813,7 @@ export const useMutationAssignRole = (organization_id: string) => {
             role_id: arg.role_id,
             scope: arg.scope,
             project_id: arg.project_id,
-          },
+          } as unknown as TJson,
         },
         organization_id
       ) as Promise<{ success: boolean }>,

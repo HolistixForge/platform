@@ -1,7 +1,10 @@
-import { ReducerWithCollab } from '../index';
+import { ReducerWithCollab, Collab } from '../index';
 import type { ICollabRegistry } from '../index';
 import type { RequestData } from '@holistix-forge/reducers';
-import type { Collab } from '@holistix-forge/collab-engine';
+import type {
+  TValidSharedData,
+  SharedMap,
+} from '@holistix-forge/collab-engine';
 
 // Test event types
 type TTestEvents =
@@ -10,13 +13,13 @@ type TTestEvents =
 
 // Test shared data
 type TTestSharedData = {
-  'test:items': Map<string, string>;
-  'test:count': number;
+  'test:items': SharedMap<string>;
+  'test:count': SharedMap<number>;
 };
 
 // Concrete implementation for testing
 class TestReducer extends ReducerWithCollab<TTestEvents, TTestSharedData> {
-  public lastCollab: Collab<TTestSharedData> | null = null;
+  public lastCollab: Collab<TValidSharedData> | null = null;
 
   override async reduce(
     event: TTestEvents,
@@ -36,7 +39,7 @@ class TestReducer extends ReducerWithCollab<TTestEvents, TTestSharedData> {
   ) {
     const collab = this.getCollab(requestData);
     this.lastCollab = collab;
-    (collab.sharedData['test:items'] as Map<string, string>).set(
+    (collab.sharedData['test:items'] as unknown as Map<string, string>).set(
       event.id,
       event.data
     );
@@ -55,7 +58,7 @@ class TestReducer extends ReducerWithCollab<TTestEvents, TTestSharedData> {
 
 describe('ReducerWithCollab', () => {
   let mockRegistry: jest.Mocked<ICollabRegistry>;
-  let mockCollab: jest.Mocked<Collab<TTestSharedData>>;
+  let mockCollab: jest.Mocked<Collab<TValidSharedData>>;
   let reducer: TestReducer;
 
   beforeEach(() => {
@@ -96,13 +99,13 @@ describe('ReducerWithCollab', () => {
   });
 
   describe('getCollab', () => {
-    const validRequestData: RequestData = {
+    const validRequestData = {
       ip: '127.0.0.1',
       user_id: 'user-123',
       jwt: {},
       headers: {},
       project_id: 'project-456',
-    };
+    } as unknown as RequestData;
 
     it('should get collab from registry with correct project_id', () => {
       const collab = reducer['getCollab'](validRequestData);
@@ -114,10 +117,13 @@ describe('ReducerWithCollab', () => {
     });
 
     it('should throw error when project_id is undefined', () => {
-      const invalidRequestData: RequestData = {
-        ...validRequestData,
+      const invalidRequestData = {
+        ip: '127.0.0.1',
+        user_id: 'user-123',
+        jwt: {},
+        headers: {},
         project_id: undefined,
-      };
+      } as unknown as RequestData;
 
       expect(() => {
         reducer['getCollab'](invalidRequestData);
@@ -125,10 +131,13 @@ describe('ReducerWithCollab', () => {
     });
 
     it('should throw error when project_id is empty string', () => {
-      const invalidRequestData: RequestData = {
-        ...validRequestData,
+      const invalidRequestData = {
+        ip: '127.0.0.1',
+        user_id: 'user-123',
+        jwt: {},
+        headers: {},
         project_id: '',
-      };
+      } as unknown as RequestData;
 
       expect(() => {
         reducer['getCollab'](invalidRequestData);
@@ -137,10 +146,13 @@ describe('ReducerWithCollab', () => {
 
     it('should include module name in error message', () => {
       const customReducer = new TestReducer(mockRegistry, 'custom-module-name');
-      const invalidRequestData: RequestData = {
-        ...validRequestData,
+      const invalidRequestData = {
+        ip: '127.0.0.1',
+        user_id: 'user-123',
+        jwt: {},
+        headers: {},
         project_id: undefined,
-      };
+      } as unknown as RequestData;
 
       expect(() => {
         customReducer['getCollab'](invalidRequestData);
@@ -150,8 +162,20 @@ describe('ReducerWithCollab', () => {
     });
 
     it('should work with different project_ids', () => {
-      const requestData1 = { ...validRequestData, project_id: 'project-1' };
-      const requestData2 = { ...validRequestData, project_id: 'project-2' };
+      const requestData1 = {
+        ip: '127.0.0.1',
+        user_id: 'user-123',
+        jwt: {},
+        headers: {},
+        project_id: 'project-1',
+      } as unknown as RequestData;
+      const requestData2 = {
+        ip: '127.0.0.1',
+        user_id: 'user-123',
+        jwt: {},
+        headers: {},
+        project_id: 'project-2',
+      } as unknown as RequestData;
 
       reducer['getCollab'](requestData1);
       reducer['getCollab'](requestData2);
@@ -167,13 +191,13 @@ describe('ReducerWithCollab', () => {
   });
 
   describe('reduce method integration', () => {
-    const requestData: RequestData = {
+    const requestData = {
       ip: '127.0.0.1',
       user_id: 'user-123',
       jwt: {},
       headers: {},
       project_id: 'test-project',
-    };
+    } as unknown as RequestData;
 
     it('should call getCollab when processing events', async () => {
       await reducer.reduce(
@@ -201,7 +225,10 @@ describe('ReducerWithCollab', () => {
         requestData
       );
 
-      const items = mockCollab.sharedData['test:items'] as Map<string, string>;
+      const items = mockCollab.sharedData['test:items'] as unknown as Map<
+        string,
+        string
+      >;
       expect(items.get('item-1')).toBe('test-data');
     });
 
@@ -217,7 +244,10 @@ describe('ReducerWithCollab', () => {
 
       expect(mockRegistry.getCollabForProject).toHaveBeenCalledTimes(2);
 
-      const items = mockCollab.sharedData['test:items'] as Map<string, string>;
+      const items = mockCollab.sharedData['test:items'] as unknown as Map<
+        string,
+        string
+      >;
       expect(items.get('item-1')).toBe('data-1');
       expect(items.get('item-2')).toBe('data-2');
     });
@@ -236,7 +266,13 @@ describe('ReducerWithCollab', () => {
     });
 
     it('should throw error if project_id missing', async () => {
-      const invalidRequestData = { ...requestData, project_id: undefined };
+      const invalidRequestData = {
+        ip: '127.0.0.1',
+        user_id: 'user-123',
+        jwt: {},
+        headers: {},
+        project_id: undefined,
+      } as unknown as RequestData;
 
       await expect(
         reducer.reduce(
@@ -262,18 +298,21 @@ describe('ReducerWithCollab', () => {
         .mockReturnValueOnce(collab1 as any)
         .mockReturnValueOnce(collab2 as any);
 
-      const requestData1: RequestData = {
+      const requestData1 = {
         ip: '127.0.0.1',
         user_id: 'user-1',
         jwt: {},
         headers: {},
         project_id: 'project-1',
-      };
+      } as unknown as RequestData;
 
-      const requestData2: RequestData = {
-        ...requestData1,
+      const requestData2 = {
+        ip: '127.0.0.1',
+        user_id: 'user-1',
+        jwt: {},
+        headers: {},
         project_id: 'project-2',
-      };
+      } as unknown as RequestData;
 
       await reducer.reduce(
         { type: 'test:create', id: 'item-1', data: 'from-project-1' },
@@ -294,13 +333,13 @@ describe('ReducerWithCollab', () => {
   });
 
   describe('error handling', () => {
-    const requestData: RequestData = {
+    const requestData = {
       ip: '127.0.0.1',
       user_id: 'user-123',
       jwt: {},
       headers: {},
       project_id: 'test-project',
-    };
+    } as unknown as RequestData;
 
     it('should propagate errors from registry', async () => {
       const registryError = new Error('Registry error');
@@ -317,13 +356,13 @@ describe('ReducerWithCollab', () => {
     });
 
     it('should handle null/undefined in various fields', () => {
-      const edgeCaseData: RequestData = {
+      const edgeCaseData = {
         ip: '',
         user_id: '',
-        jwt: null as any,
-        headers: null as any,
+        jwt: null,
+        headers: null,
         project_id: 'valid-project',
-      };
+      } as unknown as RequestData;
 
       // Should not throw - only project_id matters
       expect(() => {
@@ -334,13 +373,13 @@ describe('ReducerWithCollab', () => {
 
   describe('type safety', () => {
     it('should enforce correct event types', async () => {
-      const requestData: RequestData = {
+      const requestData = {
         ip: '127.0.0.1',
         user_id: 'user-123',
         jwt: {},
         headers: {},
         project_id: 'test-project',
-      };
+      } as unknown as RequestData;
 
       // TypeScript should enforce these at compile time
       await reducer.reduce(
@@ -382,7 +421,13 @@ describe('ReducerWithCollab', () => {
       const extended = new ExtendedReducer(mockRegistry, 'extended-module');
       await extended.reduce(
         { type: 'test:create', id: 'item-1', data: 'test' },
-        { ip: '', user_id: '', jwt: {}, headers: {}, project_id: 'test' }
+        {
+          ip: '',
+          user_id: '',
+          jwt: {},
+          headers: {},
+          project_id: 'test',
+        } as unknown as RequestData
       );
 
       expect(extended.customMethodCalled).toBe(true);
@@ -397,14 +442,17 @@ describe('ReducerWithCollab', () => {
           return this.getCollab(requestData);
         }
 
-        override async reduce(): Promise<void> {
+        override async reduce(
+          _event: TTestEvents,
+          _requestData: RequestData
+        ): Promise<void> {
           // Base implementation
         }
       }
 
       class FinalReducer extends MiddleReducer {
         override async reduce(
-          event: TTestEvents,
+          _event: TTestEvents,
           requestData: RequestData
         ): Promise<void> {
           const collab = this.helper(requestData);
@@ -413,10 +461,13 @@ describe('ReducerWithCollab', () => {
       }
 
       const final = new FinalReducer(mockRegistry, 'final-module');
-      await final.reduce(
-        { type: 'test:create', id: 'item-1', data: 'test' },
-        { ip: '', user_id: '', jwt: {}, headers: {}, project_id: 'test' }
-      );
+      await final.reduce({ type: 'test:create', id: 'item-1', data: 'test' }, {
+        ip: '',
+        user_id: '',
+        jwt: {},
+        headers: {},
+        project_id: 'test',
+      } as unknown as RequestData);
     });
   });
 });

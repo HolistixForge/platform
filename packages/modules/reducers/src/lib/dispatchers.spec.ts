@@ -4,9 +4,17 @@
 
 import { FrontendDispatcher } from './dispatchers';
 import type { ApiFetch } from '@holistix-forge/api-fetch';
+import type { TBaseEvent } from '..';
+
+/** Helper to extract jsonBody from a mock call as a record with string keys */
+function getJsonBody(
+  call: Parameters<ApiFetch['fetch']>
+): Record<string, unknown> {
+  return call[0].jsonBody as Record<string, unknown>;
+}
 
 describe('FrontendDispatcher', () => {
-  let dispatcher: FrontendDispatcher;
+  let dispatcher: FrontendDispatcher<TBaseEvent>;
   let mockApiFetch: jest.Mocked<ApiFetch>;
 
   beforeEach(() => {
@@ -77,7 +85,7 @@ describe('FrontendDispatcher', () => {
         await dispatcher.dispatch(event);
 
         expect(mockApiFetch.fetch).toHaveBeenCalledWith({
-          url: 'event',
+          url: 'collab/event',
           method: 'POST',
           jsonBody: {
             event,
@@ -95,14 +103,16 @@ describe('FrontendDispatcher', () => {
       expect(mockApiFetch.fetch).toHaveBeenCalledTimes(3);
 
       mockApiFetch.fetch.mock.calls.forEach((call) => {
-        expect(call[0].jsonBody.project_id).toBe('test-project-456');
+        expect(getJsonBody(call).project_id).toBe('test-project-456');
       });
     });
 
     it('should use updated project_id after setProjectId call', async () => {
       await dispatcher.dispatch({ type: 'test:event-1' });
 
-      expect(mockApiFetch.fetch.mock.calls[0][0].jsonBody.project_id).toBe('test-project-456');
+      expect(getJsonBody(mockApiFetch.fetch.mock.calls[0]).project_id).toBe(
+        'test-project-456'
+      );
 
       // Change project
       dispatcher.setProjectId('different-project-789');
@@ -110,7 +120,9 @@ describe('FrontendDispatcher', () => {
 
       await dispatcher.dispatch({ type: 'test:event-2' });
 
-      expect(mockApiFetch.fetch.mock.calls[0][0].jsonBody.project_id).toBe('different-project-789');
+      expect(getJsonBody(mockApiFetch.fetch.mock.calls[0]).project_id).toBe(
+        'different-project-789'
+      );
     });
   });
 
@@ -124,7 +136,7 @@ describe('FrontendDispatcher', () => {
 
       expect(mockApiFetch.fetch).toHaveBeenCalledWith(
         expect.objectContaining({
-          url: 'event',
+          url: 'collab/event',
           method: 'POST',
         })
       );
@@ -159,9 +171,9 @@ describe('FrontendDispatcher', () => {
     it('should propagate network errors', async () => {
       mockApiFetch.fetch.mockRejectedValue(new Error('Network error'));
 
-      await expect(
-        dispatcher.dispatch({ type: 'test:event' })
-      ).rejects.toThrow('Network error');
+      await expect(dispatcher.dispatch({ type: 'test:event' })).rejects.toThrow(
+        'Network error'
+      );
     });
 
     it('should not dispatch if fetch not set', async () => {
@@ -170,7 +182,7 @@ describe('FrontendDispatcher', () => {
 
       // Should not throw, just not call fetch
       await newDispatcher.dispatch({ type: 'test:event' });
-      
+
       expect(mockApiFetch.fetch).not.toHaveBeenCalled();
     });
   });
@@ -187,7 +199,7 @@ describe('FrontendDispatcher', () => {
       expect(mockApiFetch.fetch).toHaveBeenCalledTimes(3);
 
       mockApiFetch.fetch.mock.calls.forEach((call, i) => {
-        expect(call[0].jsonBody.project_id).toBe(projects[i]);
+        expect(getJsonBody(call).project_id).toBe(projects[i]);
       });
     });
 
@@ -200,8 +212,12 @@ describe('FrontendDispatcher', () => {
 
       await Promise.all([promise1, promise2]);
 
-      expect(mockApiFetch.fetch.mock.calls[0][0].jsonBody.project_id).toBe('project-1');
-      expect(mockApiFetch.fetch.mock.calls[1][0].jsonBody.project_id).toBe('project-2');
+      expect(getJsonBody(mockApiFetch.fetch.mock.calls[0]).project_id).toBe(
+        'project-1'
+      );
+      expect(getJsonBody(mockApiFetch.fetch.mock.calls[1]).project_id).toBe(
+        'project-2'
+      );
     });
   });
 
@@ -211,12 +227,15 @@ describe('FrontendDispatcher', () => {
 
       await dispatcher.dispatch({ type: 'tabs:add-tab', name: 'Tab 1' });
       await dispatcher.dispatch({ type: 'tabs:add-tab', name: 'Tab 2' });
-      await dispatcher.dispatch({ type: 'whiteboard:create-node', id: 'node-1' });
+      await dispatcher.dispatch({
+        type: 'whiteboard:create-node',
+        id: 'node-1',
+      });
 
       expect(mockApiFetch.fetch).toHaveBeenCalledTimes(3);
 
       mockApiFetch.fetch.mock.calls.forEach((call) => {
-        expect(call[0].jsonBody.project_id).toBe('mounted-project-123');
+        expect(getJsonBody(call).project_id).toBe('mounted-project-123');
       });
     });
 
@@ -227,8 +246,12 @@ describe('FrontendDispatcher', () => {
       dispatcher.setProjectId('project-2');
       await dispatcher.dispatch({ type: 'test:event-2' });
 
-      expect(mockApiFetch.fetch.mock.calls[0][0].jsonBody.project_id).toBe('project-1');
-      expect(mockApiFetch.fetch.mock.calls[1][0].jsonBody.project_id).toBe('project-2');
+      expect(getJsonBody(mockApiFetch.fetch.mock.calls[0]).project_id).toBe(
+        'project-1'
+      );
+      expect(getJsonBody(mockApiFetch.fetch.mock.calls[1]).project_id).toBe(
+        'project-2'
+      );
     });
   });
 
@@ -248,9 +271,8 @@ describe('FrontendDispatcher', () => {
       expect(mockApiFetch.fetch).toHaveBeenCalledTimes(10);
 
       mockApiFetch.fetch.mock.calls.forEach((call) => {
-        expect(call[0].jsonBody.project_id).toBe('concurrent-test-project');
+        expect(getJsonBody(call).project_id).toBe('concurrent-test-project');
       });
     });
   });
 });
-

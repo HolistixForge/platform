@@ -71,7 +71,7 @@ describe.skip('Testing PostgreSQL driver', () => {
     try {
       await pg.query(api['doError'].query, []);
     } catch (e) {
-      error = e.message;
+      error = (e as Error).message;
     }
     expect(error).toContain('relation "does_not_exist_table" does not exist');
   });
@@ -81,10 +81,11 @@ describe.skip('Testing PostgreSQL driver', () => {
   it('returns one row', async () => {
     const r = await pg.query(api['oneRow'].query, []);
     let set = r.next();
+    expect(set).toBeDefined();
 
-    // const isError = set.isError();
-    const oneRow = set.oneRow();
-    const allRows = set.allRows();
+    // const isError = set!.isError();
+    const oneRow = set!.oneRow();
+    const allRows = set!.allRows();
 
     while (set) {
       console.log({
@@ -103,10 +104,11 @@ describe.skip('Testing PostgreSQL driver', () => {
   it('returns multiple rows', async () => {
     const r = await pg.query(api['multipleRow'].query, []);
     let set = r.next();
+    expect(set).toBeDefined();
 
-    // const isError = set.isError();
-    const oneRow = set.oneRow();
-    const allRows = set.allRows();
+    // const isError = set!.isError();
+    const oneRow = set!.oneRow();
+    const allRows = set!.allRows();
 
     while (set) {
       console.log({
@@ -127,7 +129,7 @@ describe.skip('Testing PostgreSQL driver', () => {
     try {
       await pg.query(api['fqFail'].query, []);
     } catch (e) {
-      error = e.message;
+      error = (e as Error).message;
     }
     expect(error).toContain('"orders_user_id_fkey"');
   });
@@ -139,7 +141,7 @@ describe.skip('Testing PostgreSQL driver', () => {
     try {
       await pg.query(api['callRaiseAnError'].query, [42, 'abemus papam', null]);
     } catch (e) {
-      error = e.message;
+      error = (e as Error).message;
     }
     expect(error).toContain('artificial_exception');
   });
@@ -156,10 +158,11 @@ describe.skip('Testing PostgreSQL driver', () => {
       null,
     ]);
     let set = r.next();
+    expect(set).toBeDefined();
 
-    // const isError = set.isError();
-    const oneRow = set.oneRow();
-    const allRows = set.allRows();
+    // const isError = set!.isError();
+    const oneRow = set!.oneRow();
+    const allRows = set!.allRows();
 
     while (set) {
       console.log({
@@ -191,10 +194,11 @@ describe.skip('Testing PostgreSQL driver', () => {
   it('must return rows from function', async () => {
     const r = await pg.query(api['get_orders_by_user_id'].query, [2]);
     let set = r.next();
+    expect(set).toBeDefined();
 
-    // const isError = set.isError();
-    const oneRow = set.oneRow();
-    const allRows = set.allRows();
+    // const isError = set!.isError();
+    const oneRow = set!.oneRow();
+    const allRows = set!.allRows();
 
     while (set) {
       console.log({

@@ -72,7 +72,7 @@ describe('Collab Hooks with CollabProjectProvider', () => {
     };
 
     const Wrapper = ({ children }: { children: ReactNode }) => (
-      <ModuleProvider modules={mockModuleExports}>
+      <ModuleProvider exports={mockModuleExports}>
         <CollabProjectProvider project_id={projectId}>
           {children}
         </CollabProjectProvider>
@@ -132,7 +132,7 @@ describe('Collab Hooks with CollabProjectProvider', () => {
     });
 
     it('should return data from extraction function', () => {
-      const { Wrapper, mocks } = createWrapper();
+      const { Wrapper } = createWrapper();
 
       const { result } = renderHook(
         () =>
@@ -171,9 +171,7 @@ describe('Collab Hooks with CollabProjectProvider', () => {
       };
 
       const BadWrapper = ({ children }: { children: ReactNode }) => (
-        <ModuleProvider modules={mockModuleExports}>
-          {children}
-        </ModuleProvider>
+        <ModuleProvider exports={mockModuleExports}>{children}</ModuleProvider>
       );
 
       expect(() => {
@@ -181,7 +179,9 @@ describe('Collab Hooks with CollabProjectProvider', () => {
           () => useLocalSharedData(['tabs:tabs'], (d) => d['tabs:tabs']),
           { wrapper: BadWrapper }
         );
-      }).toThrow('useCollabProjectId must be used within CollabProjectProvider');
+      }).toThrow(
+        'useCollabProjectId must be used within CollabProjectProvider'
+      );
 
       consoleSpy.mockRestore();
     });
@@ -289,7 +289,7 @@ describe('Collab Hooks with CollabProjectProvider', () => {
 
   describe('useAwarenessSelections', () => {
     it('should return selection tracking', () => {
-      const { Wrapper, mocks } = createWrapper();
+      const { Wrapper } = createWrapper();
 
       const { result } = renderHook(() => useAwarenessSelections(), {
         wrapper: Wrapper,
@@ -377,7 +377,7 @@ describe('Collab Hooks with CollabProjectProvider', () => {
       const mockModuleExports = { collab: { getCollabForProject } };
 
       const Wrapper1 = ({ children }: { children: ReactNode }) => (
-        <ModuleProvider modules={mockModuleExports}>
+        <ModuleProvider exports={mockModuleExports}>
           <CollabProjectProvider project_id="project-1">
             {children}
           </CollabProjectProvider>
@@ -385,7 +385,7 @@ describe('Collab Hooks with CollabProjectProvider', () => {
       );
 
       const Wrapper2 = ({ children }: { children: ReactNode }) => (
-        <ModuleProvider modules={mockModuleExports}>
+        <ModuleProvider exports={mockModuleExports}>
           <CollabProjectProvider project_id="project-2">
             {children}
           </CollabProjectProvider>

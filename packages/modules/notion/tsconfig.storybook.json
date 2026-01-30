@@ -24,16 +24,17 @@
     "src/**/*.stories.mdx",
     ".storybook/*.js",
     ".storybook/*.ts",
-    "src/**/*.json"
-  ],
-  "references": [
-    {
-      "path": "./tsconfig.lib.json"
-    }
+    "src/**/*.json",
+    ".storybook/*.tsx"
   ],
   "files": [
     "../../../node_modules/@nx/react/typings/styled-jsx.d.ts",
     "../../../node_modules/@nx/react/typings/cssmodule.d.ts",
     "../../../node_modules/@nx/react/typings/image.d.ts"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    }
   ]
 }

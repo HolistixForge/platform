@@ -35,16 +35,18 @@ describe('CollabRegistryFrontend', () => {
     }));
 
     // Mock YjsClientCollab constructor
-    (YjsClientCollab as jest.Mock).mockImplementation((config) => ({
+    (YjsClientCollab as unknown as jest.Mock).mockImplementation((config) => ({
       config,
       sharedData: {},
       destroy: jest.fn(),
     }));
 
     // Mock LocalOverrider constructor
-    (LocalOverrider as jest.Mock).mockImplementation((sharedData) => ({
-      sharedData,
-    }));
+    (LocalOverrider as unknown as jest.Mock).mockImplementation(
+      (sharedData) => ({
+        sharedData,
+      })
+    );
   });
 
   describe('constructor', () => {
@@ -107,7 +109,7 @@ describe('CollabRegistryFrontend', () => {
 
     it('should create LocalOverrider with shared data from collab', () => {
       const mockSharedData = { 'tabs:tabs': new Map() };
-      (YjsClientCollab as jest.Mock).mockImplementation(() => ({
+      (YjsClientCollab as unknown as jest.Mock).mockImplementation(() => ({
         sharedData: mockSharedData,
         destroy: jest.fn(),
       }));
@@ -190,7 +192,7 @@ describe('CollabRegistryFrontend', () => {
 
     it('should call destroy on collab instance', () => {
       const mockDestroy = jest.fn();
-      (YjsClientCollab as jest.Mock).mockImplementation(() => ({
+      (YjsClientCollab as unknown as jest.Mock).mockImplementation(() => ({
         sharedData: {},
         destroy: mockDestroy,
       }));
@@ -256,7 +258,7 @@ describe('CollabRegistryFrontend', () => {
 
     it('should call destroy on all collab instances', () => {
       const mockDestroy = jest.fn();
-      (YjsClientCollab as jest.Mock).mockImplementation(() => ({
+      (YjsClientCollab as unknown as jest.Mock).mockImplementation(() => ({
         sharedData: {},
         destroy: mockDestroy,
       }));

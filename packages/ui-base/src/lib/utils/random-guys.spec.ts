@@ -1,5 +1,5 @@
 import { randomPP, randomGuys, randomGuy } from './random-guys';
-import { TF_User } from '@holistix-forge/types';
+import type { TF_User } from '@holistix-forge/types';
 
 /**
  * TESTING UTILITY FUNCTIONS - random-guys.spec.ts

@@ -33,8 +33,8 @@ export const UserListItem = ({
       }
     >
       <div className="user-info">
-        <UserAvatar user={collaborator} />
-        <UserUsername user={collaborator} />
+        <UserAvatar {...collaborator} />
+        <UserUsername {...collaborator} />
       </div>
       {children && <div className="user-actions">{children}</div>}
     </div>
