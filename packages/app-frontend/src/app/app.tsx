@@ -18,6 +18,7 @@ import { ProjectRoot } from './pages/project/project-root';
 import { EditorPage } from './pages/project/editor/editor-page';
 import { OrganizationPermissionsPage } from './pages/organization/permissions-page';
 import { OrganizationDashboard } from './pages/organization/dashboard';
+import { CredentialsPage } from './pages/credentials';
 import { MobileBlockOverlay } from './MobileBlockOverlay';
 
 //
@@ -61,6 +62,10 @@ export function App() {
               <Route
                 path="/account/settings"
                 element={<AccountSettingsPage />}
+              />
+              <Route
+                path="/account/credentials"
+                element={<CredentialsPage />}
               />
               <Route
                 path="/account/forgot-password"

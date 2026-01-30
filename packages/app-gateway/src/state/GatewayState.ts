@@ -12,7 +12,7 @@ export interface OrgMember {
   user_id: string;
   username: string;
   email: string;
-  role: 'owner' | 'admin' | 'member';  // Database role (simple)
+  role: 'owner' | 'admin' | 'member'; // Database role (simple)
 }
 
 /**
@@ -42,6 +42,17 @@ export class GatewayState {
   constructor() {
     // Initialize Ganymede client (will be updated with token when organization context is set)
     this.ganymedeClient = createGanymedeClient();
+  }
+
+  /**
+   * Get the Ganymede client for direct API calls
+   * Used by other components that need to communicate with Ganymede
+   */
+  getGanymedeClient(): GanymedeClient {
+    if (!this.ganymedeClient) {
+      throw new Error('Ganymede client not initialized');
+    }
+    return this.ganymedeClient;
   }
 
   /**
@@ -430,7 +441,7 @@ export class GatewayState {
   /**
    * Fetch fresh organization members from Ganymede
    * Used when initializing project permissions
-   * 
+   *
    * @returns Array of organization members with their database roles
    */
   async fetchOrganizationMembers(): Promise<OrgMember[]> {
@@ -466,7 +477,7 @@ export class GatewayState {
     }
 
     const data = (await response.json()) as { members: OrgMember[] };
-    
+
     log(
       EPriority.Info,
       'GATEWAY_STATE',

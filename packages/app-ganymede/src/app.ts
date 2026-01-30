@@ -26,6 +26,7 @@ import { setupProjectRoutes } from './routes/projects';
 import { setupGatewayRoutes } from './routes/gateway';
 import { setupUserRoutes } from './routes/users';
 import { setupInternalProjectRoutes } from './routes/internal/projects';
+import { setupCredentialRoutes } from './routes/credentials';
 import {
   globalLimiter,
   authStrictLimiter,
@@ -199,6 +200,7 @@ export function createApp(
   setupProjectRoutes(router, rateLimiters.api);
   setupGatewayRoutes(router, rateLimiters.api);
   setupUserRoutes(router, rateLimiters.api);
+  setupCredentialRoutes(router, rateLimiters.api);
 
   // Internal API routes (gateway-only, protected by gateway token)
   setupInternalProjectRoutes(router, rateLimiters.api);

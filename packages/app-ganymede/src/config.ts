@@ -34,7 +34,14 @@ const envVars = [
   'SESSION_COOKIE_KEY',
 ] as const;
 
+// Optional environment variables (have sensible defaults for testing)
+const optionalEnvVars = [
+  // Credentials Wallet Encryption (defaults to test key if not set)
+  'CREDENTIALS_ENCRYPTION_KEY',
+] as const;
+
 type EnvVars = (typeof envVars)[number];
+type OptionalEnvVars = (typeof optionalEnvVars)[number];
 
 type ExtraKeys =
   | 'APP_GANYMEDE_URL'
@@ -44,10 +51,8 @@ type ExtraKeys =
   | 'MAGIC_LINK_FAILED_URL'
   | 'MAGILINK_SECRET';
 
-const CONFIG: Record<EnvVars | ExtraKeys, string> = {} as Record<
-  EnvVars | ExtraKeys,
-  string
->;
+const CONFIG: Record<EnvVars | OptionalEnvVars | ExtraKeys, string> =
+  {} as Record<EnvVars | OptionalEnvVars | ExtraKeys, string>;
 
 envVars.forEach((varName) => {
   const value = process.env[varName];
@@ -56,6 +61,17 @@ envVars.forEach((varName) => {
   } else {
     undefinedValues.push(varName);
   }
+});
+
+// Process optional env vars with defaults
+const optionalDefaults: Record<OptionalEnvVars, string> = {
+  // Default key for testing only - MUST be overridden in production
+  CREDENTIALS_ENCRYPTION_KEY: 'test-encryption-key-not-for-production-use',
+};
+
+optionalEnvVars.forEach((varName) => {
+  const value = process.env[varName];
+  CONFIG[varName] = value || optionalDefaults[varName];
 });
 
 if (undefinedValues.length > 0) {
@@ -71,7 +87,9 @@ CONFIG['APP_GANYMEDE_URL'] = `https://${CONFIG.GANYMEDE_FQDN}`;
 CONFIG['APP_FRONTEND_URL'] = `https://${CONFIG.FRONTEND_FQDN}`;
 CONFIG['APP_FRONTEND_URL_DEV'] = `https://frontend.${CONFIG.FRONTEND_FQDN}`;
 CONFIG['LOGIN_PAGE_URL'] = `${CONFIG.APP_FRONTEND_URL}/account/login`;
-CONFIG['MAGIC_LINK_FAILED_URL'] = `${CONFIG.APP_FRONTEND_URL}/account/link-failed`;
+CONFIG[
+  'MAGIC_LINK_FAILED_URL'
+] = `${CONFIG.APP_FRONTEND_URL}/account/link-failed`;
 CONFIG['MAGILINK_SECRET'] = CONFIG.SESSION_COOKIE_KEY;
 
 export { CONFIG };

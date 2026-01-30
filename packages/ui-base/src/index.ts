@@ -20,7 +20,11 @@ export type { PermissionsPageProps } from './lib/permissions-page/permissions-pa
 export { RolesTab } from './lib/permissions-page/roles-tab';
 export type { RolesTabProps } from './lib/permissions-page/roles-tab';
 export { UsersTab } from './lib/permissions-page/users-tab';
-export type { UsersTabProps, OrgMember, UserRoleAssignment } from './lib/permissions-page/users-tab';
+export type {
+  UsersTabProps,
+  OrgMember,
+  UserRoleAssignment,
+} from './lib/permissions-page/users-tab';
 export { UserRoleEditor } from './lib/permissions-page/user-role-editor';
 export type { UserRoleEditorProps } from './lib/permissions-page/user-role-editor';
 
@@ -91,3 +95,21 @@ export { TagsBar } from './lib/tags/tags';
 
 export type { ColorValue } from './lib/form/form-fields/color-picker';
 export { ColorPicker } from './lib/form/form-fields/color-picker';
+
+// Credentials Wallet UI
+export {
+  CredentialCard,
+  CredentialForm,
+  CredentialTypeSelector,
+  CredentialsList,
+  CredentialShareDialog,
+} from './lib/credentials';
+export type {
+  CredentialCardProps,
+  CredentialFormProps,
+  CredentialTypeSelectorProps,
+  CredentialsListProps,
+  CredentialShareDialogProps,
+  Organization as CredentialOrganization,
+  Project as CredentialProject,
+} from './lib/credentials';

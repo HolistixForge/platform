@@ -68,6 +68,22 @@ export {
   type OrganizationData,
 } from './lib/contexts/organization-context';
 
+// Credentials Wallet
+export {
+  credentialKeys,
+  useQueryCredentialTypes,
+  useMutationRegisterCredentialType,
+  useQueryCredentials,
+  useQueryCredential,
+  useMutationCreateCredential,
+  useMutationUpdateCredential,
+  useMutationDeleteCredential,
+  useMutationValidateCredential,
+  useQueryCredentialShares,
+  useMutationShareCredential,
+  useMutationRevokeCredentialShare,
+} from './lib/credentials-queries';
+
 export {
   ProjectProvider,
   useProject,
