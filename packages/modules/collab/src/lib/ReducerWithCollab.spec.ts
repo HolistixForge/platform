@@ -36,7 +36,10 @@ class TestReducer extends ReducerWithCollab<TTestEvents, TTestSharedData> {
   ) {
     const collab = this.getCollab(requestData);
     this.lastCollab = collab;
-    (collab.sharedData['test:items'] as Map<string, string>).set(event.id, event.data);
+    (collab.sharedData['test:items'] as Map<string, string>).set(
+      event.id,
+      event.data
+    );
   }
 
   private async _update(
@@ -46,7 +49,7 @@ class TestReducer extends ReducerWithCollab<TTestEvents, TTestSharedData> {
     const collab = this.getCollab(requestData);
     this.lastCollab = collab;
     // Just for testing
-    event.value; // use the value
+    void event.value; // use the value
   }
 }
 
@@ -104,7 +107,9 @@ describe('ReducerWithCollab', () => {
     it('should get collab from registry with correct project_id', () => {
       const collab = reducer['getCollab'](validRequestData);
 
-      expect(mockRegistry.getCollabForProject).toHaveBeenCalledWith('project-456');
+      expect(mockRegistry.getCollabForProject).toHaveBeenCalledWith(
+        'project-456'
+      );
       expect(collab).toBe(mockCollab);
     });
 
@@ -139,7 +144,9 @@ describe('ReducerWithCollab', () => {
 
       expect(() => {
         customReducer['getCollab'](invalidRequestData);
-      }).toThrow('project_id is required for custom-module-name reducer events');
+      }).toThrow(
+        'project_id is required for custom-module-name reducer events'
+      );
     });
 
     it('should work with different project_ids', () => {
@@ -149,8 +156,12 @@ describe('ReducerWithCollab', () => {
       reducer['getCollab'](requestData1);
       reducer['getCollab'](requestData2);
 
-      expect(mockRegistry.getCollabForProject).toHaveBeenCalledWith('project-1');
-      expect(mockRegistry.getCollabForProject).toHaveBeenCalledWith('project-2');
+      expect(mockRegistry.getCollabForProject).toHaveBeenCalledWith(
+        'project-1'
+      );
+      expect(mockRegistry.getCollabForProject).toHaveBeenCalledWith(
+        'project-2'
+      );
       expect(mockRegistry.getCollabForProject).toHaveBeenCalledTimes(2);
     });
   });
@@ -170,7 +181,9 @@ describe('ReducerWithCollab', () => {
         requestData
       );
 
-      expect(mockRegistry.getCollabForProject).toHaveBeenCalledWith('test-project');
+      expect(mockRegistry.getCollabForProject).toHaveBeenCalledWith(
+        'test-project'
+      );
     });
 
     it('should use correct collab instance in event handler', async () => {
@@ -203,7 +216,7 @@ describe('ReducerWithCollab', () => {
       );
 
       expect(mockRegistry.getCollabForProject).toHaveBeenCalledTimes(2);
-      
+
       const items = mockCollab.sharedData['test:items'] as Map<string, string>;
       expect(items.get('item-1')).toBe('data-1');
       expect(items.get('item-2')).toBe('data-2');
@@ -236,8 +249,14 @@ describe('ReducerWithCollab', () => {
 
   describe('project isolation', () => {
     it('should use different collab instances for different projects', async () => {
-      const collab1 = { ...mockCollab, sharedData: { ...mockCollab.sharedData } };
-      const collab2 = { ...mockCollab, sharedData: { ...mockCollab.sharedData } };
+      const collab1 = {
+        ...mockCollab,
+        sharedData: { ...mockCollab.sharedData },
+      };
+      const collab2 = {
+        ...mockCollab,
+        sharedData: { ...mockCollab.sharedData },
+      };
 
       mockRegistry.getCollabForProject
         .mockReturnValueOnce(collab1 as any)
@@ -265,8 +284,12 @@ describe('ReducerWithCollab', () => {
         requestData2
       );
 
-      expect(mockRegistry.getCollabForProject).toHaveBeenCalledWith('project-1');
-      expect(mockRegistry.getCollabForProject).toHaveBeenCalledWith('project-2');
+      expect(mockRegistry.getCollabForProject).toHaveBeenCalledWith(
+        'project-1'
+      );
+      expect(mockRegistry.getCollabForProject).toHaveBeenCalledWith(
+        'project-2'
+      );
     });
   });
 
@@ -324,7 +347,7 @@ describe('ReducerWithCollab', () => {
         { type: 'test:create', id: 'item-1', data: 'test' },
         requestData
       );
-      
+
       await reducer.reduce(
         { type: 'test:update', id: 'item-1', value: 42 },
         requestData
@@ -336,7 +359,10 @@ describe('ReducerWithCollab', () => {
 
   describe('inheritance', () => {
     it('should allow extending with custom methods', async () => {
-      class ExtendedReducer extends ReducerWithCollab<TTestEvents, TTestSharedData> {
+      class ExtendedReducer extends ReducerWithCollab<
+        TTestEvents,
+        TTestSharedData
+      > {
         public customMethodCalled = false;
 
         override async reduce(
@@ -363,7 +389,10 @@ describe('ReducerWithCollab', () => {
     });
 
     it('should support multiple inheritance levels', async () => {
-      class MiddleReducer extends ReducerWithCollab<TTestEvents, TTestSharedData> {
+      class MiddleReducer extends ReducerWithCollab<
+        TTestEvents,
+        TTestSharedData
+      > {
         protected helper(requestData: RequestData) {
           return this.getCollab(requestData);
         }
@@ -391,4 +420,3 @@ describe('ReducerWithCollab', () => {
     });
   });
 });
-

@@ -23,7 +23,9 @@ describe('CollabRegistryFrontend', () => {
       room_id: project_id,
       token: {
         get: () => 'mock-token',
-        refresh: () => {},
+        refresh: () => {
+          /* no-op for test */
+        },
       },
       user: {
         username: 'TestUser',

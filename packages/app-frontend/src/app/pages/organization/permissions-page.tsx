@@ -4,7 +4,6 @@ import { PermissionsPage } from '@holistix-forge/ui-base';
 import {
   useQueryRoles,
   useQueryOrgMembers,
-  useQueryUserRoles,
   useMutationCreateRole,
   useMutationUpdateRole,
   useMutationDeleteRole,
@@ -17,6 +16,33 @@ import {
 export const OrganizationPermissionsPage = () => {
   const { organization_id } = useParams<{ organization_id: string }>();
 
+  // All hooks must be called unconditionally (before any early return)
+  const rolesQuery = useQueryRoles(organization_id ?? '');
+  const membersQuery = useQueryOrgMembers(organization_id ?? '');
+
+  const membersData = membersQuery.data?.members;
+
+  const userRolesMap: { [user_id: string]: UserRoleAssignment } =
+    useMemo(() => {
+      const map: { [user_id: string]: UserRoleAssignment } = {};
+      if (membersData) {
+        membersData.forEach((m) => {
+          map[m.user_id] = {
+            user_id: m.user_id,
+            org_roles: [],
+            project_roles: {},
+          };
+        });
+      }
+      return map;
+    }, [membersData]);
+
+  const createRoleMutation = useMutationCreateRole(organization_id ?? '');
+  const updateRoleMutation = useMutationUpdateRole(organization_id ?? '');
+  const deleteRoleMutation = useMutationDeleteRole(organization_id ?? '');
+  const assignRoleMutation = useMutationAssignRole(organization_id ?? '');
+  const removeRoleMutation = useMutationRemoveRole(organization_id ?? '');
+
   if (!organization_id) {
     return (
       <div style={{ padding: '2rem', color: '#ef4444' }}>
@@ -24,36 +50,6 @@ export const OrganizationPermissionsPage = () => {
       </div>
     );
   }
-
-  // Fetch data
-  const rolesQuery = useQueryRoles(organization_id);
-  const membersQuery = useQueryOrgMembers(organization_id);
-
-  // Fetch all user roles (for all members)
-  const memberIds = membersQuery.data?.members.map((m) => m.user_id) || [];
-  
-  // For now, we'll fetch user roles on-demand when a user is selected
-  // In a production app, you might want to batch-fetch or cache these
-  // We'll create a simple map structure
-  const userRolesMap: { [user_id: string]: UserRoleAssignment } = useMemo(() => {
-    const map: { [user_id: string]: UserRoleAssignment } = {};
-    // Initialize empty assignments for all members
-    memberIds.forEach((user_id) => {
-      map[user_id] = {
-        user_id,
-        org_roles: [],
-        project_roles: {},
-      };
-    });
-    return map;
-  }, [memberIds]);
-
-  // Mutations
-  const createRoleMutation = useMutationCreateRole(organization_id);
-  const updateRoleMutation = useMutationUpdateRole(organization_id);
-  const deleteRoleMutation = useMutationDeleteRole(organization_id);
-  const assignRoleMutation = useMutationAssignRole(organization_id);
-  const removeRoleMutation = useMutationRemoveRole(organization_id);
 
   const handleCreateRole = async (
     role: Omit<Role, 'role_id' | 'system' | 'immutable'>
@@ -85,8 +81,13 @@ export const OrganizationPermissionsPage = () => {
     scope: 'org' | 'project',
     project_id?: string
   ) => {
-    await assignRoleMutation.mutateAsync({ user_id, role_id, scope, project_id });
-    
+    await assignRoleMutation.mutateAsync({
+      user_id,
+      role_id,
+      scope,
+      project_id,
+    });
+
     // Update local map (optimistic update will be handled by react-query)
     if (userRolesMap[user_id]) {
       const role = rolesQuery.data?.roles.find((r) => r.role_id === role_id);
@@ -109,17 +110,17 @@ export const OrganizationPermissionsPage = () => {
     project_id?: string
   ) => {
     await removeRoleMutation.mutateAsync({ user_id, role_id, project_id });
-    
+
     // Update local map
     if (userRolesMap[user_id]) {
       if (!project_id) {
-        userRolesMap[user_id].org_roles = userRolesMap[user_id].org_roles.filter(
-          (r) => r.role_id !== role_id
-        );
+        userRolesMap[user_id].org_roles = userRolesMap[
+          user_id
+        ].org_roles.filter((r) => r.role_id !== role_id);
       } else if (userRolesMap[user_id].project_roles[project_id]) {
-        userRolesMap[user_id].project_roles[project_id] = userRolesMap[user_id].project_roles[
-          project_id
-        ].filter((r) => r.role_id !== role_id);
+        userRolesMap[user_id].project_roles[project_id] = userRolesMap[
+          user_id
+        ].project_roles[project_id].filter((r) => r.role_id !== role_id);
       }
     }
   };
