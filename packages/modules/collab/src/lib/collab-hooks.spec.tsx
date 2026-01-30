@@ -14,9 +14,9 @@ import {
 
 // Mock ModuleProvider to properly provide exports
 jest.mock('@holistix-forge/module/frontend', () => ({
-  ModuleProvider: ({ children, modules }: any) => {
-    // Store modules in a way that useModuleExports can access
-    (global as any).__mockModules = modules;
+  ModuleProvider: ({ children, exports }: any) => {
+    // Store exports in a way that useModuleExports can access
+    (global as any).__mockModules = exports;
     return <>{children}</>;
   },
   useModuleExports: () => {

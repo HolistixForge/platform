@@ -64,7 +64,7 @@ describe('FrontendDispatcher', () => {
       await dispatcher.dispatch(event);
 
       expect(mockApiFetch.fetch).toHaveBeenCalledWith({
-        url: 'event',
+        url: 'collab/event',
         method: 'POST',
         jsonBody: {
           event,
@@ -153,7 +153,7 @@ describe('FrontendDispatcher', () => {
       await dispatcher.dispatch(complexEvent);
 
       expect(mockApiFetch.fetch).toHaveBeenCalledWith({
-        url: 'event',
+        url: 'collab/event',
         method: 'POST',
         jsonBody: {
           event: complexEvent,
