@@ -3,12 +3,6 @@
  * Sets up test environment variables required by the app
  */
 
-// Polyfill WebSocket for Node.js < 22 (CI uses Node 20)
-if (typeof globalThis.WebSocket === 'undefined') {
-  const { WebSocket } = require('ws');
-  globalThis.WebSocket = WebSocket;
-}
-
 // Set test environment
 process.env.NODE_ENV = 'test';
 
