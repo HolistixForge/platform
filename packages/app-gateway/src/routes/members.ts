@@ -2,11 +2,16 @@ import { Router, RequestHandler } from 'express';
 import { asyncHandler, AuthRequest } from '../middleware/route-handler';
 import { authenticateJwt } from '../middleware/jwt-auth';
 import { getGatewayInstances } from '../initialization/gateway-instances';
-import { EPriority, log, ForbiddenException, NotFoundException } from '@holistix-forge/log';
+import {
+  EPriority,
+  log,
+  ForbiddenException,
+  NotFoundException,
+} from '@holistix-forge/log';
 
 /**
  * Member Management Routes
- * 
+ *
  * Gateway-orchestrated project member management.
  * All member add/remove operations go through gateway to maintain consistency.
  */
@@ -18,7 +23,7 @@ export const setupMembersRoutes = (
   /**
    * POST /members/projects/:project_id/users
    * Add member to project with roles
-   * 
+   *
    * Body: { user_id: string, role_ids: string[] }
    * Requires: project:*:admin permission
    */
@@ -44,7 +49,9 @@ export const setupMembersRoutes = (
       log(
         EPriority.Info,
         'MEMBERS',
-        `Add member request: project ${project_id}, user ${user_id}, roles: ${role_ids.join(', ')}`
+        `Add member request: project ${project_id}, user ${user_id}, roles: ${role_ids.join(
+          ', '
+        )}`
       );
 
       // 1. Validate: Requester has permission
@@ -61,7 +68,8 @@ export const setupMembersRoutes = (
       }
 
       // 2. Validate: User is organization member
-      const orgMembers = await instances.gatewayState.fetchOrganizationMembers();
+      const orgMembers =
+        await instances.gatewayState.fetchOrganizationMembers();
       const isMember = orgMembers.some((m) => m.user_id === user_id);
 
       if (!isMember) {
@@ -75,7 +83,9 @@ export const setupMembersRoutes = (
         const role = instances.roleManager.getRole(role_id);
 
         if (!role) {
-          throw new NotFoundException([{ message: `Role not found: ${role_id}` }]);
+          throw new NotFoundException([
+            { message: `Role not found: ${role_id}` },
+          ]);
         }
 
         if (role.scope !== 'project') {
@@ -89,7 +99,11 @@ export const setupMembersRoutes = (
 
       // 4. Assign roles in gateway state
       for (const role_id of role_ids) {
-        instances.userRoleManager.assignProjectRole(user_id, project_id, role_id);
+        instances.userRoleManager.assignProjectRole(
+          user_id,
+          project_id,
+          role_id
+        );
 
         const role = instances.roleManager.getRole(role_id);
         log(
@@ -100,13 +114,15 @@ export const setupMembersRoutes = (
       }
 
       // 5. Call Ganymede internal API
-      const ganymedeUrl = process.env.GANYMEDE_URL || 'http://app-ganymede:3000';
+      const ganymedeUrl =
+        process.env.GANYMEDE_URL || 'http://app-ganymede:3000';
       const gatewayToken = process.env.GATEWAY_TOKEN;
 
       if (!gatewayToken) {
         throw new Error('GATEWAY_TOKEN not configured');
       }
 
+      // Not SSRF: base URL is from server env var, project_id is a JWT-validated UUID path segment
       const response = await fetch(
         `${ganymedeUrl}/internal/projects/${project_id}/members`,
         {
@@ -139,7 +155,7 @@ export const setupMembersRoutes = (
   /**
    * DELETE /members/projects/:project_id/users/:user_id
    * Remove member from project
-   * 
+   *
    * Requires: project:*:admin permission
    */
   router.delete(
@@ -182,13 +198,15 @@ export const setupMembersRoutes = (
       );
 
       // 3. Call Ganymede internal API
-      const ganymedeUrl = process.env.GANYMEDE_URL || 'http://app-ganymede:3000';
+      const ganymedeUrl =
+        process.env.GANYMEDE_URL || 'http://app-ganymede:3000';
       const gatewayToken = process.env.GATEWAY_TOKEN;
 
       if (!gatewayToken) {
         throw new Error('GATEWAY_TOKEN not configured');
       }
 
+      // Not SSRF: base URL is from server env var, project_id/user_id are JWT-validated UUID path segments
       const response = await fetch(
         `${ganymedeUrl}/internal/projects/${project_id}/members/${user_id}`,
         {

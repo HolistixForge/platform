@@ -222,6 +222,7 @@ export class ProjectRoomsManager implements IPersistenceProvider {
         process.env.GANYMEDE_URL || 'http://app-ganymede:3000';
       const orgToken = instances.gatewayState.getOrganizationToken();
 
+      // Not SSRF: base URL is from server env var, project_id is an internal UUID from project room state
       const response = await fetch(
         `${ganymedeUrl}/projects/${project_id}/members`,
         {
