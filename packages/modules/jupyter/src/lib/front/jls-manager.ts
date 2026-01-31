@@ -201,6 +201,7 @@ export class JLsManager extends Listenable {
                 type: 'jupyter:resources-changed',
                 user_container_id: server.user_container_id,
                 resources,
+                systemEvent: true,
               });
             });
             resolve(driver);

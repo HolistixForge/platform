@@ -172,46 +172,45 @@ export const CredentialsPage = () => {
           onOpenChange={setDeleteDialogOpen}
           title="Delete Credential"
           description={`Are you sure you want to delete "${credentialToDelete?.name}"? This action cannot be undone.`}
-          content={
-            <div
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: '0.5rem',
+              marginTop: '1rem',
+            }}
+          >
+            <button
+              onClick={() => setDeleteDialogOpen(false)}
               style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                gap: '0.5rem',
-                marginTop: '1rem',
+                padding: '0.5rem 1rem',
+                background: 'transparent',
+                border: '1px solid var(--c-border, rgba(255, 255, 255, 0.2))',
+                borderRadius: '6px',
+                color: 'var(--c-text-secondary)',
+                cursor: 'pointer',
               }}
             >
-              <button
-                onClick={() => setDeleteDialogOpen(false)}
-                style={{
-                  padding: '0.5rem 1rem',
-                  background: 'transparent',
-                  border: '1px solid var(--c-border, rgba(255, 255, 255, 0.2))',
-                  borderRadius: '6px',
-                  color: 'var(--c-text-secondary)',
-                  cursor: 'pointer',
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                disabled={deleteMutation.isPending}
-                style={{
-                  padding: '0.5rem 1rem',
-                  background: 'var(--c-danger, #ef4444)',
-                  border: 'none',
-                  borderRadius: '6px',
-                  color: '#fff',
-                  cursor: deleteMutation.isPending ? 'not-allowed' : 'pointer',
-                  opacity: deleteMutation.isPending ? 0.7 : 1,
-                }}
-              >
-                {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-              </button>
-            </div>
-          }
-        />
+              Cancel
+            </button>
+            <button
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+              style={{
+                padding: '0.5rem 1rem',
+                background: 'var(--c-danger, #ef4444)',
+                border: 'none',
+                borderRadius: '6px',
+                color: '#fff',
+                cursor: deleteMutation.isPending ? 'not-allowed' : 'pointer',
+                opacity: deleteMutation.isPending ? 0.7 : 1,
+              }}
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            </button>
+          </div>
+        </DialogControlled>
 
         {/* Share Dialog */}
         {shareDialogOpen && credentialToShare && (

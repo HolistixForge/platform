@@ -19,7 +19,10 @@ const StoryWrapper = () => {
       open={true}
       onOpenChange={() => null}
     >
-      <NewProjectForm action={action} />
+      <NewProjectForm
+        action={action}
+        organizations={[{ organization_id: '1', name: 'Test Org' }]}
+      />
     </DialogControlled>
   );
 };

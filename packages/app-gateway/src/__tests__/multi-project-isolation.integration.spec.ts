@@ -10,7 +10,7 @@ import * as Y from 'yjs';
 // Mock y-websocket utils
 jest.mock('y-websocket/bin/utils', () => {
   const mockDocs = new Map<string, Y.Doc>();
-  
+
   return {
     getYDoc: jest.fn((room_id: string) => {
       if (!mockDocs.has(room_id)) {
@@ -27,10 +27,10 @@ const ywsUtils = require('y-websocket/bin/utils');
 // Mock YjsServerCollab with minimal implementation
 jest.mock('@holistix-forge/collab', () => {
   const actual = jest.requireActual('@holistix-forge/collab');
-  
+
   // Mock Y.Array-like object
   class MockYArray extends Array {
-    push(items: any[]) {
+    override push(items: any[]) {
       // Y.Array push takes an array and adds each element
       super.push(...items);
       return this.length;
@@ -39,12 +39,12 @@ jest.mock('@holistix-forge/collab', () => {
       return Array.from(this);
     }
   }
-  
+
   class MockYjsServerCollab {
     sharedData: Record<string, Map<string, any> | any> = {};
     sharedTypes: any = {};
     sharedEditor: any = {};
-    
+
     loadSharedData(type: 'map' | 'array', moduleName: string, name: string) {
       const key = `${moduleName}:${name}`;
       if (type === 'map') {
@@ -54,7 +54,7 @@ jest.mock('@holistix-forge/collab', () => {
       }
     }
   }
-  
+
   return {
     ...actual,
     YjsServerCollab: MockYjsServerCollab,
@@ -89,8 +89,14 @@ describe('Multi-Project Data Isolation', () => {
       const collabA = registry.getCollabForProject('project-a');
       const collabB = registry.getCollabForProject('project-b');
 
-      const itemsA = collabA.sharedData['test:items'] as Map<string, string>;
-      const itemsB = collabB.sharedData['test:items'] as Map<string, string>;
+      const itemsA = collabA.sharedData['test:items'] as unknown as Map<
+        string,
+        string
+      >;
+      const itemsB = collabB.sharedData['test:items'] as unknown as Map<
+        string,
+        string
+      >;
 
       // Add data to project A
       itemsA.set('key1', 'value-from-a');
@@ -116,8 +122,12 @@ describe('Multi-Project Data Isolation', () => {
       const collabA = registry.getCollabForProject('project-a');
       const collabB = registry.getCollabForProject('project-b');
 
-      const listA = collabA.sharedData['test:list'] as Y.Array<string>;
-      const listB = collabB.sharedData['test:list'] as Y.Array<string>;
+      const listA = collabA.sharedData[
+        'test:list'
+      ] as unknown as Y.Array<string>;
+      const listB = collabB.sharedData[
+        'test:list'
+      ] as unknown as Y.Array<string>;
 
       // Add data to both projects
       listA.push(['item-a-1', 'item-a-2']);
@@ -138,7 +148,7 @@ describe('Multi-Project Data Isolation', () => {
       const ydocB = projectRooms.getYDoc('project-b');
 
       expect(ydocA).not.toBe(ydocB);
-      expect(ydocA.clientID).not.toBe(ydocB.clientID);
+      expect(ydocA!.clientID).not.toBe(ydocB!.clientID);
     });
 
     it('should have different room_ids', async () => {
@@ -160,8 +170,14 @@ describe('Multi-Project Data Isolation', () => {
       const collab1 = registry.getCollabForProject('project-1');
       const collab2 = registry.getCollabForProject('project-2');
 
-      const items1 = collab1.sharedData['test:items'] as Map<string, number>;
-      const items2 = collab2.sharedData['test:items'] as Map<string, number>;
+      const items1 = collab1.sharedData['test:items'] as unknown as Map<
+        string,
+        number
+      >;
+      const items2 = collab2.sharedData['test:items'] as unknown as Map<
+        string,
+        number
+      >;
 
       // Simulate concurrent writes
       const promises = [];
@@ -192,8 +208,14 @@ describe('Multi-Project Data Isolation', () => {
       const collab1 = registry.getCollabForProject('project-1');
       const collab2 = registry.getCollabForProject('project-2');
 
-      const items1 = collab1.sharedData['test:items'] as Map<string, string>;
-      const items2 = collab2.sharedData['test:items'] as Map<string, string>;
+      const items1 = collab1.sharedData['test:items'] as unknown as Map<
+        string,
+        string
+      >;
+      const items2 = collab2.sharedData['test:items'] as unknown as Map<
+        string,
+        string
+      >;
 
       items1.set('shared-key', 'value-1');
       items2.set('shared-key', 'value-2');
@@ -222,9 +244,18 @@ describe('Multi-Project Data Isolation', () => {
       const collab3 = registry.getCollabForProject('project-3');
 
       // Initialize all with same key
-      const items1 = collab1.sharedData['test:items'] as Map<string, number>;
-      const items2 = collab2.sharedData['test:items'] as Map<string, number>;
-      const items3 = collab3.sharedData['test:items'] as Map<string, number>;
+      const items1 = collab1.sharedData['test:items'] as unknown as Map<
+        string,
+        number
+      >;
+      const items2 = collab2.sharedData['test:items'] as unknown as Map<
+        string,
+        number
+      >;
+      const items3 = collab3.sharedData['test:items'] as unknown as Map<
+        string,
+        number
+      >;
 
       items1.set('count', 1);
       items2.set('count', 2);
@@ -253,8 +284,14 @@ describe('Multi-Project Data Isolation', () => {
       const collabA = registry.getCollabForProject('project-a');
       const collabB = registry.getCollabForProject('project-b');
 
-      const itemsA = collabA.sharedData['test:items'] as Map<string, string>;
-      const itemsB = collabB.sharedData['test:items'] as Map<string, string>;
+      const itemsA = collabA.sharedData['test:items'] as unknown as Map<
+        string,
+        string
+      >;
+      const itemsB = collabB.sharedData['test:items'] as unknown as Map<
+        string,
+        string
+      >;
 
       // Bulk add to A
       const bulkDataA = new Map<string, string>();
@@ -287,8 +324,14 @@ describe('Multi-Project Data Isolation', () => {
       const collab1 = registry.getCollabForProject('project-1');
       const collab2 = registry.getCollabForProject('project-2');
 
-      const items1 = collab1.sharedData['test:items'] as Map<string, string>;
-      const items2 = collab2.sharedData['test:items'] as Map<string, string>;
+      const items1 = collab1.sharedData['test:items'] as unknown as Map<
+        string,
+        string
+      >;
+      const items2 = collab2.sharedData['test:items'] as unknown as Map<
+        string,
+        string
+      >;
 
       items1.set('key-a', 'value-from-project-1');
       items2.set('key-a', 'value-from-project-2');
@@ -310,7 +353,7 @@ describe('Multi-Project Data Isolation', () => {
       // Verify isolation maintained - both projects should exist and be separate
       expect(newProjectRooms.hasProject('project-1')).toBe(true);
       expect(newProjectRooms.hasProject('project-2')).toBe(true);
-      
+
       // Verify they have different room IDs (isolation)
       const roomId1 = newProjectRooms.getRoomId('project-1');
       const roomId2 = newProjectRooms.getRoomId('project-2');
@@ -322,7 +365,10 @@ describe('Multi-Project Data Isolation', () => {
       await projectRooms.initializeProject('project-2');
 
       const collab1 = registry.getCollabForProject('project-1');
-      const items1 = collab1.sharedData['test:items'] as Map<string, string>;
+      const items1 = collab1.sharedData['test:items'] as unknown as Map<
+        string,
+        string
+      >;
       items1.set('data', 'project-1-data');
 
       // Serialize only project 1
@@ -338,7 +384,10 @@ describe('Multi-Project Data Isolation', () => {
       newRegistry.registerSharedData('map', 'test', 'items');
 
       const newCollab2 = newRegistry.getCollabForProject('project-2');
-      const newItems2 = newCollab2.sharedData['test:items'] as Map<string, string>;
+      const newItems2 = newCollab2.sharedData['test:items'] as unknown as Map<
+        string,
+        string
+      >;
       newItems2.set('data', 'fresh-project-2-data');
 
       // Load project 1 snapshot
@@ -361,7 +410,10 @@ describe('Multi-Project Data Isolation', () => {
       // Add unique data to each
       for (let i = 0; i < projectCount; i++) {
         const collab = registry.getCollabForProject(`project-${i}`);
-        const items = collab.sharedData['test:items'] as Map<string, number>;
+        const items = collab.sharedData['test:items'] as unknown as Map<
+          string,
+          number
+        >;
         items.set('project-id', i);
         items.set('unique-value', i * 100);
       }
@@ -369,8 +421,11 @@ describe('Multi-Project Data Isolation', () => {
       // Verify isolation
       for (let i = 0; i < projectCount; i++) {
         const collab = registry.getCollabForProject(`project-${i}`);
-        const items = collab.sharedData['test:items'] as Map<string, number>;
-        
+        const items = collab.sharedData['test:items'] as unknown as Map<
+          string,
+          number
+        >;
+
         expect(items.get('project-id')).toBe(i);
         expect(items.get('unique-value')).toBe(i * 100);
       }
@@ -383,8 +438,14 @@ describe('Multi-Project Data Isolation', () => {
       const collab1 = registry.getCollabForProject('project-heavy-1');
       const collab2 = registry.getCollabForProject('project-heavy-2');
 
-      const items1 = collab1.sharedData['test:items'] as Map<string, string>;
-      const items2 = collab2.sharedData['test:items'] as Map<string, string>;
+      const items1 = collab1.sharedData['test:items'] as unknown as Map<
+        string,
+        string
+      >;
+      const items2 = collab2.sharedData['test:items'] as unknown as Map<
+        string,
+        string
+      >;
 
       // Add 10k items to each project
       for (let i = 0; i < 10000; i++) {
@@ -414,9 +475,18 @@ describe('Multi-Project Data Isolation', () => {
       const collab10 = registry.getCollabForProject('project-10');
       const collab11 = registry.getCollabForProject('project-11');
 
-      const items1 = collab1.sharedData['test:items'] as Map<string, number>;
-      const items10 = collab10.sharedData['test:items'] as Map<string, number>;
-      const items11 = collab11.sharedData['test:items'] as Map<string, number>;
+      const items1 = collab1.sharedData['test:items'] as unknown as Map<
+        string,
+        number
+      >;
+      const items10 = collab10.sharedData['test:items'] as unknown as Map<
+        string,
+        number
+      >;
+      const items11 = collab11.sharedData['test:items'] as unknown as Map<
+        string,
+        number
+      >;
 
       items1.set('id', 1);
       items10.set('id', 10);
@@ -430,19 +500,23 @@ describe('Multi-Project Data Isolation', () => {
     it('should handle empty project_id edge cases', async () => {
       // Empty string project ID
       await projectRooms.initializeProject('');
-      
+
       const collabEmpty = registry.getCollabForProject('');
-      const itemsEmpty = collabEmpty.sharedData['test:items'] as Map<string, string>;
+      const itemsEmpty = collabEmpty.sharedData['test:items'] as unknown as Map<
+        string,
+        string
+      >;
       itemsEmpty.set('test', 'empty-id-value');
 
       // Regular project shouldn't see it
       await projectRooms.initializeProject('regular-project');
       const collabRegular = registry.getCollabForProject('regular-project');
-      const itemsRegular = collabRegular.sharedData['test:items'] as Map<string, string>;
+      const itemsRegular = collabRegular.sharedData[
+        'test:items'
+      ] as unknown as Map<string, string>;
 
       expect(itemsEmpty.has('test')).toBe(true);
       expect(itemsRegular.has('test')).toBe(false);
     });
   });
 });
-

@@ -45,6 +45,11 @@ jobs:
         env:
           NODE_OPTIONS: --max_old_space_size=4096
 
+      - name: Build all packages
+        run: npx nx run-many -t build --parallel=5
+        env:
+          NODE_OPTIONS: --max_old_space_size=4096
+
       - name: Run TypeScript type checking
         run: npx nx run-many -t typecheck --parallel=5
         env:
@@ -52,11 +57,6 @@ jobs:
 
       - name: Validate Vite configurations
         run: npm run validate:vite
-
-      - name: Build all packages
-        run: npx nx run-many -t build --parallel=5
-        env:
-          NODE_OPTIONS: --max_old_space_size=4096
 
       - name: Validate Node.js bundles
         run: npm run validate:node

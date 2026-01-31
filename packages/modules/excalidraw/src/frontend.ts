@@ -5,14 +5,12 @@ import { TWhiteboardFrontendExports } from '@holistix-forge/whiteboard/frontend'
 import { layer } from './lib/layer';
 import { ExcalidrawNode } from './lib/excalidraw-node';
 import { excalidrawMenuEntries } from './lib/excalidraw-menu';
-import { TExcalidrawSharedData } from './lib/excalidraw-shared-model';
-
 import './lib/style.scss';
 
 //
 
 type TRequired = {
-  collab: TCollabFrontendExports<TExcalidrawSharedData>;
+  collab: TCollabFrontendExports;
   whiteboard: TWhiteboardFrontendExports;
 };
 
@@ -23,7 +21,11 @@ export const moduleFrontend: TModule<TRequired> = {
   dependencies: [],
   load: ({ depsExports, moduleExports, config }) => {
     // Register shared data schema with registry
-    depsExports.collab.registry.registerSharedData('map', 'excalidraw', 'drawing');
+    depsExports.collab.registry.registerSharedData(
+      'map',
+      'excalidraw',
+      'drawing'
+    );
 
     depsExports.whiteboard.registerMenuEntries(excalidrawMenuEntries);
     depsExports.whiteboard.registerNodes({

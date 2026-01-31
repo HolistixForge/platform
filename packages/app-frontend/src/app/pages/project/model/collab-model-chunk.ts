@@ -5,7 +5,10 @@ import {
 import { useDispatcher as useDispatcherOriginal } from '@holistix-forge/reducers/frontend';
 import { TCoreSharedData, TCoreEvent } from '@holistix-forge/core-graph';
 import { TabPayload, TTabEvents, TTabsSharedData } from '@holistix-forge/tabs';
-import { TWhiteboardSharedData, TSpaceEvent } from '@holistix-forge/whiteboard';
+import {
+  TWhiteboardSharedData,
+  TWhiteboardEvent,
+} from '@holistix-forge/whiteboard';
 import { TChatEvent, TChatSharedData } from '@holistix-forge/chats';
 import {
   TUserContainersEvents,
@@ -26,7 +29,7 @@ export type AllSharedData = TCoreSharedData &
 
 type AllEvents =
   | TCoreEvent
-  | TSpaceEvent
+  | TWhiteboardEvent
   | TUserContainersEvents
   | TJupyterEvent
   | TTabEvents<TabPayload>

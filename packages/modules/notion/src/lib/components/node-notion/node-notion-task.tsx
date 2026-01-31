@@ -44,7 +44,7 @@ export const NodeNotionTask = ({
   const o: { database: TNotionDatabase; page: TNotionPage } =
     useLocalSharedData<TNotionSharedData>(['notion:databases'], (sd) => {
       const database = sd['notion:databases'].get(node.data!.databaseId);
-      const page = database?.pages.find((p) => p.id === pageId);
+      const page = database?.pages.find((p: TNotionPage) => p.id === pageId);
       return { database, page };
     });
 

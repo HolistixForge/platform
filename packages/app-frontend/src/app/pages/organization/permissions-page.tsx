@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { PermissionsPage } from '@holistix-forge/ui-base';
 import {

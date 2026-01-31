@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { JupyterStoryCollabContext } from '../stories/module-stories-utils';
+import { JupyterStoryInit } from '../stories/module-stories-utils';
 
 import { NewTerminalForm } from './new-terminal';
 
@@ -8,14 +8,14 @@ import { NewTerminalForm } from './new-terminal';
 
 const StoryWrapper = () => {
   return (
-    <JupyterStoryCollabContext>
+    <JupyterStoryInit>
       <NewTerminalForm
-        user_container_id={1}
+        user_container_id={'1'}
         position={{ x: 0, y: 0 }}
         viewId={''}
         closeForm={() => null}
       />
-    </JupyterStoryCollabContext>
+    </JupyterStoryInit>
   );
 };
 

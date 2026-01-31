@@ -9,7 +9,7 @@ import { useDispatcher } from '@holistix-forge/reducers/frontend';
 import { TGraphNode } from '@holistix-forge/core-graph';
 import { useCallback } from 'react';
 
-import { TNotionSharedData } from '../../notion-shared-model';
+import { TNotionNodeView, TNotionSharedData } from '../../notion-shared-model';
 import { TNotionDatabase } from '../../notion-types';
 import { NotionDatabase, TNotionViewMode } from './notion-database';
 import { TNotionEvent } from '../../notion-events';
@@ -40,7 +40,7 @@ export const NodeNotionDatabase = ({
   const viewMode: TNotionViewMode = useLocalSharedData<TNotionSharedData>(
     ['notion:node-views'],
     (sd) =>
-      Array.from(sd['notion:node-views'].values()).find(
+      (Array.from(sd['notion:node-views'].values()) as TNotionNodeView[]).find(
         (v) => v.nodeId === node.id && v.viewId === useNodeValue.viewId
       )?.viewMode || {
         mode: 'kanban',

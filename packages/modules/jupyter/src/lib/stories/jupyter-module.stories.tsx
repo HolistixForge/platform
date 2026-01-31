@@ -26,7 +26,7 @@ import {
 import { moduleBackend as spaceBackend } from '@holistix-forge/whiteboard';
 import { moduleFrontend as spaceFrontend } from '@holistix-forge/whiteboard/frontend';
 import { moduleBackend as tabsBackend } from '@holistix-forge/tabs';
-import { moduleFrontend as tabsFrontend } from '@holistix-forge/tabs';
+import { moduleFrontend as tabsFrontend } from '@holistix-forge/tabs/frontend';
 //
 import { moduleBackend as userContainersBackend } from '@holistix-forge/user-containers';
 import { moduleFrontend as userContainersFrontend } from '@holistix-forge/user-containers/frontend';

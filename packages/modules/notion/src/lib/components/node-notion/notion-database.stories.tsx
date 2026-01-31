@@ -33,7 +33,7 @@ const DefaultStory = (args: { database: any }) => {
       database={args.database}
       viewMode={viewMode}
       setViewMode={setViewMode}
-      onUpdatePage={(pageId, properties) => {
+      onUpdatePage={(pageId: string, properties: Record<string, unknown>) => {
         console.log('onUpdatePage', pageId, properties);
       }}
       onCreatePage={() => {

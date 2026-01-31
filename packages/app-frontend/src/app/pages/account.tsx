@@ -8,25 +8,25 @@ import { ReactNode } from 'react';
 import { NewPasswordFormLogic } from '../forms/password';
 
 export const LoginPage = () => {
-  const { accountFQDN } = useApi();
+  const { ganymedeFQDN } = useApi();
 
   return (
     <LoginFormLogic
-      githubLoginUrl={`https://${accountFQDN}/github`}
-      gitLabLoginUrl={`https://${accountFQDN}/gitlab`}
-      linkedinLoginUrl={`https://${accountFQDN}/linkedin`}
-      discordLoginUrl={`https://${accountFQDN}/discord`}
+      githubLoginUrl={`https://${ganymedeFQDN}/github`}
+      gitLabLoginUrl={`https://${ganymedeFQDN}/gitlab`}
+      linkedinLoginUrl={`https://${ganymedeFQDN}/linkedin`}
+      discordLoginUrl={`https://${ganymedeFQDN}/discord`}
     />
   );
 };
 
 export const LoginLinkedinPage = () => {
-  const { accountFQDN } = useApi();
+  const { ganymedeFQDN } = useApi();
 
   return (
     <LoginFormLogic
       local={false}
-      linkedinLoginUrl={`https://${accountFQDN}/linkedin`}
+      linkedinLoginUrl={`https://${ganymedeFQDN}/linkedin`}
     />
   );
 };

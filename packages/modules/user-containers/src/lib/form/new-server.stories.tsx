@@ -9,11 +9,9 @@ import {
 } from '@holistix-forge/collab/frontend';
 import { moduleFrontend as coreFrontend } from '@holistix-forge/core-graph';
 import { moduleFrontend as spaceFrontend } from '@holistix-forge/whiteboard/frontend';
-import { moduleFrontend as tabsFrontend } from '@holistix-forge/tabs';
 import { moduleFrontend as reducersFrontend } from '@holistix-forge/reducers/frontend';
 
 import { NewContainerForm } from './new-server';
-import { TUserContainersSharedData } from '../servers-shared-model';
 import { moduleFrontend as userContainersFrontend } from '../../frontend';
 
 //
@@ -32,7 +30,6 @@ const modulesFrontend: { module: TModule<never, object>; config: object }[] = [
   { module: reducersFrontend, config: {} },
   { module: coreFrontend, config: {} },
   { module: spaceFrontend, config: {} },
-  { module: tabsFrontend, config: {} },
   {
     module: userContainersFrontend,
     config: {},
@@ -44,16 +41,19 @@ const modulesFrontend: { module: TModule<never, object>; config: object }[] = [
       description: 'Story init module',
       dependencies: ['collab'],
       load: ({ depsExports }) => {
-        (
+        const collabExports = (
           depsExports as unknown as {
-            collab: TCollabFrontendExports<TUserContainersSharedData>;
+            collab: TCollabFrontendExports;
           }
-        ).collab.collab.sharedData['user-containers:images'].set('test', {
+        ).collab;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const images = collabExports.getCollabForProject('story').collab
+          .sharedData['user-containers:images'] as any;
+        images.set('test', {
           imageId: 'test',
           imageName: 'Test',
           description: 'Test',
         });
-        //
       },
     },
     config: {},

@@ -11,7 +11,7 @@ import * as Y from 'yjs';
 // Mock y-websocket utils
 jest.mock('y-websocket/bin/utils', () => {
   const mockDocs = new Map<string, Y.Doc>();
-  
+
   return {
     getYDoc: jest.fn((room_id: string) => {
       if (!mockDocs.has(room_id)) {
@@ -28,12 +28,12 @@ const ywsUtils = require('y-websocket/bin/utils');
 // Mock YjsServerCollab with minimal implementation
 jest.mock('@holistix-forge/collab', () => {
   const actual = jest.requireActual('@holistix-forge/collab');
-  
+
   class MockYjsServerCollab {
     sharedData: Record<string, Map<string, any> | any[]> = {};
     sharedTypes: any = {};
     sharedEditor: any = {};
-    
+
     loadSharedData(type: 'map' | 'array', moduleName: string, name: string) {
       const key = `${moduleName}:${name}`;
       if (type === 'map') {
@@ -43,7 +43,7 @@ jest.mock('@holistix-forge/collab', () => {
       }
     }
   }
-  
+
   return {
     ...actual,
     YjsServerCollab: MockYjsServerCollab,
@@ -72,8 +72,10 @@ class MockWhiteboardReducer extends Reducer<any> {
   override async reduce(event: any, requestData: RequestData): Promise<void> {
     if (event.type === 'project:init') {
       const collab = this.registry.getCollabForProject(requestData.project_id!);
-      const views = collab.sharedData['whiteboard:graphViews'] as Map<string, TGraphView>;
-      
+      const views = collab.sharedData[
+        'whiteboard:graphViews'
+      ] as unknown as Map<string, TGraphView>;
+
       // Only initialize if empty (idempotent)
       if (views.size === 0) {
         views.set('view-1', {
@@ -94,8 +96,11 @@ class MockTabsReducer extends Reducer<any> {
   override async reduce(event: any, requestData: RequestData): Promise<void> {
     if (event.type === 'project:init') {
       const collab = this.registry.getCollabForProject(requestData.project_id!);
-      const tabs = collab.sharedData['tabs:tabs'] as Map<string, TTab>;
-      
+      const tabs = collab.sharedData['tabs:tabs'] as unknown as Map<
+        string,
+        TTab
+      >;
+
       // Only initialize if empty (idempotent)
       if (tabs.size === 0) {
         tabs.set('tab-1', {
@@ -154,7 +159,9 @@ describe('Project Initialization Integration', () => {
       const collab = registry.getCollabForProject('project-1');
 
       // Check default view was created
-      const views = collab.sharedData['whiteboard:graphViews'] as Map<string, TGraphView>;
+      const views = collab.sharedData[
+        'whiteboard:graphViews'
+      ] as unknown as Map<string, TGraphView>;
       expect(views.size).toBe(1);
       expect(views.has('view-1')).toBe(true);
 
@@ -162,7 +169,10 @@ describe('Project Initialization Integration', () => {
       expect(view.name).toBe('Default View');
 
       // Check default tab was created
-      const tabs = collab.sharedData['tabs:tabs'] as Map<string, TTab>;
+      const tabs = collab.sharedData['tabs:tabs'] as unknown as Map<
+        string,
+        TTab
+      >;
       expect(tabs.size).toBe(1);
       expect(tabs.has('tab-1')).toBe(true);
 
@@ -179,8 +189,13 @@ describe('Project Initialization Integration', () => {
       const collab = registry.getCollabForProject('project-1');
 
       // Should still only have one view and one tab
-      const views = collab.sharedData['whiteboard:graphViews'] as Map<string, TGraphView>;
-      const tabs = collab.sharedData['tabs:tabs'] as Map<string, TTab>;
+      const views = collab.sharedData[
+        'whiteboard:graphViews'
+      ] as unknown as Map<string, TGraphView>;
+      const tabs = collab.sharedData['tabs:tabs'] as unknown as Map<
+        string,
+        TTab
+      >;
 
       expect(views.size).toBe(1);
       expect(tabs.size).toBe(1);
@@ -220,8 +235,13 @@ describe('Project Initialization Integration', () => {
       // Each project should have its own defaults
       for (const project_id of ['project-1', 'project-2', 'project-3']) {
         const collab = registry.getCollabForProject(project_id);
-        const views = collab.sharedData['whiteboard:graphViews'] as Map<string, TGraphView>;
-        const tabs = collab.sharedData['tabs:tabs'] as Map<string, TTab>;
+        const views = collab.sharedData[
+          'whiteboard:graphViews'
+        ] as unknown as Map<string, TGraphView>;
+        const tabs = collab.sharedData['tabs:tabs'] as unknown as Map<
+          string,
+          TTab
+        >;
 
         expect(views.size).toBe(1);
         expect(tabs.size).toBe(1);
@@ -234,7 +254,9 @@ describe('Project Initialization Integration', () => {
 
       // Modify project 1
       const collab1 = registry.getCollabForProject('project-1');
-      const views1 = collab1.sharedData['whiteboard:graphViews'] as Map<string, TGraphView>;
+      const views1 = collab1.sharedData[
+        'whiteboard:graphViews'
+      ] as unknown as Map<string, TGraphView>;
       views1.set('view-2', {
         id: 'view-2',
         name: 'Custom View for Project 1',
@@ -243,7 +265,10 @@ describe('Project Initialization Integration', () => {
 
       // Modify project 2
       const collab2 = registry.getCollabForProject('project-2');
-      const tabs2 = collab2.sharedData['tabs:tabs'] as Map<string, TTab>;
+      const tabs2 = collab2.sharedData['tabs:tabs'] as unknown as Map<
+        string,
+        TTab
+      >;
       tabs2.set('tab-2', {
         id: 'tab-2',
         name: 'Custom Tab for Project 2',
@@ -252,10 +277,15 @@ describe('Project Initialization Integration', () => {
 
       // Verify isolation
       expect(views1.size).toBe(2); // view-1 + view-2
-      const views2 = collab2.sharedData['whiteboard:graphViews'] as Map<string, TGraphView>;
+      const views2 = collab2.sharedData[
+        'whiteboard:graphViews'
+      ] as unknown as Map<string, TGraphView>;
       expect(views2.size).toBe(1); // only view-1
 
-      const tabs1 = collab1.sharedData['tabs:tabs'] as Map<string, TTab>;
+      const tabs1 = collab1.sharedData['tabs:tabs'] as unknown as Map<
+        string,
+        TTab
+      >;
       expect(tabs1.size).toBe(1); // only tab-1
       expect(tabs2.size).toBe(2); // tab-1 + tab-2
     });
@@ -275,8 +305,13 @@ describe('Project Initialization Integration', () => {
       // Verify all initialized correctly
       for (let i = 1; i <= 5; i++) {
         const collab = registry.getCollabForProject(`project-${i}`);
-        const views = collab.sharedData['whiteboard:graphViews'] as Map<string, TGraphView>;
-        const tabs = collab.sharedData['tabs:tabs'] as Map<string, TTab>;
+        const views = collab.sharedData[
+          'whiteboard:graphViews'
+        ] as unknown as Map<string, TGraphView>;
+        const tabs = collab.sharedData['tabs:tabs'] as unknown as Map<
+          string,
+          TTab
+        >;
 
         expect(views.size).toBeGreaterThanOrEqual(1);
         expect(tabs.size).toBeGreaterThanOrEqual(1);
@@ -289,16 +324,21 @@ describe('Project Initialization Integration', () => {
       // Manually add data before initialization
       await projectRooms.initializeProject('project-1');
       const collab = registry.getCollabForProject('project-1');
-      
+
       // Add custom data
-      const views = collab.sharedData['whiteboard:graphViews'] as Map<string, TGraphView>;
+      const views = collab.sharedData[
+        'whiteboard:graphViews'
+      ] as unknown as Map<string, TGraphView>;
       views.set('custom-view', {
         id: 'custom-view',
         name: 'Pre-existing View',
         created_at: new Date().toISOString(),
       });
 
-      const tabs = collab.sharedData['tabs:tabs'] as Map<string, TTab>;
+      const tabs = collab.sharedData['tabs:tabs'] as unknown as Map<
+        string,
+        TTab
+      >;
       tabs.set('custom-tab', {
         id: 'custom-tab',
         name: 'Pre-existing Tab',
@@ -320,7 +360,9 @@ describe('Project Initialization Integration', () => {
       await projectRooms.initializeProject('project-1');
       const collab = registry.getCollabForProject('project-1');
 
-      const views = collab.sharedData['whiteboard:graphViews'] as Map<string, TGraphView>;
+      const views = collab.sharedData[
+        'whiteboard:graphViews'
+      ] as unknown as Map<string, TGraphView>;
       views.set('view-2', {
         id: 'view-2',
         name: 'User Created View',
@@ -363,7 +405,10 @@ describe('Project Initialization Integration', () => {
     it('should continue if one reducer fails', async () => {
       // Create a reducer that throws
       class FailingReducer extends Reducer<any> {
-        override async reduce(): Promise<void> {
+        override async reduce(
+          _event: any,
+          _requestData: RequestData
+        ): Promise<void> {
           throw new Error('Reducer failure');
         }
       }
@@ -389,8 +434,13 @@ describe('Project Initialization Integration', () => {
 
       // Other reducers should still have initialized
       const collab = registry.getCollabForProject('project-1');
-      const views = collab.sharedData['whiteboard:graphViews'] as Map<string, TGraphView>;
-      const tabs = collab.sharedData['tabs:tabs'] as Map<string, TTab>;
+      const views = collab.sharedData[
+        'whiteboard:graphViews'
+      ] as unknown as Map<string, TGraphView>;
+      const tabs = collab.sharedData['tabs:tabs'] as unknown as Map<
+        string,
+        TTab
+      >;
 
       // Should have defaults from successful reducers
       expect(views.size).toBeGreaterThanOrEqual(1);
@@ -416,10 +466,11 @@ describe('Project Initialization Integration', () => {
       // Spot check a few projects
       for (const i of [0, 50, 99]) {
         const collab = registry.getCollabForProject(`project-${i}`);
-        const views = collab.sharedData['whiteboard:graphViews'] as Map<string, TGraphView>;
+        const views = collab.sharedData[
+          'whiteboard:graphViews'
+        ] as unknown as Map<string, TGraphView>;
         expect(views.size).toBeGreaterThanOrEqual(1);
       }
     });
   });
 });
-

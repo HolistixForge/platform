@@ -31,6 +31,7 @@ import {
 import {
   TAirtableBase,
   TAirtableBaseSearchResult,
+  TAirtableField,
   TAirtableRecordValue,
   TAirtableTable,
 } from './airtable-types';
@@ -101,7 +102,7 @@ export class AirtableReducer extends ReducerWithCollab<
         return this._deleteRecord(event, requestData);
 
       case 'airtable:reorder-record':
-        return this._reorderRecord(event);
+        return this._reorderRecord(event, requestData);
 
       case 'airtable:load-record-node':
         return this._loadRecordNode(event, requestData);
@@ -125,13 +126,13 @@ export class AirtableReducer extends ReducerWithCollab<
         return this._deleteBase(event, requestData);
 
       case 'airtable:set-node-view':
-        return this._setNodeView(event);
+        return this._setNodeView(event, requestData);
 
       case 'airtable:search-bases':
-        return this._searchBases(event);
+        return this._searchBases(event, requestData);
 
       case 'airtable:clear-user-search-results':
-        return this._clearUserSearchResults(event);
+        return this._clearUserSearchResults(event, requestData);
 
       case 'reducers:periodic':
         return this._periodic(event, requestData);
@@ -148,7 +149,7 @@ export class AirtableReducer extends ReducerWithCollab<
     const base = Array.from(collab.sharedData['airtable:bases'].values()).find(
       (d: TAirtableBase) =>
         d.tables.find((t: TAirtableTable) =>
-          t.records.find((r: TAirtableRecord) => r.id === event.recordId)
+          t.records.find((r: TAirtableRecordValue) => r.id === event.recordId)
         )
     );
 
@@ -229,6 +230,7 @@ export class AirtableReducer extends ReducerWithCollab<
     },
     requestData: RequestData
   ): Promise<boolean> {
+    const collab = this.getCollab(requestData);
     const { baseId } = event;
 
     const apiKey =
@@ -316,7 +318,7 @@ export class AirtableReducer extends ReducerWithCollab<
           tablesWithRecords.map((t: TAirtableTable) => t.id)
         );
         const deletedTables = existingBase.tables.filter(
-          (oldTable) => !newTableIds.has(oldTable.id)
+          (oldTable: TAirtableTable) => !newTableIds.has(oldTable.id)
         );
 
         // Delete nodes for deleted tables
@@ -336,7 +338,7 @@ export class AirtableReducer extends ReducerWithCollab<
         });
 
         // Check for deleted and updated records in remaining tables
-        existingBase.tables.forEach((oldTable) => {
+        existingBase.tables.forEach((oldTable: TAirtableTable) => {
           const newTable = tablesWithRecords.find(
             (t: TAirtableTable) => t.id === oldTable.id
           );
@@ -345,14 +347,19 @@ export class AirtableReducer extends ReducerWithCollab<
               newTable.records.map((r: TAirtableRecordValue) => r.id)
             );
             const deletedRecords = oldTable.records.filter(
-              (oldRecord) => !newRecordIds.has(oldRecord.id)
+              (oldRecord: TAirtableRecordValue) =>
+                !newRecordIds.has(oldRecord.id)
             );
 
             // Dispatch delete node events for each deleted record
             collab.sharedData['core-graph:nodes'].forEach((node) => {
               if (node.type === 'airtable-record') {
                 const nodeData = node.data as TNodeAirtableRecordDataPayload;
-                if (deletedRecords.find((r) => r.id === nodeData.recordId)) {
+                if (
+                  deletedRecords.find(
+                    (r: TAirtableRecordValue) => r.id === nodeData.recordId
+                  )
+                ) {
                   this.exports.reducers.processEvent(
                     {
                       type: 'core:delete-node',
@@ -399,11 +406,12 @@ export class AirtableReducer extends ReducerWithCollab<
     requestData: RequestData
   ): Promise<void> {
     const now = new Date();
+    const collab = this.getCollab(requestData);
 
     // Sync all bases in parallel for better performance
     const syncPromises = Array.from(
-      this.collab.sharedData['airtable:bases'].values()
-    ).map(async (base) => {
+      collab.sharedData['airtable:bases'].values()
+    ).map(async (base: TAirtableBase) => {
       try {
         await this._fetchAndUpdateBase(
           { baseId: base.id, AIRTABLE_API_KEY: base.AIRTABLE_API_KEY },
@@ -426,11 +434,12 @@ export class AirtableReducer extends ReducerWithCollab<
     requestData: RequestData
   ): Promise<void> {
     try {
+      const collab = this.getCollab(requestData);
       const { baseId, tableId, recordId, fields } = event;
 
       await this.makeAirtableRequest(
         `/${baseId}/${tableId}/${recordId}`,
-        this.collab.sharedData['airtable:bases'].get(baseId)?.AIRTABLE_API_KEY || '',
+        collab.sharedData['airtable:bases'].get(baseId)?.AIRTABLE_API_KEY || '',
         {
           method: 'PATCH',
           body: JSON.stringify({ fields }),
@@ -453,6 +462,7 @@ export class AirtableReducer extends ReducerWithCollab<
     requestData: RequestData
   ): Promise<void> {
     try {
+      const collab = this.getCollab(requestData);
       const { baseId, tableId, fields } = event;
 
       await this.makeAirtableRequest(
@@ -480,6 +490,7 @@ export class AirtableReducer extends ReducerWithCollab<
     requestData: RequestData
   ): Promise<void> {
     try {
+      const collab = this.getCollab(requestData);
       const { baseId, tableId, recordId } = event;
 
       await this.makeAirtableRequest(
@@ -535,19 +546,23 @@ export class AirtableReducer extends ReducerWithCollab<
 
   //
 
-  private async _reorderRecord(event: TEventReorderRecord): Promise<void> {
+  private async _reorderRecord(
+    event: TEventReorderRecord,
+    requestData: RequestData
+  ): Promise<void> {
     // Airtable doesn't have built-in ordering, so we'll implement this
     // by updating a custom order field if it exists
     try {
+      const collab = this.getCollab(requestData);
       const { baseId, tableId, recordId, newPosition } = event;
 
       // Find the table and check if it has an order field
       const base = collab.sharedData['airtable:bases'].get(baseId);
       if (base) {
-        const table = base.tables.find((t) => t.id === tableId);
+        const table = base.tables.find((t: TAirtableTable) => t.id === tableId);
         if (table) {
           const orderField = table.fields.find(
-            (f) =>
+            (f: TAirtableField) =>
               f.name.toLowerCase().includes('order') ||
               f.name.toLowerCase().includes('position')
           );
@@ -609,6 +624,7 @@ export class AirtableReducer extends ReducerWithCollab<
     requestData: RequestData
   ): Promise<void> {
     try {
+      const collab = this.getCollab(requestData);
       const { baseId } = event;
 
       // Remove from local state
@@ -656,7 +672,11 @@ export class AirtableReducer extends ReducerWithCollab<
 
   //
 
-  private async _setNodeView(event: TEventSetNodeView): Promise<void> {
+  private async _setNodeView(
+    event: TEventSetNodeView,
+    requestData: RequestData
+  ): Promise<void> {
+    const collab = this.getCollab(requestData);
     const { nodeId, viewId, viewMode } = event;
 
     collab.sharedData['airtable:node-views'].set(`${nodeId}-${viewId}`, {
@@ -716,8 +736,12 @@ export class AirtableReducer extends ReducerWithCollab<
 
   //
 
-  private async _searchBases(event: TEventSearchBases): Promise<void> {
+  private async _searchBases(
+    event: TEventSearchBases,
+    requestData: RequestData
+  ): Promise<void> {
     try {
+      const collab = this.getCollab(requestData);
       const { query, userId } = event;
 
       // Search user's bases
@@ -767,8 +791,10 @@ export class AirtableReducer extends ReducerWithCollab<
   //
 
   private async _clearUserSearchResults(
-    event: TEventClearUserSearchResults
+    event: TEventClearUserSearchResults,
+    requestData: RequestData
   ): Promise<void> {
+    const collab = this.getCollab(requestData);
     const { userId } = event;
     collab.sharedData['airtable:base-search-results'].delete(userId);
   }

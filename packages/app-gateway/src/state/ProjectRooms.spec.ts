@@ -4,7 +4,7 @@ import * as Y from 'yjs';
 // Mock y-websocket utils
 jest.mock('y-websocket/bin/utils', () => {
   const mockDocs = new Map<string, Y.Doc>();
-  
+
   return {
     getYDoc: jest.fn((room_id: string) => {
       if (!mockDocs.has(room_id)) {
@@ -21,8 +21,6 @@ const ywsUtils = require('y-websocket/bin/utils');
 
 describe('ProjectRoomsManager', () => {
   let projectRooms: ProjectRoomsManager;
-  let mockReducers: Reducer<unknown>[];
-
   beforeEach(() => {
     // Reset y-websocket mock
     if (ywsUtils.__resetMockDocs) {
@@ -31,7 +29,6 @@ describe('ProjectRoomsManager', () => {
     jest.clearAllMocks();
 
     projectRooms = new ProjectRoomsManager();
-    mockReducers = [];
   });
 
   describe('initializeProject', () => {
@@ -102,7 +99,7 @@ describe('ProjectRoomsManager', () => {
       } as any;
 
       projectRooms.setEventProcessor(mockProcessor);
-      
+
       await projectRooms.initializeProject('project-1');
       await projectRooms.initializeProject('project-1');
 
@@ -194,7 +191,7 @@ describe('ProjectRoomsManager', () => {
 
     it('should serialize single project', async () => {
       await projectRooms.initializeProject('project-1');
-      
+
       const serialized = projectRooms.saveToSerializable();
       expect(Object.keys(serialized)).toContain('project-1');
       // Serialized data is just the snapshot (Record<string, unknown>)
@@ -216,7 +213,7 @@ describe('ProjectRoomsManager', () => {
 
     it('should serialize Y.Doc state correctly', async () => {
       await projectRooms.initializeProject('project-1');
-      
+
       // Modify Y.Doc
       const ydoc = projectRooms.getYDoc('project-1');
       if (ydoc) {
@@ -317,7 +314,7 @@ describe('ProjectRoomsManager', () => {
       // Verify isolation maintained - both projects should exist and be separate
       expect(newProjectRooms.hasProject('project-1')).toBe(true);
       expect(newProjectRooms.hasProject('project-2')).toBe(true);
-      
+
       // Verify they have different room IDs (isolation)
       const roomId1 = newProjectRooms.getRoomId('project-1');
       const roomId2 = newProjectRooms.getRoomId('project-2');
@@ -394,7 +391,7 @@ describe('ProjectRoomsManager', () => {
 
     it('should handle very long project_id', async () => {
       const longId = 'a'.repeat(1000);
-      
+
       await projectRooms.initializeProject(longId);
       expect(projectRooms.getRoomId(longId)).toBeDefined();
     });
@@ -415,7 +412,7 @@ describe('ProjectRoomsManager', () => {
       // Snapshot should be queued as pending (project not initialized yet)
       // When we initialize the project, it should apply the pending snapshot
       await projectRooms.initializeProject('project-1');
-      
+
       // Now the project should be accessible
       expect(projectRooms.getRoomId('project-1')).toBeDefined();
     });
@@ -424,11 +421,11 @@ describe('ProjectRoomsManager', () => {
   describe('room_id generation', () => {
     it('should generate unique room_ids for different projects', async () => {
       const roomIds = new Set<string>();
-      
+
       for (let i = 0; i < 100; i++) {
         await projectRooms.initializeProject(`project-${i}`);
         const room_id = projectRooms.getRoomId(`project-${i}`);
-        roomIds.add(room_id);
+        roomIds.add(room_id!);
       }
 
       // All room_ids should be unique
@@ -447,4 +444,3 @@ describe('ProjectRoomsManager', () => {
     });
   });
 });
-

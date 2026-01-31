@@ -8,11 +8,15 @@ import {
 } from '@holistix-forge/user-containers';
 import { useLocalSharedData } from '@holistix-forge/collab/frontend';
 import { useDispatcher } from '@holistix-forge/reducers/frontend';
-import { ButtonBase, SelectFieldset, SelectItem } from '@holistix-forge/ui-base';
+import {
+  ButtonBase,
+  SelectFieldset,
+  SelectItem,
+} from '@holistix-forge/ui-base';
 
 import { TJupyterEvent } from '../../jupyter-events';
 import {
-  JupyterStoryCollabContext,
+  JupyterStoryInit,
   STORY_USER_CONTAINER_ID,
 } from '../../stories/module-stories-utils';
 import { JupyterTerminal } from './terminal';
@@ -28,9 +32,9 @@ Logger.setPriority(EPriority.Debug);
 
 const StoryWrapper = () => {
   return (
-    <JupyterStoryCollabContext>
+    <JupyterStoryInit>
       <Terminals />
-    </JupyterStoryCollabContext>
+    </JupyterStoryInit>
   );
 };
 
@@ -38,7 +42,7 @@ const StoryWrapper = () => {
 
 const Terminals = () => {
   const dispatcher = useDispatcher<TJupyterEvent | TUserContainersEvents>();
-  const { jupyter: jmc } = useJLsManager();
+  const jmc = useJLsManager();
 
   const sd = useLocalSharedData<TUserContainersSharedData & TJupyterSharedData>(
     ['user-containers:containers', 'jupyter:servers'],
@@ -57,7 +61,7 @@ const Terminals = () => {
   useEffect(() => {
     if (server && service && jupyter) {
       console.log({ jmc });
-      jmc.jlsManager.startPollingResources(server);
+      jmc.startPollingResources(server);
     }
   }, [jupyter, jmc, server, service]);
 

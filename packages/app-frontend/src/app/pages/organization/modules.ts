@@ -4,7 +4,7 @@ import { moduleFrontend as collabFrontend } from '@holistix-forge/collab/fronten
 import { moduleFrontend as reducersFrontend } from '@holistix-forge/reducers/frontend';
 import { moduleFrontend as coreFrontend } from '@holistix-forge/core-graph';
 import { moduleFrontend as spaceFrontend } from '@holistix-forge/whiteboard/frontend';
-import { moduleFrontend as tabsFrontend } from '@holistix-forge/tabs';
+import { moduleFrontend as tabsFrontend } from '@holistix-forge/tabs/frontend';
 import { moduleFrontend as userContainersFrontend } from '@holistix-forge/user-containers/frontend';
 import { moduleFrontend as notionFrontend } from '@holistix-forge/notion/frontend';
 import { moduleFrontend as airtableFrontend } from '@holistix-forge/airtable/frontend';
