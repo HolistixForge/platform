@@ -1,6 +1,6 @@
 import type * as Y from 'yjs';
 import { EPriority, log } from '@holistix-forge/log';
-import { makeUuid } from '@holistix-forge/simple-types';
+import { makeUuid, isUuid } from '@holistix-forge/simple-types';
 import {
   getAllSharedDataAsJSON,
   setAllSharedDataFromJSON,
@@ -222,7 +222,15 @@ export class ProjectRoomsManager implements IPersistenceProvider {
         process.env.GANYMEDE_URL || 'http://app-ganymede:3000';
       const orgToken = instances.gatewayState.getOrganizationToken();
 
-      // Not SSRF: base URL is from server env var, project_id is an internal UUID from project room state
+      if (!isUuid(project_id)) {
+        log(
+          EPriority.Warning,
+          'PROJECT_ROOMS',
+          `Invalid project_id format: ${project_id}`
+        );
+        return;
+      }
+
       const response = await fetch(
         `${ganymedeUrl}/projects/${project_id}/members`,
         {

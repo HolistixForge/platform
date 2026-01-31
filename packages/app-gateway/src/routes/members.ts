@@ -8,6 +8,7 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@holistix-forge/log';
+import { isUuid } from '@holistix-forge/simple-types';
 
 /**
  * Member Management Routes
@@ -39,6 +40,10 @@ export const setupMembersRoutes = (
           error: 'Missing or invalid fields',
           required: { user_id: 'string', role_ids: 'string[]' },
         });
+      }
+
+      if (!isUuid(project_id) || !isUuid(user_id)) {
+        return res.status(400).json({ error: 'Invalid UUID format' });
       }
 
       const instances = getGatewayInstances();
@@ -122,7 +127,6 @@ export const setupMembersRoutes = (
         throw new Error('GATEWAY_TOKEN not configured');
       }
 
-      // Not SSRF: base URL is from server env var, project_id is a JWT-validated UUID path segment
       const response = await fetch(
         `${ganymedeUrl}/internal/projects/${project_id}/members`,
         {
@@ -163,6 +167,10 @@ export const setupMembersRoutes = (
     authenticateJwt,
     asyncHandler(async (req: AuthRequest, res) => {
       const { project_id, user_id } = req.params;
+
+      if (!isUuid(project_id) || !isUuid(user_id)) {
+        return res.status(400).json({ error: 'Invalid UUID format' });
+      }
 
       const instances = getGatewayInstances();
       if (!instances) {
@@ -206,7 +214,6 @@ export const setupMembersRoutes = (
         throw new Error('GATEWAY_TOKEN not configured');
       }
 
-      // Not SSRF: base URL is from server env var, project_id/user_id are JWT-validated UUID path segments
       const response = await fetch(
         `${ganymedeUrl}/internal/projects/${project_id}/members/${user_id}`,
         {
