@@ -20,13 +20,10 @@ export const moduleFrontend: TModule<TRequired> = {
   description: 'Airtable module',
   dependencies: ['core-graph', 'collab', 'whiteboard'],
   load: ({ depsExports }) => {
-    depsExports.collab.collab.loadSharedData('map', 'airtable', 'bases');
-    depsExports.collab.collab.loadSharedData('map', 'airtable', 'node-views');
-    depsExports.collab.collab.loadSharedData(
-      'map',
-      'airtable',
-      'base-search-results'
-    );
+    // Register shared data schema with registry
+    depsExports.collab.registry.registerSharedData('map', 'airtable', 'bases');
+    depsExports.collab.registry.registerSharedData('map', 'airtable', 'node-views');
+    depsExports.collab.registry.registerSharedData('map', 'airtable', 'base-search-results');
 
     depsExports.whiteboard.registerMenuEntries(airtableMenuEntries);
     depsExports.whiteboard.registerNodes({

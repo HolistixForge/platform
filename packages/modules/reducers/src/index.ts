@@ -1,14 +1,38 @@
 import { TModule } from '@holistix-forge/module';
-import { TJson, TJsonWithUndefined, TStringMap } from '@holistix-forge/simple-types';
+import {
+  TJson,
+  TJsonWithDate,
+  TStringMap,
+} from '@holistix-forge/simple-types';
 import { BackendEventProcessor } from './lib/backendEventProcessor';
 
-export type TBaseEvent = { type: string; [key: string]: TJsonWithUndefined };
+/**
+ * Base Event Type
+ *
+ * systemEvent: Optional flag to mark events that should NOT rearm project activity timer
+ * - undefined/false: User-initiated events (rearm timer on activity)
+ * - true: System/internal events (don't affect activity tracking)
+ *
+ * Examples:
+ * - User events: { type: 'tabs:add-tab', ... } ← rearms timer
+ * - System events: { type: 'reducers:periodic', systemEvent: true } ← doesn't rearm
+ */
+export type TBaseEvent = { 
+  type: string; 
+  systemEvent?: boolean;
+  [key: string]: TJsonWithDate | undefined;
+};
 
 export abstract class RequestData {
   abstract get ip(): string;
   abstract get user_id(): string;
   abstract get jwt(): TJson;
   abstract get headers(): TStringMap;
+  /**
+   * Project ID for multi-project architecture
+   * Required when using registry mode
+   */
+  abstract get project_id(): string | undefined;
 }
 
 export abstract class Reducer<TEvents = TBaseEvent> {
@@ -38,5 +62,8 @@ export const moduleBackend: TModule<undefined, TReducersBackendExports> = {
   },
 };
 
-export type { TEventPeriodic } from './lib/backendEventProcessor';
+// System events (infrastructure-level events)
+export type { TEventPeriodic } from './lib/system-events';
+
+// Event processor
 export { BackendEventProcessor } from './lib/backendEventProcessor';

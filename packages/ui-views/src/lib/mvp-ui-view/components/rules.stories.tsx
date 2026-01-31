@@ -18,12 +18,8 @@ export default meta;
 type Story = StoryObj<typeof Rules>;
 
 export const Group: Story = {
-  args: {
-    mode: 'Group',
-  },
+  args: {},
 };
 export const Role: Story = {
-  args: {
-    mode: 'Role',
-  },
+  args: {},
 };

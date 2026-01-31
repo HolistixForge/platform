@@ -6,17 +6,16 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "types": ["jest", "node"]
+    "types": ["jest", "node"],
+    "resolveJsonModule": true
   },
+  "files": ["src/oas30.json"],
   "include": [
     "jest.config.ts",
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
-    "src/**/*.d.ts"
+    "src/**/*.d.ts",
+    "src/**/*.ts"
   ],
-  "references": [
-    {
-      "path": "./tsconfig.app.json"
-    }
-  ]
+  "exclude": ["out-tsc", "dist"]
 }

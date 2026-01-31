@@ -15,8 +15,9 @@ import {
 } from './pages/account';
 import { HomePage } from './pages/home';
 import { ProjectRoot } from './pages/project/project-root';
-import { ProjectAuthorizationsPage } from './pages/project/authorizations';
 import { EditorPage } from './pages/project/editor/editor-page';
+import { OrganizationPermissionsPage } from './pages/organization/permissions-page';
+import { OrganizationDashboard } from './pages/organization/dashboard';
 import { CredentialsPage } from './pages/credentials';
 import { MobileBlockOverlay } from './MobileBlockOverlay';
 
@@ -41,11 +42,16 @@ export function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/p/:owner/:project_name" element={<ProjectRoot />}>
                 <Route path="editor" element={<EditorPage />} />
-                <Route
-                  path="authorizations"
-                  element={<ProjectAuthorizationsPage />}
-                />
               </Route>
+
+              <Route
+                path="/org/:organization_id"
+                element={<OrganizationDashboard />}
+              />
+              <Route
+                path="/org/:organization_id/permissions"
+                element={<OrganizationPermissionsPage />}
+              />
 
               <Route path="/account/signup" element={<SignupPage />} />
               <Route path="/account/login" element={<LoginPage />} />

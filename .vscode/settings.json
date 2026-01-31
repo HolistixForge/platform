@@ -33,6 +33,25 @@
       "label": "Gateway Pool HTTP",
       "onAutoForward": "ignore"
     }
-  }
+  },
+  "workbench.colorCustomizations": {
+    "activityBar.activeBackground": "#157232",
+    "activityBar.background": "#157232",
+    "activityBar.foreground": "#e7e7e7",
+    "activityBar.inactiveForeground": "#e7e7e799",
+    "activityBarBadge.background": "#3b1987",
+    "activityBarBadge.foreground": "#e7e7e7",
+    "commandCenter.border": "#e7e7e799",
+    "sash.hoverBorder": "#157232",
+    "statusBar.background": "#0d471f",
+    "statusBar.foreground": "#e7e7e7",
+    "statusBarItem.hoverBackground": "#157232",
+    "statusBarItem.remoteBackground": "#0d471f",
+    "statusBarItem.remoteForeground": "#e7e7e7",
+    "titleBar.activeBackground": "#0d471f",
+    "titleBar.activeForeground": "#e7e7e7",
+    "titleBar.inactiveBackground": "#0d471f99",
+    "titleBar.inactiveForeground": "#e7e7e799"
+  },
+  "peacock.remoteColor": "#0D471F"
 }
-

@@ -10,7 +10,7 @@ function error_exit {
 
 # Function for displaying success message and returning JSON
 function write_config {
-    echo -n "{\"status\": \"ok\", \"pid\": $1, \"temp_dir\": \"$2\", \"port\": $3, \"hostname\": \"$4\", \"certificates\": { \"clients.crt\": \"${5//$'\n'/\\n}\", \"clients.key\": \"${6//$'\n'/\\n}\", \"ca.crt\": \"${7//$'\n'/\\n}\", \"ta.key\": \"${8//$'\n'/\\n}\" }}" >"/tmp/vpn-config.json"
+    echo -n "{\"organization_id\": \"$1\", \"status\": \"ok\", \"pid\": $2, \"temp_dir\": \"$3\", \"port\": $4, \"hostname\": \"$5\", \"certificates\": { \"clients.crt\": \"${6//$'\n'/\\n}\", \"clients.key\": \"${7//$'\n'/\\n}\", \"ca.crt\": \"${8//$'\n'/\\n}\", \"ta.key\": \"${9//$'\n'/\\n}\" }}" >"/tmp/vpn-config.json"
     exit 0
 }
 
@@ -97,7 +97,10 @@ echo "${OPENVPN_PID}" >"${OPENVPN_PID_FILE}" || error_exit "Failed to write Open
 # Get public hostname of the machine
 HOSTNAME=$(hostname -f)
 
+# Get organization_id from environment (passed by vpn-manager)
+ORG_ID="${ORGANIZATION_ID:-unknown}"
+
 # Output success message
-write_config "${OPENVPN_PID}" "${TEMP_DIR}" "${GATEWAY_VPN_PORT}" "${HOSTNAME}" "$(cat "${CLIENTS_CERT}")" "$(cat "${CLIENTS_KEY}")" "$(cat "${CA_CERT}")" "$(cat "${TA_KEY}")"
+write_config "${ORG_ID}" "${OPENVPN_PID}" "${TEMP_DIR}" "${GATEWAY_VPN_PORT}" "${HOSTNAME}" "$(cat "${CLIENTS_CERT}")" "$(cat "${CLIENTS_KEY}")" "$(cat "${CA_CERT}")" "$(cat "${TA_KEY}")"
 
 sudo nginx -s reload

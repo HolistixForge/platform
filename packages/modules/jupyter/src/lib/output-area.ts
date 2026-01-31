@@ -79,7 +79,7 @@ class VirtualOutputArea {
     value.onReply = this._onExecuteReply;
 
     // Handle stdin.
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     value.onStdin = (msg) => {
       //
     };

@@ -26,7 +26,6 @@ import {
 import { moduleBackend as spaceBackend } from '@holistix-forge/whiteboard';
 import { moduleFrontend as spaceFrontend } from '@holistix-forge/whiteboard/frontend';
 import { moduleBackend as tabsBackend } from '@holistix-forge/tabs';
-import { moduleFrontend as tabsFrontend } from '@holistix-forge/tabs';
 //
 import {
   TUserContainersExports,
@@ -107,7 +106,6 @@ const modulesFrontend: { module: TModule<never, object>; config: object }[] = [
   { module: reducersFrontend, config: {} },
   { module: coreFrontend, config: {} },
   { module: spaceFrontend, config: {} },
-  { module: tabsFrontend, config: {} },
   { module: userContainersFrontend, config: {} },
 ];
 

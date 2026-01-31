@@ -33,7 +33,8 @@ export const moduleFrontend: TModule<TRequired> = {
   description: 'Jupyter module',
   dependencies: ['core-graph', 'collab', 'whiteboard', 'user-containers'],
   load: ({ depsExports, moduleExports }) => {
-    depsExports.collab.collab.loadSharedData('map', 'jupyter', 'servers');
+    // Register shared data schema with registry
+    depsExports.collab.registry.registerSharedData('map', 'jupyter', 'servers');
 
     depsExports.whiteboard.registerMenuEntries(spaceMenuEntrie);
     depsExports.whiteboard.registerNodes({
@@ -42,10 +43,15 @@ export const moduleFrontend: TModule<TRequired> = {
       'jupyter-terminal': NodeTerminal,
     });
 
+    // TODO: Refactor JLsManager to use per-project collab via getCollabForProject()
+    // For now, shared data is resolved lazily at runtime when a project context is available
+    const getSharedData = (project_id: string) =>
+      depsExports.collab.getCollabForProject(project_id).collab
+        .sharedData as TJupyterSharedData & TUserContainersSharedData;
+
     moduleExports({
       jlsManager: new JLsManager(
-        depsExports.collab.collab.sharedData as TJupyterSharedData &
-          TUserContainersSharedData,
+        getSharedData as any,
         depsExports.reducers.dispatcher,
         depsExports['user-containers'].getToken
       ),

@@ -3,6 +3,7 @@ import {
   useCurrentUser,
   useMutationLogout,
   useQueriesUsers,
+  useProject,
 } from '@holistix-forge/frontend-data';
 import { useAction } from '@holistix-forge/ui-base';
 import { Header } from '@holistix-forge/ui-views';
@@ -24,7 +25,7 @@ export const HeaderLogic = () => {
 
   // Always render Header - it will show login/signup buttons when user is not logged in
   const user = meStatus === 'success' && me?.user.user_id ? me.user : undefined;
-  
+
   return (
     <Header
       user={user}
@@ -51,8 +52,19 @@ export const HeaderLogicProject = () => {
 
   const users = useAwarenessUserList();
 
+  // Get organization_id from project context for permissions link
+  const { organization_id } = useProject();
+  const permissionsLink = `/org/${organization_id}/permissions`;
+
+  // Filter out guest user ID before fetching user details
+  // The guest user ID is used as a fallback in collab config and should not be fetched
+  const GUEST_USER_ID = '00000000-0000-0000-0000-000000000001';
+  const validUserIds = users
+    .map((u) => u.user_id)
+    .filter((id) => id !== GUEST_USER_ID);
+
   // queries for each needed user
-  const usersQueries = useQueriesUsers(users.map((u) => u.user_id));
+  const usersQueries = useQueriesUsers(validUserIds);
 
   const otherUsers: TF_User[] = usersQueries
     .filter(
@@ -68,12 +80,13 @@ export const HeaderLogicProject = () => {
 
   // Always render Header - it will show login/signup buttons when user is not logged in
   const user = meStatus === 'success' && me?.user.user_id ? me.user : undefined;
-  
+
   return (
     <Header
       user={user}
       otherUsers={otherUsers}
       logoutAction={user ? logoutAction : undefined}
+      permissionsLink={permissionsLink}
       host
       share
       hasNotifications

@@ -6,14 +6,13 @@ import { TGraphView } from './lib/whiteboard-types';
 import { TCollabBackendExports } from '@holistix-forge/collab';
 import { TReducersBackendExports } from '@holistix-forge/reducers';
 import { TGatewayExports } from '@holistix-forge/gateway';
-import { TCoreSharedData } from '@holistix-forge/core-graph';
 
 export type TWhiteboardSharedData = {
   'whiteboard:graphViews': SharedMap<TGraphView>;
 };
 
 type TRequired = {
-  collab: TCollabBackendExports<TWhiteboardSharedData & TCoreSharedData>;
+  collab: TCollabBackendExports;
   reducers: TReducersBackendExports;
   gateway: TGatewayExports;
 };
@@ -24,12 +23,20 @@ export const moduleBackend: TModule<TRequired> = {
   description: 'Whiteboard module',
   dependencies: ['core-graph', 'gateway'],
   load: ({ depsExports }) => {
-    depsExports.collab.collab.loadSharedData('map', 'whiteboard', 'graphViews');
+    // Register shared data schema with registry
+    depsExports.collab.registry.registerSharedData(
+      'map',
+      'whiteboard',
+      'graphViews'
+    );
     depsExports.reducers.loadReducers(new WhiteboardReducer(depsExports));
   },
 };
 
-export { nodeViewDefaultStatus, defaultGraphView } from './lib/whiteboard-types';
+export {
+  nodeViewDefaultStatus,
+  defaultGraphView,
+} from './lib/whiteboard-types';
 
 export type { TNodeView } from './lib/whiteboard-types';
 

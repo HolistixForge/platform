@@ -36,9 +36,13 @@
                     },
                     "additionalProperties": true,
                     "required": ["type"]
+                  },
+                  "project_id": {
+                    "type": "string",
+                    "format": "uuid"
                   }
                 },
-                "required": ["event"],
+                "required": ["event", "project_id"],
                 "additionalProperties": false
               }
             }
@@ -52,7 +56,8 @@
     },
     "/collab/start": {
       "post": {
-        "summary": "Initialize gateway with organization handshake",
+        "summary": "Trigger gateway initialization",
+        "description": "Triggers gateway to fetch config from Ganymede and initialize. Public endpoint (no auth required).",
         "tags": ["Collab"],
         "requestBody": {
           "required": true,
@@ -60,16 +65,26 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "properties": {
-                  "tmp_handshake_token": { "type": "string", "format": "uuid" }
-                },
-                "required": ["tmp_handshake_token"]
+                "properties": {}
               }
             }
           }
         },
         "responses": {
           "200": { "$ref": "#/components/responses/empty" },
+          "404": {
+            "description": "Gateway not allocated to any organization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
           "4XX": { "$ref": "#/components/responses/errors" }
         }
       }
@@ -179,8 +194,9 @@
     },
     "/permissions/projects/{project_id}": {
       "get": {
-        "summary": "Get user permissions for a project",
-        "description": "Returns permissions for all users in a project. Requires gateway:[permissions:*]:read permission and project access.",
+        "summary": "[DEPRECATED] Get user permissions for a project",
+        "description": "⚠️ DEPRECATED: Use GET /users/:user_id/roles instead. This endpoint is not compatible with RBAC and returns HTTP 410.",
+        "deprecated": true,
         "tags": ["Permissions"],
         "parameters": [
           { "$ref": "#/components/parameters/headers_authorization" },
@@ -222,8 +238,9 @@
     },
     "/permissions/projects/{project_id}/users/{user_id}": {
       "patch": {
-        "summary": "Update user permissions for a project",
-        "description": "Updates permissions for a user in a project. Requires gateway:[permissions:*]:write permission and project access.",
+        "summary": "[DEPRECATED] Update user permissions for a project",
+        "description": "⚠️ DEPRECATED: Use POST /users/:user_id/roles to assign roles instead. Direct permission assignment bypasses RBAC. Returns HTTP 410.",
+        "deprecated": true,
         "tags": ["Permissions"],
         "parameters": [
           { "$ref": "#/components/parameters/headers_authorization" },
@@ -280,6 +297,453 @@
               }
             }
           },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/roles": {
+      "get": {
+        "summary": "List all roles",
+        "description": "Returns all roles (system + custom). Requires gateway:roles:read permission.",
+        "tags": ["RBAC"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of roles",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "roles": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/role" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      },
+      "post": {
+        "summary": "Create custom role",
+        "description": "Creates a new custom role. Requires gateway:roles:write permission.",
+        "tags": ["RBAC"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "role_name": {
+                    "type": "string",
+                    "description": "Unique role identifier (e.g., 'project-developer')"
+                  },
+                  "display_name": {
+                    "type": "string",
+                    "description": "Human-readable name"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Role description"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Array of permission strings"
+                  },
+                  "scope": {
+                    "type": "string",
+                    "enum": ["org", "project"],
+                    "description": "Role scope level"
+                  }
+                },
+                "required": [
+                  "role_name",
+                  "display_name",
+                  "permissions",
+                  "scope"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Role created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/role" }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/roles/{role_id}": {
+      "get": {
+        "summary": "Get role by ID",
+        "description": "Returns a specific role. Requires gateway:roles:read permission.",
+        "tags": ["RBAC"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "in": "path",
+            "name": "role_id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Role details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/role" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/errors" },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      },
+      "patch": {
+        "summary": "Update custom role",
+        "description": "Updates a custom role. Cannot modify system roles. Requires gateway:roles:write permission.",
+        "tags": ["RBAC"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "in": "path",
+            "name": "role_id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "display_name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "permissions": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Role updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/role" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/errors" },
+          "404": { "$ref": "#/components/responses/errors" },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      },
+      "delete": {
+        "summary": "Delete custom role",
+        "description": "Deletes a custom role and removes it from all users. Cannot delete system roles. Requires gateway:roles:write permission.",
+        "tags": ["RBAC"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "in": "path",
+            "name": "role_id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Role deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/errors" },
+          "404": { "$ref": "#/components/responses/errors" },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/users/{user_id}/roles": {
+      "get": {
+        "summary": "Get user's roles",
+        "description": "Returns user's organization and project roles. Requires gateway:roles:read permission.",
+        "tags": ["RBAC"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "in": "query",
+            "name": "project_id",
+            "required": false,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Optional project ID to include project-specific roles"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User roles",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "org_roles": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/role" }
+                    },
+                    "project_roles": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/role" }
+                      },
+                      "description": "Map of project_id to roles array"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      },
+      "post": {
+        "summary": "Assign role to user",
+        "description": "Assigns a role to a user at org or project level. Requires gateway:roles:write permission.",
+        "tags": ["RBAC"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "role_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Role ID to assign"
+                  },
+                  "scope": {
+                    "type": "string",
+                    "enum": ["org", "project"],
+                    "description": "Assignment scope"
+                  },
+                  "project_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Required if scope is 'project'"
+                  }
+                },
+                "required": ["role_id", "scope"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Role assigned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/errors" },
+          "403": { "$ref": "#/components/responses/errors" },
+          "404": { "$ref": "#/components/responses/errors" },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/users/{user_id}/roles/{role_id}": {
+      "delete": {
+        "summary": "Remove role from user",
+        "description": "Removes a role from a user. Requires gateway:roles:write permission.",
+        "tags": ["RBAC"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "in": "path",
+            "name": "role_id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "in": "query",
+            "name": "project_id",
+            "required": false,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Required for project-scoped roles"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Role removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/errors" },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/members/projects/{project_id}/users": {
+      "post": {
+        "summary": "Add member to project",
+        "description": "Adds a user to a project with specified roles. Gateway-orchestrated member management. Requires project:*:admin permission.",
+        "tags": ["Members"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "User ID (must be org member)"
+                  },
+                  "role_ids": {
+                    "type": "array",
+                    "items": { "type": "string", "format": "uuid" },
+                    "description": "Project-scoped roles to assign"
+                  }
+                },
+                "required": ["user_id", "role_ids"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Member added",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/errors" },
+          "403": { "$ref": "#/components/responses/errors" },
+          "404": { "$ref": "#/components/responses/errors" },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/members/projects/{project_id}/users/{user_id}": {
+      "delete": {
+        "summary": "Remove member from project",
+        "description": "Removes a user from a project (removes all project roles). Requires project:*:admin permission.",
+        "tags": ["Members"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Member removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/errors" },
           "4XX": { "$ref": "#/components/responses/errors" }
         }
       }
@@ -373,8 +837,14 @@
                     "type": "string",
                     "description": "Refresh token (for refresh_token grant)"
                   },
-                  "client_id": { "type": "string", "description": "OAuth client ID" },
-                  "client_secret": { "type": "string", "description": "OAuth client secret" },
+                  "client_id": {
+                    "type": "string",
+                    "description": "OAuth client ID"
+                  },
+                  "client_secret": {
+                    "type": "string",
+                    "description": "OAuth client secret"
+                  },
                   "redirect_uri": {
                     "type": "string",
                     "format": "uri",
@@ -527,6 +997,55 @@
           }
         },
         "required": ["permission", "module", "resourcePath", "action"]
+      },
+      "role": {
+        "type": "object",
+        "properties": {
+          "role_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique role identifier"
+          },
+          "role_name": {
+            "type": "string",
+            "description": "Role name (e.g., 'org:owner', 'project-developer')"
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Human-readable name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Role description"
+          },
+          "permissions": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Array of permission strings (supports wildcards)"
+          },
+          "scope": {
+            "type": "string",
+            "enum": ["org", "project"],
+            "description": "Org-level (applies to all projects) or project-specific"
+          },
+          "system": {
+            "type": "boolean",
+            "description": "Whether this is a system-defined role"
+          },
+          "immutable": {
+            "type": "boolean",
+            "description": "Whether this role can be modified or deleted"
+          }
+        },
+        "required": [
+          "role_id",
+          "role_name",
+          "display_name",
+          "permissions",
+          "scope",
+          "system",
+          "immutable"
+        ]
       }
     },
     "parameters": {

@@ -5,6 +5,9 @@ dist
 tmp
 out-tsc
 
+# Temporary TypeScript config files created by tsc-files
+tsconfig.*.tsbuildinfo
+
 # dependencies
 node_modules
 

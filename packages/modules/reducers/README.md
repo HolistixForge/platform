@@ -22,7 +22,23 @@ No dependencies - foundational module for event processing.
 
 - `TReducersBackendExports`: Backend reducer interface with `processEvent` and `loadReducers`
 - `Reducer`: Abstract base class for event reducers
-- `RequestData`: Abstract class for request context
-- `BackendEventProcessor`: Core event processing engine
-- `TEventPeriodic`: Type for periodic/recurring events
+- `RequestData`: Abstract class for request context (includes `project_id` for multi-project support)
+- `TBaseEvent`: Base event type with optional `systemEvent` flag
+- `BackendEventProcessor`: Core event processing engine (generic, no gateway-specific logic)
+- `TEventPeriodic`: Type for periodic/recurring system events (defined in `lib/system-events.ts`)
+
+## System Events
+
+System events are infrastructure-level events that don't represent user actions:
+
+- **`systemEvent: true`**: Events that should NOT rearm project activity timers
+  - `reducers:periodic` - Scheduled maintenance tasks
+  - `project:init` - Automatic project initialization
+  - `user-container:watchdog` - Container health checks
+  - `jupyter:resources-changed` - Automatic resource updates
+
+- **`systemEvent: false/undefined`**: User-initiated events that DO rearm activity timers
+  - All user actions (`tabs:add-tab`, `whiteboard:move-node`, etc.)
+
+See `lib/system-events.ts` for system event type definitions.
 

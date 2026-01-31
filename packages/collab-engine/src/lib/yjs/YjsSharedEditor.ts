@@ -24,7 +24,7 @@ export class YjsSharedEditor extends SharedEditor {
   override async getBindingObjects(
     editorId: string
   ): Promise<YjsBindingData | false> {
-    let ytext = this._editorBindings.get(editorId);
+    const ytext = this._editorBindings.get(editorId);
     if (!ytext) {
       return false;
     }

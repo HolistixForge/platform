@@ -40,6 +40,9 @@
       "path": "../../log/tsconfig.lib.json"
     },
     {
+      "path": "../reducers/tsconfig.lib.json"
+    },
+    {
       "path": "../../collab-engine/tsconfig.lib.json"
     },
     {

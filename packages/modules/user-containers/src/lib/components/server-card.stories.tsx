@@ -7,7 +7,7 @@ import {
   withServicesStory,
   StoryArgs,
 } from './server-card-stories';
-import { localRunnerFrontend } from '../local-runner';
+import { localRunnerFrontend } from '../local-runner-frontend';
 
 //
 

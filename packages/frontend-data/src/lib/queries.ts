@@ -4,6 +4,7 @@ import {
   TCollaborator,
   TG_User,
 } from '@holistix-forge/types';
+import type { TJson } from '@holistix-forge/simple-types';
 import { useApi } from './api-context';
 import {
   useQuery,
@@ -439,12 +440,14 @@ export const useMutationChangePassword = () => {
 export const useQueryUserOrganizations = () => {
   const { ganymedeApi } = useApi();
 
-  return useQuery<Array<{
-    organization_id: string;
-    name: string;
-    owner_user_id: string;
-    created_at: string;
-  }>>({
+  return useQuery<
+    Array<{
+      organization_id: string;
+      name: string;
+      owner_user_id: string;
+      created_at: string;
+    }>
+  >({
     queryKey: ['user-organizations', 'me'],
     queryFn: () =>
       (
@@ -539,7 +542,10 @@ export const useMutationDeleteProject = (project_id: string) => {
 
 //
 
-export const useQueryProjectByName = (organization_id: string, project_name: string) => {
+export const useQueryProjectByName = (
+  organization_id: string,
+  project_name: string
+) => {
   const { ganymedeApi } = useApi();
   return useQuery<TApi_Project>({
     queryKey: ['projects', organization_id, project_name],
@@ -578,6 +584,333 @@ export const useMutationStartOrganization = (organization_id: string) => {
       });
       // Also invalidate user projects in case gateway status affects project list
       queryClient.invalidateQueries({ queryKey: ['user-projects', 'me'] });
+    },
+  });
+};
+
+//
+// RBAC Hooks
+//
+
+export interface Role {
+  role_id: string;
+  role_name: string;
+  display_name: string;
+  description: string;
+  permissions: string[];
+  scope: 'org' | 'project';
+  system: boolean;
+  immutable: boolean;
+}
+
+export interface CreateRoleInput {
+  role_name: string;
+  display_name: string;
+  description: string;
+  permissions: string[];
+  scope: 'org' | 'project';
+}
+
+export interface UserRoleAssignment {
+  user_id: string;
+  org_roles: Role[];
+  project_roles: { [project_id: string]: Role[] };
+}
+
+export interface OrgMember {
+  user_id: string;
+  username: string;
+  email: string;
+  added_at: string;
+}
+
+export interface PermissionDefinition {
+  permission: string;
+  module: string;
+  resourcePath: string;
+  action: string;
+  description?: string;
+}
+
+// Query: List all roles
+export const useQueryRoles = (organization_id: string) => {
+  const { ganymedeApi } = useApi();
+  return useQuery<{ roles: Role[] }>({
+    queryKey: ['roles', organization_id],
+    queryFn: () =>
+      ganymedeApi.fetchGateway(
+        {
+          url: 'roles',
+          method: 'GET',
+        },
+        organization_id
+      ) as unknown as Promise<{ roles: Role[] }>,
+    enabled: !!organization_id,
+  });
+};
+
+// Query: Get specific role
+export const useQueryRole = (organization_id: string, role_id: string) => {
+  const { ganymedeApi } = useApi();
+  return useQuery<Role>({
+    queryKey: ['role', organization_id, role_id],
+    queryFn: () =>
+      ganymedeApi.fetchGateway(
+        {
+          url: 'roles/{role_id}',
+          method: 'GET',
+          pathParameters: { role_id },
+        },
+        organization_id
+      ) as unknown as Promise<Role>,
+    enabled: !!organization_id && !!role_id,
+  });
+};
+
+// Query: Get user's roles
+export const useQueryUserRoles = (
+  organization_id: string,
+  user_id: string,
+  project_id?: string
+) => {
+  const { ganymedeApi } = useApi();
+  return useQuery<UserRoleAssignment>({
+    queryKey: ['user-roles', organization_id, user_id, project_id],
+    queryFn: () => {
+      const url = project_id
+        ? `users/${user_id}/roles?project_id=${project_id}`
+        : `users/${user_id}/roles`;
+      return ganymedeApi.fetchGateway(
+        {
+          url,
+          method: 'GET',
+        },
+        organization_id
+      ) as unknown as Promise<UserRoleAssignment>;
+    },
+    enabled: !!organization_id && !!user_id,
+  });
+};
+
+// Query: Get organization members
+export const useQueryOrgMembers = (organization_id: string) => {
+  const { ganymedeApi } = useApi();
+  return useQuery<{ members: OrgMember[] }>({
+    queryKey: ['org-members', organization_id],
+    queryFn: () =>
+      ganymedeApi.fetch({
+        url: 'orgs/{organization_id}/members',
+        method: 'GET',
+        pathParameters: { organization_id },
+      }) as unknown as Promise<{ members: OrgMember[] }>,
+    enabled: !!organization_id,
+  });
+};
+
+// Query: Get all available permissions (module-registered)
+export const useQueryPermissions = (organization_id: string) => {
+  const { ganymedeApi } = useApi();
+  return useQuery<{ permissions: PermissionDefinition[] }>({
+    queryKey: ['permissions-catalog', organization_id],
+    queryFn: () =>
+      ganymedeApi.fetchGateway(
+        {
+          url: 'permissions',
+          method: 'GET',
+        },
+        organization_id
+      ) as unknown as Promise<{ permissions: PermissionDefinition[] }>,
+    enabled: !!organization_id,
+  });
+};
+
+// Mutation: Create role
+export const useMutationCreateRole = (organization_id: string) => {
+  const { ganymedeApi } = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (role: CreateRoleInput) =>
+      ganymedeApi.fetchGateway(
+        {
+          url: 'roles',
+          method: 'POST',
+          jsonBody: role as unknown as TJson,
+        },
+        organization_id
+      ) as unknown as Promise<Role>,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['roles', organization_id] });
+    },
+  });
+};
+
+// Mutation: Update role
+export const useMutationUpdateRole = (organization_id: string) => {
+  const { ganymedeApi } = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (arg: {
+      role_id: string;
+      updates: Partial<
+        Pick<Role, 'display_name' | 'description' | 'permissions'>
+      >;
+    }) =>
+      ganymedeApi.fetchGateway(
+        {
+          url: 'roles/{role_id}',
+          method: 'PATCH',
+          pathParameters: { role_id: arg.role_id },
+          jsonBody: arg.updates,
+        },
+        organization_id
+      ) as unknown as Promise<Role>,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['roles', organization_id] });
+    },
+  });
+};
+
+// Mutation: Delete role
+export const useMutationDeleteRole = (organization_id: string) => {
+  const { ganymedeApi } = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (role_id: string) =>
+      ganymedeApi.fetchGateway(
+        {
+          url: 'roles/{role_id}',
+          method: 'DELETE',
+          pathParameters: { role_id },
+        },
+        organization_id
+      ) as Promise<{ success: boolean }>,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['roles', organization_id] });
+      queryClient.invalidateQueries({
+        queryKey: ['user-roles', organization_id],
+      });
+    },
+  });
+};
+
+// Mutation: Assign role to user
+export const useMutationAssignRole = (organization_id: string) => {
+  const { ganymedeApi } = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (arg: {
+      user_id: string;
+      role_id: string;
+      scope: 'org' | 'project';
+      project_id?: string;
+    }) =>
+      ganymedeApi.fetchGateway(
+        {
+          url: 'users/{user_id}/roles',
+          method: 'POST',
+          pathParameters: { user_id: arg.user_id },
+          jsonBody: {
+            role_id: arg.role_id,
+            scope: arg.scope,
+            project_id: arg.project_id,
+          } as unknown as TJson,
+        },
+        organization_id
+      ) as Promise<{ success: boolean }>,
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['user-roles', organization_id, variables.user_id],
+      });
+    },
+  });
+};
+
+// Mutation: Remove role from user
+export const useMutationRemoveRole = (organization_id: string) => {
+  const { ganymedeApi } = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (arg: {
+      user_id: string;
+      role_id: string;
+      project_id?: string;
+    }) => {
+      const url = arg.project_id
+        ? `users/${arg.user_id}/roles/${arg.role_id}?project_id=${arg.project_id}`
+        : `users/${arg.user_id}/roles/${arg.role_id}`;
+      return ganymedeApi.fetchGateway(
+        {
+          url,
+          method: 'DELETE',
+        },
+        organization_id
+      ) as Promise<{ success: boolean }>;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['user-roles', organization_id, variables.user_id],
+      });
+    },
+  });
+};
+
+// Mutation: Add project member with roles
+export const useMutationAddProjectMember = (organization_id: string) => {
+  const { ganymedeApi } = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (arg: {
+      project_id: string;
+      user_id: string;
+      role_ids: string[];
+    }) =>
+      ganymedeApi.fetchGateway(
+        {
+          url: 'members/projects/{project_id}/users',
+          method: 'POST',
+          pathParameters: { project_id: arg.project_id },
+          jsonBody: {
+            user_id: arg.user_id,
+            role_ids: arg.role_ids,
+          },
+        },
+        organization_id
+      ) as Promise<{ success: boolean }>,
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['project-members', variables.project_id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['user-roles', organization_id, variables.user_id],
+      });
+    },
+  });
+};
+
+// Mutation: Remove project member
+export const useMutationRemoveProjectMember = (organization_id: string) => {
+  const { ganymedeApi } = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (arg: { project_id: string; user_id: string }) =>
+      ganymedeApi.fetchGateway(
+        {
+          url: 'members/projects/{project_id}/users/{user_id}',
+          method: 'DELETE',
+          pathParameters: {
+            project_id: arg.project_id,
+            user_id: arg.user_id,
+          },
+        },
+        organization_id
+      ) as Promise<{ success: boolean }>,
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['project-members', variables.project_id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['user-roles', organization_id, variables.user_id],
+      });
     },
   });
 };

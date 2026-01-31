@@ -49,9 +49,11 @@ const StartOrganizationBox = ({
  */
 export const OrganizationContext = ({
   organization_id,
+  project_id,
   children,
 }: {
   organization_id: string;
+  project_id?: string;
   children: ReactNode;
 }) => {
   const { ganymedeApi } = useApi();
@@ -75,10 +77,13 @@ export const OrganizationContext = ({
 
     const modules = getModulesFrontend({
       fetch: gatewayFetch,
+      gateway_hostname,
+      project_id,
+      ganymedeApi,
     });
 
     return loadModules(modules);
-  }, [gateway_hostname, ganymedeApi]);
+  }, [gateway_hostname, ganymedeApi, project_id]);
 
   // Show loading state
   if (gatewayStatus === 'pending') {

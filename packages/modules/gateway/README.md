@@ -30,5 +30,6 @@ Exports managers for OAuth, tokens, permissions, and DNS. Provides `toGanymede` 
 - `PermissionRegistry`: Permission definition registry
 - `ProtectedServiceRegistry`: Protected-service registration (for HTTP/WS metadata)
 - `TGatewaySharedData`, `TGatewayMeta`: Shared data types
-- Event types: `TEventLoad`, `TEventDisableShutdown`
+- Event types: `TEventDisableProjectUnloading`, `TEventProjectInit`
+- Shared data types: `TGatewaySharedData`, `TGatewayMeta` (per-project activity tracking)
 

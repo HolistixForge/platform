@@ -1,4 +1,12 @@
-import { Response, NextFunction, RequestHandler } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
+
+export interface AuthRequest extends Request {
+  user: {
+    id: string;
+    username: string;
+    email: string;
+  };
+}
 
 export const asyncHandler = (
   fn: (req: any, res: Response, next: NextFunction) => Promise<any>

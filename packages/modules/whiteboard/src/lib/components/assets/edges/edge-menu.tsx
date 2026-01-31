@@ -1,9 +1,13 @@
 import { CSSProperties } from 'react';
 
 import { ColorPicker } from '@holistix-forge/ui-base';
-import { SelectFieldset, SelectItem, SliderFieldset } from '@holistix-forge/ui-base';
+import {
+  SelectFieldset,
+  SelectItem,
+  SliderFieldset,
+} from '@holistix-forge/ui-base';
 import { useLocalSharedData } from '@holistix-forge/collab/frontend';
-import { TCoreSharedData } from '@holistix-forge/core-graph';
+import { TCoreSharedData, TEdge } from '@holistix-forge/core-graph';
 
 import { edgeId, TEdgeRenderProps } from '../../apis/types/edge';
 
@@ -74,7 +78,7 @@ export const EdgeMenu = ({
   const renderProps: TEdgeRenderProps = useLocalSharedData<TCoreSharedData>(
     ['core-graph:edges'],
     (sd) => {
-      const edge = sd['core-graph:edges'].find((e) => edgeId(e) === eid);
+      const edge = sd['core-graph:edges'].find((e: TEdge) => edgeId(e) === eid);
       const renderProps = (edge as any)?.renderProps;
       return renderProps || {};
     }

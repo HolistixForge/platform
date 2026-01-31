@@ -1015,18 +1015,19 @@
     },
     "/gateway/config": {
       "post": {
-        "summary": "Gateway handshake - get org config",
+        "summary": "Get gateway configuration",
+        "description": "Gateway calls this at startup to fetch organization config. Requires TJwtGateway authentication.",
         "tags": ["Gateway"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization" }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "properties": {
-                  "tmp_handshake_token": { "type": "string", "format": "uuid" }
-                },
-                "required": ["tmp_handshake_token"]
+                "properties": {}
               }
             }
           }
@@ -1044,7 +1045,7 @@
                     "gateway_id": { "type": "string", "format": "uuid" },
                     "organization_token": {
                       "type": "string",
-                      "description": "JWT token for organization-bound operations"
+                      "description": "TJwtOrganization for organization-bound operations"
                     },
                     "projects": {
                       "type": "array",
@@ -1059,16 +1060,41 @@
                           "username": { "type": "string" },
                           "role": {
                             "type": "string",
-                            "enum": ["owner", "admin", "member"]
+                            "enum": ["owner", "admin", "member"],
+                            "description": "User's role in the organization"
                           }
-                        }
-                      }
+                        },
+                        "required": ["user_id", "username", "role"]
+                      },
+                      "description": "Organization members for Gateway RBAC initialization"
                     }
+                  },
+                  "required": [
+                    "organization_id",
+                    "organization_name",
+                    "gateway_id",
+                    "organization_token",
+                    "projects",
+                    "members"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Gateway not allocated to any organization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string" }
                   }
                 }
               }
             }
           },
+          "401": { "$ref": "#/components/responses/errors" },
           "4XX": { "$ref": "#/components/responses/errors" }
         }
       }
@@ -2291,11 +2317,11 @@
       "headers_authorization": {
         "in": "header",
         "name": "authorization",
-        "description": "JWT access token (user token with 'token ' prefix)",
+        "description": "JWT access token (with 'token ' or 'Bearer ' prefix, or no prefix)",
         "required": true,
         "schema": {
           "type": "string",
-          "pattern": "^(?:token\\s)?[-A-Za-z0-9_+./]*={0,3}$"
+          "pattern": "^(?:(?:token|Bearer)\\s)?[-A-Za-z0-9_+./]*={0,3}$"
         }
       },
       "headers_authorization_bearer": {

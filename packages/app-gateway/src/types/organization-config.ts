@@ -15,7 +15,7 @@ export interface TOrganizationConfig {
   organization_id: string;
   organization_name: string;
   gateway_id: string;
-  gateway_token: string; // For authenticating with Ganymede
+  organization_token: string; // TJwtOrganization for organization-bound operations
   ganymede_fqdn: string;
 
   // Organization members (for permission initialization)

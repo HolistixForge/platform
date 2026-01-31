@@ -180,6 +180,23 @@ export class YjsClientCollab extends Collab<TValidSharedData> {
     return this._synced;
   }
 
+  /**
+   * Destroy this collab instance
+   * Disconnects WebSocket and cleans up resources
+   */
+  public destroy(): void {
+    if (this.provider) {
+      this.provider.awareness.destroy();
+      this.provider.disconnect();
+      this.provider.destroy();
+      log(EPriority.Debug, 'COLLAB', 'Provider destroyed');
+    }
+    if (this.ydoc) {
+      this.ydoc.destroy();
+      log(EPriority.Debug, 'COLLAB', 'YDoc destroyed');
+    }
+  }
+
   private resetErrors(): void {
     this.errors = [];
   }
@@ -235,7 +252,20 @@ class MyWebSocket extends WebSocket {
   constructor(url: string | URL, protocols?: string | string[]) {
     // get token from URL, then concat
     let token = '';
-    const args = MyWebSocket.websocketArgs.get(url as string);
+    
+    // Extract base URL (without room_id path) to match the key used in websocketArgs.set()
+    // URL format: wss://org-xxx.apollo.local/project/room-id
+    // Key format: wss://org-xxx.apollo.local/project
+    const urlObj = new URL(url);
+    const pathParts = urlObj.pathname.split('/').filter(p => p);
+    // Remove last path segment (room_id) to get base path
+    if (pathParts.length > 0) {
+      pathParts.pop();
+    }
+    const basePath = '/' + pathParts.join('/');
+    const baseUrl = `${urlObj.protocol}//${urlObj.host}${basePath}`;
+    
+    const args = MyWebSocket.websocketArgs.get(baseUrl);
     if (args) token = args.getToken();
 
     if (token !== '') {

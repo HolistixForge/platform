@@ -73,7 +73,7 @@ export type TUIElements = {
   layers: TLayerProvider[];
 };
 
-const modulesMenuEntries: TWhiteboardMenuEntries[] = [];
+let modulesMenuEntries: TWhiteboardMenuEntries[] = [];
 
 const uiElements: TUIElements = {
   panels: {},
@@ -96,6 +96,17 @@ const uiElements: TUIElements = {
   layers: [],
 };
 
+/**
+ * Reset module-level state so that re-loading modules
+ * does not accumulate duplicate entries.
+ */
+function resetUIElements() {
+  modulesMenuEntries = [];
+  uiElements.panels = {};
+  uiElements.nodes = {};
+  uiElements.layers = [];
+}
+
 export type TWhiteboardFrontendExports = {
   registerMenuEntries: (entries: TWhiteboardMenuEntries) => void;
   registerNodes: (nodes: {
@@ -114,7 +125,15 @@ export const moduleFrontend: TModule<TRequired, TWhiteboardFrontendExports> = {
   description: 'Whiteboard module',
   dependencies: ['core-graph'],
   load: ({ depsExports, moduleExports }) => {
-    depsExports.collab.collab.loadSharedData('map', 'whiteboard', 'graphViews');
+    // Reset module state to prevent accumulation on re-load
+    resetUIElements();
+
+    // Register shared data schema with registry
+    depsExports.collab.registry.registerSharedData(
+      'map',
+      'whiteboard',
+      'graphViews'
+    );
 
     const exports: TWhiteboardFrontendExports = {
       registerMenuEntries: (entries) => {
@@ -124,6 +143,12 @@ export const moduleFrontend: TModule<TRequired, TWhiteboardFrontendExports> = {
         uiElements.nodes = { ...uiElements.nodes, ...newNodes };
       },
       registerLayer: (newLayer) => {
+        if (uiElements.layers.some((l) => l.id === newLayer.id)) {
+          console.warn(
+            `[whiteboard] Duplicate layer registration ignored: "${newLayer.id}"`
+          );
+          return;
+        }
         uiElements.layers.push(newLayer);
       },
       registerPanel: (newPanels) => {

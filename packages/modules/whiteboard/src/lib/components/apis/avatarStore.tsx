@@ -20,11 +20,15 @@ export class AvatarStore extends Listenable {
     });
   }
 
-  protected processUpdates() {}
+  protected processUpdates() {
+    // No-op: Override in subclass if needed
+  }
 
   public getAvatarsElements(): (ReactElement | undefined)[] {
     return [];
   }
 
-  public updateAllAvatars() {}
+  public updateAllAvatars() {
+    // No-op: Override in subclass if needed
+  }
 }

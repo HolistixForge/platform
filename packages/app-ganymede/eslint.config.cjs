@@ -1,3 +1,6 @@
 const baseConfig = require('../../eslint.config.cjs');
 
-module.exports = [...baseConfig];
+module.exports = [
+  { ignores: ['tests/.venv/**'] },
+  ...baseConfig,
+];

@@ -367,6 +367,25 @@ export class GanymedeApi extends ApiFetch {
     return this._doTokenLogic<TJson>(r, () => super.fetch(r, gatewayUrl));
   }
 
+  /**
+   * Get current access token (synchronous)
+   * Returns empty string if token is not available
+   * @returns Access token string
+   */
+  public getAccessToken(): string {
+    const tokenKey = this._getTokenKeyForRequest();
+    const tokenData = this._ts.get(tokenKey);
+    return tokenData.value?.token.access_token || '';
+  }
+
+  /**
+   * Refresh access token
+   * Clears cached token to force refresh on next request
+   */
+  public refreshAccessToken(): void {
+    this._ts.reset();
+  }
+
   public reset() {
     this._ts.reset();
     this._organizationGateways.clear();

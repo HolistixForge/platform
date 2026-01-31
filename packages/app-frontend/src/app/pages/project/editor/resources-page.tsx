@@ -13,7 +13,7 @@ import {
 import { useLocalSharedData } from '@holistix-forge/collab/frontend';
 
 import { ProjectSidebar } from '../sidebar';
-import { useProject } from '../project-context';
+import { useProject } from '@holistix-forge/frontend-data';
 
 //
 

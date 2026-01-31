@@ -9,13 +9,6 @@ import { trace } from '@opentelemetry/api';
 import { browserLog, BrowserLogLevel } from './browser-log';
 
 describe('browserLog', () => {
-  // Store original console methods
-  const originalConsole = {
-    error: console.error,
-    warn: console.warn,
-    info: console.info,
-    debug: console.debug,
-  };
 
   // Mock console methods
   let consoleErrorSpy: jest.SpyInstance;

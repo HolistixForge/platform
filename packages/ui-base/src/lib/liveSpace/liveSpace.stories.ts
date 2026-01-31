@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { LiveSpace } from './liveSpace';
 
-const meta = {
+const meta: Meta<typeof LiveSpace> = {
   title: 'UI/LiveSpace',
   component: LiveSpace,
   parameters: {
@@ -19,7 +19,7 @@ const meta = {
       },
     },
   },
-} satisfies Meta<typeof LiveSpace>;
+};
 
 export default meta;
 

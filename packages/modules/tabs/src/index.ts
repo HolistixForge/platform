@@ -1,13 +1,10 @@
 import { TabsReducer } from './lib/tabs-reducer';
 import type { TModule } from '@holistix-forge/module';
 import type { TCollabBackendExports } from '@holistix-forge/collab';
-import type { TCollabFrontendExports } from '@holistix-forge/collab/frontend';
 import type { TReducersBackendExports } from '@holistix-forge/reducers';
-import type { TTabsSharedData } from './lib/tabs-shared-model';
-import type { TCoreSharedData } from '@holistix-forge/core-graph';
 
 type TBackendRequired = {
-  collab: TCollabBackendExports<TTabsSharedData & TCoreSharedData>;
+  collab: TCollabBackendExports;
   reducers: TReducersBackendExports;
 };
 
@@ -17,22 +14,9 @@ export const moduleBackend: TModule<TBackendRequired> = {
   description: 'Tabs module',
   dependencies: ['core-graph', 'collab', 'reducers'],
   load: ({ depsExports }) => {
-    depsExports.collab.collab.loadSharedData('map', 'tabs', 'tabs');
+    // Register shared data schema with registry
+    depsExports.collab.registry.registerSharedData('map', 'tabs', 'tabs');
     depsExports.reducers.loadReducers(new TabsReducer(depsExports));
-  },
-};
-
-type TFrontendRequired = {
-  collab: TCollabFrontendExports;
-};
-
-export const moduleFrontend: TModule<TFrontendRequired> = {
-  name: 'tabs',
-  version: '0.0.1',
-  description: 'Tabs module',
-  dependencies: ['collab'],
-  load: ({ depsExports }) => {
-    depsExports.collab.collab.loadSharedData('map', 'tabs', 'tabs');
   },
 };
 
@@ -44,8 +28,5 @@ export type { TabPayload, TabPath } from './lib/tabs-types';
 
 export { ReadOnlyTree } from './lib/tree';
 export type { TreeElement } from './lib/tree';
-
-export { TabsRadix } from './lib/components/tabs-radix';
-export type { PanelProps } from './lib/components/tabs-radix';
 
 export type { TTabsTree } from './lib/tabs-types';

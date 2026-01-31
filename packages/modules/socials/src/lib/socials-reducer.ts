@@ -1,9 +1,9 @@
-import { TCoreSharedData } from '@holistix-forge/core-graph';
-import { Reducer, RequestData } from '@holistix-forge/reducers';
+import { TCoreSharedData, TGraphNode } from '@holistix-forge/core-graph';
+import { RequestData } from '@holistix-forge/reducers';
 import { makeUuid } from '@holistix-forge/simple-types';
 import { UserException } from '@holistix-forge/log';
 import type { TReducersBackendExports } from '@holistix-forge/reducers';
-import { TCollabBackendExports } from '@holistix-forge/collab';
+import { TCollabBackendExports, ReducerWithCollab } from '@holistix-forge/collab';
 import { TGatewayExports } from '@holistix-forge/gateway';
 
 import {
@@ -23,16 +23,19 @@ import {
 //
 
 type TRequired = {
-  collab: TCollabBackendExports<TCoreSharedData>;
+  collab: TCollabBackendExports;
   reducers: TReducersBackendExports;
   gateway: TGatewayExports;
 };
 
-export class SocialsReducer extends Reducer<TEventSocials> {
+export class SocialsReducer extends ReducerWithCollab<
+  TEventSocials,
+  TCoreSharedData
+> {
   //
 
   constructor(private readonly depsExports: TRequired) {
-    super();
+    super(depsExports.collab.registry, 'socials');
     this.depsExports = depsExports;
   }
 
@@ -81,10 +84,8 @@ export class SocialsReducer extends Reducer<TEventSocials> {
   ): Promise<void> {
     const id = makeUuid();
 
-    await this.depsExports.collab.collab.sharedEditor.createEditor(
-      id,
-      'Start to write your text here...'
-    );
+    const collab = this.getCollab(requestData);
+    await collab.sharedEditor.createEditor(id, 'Start to write your text here...');
 
     this.depsExports.reducers.processEvent(
       {
@@ -109,9 +110,8 @@ export class SocialsReducer extends Reducer<TEventSocials> {
     event: TEventDeleteTextEditor,
     requestData: RequestData
   ): Promise<void> {
-    await this.depsExports.collab.collab.sharedEditor.deleteEditor(
-      event.nodeId
-    );
+    const collab = this.getCollab(requestData);
+    await collab.sharedEditor.deleteEditor(event.nodeId);
 
     this.depsExports.reducers.processEvent(
       {
@@ -252,13 +252,12 @@ export class SocialsReducer extends Reducer<TEventSocials> {
   ): Promise<void> {
     const userId = event.userId || requestData.user_id;
 
-    this.depsExports.collab.collab.sharedData['core-graph:nodes'].forEach(
-      (node) => {
-        if (node.data?.userId === userId) {
-          throw new UserException('User already has a reservation');
-        }
+    const collab = this.getCollab(requestData);
+    collab.sharedData['core-graph:nodes'].forEach((node: TGraphNode) => {
+      if (node.data?.userId === userId) {
+        throw new UserException('User already has a reservation');
       }
-    );
+    });
 
     const id = makeUuid();
 
@@ -297,9 +296,8 @@ export class SocialsReducer extends Reducer<TEventSocials> {
     event: TEventDeleteReservation,
     requestData: RequestData
   ): Promise<void> {
-    const nodeData = this.depsExports.collab.collab.sharedData[
-      'core-graph:nodes'
-    ].get(event.nodeId);
+    const collab = this.getCollab(requestData);
+    const nodeData = collab.sharedData['core-graph:nodes'].get(event.nodeId);
 
     const jwt = requestData.jwt as { project_id?: string };
     const project_id = jwt?.project_id;

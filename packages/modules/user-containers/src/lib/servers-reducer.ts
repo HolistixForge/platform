@@ -12,14 +12,16 @@ import {
   TEventDeleteNode,
   TEventNewNode,
 } from '@holistix-forge/core-graph';
-import { TEventLoad, TGatewayExports } from '@holistix-forge/gateway';
+import { TGatewayExports } from '@holistix-forge/gateway';
 import {
-  Reducer,
   RequestData,
   TReducersBackendExports,
   TEventPeriodic,
 } from '@holistix-forge/reducers';
-import { TCollabBackendExports } from '@holistix-forge/collab';
+import {
+  TCollabBackendExports,
+  ReducerWithCollab,
+} from '@holistix-forge/collab';
 import crypto from 'crypto';
 
 import { TUserContainersSharedData } from './servers-shared-model';
@@ -41,30 +43,27 @@ import { SharedMap } from '@holistix-forge/collab-engine';
 //
 
 type TRequired = {
-  collab: TCollabBackendExports<TUserContainersSharedData & TCoreSharedData>;
+  collab: TCollabBackendExports;
   reducers: TReducersBackendExports;
   gateway: TGatewayExports;
   'user-containers': TUserContainersExports;
 };
 
-export class UserContainersReducer extends Reducer<
-  TUserContainersEvents | TEventLoad | TEventPeriodic
+export class UserContainersReducer extends ReducerWithCollab<
+  TUserContainersEvents | TEventPeriodic,
+  TUserContainersSharedData & TCoreSharedData
 > {
   //
 
   constructor(private readonly depsExports: TRequired) {
-    super();
+    super(depsExports.collab.registry, 'user-containers');
   }
 
   reduce(
-    event: TUserContainersEvents | TEventLoad | TEventPeriodic,
+    event: TUserContainersEvents | TEventPeriodic,
     requestData: RequestData
   ): Promise<void> {
     switch (event.type) {
-      case 'gateway:load':
-        // TODO start polling state through runner API ?
-        return Promise.resolve();
-
       case 'user-container:new':
         return this._new(event, requestData);
       case 'user-container:delete':
@@ -81,7 +80,7 @@ export class UserContainersReducer extends Reducer<
         return this._start(event, requestData);
 
       case 'reducers:periodic':
-        return this._periodic(event);
+        return this._periodic(event, requestData);
 
       default:
         return Promise.resolve();
@@ -200,11 +199,13 @@ export class UserContainersReducer extends Reducer<
       });
   }
 
-  private async deleteOAuthClients(containerId: string) {
+  private async deleteOAuthClients(
+    containerId: string,
+    requestData: RequestData
+  ) {
+    const collab = this.getCollab(requestData);
     const container =
-      this.depsExports.collab.collab.sharedData[
-        'user-containers:containers'
-      ].get(containerId);
+      collab.sharedData['user-containers:containers'].get(containerId);
 
     if (!container) return;
 
@@ -278,10 +279,8 @@ export class UserContainersReducer extends Reducer<
     };
 
     // Store in shared state
-    this.depsExports.collab.collab.sharedData['user-containers:containers'].set(
-      containerId,
-      container
-    );
+    const collab = this.getCollab(requestData);
+    collab.sharedData['user-containers:containers'].set(containerId, container);
 
     // Create graph node
     const e: TEventNewNode = {
@@ -329,8 +328,8 @@ export class UserContainersReducer extends Reducer<
     // Note: Token validation would need to be implemented in TokenManager
     // For now, we trust the JWT structure
 
-    const sduc =
-      this.depsExports.collab.collab.sharedData['user-containers:containers'];
+    const collab = this.getCollab(requestData);
+    const sduc = collab.sharedData['user-containers:containers'];
     const s = sduc.get(containerId);
 
     if (!s) {
@@ -368,8 +367,8 @@ export class UserContainersReducer extends Reducer<
       ]);
     }
 
-    const sduc =
-      this.depsExports.collab.collab.sharedData['user-containers:containers'];
+    const collab = this.getCollab(requestData);
+    const sduc = collab.sharedData['user-containers:containers'];
     const s = sduc.get(containerId);
 
     if (!s) {
@@ -402,8 +401,8 @@ export class UserContainersReducer extends Reducer<
       ]);
     }
 
-    const sduc =
-      this.depsExports.collab.collab.sharedData['user-containers:containers'];
+    const collab = this.getCollab(requestData);
+    const sduc = collab.sharedData['user-containers:containers'];
 
     const s = sduc.get(containerId);
     if (!s) throw new NotFoundException();
@@ -463,12 +462,19 @@ export class UserContainersReducer extends Reducer<
 
   //
 
-  async _periodic(event: TEventPeriodic) {
-    const sduc =
-      this.depsExports.collab.collab.sharedData['user-containers:containers'];
+  async _periodic(event: TEventPeriodic, requestData: RequestData) {
+    const project_id = requestData.project_id;
+    if (!project_id) {
+      // Should not happen with per-project periodic events
+      return;
+    }
+    
+    // Process containers for this specific project
+    const collab = this.getCollab(requestData);
+    const sduc = collab.sharedData['user-containers:containers'];
     // remove declared http services for container that did not
     // sent watchdog event for 30 secondes (down)
-    sduc.forEach((container) => {
+    sduc.forEach((container: TUserContainer) => {
       if (
         container.httpServices.length > 0 &&
         (!container.last_watchdog_at ||
@@ -499,10 +505,9 @@ export class UserContainersReducer extends Reducer<
     const containerId = event.user_container_id;
 
     // Get container to check ownership (if tracking created_by_user_id)
+    const collab = this.getCollab(requestData);
     const container =
-      this.depsExports.collab.collab.sharedData[
-        'user-containers:containers'
-      ].get(containerId);
+      collab.sharedData['user-containers:containers'].get(containerId);
 
     if (!container) {
       throw new NotFoundException([
@@ -519,17 +524,13 @@ export class UserContainersReducer extends Reducer<
     }
 
     // Delete OAuth clients
-    await this.deleteOAuthClients(containerId);
+    await this.deleteOAuthClients(containerId, requestData);
 
     // Remove from shared state
-    this.depsExports.collab.collab.sharedData[
-      'user-containers:containers'
-    ].delete(containerId);
+    collab.sharedData['user-containers:containers'].delete(containerId);
 
     // Update nginx to remove container services
-    await this._updateNginx(
-      this.depsExports.collab.collab.sharedData['user-containers:containers']
-    );
+    await this._updateNginx(collab.sharedData['user-containers:containers']);
 
     // Delete graph node
     const id = userContainerNodeId(containerId);
@@ -556,8 +557,8 @@ export class UserContainersReducer extends Reducer<
     const containerId = event.user_container_id;
     const runnerId = event.runner_id;
 
-    const sduc =
-      this.depsExports.collab.collab.sharedData['user-containers:containers'];
+    const collab = this.getCollab(requestData);
+    const sduc = collab.sharedData['user-containers:containers'];
     const container = sduc.get(containerId);
 
     if (!container) {
@@ -595,8 +596,8 @@ export class UserContainersReducer extends Reducer<
 
     const containerId = event.user_container_id;
 
-    const sduc =
-      this.depsExports.collab.collab.sharedData['user-containers:containers'];
+    const collab = this.getCollab(requestData);
+    const sduc = collab.sharedData['user-containers:containers'];
     const container = sduc.get(containerId);
 
     if (!container) {

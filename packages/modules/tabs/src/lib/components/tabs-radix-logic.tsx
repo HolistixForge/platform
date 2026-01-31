@@ -15,11 +15,7 @@ type TabsRadixLogicProps<T> = {
 
 //
 
-export const TabsRadixLogic = <
-  T extends {
-    /**/
-  }
->({
+export const TabsRadixLogic = <T extends Record<string, unknown>>({
   initialTree,
   PanelComponent,
   newTabPayload,

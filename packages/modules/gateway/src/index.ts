@@ -34,15 +34,16 @@ export const moduleFrontend: TModule<
   description: 'Gateway module',
   dependencies: ['collab'],
   load: ({ depsExports }) => {
-    depsExports.collab.collab.loadSharedData('map', 'gateway', 'gateway');
+    // Register shared data schema with registry
+    depsExports.collab.registry.registerSharedData('map', 'gateway', 'gateway');
   },
 };
 
 //
 
 export type { TGatewayEvents } from './lib/gateway-events';
-export type { TEventLoad } from './lib/gateway-events';
 export type { TGatewaySharedData, TGatewayMeta } from './lib/gateway-types';
+export type { TProjectEvents, TEventProjectInit } from './lib/project-init-events';
 
 // Export manager interfaces and types
 export {
@@ -68,4 +69,4 @@ export {
   type ProtectedServiceResolution,
 } from './lib/protected-service-registry';
 
-export type { TEventDisableShutdown } from './lib/gateway-events';
+export type { TEventDisableProjectUnloading } from './lib/gateway-events';

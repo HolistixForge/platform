@@ -1,12 +1,9 @@
 import { PageConfig } from '@jupyterlab/coreutils';
-import { TUserContainersSharedData } from '@holistix-forge/user-containers';
 import { JupyterReducer } from './lib/jupyter-reducer';
 import type { TModule } from '@holistix-forge/module';
 import type { TCollabBackendExports } from '@holistix-forge/collab';
 import type { TReducersBackendExports } from '@holistix-forge/reducers';
 import type { TUserContainersExports } from '@holistix-forge/user-containers';
-import type { TJupyterSharedData } from './lib/jupyter-shared-model';
-import type { TCoreSharedData } from '@holistix-forge/core-graph';
 
 //
 
@@ -15,9 +12,7 @@ PageConfig.setOption('terminalsAvailable', 'true');
 export type TJupyterExports = never;
 
 type TRequired = {
-  collab: TCollabBackendExports<
-    TUserContainersSharedData & TJupyterSharedData & TCoreSharedData
-  >;
+  collab: TCollabBackendExports;
   reducers: TReducersBackendExports;
   'user-containers': TUserContainersExports;
 };
@@ -80,7 +75,7 @@ export const moduleBackend: TModule<TRequired, TJupyterExports> = {
   dependencies: ['core-graph', 'collab', 'reducers', 'user-containers'],
   load: ({ depsExports, moduleExports }) => {
     // Load shared data
-    depsExports.collab.collab.loadSharedData('map', 'jupyter', 'servers');
+    depsExports.collab.registry.registerSharedData('map', 'jupyter', 'servers');
 
     // Register container images with user-containers
     depsExports['user-containers'].imageRegistry.register(containerImagesData);

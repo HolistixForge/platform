@@ -2,11 +2,9 @@ import { NotionReducer } from './lib/notion-reducer';
 import type { TModule } from '@holistix-forge/module';
 import type { TCollabBackendExports } from '@holistix-forge/collab';
 import type { TReducersBackendExports } from '@holistix-forge/reducers';
-import type { TNotionSharedData } from './lib/notion-shared-model';
-import type { TCoreSharedData } from '@holistix-forge/core-graph';
 
 type TRequired = {
-  collab: TCollabBackendExports<TNotionSharedData & TCoreSharedData>;
+  collab: TCollabBackendExports;
   reducers: TReducersBackendExports;
 };
 
@@ -16,9 +14,18 @@ export const moduleBackend: TModule<TRequired> = {
   description: 'Notion module',
   dependencies: ['core-graph', 'collab', 'reducers'],
   load: ({ depsExports }) => {
-    depsExports.collab.collab.loadSharedData('map', 'notion', 'databases');
-    depsExports.collab.collab.loadSharedData('map', 'notion', 'node-views');
-    depsExports.collab.collab.loadSharedData(
+    // Register shared data schema with registry
+    depsExports.collab.registry.registerSharedData(
+      'map',
+      'notion',
+      'databases'
+    );
+    depsExports.collab.registry.registerSharedData(
+      'map',
+      'notion',
+      'node-views'
+    );
+    depsExports.collab.registry.registerSharedData(
       'map',
       'notion',
       'database-search-results'

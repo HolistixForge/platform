@@ -25,23 +25,32 @@ export default {
   },
 };
 
+// Wrapper component to allow hooks in Storybook render function
+const DefaultStory = (args: { database: any }) => {
+  const [viewMode, setViewMode] = useState<TNotionViewMode>({ mode: 'list' });
+  return (
+    <NotionDatabase
+      database={args.database}
+      viewMode={viewMode}
+      setViewMode={setViewMode}
+      onUpdatePage={(pageId: string, properties: Record<string, unknown>) => {
+        console.log('onUpdatePage', pageId, properties);
+      }}
+      onCreatePage={() => {
+        // No-op: To be implemented
+      }}
+      onDeletePage={() => {
+        // No-op: To be implemented
+      }}
+      onReorderPage={() => {
+        // No-op: To be implemented
+      }}
+    />
+  );
+};
+
 export const Default: StoryObj<typeof NotionDatabase> = {
-  render: (args) => {
-    const [viewMode, setViewMode] = useState<TNotionViewMode>({ mode: 'list' });
-    return (
-      <NotionDatabase
-        database={args.database}
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        onUpdatePage={(pageId, properties) => {
-          console.log('onUpdatePage', pageId, properties);
-        }}
-        onCreatePage={() => {}}
-        onDeletePage={() => {}}
-        onReorderPage={() => {}}
-      />
-    );
-  },
+  render: DefaultStory,
   args: {
     database: 'example1' as any,
   },

@@ -1,0 +1,224 @@
+.role-editor {
+  display: flex;
+  height: 100%;
+  gap: 20px;
+  background: var(--c-black-2);
+  border-radius: 8px;
+  overflow: hidden;
+
+  .panel-roles,
+  .panel-edit-role {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 300px;
+  }
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--c-black-3);
+    
+    & > div {
+      display: flex;
+      gap: 10px;
+    }
+  }
+
+  .panel-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--c-white-1);
+  }
+
+  .separator {
+    width: 1px;
+    background: var(--c-black-3);
+  }
+
+  .ScrollAreaRoot {
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .ScrollAreaViewport {
+    width: 100%;
+    height: 100%;
+    padding: 15px 20px;
+  }
+
+  .roles-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .role-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: var(--c-black-1);
+    border: 1px solid var(--c-black-3);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background: var(--c-black-3);
+      border-color: var(--c-blue-1);
+    }
+
+    &.system-role {
+      background: var(--c-black-0);
+      cursor: default;
+
+      &:hover {
+        background: var(--c-black-0);
+        border-color: var(--c-black-3);
+      }
+    }
+  }
+
+  .role-info {
+    flex: 1;
+  }
+
+  .role-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--c-white-1);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    background: var(--c-blue-1);
+    color: var(--c-white-1);
+    border-radius: 3px;
+    font-weight: 500;
+  }
+
+  .role-scope {
+    font-size: 11px;
+    color: var(--c-white-3);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .role-permissions-count {
+    font-size: 12px;
+    color: var(--c-white-2);
+  }
+
+  .role-actions {
+    display: flex;
+    gap: 5px;
+  }
+
+  .edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--c-white-2);
+    }
+
+    input,
+    select {
+      padding: 8px 12px;
+      background: var(--c-black-1);
+      border: 1px solid var(--c-black-3);
+      border-radius: 4px;
+      color: var(--c-white-1);
+      font-size: 13px;
+
+      &:focus {
+        outline: none;
+        border-color: var(--c-blue-1);
+      }
+    }
+
+    select {
+      cursor: pointer;
+    }
+  }
+
+  .permission-input {
+    display: flex;
+    gap: 10px;
+
+    input {
+      flex: 1;
+      padding: 8px 12px;
+      background: var(--c-black-1);
+      border: 1px solid var(--c-black-3);
+      border-radius: 4px;
+      color: var(--c-white-1);
+      font-size: 13px;
+      font-family: 'Courier New', monospace;
+
+      &:focus {
+        outline: none;
+        border-color: var(--c-blue-1);
+      }
+    }
+  }
+
+  .permissions-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .permission-tag {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: var(--c-black-1);
+    border: 1px solid var(--c-black-3);
+    border-radius: 4px;
+    font-size: 12px;
+
+    code {
+      color: var(--c-blue-2);
+      font-family: 'Courier New', monospace;
+    }
+
+    .remove-btn {
+      background: transparent;
+      border: none;
+      color: var(--c-red-1);
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      padding: 0;
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover {
+        color: var(--c-red-2);
+      }
+    }
+  }
+}

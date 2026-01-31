@@ -1,5 +1,5 @@
 import request from 'supertest';
-import express, { Express, Router } from 'express';
+import express, { Express } from 'express';
 
 /**
  * SIMPLIFIED EXPRESS ENDPOINT TESTING GUIDE
@@ -118,7 +118,7 @@ describe('Express Endpoint Testing - Simple Example', () => {
         if (!user) {
           return res.status(404).json({ error: 'Not found' });
         }
-        res.json(user);
+        return res.json(user);
       });
 
       // Test list endpoint
@@ -152,4 +152,3 @@ describe('Express Endpoint Testing - Simple Example', () => {
  *
  * Keep tests simple and focused!
  */
-

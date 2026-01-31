@@ -5,7 +5,6 @@ import type { TCollabFrontendExports } from '@holistix-forge/collab/frontend';
 import type { TWhiteboardFrontendExports } from '@holistix-forge/whiteboard/frontend';
 import { serversMenuEntries } from './lib/servers-menu';
 import { localRunnerFrontend } from './lib/local-runner-frontend';
-import { TUserContainersSharedData } from './lib/servers-shared-model';
 import { TUserContainer } from './lib/servers-types';
 
 //
@@ -29,7 +28,7 @@ export type TUserContainersFrontendExports = {
 };
 
 type TRequired = {
-  collab: TCollabFrontendExports<TUserContainersSharedData>;
+  collab: TCollabFrontendExports;
   whiteboard: TWhiteboardFrontendExports;
 };
 
@@ -39,12 +38,13 @@ export const moduleFrontend: TModule<TRequired> = {
   description: 'User containers module',
   dependencies: ['core-graph', 'collab', 'whiteboard', 'tabs'],
   load: ({ depsExports, moduleExports }) => {
-    depsExports.collab.collab.loadSharedData(
+    // Register shared data schema with registry
+    depsExports.collab.registry.registerSharedData(
       'map',
       'user-containers',
       'containers'
     );
-    depsExports.collab.collab.loadSharedData(
+    depsExports.collab.registry.registerSharedData(
       'map',
       'user-containers',
       'images'

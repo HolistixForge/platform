@@ -13,13 +13,11 @@ if [ ! -f "${GATEWAY_APP_DIR}/main.js" ]; then
     exit 1
 fi
 
-cd "$GATEWAY_APP_DIR"
-
 # Set log file
 export LOG_FILE=${LOG_FILE:-"/tmp/gateway.log"}
 
 echo "🚀 Starting app-gateway with auto-restart..."
-echo "📂 Working directory: $(pwd)"
+echo "📂 App directory: ${GATEWAY_APP_DIR}"
 echo "📊 Logs: ${LOG_FILE}"
 echo ""
 
@@ -32,11 +30,15 @@ while true; do
     echo "✅ app-gateway starting..."
     
     # Start app-gateway (blocks until exit)
+    # CRITICAL: Use absolute path AND set working directory in the node command
+    # to avoid uv_cwd errors when started via nohup/setsid
+    # The `cd` in a subshell ensures Node.js bootstrap can read cwd correctly
     GATEWAY_ID="${GATEWAY_ID}" \
     GATEWAY_TOKEN="${GATEWAY_TOKEN}" \
     GANYMEDE_FQDN="${GANYMEDE_FQDN}" \
     ALLOWED_ORIGINS="${ALLOWED_ORIGINS}" \
-        node --enable-source-maps ./main.js > "$LOG_FILE" 2>&1
+    JWT_PUBLIC_KEY="${JWT_PUBLIC_KEY}" \
+        bash -c "cd '${GATEWAY_APP_DIR}' && node --enable-source-maps '${GATEWAY_APP_DIR}/main.js'" > "$LOG_FILE" 2>&1
     
     EXIT_CODE=$?
     

@@ -348,4 +348,176 @@ describe('CSRF Protection Middleware', () => {
       expect(res.status).toBe(403);
     });
   });
+
+  describe('Custom CSRF Exempt Paths (App-Specific)', () => {
+    it('should exempt exact paths specified in csrfExemptPaths', async () => {
+      const customApp = express();
+      setupBasicExpressApp(customApp, {
+        csrfExemptPaths: ['/custom/exempt', '/another/exempt'],
+      });
+      customApp.post('/custom/exempt', (req, res) => {
+        res.json({ success: true });
+      });
+      customApp.post('/another/exempt', (req, res) => {
+        res.json({ success: true });
+      });
+      customApp.post('/not/exempt', (req, res) => {
+        res.json({ success: true });
+      });
+
+      // Exempt paths should work without CSRF check
+      const res1 = await request(customApp).post('/custom/exempt');
+      expect(res1.status).toBe(200);
+      expect(res1.body.success).toBe(true);
+
+      const res2 = await request(customApp).post('/another/exempt');
+      expect(res2.status).toBe(200);
+      expect(res2.body.success).toBe(true);
+
+      // Non-exempt path should be protected
+      const res3 = await request(customApp).post('/not/exempt');
+      expect(res3.status).toBe(403);
+      expect(res3.body.error).toBe('CSRF validation failed');
+    });
+
+    it('should support Express-style params in exempt paths', async () => {
+      const customApp = express();
+      setupBasicExpressApp(customApp, {
+        csrfExemptPaths: ['/collab/:project_id', '/api/:version/resource/:id'],
+      });
+      customApp.post('/collab/:project_id', (req, res) => {
+        res.json({ success: true, project_id: req.params.project_id });
+      });
+      customApp.post('/api/:version/resource/:id', (req, res) => {
+        res.json({ success: true });
+      });
+      customApp.post('/other/path', (req, res) => {
+        res.json({ success: true });
+      });
+
+      // Should match /collab/:project_id pattern
+      const res1 = await request(customApp).post('/collab/project-123');
+      expect(res1.status).toBe(200);
+      expect(res1.body.success).toBe(true);
+
+      const res2 = await request(customApp).post('/collab/abc-xyz-456');
+      expect(res2.status).toBe(200);
+      expect(res2.body.success).toBe(true);
+
+      // Should match /api/:version/resource/:id pattern
+      const res3 = await request(customApp).post('/api/v1/resource/123');
+      expect(res3.status).toBe(200);
+      expect(res3.body.success).toBe(true);
+
+      const res4 = await request(customApp).post('/api/v2/resource/abc');
+      expect(res4.status).toBe(200);
+      expect(res4.body.success).toBe(true);
+
+      // Should NOT match non-exempt paths
+      const res5 = await request(customApp).post('/other/path');
+      expect(res5.status).toBe(403);
+      expect(res5.body.error).toBe('CSRF validation failed');
+    });
+
+    it('should not exempt paths that partially match patterns', async () => {
+      const customApp = express();
+      setupBasicExpressApp(customApp, {
+        csrfExemptPaths: ['/collab/:project_id'],
+      });
+      customApp.post('/collab/:project_id', (req, res) => {
+        res.json({ success: true });
+      });
+      customApp.post('/collab/:project_id/nested', (req, res) => {
+        res.json({ success: true });
+      });
+      customApp.post('/collab', (req, res) => {
+        res.json({ success: true });
+      });
+
+      // Should match exactly /collab/:project_id
+      const res1 = await request(customApp).post('/collab/proj-123');
+      expect(res1.status).toBe(200);
+
+      // Should NOT match /collab/:project_id/nested (longer path)
+      const res2 = await request(customApp).post('/collab/proj-123/nested');
+      expect(res2.status).toBe(403);
+      expect(res2.body.error).toBe('CSRF validation failed');
+
+      // Should NOT match /collab (shorter path)
+      const res3 = await request(customApp).post('/collab');
+      expect(res3.status).toBe(403);
+      expect(res3.body.error).toBe('CSRF validation failed');
+    });
+
+    it('should work with empty csrfExemptPaths array', async () => {
+      const customApp = express();
+      setupBasicExpressApp(customApp, {
+        csrfExemptPaths: [],
+      });
+      customApp.post('/test/post', (req, res) => {
+        res.json({ success: true });
+      });
+
+      // Should protect all paths (no exemptions)
+      const res = await request(customApp).post('/test/post');
+      expect(res.status).toBe(403);
+      expect(res.body.error).toBe('CSRF validation failed');
+    });
+
+    it('should work without csrfExemptPaths option (backward compatibility)', async () => {
+      const customApp = express();
+      setupBasicExpressApp(customApp); // No options passed
+      customApp.post('/test/post', (req, res) => {
+        res.json({ success: true });
+      });
+
+      // Should protect all paths (no custom exemptions)
+      const res = await request(customApp).post('/test/post');
+      expect(res.status).toBe(403);
+      expect(res.body.error).toBe('CSRF validation failed');
+
+      // JWT should still work
+      const resWithJwt = await request(customApp)
+        .post('/test/post')
+        .set('Authorization', 'Bearer token');
+      expect(resWithJwt.status).toBe(200);
+    });
+
+    it('should combine custom exemptions with built-in exemptions', async () => {
+      const customApp = express();
+      setupBasicExpressApp(customApp, {
+        csrfExemptPaths: ['/custom/exempt'],
+      });
+      customApp.post('/custom/exempt', (req, res) => {
+        res.json({ success: true, type: 'custom' });
+      });
+      customApp.post('/health', (req, res) => {
+        res.json({ success: true, type: 'health' });
+      });
+      customApp.post('/protected', (req, res) => {
+        res.json({ success: true });
+      });
+
+      // Custom exempt path should work
+      const res1 = await request(customApp).post('/custom/exempt');
+      expect(res1.status).toBe(200);
+      expect(res1.body.type).toBe('custom');
+
+      // Built-in exempt path (/health) should still work
+      const res2 = await request(customApp).post('/health');
+      expect(res2.status).toBe(200);
+      expect(res2.body.type).toBe('health');
+
+      // JWT auth should still work
+      const res3 = await request(customApp)
+        .post('/protected')
+        .set('Authorization', 'Bearer token');
+      expect(res3.status).toBe(200);
+
+      // Protected path without JWT or exemption should fail
+      const res4 = await request(customApp).post('/protected');
+      expect(res4.status).toBe(403);
+      expect(res4.body.error).toBe('CSRF validation failed');
+    });
+  });
 });

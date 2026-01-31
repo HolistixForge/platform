@@ -1,20 +1,17 @@
 import { Router, Request, RequestHandler } from 'express';
-import { BackendEventProcessor } from '@holistix-forge/reducers';
 import { EPriority, log, NotFoundException } from '@holistix-forge/log';
 import { asyncHandler } from '../middleware/route-handler';
-import { VPN } from '../config/organization';
 import { initializeGatewayForOrganization } from '../initialization/gateway-init';
+import { fetchConfigFromGanymede } from '../initialization/fetch-config';
 import { authenticateJwt, requireScope } from '../middleware/jwt-auth';
 import { requireProjectAccess } from '../middleware/permissions';
 import { getGatewayInstances } from '../initialization/gateway-instances';
-
-let bep: BackendEventProcessor<any> | null = null;
-
-export const setBackendEventProcessor = (
-  processor: BackendEventProcessor<any>
-) => {
-  bep = processor;
-};
+import {
+  loadVpnConfig,
+  isVpnValidForOrg,
+  stopVpn,
+  startVpnAsync,
+} from '../vpn/vpn-manager';
 
 export const setupCollabRoutes = (
   router: Router,
@@ -29,79 +26,105 @@ export const setupCollabRoutes = (
   }) as any);
 
   // POST /collab/event - Process collaborative event
+  // Requires project_id in request body for multi-project architecture
   router.post(
     '/collab/event',
     authenticateJwt,
-    requireProjectAccess(), // Check project access if project_id is in JWT
+    requireProjectAccess(), // Check project access if project_id is in JWT or body
     asyncHandler(async (req: Request, res) => {
-      if (!bep) {
-        throw new NotFoundException([{ message: 'Collab data not bound' }]);
+      const instances = getGatewayInstances();
+      if (!instances) {
+        throw new NotFoundException([{ message: 'Gateway not initialized' }]);
       }
 
       const authReq = req as any;
-      const { event } = req.body;
+      const { event, project_id } = req.body;
       const user_id = authReq.user.id;
       const ip = (req.headers['x-real-ip'] as string) || req.ip || 'unknown';
+
+      // project_id is required for multi-project architecture
+      // It tells reducers which project's YJS doc to operate on
+      if (!project_id) {
+        throw new NotFoundException([
+          { message: 'project_id is required in request body' },
+        ]);
+      }
 
       const requestData = {
         ip,
         user_id,
         jwt: authReq.jwt || {},
         headers: req.headers as any,
+        project_id,
       };
 
-      await bep.processEvent(event, requestData);
+      await instances.reducers.processEvent(event, requestData);
 
       return res.json({});
     })
   );
 
-  // POST /collab/start - Initialize gateway with handshake
   router.post(
     '/collab/start',
     asyncHandler(async (req: Request, res) => {
-      const { tmp_handshake_token } = req.body;
+      log(EPriority.Info, 'COLLAB_START', 'Initialization trigger received');
 
-      log(EPriority.Info, 'GATEWAY', 'Starting collab with handshake token');
+      const config = await fetchConfigFromGanymede();
 
-      // Call ganymede to get config using centralized client
-      const { createGanymedeClient } = await import('../lib/ganymede-client');
-      const ganymedeClient = createGanymedeClient();
+      if (!config) {
+        return res.status(404).json({
+          error: 'Gateway not allocated to any organization',
+        });
+      }
 
-      const config = await ganymedeClient.request<{
-        organization_id: string;
-        organization_token: string;
-        gateway_id: string;
-      }>({
-        method: 'POST',
-        url: '/gateway/config',
-        headers: { 'Content-Type': 'application/json' },
-        jsonBody: { tmp_handshake_token },
-      });
+      // Initialize gateway first (fast)
+      const { getServers } = await import('../servers');
+      const servers = getServers();
 
-      log(EPriority.Info, 'GATEWAY', 'Received config from Ganymede', {
-        config,
-      });
+      await initializeGatewayForOrganization(
+        config.organization_id,
+        config.gateway_id,
+        config.organization_token,
+        servers,
+        config.members
+      );
 
-      // Initialize gateway with organization context
-      if (
-        config.organization_token &&
-        config.organization_id &&
-        config.gateway_id
-      ) {
-        // Initialize gateway (this will pull data from Ganymede)
-        await initializeGatewayForOrganization(
-          config.organization_id,
-          config.gateway_id,
-          config.organization_token
-        );
+      // Start VPN asynchronously AFTER gateway init (VPN not critical for frontend)
+      const existingVpn = loadVpnConfig();
+
+      if (!isVpnValidForOrg(existingVpn, config.organization_id)) {
+        if (existingVpn) {
+          log(EPriority.Info, 'VPN', `Stopping old VPN (org mismatch)`);
+          stopVpn();
+        }
 
         log(
           EPriority.Info,
-          'GATEWAY',
-          'Gateway initialized from /collab/start'
+          'VPN',
+          `Starting VPN asynchronously for org ${config.organization_id}...`
+        );
+        startVpnAsync(config.organization_id).catch((err) => {
+          log(EPriority.Error, 'VPN', `VPN startup failed: ${err.message}`);
+        });
+      } else {
+        log(EPriority.Info, 'VPN', '✅ VPN already valid for organization');
+      }
+
+      if (config.projects && config.projects.length > 0) {
+        log(
+          EPriority.Info,
+          'COLLAB_START',
+          `Gateway has ${config.projects.length} projects (will initialize on demand)`
+        );
+      } else {
+        log(
+          EPriority.Info,
+          'COLLAB_START',
+          'No projects registered for this organization'
         );
       }
+
+      log(EPriority.Info, 'COLLAB_START', '✅ Gateway initialized');
 
       return res.json({});
     })
@@ -132,14 +155,41 @@ export const setupCollabRoutes = (
         ]);
       }
 
-      const room_id = instances.projectRooms.getRoomId(project_id);
+      // Check if project is already initialized
+      let room_id = instances.projectRooms.getRoomId(project_id);
 
+      // If not initialized, initialize NOW (lazy initialization)
       if (!room_id) {
-        throw new NotFoundException([
-          {
-            message: `Project ${project_id} not initialized or room not found`,
-          },
-        ]);
+        log(
+          EPriority.Info,
+          'COLLAB',
+          `🔄 Lazy initializing project: ${project_id}`
+        );
+
+        const startTime = Date.now();
+
+        try {
+          room_id = await instances.projectRooms.initializeProject(project_id);
+
+          const duration = Date.now() - startTime;
+          log(
+            EPriority.Info,
+            'COLLAB',
+            `✅ Project initialized in ${duration}ms: ${project_id}, room: ${room_id}`
+          );
+        } catch (error: any) {
+          log(
+            EPriority.Error,
+            'COLLAB',
+            `Failed to initialize project ${project_id}: ${error.message}`,
+            error
+          );
+          throw new NotFoundException([
+            {
+              message: `Failed to initialize project ${project_id}: ${error.message}`,
+            },
+          ]);
+        }
       }
 
       return res.json({ data: room_id });
@@ -150,19 +200,21 @@ export const setupCollabRoutes = (
   // Requires JWT token with 'org:{org_id}:connect-vpn' scope (organization-specific)
   router.get(
     '/collab/vpn-config',
-    authenticateJwt, // Extract and attach JWT
-    requireScope('org:{org_id}:connect-vpn'), // Verify token has org-specific scope
+    authenticateJwt,
+    requireScope('org:{org_id}:connect-vpn'),
     asyncHandler(async (req: Request, res) => {
-      if (!VPN) {
-        return res.status(500).json({ error: 'VPN config not available' });
+      const vpn = loadVpnConfig();
+
+      if (!vpn) {
+        return res.status(503).json({ error: 'VPN not available' });
       }
 
       const vpnConfig = {
-        ...VPN,
+        ...vpn,
         config: `client
 dev tun
 proto udp
-remote GATEWAY_FQDN ${VPN.port}
+remote GATEWAY_FQDN ${vpn.port}
 resolv-retry infinite
 nobind
 cipher AES-256-GCM

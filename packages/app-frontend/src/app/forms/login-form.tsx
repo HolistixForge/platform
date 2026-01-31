@@ -59,7 +59,7 @@ export const SendMagicLinkFormLogic = ({
   title: string;
   context: MagicLinkContext;
 }) => {
-  const { accountApi } = useApi();
+  const { ganymedeApi } = useApi();
 
   const [message, setMessage] = useState('');
 
@@ -68,7 +68,7 @@ export const SendMagicLinkFormLogic = ({
     context: MagicLinkContext;
   }>(
     (d, methods) =>
-      accountApi
+      ganymedeApi
         .fetch({
           method: 'POST',
           url: 'magiclink/request',
@@ -78,7 +78,7 @@ export const SendMagicLinkFormLogic = ({
           methods.disable();
           setMessage('Check your inbox !');
         }),
-    [accountApi],
+    [ganymedeApi],
     { values: { email, context } }
   );
 

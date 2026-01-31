@@ -1,6 +1,6 @@
 /**
  * Tests for JWT utility functions
- * 
+ *
  * Tests JWT token generation and payload extraction utilities
  * used for authentication across the platform.
  */
@@ -126,7 +126,7 @@ describe('JWT Utilities', () => {
       };
 
       const token = generateJwtToken(payload);
-      const decoded = jwt.decode(token) as TJson;
+      const decoded = jwt.decode(token) as Record<string, TJson>;
 
       expect(decoded.userId).toBe('123');
       expect(decoded.email).toBe('test@example.com');
@@ -161,7 +161,7 @@ describe('JWT Utilities', () => {
       expect(decoded2.iat).toBeDefined();
       expect(typeof decoded1.iat).toBe('number');
       expect(typeof decoded2.iat).toBe('number');
-      
+
       // Tokens generated within the same second will have the same 'iat',
       // but they're still valid JWT tokens
       expect(decoded1.userId).toBe('123');
@@ -184,7 +184,7 @@ describe('JWT Utilities', () => {
       const payload: TJson = { userId: '123', email: 'test@example.com' };
       const token = generateJwtToken(payload);
 
-      const extracted = jwtPayload(token);
+      const extracted = jwtPayload(token) as Record<string, TJson>;
 
       expect(extracted.userId).toBe('123');
       expect(extracted.email).toBe('test@example.com');
@@ -194,7 +194,7 @@ describe('JWT Utilities', () => {
       const payload: TJson = { userId: '123' };
       const token = generateJwtToken(payload);
 
-      const extracted = jwtPayload(`Bearer ${token}`);
+      const extracted = jwtPayload(`Bearer ${token}`) as Record<string, TJson>;
 
       expect(extracted.userId).toBe('123');
     });
@@ -203,7 +203,7 @@ describe('JWT Utilities', () => {
       const payload: TJson = { userId: '123' };
       const token = generateJwtToken(payload);
 
-      const extracted = jwtPayload(`token ${token}`);
+      const extracted = jwtPayload(`token ${token}`) as Record<string, TJson>;
 
       expect(extracted.userId).toBe('123');
     });
@@ -212,7 +212,7 @@ describe('JWT Utilities', () => {
       const payload: TJson = { userId: '123' };
       const token = generateJwtToken(payload);
 
-      const extracted = jwtPayload(token);
+      const extracted = jwtPayload(token) as Record<string, TJson>;
 
       expect(extracted.userId).toBe('123');
     });
@@ -276,7 +276,7 @@ describe('JWT Utilities', () => {
       };
       const token = generateJwtToken(payload);
 
-      const extracted = jwtPayload(token);
+      const extracted = jwtPayload(token) as Record<string, TJson>;
 
       expect(extracted.userId).toBe('123');
       expect(extracted.email).toBe('test@example.com');
@@ -305,7 +305,7 @@ describe('JWT Utilities', () => {
       const token = generateJwtToken(payload);
 
       // Only 'Bearer ' (capital B) should be recognized
-      const extracted = jwtPayload(`Bearer ${token}`);
+      const extracted = jwtPayload(`Bearer ${token}`) as Record<string, TJson>;
       expect(extracted.userId).toBe('123');
 
       // 'bearer ' (lowercase) should not be stripped
@@ -328,12 +328,18 @@ describe('JWT Utilities', () => {
       const token = generateJwtToken(originalPayload, '1h');
 
       // Verify and extract payload
-      const extractedPayload = jwtPayload(token);
+      const extractedPayload = jwtPayload(token) as Record<string, TJson>;
 
       // Should match original payload (plus JWT claims)
-      expect(extractedPayload.userId).toBe(originalPayload.userId);
-      expect(extractedPayload.email).toBe(originalPayload.email);
-      expect(extractedPayload.role).toBe(originalPayload.role);
+      expect(extractedPayload.userId).toBe(
+        (originalPayload as Record<string, TJson>).userId
+      );
+      expect(extractedPayload.email).toBe(
+        (originalPayload as Record<string, TJson>).email
+      );
+      expect(extractedPayload.role).toBe(
+        (originalPayload as Record<string, TJson>).role
+      );
     });
 
     it('should handle typical authentication flow', () => {
@@ -350,11 +356,14 @@ describe('JWT Utilities', () => {
       const authHeader = `Bearer ${token}`;
 
       // Server extracts and validates payload
-      const validatedClaims = jwtPayload(authHeader);
+      const validatedClaims = jwtPayload(authHeader) as Record<string, TJson>;
 
       expect(validatedClaims.userId).toBe('user-456');
       expect(validatedClaims.email).toBe('alice@example.com');
-      expect(validatedClaims.scopes).toEqual(['read:projects', 'write:projects']);
+      expect(validatedClaims.scopes).toEqual([
+        'read:projects',
+        'write:projects',
+      ]);
     });
 
     it('should handle service-to-service authentication', () => {
@@ -368,7 +377,7 @@ describe('JWT Utilities', () => {
       const token = generateJwtToken(serviceClaims, '5m');
 
       // Service B validates token
-      const validated = jwtPayload(token);
+      const validated = jwtPayload(token) as Record<string, TJson>;
 
       expect(validated.serviceId).toBe('gateway-service');
       expect(validated.environment).toBe('production');
@@ -376,4 +385,3 @@ describe('JWT Utilities', () => {
     });
   });
 });
-

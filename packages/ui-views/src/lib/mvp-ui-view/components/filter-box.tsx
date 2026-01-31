@@ -83,21 +83,18 @@ export const FilterBox = ({ mode, name, user }: FilterBoxProps) => {
         </div>
       ) : (
         <div className="flex flex-col mt-10 gap-16">
-          {
-            // eslint-disable-next-line no-plusplus
-            Array.from({ length: addFilter }).map((_, index) => (
-              <Wrapper
-                resizeBorderColor="#7832AF"
-                tagColor="#7832AF"
-                tag="Data_user_boosting"
-                displayRemove
-                displayDelete
-                displaySettings
-                // if user is true, set the user object
-                user={user ? randomGuy() : undefined}
-              />
-            ))
-          }
+          {Array.from({ length: addFilter }).map((_, index) => (
+            <Wrapper
+              resizeBorderColor="#7832AF"
+              tagColor="#7832AF"
+              tag="Data_user_boosting"
+              displayRemove
+              displayDelete
+              displaySettings
+              // if user is true, set the user object
+              user={user ? randomGuy() : undefined}
+            />
+          ))}
         </div>
       )}
     </div>

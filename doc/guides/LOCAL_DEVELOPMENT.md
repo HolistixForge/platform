@@ -247,6 +247,25 @@ Runs all setup scripts in sequence:
 
 This installs everything: system deps, Docker CLI, mkcert, PostgreSQL, CoreDNS, and builds images.
 
+### 7. Install Playwright (Browser Automation)
+
+Playwright is used for browser automation and debugging (e.g., capturing console logs, screenshots, executing JS in a headless browser). It is also configured as an MCP server for AI coding assistants (see `.mcp.json`).
+
+```bash
+# Install Playwright's Chromium browser
+npx playwright install chromium
+
+# Install system dependencies for headless Chromium
+npx playwright install-deps chromium
+```
+
+**Verify installation:**
+
+```bash
+# Should start and exit without errors
+timeout 5 npx @playwright/mcp@latest --headless || true
+```
+
 ## Environment Management Scripts
 
 ### Create New Environment
@@ -418,6 +437,36 @@ docker logs -f gw-pool-2  # Follow
 # CoreDNS logs (runs in foreground, check process)
 ps aux | grep coredns
 ```
+
+### Check Infrastructure Status
+
+**Quick status check:**
+
+```bash
+# Shows Ganymede and Gateway status for all environments
+./scripts/local-dev/envctl.sh list
+
+# Status for specific environment
+./scripts/local-dev/envctl.sh status dev-001
+```
+
+**Comprehensive infrastructure diagnostic:**
+
+```bash
+# Complete health check of all services, containers, DNS, networking
+./scripts/local-dev/infra-diagnostic.sh
+```
+
+This diagnostic tool checks:
+
+- Core services (PostgreSQL, Nginx, CoreDNS, Build Server)
+- Observability stack (OTLP, Loki, Tempo, Grafana)
+- Gateway containers (status, DNS, ports)
+- DNS resolution (CoreDNS, wildcard domains)
+- HTTPS connectivity (frontend, Ganymede API)
+- Network configuration
+
+**Use `infra-diagnostic.sh` for troubleshooting** as it provides the most detailed status information.
 
 ### Rebuild and Restart
 
@@ -662,7 +711,7 @@ docker logs gw-pool-0
 
 # Check gateway status in database
 PGPASSWORD=devpassword psql -U postgres -d ganymede_dev_001 -c \
-  "SELECT gateway_id, ready, container_name, http_port FROM gateways;"
+  "SELECT gateway_id, ready, container_name, http_port, gateway_nginx_upstream FROM gateways;"
 ```
 
 ### Port Allocation

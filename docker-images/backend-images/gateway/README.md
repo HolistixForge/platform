@@ -267,7 +267,6 @@ docker exec <container> /opt/gateway/app/lib/reload-gateway.sh
 
 - Finds all Node.js processes running `app-gateway/main.js`
 - Kills process groups (PGID) using SIGTERM
-- Removes `/tmp/project-config.json`
 
 **Note:** This script is used by `reset-gateway.sh` to stop app-gateway before resetting infrastructure. The entrypoint handles shutdown via signal handlers, not this script.
 

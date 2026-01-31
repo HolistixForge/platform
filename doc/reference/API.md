@@ -211,7 +211,7 @@ Gateway pushes state updates via Yjs synchronization protocol.
 | Method | Endpoint             | Authentication                                        | Description                                                   |
 | ------ | -------------------- | ----------------------------------------------------- | ------------------------------------------------------------- |
 | `GET`  | `/collab/ping`       | None                                                  | Health check                                                  |
-| `POST` | `/collab/start`      | None (handshake token in body)                        | Initialize gateway (called by Ganymede)                       |
+| `POST` | `/collab/start`      | None (trigger)                                        | Trigger gateway initialization (called by Ganymede)           |
 | `GET`  | `/collab/room-id`    | `TJwtUser` with `project_id` + project access         | Get room ID for a project                                     |
 | `POST` | `/collab/event`      | `TJwtUser` with `project_id` + project access         | Process collaborative event                                   |
 | `GET`  | `/collab/vpn-config` | JWT with `org:{org_id}:connect-vpn` scope             | Get OpenVPN configuration                                     |

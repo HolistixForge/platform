@@ -12,7 +12,6 @@ import {
   NotFoundException,
   UnknownException,
   OneError,
-  ErrorCategory,
 } from './exceptions';
 
 describe('Exception Classes', () => {

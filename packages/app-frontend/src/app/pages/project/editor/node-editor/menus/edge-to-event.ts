@@ -3,7 +3,7 @@ import { TCoreSharedData, TEdge } from '@holistix-forge/core-graph';
 
 export const edgeToEvent = (
   edge: TEdge,
-  nodes: TCoreSharedData['nodes']
+  nodes: TCoreSharedData['core-graph:nodes']
 ): Partial<TUserContainersEvents> => {
   const n1 = nodes.get(edge.from.node);
   const n2 = nodes.get(edge.to.node);
@@ -11,13 +11,13 @@ export const edgeToEvent = (
   if (!n1 || !n2 || Object.is(n1, n2)) throw new Error(`impossible edge`);
 
   switch (n1?.type) {
-    case 'volume':
+    case 'user-container':
       if (n2.type === 'user-container')
         return {
-          type: 'user-containers:mount-volume',
-          project_user_container_id: n2.data!
-            .project_user_container_id as number,
-          volume_id: n1.data!.volume_id as number,
+          type: 'user-container:new',
+          project_id: '',
+          containerName: n2.name,
+          imageId: '',
         };
       break;
 

@@ -312,7 +312,7 @@ describe('GanymedeClient', () => {
         method: 'POST',
         url: '/gateway/config',
         headers: { 'Content-Type': 'application/json' },
-        jsonBody: { tmp_handshake_token: 'temp-token' },
+        jsonBody: {},
       });
 
       expect(result).toEqual({

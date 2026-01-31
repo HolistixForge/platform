@@ -5,10 +5,7 @@ import type { TModule } from '@holistix-forge/module';
 import { TMyfetchRequest } from '@holistix-forge/simple-types';
 import { TReducersBackendExports } from '@holistix-forge/reducers';
 import { TCollabBackendExports } from '@holistix-forge/collab';
-import type {
-  TGatewayExports,
-  TGatewaySharedData,
-} from '@holistix-forge/gateway';
+import type { TGatewayExports } from '@holistix-forge/gateway';
 
 import { GatewayReducer } from './gateway-reducer';
 import type {
@@ -42,7 +39,7 @@ export type GatewayModuleConfig = {
 };
 
 type TRequired = {
-  collab: TCollabBackendExports<TGatewaySharedData>;
+  collab: TCollabBackendExports;
   reducers: TReducersBackendExports;
 };
 
@@ -56,7 +53,9 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
   description: 'Gateway module',
   dependencies: ['collab', 'reducers'],
   load: ({ depsExports, moduleExports, config }) => {
-    depsExports.collab.collab.loadSharedData('map', 'gateway', 'gateway');
+    // Register shared data schema with registry
+    depsExports.collab.registry.registerSharedData('map', 'gateway', 'gateway');
+
     depsExports.reducers.loadReducers(
       new GatewayReducer({
         collab: depsExports.collab,

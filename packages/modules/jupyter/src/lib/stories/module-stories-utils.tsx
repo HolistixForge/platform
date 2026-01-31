@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { useLocalSharedData } from '@holistix-forge/collab/frontend';
-import { TUserContainersSharedData } from '@holistix-forge/user-containers';
+import {
+  TUserContainer,
+  TUserContainersSharedData,
+} from '@holistix-forge/user-containers';
 import { TCoreSharedData } from '@holistix-forge/core-graph';
 import type { TModule } from '@holistix-forge/module';
 import type { TCollabBackendExports } from '@holistix-forge/collab';
@@ -9,6 +12,7 @@ import type { TCollabBackendExports } from '@holistix-forge/collab';
 //
 
 import { TJupyterSharedData } from '../../lib/jupyter-shared-model';
+import { SharedMap } from '@holistix-forge/collab-engine';
 
 //
 
@@ -16,7 +20,7 @@ const STORY_TOKEN = 'My_Super_Test_Story';
 
 const STORY_JUPYTERLAB_CLIENT_ID = 'jupyterlab-story';
 
-export const STORY_PROJECT_ID = 0;
+export const STORY_PROJECT_ID = 'story-project';
 
 export const STORY_USER_CONTAINER_ID = '0';
 
@@ -27,9 +31,7 @@ const STORY_JUPYTER_IP = '127.0.0.1';
 
 export const createStoryInitModule = (): TModule<
   {
-    collab: TCollabBackendExports<
-      TUserContainersSharedData & TJupyterSharedData & TCoreSharedData
-    >;
+    collab: TCollabBackendExports;
   },
   object
 > => {
@@ -39,9 +41,14 @@ export const createStoryInitModule = (): TModule<
     description: 'Story init module for Jupyter',
     dependencies: ['collab', 'user-containers', 'jupyter'],
     load: ({ depsExports }) => {
+      // Get collab instance for story project
+      const collab =
+        depsExports.collab.registry.getCollabForProject(STORY_PROJECT_ID);
+
       // Mock a user container with Jupyter service
-      const containersMap =
-        depsExports.collab.collab.sharedData['user-containers:containers'];
+      const containersMap = collab.sharedData[
+        'user-containers:containers'
+      ] as SharedMap<TUserContainer>;
 
       // Create mock container
       containersMap.set(STORY_USER_CONTAINER_ID, {

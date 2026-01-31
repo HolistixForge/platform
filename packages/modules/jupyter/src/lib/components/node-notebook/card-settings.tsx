@@ -1,5 +1,8 @@
 import { icons, SelectFieldset, SelectItem } from '@holistix-forge/ui-base';
-import { NodeMainToolbar, useMakeButton } from '@holistix-forge/whiteboard/frontend';
+import {
+  NodeMainToolbar,
+  useMakeButton,
+} from '@holistix-forge/whiteboard/frontend';
 
 type CardSettingsProps = {
   status: 'success' | 'error' | 'warning';
@@ -42,7 +45,9 @@ export const CardSettings = ({ status }: CardSettingsProps) => {
           <SelectFieldset
             name={''}
             value={'python 3.10.12 modele'}
-            onChange={function (v: string): void {}}
+            onChange={function (v: string): void {
+              // No-op: To be implemented
+            }}
             placeholder={''}
             className="small w-full"
             integrated
@@ -62,7 +67,9 @@ export const CardSettings = ({ status }: CardSettingsProps) => {
           <SelectFieldset
             name={''}
             value={'master-branch'}
-            onChange={function (v: string): void {}}
+            onChange={function (v: string): void {
+              // No-op: To be implemented
+            }}
             placeholder={''}
             className="small w-full"
             integrated
@@ -77,7 +84,9 @@ export const CardSettings = ({ status }: CardSettingsProps) => {
           <SelectFieldset
             name={''}
             value={'test.ipynb'}
-            onChange={function (v: string): void {}}
+            onChange={function (v: string): void {
+              // No-op: To be implemented
+            }}
             placeholder={''}
             className="small w-full"
             integrated
@@ -92,7 +101,9 @@ export const CardSettings = ({ status }: CardSettingsProps) => {
           <SelectFieldset
             name={''}
             value={'Title cell # 1'}
-            onChange={function (v: string): void {}}
+            onChange={function (v: string): void {
+              // No-op: To be implemented
+            }}
             placeholder={''}
             className="small w-full"
             integrated

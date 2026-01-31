@@ -4,10 +4,9 @@ import type { TReducersBackendExports } from '@holistix-forge/reducers';
 import type { TCollabFrontendExports } from '@holistix-forge/collab/frontend';
 
 import { CoreReducer } from './lib/core-reducer';
-import { TCoreSharedData } from './lib/core-types';
 
 type TBackendRequired = {
-  collab: TCollabBackendExports<TCoreSharedData>;
+  collab: TCollabBackendExports;
   reducers: TReducersBackendExports;
 };
 
@@ -17,8 +16,17 @@ export const moduleBackend: TModule<TBackendRequired> = {
   description: 'Core module',
   dependencies: ['collab', 'reducers'],
   load: ({ depsExports }) => {
-    depsExports.collab.collab.loadSharedData('map', 'core-graph', 'nodes');
-    depsExports.collab.collab.loadSharedData('array', 'core-graph', 'edges');
+    // Register shared data schema with registry
+    depsExports.collab.registry.registerSharedData(
+      'map',
+      'core-graph',
+      'nodes'
+    );
+    depsExports.collab.registry.registerSharedData(
+      'array',
+      'core-graph',
+      'edges'
+    );
 
     depsExports.reducers.loadReducers(new CoreReducer(depsExports));
   },
@@ -36,8 +44,9 @@ export const moduleFrontend: TModule<TFrontendRequired> = {
   description: 'Core module',
   dependencies: ['collab'],
   load: ({ depsExports }) => {
-    depsExports.collab.collab.loadSharedData('map', 'core-graph', 'nodes');
-    depsExports.collab.collab.loadSharedData('array', 'core-graph', 'edges');
+    // Register shared data schema with registry
+    depsExports.collab.registry.registerSharedData('map', 'core-graph', 'nodes');
+    depsExports.collab.registry.registerSharedData('array', 'core-graph', 'edges');
   },
 };
 

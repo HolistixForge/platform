@@ -102,6 +102,21 @@ get_service_status() {
     local env_dir=$1
     local service=$2
     
+    # Gateways are Docker containers, not Node.js processes
+    # Check Docker container status instead of PID files
+    if [ "$service" = "gateway" ]; then
+        local env_name=$(basename "$env_dir")
+        local running_count=$(docker ps --filter "label=environment=${env_name}" --format "{{.Names}}" 2>/dev/null | wc -l)
+        
+        if [ "$running_count" -gt 0 ]; then
+            # Return container count as "PID" for display purposes
+            echo "running:${running_count}:::"
+        else
+            echo "stopped::"
+        fi
+        return
+    fi
+    
     local pid_file="${env_dir}/pids/${service}.pid"
     
     if [ ! -f "$pid_file" ]; then

@@ -25,6 +25,7 @@ import { setupOrganizationRoutes } from './routes/organizations';
 import { setupProjectRoutes } from './routes/projects';
 import { setupGatewayRoutes } from './routes/gateway';
 import { setupUserRoutes } from './routes/users';
+import { setupInternalProjectRoutes } from './routes/internal/projects';
 import { setupCredentialRoutes } from './routes/credentials';
 import {
   globalLimiter,
@@ -70,7 +71,20 @@ export function createApp(
   app.set('trust proxy', 1);
 
   // Basic Express setup (CORS, body parsing, etc.)
-  setupBasicExpressApp(app);
+  // Ganymede-specific CSRF exemptions:
+  // - /gateway/*: Gateway management endpoints (server-to-server or frontend-initiated)
+  // - /collab/start: Gateway calls during initialization
+  setupBasicExpressApp(app, {
+    csrfExemptPaths: [
+      '/gateway/start', // Frontend initiates gateway allocation
+      '/gateway/config', // Gateway fetches config from Ganymede
+      '/gateway/ready', // Gateway signals ready status
+      '/gateway/stop', // Gateway signals shutdown/deallocation
+      '/collab/start', // Gateway calls during initialization
+      '/oauth/authorize', // OAuth authorization code flow (protected by client credentials)
+      '/oauth/token', // OAuth token exchange (protected by client credentials)
+    ],
+  });
 
   // Global rate limiter (apply to all routes as baseline protection)
   // Can be disabled for testing or via environment variable
@@ -187,6 +201,9 @@ export function createApp(
   setupGatewayRoutes(router, rateLimiters.api);
   setupUserRoutes(router, rateLimiters.api);
   setupCredentialRoutes(router, rateLimiters.api);
+
+  // Internal API routes (gateway-only, protected by gateway token)
+  setupInternalProjectRoutes(router, rateLimiters.api);
 
   // Additional routes (e.g., test routes)
   if (options.setupAdditionalRoutes) {

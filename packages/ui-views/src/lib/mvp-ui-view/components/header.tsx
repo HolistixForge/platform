@@ -25,6 +25,7 @@ export type HeaderProps = {
   logoutAction?: TAction;
   share?: boolean;
   host?: boolean;
+  permissionsLink?: string; // Link to organization permissions page
 };
 
 export const Header = ({
@@ -34,6 +35,7 @@ export const Header = ({
   user,
   otherUsers,
   logoutAction,
+  permissionsLink,
 }: HeaderProps) => {
   const NiAction = useNotImplemented();
 
@@ -42,7 +44,11 @@ export const Header = ({
       <div className="not-bellow-640 flex items-center gap-4">
         <p className="text-white text-[16px]">Menu</p>
         <div className="rounded-[10px] bg-white/20 w-[2px] h-[28px]" />
-        <ButtonIcon Icon={icons.Save} {...NiAction} actionOriginId="save" />
+        {permissionsLink && (
+          <Link to={permissionsLink}>
+            <ButtonIcon Icon={icons.Key} actionOriginId="permissions" />
+          </Link>
+        )}
         <div className="rounded-[10px] bg-white/20 w-[2px] h-[28px]" />
         <ButtonIcon
           Icon={icons.RoundedPlus}

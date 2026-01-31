@@ -9,6 +9,7 @@
  */
 
 import { initializeNodeObservability } from '@holistix-forge/observability';
+import { Logger } from '@holistix-forge/log';
 
 // Initialize OpenTelemetry with auto-instrumentation
 initializeNodeObservability({
@@ -17,4 +18,12 @@ initializeNodeObservability({
 });
 
 console.log('[Tracing] OpenTelemetry initialized and instrumentations registered');
+
+// Initialize Logger to enable OTLP log export
+Logger.initialize({
+  otlpEndpointHttp: process.env.OTLP_ENDPOINT_HTTP,
+  serviceName: process.env.OTEL_SERVICE_NAME || 'gateway',
+});
+
+console.log('[Tracing] Logger initialized for OTLP export');
 

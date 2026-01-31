@@ -11,9 +11,9 @@ import { menuItems } from './access-role';
 
 //
 
-export type GroupViewProps = {};
+export type GroupViewProps = Record<string, never>;
 
-export const GroupView = ({}: GroupViewProps) => {
+export const GroupView = (_props: GroupViewProps) => {
   const [tags, setTags] = useState<any>([
     {
       text: 'Boosting',

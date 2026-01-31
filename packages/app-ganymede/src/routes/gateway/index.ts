@@ -1,4 +1,4 @@
-import { Router, Request, RequestHandler } from 'express';
+import { Router, RequestHandler } from 'express';
 import {
   authenticateJwtUser,
   authenticateJwtGateway,
@@ -16,6 +16,82 @@ import {
   makeOrgGatewayHostname,
   makeOrgGatewayUrl,
 } from '../../lib/url-helpers';
+
+/**
+ * Cleanup/rollback gateway allocation on failure
+ * Returns gateway to pool and removes nginx config
+ */
+async function cleanupFailedAllocation(
+  organization_id: string,
+  reason: string
+): Promise<void> {
+  log(
+    EPriority.Warning,
+    'GATEWAY_CLEANUP',
+    `Cleaning up failed allocation for org ${organization_id}: ${reason}`
+  );
+
+  try {
+    // 1. Check if gateway was allocated
+    const allocCheck = await pg.query(
+      'SELECT gateway_id FROM func_organizations_get_active_gateway($1)',
+      [organization_id]
+    );
+    const allocated = allocCheck.next()?.oneRow();
+
+    if (!allocated) {
+      log(
+        EPriority.Info,
+        'GATEWAY_CLEANUP',
+        'No allocation found - failure before DB commit'
+      );
+      return;
+    }
+
+    const gateway_id = allocated['gateway_id'];
+    log(
+      EPriority.Warning,
+      'GATEWAY_CLEANUP',
+      `Deallocating gateway ${gateway_id}`
+    );
+
+    // 2. Mark gateway allocation as ended (returns to pool)
+    await pg.query('CALL proc_organizations_gateways_stop($1)', [gateway_id]);
+    log(EPriority.Info, 'GATEWAY_CLEANUP', '✅ Gateway returned to pool');
+
+    // 3. Remove Nginx config (best-effort)
+    try {
+      await nginxManager.removeGatewayConfig(organization_id);
+      await nginxManager.reloadNginx();
+      log(EPriority.Info, 'GATEWAY_CLEANUP', '✅ Nginx config removed');
+    } catch (nginxError: any) {
+      // Non-critical - log and continue
+      log(
+        EPriority.Warning,
+        'GATEWAY_CLEANUP',
+        `Nginx cleanup warning: ${nginxError.message}`
+      );
+    }
+
+    log(
+      EPriority.Info,
+      'GATEWAY_CLEANUP',
+      `✅ Cleanup complete for org ${organization_id}`
+    );
+  } catch (error: any) {
+    log(
+      EPriority.Critical,
+      'GATEWAY_CLEANUP',
+      `❌ CLEANUP FAILED - Manual intervention required!`
+    );
+    log(
+      EPriority.Critical,
+      'GATEWAY_CLEANUP',
+      `Org ${organization_id}: ${error.message}`
+    );
+    throw new Error(`Cleanup failed: ${error.message}`);
+  }
+}
 
 export const setupGatewayRoutes = (
   router: Router,
@@ -85,18 +161,28 @@ export const setupGatewayRoutes = (
           throw new Error('Failed to allocate gateway from pool');
         }
 
-        const container_name = row['container_name'];
+        const container_name = row['container_name'] as string | null;
         const http_port = row['http_port'] as number;
-        const tmp_handshake_token = row['tmp_handshake_token'];
+        const gateway_nginx_upstream = row['gateway_nginx_upstream'] as string;
+
+        // Validate that nginx_upstream was returned from database
+        if (!gateway_nginx_upstream) {
+          throw new Error(
+            'Gateway allocation failed: gateway_nginx_upstream is missing from database'
+          );
+        }
 
         log(
           EPriority.Info,
           'GATEWAY_ALLOC',
-          `Allocated ${container_name} (port ${http_port}) to org ${organization_id}`
+          `Allocated ${container_name} (port ${http_port}, upstream ${gateway_nginx_upstream}) to org ${organization_id}`
         );
 
-        // 2. Create Nginx config (routes org traffic to gateway HTTP port)
-        await nginxManager.createGatewayConfig(organization_id, http_port);
+        // 2. Create Nginx config (routes org traffic to gateway)
+        await nginxManager.createGatewayConfig(
+          organization_id,
+          gateway_nginx_upstream
+        );
 
         // 3. Reload Nginx
         await nginxManager.reloadNginx();
@@ -111,24 +197,73 @@ export const setupGatewayRoutes = (
           `Gateway accessible at: ${gateway_url}`
         );
 
-        // 5. Call gateway handshake
+        // 4.5. Wait for gateway to be ready (health check with timeout)
+        log(EPriority.Info, 'GATEWAY_ALLOC', 'Checking gateway health...');
+
+        const healthCheckTimeout = 5000; // 5s max
+        const healthCheckInterval = 200; // Check every 200ms
+        const startTime = Date.now();
+        let isHealthy = false;
+
+        while (Date.now() - startTime < healthCheckTimeout) {
+          try {
+            // Try to reach gateway health endpoint
+            const healthUrl = `${gateway_url}/collab/ping`;
+            const healthResponse = await fetch(healthUrl, {
+              method: 'GET',
+              signal: AbortSignal.timeout(500), // 500ms timeout per request
+            });
+
+            if (healthResponse.ok) {
+              isHealthy = true;
+              const elapsed = Date.now() - startTime;
+              log(
+                EPriority.Info,
+                'GATEWAY_ALLOC',
+                `✅ Gateway healthy after ${elapsed}ms`
+              );
+              break;
+            }
+          } catch (error) {
+            // Health check failed, retry
+          }
+
+          // Wait before retry
+          await new Promise((resolve) =>
+            setTimeout(resolve, healthCheckInterval)
+          );
+        }
+
+        if (!isHealthy) {
+          throw new Error(
+            `Gateway health check failed after ${healthCheckTimeout}ms. Gateway may not be ready.`
+          );
+        }
+
+        // 5. Trigger gateway initialization
         const handshakeUrl = `${gateway_url}/collab/start`;
         log(
           EPriority.Info,
           'GATEWAY_ALLOC',
-          `Calling gateway handshake: ${handshakeUrl}`
+          `Triggering gateway initialization: ${handshakeUrl}`
         );
+
+        const domain = process.env.DOMAIN || 'domain.local';
+        const origin = `https://${domain}`;
 
         const handshakeResponse = await fetch(handshakeUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tmp_handshake_token }),
+          headers: {
+            'Content-Type': 'application/json',
+            Origin: origin,
+          },
+          body: JSON.stringify({}),
         });
 
         if (!handshakeResponse.ok) {
           const errorText = await handshakeResponse.text();
           throw new Error(
-            `Gateway handshake failed: ${handshakeResponse.status} ${errorText}`
+            `Gateway initialization failed: ${handshakeResponse.status} ${errorText}`
           );
         }
 
@@ -147,8 +282,21 @@ export const setupGatewayRoutes = (
           error.message
         );
 
-        // TODO: Cleanup on failure (deallocate, remove DNS, remove nginx config)
+        // CRITICAL: Cleanup on failure to prevent inconsistent state
+        // If handshake or any step fails, we must rollback the allocation
+        try {
+          await cleanupFailedAllocation(organization_id, error.message);
+        } catch (cleanupError: any) {
+          // Cleanup failed - log critical error for manual intervention
+          log(
+            EPriority.Critical,
+            'GATEWAY_ALLOC',
+            `⚠️ ORPHANED ALLOCATION - Manual cleanup required!`,
+            { organization_id, error: cleanupError.message }
+          );
+        }
 
+        // Return appropriate error to user
         if (error.message.includes('no_gateway_available')) {
           return res
             .status(503)
@@ -163,25 +311,25 @@ export const setupGatewayRoutes = (
     })
   );
 
-  // POST /gateway/config - Gateway calls this with handshake token
-  // NOTE: Uses temporary handshake token, not gateway JWT (token generated here)
   router.post(
     '/gateway/config',
-    asyncHandler(async (req: Request, res) => {
-      const { tmp_handshake_token } = req.body;
+    authenticateJwtGateway,
+    asyncHandler(async (req: GatewayAuthRequest, res) => {
+      const gateway_id = req.gateway.id;
 
-      // Get org from handshake token
       const result = await pg.query(
-        'SELECT * FROM func_organizations_gateways_get($1)',
-        [tmp_handshake_token]
+        'SELECT * FROM func_organizations_get_allocation_by_gateway_id($1)',
+        [gateway_id]
       );
       const row = result.next()?.oneRow();
+
       if (!row) {
-        return res.status(403).json({ error: 'Invalid handshake token' });
+        return res.status(404).json({
+          error: 'No active allocation for this gateway',
+        });
       }
 
       const organization_id = row['organization_id'];
-      const gateway_id = row['gateway_id'];
 
       // Get organization details
       const orgResult = await pg.query(
@@ -190,19 +338,19 @@ export const setupGatewayRoutes = (
       );
       const org = orgResult.next()?.oneRow();
 
-      // Get organization members
-      const membersResult = await pg.query(
-        'SELECT * FROM func_organizations_members_list($1)',
-        [organization_id]
-      );
-      const members = membersResult.next()?.allRows() || [];
-
       // Get organization projects
       const projectsResult = await pg.query(
         'SELECT * FROM func_projects_list_by_organization($1)',
         [organization_id]
       );
       const projects = projectsResult.next()?.allRows() || [];
+
+      // Get organization members with roles (for Gateway RBAC initialization)
+      const membersResult = await pg.query(
+        'SELECT * FROM func_organizations_members_list($1)',
+        [organization_id]
+      );
+      const members = membersResult.next()?.allRows() || [];
 
       // Generate organization JWT token (gateway bound to org)
       const organizationToken = generateJwtToken(

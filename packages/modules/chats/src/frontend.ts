@@ -16,7 +16,8 @@ export const moduleFrontend: TModule<TRequired> = {
   description: 'Chats module',
   dependencies: ['core-graph', 'collab', 'whiteboard'],
   load: ({ depsExports }) => {
-    depsExports.collab.collab.loadSharedData('map', 'chats', 'chats');
+    // Register shared data schema with registry
+    depsExports.collab.registry.registerSharedData('map', 'chats', 'chats');
 
     depsExports.whiteboard.registerMenuEntries(
       ({ dispatcher, from, position, viewId }) => [

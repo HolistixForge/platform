@@ -12,11 +12,10 @@ import {
   setupValidator,
   TStart,
 } from '@holistix-forge/backend-engine';
-import { BackendEventProcessor } from '@holistix-forge/reducers';
-
-import { VPN } from './config/organization';
-import { setupCollabRoutes, setBackendEventProcessor } from './routes/collab';
+import { setupCollabRoutes } from './routes/collab';
 import { setupPermissionsRoutes } from './routes/permissions';
+import { setupMembersRoutes } from './routes/members';
+import { setupRolesRoutes } from './routes/roles';
 import { setupProtectedServicesRoutes } from './routes/protected-services';
 import { setupOauthRoutes } from './routes/oauth';
 import oas from './oas30.json';
@@ -24,8 +23,14 @@ import {
   initializeGatewayForOrganization,
   shutdownGateway,
 } from './initialization/gateway-init';
-import { loadOrganizationConfig } from './config/organization';
+import { fetchConfigFromGanymede } from './initialization/fetch-config';
 import { signalGatewayReady } from './initialization/signal-ready';
+import {
+  loadVpnConfig,
+  isVpnValidForOrg,
+  stopVpn,
+  startVpnAsync,
+} from './vpn/vpn-manager';
 import {
   globalLimiter,
   oauthLimiter,
@@ -34,14 +39,16 @@ import {
 } from './middleware/rate-limiter';
 
 //
-// Global state
-//
-
-let bep: BackendEventProcessor<never>;
-
-//
 // Express setup
 //
+
+// Derive ALLOWED_ORIGINS from DOMAIN if not explicitly set
+// Gateway containers have DOMAIN env var but may not have ALLOWED_ORIGINS
+if (!process.env.ALLOWED_ORIGINS && process.env.DOMAIN) {
+  process.env.ALLOWED_ORIGINS = JSON.stringify([
+    `https://${process.env.DOMAIN}`,
+  ]);
+}
 
 export const setupExpressApp = (options?: {
   skipValidation?: boolean;
@@ -58,7 +65,14 @@ export const setupExpressApp = (options?: {
 
   // Observability is now handled by @holistix-forge/observability package
   // Auto-instrumentation will automatically create spans for Express requests
-  setupBasicExpressApp(app);
+  // Gateway-specific CSRF exemptions:
+  // - /collab/:project_id: WebSocket connections for YJS collaboration
+  //   (WebSocket upgrade requests use GET, but clients may POST to collab endpoint)
+  setupBasicExpressApp(app, {
+    csrfExemptPaths: [
+      '/collab/:project_id', // YJS collaboration endpoint (supports Express params)
+    ],
+  });
 
   // Global rate limiter (apply to all routes as baseline protection)
   if (isRateLimitingEnabled()) {
@@ -96,6 +110,8 @@ export const setupExpressApp = (options?: {
 
   setupCollabRoutes(router, rateLimiters.api);
   setupPermissionsRoutes(router, rateLimiters.api);
+  setupMembersRoutes(router, rateLimiters.api);
+  setupRolesRoutes(router, rateLimiters.api);
   setupProtectedServicesRoutes(router, rateLimiters.api);
   setupOauthRoutes(router, rateLimiters.oauth);
 
@@ -182,50 +198,84 @@ function setupShutdownHandlers() {
 // Main
 //
 
+// Store server instances for WebSocket grafting
+import { setServers } from './servers';
+let servers: (http.Server | https.Server)[] = [];
+
 (async function main() {
   try {
-    bep = new BackendEventProcessor<never>();
-    setBackendEventProcessor(bep);
-
-    if (!VPN) throw new Error('VPN config read failed');
-
     // Setup Express server
     const app = setupExpressApp();
     // Gateway always listens on port 8888 internally (Nginx proxies from external port)
     const bindings: TStart[] = [{ host: '127.0.0.1', port: 8888 }];
-    bindings.map((b) => startServer(app, b));
+    servers = bindings.map((b) => startServer(app, b));
+
+    // Make servers available globally for WebSocket grafting
+    setServers(servers);
 
     // Signal gateway is ready (if GATEWAY_ID is set)
+    // Run in background - don't block gateway startup if Ganymede is unreachable
     const gatewayId = process.env.GATEWAY_ID;
     if (gatewayId) {
-      await signalGatewayReady(gatewayId);
+      signalGatewayReady(gatewayId).catch((err) => {
+        log(
+          EPriority.Warning,
+          'GATEWAY',
+          `Failed to signal ready to Ganymede: ${err.message}`
+        );
+      });
     }
 
-    // Load organization configuration (for hot restart)
-    const orgConfig = loadOrganizationConfig();
+    const orgConfig = await fetchConfigFromGanymede();
 
     if (orgConfig) {
-      // NEW: Initialize gateway with organization config
       log(
         EPriority.Info,
         'GATEWAY',
-        `Initializing gateway for organization: ${orgConfig.organization_name}`
+        `Allocated to organization: ${orgConfig.organization_name}`
       );
+
+      const existingVpn = loadVpnConfig();
+
+      if (isVpnValidForOrg(existingVpn, orgConfig.organization_id)) {
+        log(EPriority.Info, 'VPN', '✅ VPN config valid, reusing existing VPN');
+      } else {
+        if (existingVpn) {
+          log(
+            EPriority.Warning,
+            'VPN',
+            `VPN org mismatch (old: ${existingVpn.organization_id}, new: ${orgConfig.organization_id})`
+          );
+          stopVpn();
+        }
+
+        log(EPriority.Info, 'VPN', 'Starting VPN in background...');
+        startVpnAsync(orgConfig.organization_id).catch((err) => {
+          log(
+            EPriority.Error,
+            'VPN',
+            `VPN startup failed: ${err.message} (container features unavailable)`
+          );
+        });
+      }
+
       await initializeGatewayForOrganization(
         orgConfig.organization_id,
         orgConfig.gateway_id,
-        orgConfig.gateway_token
+        orgConfig.organization_token,
+        servers,
+        orgConfig.members
       );
-      log(EPriority.Info, 'GATEWAY', 'Gateway ready and serving organization');
-    } else {
+
       log(
         EPriority.Info,
         'GATEWAY',
-        'Gateway idle, waiting for organization allocation...'
+        '✅ Gateway ready and serving organization'
       );
-      // Gateway is registered via app-ganymede-cmd CLI tool
-      // Then allocated to organizations via /gateway/start API
-      // Initialization happens via /collab/start
+    } else {
+      log(EPriority.Info, 'GATEWAY', 'No active allocation - gateway idle');
+
+      stopVpn();
     }
 
     // Setup graceful shutdown

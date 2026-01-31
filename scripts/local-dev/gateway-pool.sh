@@ -250,15 +250,21 @@ cmd_create() {
         echo -e "${BLUE}  Creating ${gateway_name}...${NC}"
         
         # Register gateway in database
+        # For development, nginx_upstream is always Docker host IP (172.17.0.1) + HTTP port
+        # This is the address that Stage 1 Nginx (in main dev container) uses to reach gateway containers
+        local nginx_upstream="172.17.0.1:${gw_http_port}"
+        
         echo "     Registering in database..."
         echo "     Gateway: ${gateway_name}, HTTP: ${gw_http_port}, VPN: ${gw_vpn_port}"
+        echo "     Nginx upstream: ${nginx_upstream}"
         set +e
         local register_output=$(LOG_LEVEL=6 \
             node "${workspace_path}/dist/packages/app-ganymede-cmds/main.js" add-gateway \
             -gv "${gateway_version}" \
             -c "${gateway_name}" \
             -hp "${gw_http_port}" \
-            -vp "${gw_vpn_port}" 2>&1)
+            -vp "${gw_vpn_port}" \
+            -nu "${nginx_upstream}" 2>&1)
         local register_exit_code=$?
         set -e
         
@@ -293,6 +299,10 @@ cmd_create() {
         container_env[GANYMEDE_API_URL]="https://${build_server_ip}"
         container_env[DOMAIN]="${DOMAIN}"
         container_env[BUILD_SERVER_IP]="${build_server_ip}"
+        container_env[ALLOWED_ORIGINS]="[\"https://${DOMAIN}\"]"
+        
+        # JWT Keys for token verification
+        container_env[JWT_PUBLIC_KEY]="${JWT_PUBLIC_KEY}"
         
         # OpenTelemetry configuration
         # Gateway containers need to reach OTLP Collector on the Docker host.

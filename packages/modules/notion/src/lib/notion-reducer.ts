@@ -1,14 +1,16 @@
 import { Client } from '@notionhq/client';
 
-import { TCoreSharedData } from '@holistix-forge/core-graph';
+import { TCoreSharedData, TGraphNode } from '@holistix-forge/core-graph';
 import { makeUuid, toUuid } from '@holistix-forge/simple-types';
 import {
-  Reducer,
   RequestData,
   TEventPeriodic,
   TReducersBackendExports,
 } from '@holistix-forge/reducers';
-import { TCollabBackendExports } from '@holistix-forge/collab';
+import {
+  TCollabBackendExports,
+  ReducerWithCollab,
+} from '@holistix-forge/collab';
 
 import {
   TEventCreatePage,
@@ -40,21 +42,26 @@ import { TNodeNotionKanbanColumnDataPayload } from './components/node-notion/nod
 //
 
 type TRequiredExports = {
-  collab: TCollabBackendExports<TNotionSharedData & TCoreSharedData>;
+  collab: TCollabBackendExports;
   reducers: TReducersBackendExports;
 };
 
 //
 
-export class NotionReducer extends Reducer<TNotionEvent | TEventPeriodic> {
+export class NotionReducer extends ReducerWithCollab<
+  TNotionEvent | TEventPeriodic,
+  TNotionSharedData & TCoreSharedData
+> {
   private lastSync: Date = new Date(0); // Initialize to epoch
 
   private clients: Map<string, Client> = new Map();
 
-  constructor(private depsExports: TRequiredExports) {
-    super();
+  constructor(depsExports: TRequiredExports) {
+    super(depsExports.collab.registry, 'notion');
     this.depsExports = depsExports;
   }
+
+  private readonly depsExports: TRequiredExports;
 
   private getNotionClient(apiKey: string) {
     let client = this.clients.get(apiKey);
@@ -84,7 +91,7 @@ export class NotionReducer extends Reducer<TNotionEvent | TEventPeriodic> {
         return this._createPage(event, requestData);
 
       case 'notion:delete-page':
-        return this._deletePage(event);
+        return this._deletePage(event, requestData);
 
       case 'notion:reorder-page':
         return this._reorderPage(event, requestData);
@@ -108,13 +115,13 @@ export class NotionReducer extends Reducer<TNotionEvent | TEventPeriodic> {
         return this._deleteDatabase(event, requestData);
 
       case 'notion:set-node-view':
-        return this._setNodeView(event);
+        return this._setNodeView(event, requestData);
 
       case 'notion:search-databases':
-        return this._searchDatabases(event);
+        return this._searchDatabases(event, requestData);
 
       case 'notion:clear-user-search-results':
-        return this._clearUserSearchResults(event);
+        return this._clearUserSearchResults(event, requestData);
 
       case 'reducers:periodic':
         return this._periodic(event, requestData);
@@ -127,9 +134,14 @@ export class NotionReducer extends Reducer<TNotionEvent | TEventPeriodic> {
     event: TEventLoadPageNode,
     requestData: RequestData
   ): Promise<void> {
-    const database = Array.from(
-      this.depsExports.collab.collab.sharedData['notion:databases'].values()
-    ).find((d) => d.pages.find((p) => p.id === event.pageId));
+    const collab = this.getCollab(requestData);
+    const database = (
+      Array.from(
+        collab.sharedData['notion:databases'].values()
+      ) as TNotionDatabase[]
+    ).find((d: TNotionDatabase) =>
+      d.pages.find((p: TNotionPage) => p.id === event.pageId)
+    );
 
     if (!database) return;
 
@@ -174,6 +186,7 @@ export class NotionReducer extends Reducer<TNotionEvent | TEventPeriodic> {
     },
     requestData: RequestData
   ): Promise<boolean> {
+    const collab = this.getCollab(requestData);
     let { databaseId } = event;
 
     const r = toUuid(databaseId);
@@ -183,9 +196,7 @@ export class NotionReducer extends Reducer<TNotionEvent | TEventPeriodic> {
 
     const apiKey =
       event.NOTION_API_KEY ||
-      this.depsExports.collab.collab.sharedData['notion:databases'].get(
-        databaseId
-      )?.NOTION_API_KEY ||
+      collab.sharedData['notion:databases'].get(databaseId)?.NOTION_API_KEY ||
       '';
 
     try {
@@ -207,37 +218,33 @@ export class NotionReducer extends Reducer<TNotionEvent | TEventPeriodic> {
 
       // Get the existing database to compare with new pages
       const existingDatabase =
-        this.depsExports.collab.collab.sharedData['notion:databases'].get(
-          databaseId
-        );
+        collab.sharedData['notion:databases'].get(databaseId);
       const newPages = pagesResponse.results as TNotionPage[];
 
       // If we had existing pages, check for deleted ones
       if (existingDatabase) {
         const newPageIds = new Set(newPages.map((page) => page.id));
         const deletedPages = existingDatabase.pages.filter(
-          (oldPage) => !newPageIds.has(oldPage.id)
+          (oldPage: TNotionPage) => !newPageIds.has(oldPage.id)
         );
 
         // Dispatch delete node events for each deleted page
-        this.depsExports.collab.collab.sharedData['core-graph:nodes'].forEach(
-          (node) => {
-            if (
-              node.type === 'notion-page' &&
-              deletedPages.some(
-                (deletedPage) => deletedPage.id === node.data?.pageId
-              )
-            ) {
-              this.depsExports.reducers.processEvent(
-                {
-                  type: 'core:delete-node',
-                  id: node.id,
-                },
-                requestData
-              );
-            }
+        collab.sharedData['core-graph:nodes'].forEach((node: TGraphNode) => {
+          if (
+            node.type === 'notion-page' &&
+            deletedPages.some(
+              (deletedPage: TNotionPage) => deletedPage.id === node.data?.pageId
+            )
+          ) {
+            this.depsExports.reducers.processEvent(
+              {
+                type: 'core:delete-node',
+                id: node.id,
+              },
+              requestData
+            );
           }
-        );
+        });
       }
 
       const database: TNotionDatabase = {
@@ -246,10 +253,7 @@ export class NotionReducer extends Reducer<TNotionEvent | TEventPeriodic> {
         NOTION_API_KEY: apiKey,
       } as unknown as TNotionDatabase;
 
-      this.depsExports.collab.collab.sharedData['notion:databases'].set(
-        databaseId,
-        database
-      );
+      collab.sharedData['notion:databases'].set(databaseId, database);
     } catch (error) {
       console.error('Failed to fetch and update database:', error);
       return false;
@@ -264,13 +268,14 @@ export class NotionReducer extends Reducer<TNotionEvent | TEventPeriodic> {
     event: TEventPeriodic,
     requestData: RequestData
   ): Promise<void> {
+    const collab = this.getCollab(requestData);
     const now = new Date();
     const timeSinceLastSync = now.getTime() - this.lastSync.getTime();
 
     // Only sync if more than some time has passed
     if (timeSinceLastSync >= 5000) {
-      this.depsExports.collab.collab.sharedData['notion:databases'].forEach(
-        (database) => {
+      collab.sharedData['notion:databases'].forEach(
+        (database: TNotionDatabase) => {
           this._fetchAndUpdateDatabase(
             { databaseId: database.id },
             requestData
@@ -287,11 +292,11 @@ export class NotionReducer extends Reducer<TNotionEvent | TEventPeriodic> {
     event: TEventUpdatePage,
     requestData: RequestData
   ): Promise<void> {
+    const collab = this.getCollab(requestData);
     const { pageId } = event;
     const apiKey =
-      this.depsExports.collab.collab.sharedData['notion:databases'].get(
-        event.databaseId
-      )?.NOTION_API_KEY || '';
+      collab.sharedData['notion:databases'].get(event.databaseId)
+        ?.NOTION_API_KEY || '';
 
     try {
       const notion = this.getNotionClient(apiKey);
@@ -319,11 +324,11 @@ export class NotionReducer extends Reducer<TNotionEvent | TEventPeriodic> {
     event: TEventCreatePage,
     requestData: RequestData
   ): Promise<void> {
+    const collab = this.getCollab(requestData);
     const { databaseId } = event;
     const apiKey =
-      this.depsExports.collab.collab.sharedData['notion:databases'].get(
-        event.databaseId
-      )?.NOTION_API_KEY || '';
+      collab.sharedData['notion:databases'].get(event.databaseId)
+        ?.NOTION_API_KEY || '';
 
     try {
       const notion = this.getNotionClient(apiKey);
@@ -345,12 +350,15 @@ export class NotionReducer extends Reducer<TNotionEvent | TEventPeriodic> {
     }
   }
 
-  private async _deletePage(event: TEventDeletePage): Promise<void> {
+  private async _deletePage(
+    event: TEventDeletePage,
+    requestData: RequestData
+  ): Promise<void> {
+    const collab = this.getCollab(requestData);
     const { databaseId, pageId } = event;
     const apiKey =
-      this.depsExports.collab.collab.sharedData['notion:databases'].get(
-        event.databaseId
-      )?.NOTION_API_KEY || '';
+      collab.sharedData['notion:databases'].get(event.databaseId)
+        ?.NOTION_API_KEY || '';
 
     try {
       const notion = this.getNotionClient(apiKey);
@@ -361,16 +369,12 @@ export class NotionReducer extends Reducer<TNotionEvent | TEventPeriodic> {
       });
 
       // Update local state
-      const database =
-        this.depsExports.collab.collab.sharedData['notion:databases'].get(
-          databaseId
-        );
+      const database = collab.sharedData['notion:databases'].get(databaseId);
       if (database) {
-        database.pages = database.pages.filter((p) => p.id !== pageId);
-        this.depsExports.collab.collab.sharedData['notion:databases'].set(
-          databaseId,
-          database
+        database.pages = database.pages.filter(
+          (p: TNotionPage) => p.id !== pageId
         );
+        collab.sharedData['notion:databases'].set(databaseId, database);
       }
     } catch (error) {
       console.error('Failed to delete page:', error);
@@ -382,21 +386,20 @@ export class NotionReducer extends Reducer<TNotionEvent | TEventPeriodic> {
     event: TEventReorderPage,
     requestData: RequestData
   ): Promise<void> {
+    const collab = this.getCollab(requestData);
     const { databaseId, pageId, newPosition } = event;
     const apiKey =
-      this.depsExports.collab.collab.sharedData['notion:databases'].get(
-        event.databaseId
-      )?.NOTION_API_KEY || '';
+      collab.sharedData['notion:databases'].get(event.databaseId)
+        ?.NOTION_API_KEY || '';
     try {
       const notion = this.getNotionClient(apiKey);
-      const database =
-        this.depsExports.collab.collab.sharedData['notion:databases'].get(
-          databaseId
-        );
+      const database = collab.sharedData['notion:databases'].get(databaseId);
       if (!database) throw new Error('Database not found');
 
       // Find current position
-      const currentIndex = database.pages.findIndex((p) => p.id === pageId);
+      const currentIndex = database.pages.findIndex(
+        (p: TNotionPage) => p.id === pageId
+      );
       if (currentIndex === -1) throw new Error('Page not found');
 
       // Update order in Notion
@@ -450,63 +453,58 @@ export class NotionReducer extends Reducer<TNotionEvent | TEventPeriodic> {
     event: TEventDeleteDatabase,
     requestData: RequestData
   ): Promise<void> {
+    const collab = this.getCollab(requestData);
     const { databaseId } = event;
 
     // First, delete all nodes associated with this database
-    const database =
-      this.depsExports.collab.collab.sharedData['notion:databases'].get(
-        databaseId
-      );
+    const database = collab.sharedData['notion:databases'].get(databaseId);
     if (database) {
-      const pagesIds = database.pages.map((page) => page.id);
-      this.depsExports.collab.collab.sharedData['core-graph:nodes'].forEach(
-        (node) => {
-          if (
-            node.type === 'notion-page' &&
-            pagesIds.includes((node.data as TNodeNotionTaskDataPayload).pageId)
-          ) {
-            this.depsExports.reducers.processEvent(
-              {
-                type: 'core:delete-node',
-                id: node.id,
-              },
-              requestData
-            );
-          } else if (
-            node.type === 'notion-database' &&
-            node.data?.databaseId === databaseId
-          ) {
-            this.depsExports.reducers.processEvent(
-              {
-                type: 'core:delete-node',
-                id: node.id,
-              },
-              requestData
-            );
-          }
+      const pagesIds = database.pages.map((page: TNotionPage) => page.id);
+      collab.sharedData['core-graph:nodes'].forEach((node: TGraphNode) => {
+        if (
+          node.type === 'notion-page' &&
+          pagesIds.includes((node.data as TNodeNotionTaskDataPayload).pageId)
+        ) {
+          this.depsExports.reducers.processEvent(
+            {
+              type: 'core:delete-node',
+              id: node.id,
+            },
+            requestData
+          );
+        } else if (
+          node.type === 'notion-database' &&
+          node.data?.databaseId === databaseId
+        ) {
+          this.depsExports.reducers.processEvent(
+            {
+              type: 'core:delete-node',
+              id: node.id,
+            },
+            requestData
+          );
         }
-      );
+      });
       // Remove from shared data
-      this.depsExports.collab.collab.sharedData['notion:databases'].delete(
-        databaseId
-      );
+      collab.sharedData['notion:databases'].delete(databaseId);
     }
   }
 
   //
 
-  private async _setNodeView(event: TEventSetNodeView): Promise<void> {
+  private async _setNodeView(
+    event: TEventSetNodeView,
+    requestData: RequestData
+  ): Promise<void> {
+    const collab = this.getCollab(requestData);
     const { nodeId, viewId, viewMode } = event;
-    this.depsExports.collab.collab.sharedData['notion:node-views'].set(
-      `${nodeId}-${viewId}`,
-      {
-        type: 'database',
-        databaseId: nodeId,
-        nodeId,
-        viewId,
-        viewMode,
-      }
-    );
+    collab.sharedData['notion:node-views'].set(`${nodeId}-${viewId}`, {
+      type: 'database',
+      databaseId: nodeId,
+      nodeId,
+      viewId,
+      viewMode,
+    });
   }
 
   //
@@ -557,7 +555,11 @@ export class NotionReducer extends Reducer<TNotionEvent | TEventPeriodic> {
     );
   }
 
-  private async _searchDatabases(event: TEventSearchDatabases): Promise<void> {
+  private async _searchDatabases(
+    event: TEventSearchDatabases,
+    requestData: RequestData
+  ): Promise<void> {
+    const collab = this.getCollab(requestData);
     try {
       const notion = this.getNotionClient(event.NOTION_API_KEY || '');
       const response = await notion.search({
@@ -567,19 +569,20 @@ export class NotionReducer extends Reducer<TNotionEvent | TEventPeriodic> {
 
       // Store search results for this specific user
       const searchResults = response.results as TNotionDatabaseSearchResult[];
-      this.depsExports.collab.collab.sharedData[
-        'notion:database-search-results'
-      ].set(event.userId, searchResults);
+      collab.sharedData['notion:database-search-results'].set(
+        event.userId,
+        searchResults
+      );
     } catch (error) {
       console.error('Failed to search databases:', error);
     }
   }
 
   private async _clearUserSearchResults(
-    event: TEventClearUserSearchResults
+    event: TEventClearUserSearchResults,
+    requestData: RequestData
   ): Promise<void> {
-    this.depsExports.collab.collab.sharedData[
-      'notion:database-search-results'
-    ].delete(event.userId);
+    const collab = this.getCollab(requestData);
+    collab.sharedData['notion:database-search-results'].delete(event.userId);
   }
 }

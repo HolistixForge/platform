@@ -3,6 +3,15 @@
   "include": [],
   "references": [
     {
+      "path": "../modules/module"
+    },
+    {
+      "path": "../ui-base"
+    },
+    {
+      "path": "../collab-engine"
+    },
+    {
       "path": "../types"
     },
     {

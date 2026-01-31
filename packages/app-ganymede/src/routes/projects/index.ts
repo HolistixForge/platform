@@ -69,10 +69,11 @@ export const setupProjectRoutes = (
         return res.status(403).json({ error: 'Not organization member' });
       }
 
-      const result = await pg.query('CALL proc_projects_new($1, $2, $3, $4)', [
+      const result = await pg.query('CALL proc_projects_new($1, $2, $3, $4, $5)', [
         organization_id,
         name,
         isPublic,
+        req.user.id,  // Pass creator user_id
         null,
       ]);
       const new_project_id = result.next()?.oneRow()['new_project_id'];
@@ -161,76 +162,8 @@ export const setupProjectRoutes = (
     })
   );
 
-  // POST /projects/:project_id/members - Add member to project
-  router.post(
-    '/projects/:project_id/members',
-    authenticateJwtUser,
-    asyncHandler(async (req: AuthRequest, res) => {
-      // Get project to find organization_id
-      const projectResult = await pg.query(
-        'SELECT organization_id FROM projects WHERE project_id = $1',
-        [req.params.project_id]
-      );
-      const project = projectResult.next()?.oneRow();
-      if (!project) {
-        return res.status(404).json({ error: 'Project not found' });
-      }
-
-      // Check user is org owner or admin
-      const roleCheck = await pg.query(
-        'SELECT func_user_get_org_role($1, $2) as role',
-        [req.user.id, String(project['organization_id'])]
-      );
-      const role = roleCheck.next()?.oneRow()['role'] as string | null;
-      if (!role || !['owner', 'admin'].includes(role)) {
-        return res
-          .status(403)
-          .json({ error: 'Only org owner/admin can add project members' });
-      }
-
-      const { user_id } = req.body;
-      await pg.query('CALL proc_projects_members_edit($1, $2, $3)', [
-        req.params.project_id,
-        user_id,
-        true, // add = true
-      ]);
-      return res.json({ success: true });
-    })
-  );
-
-  // DELETE /projects/:project_id/members/:user_id - Remove member
-  router.delete(
-    '/projects/:project_id/members/:user_id',
-    authenticateJwtUser,
-    asyncHandler(async (req: AuthRequest, res) => {
-      // Get project to find organization_id
-      const projectResult = await pg.query(
-        'SELECT organization_id FROM projects WHERE project_id = $1',
-        [req.params.project_id]
-      );
-      const project = projectResult.next()?.oneRow();
-      if (!project) {
-        return res.status(404).json({ error: 'Project not found' });
-      }
-
-      // Check user is org owner or admin
-      const roleCheck = await pg.query(
-        'SELECT func_user_get_org_role($1, $2) as role',
-        [req.user.id, String(project['organization_id'])]
-      );
-      const role = roleCheck.next()?.oneRow()['role'] as string | null;
-      if (!role || !['owner', 'admin'].includes(role)) {
-        return res
-          .status(403)
-          .json({ error: 'Only org owner/admin can remove project members' });
-      }
-
-      await pg.query('CALL proc_projects_members_edit($1, $2, $3)', [
-        req.params.project_id,
-        req.params.user_id,
-        false, // add = false
-      ]);
-      return res.json({ success: true });
-    })
-  );
+  // NOTE: Project member add/remove routes REMOVED
+  // Use gateway member management API instead:
+  // - POST /members/projects/:id/users (gateway)
+  // - DELETE /members/projects/:id/users/:user_id (gateway)
 };

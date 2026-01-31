@@ -1,199 +1,219 @@
 import { EPriority, log } from '@holistix-forge/log';
 import { IPersistenceProvider } from '../state/IPersistenceProvider';
-import type { TPermissionData } from './types';
 import { PermissionManager as AbstractPermissionManager } from '@holistix-forge/gateway';
+import { UserRoleManager } from './UserRoleManager';
 
 /**
- * PermissionManager - Simple Permission Management
+ * PermissionManager - Role-Based Permission Checking
  *
  * Responsibilities:
- * - Check if user has permission (exact string match)
- * - Add/remove permissions for users
- * - Initialize permissions from organization config
- * - Provide persistence via IPersistenceProvider interface
+ * - Check if user has permission (via role resolution with wildcard matching)
+ * - Resolve permissions from user's roles (org + project)
+ * - Support wildcard patterns in permissions
  *
- * Permissions are simple strings:
- * - "org:owner", "org:admin", "org:member"
- * - "project:abc-123:admin"
- * - "container:def-456:delete"
- * - "container:create"
+ * Permission resolution strategy:
+ * 1. Get user's roles (org-level + project-specific)
+ * 2. Expand roles to get all permissions
+ * 3. Check if any permission matches (with wildcard support)
+ * 4. Special case: org:owner always has access (wildcard "*")
  *
- * MVP: Exact string matching only (no hierarchy, no wildcards)
- * Future: Can add hierarchy by updating hasPermission() logic
+ * Wildcard matching examples:
+ * - "*" matches everything (universal wildcard)
+ * - "project:*:admin" matches "project:abc:admin" and "project:xyz:admin"
+ * - "container:*" matches "container:abc123"
+ *
+ * NOTE: This manager no longer stores permissions directly.
+ * All permissions are resolved dynamically from roles (stored in UserRoleManager).
+ * Implements IPersistenceProvider but has nothing to persist.
  */
 export class PermissionManager
   extends AbstractPermissionManager
   implements IPersistenceProvider
 {
-  private data: TPermissionData;
+  private userRoleManager: UserRoleManager | null = null;
 
   constructor() {
     super();
-    this.data = {
-      permissions: {},
-    };
   }
-
-  // IPersistenceProvider implementation
-
-  loadFromSerialized(data: Record<string, unknown> | null | undefined): void {
-    if (!data) {
-      log(EPriority.Info, 'PERMISSIONS', 'No permission data to load');
-      return;
-    }
-
-    if (data.permissions && typeof data.permissions === 'object') {
-      this.data.permissions =
-        data.permissions as TPermissionData['permissions'];
-      log(EPriority.Info, 'PERMISSIONS', 'Loaded permission data');
-    } else {
-      log(EPriority.Notice, 'PERMISSIONS', 'Invalid permission data format');
-    }
-  }
-
-  saveToSerializable(): Record<string, unknown> {
-    return {
-      permissions: { ...this.data.permissions },
-    };
-  }
-
-  // Permission management methods
 
   /**
-   * Check if user has exact permission
-   * Simple exact-match only (no hierarchy for now)
+   * Set UserRoleManager reference
+   * Called during gateway initialization after UserRoleManager is created
    */
-  override hasPermission(user_id: string, permission: string): boolean {
-    const userPermissions = this.data.permissions[user_id];
-    if (!userPermissions) {
+  setUserRoleManager(userRoleManager: UserRoleManager): void {
+    this.userRoleManager = userRoleManager;
+  }
+
+  // ============================================================================
+  // Permission Checking (Main API)
+  // ============================================================================
+
+  /**
+   * Check if user has permission
+   * 
+   * Resolves permissions via user's roles with wildcard matching.
+   * 
+   * @param user_id - User ID
+   * @param permission - Permission to check (e.g., "project:abc:admin")
+   * @param project_id - Optional project ID (includes project-specific roles)
+   * @returns true if user has permission, false otherwise
+   */
+  override hasPermission(
+    user_id: string,
+    permission: string,
+    project_id?: string
+  ): boolean {
+    if (!this.userRoleManager) {
+      log(
+        EPriority.Warning,
+        'PERMISSIONS',
+        'UserRoleManager not initialized, denying permission'
+      );
       return false;
     }
-    return userPermissions.includes(permission);
+
+    // Get all user roles (org + project if specified)
+    const roles = this.userRoleManager.getAllUserRoles(user_id, project_id);
+
+    if (roles.length === 0) {
+      return false; // No roles = no permissions
+    }
+
+    // Special case: org:owner has universal access
+    if (roles.some((role) => role.role_name === 'org:owner')) {
+      return true;
+    }
+
+    // Get all permissions from all roles
+    const rolePermissions = roles.flatMap((role) => role.permissions);
+
+    // Check if any role permission matches (with wildcard matching)
+    return rolePermissions.some((rolePermission) =>
+      this.matchPermission(rolePermission, permission)
+    );
   }
 
+  // ============================================================================
+  // Wildcard Matching
+  // ============================================================================
+
   /**
-   * Add permission to user
+   * Match permission pattern against actual permission
+   * 
+   * Supports wildcards:
+   * - "*" = matches everything
+   * - "project:*:admin" matches "project:abc:admin"
+   * - "container:*" matches "container:abc123"
+   * 
+   * @param pattern - Permission pattern (may contain wildcards)
+   * @param permission - Actual permission to check
+   * @returns true if pattern matches permission
+   */
+  private matchPermission(pattern: string, permission: string): boolean {
+    // Universal wildcard
+    if (pattern === '*') {
+      return true;
+    }
+
+    // Exact match
+    if (pattern === permission) {
+      return true;
+    }
+
+    // Split by colon to match parts
+    const patternParts = pattern.split(':');
+    const permissionParts = permission.split(':');
+
+    // Must have same number of parts
+    if (patternParts.length !== permissionParts.length) {
+      return false;
+    }
+
+    // Check each part (supporting wildcards)
+    return patternParts.every((patternPart, i) => {
+      // Wildcard in this position
+      if (patternPart === '*') {
+        return true;
+      }
+
+      // Exact match for this part
+      return patternPart === permissionParts[i];
+    });
+  }
+
+  // ============================================================================
+  // Legacy Methods (for compatibility with existing code)
+  // ============================================================================
+
+  /**
+   * @deprecated Use role-based permission management instead
+   * This method is kept for backward compatibility but does nothing.
    */
   override addPermission(user_id: string, permission: string): void {
-    if (!this.data.permissions[user_id]) {
-      this.data.permissions[user_id] = [];
-    }
-    if (!this.data.permissions[user_id].includes(permission)) {
-      this.data.permissions[user_id].push(permission);
-      log(
-        EPriority.Debug,
-        'PERMISSIONS',
-        `Added permission: ${user_id} → ${permission}`
-      );
-    }
+    log(
+      EPriority.Warning,
+      'PERMISSIONS',
+      `addPermission is deprecated. Use UserRoleManager.assignRole() instead. Ignoring: ${user_id} → ${permission}`
+    );
   }
 
   /**
-   * Remove permission from user
+   * @deprecated Use role-based permission management instead
+   * This method is kept for backward compatibility but does nothing.
    */
   override removePermission(user_id: string, permission: string): void {
-    if (this.data.permissions[user_id]) {
-      const before = this.data.permissions[user_id].length;
-      this.data.permissions[user_id] = this.data.permissions[user_id].filter(
-        (p) => p !== permission
+    log(
+      EPriority.Warning,
+      'PERMISSIONS',
+      `removePermission is deprecated. Use UserRoleManager.removeRole() instead. Ignoring: ${user_id} → ${permission}`
+    );
+  }
+
+  /**
+   * Get all permissions for user (expanded from roles)
+   * 
+   * @param user_id - User ID
+   * @param project_id - Optional project ID
+   * @returns Array of permission strings
+   */
+  getPermissions(user_id: string, project_id?: string): string[] {
+    if (!this.userRoleManager) {
+      return [];
+    }
+
+    return this.userRoleManager.getUserPermissions(user_id, project_id);
+  }
+
+  // ============================================================================
+  // Persistence (IPersistenceProvider)
+  // ============================================================================
+
+  /**
+   * Load from serialized data
+   * 
+   * NOTE: PermissionManager no longer stores permissions.
+   * All permissions are in UserRoleManager (via roles).
+   * This method exists for IPersistenceProvider compatibility but does nothing.
+   */
+  loadFromSerialized(data: Record<string, unknown> | null | undefined): void {
+    // Nothing to load - permissions are resolved from roles
+    if (data && Object.keys(data).length > 0) {
+      log(
+        EPriority.Info,
+        'PERMISSIONS',
+        'Ignoring legacy permission data (using role-based system)'
       );
-      const after = this.data.permissions[user_id].length;
-      if (before !== after) {
-        log(
-          EPriority.Debug,
-          'PERMISSIONS',
-          `Removed permission: ${user_id} → ${permission}`
-        );
-      }
     }
   }
 
   /**
-   * Get all permissions for user
+   * Save to serializable format
+   * 
+   * NOTE: PermissionManager no longer stores permissions.
+   * Returns empty object to satisfy IPersistenceProvider interface.
    */
-  getPermissions(user_id: string): string[] {
-    return this.data.permissions[user_id] || [];
-  }
-
-  /**
-   * Set all permissions for user (replaces existing)
-   */
-  setPermissions(user_id: string, permissions: string[]): void {
-    this.data.permissions[user_id] = permissions;
-    log(
-      EPriority.Info,
-      'PERMISSIONS',
-      `Set permissions: ${user_id} → [${permissions.join(', ')}]`
-    );
-  }
-
-  /**
-   * Initialize permissions from organization config
-   * Called when gateway starts
-   */
-  async initializeFromConfig(config: {
-    members: Array<{
-      user_id: string;
-      username: string;
-      role: 'owner' | 'admin' | 'member';
-    }>;
-  }): Promise<void> {
-    log(
-      EPriority.Info,
-      'PERMISSIONS',
-      'Initializing permissions from org config'
-    );
-
-    // Map organization roles to permission strings
-    for (const member of config.members) {
-      const orgPermission = `org:${member.role}`;
-      this.setPermissions(member.user_id, [orgPermission]);
-    }
-
-    log(
-      EPriority.Info,
-      'PERMISSIONS',
-      `Initialized ${config.members.length} org members`
-    );
-  }
-
-  /**
-   * Add project-level permissions for a user
-   */
-  addProjectPermissions(
-    user_id: string,
-    project_id: string,
-    permissions: string[]
-  ): void {
-    for (const perm of permissions) {
-      this.addPermission(user_id, `project:${project_id}:${perm}`);
-    }
-  }
-
-  /**
-   * Remove all permissions for a user (cleanup)
-   */
-  removeUser(user_id: string): void {
-    delete this.data.permissions[user_id];
-    log(
-      EPriority.Debug,
-      'PERMISSIONS',
-      `Removed all permissions for user: ${user_id}`
-    );
-  }
-
-  /**
-   * Get all users with any permissions
-   */
-  getAllUsers(): string[] {
-    return Object.keys(this.data.permissions);
-  }
-
-  /**
-   * Get all permissions for all users
-   * Returns a map of user_id -> permissions array
-   */
-  getAllPermissions(): { [user_id: string]: string[] } {
-    return { ...this.data.permissions };
+  saveToSerializable(): Record<string, unknown> {
+    // Nothing to save - permissions are in roles
+    return {};
   }
 }

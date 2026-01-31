@@ -1,8 +1,5 @@
-import {
-  Reducer,
-  RequestData,
-  TReducersBackendExports,
-} from '@holistix-forge/reducers';
+import { RequestData, TReducersBackendExports } from '@holistix-forge/reducers';
+import { ReducerWithCollab } from '@holistix-forge/collab';
 import {
   TCoreEvent,
   TCoreSharedData,
@@ -10,10 +7,11 @@ import {
   TEventNewNode,
 } from '@holistix-forge/core-graph';
 import { TGraphNode } from '@holistix-forge/core-graph';
-import { error, UserException } from '@holistix-forge/log';
+import { error, UserException, log, EPriority } from '@holistix-forge/log';
 import { TJsonObject } from '@holistix-forge/simple-types';
 
 import { TWhiteboardSharedData } from '../index';
+import { TEventProjectInit } from '@holistix-forge/gateway';
 import {
   TWhiteboardEvent,
   TEventNewView,
@@ -50,7 +48,7 @@ import {
   TNodeView,
 } from './whiteboard-types';
 import { getAbsolutePosition } from './utils/position-utils';
-import { edgeId } from './components/apis/types/edge';
+import { edgeId } from './whiteboard-edge-utils';
 import { TCollabBackendExports } from '@holistix-forge/collab';
 import { TGatewayExports } from '@holistix-forge/gateway';
 
@@ -58,10 +56,10 @@ import { TGatewayExports } from '@holistix-forge/gateway';
  *
  */
 
-type ReducedEvents = TWhiteboardEvent | TCoreEvent;
+type ReducedEvents = TWhiteboardEvent | TCoreEvent | TEventProjectInit;
 
 type RequiredExports = {
-  collab: TCollabBackendExports<TWhiteboardSharedData & TCoreSharedData>;
+  collab: TCollabBackendExports;
   reducers: TReducersBackendExports;
   gateway: TGatewayExports;
 };
@@ -70,12 +68,15 @@ type RequiredExports = {
  *
  */
 
-export class WhiteboardReducer extends Reducer<ReducedEvents> {
+export class WhiteboardReducer extends ReducerWithCollab<
+  ReducedEvents,
+  TWhiteboardSharedData & TCoreSharedData
+> {
   //
   private depsExports: RequiredExports;
 
   constructor(depsExports: RequiredExports) {
-    super();
+    super(depsExports.collab.registry, 'whiteboard');
     this.depsExports = depsExports;
   }
 
@@ -84,6 +85,9 @@ export class WhiteboardReducer extends Reducer<ReducedEvents> {
     requestData: RequestData
   ): Promise<void> {
     switch (event.type) {
+      case 'project:init':
+        return this._initProject(event, requestData);
+
       case 'whiteboard:new-view':
         return this.newView(event, requestData);
 
@@ -97,18 +101,18 @@ export class WhiteboardReducer extends Reducer<ReducedEvents> {
         );
 
       case 'whiteboard:reduce-node':
-        return this.executeGraphViewAction(event, (gvc) => {
+        return this.executeGraphViewAction(event, requestData, (gvc) => {
           this.changeNodeMode(event as TEventReduceNode, gvc, 'REDUCED');
         });
 
       case 'whiteboard:expand-node':
-        return this.executeGraphViewAction(event, (gvc) => {
+        return this.executeGraphViewAction(event, requestData, (gvc) => {
           this.changeNodeMode(event as TEventExpandNode, gvc, 'EXPANDED');
         });
 
       case 'whiteboard:close-connector':
       case 'whiteboard:open-connector':
-        return this.executeGraphViewAction(event, (gvc) => {
+        return this.executeGraphViewAction(event, requestData, (gvc) => {
           this.openCloseConnector(
             event as TEventCloseConnector | TEventOpenConnector,
             gvc
@@ -116,7 +120,7 @@ export class WhiteboardReducer extends Reducer<ReducedEvents> {
         });
 
       case 'whiteboard:highlight':
-        return this.executeGraphViewAction(event, (gvc) => {
+        return this.executeGraphViewAction(event, requestData, (gvc) => {
           this.setEdgeHighlight(
             event as TEventHighlightFromConnector,
             gvc,
@@ -125,7 +129,7 @@ export class WhiteboardReducer extends Reducer<ReducedEvents> {
         });
 
       case 'whiteboard:unhighlight':
-        return this.executeGraphViewAction(event, (gvc) => {
+        return this.executeGraphViewAction(event, requestData, (gvc) => {
           this.setEdgeHighlight(
             event as TEventUnhighlightFromConnector,
             gvc,
@@ -134,40 +138,60 @@ export class WhiteboardReducer extends Reducer<ReducedEvents> {
         });
 
       case 'whiteboard:filter-out-node':
-        return this.executeGraphViewAction(event, (gvc, nodes, edges) => {
-          this.filterOutNode(event as TEventFilterOutNode, gvc, nodes, edges);
-        });
+        return this.executeGraphViewAction(
+          event,
+          requestData,
+          (gvc, nodes, edges) => {
+            this.filterOutNode(event as TEventFilterOutNode, gvc, nodes, edges);
+          }
+        );
 
       case 'whiteboard:unfilter-out-node':
-        return this.executeGraphViewAction(event, (gvc, nodes, edges) => {
-          this.unfilterOutNode(
-            event as TEventUnfilterOutNode,
-            gvc,
-            nodes,
-            edges
-          );
-        });
+        return this.executeGraphViewAction(
+          event,
+          requestData,
+          (gvc, nodes, edges) => {
+            this.unfilterOutNode(
+              event as TEventUnfilterOutNode,
+              gvc,
+              nodes,
+              edges
+            );
+          }
+        );
 
       case 'whiteboard:open-node':
       case 'whiteboard:close-node':
-        return this.executeGraphViewAction(event, (gvc, nodes, edges) => {
-          this.openCloseNode(
-            event as TEventOpenNode | TEventCloseNode,
-            gvc,
-            nodes,
-            edges
-          );
-        });
+        return this.executeGraphViewAction(
+          event,
+          requestData,
+          (gvc, nodes, edges) => {
+            this.openCloseNode(
+              event as TEventOpenNode | TEventCloseNode,
+              gvc,
+              nodes,
+              edges
+            );
+          }
+        );
 
       case 'whiteboard:resize-node':
-        return this.executeGraphViewAction(event, (gvc, nodes, edges) => {
-          this.resizeNode(event as TEventResizeNode, gvc, nodes, edges);
-        });
+        return this.executeGraphViewAction(
+          event,
+          requestData,
+          (gvc, nodes, edges) => {
+            this.resizeNode(event as TEventResizeNode, gvc, nodes, edges);
+          }
+        );
 
       case 'whiteboard:update-graph-view':
-        return this.executeGraphViewAction(event, (gvc, nodes, edges) => {
-          this.updateGraphview(gvc, nodes, edges);
-        });
+        return this.executeGraphViewAction(
+          event,
+          requestData,
+          (gvc, nodes, edges) => {
+            this.updateGraphview(gvc, nodes, edges);
+          }
+        );
 
       case 'whiteboard:new-group':
         this.newGroup(event, requestData);
@@ -178,11 +202,11 @@ export class WhiteboardReducer extends Reducer<ReducedEvents> {
         return Promise.resolve();
 
       case 'whiteboard:group-property-change':
-        this.groupPropertyChange(event);
+        this.groupPropertyChange(event, requestData);
         return Promise.resolve();
 
       case 'whiteboard:shape-property-change':
-        this.shapePropertyChange(event);
+        this.shapePropertyChange(event, requestData);
         return Promise.resolve();
 
       case 'whiteboard:delete-shape':
@@ -200,35 +224,51 @@ export class WhiteboardReducer extends Reducer<ReducedEvents> {
         return Promise.resolve();
 
       case 'core:new-node':
-        this.newNode(event);
+        this.newNode(event, requestData);
         this.updateAllGraphviews(event, requestData);
         return Promise.resolve();
 
       case 'whiteboard:edge-property-change':
         return (async () => {
-          await this.edgePropertyChange(event);
+          await this.edgePropertyChange(event, requestData);
           this.updateAllGraphviews(event, requestData);
         })();
 
       case 'whiteboard:move-node-to-front':
-        return this.executeGraphViewAction(event, (gvc, nodes, edges) => {
-          this.moveNodeToFront(event, gvc);
-        });
+        return this.executeGraphViewAction(
+          event,
+          requestData,
+          (gvc, nodes, edges) => {
+            this.moveNodeToFront(event, gvc);
+          }
+        );
 
       case 'whiteboard:move-node-to-back':
-        return this.executeGraphViewAction(event, (gvc, nodes, edges) => {
-          this.moveNodeToBack(event, gvc);
-        });
+        return this.executeGraphViewAction(
+          event,
+          requestData,
+          (gvc, nodes, edges) => {
+            this.moveNodeToBack(event, gvc);
+          }
+        );
 
       case 'whiteboard:lock-node':
-        return this.executeGraphViewAction(event, (gvc, nodes, edges) => {
-          this.lockNode(event, gvc, nodes, edges, requestData.user_id);
-        });
+        return this.executeGraphViewAction(
+          event,
+          requestData,
+          (gvc, nodes, edges) => {
+            this.lockNode(event, gvc, nodes, edges, requestData.user_id);
+          }
+        );
 
       case 'whiteboard:disable-feature':
-        return this.executeGraphViewAction(event, (gvc, nodes, edges) => {
-          this.disableFeature(event, gvc);
-        });
+        return this.executeGraphViewAction(
+          event,
+          requestData,
+          (gvc, nodes, edges) => {
+            this.disableFeature(event, gvc);
+          }
+        );
 
       default:
         return Promise.resolve();
@@ -237,33 +277,30 @@ export class WhiteboardReducer extends Reducer<ReducedEvents> {
 
   private executeGraphViewAction<T extends { viewId: string }>(
     event: T,
+    requestData: RequestData,
     action: (
       gvc: TGraphView,
       nodes: Map<string, TGraphNode>,
       edges: TEdge[]
     ) => void
   ): Promise<void> {
+    const collab = this.getCollab(requestData);
     const viewId = event.viewId;
-    const gv =
-      this.depsExports.collab.collab.sharedData['whiteboard:graphViews'].get(viewId);
+    const gv = collab.sharedData['whiteboard:graphViews'].get(viewId);
     if (!gv) {
       error('SPACE', `Graph view ${viewId} not found`);
       return Promise.resolve();
     }
 
     const gvc = structuredClone(gv);
-    const nodes = this.depsExports.collab.collab.sharedData[
-      'core-graph:nodes'
-    ] as unknown as Map<string, TGraphNode>;
-    const edges = this.depsExports.collab.collab.sharedData[
-      'core-graph:edges'
-    ] as unknown as TEdge[];
+    const nodes = collab.sharedData['core-graph:nodes'] as unknown as Map<
+      string,
+      TGraphNode
+    >;
+    const edges = collab.sharedData['core-graph:edges'] as unknown as TEdge[];
 
     action(gvc, nodes, edges);
-    this.depsExports.collab.collab.sharedData['whiteboard:graphViews'].set(
-      viewId,
-      gvc
-    );
+    collab.sharedData['whiteboard:graphViews'].set(viewId, gvc);
     return Promise.resolve();
   }
 
@@ -278,14 +315,13 @@ export class WhiteboardReducer extends Reducer<ReducedEvents> {
       edges: TEdge[]
     ) => void
   ): Promise<void> {
-    const gv = this.depsExports.collab.collab.sharedData[
-      'whiteboard:graphViews'
-    ].get(event.viewId);
+    const collab = this.getCollab(requestData);
+    const gv = collab.sharedData['whiteboard:graphViews'].get(event.viewId);
     if (!gv) {
       error('SPACE', `Graph view ${event.viewId} not found`);
       return Promise.resolve();
     }
-    const nv = gv.nodeViews.find((n) => n.id === event.nid);
+    const nv = gv.nodeViews.find((n: TNodeView) => n.id === event.nid);
     if (!nv) {
       error('SPACE', `Node ${event.nid} not found in graph view`);
       return Promise.resolve();
@@ -295,9 +331,7 @@ export class WhiteboardReducer extends Reducer<ReducedEvents> {
 
     if (nv.lockedBy) {
       authorized = false;
-      const nodeData = this.depsExports.collab.collab.sharedData[
-        'core-graph:nodes'
-      ].get(event.nid);
+      const nodeData = collab.sharedData['core-graph:nodes'].get(event.nid);
       const jwt = requestData.jwt as { project_id?: string };
       const project_id = jwt?.project_id;
       let admin = false;
@@ -317,7 +351,7 @@ export class WhiteboardReducer extends Reducer<ReducedEvents> {
     }
 
     if (authorized) {
-      return this.executeGraphViewAction(event, action);
+      return this.executeGraphViewAction(event, requestData, action);
     } else
       throw new UserException('You are not authorized to perform this action');
   }
@@ -368,7 +402,8 @@ export class WhiteboardReducer extends Reducer<ReducedEvents> {
     }
 
     node.status.forceOpened = action.type === 'whiteboard:open-node';
-    node.status.forceClosed = action.type === 'whiteboard:open-node' ? false : true;
+    node.status.forceClosed =
+      action.type === 'whiteboard:open-node' ? false : true;
     this.updateGraphview(gv, nodes, edges);
   }
 
@@ -743,7 +778,6 @@ export class WhiteboardReducer extends Reducer<ReducedEvents> {
       let currentNodeId = nodeId;
 
       while (true) {
-        // eslint-disable-next-line no-loop-func
         const nodeView = gv.nodeViews.find((n) => n.id === currentNodeId);
         if (!nodeView?.parentId) break;
 
@@ -976,10 +1010,12 @@ export class WhiteboardReducer extends Reducer<ReducedEvents> {
 
   //
 
-  groupPropertyChange(event: TEventGroupPropertyChange) {
-    const node = this.depsExports.collab.collab.sharedData[
-      'core-graph:nodes'
-    ].get(event.groupId);
+  groupPropertyChange(
+    event: TEventGroupPropertyChange,
+    requestData: RequestData
+  ) {
+    const collab = this.getCollab(requestData);
+    const node = collab.sharedData['core-graph:nodes'].get(event.groupId);
     if (!node) {
       error('SPACE', `node ${event.groupId} not found`);
       return;
@@ -988,18 +1024,17 @@ export class WhiteboardReducer extends Reducer<ReducedEvents> {
       ...node.data,
       ...event.properties,
     };
-    this.depsExports.collab.collab.sharedData['core-graph:nodes'].set(
-      event.groupId,
-      node
-    );
+    collab.sharedData['core-graph:nodes'].set(event.groupId, node);
   }
 
   //
 
-  shapePropertyChange(event: TEventShapePropertyChange) {
-    const node = this.depsExports.collab.collab.sharedData[
-      'core-graph:nodes'
-    ].get(event.shapeId);
+  shapePropertyChange(
+    event: TEventShapePropertyChange,
+    requestData: RequestData
+  ) {
+    const collab = this.getCollab(requestData);
+    const node = collab.sharedData['core-graph:nodes'].get(event.shapeId);
     if (!node) {
       error('SPACE', `node ${event.shapeId} not found`);
       return;
@@ -1008,33 +1043,24 @@ export class WhiteboardReducer extends Reducer<ReducedEvents> {
       ...node.data,
       ...event.properties,
     };
-    this.depsExports.collab.collab.sharedData['core-graph:nodes'].set(
-      event.shapeId,
-      node
-    );
+    collab.sharedData['core-graph:nodes'].set(event.shapeId, node);
   }
 
   //
 
-  edgePropertyChange(event: TEventEdgePropertyChange) {
-    return this.depsExports.collab.collab.sharedTypes.transaction(async () => {
+  edgePropertyChange(
+    event: TEventEdgePropertyChange,
+    requestData: RequestData
+  ) {
+    const collab = this.getCollab(requestData);
+    return collab.sharedTypes.transaction(async () => {
       let edge;
       let i;
-      for (
-        i = 0;
-        i <
-        this.depsExports.collab.collab.sharedData['core-graph:edges'].length;
-        i++
-      ) {
+      for (i = 0; i < collab.sharedData['core-graph:edges'].length; i++) {
         if (
-          edgeId(
-            this.depsExports.collab.collab.sharedData['core-graph:edges'].get(i)
-          ) === event.edgeId
+          edgeId(collab.sharedData['core-graph:edges'].get(i)) === event.edgeId
         ) {
-          edge =
-            this.depsExports.collab.collab.sharedData['core-graph:edges'].get(
-              i
-            );
+          edge = collab.sharedData['core-graph:edges'].get(i);
           break;
         }
       }
@@ -1046,19 +1072,19 @@ export class WhiteboardReducer extends Reducer<ReducedEvents> {
       (edge as unknown as { renderProps: TJsonObject }).renderProps = event
         .properties.renderProps as TJsonObject;
 
-      this.depsExports.collab.collab.sharedData['core-graph:edges'].delete(i);
-      this.depsExports.collab.collab.sharedData['core-graph:edges'].push([
-        edge,
-      ]);
+      collab.sharedData['core-graph:edges'].delete(i);
+      collab.sharedData['core-graph:edges'].push([edge]);
     });
   }
 
   //
 
-  newNode(event: TEventNewNode) {
-    this.depsExports.collab.collab.sharedData['whiteboard:graphViews'].forEach(
-      (gv, k) => {
-        gv.nodeViews.push({
+  newNode(event: TEventNewNode, requestData: RequestData) {
+    const collab = this.getCollab(requestData);
+    collab.sharedData['whiteboard:graphViews'].forEach(
+      (gv: TGraphView, k: string) => {
+        const gvc = structuredClone(gv);
+        gvc.nodeViews.push({
           id: event.nodeData.id,
           type: event.nodeData.type,
           position:
@@ -1067,6 +1093,7 @@ export class WhiteboardReducer extends Reducer<ReducedEvents> {
               : { x: 0, y: 0 },
           status: nodeViewDefaultStatus(),
         });
+        collab.sharedData['whiteboard:graphViews'].set(k, gvc);
       }
     );
   }
@@ -1074,11 +1101,9 @@ export class WhiteboardReducer extends Reducer<ReducedEvents> {
   //
 
   newView(event: TEventNewView, requestData: RequestData) {
+    const collab = this.getCollab(requestData);
     const nv: TGraphView = defaultGraphView();
-    this.depsExports.collab.collab.sharedData['whiteboard:graphViews'].set(
-      event.viewId,
-      nv
-    );
+    collab.sharedData['whiteboard:graphViews'].set(event.viewId, nv);
 
     this.depsExports.reducers.processEvent(
       {
@@ -1094,8 +1119,9 @@ export class WhiteboardReducer extends Reducer<ReducedEvents> {
   //
 
   updateAllGraphviews(event: ReducedEvents, requestData: RequestData) {
-    this.depsExports.collab.collab.sharedData['whiteboard:graphViews'].forEach(
-      (gv, k) => {
+    const collab = this.getCollab(requestData);
+    collab.sharedData['whiteboard:graphViews'].forEach(
+      (gv: TGraphView, k: string) => {
         this.depsExports.reducers.processEvent(
           {
             type: 'whiteboard:update-graph-view',
@@ -1118,11 +1144,12 @@ export class WhiteboardReducer extends Reducer<ReducedEvents> {
   }
 
   deleteGroup(event: TEventDeleteGroup, requestData: RequestData) {
+    const collab = this.getCollab(requestData);
     const { groupId } = event;
 
     // Before deleting the group, detach all child nodes and set their positions to absolute
-    this.depsExports.collab.collab.sharedData['whiteboard:graphViews'].forEach(
-      (gv, viewId) => {
+    collab.sharedData['whiteboard:graphViews'].forEach(
+      (gv: TGraphView, viewId: string) => {
         // Find all nodes where parentId matches the group being deleted
         const childNodes = gv.nodeViews.filter(
           (node) => node.parentId === groupId
@@ -1153,6 +1180,46 @@ export class WhiteboardReducer extends Reducer<ReducedEvents> {
         id: groupId,
       },
       requestData
+    );
+  }
+
+  /**
+   * Initialize project with default whiteboard view
+   * Called when a new project is created
+   */
+  private async _initProject(
+    event: TEventProjectInit,
+    requestData: RequestData
+  ): Promise<void> {
+    const collab = this.getCollab(requestData);
+    const graphViews = collab.sharedData['whiteboard:graphViews'];
+
+    const currentSize = graphViews.copy().size;
+    log(
+      EPriority.Info,
+      'WHITEBOARD_INIT',
+      `project:init called for project ${event.project_id}, current graphViews size: ${currentSize}`
+    );
+
+    // Check if already initialized (idempotent)
+    if (currentSize > 0) {
+      log(
+        EPriority.Info,
+        'WHITEBOARD_INIT',
+        `Skipping initialization - graphViews already has ${currentSize} view(s)`
+      );
+      return;
+    }
+
+    // Create default view
+    const viewId = 'view-1';
+    const newView: TGraphView = defaultGraphView();
+
+    graphViews.set(viewId, newView);
+    log(
+      EPriority.Info,
+      'WHITEBOARD_INIT',
+      `✅ Created default graphView '${viewId}' for project ${event.project_id}`
     );
   }
 }

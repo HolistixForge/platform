@@ -4,7 +4,18 @@
   "type": "module",
   "private": true,
   "dependencies": {
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "express": "^4.21.2",
+    "nocache": "^4.0.0",
+    "cookie-parser": "^1.4.7",
+    "@holistix-forge/log": "0.0.1",
+    "@holistix-forge/simple-types": "0.0.1",
+    "@opentelemetry/api": "^1.9.0",
+    "express-openapi-validator": "^5.6.0",
+    "jsonwebtoken": "^9.0.2",
+    "ts-essentials": "^10.0.4",
+    "pg": "^8.13.1",
+    "form-data": "^4.0.1"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

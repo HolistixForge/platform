@@ -1,7 +1,7 @@
 import { Whiteboard } from '@holistix-forge/whiteboard/frontend';
 
 import './node-editor.scss';
-import { useProject } from '../../project-context';
+import { useProject } from '@holistix-forge/frontend-data';
 
 /**
  *
