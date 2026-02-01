@@ -147,7 +147,7 @@ export const RightPanels: FC<RightPanelsProps> = ({
             <div
               style={{
                 width: '2px',
-                backgroundColor: isResizing ? '#007acc' : 'var(--c-pink-4)',
+                backgroundColor: isResizing ? '#007acc' : 'var(--primary-600)',
                 cursor: 'col-resize',
                 position: 'relative',
                 zIndex: 10,
@@ -190,7 +190,7 @@ export const RightPanels: FC<RightPanelsProps> = ({
                   right: '10px',
                   width: '20px',
                   height: '20px',
-                  backgroundColor: 'var(--c-pink-4)',
+                  backgroundColor: 'var(--primary-600)',
                   cursor: 'pointer',
                   borderRadius: '3px',
                   display: 'flex',

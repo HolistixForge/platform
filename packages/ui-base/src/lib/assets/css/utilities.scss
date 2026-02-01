@@ -1,0 +1,246 @@
+// ============================================================================
+// UTILITY CLASSES
+// Minimal reusable layout patterns — only for patterns used in 5+ places.
+// Replaces common Tailwind utility classes with SCSS equivalents.
+// ============================================================================
+
+// --- Flexbox Layout ---
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.items-start {
+  align-items: flex-start;
+}
+
+.items-end {
+  align-items: flex-end;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.justify-end {
+  justify-content: flex-end;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.flex-shrink-0 {
+  flex-shrink: 0;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+// --- Sizing ---
+.w-full {
+  width: 100%;
+}
+
+.h-full {
+  height: 100%;
+}
+
+.w-fit {
+  width: fit-content;
+}
+
+.min-w-0 {
+  min-width: 0;
+}
+
+// --- Overflow ---
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.overflow-auto {
+  overflow: auto;
+}
+
+.overflow-y-auto {
+  overflow-y: auto;
+}
+
+// --- Position ---
+.relative {
+  position: relative;
+}
+
+.absolute {
+  position: absolute;
+}
+
+// --- Interaction ---
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.select-none {
+  user-select: none;
+}
+
+.pointer-events-none {
+  pointer-events: none;
+}
+
+// --- Text ---
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.whitespace-nowrap {
+  white-space: nowrap;
+}
+
+.font-bold {
+  font-weight: var(--font-weight-bold);
+}
+
+.font-medium {
+  font-weight: var(--font-weight-medium);
+}
+
+// --- Grid ---
+.grid {
+  display: grid;
+}
+
+// --- Visibility ---
+.hidden {
+  display: none;
+}
+
+.opacity-0 {
+  opacity: 0;
+}
+
+.opacity-50 {
+  opacity: 0.5;
+}
+
+// --- Fill Utilities (SVG) ---
+.fill-cyan {
+  fill: var(--cyan-300);
+}
+.fill-cyan-muted {
+  fill: var(--cyan-400);
+}
+.fill-cyan-accent {
+  fill: var(--cyan-100);
+}
+.fill-red {
+  fill: var(--red-400);
+}
+.fill-orange {
+  fill: var(--orange-300);
+}
+.fill-orange-muted {
+  fill: var(--orange-200);
+}
+.fill-neutral-light {
+  fill: var(--neutral-2);
+}
+.fill-neutral {
+  fill: var(--neutral-8);
+}
+.fill-neutral-dark {
+  fill: var(--neutral-11);
+}
+.fill-surface-dark {
+  fill: var(--surface-800);
+}
+.fill-primary {
+  fill: var(--primary-500);
+}
+.fill-green {
+  fill: var(--green-300);
+}
+.fill-bg-app {
+  fill: var(--surface-900);
+}
+.fill-red-muted {
+  fill: var(--red-300);
+}
+.fill-white {
+  fill: var(--white);
+}
+
+// --- Stroke Utilities (SVG) ---
+.stroke-yellow {
+  stroke: var(--yellow-300);
+}
+.stroke-orange {
+  stroke: var(--orange-300);
+}
+.stroke-cyan {
+  stroke: var(--cyan-300);
+}
+.stroke-red {
+  stroke: var(--red-400);
+}
+.stroke-green {
+  stroke: var(--green-400);
+}
+.stroke-neutral-light {
+  stroke: var(--neutral-2);
+}
+.stroke-neutral {
+  stroke: var(--neutral-8);
+}
+.stroke-white {
+  stroke: var(--white);
+}

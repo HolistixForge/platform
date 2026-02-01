@@ -68,23 +68,46 @@ export const ResourceSelection = ({ isOpen }: ResourceButtonsProps) => {
   return (
     <div
       onClick={() => setIsMenuOpen(!isMenuOpen)}
-      style={{ backgroundColor: ressources[selected].color }}
-      className={`cursor-pointer flex flex-row space-x-4 text-white h-[72px] min-w-[388px] ${
-        isMenuOpen ? 'rounded-b-none' : ''
-      } rounded-lg pl-[38px] uppercase relative text-[20px] py-[10px] items-center justify-between`}
+      style={{
+        backgroundColor: ressources[selected].color,
+        height: '72px',
+        minWidth: '388px',
+        borderRadius: isMenuOpen ? '8px 8px 0 0' : '8px',
+        paddingLeft: '38px',
+        textTransform: 'uppercase',
+        fontSize: '20px',
+        padding: '10px 0 10px 38px',
+        color: 'white',
+        display: 'flex',
+        flexDirection: 'row',
+        gap: '16px',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        cursor: 'pointer',
+        position: 'relative',
+      }}
     >
       {ressources[selected].name}
       <div className="flex items-center h-full">
-        <div className="h-full bg-white w-px" />
+        <div
+          className="h-full"
+          style={{ backgroundColor: 'white', width: '1px' }}
+        />
         <icons.ChevronDown
-          className={`h-10 w-10 fill-white transition-transform origin-center ${
-            isMenuOpen ? 'rotate-90' : ''
-          }`}
+          style={{
+            height: '40px',
+            width: '40px',
+            fill: 'white',
+            transition: 'transform 0.2s',
+            transformOrigin: 'center',
+            transform: isMenuOpen ? 'rotate(90deg)' : undefined,
+          }}
         />
       </div>
       {isMenuOpen && (
         <div
-          className="absolute w-full left-0 top-full !mx-0"
+          className="absolute w-full"
+          style={{ left: 0, top: '100%', margin: 0 }}
           onClick={() => {
             setIsMenuOpen(false);
           }}
@@ -95,8 +118,18 @@ export const ResourceSelection = ({ isOpen }: ResourceButtonsProps) => {
               <div
                 key={ressource.id}
                 onClick={() => setSelected(ressource.id)}
-                className={`cursor-pointer hover:brightness-75 transition-all flex text-white h-[72px] w-full pl-[38px] uppercase text-[20px] py-[10px] items-center justify-between`}
-                style={{ backgroundColor: ressource.color }}
+                className="cursor-pointer flex items-center justify-between"
+                style={{
+                  transition: 'all 0.2s',
+                  color: 'white',
+                  height: '72px',
+                  width: '100%',
+                  paddingLeft: '38px',
+                  textTransform: 'uppercase',
+                  fontSize: '20px',
+                  padding: '10px 0 10px 38px',
+                  backgroundColor: ressource.color,
+                }}
               >
                 {ressource.name}
               </div>

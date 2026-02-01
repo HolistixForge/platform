@@ -80,7 +80,15 @@ export function MobileBlockOverlay({
       {!fullscreen && (
         <div className="go-fullscreen-button">
           <button
-            className="px-4 py-2 bg-blue-700 text-white rounded-lg shadow font-semibold hover:bg-blue-800 transition"
+            className="go-fullscreen-btn"
+            style={{
+              padding: '8px 16px',
+              backgroundColor: 'var(--color-accent-muted)',
+              color: 'var(--white)',
+              borderRadius: '8px',
+              boxShadow: 'var(--shadow-sm)',
+              fontWeight: 600,
+            }}
             onClick={handleGoFullscreen}
           >
             Go Fullscreen
@@ -90,7 +98,7 @@ export function MobileBlockOverlay({
       {/* Overlay only if not hidden, not dismissed, not disabled */}
       {!(hide || dismissed || disabled) && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm lg:hidden"
+          className="flex items-center justify-center"
           style={{
             pointerEvents: 'auto',
             minHeight: '100vh',
@@ -102,18 +110,55 @@ export function MobileBlockOverlay({
             left: 0,
             right: 0,
             bottom: 0,
+            zIndex: 9999,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(4px)',
           }}
         >
-          <div className="bg-white/90 rounded-xl p-8 shadow-xl text-center max-w-xs w-full mx-4">
-            <h2 className="text-2xl font-bold mb-4 text-gray-900">Sorry!</h2>
-            <p className="text-gray-800 mb-2">
+          <div
+            className="text-center w-full"
+            style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              borderRadius: '12px',
+              padding: '32px',
+              boxShadow: 'var(--shadow-lg)',
+              maxWidth: '320px',
+              margin: '0 16px',
+            }}
+          >
+            <h2
+              className="font-bold"
+              style={{
+                fontSize: '1.5rem',
+                lineHeight: '2rem',
+                marginBottom: '16px',
+                color: '#111827',
+              }}
+            >
+              Sorry!
+            </h2>
+            <p style={{ color: '#1f2937', marginBottom: '8px' }}>
               This app is not well adapted for mobile yet.
             </p>
-            <p className="text-gray-600 text-sm mb-4">
+            <p
+              style={{
+                color: '#4b5563',
+                fontSize: 'var(--font-size-sm)',
+                marginBottom: '16px',
+              }}
+            >
               Please visit us from a desktop browser for the best experience.
             </p>
             <button
-              className="mt-2 px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold shadow hover:bg-blue-700 transition"
+              style={{
+                marginTop: '8px',
+                padding: '8px 24px',
+                backgroundColor: 'var(--color-accent)',
+                color: 'var(--white)',
+                borderRadius: '8px',
+                fontWeight: 600,
+                boxShadow: 'var(--shadow-sm)',
+              }}
               onClick={handleOk}
             >
               OK

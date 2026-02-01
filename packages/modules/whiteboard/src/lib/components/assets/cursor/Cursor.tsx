@@ -41,8 +41,8 @@ const CursorIcon = ({ ...props }: React.HTMLAttributes<SVGElement>) => (
     <path
       {...props}
       d="M2 2.38L9.88966 19.38L12.0138 13.09H24L2 2.38Z"
-      fill="var(--color-background)"
-      className="stroke--c-gray-2"
+      fill="var(--color-bg-app)"
+      className="stroke-neutral-light"
     />
   </svg>
 );

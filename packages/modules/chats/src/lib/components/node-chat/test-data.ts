@@ -18,7 +18,7 @@ export const useTestChatBox = (_status: ChatboxProps['status']) => {
     const n: SimpleMessage = {
       username: 'local:John Doe',
       content: msg,
-      color: 'var(--c-orange-2)',
+      color: 'var(--orange-200)',
       space: '48946',
       id: `${messageList.length}`,
       date: new Date(),
@@ -61,17 +61,17 @@ export const useTestChatBox = (_status: ChatboxProps['status']) => {
 export const testUsers = [
   {
     username: 'github:Alice Dj',
-    color: 'var(--c-pink-4)',
+    color: 'var(--primary-600)',
     picture: null,
   },
   {
     username: 'local:Mickey Willis',
-    color: 'var(--c-green-1)',
+    color: 'var(--green-400)',
     picture: null,
   },
   {
     username: 'gitlab:Paul Jean-Claude Junior de la Vega',
-    color: 'var(--c-blue-3)',
+    color: 'var(--cyan-300)',
     picture: null,
   },
 ];

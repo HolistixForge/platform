@@ -1,3 +1,20 @@
+:root {
+  // --- User Bubble / Avatar domain tokens ---
+  --c-live-indicator: #f7c8de;
+  --c-live-ping: #f72585;
+  --c-plus-n-bg: #3c2986;
+  --c-plus-n-border: #451d5f;
+  --c-host-ping: #8498ff;
+  --c-host-label: #1032e3;
+
+  // --- Role Badge Colors ---
+  --c-role-custom: #60a5fa;
+
+  // --- Brand Colors ---
+  --c-brand-linkedin: #0a66c2;
+  --c-brand-highlight-blue: #007acc;
+}
+
 .AvatarRoot {
   display: inline-flex;
   align-items: center;
@@ -9,6 +26,11 @@
   flex: 0 0 var(--avatar-width);
   border-radius: 100%;
   margin-right: 10px;
+
+  &:hover .avatar-host-label {
+    transform: translateX(-50%) translateY(-190%);
+    opacity: 1;
+  }
 
   .AvatarImage {
     width: 100%;
@@ -24,9 +46,9 @@
     border-radius: 100%;
     align-items: center;
     justify-content: center;
-    background-color: var(--c-gray-4);
-    color: var(--c-gray-8);
-    font-size: 15px;
+    background-color: var(--neutral-4);
+    color: var(--neutral-8);
+    font-size: var(--font-size-lg);
     line-height: 1;
     font-weight: 500;
     text-transform: uppercase;
@@ -46,7 +68,7 @@
   &.gitlab {
     background-color: var(--user-color);
     border-radius: 50%;
-    color: var(--color-background);
+    color: var(--color-bg-app);
   }
 
   &.linkedin {

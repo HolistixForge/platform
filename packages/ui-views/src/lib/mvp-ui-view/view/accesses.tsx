@@ -12,27 +12,58 @@ export type AccessesProps = Record<string, never>;
 
 export const Accesses = (_props: AccessesProps) => {
   return (
-    <div className="w-[1920px] h-[1080px] border">
+    <div style={{ width: '1920px', height: '1080px', border: '1px solid' }}>
       <Header hasNotifications />
       <ResourceBar title="Accesses" />
-      <div className="flex justify-between pl-[20px] pt-[7px]">
-        <div className="flex items-center gap-[9px]">
-          <span className="text-[9px] text-white/80">Accesses</span>
-          <div className="h-1 w-1 rounded-full bg-white/20" />
+      <div
+        className="flex justify-between"
+        style={{ paddingLeft: '20px', paddingTop: '7px' }}
+      >
+        <div className="flex items-center" style={{ gap: '9px' }}>
+          <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.8)' }}>
+            Accesses
+          </span>
+          <div
+            style={{
+              height: '4px',
+              width: '4px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(255,255,255,0.2)',
+            }}
+          />
         </div>
       </div>
-      <div className="h-[calc(1080px-90px)] relative pt-[20px] flex gap-[30px]">
+      <div
+        className="relative flex"
+        style={{
+          height: 'calc(1080px - 90px)',
+          paddingTop: '20px',
+          gap: '30px',
+        }}
+      >
         <Sidebar active={'authorizations'} items={menuItems} />
 
-        <div className="w-full mt-4">
-          <section className="pt-[10px] w-full pr-[50px] grid grid-cols-12 gap-[30px]">
-            <div className="col-span-4">
+        <div className="w-full" style={{ marginTop: '16px' }}>
+          <section
+            className="grid"
+            style={{
+              paddingTop: '10px',
+              width: '100%',
+              paddingRight: '50px',
+              gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
+              gap: '30px',
+            }}
+          >
+            <div style={{ gridColumn: 'span 4' }}>
               <UserList />
             </div>
-            <div className="col-span-4 flex flex-col gap-5">
+            <div
+              className="flex flex-col"
+              style={{ gridColumn: 'span 4', gap: '20px' }}
+            >
               <FilterBox name="Groups" mode="Group" />
             </div>
-            <div className="col-span-4">
+            <div style={{ gridColumn: 'span 4' }}>
               <FilterBox name="Roles" mode="Role" />
             </div>
           </section>

@@ -4,11 +4,11 @@ import { CSSProperties } from 'react';
 const s1 = {
   width: '120px',
   height: '120px',
-  border: 'solid 1px var(--c-gray-9)',
+  border: 'solid 1px var(--neutral-9)',
   position: 'relative',
   backgroundRepeat: 'no-repeat',
   backgroundPosition: '50% 50%',
-  backgroundColor: 'var(--ca-white-1)',
+  backgroundColor: 'var(--alpha-white-10)',
 } as CSSProperties;
 
 const s3 = {
@@ -16,7 +16,7 @@ const s3 = {
   bottom: '-9px',
   left: 0,
   fontSize: '9px',
-  color: 'var(--c-white-1)',
+  color: 'var(--white)',
 } as CSSProperties;
 
 const bgs = [

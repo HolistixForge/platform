@@ -28,7 +28,7 @@
 
 .table-item {
   background: rgba(255, 255, 255, 0.1);
-  border: 1px solid #404040;
+  border: 1px solid var(--c-neutral-border);
   border-radius: 8px;
   padding: 16px;
   cursor: grab;
@@ -43,8 +43,8 @@
   &:hover {
     background: rgba(54, 54, 54, 0.2) !important;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    border-color: #4dabf7;
+    box-shadow: var(--shadow-card-hover);
+    border-color: var(--c-highlight-blue);
   }
 
   &.dragging {
@@ -54,8 +54,8 @@
 
   .table-item-header {
     .table-item-title {
-      color: #ffffff;
-      font-size: 16px;
+      color: var(--white);
+      font-size: var(--font-size-lg);
       font-weight: 600;
       margin: 0 0 8px 0;
       line-height: 1.4;
@@ -69,10 +69,10 @@
       .table-count,
       .table-fields {
         background: rgba(77, 171, 247, 0.2);
-        color: #4dabf7;
+        color: var(--c-highlight-blue);
         padding: 2px 6px;
         border-radius: 10px;
-        font-size: 11px;
+        font-size: var(--font-size-xs);
         font-weight: 500;
       }
     }
@@ -93,23 +93,23 @@
       border-radius: 4px;
 
       .field-label {
-        color: #868e96;
-        font-size: 12px;
+        color: var(--c-neutral-text-muted);
+        font-size: var(--font-size-sm);
         font-weight: 500;
         min-width: 60px;
       }
 
       .field-name {
-        color: #ffffff;
-        font-size: 13px;
+        color: var(--white);
+        font-size: var(--font-size-md);
         font-weight: 500;
       }
     }
 
     .table-sample-records {
       .sample-label {
-        color: #868e96;
-        font-size: 12px;
+        color: var(--c-neutral-text-muted);
+        font-size: var(--font-size-sm);
         font-weight: 500;
         display: block;
         margin-bottom: 4px;
@@ -121,12 +121,12 @@
         gap: 4px;
 
         .sample-record {
-          color: #ddd;
-          font-size: 12px;
+          color: var(--c-neutral-text-light);
+          font-size: var(--font-size-sm);
           padding: 4px 8px;
           background: rgba(255, 255, 255, 0.05);
           border-radius: 3px;
-          border-left: 3px solid #4dabf7;
+          border-left: 3px solid var(--c-highlight-blue);
         }
       }
     }
@@ -145,10 +145,10 @@
 
       .view-badge {
         background: rgba(255, 255, 255, 0.1);
-        color: #ffffff;
+        color: var(--white);
         padding: 2px 6px;
         border-radius: 10px;
-        font-size: 10px;
+        font-size: var(--font-size-2xs);
         font-weight: 500;
         text-transform: capitalize;
       }
@@ -159,15 +159,15 @@
 // Color variations for different table types
 .table-item {
   &.has-records {
-    border-left: 4px solid #51cf66;
+    border-left: 4px solid var(--c-highlight-green);
   }
 
   &.empty-table {
-    border-left: 4px solid #868e96;
+    border-left: 4px solid var(--c-neutral-text-muted);
     opacity: 0.7;
   }
 
   &.many-fields {
-    border-left: 4px solid #ffd43b;
+    border-left: 4px solid var(--c-highlight-yellow);
   }
 }

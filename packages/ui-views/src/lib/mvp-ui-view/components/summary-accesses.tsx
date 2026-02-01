@@ -26,8 +26,8 @@ export const SummaryAccesses = ({ activeTab }: SummaryAccessesProps) => {
   }, [activeTab]);
 
   return (
-    <div className="flex flex-col gap-[10px] w-full">
-      <div className="flex items-center gap-[14px]">
+    <div className="flex flex-col w-full" style={{ gap: '10px' }}>
+      <div className="flex items-center" style={{ gap: '14px' }}>
         <icons.SummaryAccess />
         <Tabs
           currentTabs={activeTab}
@@ -47,10 +47,21 @@ export const SummaryAccesses = ({ activeTab }: SummaryAccessesProps) => {
           ]}
         />
       </div>
-      <div className="flex flex-col gap-[18px]">
-        <div className="flex flex-col min-w-[300px] gap-[10px]">
+      <div className="flex flex-col" style={{ gap: '18px' }}>
+        <div
+          className="flex flex-col"
+          style={{ minWidth: '300px', gap: '10px' }}
+        >
           <div
-            className="cursor-pointer transition-all hover:bg-white/20 flex items-center justify-between bg-[#2A2A3F] h-[30px] rounded-[4px] px-[14px] text-[12px]"
+            className="cursor-pointer flex items-center justify-between"
+            style={{
+              transition: 'all 0.2s',
+              backgroundColor: '#2A2A3F',
+              height: '30px',
+              borderRadius: '4px',
+              padding: '0 14px',
+              fontSize: '12px',
+            }}
             onClick={() => setInAdmin((prevState) => [...prevState, 'test'])}
           >
             Admin
@@ -58,7 +69,14 @@ export const SummaryAccesses = ({ activeTab }: SummaryAccessesProps) => {
           </div>
 
           {_activeTab === 'users' ? (
-            <div className="px-2 space-y-2">
+            <div
+              style={{
+                padding: '0 8px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+              }}
+            >
               {inAdmin.map((user, index) => (
                 <UserDisplayItem
                   key={index}
@@ -72,7 +90,15 @@ export const SummaryAccesses = ({ activeTab }: SummaryAccessesProps) => {
               ))}
             </div>
           ) : _activeTab === 'groups' ? (
-            <div className={`px-2 space-y-10 ${inAdmin.length > 0 && 'mt-10'}`}>
+            <div
+              style={{
+                padding: '0 8px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '40px',
+                marginTop: inAdmin.length > 0 ? '40px' : undefined,
+              }}
+            >
               {inAdmin.map((user, index) => (
                 <Wrapper
                   resizeBorderColor="red"
@@ -84,7 +110,15 @@ export const SummaryAccesses = ({ activeTab }: SummaryAccessesProps) => {
               ))}
             </div>
           ) : (
-            <div className={`px-2 space-y-10 ${inAdmin.length > 0 && 'mt-10'}`}>
+            <div
+              style={{
+                padding: '0 8px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '40px',
+                marginTop: inAdmin.length > 0 ? '40px' : undefined,
+              }}
+            >
               {inAdmin.map((user, index) => (
                 <Wrapper
                   resizeBorderColor="red"
@@ -97,7 +131,15 @@ export const SummaryAccesses = ({ activeTab }: SummaryAccessesProps) => {
           )}
 
           <div
-            className="cursor-pointer transition-all hover:bg-white/20 flex items-center justify-between bg-[#2A2A3F] h-[30px] rounded-[4px] px-[14px] text-[12px]"
+            className="cursor-pointer flex items-center justify-between"
+            style={{
+              transition: 'all 0.2s',
+              backgroundColor: '#2A2A3F',
+              height: '30px',
+              borderRadius: '4px',
+              padding: '0 14px',
+              fontSize: '12px',
+            }}
             onClick={() => setInWriter((prevState) => [...prevState, 'test'])}
           >
             Writer
@@ -105,7 +147,14 @@ export const SummaryAccesses = ({ activeTab }: SummaryAccessesProps) => {
           </div>
 
           {_activeTab === 'users' ? (
-            <div className="px-2 space-y-2">
+            <div
+              style={{
+                padding: '0 8px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+              }}
+            >
               {inWriter.map((user, index) => (
                 <UserDisplayItem
                   key={index}
@@ -120,7 +169,13 @@ export const SummaryAccesses = ({ activeTab }: SummaryAccessesProps) => {
             </div>
           ) : _activeTab === 'groups' ? (
             <div
-              className={`px-2 space-y-10 ${inWriter.length > 0 && 'mt-10'}`}
+              style={{
+                padding: '0 8px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '40px',
+                marginTop: inWriter.length > 0 ? '40px' : undefined,
+              }}
             >
               {inWriter.map((user, index) => (
                 <Wrapper
@@ -134,7 +189,13 @@ export const SummaryAccesses = ({ activeTab }: SummaryAccessesProps) => {
             </div>
           ) : (
             <div
-              className={`px-2 space-y-10 ${inWriter.length > 0 && 'mt-10'}`}
+              style={{
+                padding: '0 8px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '40px',
+                marginTop: inWriter.length > 0 ? '40px' : undefined,
+              }}
             >
               {inWriter.map((user, index) => (
                 <Wrapper
@@ -148,7 +209,15 @@ export const SummaryAccesses = ({ activeTab }: SummaryAccessesProps) => {
           )}
 
           <div
-            className="cursor-pointer transition-all hover:bg-white/20 flex items-center justify-between bg-[#2A2A3F] h-[30px] rounded-[4px] px-[14px] text-[12px]"
+            className="cursor-pointer flex items-center justify-between"
+            style={{
+              transition: 'all 0.2s',
+              backgroundColor: '#2A2A3F',
+              height: '30px',
+              borderRadius: '4px',
+              padding: '0 14px',
+              fontSize: '12px',
+            }}
             onClick={() => setInReader((prevState) => [...prevState, 'test'])}
           >
             Reader
@@ -156,7 +225,14 @@ export const SummaryAccesses = ({ activeTab }: SummaryAccessesProps) => {
           </div>
 
           {_activeTab === 'users' ? (
-            <div className="px-2 space-y-2">
+            <div
+              style={{
+                padding: '0 8px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+              }}
+            >
               {inReader.map((user, index) => (
                 <UserDisplayItem
                   key={index}
@@ -171,7 +247,13 @@ export const SummaryAccesses = ({ activeTab }: SummaryAccessesProps) => {
             </div>
           ) : _activeTab === 'groups' ? (
             <div
-              className={`px-2 space-y-10 ${inReader.length > 0 && 'mt-10'}`}
+              style={{
+                padding: '0 8px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '40px',
+                marginTop: inReader.length > 0 ? '40px' : undefined,
+              }}
             >
               {inReader.map((user, index) => (
                 <Wrapper
@@ -185,7 +267,13 @@ export const SummaryAccesses = ({ activeTab }: SummaryAccessesProps) => {
             </div>
           ) : (
             <div
-              className={`px-2 space-y-10 ${inReader.length > 0 && 'mt-10'}`}
+              style={{
+                padding: '0 8px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '40px',
+                marginTop: inReader.length > 0 ? '40px' : undefined,
+              }}
             >
               {inReader.map((user, index) => (
                 <Wrapper

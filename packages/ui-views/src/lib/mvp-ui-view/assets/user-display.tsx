@@ -8,7 +8,7 @@ type UserDisplayProps = Record<string, never>;
 
 export const UserDisplay = (_props: UserDisplayProps) => {
   return (
-    <div className="min-w-[600px] flex flex-col gap-5">
+    <div className="flex flex-col" style={{ minWidth: '600px', gap: '20px' }}>
       <UserDisplayItem
         user={randomGuy()}
         role="role"

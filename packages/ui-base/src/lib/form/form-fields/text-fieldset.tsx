@@ -72,7 +72,7 @@ export const TextFieldset = ({
 
       {copyButton && (
         <button onClick={() => copyToClipboard(value)}>
-          <CopyIcon style={{ color: 'var(--c-pink-1)' }} />
+          <CopyIcon style={{ color: 'var(--primary-100)' }} />
         </button>
       )}
     </fieldset>

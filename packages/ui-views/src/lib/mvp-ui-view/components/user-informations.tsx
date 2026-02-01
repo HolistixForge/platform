@@ -16,9 +16,20 @@ export const UserInformations = ({ editing }: UserInformationsProps) => {
   }, [editing]);
 
   return (
-    <div className="flex flex-col w-[445px]">
-      <div className="flex items-center justify-between bg-[#2A2A3F] h-[40px] rounded-[4px] px-[10px]">
-        <p className="text-white text-[16px] font-bold leading-[28px]">
+    <div className="flex flex-col" style={{ width: '445px' }}>
+      <div
+        className="flex items-center justify-between"
+        style={{
+          backgroundColor: '#2A2A3F',
+          height: '40px',
+          borderRadius: '4px',
+          padding: '0 10px',
+        }}
+      >
+        <p
+          className="font-bold"
+          style={{ color: 'white', fontSize: '16px', lineHeight: '28px' }}
+        >
           Informations
         </p>
         <div className="cursor-pointer" onClick={() => _setEditing(!_editing)}>
@@ -26,92 +37,182 @@ export const UserInformations = ({ editing }: UserInformationsProps) => {
         </div>
       </div>
       <div
-        className={`${
-          _editing ? 'px-[13px]' : 'px-[32px]'
-        } py-[15px] flex flex-col gap-[30px]`}
+        className="flex flex-col"
+        style={{
+          paddingLeft: _editing ? '13px' : '32px',
+          paddingRight: _editing ? '13px' : '32px',
+          paddingTop: '15px',
+          paddingBottom: '15px',
+          gap: '30px',
+        }}
       >
-        <div className="space-y-1">
-          <label className="text-white text-[14px] font-bold">First Name</label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label
+            className="font-bold"
+            style={{ color: 'white', fontSize: '14px' }}
+          >
+            First Name
+          </label>
           {_editing ? (
             <input
-              className="w-full h-[42px] text-white text-[14px] placeholder:text-[#7E7E93] leading-[28px] rounded-[4px] px-[10px]"
+              className="w-full"
+              style={{
+                height: '42px',
+                color: 'white',
+                fontSize: '14px',
+                lineHeight: '28px',
+                borderRadius: '4px',
+                padding: '0 10px',
+                border: '1px solid #833A9D',
+              }}
               placeholder="First Name"
               defaultValue="John"
-              style={{
-                border: '1px solid #833A9D',
-              }}
             />
           ) : (
-            <p className="text-white text-[14px] pl-2 leading-[28px]">John</p>
+            <p
+              style={{
+                color: 'white',
+                fontSize: '14px',
+                paddingLeft: '8px',
+                lineHeight: '28px',
+              }}
+            >
+              John
+            </p>
           )}
         </div>
 
-        <div className="space-y-1">
-          <label className="text-white text-[14px] font-bold">Last Name</label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label
+            className="font-bold"
+            style={{ color: 'white', fontSize: '14px' }}
+          >
+            Last Name
+          </label>
           {_editing ? (
             <input
-              className="w-full h-[42px] text-white text-[14px] placeholder:text-[#7E7E93] leading-[28px] rounded-[4px] px-[10px]"
+              className="w-full"
+              style={{
+                height: '42px',
+                color: 'white',
+                fontSize: '14px',
+                lineHeight: '28px',
+                borderRadius: '4px',
+                padding: '0 10px',
+                border: '1px solid #833A9D',
+              }}
               placeholder="Last Name"
               defaultValue="Doe"
-              style={{
-                border: '1px solid #833A9D',
-              }}
             />
           ) : (
-            <p className="text-white text-[14px] pl-2 leading-[28px]">Doe</p>
+            <p
+              style={{
+                color: 'white',
+                fontSize: '14px',
+                paddingLeft: '8px',
+                lineHeight: '28px',
+              }}
+            >
+              Doe
+            </p>
           )}
         </div>
 
-        <div className="space-y-1">
-          <label className="text-white text-[14px] font-bold">Mail</label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label
+            className="font-bold"
+            style={{ color: 'white', fontSize: '14px' }}
+          >
+            Mail
+          </label>
           {_editing ? (
             <input
-              className="w-full h-[42px] text-white text-[14px] placeholder:text-[#7E7E93] leading-[28px] rounded-[4px] px-[10px]"
-              placeholder="Mail"
-              defaultValue="john.doe@gmail.com"
+              className="w-full"
               style={{
+                height: '42px',
+                color: 'white',
+                fontSize: '14px',
+                lineHeight: '28px',
+                borderRadius: '4px',
+                padding: '0 10px',
                 border: '1px solid #833A9D',
               }}
+              placeholder="Mail"
+              defaultValue="john.doe@gmail.com"
               type="email"
             />
           ) : (
-            <p className="text-white text-[14px] pl-2 leading-[28px]">
+            <p
+              style={{
+                color: 'white',
+                fontSize: '14px',
+                paddingLeft: '8px',
+                lineHeight: '28px',
+              }}
+            >
               john.doe@gmail.com
             </p>
           )}
         </div>
 
-        <div className="space-y-1">
-          <label className="text-white text-[14px] font-bold">Password</label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label
+            className="font-bold"
+            style={{ color: 'white', fontSize: '14px' }}
+          >
+            Password
+          </label>
           {_editing ? (
             <input
-              className="w-full h-[42px] text-white text-[14px] placeholder:text-[#7E7E93] leading-[28px] rounded-[4px] px-[10px]"
-              placeholder="Password"
-              defaultValue="123456789"
+              className="w-full"
               style={{
+                height: '42px',
+                color: 'white',
+                fontSize: '14px',
+                lineHeight: '28px',
+                borderRadius: '4px',
+                padding: '0 10px',
                 border: '1px solid #833A9D',
               }}
+              placeholder="Password"
+              defaultValue="123456789"
               type="password"
             />
           ) : (
-            <p className="text-white text-[14px] pl-2 leading-[28px]">
+            <p
+              style={{
+                color: 'white',
+                fontSize: '14px',
+                paddingLeft: '8px',
+                lineHeight: '28px',
+              }}
+            >
               123456789
             </p>
           )}
         </div>
 
         {_editing && (
-          <div className="space-y-1">
-            <label className="text-white text-[14px] font-bold">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label
+              className="font-bold"
+              style={{ color: 'white', fontSize: '14px' }}
+            >
               Confirm Password
             </label>
             <input
-              className="w-full h-[42px] text-white text-[14px] placeholder:text-[#7E7E93] leading-[28px] rounded-[4px] px-[10px]"
-              placeholder="Confirm Password"
-              defaultValue="123456789"
+              className="w-full"
               style={{
+                height: '42px',
+                color: 'white',
+                fontSize: '14px',
+                lineHeight: '28px',
+                borderRadius: '4px',
+                padding: '0 10px',
                 border: '1px solid #833A9D',
               }}
+              placeholder="Confirm Password"
+              defaultValue="123456789"
               type="password"
             />
           </div>

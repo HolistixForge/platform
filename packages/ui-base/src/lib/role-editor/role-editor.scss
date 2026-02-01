@@ -2,7 +2,7 @@
   display: flex;
   height: 100%;
   gap: 20px;
-  background: var(--c-black-2);
+  background: var(--surface-900);
   border-radius: 8px;
   overflow: hidden;
 
@@ -19,7 +19,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 15px 20px;
-    border-bottom: 1px solid var(--c-black-3);
+    border-bottom: 1px solid var(--black-600);
     
     & > div {
       display: flex;
@@ -28,14 +28,14 @@
   }
 
   .panel-title {
-    font-size: 16px;
+    font-size: var(--font-size-lg);
     font-weight: 600;
-    color: var(--c-white-1);
+    color: var(--white);
   }
 
   .separator {
     width: 1px;
-    background: var(--c-black-3);
+    background: var(--black-600);
   }
 
   .ScrollAreaRoot {
@@ -60,24 +60,24 @@
     justify-content: space-between;
     align-items: center;
     padding: 12px 15px;
-    background: var(--c-black-1);
-    border: 1px solid var(--c-black-3);
+    background: var(--surface-800);
+    border: 1px solid var(--black-600);
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s;
 
     &:hover {
-      background: var(--c-black-3);
-      border-color: var(--c-blue-1);
+      background: var(--black-600);
+      border-color: var(--cyan-100);
     }
 
     &.system-role {
-      background: var(--c-black-0);
+      background: var(--surface-700);
       cursor: default;
 
       &:hover {
-        background: var(--c-black-0);
-        border-color: var(--c-black-3);
+        background: var(--surface-700);
+        border-color: var(--black-600);
       }
     }
   }
@@ -87,9 +87,9 @@
   }
 
   .role-name {
-    font-size: 14px;
+    font-size: var(--font-size-md);
     font-weight: 600;
-    color: var(--c-white-1);
+    color: var(--white);
     margin-bottom: 4px;
     display: flex;
     align-items: center;
@@ -97,24 +97,24 @@
   }
 
   .badge {
-    font-size: 10px;
+    font-size: var(--font-size-2xs);
     padding: 2px 6px;
-    background: var(--c-blue-1);
-    color: var(--c-white-1);
+    background: var(--cyan-100);
+    color: var(--white);
     border-radius: 3px;
     font-weight: 500;
   }
 
   .role-scope {
-    font-size: 11px;
-    color: var(--c-white-3);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-faint);
     text-transform: uppercase;
     margin-bottom: 2px;
   }
 
   .role-permissions-count {
-    font-size: 12px;
-    color: var(--c-white-2);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
   }
 
   .role-actions {
@@ -134,23 +134,23 @@
     gap: 8px;
 
     label {
-      font-size: 13px;
+      font-size: var(--font-size-md);
       font-weight: 600;
-      color: var(--c-white-2);
+      color: var(--color-text-muted);
     }
 
     input,
     select {
       padding: 8px 12px;
-      background: var(--c-black-1);
-      border: 1px solid var(--c-black-3);
+      background: var(--surface-800);
+      border: 1px solid var(--black-600);
       border-radius: 4px;
-      color: var(--c-white-1);
-      font-size: 13px;
+      color: var(--white);
+      font-size: var(--font-size-md);
 
       &:focus {
         outline: none;
-        border-color: var(--c-blue-1);
+        border-color: var(--cyan-100);
       }
     }
 
@@ -166,16 +166,16 @@
     input {
       flex: 1;
       padding: 8px 12px;
-      background: var(--c-black-1);
-      border: 1px solid var(--c-black-3);
+      background: var(--surface-800);
+      border: 1px solid var(--black-600);
       border-radius: 4px;
-      color: var(--c-white-1);
-      font-size: 13px;
+      color: var(--white);
+      font-size: var(--font-size-md);
       font-family: 'Courier New', monospace;
 
       &:focus {
         outline: none;
-        border-color: var(--c-blue-1);
+        border-color: var(--cyan-100);
       }
     }
   }
@@ -192,22 +192,22 @@
     align-items: center;
     gap: 6px;
     padding: 6px 10px;
-    background: var(--c-black-1);
-    border: 1px solid var(--c-black-3);
+    background: var(--surface-800);
+    border: 1px solid var(--black-600);
     border-radius: 4px;
-    font-size: 12px;
+    font-size: var(--font-size-sm);
 
     code {
-      color: var(--c-blue-2);
+      color: var(--cyan-300);
       font-family: 'Courier New', monospace;
     }
 
     .remove-btn {
       background: transparent;
       border: none;
-      color: var(--c-red-1);
+      color: var(--red-300);
       cursor: pointer;
-      font-size: 18px;
+      font-size: var(--font-size-xl);
       line-height: 1;
       padding: 0;
       width: 16px;
@@ -217,7 +217,7 @@
       justify-content: center;
 
       &:hover {
-        color: var(--c-red-2);
+        color: var(--red-400);
       }
     }
   }

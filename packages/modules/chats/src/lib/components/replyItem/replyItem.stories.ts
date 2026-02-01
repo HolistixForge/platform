@@ -19,7 +19,7 @@ export const Normal: Story = {
   args: {
     username: 'local:John',
     content: 'Lorem ipsum dolor sit am',
-    color: 'var(--c-orange-2)',
+    color: 'var(--orange-200)',
     space: 'space54',
     id: '89461896',
     date: new Date(),
@@ -27,7 +27,7 @@ export const Normal: Story = {
       picture: '',
       username: 'gitlab:Dave',
       content: 'Amet consectetur adispicing elit',
-      color: 'var(--c-pink-3)',
+      color: 'var(--primary-500)',
       space: 'space54',
       id: '61896894',
       date: new Date(),

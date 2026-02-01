@@ -5,6 +5,7 @@ import { icons } from '../assets/icons';
 import { CSSProperties } from 'react';
 
 import './users.scss';
+import './user-bubble.scss';
 
 /**
  * split the username to separate provider and id
@@ -46,29 +47,43 @@ export const UserAvatar = ({
       size === 'small' ? '38px' : size === 'large' ? '48px' : undefined,
   };
 
-  const className = `
-  ${removeMarginRight && '!mr-0'}
-  AvatarRoot
-  ${host ? 'border border-[#8498FF] drop-shadow-[0px_0px_4px_#0550B3]' : ''} 
-  ${live ? 'border border-[#F72585] drop-shadow-[0px_0px_4px_#F72585]' : ''} 
-  rounded-full group/avatar bg-black relative`;
+  const hostStyle = host
+    ? {
+        border: '1px solid #8498FF',
+        filter: 'drop-shadow(0px 0px 4px #0550B3)',
+      }
+    : {};
+  const liveStyle = live
+    ? {
+        border: '1px solid #F72585',
+        filter: 'drop-shadow(0px 0px 4px #F72585)',
+      }
+    : {};
+  const mrStyle = removeMarginRight ? { marginRight: 0 } : {};
+
+  const avatarStyle = {
+    ...hostStyle,
+    ...liveStyle,
+    ...mrStyle,
+    borderRadius: '9999px',
+    backgroundColor: 'black',
+    position: 'relative' as const,
+  };
+
+  const className = 'AvatarRoot';
 
   return (
     <Avatar.Root
       className={className}
-      style={s as CSSProperties}
+      style={{ ...s, ...avatarStyle } as CSSProperties}
       title={username}
     >
-      {live && (
-        <div className="absolute -z-10 h-[31px] w-[31px] bg-[#F72585] origin-center rounded-full animate-ping"></div>
-      )}
-      {host && (
-        <div className="absolute -z-10 h-[31px] w-[31px] bg-[#8498FF] origin-center rounded-full animate-ping"></div>
-      )}
+      {live && <div className="avatar-live-ping ping-live"></div>}
+      {host && <div className="avatar-live-ping ping-host"></div>}
 
       {host && (
-        <span className="absolute group-hover/avatar:-translate-y-[190%] opacity-0 group-hover/avatar:opacity-100 transition-all left-1/2 -translate-x-1/2 text-[16px] text-host text-[#1032E3] -z-10 p-[2px] rounded-[4px] border border-[#8498FF]">
-          <span className="text-stroke-host font-bold">host</span>
+        <span className="avatar-host-label">
+          <span className="avatar-host-text text-stroke-host">host</span>
         </span>
       )}
 

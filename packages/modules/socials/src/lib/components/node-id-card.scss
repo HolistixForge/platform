@@ -14,8 +14,8 @@
     justify-content: center;
     padding-top: 25px;
     height: 340px;
-    background-color: var(--c-pink-6);
-    box-shadow: 0 0 2px 0 rgba(255, 255, 255, 0.5);
+    background-color: var(--primary-900);
+    box-shadow: var(--shadow-id-card);
   }
 
   .photo-section {
@@ -33,12 +33,12 @@
     margin-top: 20px;
 
     .username {
-      background-color: #ffffff;
+      background-color: var(--white);
       border-radius: 4px;
       padding: 6px 10px;
       display: block;
       max-width: 100%;
-      font-size: 22px;
+      font-size: var(--font-size-2xl);
       font-weight: 525;
       //text-shadow: 0 0 7px rgba(255, 255, 255, 1);
       margin: 0;
@@ -54,11 +54,11 @@
 
 .node-reservation {
   .id-card {
-    background-color: #0a66c2;
+    background-color: var(--c-brand-linkedin);
   }
   .reservation-label {
-    color: #ffffff;
-    font-size: 14px;
+    color: var(--white);
+    font-size: var(--font-size-md);
     font-weight: 525;
     text-transform: uppercase;
     letter-spacing: 0.05em;

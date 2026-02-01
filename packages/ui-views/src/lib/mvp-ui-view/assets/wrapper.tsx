@@ -31,12 +31,21 @@ export const Wrapper = ({
   const [displayAll, setDisplayAll] = useState(false);
 
   return (
-    <div className="flex gap-2">
+    <div className="flex" style={{ gap: '8px' }}>
       <div className="relative w-full">
-        <div className="flex items-center absolute left-0 -top-7 gap-[6px]">
+        <div
+          className="flex items-center absolute"
+          style={{ left: 0, top: '-28px', gap: '6px' }}
+        >
           <div
-            className="rounded-t-[4px] text-white text-[12px] font-bold px-2 h-[24px] flex items-center justify-center"
+            className="flex items-center justify-center font-bold"
             style={{
+              borderRadius: '4px 4px 0 0',
+              color: 'white',
+              fontSize: '12px',
+              paddingLeft: '8px',
+              paddingRight: '8px',
+              height: '24px',
               background: tagColor,
             }}
           >
@@ -44,8 +53,15 @@ export const Wrapper = ({
           </div>
           {tagSecondary && (
             <div
-              className="rounded-[4px] text-white text-[10px] uppercase font-bold px-2 flex items-center justify-center h-[24px]"
+              className="flex items-center justify-center font-bold"
               style={{
+                borderRadius: '4px',
+                color: 'white',
+                fontSize: '10px',
+                textTransform: 'uppercase',
+                paddingLeft: '8px',
+                paddingRight: '8px',
+                height: '24px',
                 background: tagSecondaryColor,
               }}
             >
@@ -55,72 +71,163 @@ export const Wrapper = ({
         </div>
 
         <div
-          className="resize relative overflow-hidden border-2 min-w-[200px] h-auto rounded-tl-[1px] rounded-b-[4px] rounded-tr-[4px] py-3 flex flex-col gap-2"
-          style={{ borderColor: resizeBorderColor }}
+          className="relative overflow-hidden flex flex-col"
+          style={{
+            resize: 'both',
+            borderWidth: '2px',
+            borderStyle: 'solid',
+            borderColor: resizeBorderColor,
+            minWidth: '200px',
+            height: 'auto',
+            borderTopLeftRadius: '1px',
+            borderBottomLeftRadius: '4px',
+            borderBottomRightRadius: '4px',
+            borderTopRightRadius: '4px',
+            paddingTop: '12px',
+            paddingBottom: '12px',
+            gap: '8px',
+          }}
         >
-          <div className="flex flex-wrap gap-2 px-4">
-            <div className="bg-[#1351AE] text-white rounded-[4px] text-[12px] font-bold px-2">
+          <div
+            className="flex flex-wrap"
+            style={{ gap: '8px', padding: '0 16px' }}
+          >
+            <div
+              className="font-bold"
+              style={{
+                backgroundColor: '#1351AE',
+                color: 'white',
+                borderRadius: '4px',
+                fontSize: '12px',
+                paddingLeft: '8px',
+                paddingRight: '8px',
+              }}
+            >
               France
             </div>
-            <div className="bg-[#1351AE] text-white rounded-[4px] text-[12px] font-bold px-2">
+            <div
+              className="font-bold"
+              style={{
+                backgroundColor: '#1351AE',
+                color: 'white',
+                borderRadius: '4px',
+                fontSize: '12px',
+                paddingLeft: '8px',
+                paddingRight: '8px',
+              }}
+            >
               France
             </div>
-            <div className="bg-[#1351AE] text-white rounded-[4px] text-[12px] font-bold px-2">
+            <div
+              className="font-bold"
+              style={{
+                backgroundColor: '#1351AE',
+                color: 'white',
+                borderRadius: '4px',
+                fontSize: '12px',
+                paddingLeft: '8px',
+                paddingRight: '8px',
+              }}
+            >
               France
             </div>
-            <div className="bg-[#1351AE] text-white rounded-[4px] text-[12px] font-bold px-2">
+            <div
+              className="font-bold"
+              style={{
+                backgroundColor: '#1351AE',
+                color: 'white',
+                borderRadius: '4px',
+                fontSize: '12px',
+                paddingLeft: '8px',
+                paddingRight: '8px',
+              }}
+            >
               France
             </div>
-            <div className="bg-[#1351AE] text-white rounded-[4px] text-[12px] font-bold px-2">
+            <div
+              className="font-bold"
+              style={{
+                backgroundColor: '#1351AE',
+                color: 'white',
+                borderRadius: '4px',
+                fontSize: '12px',
+                paddingLeft: '8px',
+                paddingRight: '8px',
+              }}
+            >
               France
             </div>
           </div>
 
           {user && (
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-1 px-4">
+            <div className="flex flex-col" style={{ gap: '8px' }}>
+              <div
+                className="flex items-center"
+                style={{ gap: '4px', padding: '0 16px' }}
+              >
                 <UserAvatar {...user} size="small" />
-                <p className="text-[12px] leading-[28px]">
-                  <UserUsername {...user} />
-                </p>
-              </div>
-              <div className="flex items-center gap-1 px-4">
-                <UserAvatar {...user} size="small" />
-                <p className="text-[12px] leading-[28px]">
+                <p style={{ fontSize: '12px', lineHeight: '28px' }}>
                   <UserUsername {...user} />
                 </p>
               </div>
               <div
-                className={`flex justify-center items-center text-white text-[12px] font-bold h-[18px] transition-all ${
-                  displayAll ? 'bg-[#43436F]' : 'hover:bg-[#43436F]'
-                } rounded-b-[4px] cursor-pointer`}
+                className="flex items-center"
+                style={{ gap: '4px', padding: '0 16px' }}
+              >
+                <UserAvatar {...user} size="small" />
+                <p style={{ fontSize: '12px', lineHeight: '28px' }}>
+                  <UserUsername {...user} />
+                </p>
+              </div>
+              <div
+                className="flex justify-center items-center font-bold cursor-pointer"
+                style={{
+                  color: 'white',
+                  fontSize: '12px',
+                  height: '18px',
+                  transition: 'all 0.2s',
+                  backgroundColor: displayAll ? '#43436F' : undefined,
+                  borderRadius: '0 0 4px 4px',
+                }}
                 onClick={() => setDisplayAll(!displayAll)}
               >
                 {displayAll ? '-' : '+ 10'}
               </div>
               {displayAll && (
                 <>
-                  <div className="flex items-center gap-1 px-4">
+                  <div
+                    className="flex items-center"
+                    style={{ gap: '4px', padding: '0 16px' }}
+                  >
                     <UserAvatar {...user} size="small" />
-                    <p className="text-[12px] leading-[28px]">
+                    <p style={{ fontSize: '12px', lineHeight: '28px' }}>
                       <UserUsername {...user} />
                     </p>
                   </div>
-                  <div className="flex items-center gap-1 px-4">
+                  <div
+                    className="flex items-center"
+                    style={{ gap: '4px', padding: '0 16px' }}
+                  >
                     <UserAvatar {...user} size="small" />
-                    <p className="text-[12px] leading-[28px]">
+                    <p style={{ fontSize: '12px', lineHeight: '28px' }}>
                       <UserUsername {...user} />
                     </p>
                   </div>
-                  <div className="flex items-center gap-1 px-4">
+                  <div
+                    className="flex items-center"
+                    style={{ gap: '4px', padding: '0 16px' }}
+                  >
                     <UserAvatar {...user} size="small" />
-                    <p className="text-[12px] leading-[28px]">
+                    <p style={{ fontSize: '12px', lineHeight: '28px' }}>
                       <UserUsername {...user} />
                     </p>
                   </div>
-                  <div className="flex items-center gap-1 px-4">
+                  <div
+                    className="flex items-center"
+                    style={{ gap: '4px', padding: '0 16px' }}
+                  >
                     <UserAvatar {...user} size="small" />
-                    <p className="text-[12px] leading-[28px]">
+                    <p style={{ fontSize: '12px', lineHeight: '28px' }}>
                       <UserUsername {...user} />
                     </p>
                   </div>
@@ -131,21 +238,26 @@ export const Wrapper = ({
         </div>
       </div>
       <div
-        className={`flex items-center gap-2 transition-opacity duration-300`} // Manage opacity
+        className="flex items-center"
+        style={{ gap: '8px', transition: 'opacity 0.3s' }}
       >
         {displaySettings && (
           <div className="cursor-pointer">
-            <icons.Settings className="w-5 h-5 text-[white]" />
+            <icons.Settings
+              style={{ width: '20px', height: '20px', color: 'white' }}
+            />
           </div>
         )}
         {displayRemove && (
           <div className="cursor-pointer">
-            <icons.Remove className="w-5 h-5 text-[white]" />
+            <icons.Remove
+              style={{ width: '20px', height: '20px', color: 'white' }}
+            />
           </div>
         )}
         {displayDelete && (
           <div className="cursor-pointer">
-            <icons.Delete className="w-5 h-5" />
+            <icons.Delete style={{ width: '20px', height: '20px' }} />
           </div>
         )}
       </div>

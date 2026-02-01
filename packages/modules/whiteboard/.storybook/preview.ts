@@ -17,7 +17,7 @@ const preview: Preview = {
       values: [
         {
           name: 'dark',
-          value: 'var(--color-background)',
+          value: 'var(--color-bg-app)',
         },
       ],
     },

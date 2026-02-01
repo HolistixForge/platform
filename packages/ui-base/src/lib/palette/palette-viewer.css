@@ -1,7 +1,7 @@
 h1,
 h2,
 h3 {
-  color: var(--c-white-1);
+  color: var(--white);
 }
 
 .palette-viewer {
@@ -17,19 +17,19 @@ h3 {
 }
 
 .color-box {
-  border: solid 1px var(--c-gray-9);
+  border: solid 1px var(--neutral-9);
   height: 100px;
   padding: 20px 15px;
   border-radius: 5px;
   box-sizing: border-box;
-  color: var(--c-white-1);
+  color: var(--white);
   font-weight: bold;
   cursor: pointer;
 }
 .color-box:hover {
-  color: var(--c-black-4);
+  color: var(--black-700);
 }
 
 .color-label {
-  font-size: 14px;
+  font-size: var(--font-size-md);
 }

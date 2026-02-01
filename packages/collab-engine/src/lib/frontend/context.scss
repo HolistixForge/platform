@@ -1,3 +1,8 @@
+:root {
+  // --- Collaboration domain tokens ---
+  --color-yjs-awareness-default: var(--orange-500);
+}
+
 .collab-error-overlay {
   position: fixed;
   top: 0;
@@ -5,34 +10,34 @@
   right: 0;
   bottom: 0;
   backdrop-filter: blur(4px);
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
+  background-color: var(--alpha-black-55);
+  z-index: var(--z-toast);
   display: flex;
   align-items: center;
   justify-content: center;
 
   .error-content {
-    background-color: var(--color-background);
+    background-color: var(--color-bg-app);
     border-radius: 8px;
     padding: 24px;
     max-width: 400px;
     text-align: center;
 
     .error-title {
-      font-size: 18px;
+      font-size: var(--font-size-xl);
       font-weight: 600;
       margin-bottom: 12px;
       color: var(--color-error);
     }
 
     .error-message {
-      font-size: 14px;
+      font-size: var(--font-size-md);
       color: var(--color-text);
       margin-bottom: 8px;
     }
 
     .error-count {
-      font-size: 12px;
+      font-size: var(--font-size-sm);
       color: var(--color-text-muted);
     }
   }

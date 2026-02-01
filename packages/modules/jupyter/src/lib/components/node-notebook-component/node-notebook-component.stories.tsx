@@ -87,7 +87,7 @@ type Story = StoryObj<typeof NodeStory>;
 
 export const ReducedNormal: Story = {
   args: {
-    color: 'var(--c-red-4)',
+    color: 'var(--red-500)',
     status: 'success',
     selected: false,
     expanded: true,
@@ -102,7 +102,7 @@ export const ReducedHover: Story = {
     },
   },
   args: {
-    color: 'var(--c-red-4)',
+    color: 'var(--red-500)',
     status: 'success',
     selected: false,
     expanded: true,
@@ -117,7 +117,7 @@ export const ReducedOpen: Story = {
     },
   },
   args: {
-    color: 'var(--c-red-4)',
+    color: 'var(--red-500)',
     status: 'success',
     notebookOpened: true,
     selected: false,

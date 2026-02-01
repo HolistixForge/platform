@@ -1,3 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+:root {
+  // --- Chat domain tokens ---
+  --color-chat-new: var(--cyan-300);
+  --color-chat-default: var(--primary-500);
+}

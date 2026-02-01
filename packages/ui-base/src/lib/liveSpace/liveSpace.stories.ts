@@ -27,7 +27,7 @@ type Story = StoryObj<typeof LiveSpace>;
 
 export const Normal: Story = {
   args: {
-    color: 'var(--c-green-1)',
+    color: 'var(--green-400)',
     status: 'default',
   },
 };

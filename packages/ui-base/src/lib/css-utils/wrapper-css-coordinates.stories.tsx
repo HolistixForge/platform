@@ -18,7 +18,7 @@ export const Primary: Story = {
         style={{
           width: '300px',
           height: '300px',
-          background: `linear-gradient(45deg, var(--c-orange-2), var(--c-green-1))`,
+          background: `linear-gradient(45deg, var(--orange-200), var(--green-400))`,
           backgroundPosition: 'var(--x) var(--y)',
           backgroundSize: '400%',
         }}
@@ -31,7 +31,7 @@ export const Primary: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     expect(
-      canvas.getByText(/Welcome to WrapperCssCoordinates!/gi),
+      canvas.getByText(/Welcome to WrapperCssCoordinates!/gi)
     ).toBeTruthy();
   },
 };

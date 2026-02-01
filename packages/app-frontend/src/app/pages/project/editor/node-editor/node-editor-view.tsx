@@ -12,7 +12,7 @@ export const NodeEditorView = ({ viewId }: { viewId: string }) => {
   const project = useProject();
 
   return (
-    <div style={{ height: '100%', backgroundColor: 'var(--color-background)' }}>
+    <div style={{ height: '100%', backgroundColor: 'var(--color-bg-app)' }}>
       <Whiteboard viewId={viewId} projectId={project.project.project_id} />
     </div>
   );

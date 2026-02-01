@@ -45,6 +45,7 @@ test-output
 
 
 storybook-static
+__diff_output__
 
 .env
 

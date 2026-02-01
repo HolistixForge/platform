@@ -42,9 +42,14 @@ export const OrganizationDashboard = () => {
     return (
       <div>
         <HeaderLogic />
-        <div className="flex flex-col items-center justify-center h-[calc(100vh-80px)]">
-          <InfoCircledIcon className="w-[38px] h-[38px]" />
-          <p className="text-lg">Loading organization...</p>
+        <div
+          className="flex flex-col items-center justify-center"
+          style={{ height: 'calc(100vh - 80px)' }}
+        >
+          <InfoCircledIcon style={{ width: '38px', height: '38px' }} />
+          <p style={{ fontSize: 'var(--font-size-lg)' }}>
+            Loading organization...
+          </p>
         </div>
       </div>
     );
@@ -54,8 +59,18 @@ export const OrganizationDashboard = () => {
     return (
       <div>
         <HeaderLogic />
-        <div className="flex flex-col items-center justify-center h-[calc(100vh-80px)]">
-          <p className="text-lg text-red-400">Organization not found</p>
+        <div
+          className="flex flex-col items-center justify-center"
+          style={{ height: 'calc(100vh - 80px)' }}
+        >
+          <p
+            style={{
+              fontSize: 'var(--font-size-lg)',
+              color: 'var(--primary-500)',
+            }}
+          >
+            Organization not found
+          </p>
         </div>
       </div>
     );
@@ -67,11 +82,30 @@ export const OrganizationDashboard = () => {
     <div>
       <HeaderLogic />
 
-      <div className="container mx-auto px-8 py-12 max-w-[1200px]">
+      <div
+        style={{ maxWidth: '1200px', margin: '0 auto', padding: '48px 32px' }}
+      >
         {/* Organization Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">{org.name}</h1>
-          <div className="flex items-center gap-4 text-slate-400 text-sm">
+        <div style={{ marginBottom: '32px' }}>
+          <h1
+            className="font-bold"
+            style={{
+              fontSize: '1.875rem',
+              lineHeight: '2.25rem',
+              color: 'var(--white)',
+              marginBottom: '8px',
+            }}
+          >
+            {org.name}
+          </h1>
+          <div
+            className="flex items-center"
+            style={{
+              gap: '16px',
+              color: 'var(--neutral-5)',
+              fontSize: 'var(--font-size-sm)',
+            }}
+          >
             <span>
               {orgProjects.length} project{orgProjects.length !== 1 ? 's' : ''}
             </span>
@@ -79,7 +113,7 @@ export const OrganizationDashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="flex gap-4 mb-8">
+        <div className="flex" style={{ gap: '16px', marginBottom: '32px' }}>
           <Link to={`/org/${organization_id}/permissions`}>
             <ButtonBase
               text="Manage Permissions"
@@ -98,25 +132,49 @@ export const OrganizationDashboard = () => {
         </div>
 
         {/* Projects Table */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-white">Projects</h2>
+        <div style={{ marginBottom: '32px' }}>
+          <div
+            className="flex justify-between items-center"
+            style={{ marginBottom: '16px' }}
+          >
+            <h2
+              style={{
+                fontSize: '1.25rem',
+                lineHeight: '1.75rem',
+                fontWeight: 600,
+                color: 'var(--white)',
+              }}
+            >
+              Projects
+            </h2>
             <Link to="/">
               <ButtonBase text="+ New Project" className="blue small" />
             </Link>
           </div>
 
           {orgProjects.length > 0 ? (
-            <Table.Root className="border border-slate-700 rounded-md overflow-hidden">
-              <Table.Header className="-bg--c-alt-blue-4">
+            <Table.Root
+              className="overflow-hidden"
+              style={{
+                border: '1px solid var(--neutral-8)',
+                borderRadius: '6px',
+              }}
+            >
+              <Table.Header style={{ backgroundColor: 'var(--surface-600)' }}>
                 <Table.Row>
-                  <Table.ColumnHeaderCell className="py-4 px-6">
+                  <Table.ColumnHeaderCell style={{ padding: '16px 24px' }}>
                     Project Name
                   </Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell className="py-4 px-6 text-center">
+                  <Table.ColumnHeaderCell
+                    className="text-center"
+                    style={{ padding: '16px 24px' }}
+                  >
                     Public
                   </Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell className="py-4 px-6 text-center">
+                  <Table.ColumnHeaderCell
+                    className="text-center"
+                    style={{ padding: '16px 24px' }}
+                  >
                     Actions
                   </Table.ColumnHeaderCell>
                 </Table.Row>
@@ -125,28 +183,52 @@ export const OrganizationDashboard = () => {
                 {orgProjects.map((project) => (
                   <Table.Row
                     key={project.project_id}
-                    className="border-t border-slate-700 hover:bg-slate-800/50"
+                    style={{ borderTop: '1px solid var(--neutral-8)' }}
                   >
-                    <Table.Cell className="py-4 px-6 text-white">
+                    <Table.Cell
+                      style={{ padding: '16px 24px', color: 'var(--white)' }}
+                    >
                       {project.name}
                     </Table.Cell>
-                    <Table.Cell className="py-4 px-6 text-center">
+                    <Table.Cell
+                      className="text-center"
+                      style={{ padding: '16px 24px' }}
+                    >
                       <span
-                        className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${
-                          project.public
-                            ? 'bg-green-900/50 text-green-300'
-                            : 'bg-slate-700 text-slate-300'
-                        }`}
+                        className="items-center font-medium"
+                        style={{
+                          display: 'inline-flex',
+                          padding: '4px 8px',
+                          fontSize: '0.75rem',
+                          borderRadius: '9999px',
+                          backgroundColor: project.public
+                            ? 'rgba(20, 83, 45, 0.5)'
+                            : 'var(--neutral-8)',
+                          color: project.public
+                            ? '#86efac'
+                            : 'var(--neutral-4)',
+                        }}
                       >
                         {project.public ? 'Public' : 'Private'}
                       </span>
                     </Table.Cell>
-                    <Table.Cell className="py-4 px-6 text-center">
+                    <Table.Cell
+                      className="text-center"
+                      style={{ padding: '16px 24px' }}
+                    >
                       <a
                         href={`/p/${organization_id}/${project.name}/editor`}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium -bg--c-alt-blue-1 hover:-bg--c-alt-blue-2 text-white transition-colors"
+                        className="items-center justify-center font-medium"
+                        style={{
+                          display: 'inline-flex',
+                          borderRadius: '6px',
+                          padding: '8px 16px',
+                          fontSize: 'var(--font-size-sm)',
+                          color: 'var(--white)',
+                          backgroundColor: 'var(--cyan-300)',
+                        }}
                       >
                         Open
                       </a>
@@ -156,8 +238,18 @@ export const OrganizationDashboard = () => {
               </Table.Body>
             </Table.Root>
           ) : (
-            <div className="flex flex-col items-center justify-center py-16 border border-slate-700 rounded-md bg-slate-900/20">
-              <p className="text-slate-400 mb-4">No projects yet</p>
+            <div
+              className="flex flex-col items-center justify-center"
+              style={{
+                padding: '64px 0',
+                border: '1px solid var(--neutral-8)',
+                borderRadius: '6px',
+                backgroundColor: 'rgba(15, 23, 42, 0.2)',
+              }}
+            >
+              <p style={{ color: 'var(--neutral-5)', marginBottom: '16px' }}>
+                No projects yet
+              </p>
               <Link to="/">
                 <ButtonBase text="Create First Project" className="blue" />
               </Link>

@@ -72,7 +72,7 @@ type Story = StoryObj<typeof StoryWrapper>;
 
 export const Closed: Story = {
   args: {
-    color: 'var(--c-alt-blue-2)',
+    color: 'var(--cyan-300)',
     inputs: 4,
     expanded: false,
     selected: true,
@@ -81,7 +81,7 @@ export const Closed: Story = {
 
 export const Closed_Hover: Story = {
   args: {
-    color: 'var(--c-alt-blue-2)',
+    color: 'var(--cyan-300)',
     inputs: 4,
     expanded: false,
     selected: true,
@@ -91,7 +91,7 @@ export const Closed_Hover: Story = {
 
 export const Opened: Story = {
   args: {
-    color: 'var(--c-alt-blue-2)',
+    color: 'var(--cyan-300)',
     inputs: 4,
     expanded: true,
     selected: true,

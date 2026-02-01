@@ -14,7 +14,7 @@
   flex-direction: column;
 
   &-header {
-    border-bottom: 1px solid #fff;
+    border-bottom: 1px solid var(--white);
     margin-bottom: 10px;
     display: flex;
     align-items: center;
@@ -25,8 +25,8 @@
 
   .notion-h2 {
     margin: 0;
-    color: #ffffff;
-    font-size: 18px;
+    color: var(--white);
+    font-size: var(--font-size-xl);
     font-weight: 600;
     display: inline;
     line-height: 40px;
@@ -47,18 +47,18 @@
     display: flex;
     gap: 8px;
     button {
-      background: #222;
-      color: #fff;
-      border: 1px solid #444;
+      background: var(--c-neutral-bg-dark);
+      color: var(--white);
+      border: 1px solid var(--c-neutral-border-light);
       border-radius: 4px;
       padding: 4px 12px;
       cursor: pointer;
-      font-size: 13px;
+      font-size: var(--font-size-md);
       transition: background 0.2s, color 0.2s;
       &.active,
       &:hover {
-        background: #4dabf7;
-        color: #222;
+        background: var(--c-highlight-blue);
+        color: var(--c-neutral-bg-dark);
       }
     }
   }
@@ -75,13 +75,13 @@
   .task-meta {
     display: inline-flex;
     gap: 8px;
-    font-size: 12px;
+    font-size: var(--font-size-sm);
   }
 
   .task-status {
     padding: 2px 6px;
     border-radius: 3px;
-    color: #ffffff;
+    color: var(--white);
   }
 }
 
@@ -99,38 +99,38 @@
     align-items: center;
     gap: 8px;
     padding: 12px 0;
-    border-bottom: 1px solid #404040;
+    border-bottom: 1px solid var(--c-neutral-border);
     flex-shrink: 0;
 
     label {
-      color: #ffffff;
-      font-size: 14px;
+      color: var(--white);
+      font-size: var(--font-size-md);
       font-weight: 500;
     }
 
     .notion-subgroup-select {
       background: rgba(54, 54, 54, 0.3);
-      border: 1px solid #404040;
+      border: 1px solid var(--c-neutral-border);
       border-radius: 4px;
-      color: #ffffff;
+      color: var(--white);
       padding: 6px 12px;
-      font-size: 13px;
+      font-size: var(--font-size-md);
       cursor: pointer;
       transition: border-color 0.2s ease;
 
       &:hover {
-        border-color: #4dabf7;
+        border-color: var(--c-highlight-blue);
       }
 
       &:focus {
         outline: none;
-        border-color: #4dabf7;
-        box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.2);
+        border-color: var(--c-highlight-blue);
+        box-shadow: var(--shadow-focus-blue-sm);
       }
 
       option {
-        background: #2d2d2d;
-        color: #ffffff;
+        background: var(--c-neutral-bg-darker);
+        color: var(--white);
       }
     }
   }
@@ -151,7 +151,7 @@
     background: rgba(54, 54, 54, 0.1);
     border-radius: 8px;
     padding: 16px;
-    border: 1px solid #404040;
+    border: 1px solid var(--c-neutral-border);
     transition: all 0.2s ease;
     display: flex;
     flex-direction: column;
@@ -161,7 +161,7 @@
     }
     &.drag-over {
       background: rgba(54, 54, 54, 0.3) !important;
-      border-color: #4dabf7 !important;
+      border-color: var(--c-highlight-blue) !important;
     }
   }
   .notion-kanban-column-header {
@@ -180,14 +180,14 @@
       border-radius: 50%;
     }
     .notion-kanban-title {
-      color: #ffffff;
-      font-size: 14px;
+      color: var(--white);
+      font-size: var(--font-size-md);
       font-weight: 600;
       margin: 0;
     }
     .notion-kanban-count {
-      color: #868e96;
-      font-size: 12px;
+      color: var(--c-neutral-text-muted);
+      font-size: var(--font-size-sm);
       margin-left: 20px;
     }
   }
@@ -229,8 +229,8 @@
 
     &.drag-over {
       background: rgba(77, 171, 247, 0.1) !important;
-      border-color: #4dabf7 !important;
-      box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.2);
+      border-color: var(--c-highlight-blue) !important;
+      box-shadow: var(--shadow-focus-blue-sm);
     }
 
     .notion-kanban-subgroup-header {
@@ -248,15 +248,15 @@
       }
 
       .notion-kanban-subgroup-title {
-        color: #ffffff;
-        font-size: 12px;
+        color: var(--white);
+        font-size: var(--font-size-sm);
         font-weight: 500;
         flex: 1;
       }
 
       .notion-kanban-subgroup-count {
-        color: #868e96;
-        font-size: 11px;
+        color: var(--c-neutral-text-muted);
+        font-size: var(--font-size-xs);
         background: rgba(255, 255, 255, 0.1);
         padding: 2px 6px;
         border-radius: 10px;
@@ -286,29 +286,29 @@
 .notion-kanban,
 .node-notion-task {
   .bg-blue {
-    background: #4dabf7;
+    background: var(--c-highlight-blue);
   }
   .bg-green {
-    background: #51cf66;
+    background: var(--c-highlight-green);
   }
   .bg-red {
-    background: #ff6b6b;
+    background: var(--c-highlight-red);
   }
   .bg-yellow {
-    background: #ffd43b;
+    background: var(--c-highlight-yellow);
   }
   .bg-orange {
-    background: #ff922b;
+    background: var(--c-highlight-orange);
   }
   .bg-purple {
-    background: #cc5de8;
+    background: var(--c-highlight-purple);
   }
   .bg-pink {
-    background: #f783ac;
+    background: var(--c-highlight-pink);
   }
   .bg-gray,
   .bg-default {
-    background: #868e96;
+    background: var(--c-neutral-text-muted);
   }
 }
 
@@ -327,7 +327,7 @@
 
 .task-item {
   background: rgba(255, 255, 255, 0.1);
-  border: 1px solid #404040;
+  border: 1px solid var(--c-neutral-border);
   border-radius: 8px;
   padding: 16px;
   cursor: grab;
@@ -342,13 +342,13 @@
   .task-item-header,
   .task-item-meta {
     position: relative;
-    z-index: 2;
+    z-index: var(--z-base);
   }
 
   &:hover {
     background: rgba(54, 54, 54, 0.2) !important;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-card-hover);
   }
 
   &.dragging {
@@ -358,15 +358,15 @@
 
   .task-item-header {
     .task-item-title {
-      color: #ffffff;
-      font-size: 14px;
+      color: var(--white);
+      font-size: var(--font-size-md);
       font-weight: 600;
       margin: 0 0 8px 0;
       line-height: 1.4;
     }
     .task-item-description {
-      color: #ddd;
-      font-size: 12px;
+      color: var(--c-neutral-text-light);
+      font-size: var(--font-size-sm);
       line-height: 24px;
       margin: 0 0 12px 0;
       border-radius: 4px;

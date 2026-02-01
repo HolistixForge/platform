@@ -8,27 +8,27 @@
 
   a,
   a:visited {
-    color: var(--c-white-1);
+    color: var(--white);
   }
 }
 
 .react-flow__controls button {
-  background-color: var(--color-background);
-  border-bottom: var(--ca-black-6);
+  background-color: var(--color-bg-app);
+  border-bottom: var(--alpha-black-25);
   path {
-    stroke: var(--c-white-1);
-    fill: var(--c-white-1);
+    stroke: var(--white);
+    fill: var(--white);
   }
 }
 
 .react-flow__minimap {
-  background-color: var(--color-background);
+  background-color: var(--color-bg-app);
 
   path.react-flow__minimap-mask {
-    fill: var(--ca-black-7);
+    fill: var(--alpha-black-17);
   }
 
   rect.react-flow__minimap-node {
-    fill: var(--color-node-background);
+    fill: var(--color-bg-node);
   }
 }

@@ -34,21 +34,21 @@
 
   .reply-header {
     h5 {
-      font-size: 14px;
+      font-size: var(--font-size-md);
     }
 
     p {
-      font-size: 10px;
-      color: var(--c-white-1);
+      font-size: var(--font-size-2xs);
+      color: var(--white);
     }
   }
 
   .reply-wrapper .content-text {
-    font-size: 11px;
+    font-size: var(--font-size-xs);
     max-width: 82%;
     white-space: nowrap;
     text-overflow: ellipsis;
-    color: var(--c-gray-9);
+    color: var(--neutral-9);
     overflow: hidden;
   }
 }

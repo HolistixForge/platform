@@ -43,7 +43,7 @@ export const ResourcePage = () => {
         }}
       >
         <ResourceBar title="Resources" />
-        <div className="p-24">
+        <div style={{ padding: '96px' }}>
           <ServerStack onNewServerClick={() => setDisplayNewServerForm(true)}>
             {array.map((ucid) => (
               <UserContainerCardInternal

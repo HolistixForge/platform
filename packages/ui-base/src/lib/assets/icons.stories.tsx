@@ -6,12 +6,12 @@ import { CSSProperties, FC, HTMLAttributes } from 'react';
 const s1 = {
   width: '120px',
   height: '120px',
-  border: 'solid 1px var(--c-gray-9)',
+  border: 'solid 1px var(--neutral-9)',
   display: 'flex' /* Use flexbox for centering */,
   justifyContent: 'center' /* Center horizontally */,
   alignItems: 'center' /* Center vertically */,
   position: 'relative',
-  backgroundColor: 'var(--ca-white-1)',
+  backgroundColor: 'var(--alpha-white-10)',
 } as CSSProperties;
 
 const s3 = {
@@ -19,7 +19,7 @@ const s3 = {
   bottom: '-3px',
   left: 0,
   fontSize: '11px',
-  color: 'var(--c-white-1)',
+  color: 'var(--white)',
 } as CSSProperties;
 
 const AllIcon = () => {
@@ -41,9 +41,7 @@ const AllIcon = () => {
             <Icon
               style={{
                 fill:
-                  k === 'Reply' || k === 'Branch'
-                    ? 'var(--c-white-1)'
-                    : undefined,
+                  k === 'Reply' || k === 'Branch' ? 'var(--white)' : undefined,
                 width: '100px',
                 height: '100px',
                 border: 'dashed 1px red',
