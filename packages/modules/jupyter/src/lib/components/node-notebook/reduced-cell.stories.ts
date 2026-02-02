@@ -1,10 +1,19 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { createElement } from 'react';
 
 import { ReducedCell } from './reduced-cell';
 
 const meta = {
   title: 'Modules/Jupyter/Components/Reduced Cells',
   component: ReducedCell,
+  decorators: [
+    (Story) =>
+      createElement(
+        'div',
+        { style: { padding: '20px', minWidth: '40px', minHeight: '40px' } },
+        createElement(Story)
+      ),
+  ],
   parameters: {
     layout: 'centered',
   },

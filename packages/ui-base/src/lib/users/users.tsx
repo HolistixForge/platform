@@ -66,7 +66,7 @@ export const UserAvatar = ({
     ...liveStyle,
     ...mrStyle,
     borderRadius: '9999px',
-    backgroundColor: 'black',
+    backgroundColor: 'var(--surface-700)',
     position: 'relative' as const,
   };
 
