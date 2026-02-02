@@ -126,6 +126,11 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install chromium --with-deps
 
+      - name: Build library packages
+        run: npx nx run-many -t build --parallel=5
+        env:
+          NODE_OPTIONS: --max_old_space_size=4096
+
       - name: Build all Storybooks
         run: npx nx run-many -t build-storybook --parallel=3
         env:
