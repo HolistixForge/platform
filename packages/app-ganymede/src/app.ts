@@ -80,6 +80,7 @@ export function createApp(
       '/gateway/config', // Gateway fetches config from Ganymede
       '/gateway/ready', // Gateway signals ready status
       '/gateway/stop', // Gateway signals shutdown/deallocation
+      '/gateway/tokens/scoped', // Gateway requests project-scoped tokens
       '/collab/start', // Gateway calls during initialization
       '/oauth/authorize', // OAuth authorization code flow (protected by client credentials)
       '/oauth/token', // OAuth token exchange (protected by client credentials)

@@ -8,6 +8,7 @@
  */
 
 import { UserContainersReducer } from './servers-reducer';
+import { ContainerImageRegistry } from './image-registry';
 
 // Mock dependencies
 jest.mock('@holistix-forge/log', () => ({
@@ -394,5 +395,167 @@ describe('UserContainersReducer - buildRedirectUris', () => {
         'https://uc-abc123.org-def456.domain.local///oauth///callback',
       ]);
     });
+  });
+});
+
+describe('ContainerImageRegistry - getAll', () => {
+  it('should return empty array when no images registered', () => {
+    const registry = new ContainerImageRegistry();
+    expect(registry.getAll()).toEqual([]);
+  });
+
+  it('should return all registered images', () => {
+    const registry = new ContainerImageRegistry();
+    const images = [
+      {
+        imageId: 'ubuntu:terminal',
+        imageName: 'Ubuntu Terminal',
+        imageUri: 'holistixforge/ubuntu-terminal',
+        imageTag: '24.04',
+        description: 'Minimal Ubuntu container',
+        category: 'utility',
+        oauthClients: [],
+      },
+      {
+        imageId: 'jupyter:lab',
+        imageName: 'JupyterLab',
+        imageUri: 'holistixforge/jupyterlab',
+        imageTag: 'latest',
+        description: 'JupyterLab notebook',
+        category: 'data-science',
+        oauthClients: [],
+      },
+    ];
+    registry.register(images);
+
+    const result = registry.getAll();
+    expect(result).toHaveLength(2);
+    expect(result).toEqual(expect.arrayContaining(images));
+  });
+});
+
+describe('UserContainersReducer - _initProject', () => {
+  let reducer: UserContainersReducer;
+  let mockImagesMap: Map<string, any>;
+  let mockImageRegistry: ContainerImageRegistry;
+  let mockDepsExports: any;
+
+  beforeEach(() => {
+    mockImagesMap = new Map();
+    mockImageRegistry = new ContainerImageRegistry();
+    mockImageRegistry.register([
+      {
+        imageId: 'ubuntu:terminal',
+        imageName: 'Ubuntu Terminal',
+        imageUri: 'holistixforge/ubuntu-terminal',
+        imageTag: '24.04',
+        description: 'Minimal Ubuntu container',
+        category: 'utility',
+        oauthClients: [],
+      },
+    ]);
+
+    // Create a mock SharedMap with copy() method
+    const imagesSharedMap = {
+      get: (key: string) => mockImagesMap.get(key),
+      set: (key: string, value: any) => mockImagesMap.set(key, value),
+      copy: () => new Map(mockImagesMap),
+    };
+
+    mockDepsExports = {
+      collab: {
+        registry: {
+          getCollabForProject: jest.fn(() => ({
+            sharedData: {
+              'user-containers:containers': new Map(),
+              'user-containers:images': imagesSharedMap,
+            },
+          })),
+        },
+      },
+      gateway: {
+        permissionRegistry: {
+          getPermissions: jest.fn(() => ({})),
+        },
+        protectedServiceRegistry: {
+          registerService: jest.fn(),
+        },
+      },
+      'user-containers': {
+        imageRegistry: mockImageRegistry,
+      },
+    };
+
+    reducer = new UserContainersReducer(mockDepsExports as any);
+  });
+
+  it('should sync images from registry to shared map on project:init', async () => {
+    const event = {
+      type: 'project:init' as const,
+      project_id: 'test-project-123',
+      systemEvent: true as const,
+    };
+
+    const requestData = { project_id: 'test-project-123' } as any;
+
+    await reducer.reduce(event, requestData);
+
+    expect(mockImagesMap.size).toBe(1);
+    expect(mockImagesMap.get('ubuntu:terminal')).toEqual({
+      imageId: 'ubuntu:terminal',
+      imageName: 'Ubuntu Terminal',
+      description: 'Minimal Ubuntu container',
+    });
+  });
+
+  it('should be idempotent - skip images already in shared map', async () => {
+    // Pre-populate the shared map
+    mockImagesMap.set('ubuntu:terminal', {
+      imageId: 'ubuntu:terminal',
+      imageName: 'Ubuntu Terminal',
+      description: 'Minimal Ubuntu container',
+    });
+
+    const event = {
+      type: 'project:init' as const,
+      project_id: 'test-project-123',
+      systemEvent: true as const,
+    };
+
+    const requestData = { project_id: 'test-project-123' } as any;
+
+    await reducer.reduce(event, requestData);
+
+    // Should still have exactly 1 entry (not duplicated)
+    expect(mockImagesMap.size).toBe(1);
+  });
+
+  it('should sync multiple images', async () => {
+    // Register a second image
+    mockImageRegistry.register([
+      {
+        imageId: 'jupyter:lab',
+        imageName: 'JupyterLab',
+        imageUri: 'holistixforge/jupyterlab',
+        imageTag: 'latest',
+        description: 'JupyterLab notebook',
+        category: 'data-science',
+        oauthClients: [],
+      },
+    ]);
+
+    const event = {
+      type: 'project:init' as const,
+      project_id: 'test-project-123',
+      systemEvent: true as const,
+    };
+
+    const requestData = { project_id: 'test-project-123' } as any;
+
+    await reducer.reduce(event, requestData);
+
+    expect(mockImagesMap.size).toBe(2);
+    expect(mockImagesMap.has('ubuntu:terminal')).toBe(true);
+    expect(mockImagesMap.has('jupyter:lab')).toBe(true);
   });
 });

@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   InfoCircledIcon,
   TrashIcon,
   OpenInNewWindowIcon,
+  CopyIcon,
+  CheckIcon,
 } from '@radix-ui/react-icons';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import * as Menubar from '@radix-ui/react-menubar';
@@ -98,8 +100,12 @@ export const UserContainerCardInternal = ({
     serviceUrl(container, firstServiceName);
 
   // Terminal URL: use serviceUrl helper to construct proper FQDN-based URL
-  const terminalService = container.httpServices.find(s => s.name === 'terminal');
-  const terminalUrl = terminalService ? serviceUrl(container, 'terminal') : null;
+  const terminalService = container.httpServices.find(
+    (s) => s.name === 'terminal'
+  );
+  const terminalUrl = terminalService
+    ? serviceUrl(container, 'terminal')
+    : null;
 
   //
 
@@ -109,7 +115,9 @@ export const UserContainerCardInternal = ({
         color === 'red' ? 'node-background' : 'gradient-notebook-card'
       } rounded-[8px] col-span-1 flex flex-col p-5 relative w-[400px] pointer`}
       onClick={() => {
-        firstServiceName && onOpenService?.(firstServiceName);
+        if (firstServiceName) {
+          onOpenService?.(firstServiceName);
+        }
       }}
     >
       {alive && container.last_activity && (
@@ -208,12 +216,12 @@ export const UserContainerCardInternal = ({
               <p>Select a runner to start the container</p>
             </div>
             <div className="flex gap-2">
-              {Array.from(runners.values()).map((runner, k) => (
+              {Array.from(runners.entries()).map(([runnerId, runner]) => (
                 <div
-                  key={runner.label}
+                  key={runnerId}
                   className="flex items-center gap-2 cursor-pointer border border-white/10 rounded-[4px] p-2"
                   onClick={() => {
-                    onSelectRunner(runner.label);
+                    onSelectRunner(runnerId);
                   }}
                 >
                   <runner.icon />
@@ -223,6 +231,11 @@ export const UserContainerCardInternal = ({
             </div>
           </>
         )}
+
+        {container.runner.id !== 'none' &&
+          typeof container.runner.command === 'string' && (
+            <DockerCommand command={container.runner.command} />
+          )}
       </div>
 
       <TagsBar tags={tags} addTag={addTag} />
@@ -244,6 +257,48 @@ export const UserContainerCardInternal = ({
         <ButtonBase className="red" text="Delete" {...deleteAction} />
       </DialogControlled>
     </div>
+  );
+};
+
+const DockerCommand = ({ command }: { command: string }) => {
+  const [copied, setCopied] = useState(false);
+
+  const onCopy = useCallback(() => {
+    navigator.clipboard.writeText(command);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [command]);
+
+  return (
+    <ClickStopPropagation>
+      <div className="mt-2">
+        <div className="flex items-center justify-between mb-1">
+          <p className="text-white/60 text-[11px]">
+            Run this command to start the container:
+          </p>
+          <button
+            className="flex items-center gap-1 text-white/60 hover:text-white text-[11px] cursor-pointer"
+            onClick={onCopy}
+          >
+            {copied ? (
+              <>
+                <CheckIcon className="h-3 w-3" /> Copied
+              </>
+            ) : (
+              <>
+                <CopyIcon className="h-3 w-3" /> Copy
+              </>
+            )}
+          </button>
+        </div>
+        <pre
+          className="bg-black/40 rounded-[4px] p-2 text-[10px] text-green-400 overflow-x-auto max-h-[80px] whitespace-pre-wrap break-all cursor-text select-all"
+          onClick={onCopy}
+        >
+          {command}
+        </pre>
+      </div>
+    </ClickStopPropagation>
   );
 };
 

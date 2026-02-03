@@ -70,9 +70,7 @@ export const moduleBackend: TModule<TRequired, TUserContainersExports> = {
       'images'
     );
 
-    // Setup image registry (multi-project mode: images are per-project, registry is global)
-    // The registry will work with per-project data when containers are created
-    const registry = new ContainerImageRegistry(null);
+    const registry = new ContainerImageRegistry();
 
     // Register built-in images owned by user-containers module itself.
     // These do not depend on other feature modules.

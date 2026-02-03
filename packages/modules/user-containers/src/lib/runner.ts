@@ -1,30 +1,28 @@
+import { TJsonObject } from '@holistix-forge/simple-types';
 import { TUserContainer } from './servers-types';
 import { ContainerImageRegistry } from './image-registry';
 
+export type TRunnerConfig = {
+  user_id: string;
+  project_id: string;
+  frontend_fqdn: string;
+  ganymede_fqdn: string;
+  gateway_fqdn: string;
+};
+
 /**
- * Abstract base class for container runners
- * Provides command generation and container startup functionality
+ * Abstract base class for container runners.
+ * Provides command generation and container startup functionality.
  */
 export abstract class ContainerRunner {
   /**
-   * Generate Docker run command for a container
-   * @param container - Container to generate command for
-   * @param jwtToken - JWT token for container authentication
-   * @param imageRegistry - Image registry to get image definition
-   * @param config - Configuration with FQDNs and user info
-   * @returns Docker run command string
+   * Generate Docker run command for a container.
    */
   generateCommand(
     container: TUserContainer,
     jwtToken: string,
     imageRegistry: ContainerImageRegistry,
-    config: {
-      user_id: string;
-      project_id: string;
-      frontend_fqdn: string;
-      ganymede_fqdn: string;
-      gateway_fqdn: string;
-    }
+    config: TRunnerConfig
   ): string {
     const imageDef = imageRegistry.get(container.image_id);
     if (!imageDef) {
@@ -38,7 +36,6 @@ export abstract class ContainerRunner {
     container.oauth.forEach((oc) => {
       oauth_clients[oc.service_name] = {
         client_id: oc.client_id,
-        // client_secret would need to be retrieved from OAuthManager if needed
       };
     });
 
@@ -58,18 +55,23 @@ export abstract class ContainerRunner {
     const json = JSON.stringify(settings);
     const env = Buffer.from(json).toString('base64');
 
-    // Generate container name
+    // Generate container name (sanitize: replace spaces with underscores)
     const shortUuid = container.user_container_id.substring(0, 8);
-    const fullname = `holistix_${container.container_name}_${shortUuid}`;
+    const safeName = container.container_name.replace(/[^a-zA-Z0-9_.-]/g, '_');
+    const fullname = `holistix_${safeName}_${shortUuid}`;
 
     // Return Docker run command
     return `docker run --restart unless-stopped --name ${fullname} -e SETTINGS=${env} --cap-add=NET_ADMIN --device /dev/net/tun ${imageDef.imageUri}:${imageDef.imageTag}`;
   }
 
   /**
-   * Start a container
-   * @param container - Container to start
-   * @param jwtToken - JWT token for container authentication
+   * Start a container.
+   * Returns runner-specific data to be merged into container.runner in shared state.
    */
-  abstract start(container: TUserContainer, jwtToken: string): Promise<void>;
+  abstract start(
+    container: TUserContainer,
+    jwtToken: string,
+    imageRegistry: ContainerImageRegistry,
+    config: TRunnerConfig
+  ): Promise<TJsonObject>;
 }

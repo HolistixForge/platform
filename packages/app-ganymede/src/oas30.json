@@ -1139,6 +1139,52 @@
         "security": [{ "gatewayToken": [] }]
       }
     },
+    "/gateway/tokens/scoped": {
+      "post": {
+        "summary": "Generate project-scoped JWT token",
+        "description": "Gateway calls this to get a signed JWT token. Ganymede validates project ownership and signs the payload - it is agnostic to token content. Only Ganymede has the private key.",
+        "tags": ["Gateway"],
+        "parameters": [
+          { "$ref": "#/components/parameters/headers_authorization_bearer" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["project_id", "payload"],
+                "properties": {
+                  "project_id": { "type": "string", "format": "uuid" },
+                  "payload": {
+                    "type": "object",
+                    "description": "Token payload to sign (Ganymede signs as-is, gateway defines structure)",
+                    "additionalProperties": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        },
+        "security": [{ "organizationToken": [] }]
+      }
+    },
     "/gateway/stop": {
       "post": {
         "summary": "Stop gateway (deallocate from organization)",

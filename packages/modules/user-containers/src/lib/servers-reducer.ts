@@ -12,7 +12,7 @@ import {
   TEventDeleteNode,
   TEventNewNode,
 } from '@holistix-forge/core-graph';
-import { TGatewayExports } from '@holistix-forge/gateway';
+import { TGatewayExports, TEventProjectInit } from '@holistix-forge/gateway';
 import {
   RequestData,
   TReducersBackendExports,
@@ -50,7 +50,7 @@ type TRequired = {
 };
 
 export class UserContainersReducer extends ReducerWithCollab<
-  TUserContainersEvents | TEventPeriodic,
+  TUserContainersEvents | TEventPeriodic | TEventProjectInit,
   TUserContainersSharedData & TCoreSharedData
 > {
   //
@@ -60,10 +60,12 @@ export class UserContainersReducer extends ReducerWithCollab<
   }
 
   reduce(
-    event: TUserContainersEvents | TEventPeriodic,
+    event: TUserContainersEvents | TEventPeriodic | TEventProjectInit,
     requestData: RequestData
   ): Promise<void> {
     switch (event.type) {
+      case 'project:init':
+        return this._initProject(event, requestData);
       case 'user-container:new':
         return this._new(event, requestData);
       case 'user-container:delete':
@@ -85,6 +87,45 @@ export class UserContainersReducer extends ReducerWithCollab<
       default:
         return Promise.resolve();
     }
+  }
+
+  private async _initProject(
+    event: TEventProjectInit,
+    requestData: RequestData
+  ): Promise<void> {
+    const collab = this.getCollab(requestData);
+    const imagesMap = collab.sharedData['user-containers:images'];
+
+    const currentSize = imagesMap.copy().size;
+    log(
+      EPriority.Info,
+      'USER_CONTAINERS_INIT',
+      `project:init called for project ${event.project_id}, current images size: ${currentSize}`
+    );
+
+    // Get all images from the in-memory registry
+    const allImages =
+      this.depsExports['user-containers'].imageRegistry.getAll();
+
+    let synced = 0;
+    for (const img of allImages) {
+      // Idempotent: skip if already present
+      if (imagesMap.get(img.imageId)) {
+        continue;
+      }
+      imagesMap.set(img.imageId, {
+        imageId: img.imageId,
+        imageName: img.imageName,
+        description: img.description,
+      });
+      synced++;
+    }
+
+    log(
+      EPriority.Info,
+      'USER_CONTAINERS_INIT',
+      `Synced ${synced} image(s) to shared map for project ${event.project_id} (${allImages.length} total in registry)`
+    );
   }
 
   private generateContainerId(): string {
@@ -468,7 +509,7 @@ export class UserContainersReducer extends ReducerWithCollab<
       // Should not happen with per-project periodic events
       return;
     }
-    
+
     // Process containers for this specific project
     const collab = this.getCollab(requestData);
     const sduc = collab.sharedData['user-containers:containers'];
@@ -620,22 +661,29 @@ export class UserContainersReducer extends ReducerWithCollab<
     const runnerId = container.runner.id;
 
     // Generate hosting token (TJwtUserContainer) for the container
-    // Get project_id from JWT or container context
-    const project_id =
-      (jwt as any)?.project_id || (container as any)?.project_id;
+    // project_id comes from requestData (set by collab route from event body)
+    const project_id = requestData.project_id;
     if (!project_id) {
       throw new ForbiddenException([
         { message: 'Project ID required for token generation' },
       ]);
     }
 
+    // Generate hosting token via TokenManager (calls Ganymede internally)
+    // Reducer constructs the complete payload - TokenManager is just a pipe
     const tokenManager = this.depsExports.gateway.tokenManager;
-    const hostingToken = tokenManager.generateJWTToken({
-      type: 'user_container_token',
+    const organization_id = this.depsExports.gateway.organization_id;
+    const hostingToken = await tokenManager.generateProjectScopedToken(
       project_id,
-      user_container_id: containerId,
-      scope: 'container:access',
-    });
+      {
+        type: 'user_container_token',
+        user_container_id: containerId,
+        // Scopes (space-separated, standard JWT format):
+        // - project:${project_id}:access - for /collab/event access (requireProjectAccess)
+        // - org:${organization_id}:connect-vpn - for /collab/vpn-config access (requireScope)
+        scope: `project:${project_id}:access org:${organization_id}:connect-vpn`,
+      }
+    );
 
     // Get runner from registry
     const runner = this.depsExports['user-containers'].getRunner(runnerId);
@@ -645,10 +693,30 @@ export class UserContainersReducer extends ReducerWithCollab<
       ]);
     }
 
-    // Call runner's start method with container and JWT token
-    // Token is NOT stored in shared data - it's only passed to runner
-    // The runner will use generateCommand internally if needed
-    await runner.start(container, hostingToken);
+    // Build config from environment and gateway exports
+    const domain = process.env.DOMAIN || 'domain.local';
+    const config = {
+      user_id,
+      project_id,
+      frontend_fqdn: process.env.FRONTEND_FQDN || domain,
+      ganymede_fqdn: process.env.GANYMEDE_FQDN || `ganymede.${domain}`,
+      gateway_fqdn: this.depsExports.gateway.gatewayFQDN,
+    };
+
+    // Call runner - returns runner-specific data (e.g. docker command for local runner)
+    const imageRegistry = this.depsExports['user-containers'].imageRegistry;
+    const runnerResult = await runner.start(
+      container,
+      hostingToken,
+      imageRegistry,
+      config
+    );
+
+    // Merge runner result into container.runner in shared state
+    sduc.set(containerId, {
+      ...container,
+      runner: { ...container.runner, ...runnerResult },
+    });
   }
 
   //

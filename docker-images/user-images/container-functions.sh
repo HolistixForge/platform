@@ -60,7 +60,7 @@ get_system_info() {
 }
 
 watchdog() {
-    PAYLOAD='{"event":{"type":"user-container:watchdog","system": '$(get_system_info)'}}'
+    PAYLOAD='{"event":{"type":"user-container:watchdog","system": '$(get_system_info)'},"project_id":"'${PROJECT_ID}'"}'
     echo "--->$PAYLOAD<---"
     curl -X POST http://${GATEWAY_VPN_IP}/collab/event \
         -H "Authorization: ${TOKEN}" \
@@ -105,7 +105,7 @@ map_http_service() {
             -X POST http://${GATEWAY_VPN_IP}/collab/event \
             -H "Authorization: ${TOKEN}" \
             -H "Content-Type: application/json" \
-            -d "{\"event\":{\"type\":\"user-container:map-http-service\",\"port\":${PORT},\"name\":\"${NAME}\"}}" \
+            -d "{\"event\":{\"type\":\"user-container:map-http-service\",\"port\":${PORT},\"name\":\"${NAME}\"},\"project_id\":\"${PROJECT_ID}\"}" \
             2>/dev/null
         sleep 15
     done

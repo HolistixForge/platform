@@ -57,4 +57,4 @@ data/*
 .venv
 
 # Static documentation site generator (md-file-graph output)
-website/static/
+website/static/.playwright-mcp/

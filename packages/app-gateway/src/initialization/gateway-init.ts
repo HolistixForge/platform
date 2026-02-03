@@ -213,6 +213,7 @@ export async function initializeGatewayForOrganization(
   // 3.2 Create other manager instances
   const oauthManager = new OAuthManager();
   const tokenManager = new TokenManager();
+  tokenManager.initialize(organizationToken); // Initialize with org token for Ganymede calls
   const projectRooms = new ProjectRoomsManager();
 
   // 3.5 Create CollabRegistry for multi-project architecture

@@ -27,10 +27,11 @@ export const setupCollabRoutes = (
 
   // POST /collab/event - Process collaborative event
   // Requires project_id in request body for multi-project architecture
+  // Both user tokens and container tokens send project_id in the body
   router.post(
     '/collab/event',
     authenticateJwt,
-    requireProjectAccess(), // Check project access if project_id is in JWT or body
+    requireProjectAccess(), // Handles both user tokens and container tokens (see middleware)
     asyncHandler(async (req: Request, res) => {
       const instances = getGatewayInstances();
       if (!instances) {
@@ -38,9 +39,17 @@ export const setupCollabRoutes = (
       }
 
       const authReq = req as any;
-      const { event, project_id } = req.body;
-      const user_id = authReq.user.id;
+      const jwt = authReq.jwt;
+      const { event } = req.body;
       const ip = (req.headers['x-real-ip'] as string) || req.ip || 'unknown';
+
+      // Get user_id - container tokens don't have one (use empty string)
+      // Reducers check JWT type to determine if it's a container token
+      const user_id = authReq.user?.id || '';
+
+      // project_id comes from request body for both user and container tokens
+      // (container scripts now include project_id in event payload)
+      const project_id = req.body.project_id;
 
       // project_id is required for multi-project architecture
       // It tells reducers which project's YJS doc to operate on
@@ -53,7 +62,7 @@ export const setupCollabRoutes = (
       const requestData = {
         ip,
         user_id,
-        jwt: authReq.jwt || {},
+        jwt: jwt || {},
         headers: req.headers as any,
         project_id,
       };

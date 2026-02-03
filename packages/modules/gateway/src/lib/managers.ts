@@ -10,16 +10,24 @@ import { TJson } from '@holistix-forge/simple-types';
 
 /**
  * Abstract TokenManager interface
- * Provides generic token generation for JWT
+ * Provides token generation via Ganymede (centralized signing)
  */
 export abstract class TokenManager {
   /**
-   * Generate JWT token for any payload
-   * @param payload - Payload object to encode
-   * @param expiresIn - Optional expiration (default: '1h')
-   * @returns JWT token string
+   * Generate a project-scoped JWT token via Ganymede
+   *
+   * Tokens are signed by Ganymede (the only service with the private key).
+   * TokenManager is a dumb pipe - caller constructs the complete payload.
+   * Ganymede only validates project ownership and signs as-is.
+   *
+   * @param project_id - Project ID the token is scoped to
+   * @param payload - Complete token payload (type, scope, claims - caller defines structure)
+   * @returns Promise resolving to signed JWT token string
    */
-  abstract generateJWTToken(payload: TJson, expiresIn?: string): string;
+  abstract generateProjectScopedToken(
+    project_id: string,
+    payload: TJson
+  ): Promise<string>;
 }
 
 /**

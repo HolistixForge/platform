@@ -4,11 +4,13 @@
 
 Run `./scripts/local-dev/infra-diagnostic.sh` in these situations:
 
-1. **User asks about infrastructure status** - "Is everything running?", "Check services", "What's wrong?"
-2. **User reports issues** - Connection failures, DNS problems, service not responding, container issues
-3. **After infrastructure changes** - After setup scripts, starting/stopping services, creating/deleting environments, DNS changes
-4. **When troubleshooting** - Before suggesting fixes, run diagnostics to understand current state
-5. **As verification** - After completing setup or applying fixes
+1. **Before any browser testing** - Run as step 0 before navigating to any `*.local` URL (checks DNS, CoreDNS, Nginx, containers)
+2. **Before deploying** - Step 0 in the gateway deployment workflow (see `gateway-deployment-workflow.md`)
+3. **User asks about infrastructure status** - "Is everything running?", "Check services", "What's wrong?"
+4. **User reports issues** - Connection failures, DNS problems, service not responding, container issues
+5. **After infrastructure changes** - After setup scripts, starting/stopping services, creating/deleting environments, DNS changes
+6. **When troubleshooting** - Before suggesting fixes, run diagnostics to understand current state
+7. **As verification** - After completing setup or applying fixes
 
 ## How to Use
 

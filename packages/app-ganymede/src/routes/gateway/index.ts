@@ -395,6 +395,61 @@ export const setupGatewayRoutes = (
     })
   );
 
+  // POST /gateway/tokens/scoped - Generate project-scoped JWT tokens
+  // Gateway calls this to get signed tokens (only Ganymede has the private key)
+  // Ganymede is agnostic to token content - it only validates project ownership and signs
+  router.post(
+    '/gateway/tokens/scoped',
+    authenticateJwtOrganization,
+    asyncHandler(async (req: OrganizationAuthRequest, res) => {
+      const { project_id, payload } = req.body;
+
+      // Validate project_id is provided and is a valid UUID
+      if (!project_id || !/^[a-f0-9-]{36}$/.test(project_id)) {
+        return res.status(400).json({
+          error: 'Missing or invalid project_id (must be UUID)',
+        });
+      }
+
+      // Validate payload is provided
+      if (!payload || typeof payload !== 'object') {
+        return res.status(400).json({
+          error: 'Missing or invalid payload (must be object)',
+        });
+      }
+
+      // Verify project belongs to organization (the ONLY business logic check)
+      const projectCheck = await pg.query(
+        'SELECT 1 FROM projects WHERE project_id = $1 AND organization_id = $2',
+        [project_id, req.organization.id]
+      );
+      if (!projectCheck.next()?.oneRow()) {
+        return res.status(403).json({
+          error: 'Project does not belong to organization',
+        });
+      }
+
+      log(
+        EPriority.Info,
+        'GATEWAY_TOKEN',
+        `Signing token for project ${project_id}`,
+        { payload_type: payload.type }
+      );
+
+      // Sign whatever the gateway sends - Ganymede doesn't interpret the payload
+      // Gateway is responsible for constructing valid token payloads
+      const token = generateJwtToken(
+        {
+          project_id,
+          ...payload,
+        },
+        '365d'
+      );
+
+      return res.json({ token });
+    })
+  );
+
   // POST /gateway/stop - Stop gateway (called when org deallocates)
   router.post(
     '/gateway/stop',

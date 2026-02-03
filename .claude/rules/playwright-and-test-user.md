@@ -47,7 +47,15 @@ If the browser fails to launch with a sandbox error, verify that both `--no-sand
 
 ### Prerequisites Before Using the Browser
 
-Before navigating to any `*.local` URL:
+**Quick check — run the infra diagnostic tool first:**
+
+```bash
+./scripts/local-dev/infra-diagnostic.sh
+```
+
+This verifies DNS, CoreDNS, Nginx, gateway containers, and connectivity in one command. If it passes, you're ready to use the browser.
+
+If the diagnostic fails or you need to fix individual items:
 
 1. **CoreDNS must be running** — resolves `*.local` domains
    ```bash

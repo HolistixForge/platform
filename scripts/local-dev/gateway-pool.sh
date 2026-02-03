@@ -301,7 +301,7 @@ cmd_create() {
         container_env[BUILD_SERVER_IP]="${build_server_ip}"
         container_env[ALLOWED_ORIGINS]="[\"https://${DOMAIN}\"]"
         
-        # JWT Keys for token verification
+        # JWT public key for token verification (gateway verifies, Ganymede signs)
         container_env[JWT_PUBLIC_KEY]="${JWT_PUBLIC_KEY}"
         
         # OpenTelemetry configuration
