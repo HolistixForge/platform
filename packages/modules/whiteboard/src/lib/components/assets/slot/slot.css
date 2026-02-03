@@ -8,15 +8,15 @@
 }
 
 .handles-bar ul li {
-  font-size: 8px;
-  color: var(--c-yellow-1);
+  font-size: var(--font-size-2xs);
+  color: var(--yellow-100);
   white-space: nowrap;
   margin: 0;
   padding: 0;
   width: 8.5px;
   height: 40px;
   border-radius: 8px;
-  border: 1px solid var(--c-yellow-1);
+  border: 1px solid var(--yellow-100);
   user-select: none;
   position: relative;
 }

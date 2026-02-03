@@ -10,7 +10,6 @@ export interface CellsHiveProps {
 }
 
 export const CellsHive = ({ cells, columnsNumber }: CellsHiveProps) => {
-  
   const columns: Array<Cells> = Array(columnsNumber)
     .fill(1)
     .map(() => []);
@@ -18,13 +17,15 @@ export const CellsHive = ({ cells, columnsNumber }: CellsHiveProps) => {
   cells.forEach((c, i) => columns[i % columnsNumber].push(c));
 
   return (
-    <div className="flex gap-[1px]">
+    <div className="flex" style={{ gap: '1px' }}>
       {columns.map((column, i) => (
         <div
           key={i}
-          className={`flex flex-col gap-[1px] ${
-            i % 2 === 1 ? 'translate-y-1' : ''
-          }`}
+          className="flex flex-col"
+          style={{
+            gap: '1px',
+            ...(i % 2 === 1 ? { transform: 'translateY(4px)' } : {}),
+          }}
         >
           {column.map((c) => (
             <ReducedCell type={c.type} key={c.id} />

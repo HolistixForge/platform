@@ -1,0 +1,152 @@
+// UserBubble component styles
+
+.user-bubble-root {
+  position: relative;
+  display: flex;
+
+  &.horizontal {
+    align-items: center;
+  }
+
+  &.vertical {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.live-indicator {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  height: fit-content;
+  line-height: 10px;
+  font-size: var(--font-size-sm);
+  color: var(--c-live-indicator);
+  width: fit-content;
+  gap: 2px;
+  z-index: var(--z-dropdown);
+
+  &.live-small {
+    bottom: 2px;
+  }
+
+  &.live-large {
+    bottom: 4px;
+  }
+}
+
+.live-dot {
+  border-radius: 9999px;
+  height: 8px;
+  width: 8px;
+  margin-bottom: 2px;
+}
+
+.bubble-avatar-wrapper {
+  position: absolute;
+  border-radius: 9999px;
+}
+
+.plus-n-wrapper {
+  position: absolute;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.horizontal {
+    left: 0;
+  }
+
+  &.vertical {
+    top: 0;
+  }
+}
+
+.plus-n-ping {
+  position: absolute;
+  z-index: var(--z-behind);
+  height: 65%;
+  width: 65%;
+  background-color: var(--c-live-ping);
+  transform-origin: center;
+  border-radius: 9999px;
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.plus-n-circle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-base);
+  height: 100%;
+  width: 100%;
+  border-radius: 9999px;
+  background-color: var(--c-plus-n-bg);
+  border: 1px solid var(--c-plus-n-border);
+
+  &.live-border {
+    border-color: var(--c-live-ping);
+    filter: drop-shadow(0px 0px 4px var(--c-live-ping));
+  }
+
+  &.size-small {
+    max-height: 38px;
+    max-width: 38px;
+    min-height: 38px;
+    min-width: 38px;
+  }
+
+  &.size-large {
+    max-height: 48px;
+    max-width: 48px;
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+// Avatar styles for users.tsx
+.avatar-live-ping {
+  position: absolute;
+  z-index: var(--z-behind);
+  height: 31px;
+  width: 31px;
+  transform-origin: center;
+  border-radius: 9999px;
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+
+  &.ping-live {
+    background-color: var(--c-live-ping);
+  }
+
+  &.ping-host {
+    background-color: var(--c-host-ping);
+  }
+}
+
+.avatar-host-label {
+  position: absolute;
+  opacity: 0;
+  transition: all 0.15s;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: var(--font-size-lg);
+  color: var(--c-host-label);
+  z-index: var(--z-behind);
+  padding: 2px;
+  border-radius: 4px;
+  border: 1px solid var(--c-host-ping);
+}
+
+.avatar-host-text {
+  font-weight: var(--font-weight-bold);
+}
+
+@keyframes ping {
+  75%,
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}

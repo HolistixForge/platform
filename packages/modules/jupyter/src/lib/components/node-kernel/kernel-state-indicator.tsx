@@ -24,7 +24,7 @@ const stateToColor = (state: number) => {
 
 export const KernelStateIndicator = ({ state }: KernelStateIndicatorProps) => {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center" style={{ gap: '8px' }}>
       <div
         className="led"
         style={{ backgroundColor: stateToColor(state) }}

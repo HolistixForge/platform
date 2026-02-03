@@ -17,12 +17,18 @@ export const Tag = ({
 }: TagProps) => {
   return (
     <span
+      className="tag flex group/tag items-center font-medium transition-all"
       style={{
         color: textColor,
+        gap: '8px',
+        textTransform: 'uppercase',
+        fontSize: '10px',
+        lineHeight: '14px',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        borderRadius: '4px',
       }}
-      className={`tag flex group/tag items-center gap-2 uppercase text-[10px] font-medium leading-[14px] bg-white bg-opacity-5 rounded-[4px] transition-all`}
     >
-      <span className="py-[2px] px-[10px]" contentEditable>
+      <span style={{ padding: '2px 10px' }} contentEditable>
         {text}
       </span>
       {crowned ? (

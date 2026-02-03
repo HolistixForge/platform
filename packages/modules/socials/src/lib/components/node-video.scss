@@ -1,3 +1,8 @@
+:root {
+  // --- Socials domain tokens ---
+  --color-youtube: #f00;
+}
+
 .video-node {
   .select-handle {
     position: absolute;
@@ -6,12 +11,12 @@
     transform: translateX(-50%);
     width: 100px;
     height: 30px;
-    background-color: #aaa;
+    background-color: var(--c-neutral-select-handle);
     border-radius: 0 0 10px 10px;
     opacity: 0;
     transition: opacity 0.3s ease-in-out;
-    font-size: 14px;
-    color: #fff;
+    font-size: var(--font-size-md);
+    color: var(--white);
     display: flex;
     align-items: center;
     justify-content: center;

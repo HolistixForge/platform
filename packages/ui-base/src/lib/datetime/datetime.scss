@@ -12,8 +12,8 @@
       margin-right: 5px;
       display: inline;
       path {
-        stroke: var(--c-gray-8);
-        fill: var(--c-gray-8);
+        stroke: var(--neutral-8);
+        fill: var(--neutral-8);
       }
     }
 
@@ -24,9 +24,9 @@
 
   .datetime-hover {
     position: absolute;
-    background-color: var(--c-black-5);
-    border: solid 1px var(--c-white-1);
-    color: var(--c-white-1);
+    background-color: var(--black-800);
+    border: solid 1px var(--white);
+    color: var(--white);
     padding: 0px 7px;
     border-radius: 9999px;
     white-space: nowrap;

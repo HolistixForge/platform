@@ -20,28 +20,79 @@ export const CardSettings = ({ status }: CardSettingsProps) => {
   });
 
   return (
-    <div className="w-[220px] -bg--c-blue-gray-1 p-[10px] rounded-[4px] flex flex-col gap-[20px]">
-      <div className="flex items-center justify-between gap-3">
+    <div
+      className="flex flex-col"
+      style={{
+        width: '220px',
+        padding: '10px',
+        borderRadius: '4px',
+        gap: '20px',
+        backgroundColor: 'var(--surface-800)',
+      }}
+    >
+      <div
+        className="flex items-center justify-between"
+        style={{ gap: '12px' }}
+      >
         <NodeMainToolbar buttons={buttons} />
-        <div className="flex items-center gap-[6px]">
+        <div className="flex items-center" style={{ gap: '6px' }}>
           <icons.NoteBookIcon />
-          <span className="uppercase text-white -bg--c-orange-3 rounded-[2px] text-[10px] p-[2px] leading-[14px]">
+          <span
+            style={{
+              textTransform: 'uppercase',
+              color: 'var(--white)',
+              borderRadius: '2px',
+              fontSize: '10px',
+              padding: '2px',
+              lineHeight: '14px',
+              backgroundColor: 'var(--orange-300)',
+            }}
+          >
             Notebook
           </span>
-          <div className="rounded-full h-[14px] w-[14px] -bg--c-pink-3" />
+          <div
+            style={{
+              borderRadius: '9999px',
+              height: '14px',
+              width: '14px',
+              backgroundColor: 'var(--primary-300)',
+            }}
+          />
         </div>
       </div>
-      <div className="flex flex-col gap-2">
-        <div className="rounded-[2px] border-[1.5px] -border--c-blue-gray-3 px-[6px] py-[4px]">
+      <div className="flex flex-col" style={{ gap: '8px' }}>
+        <div
+          style={{
+            borderRadius: '2px',
+            borderWidth: '1.5px',
+            borderStyle: 'solid',
+            borderColor: 'var(--surface-600)',
+            padding: '4px 6px',
+          }}
+        >
           <p
             contentEditable
-            className="text-white text-xs font-bold outline-none"
+            className="font-bold"
+            style={{
+              color: 'var(--white)',
+              fontSize: 'var(--font-size-xs)',
+              outline: 'none',
+            }}
           >
             Node #12345
           </p>
         </div>
 
-        <div className="w-full rounded-[2px] border-[1.5px] -border--c-blue-gray-3 px-[6px] py-[4px]">
+        <div
+          className="w-full"
+          style={{
+            borderRadius: '2px',
+            borderWidth: '1.5px',
+            borderStyle: 'solid',
+            borderColor: 'var(--surface-600)',
+            padding: '4px 6px',
+          }}
+        >
           <SelectFieldset
             name={''}
             value={'python 3.10.12 modele'}
@@ -63,7 +114,16 @@ export const CardSettings = ({ status }: CardSettingsProps) => {
           </SelectFieldset>
         </div>
 
-        <div className="w-full rounded-[2px] border-[1.5px] -border--c-blue-gray-3 px-[6px] py-[4px]">
+        <div
+          className="w-full"
+          style={{
+            borderRadius: '2px',
+            borderWidth: '1.5px',
+            borderStyle: 'solid',
+            borderColor: 'var(--surface-600)',
+            padding: '4px 6px',
+          }}
+        >
           <SelectFieldset
             name={''}
             value={'master-branch'}
@@ -80,7 +140,16 @@ export const CardSettings = ({ status }: CardSettingsProps) => {
           </SelectFieldset>
         </div>
 
-        <div className="w-full rounded-[2px] border-[1.5px] -border--c-blue-gray-3 px-[6px] py-[4px]">
+        <div
+          className="w-full"
+          style={{
+            borderRadius: '2px',
+            borderWidth: '1.5px',
+            borderStyle: 'solid',
+            borderColor: 'var(--surface-600)',
+            padding: '4px 6px',
+          }}
+        >
           <SelectFieldset
             name={''}
             value={'test.ipynb'}
@@ -97,7 +166,16 @@ export const CardSettings = ({ status }: CardSettingsProps) => {
           </SelectFieldset>
         </div>
 
-        <div className="w-full rounded-[2px] border-[1.5px] -border--c-blue-gray-3 px-[6px] py-[4px]">
+        <div
+          className="w-full"
+          style={{
+            borderRadius: '2px',
+            borderWidth: '1.5px',
+            borderStyle: 'solid',
+            borderColor: 'var(--surface-600)',
+            padding: '4px 6px',
+          }}
+        >
           <SelectFieldset
             name={''}
             value={'Title cell # 1'}
@@ -115,11 +193,35 @@ export const CardSettings = ({ status }: CardSettingsProps) => {
         </div>
       </div>
       {status === 'success' ? (
-        <div className="ml-auto h-[8px] w-[8px] rounded-full -bg--c-green-3" />
+        <div
+          style={{
+            marginLeft: 'auto',
+            height: '8px',
+            width: '8px',
+            borderRadius: '9999px',
+            backgroundColor: 'var(--green-300)',
+          }}
+        />
       ) : status === 'error' ? (
-        <div className="ml-auto h-[8px] w-[8px] rounded-full -bg--c-red-1" />
+        <div
+          style={{
+            marginLeft: 'auto',
+            height: '8px',
+            width: '8px',
+            borderRadius: '9999px',
+            backgroundColor: 'var(--red-300)',
+          }}
+        />
       ) : (
-        <div className="ml-auto h-[8px] w-[8px] rounded-full -bg--c-yellow-3" />
+        <div
+          style={{
+            marginLeft: 'auto',
+            height: '8px',
+            width: '8px',
+            borderRadius: '9999px',
+            backgroundColor: 'var(--yellow-300)',
+          }}
+        />
       )}
     </div>
   );

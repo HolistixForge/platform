@@ -1,3 +1,15 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+:root {
+  // --- Jupyter domain tokens ---
+  --color-kernel: var(--primary-600);
+  --color-kernel-state-1: var(--primary-200);
+  --color-kernel-state-2: var(--primary-500);
+
+  // JupyterLab collaborator colors
+  --jp-collaborator-color1: #ffad8e;
+  --jp-collaborator-color2: #dac83d;
+  --jp-collaborator-color3: #72dd76;
+  --jp-collaborator-color4: #00e4d0;
+  --jp-collaborator-color5: #45d4ff;
+  --jp-collaborator-color6: #e2b1ff;
+  --jp-collaborator-color7: #ff9de6;
+}

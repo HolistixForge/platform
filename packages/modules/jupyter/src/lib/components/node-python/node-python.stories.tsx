@@ -86,7 +86,7 @@ type Story = StoryObj<typeof NodeStory>;
 
 export const Closed: Story = {
   args: {
-    color: 'var(--c-red-4)',
+    color: 'var(--red-500)',
     nodeInfos: true,
     status: 'success',
     expanded: false,
@@ -96,7 +96,7 @@ export const Closed: Story = {
 
 export const Closed_Hover: Story = {
   args: {
-    color: 'var(--c-red-4)',
+    color: 'var(--red-500)',
     nodeInfos: true,
     status: 'success',
     expanded: false,
@@ -113,7 +113,7 @@ export const Opened: Story = {
     },
   },
   args: {
-    color: 'var(--c-red-4)',
+    color: 'var(--red-500)',
     nodeInfos: true,
     status: 'success',
     expanded: true,

@@ -15,8 +15,8 @@
   position: absolute;
   top: -50px;
   left: 40px;
-  color: var(--c-white-1);
-  font-size: 14px;
+  color: var(--white);
+  font-size: var(--font-size-md);
   font-weight: bold;
 }
 
@@ -55,16 +55,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--c-pink-51);
+  background: var(--primary-600);
 }
 
 .new-comment span {
-  color: var(--c-white-1);
-  font-size: 10px;
+  color: var(--white);
+  font-size: var(--font-size-2xs);
 }
 
 .resizable-div {
-  border: 3px dashed var(--c-black-6);
+  border: 3px dashed var(--black-900);
   overflow: hidden;
   position: relative;
   border-radius: 8px;
@@ -79,13 +79,13 @@
 .anchor {
   width: 20px;
   height: 20px;
-  background-color: var(--c-gray-7);
+  background-color: var(--neutral-7);
   opacity: 0.2;
   border-radius: 50%;
   position: absolute;
   bottom: -8px;
   right: -8px;
-  z-index: 10;
+  z-index: var(--z-base);
   cursor: nwse-resize;
   transition: 0.2s;
 }

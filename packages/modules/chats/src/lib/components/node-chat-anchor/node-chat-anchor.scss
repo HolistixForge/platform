@@ -22,8 +22,8 @@
   }
 
   .new-comment span {
-    color: var(--c-white-1);
-    font-size: 10px;
+    color: var(--white);
+    font-size: var(--font-size-2xs);
   }
 
   .comment-wrapper {
@@ -59,7 +59,7 @@
   .side-comment p {
     margin: 0;
     padding: 0;
-    font-size: 9px;
+    font-size: var(--font-size-2xs);
     outline: none;
   }
 }
@@ -69,7 +69,7 @@
 .comment-icon {
   .node-outputs-closed {
     bottom: 50%;
-    z-index: -1;
+    z-index: var(--z-base);
     .edges-count {
       top: 0;
       transform: translate(-50%, -50%);

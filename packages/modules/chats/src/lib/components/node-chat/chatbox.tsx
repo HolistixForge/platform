@@ -9,7 +9,10 @@ import {
   ButtonIconProps,
   useAction,
 } from '@holistix-forge/ui-base';
-import { DisableZoomDragPan, NodeMainToolbar } from '@holistix-forge/whiteboard/frontend';
+import {
+  DisableZoomDragPan,
+  NodeMainToolbar,
+} from '@holistix-forge/whiteboard/frontend';
 
 import {
   DiscussionItem,
@@ -125,7 +128,6 @@ export const Chatbox = ({
     // execute handleScroll for special case when the chat
     // is almost empty and no scroll bar exist
     handleScroll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   //
@@ -187,7 +189,7 @@ export const Chatbox = ({
             <icons.Chat
               style={{
                 fill: general
-                  ? 'var(--c-yellow-1)'
+                  ? 'var(--yellow-100)'
                   : status === 'new'
                   ? 'var(--color-chat-new)'
                   : 'var(--color-chat-default)',
@@ -197,7 +199,7 @@ export const Chatbox = ({
               className="badge"
               style={{
                 backgroundColor: general
-                  ? 'var(--c-yellow-1)'
+                  ? 'var(--yellow-100)'
                   : status === 'new'
                   ? 'var(--color-chat-new)'
                   : 'var(--color-chat-default)',

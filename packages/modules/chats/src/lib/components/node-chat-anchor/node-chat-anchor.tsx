@@ -1,5 +1,8 @@
 import { icons } from '@holistix-forge/ui-base';
-import { InputsAndOutputs, useNodeContext } from '@holistix-forge/whiteboard/frontend';
+import {
+  InputsAndOutputs,
+  useNodeContext,
+} from '@holistix-forge/whiteboard/frontend';
 import { useNodeEdges } from '@holistix-forge/core-graph/frontend';
 import { TGraphNode } from '@holistix-forge/core-graph';
 import { useLocalSharedData } from '@holistix-forge/collab/frontend';
@@ -34,22 +37,24 @@ export const NodeChatAnchor = ({ node }: { node: TGraphNode }) => {
   // we want to open also the chat node
   const handleOpen = () => {
     useNodeValue.open();
-    chatNodeId &&
+    if (chatNodeId) {
       dispatcher.dispatch({
         type: 'whiteboard:open-node',
         nid: chatNodeId,
         viewId: useNodeValue.viewId,
       });
+    }
   };
 
   const handleClose = () => {
     useNodeValue.close();
-    chatNodeId &&
+    if (chatNodeId) {
       dispatcher.dispatch({
         type: 'whiteboard:close-node',
         nid: chatNodeId,
         viewId: useNodeValue.viewId,
       });
+    }
   };
 
   let unread = 0;
@@ -136,7 +141,7 @@ export const NodeChatAnchorInternal = ({
             style={{
               border:
                 status === 'new' ? '1px solid var(--color-chat-new)' : 'none',
-              color: status === 'new' ? 'var(--c-white-1)' : 'var(--c-pink-2)',
+              color: status === 'new' ? 'var(--white)' : 'var(--primary-200)',
             }}
             className={`side-comment ${isOpened ? 'side-comment-open' : ''}`}
           >

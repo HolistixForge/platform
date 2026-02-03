@@ -36,10 +36,18 @@ export const HomePage = () => {
       {ili ? (
         <ProjectsList />
       ) : (
-        <div className="flex flex-col items-center justify-center h-[calc(100vh-80px)]">
-          <div className="flex items-center gap-2 text-slate-400">
+        <div
+          className="flex flex-col items-center justify-center"
+          style={{ height: 'calc(100vh - 80px)' }}
+        >
+          <div
+            className="flex items-center"
+            style={{ gap: '8px', color: 'var(--neutral-5)' }}
+          >
             <InfoCircledIcon />
-            <p className="text-lg">Log in to see your projects</p>
+            <p style={{ fontSize: 'var(--font-size-lg)' }}>
+              Log in to see your projects
+            </p>
           </div>
         </div>
       )}
@@ -94,28 +102,72 @@ const ProjectsList = () => {
         {/* Organizations Section */}
         {orgsData && orgsData.length > 0 && (
           <div
-            className="organizations-list w-[350px] sm:w-[900px] mx-auto mt-16"
-            style={{ '--avatar-width': '30px' } as React.CSSProperties}
+            className="organizations-list"
+            style={
+              {
+                '--avatar-width': '30px',
+                width: '900px',
+                maxWidth: '100%',
+                margin: '64px auto 0',
+              } as React.CSSProperties
+            }
           >
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-semibold">My Organizations</h2>
+            <div
+              className="flex justify-between items-center"
+              style={{ marginBottom: '32px' }}
+            >
+              <h2
+                style={{
+                  fontSize: '1.5rem',
+                  lineHeight: '2rem',
+                  fontWeight: 600,
+                }}
+              >
+                My Organizations
+              </h2>
               <button
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'var(--color-accent)',
+                  color: 'var(--white)',
+                  borderRadius: '6px',
+                }}
                 onClick={() => no_action.open()}
               >
                 + New Organization
               </button>
             </div>
-            <Table.Root className="table-fixed border border-slate-700 rounded-md overflow-hidden mb-16">
-              <Table.Header className="w-[350px] sm:w-[900px] -bg--c-alt-blue-4">
+            <Table.Root
+              className="overflow-hidden"
+              style={{
+                tableLayout: 'fixed',
+                border: '1px solid var(--neutral-8)',
+                borderRadius: '6px',
+                marginBottom: '64px',
+              }}
+            >
+              <Table.Header
+                style={{
+                  width: '900px',
+                  backgroundColor: 'var(--surface-600)',
+                }}
+              >
                 <Table.Row>
-                  <Table.ColumnHeaderCell className="py-4 px-6 w-[50%]">
+                  <Table.ColumnHeaderCell
+                    style={{ padding: '16px 24px', width: '50%' }}
+                  >
                     Organization
                   </Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell className="py-4 px-6 w-[25%] text-center">
+                  <Table.ColumnHeaderCell
+                    className="text-center"
+                    style={{ padding: '16px 24px', width: '25%' }}
+                  >
                     Projects
                   </Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell className="py-4 px-6 w-[25%] text-center">
+                  <Table.ColumnHeaderCell
+                    className="text-center"
+                    style={{ padding: '16px 24px', width: '25%' }}
+                  >
                     Actions
                   </Table.ColumnHeaderCell>
                 </Table.Row>
@@ -130,28 +182,55 @@ const ProjectsList = () => {
                   return (
                     <Table.Row
                       key={org.organization_id}
-                      className="border-t border-slate-700 hover:bg-slate-800/50"
+                      style={{ borderTop: '1px solid var(--neutral-8)' }}
                     >
-                      <Table.Cell className="py-4 px-6 text-white">
-                        <Link
-                          to={`/org/${org.organization_id}`}
-                          className="hover:text-blue-400 transition-colors"
-                        >
+                      <Table.Cell
+                        style={{ padding: '16px 24px', color: 'var(--white)' }}
+                      >
+                        <Link to={`/org/${org.organization_id}`}>
                           {org.name}
                         </Link>
                       </Table.Cell>
-                      <Table.Cell className="py-4 px-6 text-center text-slate-300">
+                      <Table.Cell
+                        className="text-center"
+                        style={{
+                          padding: '16px 24px',
+                          color: 'var(--neutral-4)',
+                        }}
+                      >
                         {projectCount}
                       </Table.Cell>
-                      <Table.Cell className="py-4 px-6 text-center">
-                        <div className="flex items-center justify-center gap-2">
+                      <Table.Cell
+                        className="text-center"
+                        style={{ padding: '16px 24px' }}
+                      >
+                        <div
+                          className="flex items-center justify-center"
+                          style={{ gap: '8px' }}
+                        >
                           <Link to={`/org/${org.organization_id}`}>
-                            <button className="px-3 py-1 text-sm -bg--c-alt-blue-1 hover:-bg--c-alt-blue-2 text-white rounded transition-colors">
+                            <button
+                              style={{
+                                padding: '4px 12px',
+                                fontSize: 'var(--font-size-sm)',
+                                color: 'var(--white)',
+                                borderRadius: '4px',
+                                backgroundColor: 'var(--cyan-300)',
+                              }}
+                            >
                               Dashboard
                             </button>
                           </Link>
                           <Link to={`/org/${org.organization_id}/permissions`}>
-                            <button className="px-3 py-1 text-sm bg-purple-900/50 hover:bg-purple-800/50 text-purple-200 rounded transition-colors">
+                            <button
+                              style={{
+                                padding: '4px 12px',
+                                fontSize: 'var(--font-size-sm)',
+                                backgroundColor: 'rgba(88, 28, 135, 0.5)',
+                                color: '#d8b4fe',
+                                borderRadius: '4px',
+                              }}
+                            >
                               Permissions
                             </button>
                           </Link>
@@ -167,39 +246,83 @@ const ProjectsList = () => {
 
         {/* Projects Section */}
         <div
-          className="projects-list w-[350px] sm:w-[900px] mx-auto mt-16"
-          style={{ '--avatar-width': '30px' } as React.CSSProperties}
+          className="projects-list"
+          style={
+            {
+              '--avatar-width': '30px',
+              width: '900px',
+              maxWidth: '100%',
+              margin: '64px auto 0',
+            } as React.CSSProperties
+          }
         >
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-semibold">My Projects</h2>
+          <div
+            className="flex justify-between items-center"
+            style={{ marginBottom: '32px' }}
+          >
+            <h2
+              style={{
+                fontSize: '1.5rem',
+                lineHeight: '2rem',
+                fontWeight: 600,
+              }}
+            >
+              My Projects
+            </h2>
             {(!orgsData || orgsData.length === 0) && (
               <button
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'var(--color-accent)',
+                  color: 'var(--white)',
+                  borderRadius: '6px',
+                }}
                 onClick={() => no_action.open()}
               >
                 + New Organization
               </button>
             )}
           </div>
-          <Table.Root className="table-fixed border border-slate-700 rounded-md overflow-hidden">
-            <Table.Header className="w-[350px] sm:w-[900px] -bg--c-alt-blue-4">
+          <Table.Root
+            className="overflow-hidden"
+            style={{
+              tableLayout: 'fixed',
+              border: '1px solid var(--neutral-8)',
+              borderRadius: '6px',
+            }}
+          >
+            <Table.Header
+              style={{ width: '900px', backgroundColor: 'var(--surface-600)' }}
+            >
               <Table.Row>
-                <Table.ColumnHeaderCell className="py-4 px-6 w-[40%] sm:w-[20%]">
+                <Table.ColumnHeaderCell
+                  style={{ padding: '16px 24px', width: '20%' }}
+                >
                   Name
                 </Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell className="py-4 px-6 w-[0%] sm:w-[18%] hidden sm:table-cell">
+                <Table.ColumnHeaderCell
+                  style={{ padding: '16px 24px', width: '18%' }}
+                >
                   Organization
                 </Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell className="py-4 px-6 w-[0%] sm:w-[15%] hidden sm:table-cell">
+                <Table.ColumnHeaderCell
+                  style={{ padding: '16px 24px', width: '15%' }}
+                >
                   Owner
                 </Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell className="py-4 px-6 w-[0%] sm:w-[8%] hidden sm:table-cell">
+                <Table.ColumnHeaderCell
+                  style={{ padding: '16px 24px', width: '8%' }}
+                >
                   Public
                 </Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell className="py-4 px-6 w-[35%] sm:w-[20%]">
+                <Table.ColumnHeaderCell
+                  style={{ padding: '16px 24px', width: '20%' }}
+                >
                   Link
                 </Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell className="py-4 px-6 w-[25%] sm:w-[19%]">
+                <Table.ColumnHeaderCell
+                  style={{ padding: '16px 24px', width: '19%' }}
+                >
                   Actions
                 </Table.ColumnHeaderCell>
               </Table.Row>
@@ -208,30 +331,70 @@ const ProjectsList = () => {
               {data?.map((p) => (
                 <ProjectsListItem key={p.project_id} project={p} />
               ))}
-              <Table.Row className="border-t border-slate-700 hover:bg-slate-800/50">
-                <Table.Cell className="py-4 px-6">
+              <Table.Row style={{ borderTop: '1px solid var(--neutral-8)' }}>
+                <Table.Cell style={{ padding: '16px 24px' }}>
                   <button
-                    className="flex items-center text-slate-400 hover:text-white transition-colors"
+                    className="flex items-center"
+                    style={{ color: 'var(--neutral-5)' }}
                     onClick={() => np_action.open()}
                   >
-                    <span className="text-2xl mr-2">+</span>
+                    <span style={{ fontSize: '1.5rem', marginRight: '8px' }}>
+                      +
+                    </span>
                     <span>New Project</span>
                   </button>
                 </Table.Cell>
-                <Table.Cell className="py-4 px-6 hidden sm:table-cell">
-                  <div className="h-4 w-20 bg-slate-700/50 rounded"></div>
+                <Table.Cell style={{ padding: '16px 24px' }}>
+                  <div
+                    style={{
+                      height: '16px',
+                      width: '80px',
+                      backgroundColor: 'rgba(51, 65, 85, 0.5)',
+                      borderRadius: '4px',
+                    }}
+                  ></div>
                 </Table.Cell>
-                <Table.Cell className="py-4 px-6 hidden sm:table-cell">
-                  <div className="h-4 w-16 bg-slate-700/50 rounded"></div>
+                <Table.Cell style={{ padding: '16px 24px' }}>
+                  <div
+                    style={{
+                      height: '16px',
+                      width: '64px',
+                      backgroundColor: 'rgba(51, 65, 85, 0.5)',
+                      borderRadius: '4px',
+                    }}
+                  ></div>
                 </Table.Cell>
-                <Table.Cell className="py-4 px-6 hidden sm:table-cell">
-                  <div className="h-4 w-12 bg-slate-700/50 rounded"></div>
+                <Table.Cell style={{ padding: '16px 24px' }}>
+                  <div
+                    style={{
+                      height: '16px',
+                      width: '48px',
+                      backgroundColor: 'rgba(51, 65, 85, 0.5)',
+                      borderRadius: '4px',
+                    }}
+                  ></div>
                 </Table.Cell>
-                <Table.Cell className="py-4 px-6">
-                  <div className="h-4 w-20 bg-slate-700/50 rounded mx-auto"></div>
+                <Table.Cell style={{ padding: '16px 24px' }}>
+                  <div
+                    style={{
+                      height: '16px',
+                      width: '80px',
+                      backgroundColor: 'rgba(51, 65, 85, 0.5)',
+                      borderRadius: '4px',
+                      margin: '0 auto',
+                    }}
+                  ></div>
                 </Table.Cell>
-                <Table.Cell className="py-4 px-6">
-                  <div className="h-4 w-12 bg-slate-700/50 rounded mx-auto"></div>
+                <Table.Cell style={{ padding: '16px 24px' }}>
+                  <div
+                    style={{
+                      height: '16px',
+                      width: '48px',
+                      backgroundColor: 'rgba(51, 65, 85, 0.5)',
+                      borderRadius: '4px',
+                      margin: '0 auto',
+                    }}
+                  ></div>
                 </Table.Cell>
               </Table.Row>
             </Table.Body>
@@ -273,7 +436,7 @@ const ProjectsListItem = ({
 
   // Parse organization name: if matches "xxxx:yyyyy-org", extract username
   const renderOrganization = () => {
-    if (!orgData) return <span className="text-slate-500">...</span>;
+    if (!orgData) return <span style={{ color: 'var(--neutral-6)' }}>...</span>;
 
     const orgName = orgData.name;
     const match = orgName.match(/^(.+)-org$/);
@@ -281,62 +444,69 @@ const ProjectsListItem = ({
     const content =
       match && ownerStatus === 'success' && ownerData ? (
         // Pattern matches: "xxxx:yyyyy-org" → show UserInline"
-        <span className="flex items-center gap-1">
-          <UserInline color="var(--c-white-1)" {...ownerData} />
+        <span className="flex items-center" style={{ gap: '4px' }}>
+          <UserInline color="var(--white)" {...ownerData} />
         </span>
       ) : (
         // Regular organization name
-        <span className="text-slate-300">{orgName}</span>
+        <span style={{ color: 'var(--neutral-4)' }}>{orgName}</span>
       );
 
     // Wrap in link to org dashboard
-    return (
-      <Link
-        to={`/org/${project.organization_id}`}
-        className="hover:text-blue-400 transition-colors"
-      >
-        {content}
-      </Link>
-    );
+    return <Link to={`/org/${project.organization_id}`}>{content}</Link>;
   };
 
   return (
-    <Table.Row className="border-t border-slate-700 hover:bg-slate-800/50">
-      <Table.Cell className="py-4 px-6" style={{ color: 'var(--c-white-1)' }}>
+    <Table.Row style={{ borderTop: '1px solid var(--neutral-8)' }}>
+      <Table.Cell style={{ padding: '16px 24px', color: 'var(--white)' }}>
         {project.name}
       </Table.Cell>
-      <Table.Cell className="py-4 px-6 ellipsis hidden sm:table-cell">
+      <Table.Cell className="ellipsis" style={{ padding: '16px 24px' }}>
         {renderOrganization()}
       </Table.Cell>
-      <Table.Cell className="py-4 px-6 ellipsis hidden sm:table-cell">
+      <Table.Cell className="ellipsis" style={{ padding: '16px 24px' }}>
         {ownerStatus === 'success' && ownerData ? (
-          <UserInline color="var(--c-white-1)" {...ownerData} />
+          <UserInline color="var(--white)" {...ownerData} />
         ) : (
-          <span className="text-slate-500">...</span>
+          <span style={{ color: 'var(--neutral-6)' }}>...</span>
         )}
       </Table.Cell>
-      <Table.Cell className="py-4 px-6 text-center hidden sm:table-cell">
+      <Table.Cell className="text-center" style={{ padding: '16px 24px' }}>
         <span
-          className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${
-            project.public
-              ? 'bg-green-900/50 text-green-300'
-              : 'bg-slate-700 text-slate-300'
-          }`}
+          className="items-center font-medium"
+          style={{
+            display: 'inline-flex',
+            padding: '4px 8px',
+            fontSize: '0.75rem',
+            borderRadius: '9999px',
+            backgroundColor: project.public
+              ? 'rgba(20, 83, 45, 0.5)'
+              : 'var(--neutral-8)',
+            color: project.public ? '#86efac' : 'var(--neutral-4)',
+          }}
         >
           {project.public ? 'Public' : 'Private'}
         </span>
       </Table.Cell>
-      <Table.Cell className="py-4 px-6 text-center">
+      <Table.Cell className="text-center" style={{ padding: '16px 24px' }}>
         <a
           href={`/p/${project.organization_id}/${project.name}/editor`}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium -bg--c-alt-blue-1 hover:-bg--c-alt-blue-2 text-white transition-colors"
+          className="items-center justify-center font-medium"
+          style={{
+            display: 'inline-flex',
+            borderRadius: '6px',
+            padding: '8px 16px',
+            fontSize: 'var(--font-size-sm)',
+            color: 'var(--white)',
+            backgroundColor: 'var(--cyan-300)',
+          }}
         >
           Open
         </a>
       </Table.Cell>
-      <Table.Cell className="py-4 px-6 text-center">
+      <Table.Cell className="text-center" style={{ padding: '16px 24px' }}>
         <DeleteProjectFormLogic project_id={project.project_id} />
       </Table.Cell>
     </Table.Row>

@@ -18,12 +18,34 @@ export const ReducedCell = ({ type }: ReducedCellProps) => {
       ) : type === 'selected' ? (
         <div className="relative">
           <icons.SelectedOutline />
-          <icons.ReducedCellNormal className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
+          <icons.ReducedCellNormal
+            className="absolute"
+            style={{
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+            }}
+          />
         </div>
       ) : type === 'glow' ? (
         <div className="relative">
-          <div className="-bg--c-blue-3 animate-ping h-[8.5px] w-[8.5px] rounded-full" />
-          <icons.ReducedCellNormal className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
+          <div
+            className="animate-ping"
+            style={{
+              height: '8.5px',
+              width: '8.5px',
+              borderRadius: '9999px',
+              backgroundColor: 'var(--surface-300)',
+            }}
+          />
+          <icons.ReducedCellNormal
+            className="absolute"
+            style={{
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+            }}
+          />
         </div>
       ) : null}
     </>

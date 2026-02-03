@@ -14,7 +14,7 @@
   }
 
   span {
-    font-size: 12px;
+    font-size: var(--font-size-sm);
   }
 
   .provider-logo {
@@ -23,13 +23,13 @@
     margin: auto;
     display: inline;
     vertical-align: middle;
-    fill: white;
+    fill: var(--white);
 
     &.gitlab {
-      background-color: var(--c-white-1);
+      background-color: var(--white);
       border-radius: 50%;
-      color: var(--color-background);
-      fill: var(--color-background);
+      color: var(--color-bg-app);
+      fill: var(--color-bg-app);
     }
   }
 }
@@ -39,6 +39,6 @@
 .providers {
   padding: 15px;
   margin: 25px;
-  box-shadow: 0 0 2px 0 var(--ca-white-3);
+  box-shadow: var(--shadow-form-glow);
   border-radius: var(--form-input-border-radius);
 }

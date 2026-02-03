@@ -40,6 +40,6 @@ export const Normal: Story = {
     username: 'github:JohnManager',
     firstname: 'John',
     lastname: 'Manager',
-    color: 'var(--c-pink-3)',
+    color: 'var(--primary-500)',
   },
 };

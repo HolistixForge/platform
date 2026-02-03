@@ -1,10 +1,24 @@
 export const HiveTag = ({ title, color }: { title: string; color: string }) => {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center" style={{ gap: '12px' }}>
       <div
-        className={`w-[14px] h-[5px] rounded-[50px] ${color} rotate-[15deg]`}
+        className={`${color}`}
+        style={{
+          width: '14px',
+          height: '5px',
+          borderRadius: '50px',
+          transform: 'rotate(15deg)',
+        }}
       />
-      <p className="w-[50px] text-white text-right text-[9px] leading-normal">
+      <p
+        className="text-right"
+        style={{
+          width: '50px',
+          color: 'var(--white)',
+          fontSize: '9px',
+          lineHeight: 'normal',
+        }}
+      >
         {title}
       </p>
     </div>

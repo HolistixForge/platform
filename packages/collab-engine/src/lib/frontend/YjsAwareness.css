@@ -1,5 +1,5 @@
 .yRemoteSelection {
-  background-color: var(--ca-orange-45);
+  background-color: rgba(250, 129, 0, 0.5);
 }
 .yRemoteSelectionHead {
   position: absolute;

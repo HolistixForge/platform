@@ -1,12 +1,8 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 .go-fullscreen-button {
   position: fixed;
   bottom: 40px;
   right: 16px;
-  z-index: 10000;
+  z-index: var(--z-toast);
   display: none;
 }
 

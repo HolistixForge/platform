@@ -14,14 +14,14 @@
     width: 40px;
     box-shadow: var(--form-input-bs-x, 0) var(--form-input-bs-y, 0)
       var(--form-input-bs-blur) var(--form-input-bs-scale, 0)
-      var(--ca-white-4, transparent);
+      var(--alpha-white-35, transparent);
     padding: 0;
-    background-color: var(--color-background);
+    background-color: var(--color-bg-app);
 
     svg {
       height: 75%;
       width: 75%;
-      color: var(--c-white-1);
+      color: var(--white);
     }
   }
 }

@@ -12,7 +12,7 @@
     margin-bottom: 2rem;
 
     h1 {
-      font-size: 2rem;
+      font-size: var(--font-size-4xl);
       font-weight: 600;
       margin: 0 0 0.5rem 0;
       color: var(--color-text-primary, #ffffff);
@@ -21,7 +21,7 @@
     .subtitle {
       margin: 0;
       color: var(--color-text-secondary, #888888);
-      font-size: 0.95rem;
+      font-size: var(--font-size-lg);
     }
   }
 
@@ -44,7 +44,7 @@
     border: none;
     color: var(--color-text-secondary, #888888);
     cursor: pointer;
-    font-size: 0.95rem;
+    font-size: var(--font-size-lg);
     font-weight: 500;
     transition: all 0.2s;
     border-bottom: 2px solid transparent;
@@ -96,13 +96,13 @@
 
         h3 {
           margin: 0 0 0.25rem 0;
-          font-size: 1.1rem;
+          font-size: var(--font-size-xl);
           font-weight: 600;
         }
 
         .member-count {
           margin: 0;
-          font-size: 0.85rem;
+          font-size: var(--font-size-md);
           color: var(--color-text-secondary, #888888);
         }
       }
@@ -129,7 +129,7 @@
           border: 1px solid var(--color-border, #333333);
           border-radius: 6px;
           color: var(--color-text-primary, #e0e0e0);
-          font-size: 0.9rem;
+          font-size: var(--font-size-md);
 
           &::placeholder {
             color: var(--color-text-secondary, #666666);
@@ -198,7 +198,7 @@
 
       &.selected {
         background: var(--color-accent-primary, #3b82f6);
-        color: #ffffff;
+        color: var(--white);
 
         .email,
         .no-roles,
@@ -219,12 +219,12 @@
           height: 36px;
           border-radius: 50%;
           background: var(--color-accent-secondary, #6366f1);
-          color: #ffffff;
+          color: var(--white);
           display: flex;
           align-items: center;
           justify-content: center;
           font-weight: 600;
-          font-size: 0.9rem;
+          font-size: var(--font-size-md);
           flex-shrink: 0;
         }
 
@@ -234,14 +234,14 @@
 
           .username {
             font-weight: 500;
-            font-size: 0.95rem;
+            font-size: var(--font-size-lg);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
           }
 
           .email {
-            font-size: 0.8rem;
+            font-size: var(--font-size-sm);
             color: var(--color-text-secondary, #888888);
             white-space: nowrap;
             overflow: hidden;
@@ -252,7 +252,7 @@
 
       .roles-preview {
         flex-shrink: 0;
-        font-size: 0.85rem;
+        font-size: var(--font-size-md);
 
         .no-roles {
           color: var(--color-text-secondary, #666666);
@@ -279,7 +279,7 @@
         justify-content: center;
         height: 100%;
         color: var(--color-text-secondary, #888888);
-        font-size: 0.95rem;
+        font-size: var(--font-size-lg);
       }
     }
   }
@@ -301,13 +301,13 @@
   header {
     h3 {
       margin: 0 0 0.25rem 0;
-      font-size: 1.25rem;
+      font-size: var(--font-size-2xl);
       font-weight: 600;
     }
 
     .user-id-hint {
       margin: 0;
-      font-size: 0.8rem;
+      font-size: var(--font-size-sm);
       color: var(--color-text-secondary, #666666);
       font-family: 'Courier New', monospace;
     }
@@ -316,7 +316,7 @@
   section {
     h4 {
       margin: 0 0 0.75rem 0;
-      font-size: 0.95rem;
+      font-size: var(--font-size-lg);
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -351,7 +351,7 @@
         border: 1px solid var(--color-border, #333333);
         border-radius: 6px;
         color: var(--color-text-primary, #e0e0e0);
-        font-size: 0.9rem;
+        font-size: var(--font-size-md);
 
         &:focus {
           outline: none;
@@ -373,7 +373,7 @@
     border: 1px solid rgba(59, 130, 246, 0.3);
     border-radius: 6px;
     color: var(--color-accent-primary, #3b82f6);
-    font-size: 0.9rem;
+    font-size: var(--font-size-md);
   }
 }
 
@@ -384,19 +384,19 @@
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
   border-radius: 6px;
-  font-size: 0.85rem;
+  font-size: var(--font-size-md);
   font-weight: 500;
 
   &.system {
     background: rgba(139, 92, 246, 0.15);
     border: 1px solid rgba(139, 92, 246, 0.4);
-    color: #a78bfa;
+    color: var(--surface-300); /* charter-exception: unique purple */
   }
 
   &.custom {
     background: rgba(59, 130, 246, 0.15);
     border: 1px solid rgba(59, 130, 246, 0.4);
-    color: #60a5fa;
+    color: var(--c-role-custom);
   }
 
   .role-name {
@@ -427,7 +427,7 @@
   }
 
   .remove-btn:hover {
-    color: #ef4444;
+    color: var(--red-300);
   }
 }
 
@@ -438,8 +438,8 @@
   background: var(--color-bg-secondary, #1a1a1a);
   border: 1px solid var(--color-border, #333333);
   border-radius: 8px;
-  box-shadow: 0 10px 38px -10px rgba(0, 0, 0, 0.5), 0 10px 20px -15px rgba(0, 0, 0, 0.4);
-  z-index: 1000;
+  box-shadow: var(--shadow-xl);
+  z-index: var(--z-toast);
   overflow: hidden;
 
   .popover-header {
@@ -448,13 +448,13 @@
 
     h4 {
       margin: 0 0 0.25rem 0;
-      font-size: 1rem;
+      font-size: var(--font-size-lg);
       font-weight: 600;
     }
 
     .description {
       margin: 0;
-      font-size: 0.85rem;
+      font-size: var(--font-size-md);
       color: var(--color-text-secondary, #888888);
     }
   }
@@ -464,7 +464,7 @@
 
     h5 {
       margin: 0 0 0.75rem 0;
-      font-size: 0.85rem;
+      font-size: var(--font-size-md);
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -501,20 +501,20 @@
         align-items: start;
         gap: 0.5rem;
         padding: 0.4rem 0;
-        font-size: 0.85rem;
+        font-size: var(--font-size-md);
 
         .check-icon {
           flex-shrink: 0;
           width: 14px;
           height: 14px;
           margin-top: 2px;
-          color: #10b981;
+          color: var(--green-400);
         }
 
         code {
           flex: 1;
           font-family: 'Courier New', monospace;
-          font-size: 0.8rem;
+          font-size: var(--font-size-sm);
           color: var(--color-text-primary, #e0e0e0);
           word-break: break-all;
         }

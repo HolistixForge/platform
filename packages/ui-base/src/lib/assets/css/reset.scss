@@ -10,8 +10,8 @@
 
 html body,
 .root {
-  color: var(--c-white-1);
-  background-color: var(--color-background);
+  color: var(--white);
+  background-color: var(--color-bg-app);
   margin: 0;
   padding: 0;
 
@@ -26,21 +26,21 @@ html body,
   }
 
   a {
-    color: var(--color-a-not-visited);
-    text-decoration-color: var(--color-a-not-visited);
+    color: var(--color-link);
+    text-decoration-color: var(--color-link);
     text-decoration: none;
   }
   a:visited {
-    color: var(--color-a-visited);
-    text-decoration-color: var(--color-a-visited);
+    color: var(--color-link);
+    text-decoration-color: var(--color-link);
   }
   a:hover {
-    color: var(--color-a-hover);
-    text-decoration-color: var(--color-a-hover);
+    color: var(--color-link);
+    text-decoration-color: var(--color-link);
   }
 
   h1 {
-    font-size: 30px;
+    font-size: var(--font-size-4xl);
     margin-bottom: 20px;
   }
 }

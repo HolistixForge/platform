@@ -132,4 +132,4 @@ export class HtmlAvatarStore extends AvatarStore {
 
 //
 
-const INACTIVE = 'var(--c-gray-9)';
+const INACTIVE = 'var(--neutral-9)';

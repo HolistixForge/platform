@@ -16,103 +16,287 @@ export const ControlBar = () => {
   };
 
   return (
-    <div className="flex items-center rounded-[50px] border border-[#C4C4C4] -bg--c-blue-gray-0 pr-[30px] h-[64px]">
-      <div className="pr-5 pl-[30px] h-full flex items-center justify-center relative group active:-bg--c-blue-gray-3 rounded-l-[50px]">
-        <icons.Plus className="h-[24px] w-[24px] cursor-pointer relative z-20" />
-        <div className="absolute h-[62px] bg-addToolbar w-full left-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity z-10" />
+    <div
+      className="flex items-center"
+      style={{
+        borderRadius: '50px',
+        border: '1px solid #C4C4C4',
+        paddingRight: '30px',
+        height: '64px',
+        backgroundColor: 'var(--surface-900)',
+      }}
+    >
+      <div
+        className="h-full flex items-center justify-center relative group"
+        style={{
+          paddingRight: '20px',
+          paddingLeft: '30px',
+          borderRadius: '50px 0 0 50px',
+        }}
+      >
+        <icons.Plus
+          className="cursor-pointer relative"
+          style={{ height: '24px', width: '24px', zIndex: 20 }}
+        />
+        <div
+          className="absolute opacity-0 group-hover:opacity-100 transition-opacity bg-addToolbar w-full"
+          style={{ height: '62px', left: 0, top: 0, zIndex: 10 }}
+        />
       </div>
       <div
         onClick={toggleMenu}
         className="relative h-full cursor-pointer group/list"
       >
         <div
-          className={`absolute h-[62px] bg-contain bg-toolbar-tertiary w-[98%] left-0 top-0 opacity-0 group-hover/list:opacity-100 transition-opacity ${
+          className={`absolute opacity-0 group-hover/list:opacity-100 transition-opacity bg-toolbar-tertiary ${
             childArrowHovered && isMenuOpen ? 'hidden' : ''
           }`}
+          style={{
+            height: '62px',
+            backgroundSize: 'contain',
+            width: '98%',
+            left: 0,
+            top: 0,
+          }}
         />
         {isMenuOpen && (
-          <ul className="absolute bottom-full left-0 w-full flex items-center justify-center flex-col -bg--c-blue-gray-0 border border-white border-opacity-20">
+          <ul
+            className="absolute w-full flex items-center justify-center flex-col"
+            style={{
+              bottom: '100%',
+              left: 0,
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              backgroundColor: 'var(--surface-900)',
+            }}
+          >
             <li
               onMouseEnter={() => setChildArrowHovered(true)}
               onMouseLeave={() => setChildArrowHovered(false)}
-              className={`h-[60px] flex items-center w-full justify-center border-white border-opacity-20 hover:border-opacity-100 border-r transition-all relative group`}
+              className="flex items-center w-full justify-center relative group transition-all"
+              style={{
+                height: '60px',
+                borderRight: '1px solid rgba(255, 255, 255, 0.2)',
+              }}
               onClick={() => setSelectedArrow('top')}
             >
-              <icons.RoundedArrowTop className="h-[24px] w-[24px]" />
-              <div className="absolute h-[62px] bg-cover bg-toolbar-tertiary w-full left-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <icons.RoundedArrowTop
+                style={{ height: '24px', width: '24px' }}
+              />
+              <div
+                className="absolute w-full opacity-0 group-hover:opacity-100 transition-opacity bg-toolbar-tertiary"
+                style={{
+                  height: '62px',
+                  backgroundSize: 'cover',
+                  left: 0,
+                  top: 0,
+                }}
+              />
             </li>
             <li
               onMouseEnter={() => setChildArrowHovered(true)}
               onMouseLeave={() => setChildArrowHovered(false)}
-              className={`h-[60px] flex items-center w-full justify-center border-white border-opacity-20 hover:border-opacity-100 border-r transition-all relative group`}
+              className="flex items-center w-full justify-center relative group transition-all"
+              style={{
+                height: '60px',
+                borderRight: '1px solid rgba(255, 255, 255, 0.2)',
+              }}
               onClick={() => setSelectedArrow('left')}
             >
-              <icons.RoundedArrowLeft className="h-[24px] w-[24px]" />
-              <div className="absolute h-[62px] bg-cover bg-toolbar-tertiary w-full left-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <icons.RoundedArrowLeft
+                style={{ height: '24px', width: '24px' }}
+              />
+              <div
+                className="absolute w-full opacity-0 group-hover:opacity-100 transition-opacity bg-toolbar-tertiary"
+                style={{
+                  height: '62px',
+                  backgroundSize: 'cover',
+                  left: 0,
+                  top: 0,
+                }}
+              />
             </li>
             <li
               onMouseEnter={() => setChildArrowHovered(true)}
               onMouseLeave={() => setChildArrowHovered(false)}
-              className={`h-[60px] flex items-center w-full justify-center border-white border-opacity-20 hover:border-opacity-100 border-r transition-all relative group`}
+              className="flex items-center w-full justify-center relative group transition-all"
+              style={{
+                height: '60px',
+                borderRight: '1px solid rgba(255, 255, 255, 0.2)',
+              }}
               onClick={() => setSelectedArrow('bottom')}
             >
-              <icons.RoundedArrowDown className="h-[24px] w-[24px]" />
-              <div className="absolute h-[62px] bg-cover bg-toolbar-tertiary w-full left-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <icons.RoundedArrowDown
+                style={{ height: '24px', width: '24px' }}
+              />
+              <div
+                className="absolute w-full opacity-0 group-hover:opacity-100 transition-opacity bg-toolbar-tertiary"
+                style={{
+                  height: '62px',
+                  backgroundSize: 'cover',
+                  left: 0,
+                  top: 0,
+                }}
+              />
             </li>
           </ul>
         )}
         <div
-          className={`flex items-center justify-center h-full px-[7px] -border-l--c-white-2 border-l border-r-[2px]`}
+          className="flex items-center justify-center h-full"
+          style={{
+            padding: '0 7px',
+            borderLeft: '1px solid var(--neutral-9)',
+            borderRight: '2px solid',
+          }}
         >
           {selectedArrow === 'top' ? (
-            <icons.RoundedArrowTop className="h-[24px] w-[24px] mb-4" />
+            <icons.RoundedArrowTop
+              style={{ height: '24px', width: '24px', marginBottom: '16px' }}
+            />
           ) : selectedArrow === 'left' ? (
-            <icons.RoundedArrowLeft className="h-[24px] w-[24px] mb-4" />
+            <icons.RoundedArrowLeft
+              style={{ height: '24px', width: '24px', marginBottom: '16px' }}
+            />
           ) : selectedArrow === 'bottom' ? (
-            <icons.RoundedArrowDown className="h-[24px] w-[24px] mb-4" />
+            <icons.RoundedArrowDown
+              style={{ height: '24px', width: '24px', marginBottom: '16px' }}
+            />
           ) : (
-            <icons.RoundedArrowRight className="h-[24px] w-[24px] mb-4" />
+            <icons.RoundedArrowRight
+              style={{ height: '24px', width: '24px', marginBottom: '16px' }}
+            />
           )}
           <icons.ChevronDown
-            className={`absolute bottom-0 fill--c-gray-11 ${
-              isMenuOpen ? 'rotate-180' : ''
-            } transition-all`}
+            className="absolute fill-neutral-dark transition-all"
+            style={{
+              bottom: 0,
+              ...(isMenuOpen ? { transform: 'rotate(180deg)' } : {}),
+            }}
           />
         </div>
       </div>
-      <div className="cursor-pointer h-full w-[59px] flex items-center justify-center relative group active:-bg--c-blue-gray-3">
-        <icons.MediaPlay className="w-[28px] h-[28px]" />
-        <div className="absolute h-[62px] bg-contain bg-toolbar w-[64px] -left-[.16rem] top-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div
+        className="cursor-pointer h-full flex items-center justify-center relative group"
+        style={{ width: '59px' }}
+      >
+        <icons.MediaPlay style={{ width: '28px', height: '28px' }} />
+        <div
+          className="absolute opacity-0 group-hover:opacity-100 transition-opacity bg-toolbar"
+          style={{
+            height: '62px',
+            backgroundSize: 'contain',
+            width: '64px',
+            left: '-0.16rem',
+            top: 0,
+          }}
+        />
       </div>
-      <div className="w-[2px] h-[34px] -bg--c-alt-gray-1 rounded-full" />
-      <div className="cursor-pointer h-full w-[59px] flex items-center justify-center relative group active:-bg--c-blue-gray-3">
-        <icons.Reload className="w-[24px] h-[24px]" />
-        <div className="absolute h-[62px] bg-toolbar w-[64px] -left-[.175rem] top-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div
+        style={{
+          backgroundColor: 'var(--neutral-9)',
+          width: '2px',
+          height: '34px',
+          borderRadius: '9999px',
+        }}
+      />
+      <div
+        className="cursor-pointer h-full flex items-center justify-center relative group"
+        style={{ width: '59px' }}
+      >
+        <icons.Reload style={{ width: '24px', height: '24px' }} />
+        <div
+          className="absolute opacity-0 group-hover:opacity-100 transition-opacity bg-toolbar"
+          style={{ height: '62px', width: '64px', left: '-0.175rem', top: 0 }}
+        />
       </div>
-      <div className="w-[2px] h-[34px] -bg--c-alt-gray-1 rounded-full" />
-      <div className="cursor-pointer h-full w-[59px] flex items-center justify-center relative group active:-bg--c-blue-gray-3">
-        <icons.FastForward className="w-[24px] h-[24px]" />
-        <div className="absolute h-[62px] bg-toolbar w-[64px] -left-[.175rem] top-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div
+        style={{
+          backgroundColor: 'var(--neutral-9)',
+          width: '2px',
+          height: '34px',
+          borderRadius: '9999px',
+        }}
+      />
+      <div
+        className="cursor-pointer h-full flex items-center justify-center relative group"
+        style={{ width: '59px' }}
+      >
+        <icons.FastForward style={{ width: '24px', height: '24px' }} />
+        <div
+          className="absolute opacity-0 group-hover:opacity-100 transition-opacity bg-toolbar"
+          style={{ height: '62px', width: '64px', left: '-0.175rem', top: 0 }}
+        />
       </div>
-      <div className="w-[2px] h-[34px] -bg--c-alt-gray-1 rounded-full" />
-      <div className="cursor-pointer h-full w-[59px] flex items-center justify-center relative group active:-bg--c-blue-gray-3">
-        <icons.Stop className="w-[18px] h-[18px]" />
-        <div className="absolute h-[62px] bg-toolbar w-[64px] -left-[.175rem] top-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div
+        style={{
+          backgroundColor: 'var(--neutral-9)',
+          width: '2px',
+          height: '34px',
+          borderRadius: '9999px',
+        }}
+      />
+      <div
+        className="cursor-pointer h-full flex items-center justify-center relative group"
+        style={{ width: '59px' }}
+      >
+        <icons.Stop style={{ width: '18px', height: '18px' }} />
+        <div
+          className="absolute opacity-0 group-hover:opacity-100 transition-opacity bg-toolbar"
+          style={{ height: '62px', width: '64px', left: '-0.175rem', top: 0 }}
+        />
       </div>
-      <div className="w-[2px] h-[52px] -bg--c-alt-gray-1 rounded-full" />
-      <div className="cursor-pointer h-full w-[59px] flex items-center justify-center relative group active:-bg--c-blue-gray-3">
-        <icons.Cissors className="w-[23px] h-[23px]" />
-        <div className="absolute h-[62px] bg-toolbar w-[64px] -left-[.175rem] top-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div
+        style={{
+          backgroundColor: 'var(--neutral-9)',
+          width: '2px',
+          height: '52px',
+          borderRadius: '9999px',
+        }}
+      />
+      <div
+        className="cursor-pointer h-full flex items-center justify-center relative group"
+        style={{ width: '59px' }}
+      >
+        <icons.Cissors style={{ width: '23px', height: '23px' }} />
+        <div
+          className="absolute opacity-0 group-hover:opacity-100 transition-opacity bg-toolbar"
+          style={{ height: '62px', width: '64px', left: '-0.175rem', top: 0 }}
+        />
       </div>
-      <div className="w-[2px] h-[34px] -bg--c-alt-gray-1 rounded-full" />
-      <div className="cursor-pointer h-full w-[59px] flex items-center justify-center relative group active:-bg--c-blue-gray-3">
-        <icons.Copy className="w-[18px] h-[18px]" />
-        <div className="absolute h-[62px] bg-toolbar w-[64px] -left-[.175rem] top-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div
+        style={{
+          backgroundColor: 'var(--neutral-9)',
+          width: '2px',
+          height: '34px',
+          borderRadius: '9999px',
+        }}
+      />
+      <div
+        className="cursor-pointer h-full flex items-center justify-center relative group"
+        style={{ width: '59px' }}
+      >
+        <icons.Copy style={{ width: '18px', height: '18px' }} />
+        <div
+          className="absolute opacity-0 group-hover:opacity-100 transition-opacity bg-toolbar"
+          style={{ height: '62px', width: '64px', left: '-0.175rem', top: 0 }}
+        />
       </div>
-      <div className="w-[2px] h-[34px] -bg--c-alt-gray-1 rounded-full" />
-      <div className="cursor-pointer h-full w-[59px] flex items-center justify-center relative group active:-bg--c-blue-gray-3">
-        <icons.Past className="w-[18px] h-[18px]" />
-        <div className="absolute h-[62px] bg-toolbar w-[64px] -left-[.175rem] top-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div
+        style={{
+          backgroundColor: 'var(--neutral-9)',
+          width: '2px',
+          height: '34px',
+          borderRadius: '9999px',
+        }}
+      />
+      <div
+        className="cursor-pointer h-full flex items-center justify-center relative group"
+        style={{ width: '59px' }}
+      >
+        <icons.Past style={{ width: '18px', height: '18px' }} />
+        <div
+          className="absolute opacity-0 group-hover:opacity-100 transition-opacity bg-toolbar"
+          style={{ height: '62px', width: '64px', left: '-0.175rem', top: 0 }}
+        />
       </div>
     </div>
   );
