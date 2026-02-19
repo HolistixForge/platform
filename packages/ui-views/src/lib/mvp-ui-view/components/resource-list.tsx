@@ -37,9 +37,9 @@ export const ResourceList = ({
 
   return (
     <div className="flex flex-col w-full">
-      <div className="space-y-[10px]">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {displayTabs && (
-          <div className="flex items-center gap-[14px]">
+          <div className="flex items-center" style={{ gap: '14px' }}>
             <icons.SummaryAccess />
             <Tabs
               tabs={[{ tab: 'All' }, { tab: 'Added' }, { tab: 'Filtered' }]}
@@ -47,28 +47,47 @@ export const ResourceList = ({
             />
           </div>
         )}
-        <div className="flex items-center bg-white/5 h-[28px] w-full rounded-[4px] py-1 px-3 gap-[20px]">
+        <div
+          className="flex items-center w-full cursor-pointer"
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.05)',
+            height: '28px',
+            borderRadius: '4px',
+            padding: '4px 12px',
+            gap: '20px',
+          }}
+        >
           <div className="cursor-pointer">
             <icons.Search />
           </div>
           <input
-            className="w-full h-full text-[14px] text-white/40"
+            className="w-full h-full"
+            style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)' }}
             placeholder={'rules'}
           />
           <div className="cursor-pointer">
-            <icons.Filter className="w-7 h-7" />
+            <icons.Filter style={{ width: '28px', height: '28px' }} />
           </div>
         </div>
         <div
-          className="flex items-center justify-between rounded-[4px] px-[13px] bg-[#2A2A3F] h-[36px] cursor-pointer"
+          className="flex items-center justify-between cursor-pointer"
+          style={{
+            borderRadius: '4px',
+            padding: '0 13px',
+            backgroundColor: '#2A2A3F',
+            height: '36px',
+          }}
           onClick={() => addCard()}
         >
-          <p className="text-[16px] text-white">Ressources</p>
+          <p style={{ fontSize: '16px', color: 'white' }}>Ressources</p>
           <icons.Plus />
         </div>
       </div>
 
-      <div className="flex flex-col gap-[14px] mt-2 px-[10px]">
+      <div
+        className="flex flex-col"
+        style={{ gap: '14px', marginTop: '8px', padding: '0 10px' }}
+      >
         {cards.map((card, index) => (
           <div
             key={index}

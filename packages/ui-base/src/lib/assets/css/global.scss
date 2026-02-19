@@ -36,8 +36,8 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  border: 1px solid var(--c-white-1);
-  background: var(--c-blue-62);
+  border: 1px solid var(--white);
+  background: var(--surface-800);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -46,8 +46,8 @@
 .number-field-input .number p,
 .number-field-output .number p {
   margin: 0;
-  font-size: 10px;
-  color: var(--c-white-1);
+  font-size: var(--font-size-2xs);
+  color: var(--white);
 }
 
 .node-io-grid-output {
@@ -80,7 +80,7 @@
       );
       height: 9px;
       width: 9px;
-      background: var(--c-alt-blue-1);
+      background: var(--cyan-100);
     }
   }
 }
@@ -115,7 +115,7 @@
       );
       height: 9px;
       width: 9px;
-      background: var(--c-alt-blue-4);
+      background: var(--cyan-400);
     }
   }
 }
@@ -123,7 +123,7 @@
 /* Mains infos text */
 
 .main-infos {
-  color: var(--c-white-1);
+  color: var(--white);
 }
 
 .main-infos p {
@@ -142,8 +142,8 @@
 
 .main-infos ul li {
   white-space: nowrap;
-  font-size: 10px;
-  color: var(--c-white-1);
+  font-size: var(--font-size-2xs);
+  color: var(--white);
   font-weight: 300;
 }
 
@@ -164,7 +164,7 @@
     opacity: 1;
   }
   .node-menu {
-    z-index: 5;
+    z-index: var(--z-base);
   }
 }
 
@@ -178,7 +178,7 @@
 
 .expanded-menu {
   opacity: 1 !important;
-  z-index: 3;
+  z-index: var(--z-base);
 }
 
 .gradient-conic-pink {
@@ -225,38 +225,38 @@
   &:hover {
     --gradient-opacity: 0.8;
     background-color: rgba(20, 20, 50, 0.2);
-    border: 2px solid #9744a3;
-    box-shadow: 0px 0px 90px -10px #92329f;
+    border: 2px solid #9744a3; /* charter-exception: unique color */
+    box-shadow: var(--shadow-glow-pink-hover);
   }
 
   &:active:not(:has(button:active)):not(:has(.tags-container:active)) {
     --gradient-opacity: 0.2;
-    border: 2px solid #8e60f4;
-    box-shadow: 0px 0px 90px -10px #b562c0;
+    border: 2px solid #8e60f4; /* charter-exception: unique color */
+    box-shadow: var(--shadow-glow-pink-active);
   }
 }
 
 .node-background {
-  background: var(--color-node-background);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  background: var(--color-bg-node);
+  box-shadow: var(--shadow-lg);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--alpha-white-10);
 
   &:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--alpha-white-15);
   }
 }
 
 .node-header-background {
-  background: var(--c-pink-6);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  background: var(--primary-900);
+  box-shadow: var(--shadow-lg);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid var(--c-pink-4);
+  border: 1px solid var(--primary-600);
 
   &:hover {
-    background: var(--c-pink-5);
+    background: var(--primary-700);
   }
 }
 
@@ -303,7 +303,7 @@
 
 .conic-gradient-live {
   background: radial-gradient(circle, #f7c8de 0%, #f72686 50%);
-  box-shadow: 0px 0px 10px 1px #f72686;
+  box-shadow: var(--shadow-glow-live);
 }
 
 .text-shadow-pink {
@@ -318,7 +318,7 @@
 
 * {
   scrollbar-width: none; /* Options: auto, thin, none */
-  scrollbar-color: green orange; /* Thumb and track colors */
+  scrollbar-color: var(--green-600) var(--orange-300); /* Thumb and track colors */
 }
 
 .opacity-on-hover {

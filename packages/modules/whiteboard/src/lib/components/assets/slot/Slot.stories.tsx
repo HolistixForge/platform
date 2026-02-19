@@ -13,11 +13,11 @@ const SlotStory = (props: SlotProps) => {
           width: '100px',
           height: '100px',
           margin: '100px',
-          background: 'var(--ca-white-1)',
+          background: 'var(--alpha-white-10)',
           borderRadius: '10px',
           position: 'relative',
           textAlign: 'center',
-          color: 'var(--c-gray-8)',
+          color: 'var(--neutral-8)',
           padding: '15px 0',
           boxSizing: 'border-box',
         }}

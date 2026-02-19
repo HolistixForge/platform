@@ -60,11 +60,12 @@ export const NodeKernel = ({
   const dispatcher = useDispatcher<TJupyterEvent>();
 
   const handleDeleteKernel = useCallback(async () => {
-    client_id &&
-      (await dispatcher.dispatch({
+    if (client_id) {
+      await dispatcher.dispatch({
         type: 'jupyter:delete-kernel-node',
         nodeId: id,
-      }));
+      });
+    }
   }, [dispatcher, kernel_id, client_id]);
 
   const buttons = useNodeHeaderButtons({
@@ -89,7 +90,10 @@ export const NodeKernel = ({
       {isOpened && (
         <DisableZoomDragPan noDrag>
           <div className="node-wrapper-body">
-            <div className="node-background rounded-[8px] col-span-1 flex flex-col p-5 w-[400px]">
+            <div
+              className="node-background flex flex-col"
+              style={{ borderRadius: '8px', padding: '20px', width: '400px' }}
+            >
               <div>
                 <p>
                   kernel <b>{kernel?.kernel_id.substring(0, 8)}</b>{' '}
@@ -110,13 +114,32 @@ export const NodeKernel = ({
                   )}
                 </p>
                 {kernel.notebooks && kernel.notebooks.length > 0 && (
-                  <div className="mt-4">
-                    <p className="font-semibold mb-2">Connected Notebooks:</p>
-                    <ul className="list-disc pl-5 space-y-1">
+                  <div style={{ marginTop: '16px' }}>
+                    <p className="font-medium" style={{ marginBottom: '8px' }}>
+                      Connected Notebooks:
+                    </p>
+                    <ul
+                      style={{
+                        listStyleType: 'disc',
+                        paddingLeft: '20px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '4px',
+                      }}
+                    >
                       {kernel.notebooks.map((notebook: any) => (
-                        <li key={notebook.path} className="text-sm">
+                        <li
+                          key={notebook.path}
+                          style={{ fontSize: 'var(--font-size-sm)' }}
+                        >
                           {notebook.name}
-                          <span className="text-gray-500 text-xs ml-2">
+                          <span
+                            style={{
+                              color: 'var(--neutral-5)',
+                              fontSize: 'var(--font-size-xs)',
+                              marginLeft: '8px',
+                            }}
+                          >
                             ({notebook.path})
                           </span>
                         </li>

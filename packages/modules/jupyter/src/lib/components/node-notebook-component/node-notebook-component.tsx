@@ -77,13 +77,17 @@ export const NodeNotebookComponent = ({
   }, [inConOpened, outConOpened]);
 
   return (
-    <div className="node-wrapper node-reduced relative group h-auto">
+    <div
+      className="node-wrapper node-reduced relative group"
+      style={{ height: 'auto' }}
+    >
       {/* Menu top left */}
       {!isExpanded && (
         <div
-          className={`node-menu group-[.test-hover]:opacity-100 !-top-[80%] -translate-x-1/2 !left-1/2 node-hover-visible  ${
+          className={`node-menu group-[.test-hover]:opacity-100 node-hover-visible ${
             inConOpened ? 'input-open-left' : ''
           }`}
+          style={{ top: '-80%', left: '50%', transform: 'translateX(-50%)' }}
         >
           <NodeMainToolbar className="outside" buttons={buttons} />
         </div>
@@ -92,9 +96,14 @@ export const NodeNotebookComponent = ({
       {/* Module right */}
       {!isExpanded && (
         <div
-          className={`node-right !top-0 !left-[120%] node-hover-visible ${
-            outConOpened ? '!-translate-y-10 !translate-x-8' : ''
-          } transition-transform`}
+          className={`node-right node-hover-visible transition-transform`}
+          style={{
+            top: 0,
+            left: '120%',
+            ...(outConOpened
+              ? { transform: 'translateY(-40px) translateX(32px)' }
+              : {}),
+          }}
         >
           <div
             className={`top ${status === 'loading' ? 'rotate-animation' : ''}`}
@@ -116,11 +125,27 @@ export const NodeNotebookComponent = ({
       )}
 
       {!isExpanded && (
-        <div className="flex items-center gap-2 absolute -top-1/3 left-1/2 -translate-x-1/2 w-max">
-          <p className="text-white text-sm font-bold">Node #12345</p>
+        <div
+          className="flex items-center absolute"
+          style={{
+            gap: '8px',
+            top: '-33.33%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 'max-content',
+          }}
+        >
+          <p
+            className="font-bold"
+            style={{ color: 'var(--white)', fontSize: 'var(--font-size-sm)' }}
+          >
+            Node #12345
+          </p>
           <div
-            className="h-[13px] w-[13px] rounded-full"
             style={{
+              height: '13px',
+              width: '13px',
+              borderRadius: '9999px',
               backgroundColor: color,
             }}
           />
@@ -134,13 +159,23 @@ export const NodeNotebookComponent = ({
             <>
               {/* Output right */}
               <div
-                className={`absolute right-0 top-1/2 -translate-y-1/2 -rotate-90 input-output-rotated opacity-0 transition-opacity group-hover:opacity-100 group-[.testhover]:opacity-100`}
+                className="absolute input-output-rotated opacity-0 transition-opacity group-hover:opacity-100 group-[.testhover]:opacity-100"
+                style={{
+                  right: 0,
+                  top: '50%',
+                  transform: 'translateY(-50%) rotate(-90deg)',
+                }}
               >
                 <Outputs nodeId={nodeId} />
               </div>
               {/* Input left */}
               <div
-                className={`absolute left-0 top-1/2 -translate-y-1/2 -rotate-90 input-output-rotated opacity-0 transition-opacity group-hover:opacity-100 group-[.testhover]:opacity-100`}
+                className="absolute input-output-rotated opacity-0 transition-opacity group-hover:opacity-100 group-[.testhover]:opacity-100"
+                style={{
+                  left: 0,
+                  top: '50%',
+                  transform: 'translateY(-50%) rotate(-90deg)',
+                }}
               >
                 <Inputs nodeId={nodeId} />
               </div>
@@ -154,13 +189,22 @@ export const NodeNotebookComponent = ({
                 style={{
                   fill:
                     status === 'loading'
-                      ? 'var(--c-green-2)'
-                      : 'var(--c-red-2)',
+                      ? 'var(--green-600)'
+                      : 'var(--red-400)',
                 }}
               />
             </div>
             {openNotebook ? (
-              <div className="-bg--c-blue-6 absolute top-[85%] left-0 right-0 flex items-center justify-center flex-col z-30">
+              <div
+                className="absolute flex items-center justify-center flex-col"
+                style={{
+                  top: '85%',
+                  left: 0,
+                  right: 0,
+                  zIndex: 30,
+                  backgroundColor: 'var(--surface-600)',
+                }}
+              >
                 <div
                   style={{
                     transform: 'translateX(calc(-50% + (54px / 2)))',
@@ -170,20 +214,28 @@ export const NodeNotebookComponent = ({
                 >
                   {/* Input left */}
                   <div
-                    className={`absolute top-1/2 left-[-20px] -translate-y-1/2 -rotate-90 input-output-rotated opacity-0 transition-opacity group-hover:opacity-100 group-[.testhover]:opacity-100`}
+                    className="absolute input-output-rotated opacity-0 transition-opacity group-hover:opacity-100 group-[.testhover]:opacity-100"
+                    style={{
+                      top: '50%',
+                      left: '-20px',
+                      transform: 'translateY(-50%) rotate(-90deg)',
+                    }}
                   >
                     <Inputs nodeId={nodeId} />
                   </div>
 
-                  <div className={`flex flex-col gap-4 transition-all`}>
+                  <div
+                    className="flex flex-col transition-all"
+                    style={{ gap: '16px' }}
+                  >
                     <HiveLine color="" cells={cells0} title="" />
                     <HiveLine
-                      color="-bg--c-blue-1"
+                      color="var(--surface-100)"
                       cells={cells1}
                       title="Hive 1"
                     />
                     <HiveLine
-                      color="-bg--c-red-1"
+                      color="var(--red-300)"
                       cells={cells2}
                       title="Hive 2 lorem ipsum dolor sit amet, consectetur adipiscing elit"
                     />
@@ -191,41 +243,86 @@ export const NodeNotebookComponent = ({
 
                   {/* Output right */}
                   <div
-                    className={`absolute right-[-20px] top-1/2 -translate-y-1/2 -rotate-90 input-output-rotated opacity-0 transition-opacity group-hover:opacity-100 group-[.testhover]:opacity-100`}
+                    className="absolute input-output-rotated opacity-0 transition-opacity group-hover:opacity-100 group-[.testhover]:opacity-100"
+                    style={{
+                      right: '-20px',
+                      top: '50%',
+                      transform: 'translateY(-50%) rotate(-90deg)',
+                    }}
                   >
                     <Outputs nodeId={nodeId} />
                   </div>
                 </div>
 
                 <icons.NoteBookBottomClose
-                  className="cursor-pointer relative z-20 w-[63px]"
+                  className="cursor-pointer relative"
+                  style={{ zIndex: 20, width: '63px' }}
                   onClick={() => setOpenNotebook(false)}
                 />
               </div>
             ) : (
               <div
                 onClick={() => setOpenNotebook(true)}
-                className="absolute left-1/2 group-[.testhover]:!opacity-100 -translate-x-1/2 bottom-0 flex justify-center opacity-0 group-hover/notebook:opacity-100 transition-opacity cursor-pointer z-20"
+                className="absolute flex justify-center opacity-0 group-hover/notebook:opacity-100 transition-opacity cursor-pointer group-[.testhover]:!opacity-100"
+                style={{
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  bottom: 0,
+                  zIndex: 20,
+                }}
               >
-                <icons.NoteBookBottom className="w-[63px]" />
+                <icons.NoteBookBottom style={{ width: '63px' }} />
               </div>
             )}
-            <ul className="absolute z-[3] left-0 top-0 h-[90px] w-[90px] list-none m-0 p-0">
+            <ul
+              className="absolute"
+              style={{
+                zIndex: 3,
+                left: 0,
+                top: 0,
+                height: '90px',
+                width: '90px',
+                listStyle: 'none',
+                margin: 0,
+                padding: 0,
+              }}
+            >
               <li
-                className="absolute rounded-full opacity-70 w-[7px] h-[7px] bottom-[14px] right-[24px] blur-[1.5px] animate-floating"
+                className="absolute animate-floating"
                 style={{
+                  borderRadius: '9999px',
+                  opacity: 0.7,
+                  width: '7px',
+                  height: '7px',
+                  bottom: '14px',
+                  right: '24px',
+                  filter: 'blur(1.5px)',
                   backgroundColor: color,
                 }}
               />
               <li
-                className="absolute rounded-full opacity-70 w-[12px] h-[12px] bottom-[22px] left-[24px] blur-[1px] animate-floating"
+                className="absolute animate-floating"
                 style={{
+                  borderRadius: '9999px',
+                  opacity: 0.7,
+                  width: '12px',
+                  height: '12px',
+                  bottom: '22px',
+                  left: '24px',
+                  filter: 'blur(1px)',
                   backgroundColor: color,
                 }}
               />
               <li
-                className="absolute rounded-full opacity-70 w-[8px] h-[8px] bottom-[40px] left-[18px] blur-[1.5px] animate-floating"
+                className="absolute animate-floating"
                 style={{
+                  borderRadius: '9999px',
+                  opacity: 0.7,
+                  width: '8px',
+                  height: '8px',
+                  bottom: '40px',
+                  left: '18px',
+                  filter: 'blur(1.5px)',
                   backgroundColor: color,
                 }}
               />
@@ -276,18 +373,27 @@ const HiveLine = ({
       {/* Hive tag */}
 
       <div
-        className={`w-[14px] h-[5px] rounded-[50px] ${color} rotate-[15deg]`}
+        style={{
+          width: '14px',
+          height: '5px',
+          borderRadius: '50px',
+          transform: 'rotate(15deg)',
+          backgroundColor: color || undefined,
+        }}
       />
 
       <p
+        className="text-right"
         style={{
           flex: '1 1 auto',
           whiteSpace: 'nowrap',
           maxWidth: '150px',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
+          color: 'var(--white)',
+          fontSize: '9px',
+          lineHeight: 'normal',
         }}
-        className="text-white text-right text-[9px] leading-normal"
       >
         {title}
       </p>

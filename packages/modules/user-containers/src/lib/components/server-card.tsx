@@ -113,7 +113,8 @@ export const UserContainerCardInternal = ({
     <div
       className={`${
         color === 'red' ? 'node-background' : 'gradient-notebook-card'
-      } rounded-[8px] col-span-1 flex flex-col p-5 relative w-[400px] pointer`}
+      } flex flex-col relative pointer`}
+      style={{ borderRadius: '8px', padding: '20px', width: '400px' }}
       onClick={() => {
         if (firstServiceName) {
           onOpenService?.(firstServiceName);
@@ -122,13 +123,21 @@ export const UserContainerCardInternal = ({
     >
       {alive && container.last_activity && (
         <div
-          className="absolute flex gap-2 items-center"
+          className="absolute flex items-center"
           style={{
+            gap: '8px',
             top: `calc(-25px - (var(--node-wrapper-header-height, 0px)))`,
           }}
         >
-          <div className="rounded-full h-3 w-3 bg-[#F72585]" />
-          <p className="text-[12px] text-white/80">
+          <div
+            style={{
+              borderRadius: '9999px',
+              height: '12px',
+              width: '12px',
+              backgroundColor: '#F72585',
+            }}
+          />
+          <p style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.8)' }}>
             last activity&nbsp;
             <Datetime
               value={container.last_activity}
@@ -140,13 +149,27 @@ export const UserContainerCardInternal = ({
       )}
 
       <div className="flex justify-between">
-        <div className="flex gap-3 items-center">
-          <p className="text-white text-[12px] font-bold leading-[28px]">
+        <div className="flex items-center" style={{ gap: '12px' }}>
+          <p
+            className="font-bold"
+            style={{
+              color: 'var(--white)',
+              fontSize: '12px',
+              lineHeight: '28px',
+            }}
+          >
             {container.container_name}
           </p>
           {image && (
             <span
-              className="bg-[#45AFDD] rounded-[4px] h-[18px] flex items-center justify-center text-[12px] font-bold px-2"
+              className="flex items-center justify-center font-bold"
+              style={{
+                backgroundColor: '#45AFDD',
+                borderRadius: '4px',
+                height: '18px',
+                fontSize: '12px',
+                padding: '0 8px',
+              }}
               title={image.imageName}
             >
               {image.description}
@@ -159,7 +182,7 @@ export const UserContainerCardInternal = ({
             <Menubar.Root className="MenubarRoot integrated">
               <Menubar.Menu>
                 <Menubar.Trigger className="">
-                  <icons.Settings className="h-6 w-6" />
+                  <icons.Settings style={{ height: '24px', width: '24px' }} />
                 </Menubar.Trigger>
                 <Menubar.Portal>
                   <Menubar.Content
@@ -212,14 +235,20 @@ export const UserContainerCardInternal = ({
       <div>
         {container.runner.id === 'none' && (
           <>
-            <div className="text-white text-[12px]">
+            <div style={{ color: 'var(--white)', fontSize: '12px' }}>
               <p>Select a runner to start the container</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex" style={{ gap: '8px' }}>
               {Array.from(runners.entries()).map(([runnerId, runner]) => (
                 <div
                   key={runnerId}
-                  className="flex items-center gap-2 cursor-pointer border border-white/10 rounded-[4px] p-2"
+                  className="flex items-center cursor-pointer"
+                  style={{
+                    gap: '8px',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '4px',
+                    padding: '8px',
+                  }}
                   onClick={() => {
                     onSelectRunner(runnerId);
                   }}
@@ -240,11 +269,11 @@ export const UserContainerCardInternal = ({
 
       <TagsBar tags={tags} addTag={addTag} />
 
-      <div className="absolute right-4 bottom-[20px]">
+      <div className="absolute" style={{ right: '16px', bottom: '20px' }}>
         <StatusLed color={color} type="server-card" />
       </div>
 
-      <div className="absolute right-9 bottom-[19px]">
+      <div className="absolute" style={{ right: '36px', bottom: '19px' }}>
         {alive && container.system && <SystemInfo {...container.system} />}
       </div>
 
@@ -315,11 +344,11 @@ const SystemInfo = ({
   return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
-        <InfoCircledIcon name="info" className="text-white" />
+        <InfoCircledIcon name="info" style={{ color: 'var(--white)' }} />
       </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content className="TooltipContent tooltip" sideOffset={12}>
-          <div className="text-white text-[12px]">
+          <div style={{ color: 'var(--white)', fontSize: '12px' }}>
             {cpu && (
               <div>
                 <strong>CPU:</strong> {cpu.model} ({cpu.count} cores,{' '}

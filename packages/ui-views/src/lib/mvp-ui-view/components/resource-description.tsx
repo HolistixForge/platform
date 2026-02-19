@@ -16,9 +16,20 @@ export const ResourceDescription = ({ editing }: ResourceDescriptionProps) => {
   }, [editing]);
 
   return (
-    <div className="flex flex-col min-w-[390px]">
-      <div className="flex items-center justify-between bg-[#2A2A3F] h-[36px] rounded-t-[4px] px-[10px]">
-        <p className="text-white text-[16px] font-bold leading-[28px]">
+    <div className="flex flex-col" style={{ minWidth: '390px' }}>
+      <div
+        className="flex items-center justify-between"
+        style={{
+          backgroundColor: '#2A2A3F',
+          height: '36px',
+          borderRadius: '4px 4px 0 0',
+          padding: '0 10px',
+        }}
+      >
+        <p
+          className="font-bold"
+          style={{ color: 'white', fontSize: '16px', lineHeight: '28px' }}
+        >
           Description
         </p>
         <div className="cursor-pointer" onClick={() => _setEditing(!_editing)}>
@@ -26,14 +37,28 @@ export const ResourceDescription = ({ editing }: ResourceDescriptionProps) => {
         </div>
       </div>
       <div
-        className={`${
-          _editing ? 'description-gradient' : ''
-        } p-px rounded-b-[4px]`}
+        className={_editing ? 'description-gradient' : ''}
+        style={{ padding: '1px', borderRadius: '0 0 4px 4px' }}
       >
-        <div className="bg-[#141432] px-[12px] py-[15px] rounded-b-[4px]">
+        <div
+          style={{
+            backgroundColor: '#141432',
+            padding: '15px 12px',
+            borderRadius: '0 0 4px 4px',
+          }}
+        >
           {_editing ? (
             <textarea
-              className="w-full min-h-[600px] bg-[#141432] text-white text-[12px] leading-[17px] resize-none outline-none"
+              className="w-full"
+              style={{
+                minHeight: '600px',
+                backgroundColor: '#141432',
+                color: 'white',
+                fontSize: '12px',
+                lineHeight: '17px',
+                resize: 'none',
+                outline: 'none',
+              }}
               placeholder="Description"
               defaultValue={`Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam
               imperdiet fringilla neque, in vehicula lorem varius vel. Curabitur
@@ -59,7 +84,7 @@ export const ResourceDescription = ({ editing }: ResourceDescriptionProps) => {
               non, molestie urna. Nam efficitur magna leo,`}
             />
           ) : (
-            <p className="text-[12px] text-white leading-[17px]">
+            <p style={{ fontSize: '12px', color: 'white', lineHeight: '17px' }}>
               Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam
               imperdiet fringilla neque, in vehicula lorem varius vel. Curabitur
               ac diam at felis scelerisque ullamcorper vel id purus. Integer

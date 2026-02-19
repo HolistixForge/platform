@@ -85,7 +85,7 @@ export const NodeChatbox = ({ node }: { node: TGraphNode }) => {
 
   const placeholder = {
     username: 'Loading...',
-    color: 'var(--c-gray-9)',
+    color: 'var(--neutral-9)',
     picture: null,
   };
 
@@ -107,21 +107,23 @@ export const NodeChatbox = ({ node }: { node: TGraphNode }) => {
 
   // we want to close the anchor node rather than this node
   const handleClose = () => {
-    anchorNodeId &&
+    if (anchorNodeId) {
       dispatcher.dispatch({
         type: 'whiteboard:close-node',
         nid: anchorNodeId,
         viewId: useNodeValue.viewId,
       });
+    }
   };
 
   const handleFilterOut = () => {
-    anchorNodeId &&
+    if (anchorNodeId) {
       dispatcher.dispatch({
         type: 'whiteboard:filter-out-node',
         nid: anchorNodeId,
         viewId: useNodeValue.viewId,
       });
+    }
   };
 
   const handleDelete = () => {

@@ -14,7 +14,7 @@ const StoryWrapper = (props: Record<string, never>) => {
   const [copied, setCopied] = useState<string>('');
 
   useEffect(() => {
-    const palette = getCssProperties('--c-');
+    const palette = getCssProperties('--');
     const groups: PaletteGroups = {};
     Object.keys(palette).forEach((property) => {
       const group = property.replace(/\d/g, '');

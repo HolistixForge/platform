@@ -1,0 +1,133 @@
+// Tags component styles
+
+.tag-input {
+  text-transform: uppercase;
+  background-color: var(--surface-700);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-medium);
+  line-height: 14px;
+  height: 22px;
+  outline: none;
+  border: 1px solid var(--surface-300);
+}
+
+.tag-label {
+  text-transform: uppercase;
+  background-color: var(--surface-700);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-medium);
+  line-height: 14px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+
+  &.tag-editable {
+    cursor: text;
+    transition: background-color 0.15s;
+
+    &:hover {
+      background-color: var(--surface-700);
+    }
+  }
+}
+
+.tags-container {
+  position: relative;
+  z-index: var(--z-base);
+  width: 80%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 16px;
+  gap: 4px;
+}
+
+.tag-appear {
+  transition: opacity 0.3s;
+  opacity: 1;
+}
+
+.tag-toggle-btn {
+  height: 20px;
+  width: 20px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transition: all 0.15s;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--alpha-white-10);
+  }
+
+  &.has-others {
+    border: 1px solid var(--surface-300);
+
+    .tag-toggle-text {
+      color: var(--surface-300);
+    }
+
+    &.is-opened {
+      border-color: var(--primary-600);
+    }
+  }
+
+  &.no-others {
+    border: 1px solid var(--surface-400);
+
+    .tag-toggle-text {
+      color: var(--surface-400);
+    }
+  }
+}
+
+.tag-toggle-text {
+  margin-left: 0.5px;
+  margin-top: 0.5px;
+  line-height: 0%;
+
+  &.collapsed {
+    margin-bottom: 8px;
+  }
+}
+
+.tags-dropdown {
+  position: absolute;
+  padding: 8px;
+  flex-wrap: wrap;
+  top: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  right: 0;
+  width: 100%;
+  background-color: var(--surface-700);
+  z-index: var(--z-base);
+  border-radius: 4px;
+  border: 1px solid var(--primary-600);
+  gap: 5px;
+}
+
+.tag-add-btn {
+  border: 1px solid var(--surface-400);
+  height: 20px;
+  width: 20px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--surface-400);
+  text-align: center;
+  transition: all 0.15s;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--alpha-white-10);
+  }
+}

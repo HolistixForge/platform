@@ -29,7 +29,7 @@ export const ServerView = (_props: ServerViewProps) => {
   };
 
   return (
-    <div className="w-[1920px] h-[1080px] border">
+    <div style={{ width: '1920px', height: '1080px', border: '1px solid' }}>
       <Header hasNotifications />
       <ResourceBar
         title="Name_of_server"
@@ -38,43 +38,109 @@ export const ServerView = (_props: ServerViewProps) => {
         warningColor="green"
         tabs={[{ tab: 'Settings' }, { tab: 'Logs' }]}
       />
-      <div className="flex justify-between pl-[20px] pt-[7px]">
-        <div className="flex items-center gap-[9px]">
-          <span className="text-[9px] text-white/80">Resource</span>
-          <div className="h-1 w-1 rounded-full bg-white/20" />
-          <span className="text-[9px] text-white/80">
+      <div
+        className="flex justify-between"
+        style={{ paddingLeft: '20px', paddingTop: '7px' }}
+      >
+        <div className="flex items-center" style={{ gap: '9px' }}>
+          <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.8)' }}>
+            Resource
+          </span>
+          <div
+            style={{
+              height: '4px',
+              width: '4px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(255,255,255,0.2)',
+            }}
+          />
+          <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.8)' }}>
             Server:Name_of_server
           </span>
-          <div className="h-1 w-1 rounded-full bg-white/20" />
+          <div
+            style={{
+              height: '4px',
+              width: '4px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(255,255,255,0.2)',
+            }}
+          />
         </div>
 
-        <div className="mr-10 cursor-pointer z-20">
-          <icons.Close className="cursor-pointer h-[40px] w-[40px]" />
+        <div
+          className="cursor-pointer"
+          style={{ marginRight: '40px', zIndex: 20 }}
+        >
+          <icons.Close
+            className="cursor-pointer"
+            style={{ height: '40px', width: '40px' }}
+          />
         </div>
       </div>
-      <div className="h-[calc(1080px-90px)] relative pt-[20px] flex gap-[30px]">
+      <div
+        className="relative flex"
+        style={{
+          height: 'calc(1080px - 90px)',
+          paddingTop: '20px',
+          gap: '30px',
+        }}
+      >
         <Sidebar active={'tree'} items={menuItems} />
 
         <div>
-          <section className="min-h-[70px] mr-[50px] w-1/4 flex flex-wrap items-start pt-3 gap-[5px]">
+          <section
+            className="flex flex-wrap items-start"
+            style={{
+              minHeight: '70px',
+              marginRight: '50px',
+              width: '25%',
+              paddingTop: '12px',
+              gap: '5px',
+            }}
+          >
             {tags.map((tag: any) => (
               <Tags text={tag.text} color={tag.color} />
             ))}
             <div
-              className="border border-[#50506C] h-5 w-5 rounded-[4px] flex items-center justify-center text-[#50506C] text-center hover:bg-white/20 transition-all cursor-pointer"
+              className="flex items-center justify-center text-center cursor-pointer"
+              style={{
+                border: '1px solid #50506C',
+                height: '20px',
+                width: '20px',
+                borderRadius: '4px',
+                color: '#50506C',
+                transition: 'all 0.2s',
+              }}
               onClick={() => addTag(`tag-${tags.length}`, '#ff0000')}
             >
-              <span className="ml-[0.5px] mt-[0.5px] leading-[0%]">+</span>
+              <span
+                style={{
+                  marginLeft: '0.5px',
+                  marginTop: '0.5px',
+                  lineHeight: '0%',
+                }}
+              >
+                +
+              </span>
             </div>
           </section>
-          <section className="pt-[10px] w-full pr-[50px] grid grid-cols-12 gap-[30px]">
-            <div className="col-span-4">
+          <section
+            className="grid"
+            style={{
+              paddingTop: '10px',
+              width: '100%',
+              paddingRight: '50px',
+              gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
+              gap: '30px',
+            }}
+          >
+            <div style={{ gridColumn: 'span 4' }}>
               <ResourceDescription editing={false} />
             </div>
-            <div className="col-span-4">
+            <div style={{ gridColumn: 'span 4' }}>
               <ResourceList displayTabs={false} />
             </div>
-            <div className="col-span-4">
+            <div style={{ gridColumn: 'span 4' }}>
               <SummaryAccesses activeTab="users" />
             </div>
           </section>
@@ -87,8 +153,21 @@ export const ServerView = (_props: ServerViewProps) => {
 const Tags = ({ text, color }: { text: string; color?: string }) => {
   return (
     <span
-      className={`uppercase bg-[#252546] rounded-[4px] px-2 py-1 text-[10px] font-medium leading-[14px] min-h-[22px] h-[22px] flex items-center w-fit`}
-      style={{ color: color }}
+      className="flex items-center w-fit font-medium"
+      style={{
+        textTransform: 'uppercase',
+        backgroundColor: '#252546',
+        borderRadius: '4px',
+        paddingLeft: '8px',
+        paddingRight: '8px',
+        paddingTop: '4px',
+        paddingBottom: '4px',
+        fontSize: '10px',
+        lineHeight: '14px',
+        minHeight: '22px',
+        height: '22px',
+        color: color,
+      }}
       contentEditable={true}
     >
       {text}

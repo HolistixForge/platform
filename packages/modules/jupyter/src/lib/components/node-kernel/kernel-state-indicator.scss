@@ -13,7 +13,7 @@
   border: none;
   overflow: hidden;
   position: relative;
-  background-color: var(--c-gray-12);
+  background-color: var(--neutral-12);
 
   span {
     position: absolute;
@@ -21,12 +21,12 @@
     left: 0;
     line-height: var(--height);
     font-size: var(--height);
-    color: var(--c-white-1);
+    color: var(--white);
     margin-left: 5px;
   }
 
   .progress {
-    background: var(--ca-white-1);
+    background: var(--alpha-white-10);
     height: 100%;
     transition: width ease-out 1s;
   }

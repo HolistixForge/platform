@@ -1,3 +1,42 @@
+:root {
+  // --- Status Colors (task/kanban) — shared by airtable + notion ---
+  --c-status-red: #ef4444;
+  --c-status-orange: #f97316;
+  --c-status-yellow: #eab308;
+  --c-status-green: #22c55e;
+  --c-status-blue: #3b82f6;
+  --c-status-purple: #a855f7;
+  --c-status-pink: #ec4899;
+  --c-status-gray: #6b7280;
+  --c-status-brown: #a16207;
+
+  // --- Accent / Highlight Colors ---
+  --c-highlight-blue: #4dabf7;
+  --c-highlight-green: #51cf66;
+  --c-highlight-red: #ff6b6b;
+  --c-highlight-yellow: #ffd43b;
+  --c-highlight-orange: #ff922b;
+  --c-highlight-orange-accent: #ff6b35;
+  --c-highlight-purple: #cc5de8;
+  --c-highlight-pink: #f783ac;
+
+  // --- UI Neutral Colors (airtable/notion shared) ---
+  --c-neutral-border: #404040;
+  --c-neutral-border-light: #444;
+  --c-neutral-bg-dark: #222;
+  --c-neutral-bg-darker: #2d2d2d;
+  --c-neutral-bg-option: #333;
+  --c-neutral-text-muted: #868e96;
+  --c-neutral-text-light: #ddd;
+  --c-neutral-text-dim: #bbb;
+  --c-neutral-text-dimmer: #adb5bd;
+  --c-neutral-text-subtle: #999;
+  --c-neutral-text-faint: #666;
+  --c-neutral-border-form: #e0e0e0;
+  --c-neutral-border-input: #e5e7eb;
+  --c-neutral-select-handle: #aaa;
+}
+
 .airtable-table {
   .airtable-logo {
     width: 24px;
@@ -9,13 +48,13 @@
     align-items: center;
     gap: 12px;
     padding: 16px;
-    border-bottom: 1px solid #404040;
+    border-bottom: 1px solid var(--c-neutral-border);
 
     .airtable-h2 {
       margin: 0;
-      font-size: 18px;
+      font-size: var(--font-size-xl);
       font-weight: 600;
-      color: #ffffff;
+      color: var(--white);
     }
 
     .airtable-view-switcher {
@@ -24,20 +63,20 @@
       gap: 8px;
 
       button {
-        background: #222;
-        color: #fff;
-        border: 1px solid #444;
+        background: var(--c-neutral-bg-dark);
+        color: var(--white);
+        border: 1px solid var(--c-neutral-border-light);
         border-radius: 4px;
         padding: 4px 12px;
         cursor: pointer;
-        font-size: 13px;
+        font-size: var(--font-size-md);
         transition: background 0.2s, color 0.2s;
 
         &.active,
         &:hover {
-          background: #ff6b35;
-          color: #222;
-          border-color: #ff6b35;
+          background: var(--c-highlight-orange-accent);
+          color: var(--c-neutral-bg-dark);
+          border-color: var(--c-highlight-orange-accent);
         }
       }
     }
@@ -52,20 +91,20 @@
 
     h3 {
       margin: 0 0 8px 0;
-      font-size: 16px;
-      color: #ffffff;
+      font-size: var(--font-size-lg);
+      color: var(--white);
     }
 
     p {
       margin: 0;
-      color: #ddd;
-      font-size: 14px;
+      color: var(--c-neutral-text-light);
+      font-size: var(--font-size-md);
     }
   }
 
   .airtable-list-content {
     .airtable-list-item {
-      border: 1px solid #404040;
+      border: 1px solid var(--c-neutral-border);
       border-radius: 4px;
       padding: 12px;
       margin-bottom: 8px;
@@ -74,7 +113,7 @@
       .airtable-record-id {
         font-weight: 600;
         margin-bottom: 8px;
-        color: #ffffff;
+        color: var(--white);
       }
 
       .airtable-record-fields {
@@ -82,16 +121,16 @@
           display: flex;
           gap: 8px;
           margin-bottom: 4px;
-          font-size: 14px;
+          font-size: var(--font-size-md);
 
           .field-name {
             font-weight: 500;
-            color: #bbb;
+            color: var(--c-neutral-text-dim);
             min-width: 80px;
           }
 
           .field-value {
-            color: #ffffff;
+            color: var(--white);
           }
         }
       }
@@ -109,32 +148,32 @@
 
 .airtable-kanban-subgroup-selector {
   padding: 12px 16px;
-  border-bottom: 1px solid #404040;
+  border-bottom: 1px solid var(--c-neutral-border);
   background: rgba(255, 255, 255, 0.05);
 
   label {
     font-weight: 500;
     margin-right: 8px;
-    color: #ffffff;
+    color: var(--white);
   }
 
   .airtable-subgroup-select {
     padding: 6px 12px;
-    border: 1px solid #404040;
+    border: 1px solid var(--c-neutral-border);
     border-radius: 6px;
     background: rgba(255, 255, 255, 0.1);
-    font-size: 14px;
-    color: #ffffff;
+    font-size: var(--font-size-md);
+    color: var(--white);
 
     &:focus {
       outline: none;
-      border-color: #4dabf7;
-      box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.1);
+      border-color: var(--c-highlight-blue);
+      box-shadow: var(--shadow-focus-blue);
     }
 
     option {
-      background: #333;
-      color: #ffffff;
+      background: var(--c-neutral-bg-option);
+      color: var(--white);
     }
   }
 }
@@ -152,7 +191,7 @@
   flex: 1 1 280px;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  border: 1px solid #404040;
+  border: 1px solid var(--c-neutral-border);
   display: flex;
   flex-direction: column;
   transition: all 0.2s ease;
@@ -162,12 +201,12 @@
   &:hover {
     background: rgba(54, 54, 54, 0.2) !important;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-card-hover);
   }
 
   &.drag-over {
-    border-color: #4dabf7;
-    box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.1);
+    border-color: var(--c-highlight-blue);
+    box-shadow: var(--shadow-focus-blue);
   }
 
   &.dragging {
@@ -178,7 +217,7 @@
 
 .airtable-kanban-column-header {
   padding: 12px 16px;
-  border-bottom: 1px solid #404040;
+  border-bottom: 1px solid var(--c-neutral-border);
   background: rgba(255, 255, 255, 0.05);
   border-radius: 8px 8px 0 0;
 }
@@ -198,16 +237,16 @@
 }
 
 .airtable-kanban-title {
-  font-size: 14px;
+  font-size: var(--font-size-md);
   font-weight: 600;
-  color: #ffffff;
+  color: var(--white);
   margin: 0;
   flex: 1;
 }
 
 .airtable-kanban-count {
-  font-size: 12px;
-  color: #868e96;
+  font-size: var(--font-size-sm);
+  color: var(--c-neutral-text-muted);
   font-weight: 500;
 }
 
@@ -222,7 +261,7 @@
   margin-bottom: 12px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid #404040;
+  border: 1px solid var(--c-neutral-border);
   transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
@@ -230,12 +269,12 @@
   &:hover {
     background: rgba(54, 54, 54, 0.2) !important;
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-card-md-hover);
   }
 
   &.drag-over {
-    border-color: #4dabf7;
-    box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.1);
+    border-color: var(--c-highlight-blue);
+    box-shadow: var(--shadow-focus-blue-sm);
   }
 
   &:last-child {
@@ -245,7 +284,7 @@
 
 .airtable-kanban-subgroup-header {
   padding: 8px 12px;
-  border-bottom: 1px solid #404040;
+  border-bottom: 1px solid var(--c-neutral-border);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -261,15 +300,15 @@
 }
 
 .airtable-kanban-subgroup-title {
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   font-weight: 500;
-  color: #bbb;
+  color: var(--c-neutral-text-dim);
   flex: 1;
 }
 
 .airtable-kanban-subgroup-count {
-  font-size: 11px;
-  color: #868e96;
+  font-size: var(--font-size-xs);
+  color: var(--c-neutral-text-muted);
   font-weight: 500;
 }
 
@@ -280,34 +319,34 @@
 // Task status colors - Gallery theme compatible
 .task-status {
   &.bg-red {
-    background-color: #ef4444;
+    background-color: var(--c-status-red);
   }
   &.bg-orange {
-    background-color: #f97316;
+    background-color: var(--c-status-orange);
   }
   &.bg-yellow {
-    background-color: #eab308;
+    background-color: var(--c-status-yellow);
   }
   &.bg-green {
-    background-color: #22c55e;
+    background-color: var(--c-status-green);
   }
   &.bg-blue {
-    background-color: #3b82f6;
+    background-color: var(--c-status-blue);
   }
   &.bg-purple {
-    background-color: #a855f7;
+    background-color: var(--c-status-purple);
   }
   &.bg-pink {
-    background-color: #ec4899;
+    background-color: var(--c-status-pink);
   }
   &.bg-gray {
-    background-color: #6b7280;
+    background-color: var(--c-status-gray);
   }
   &.bg-brown {
-    background-color: #a16207;
+    background-color: var(--c-status-brown);
   }
   &.bg-default {
-    background-color: #6b7280;
+    background-color: var(--c-status-gray);
   }
 }
 
@@ -319,14 +358,14 @@
 
     h3 {
       margin: 0 0 8px 0;
-      font-size: 16px;
-      color: #ffffff;
+      font-size: var(--font-size-lg);
+      color: var(--white);
     }
 
     p {
       margin: 0;
-      color: #ddd;
-      font-size: 14px;
+      color: var(--c-neutral-text-light);
+      font-size: var(--font-size-md);
     }
   }
 
@@ -338,7 +377,7 @@
 
       .airtable-gallery-card {
         background: rgba(255, 255, 255, 0.1);
-        border: 1px solid #404040;
+        border: 1px solid var(--c-neutral-border);
         border-radius: 8px;
         padding: 16px;
         min-height: 120px;
@@ -353,13 +392,13 @@
         &:hover {
           background: rgba(54, 54, 54, 0.2) !important;
           transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+          box-shadow: var(--shadow-card-hover);
         }
 
         .gallery-card-header {
           .gallery-card-title {
-            color: #ffffff;
-            font-size: 14px;
+            color: var(--white);
+            font-size: var(--font-size-md);
             font-weight: 600;
             margin: 0 0 8px 0;
             line-height: 1.4;
@@ -371,22 +410,22 @@
           flex-direction: column;
           gap: 8px;
           margin-top: auto;
-          font-size: 12px;
-          color: #ddd;
+          font-size: var(--font-size-sm);
+          color: var(--c-neutral-text-light);
 
           .gallery-field {
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 8px;
-            font-size: 12px;
+            font-size: var(--font-size-sm);
             .field-label {
-              color: #bbb;
+              color: var(--c-neutral-text-dim);
               font-weight: 500;
               min-width: 80px;
             }
             .field-value {
-              color: #fff;
+              color: var(--white);
               text-align: right;
               max-width: 60%;
               overflow: hidden;
@@ -403,7 +442,7 @@
 // Enhanced gallery card styles for kanban compatibility - Gallery theme
 .airtable-gallery-card {
   background: rgba(255, 255, 255, 0.1);
-  border: 1px solid #404040;
+  border: 1px solid var(--c-neutral-border);
   border-radius: 8px;
   padding: 16px;
   min-height: 120px;
@@ -418,7 +457,7 @@
   &:hover {
     background: rgba(54, 54, 54, 0.2) !important;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-card-hover);
   }
 
   &:last-child {
@@ -431,9 +470,9 @@
   }
 
   .gallery-card-title {
-    font-size: 14px;
+    font-size: var(--font-size-md);
     font-weight: 600;
-    color: #ffffff;
+    color: var(--white);
     margin: 0;
     line-height: 1.4;
   }
@@ -443,28 +482,28 @@
     flex-direction: column;
     gap: 8px;
     margin-top: auto;
-    font-size: 12px;
-    color: #ddd;
+    font-size: var(--font-size-sm);
+    color: var(--c-neutral-text-light);
 
     .gallery-field {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 8px;
-      font-size: 12px;
+      font-size: var(--font-size-sm);
 
       &:last-child {
         margin-bottom: 0;
       }
 
       .field-label {
-        color: #bbb;
+        color: var(--c-neutral-text-dim);
         font-weight: 500;
         min-width: 80px;
       }
 
       .field-value {
-        color: #fff;
+        color: var(--white);
         text-align: right;
         max-width: 60%;
         overflow: hidden;
@@ -484,14 +523,14 @@
 
     h3 {
       margin: 0 0 8px 0;
-      font-size: 16px;
-      color: #ffffff;
+      font-size: var(--font-size-lg);
+      color: var(--white);
     }
 
     p {
       margin: 0;
-      color: #ddd;
-      font-size: 14px;
+      color: var(--c-neutral-text-light);
+      font-size: var(--font-size-md);
     }
   }
 
@@ -506,7 +545,7 @@
         background: rgba(255, 255, 255, 0.1);
         border-radius: 8px;
         padding: 16px;
-        border: 1px solid #404040;
+        border: 1px solid var(--c-neutral-border);
         position: relative;
         overflow: hidden;
         transition: all 0.2s ease;
@@ -514,24 +553,24 @@
         &:hover {
           background: rgba(54, 54, 54, 0.2) !important;
           transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+          box-shadow: var(--shadow-card-hover);
         }
 
         h4 {
           margin: 0 0 12px 0;
-          font-size: 14px;
+          font-size: var(--font-size-md);
           font-weight: 600;
-          color: #ffffff;
+          color: var(--white);
         }
 
         .airtable-kanban-cards {
           .airtable-kanban-card {
             background: rgba(255, 255, 255, 0.1);
-            border: 1px solid #404040;
+            border: 1px solid var(--c-neutral-border);
             border-radius: 6px;
             padding: 12px;
             margin-bottom: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            box-shadow: var(--shadow-sm);
             position: relative;
             overflow: hidden;
             transition: all 0.2s ease;
@@ -539,13 +578,13 @@
             &:hover {
               background: rgba(54, 54, 54, 0.2) !important;
               transform: translateY(-1px);
-              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+              box-shadow: var(--shadow-card-md-hover);
             }
 
             .card-title {
               font-weight: 600;
               margin-bottom: 8px;
-              color: #ffffff;
+              color: var(--white);
             }
 
             .card-content {
@@ -553,14 +592,14 @@
                 display: flex;
                 justify-content: space-between;
                 margin-bottom: 4px;
-                font-size: 12px;
+                font-size: var(--font-size-sm);
 
                 span:first-child {
-                  color: #bbb;
+                  color: var(--c-neutral-text-dim);
                 }
 
                 span:last-child {
-                  color: #ffffff;
+                  color: var(--white);
                   font-weight: 500;
                 }
               }
@@ -587,7 +626,7 @@
   background: rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   padding: 16px;
-  border: 1px solid #404040;
+  border: 1px solid var(--c-neutral-border);
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
@@ -598,11 +637,11 @@
 .kanban-column:hover {
   background: rgba(54, 54, 54, 0.2) !important;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-card-hover);
 }
 .kanban-column.drag-over {
   background: rgba(54, 54, 54, 0.3) !important;
-  border-color: #4dabf7 !important;
+  border-color: var(--c-highlight-blue) !important;
 }
 .kanban-column .column-header {
   margin-bottom: 16px;
@@ -612,14 +651,14 @@
   gap: 8px;
 }
 .kanban-column .column-header h4 {
-  color: #ffffff;
-  font-size: 14px;
+  color: var(--white);
+  font-size: var(--font-size-md);
   font-weight: 600;
   margin: 0;
 }
 .kanban-column .record-count {
-  color: #868e96;
-  font-size: 12px;
+  color: var(--c-neutral-text-muted);
+  font-size: var(--font-size-sm);
   margin-left: 20px;
 }
 

@@ -11,8 +11,8 @@
   .TabsList {
     flex-shrink: 0;
     display: flex;
-    border-bottom: 1px solid var(--color-background);
-    background: var(--c-blue-gray-5);
+    border-bottom: 1px solid var(--color-bg-app);
+    background: var(--surface-700);
     padding: 0 20px 0 40px;
     gap: 15px;
     overflow-x: auto;
@@ -23,10 +23,10 @@
     &::-webkit-scrollbar {
       height: 5px;
       width: 5px;
-      background: var(--c-blue-gray-6);
+      background: var(--surface-800);
     }
     &::-webkit-scrollbar-thumb {
-      background: var(--c-blue-gray-4);
+      background: var(--surface-300);
       border-radius: 5px;
     }
 
@@ -34,7 +34,7 @@
       min-width: 2px;
       border-radius: 2px;
       height: 20px;
-      background: var(--c-blue-gray-4);
+      background: var(--surface-300);
       margin-left: 17px;
     }
 
@@ -42,9 +42,9 @@
       flex: 0 0 auto;
       line-height: 1;
       user-select: none;
-      color: var(--c-gray-7);
+      color: var(--neutral-7);
       font-weight: 700;
-      font-size: 12px;
+      font-size: var(--font-size-sm);
       cursor: pointer;
       height: 100%;
       display: flex;
@@ -71,7 +71,7 @@
       }
 
       .trigger-active {
-        background: var(--color-background);
+        background: var(--color-bg-app);
         &:before {
           left: -33px;
           @include left-curve('%23141432');
@@ -82,7 +82,7 @@
       }
 
       .trigger-terminal {
-        background: var(--c-pink-3);
+        background: var(--primary-500);
         &:before {
           left: -33px;
           @include left-curve('%23a35bbb');
@@ -131,7 +131,7 @@
         }
         .icon-add {
           left: 2px;
-          background: var(--c-blue-gray-7);
+          background: var(--surface-700);
           height: 12px;
           width: 12px;
           border-radius: 3px;
@@ -152,13 +152,13 @@
         span.editing {
           border-radius: 4px;
           box-sizing: border-box;
-          border: solid 1px var(--c-gray-8);
+          border: solid 1px var(--neutral-8);
           outline: none;
           padding: 3px 8px;
         }
 
         .children-count {
-          background-color: var(--c-pink-3);
+          background-color: var(--primary-500);
           margin-left: 10px;
           border-radius: 50%;
           height: 14px;
@@ -166,7 +166,7 @@
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 9px;
+          font-size: var(--font-size-2xs);
         }
       }
     }
@@ -186,7 +186,7 @@
   .TabsContent {
     flex-grow: 1;
     border-bottom: none;
-    color: gray;
+    color: var(--neutral-9);
     outline: none;
     &[data-state='inactive'] {
       display: none; /* Hide inactive tab content */

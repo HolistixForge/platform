@@ -18,7 +18,7 @@
   .app-header {
     height: 0 !important;
     position: absolute;
-    z-index: 1000000;
+    z-index: var(--z-toast);
     pointer-events: none;
     background: none;
   }

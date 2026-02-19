@@ -20,7 +20,7 @@ export const Normal: Story = {
     date: new Date(),
     username: 'local:John',
     content: 'Lorem ipsum dolor sit am',
-    color: 'var(--c-orange-2)',
+    color: 'var(--orange-200)',
     space: 'space12',
     id: '89461896',
   },

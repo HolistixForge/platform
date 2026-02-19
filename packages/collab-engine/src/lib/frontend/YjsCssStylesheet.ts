@@ -6,7 +6,7 @@ const userCss: {
 } = {};
 
 export const buildUserCss = (key: number, color: string | undefined) => {
-  color = color || 'var(--c-orange-4)';
+  color = color || 'var(--orange-400)';
   const k = `${key}`;
 
   if (!userCss[k]) {

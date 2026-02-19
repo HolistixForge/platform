@@ -26,16 +26,24 @@ export const UserDisplayItem = ({
   removeUser,
 }: UserDisplayItemProps) => {
   return (
-    <div className={`grid grid-cols-12 max-w-full gap-[20px] w-full`}>
+    <div
+      className="grid w-full"
+      style={{
+        gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
+        maxWidth: '100%',
+        gap: '20px',
+      }}
+    >
       <div
-        className={`${
-          mail ? 'col-span-5' : 'col-span-7'
-        } flex items-center gap-[8px]`}
+        className="flex items-center"
+        style={{ gridColumn: mail ? 'span 5' : 'span 7', gap: '8px' }}
       >
         <UserAvatar {...user} size="small" />
         <p
-          className="text-[12px] leading-[28px] whitespace-nowrap"
+          className="whitespace-nowrap"
           style={{
+            fontSize: '12px',
+            lineHeight: '28px',
             color: roleColor,
           }}
         >
@@ -43,43 +51,54 @@ export const UserDisplayItem = ({
         </p>
       </div>
       <div
-        className={`${
-          !mail ? 'col-span-3' : 'col-span-5'
-        } flex items-center gap-2`}
+        className="flex items-center"
+        style={{ gridColumn: !mail ? 'span 3' : 'span 5', gap: '8px' }}
       >
         <div
-          className="text-white rounded-[4px] text-[12px] font-bold px-2"
+          className="font-bold"
           style={{
+            color: 'white',
+            borderRadius: '4px',
+            fontSize: '12px',
+            paddingLeft: '8px',
+            paddingRight: '8px',
             backgroundColor: roleColor,
           }}
         >
           {role}
         </div>
-        <p className="text-[12px] text-[#77768E]">{mail ? mail : null}</p>
+        <p style={{ fontSize: '12px', color: '#77768E' }}>
+          {mail ? mail : null}
+        </p>
       </div>
       <div
-        className={`${
-          mail ? 'col-span-2' : 'col-span-2'
-        } flex items-center justify-end gap-1`}
+        className="flex items-center justify-end"
+        style={{ gridColumn: 'span 2', gap: '4px' }}
       >
         {buttons?.settings && (
           <div className="cursor-pointer">
-            <icons.Settings className="w-5 h-5 text-[white]" />
+            <icons.Settings
+              style={{ width: '20px', height: '20px', color: 'white' }}
+            />
           </div>
         )}
         {buttons?.remove && (
           <div className="cursor-pointer">
-            <icons.Remove className="w-5 h-5 text-[white]" />
+            <icons.Remove
+              style={{ width: '20px', height: '20px', color: 'white' }}
+            />
           </div>
         )}
         {buttons?.filter && (
           <div className="cursor-pointer">
-            <icons.Filter className="w-5 h-5 text-[white]" />
+            <icons.Filter
+              style={{ width: '20px', height: '20px', color: 'white' }}
+            />
           </div>
         )}
         {buttons?.delete && (
           <div className="cursor-pointer" onClick={removeUser}>
-            <icons.Delete className="w-5 h-5" />
+            <icons.Delete style={{ width: '20px', height: '20px' }} />
           </div>
         )}
       </div>

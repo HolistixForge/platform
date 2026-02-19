@@ -96,7 +96,7 @@ const CustomNode = ({ id }: NodeProps) => {
         width: '50px',
         height: '50px',
         borderRadius: '10px',
-        background: 'var(--c-black-3)',
+        background: 'var(--black-600)',
       }}
     >
       <Handle type="source" position={Position.Bottom} />

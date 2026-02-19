@@ -1,4 +1,8 @@
-import { UserAvatar, randomGuy, ResourceButtons } from '@holistix-forge/ui-base';
+import {
+  UserAvatar,
+  randomGuy,
+  ResourceButtons,
+} from '@holistix-forge/ui-base';
 import { StatusLed } from '@holistix-forge/user-containers/frontend';
 
 import { Tabs } from './tabs';
@@ -37,34 +41,61 @@ export const ResourceBar = ({
     <div
       className={`${
         tabs ? 'resource-bar-gradient-secondary' : 'resource-bar-gradient'
-      } w-full h-[50px] px-6 grid grid-cols-12 relative`}
+      } w-full grid relative`}
+      style={{
+        height: '50px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
+      }}
     >
       <div
-        className={`flex items-center ${
-          tags?.length === 2 ? 'col-span-4' : 'col-span-3'
-        } gap-[10px]`}
+        className="flex items-center"
+        style={{
+          gridColumn: tags?.length === 2 ? 'span 4' : 'span 3',
+          gap: '10px',
+        }}
       >
         {tags && (
-          <div className="flex items-center gap-[2px]">
-            {tags?.map((tag) => (
+          <div className="flex items-center" style={{ gap: '2px' }}>
+            {tags?.map((tag, idx) => (
               <div
                 key={tag.name}
-                className={`h-[33px] text-white text-[20px] font-bold px-2 first:rounded-l-[4px] ${
-                  tags.length > 1 ? 'last:rounded-r-[4px]' : ''
-                }`}
-                style={{ backgroundColor: tag.color }}
+                className="font-bold"
+                style={{
+                  height: '33px',
+                  color: 'white',
+                  fontSize: '20px',
+                  paddingLeft: '8px',
+                  paddingRight: '8px',
+                  backgroundColor: tag.color,
+                  borderTopLeftRadius: idx === 0 ? '4px' : undefined,
+                  borderBottomLeftRadius: idx === 0 ? '4px' : undefined,
+                  borderTopRightRadius:
+                    tags.length > 1 && idx === tags.length - 1
+                      ? '4px'
+                      : undefined,
+                  borderBottomRightRadius:
+                    tags.length > 1 && idx === tags.length - 1
+                      ? '4px'
+                      : undefined,
+                }}
               >
                 {tag.name}
               </div>
             ))}
           </div>
         )}
-        <div className="flex items-center gap-[10px]">
-          <div className="text-white text-[20px] font-semibold">{title}</div>
+        <div className="flex items-center" style={{ gap: '10px' }}>
+          <div style={{ color: 'white', fontSize: '20px', fontWeight: 600 }}>
+            {title}
+          </div>
           {titleDot && (
             <div
-              className="w-[15px] h-[15px] rounded-full"
               style={{
+                width: '15px',
+                height: '15px',
+                borderRadius: '50%',
                 background: titleDot,
               }}
             />
@@ -72,8 +103,11 @@ export const ResourceBar = ({
         </div>
       </div>
 
-      <div className="col-span-3 flex items-center gap-[30px]">
-        <div className="flex items-center gap-2">
+      <div
+        className="flex items-center"
+        style={{ gridColumn: 'span 3', gap: '30px' }}
+      >
+        <div className="flex items-center" style={{ gap: '8px' }}>
           {buttonPrimary && (
             <ResourceButtons size="medium" type={buttonPrimary} />
           )}
@@ -89,7 +123,10 @@ export const ResourceBar = ({
         {host ? (
           <div className="flex items-center">
             <UserAvatar {...randomGuy()} host size="small" />
-            <p className="text-[12px] whitespace-nowrap leading-[28px]">
+            <p
+              className="whitespace-nowrap"
+              style={{ fontSize: '12px', lineHeight: '28px' }}
+            >
               John Doe
             </p>
           </div>
@@ -98,16 +135,25 @@ export const ResourceBar = ({
 
       {tabs && (
         <div
-          className={`${
-            tags?.length === 2 ? 'col-span-5' : 'col-span-6'
-          } flex items-center bg-gradient-to-r`}
+          className="flex items-center"
+          style={{ gridColumn: tags?.length === 2 ? 'span 5' : 'span 6' }}
         >
           <Tabs tabs={tabs} currentTabs="Summary" />
         </div>
       )}
 
       {path !== '' && (
-        <p className="absolute right-4 text-[#6C4BA2] text-[14px] leading-[28px] top-1/2 -translate-y-1/2">
+        <p
+          className="absolute"
+          style={{
+            right: '16px',
+            color: '#6C4BA2',
+            fontSize: '14px',
+            lineHeight: '28px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+          }}
+        >
           {path}
         </p>
       )}

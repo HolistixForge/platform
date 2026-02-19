@@ -1,3 +1,10 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+:root {
+  // --- LED Status domain tokens ---
+  --c-led-blue: #5aa3f8;
+  --c-led-blue-shadow: #2b6da0;
+  --c-led-green-shadow: #2b961d;
+  --c-led-red: #f75252;
+  --c-led-red-shadow: #ab3030;
+  --c-led-yellow: #ffe921;
+  --c-led-yellow-shadow: #67600e;
+}

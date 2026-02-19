@@ -17,7 +17,7 @@
   .edge-menu-label {
     min-width: 70px;
     font-weight: 600;
-    font-size: 12px;
+    font-size: var(--font-size-sm);
   }
 
   // For grouping marker controls
@@ -28,7 +28,7 @@
   }
 
   .Label {
-    font-size: 12px;
+    font-size: var(--font-size-sm);
     width: initial;
     min-width: 60px;
     text-align: left;

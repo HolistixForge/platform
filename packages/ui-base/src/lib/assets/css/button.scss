@@ -9,20 +9,20 @@ span.button-root {
     height: var(--form-input-height);
     padding: 0 15px;
     //
-    font-size: 15px;
+    font-size: var(--font-size-lg);
     line-height: 1;
     font-weight: 500;
     //
     cursor: pointer;
     //
-    color: var(--c-white-1);
-    border: solid 1px var(--c-gray-9);
+    color: var(--white);
+    border: solid 1px var(--neutral-9);
 
     &:hover,
     &.testhover {
       // border: solid 1.5px var(--color-button-blue);
       color: var(--form-input-color);
-      background-color: var(--ca-white-1);
+      background-color: var(--alpha-white-10);
     }
 
     &.icon {
@@ -36,40 +36,40 @@ span.button-root {
 
     &.small {
       padding: 0 8px;
-      font-size: 11px;
+      font-size: var(--font-size-xs);
       height: 28px;
     }
 
     &.submit {
-      background-color: var(--c-pink-2);
-      border-color: var(--c-pink-2);
-      color: var(--c-white-1);
-      box-shadow: 0 2px 10px var(--ca-black-7);
+      background-color: var(--primary-200);
+      border-color: var(--primary-200);
+      color: var(--white);
+      box-shadow: var(--shadow-md);
 
       &:hover,
       &.testhover {
-        background-color: var(--c-pink-1);
+        background-color: var(--primary-100);
       }
     }
 
     &.red {
-      color: var(--c-red-1);
-      border-color: var(--c-red-1);
-      //background-color: var(--c-white-1);
+      color: var(--red-300);
+      border-color: var(--red-300);
+      //background-color: var(--white);
       &:hover,
       &.testhover {
-        color: var(--c-white-1);
-        background-color: var(--c-red-1);
+        color: var(--white);
+        background-color: var(--red-300);
       }
     }
 
     &.blue {
       color: var(--color-button-blue);
       border-color: var(--color-button-blue);
-      //background-color: var(--c-white-1);
+      //background-color: var(--white);
       &:hover,
       &.testhover {
-        color: var(--c-white-1);
+        color: var(--white);
         background-color: var(--color-button-blue);
       }
     }
@@ -86,7 +86,7 @@ span.button-root {
       height: 46px;
       min-height: 46px;
       border-radius: 8px;
-      border: solid 1px #9542c6;
+      border: solid 1px #9542c6; /* charter-exception: unique color */
       --icon-width: 22px;
       --icon-height: 22px;
 
@@ -131,9 +131,9 @@ span.button-root {
       &.cloud,
       &.share {
         width: 49px;
-        font-size: 12px;
-        color: white;
-        fill: white;
+        font-size: var(--font-size-sm);
+        color: var(--white);
+        fill: var(--white);
       }
 
       &.docker {
@@ -191,7 +191,7 @@ span.button-root {
 
         &:hover,
         &.testhover {
-          box-shadow: 0px 0px 3px #987bbd inset;
+          box-shadow: var(--shadow-btn-purple-inset);
           filter: drop-shadow(0px 0px 3px #987bbd);
           --tw-text-opacity: 1;
           color: rgb(152 123 189 / var(--tw-text-opacity));
@@ -215,7 +215,7 @@ span.button-root {
 
         &:hover,
         &.testhover {
-          box-shadow: 0px 0px 3px #0550b3 inset;
+          box-shadow: var(--shadow-btn-blue-inset);
           filter: drop-shadow(0px 0px 3px #0550b3);
           --tw-text-opacity: 1;
           color: rgb(90 163 248 / var(--tw-text-opacity));
@@ -223,12 +223,12 @@ span.button-root {
       }
 
       &.enter {
-        border: solid 1px #a998d6;
+        border: solid 1px var(--surface-300);
       }
 
-      background-color: var(--c-blue-6);
+      background-color: var(--surface-900);
       &.stop {
-        background-color: #29293e;
+        background-color: var(--surface-700);
       }
     }
 
@@ -257,25 +257,23 @@ span.button-root {
 .TooltipContent {
   border-radius: 4px;
   padding: 10px 15px;
-  font-size: 13px;
+  font-size: var(--font-size-md);
   line-height: 1;
-  box-shadow:
-    hsl(206 22% 7% / 35%) 0px 10px 38px -10px,
-    hsl(206 22% 7% / 20%) 0px 10px 20px -15px;
+  box-shadow: var(--shadow-xl);
   user-select: none;
   animation-duration: 400ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   will-change: transform, opacity;
 
   &.errors {
-    background-color: var(--c-red-1);
+    background-color: var(--red-300);
     max-width: 200px;
   }
   &.success {
-    background-color: var(--c-green-3);
+    background-color: var(--green-300);
   }
   &.tooltip {
-    background-color: var(--c-alt-blue-2);
+    background-color: var(--cyan-300);
   }
 
   svg {
@@ -297,13 +295,13 @@ span.button-root {
 
 .TooltipArrow {
   &.errors {
-    fill: var(--c-red-1);
+    fill: var(--red-300);
   }
   &.success {
-    fill: var(--c-green-3);
+    fill: var(--green-300);
   }
   &.tooltip {
-    fill: var(--c-alt-blue-2);
+    fill: var(--cyan-300);
   }
 }
 

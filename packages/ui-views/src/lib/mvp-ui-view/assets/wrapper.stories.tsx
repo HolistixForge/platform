@@ -9,6 +9,13 @@ import { Wrapper } from './wrapper';
 const meta = {
   title: 'Mvp/Assets/wrapper',
   component: Wrapper,
+  decorators: [
+    (Story) => (
+      <div style={{ padding: '40px 20px' }}>
+        <Story />
+      </div>
+    ),
+  ],
   parameters: {
     layout: 'centered',
   },

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { randomColor } from '../css-utils/css-utils';
 
+import './tags.scss';
+
 export type Tag = { text: string; color: string };
 
 export const Tags = ({
@@ -54,7 +56,7 @@ export const Tags = ({
         onChange={(e) => setEditedText(e.target.value)}
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
-        className="uppercase bg-[#252546] rounded-[4px] px-2 py-1 text-[10px] font-medium leading-[14px] h-[22px] outline-none border border-[#A998DA]"
+        className="tag-input"
         style={{ color }}
       />
     );
@@ -62,9 +64,7 @@ export const Tags = ({
 
   return (
     <span
-      className={`uppercase bg-[#252546] rounded-[4px] px-2 py-1 text-[10px] font-medium leading-[14px] h-[22px] flex items-center ${
-        onEdit ? 'cursor-text hover:bg-[#2C2C47] transition-colors' : ''
-      }`}
+      className={`tag-label ${onEdit ? 'tag-editable' : ''}`}
       style={{ color: color }}
       onClick={() => onEdit && setIsEditing(true)}
     >
@@ -129,17 +129,11 @@ export const TagsBar = ({ tags = [], addTag, editTag }: TagsBarProps) => {
 
   return (
     <>
-      <div
-        ref={containerRef}
-        className="tags-container relative z-20 w-[80%] flex flex-wrap items-center mt-4 gap-1"
-      >
+      <div ref={containerRef} className="tags-container">
         {visibleTags.map((tag: Tag, visibleIndex: number) => {
           const originalIndex = tags.findIndex((t) => t === tag);
           return (
-            <span
-              key={visibleIndex}
-              className="transition-opacity duration-300 opacity-100"
-            >
+            <span key={visibleIndex} className="tag-appear">
               <Tags
                 text={tag.text}
                 color={tag.color}
@@ -154,11 +148,11 @@ export const TagsBar = ({ tags = [], addTag, editTag }: TagsBarProps) => {
         })}
 
         <button
-          className={`border ${
-            otherTags.length > 0 ? 'border-[#A998DA]' : 'border-[#50506C]'
-          } h-5 w-5 ${
-            otherTagsOpened && '!border-[#833A9D]'
-          } rounded-[4px] flex items-center justify-center text-[#141432] text-center hover:bg-white/10  transition-all cursor-pointer`}
+          className={`tag-toggle-btn ${
+            otherTags.length > 0
+              ? `has-others ${otherTagsOpened ? 'is-opened' : ''}`
+              : 'no-others'
+          }`}
           onClick={() =>
             otherTags.length > 0
               ? openMenu()
@@ -166,10 +160,8 @@ export const TagsBar = ({ tags = [], addTag, editTag }: TagsBarProps) => {
           }
         >
           <span
-            className={`ml-[0.5px] mt-[0.5px] leading-[0%] ${
-              otherTags.length > 0
-                ? `text-[#A998DA] ${!otherTagsOpened && 'mb-2'}`
-                : 'text-[#50506C]'
+            className={`tag-toggle-text ${
+              otherTags.length > 0 && !otherTagsOpened ? 'collapsed' : ''
             }`}
           >
             {otherTags.length > 0 ? (otherTagsOpened ? '-' : '...') : '+'}
@@ -178,7 +170,7 @@ export const TagsBar = ({ tags = [], addTag, editTag }: TagsBarProps) => {
       </div>
 
       {otherTagsOpened && (
-        <div className="tags-container absolute px-2 py-2 flex-wrap top-full max-h-[200px] overflow-y-auto flex right-0 w-full bg-[#2C2C47] z-30 rounded-[4px] border border-[#833A9D] gap-[5px]">
+        <div className="tags-dropdown">
           {otherTags.map((tag: Tag, otherIndex: number) => {
             const originalIndex = tags.findIndex((t) => t === tag);
             return (
@@ -198,7 +190,7 @@ export const TagsBar = ({ tags = [], addTag, editTag }: TagsBarProps) => {
             onClick={(e) => {
               addTag?.({ text: `tag-${tags.length}`, color: randomColor() });
             }}
-            className={`border h-5 w-5 rounded-[4px] flex items-center justify-center border-[#50506C] text-[#50506C] text-center hover:bg-white/10  transition-all cursor-pointer`}
+            className="tag-add-btn"
           >
             +
           </button>

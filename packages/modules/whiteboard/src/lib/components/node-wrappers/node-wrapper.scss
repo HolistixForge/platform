@@ -19,7 +19,7 @@
 }
 
 .move-node-mode {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: var(--alpha-black-10);
   backdrop-filter: blur(2px);
   pointer-events: auto;
 }
@@ -28,7 +28,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: var(--font-size-md);
   opacity: 0;
   transition: opacity 0.2s ease-in-out;
   pointer-events: none;
@@ -44,7 +44,7 @@
 
   &.easy-connect-active {
     opacity: 1;
-    background-color: rgba(103, 42, 164, 0.25);
+    background-color: rgba(103, 42, 164, 0.25); /* charter-exception: unique color (purple overlay) */
     backdrop-filter: blur(4px);
     pointer-events: auto;
   }

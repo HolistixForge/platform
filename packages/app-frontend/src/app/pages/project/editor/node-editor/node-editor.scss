@@ -1,9 +1,9 @@
 .terminal-container {
-  box-shadow: 0 0 6px -1px var(--ca-black-6), 0 2px 4px -1px var(--ca-black-8);
+  box-shadow: var(--shadow-node-editor);
   width: fit-content;
   /*
   .xterm-viewport {
-    // background-color: var(--color-node-background) !important;
+    // background-color: var(--color-bg-node) !important;
   }
   .xterm-text-layer {
     // opacity: 0.5;

@@ -1,6 +1,8 @@
 import { TF_User } from '@holistix-forge/types';
 import { UserAvatar } from './users';
 
+import './user-bubble.scss';
+
 export interface UserBubbleProps {
   direction: 'horizontal' | 'vertical';
   size: 'small' | 'large';
@@ -29,25 +31,28 @@ export const UserBubble = ({
 
   return (
     <div
-      className={`relative flex ${
-        direction === 'horizontal'
-          ? `items-center min-h-[${sz}px] max-h-[${sz}px]`
-          : `flex-col items-start min-w-[${sz}px] max-w-[${sz}px]`
-      }`}
+      className={`user-bubble-root ${direction}`}
       style={
         direction === 'horizontal'
-          ? { width: `${Math.floor((total - 1) * shift + sz)}px` }
-          : { height: `${Math.floor((total - 1) * shift + sz)}px` }
+          ? {
+              width: `${Math.floor((total - 1) * shift + sz)}px`,
+              minHeight: `${sz}px`,
+              maxHeight: `${sz}px`,
+            }
+          : {
+              height: `${Math.floor((total - 1) * shift + sz)}px`,
+              minWidth: `${sz}px`,
+              maxWidth: `${sz}px`,
+            }
       }
     >
       {live && !displayPlusN && (
         <div
-          className={`absolute ${
-            size === 'small' ? 'bottom-[2px]' : 'bottom-[4px]'
-          } flex items-center h-fit leading-[10px] text-[12px] text-[#f7c8de] text-shadow-pink w-fit gap-[2px]`}
-          style={{ zIndex: 110 }}
+          className={`live-indicator ${
+            size === 'small' ? 'live-small' : 'live-large'
+          } text-shadow-pink`}
         >
-          <div className="rounded-full conic-gradient-live h-2 w-2 mb-[2px]" />
+          <div className="live-dot conic-gradient-live" />
           Live
         </div>
       )}
@@ -55,7 +60,7 @@ export const UserBubble = ({
       {displayedUsers.map((u, index: number) => (
         <div
           key={index}
-          className={`absolute rounded-full`}
+          className="bubble-avatar-wrapper"
           style={{
             transform: `${
               direction === 'horizontal'
@@ -71,39 +76,34 @@ export const UserBubble = ({
 
       {displayPlusN && (
         <div
-          className={`absolute ${
-            direction === 'horizontal' ? `left-0` : `top-0`
-          } z-50 rounded-full flex items-center justify-center max-h-[${sz}px] max-w-[${sz}px] min-h-[${sz}px] min-w-[${sz}px]`}
+          className={`plus-n-wrapper ${direction}`}
           style={{
             transform: `${
               direction === 'horizontal'
                 ? `translateX(0)`
                 : `translateY(${2 * shift}px)`
-            }`, // Updated for descending vertical
+            }`,
             zIndex: 110,
+            maxHeight: `${sz}px`,
+            maxWidth: `${sz}px`,
+            minHeight: `${sz}px`,
+            minWidth: `${sz}px`,
           }}
         >
-          {live && (
-            <div className="absolute -z-10 h-[65%] w-[65%] bg-[#F72585] origin-center rounded-full animate-ping"></div>
-          )}
+          {live && <div className="plus-n-ping"></div>}
           <div
-            className={`relative flex items-center justify-center z-10 h-full w-full rounded-full bg-[#3c2986] ${
-              live &&
-              'border border-[#F72585] drop-shadow-[0px_0px_4px_#F72585]'
-            } ${
-              size === 'small'
-                ? 'max-h-[38px] max-w-[38px] min-h-[38px] min-w-[38px]'
-                : 'max-h-[48px] max-w-[48px] min-h-[48px] min-w-[48px]'
-            }  border border-[#451D5F]`}
+            className={`plus-n-circle ${live ? 'live-border' : ''} ${
+              size === 'small' ? 'size-small' : 'size-large'
+            }`}
           >
             +{users.length - 2}
             {live && (
               <div
-                className={`absolute ${
-                  size === 'small' ? 'bottom-[2px]' : 'bottom-[4px]'
-                } flex items-center h-fit leading-[10px] text-[12px] text-[#f7c8de] text-shadow-pink w-fit gap-[2px]`}
+                className={`live-indicator ${
+                  size === 'small' ? 'live-small' : 'live-large'
+                } text-shadow-pink`}
               >
-                <div className="rounded-full conic-gradient-live h-2 w-2 mb-[2px]" />
+                <div className="live-dot conic-gradient-live" />
                 Live
               </div>
             )}

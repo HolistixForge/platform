@@ -49,18 +49,33 @@ const StartOrganizationBox = ({
   );
 
   return (
-    <div className="flex flex-col items-center justify-center h-[calc(100vh-80px)]">
-      <div className="flex flex-col items-center gap-2 text-slate-400 text-center">
-        <InfoCircledIcon className="w-[38px] h-[38px]" />
-        <p className="text-lg">
+    <div
+      className="flex flex-col items-center justify-center"
+      style={{ height: 'calc(100vh - 80px)' }}
+    >
+      <div
+        className="flex flex-col items-center text-center"
+        style={{ gap: '8px', color: 'var(--neutral-5)' }}
+      >
+        <InfoCircledIcon style={{ width: '38px', height: '38px' }} />
+        <p style={{ fontSize: 'var(--font-size-lg)' }}>
           Organization has been shut down due to inactivity.
         </p>
-        <p className="text-sm text-slate-500 mt-2">
+        <p
+          style={{
+            fontSize: 'var(--font-size-sm)',
+            color: 'var(--neutral-6)',
+            marginTop: '8px',
+          }}
+        >
           Click the button below to allocate a gateway and start the
           organization.
         </p>
       </div>
-      <div className="flex items-center gap-2 text-slate-400 mt-5">
+      <div
+        className="flex items-center"
+        style={{ gap: '8px', color: 'var(--neutral-5)', marginTop: '20px' }}
+      >
         <ButtonBase {...action} text="Start Organization" className="blue" />
       </div>
     </div>
@@ -109,9 +124,14 @@ export const ProjectWrapper = ({ children }: { children: ReactNode }) => {
   // Check if user is authenticated
   if (userStatus === 'success' && !currentUserData?.user?.user_id) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-80px)]">
-        <InfoCircledIcon className="w-[38px] h-[38px]" />
-        <p className="text-lg">Please login first, then come back here</p>
+      <div
+        className="flex flex-col items-center justify-center"
+        style={{ height: 'calc(100vh - 80px)' }}
+      >
+        <InfoCircledIcon style={{ width: '38px', height: '38px' }} />
+        <p style={{ fontSize: 'var(--font-size-lg)' }}>
+          Please login first, then come back here
+        </p>
         <p>&nbsp;</p>
         <p>
           <Link to={`/account/login`}>

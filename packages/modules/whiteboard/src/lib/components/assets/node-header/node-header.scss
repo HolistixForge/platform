@@ -17,10 +17,10 @@
         height: 22px;
         font-style: normal;
         font-weight: 500;
-        font-size: 10px;
-        background: var(--c-gray-10);
+        font-size: var(--font-size-2xs);
+        background: var(--neutral-10);
         border-radius: 4px;
-        color: var(--c-white-1);
+        color: var(--white);
         line-height: 22px;
         text-transform: uppercase;
         vertical-align: top;
@@ -34,13 +34,13 @@
           background: var(--color-youtube);
         }
         &.node-type-terminal {
-          background: var(--c-black-6);
+          background: var(--black-900);
         }
         &.node-type-server {
-          background: var(--c-orange-2);
+          background: var(--orange-200);
         }
         &.node-type-volume {
-          background: var(--color-volume);
+          background: var(--cyan-600);
         }
       }
     }
@@ -50,9 +50,9 @@
       min-width: 0;
       font-style: normal;
       font-weight: 700;
-      font-size: 14px;
+      font-size: var(--font-size-md);
       line-height: 16px;
-      color: var(--c-white-1);
+      color: var(--white);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -60,7 +60,7 @@
   }
 
   .header-row {
-    border-top: solid 1px rgba(255, 255, 255, 0.2);
+    border-top: solid 1px var(--alpha-white-15);
     margin-top: 6px;
     padding-top: 4px;
   }

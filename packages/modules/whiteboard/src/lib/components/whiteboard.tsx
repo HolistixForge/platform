@@ -376,7 +376,7 @@ const WhiteboardWhiteboard = ({
           style={{
             flex: '0 0 ' + (showLayersPanel ? '240px' : '24px'),
             transition: 'flex 120ms ease',
-            background: 'var(--c-blue-61)',
+            background: 'var(--surface-900)',
             border: '1px solid var(--color-border, #e5e7eb)',
             borderRadius: 6,
             overflow: 'hidden',
@@ -535,7 +535,9 @@ const ReactFlowBaseLayer = ({
   useHotkeys(
     'shift+z',
     () => {
-      active && setMode(mode === 'move-node' ? 'default' : 'move-node');
+      if (active) {
+        setMode(mode === 'move-node' ? 'default' : 'move-node');
+      }
     },
     {
       preventDefault: true,

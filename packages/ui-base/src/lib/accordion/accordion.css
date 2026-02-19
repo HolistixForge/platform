@@ -9,26 +9,26 @@
   align-items: center;
   gap: 4px;
   padding: 4px 6px;
-  background: var(--c-blue-gray-1);
+  background: var(--surface-700);
 }
 
 .accordion-item .accordion-title p {
   padding: 0;
   margin: 0;
-  color: var(--c-pink-41);
-  font-size: 6px;
+  color: var(--primary-600);
+  font-size: var(--font-size-2xs);
 }
 
 .accordion-item .accordion-title span {
   padding: 0;
   margin: 0;
-  font-size: 6px;
-  color: var(--c-white-1);
+  font-size: var(--font-size-2xs);
+  color: var(--white);
 }
 
 .accordion-content {
-  color: var(--c-white-1);
-  font-size: 7px;
+  color: var(--white);
+  font-size: var(--font-size-2xs);
   padding: 5px 10px;
-  background: var(--c-blue-gray-2);
+  background: var(--surface-800);
 }

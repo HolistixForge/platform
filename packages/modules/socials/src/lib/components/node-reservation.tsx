@@ -57,8 +57,8 @@ export const NodeReservation = ({ node }: { node: TGraphNode }) => {
   const users = useAwarenessUserList();
   const color = user
     ? users.find((u) => u.username === user.username)?.color ||
-      'var(--c-gray-9)'
-    : 'var(--c-gray-9)';
+      'var(--neutral-9)'
+    : 'var(--neutral-9)';
 
   const { id, selected, open, isOpened } = useNodeContext();
 

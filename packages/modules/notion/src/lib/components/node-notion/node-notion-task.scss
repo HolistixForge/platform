@@ -11,16 +11,16 @@
     display: inline-block;
     padding: 6px 10px;
     border-radius: 3px;
-    font-size: 12px;
-    border: 1px solid #404040;
-    color: #ffffff;
+    font-size: var(--font-size-sm);
+    border: 1px solid var(--c-neutral-border);
+    color: var(--white);
     background-color: rgba(54, 54, 54, 0.1);
     cursor: pointer;
     margin-bottom: 8px;
     outline: none;
 
     option {
-      color: #ffffff;
+      color: var(--white);
       padding: 8px;
     }
   }
@@ -39,7 +39,7 @@
     gap: 8px;
     padding: 4px 8px;
     border-radius: 3px;
-    font-size: 12px;
+    font-size: var(--font-size-sm);
     margin-bottom: 12px;
   }
 
@@ -61,17 +61,17 @@
 
     &-label {
       display: block;
-      color: #adb5bd;
+      color: var(--c-neutral-text-dimmer);
       margin-right: 8px;
-      font-size: 11px;
+      font-size: var(--font-size-xs);
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
 
     &-value {
-      color: #ffffff;
+      color: var(--white);
       font-weight: 500;
-      font-size: 12px;
+      font-size: var(--font-size-sm);
       padding: 0;
     }
   }
@@ -84,17 +84,17 @@
   gap: 4px;
 
   &-label {
-    font-size: 12px;
-    color: #6b7280;
+    font-size: var(--font-size-sm);
+    color: var(--c-status-gray);
   }
 }
 
 .node-notion-input,
 .node-notion-select {
   padding: 4px 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--c-neutral-border-input);
   border-radius: 4px;
-  font-size: 14px;
+  font-size: var(--font-size-md);
 
   &:focus {
     outline: none;
@@ -102,8 +102,8 @@
 }
 
 .node-notion-relation {
-  font-size: 14px;
-  color: #6b7280;
+  font-size: var(--font-size-md);
+  color: var(--c-status-gray);
   padding: 4px 0;
 }
 
@@ -121,8 +121,8 @@
         outline: none;
         background: linear-gradient(
           0deg,
-          var(--c-pink-4) 0%,
-          var(--c-pink-3) 100%
+          var(--primary-600) 0%,
+          var(--primary-500) 100%
         );
       }
     }
@@ -135,26 +135,26 @@
       &:checked {
         background: linear-gradient(
           0deg,
-          var(--c-pink-4) 0%,
-          var(--c-pink-3) 100%
+          var(--primary-600) 0%,
+          var(--primary-500) 100%
         );
       }
 
       &:hover {
         background: linear-gradient(
             0deg,
-            var(--c-pink-4) 0%,
-            var(--c-pink-3) 100%
+            var(--primary-600) 0%,
+            var(--primary-500) 100%
           )
           rgba(255, 255, 255, 0.25);
       }
 
       &:focus {
-        background-color: yellow;
+        background-color: var(--yellow-300);
       }
 
       &:active {
-        background-color: orange;
+        background-color: var(--orange-400);
       }
     }
   }

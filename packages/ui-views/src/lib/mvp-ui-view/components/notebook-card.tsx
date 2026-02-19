@@ -32,29 +32,75 @@ export const NotebookCard = ({
 
   return (
     <div
-      className={`min-w-[350px] min-h-[150px] max-w-[350px] mx-auto ${
-        status !== 'stopped' ? 'gradient-notebook-card' : 'bg-[#2C2C47]'
-      } relative rounded-[8px] flex flex-col`}
+      className={`relative flex flex-col ${
+        status !== 'stopped' ? 'gradient-notebook-card' : ''
+      }`}
+      style={{
+        minWidth: '350px',
+        minHeight: '150px',
+        maxWidth: '350px',
+        marginLeft: 'auto',
+        marginRight: 'auto',
+        backgroundColor: status === 'stopped' ? '#2C2C47' : undefined,
+        borderRadius: '8px',
+      }}
     >
       {groups && (
-        <div className="absolute -bottom-6 flex items-center gap-[6px]">
-          <span className="text-white text-[12px] font-bold bg-[#3FB885] rounded-[4px] px-[7px] h-[18px]">
+        <div
+          className="absolute flex items-center"
+          style={{ bottom: '-24px', gap: '6px' }}
+        >
+          <span
+            className="font-bold"
+            style={{
+              color: 'white',
+              fontSize: '12px',
+              backgroundColor: '#3FB885',
+              borderRadius: '4px',
+              padding: '0 7px',
+              height: '18px',
+            }}
+          >
             Newyork_data
           </span>
-          <span className="text-white text-[12px] font-bold bg-[#7588B9] rounded-[4px] px-[7px] h-[18px]">
+          <span
+            className="font-bold"
+            style={{
+              color: 'white',
+              fontSize: '12px',
+              backgroundColor: '#7588B9',
+              borderRadius: '4px',
+              padding: '0 7px',
+              height: '18px',
+            }}
+          >
             team sync_13
           </span>
         </div>
       )}
 
       {status !== 'stopped' && (
-        <div className="backdrop-blur-[4px] bg-[#1C1C3D66] absolute inset-0 rounded-[8px] z-10" />
+        <div
+          className="absolute"
+          style={{
+            backdropFilter: 'blur(4px)',
+            backgroundColor: 'rgba(28, 28, 61, 0.4)',
+            inset: 0,
+            borderRadius: '8px',
+            zIndex: 10,
+          }}
+        />
       )}
 
       {live && (
         <div
-          className={`absolute -right-4 z-20 top-[50%] flex items-center`}
-          style={{ transform: 'translateY(-50%)' }}
+          className="absolute flex items-center"
+          style={{
+            right: '-16px',
+            zIndex: 20,
+            top: '50%',
+            transform: 'translateY(-50%)',
+          }}
         >
           <UserBubble
             users={liveUsers}
@@ -67,35 +113,96 @@ export const NotebookCard = ({
 
       {host && (
         <div
-          className={`absolute -left-5 top-1/2 -translate-y-1/2 z-20 flex items-center`}
+          className="absolute flex items-center"
+          style={{
+            left: '-20px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 20,
+          }}
         >
           <UserAvatar size="small" {...host} host />
         </div>
       )}
 
-      <div className="flex items-center justify-between relative z-20 pt-[6px] px-[12px]">
-        <div className="flex items-center gap-[8px]">
+      <div
+        className="flex items-center justify-between relative"
+        style={{ zIndex: 20, paddingTop: '6px', padding: '6px 12px 0 12px' }}
+      >
+        <div className="flex items-center" style={{ gap: '8px' }}>
           <icons.NoteBookIcon />
-          <span className="uppercase text-[#141432] -bg--c-orange-3 rounded-[4px] text-[10px] px-2 py-[4px] leading-[14px] h-[22px] flex items-center">
+          <span
+            className="flex items-center"
+            style={{
+              textTransform: 'uppercase',
+              color: '#141432',
+              borderRadius: '4px',
+              fontSize: '10px',
+              paddingLeft: '8px',
+              paddingRight: '8px',
+              paddingTop: '4px',
+              lineHeight: '14px',
+              height: '22px',
+              backgroundColor: 'var(--orange-300)',
+            }}
+          >
             Notebook
           </span>
           <p
-            className="text-[12px] font-bold px-[6px] border border-transparent hover:border-[#6E678C] focus:border-[#6E678C] rounded-[4px] transition-all outline-none"
+            className="font-bold"
+            style={{
+              fontSize: '12px',
+              padding: '0 6px',
+              border: '1px solid transparent',
+              borderRadius: '4px',
+              transition: 'all 0.2s',
+              outline: 'none',
+            }}
             contentEditable
           >
             Notebook #12345
           </p>
-          <div className="rounded-full h-[15px] w-[15px] bg-[#D95BA7]" />
+          <div
+            style={{
+              borderRadius: '50%',
+              height: '15px',
+              width: '15px',
+              backgroundColor: '#D95BA7',
+            }}
+          />
         </div>
 
-        <div className="cursor-pointer mt-1">
-          <icons.Settings className="h-6 w-6" />
+        <div className="cursor-pointer" style={{ marginTop: '4px' }}>
+          <icons.Settings style={{ height: '24px', width: '24px' }} />
         </div>
       </div>
 
-      <div className="flex flex-col relative z-20 gap-2 w-4/5 mt-[20px] mx-auto">
-        <div className="flex items-center gap-[24px]">
-          <div className="!border-[1.5px] w-full border-[#141432] bg-transparent rounded-[2px] cursor-pointer h-[16px] text-white text-[8px] py-[2px] px-[6px] appearance-none">
+      <div
+        className="flex flex-col relative"
+        style={{
+          zIndex: 20,
+          gap: '8px',
+          width: '80%',
+          marginTop: '20px',
+          marginLeft: 'auto',
+          marginRight: 'auto',
+        }}
+      >
+        <div className="flex items-center" style={{ gap: '24px' }}>
+          <div
+            className="w-full cursor-pointer"
+            style={{
+              borderWidth: '1.5px',
+              borderStyle: 'solid',
+              borderColor: '#141432',
+              backgroundColor: 'transparent',
+              borderRadius: '2px',
+              height: '16px',
+              color: 'white',
+              fontSize: '8px',
+              padding: '2px 6px',
+            }}
+          >
             <SelectFieldset
               name={''}
               value={'python 3.10.12 modele'}
@@ -123,9 +230,20 @@ export const NotebookCard = ({
             disabled={status === 'loading' || status === 'stopped'}
           />
         </div>
-        <div className="flex items-center gap-[24px] w-full">
+        <div className="flex items-center w-full" style={{ gap: '24px' }}>
           <p
-            className="text-white text-[8px] leading-[14px] !border-[1.5px] border-[#141432] px-[10px] h-[16px] w-full rounded-[2px]"
+            style={{
+              color: 'white',
+              fontSize: '8px',
+              lineHeight: '14px',
+              borderWidth: '1.5px',
+              borderStyle: 'solid',
+              borderColor: '#141432',
+              padding: '0 10px',
+              height: '16px',
+              width: '100%',
+              borderRadius: '2px',
+            }}
             contentEditable
           >
             root/app/project_weather/notebook2.ipynb
@@ -138,11 +256,14 @@ export const NotebookCard = ({
         </div>
       </div>
 
-      <div className="p-5">
+      <div style={{ padding: '20px' }}>
         <TagsBar tags={tags} addTag={addTag} />
       </div>
 
-      <div className="absolute right-4 bottom-2 z-30">
+      <div
+        className="absolute"
+        style={{ right: '16px', bottom: '8px', zIndex: 30 }}
+      >
         <StatusLed
           color={
             status === 'stopped'

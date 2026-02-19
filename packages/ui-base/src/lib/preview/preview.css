@@ -1,12 +1,12 @@
 .preview {
-  border: 1px solid var(--c-pink-4);
+  border: 1px solid var(--primary-600);
   width: 200px;
   border-radius: 3px;
 }
 
 .preview-header {
   padding: 2px 6px;
-  background: var(--c-blue-gray-1);
+  background: var(--surface-700);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -43,16 +43,16 @@
 .preview-header .info p {
   margin: 0;
   padding: 0;
-  font-size: 8px;
-  color: var(--c-pink-2);
+  font-size: var(--font-size-2xs);
+  color: var(--primary-200);
 }
 
 .preview-header .info span {
-  background: var(--c-green-4);
+  background: var(--green-600);
   border-radius: 1.5px;
   padding: 2px 4px;
-  font-size: 5px;
-  color: var(--c-white-1);
+  font-size: var(--font-size-2xs);
+  color: var(--white);
 }
 
 .preview textarea {
@@ -62,9 +62,9 @@
   background: none;
   border: none;
   outline: none;
-  color: var(--c-white-1);
+  color: var(--white);
   padding: 5px 10px;
-  font-size: 7px;
+  font-size: var(--font-size-2xs);
 }
 
 .preview .accordion {
@@ -77,5 +77,5 @@
 .preview hr {
   margin: 0;
   padding: 0;
-  border-color: var(--c-pink-4);
+  border-color: var(--primary-600);
 }

@@ -40,53 +40,73 @@ export const Header = ({
   const NiAction = useNotImplemented();
 
   return (
-    <nav className="app-header w-full h-[46px] flex justify-between items-center bg-[#1D1D42] px-6 relative">
-      <div className="not-bellow-640 flex items-center gap-4">
-        <p className="text-white text-[16px]">Menu</p>
-        <div className="rounded-[10px] bg-white/20 w-[2px] h-[28px]" />
+    <nav
+      className="app-header w-full flex justify-between items-center relative"
+      style={{
+        height: '46px',
+        backgroundColor: '#1D1D42',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+      }}
+    >
+      <div className="not-bellow-640 flex items-center" style={{ gap: '16px' }}>
+        <p style={{ color: 'white', fontSize: '16px' }}>Menu</p>
+        <div
+          style={{
+            borderRadius: '10px',
+            backgroundColor: 'rgba(255,255,255,0.2)',
+            width: '2px',
+            height: '28px',
+          }}
+        />
         {permissionsLink && (
           <Link to={permissionsLink}>
             <ButtonIcon Icon={icons.Key} actionOriginId="permissions" />
           </Link>
         )}
-        <div className="rounded-[10px] bg-white/20 w-[2px] h-[28px]" />
+        <div
+          style={{
+            borderRadius: '10px',
+            backgroundColor: 'rgba(255,255,255,0.2)',
+            width: '2px',
+            height: '28px',
+          }}
+        />
         <ButtonIcon
           Icon={icons.RoundedPlus}
           {...NiAction}
           actionOriginId="plus"
         />
-        <div className="rounded-[10px] bg-white/20 w-[2px] h-[28px]" />
+        <div
+          style={{
+            borderRadius: '10px',
+            backgroundColor: 'rgba(255,255,255,0.2)',
+            width: '2px',
+            height: '28px',
+          }}
+        />
         <ButtonIcon Icon={icons.Delete} {...NiAction} actionOriginId="delete" />
       </div>
 
-      <div className="flex items-center gap-[30px]">
-        {/*<div className="flex items-center gap-[30px]">
-          <div>
-            <ButtonIcon
-              Icon={icons.SimpleChevron}
-              {...NiAction}
-              actionOriginId="left"
-              iconWidth="10px"
-              iconHeight="14px"
-            />
-            <ButtonIcon
-              className="rotate-180"
-              Icon={icons.SimpleChevron}
-              {...NiAction}
-              actionOriginId="right"
-              iconWidth="10px"
-              iconHeight="14px"
-            />
-          </div>
-        </div>*/}
-        <div className="header-search not-bellow-640 flex items-center bg-white/5 h-[28px] rounded-[4px] py-1 px-3 gap-[20px]">
+      <div className="flex items-center" style={{ gap: '30px' }}>
+        <div
+          className="header-search not-bellow-640 flex items-center"
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.05)',
+            height: '28px',
+            borderRadius: '4px',
+            padding: '4px 12px',
+            gap: '20px',
+          }}
+        >
           <ButtonIcon
             Icon={icons.Search}
             {...NiAction}
             actionOriginId="search"
           />
           <input
-            className="w-full h-full text-[14px] text-white/75 placeholder:text-white/40"
+            className="w-full h-full"
+            style={{ fontSize: '14px', color: 'rgba(255,255,255,0.75)' }}
             placeholder={'Search a node, or a file ....'}
           />
           <ButtonIcon
@@ -101,8 +121,11 @@ export const Header = ({
         </div>
       </div>
 
-      <div className="flex items-center gap-[30px]">
-        <div className="not-bellow-640 flex items-center gap-5">
+      <div className="flex items-center" style={{ gap: '30px' }}>
+        <div
+          className="not-bellow-640 flex items-center"
+          style={{ gap: '20px' }}
+        >
           {host && (
             <ResourceButtons
               type={'host'}
@@ -124,7 +147,10 @@ export const Header = ({
           )}
         </div>
 
-        <div className="flex other-users-container items-center gap-[10px]">
+        <div
+          className="flex other-users-container items-center"
+          style={{ gap: '10px' }}
+        >
           <div className="flex items-center">
             <UserBubble
               users={otherUsers || []}
@@ -135,7 +161,15 @@ export const Header = ({
             />
           </div>
 
-          <div className="not-bellow-640 rounded-[10px] bg-white/20 w-[2px] h-[28px]" />
+          <div
+            className="not-bellow-640"
+            style={{
+              borderRadius: '10px',
+              backgroundColor: 'rgba(255,255,255,0.2)',
+              width: '2px',
+              height: '28px',
+            }}
+          />
 
           {user?.username ? (
             <>
@@ -162,7 +196,10 @@ export const Header = ({
                 />
               )}
 
-              <div className="not-bellow-640 flex items-center gap-[5px]">
+              <div
+                className="not-bellow-640 flex items-center"
+                style={{ gap: '5px' }}
+              >
                 <Link to="/account/credentials" title="Credentials Wallet">
                   <ButtonIcon Icon={LockClosedIcon} />
                 </Link>
@@ -171,9 +208,8 @@ export const Header = ({
                 </Link>
 
                 <div
-                  className={`relative ${
-                    hasNotifications && 'mr-3'
-                  } cursor-pointer`}
+                  className="relative cursor-pointer"
+                  style={{ marginRight: hasNotifications ? '12px' : undefined }}
                 >
                   <ButtonIcon
                     Icon={icons.Notification}
@@ -184,7 +220,19 @@ export const Header = ({
                   />
 
                   {hasNotifications && (
-                    <div className="absolute top-1/2 -translate-y-1/2 -right-[15px] w-[21px] h-[21px] bg-[#C43838] rounded-full text-[10px] flex items-center justify-center">
+                    <div
+                      className="absolute flex items-center justify-center"
+                      style={{
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        right: '-15px',
+                        width: '21px',
+                        height: '21px',
+                        backgroundColor: '#C43838',
+                        borderRadius: '50%',
+                        fontSize: '10px',
+                      }}
+                    >
                       50
                     </div>
                   )}

@@ -5,6 +5,13 @@ import { ResourceSelection } from './resource-selection';
 const meta = {
   title: 'Mvp/Assets/resource-selection',
   component: ResourceSelection,
+  decorators: [
+    (Story) => (
+      <div style={{ padding: '10px', minHeight: '200px' }}>
+        <Story />
+      </div>
+    ),
+  ],
   parameters: {
     layout: 'centered',
   },

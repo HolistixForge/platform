@@ -40,24 +40,40 @@ export const FilterBox = ({ mode, name, user }: FilterBoxProps) => {
   };
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center bg-white/5 h-[28px] w-full rounded-[4px] py-1 px-3 gap-[20px]">
+    <div className="flex flex-col" style={{ gap: '12px' }}>
+      <div
+        className="flex items-center w-full"
+        style={{
+          backgroundColor: 'rgba(255,255,255,0.05)',
+          height: '28px',
+          borderRadius: '4px',
+          padding: '4px 12px',
+          gap: '20px',
+        }}
+      >
         <div className="cursor-pointer">
           <icons.Search />
         </div>
         <input
-          className="w-full h-full text-[14px] text-white/40"
+          className="w-full h-full"
+          style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)' }}
           placeholder={
             mode === 'Group' ? 'Search a node, or a file .....' : 'roles'
           }
         />
         <div className="cursor-pointer">
-          <icons.Filter className="w-7 h-7" />
+          <icons.Filter style={{ width: '28px', height: '28px' }} />
         </div>
       </div>
 
       <div
-        className="flex items-center justify-between rounded-[4px] px-[13px] bg-[#2A2A3F] h-[36px] cursor-pointer"
+        className="flex items-center justify-between cursor-pointer"
+        style={{
+          borderRadius: '4px',
+          padding: '0 13px',
+          backgroundColor: '#2A2A3F',
+          height: '36px',
+        }}
         onClick={() => {
           if (mode === 'Tags') {
             addTag(`tag-${tags.length}`, '#ff0000');
@@ -66,12 +82,12 @@ export const FilterBox = ({ mode, name, user }: FilterBoxProps) => {
           }
         }}
       >
-        <p className="text-[16px] text-white">{name}</p>
+        <p style={{ fontSize: '16px', color: 'white' }}>{name}</p>
         <icons.Plus />
       </div>
 
       {mode === 'Tags' ? (
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col" style={{ gap: '20px' }}>
           {tags.map((tag: any, index: number) => (
             <div className="flex items-center justify-between">
               <Tag text={tag.text} color={tag.color} />
@@ -82,7 +98,10 @@ export const FilterBox = ({ mode, name, user }: FilterBoxProps) => {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col mt-10 gap-16">
+        <div
+          className="flex flex-col"
+          style={{ marginTop: '40px', gap: '64px' }}
+        >
           {Array.from({ length: addFilter }).map((_, index) => (
             <Wrapper
               resizeBorderColor="#7832AF"
@@ -104,8 +123,21 @@ export const FilterBox = ({ mode, name, user }: FilterBoxProps) => {
 export const Tag = ({ text, color }: { text: string; color?: string }) => {
   return (
     <span
-      className={`uppercase bg-[#252546] rounded-[4px] py-1 px-2 text-[14px] font-medium leading-[14px] min-h-[27px] h-[27px] flex items-center w-fit`}
-      style={{ color: color }}
+      className="flex items-center w-fit font-medium"
+      style={{
+        textTransform: 'uppercase',
+        backgroundColor: '#252546',
+        borderRadius: '4px',
+        paddingTop: '4px',
+        paddingBottom: '4px',
+        paddingLeft: '8px',
+        paddingRight: '8px',
+        fontSize: '14px',
+        lineHeight: '14px',
+        minHeight: '27px',
+        height: '27px',
+        color: color,
+      }}
       contentEditable={true}
     >
       {text}

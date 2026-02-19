@@ -80,9 +80,12 @@ export const NodeNotebook = ({
   };
 
   return (
-    <div className="w-[430px] relative group spread">
+    <div className="relative group spread" style={{ width: '430px' }}>
       {expanded && (
-        <div className="absolute group-hover:opacity-100 -top-10 right-0 opacity-0 transition-opacity h-[40px] group-[.testhover]:opacity-100">
+        <div
+          className="absolute opacity-0 group-hover:opacity-100 transition-opacity group-[.testhover]:opacity-100"
+          style={{ top: '-40px', right: 0, height: '40px' }}
+        >
           <DisplayMenu
             title={title}
             input={input}
@@ -94,35 +97,78 @@ export const NodeNotebook = ({
         </div>
       )}
 
-      <div className="absolute group-hover:opacity-100 -top-10 left-0 opacity-0 transition-opacity h-[40px]  group-[.testhover]:opacity-100">
+      <div
+        className="absolute opacity-0 group-hover:opacity-100 transition-opacity group-[.testhover]:opacity-100"
+        style={{ top: '-40px', left: 0, height: '40px' }}
+      >
         <NodeMainToolbar buttons={buttons} />
       </div>
 
       {/* input left */}
-      <div className="absolute left-0 top-1/2 -translate-y-1/2 -rotate-90 input-output-rotated opacity-0 group-hover:opacity-100 transition-opacity group-[.testhover]:opacity-100">
+      <div
+        className="absolute opacity-0 group-hover:opacity-100 transition-opacity input-output-rotated group-[.testhover]:opacity-100"
+        style={{
+          left: 0,
+          top: '50%',
+          transform: 'translateY(-50%) rotate(-90deg)',
+        }}
+      >
         <Inputs nodeId={'node-1'} />
       </div>
 
       {/* Output right */}
-      <div className="absolute right-0 top-1/2 -translate-y-1/2 -rotate-90 input-output-rotated opacity-0 group-hover:opacity-100 transition-opacity group-[.testhover]:opacity-100">
+      <div
+        className="absolute opacity-0 group-hover:opacity-100 transition-opacity input-output-rotated group-[.testhover]:opacity-100"
+        style={{
+          right: 0,
+          top: '50%',
+          transform: 'translateY(-50%) rotate(-90deg)',
+        }}
+      >
         <Outputs nodeId={'node-1'} />
       </div>
 
       {expanded ? (
-        <div className="py-[10px] px-[5px] -bg--c-blue-gray-2 rounded-[8px] border -border--c-blue-gray-1 flex flex-col gap-2 ">
+        <div
+          className="flex flex-col"
+          style={{
+            padding: '10px 5px',
+            borderRadius: '8px',
+            border: '1px solid var(--surface-800)',
+            gap: '8px',
+            backgroundColor: 'var(--surface-700)',
+          }}
+        >
           {/* SpreadCell Top */}
-          <div className="absolute -top-5 z-10 left-1/2 -translate-x-1/2 h-[14px] w-[14px] border -border--c-alt-blue-4 rounded-full -bg--c-blue-62 flex items-center justify-center">
+          <div
+            className="absolute flex items-center justify-center"
+            style={{
+              top: '-20px',
+              zIndex: 10,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              height: '14px',
+              width: '14px',
+              border: '1px solid var(--surface-600)',
+              borderRadius: '9999px',
+              backgroundColor: 'var(--surface-600)',
+            }}
+          >
             <icons.SpreadCellPlugTop />
           </div>
 
           {title && (
-            <div className="flex gap-3">
-              <div className="w-[60px] flex items-center justify-end">
+            <div className="flex" style={{ gap: '12px' }}>
+              <div
+                className="flex items-center justify-end"
+                style={{ width: '60px' }}
+              >
                 <icons.TitlePolygon />
               </div>
               <p
                 contentEditable
-                className="text-white text-[9px] whitespace-nowrap"
+                className="whitespace-nowrap"
+                style={{ color: 'var(--white)', fontSize: '9px' }}
               >
                 Cell #1
               </p>
@@ -130,10 +176,13 @@ export const NodeNotebook = ({
           )}
 
           {input && (
-            <div className="flex gap-3">
+            <div className="flex" style={{ gap: '12px' }}>
               {input && !output ? (
-                <div className="flex gap-2 w-full">
-                  <div className="flex flex-col items-center gap-3 min-w-[50px] justify-center py-5">
+                <div className="flex w-full" style={{ gap: '8px' }}>
+                  <div
+                    className="flex flex-col items-center justify-center"
+                    style={{ gap: '12px', minWidth: '50px', padding: '20px 0' }}
+                  >
                     {status === 'success' ? (
                       <icons.CheckMark />
                     ) : status === 'error' ? (
@@ -152,19 +201,36 @@ export const NodeNotebook = ({
                       <icons.ArrowRightCircle />
                     )}
 
-                    <div className="h-4 w-4 rounded-full -bg--c-pink-7 mx-auto" />
+                    <div
+                      style={{
+                        height: '16px',
+                        width: '16px',
+                        borderRadius: '9999px',
+                        margin: '0 auto',
+                        backgroundColor: 'var(--primary-700)',
+                      }}
+                    />
                   </div>
                   <div
-                    className="w-full h-full rounded-[4px] bg-white bg-opacity-10"
-                    style={{ overflow: 'hidden' }}
+                    className="w-full h-full"
+                    style={{
+                      overflow: 'hidden',
+                      borderRadius: '4px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    }}
                   >
                     <CodeEditorMonaco code={code} />
                   </div>
                 </div>
               ) : (
                 <>
-                  <div className="flex flex-col items-center gap-2 min-w-[60px] justify-center">
-                    <p className="text-white text-[9px]">Entrée [1]</p>
+                  <div
+                    className="flex flex-col items-center justify-center"
+                    style={{ gap: '8px', minWidth: '60px' }}
+                  >
+                    <p style={{ color: 'var(--white)', fontSize: '9px' }}>
+                      Entrée [1]
+                    </p>
 
                     {status === 'success' ? (
                       <icons.CheckMark />
@@ -185,8 +251,12 @@ export const NodeNotebook = ({
                     )}
                   </div>
                   <div
-                    className="w-full rounded-[4px] bg-white bg-opacity-10"
-                    style={{ overflow: 'hidden' }}
+                    className="w-full"
+                    style={{
+                      overflow: 'hidden',
+                      borderRadius: '4px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    }}
                   >
                     <CodeEditorMonaco code={code} />
                   </div>
@@ -196,10 +266,22 @@ export const NodeNotebook = ({
           )}
 
           {output && (
-            <div className="flex gap-4 mr-2 h-auto">
+            <div
+              className="flex"
+              style={{ gap: '16px', marginRight: '8px', height: 'auto' }}
+            >
               {!input && output ? (
-                <div className="flex w-full ml-2">
-                  <div className="flex flex-col items-center gap-3 min-w-[50px] justify-center bg-white bg-opacity-10 rounded-l-[4px] py-5">
+                <div className="flex w-full" style={{ marginLeft: '8px' }}>
+                  <div
+                    className="flex flex-col items-center justify-center"
+                    style={{
+                      gap: '12px',
+                      minWidth: '50px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      borderRadius: '4px 0 0 4px',
+                      padding: '20px 0',
+                    }}
+                  >
                     {status === 'success' ? (
                       <icons.CheckMark />
                     ) : status === 'error' ? (
@@ -218,16 +300,47 @@ export const NodeNotebook = ({
                       <icons.ArrowRightCircle />
                     )}
 
-                    <div className="h-4 w-4 rounded-full -bg--c-pink-7 mx-auto" />
+                    <div
+                      style={{
+                        height: '16px',
+                        width: '16px',
+                        borderRadius: '9999px',
+                        margin: '0 auto',
+                        backgroundColor: 'var(--primary-700)',
+                      }}
+                    />
                   </div>
-                  <div className="-bg--c-blue-6 w-full rounded-r-[4px]"></div>
+                  <div
+                    className="w-full"
+                    style={{
+                      borderRadius: '0 4px 4px 0',
+                      backgroundColor: 'var(--surface-600)',
+                    }}
+                  ></div>
                 </div>
               ) : (
                 <>
-                  <span className="-text--c-red-5 rounded-[4px] bg-white bg-opacity-10 text-[9px] whitespace-nowrap h-auto py-2 min-w-[60px] text-center">
+                  <span
+                    className="whitespace-nowrap text-center"
+                    style={{
+                      borderRadius: '4px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      fontSize: '9px',
+                      height: 'auto',
+                      padding: '8px 0',
+                      minWidth: '60px',
+                      color: 'var(--red-500)',
+                    }}
+                  >
                     Output [1]
                   </span>
-                  <p className="-text--ca-white-9 text-[9px] max-w-full">
+                  <p
+                    style={{
+                      fontSize: '9px',
+                      maxWidth: '100%',
+                      color: 'var(--alpha-white-90)',
+                    }}
+                  >
                     Lorem ipsum dolor sit, amet consectetur adipisicing elit.
                     Repudiandae fugiat iure nam eligendi expedita vel odio a
                     molestiae? Nam dolore esse fuga omnis doloribus animi
@@ -238,21 +351,28 @@ export const NodeNotebook = ({
             </div>
           )}
 
-          <div className="flex gap-3">
+          <div className="flex" style={{ gap: '12px' }}>
             <div
-              className={`${
-                !title && !input && output ? 'min-w-[50px]' : 'min-w-[60px]'
-              } h-full flex items-end`}
+              className="h-full flex items-end"
+              style={{ minWidth: !title && !input && output ? '50px' : '60px' }}
             >
               {
                 // if just output is displayed, we need to add a spacer
                 !input && !output && (
-                  <div className="h-4 w-4 rounded-full -bg--c-pink-7 mx-auto" />
+                  <div
+                    style={{
+                      height: '16px',
+                      width: '16px',
+                      borderRadius: '9999px',
+                      margin: '0 auto',
+                      backgroundColor: 'var(--primary-700)',
+                    }}
+                  />
                 )
               }
             </div>
 
-            <div className="flex flex-wrap gap-1 items-center">
+            <div className="flex flex-wrap items-center" style={{ gap: '4px' }}>
               {tag.map((tag, i) => (
                 <Tag
                   key={i}
@@ -265,7 +385,14 @@ export const NodeNotebook = ({
               ))}
               <span
                 onClick={() => addTag('test', false)}
-                className="flex items-center justify-center h-5 w-5 rounded-[4px] border -border--c-blue-gray-1 cursor-pointer p-0"
+                className="flex items-center justify-center cursor-pointer"
+                style={{
+                  height: '20px',
+                  width: '20px',
+                  borderRadius: '4px',
+                  border: '1px solid var(--surface-800)',
+                  padding: 0,
+                }}
               >
                 <icons.LittlePlus />
               </span>
@@ -273,12 +400,25 @@ export const NodeNotebook = ({
           </div>
 
           {/* SpreadCell Bottom */}
-          <div className="absolute -bottom-5 z-10 left-1/2 -translate-x-1/2 h-[14px] w-[14px] border -border--c-alt-blue-1 rounded-full -bg--c-blue-62 flex items-center justify-center">
+          <div
+            className="absolute flex items-center justify-center"
+            style={{
+              bottom: '-20px',
+              zIndex: 10,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              height: '14px',
+              width: '14px',
+              border: '1px solid var(--cyan-300)',
+              borderRadius: '9999px',
+              backgroundColor: 'var(--surface-600)',
+            }}
+          >
             <icons.SpreadCellPlugBottom />
           </div>
         </div>
       ) : (
-        <div className="p-5 bg-white"></div>
+        <div style={{ padding: '20px', backgroundColor: 'white' }}></div>
       )}
     </div>
   );

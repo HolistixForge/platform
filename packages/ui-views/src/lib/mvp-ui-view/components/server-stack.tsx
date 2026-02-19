@@ -38,14 +38,28 @@ export const ServerStack = ({
   return (
     <div
       ref={containerRef}
-      className="server-stack-container grid gap-[32px] w-full"
-      style={{ gridTemplateColumns: `repeat(${columns}, minmax(400px, 1fr))` }}
+      className="server-stack-container grid w-full"
+      style={{
+        gap: '32px',
+        gridTemplateColumns: `repeat(${columns}, minmax(400px, 1fr))`,
+      }}
     >
       <div
-        className="w-[400px] h-[202px] flex items-center justify-center border-dashed border rounded-[8px] border-white/40 cursor-pointer"
+        className="flex items-center justify-center cursor-pointer"
+        style={{
+          width: '400px',
+          height: '202px',
+          borderStyle: 'dashed',
+          borderWidth: '1px',
+          borderRadius: '8px',
+          borderColor: 'rgba(255,255,255,0.4)',
+        }}
         onClick={onNewServerClick}
       >
-        <p className="text-[12px] font-bold leading-[28px] text-white">
+        <p
+          className="font-bold"
+          style={{ fontSize: '12px', lineHeight: '28px', color: 'white' }}
+        >
           add resource
         </p>
       </div>
