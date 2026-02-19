@@ -1,0 +1,28 @@
+{
+  "name": "@holistix-forge/vscode",
+  "version": "0.0.1",
+  "nx": {
+    "name": "@holistix-forge/vscode",
+    "projectType": "library",
+    "sourceRoot": "packages/modules/vscode/src"
+  },
+  "style": "./dist/vscode.css",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./frontend": {
+      "types": "./dist/frontend.d.ts",
+      "import": "./dist/frontend.js",
+      "default": "./dist/frontend.js"
+    },
+    "./style": "./dist/vscode.css"
+  },
+  "types": "./dist/index.d.ts",
+  "module": "./dist/index.js",
+  "type": "module",
+  "main": "./dist/index.js"
+}

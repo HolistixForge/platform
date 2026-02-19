@@ -6,6 +6,11 @@ set -e
 
 # Set working directory to gateway app
 GATEWAY_ROOT=${GATEWAY_ROOT:-"/opt/gateway"}
+
+# Source config for GATEWAY_DEV and other vars
+if [ -f "${GATEWAY_ROOT}/app/config.conf" ]; then
+    source "${GATEWAY_ROOT}/app/config.conf"
+fi
 GATEWAY_APP_DIR="${GATEWAY_ROOT}/app-gateway"
 
 if [ ! -f "${GATEWAY_APP_DIR}/main.js" ]; then
@@ -38,6 +43,7 @@ while true; do
     GANYMEDE_FQDN="${GANYMEDE_FQDN}" \
     ALLOWED_ORIGINS="${ALLOWED_ORIGINS}" \
     JWT_PUBLIC_KEY="${JWT_PUBLIC_KEY}" \
+    GATEWAY_DEV="${GATEWAY_DEV:-}" \
         bash -c "cd '${GATEWAY_APP_DIR}' && node --enable-source-maps '${GATEWAY_APP_DIR}/main.js'" > "$LOG_FILE" 2>&1
     
     EXIT_CODE=$?

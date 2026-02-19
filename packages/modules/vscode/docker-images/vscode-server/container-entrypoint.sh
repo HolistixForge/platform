@@ -11,8 +11,17 @@ sh -c '. /usr/local/bin/container-functions.sh && vpn_loop' &
 # All users with the same session name share the terminal
 sh -c '/usr/local/bin/start-ttyd.sh 7681' &
 
-# Map terminal service to gateway (gateway routes uc-{uuid}.org-{uuid}.domain.local directly to VPN IP:7681)
+# Map terminal service to gateway
 sh -c '. /usr/local/bin/container-functions.sh && map_http_service terminal 7681' &
+
+# Start code-server on port 8080
+# --auth none: disable auth (gateway handles authentication)
+# --bind-addr: listen on all interfaces
+# --disable-telemetry: disable telemetry
+sh -c 'code-server --auth none --bind-addr 0.0.0.0:8080 --disable-telemetry /workspace' &
+
+# Map code-server service to gateway
+sh -c '. /usr/local/bin/container-functions.sh && map_http_service vscode 8080' &
 
 # Keep container running
 tail -f /dev/null

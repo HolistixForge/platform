@@ -60,8 +60,17 @@ export abstract class ContainerRunner {
     const safeName = container.container_name.replace(/[^a-zA-Z0-9_.-]/g, '_');
     const fullname = `holistix_${safeName}_${shortUuid}`;
 
+    // Build --add-host entries for dev environments
+    // In dev, containers can't resolve .local domains via DNS, so we map them
+    // to the Docker bridge gateway IP which routes to the host/dev container
+    let addHostFlags = '';
+    if (process.env.GATEWAY_DEV === '1') {
+      const hostIp = '172.17.0.1';
+      addHostFlags = `--add-host=${config.gateway_fqdn}:${hostIp} --add-host=${config.ganymede_fqdn}:${hostIp} `;
+    }
+
     // Return Docker run command
-    return `docker run --restart unless-stopped --name ${fullname} -e SETTINGS=${env} --cap-add=NET_ADMIN --device /dev/net/tun ${imageDef.imageUri}:${imageDef.imageTag}`;
+    return `docker run ${addHostFlags}--restart unless-stopped --name ${fullname} -e SETTINGS=${env} --cap-add=NET_ADMIN --device /dev/net/tun ${imageDef.imageUri}:${imageDef.imageTag}`;
   }
 
   /**

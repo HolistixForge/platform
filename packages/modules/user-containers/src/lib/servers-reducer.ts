@@ -136,7 +136,7 @@ export class UserContainersReducer extends ReducerWithCollab<
   }
 
   /**
-   * Generate FQDN for user container
+   * Generate FQDN for user container (main/default service)
    * Container-aware logic (lives in user-containers module, not gateway/ganymede)
    * @param containerId - Container ID
    * @param organizationId - Organization ID
@@ -146,8 +146,36 @@ export class UserContainersReducer extends ReducerWithCollab<
     containerId: string,
     organizationId: string
   ): string {
-    const domain = process.env.DOMAIN || 'domain.local';
+    // Extract domain from gateway FQDN (org-{uuid}.{domain} -> {domain})
+    // process.env.DOMAIN is not available at runtime in bundled modules
+    const gatewayFqdn = this.depsExports.gateway.gatewayFQDN;
+    const domain = gatewayFqdn.split('.').slice(1).join('.') || 'domain.local';
     return `uc-${containerId}.org-${organizationId}.${domain}`;
+  }
+
+  /**
+   * Generate FQDN for a specific service within a container
+   * @param containerId - Container ID
+   * @param organizationId - Organization ID
+   * @param serviceName - Service name (e.g., 'terminal', 'vscode')
+   * @returns FQDN:
+   *   - Main service (empty/main): uc-{containerId}.org-{orgId}.{domain}
+   *   - Named service: {service}.uc-{containerId}.org-{orgId}.{domain}
+   */
+  private generateServiceFQDN(
+    containerId: string,
+    organizationId: string,
+    serviceName: string
+  ): string {
+    const baseFqdn = this.generateContainerFQDN(containerId, organizationId);
+
+    // Main/default service uses base FQDN
+    if (!serviceName || serviceName === 'main' || serviceName === 'default') {
+      return baseFqdn;
+    }
+
+    // Named services get subdomain: {service}.uc-{id}.org-{org}.{domain}
+    return `${serviceName}.${baseFqdn}`;
   }
 
   private async createOAuthClients(
@@ -380,13 +408,15 @@ export class UserContainersReducer extends ReducerWithCollab<
     }
 
     // Update container state
-    // Note: IP changes are handled when container reconnects with new IP
-    // DNS registration happens at container creation, not here
+    // Capture the VPN IP from the request (x-real-ip header set by nginx)
+    // This enables nginx reverse proxy routing: FQDN -> VPN IP:port
+    const containerIp = requestData.ip;
+
     sduc.set(containerId, {
       ...s,
       last_watchdog_at: new Date().toISOString(),
       system: event.system,
-      // IP might be updated here if provided in event (currently not in TEventWatchdog)
+      ip: containerIp || s.ip, // Update IP from request, keep existing if not provided
     });
   }
 
@@ -448,33 +478,45 @@ export class UserContainersReducer extends ReducerWithCollab<
     const s = sduc.get(containerId);
     if (!s) throw new NotFoundException();
 
+    // Capture the VPN IP from the request (crucial for nginx routing)
+    const containerIp = requestData.ip;
     const httpServices = [...s.httpServices];
+    let needsUpdate = false;
+
+    // Update IP if changed (may arrive before first watchdog)
+    if (containerIp && containerIp !== s.ip) {
+      needsUpdate = true;
+    }
 
     if (
       !httpServices.find(
         (service) => service.name === event.name && service.port === event.port
       )
     ) {
-      // for jupyter stories with a local jupyterlab container
-      if (this.depsExports.gateway.gatewayFQDN === '127.0.0.1') {
-        httpServices.push({
-          host: this.depsExports.gateway.gatewayFQDN,
-          name: event.name,
-          port: event.port,
-          secure: false,
-        });
-      } else {
-        httpServices.push({
-          host: this.depsExports.gateway.gatewayFQDN,
-          name: event.name,
-          port: event.port,
-          secure: true,
-        });
-      }
+      // Generate per-service FQDN for routing
+      // Format: {service}.uc-{containerId}.org-{orgId}.{domain}
+      // Main/default service: uc-{containerId}.org-{orgId}.{domain}
+      const serviceFQDN = this.generateServiceFQDN(
+        containerId,
+        this.depsExports.gateway.organization_id,
+        event.name
+      );
 
+      httpServices.push({
+        host: serviceFQDN,
+        name: event.name,
+        port: event.port,
+        secure: true,
+      });
+
+      needsUpdate = true;
+    }
+
+    if (needsUpdate) {
       sduc.set(containerId, {
         ...s,
         httpServices,
+        ip: containerIp || s.ip, // Update IP from request
       });
 
       await this._updateNginx(sduc);
@@ -693,14 +735,17 @@ export class UserContainersReducer extends ReducerWithCollab<
       ]);
     }
 
-    // Build config from environment and gateway exports
-    const domain = process.env.DOMAIN || 'domain.local';
+    // Build config from gateway exports (not process.env which may not be available)
+    const gatewayExports = this.depsExports.gateway;
+    const gatewayFqdn = gatewayExports.gatewayFQDN;
+    // Extract domain from gateway FQDN: org-{uuid}.{domain} -> {domain}
+    const domain = gatewayFqdn.split('.').slice(1).join('.') || 'domain.local';
     const config = {
       user_id,
       project_id,
-      frontend_fqdn: process.env.FRONTEND_FQDN || domain,
-      ganymede_fqdn: process.env.GANYMEDE_FQDN || `ganymede.${domain}`,
-      gateway_fqdn: this.depsExports.gateway.gatewayFQDN,
+      frontend_fqdn: domain,
+      ganymede_fqdn: `ganymede.${domain}`,
+      gateway_fqdn: gatewayFqdn,
     };
 
     // Call runner - returns runner-specific data (e.g. docker command for local runner)

@@ -52,12 +52,14 @@ BEGIN { in_base_block = 0; base_block_count = 0; }
 ' "${NGINX_CONFIG}" > "${CONFIG_FILE}"
 
 # Read services from stdin and add server blocks for each user container FQDN
+# Server blocks listen on GATEWAY_HTTP_PORT (same as app-gateway) with specific server_names
+# Nginx matches specific server_names before the catch-all server_name _, so these take precedence
 while read -r fqdn ip port; do
   if [[ -n "$fqdn" && -n "$ip" && -n "$port" ]]; then
     cat >> "${CONFIG_FILE}" <<EOF
 
 server {
-    listen 80;
+    listen ${GATEWAY_HTTP_PORT};
     server_name ${fqdn};
 
     location / {

@@ -120,7 +120,7 @@ User clicks "New Container" in whiteboard context menu
 4. Maps HTTP service `terminal:7681` to gateway
 5. `tail -f /dev/null` to keep container running
 
-**container-functions.sh** (`docker-images/user-images/`) - Already exists and is complete:
+**container-functions.sh** (`packages/modules/user-containers/docker-images/base/`) - Already exists and is complete:
 
 - `extract_settings()` - Parses base64 SETTINGS env var into: TOKEN, GATEWAY_FQDN, PROJECT_ID, USER_CONTAINER_ID, etc.
 - `start_vpn()` - Fetches VPN config from gateway (requires `org:{org_id}:connect-vpn` scope), starts OpenVPN
@@ -361,7 +361,7 @@ Container scripts send `project_id` in the request body for all events.
 | ------------------------------------------------------------------------------- | -------------------------------------- |
 | `packages/modules/user-containers/docker-images/ubuntu/Dockerfile`              | Ubuntu terminal image                  |
 | `packages/modules/user-containers/docker-images/ubuntu/container-entrypoint.sh` | Image entrypoint                       |
-| `docker-images/user-images/container-functions.sh`                              | Shared bootstrap (VPN, watchdog, etc.) |
+| `packages/modules/user-containers/docker-images/base/container-functions.sh`    | Shared bootstrap (VPN, watchdog, etc.) |
 
 ### Infrastructure
 

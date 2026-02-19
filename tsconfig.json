@@ -98,6 +98,9 @@
     },
     {
       "path": "./packages/modules/whiteboard"
+    },
+    {
+      "path": "./packages/modules/vscode"
     }
   ],
   "ts-node": {

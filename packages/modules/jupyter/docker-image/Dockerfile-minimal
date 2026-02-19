@@ -1,23 +1,53 @@
+# Jupyter Minimal Notebook - User Container Image
+#
+# Minimal Jupyter notebook environment with web terminal support.
+#
+# Build (from repo root):
+#   docker build -t holistixforge/jupyter-minimal:latest -f packages/modules/jupyter/docker-image/Dockerfile-minimal packages/modules/jupyter/docker-image/
+#
+# Requires:
+#   - holistixforge/bootstrap-tools:latest (build from user-containers/docker-images/base/)
+#   - holistixforge/ttyd-tools:latest (build from user-containers/docker-images/ttyd/)
+
+# Stage 1: Get shared Holistix bootstrap tools
+FROM holistixforge/bootstrap-tools:latest AS tools
+
+# Stage 2: Get ttyd tools layer
+FROM holistixforge/ttyd-tools:latest AS ttyd
+
+# Stage 3: Build the actual image
 FROM quay.io/jupyter/minimal-notebook:lab-4.2.0
 
 USER root
 
+# Install required packages (Debian-based image)
+# Note: tini is already included in jupyter base images
 RUN apt-get update --yes && apt-get install --yes --no-install-recommends \
     jq \
     curl \
     openvpn \
     iputils-ping \
-    pciutils
+    pciutils \
+  && rm -rf /var/lib/apt/lists/*
 
-# jovyan
+# Copy shared Holistix bootstrap tools from tools stage
+COPY --from=tools /holistix/ /usr/local/bin/
+RUN chmod +x /usr/local/bin/*.sh
+
+# Copy ttyd tools from ttyd stage
+COPY --from=ttyd /holistix/ttyd/ /usr/local/bin/
+RUN chmod +x /usr/local/bin/*.sh
+
+# Install ttyd and tmux using the distro-specific installer (Debian)
+RUN /usr/local/bin/install-ttyd-debian.sh
+
+# Install Jupyter collaboration extension as jovyan user
 USER ${NB_UID}
-
 RUN pip install jupyter-collaboration
 
 USER root
 
-COPY --chmod=755 ../../docker-images/user-images/container-functions.sh /usr/local/bin/
-
+# Copy container-specific files
 COPY --chmod=755 ./page_config.json /etc/jupyter/labconfig/
 COPY --chmod=755 ./start-singleuser.sh ./activity-server.py ./container-entrypoint.sh /usr/local/bin/
 

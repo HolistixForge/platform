@@ -21,6 +21,9 @@
   ],
   "references": [
     {
+      "path": "../observability/tsconfig.lib.json"
+    },
+    {
       "path": "../collab-engine/tsconfig.lib.json"
     },
     {
@@ -30,9 +33,6 @@
       "path": "../backend-engine/tsconfig.lib.json"
     },
     {
-      "path": "../observability/tsconfig.lib.json"
-    },
-    {
       "path": "../simple-types/tsconfig.lib.json"
     },
     {
@@ -40,6 +40,9 @@
     },
     {
       "path": "../modules/gateway/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/vscode/tsconfig.lib.json"
     },
     {
       "path": "../modules/pgadmin4/tsconfig.lib.json"

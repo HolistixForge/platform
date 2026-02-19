@@ -1,44 +1,54 @@
-# https://github.com/jupyter/docker-stacks/blob/main/images/pytorch-notebook/Dockerfile 
+# Jupyter PyTorch Notebook - User Container Image
+#
+# Jupyter notebook with PyTorch (CUDA) and web terminal support.
+#
+# Build (from repo root):
+#   docker build -t holistixforge/jupyter-pytorch:latest -f packages/modules/jupyter/docker-image/Dockerfile-pytorch packages/modules/jupyter/docker-image/
+#
+# Requires:
+#   - holistixforge/bootstrap-tools:latest (build from user-containers/docker-images/base/)
+#   - holistixforge/ttyd-tools:latest (build from user-containers/docker-images/ttyd/)
+#
+# Reference: https://github.com/jupyter/docker-stacks/blob/main/images/pytorch-notebook/Dockerfile
+
+# Stage 1: Get shared Holistix bootstrap tools
+FROM holistixforge/bootstrap-tools:latest AS tools
+
+# Stage 2: Get ttyd tools layer
+FROM holistixforge/ttyd-tools:latest AS ttyd
+
+# Stage 3: Build the actual image
 FROM quay.io/jupyter/scipy-notebook:lab-4.2.0
 
 USER root
 
+# Install required packages (Debian-based image)
+# Note: tini is already included in jupyter base images
 RUN apt-get update --yes && apt-get install --yes --no-install-recommends \
     jq \
     curl \
     openvpn \
     iputils-ping \
-    pciutils
+    pciutils \
+  && rm -rf /var/lib/apt/lists/*
 
-# jovyan
+# Copy shared Holistix bootstrap tools from tools stage
+COPY --from=tools /holistix/ /usr/local/bin/
+RUN chmod +x /usr/local/bin/*.sh
+
+# Copy ttyd tools from ttyd stage
+COPY --from=ttyd /holistix/ttyd/ /usr/local/bin/
+RUN chmod +x /usr/local/bin/*.sh
+
+# Install ttyd and tmux using the distro-specific installer (Debian)
+RUN /usr/local/bin/install-ttyd-debian.sh
+
+# Install PyTorch and collaboration extension as jovyan user
 USER ${NB_UID}
-
 
 # Fix: https://github.com/hadolint/hadolint/wiki/DL4006
 # Fix: https://github.com/koalaman/shellcheck/wiki/SC3014
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-# COPY whl_cache /tmp/whl_cache
-
-## --find-links=./whl_cache \
-# RUN pip install --no-cache-dir \
-#    /tmp/whl_cache/torch-2.4.1+cu124-cp311-cp311-linux_x86_64.whl \
-#    /tmp/whl_cache/torchvision-0.19.1+cu124-cp311-cp311-linux_x86_64.whl \
-#    /tmp/whl_cache/torchaudio-2.4.1+cu124-cp311-cp311-linux_x86_64.whl \
-#    /tmp/whl_cache/nvidia_cuda_nvrtc_cu12-12.4.99-py3-none-manylinux2014_x86_64.whl \
-#    /tmp/whl_cache/nvidia_cuda_cupti_cu12-12.4.99-py3-none-manylinux2014_x86_64.whl \
-#    /tmp/whl_cache/nvidia_cudnn_cu12-9.1.0.70-py3-none-manylinux2014_x86_64.whl \
-#    /tmp/whl_cache/nvidia_cublas_cu12-12.4.2.65-py3-none-manylinux2014_x86_64.whl \
-#    /tmp/whl_cache/nvidia_cufft_cu12-11.2.0.44-py3-none-manylinux2014_x86_64.whl \
-#    /tmp/whl_cache/nvidia_curand_cu12-10.3.5.119-py3-none-manylinux2014_x86_64.whl \
-#    /tmp/whl_cache/nvidia_cuda_runtime_cu12-12.4.99-py3-none-manylinux2014_x86_64.whl \
-#    /tmp/whl_cache/nvidia_cusolver_cu12-11.6.0.99-py3-none-manylinux2014_x86_64.whl \
-#    /tmp/whl_cache/nvidia_cusparse_cu12-12.3.0.142-py3-none-manylinux2014_x86_64.whl \
-#    /tmp/whl_cache/nvidia_nccl_cu12-2.20.5-py3-none-manylinux2014_x86_64.whl \
-#    /tmp/whl_cache/nvidia_nvjitlink_cu12-12.4.99-py3-none-manylinux2014_x86_64.whl \
-#    /tmp/whl_cache/triton-3.0.0-1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl \
-#    /tmp/whl_cache/nvidia_nvtx_cu12-12.4.99-py3-none-manylinux2014_x86_64.whl \
-# --index-url https://download.pytorch.org/whl/cu124
 
 RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 
@@ -46,8 +56,7 @@ RUN pip install --no-cache-dir jupyter-collaboration
 
 USER root
 
-COPY --chmod=755 ../../docker-images/user-images/container-functions.sh /usr/local/bin/
-
+# Copy container-specific files
 COPY --chmod=755 ./page_config.json /etc/jupyter/labconfig/
 COPY --chmod=755 ./start-singleuser.sh ./activity-server.py ./container-entrypoint.sh /usr/local/bin/
 

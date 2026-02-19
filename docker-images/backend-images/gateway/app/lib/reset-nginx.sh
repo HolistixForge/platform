@@ -4,6 +4,12 @@ sudo rm -rf /var/log/nginx/access.log /var/log/nginx/error.log
 
 env
 
+# Increase server_names_hash_bucket_size to handle long container FQDNs
+# (uc-{uuid}.org-{uuid}.domain.local can exceed the default 64 bytes)
+if ! grep -q "^\s*server_names_hash_bucket_size" /etc/nginx/nginx.conf; then
+    sudo sed -i 's/http {/http {\n\tserver_names_hash_bucket_size 128;/' /etc/nginx/nginx.conf
+fi
+
 # Base nginx config for gateway
 # Two server blocks:
 #   1. Gateway FQDN (from browser via Stage 1 nginx) - routes all to app-gateway

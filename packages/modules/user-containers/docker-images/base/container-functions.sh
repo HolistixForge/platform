@@ -72,6 +72,7 @@ watchdog() {
 # OBSOLETE: With distinct FQDNs per container (uc-{uuid}.org-{uuid}.domain.local),
 # user containers don't need internal nginx. Gateway nginx routes directly to VPN IP:port.
 # This function remains as a no-op stub for backward compatibility with old entrypoints.
+# delete
 reset_nginx() {
     echo "reset_nginx: skipped (distinct FQDN routing, no internal nginx needed)"
 }

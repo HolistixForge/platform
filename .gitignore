@@ -58,3 +58,5 @@ data/*
 
 # Static documentation site generator (md-file-graph output)
 website/static/.playwright-mcp/
+
+.playwright-mcp

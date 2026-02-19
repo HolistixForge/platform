@@ -11,6 +11,7 @@ import { moduleBackend as userContainersBackend } from '@holistix-forge/user-con
 import { moduleBackend as jupyterBackend } from '@holistix-forge/jupyter';
 import { moduleBackend as n8nBackend } from '@holistix-forge/n8n';
 import { moduleBackend as pgadmin4Backend } from '@holistix-forge/pgadmin4';
+import { moduleBackend as vscodeBackend } from '@holistix-forge/vscode';
 import { moduleBackend as gatewayBackend } from '../module/module';
 import type {
   PermissionManager,
@@ -113,5 +114,6 @@ export function createBackendModulesConfig(
     { module: jupyterBackend, config: {} },
     { module: n8nBackend, config: {} },
     { module: pgadmin4Backend, config: {} },
+    { module: vscodeBackend, config: {} },
   ];
 }

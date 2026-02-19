@@ -3,9 +3,6 @@
   "include": [],
   "references": [
     {
-      "path": "../collab-engine"
-    },
-    {
       "path": "../log"
     },
     {
@@ -15,13 +12,25 @@
       "path": "../modules/jupyter"
     },
     {
-      "path": "../modules/gateway"
+      "path": "../collab-engine"
+    },
+    {
+      "path": "../simple-types"
+    },
+    {
+      "path": "../api-fetch"
+    },
+    {
+      "path": "../modules/vscode"
     },
     {
       "path": "../modules/chats"
     },
     {
       "path": "../modules/socials"
+    },
+    {
+      "path": "../modules/gateway"
     },
     {
       "path": "../modules/excalidraw"
@@ -51,19 +60,13 @@
       "path": "../modules/module"
     },
     {
-      "path": "../simple-types"
-    },
-    {
-      "path": "../api-fetch"
+      "path": "../types"
     },
     {
       "path": "../modules/collab"
     },
     {
       "path": "../ui-views"
-    },
-    {
-      "path": "../types"
     },
     {
       "path": "../ui-base"

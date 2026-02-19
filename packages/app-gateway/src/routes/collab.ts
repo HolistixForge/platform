@@ -235,7 +235,7 @@ tls-auth ta.key 1
 # verb 5`,
       };
 
-      return res.json({ data: vpnConfig });
+      return res.json(vpnConfig);
     })
   );
 };

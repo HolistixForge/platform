@@ -13,6 +13,7 @@ import { moduleFrontend as excalidrawFrontend } from '@holistix-forge/excalidraw
 import { moduleFrontend as gatewayFrontend } from '@holistix-forge/gateway';
 import { moduleFrontend as socialsFrontend } from '@holistix-forge/socials/frontend';
 import { moduleFrontend as chatsFrontend } from '@holistix-forge/chats/frontend';
+import { moduleFrontend as vscodeFrontend } from '@holistix-forge/vscode/frontend';
 
 /**
  * Get all frontend modules
@@ -51,5 +52,6 @@ export function getAllModules(): {
     { module: gatewayFrontend },
     { module: socialsFrontend },
     { module: chatsFrontend },
+    { module: vscodeFrontend },
   ];
 }
