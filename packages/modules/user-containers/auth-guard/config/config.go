@@ -20,9 +20,10 @@ type Config struct {
 	CookieDomain       string
 	SessionTTL         time.Duration
 	CustomDomains      []string
-	InsecureSkipVerify bool
-	BaseFQDN           string // derived: uc-{ContainerID}.org-{OrganizationID}.{domain}
-	Domain             string // extracted from CookieDomain
+	InsecureSkipVerify  bool
+	SkipPermissionCheck bool
+	BaseFQDN            string // derived: uc-{ContainerID}.org-{OrganizationID}.{domain}
+	Domain              string // extracted from CookieDomain
 }
 
 // Parse reads CLI flags and returns a populated Config.
@@ -41,6 +42,7 @@ func Parse(args []string) (*Config, error) {
 	fs.StringVar(&cfg.OrganizationID, "organization-id", "", "Organization identifier")
 	fs.StringVar(&cfg.CookieDomain, "cookie-domain", "", "Cookie domain for sessions")
 	fs.BoolVar(&cfg.InsecureSkipVerify, "insecure-skip-verify", false, "Skip TLS verification (dev only)")
+	fs.BoolVar(&cfg.SkipPermissionCheck, "skip-permission-check", false, "Skip gateway permission checks (dev only)")
 
 	var sessionTTL string
 	fs.StringVar(&sessionTTL, "session-ttl", "24h", "Session TTL duration (e.g. 24h, 1h30m)")

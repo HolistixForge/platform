@@ -48,8 +48,13 @@ RUN pip install jupyter-collaboration
 USER root
 
 # Copy container-specific files
-COPY --chmod=755 ./page_config.json /etc/jupyter/labconfig/
-COPY --chmod=755 ./start-singleuser.sh ./activity-server.py ./container-entrypoint.sh /usr/local/bin/
+COPY ./page_config.json /etc/jupyter/labconfig/
+COPY ./start-singleuser.sh ./activity-server.py ./hub-oauth-proxy.py ./container-entrypoint.sh /usr/local/bin/
+RUN chmod 755 /etc/jupyter/labconfig/page_config.json \
+    /usr/local/bin/start-singleuser.sh \
+    /usr/local/bin/activity-server.py \
+    /usr/local/bin/hub-oauth-proxy.py \
+    /usr/local/bin/container-entrypoint.sh
 
 # Configure container entrypoint
 # ENTRYPOINT was ["tini", "-g", "--", "start.sh"]

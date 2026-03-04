@@ -52,8 +52,13 @@ func main() {
 	sessions := auth.NewSessionStore(cfg.SessionTTL)
 	defer sessions.Stop()
 
-	// Create permission checker
-	permChecker := auth.NewPermissionChecker(cfg.GatewayURL, cfg.ContainerID, httpClient, cfg.SessionTTL)
+	// Create permission checker (skip in dev mode if flag is set)
+	var permChecker *auth.PermissionChecker
+	if cfg.SkipPermissionCheck {
+		log.Printf("[main] permission checks disabled (--skip-permission-check)")
+	} else {
+		permChecker = auth.NewPermissionChecker(cfg.GatewayURL, cfg.ContainerID, httpClient, cfg.SessionTTL)
+	}
 
 	// Create OAuth handler
 	oauthHandler := auth.NewOAuthHandler(auth.OAuthConfig{

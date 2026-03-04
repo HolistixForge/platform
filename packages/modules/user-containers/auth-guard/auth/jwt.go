@@ -77,9 +77,23 @@ func (v *JWTValidator) Validate(tokenString string) (*UserClaims, error) {
 		return nil, fmt.Errorf("invalid token claims")
 	}
 
+	// Support both flat claims (user_id, username) and nested claims (user.id, user.username)
 	userID, _ := claims["user_id"].(string)
 	username, _ := claims["username"].(string)
 	displayName, _ := claims["display_name"].(string)
+
+	// Ganymede OAuth tokens use nested user object: {"user": {"id": "...", "username": "..."}}
+	if userID == "" {
+		if userObj, ok := claims["user"].(map[string]interface{}); ok {
+			userID, _ = userObj["id"].(string)
+			if username == "" {
+				username, _ = userObj["username"].(string)
+			}
+			if displayName == "" {
+				displayName, _ = userObj["display_name"].(string)
+			}
+		}
+	}
 
 	if userID == "" {
 		return nil, fmt.Errorf("token missing user_id claim")

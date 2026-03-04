@@ -93,6 +93,7 @@ func (o *OAuthHandler) RedirectToAuth(w http.ResponseWriter, r *http.Request, or
 		"redirect_uri":  {redirectURI},
 		"response_type": {"code"},
 		"state":         {stateEncoded},
+		"scope":         {"user_container"},
 	}
 
 	authURL := fmt.Sprintf("%s/oauth/authorize?%s", o.ganymedeURL, params.Encode())

@@ -422,7 +422,7 @@ export const model: AuthorizationCodeModel &
     if (user.validated_scope) {
       vs = user.validated_scope;
     } else {
-      vs = scope;
+      vs = scope ?? [];
     }
 
     debug(`validateScope`, { args: { user, client, scope }, r: vs });
