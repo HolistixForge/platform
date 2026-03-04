@@ -51,9 +51,7 @@ export const NodeKernel = ({
 
   const kernel = s.js?.kernels[kernel_id];
 
-  const client_id = s.ps?.oauth.find(
-    (o) => o.service_name === 'jupyterlab'
-  )?.client_id;
+  const client_id = s.ps?.auth_guard?.client_id;
 
   // console.log({ kernelPack, js: s.js, ps: s.ps, kernel, client_id });
 

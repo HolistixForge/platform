@@ -1,20 +1,18 @@
 # Gateway Module
 
-Provides gateway infrastructure services including OAuth2 provider, token management, permissions, DNS, reverse proxy control, and a generic protected-service registry.
+Provides gateway infrastructure services including token management, permissions, DNS, reverse proxy control, and Ganymede communication.
 
 ## Features
 
-- **OAuth2 Provider**: Full OAuth2 authorization server for container applications
 - **Token Management**: JWT token generation, validation, and lifecycle management
 - **Permission System**: Fine-grained permission checking and registry
 - **DNS Management**: Dynamic DNS record management for container URLs
 - **Reverse Proxy**: Nginx reverse proxy configuration and updates
-- **Ganymede Communication**: HTTP client for communicating with the main API server
-- **Protected Services**: Generic registry for module-defined protected services (HTTP/WS metadata)
+- **Ganymede Communication**: HTTP client for communicating with the main API server (both user-authenticated and gateway-internal calls)
 
 ## API
 
-Exports managers for OAuth, tokens, permissions, and DNS. Provides `toGanymede` function for API calls. `updateReverseProxy` manages nginx configuration. `PermissionRegistry` allows modules to register permission definitions. `ProtectedServiceRegistry` lets modules declare protected services that the gateway can guard with JWT + permissions. Gateway metadata includes FQDN and organization ID.
+Exports managers for tokens, permissions, and DNS. Provides `toGanymede` and `toGanymedeInternal` functions for API calls. `updateReverseProxy` manages nginx configuration. `PermissionRegistry` allows modules to register permission definitions. Gateway metadata includes FQDN and organization ID.
 
 ## Dependencies
 
@@ -24,12 +22,8 @@ Exports managers for OAuth, tokens, permissions, and DNS. Provides `toGanymede` 
 
 - `TGatewayExports`: Complete gateway services interface
 - `TokenManager`: JWT token management
-- `OAuthManager`: OAuth2 provider implementation
 - `PermissionManager`: Permission checking and enforcement
 - `DNSManager`: DNS record management
 - `PermissionRegistry`: Permission definition registry
-- `ProtectedServiceRegistry`: Protected-service registration (for HTTP/WS metadata)
 - `TGatewaySharedData`, `TGatewayMeta`: Shared data types
 - Event types: `TEventDisableProjectUnloading`, `TEventProjectInit`
-- Shared data types: `TGatewaySharedData`, `TGatewayMeta` (per-project activity tracking)
-

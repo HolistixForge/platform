@@ -58,7 +58,7 @@ export class GatewayState {
   /**
    * Register a persistence provider with an ID
    * Loads data from pulled snapshot if available
-   * @param id - Unique identifier (e.g., 'permissions', 'oauth', 'containers', 'projects')
+   * @param id - Unique identifier (e.g., 'permissions', 'containers', 'projects')
    * @param provider - Provider that implements IPersistenceProvider
    */
   register(id: string, provider: IPersistenceProvider): void {

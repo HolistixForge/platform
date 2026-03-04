@@ -6,7 +6,7 @@
  * logic can access them without tight coupling or circular dependencies.
  *
  * Who Uses This:
- * - Gateway routes (collab, permissions, OAuth, protected services)
+ * - Gateway routes (collab, permissions, container access)
  * - Gateway middleware (authentication, authorization)
  * - Gateway reducers (for project cleanup)
  * - Gateway shutdown logic
@@ -41,4 +41,3 @@ export function getGatewayInstances(): GatewayInstances | null {
 export function getProjectRoomsManager(): ProjectRoomsManager | null {
   return gatewayInstances?.projectRooms || null;
 }
-

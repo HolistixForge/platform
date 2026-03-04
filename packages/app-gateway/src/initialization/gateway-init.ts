@@ -8,12 +8,8 @@ import { RoleManager } from '../permissions/RoleManager';
 import { UserRoleManager } from '../permissions/UserRoleManager';
 import { ProjectRoomsManager } from '../state/ProjectRooms';
 import { CollabRegistry } from '../state/CollabRegistry';
-import { OAuthManager } from '../oauth';
 import { TokenManager } from '../tokens';
-import {
-  PermissionRegistry,
-  ProtectedServiceRegistry,
-} from '@holistix-forge/gateway';
+import { PermissionRegistry } from '@holistix-forge/gateway';
 import type { TReducersBackendExports } from '@holistix-forge/reducers';
 import { graftYjsWebsocket } from '../websocket';
 import { GatewayPeriodicTimer } from '../timers/periodic-events';
@@ -25,7 +21,7 @@ import { createGanymedeClient } from '../lib/ganymede-client';
  *
  * This interface defines the INTERNAL registry of gateway infrastructure.
  * These instances are stored in a global registry and accessed by:
- * - Gateway routes (collab, permissions, OAuth, protected services)
+ * - Gateway routes (collab, permissions)
  * - Gateway middleware (authentication, authorization)
  * - Gateway shutdown logic
  *
@@ -37,12 +33,10 @@ export interface GatewayInstances {
   roleManager: RoleManager;
   userRoleManager: UserRoleManager;
   permissionManager: PermissionManager;
-  oauthManager: OAuthManager;
   tokenManager: TokenManager;
   projectRooms: ProjectRoomsManager;
   collabRegistry: CollabRegistry;
   permissionRegistry: PermissionRegistry;
-  protectedServiceRegistry: ProtectedServiceRegistry;
   periodicTimer: GatewayPeriodicTimer;
   shutdownTimer: GatewayShutdownTimer;
   reducers: TReducersBackendExports;
@@ -163,7 +157,7 @@ async function initializeDefaultPermissions(
  * Two Distribution Mechanisms:
  * 1. Module Config (External API): Managers passed TO modules via load({ config })
  *    - Purpose: Allow modules to integrate with gateway infrastructure
- *    - Examples: Register permissions, handle OAuth, register protected services
+ *    - Examples: Register permissions, manage tokens
  *    - Distribution: createBackendModulesConfig() → modules receive via config parameter
  *
  * 2. GatewayInstances Registry (Internal API): Managers stored in registry for gateway use
@@ -211,7 +205,6 @@ export async function initializeGatewayForOrganization(
   permissionManager.setUserRoleManager(userRoleManager);
 
   // 3.2 Create other manager instances
-  const oauthManager = new OAuthManager();
   const tokenManager = new TokenManager();
   tokenManager.initialize(organizationToken); // Initialize with org token for Ganymede calls
   const projectRooms = new ProjectRoomsManager();
@@ -225,7 +218,6 @@ export async function initializeGatewayForOrganization(
   gatewayState.register('roles', roleManager);
   gatewayState.register('user_roles', userRoleManager);
   gatewayState.register('permissions', permissionManager);
-  gatewayState.register('oauth', oauthManager);
   gatewayState.register('projects', projectRooms);
 
   // 4.1 Initialize default system roles (after registration so they can be persisted)
@@ -254,7 +246,6 @@ export async function initializeGatewayForOrganization(
 
   // 5.5 Create PermissionRegistry instance
   const permissionRegistry = new PermissionRegistry();
-  const protectedServiceRegistry = new ProtectedServiceRegistry();
 
   // 5. Store instances in registry for route access + start auto-save
   gatewayState.startAutosave();
@@ -271,16 +262,14 @@ export async function initializeGatewayForOrganization(
   // IMPORTANT: This creates the EXTERNAL API for modules
   // These managers are passed TO modules via their load({ config }) function
   // This is the PUBLIC interface that modules use to integrate with gateway infrastructure
-  // (e.g., register permissions, handle OAuth, register protected services)
+  // (e.g., register permissions, manage tokens)
   const modulesConfig = createBackendModulesConfig(
     organizationId,
     organizationToken,
     gatewayId,
     permissionManager, // ← Passed to modules for permission registration
-    oauthManager, // ← Passed to modules for OAuth integration
     tokenManager, // ← Passed to modules for token management
     permissionRegistry, // ← Passed to modules for permission registration
-    protectedServiceRegistry, // ← Passed to modules for protected service registration
     collabRegistry // ← Passed to modules for shared data schema registration
   );
   log(
@@ -332,18 +321,12 @@ export async function initializeGatewayForOrganization(
     );
   }
 
-  // 7. Start automatic OAuth cleanup (managed by OAuthManager)
-  oauthManager.startAutomaticCleanup();
-  log(EPriority.Info, 'GATEWAY_INIT', 'OAuth automatic cleanup enabled');
-
-  // 8. Log statistics
-  const oauthStats = oauthManager.getStats();
+  // 7. Log statistics
   log(
     EPriority.Info,
     'GATEWAY_INIT',
     `Gateway initialized: ${projectRooms.getProjectCount()} projects, ` +
-      `${collabRegistry.getSchemaSize()} shared data types registered, ` +
-      `${oauthStats.clients} OAuth clients`
+      `${collabRegistry.getSchemaSize()} shared data types registered`
   );
 
   // 9. Store instances in INTERNAL registry for gateway infrastructure
@@ -360,12 +343,10 @@ export async function initializeGatewayForOrganization(
     roleManager, // ← NEW: RBAC role management
     userRoleManager, // ← NEW: RBAC user-role assignments
     permissionManager, // ← Both (modules register, routes check)
-    oauthManager, // ← Both (modules integrate, routes handle OAuth)
     tokenManager, // ← Both (modules use, routes validate)
     projectRooms, // ← Internal only (project lifecycle management)
     collabRegistry, // ← Both (modules register, routes access)
     permissionRegistry, // ← Both (modules register, routes check)
-    protectedServiceRegistry, // ← Both (modules register, routes handle)
     periodicTimer, // ← Internal only (gateway timers)
     shutdownTimer, // ← Internal only (gateway shutdown)
     reducers: moduleExports.reducers, // ← Module event processor (used by HTTP route handler)
@@ -389,10 +370,6 @@ export async function shutdownGateway(): Promise<void> {
     log(EPriority.Info, 'GATEWAY_SHUTDOWN', 'No gateway instances to shutdown');
     return;
   }
-
-  // Stop OAuth cleanup timer and do final cleanup
-  instances.oauthManager.stopAutomaticCleanup();
-  instances.oauthManager.cleanupExpired();
 
   // Stop gateway timers
   instances.periodicTimer.stop();

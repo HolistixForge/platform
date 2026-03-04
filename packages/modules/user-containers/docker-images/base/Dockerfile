@@ -18,3 +18,6 @@ FROM scratch
 
 # Copy shared bootstrap files
 COPY container-functions.sh /holistix/container-functions.sh
+
+# Copy auth guard binary (built with: make build-linux-amd64 in auth-guard/)
+COPY auth-guard/auth-guard-linux-amd64 /holistix/auth-guard

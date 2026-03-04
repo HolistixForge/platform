@@ -26,6 +26,7 @@ import { setupProjectRoutes } from './routes/projects';
 import { setupGatewayRoutes } from './routes/gateway';
 import { setupUserRoutes } from './routes/users';
 import { setupInternalProjectRoutes } from './routes/internal/projects';
+import { setupInternalOAuthClientRoutes } from './routes/internal/oauth-clients';
 import { setupCredentialRoutes } from './routes/credentials';
 import {
   globalLimiter,
@@ -84,6 +85,10 @@ export function createApp(
       '/collab/start', // Gateway calls during initialization
       '/oauth/authorize', // OAuth authorization code flow (protected by client credentials)
       '/oauth/token', // OAuth token exchange (protected by client credentials)
+      '/internal/oauth/clients', // Internal OAuth client management (protected by gateway token)
+      '/internal/oauth/clients/:client_id', // Internal OAuth client deletion (protected by gateway token)
+      '/internal/projects/:project_id/members', // Internal project member add (protected by gateway token)
+      '/internal/projects/:project_id/members/:user_id', // Internal project member remove (protected by gateway token)
     ],
   });
 
@@ -205,6 +210,7 @@ export function createApp(
 
   // Internal API routes (gateway-only, protected by gateway token)
   setupInternalProjectRoutes(router, rateLimiters.api);
+  setupInternalOAuthClientRoutes(router, rateLimiters.api);
 
   // Additional routes (e.g., test routes)
   if (options.setupAdditionalRoutes) {

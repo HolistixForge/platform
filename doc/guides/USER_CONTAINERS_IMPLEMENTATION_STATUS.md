@@ -75,11 +75,23 @@ User clicks "New Container" in whiteboard context menu
          │
          ▼
 ┌──────────────────────────────────────────────────────┐
+│ Auth Guard Proxy (inside container, port 8443)        │
+│ - Intercepts all inbound requests                     │
+│ - Authenticates user via OAuth with Ganymede           │
+│ - Checks permissions via gateway /containers/:id/     │
+│   verify-access endpoint                              │
+│ - Proxies authenticated requests to backend service   │
+│   (e.g. ttyd on port 7681)                            │
+└──────────────────────────────────────────────────────┘
+         │
+         ▼
+┌──────────────────────────────────────────────────────┐
 │ User accesses container                               │
 │ - "Open Terminal" in settings menu                    │
 │ - Browser → uc-{id}.org-{org}.domain.local            │
 │ - Stage 1 Nginx (SSL) → Gateway Stage 2 Nginx        │
-│ - Nginx routes FQDN to container VPN IP:7681          │
+│ - Nginx routes FQDN to container VPN IP:8443          │
+│ - Auth Guard authenticates, proxies to ttyd:7681      │
 │ - ttyd web terminal loads in browser                  │
 └──────────────────────────────────────────────────────┘
 ```
@@ -116,9 +128,12 @@ User clicks "New Container" in whiteboard context menu
 
 1. Sources container-functions.sh (extracts SETTINGS, defines VPN/watchdog functions)
 2. Starts VPN + watchdog loop in background
-3. Starts `ttyd -p 7681 /bin/bash` in background
-4. Maps HTTP service `terminal:7681` to gateway
-5. `tail -f /dev/null` to keep container running
+3. Starts Auth Guard Proxy binary (from bootstrap-tools image) on port 8443
+4. Starts `ttyd -p 7681 /bin/bash` in background
+5. Maps HTTP service `terminal:7681` to gateway
+6. `tail -f /dev/null` to keep container running
+
+The auth guard binary is included in the base bootstrap-tools image and started by `container-entrypoint.sh`.
 
 **container-functions.sh** (`packages/modules/user-containers/docker-images/base/`) - Already exists and is complete:
 
@@ -168,7 +183,7 @@ docker run --restart unless-stopped \
   holistixforge/ubuntu-terminal:24.04
 ```
 
-The SETTINGS JSON contains: user_id, frontend_fqdn, ganymede_fqdn, gateway_fqdn, token (JWT), project_id, user_container_id, oauth_clients.
+The SETTINGS JSON contains: user_id, frontend_fqdn, ganymede_fqdn, gateway_fqdn, token (JWT), project_id, user_container_id, auth_guard.
 
 ---
 
@@ -187,8 +202,13 @@ The SETTINGS JSON contains: user_id, frontend_fqdn, ganymede_fqdn, gateway_fqdn,
 - [x] DNS wildcard setup (CoreDNS zone files)
 - [x] Gateway nginx update script (`update-nginx-locations.sh`)
 - [x] Permission system (container:create, container:delete, terminal)
-- [x] Protected service registration for terminal access
+- [x] Auth Guard Proxy for container authentication
 - [x] Event types for all container lifecycle events
+- [x] Auth Guard Proxy binary (Go)
+- [x] Per-container OAuth client registration via Ganymede
+- [x] Gateway verify-access endpoint
+- [x] Legacy Protected Services removal
+- [x] Legacy Gateway OAuth removal
 
 ### TODO
 
@@ -216,6 +236,8 @@ The SETTINGS JSON contains: user_id, frontend_fqdn, ganymede_fqdn, gateway_fqdn,
 5. **Runner field is extensible.** `TUserContainer.runner` is `{ id: string } & TJsonObject`, allowing runners to store arbitrary data (like the docker command for the local runner).
 
 6. **Centralized token signing (Ganymede).** User container tokens (`TJwtUserContainer`) are signed exclusively by Ganymede. The gateway does NOT have the JWT private key - it only has the public key for verification. When the gateway needs a token for a container, it calls `POST /gateway/tokens/user-container` on Ganymede. This improves security by centralizing secret management.
+
+7. **Auth Guard Proxy for container auth.** A compiled Go binary runs inside every container as the sole network entry point. It authenticates via OAuth with Ganymede, checks permissions with the gateway, and reverse-proxies to backend services. This replaces the old Protected Services pattern and per-service OAuth configuration.
 
 ---
 
@@ -362,6 +384,13 @@ Container scripts send `project_id` in the request body for all events.
 | `packages/modules/user-containers/docker-images/ubuntu/Dockerfile`              | Ubuntu terminal image                  |
 | `packages/modules/user-containers/docker-images/ubuntu/container-entrypoint.sh` | Image entrypoint                       |
 | `packages/modules/user-containers/docker-images/base/container-functions.sh`    | Shared bootstrap (VPN, watchdog, etc.) |
+
+### Auth Guard Proxy
+
+| File                                                  | Description                            |
+| ----------------------------------------------------- | -------------------------------------- |
+| `packages/modules/user-containers/auth-guard/`        | Auth Guard Proxy Go binary             |
+| `packages/app-gateway/src/routes/container-access.ts` | Container access verification endpoint |
 
 ### Infrastructure
 

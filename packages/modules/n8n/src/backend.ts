@@ -9,13 +9,6 @@ const containerImagesData = [
     imageTag: '1.97.1',
     description: 'n8n workflow automation platform',
     category: 'automation',
-    oauthClients: [
-      {
-        serviceName: 'n8n',
-        accessTokenLifetime: 31536000,
-        redirectPaths: [],
-      },
-    ],
   },
 ];
 

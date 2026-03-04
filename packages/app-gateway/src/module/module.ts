@@ -8,21 +8,14 @@ import { TCollabBackendExports } from '@holistix-forge/collab';
 import type { TGatewayExports } from '@holistix-forge/gateway';
 
 import { GatewayReducer } from './gateway-reducer';
-import type {
-  PermissionManager,
-  OAuthManager,
-  TokenManager,
-} from '@holistix-forge/gateway';
+import type { PermissionManager, TokenManager } from '@holistix-forge/gateway';
 import { createGanymedeClient } from '../lib/ganymede-client';
 
 /**
  * Gateway Module Configuration
  * Passed to gateway module load() function
  */
-import {
-  PermissionRegistry,
-  ProtectedServiceRegistry,
-} from '@holistix-forge/gateway';
+import { PermissionRegistry } from '@holistix-forge/gateway';
 
 export type GatewayModuleConfig = {
   organization_id: string;
@@ -32,10 +25,8 @@ export type GatewayModuleConfig = {
   ganymedeFQDN: string;
   gatewayToken: string;
   permissionManager: PermissionManager;
-  oauthManager: OAuthManager;
   tokenManager: TokenManager;
   permissionRegistry: PermissionRegistry;
-  protectedServiceRegistry: ProtectedServiceRegistry;
 };
 
 type TRequired = {
@@ -79,6 +70,17 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
       return ganymedeClient.request<T>(request);
     };
 
+    // toGanymedeInternal uses X-Gateway-Token header for internal API routes
+    const toGanymedeInternal = async <T>(
+      request: TMyfetchRequest
+    ): Promise<T> => {
+      request.headers = {
+        ...request.headers,
+        'x-gateway-token': gatewayConfig.gatewayToken,
+      };
+      return ganymedeClient.request<T>(request);
+    };
+
     // Register gateway module permissions
     const permissionRegistry = gatewayConfig.permissionRegistry;
     permissionRegistry.register('gateway:[permissions:*]:read', {
@@ -94,6 +96,7 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
 
     const myExports: TGatewayExports = {
       toGanymede,
+      toGanymedeInternal,
 
       updateReverseProxy: async (
         services: { host: string; ip: string; port: number }[]
@@ -113,9 +116,7 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
 
       tokenManager: gatewayConfig.tokenManager,
       permissionManager: gatewayConfig.permissionManager,
-      oauthManager: gatewayConfig.oauthManager,
       permissionRegistry: gatewayConfig.permissionRegistry,
-      protectedServiceRegistry: gatewayConfig.protectedServiceRegistry,
     };
 
     moduleExports(myExports);

@@ -72,9 +72,7 @@ export const useCellLogic = ({
       (sd) => sd['user-containers:containers'].get(`${userContainerId}`)
     );
 
-  const client_id = ps?.oauth?.find(
-    (o) => o.service_name === 'jupyterlab'
-  )?.client_id;
+  const client_id = ps?.auth_guard?.client_id;
 
   const dispatcher = useDispatcher<TJupyterEvent | TCoreEvent>();
 
@@ -96,7 +94,7 @@ export const useCellLogic = ({
   const handleEditorMount = useCallback(
     (editor: TEditor) => {
       editorRef.current = editor;
-      awareness && bindEditor('monaco', cellId, editor);
+      if (awareness) bindEditor('monaco', cellId, editor);
     },
     [awareness, bindEditor, cellId]
   );

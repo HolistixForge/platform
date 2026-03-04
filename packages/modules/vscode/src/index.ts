@@ -33,7 +33,6 @@ export const moduleBackend: TModule<TRequired, TVscodeExports> = {
       description:
         'Web-based VS Code development environment with terminal support',
       category: 'development',
-      oauthClients: [],
     };
 
     depsExports['user-containers'].imageRegistry.register([vscodeImage]);

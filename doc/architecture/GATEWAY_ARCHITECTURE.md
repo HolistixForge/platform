@@ -23,7 +23,7 @@ Holistix Forge uses a **pool-based multi-gateway architecture** where gateway co
 
 **Architectural Decisions:**
 
-- **Clean Separation of Concerns** - Each manager (PermissionManager, OAuthManager, TokenManager) is responsible for its own domain logic and uses GatewayState as a generic persistence coordinator
+- **Clean Separation of Concerns** - Each manager (PermissionManager, TokenManager) is responsible for its own domain logic and uses GatewayState as a generic persistence coordinator
 - **Role-Based Access Control (RBAC)** - Full RBAC system with Users → Roles → Permissions model. Supports wildcard matching, org-level and project-level roles, system roles (immutable), and custom roles. See [PERMISSION_SYSTEM.md](./PERMISSION_SYSTEM.md) for details.
 - **Lazy Project Initialization** - Project rooms are initialized on-demand when first accessed (WebSocket connection or API call), not at gateway startup. Improves startup performance.
 - **Default Role Assignment** - Organization members automatically receive default RBAC roles during gateway initialization based on their Ganymede membership (owner → org:owner, admin → org:admin).
@@ -80,7 +80,7 @@ All domains resolved via CoreDNS with wildcard DNS (no dynamic registration need
 
 **Why wildcard?** Stage 1 already routed org-{uuid}.domain.local to this specific gateway port. Only one gateway listens on each port, so no server_name filtering needed.
 
-**Path routing:** /collab, /svc, /oauth, /permissions are Express routes inside app-gateway.
+**Path routing:** /collab and /permissions are Express routes inside app-gateway. Container authentication is handled by the Auth Guard Proxy running inside each container.
 
 ---
 
@@ -175,7 +175,7 @@ Gateway startup → fetchConfigFromGanymede() (using TJwtGateway):
 Gateway → initializeGatewayForOrganization():
   1. Create GatewayState instance
   2. Set organization context → Automatically pulls data from Ganymede
-  3. Create manager instances (PermissionManager, OAuthManager, etc.)
+  3. Create manager instances (PermissionManager, TokenManager, etc.)
   4. Initialize default RBAC roles and assign to members
   5. Register providers → Providers automatically load their data
   6. Store instances in GatewayInstances registry
@@ -541,7 +541,7 @@ Gateway always fetches config from Ganymede at startup using TJwtGateway. This h
 
 1. Create `GatewayState` instance and initialize with org/gateway IDs
 2. Set organization context → Automatically pulls data from Ganymede
-3. Create manager instances (RoleManager, UserRoleManager, PermissionManager, OAuthManager, etc.)
+3. Create manager instances (RoleManager, UserRoleManager, PermissionManager, TokenManager, etc.)
 4. Initialize default RBAC roles (org:owner, org:admin) and assign to organization members
 5. Register providers with `GatewayState` → Providers automatically load their data
 6. Load backend modules (collab, reducers, gateway, user-containers, etc.)
@@ -646,11 +646,9 @@ interface IPersistenceProvider {
 - `roleManager` - RoleManager instance
 - `userRoleManager` - UserRoleManager instance
 - `permissionManager` - PermissionManager instance
-- `oauthManager` - OAuthManager instance
 - `tokenManager` - TokenManager instance
 - `projectRoomsManager` - ProjectRoomsManager instance
 - `permissionRegistry` - PermissionRegistry instance
-- `protectedServiceRegistry` - ProtectedServiceRegistry instance
 
 **Usage**: Routes access instances via `getGatewayInstances()` to avoid singletons.
 
@@ -683,16 +681,6 @@ Implements RBAC permission checking (read-only, no persistence).
 - Permission expansion from roles
 - Fine-grained permission strings
 
-#### OAuthManager
-
-Manages OAuth clients, codes, tokens for container apps.
-
-- Create/delete OAuth clients
-- Generate authorization codes
-- Exchange codes for tokens
-- Token validation
-- Implements `IPersistenceProvider`
-
 #### TokenManager
 
 Handles JWT token verification for container authentication (no persistence).
@@ -719,15 +707,6 @@ Registry of permission definitions registered by modules (no persistence).
 - Permission validation
 - Permission listing via `/permissions` endpoints
 - Used for UI permission management
-
-#### ProtectedServiceRegistry
-
-Registry of generic "protected services" registered by modules (no persistence).
-
-- Modules register custom services
-- Route matching: `/svc/{serviceId}`
-- Middleware injection
-- Dynamic service resolution
 
 ### Centralized Storage (Stateless Gateways)
 
@@ -811,7 +790,6 @@ Registry of generic "protected services" registered by modules (no persistence).
 - `GET /oauth/authorize` (TJwtUser) - OAuth authorization for container apps
 - `POST /oauth/token` - OAuth token exchange
 - `POST /oauth/authenticate` (OAuth Bearer token) - Validate OAuth token
-- `ALL /svc/{serviceId}` (TJwtUser usually) - Module-defined protected service
 
 ---
 
@@ -1005,7 +983,6 @@ docker exec gw-pool-dev-001-0 ps aux | grep openvpn
 
 - [Gateway Container Scripts](../../docker-images/backend-images/gateway/README.md) - Shell scripts for OpenVPN, Nginx, and container lifecycle
 - [App-Gateway](../../packages/app-gateway/README.md) - Node.js application
-- [Protected Services](./PROTECTED_SERVICES.md) - Module-driven protected endpoints
 - [Permission System](./PERMISSION_SYSTEM.md) - RBAC implementation details
 - [System Architecture](./SYSTEM_ARCHITECTURE.md) - Complete system diagram
 - [User Containers Module](../../packages/modules/user-containers/README.md) - Container management

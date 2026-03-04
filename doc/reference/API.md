@@ -147,7 +147,7 @@ Ganymede provides OAuth2 for **user authentication** only. This is used by the f
 - **`POST /oauth/token`**: No authentication required. Uses client credentials (client_id, client_secret) from request body. Supports `authorization_code` and `refresh_token` grant types. Only supports the global `app-main-client-id` client.
 - **`GET /oauth/public-key`**: No authentication required. Returns the public key used to verify JWT tokens issued by Ganymede.
 
-**Note:** Ganymede OAuth is **only for user authentication**. Container applications use Gateway OAuth (see Gateway API section).
+**Note:** Ganymede OAuth is **only for user authentication**. Container applications use their own OAuth clients via Gateway OAuth provider (see Gateway API section).
 
 ### Gateway Management
 
@@ -210,41 +210,35 @@ Gateway pushes state updates via Yjs synchronization protocol.
 
 ### HTTP Endpoints
 
-| Method | Endpoint             | Authentication                                        | Description                                                   |
-| ------ | -------------------- | ----------------------------------------------------- | ------------------------------------------------------------- |
-| `GET`  | `/collab/ping`       | None                                                  | Health check                                                  |
-| `POST` | `/collab/start`      | None (trigger)                                        | Trigger gateway initialization (called by Ganymede)           |
-| `GET`  | `/collab/room-id`    | `TJwtUser` with `project_id` + project access         | Get room ID for a project                                     |
-| `POST` | `/collab/event`      | `TJwtUser` with `project_id` + project access         | Process collaborative event                                   |
-| `GET`  | `/collab/vpn-config` | JWT with `org:{org_id}:connect-vpn` scope             | Get OpenVPN configuration                                     |
-| `ALL`  | `/svc/{serviceId}`   | `TJwtUser` (or other JWT types as defined by modules) | Resolve a module-defined protected service (returns metadata) |
+| Method | Endpoint                                 | Authentication                                | Description                                                    |
+| ------ | ---------------------------------------- | --------------------------------------------- | -------------------------------------------------------------- |
+| `GET`  | `/collab/ping`                           | None                                          | Health check                                                   |
+| `POST` | `/collab/start`                          | None (trigger)                                | Trigger gateway initialization (called by Ganymede)            |
+| `GET`  | `/collab/room-id`                        | `TJwtUser` with `project_id` + project access | Get room ID for a project                                      |
+| `POST` | `/collab/event`                          | `TJwtUser` with `project_id` + project access | Process collaborative event                                    |
+| `GET`  | `/collab/vpn-config`                     | JWT with `org:{org_id}:connect-vpn` scope     | Get OpenVPN configuration                                      |
+| `POST` | `/containers/:containerId/verify-access` | Bearer JWT token                              | Verify user access to a container (called by Auth Guard Proxy) |
 
 **Authentication Details:**
 
 - **`GET /collab/room-id`**: Requires `TJwtUser` token. The `project_id` can be provided in JWT payload or as a query parameter (`?project_id=...`). The user must have project access (member, admin, or org admin/owner). Returns the room_id for the specified project.
 - **`POST /collab/event`**: Requires `TJwtUser` token with `project_id` in the JWT payload. The user must have project access (member, admin, or org admin/owner).
 - **`GET /collab/vpn-config`**: Requires any JWT token with `org:{org_id}:connect-vpn` scope, where `{org_id}` is the gateway's organization ID. The scope must match exactly (organization-scoped). The gateway resolves `{org_id}` at runtime and verifies the token contains the matching scope.
-- **`ALL /svc/{serviceId}`**: Requires a valid JWT (usually `TJwtUser`) and uses the module-registered `ProtectedServiceRegistry` entry for `serviceId` to:
-  - Run a module-defined permission check, and
-  - Return a generic `resolution` object describing how to reach the protected service (URL, protocol, tickets, etc.).
+- **`POST /containers/:containerId/verify-access`**: Called by Auth Guard Proxy to verify user access to a container. Requires Bearer JWT token in Authorization header. Returns JSON response with `allowed` (boolean) and `user` (user info) fields.
 
-### OAuth2 Provider (Container Applications)
+### Container Authentication (Auth Guard Proxy)
 
-Gateway provides OAuth2 for **container applications** (JupyterLab, pgAdmin, n8n, etc.). Each container service gets its own OAuth client, allowing users to authenticate within those services.
+Container applications (JupyterLab, pgAdmin, n8n, etc.) are protected by an **Auth Guard Proxy** sidecar running inside each container. The auth guard handles OAuth 2.0 Authorization Code flow directly with Ganymede and verifies access via the gateway.
 
-| Method | Endpoint              | Authentication                    | Description                              |
-| ------ | --------------------- | --------------------------------- | ---------------------------------------- |
-| `GET`  | `/oauth/authorize`    | JWT (user token)                  | OAuth authorization endpoint             |
-| `POST` | `/oauth/token`        | None (client credentials in body) | Exchange code for token or refresh token |
-| `POST` | `/oauth/authenticate` | OAuth access token (Bearer)       | Validate OAuth token                     |
+| Method | Endpoint                                 | Authentication   | Description                                |
+| ------ | ---------------------------------------- | ---------------- | ------------------------------------------ |
+| `POST` | `/containers/:containerId/verify-access` | Bearer JWT token | Verify user access to a specific container |
 
 **Authentication Details:**
 
-- **`GET /oauth/authorize`**: Requires user to be authenticated via JWT token. Used for OAuth2 authorization code flow where the user grants permission to container applications. Each container service has its own OAuth client.
-- **`POST /oauth/token`**: No authentication required. Uses client credentials (client_id, client_secret) from request body for OAuth2 token exchange. Supports `authorization_code` and `refresh_token` grant types.
-- **`POST /oauth/authenticate`**: Requires OAuth2 access token (Bearer token) in Authorization header. Used by resource servers (container applications) to validate tokens and get user information.
+- **`POST /containers/:containerId/verify-access`**: Called by the Auth Guard Proxy after exchanging an OAuth authorization code with Ganymede for a JWT. The gateway checks the user's RBAC permissions (org:owner, org:admin, project:member, project:admin) against the container's project scope.
 
-**Note:** Gateway OAuth is **only for container applications**. User authentication uses Ganymede OAuth (see Ganymede API section).
+**Note:** OAuth client registration for containers is managed centrally via Ganymede's internal API (`POST /internal/oauth/clients`). See [Auth Guard Proxy](../current-works/AUTH_GUARD_PROXY.md) for full architecture.
 
 ## Request/Response Examples
 

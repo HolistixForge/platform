@@ -8,6 +8,7 @@ export type TRunnerConfig = {
   frontend_fqdn: string;
   ganymede_fqdn: string;
   gateway_fqdn: string;
+  organization_id: string;
 };
 
 /**
@@ -29,16 +30,6 @@ export abstract class ContainerRunner {
       throw new Error(`Image ${container.image_id} not found in registry`);
     }
 
-    // Build OAuth clients object
-    const oauth_clients: {
-      [k: string]: { client_id: string; client_secret?: string };
-    } = {};
-    container.oauth.forEach((oc) => {
-      oauth_clients[oc.service_name] = {
-        client_id: oc.client_id,
-      };
-    });
-
     // Create settings JSON
     const settings = {
       user_id: config.user_id,
@@ -48,7 +39,15 @@ export abstract class ContainerRunner {
       token: jwtToken,
       project_id: config.project_id,
       user_container_id: container.user_container_id,
-      oauth_clients,
+      // Auth Guard Proxy config (per-container OAuth client registered with Ganymede)
+      ...(container.auth_guard && {
+        auth_guard: {
+          client_id: container.auth_guard.client_id,
+          client_secret: container.auth_guard.client_secret,
+          container_id: container.user_container_id,
+          organization_id: config.organization_id,
+        },
+      }),
     };
 
     // Base64 encode settings

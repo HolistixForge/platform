@@ -15,15 +15,14 @@ extract_settings() {
     export PROJECT_ID=$(echo "$JSON_SETTINGS" | jq -r '.project_id')
     export USER_CONTAINER_ID=$(echo "$JSON_SETTINGS" | jq -r '.user_container_id')
 
+    # Auth Guard Proxy settings (per-container OAuth client)
+    export AUTH_GUARD_CLIENT_ID=$(echo "$JSON_SETTINGS" | jq -r '.auth_guard.client_id // empty')
+    export AUTH_GUARD_CLIENT_SECRET=$(echo "$JSON_SETTINGS" | jq -r '.auth_guard.client_secret // empty')
+    export AUTH_GUARD_CONTAINER_ID=$(echo "$JSON_SETTINGS" | jq -r '.auth_guard.container_id // empty')
+    export AUTH_GUARD_ORG_ID=$(echo "$JSON_SETTINGS" | jq -r '.auth_guard.organization_id // empty')
+
     # Backward-compatible alias used in some nginx paths
     export PROJECT_SERVER_ID="${USER_CONTAINER_ID}"
-
-    # echo
-    # echo -e "GANYMEDE_FQDN: $GANYMEDE_FQDN\n"
-    # echo -e "ACCOUNT_FQDN: $ACCOUNT_FQDN\n"
-    # echo -e "FRONTEND_FQDN: $FRONTEND_FQDN\n"
-    # echo -e "PROJECT_ID: $PROJECT_ID\n"
-    # echo -e "PROJECT_SERVER_ID: $PROJECT_SERVER_ID\n"
 }
 
 extract_settings
@@ -97,16 +96,77 @@ vpn_loop() {
     done
 }
 
+start_auth_guard() {
+    if [ -z "$AUTH_GUARD_CLIENT_ID" ]; then
+        echo "Auth guard not configured (no client_id), skipping"
+        return 0
+    fi
+
+    GUARD_BIN="/usr/local/bin/auth-guard"
+    if [ ! -x "$GUARD_BIN" ]; then
+        echo "Auth guard binary not found at $GUARD_BIN, skipping"
+        return 0
+    fi
+
+    # Build domain from gateway FQDN (org-{uuid}.{domain} -> {domain})
+    DOMAIN=$(echo "$GATEWAY_FQDN" | sed 's/^[^.]*\.//')
+
+    GUARD_FLAGS="--listen-port 8443 --admin-port 9999"
+    GUARD_FLAGS="$GUARD_FLAGS --ganymede-url https://${GANYMEDE_FQDN}"
+    GUARD_FLAGS="$GUARD_FLAGS --gateway-url https://${GATEWAY_FQDN}"
+    GUARD_FLAGS="$GUARD_FLAGS --client-id ${AUTH_GUARD_CLIENT_ID}"
+    GUARD_FLAGS="$GUARD_FLAGS --client-secret ${AUTH_GUARD_CLIENT_SECRET}"
+    GUARD_FLAGS="$GUARD_FLAGS --container-id ${AUTH_GUARD_CONTAINER_ID}"
+    GUARD_FLAGS="$GUARD_FLAGS --organization-id ${AUTH_GUARD_ORG_ID}"
+    GUARD_FLAGS="$GUARD_FLAGS --cookie-domain .${DOMAIN}"
+
+    # In dev mode (self-signed certs), skip TLS verification
+    if [ "${GATEWAY_DEV:-0}" = "1" ]; then
+        GUARD_FLAGS="$GUARD_FLAGS --insecure-skip-verify"
+    fi
+
+    echo "Starting auth guard proxy..."
+    $GUARD_BIN $GUARD_FLAGS &
+    GUARD_PID=$!
+
+    # Wait for guard to be healthy (up to 15 seconds)
+    for i in $(seq 1 30); do
+        if curl -s -o /dev/null http://localhost:9999/health 2>/dev/null; then
+            echo "Auth guard ready (pid=$GUARD_PID)"
+            export AUTH_GUARD_RUNNING=1
+            return 0
+        fi
+        sleep 0.5
+    done
+
+    echo "WARNING: Auth guard failed to start within 15s"
+    return 1
+}
+
 map_http_service() {
     NAME=$1
     PORT=$2
+
+    # If auth guard is running, register service with guard admin API
+    # and report guard port (8443) to gateway instead of service port
+    if [ "${AUTH_GUARD_RUNNING:-0}" = "1" ]; then
+        # Register with auth guard's admin API
+        curl -s -X POST http://localhost:9999/services/register \
+            -H "Content-Type: application/json" \
+            -d "{\"name\":\"${NAME}\",\"port\":${PORT}}" \
+            2>/dev/null
+        REPORT_PORT=8443
+    else
+        REPORT_PORT=$PORT
+    fi
+
     while true; do
         echo "map_http_service $NAME"
         curl --max-time 2 \
             -X POST http://${GATEWAY_VPN_IP}/collab/event \
             -H "Authorization: ${TOKEN}" \
             -H "Content-Type: application/json" \
-            -d "{\"event\":{\"type\":\"user-container:map-http-service\",\"port\":${PORT},\"name\":\"${NAME}\"},\"project_id\":\"${PROJECT_ID}\"}" \
+            -d "{\"event\":{\"type\":\"user-container:map-http-service\",\"port\":${REPORT_PORT},\"name\":\"${NAME}\"},\"project_id\":\"${PROJECT_ID}\"}" \
             2>/dev/null
         sleep 15
     done

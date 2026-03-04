@@ -28,7 +28,7 @@ const meta = {
   parameters: {
     layout: 'centered',
     controls: {
-      exclude: ['image', 'oauth', 'ip'],
+      exclude: ['image', 'auth_guard', 'ip'],
     },
   },
   argTypes: {

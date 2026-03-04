@@ -250,20 +250,14 @@ uc-{uuid}.org-{uuid}.domain.local → CoreDNS (wildcard) → Stage 1 Nginx → G
 - No broken URLs after gateway changes
 - Direct routing (no path prefixes needed)
 
-### 5. Protected Services
+### 5. Auth Guard Proxy
 
-Modules can register protected HTTP/WebSocket endpoints with custom permission logic:
+Each user container runs an Auth Guard Proxy binary as its network entry point:
 
-- **Generic registry** - `ProtectedServiceRegistry` in gateway module
-- **Module-defined** - Each module owns permission checks and resolution
-- **Gateway endpoint** - `/svc/{serviceId}` validates JWT and calls module logic
-
-**Example:** User container terminals via ttyd
-
-- Module: `user-containers`
-- Service ID: `user-containers:terminal`
-- Permission: `user-containers:[user-container:*]:terminal`
-- Resolution: Returns terminal service metadata (FQDN, port)
+- **OAuth with Ganymede** - Users authenticate via standard OAuth 2.0 Authorization Code flow
+- **Permission checks** - Guard calls gateway's `/containers/:id/verify-access` endpoint
+- **Per-container OAuth clients** - Registered in Ganymede database (not gateway memory)
+- **Reverse proxy** - After authentication, proxies requests to backend services
 
 ## Security Model
 
@@ -371,7 +365,6 @@ See [guides/PRODUCTION_DEPLOYMENT.md](../guides/PRODUCTION_DEPLOYMENT.md) for pr
 
 - [System Architecture](SYSTEM_ARCHITECTURE.md) - Complete system diagram
 - [Gateway Architecture](GATEWAY_ARCHITECTURE.md) - Multi-gateway pool architecture
-- [Protected Services](PROTECTED_SERVICES.md) - Module-driven protected endpoints
 - [Frontend Architecture](FRONTEND_ARCHITECTURE.md) - React app and module system
 - [Permission System](PERMISSION_SYSTEM.md) - Authorization model
 - [Local Development](../guides/LOCAL_DEVELOPMENT.md) - Dev environment setup

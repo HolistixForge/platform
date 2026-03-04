@@ -274,4 +274,4 @@ docker exec gw-pool-<env>-4 grep "map-http-service" /tmp/gateway.log
 
 - [User Containers Module](../../packages/modules/user-containers/README.md)
 - [Gateway Architecture](../../doc/architecture/GATEWAY_ARCHITECTURE.md)
-- [Protected Services](../../doc/architecture/PROTECTED_SERVICES.md)
+- [Auth Guard Proxy](../../doc/current-works/AUTH_GUARD_PROXY.md)

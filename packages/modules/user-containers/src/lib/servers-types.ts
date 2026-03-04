@@ -34,10 +34,10 @@ export type TUserContainer = {
   user_container_id: string;
   container_name: string;
   image_id: string;
-  oauth: {
-    service_name: string;
+  auth_guard?: {
     client_id: string;
-  }[];
+    client_secret: string;
+  };
   runner: { id: string } & TJsonObject;
   created_at: string;
 } & TUserContainerPublishedInfo;

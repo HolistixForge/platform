@@ -14,6 +14,7 @@ import { EPriority, error, log } from '@holistix-forge/log';
 import { makeUuid } from '@holistix-forge/simple-types';
 import { development, generateJwtToken } from '@holistix-forge/backend-engine';
 import { GLOBAL_CLIENT_ID, TJwtUser } from '@holistix-forge/types';
+import bcrypt from 'bcryptjs';
 
 import { CONFIG } from '../config';
 import { pg } from '../database/pg';
@@ -47,8 +48,82 @@ export const model: AuthorizationCodeModel &
     clientId: string,
     clientSecret: string
   ): Promise<Client | Falsey> => {
-    // TODO: OAuth moved to gateway - this is now a stub
-    // This is only used for the global 'app-main-client-id' client
+    // 1. DB lookup: check oauth_clients table
+    try {
+      const qr = await pg.query(
+        'SELECT * FROM oauth_clients WHERE client_id = $1',
+        [clientId]
+      );
+      const result = qr.next();
+      const row = result?.oneRow();
+
+      if (row) {
+        // Check expiration
+        if (
+          row['expires_at'] &&
+          new Date(row['expires_at'] as string) < new Date()
+        ) {
+          debug('getClient', { clientId, r: false, reason: 'expired' });
+          return false;
+        }
+
+        // Validate secret if provided (null during authorize phase)
+        if (clientSecret) {
+          const secretHash = row['client_secret_hash'] as string | null;
+          if (secretHash) {
+            // New-style client with bcrypt hash
+            const valid = await bcrypt.compare(clientSecret, secretHash);
+            if (!valid) {
+              debug('getClient', {
+                clientId,
+                r: false,
+                reason: 'bad secret (bcrypt)',
+              });
+              return false;
+            }
+          } else {
+            // Legacy client with plaintext secret
+            if (
+              row['client_secret'] !== clientSecret &&
+              row['client_secret'] !== 'none'
+            ) {
+              debug('getClient', {
+                clientId,
+                r: false,
+                reason: 'bad secret (legacy)',
+              });
+              return false;
+            }
+          }
+        }
+
+        const redirectUris =
+          typeof row['redirect_uris'] === 'string'
+            ? JSON.parse(row['redirect_uris'])
+            : row['redirect_uris'];
+        const grants =
+          typeof row['grants'] === 'string'
+            ? JSON.parse(row['grants'])
+            : row['grants'];
+
+        const client: Client = {
+          id: row['client_id'] as string,
+          grants: grants as string[],
+          redirectUris: redirectUris as string[],
+          accessTokenLifetime:
+            (row['access_token_lifetime'] as number) || ACCESS_TOKEN_LIFETIME,
+          refreshTokenLifetime:
+            (row['refresh_token_lifetime'] as number) || REFRESH_TOKEN_LIFETIME,
+        };
+
+        debug('getClient', { clientId, r: true });
+        return client;
+      }
+    } catch (e: any) {
+      error('OAUTH_MODEL', `getClient DB lookup failed: ${e.message}`);
+    }
+
+    // 2. Fallback: hardcoded global client (backward compat)
     if (clientId === GLOBAL_CLIENT_ID) {
       return {
         id: GLOBAL_CLIENT_ID,
@@ -59,7 +134,7 @@ export const model: AuthorizationCodeModel &
       };
     }
 
-    debug(`getClient`, { args: { clientId, clientSecret }, r: false });
+    debug('getClient', { args: { clientId, clientSecret }, r: false });
     return false;
   },
 

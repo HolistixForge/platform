@@ -186,7 +186,7 @@ Access URLs (from host OS browser via DNS delegation):
 ## Related Documentation
 
 - [Gateway Architecture](./GATEWAY_ARCHITECTURE.md) - Multi-gateway pool architecture
-- [Protected Services](./PROTECTED_SERVICES.md) - Terminal access and protected endpoints
+- [Auth Guard Proxy](../current-works/AUTH_GUARD_PROXY.md) - Per-container authentication proxy
 - [Overview](./OVERVIEW.md) - High-level system design
 - [User Containers Module](../../packages/modules/user-containers/README.md) - Container management
 - [Docker Images](../../docker-images/README.md) - Container image development

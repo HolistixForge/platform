@@ -2,6 +2,9 @@
 
 . /usr/local/bin/container-functions.sh
 
+# Start auth guard proxy (must start before services so it can intercept traffic)
+start_auth_guard
+
 # Start VPN + watchdog loop in background
 sh -c '. /usr/local/bin/container-functions.sh && vpn_loop' &
 
@@ -12,10 +15,11 @@ sh -c '. /usr/local/bin/container-functions.sh && vpn_loop' &
 sh -c '/usr/local/bin/start-ttyd.sh 7681' &
 
 # Map terminal service to gateway
+# If auth guard is running, map_http_service registers with guard and reports guard port
 sh -c '. /usr/local/bin/container-functions.sh && map_http_service terminal 7681' &
 
 # Start code-server on port 8080
-# --auth none: disable auth (gateway handles authentication)
+# --auth none: disable auth (auth guard handles authentication)
 # --bind-addr: listen on all interfaces
 # --disable-telemetry: disable telemetry
 sh -c 'code-server --auth none --bind-addr 0.0.0.0:8080 --disable-telemetry /workspace' &

@@ -22,8 +22,6 @@ import {
   TCollabBackendExports,
   ReducerWithCollab,
 } from '@holistix-forge/collab';
-import crypto from 'crypto';
-
 import { TUserContainersSharedData } from './servers-shared-model';
 import { TUserContainer } from './servers-types';
 import {
@@ -36,7 +34,6 @@ import {
   TEventSelectRunner,
   TEventStart,
 } from './servers-events';
-import { TOAuthClient } from './container-image';
 import { TUserContainersExports } from '..';
 import { SharedMap } from '@holistix-forge/collab-engine';
 
@@ -178,114 +175,6 @@ export class UserContainersReducer extends ReducerWithCollab<
     return `${serviceName}.${baseFqdn}`;
   }
 
-  private async createOAuthClients(
-    containerId: string,
-    projectId: string,
-    oauthClients?: TOAuthClient[]
-  ): Promise<
-    { client_id: string; client_secret: string; service_name: string }[]
-  > {
-    if (!oauthClients || oauthClients.length === 0) return [];
-
-    const oauthManager = this.depsExports.gateway.oauthManager;
-    const organizationId = this.depsExports.gateway.organization_id;
-    const containerFQDN = this.generateContainerFQDN(
-      containerId,
-      organizationId
-    );
-
-    const createdClients: {
-      client_id: string;
-      client_secret: string;
-      service_name: string;
-    }[] = [];
-
-    for (const oauthClient of oauthClients) {
-      // Build complete redirect URIs from paths
-      const redirectUris = this.buildRedirectUris(
-        oauthClient.redirectPaths || [],
-        containerFQDN
-      );
-
-      // Generate unique client_id and client_secret
-      const client_id = crypto.randomUUID();
-      const client_secret = crypto.randomUUID();
-
-      // Create OAuth client via OAuthManager
-      oauthManager.addClient({
-        client_id,
-        client_secret,
-        project_id: projectId,
-        service_name: oauthClient.serviceName,
-        redirect_uris: redirectUris,
-        grants: ['authorization_code', 'refresh_token'],
-        created_at: new Date().toISOString(),
-      });
-
-      log(
-        EPriority.Debug,
-        'OAUTH_CLIENT',
-        `Created OAuth client for ${oauthClient.serviceName}`,
-        {
-          client_id,
-          service_name: oauthClient.serviceName,
-          redirect_uris: redirectUris,
-        }
-      );
-
-      createdClients.push({
-        client_id,
-        client_secret,
-        service_name: oauthClient.serviceName,
-      });
-    }
-
-    return createdClients;
-  }
-
-  /**
-   * Build complete redirect URIs from paths
-   *
-   * Constructs full redirect URIs by combining:
-   * - Protocol: https (or http for local dev)
-   * - FQDN: The container's FQDN (uc-{uuid}.org-{org-uuid}.domain.local)
-   * - Path: From the image definition (e.g., /oauth_callback)
-   *
-   * @param redirectPaths - Array of redirect paths from image definition (e.g., ['/oauth_callback'])
-   * @param containerFQDN - The container's FQDN
-   * @returns Array of complete redirect URIs
-   */
-  private buildRedirectUris(
-    redirectPaths: string[],
-    containerFQDN: string
-  ): string[] {
-    return redirectPaths
-      .filter((path) => path && path.trim() !== '')
-      .map((path) => {
-        // Ensure path starts with /
-        const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-        return `https://${containerFQDN}${normalizedPath}`;
-      });
-  }
-
-  private async deleteOAuthClients(
-    containerId: string,
-    requestData: RequestData
-  ) {
-    const collab = this.getCollab(requestData);
-    const container =
-      collab.sharedData['user-containers:containers'].get(containerId);
-
-    if (!container) return;
-
-    const oauthManager = this.depsExports.gateway.oauthManager;
-
-    // Delete all OAuth clients for this container
-    for (const oauthClient of container.oauth) {
-      oauthManager.deleteClient(oauthClient.client_id);
-    }
-  }
-
   async _new(event: TEventNew, requestData: RequestData) {
     // Extract user_id from JWT (TJwtUser)
     const jwt = requestData.jwt as TJwtUser;
@@ -325,12 +214,47 @@ export class UserContainersReducer extends ReducerWithCollab<
     // Generate container ID (string instead of database ID)
     const containerId = this.generateContainerId();
 
-    // Create OAuth clients
-    const oauthClients = await this.createOAuthClients(
-      containerId,
-      project_id,
-      imageDef.oauthClients
-    );
+    // Register auth guard OAuth client in Ganymede (per-container)
+    const organizationId = this.depsExports.gateway.organization_id;
+    const gatewayFqdn = this.depsExports.gateway.gatewayFQDN;
+    const domain = gatewayFqdn.split('.').slice(1).join('.') || 'domain.local';
+    let authGuardConfig:
+      | { client_id: string; client_secret: string }
+      | undefined;
+
+    try {
+      const result = await this.depsExports.gateway.toGanymedeInternal<{
+        client_id: string;
+        client_secret: string;
+      }>({
+        url: '/internal/oauth/clients',
+        method: 'POST',
+        jsonBody: {
+          redirect_uris: [
+            `https://uc-${containerId}.org-${organizationId}.${domain}/__auth/callback`,
+          ],
+          grants: ['authorization_code', 'refresh_token'],
+          label: `guard:${containerId}`,
+        },
+      });
+      authGuardConfig = {
+        client_id: result.client_id,
+        client_secret: result.client_secret,
+      };
+
+      log(
+        EPriority.Info,
+        'AUTH_GUARD',
+        `Registered OAuth client for container ${containerId}`,
+        { client_id: result.client_id }
+      );
+    } catch (e: any) {
+      log(
+        EPriority.Warning,
+        'AUTH_GUARD',
+        `Failed to register auth guard OAuth client: ${e.message}`
+      );
+    }
 
     // Create container in shared state (not database)
     const container: TUserContainer = {
@@ -338,7 +262,7 @@ export class UserContainersReducer extends ReducerWithCollab<
       container_name: event.containerName,
       image_id: imageDef.imageId,
       runner: { id: 'none' },
-      oauth: oauthClients,
+      auth_guard: authGuardConfig,
       ip: undefined,
       httpServices: [],
       last_watchdog_at: null,
@@ -509,6 +433,25 @@ export class UserContainersReducer extends ReducerWithCollab<
         secure: true,
       });
 
+      // When auth guard is present and this is the first service, also register
+      // the base FQDN (uc-{cid}.org-{oid}.{domain}) pointing to the guard port.
+      // This ensures /__auth/callback is reachable for OAuth flow.
+      if (
+        s.auth_guard &&
+        !httpServices.find((service) => service.name === '__guard_base')
+      ) {
+        const baseFQDN = this.generateContainerFQDN(
+          containerId,
+          this.depsExports.gateway.organization_id
+        );
+        httpServices.push({
+          host: baseFQDN,
+          name: '__guard_base',
+          port: 8443,
+          secure: true,
+        });
+      }
+
       needsUpdate = true;
     }
 
@@ -606,8 +549,27 @@ export class UserContainersReducer extends ReducerWithCollab<
       ]);
     }
 
-    // Delete OAuth clients
-    await this.deleteOAuthClients(containerId, requestData);
+    // Delete auth guard OAuth client from Ganymede
+    if (container.auth_guard?.client_id) {
+      try {
+        await this.depsExports.gateway.toGanymedeInternal({
+          url: `/internal/oauth/clients/${container.auth_guard.client_id}`,
+          method: 'DELETE',
+        });
+        log(
+          EPriority.Info,
+          'AUTH_GUARD',
+          `Deleted OAuth client for container ${containerId}`,
+          { client_id: container.auth_guard.client_id }
+        );
+      } catch (e: any) {
+        log(
+          EPriority.Warning,
+          'AUTH_GUARD',
+          `Failed to delete auth guard OAuth client: ${e.message}`
+        );
+      }
+    }
 
     // Remove from shared state
     collab.sharedData['user-containers:containers'].delete(containerId);
@@ -746,6 +708,7 @@ export class UserContainersReducer extends ReducerWithCollab<
       frontend_fqdn: domain,
       ganymede_fqdn: `ganymede.${domain}`,
       gateway_fqdn: gatewayFqdn,
+      organization_id,
     };
 
     // Call runner - returns runner-specific data (e.g. docker command for local runner)

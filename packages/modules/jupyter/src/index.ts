@@ -31,13 +31,6 @@ const containerImagesData = [
     options: {
       containerType: 'jupyter',
       ports: [8888],
-      oauthClients: [
-        {
-          serviceName: 'jupyterlab',
-          accessTokenLifetime: 31536000,
-          redirectPaths: ['/oauth_callback'],
-        },
-      ],
       capabilities: ['NET_ADMIN'],
       devices: ['/dev/net/tun'],
     },
@@ -55,13 +48,6 @@ const containerImagesData = [
     options: {
       containerType: 'jupyter',
       ports: [8888],
-      oauthClients: [
-        {
-          serviceName: 'jupyterlab',
-          accessTokenLifetime: 31536000,
-          redirectPaths: ['/oauth_callback'],
-        },
-      ],
       capabilities: ['NET_ADMIN'],
       devices: ['/dev/net/tun'],
     },

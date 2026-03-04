@@ -549,21 +549,6 @@ if (!permissionManager.hasPermission(user_id, 'container:create')) {
 }
 ```
 
-### In Protected Services
-
-```typescript
-protectedServiceRegistry.registerService({
-  id: 'user-containers:terminal',
-  checkPermission: async (ctx, { permissionManager }) => {
-    const permission = `container:${containerId}:terminal`;
-    return permissionManager.hasPermission(ctx.userId, permission);
-  },
-  resolve: async (ctx) => {
-    // Return service metadata
-  },
-});
-```
-
 ### In Gateway Routes
 
 ```typescript
@@ -853,7 +838,6 @@ console.log('User permissions:', permissions);
 - [Gateway Architecture](./GATEWAY_ARCHITECTURE.md) - Overall gateway design
 - [Frontend Architecture](./FRONTEND_ARCHITECTURE.md) - Frontend integration
 - [RBAC Implementation Plan](../current-works/PERMISSIONS_RBAC.md) - Detailed implementation plan
-- [Protected Services](./PROTECTED_SERVICES.md) - Protected service registry
 
 ---
 

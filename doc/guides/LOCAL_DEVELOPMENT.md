@@ -772,7 +772,6 @@ Each container gets a distinct FQDN that routes directly to its VPN IP:
 - Terminal (if ttyd enabled): Same URL (ttyd serves at root path)
 - Gateway internal paths:
   - `/collab/*` - Collaboration, events, VPN config (used by containers over VPN)
-  - `/svc/*` - Protected services (JWT-protected module endpoints)
   - `/oauth/*` - OAuth2 provider for container apps
 
 ---
@@ -782,4 +781,3 @@ Each container gets a distinct FQDN that routes directly to its VPN IP:
 - [Modules Testing](MODULES_TESTING.md) - Testing modules in Storybook
 - [System Architecture](../architecture/SYSTEM_ARCHITECTURE.md) - Complete system diagram
 - [Gateway Architecture](../architecture/GATEWAY_ARCHITECTURE.md) - Multi-gateway architecture
-- [Protected Services](../architecture/PROTECTED_SERVICES.md) - Terminal access and protected endpoints

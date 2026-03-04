@@ -4,15 +4,15 @@ import { Request, Response } from 'express';
 
 /**
  * Rate Limiter Configuration Module for Gateway
- * 
+ *
  * Provides tiered rate limiting for gateway endpoints to protect against
  * abuse and ensure fair resource allocation per organization.
- * 
+ *
  * Architecture:
  * - Uses in-memory store (sufficient for per-organization gateway instances)
  * - IP-based rate limiting (via X-Forwarded-For with trust proxy)
  * - Standard Rate Limit headers (RateLimit-* headers per RFC draft)
- * 
+ *
  * @see https://github.com/express-rate-limit/express-rate-limit
  * @see /doc/architecture/OVERVIEW.md
  */
@@ -74,29 +74,11 @@ const getEnvNumber = (key: string, defaultValue: number): number => {
 const WINDOW_MS = getEnvNumber('RATE_LIMIT_WINDOW_MS', 15 * 60 * 1000);
 
 /**
- * OAuth endpoints - Strict limits for per-org OAuth
- * 
- * Protects against:
- * - Token farming
- * - Token validation spam
- * - Authorization abuse
- */
-export const oauthLimiter = createRateLimiter(
-  {
-    windowMs: WINDOW_MS,
-    max: getEnvNumber('RATE_LIMIT_OAUTH_MAX', 20),
-    message: 'Too many token requests, please try again later',
-  },
-  'OAUTH'
-);
-
-/**
  * API endpoints - Generous for legitimate use
- * 
+ *
  * Protects against:
  * - Collaboration API abuse
  * - Permission check spam
- * - Protected services overload
  */
 export const apiLimiter = createRateLimiter(
   {
@@ -109,7 +91,7 @@ export const apiLimiter = createRateLimiter(
 
 /**
  * Global fallback - Very generous
- * 
+ *
  * Applied to all routes as a baseline protection
  * Prevents extreme abuse while allowing normal usage patterns
  */

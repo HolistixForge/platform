@@ -1,8 +1,8 @@
 # Auth Guard Proxy - User Container Service Protection
 
-**Last Updated:** February 19, 2026
-**Status:** Draft
-**Supersedes:** `doc/architecture/USER_CONTAINER_SERVICE_PROTECTION.md`, `doc/architecture/PROTECTED_SERVICES.md`
+**Last Updated:** March 2, 2026
+**Status:** Implemented
+**Supersedes:** ~~doc/architecture/USER_CONTAINER_SERVICE_PROTECTION.md~~, ~~doc/architecture/PROTECTED_SERVICES.md~~ (both removed)
 
 ---
 
@@ -14,7 +14,7 @@
 - [4. OAuth Authentication Flow](#4-oauth-authentication-flow)
 - [5. Permission Model](#5-permission-model)
 - [6. Service Routing](#6-service-routing)
-- [7. OAuth Client Model](#7-oauth-client-model) (abstraction, registration API, threat model)
+- [7. OAuth Client Model](#7-oauth-client-model) (abstraction, registration API, threat model, custom domain relay)
 - [8. Per-Service Integration](#8-per-service-integration)
 - [9. WebSocket Support](#9-websocket-support)
 - [10. Binary Distribution](#10-binary-distribution)
@@ -35,7 +35,7 @@ The solution is a **compiled Go binary** (the Auth Guard Proxy) that runs inside
 
 - Protects ALL services universally (no per-service auth code)
 - Distributes auth load to containers (gateway not in the hot path)
-- Works with any domain (OAuth redirect-based, not cookie-bound)
+- Works with any domain (platform FQDNs via OAuth, custom domains via token relay)
 - Handles WebSocket connections (ttyd, collab)
 - Simplifies existing OAuth-capable services (Jupyter, pgAdmin, n8n)
 - Extends Ganymede OAuth with abstract dynamic client registration (Ganymede has zero container awareness)
@@ -122,7 +122,7 @@ Five protection mechanisms were evaluated during research. The Auth Guard Proxy 
 
 - **One binary, all services:** A single Go static binary (~10MB) protects ttyd, code-server, Jupyter, and any future service without per-service code.
 - **Decentralized:** Auth validation runs inside each container. The gateway is only contacted for OAuth token exchange (once per session) and permission checks (once per session creation/renewal).
-- **Domain-independent:** OAuth redirect-based auth works with any domain, including future custom domain aliasing.
+- **Domain-independent:** OAuth always flows through the platform domain; custom domain aliases use a signed token relay for cross-domain session establishment (see Section 7.8).
 - **Zero service modification:** Services run with auth disabled. The guard handles everything externally.
 - **Minimal overhead:** <1ms per request (local reverse proxy). ~5MB RAM. <50ms startup.
 
@@ -146,8 +146,11 @@ nginx stage 2 (gateway container, routes by FQDN)
 │  Auth Guard Proxy (Go static binary, port 8443)                   │
 │  ┌──────────────────────────────────────────────────────────────┐ │
 │  │ 1. Inspect Host header → identify target service              │ │
-│  │ 2. Check session cookie (domain: .uc-{id}.org-{org}.domain)  │ │
-│  │    ├─ No cookie → OAuth redirect to Ganymede                  │ │
+│  │ 2. Check session cookie                                       │ │
+│  │    ├─ Platform domain: cookie on .uc-{id}.org-{org}.domain   │ │
+│  │    ├─ Custom domain: cookie on .myapp.example.com             │ │
+│  │    ├─ No cookie (platform) → OAuth redirect to Ganymede       │ │
+│  │    ├─ No cookie (custom)  → token relay via platform domain   │ │
 │  │    └─ Valid cookie → check permission (cached)                │ │
 │  │ 3. Verify permission with gateway (on new session/expiry)     │ │
 │  │ 4. Set X-Auth-User-* headers                                 │ │
@@ -168,7 +171,7 @@ nginx stage 2 (gateway container, routes by FQDN)
 1. **Universal protection** — one binary protects all services, no per-service auth code
 2. **Decentralized** — auth validation at the container, gateway only involved for OAuth token exchange and permission checks (infrequent)
 3. **Single entry point** — one port per container, host-based routing to backend services
-4. **Domain-independent** — OAuth redirect-based auth works with any domain
+4. **Domain-independent** — OAuth flows through platform domain; custom domain aliases work via token relay (Section 7.8)
 5. **Zero service modification** — services run with auth disabled, guard handles everything
 6. **Dynamic service registration** — services register at runtime via local admin API
 
@@ -309,27 +312,30 @@ Steps 1-6: same as 4.2
 
 ### 4.5 Session Management
 
-| Property      | Value                                       |
-| ------------- | ------------------------------------------- |
-| Storage       | In-memory map (`session_id → session data`) |
-| TTL           | Configurable, default 1 hour                |
-| Cookie name   | `__auth_session`                            |
-| Cookie domain | `.uc-{containerId}.org-{orgId}.{domain}`    |
-| Cookie flags  | `HttpOnly`, `Secure`, `SameSite=Lax`        |
-| Persistence   | None — container restart = re-auth          |
+| Property      | Value                                                                                 |
+| ------------- | ------------------------------------------------------------------------------------- |
+| Storage       | In-memory map (`session_id → session data`)                                           |
+| TTL           | Configurable, default 1 hour                                                          |
+| Cookie name   | `__auth_session`                                                                      |
+| Cookie domain | Platform: `.uc-{containerId}.org-{orgId}.{domain}` / Custom: the custom domain itself |
+| Cookie flags  | `HttpOnly`, `Secure`, `SameSite=Lax`                                                  |
+| Persistence   | None — container restart = re-auth                                                    |
+
+A single guard may have **multiple active sessions per user** — one for the platform domain, one for each custom domain alias. All sessions share the same in-memory session store and the same user identity. See Section 7.8 for how custom domain sessions are established via token relay.
 
 Session data stored per session:
 
 ```go
 type Session struct {
-    UserID      string
-    Username    string
-    DisplayName string
-    AccessToken string    // Ganymede JWT (for refresh/re-check)
+    UserID       string
+    Username     string
+    DisplayName  string
+    AccessToken  string    // Ganymede JWT (for refresh/re-check)
     RefreshToken string
-    Permissions []string  // Cached permissions
-    CreatedAt   time.Time
-    ExpiresAt   time.Time
+    Permissions  []string  // Cached permissions
+    OriginDomain string    // Domain this session belongs to (platform FQDN or custom domain)
+    CreatedAt    time.Time
+    ExpiresAt    time.Time
 }
 ```
 
@@ -434,11 +440,12 @@ The guard maintains a routing table mapping Host headers to backend ports:
 │ terminal.uc-xxx.org-yyy.domain.local          │ localhost:7681     │
 │ vscode.uc-xxx.org-yyy.domain.local            │ localhost:8080     │
 │ jupyterlab.uc-xxx.org-yyy.domain.local        │ localhost:8888     │
-│ uc-xxx.org-yyy.domain.local                   │ (auth callback)    │
+│ uc-xxx.org-yyy.domain.local                   │ (auth + relay)     │
+│ myapp.example.com                             │ localhost:8080     │  ← custom alias
 └───────────────────────────────────────────────┴────────────────────┘
 ```
 
-The base container FQDN (`uc-xxx.org-yyy.domain.local`) is reserved for the auth callback and guard admin pages (session info, health check).
+The base container FQDN (`uc-xxx.org-yyy.domain.local`) is reserved for the auth callback, cross-domain login, and guard admin pages (session info, health check). Custom domain aliases map directly to a backend service (configured when the alias is created). The guard recognizes custom domains from its `custom_domains` config and handles auth via the token relay flow (Section 7.8).
 
 ### 6.2 Service Registration (Admin API)
 
@@ -704,6 +711,8 @@ Layer 7: Audit         Log all create/delete operations with created_by
 
 ### 7.6 Cookie Domain Strategy
 
+#### Platform Domain Access
+
 Session cookie set with domain `.uc-{cid}.org-{oid}.{domain}`:
 
 ```
@@ -721,15 +730,29 @@ This cookie is sent for ALL service subdomains:
 
 One OAuth flow → one cookie → all services in the container are authenticated.
 
+#### Custom Domain Access
+
+Custom domains get a **separate session cookie** on their own domain:
+
+```
+Set-Cookie: __auth_session=yyy;
+  Domain=myapp.example.com;
+  Path=/; HttpOnly; Secure; SameSite=Lax
+```
+
+This cookie is established via the **token relay** mechanism (see Section 7.8). The platform domain session and custom domain session are independent cookies but backed by the same user identity. If the platform session expires, the custom domain session remains valid until its own TTL expires.
+
 ### 7.7 Redirect URI Strategy
 
-The OAuth callback always uses the **base container FQDN**:
+The OAuth callback always uses the **base container FQDN** on the **platform domain**:
 
 ```
 redirect_uri = https://uc-{cid}.org-{oid}.{domain}/__auth/callback
 ```
 
-Flow when accessing a service subdomain:
+**This is the only registered redirect URI.** Custom domains never appear in redirect URIs. This is a deliberate security decision — it keeps the Threat 2 mitigation intact (all redirect URIs are platform subdomains).
+
+Flow when accessing a service subdomain (platform domain):
 
 1. Browser at `vscode.uc-xxx.org-yyy.domain.local`
 2. Guard redirects to Ganymede OAuth (redirect_uri = base FQDN callback)
@@ -738,12 +761,152 @@ Flow when accessing a service subdomain:
 5. Guard redirects to original URL (`vscode.uc-xxx.org-yyy.domain.local/`)
 6. Cookie is sent because `vscode.uc-xxx...` is a subdomain of `.uc-xxx...`
 
+Flow when accessing via custom domain: **See Section 7.8 (Token Relay).**
+
 The base FQDN must be registered in nginx stage 2 (in addition to service FQDNs) and route to the guard port.
 
 Ganymede uses **exact redirect URI matching** (as per `@node-oauth/oauth2-server`). The registered redirect URI is the base FQDN callback only:
 
 - Registered: `https://uc-{cid}.org-{oid}.{domain}/__auth/callback`
-- The guard always redirects to this exact URL regardless of which service subdomain the user started from. The `state` parameter carries the original URL for the final redirect after auth.
+- The guard always redirects to this exact URL regardless of which service subdomain or custom domain the user started from. The `state` parameter carries the original URL for the final redirect after auth.
+
+### 7.8 Custom Domain Authentication (Token Relay)
+
+#### The Problem
+
+A user container may be aliased on a custom domain (e.g., `myapp.example.com` → `uc-xxx.org-yyy.apollo.local`). When a browser visits `https://myapp.example.com`:
+
+1. **Redirect URI mismatch:** The registered redirect_uri is `https://uc-xxx.org-yyy.apollo.local/__auth/callback`. Ganymede exact matching rejects `https://myapp.example.com/__auth/callback`.
+2. **Cookie domain mismatch:** A cookie set on `.uc-xxx.org-yyy.apollo.local` is never sent for `myapp.example.com` requests.
+
+If the guard redirects to Ganymede OAuth with the platform redirect_uri, the callback hits the platform domain — the custom domain browser tab never gets a session.
+
+#### The Solution: Token Relay
+
+OAuth **always** happens on the platform domain. Custom domains receive sessions via a short-lived, HMAC-signed **relay token**. No changes to Ganymede, no changes to the OAuth client model, no changes to the security threat model.
+
+#### Flow: Custom Domain → Token Relay → Session
+
+```
+Browser                   Guard (same binary, same port)       Ganymede
+  │                        │                                     │
+  │── GET / ─────────────→ │                                     │
+  │  Host: myapp.example.com                                     │
+  │  (no cookie)           │                                     │
+  │                        │ detect: custom domain, no session   │
+  │                        │                                     │
+  │←── 302 ────────────── │                                     │
+  │  Location: https://uc-xxx.org-yyy.domain.local/              │
+  │    __auth/cross-domain-login                                 │
+  │    ?origin=https://myapp.example.com                         │
+  │    &return_to=https://myapp.example.com/                     │
+  │                        │                                     │
+  │── GET /__auth/cross-domain-login ──→ │                       │
+  │  Host: uc-xxx.org-yyy.domain.local   │                       │
+  │  Cookie: __auth_session (platform)   │                       │
+  │                        │                                     │
+  │        ┌───────────────┤                                     │
+  │        │ Has platform session?                               │
+  │        │  YES → skip OAuth, proceed to relay                 │
+  │        │  NO  → full OAuth flow with Ganymede (normal)       │
+  │        │        (after OAuth, user gets platform session,    │
+  │        │         then continues below)                       │
+  │        └───────────────┤                                     │
+  │                        │                                     │
+  │                        │ Generate relay token:               │
+  │                        │   payload = {                       │
+  │                        │     user_id, username,              │
+  │                        │     origin: "myapp.example.com",    │
+  │                        │     exp: now + 30s                  │
+  │                        │   }                                 │
+  │                        │   token = HMAC-SHA256(secret, payload)
+  │                        │                                     │
+  │←── 302 ────────────── │                                     │
+  │  Location: https://myapp.example.com/                        │
+  │    __auth/relay                                              │
+  │    ?token=base64(payload.signature)                          │
+  │    &return_to=https://myapp.example.com/                     │
+  │                        │                                     │
+  │── GET /__auth/relay ──→│                                     │
+  │  Host: myapp.example.com                                     │
+  │                        │                                     │
+  │                        │ Validate relay token:               │
+  │                        │   verify HMAC signature             │
+  │                        │   verify exp > now                  │
+  │                        │   verify origin matches Host        │
+  │                        │   (optional: verify single-use)     │
+  │                        │                                     │
+  │                        │ Create session for custom domain    │
+  │                        │ Set-Cookie on myapp.example.com     │
+  │                        │                                     │
+  │←── 302 + Set-Cookie ──│                                     │
+  │  Location: https://myapp.example.com/ (return_to)            │
+  │  Set-Cookie: __auth_session=yyy;                             │
+  │    Domain=myapp.example.com;                                 │
+  │    Path=/; HttpOnly; Secure; SameSite=Lax                    │
+  │                        │                                     │
+  │── GET / ─────────────→ │                                     │
+  │  Host: myapp.example.com                                     │
+  │  Cookie: __auth_session=yyy                                  │
+  │                        │ Valid session → proxy to service    │
+  │←── 200 (page content)  │                                     │
+```
+
+**Total redirects for unauthenticated custom domain access:** 4 (custom → platform → Ganymede → platform callback → custom relay). If the user already has a platform session: 2 (custom → platform → custom relay).
+
+#### Guard Configuration for Custom Domains
+
+The guard needs to know its custom domain aliases. These are provided in the auth guard config:
+
+```json
+{
+  "auth_guard": {
+    "client_id": "...",
+    "client_secret": "...",
+    "oauth_issuer": "https://ganymede.apollo.local",
+    "gateway_url": "https://org-yyy.apollo.local",
+    "base_fqdn": "uc-xxx.org-yyy.apollo.local",
+    "custom_domains": ["myapp.example.com", "api.myproject.io"]
+  }
+}
+```
+
+The `custom_domains` array is populated by the gateway when aliases are configured. The guard uses this to:
+
+- Recognize incoming requests on custom domains (vs platform subdomains)
+- Set the correct cookie domain per request
+- Validate relay token `origin` matches a known custom domain
+
+#### Relay Token Security
+
+| Property     | Value                                                                                                  |
+| ------------ | ------------------------------------------------------------------------------------------------------ |
+| Algorithm    | HMAC-SHA256                                                                                            |
+| Signing key  | Derived from `client_secret`: `HMAC-SHA256(client_secret, "relay-token-key")`                          |
+| TTL          | 30 seconds (clock skew tolerance: +5s)                                                                 |
+| Payload      | `{ user_id, username, display_name, permissions, origin, nonce, exp }`                                 |
+| Single-use   | Optional: guard stores used nonces in memory (TTL = token TTL). Prevents replay within the 30s window. |
+| Origin-bound | Token contains `origin` field. Guard rejects tokens where `origin ≠ Host`.                             |
+| Scope        | One relay token per custom domain. Cannot be reused on a different custom domain.                      |
+
+**Why this is secure:**
+
+- The relay token is signed with the `client_secret`, which only the guard binary possesses. A token cannot be forged.
+- The token is short-lived (30 seconds). It must be consumed immediately.
+- The token is origin-bound. A token issued for `myapp.example.com` is rejected on `evil.com`.
+- The relay happens in the browser via 302 redirects (no user interaction). The token is in a URL query parameter, which is acceptable because: (a) it expires in 30 seconds, (b) HTTPS encrypts the URL in transit, (c) it's single-use.
+
+#### Why Not Register Custom Domains as redirect_uris?
+
+Rejected alternatives:
+
+1. **Add custom domain to `redirect_uris` array:** Breaks Threat 2 mitigation. Ganymede validates redirect URIs against platform domain. Relaxing this for custom domains means a compromised gateway could register `https://evil.com/callback`. Defense-in-depth lost.
+
+2. **Ganymede custom domain allowlist:** Adds domain concepts to Ganymede (violates abstraction principle). Also requires updating the allowlist whenever aliases change.
+
+3. **Wildcard redirect URIs:** The `@node-oauth/oauth2-server` library does exact matching only. Wildcards require custom code and are a well-known OAuth security risk (see OAuth 2.0 Security Best Current Practice, Section 4.1).
+
+The token relay keeps all OAuth on the platform domain and all custom domain concerns in the guard binary.
 
 ---
 
@@ -1117,6 +1280,8 @@ await ganymedeApi.delete(
 
 ## 12. Code to Remove
 
+> **Status: Complete.** All legacy code listed below has been removed as of March 2026.
+
 ### 12.1 Protected Services — Complete Removal
 
 The Protected Services feature is replaced entirely by the auth guard. All code is deleted without tombstone comments.
@@ -1237,6 +1402,39 @@ TestOAuthPermissionCheck
   - handles permission granted → creates session
   - handles permission denied → returns 403
   - handles gateway unreachable → returns 502
+
+TestCustomDomainRedirect
+  - redirects unauthenticated custom domain request to platform cross-domain-login
+  - includes origin and return_to parameters
+  - does NOT redirect to Ganymede directly (always via platform domain)
+```
+
+**Token relay tests:**
+
+```
+TestTokenRelayGeneration
+  - generates HMAC-SHA256 signed relay token
+  - token contains user_id, origin, exp, nonce
+  - token TTL is 30 seconds
+  - derives signing key from client_secret
+
+TestTokenRelayValidation
+  - accepts valid relay token and creates session
+  - rejects expired token (> 30s + 5s skew)
+  - rejects token with wrong origin (token for domainA, request on domainB)
+  - rejects token with invalid HMAC signature
+  - rejects replayed token (same nonce used twice)
+
+TestCrossDomainLogin
+  - with platform session: generates relay token, redirects to custom domain
+  - without platform session: triggers OAuth flow, then relay
+  - rejects unknown custom domain (not in config)
+
+TestCustomDomainSession
+  - sets cookie on custom domain after relay
+  - cookie domain matches custom domain (not platform domain)
+  - session is independent from platform domain session
+  - session renewal works (re-triggers relay from platform)
 ```
 
 **Session tests:**
@@ -1378,6 +1576,16 @@ TestE2E_DynamicServiceAddition
 
 ## 14. Implementation Phases
 
+> **Implementation Status (March 2026):**
+>
+> - Phase 1 (Ganymede OAuth Client API): Complete
+> - Phase 2 (Go Auth Guard Binary): Complete
+> - Phase 3 (Gateway Integration): Complete
+> - Phase 4 (Container Integration): Complete
+> - Phase 5 (Service Adapters): Complete
+> - Phase 6 (Legacy Removal): Complete
+> - Phase 7 (E2E Tests + CI): Complete
+
 ### Phase 1: Auth Guard Core (Go Binary)
 
 **Goal:** Working auth guard with OAuth flow, permission checks, HTTP proxy.
@@ -1494,6 +1702,12 @@ The guard adds <1ms latency per request (local reverse proxy). OAuth flows add ~
 
 7. **Container-to-container access:** If container A needs to call container B's API, how does it authenticate? (Currently out of scope — containers communicate via gateway collab events.)
 
+8. **Custom domain alias lifecycle:** When a custom domain alias is added/removed, how does the guard learn about it? Options: (a) gateway pushes updated config to guard's admin API, (b) guard polls gateway periodically, (c) guard reloads config from SETTINGS file. Option (a) is likely best — immediate, no polling overhead.
+
+9. **Custom domain DNS validation:** Should the platform verify that a custom domain's DNS (CNAME) actually points to the container before accepting the alias? This prevents users from claiming domains they don't control. The gateway could verify DNS resolution before registering the alias.
+
+10. **Custom domain SSL certificates:** Custom domains need valid TLS certificates. Options: (a) Let's Encrypt via ACME challenge, (b) user-provided certificates, (c) Cloudflare/proxy-based. This is an infrastructure concern outside the auth guard scope but affects the end-to-end flow.
+
 ---
 
 ## Appendix A: Request Flow Diagrams
@@ -1548,6 +1762,53 @@ Browser              Guard          Ganymede        Login Page      Gateway
   │                    │──proxy to service             │              │
   │←─response──────── │               │               │              │
 ```
+
+### Custom Domain Token Relay Flow
+
+```
+Browser                   Guard (platform domain)      Guard (same binary)
+  │                              │                           │
+  │── GET / ────────────────────────────────────────────────→│
+  │  Host: myapp.example.com     │                           │
+  │  (no cookie for this domain) │                           │
+  │                              │                           │
+  │←─ 302 ──────────────────────────────────────────────────│
+  │  → uc-xxx.../                │                           │
+  │    __auth/cross-domain-login │                           │
+  │    ?origin=myapp...          │                           │
+  │                              │                           │
+  │── GET /__auth/cross-domain-login →│                      │
+  │  Host: uc-xxx...             │                           │
+  │  Cookie: __auth_session      │                           │
+  │  (platform session exists)   │                           │
+  │                              │                           │
+  │                         validate session                 │
+  │                         generate relay token             │
+  │                         (HMAC-signed, 30s TTL)           │
+  │                              │                           │
+  │←─ 302 ──────────────────────│                           │
+  │  → myapp.example.com/       │                           │
+  │    __auth/relay?token=xxx   │                           │
+  │                              │                           │
+  │── GET /__auth/relay ────────────────────────────────────→│
+  │  Host: myapp.example.com     │                           │
+  │                              │                           │
+  │                              │        validate HMAC      │
+  │                              │        check expiry       │
+  │                              │        verify origin      │
+  │                              │        create session     │
+  │                              │                           │
+  │←─ 302 + Set-Cookie ────────────────────────────────────│
+  │  Cookie: __auth_session=yyy  │                           │
+  │  Domain=myapp.example.com    │                           │
+  │  → myapp.example.com/ (return_to)                        │
+  │                              │                           │
+  │── GET / (with cookie) ──────────────────────────────────→│
+  │                              │        valid session      │
+  │←─ 200 (proxied response)  ──────────────────────────────│
+```
+
+Note: "Guard (platform domain)" and "Guard (same binary)" are the **same process** — the guard binary listens on one port and handles all domains (platform FQDNs + custom domains). Shown separately for clarity.
 
 ---
 

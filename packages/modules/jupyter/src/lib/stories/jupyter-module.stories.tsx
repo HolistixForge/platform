@@ -74,11 +74,6 @@ const modulesBackend: { module: TModule<never, object>; config: object }[] = [
               // Mock implementation for storybook
             },
           },
-          protectedServiceRegistry: {
-            registerService: () => {
-              // Mock implementation for storybook
-            },
-          },
         });
       },
     },

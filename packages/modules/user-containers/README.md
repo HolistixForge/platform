@@ -48,16 +48,14 @@ Terminal access is available for any container image that:
 - Frontend constructs terminal URL using `serviceUrl(container, 'terminal')`
 - User clicks "Open Terminal" → opens ttyd web UI in new tab
 
-**Protected Service:**
+**Auth Guard Proxy:**
 
-The module registers a protected service `user-containers:terminal` that:
-- Checks permission: `user-containers:[user-container:{id}]:terminal`
-- Resolves to terminal service metadata (host, port, secure)
-- Can be queried via gateway `/svc/user-containers:terminal?user_container_id=...`
+Each container runs an Auth Guard Proxy as its network entry point that:
 
-**Permission:**
-
-Users need `user-containers:[user-container:*]:terminal` permission to access terminals.
+- Authenticates users via OAuth 2.0 Authorization Code flow with Ganymede
+- Calls gateway's `/containers/:id/verify-access` endpoint to check permissions
+- Verifies user has `user-containers:[user-container:*]:terminal` permission
+- After auth, proxies requests to the backend service (e.g., ttyd on localhost:7681)
 
 ---
 
@@ -70,4 +68,3 @@ Users need `user-containers:[user-container:*]:terminal` permission to access te
 - `ContainerRunner`: Runner interface
 - `serviceUrl`: Helper for generating container URLs
 - Event types: `TEventNew`, `TEventDelete`, `TEventWatchdog`, `TEventMapHttpService`
-

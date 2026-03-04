@@ -1,10 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+import { CONFIG } from '../config';
 import { EPriority, log } from '@holistix-forge/log';
+import { TJwtGateway } from '@holistix-forge/types';
+import { GatewayAuthRequest } from './auth';
 
 /**
- * Middleware to authenticate gateway requests
- * 
- * Checks X-Gateway-Token header against GATEWAY_TOKEN env var.
+ * Middleware to authenticate gateway requests via JWT
+ *
+ * Verifies X-Gateway-Token header as a JWT gateway token.
  * Used for internal API routes that should only be called by gateway.
  */
 export const authenticateGatewayToken = (
@@ -12,20 +16,9 @@ export const authenticateGatewayToken = (
   res: Response,
   next: NextFunction
 ) => {
-  const providedToken = req.headers['x-gateway-token'];
-  const expectedToken = process.env.GATEWAY_TOKEN;
+  const token = req.headers['x-gateway-token'] as string | undefined;
 
-  if (!expectedToken) {
-    log(
-      EPriority.Error,
-      'GATEWAY_AUTH',
-      'GATEWAY_TOKEN environment variable not configured'
-    );
-    res.status(500).json({ error: 'Server misconfigured' });
-    return;
-  }
-
-  if (!providedToken) {
+  if (!token) {
     log(
       EPriority.Warning,
       'GATEWAY_AUTH',
@@ -35,16 +28,39 @@ export const authenticateGatewayToken = (
     return;
   }
 
-  if (providedToken !== expectedToken) {
+  try {
+    const payload = jwt.verify(token, CONFIG.JWT_PUBLIC_KEY, {
+      algorithms: ['RS256'],
+    }) as TJwtGateway;
+
+    if (payload.type !== 'gateway_token') {
+      log(
+        EPriority.Warning,
+        'GATEWAY_AUTH',
+        `Invalid token type from ${req.method} ${req.path}: ${payload.type}`
+      );
+      res.status(403).json({ error: 'Invalid token type' });
+      return;
+    }
+
+    // Attach gateway info to request
+    const authReq = req as GatewayAuthRequest;
+    authReq.gateway = {
+      id: payload.gateway_id,
+      type: payload.type,
+      scope: payload.scope,
+    };
+
+    // Set X-Gateway-Id for downstream use
+    req.headers['x-gateway-id'] = payload.gateway_id;
+
+    next();
+  } catch (error: any) {
     log(
       EPriority.Warning,
       'GATEWAY_AUTH',
-      `Invalid gateway token from ${req.method} ${req.path}`
+      `Invalid gateway token from ${req.method} ${req.path}: ${error.message}`
     );
     res.status(403).json({ error: 'Invalid gateway token' });
-    return;
   }
-
-  // Token valid
-  next();
 };

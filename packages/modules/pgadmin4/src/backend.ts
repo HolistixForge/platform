@@ -9,13 +9,6 @@ const containerImagesData = [
     imageTag: '8.12.0',
     description: 'PostgreSQL administration and development platform',
     category: 'database',
-    oauthClients: [
-      {
-        serviceName: 'pgadmin4',
-        accessTokenLifetime: 31536000,
-        redirectPaths: [],
-      },
-    ],
   },
 ];
 

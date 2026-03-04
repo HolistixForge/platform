@@ -61,12 +61,10 @@ export const createStoryInitModule = (): TModule<
         last_activity: new Date().toISOString(),
         created_at: new Date().toISOString(),
         runner: { id: 'local' },
-        oauth: [
-          {
-            service_name: 'jupyterlab',
-            client_id: STORY_JUPYTERLAB_CLIENT_ID,
-          },
-        ],
+        auth_guard: {
+          client_id: STORY_JUPYTERLAB_CLIENT_ID,
+          client_secret: 'story-secret',
+        },
       });
     },
   };
@@ -206,13 +204,13 @@ export const useInitStoryJupyterServer =
         // Only set loading to false if we have both jupyter entry and service
         if (jupyter && service) {
           console.log('Jupyter server is initialized');
-          isLoading && setIsLoading(false);
+          if (isLoading) setIsLoading(false);
         }
       } catch (err) {
         setError(
           err instanceof Error ? err : new Error('Failed to initialize server')
         );
-        isLoading && setIsLoading(false);
+        if (isLoading) setIsLoading(false);
       }
     }, [server, jupyter, service, running, isLoading, sd]);
 

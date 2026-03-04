@@ -15,7 +15,7 @@ Welcome to the Holistix Forge documentation! This hub will guide you to the righ
 - 🏗️ **[Architecture Overview](architecture/OVERVIEW.md)** - System design and components
 - 📐 **[System Architecture](architecture/SYSTEM_ARCHITECTURE.md)** - Complete architecture diagram
 - 📊 **[Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md)** - Multi-gateway pool architecture
-- 🔒 **[Protected Services](architecture/PROTECTED_SERVICES.md)** - Module-driven protected endpoints
+- 🔒 **[Auth Guard Proxy](current-works/AUTH_GUARD_PROXY.md)** - Per-container authentication proxy
 - 📡 **[Logging & Observability](architecture/LOGGING_AND_OBSERVABILITY.md)** - Logs, traces, error categories, and OTel stack
 - 🎨 **[Layer System Architecture](../packages/modules/whiteboard/src/lib/layer.md)** - Modular whiteboard layers (Excalidraw integration)
 
@@ -122,7 +122,7 @@ doc/
 - **Authentication:** [Overview](architecture/OVERVIEW.md), [API Reference](reference/API.md)
 - **Collaboration:** [Overview](architecture/OVERVIEW.md), [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md), [Modules Testing](guides/MODULES_TESTING.md)
 - **Containers:** [System Architecture](architecture/SYSTEM_ARCHITECTURE.md), [User Containers Module](../packages/modules/user-containers/README.md), [Docker Images](../docker-images/README.md)
-- **Protected Services:** [Protected Services Architecture](architecture/PROTECTED_SERVICES.md)
+- **Container Auth:** [Auth Guard Proxy](current-works/AUTH_GUARD_PROXY.md)
 - **Terminal Access:** [User Containers Module](../packages/modules/user-containers/README.md#terminal-access) (Web-based terminals)
 - **Testing:** [Testing Guide](guides/TESTING_GUIDE.md), [Modules Testing](guides/MODULES_TESTING.md)
 - **Database:** [Overview](architecture/OVERVIEW.md), [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md)

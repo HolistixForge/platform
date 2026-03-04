@@ -7,8 +7,6 @@ import type { TGatewayExports } from '@holistix-forge/gateway';
 import type { TContainerImageDefinition } from './lib/container-image';
 import type { ContainerRunner } from './lib/runner';
 import { localRunnerBackend } from './lib/local-runner';
-import { TUserContainer } from './lib/servers-types';
-import { SharedMap } from '@holistix-forge/collab-engine';
 
 //
 
@@ -83,7 +81,6 @@ export const moduleBackend: TModule<TRequired, TUserContainersExports> = {
         description:
           'Minimal Ubuntu 24.04 container exposing only a web-based terminal',
         category: 'utility',
-        oauthClients: [],
       },
     ];
     registry.register(builtinImages);
@@ -98,67 +95,6 @@ export const moduleBackend: TModule<TRequired, TUserContainersExports> = {
     };
 
     registerContainerRunner('local', localRunnerBackend);
-
-    // Register generic protected service(s) with gateway
-    // Example: user-container terminal resolver
-    const protectedServiceRegistry =
-      depsExports.gateway.protectedServiceRegistry;
-    protectedServiceRegistry.registerService({
-      id: 'user-containers:terminal',
-      checkPermission: async (ctx, { permissionManager }) => {
-        if (!ctx.userId) return false;
-        const containerId =
-          (ctx.query.user_container_id as string) ||
-          (ctx.query.userContainerId as string);
-        if (!containerId) return false;
-        // permission format: user-containers:[user-container:{id}]:terminal
-        const permission = `user-containers:[user-container:${containerId}]:terminal`;
-        return permissionManager.hasPermission(ctx.userId, permission);
-      },
-      resolve: async (ctx) => {
-        const containerId =
-          (ctx.query.user_container_id as string) ||
-          (ctx.query.userContainerId as string);
-        if (!containerId) {
-          return null;
-        }
-
-        // Get project-specific collab instance
-        // TODO: Ensure ctx has project_id from request context
-        const project_id =
-          (ctx.query.project_id as string) || 'default-project';
-        const collab =
-          depsExports.collab.registry.getCollabForProject(project_id);
-
-        // Access shared data through collab engine
-        const sduc = collab.sharedData[
-          'user-containers:containers'
-        ] as SharedMap<TUserContainer>;
-        const container = sduc.get(containerId);
-        if (!container) {
-          return null;
-        }
-
-        // Find a httpService named "terminal"
-        const terminalService = container.httpServices.find(
-          (s: { name: string }) => s.name === 'terminal'
-        );
-        if (!terminalService) {
-          return null;
-        }
-
-        // For now, return high-level metadata. Consumers decide how to use it.
-        return {
-          data: {
-            user_container_id: container.user_container_id,
-            service: 'terminal',
-            host: terminalService.host,
-            port: terminalService.port,
-            secure: terminalService.secure ?? true,
-          },
-        };
-      },
-    });
 
     // Export registry and images
     moduleExports({
@@ -182,7 +118,6 @@ export { userContainerNodeId } from './lib/servers-reducer';
 
 export type {
   TContainerImageDefinition,
-  TOAuthClient,
   TContainerImageInfo,
 } from './lib/container-image';
 

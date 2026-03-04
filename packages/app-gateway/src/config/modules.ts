@@ -15,10 +15,8 @@ import { moduleBackend as vscodeBackend } from '@holistix-forge/vscode';
 import { moduleBackend as gatewayBackend } from '../module/module';
 import type {
   PermissionManager,
-  OAuthManager,
   TokenManager,
   PermissionRegistry,
-  ProtectedServiceRegistry,
 } from '@holistix-forge/gateway';
 import { CONFIG } from '../config';
 
@@ -34,10 +32,8 @@ import { CONFIG } from '../config';
  *
  * What gets passed to modules:
  * - permissionManager: For checking permissions in reducers
- * - oauthManager: For OAuth integration
  * - tokenManager: For JWT token management
  * - permissionRegistry: For registering module permissions
- * - protectedServiceRegistry: For registering protected services
  * - collabRegistry: For registering shared data schemas
  *
  * This is SEPARATE from GatewayInstances (internal registry):
@@ -48,10 +44,8 @@ import { CONFIG } from '../config';
  * @param organizationToken - Organization token for Ganymede
  * @param gatewayId - Gateway ID
  * @param permissionManager - Permission manager (passed to modules)
- * @param oauthManager - OAuth manager (passed to modules)
  * @param tokenManager - Token manager (passed to modules)
  * @param permissionRegistry - Permission registry (passed to modules)
- * @param protectedServiceRegistry - Protected service registry (passed to modules)
  * @param collabRegistry - CollabRegistry for multi-project architecture (passed to modules)
  * @returns Module configuration array in dependency order
  */
@@ -60,10 +54,8 @@ export function createBackendModulesConfig(
   organizationToken: string,
   gatewayId: string,
   permissionManager: PermissionManager,
-  oauthManager: OAuthManager,
   tokenManager: TokenManager,
   permissionRegistry: PermissionRegistry,
-  protectedServiceRegistry: ProtectedServiceRegistry,
   collabRegistry: ICollabRegistry
 ): { module: TModule<never, object>; config: object }[] {
   // Collab config - multi-project architecture
@@ -88,10 +80,8 @@ export function createBackendModulesConfig(
     ganymedeFQDN: CONFIG.GANYMEDE_FQDN,
     gatewayToken: CONFIG.GATEWAY_TOKEN,
     permissionManager,
-    oauthManager,
     tokenManager,
     permissionRegistry,
-    protectedServiceRegistry,
   };
 
   // Return modules in dependency order:

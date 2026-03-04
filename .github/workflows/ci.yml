@@ -101,6 +101,46 @@ jobs:
             **/test-results
           retention-days: 7
 
+  auth-guard:
+    name: Auth Guard (Go) - Build & Test
+    runs-on: ubuntu-24.04
+
+    permissions:
+      contents: read
+      actions: read
+
+    defaults:
+      run:
+        working-directory: packages/modules/user-containers/auth-guard
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: packages/modules/user-containers/auth-guard/go.mod
+          cache-dependency-path: packages/modules/user-containers/auth-guard/go.sum
+
+      - name: Download Go modules
+        run: go mod download
+
+      - name: Run tests with race detector
+        run: go test ./... -v -race
+
+      - name: Build binary (linux/amd64)
+        run: make build-linux-amd64 GO=go
+
+      - name: Verify binary exists
+        run: |
+          if [ ! -f auth-guard-linux-amd64 ]; then
+            echo "ERROR: Binary auth-guard-linux-amd64 not found"
+            exit 1
+          fi
+          file auth-guard-linux-amd64
+          ls -lh auth-guard-linux-amd64
+
   visual-regression:
     name: Visual Regression Tests
     runs-on: ubuntu-24.04

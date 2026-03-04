@@ -7,7 +7,6 @@ export const makeStoryArgs = (): StoryArgs => ({
     user_container_id: '1',
     container_name: 'My Super Server',
     image_id: '1',
-    oauth: [],
     runner: { id: 'none' },
     created_at: new Date().toISOString(),
     last_watchdog_at: null,

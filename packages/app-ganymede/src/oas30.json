@@ -2180,6 +2180,197 @@
           "4XX": { "$ref": "#/components/responses/errors" }
         }
       }
+    },
+    "/internal/oauth/clients": {
+      "post": {
+        "summary": "Register a new OAuth client (gateway-only)",
+        "tags": ["Internal"],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Gateway-Token",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "redirect_uris": {
+                    "type": "array",
+                    "items": { "type": "string", "format": "uri" }
+                  },
+                  "grants": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  },
+                  "access_token_lifetime": { "type": "integer" },
+                  "refresh_token_lifetime": { "type": "integer" },
+                  "label": { "type": "string" }
+                },
+                "required": ["redirect_uris", "grants"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "OAuth client created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "client_id": { "type": "string" },
+                    "client_secret": { "type": "string" },
+                    "redirect_uris": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "grants": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/internal/oauth/clients/{client_id}": {
+      "delete": {
+        "summary": "Delete an OAuth client (gateway-only)",
+        "tags": ["Internal"],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Gateway-Token",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OAuth client deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deleted": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/internal/projects/{project_id}/members": {
+      "post": {
+        "summary": "Add member to project (gateway-only)",
+        "tags": ["Internal"],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Gateway-Token",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user_id": { "type": "string", "format": "uuid" }
+                },
+                "required": ["user_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Member added",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
+    },
+    "/internal/projects/{project_id}/members/{user_id}": {
+      "delete": {
+        "summary": "Remove member from project (gateway-only)",
+        "tags": ["Internal"],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Gateway-Token",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Member removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": { "$ref": "#/components/responses/errors" }
+        }
+      }
     }
   },
   "components": {

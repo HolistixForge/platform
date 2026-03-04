@@ -16,8 +16,7 @@ import { setupCollabRoutes } from './routes/collab';
 import { setupPermissionsRoutes } from './routes/permissions';
 import { setupMembersRoutes } from './routes/members';
 import { setupRolesRoutes } from './routes/roles';
-import { setupProtectedServicesRoutes } from './routes/protected-services';
-import { setupOauthRoutes } from './routes/oauth';
+import { setupContainerAccessRoutes } from './routes/container-access';
 import oas from './oas30.json';
 import {
   initializeGatewayForOrganization,
@@ -33,7 +32,6 @@ import {
 } from './vpn/vpn-manager';
 import {
   globalLimiter,
-  oauthLimiter,
   apiLimiter,
   isRateLimitingEnabled,
 } from './middleware/rate-limiter';
@@ -56,7 +54,6 @@ export const setupExpressApp = (options?: {
     router: express.Router,
     rateLimiters: {
       api?: express.RequestHandler;
-      oauth?: express.RequestHandler;
     }
   ) => void;
 }) => {
@@ -105,15 +102,13 @@ export const setupExpressApp = (options?: {
   const router = express.Router();
   const rateLimiters = {
     api: isRateLimitingEnabled() ? apiLimiter : undefined,
-    oauth: isRateLimitingEnabled() ? oauthLimiter : undefined,
   };
 
   setupCollabRoutes(router, rateLimiters.api);
   setupPermissionsRoutes(router, rateLimiters.api);
   setupMembersRoutes(router, rateLimiters.api);
   setupRolesRoutes(router, rateLimiters.api);
-  setupProtectedServicesRoutes(router, rateLimiters.api);
-  setupOauthRoutes(router, rateLimiters.oauth);
+  setupContainerAccessRoutes(router, rateLimiters.api);
 
   // Additional routes (e.g., test routes)
   if (options?.setupAdditionalRoutes) {
