@@ -62,10 +62,10 @@
         .trigger-non-active {
           background-color: var(--color-button-blue);
           &:before {
-            @include left-curve('%23288eb9');
+            @include left-curve('%2316b3eb');
           }
           &:after {
-            @include left-curve('%23288eb9');
+            @include left-curve('%2316b3eb');
           }
         }
       }
@@ -74,10 +74,10 @@
         background: var(--color-bg-app);
         &:before {
           left: -33px;
-          @include left-curve('%23141432');
+          @include left-curve('%23050517');
         }
         &:after {
-          @include left-curve('%23141432');
+          @include left-curve('%23050517');
         }
       }
 
@@ -85,10 +85,10 @@
         background: var(--primary-500);
         &:before {
           left: -33px;
-          @include left-curve('%23a35bbb');
+          @include left-curve('%237d40c8');
         }
         &:after {
-          @include left-curve('%23a35bbb');
+          @include left-curve('%237d40c8');
         }
       }
 
