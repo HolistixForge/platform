@@ -438,6 +438,18 @@ echo "👤 App User: ${APP_DB_USER} (credentials in .env.ganymede)"
 echo "🌐 Domain: ${DOMAIN}"
 echo "📦 Gateway Pool: ${GATEWAY_POOL_SIZE} gateways ready"
 echo ""
+# Register the environment with systemd so it comes back after a reboot.
+# envctl.sh backgrounds Ganymede with a pid file rather than registering a
+# service, so without this it stays down and nginx answers 502.
+if command -v systemctl >/dev/null 2>&1 \
+  && systemctl list-unit-files "holistix-env@.service" >/dev/null 2>&1 \
+  && systemctl cat "holistix-env@.service" >/dev/null 2>&1; then
+  if sudo systemctl enable "holistix-env@${ENV_NAME}" >/dev/null 2>&1; then
+    echo "🔁 Registered with systemd: holistix-env@${ENV_NAME} (starts on boot)"
+    echo ""
+  fi
+fi
+
 echo "🔑 Database Admin Credentials (for manual operations):"
 echo "   User: postgres"
 echo "   Password: devpassword"

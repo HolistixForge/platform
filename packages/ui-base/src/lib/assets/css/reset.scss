@@ -8,6 +8,21 @@
   font-family: 'Roboto', sans-serif;
 }
 
+/**
+ * Form controls default to the UA `ButtonFace` background (#EFEFEF in Chrome).
+ * Tailwind's preflight used to neutralize it; Tailwind was removed in
+ * aeeaeba5 and nothing replaced this rule, so every button without an explicit
+ * background rendered as a light grey box with white text (illegible).
+ * Components own their own background — the element must contribute none.
+ */
+button,
+[type='button'],
+[type='reset'],
+[type='submit'] {
+  background-color: transparent;
+  background-image: none;
+}
+
 html body,
 .root {
   color: var(--white);

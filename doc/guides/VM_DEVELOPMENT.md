@@ -247,26 +247,24 @@ journalctl -u coredns -f
 
 ### What survives a reboot
 
-Verified by stopping and starting the VM:
+Everything, verified by stopping and starting the VM with no manual step
+afterwards: Docker, PostgreSQL, Nginx, CoreDNS and the build server come back
+as their own units, and `holistix-env@<env>` brings Ganymede and the gateway
+pool back on top of them.
 
-| Layer                                                 | After reboot       |
-| ----------------------------------------------------- | ------------------ |
-| Docker, PostgreSQL, Nginx, CoreDNS, build server      | back automatically |
-| Observability containers (`--restart unless-stopped`) | back automatically |
-| Gateway pool containers                               | **stay stopped**   |
-| Ganymede (started by `envctl.sh`, not a unit)         | **stays stopped**  |
-
-So the infrastructure layer is self-healing but the application layer is not.
-Bring it back with:
+`create-env.sh` enables that unit for each environment it creates. For one made
+before the unit existed:
 
 ```bash
-./vmctl.sh shell 'cd /root/workspace/monorepo && ./scripts/local-dev/envctl.sh start <env>'
-./vmctl.sh shell 'docker start $(docker ps -aq --filter name=gw-pool-<env>)'
+./vmctl.sh shell 'systemctl enable --now holistix-env@<env>'
 ```
 
-Putting Ganymede under systemd and giving pool containers a restart policy is
-outstanding work for production — see
-[#36](https://github.com/HolistixForge/platform/issues/36).
+**Order matters here, which is why the gateway containers carry no Docker
+restart policy.** Docker starts its containers before Ganymede. A
+self-restarting gateway therefore fetches `/gateway/config`, takes a 502, and
+parks itself idle with no project rooms — the collaboration WebSocket then
+answers 404 for every project while everything _looks_ healthy. The unit waits
+for Ganymede to listen, then starts the pool.
 
 ### Editing code
 

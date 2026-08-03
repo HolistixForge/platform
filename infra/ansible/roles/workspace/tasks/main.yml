@@ -99,6 +99,36 @@
     recurse: true
   failed_when: false
 
+# Without this, Ganymede does not survive a reboot — envctl.sh backgrounds it
+# with a pid file rather than registering a service — and every request through
+# nginx returns 502 until someone runs `envctl.sh start` by hand.
+- name: Install the per-environment systemd template unit
+  ansible.builtin.template:
+    src: holistix-env@.service.j2
+    dest: /etc/systemd/system/holistix-env@.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reload systemd units
+
+- name: Enable the unit for every existing environment
+  ansible.builtin.shell: |
+    set -o pipefail
+    changed=0
+    for dir in {{ holistix_local_dev_dir }}/*/; do
+      [ -f "${dir}/.env.ganymede" ] || continue
+      env_name="$(basename "${dir}")"
+      if ! systemctl is-enabled --quiet "holistix-env@${env_name}" 2>/dev/null; then
+        systemctl enable "holistix-env@${env_name}" >/dev/null
+        changed=1
+      fi
+    done
+    echo "${changed}"
+  args:
+    executable: /bin/bash
+  register: workspace_env_units
+  changed_when: workspace_env_units.stdout | trim == '1'
+
 - name: Install convenience shell aliases
   ansible.builtin.copy:
     dest: /etc/profile.d/holistix-aliases.sh
