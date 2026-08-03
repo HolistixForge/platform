@@ -7,12 +7,10 @@ import {
 } from '@holistix-forge/user-containers';
 import {
   NewContainerForm,
-  TContainerRunnerFrontend,
-  UserContainerCardInternal,
+  ServerCard,
 } from '@holistix-forge/user-containers/frontend';
 import { useLocalSharedData } from '@holistix-forge/collab/frontend';
 
-import { ProjectSidebar } from '../sidebar';
 import { useProject } from '@holistix-forge/frontend-data';
 
 //
@@ -28,9 +26,9 @@ export const ResourcePage = () => {
 
   const [displayNewServerForm, setDisplayNewServerForm] = useState(false);
 
-  const array: string[] = [];
+  const containerIds: string[] = [];
 
-  userContainers.forEach((p) => array.push(p.user_container_id));
+  userContainers.forEach((c) => containerIds.push(c.user_container_id));
 
   return (
     <>
@@ -45,26 +43,12 @@ export const ResourcePage = () => {
         <ResourceBar title="Resources" />
         <div style={{ padding: '96px' }}>
           <ServerStack onNewServerClick={() => setDisplayNewServerForm(true)}>
-            {array.map((ucid) => (
-              <UserContainerCardInternal
-                container={userContainers.get(ucid) as TUserContainer}
-                image={undefined}
-                onDelete={function (): Promise<void> {
-                  throw new Error('Function not implemented.');
-                }}
-                onOpenService={function (name: string): void {
-                  throw new Error('Function not implemented.');
-                }}
-                onSelectRunner={function (runner_id: string): Promise<void> {
-                  throw new Error('Function not implemented.');
-                }}
-                runners={new Map<string, TContainerRunnerFrontend>()}
-              />
+            {containerIds.map((ucid) => (
+              <ServerCard key={ucid} container_id={ucid} />
             ))}
           </ServerStack>
-        </div>{' '}
+        </div>
       </div>
-      <ProjectSidebar active="project-main" />
 
       {displayNewServerForm && (
         <NewContainerForm

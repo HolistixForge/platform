@@ -1,8 +1,10 @@
 import { FC } from 'react';
 
 import {
+  DEFAULT_DASHBOARD_TAB_TITLE,
   MAX_TAB_ROW,
   ReadOnlyTree,
+  RESOURCES_TAB_TITLE,
   TabPath,
   TabPayload,
   TTabsSharedData,
@@ -50,8 +52,14 @@ export const EditorTabsSystemLogic = () => {
 
   const onTabDelete = (path: string[]) => {
     // TODO: confirm before deleting
-    if (path[0] !== 'node-editor-1' && path[0] !== 'resources-grid')
-      dispatcher.dispatch({ type: 'tabs:delete-tab', path });
+    // The default tabs are recreated on project:init, so deleting them
+    // would only make them come back on the next reload.
+    const isDefaultTab =
+      path.length === 1 &&
+      (path[0] === DEFAULT_DASHBOARD_TAB_TITLE ||
+        path[0] === RESOURCES_TAB_TITLE);
+
+    if (!isDefaultTab) dispatcher.dispatch({ type: 'tabs:delete-tab', path });
   };
 
   const onTabRowAdd = (path: string[]) => {

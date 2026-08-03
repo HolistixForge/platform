@@ -382,16 +382,22 @@ const WhiteboardWhiteboard = ({
         updateLayerTree: handleUpdateLayerTree,
       }}
     >
-      <div style={{ display: 'flex', height: '100%' }}>
+      <div style={{ display: 'flex', height: '100%', position: 'relative' }}>
         <div
           style={{
-            flex: '0 0 ' + (showLayersPanel ? '240px' : '24px'),
+            // Overlaid rather than a flex sibling, so the canvas keeps the full
+            // width and simply continues underneath. As a flex child the panel
+            // consumed 240px and the board visibly stopped at its edge.
+            position: 'absolute',
+            top: 0,
+            bottom: 0,
             // Clear the project sidebar, which is `position: fixed; left: 15px`
             // (see ui-base/src/lib/sidebar/sidebar.css) and therefore sits
             // outside this flex flow. Without the offset the layers panel is
             // drawn on top of it and the sidebar becomes unreachable.
-            marginLeft: PROJECT_SIDEBAR_CLEARANCE,
-            transition: 'flex 120ms ease',
+            left: PROJECT_SIDEBAR_CLEARANCE,
+            width: showLayersPanel ? 240 : 24,
+            transition: 'width 120ms ease',
             background: 'var(--surface-900)',
             border: '1px solid var(--color-border, #e5e7eb)',
             borderRadius: 6,
