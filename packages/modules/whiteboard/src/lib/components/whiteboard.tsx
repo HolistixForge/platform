@@ -42,6 +42,7 @@ import { CustomStoryEdge } from './edge';
 import { RightPanels, usePanelContext } from './right-panels';
 import { ModeIndicator } from './ModeIndicator';
 import { LayersTreePanel } from './panels/layers-tree-panel';
+
 import { LayerContextProvider } from './layer-context';
 import { buildNodeTree } from '../layer-tree-utils';
 import { TGraphView } from '../whiteboard-types';
@@ -51,6 +52,16 @@ import {
   TLayerTreeCollection,
 } from '../layer-tree-types';
 import { useModuleExports } from '@holistix-forge/module/frontend';
+
+/**
+ * Horizontal room reserved for the project sidebar on the left edge.
+ *
+ * The sidebar is `position: fixed; left: 15px` with 32px icons plus padding,
+ * so it never participates in this component's layout. The layers panel used
+ * to start at x=0 and cover it, which is why the sidebar looked like it had
+ * been removed.
+ */
+const PROJECT_SIDEBAR_CLEARANCE = 80;
 
 //
 
@@ -375,6 +386,11 @@ const WhiteboardWhiteboard = ({
         <div
           style={{
             flex: '0 0 ' + (showLayersPanel ? '240px' : '24px'),
+            // Clear the project sidebar, which is `position: fixed; left: 15px`
+            // (see ui-base/src/lib/sidebar/sidebar.css) and therefore sits
+            // outside this flex flow. Without the offset the layers panel is
+            // drawn on top of it and the sidebar becomes unreachable.
+            marginLeft: PROJECT_SIDEBAR_CLEARANCE,
             transition: 'flex 120ms ease',
             background: 'var(--surface-900)',
             border: '1px solid var(--color-border, #e5e7eb)',
