@@ -326,9 +326,23 @@ listener holds `127.0.0.53:53`. The `coredns` role disables it via
 `/etc/systemd/resolved.conf.d/holistix-no-stub.conf`. Verify with
 `ss -tulnp | grep :53`.
 
-**The host cannot resolve `*.dev.test`** — re-run `./vmctl.sh dns test`; the
-guest address changes if the VM is recreated. Confirm with
-`dscacheutil -q host -a name ganymede.dev.test`.
+**The browser says `DNS_PROBE_FINISHED_NXDOMAIN`** — two causes, in order of
+likelihood:
+
+1. `/etc/resolver/test` does not exist. `./vmctl.sh dns test` needs `sudo`, so
+   it has to be run from your own terminal — it cannot work from a script or
+   an agent with no TTY. Check with `ls /etc/resolver/`.
+2. The resolver file exists but Chrome or Edge is bypassing it. Both enable
+   DNS-over-HTTPS by default, which ignores `/etc/resolver` entirely. Turn it
+   off at `chrome://settings/security` -> "Use secure DNS". Safari follows the
+   system resolver and is unaffected.
+
+Confirm the VM side independently of macOS with
+`dig +short @$(./vmctl.sh ip) ganymede.dev.test` — if that answers, the VM is
+fine and the problem is on the host.
+
+The guest address changes if the VM is recreated, so re-run `./vmctl.sh dns
+test` after a `destroy`/`up` cycle.
 
 **Browser still warns about the certificate** — `./vmctl.sh trust-ca`, then
 fully restart the browser. Firefox needs a separate manual import.

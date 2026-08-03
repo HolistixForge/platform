@@ -220,13 +220,43 @@ cmd_dns() {
     warn "    ./scripts/local-dev/create-env.sh dev-001 dev.test"
   fi
 
+  # Fail loudly rather than leaving a half-configured resolver behind: this
+  # needs an interactive terminal for the sudo password.
+  if ! sudo -n true 2>/dev/null && [ ! -t 0 ]; then
+    die "This needs sudo and there is no terminal to ask for a password.
+     Run it yourself:  $0 dns ${tld}"
+  fi
+
   info "Writing /etc/resolver/${tld} -> ${ip} (sudo required)"
   sudo mkdir -p /etc/resolver
   printf 'nameserver %s\n' "${ip}" | sudo tee "/etc/resolver/${tld}" >/dev/null
   sudo dscacheutil -flushcache 2>/dev/null || true
   sudo killall -HUP mDNSResponder 2>/dev/null || true
-  ok "Host resolver configured for .${tld}"
-  echo "   verify:  dscacheutil -q host -a name ganymede.domain.${tld}"
+
+  # Prove it works instead of asserting it does.
+  local probe="ganymede.dev.${tld}"
+  local resolved
+  resolved="$(dscacheutil -q host -a name "${probe}" 2>/dev/null \
+    | awk '/^ip_address:/ {print $2; exit}')"
+
+  if [ "${resolved}" = "${ip}" ]; then
+    ok "Host resolver configured — ${probe} resolves to ${ip}"
+  else
+    warn "Wrote /etc/resolver/${tld}, but ${probe} resolved to '${resolved:-nothing}'."
+    warn "If you have no environment on .${tld} yet this is expected; otherwise check"
+    warn "that CoreDNS is serving the zone:  $0 shell 'systemctl status coredns'"
+  fi
+
+  cat <<EOF
+
+${C_BOLD}If the browser still says NXDOMAIN${C_RESET}
+  Chrome and Edge bypass /etc/resolver when "Use secure DNS" (DNS-over-HTTPS)
+  is on, which is the default. Turn it off for local development:
+      chrome://settings/security  ->  Use secure DNS  ->  off
+  Firefox has the same setting under Network Settings -> Enable DNS over HTTPS.
+  Safari follows the system resolver and needs no change.
+
+EOF
 }
 
 cmd_trust_ca() {
