@@ -239,11 +239,18 @@ jobs:
       - name: Comment on PR with visual regression results
         if: github.event_name == 'pull_request' && steps.visual-tests.outputs.has_failures == 'true'
         uses: actions/github-script@v7
+        # Values are passed through the environment, never interpolated into the
+        # script body: diff filenames are wrapped in backticks, which would close
+        # the template literal below and break the script (or allow injection).
+        env:
+          FAILED_PACKAGES: ${{ steps.visual-tests.outputs.FAILED_PACKAGES }}
+          DIFF_FILES: ${{ steps.visual-tests.outputs.DIFF_FILES }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         with:
           script: |
-            const failedPackages = `${{ steps.visual-tests.outputs.FAILED_PACKAGES }}`;
-            const diffFiles = `${{ steps.visual-tests.outputs.DIFF_FILES }}`;
-            const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
+            const failedPackages = process.env.FAILED_PACKAGES || '';
+            const diffFiles = process.env.DIFF_FILES || '';
+            const runUrl = process.env.RUN_URL;
 
             const body = `## 📸 Visual Regression Detected
 
