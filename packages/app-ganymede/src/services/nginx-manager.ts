@@ -65,8 +65,13 @@ export class NginxManager {
       `Creating config for ${orgDomain} → ${gatewayAddress}`
     );
 
-    // Escape dots in domain for regex
-    const domainEscaped = domain.replace(/\./g, '\\\\.');
+    // Escape dots in domain for the regex server_name.
+    // The result is embedded into a template that already treats `\.` as a
+    // literal-dot matcher, so we must produce a SINGLE backslash here. Using
+    // '\\\\.' (two backslashes) yields `domain\\.local`, which in PCRE means
+    // "backslash + any char" and never matches the real hostname — silently
+    // routing every org-*/uc-* request to the default (frontend) server.
+    const domainEscaped = domain.replace(/\./g, '\\.');
 
     // Create nginx config (Stage 1: SSL termination, route to gateway)
     // Use regex server_name to match nested subdomains:
