@@ -23,8 +23,17 @@ export interface UsersTabProps {
   rolesLoading: boolean;
   getUserRoles: (user_id: string) => Role[];
   readonly?: boolean;
-  onAssignRole: (user_id: string, role_id: string, scope: 'org' | 'project', project_id?: string) => Promise<void>;
-  onRemoveRole: (user_id: string, role_id: string, project_id?: string) => Promise<void>;
+  onAssignRole: (
+    user_id: string,
+    role_id: string,
+    scope: 'org' | 'project',
+    project_id?: string
+  ) => Promise<void>;
+  onRemoveRole: (
+    user_id: string,
+    role_id: string,
+    project_id?: string
+  ) => Promise<void>;
 }
 
 const UserListItem = ({
@@ -62,7 +71,9 @@ const UserListItem = ({
         {roles.length === 0 ? (
           <span className="no-roles">(no roles)</span>
         ) : (
-          <span className="role-count">{roles.length} role{roles.length !== 1 ? 's' : ''}</span>
+          <span className="role-count">
+            {roles.length} role{roles.length !== 1 ? 's' : ''}
+          </span>
         )}
       </div>
     </div>
@@ -126,7 +137,9 @@ export const UsersTab = ({
       <div className="panel-users">
         <header>
           <h3>Organization Members</h3>
-          <p className="member-count">{members.length} member{members.length !== 1 ? 's' : ''}</p>
+          <p className="member-count">
+            {members.length} member{members.length !== 1 ? 's' : ''}
+          </p>
         </header>
 
         <div className="search-box">
@@ -144,7 +157,9 @@ export const UsersTab = ({
             <div className="user-list">
               {filteredMembers.length === 0 ? (
                 <p className="empty-state">
-                  {searchQuery ? 'No members match your search.' : 'No members in organization.'}
+                  {searchQuery
+                    ? 'No members match your search.'
+                    : 'No members in organization.'}
                 </p>
               ) : (
                 filteredMembers.map((member) => (
@@ -159,7 +174,10 @@ export const UsersTab = ({
               )}
             </div>
           </ScrollArea.Viewport>
-          <ScrollArea.Scrollbar className="scroll-area-scrollbar" orientation="vertical">
+          <ScrollArea.Scrollbar
+            className="scroll-area-scrollbar"
+            orientation="vertical"
+          >
             <ScrollArea.Thumb className="scroll-area-thumb" />
           </ScrollArea.Scrollbar>
         </ScrollArea.Root>

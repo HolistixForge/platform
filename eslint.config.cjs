@@ -10,6 +10,10 @@ module.exports = [
       '**/out-tsc',
       '**/vite.config.*.timestamp*',
       '**/vitest.config.*.timestamp*',
+      // Storybook build artefacts: generated bundles, not sources.
+      '**/storybook-static',
+      '**/__screenshots__',
+      '**/__diff_output__',
     ],
   },
   {

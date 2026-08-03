@@ -29,6 +29,7 @@ Welcome to the Holistix Forge documentation! This hub will guide you to the righ
 - 🧪 **[Test Modules](guides/MODULES_TESTING.md)** - Module stories and fake collab
 - 📦 **[Use Nx Workspace](guides/NX_WORKSPACE.md)** - Monorepo commands and workflows
 - 🎨 **[Build UI Components](guides/MODULES_TESTING.md)** - Module development with Storybook
+- 📸 **[Storybook & Visual Regression](guides/STORYBOOK.md)** - Story conventions, screenshot baselines, CI
 - 🔧 **[Package Architecture](guides/PACKAGE_ARCHITECTURE.md)** - React dependency management and package patterns
 - 🚀 **[Gateway Build Distribution](guides/GATEWAY_BUILD_DISTRIBUTION.md)** - HTTP build distribution system
 - 🔌 **[Module Reference](../packages/modules/README.md)** - Individual module documentation
@@ -94,8 +95,9 @@ doc/
 1. [Local Development Setup](guides/LOCAL_DEVELOPMENT.md)
 2. [Testing Guide](guides/TESTING_GUIDE.md) (React components, LocalStorage)
 3. [Module Testing with Storybook](guides/MODULES_TESTING.md)
-4. [Nx Workspace Guide](guides/NX_WORKSPACE.md)
-5. [API Reference](reference/API.md) (for backend integration)
+4. [Storybook & Visual Regression](guides/STORYBOOK.md)
+5. [Nx Workspace Guide](guides/NX_WORKSPACE.md)
+6. [API Reference](reference/API.md) (for backend integration)
 
 ### Backend Developer
 

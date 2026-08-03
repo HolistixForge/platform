@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import './countdown.scss';
-interface CountdownProps {
+export interface CountdownProps {
   targetDate: Date;
   onComplete: () => void;
 }
