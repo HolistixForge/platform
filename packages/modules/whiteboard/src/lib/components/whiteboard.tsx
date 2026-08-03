@@ -374,7 +374,9 @@ const WhiteboardWhiteboard = ({
       : LAYERS_PANEL_COLLAPSED_WIDTH;
     const root = document.documentElement;
     root.style.setProperty(LEFT_RAIL_VAR, `${width + LEFT_RAIL_GAP}px`);
-    return () => root.style.removeProperty(LEFT_RAIL_VAR);
+    return () => {
+      root.style.removeProperty(LEFT_RAIL_VAR);
+    };
   }, [showLayersPanel]);
 
   const gv: TGraphView | undefined = useLocalSharedData<TWhiteboardSharedData>(

@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/rules-of-hooks */
 import {
   createContext,
   FC,
@@ -138,7 +137,11 @@ export const NodeWrapper =
       dispatcher.dispatch({ type: 'whiteboard:expand-node', nid: id, viewId });
 
     const filterOut = () =>
-      dispatcher.dispatch({ type: 'whiteboard:filter-out-node', nid: id, viewId });
+      dispatcher.dispatch({
+        type: 'whiteboard:filter-out-node',
+        nid: id,
+        viewId,
+      });
 
     const opened = isNodeOpened(nv.status);
 
@@ -184,7 +187,9 @@ export const NodeWrapper =
 
       let newSize = { width: startSize.width, height: startSize.height };
 
-      nodeRef.current && (nodeRef.current.style.border = `dashed 1px #fff`);
+      if (nodeRef.current) {
+        nodeRef.current.style.border = `dashed 1px #fff`;
+      }
 
       const handleResizeMove = (e: globalThis.MouseEvent) => {
         const dx = (e.clientX - startPos.x) / zoom;
@@ -195,13 +200,16 @@ export const NodeWrapper =
           height: Math.floor(startSize.height + dy),
         };
 
-        nodeRef.current && (nodeRef.current.style.width = `${newSize.width}px`);
-        nodeRef.current &&
-          (nodeRef.current.style.height = `${newSize.height}px`);
+        if (nodeRef.current) {
+          nodeRef.current.style.width = `${newSize.width}px`;
+          nodeRef.current.style.height = `${newSize.height}px`;
+        }
       };
 
       const handleResizeEnd = () => {
-        nodeRef.current && (nodeRef.current.style.border = `none`);
+        if (nodeRef.current) {
+          nodeRef.current.style.border = `none`;
+        }
 
         dispatcher.dispatch({
           type: 'whiteboard:resize-node',
@@ -251,7 +259,19 @@ export const NodeWrapper =
                 })
               }
             >
-              <NodeComponent />
+              {/* While move mode is on, the node's own content must not take
+                  the pointer — the overlay below owns it. A `<canvas>` such as
+                  Excalidraw's otherwise handles the drag itself and swallows
+                  it, which is why move mode worked on cards and groups (plain
+                  elements, no capture) but not on drawings. */}
+              <div
+                style={{
+                  height: '100%',
+                  pointerEvents: mode === 'move-node' ? 'none' : undefined,
+                }}
+              >
+                <NodeComponent />
+              </div>
               <EasyConnect id={id} />
               <MoveNodeMode moveNodeMode={mode === 'move-node'} />
             </div>
