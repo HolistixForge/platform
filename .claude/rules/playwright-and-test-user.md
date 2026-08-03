@@ -90,13 +90,33 @@ A shared test user exists for automated browser testing and debugging.
 
 ### Credentials
 
-| Field          | Value               |
-| -------------- | ------------------- |
-| **Email**      | `claude@test.local` |
-| **Password**   | `TestUser123!`      |
-| **Username**   | `claude-test`       |
-| **First Name** | `Claude`            |
-| **Last Name**  | `Test`              |
+Two accounts exist, because testing the collaborative whiteboard needs a
+second person in the room — one browser profile per account, both editing the
+same project.
+
+| Field          | Account 1           | Account 2            |
+| -------------- | ------------------- | -------------------- |
+| **Email**      | `claude@test.local` | `claude2@test.local` |
+| **Password**   | `TestUser123!`      | `TestUser123!`       |
+| **Username**   | `claude-test`       | `claude-test-2`      |
+| **First Name** | `Claude`            | `Claude`             |
+| **Last Name**  | `Test`              | `Two`                |
+| **Org role**   | owner               | admin                |
+
+Account 2 is an org **admin**, not a plain member: `gateway-init` only
+auto-assigns a gateway role for `owner` and `admin`, so a `member` would be
+rejected on the collaboration WebSocket for lack of project access.
+
+Create or repair both, plus their shared organization and project, with:
+
+```bash
+node scripts/local-dev/verify-collab-websocket.mjs <env> --bootstrap
+```
+
+It is idempotent and prints the credentials when it finishes. Note that a
+gateway already running when an account is added will keep rejecting it until
+it is reallocated (`envctl.sh restart <env> gateway`) — it loads the member
+list at initialization.
 
 ### Usage
 

@@ -166,8 +166,15 @@ cmd_provision() {
   info "Installing Ansible collections"
   (cd "${ANSIBLE_DIR}" && ansible-galaxy collection install -r requirements.yml >/dev/null)
 
-  info "Running the playbook against '${VM_NAME}'"
-  (cd "${ANSIBLE_DIR}" && ansible-playbook site.yml "$@")
+  # The guest has several NICs and its default route is Lima's user-mode one,
+  # which the host cannot reach. Tell the playbook which address to publish.
+  local guest_ip
+  guest_ip="$(vm_ip)"
+  [ -n "${guest_ip}" ] || die "Could not determine a host-reachable guest address"
+
+  info "Running the playbook against '${VM_NAME}' (public IP ${guest_ip})"
+  (cd "${ANSIBLE_DIR}" && \
+    ansible-playbook site.yml -e "holistix_public_ip=${guest_ip}" "$@")
 
   ok "Provisioning complete"
   cat <<EOF

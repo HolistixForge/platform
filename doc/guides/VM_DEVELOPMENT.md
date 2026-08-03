@@ -142,7 +142,7 @@ explicitly rather than inferring it from a page that loads.
 
 ```bash
 ./vmctl.sh verify-ws dev-001 --bootstrap   # first run on a fresh environment
-./vmctl.sh verify-ws dev-001 --clients 5   # afterwards
+./vmctl.sh verify-ws dev-001 --clients 4   # afterwards
 ```
 
 `scripts/local-dev/verify-collab-websocket.mjs` runs on the platform host and
@@ -162,10 +162,25 @@ gateway container's nginx, the `app-gateway` process, and the y-websocket room:
 
 The room is per project, so a freshly created environment has nothing to join.
 `--bootstrap` creates what is missing through the real Ganymede API — signup
-(which also creates the organization, via `proc_users_new`) then `POST
-/projects` — rather than inserting rows, so the permissions the gateway checks
-are built exactly as they are for a human. It is idempotent and skips anything
-that already exists. The test removes the marker key it wrote before exiting.
+(which also creates the organization, via `proc_users_new`), adding the second
+account to that organization, then `POST /projects` — rather than inserting
+rows, so the permissions the gateway checks are built exactly as they are for a
+human. Every step is individually idempotent, so it also repairs a half-built
+environment. The test removes the marker key it wrote before exiting.
+
+It creates **two** accounts and spreads the clients across both, which is what
+live collaboration actually is and proves per-user authorisation rather than
+one token replayed N times:
+
+| Account              | Password       | Org role |
+| -------------------- | -------------- | -------- |
+| `claude@test.local`  | `TestUser123!` | owner    |
+| `claude2@test.local` | `TestUser123!` | admin    |
+
+Admin, not member: `gateway-init` only auto-assigns a gateway role for `owner`
+and `admin`, so a plain member is rejected on the WebSocket. And a gateway that
+was already running when the account was added keeps rejecting it until it is
+reallocated — it reads the member list at initialization.
 
 > The clients set `disableBc: true` on purpose. Without it, y-websocket
 > providers inside one Node process sync through `BroadcastChannel` and the

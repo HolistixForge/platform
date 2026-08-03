@@ -356,8 +356,16 @@ sudo service nginx reload
 # 10. Create CoreDNS zone file
 echo "🌐 Creating CoreDNS zone file..."
 
-# Get container IP
-DEV_CONTAINER_IP="127.0.0.1"
+# The address this zone hands out has to work for every consumer:
+#   - a browser on the host OS, resolving through /etc/resolver or delegation
+#   - gateway containers on the Docker bridge
+#   - this machine itself
+#
+# 127.0.0.1 only ever worked in the dev-container setup, where Docker published
+# 80/443 onto the host's own loopback. On a VM or a server it points each
+# caller at itself. PLATFORM_HOST_IP is exported by infra/ansible (see the
+# docker role) and should be an address the host OS can route to.
+DEV_CONTAINER_IP="${PLATFORM_HOST_IP:-127.0.0.1}"
 
 # Create zones directory if it doesn't exist
 sudo mkdir -p /etc/coredns/zones

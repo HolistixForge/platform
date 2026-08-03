@@ -67,6 +67,11 @@ coredns_upstreams:
   - 8.8.8.8
   - 8.8.4.4
 coredns_manage_resolv_conf: true
+# The address the DNS zones hand out. It must be routable from the host OS
+# browser, not just from inside the guest — the default route address is wrong
+# on a VM with several NICs, so infra/vm/vmctl.sh overrides this with the one
+# it knows the host can reach.
+holistix_public_ip: "{{ ansible_facts['default_ipv4']['address'] }}"
 # Set false on a production host that uses an external DNS provider.
 holistix_install_coredns: true
 

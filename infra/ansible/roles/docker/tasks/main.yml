@@ -84,13 +84,22 @@
 # create-env.sh and gateway-pool.sh default to 172.17.0.1 and honour
 # DOCKER_HOST_IP. On a real VM the default is already correct, but we write
 # the detected value out so envctl runs pick it up even on a custom bridge.
-- name: Persist DOCKER_HOST_IP for the local-dev scripts
+- name: Persist the network addresses the local-dev scripts need
   ansible.builtin.copy:
-    dest: /etc/profile.d/holistix-docker.sh
+    dest: /etc/profile.d/holistix-network.sh
     mode: '0644'
     content: |
       # Managed by Ansible (infra/ansible/roles/docker)
+      # Reached by containers on the Docker bridge.
       export DOCKER_HOST_IP={{ holistix_docker_host_ip }}
+      # Handed out by the CoreDNS zone files, so it must be routable from the
+      # host OS browser as well as from inside the guest and its containers.
+      export PLATFORM_HOST_IP={{ holistix_public_ip }}
+
+- name: Remove the superseded profile snippet
+  ansible.builtin.file:
+    path: /etc/profile.d/holistix-docker.sh
+    state: absent
 
 - name: Show the Docker host IP
   ansible.builtin.debug:

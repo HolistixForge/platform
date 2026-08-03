@@ -168,124 +168,193 @@ async function waitFor(label, check, timeout, interval = 100) {
 // ---------------------------------------------------------------------------
 // Bootstrap: make sure there is something to collaborate on
 // ---------------------------------------------------------------------------
+const TEST_ACCOUNTS = [
+  {
+    email: 'claude@test.local',
+    password: 'TestUser123!',
+    username: 'claude-test',
+    firstname: 'Claude',
+    lastname: 'Test',
+  },
+  {
+    email: 'claude2@test.local',
+    password: 'TestUser123!',
+    username: 'claude-test-2',
+    firstname: 'Claude',
+    lastname: 'Two',
+  },
+];
+
+/** Sign a user access token with the environment key. */
+function signUserToken(jwt, privateKey, account) {
+  // authenticateJwtUser accepts the 'token ' prefix only, not 'Bearer '.
+  return jwt.sign(
+    {
+      type: 'access_token',
+      user: { id: account.user_id, username: `local:${account.username}` },
+    },
+    privateKey,
+    { algorithm: 'RS256', expiresIn: '30m' },
+  );
+}
+
+/** Create the account through the real signup route if it is missing. */
+async function ensureUser(db, api, domain, account) {
+  const find = () =>
+    db.query('SELECT user_id FROM users WHERE email = $1', [account.email]);
+
+  let row = await find();
+  if (row.rowCount > 0) {
+    info(`user ${account.email} already exists`);
+    return { ...account, user_id: row.rows[0].user_id, created: false };
+  }
+
+  const res = await fetch(`${api}/signup`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Origin: `https://${domain}`,
+    },
+    body: JSON.stringify(account),
+  }).catch((err) => {
+    throw new StageError(
+      `Cannot reach ${api}/signup: ${err.message}`,
+      'Is Ganymede running? ./scripts/local-dev/envctl.sh status <env>',
+    );
+  });
+
+  if (!res.ok) {
+    throw new StageError(
+      `Signup for ${account.email} failed with ${res.status}: ${(await res.text()).slice(0, 300)}`,
+    );
+  }
+
+  row = await find();
+  if (row.rowCount === 0) {
+    throw new StageError('Signup reported success but no user row appeared');
+  }
+  ok(`created user ${account.email}`);
+  return { ...account, user_id: row.rows[0].user_id, created: true };
+}
+
 /**
  * A freshly created environment has no user, organization or project, and the
  * collab room is per project — so there would be nothing to join.
  *
- * Creates them through the real Ganymede API rather than by inserting rows, so
- * the permissions the gateway later checks are built the same way they are for
- * a human signing up. Idempotent: each step is skipped when it already exists.
+ * Creates two accounts in one organization, which is what live collaboration
+ * actually needs: a second browser signed in as a different person. Everything
+ * goes through the real Ganymede API rather than direct inserts, so the
+ * permissions the gateway checks are built exactly as they are for a human.
+ *
+ * Every step is individually idempotent, so this also repairs a half-built
+ * environment (for instance one created before the second account existed).
+ *
+ * Returns the accounts and the project to test with.
  */
 async function bootstrap({ db, domain, privateKey, jwt }) {
   const previousStage = stage;
   stage = 'bootstrap';
 
-  const existing = await db.query('SELECT 1 FROM projects LIMIT 1');
-  if (existing.rowCount > 0) {
-    info('bootstrap: a project already exists, nothing to do');
-    stage = previousStage;
-    return;
-  }
-
-  step('Bootstrapping a user, organization and project');
+  step('Ensuring two test accounts share an organization and a project');
   const api = `https://ganymede.${domain}`;
   const prevTls = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
   try {
-    // Shared test account — see .claude/rules/playwright-and-test-user.md
-    const account = {
-      email: 'claude@test.local',
-      password: 'TestUser123!',
-      username: 'claude-test',
-      firstname: 'Claude',
-      lastname: 'Test',
-    };
+    const owner = await ensureUser(db, api, domain, TEST_ACCOUNTS[0]);
 
-    let user = await db.query('SELECT user_id FROM users WHERE email = $1', [
-      account.email,
-    ]);
-
-    if (user.rowCount === 0) {
-      const res = await fetch(`${api}/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Origin: `https://${domain}`,
-        },
-        body: JSON.stringify(account),
-      }).catch((err) => {
-        throw new StageError(
-          `Cannot reach ${api}/signup: ${err.message}`,
-          'Is Ganymede running? ./scripts/local-dev/envctl.sh status <env>'
-        );
-      });
-
-      if (!res.ok) {
-        throw new StageError(
-          `Signup failed with ${res.status}: ${(await res.text()).slice(0, 300)}`
-        );
-      }
-
-      user = await db.query('SELECT user_id FROM users WHERE email = $1', [
-        account.email,
-      ]);
-      if (user.rowCount === 0) {
-        throw new StageError('Signup reported success but no user row appeared');
-      }
-      ok(`created user ${account.email}`);
-    } else {
-      info(`user ${account.email} already exists`);
-    }
-
-    const userId = user.rows[0].user_id;
-
-    // proc_users_new creates an organization alongside the user, so this
-    // should always find one.
+    // proc_users_new creates an organization alongside the user.
     const org = await db.query(
       'SELECT organization_id, name FROM organizations WHERE owner_user_id = $1 ORDER BY created_at LIMIT 1',
-      [userId]
+      [owner.user_id],
     );
     if (org.rowCount === 0) {
       throw new StageError(
-        `No organization owned by ${userId}`,
-        'Signup normally creates one; check proc_users_new.'
+        `No organization owned by ${owner.user_id}`,
+        'Signup normally creates one; check proc_users_new.',
       );
     }
     const orgId = org.rows[0].organization_id;
     info(`organization: ${org.rows[0].name} (${orgId})`);
 
-    // authenticateJwtUser accepts the 'token ' prefix only, not 'Bearer '.
-    const token = jwt.sign(
-      {
-        type: 'access_token',
-        user: { id: userId, username: `local:${account.username}` },
-      },
-      privateKey,
-      { algorithm: 'RS256', expiresIn: '10m' }
-    );
-
-    const res = await fetch(`${api}/projects`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `token ${token}`,
-        Origin: `https://${domain}`,
-      },
-      body: JSON.stringify({
-        organization_id: orgId,
-        name: 'ws-smoke-test',
-        public: false,
-      }),
+    const ownerToken = signUserToken(jwt, privateKey, owner);
+    const authed = (extra = {}) => ({
+      'Content-Type': 'application/json',
+      Authorization: `token ${ownerToken}`,
+      Origin: `https://${domain}`,
+      ...extra,
     });
 
-    if (!res.ok) {
-      throw new StageError(
-        `Project creation failed with ${res.status}: ${(await res.text()).slice(0, 300)}`
+    // The second account joins as `admin`, not `member`. gateway-init only
+    // auto-assigns a gateway role for owner and admin — a plain member gets
+    // none and its WebSocket would be rejected for lack of project access.
+    const peer = await ensureUser(db, api, domain, TEST_ACCOUNTS[1]);
+
+    const membership = await db.query(
+      'SELECT role FROM organizations_members WHERE organization_id = $1 AND user_id = $2',
+      [orgId, peer.user_id],
+    );
+    if (membership.rowCount === 0 || membership.rows[0].role === 'member') {
+      const res = await fetch(`${api}/orgs/${orgId}/members`, {
+        method: 'POST',
+        headers: authed(),
+        body: JSON.stringify({ user_id: peer.user_id, role: 'admin' }),
+      });
+      if (!res.ok) {
+        throw new StageError(
+          `Adding ${peer.email} to the organization failed with ${res.status}: ${(await res.text()).slice(0, 300)}`,
+        );
+      }
+      ok(`${peer.email} added to the organization as admin`);
+    } else {
+      info(
+        `${peer.email} is already ${membership.rows[0].role} of the organization`,
       );
     }
-    const created = await res.json();
-    ok(`created project ws-smoke-test (${created.project_id})`);
+
+    // Project
+    const projectName = 'ws-smoke-test';
+    let project = await db.query(
+      'SELECT project_id FROM projects WHERE organization_id = $1 AND name = $2',
+      [orgId, projectName],
+    );
+
+    if (project.rowCount === 0) {
+      const res = await fetch(`${api}/projects`, {
+        method: 'POST',
+        headers: authed(),
+        body: JSON.stringify({
+          organization_id: orgId,
+          name: projectName,
+          public: false,
+        }),
+      });
+      if (!res.ok) {
+        throw new StageError(
+          `Project creation failed with ${res.status}: ${(await res.text()).slice(0, 300)}`,
+        );
+      }
+      const created = await res.json();
+      ok(`created project ${projectName} (${created.project_id})`);
+      project = { rows: [{ project_id: created.project_id }], rowCount: 1 };
+    } else {
+      info(`project ${projectName} already exists`);
+    }
+
+    console.log(
+      `\n${c.bold}Sign in from your browser with either account${c.reset}\n` +
+        TEST_ACCOUNTS.map(
+          (a) =>
+            `     ${a.email}  /  ${a.password}   (${a.firstname} ${a.lastname})`,
+        ).join('\n') +
+        `\n     https://${domain}\n`,
+    );
+
+    return {
+      orgId,
+      projectId: project.rows[0].project_id,
+      accounts: [owner, peer],
+    };
   } finally {
     if (prevTls === undefined) delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
     else process.env.NODE_TLS_REJECT_UNAUTHORIZED = prevTls;
@@ -311,7 +380,7 @@ async function main() {
         fs.existsSync(opts.localDevDir)
           ? fs.readdirSync(opts.localDevDir).join(', ') || '(none)'
           : '(no ' + opts.localDevDir + ')'
-      }`
+      }`,
     );
   }
 
@@ -327,7 +396,7 @@ async function main() {
   } catch (err) {
     throw new StageError(
       `Cannot load a required module: ${err.message}`,
-      'Run this from the monorepo root so yjs/y-websocket/ws/jsonwebtoken/pg resolve.'
+      'Run this from the monorepo root so yjs/y-websocket/ws/jsonwebtoken/pg resolve.',
     );
   }
 
@@ -357,17 +426,22 @@ async function main() {
   await db.connect().catch((err) => {
     throw new StageError(
       `Cannot connect to PostgreSQL: ${err.message}`,
-      `Checked ${env.PG_USER}@${env.PG_HOST}/${env.PG_DATABASE}`
+      `Checked ${env.PG_USER}@${env.PG_HOST}/${env.PG_DATABASE}`,
     );
   });
 
   let orgId = opts.orgId;
   let projectId = opts.projectId;
   let userId = opts.userId;
+  let accounts = null;
 
   try {
     if (opts.bootstrap) {
-      await bootstrap({ db, domain, privateKey, jwt });
+      const bootstrapped = await bootstrap({ db, domain, privateKey, jwt });
+      orgId = orgId || bootstrapped.orgId;
+      projectId = projectId || bootstrapped.projectId;
+      userId = userId || bootstrapped.accounts[0].user_id;
+      accounts = bootstrapped.accounts;
     }
 
     if (!projectId) {
@@ -378,12 +452,12 @@ async function main() {
           ${orgId ? 'WHERE p.organization_id = $1' : ''}
           ORDER BY p.created_at ASC
           LIMIT 1`,
-        orgId ? [orgId] : []
+        orgId ? [orgId] : [],
       );
       if (q.rowCount === 0) {
         throw new StageError(
           'No project exists in this environment',
-          'Create one through the UI first — the collab room is per project.'
+          'Create one through the UI first — the collab room is per project.',
         );
       }
       projectId = q.rows[0].project_id;
@@ -396,7 +470,7 @@ async function main() {
            FROM projects p
            JOIN organizations o USING (organization_id)
           WHERE p.project_id = $1`,
-        [projectId]
+        [projectId],
       );
       if (q.rowCount === 0) {
         throw new StageError(`Project ${projectId} not found`);
@@ -414,12 +488,20 @@ async function main() {
   // -- Mint an access token --------------------------------------------------
   stage = 'authentication';
   // app-gateway only accepts type 'access_token' with a user id on the socket.
-  const token = jwt.sign(
-    { type: 'access_token', user: { id: userId } },
-    privateKey,
-    { algorithm: 'RS256', expiresIn: '10m' }
+  // Spread the clients over every known account. With --bootstrap that means
+  // two distinct users, which is what live collaboration actually looks like
+  // and proves per-user authorisation rather than one token replayed N times.
+  if (!accounts) {
+    accounts = [{ user_id: userId, username: 'smoke-test' }];
+  }
+  const tokens = accounts.map((a) => signUserToken(jwt, privateKey, a));
+  const token = tokens[0];
+  ok(
+    `signed ${tokens.length} RS256 access token(s) with the environment key` +
+      (accounts.length > 1
+        ? ` (${accounts.map((a) => a.email || a.user_id).join(', ')})`
+        : ''),
   );
-  ok('signed an RS256 access token with the environment key');
 
   // Development uses a mkcert certificate the Node trust store does not know.
   class DevWebSocket extends WS.WebSocket {
@@ -451,20 +533,21 @@ async function main() {
       }).catch((err) => {
         throw new StageError(
           `Cannot reach https://ganymede.${domain}/gateway/start: ${err.message}`,
-          'Check DNS for the domain and that Ganymede and nginx are running.'
+          'Check DNS for the domain and that Ganymede and nginx are running.',
         );
       });
 
       if (!res.ok) {
         throw new StageError(
-          `Gateway allocation failed with ${res.status}: ${(await res.text()).slice(0, 300)}`
+          `Gateway allocation failed with ${res.status}: ${(await res.text()).slice(0, 300)}`,
         );
       }
       const body = await res.json();
       if (body.gateway_hostname) gatewayHost = body.gateway_hostname;
       ok(`gateway allocated: ${gatewayHost}`);
     } finally {
-      if (prevTls === undefined) delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
+      if (prevTls === undefined)
+        delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
       else process.env.NODE_TLS_REJECT_UNAUTHORIZED = prevTls;
     }
   }
@@ -488,7 +571,9 @@ async function main() {
         resolve(verdict);
       };
       sock.on('open', () => finish('open'));
-      sock.on('unexpected-response', (_req, res) => finish(`HTTP ${res.statusCode}`));
+      sock.on('unexpected-response', (_req, res) =>
+        finish(`HTTP ${res.statusCode}`),
+      );
       sock.on('error', (err) => finish(err.message));
     });
 
@@ -502,7 +587,7 @@ async function main() {
         `Gateway never accepted an upgrade (last response: ${lastVerdict})`,
         lastVerdict.startsWith('HTTP 200')
           ? 'A 200 means the request hit the frontend vhost — no gateway nginx config for this org.'
-          : 'Check: docker logs gw-pool-<env>-N and /tmp/gateway.log inside the container.'
+          : 'Check: docker logs gw-pool-<env>-N and /tmp/gateway.log inside the container.',
       );
     }
     await sleep(2000);
@@ -518,7 +603,7 @@ async function main() {
   for (let i = 0; i < opts.clients; i++) {
     const doc = new Y.Doc();
     const provider = new WebsocketProvider(wsUrl, projectId, doc, {
-      params: { token },
+      params: { token: tokens[i % tokens.length] },
       WebSocketPolyfill: DevWebSocket,
       // CRITICAL: without this, providers in the same Node process sync
       // through BroadcastChannel and the test would pass even with the
@@ -526,7 +611,13 @@ async function main() {
       disableBc: true,
       connect: true,
     });
-    clients.push({ i, doc, provider, map: doc.getMap('holistix-ws-smoke') });
+    clients.push({
+      i,
+      doc,
+      provider,
+      account: accounts[i % accounts.length],
+      map: doc.getMap('holistix-ws-smoke'),
+    });
   }
 
   const cleanup = async () => {
@@ -551,14 +642,14 @@ async function main() {
     await waitFor(
       'all clients to report status=connected',
       () => clients.every((cl) => cl.provider.wsconnected),
-      opts.timeout
+      opts.timeout,
     ).catch(() => {
       const down = clients.filter((cl) => !cl.provider.wsconnected);
       throw new StageError(
         `${down.length}/${clients.length} client(s) never connected`,
         down[0]?.lastError
           ? `First error: ${down[0].lastError}`
-          : 'A 401 here means the JWT was rejected; a 404 means the room was not found.'
+          : 'A 401 here means the JWT was rejected; a 404 means the room was not found.',
       );
     });
     ok(`${clients.length} clients connected`);
@@ -579,7 +670,7 @@ async function main() {
           };
           cl.map.observe(onChange);
           onChange(); // in case it already arrived
-        })
+        }),
     );
 
     clients[0].map.set('marker', marker);
@@ -596,7 +687,7 @@ async function main() {
         .map((cl) => `client ${cl.i}`);
       throw new StageError(
         `Update from client 0 never reached ${missing.join(', ')}`,
-        'The socket is open but events are not being relayed to the room.'
+        'The socket is open but events are not being relayed to the room.',
       );
     }
     ok(`all ${received.length} peers received the update`);
@@ -606,21 +697,21 @@ async function main() {
     step('Each client publishes presence; client 0 must see every peer');
     clients.forEach((cl) =>
       cl.provider.awareness.setLocalStateField('user', {
-        user_id: `smoke-${cl.i}`,
-        username: `smoke-client-${cl.i}`,
+        user_id: cl.account.user_id,
+        username: cl.account.username || `smoke-client-${cl.i}`,
         color: '#888888',
-      })
+      }),
     );
 
     await waitFor(
       'awareness to converge',
       () => clients[0].provider.awareness.getStates().size >= clients.length,
-      opts.timeout
+      opts.timeout,
     ).catch(() => {
       const n = clients[0].provider.awareness.getStates().size;
       throw new StageError(
         `Client 0 sees ${n} peer(s), expected ${clients.length}`,
-        'Document sync works but presence/awareness is not being broadcast.'
+        'Document sync works but presence/awareness is not being broadcast.',
       );
     });
     ok(`awareness converged across ${clients.length} clients`);
@@ -632,7 +723,7 @@ async function main() {
 
     console.log(
       `\n${c.green}${c.bold}PASS${c.reset} collaboration WebSocket is functional` +
-        `\n     ${clients.length} clients, room ${projectId}, via ${wsUrl}\n`
+        `\n     ${clients.length} clients, room ${projectId}, via ${wsUrl}\n`,
     );
     return 0;
   } finally {
@@ -644,7 +735,7 @@ main()
   .then((code) => process.exit(code))
   .catch((err) => {
     console.error(
-      `\n${c.red}${c.bold}FAIL${c.reset} [${err.stage || stage}] ${err.message}`
+      `\n${c.red}${c.bold}FAIL${c.reset} [${err.stage || stage}] ${err.message}`,
     );
     if (err.hint) console.error(`     ${c.dim}${err.hint}${c.reset}`);
     if (!err.stage && err.stack) console.error(c.dim + err.stack + c.reset);
