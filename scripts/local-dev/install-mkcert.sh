@@ -6,10 +6,23 @@ set -e
 
 echo "🔐 Installing mkcert..."
 
+# Detect the CPU architecture (the platform runs on both x86_64 servers and
+# arm64 VMs on Apple Silicon)
+case "$(uname -m)" in
+  x86_64 | amd64) MKCERT_ARCH="amd64" ;;
+  aarch64 | arm64) MKCERT_ARCH="arm64" ;;
+  *)
+    echo "❌ Unsupported architecture: $(uname -m)"
+    exit 1
+    ;;
+esac
+
+echo "   Architecture: ${MKCERT_ARCH}"
+
 # Download mkcert
-curl -JLO "https://dl.filippo.io/mkcert/latest?for=linux/amd64"
-chmod +x mkcert-v*-linux-amd64
-sudo mv mkcert-v*-linux-amd64 /usr/local/bin/mkcert
+curl -fsSL -o /tmp/mkcert "https://dl.filippo.io/mkcert/latest?for=linux/${MKCERT_ARCH}"
+chmod +x /tmp/mkcert
+sudo mv /tmp/mkcert /usr/local/bin/mkcert
 
 # Create local CA
 mkcert -install

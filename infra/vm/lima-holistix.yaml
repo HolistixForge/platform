@@ -1,0 +1,81 @@
+# Lima VM for the Holistix platform.
+#
+# Rendered by infra/vm/vmctl.sh — __REPO_PATH__ is replaced with the absolute
+# path of the monorepo on the host OS before `limactl create` runs.
+#
+# Why Lima: native arm64 and x86_64, uses Apple's Virtualization.framework on
+# macOS (no kernel extension), virtiofs shares, and vzNAT gives the VM an IP
+# the host can reach directly — which is what makes ports 53/80/443 usable
+# without privileged port forwarding.
+
+minimumLimaVersion: '0.23.0'
+
+vmType: 'vz'
+
+images:
+  - location: 'https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-arm64.img'
+    arch: 'aarch64'
+  - location: 'https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-amd64.img'
+    arch: 'x86_64'
+
+# The platform runs PostgreSQL, Nginx, CoreDNS, the observability stack and a
+# pool of gateway containers side by side. Trim in vmctl.sh via
+# HOLISTIX_VM_CPUS / HOLISTIX_VM_MEMORY / HOLISTIX_VM_DISK if needed.
+cpus: 6
+memory: '12GiB'
+disk: '100GiB'
+
+mountType: virtiofs
+mounts:
+  - location: '__REPO_PATH__'
+    mountPoint: '/root/workspace/monorepo'
+    writable: true
+
+# vzNAT puts the guest on a host-reachable subnet (192.168.64.0/24 on macOS),
+# so https://<domain> and DNS on :53 work from the host browser without any
+# port forwarding. Lima's default user-mode NIC stays for outbound traffic.
+networks:
+  - vzNAT: true
+
+# Lima's automatic forwarding cannot bind privileged ports on the host, and we
+# do not need it — reach the VM on its vzNAT address instead.
+portForwards:
+  - guestPortRange: [1, 1023]
+    ignore: true
+
+# Docker Engine is installed by Ansible; Lima's own containerd would only get
+# in the way.
+containerd:
+  system: false
+  user: false
+
+ssh:
+  loadDotSSHPubKeys: false
+
+provision:
+  # Minimal bootstrap only — everything else is Ansible's job.
+  - mode: system
+    script: |
+      #!/bin/bash
+      set -eux -o pipefail
+      export DEBIAN_FRONTEND=noninteractive
+      apt-get update
+      apt-get install -y python3 python3-apt sudo ca-certificates
+      mkdir -p /root/workspace /root/.local-dev /root/.local-dev-builds
+
+probes:
+  - description: 'python3 available for Ansible'
+    script: |
+      #!/bin/bash
+      set -eux -o pipefail
+      if ! timeout 5m bash -c "until command -v python3 >/dev/null; do sleep 3; done"; then
+        echo >&2 "python3 was not installed"
+        exit 1
+      fi
+    hint: 'See /var/log/cloud-init-output.log inside the guest.'
+
+message: |
+  The VM is up. Provision it with:
+      infra/vm/vmctl.sh provision
+  Guest address (host-reachable):
+      infra/vm/vmctl.sh ip

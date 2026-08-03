@@ -1,0 +1,18 @@
+[Unit]
+Description=Holistix gateway build distribution server (:8090)
+Documentation=file://{{ holistix_workspace }}/doc/guides/GATEWAY_BUILD_DISTRIBUTION.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory={{ holistix_builds_dir }}
+ExecStart=/usr/bin/python3 -m http.server 8090 --bind 0.0.0.0
+Restart=on-failure
+RestartSec=2s
+NoNewPrivileges=true
+ProtectSystem=full
+ReadWritePaths={{ holistix_builds_dir }}
+
+[Install]
+WantedBy=multi-user.target

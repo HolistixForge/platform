@@ -1,0 +1,78 @@
+---
+- name: Install PostgreSQL
+  ansible.builtin.apt:
+    name:
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2 # required by the community.postgresql modules
+    state: present
+
+- name: Enable and start PostgreSQL
+  ansible.builtin.systemd_service:
+    name: postgresql
+    enabled: true
+    state: started
+
+- name: Discover the PostgreSQL config directory
+  ansible.builtin.find:
+    paths: /etc/postgresql
+    patterns: main
+    file_type: directory
+    recurse: true
+  register: postgres_conf_dirs
+
+- name: Fail if no PostgreSQL cluster was found
+  ansible.builtin.assert:
+    that: postgres_conf_dirs.files | length > 0
+    fail_msg: 'No /etc/postgresql/*/main directory — is the cluster initialised?'
+
+- name: Remember the cluster config path
+  ansible.builtin.set_fact:
+    postgres_conf_dir: "{{ (postgres_conf_dirs.files | sort(attribute='path') | last).path }}"
+
+# The `local` (unix socket) lines are deliberately left as `peer`: that is what
+# lets this role authenticate as the postgres system user on every re-run.
+# Everything in the platform connects over TCP (`psql -h localhost -U postgres`
+# with PGPASSWORD), which is governed by the `host` lines below.
+- name: Set the postgres superuser password
+  become: true
+  become_user: postgres
+  community.postgresql.postgresql_user:
+    name: postgres
+    password: '{{ postgres_password }}'
+    login_unix_socket: /var/run/postgresql
+  no_log: true
+
+- name: Require password authentication for TCP connections
+  ansible.builtin.lineinfile:
+    path: '{{ postgres_conf_dir }}/pg_hba.conf'
+    regexp: '^host\s+all\s+all\s+{{ item | regex_escape }}\s+'
+    line: 'host    all             all             {{ item }}            scram-sha-256'
+  loop:
+    - 127.0.0.1/32
+    - ::1/128
+  notify: Restart PostgreSQL
+
+- name: Set listen_addresses
+  ansible.builtin.lineinfile:
+    path: '{{ postgres_conf_dir }}/postgresql.conf'
+    regexp: '^#?listen_addresses'
+    line: "listen_addresses = '{{ postgres_listen_addresses }}'"
+  notify: Restart PostgreSQL
+
+- name: Flush handlers so the connectivity check sees the new config
+  ansible.builtin.meta: flush_handlers
+
+- name: Verify a password login over TCP works
+  ansible.builtin.command: psql -h localhost -U postgres -d postgres -c "SELECT 1"
+  environment:
+    PGPASSWORD: '{{ postgres_password }}'
+  changed_when: false
+  no_log: true
+
+- name: Warn when the development password is used
+  ansible.builtin.debug:
+    msg: >-
+      PostgreSQL is using the shared development password. Override
+      postgres_password on any host that is not a throwaway dev VM.
+  when: postgres_password == 'devpassword'

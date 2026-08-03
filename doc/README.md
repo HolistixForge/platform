@@ -6,6 +6,7 @@ Welcome to the Holistix Forge documentation! This hub will guide you to the righ
 
 ### Get Started
 
+- 💻 **[Run the platform in a VM](guides/VM_DEVELOPMENT.md)** - Ansible-provisioned Ubuntu VM (replaces the dev container)
 - 🚀 **[Set up local development](guides/LOCAL_DEVELOPMENT.md)** - Multi-environment dev setup
 - 🏭 **[Production deployment](guides/PRODUCTION_DEPLOYMENT.md)** - Deploy on Ubuntu VPS
 - 🤝 **[Contribute](../CONTRIBUTING.md)** - Development workflow and standards

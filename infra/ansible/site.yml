@@ -1,0 +1,86 @@
+---
+# ============================================================================
+# Holistix platform — full host provisioning
+# ============================================================================
+# Target: a bare Ubuntu 24.04 host (local VM or remote server).
+# Everything the platform needs is installed here; no dev container involved.
+#
+#   ansible-playbook site.yml                      # local dev VM
+#   ansible-playbook -i inventory/production.yml site.yml
+#   ansible-playbook site.yml --tags coredns,nginx # partial re-run
+#   ansible-playbook site.yml --check --diff       # dry run
+
+- name: Provision Holistix platform host
+  hosts: all
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Fail early on an unsupported distribution
+      ansible.builtin.assert:
+        that:
+          - ansible_facts['os_family'] == 'Debian'
+          - ansible_facts['distribution_major_version'] | int >= 22
+        fail_msg: >-
+          These roles target Ubuntu 22.04+ / Debian 12+.
+          Detected {{ ansible_facts['distribution'] }}
+          {{ ansible_facts['distribution_version'] }}.
+      tags: always
+
+    - name: Resolve the Debian architecture name once
+      ansible.builtin.set_fact:
+        holistix_deb_arch: >-
+          {{ 'arm64' if ansible_facts['architecture'] in ['aarch64', 'arm64']
+             else 'amd64' }}
+      tags: always
+
+  roles:
+    - role: common
+      tags: [common, base]
+
+    - role: node
+      tags: [node]
+
+    - role: docker
+      tags: [docker]
+
+    - role: postgres
+      tags: [postgres, db]
+
+    - role: nginx
+      tags: [nginx]
+
+    - role: mkcert
+      when: holistix_tls_mode == 'mkcert'
+      tags: [tls, mkcert]
+
+    - role: certbot
+      when: holistix_tls_mode == 'letsencrypt'
+      tags: [tls, certbot]
+
+    - role: coredns
+      when: holistix_install_coredns | bool
+      tags: [coredns, dns]
+
+    - role: workspace
+      tags: [workspace, repo]
+
+    - role: buildserver
+      when: holistix_install_build_server | bool
+      tags: [buildserver]
+
+    - role: observability
+      when: holistix_install_observability | bool
+      tags: [observability]
+
+  post_tasks:
+    - name: Summary
+      ansible.builtin.debug:
+        msg: >-
+          Host provisioned.
+          workspace={{ holistix_workspace }}
+          arch={{ holistix_deb_arch }}
+          tls={{ holistix_tls_mode }}
+          coredns={{ holistix_install_coredns }}
+          Next: {{ holistix_workspace }}/scripts/local-dev/create-env.sh <env> <domain>
+      tags: always

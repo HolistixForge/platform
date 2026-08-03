@@ -1,0 +1,24 @@
+---
+# Copy to inventory/production.yml (gitignored) and fill in.
+#
+#   ansible-playbook -i inventory/production.yml site.yml \
+#     --extra-vars "@secrets.yml" --ask-become-pass
+#
+# The playbook is connection-agnostic: anything reachable over SSH running
+# Ubuntu 24.04 works — a VPS, a bare-metal box, or a second local VM.
+
+all:
+  children:
+    production:
+      hosts:
+        holistix-prod-01:
+          ansible_host: 203.0.113.10
+          ansible_user: ubuntu
+          ansible_ssh_private_key_file: ~/.ssh/holistix_prod
+      vars:
+        holistix_repo_version: main
+        certbot_domains:
+          - app.holistix.so
+          - ganymede.app.holistix.so
+        certbot_email: contact@holistix.so
+        # Provide vault_postgres_password via ansible-vault or --extra-vars.

@@ -1,0 +1,34 @@
+---
+# Gateway build distribution server (scripts/local-dev/serve-builds.sh, :8090).
+# Gateway containers curl their tarball from here at startup, so it must come
+# back automatically after a reboot — hence a unit rather than a `&` job.
+
+- name: Create the builds directory
+  ansible.builtin.file:
+    path: '{{ holistix_builds_dir }}'
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Install the build server systemd unit
+  ansible.builtin.template:
+    src: holistix-buildserver.service.j2
+    dest: /etc/systemd/system/holistix-buildserver.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart build server
+
+- name: Enable and start the build server
+  ansible.builtin.systemd_service:
+    name: holistix-buildserver
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Wait for the build server to listen
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: 8090
+    timeout: 20

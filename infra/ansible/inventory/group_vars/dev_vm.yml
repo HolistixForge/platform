@@ -1,0 +1,19 @@
+---
+# Local development VM (Lima / Multipass / UTM / Vagrant).
+# The source tree is shared from the host OS, so nothing is cloned here.
+
+holistix_repo_mode: mount
+holistix_isolate_build_dirs: true
+
+holistix_tls_mode: mkcert
+
+holistix_install_coredns: true
+coredns_manage_resolv_conf: true
+
+holistix_install_observability: true
+holistix_install_playwright: true
+holistix_build_gateway_image: true
+holistix_npm_install: true
+holistix_install_build_server: true
+
+postgres_password: devpassword

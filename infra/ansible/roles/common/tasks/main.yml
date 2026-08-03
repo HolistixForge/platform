@@ -1,0 +1,65 @@
+---
+- name: Refresh the apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install base packages
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - wget
+      - gnupg
+      - git
+      - jq
+      - rsync
+      - unzip
+      - sudo
+      - python3
+      - python3-venv
+      - python3-debian # required by the deb822_repository module
+      - dnsutils # dig, used by infra-diagnostic.sh
+      - lsof # port checks in envctl.sh / restart-all-services.sh
+      - net-tools
+      - psmisc # killall, used by restart-all-services.sh
+      - openssl
+      - acl # required for become_user file operations
+    state: present
+
+- name: Ensure the keyring directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Create platform directories
+  ansible.builtin.file:
+    path: '{{ item }}'
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - '{{ holistix_workspace | dirname }}'
+    - '{{ holistix_local_dev_dir }}'
+    - '{{ holistix_builds_dir }}'
+
+# The local-dev scripts call `sudo` and `service` even when already root.
+# Both exist on Ubuntu Server, but `service` comes from init-system-helpers
+# which is not guaranteed on minimal cloud images.
+- name: Ensure the sysvinit `service` shim is available
+  ansible.builtin.apt:
+    name: init-system-helpers
+    state: present
+
+- name: Raise the inotify watch limit (nx watches a lot of files)
+  ansible.posix.sysctl:
+    name: '{{ item.name }}'
+    value: '{{ item.value }}'
+    sysctl_file: /etc/sysctl.d/99-holistix.conf
+    state: present
+    reload: true
+  loop:
+    - { name: fs.inotify.max_user_watches, value: '524288' }
+    - { name: fs.inotify.max_user_instances, value: '512' }

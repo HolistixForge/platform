@@ -79,14 +79,44 @@ ${FILE_BLOCKS}
 EOF
 }
 
+# True when CoreDNS is managed by a systemd unit (VM / bare-metal install via
+# infra/ansible). Dev containers have no systemd, so this is false there.
+coredns_is_systemd_managed() {
+    command -v systemctl >/dev/null 2>&1 \
+        && systemctl list-unit-files coredns.service >/dev/null 2>&1 \
+        && systemctl cat coredns.service >/dev/null 2>&1
+}
+
 # Restart CoreDNS service
 restart_coredns() {
     local quiet=${1:-false}
-    
+
     if [ "$quiet" != "true" ]; then
         echo "🔄 Restarting CoreDNS..."
     fi
-    
+
+    # Prefer systemd when a unit exists — starting a second bare process would
+    # fight the managed one for port 53.
+    if coredns_is_systemd_managed; then
+        if [ "$quiet" != "true" ]; then
+            echo "   Using systemd unit coredns.service..."
+        fi
+        sudo systemctl restart coredns
+        sleep 1
+        if sudo systemctl is-active --quiet coredns; then
+            if [ "$quiet" != "true" ]; then
+                echo "   ✅ CoreDNS restarted"
+            fi
+            return 0
+        fi
+        if [ "$quiet" != "true" ]; then
+            echo "   ❌ CoreDNS failed to start"
+            echo "   Check status: sudo systemctl status coredns"
+            echo "   Check logs:   sudo journalctl -u coredns -n 50"
+        fi
+        return 1
+    fi
+
     # Stop CoreDNS if running
     if pgrep -x coredns >/dev/null 2>&1; then
         if [ "$quiet" != "true" ]; then

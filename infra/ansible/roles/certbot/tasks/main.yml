@@ -1,0 +1,47 @@
+---
+# Production TLS. Replaces the mkcert role on public hosts.
+# Picks up where scripts/production/install.sh left off.
+
+- name: Require at least one domain
+  ansible.builtin.assert:
+    that: certbot_domains | length > 0
+    fail_msg: >-
+      holistix_tls_mode is 'letsencrypt' but certbot_domains is empty.
+      Set it in your inventory, e.g. certbot_domains: ["app.example.com"].
+
+- name: Install certbot and the nginx plugin
+  ansible.builtin.apt:
+    name:
+      - certbot
+      - python3-certbot-nginx
+    state: present
+
+- name: Check whether a certificate already exists
+  ansible.builtin.stat:
+    path: '/etc/letsencrypt/live/{{ certbot_domains[0] }}/fullchain.pem'
+  register: certbot_existing
+
+- name: Request certificates
+  ansible.builtin.command:
+    argv: "{{ certbot_args + (['-d'] | product(certbot_domains) | flatten) }}"
+  vars:
+    certbot_args:
+      - certbot
+      - --nginx
+      - --non-interactive
+      - --agree-tos
+      - --email
+      - '{{ certbot_email }}'
+  when: not certbot_existing.stat.exists
+  changed_when: true
+
+- name: Ensure the renewal timer is enabled
+  ansible.builtin.systemd_service:
+    name: certbot.timer
+    enabled: true
+    state: started
+
+- name: Dry-run a renewal to prove the setup works
+  ansible.builtin.command: certbot renew --dry-run
+  changed_when: false
+  when: certbot_existing.stat.exists

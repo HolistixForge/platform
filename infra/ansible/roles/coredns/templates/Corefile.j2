@@ -1,0 +1,19 @@
+# Managed by Ansible on first provision only.
+# scripts/local-dev/create-env.sh regenerates this file (via coredns-common.sh)
+# every time an environment is created or deleted — per-domain `file` blocks
+# are added above this one.
+
+# Forward everything else to upstream DNS
+. {
+    forward . {{ coredns_upstreams | join(' ') }} {
+        max_concurrent 1000
+    }
+
+    cache {
+        success 9984 30
+        denial 9984 5
+    }
+
+    log
+    errors
+}
