@@ -12,6 +12,11 @@ import { moduleBackend as jupyterBackend } from '@holistix-forge/jupyter';
 import { moduleBackend as n8nBackend } from '@holistix-forge/n8n';
 import { moduleBackend as pgadmin4Backend } from '@holistix-forge/pgadmin4';
 import { moduleBackend as vscodeBackend } from '@holistix-forge/vscode';
+import { moduleBackend as notionBackend } from '@holistix-forge/notion';
+import { moduleBackend as airtableBackend } from '@holistix-forge/airtable';
+import { moduleBackend as excalidrawBackend } from '@holistix-forge/excalidraw';
+import { moduleBackend as socialsBackend } from '@holistix-forge/socials';
+import { moduleBackend as chatsBackend } from '@holistix-forge/chats';
 import { moduleBackend as gatewayBackend } from '../module/module';
 import type {
   PermissionManager,
@@ -93,6 +98,14 @@ export function createBackendModulesConfig(
   // 6. tabs (depends on collab, reducers) - handles project:init
   // 7. user-containers (depends on core-graph, collab, reducers, gateway)
   // 8. Container image modules (depend on user-containers)
+  // 9. Content modules (depend on core-graph, collab, reducers)
+  //
+  // These must be here, not only in the frontend. A module whose menu entry
+  // dispatches its own event — `chats:new-chat` rather than `core:new-node`
+  // directly — has nothing to handle it if its backend is absent: the click
+  // registers, the event goes nowhere, and no node is ever created, with no
+  // error anywhere. Excalidraw masked this by dispatching `core:new-node`
+  // itself, which core-graph handles regardless.
   return [
     { module: collabBackend, config: collabConfig },
     { module: reducersBackend, config: {} },
@@ -105,5 +118,10 @@ export function createBackendModulesConfig(
     { module: n8nBackend, config: {} },
     { module: pgadmin4Backend, config: {} },
     { module: vscodeBackend, config: {} },
+    { module: notionBackend, config: {} },
+    { module: airtableBackend, config: {} },
+    { module: excalidrawBackend, config: {} },
+    { module: socialsBackend, config: {} },
+    { module: chatsBackend, config: {} },
   ];
 }
