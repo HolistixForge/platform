@@ -22,6 +22,13 @@
   background-color: var(--alpha-black-10);
   backdrop-filter: blur(2px);
   pointer-events: auto;
+
+  /* Must sit above whatever the node renders, or the drag never reaches it.
+     Relying on DOM order is enough for a plain card, but a node embedding a
+     canvas — Excalidraw — establishes its own stacking context and swallows
+     the pointer, so move mode silently stopped working on those while it kept
+     working everywhere else. */
+  z-index: 10;
 }
 
 .easy-connect-handle-box {
