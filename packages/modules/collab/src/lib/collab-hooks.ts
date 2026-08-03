@@ -67,17 +67,28 @@ export const useLocalSharedData = <TSharedData extends TValidSharedData>(
   const [, refresh] = useState({});
   const updateComponent = useRef(() => refresh({}));
 
-  // Subscribe to changes
+  // Every call site passes an array literal, so `observe` is a new reference
+  // on every render. Depending on it directly re-subscribed once per render,
+  // and since `unobserve` detaches the overrider from the shared map as soon
+  // as a key has no observer left, each render tore the shared-data
+  // subscription down and built it back up. Key it on the contents instead.
+  const keysId = (observe as string[]).join('\u0000');
+  const keys = useMemo(() => keysId.split('\u0000'), [keysId]);
+
+  // Subscribe to changes. This has to happen during render: the first
+  // `observe` of a key is what materializes it in the overrider's local
+  // copy, and `f` reads that copy below on this very render.
   useMemo(() => {
-    localOverrider.observe(observe as string[], updateComponent.current);
-  }, [localOverrider, observe]);
+    localOverrider.observe(keys, updateComponent.current);
+  }, [localOverrider, keys]);
 
   // Cleanup subscription
   useEffect(() => {
+    const update = updateComponent.current;
     return () => {
-      localOverrider.unobserve(observe as string[], updateComponent.current);
+      localOverrider.unobserve(keys, update);
     };
-  }, [localOverrider, observe]);
+  }, [localOverrider, keys]);
 
   return f(localOverrider.getData());
 };

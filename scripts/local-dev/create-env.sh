@@ -286,10 +286,18 @@ NODE_TLS_REJECT_UNAUTHORIZED=0
 # reload, so a single debugging session exhausts the OAuth budget and then locks
 # you out for the rest of the window with an opaque 429 — which looks exactly
 # like "the app is broken and shows no data".
+#
+# The global and API budgets need the same treatment. A debugging session with
+# repeated reloads goes through the 500-request global budget well inside the
+# 15-minute window, and once it is gone every call — including the OAuth
+# preflight — comes back 429, which surfaces in the browser as an opaque
+# "Failed to fetch" and a project stuck on "Loading project...".
 RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_AUTH_MAX=100
 RATE_LIMIT_OAUTH_MAX=500
 RATE_LIMIT_SENSITIVE_MAX=300
+RATE_LIMIT_API_MAX=5000
+RATE_LIMIT_GLOBAL_MAX=20000
 EOF
 
 # 8. Create Nginx server blocks (Stage 1 - Main nginx with SSL termination)

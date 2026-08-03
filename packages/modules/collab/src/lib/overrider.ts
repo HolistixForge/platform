@@ -87,7 +87,11 @@ export class LocalOverrider<
         const sdObserver = () => this.update(key as string);
         this.sdObservers.set(key as string, sdObserver);
         this.sharedData[key].observe(sdObserver);
-        sdObserver();
+        // Materialize the key, but do not call the observers: whoever is
+        // subscribing reads the data right after this call, and nothing has
+        // changed for the others. Notifying here called back into React from
+        // inside the render of the component that was subscribing.
+        this.refresh(key as string);
       }
     });
   }
@@ -108,11 +112,16 @@ export class LocalOverrider<
 
   //
 
-  private update(key: string) {
+  /** Refresh the local copy of a key and re-apply its override functions. */
+  private refresh(key: string) {
     this.localSharedData[key] = this.sharedData[key].copy();
     this.ofs.get(key)?.forEach((of) => {
       of.apply(this.localSharedData as TValidSharedDataToCopy<TSharedData>);
     });
+  }
+
+  private update(key: string) {
+    this.refresh(key);
     this.callKeyObservers(key);
   }
 

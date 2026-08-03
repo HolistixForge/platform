@@ -25,6 +25,21 @@
       "path": "../modules/gateway"
     },
     {
+      "path": "../modules/chats"
+    },
+    {
+      "path": "../modules/socials"
+    },
+    {
+      "path": "../modules/excalidraw"
+    },
+    {
+      "path": "../modules/airtable"
+    },
+    {
+      "path": "../modules/notion"
+    },
+    {
       "path": "../modules/vscode"
     },
     {

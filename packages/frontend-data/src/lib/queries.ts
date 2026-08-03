@@ -316,6 +316,13 @@ export const useCurrentUser = () => {
       }) as Promise<{
         user: CurrentUserDetails | { user_id: null };
       }>,
+    // Who is logged in does not change on its own — every transition that
+    // does change it (login, logout, TOTP, password reset) invalidates this
+    // key explicitly. Without a staleTime this query refetched on every
+    // mount, so a component that remounts in a loop turned into a /me flood
+    // that exhausted the API rate limit and re-rendered every other consumer
+    // of this hook, which kept the loop fed.
+    staleTime: 5 * 60 * 1000,
   });
 };
 
