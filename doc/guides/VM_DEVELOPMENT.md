@@ -192,6 +192,41 @@ or missing room) is immediately distinguishable from `[document propagation]`
 
 ---
 
+## 6. Storybook
+
+Each package that ships a `.storybook/` directory gets its own static build and
+its own subdomain — the environment already has a wildcard certificate and
+wildcard DNS, so a subdomain each costs nothing and avoids the base-path
+rewriting Storybook needs when served from a subdirectory.
+
+```bash
+./vmctl.sh shell 'cd /root/workspace/monorepo && ./scripts/local-dev/build-storybook.sh <env>'
+```
+
+```
+https://storybook.dev.test          index of everything available
+https://sb-ui-base.dev.test         one per package
+https://sb-whiteboard.dev.test
+...
+```
+
+| Flag               | Effect                                         |
+| ------------------ | ---------------------------------------------- |
+| _(none)_           | build every package that is not built yet      |
+| `<pkg> [<pkg>...]` | build only these; the others keep their vhosts |
+| `--force`          | rebuild even when output already exists        |
+| `--no-build`       | only regenerate the vhosts and the index       |
+
+A selection narrows what is **built**, never what is **served** — re-running
+for one package leaves the other vhosts in place.
+
+`STORYBOOK_NODE_HEAP_MB` (default 6144) caps the build heap. Node sizes its
+heap from available memory, which is not enough for the heavier packages:
+excalidraw dies with "Ineffective mark-compacts near heap limit" on a 6 GiB VM
+at Node's default.
+
+---
+
 ## Day-to-day
 
 | Command                          | Purpose                                             |
