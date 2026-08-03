@@ -292,7 +292,7 @@ describe('UserContainersReducer - Auth Guard OAuth Client Lifecycle', () => {
       );
     });
 
-    it('should store auth_guard config in container shared state', async () => {
+    it('should store the auth guard client id in container shared state', async () => {
       const event = {
         type: 'user-container:new' as const,
         containerName: 'My Terminal',
@@ -312,8 +312,32 @@ describe('UserContainersReducer - Auth Guard OAuth Client Lifecycle', () => {
       expect(containers).toHaveLength(1);
       expect(containers[0].auth_guard).toEqual({
         client_id: 'guard-client-id-123',
-        client_secret: 'guard-client-secret-abc',
       });
+    });
+
+    it('should keep the client secret out of shared state entirely', async () => {
+      // Shared state is a CRDT replicated to every client in the project, so a
+      // secret anywhere in the container record is a secret handed to every
+      // collaborator's browser — check the whole serialised record, not just
+      // the auth_guard field.
+      const event = {
+        type: 'user-container:new' as const,
+        containerName: 'My Terminal',
+        imageId: 'ubuntu:terminal',
+        project_id: 'project-1',
+      };
+
+      const requestData = {
+        project_id: 'project-1',
+        jwt: { type: 'access_token', user: { id: 'user-1' } },
+      } as any;
+
+      await reducer.reduce(event, requestData);
+
+      const containers = Array.from(mockContainersMap.values());
+      expect(JSON.stringify(containers)).not.toContain(
+        'guard-client-secret-abc'
+      );
     });
 
     it('should gracefully handle auth guard registration failure', async () => {
@@ -353,7 +377,6 @@ describe('UserContainersReducer - Auth Guard OAuth Client Lifecycle', () => {
         runner: { id: 'none' },
         auth_guard: {
           client_id: 'guard-client-to-delete',
-          client_secret: 'secret',
         },
         httpServices: [],
         last_watchdog_at: null,
@@ -423,7 +446,6 @@ describe('UserContainersReducer - Auth Guard OAuth Client Lifecycle', () => {
         runner: { id: 'none' },
         auth_guard: {
           client_id: 'guard-client-fail',
-          client_secret: 'secret',
         },
         httpServices: [],
         last_watchdog_at: null,
@@ -446,6 +468,140 @@ describe('UserContainersReducer - Auth Guard OAuth Client Lifecycle', () => {
 
       // Container should still be removed from shared state
       expect(mockContainersMap.has('container-fail-delete')).toBe(false);
+    });
+  });
+
+  describe('_start - Auth guard secret handling', () => {
+    /** Wire up the extra deps `_start` needs, and capture the runner config. */
+    const armStart = () => {
+      const started: { config?: any; container?: any } = {};
+      mockDepsExports.gateway.tokenManager = {
+        generateProjectScopedToken: jest
+          .fn()
+          .mockResolvedValue('hosting-token'),
+      };
+      mockDepsExports['user-containers'].getRunner = jest.fn(() => ({
+        start: jest.fn(
+          async (container: any, _t: any, _r: any, config: any) => {
+            started.container = container;
+            started.config = config;
+            return { command: 'docker run ...' };
+          }
+        ),
+      }));
+      return started;
+    };
+
+    const startEvent = {
+      type: 'user-container:start' as const,
+      user_container_id: 'uc-1',
+    };
+
+    const requestData = {
+      project_id: 'project-1',
+      jwt: { type: 'access_token', user: { id: 'user-1' } },
+    } as any;
+
+    const newEvent = {
+      type: 'user-container:new' as const,
+      containerName: 'My Terminal',
+      imageId: 'ubuntu:terminal',
+      project_id: 'project-1',
+    };
+
+    /**
+     * Create a container through the reducer and pick a runner for it.
+     *
+     * Its generated id is kept as-is: the in-memory secret is keyed on it, so
+     * renaming the container here would fake the very cache miss the next test
+     * sets up deliberately.
+     */
+    const createStartableContainer = async () => {
+      await reducer.reduce(newEvent, requestData);
+      const [created] = Array.from(mockContainersMap.values());
+      mockContainersMap.set(created.user_container_id, {
+        ...created,
+        runner: { id: 'local' },
+      });
+      return created.user_container_id as string;
+    };
+
+    it('passes the secret held in memory without touching Ganymede again', async () => {
+      const containerId = await createStartableContainer();
+      const started = armStart();
+      mockToGanymedeInternal.mockClear();
+
+      await reducer.reduce(
+        { ...startEvent, user_container_id: containerId },
+        requestData
+      );
+
+      expect(started.config.auth_guard_client_secret).toBe(
+        'guard-client-secret-abc'
+      );
+      // The secret was already known, so no rotation round-trip.
+      expect(mockToGanymedeInternal).not.toHaveBeenCalled();
+    });
+
+    it('rotates the OAuth client when the secret was lost with the gateway', async () => {
+      // A gateway restart between create and start: shared state survives (it
+      // is a CRDT), the in-memory secret does not. Ganymede only holds a bcrypt
+      // hash, so the client has to be replaced rather than recovered.
+      mockContainersMap.set('uc-1', {
+        user_container_id: 'uc-1',
+        container_name: 'My Terminal',
+        image_id: 'ubuntu:terminal',
+        runner: { id: 'local' },
+        auth_guard: { client_id: 'stale-client' },
+        httpServices: [],
+        last_watchdog_at: null,
+        last_activity: null,
+        created_at: new Date().toISOString(),
+      });
+      const started = armStart();
+      mockToGanymedeInternal.mockClear();
+      mockToGanymedeInternal.mockResolvedValue({
+        client_id: 'fresh-client',
+        client_secret: 'fresh-secret',
+      });
+
+      await reducer.reduce(startEvent, requestData);
+
+      expect(mockToGanymedeInternal).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: '/internal/oauth/clients/stale-client',
+          method: 'DELETE',
+        })
+      );
+      expect(started.config.auth_guard_client_secret).toBe('fresh-secret');
+      // The new client id must reach shared state, or the guard would announce
+      // a client id Ganymede no longer knows.
+      expect(mockContainersMap.get('uc-1').auth_guard).toEqual({
+        client_id: 'fresh-client',
+      });
+      expect(
+        JSON.stringify(Array.from(mockContainersMap.values()))
+      ).not.toContain('fresh-secret');
+    });
+
+    it('starts without guard config when re-registration fails', async () => {
+      mockContainersMap.set('uc-1', {
+        user_container_id: 'uc-1',
+        container_name: 'My Terminal',
+        image_id: 'ubuntu:terminal',
+        runner: { id: 'local' },
+        auth_guard: { client_id: 'stale-client' },
+        httpServices: [],
+        last_watchdog_at: null,
+        last_activity: null,
+        created_at: new Date().toISOString(),
+      });
+      const started = armStart();
+      mockToGanymedeInternal.mockRejectedValue(new Error('Ganymede down'));
+
+      await reducer.reduce(startEvent, requestData);
+
+      expect(started.config.auth_guard_client_secret).toBeUndefined();
     });
   });
 });
