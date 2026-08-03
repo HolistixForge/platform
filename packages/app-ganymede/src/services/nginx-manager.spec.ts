@@ -85,6 +85,39 @@ describe('NginxManager - Path Injection Protection', () => {
     });
   });
 
+  describe('createGatewayConfig - server_name regex escaping', () => {
+    const validUuid = '550e8400-e29b-41d4-a716-446655440000';
+
+    const writtenConfig = async (): Promise<string> => {
+      await nginxManager.createGatewayConfig(validUuid, '172.17.0.1:7100');
+      const calls = (fs.promises.writeFile as jest.Mock).mock.calls;
+      return calls[calls.length - 1][1] as string;
+    };
+
+    it('escapes domain dots with a SINGLE backslash (not double)', async () => {
+      const config = await writtenConfig();
+      // DOMAIN is 'test.local' (set in beforeEach)
+      expect(config).toContain(
+        `server_name ~^(.+\\.)?org-${validUuid}\\.test\\.local$;`
+      );
+      // Regression guard: a doubled escape (`test\\.local`) never matches the
+      // real hostname and routes org-* traffic to the default server.
+      expect(config).not.toContain('test\\\\.local');
+    });
+
+    it('produces a server_name regex that matches org and nested subdomains', async () => {
+      const config = await writtenConfig();
+      const match = config.match(/server_name\s+~\^(.+?)\$;/);
+      expect(match).not.toBeNull();
+      const re = new RegExp('^' + (match as RegExpMatchArray)[1] + '$');
+      expect(re.test(`org-${validUuid}.test.local`)).toBe(true);
+      expect(re.test(`uc-1.org-${validUuid}.test.local`)).toBe(true);
+      expect(re.test(`svc.uc-1.org-${validUuid}.test.local`)).toBe(true);
+      // must NOT match a different org
+      expect(re.test('org-other.test.local')).toBe(false);
+    });
+  });
+
   describe('createGatewayConfig - Path Traversal Attacks', () => {
     it('should reject organization ID with path traversal (..) characters', async () => {
       const maliciousId = '../../../etc/passwd';

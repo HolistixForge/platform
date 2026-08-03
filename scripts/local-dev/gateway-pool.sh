@@ -250,9 +250,11 @@ cmd_create() {
         echo -e "${BLUE}  Creating ${gateway_name}...${NC}"
         
         # Register gateway in database
-        # For development, nginx_upstream is always Docker host IP (172.17.0.1) + HTTP port
-        # This is the address that Stage 1 Nginx (in main dev container) uses to reach gateway containers
-        local nginx_upstream="172.17.0.1:${gw_http_port}"
+        # For development, nginx_upstream is the Docker host IP + HTTP port.
+        # This is the address that Stage 1 Nginx (in main dev container) uses to reach gateway containers.
+        # Defaults to the Linux docker0 bridge gateway (172.17.0.1); override with
+        # DOCKER_HOST_IP (e.g. host.docker.internal) on Docker Desktop / macOS.
+        local nginx_upstream="${DOCKER_HOST_IP:-172.17.0.1}:${gw_http_port}"
         
         echo "     Registering in database..."
         echo "     Gateway: ${gateway_name}, HTTP: ${gw_http_port}, VPN: ${gw_vpn_port}"
@@ -305,15 +307,15 @@ cmd_create() {
         container_env[JWT_PUBLIC_KEY]="${JWT_PUBLIC_KEY}"
         
         # OpenTelemetry configuration
-        # Gateway containers need to reach OTLP Collector on the Docker host.
-        # 172.17.0.1 is the Docker bridge gateway IP - it allows containers
-        # to reach services exposed on the host (OTLP ports 4317/4318).
-        # This is necessary because 'localhost' inside a container refers to
-        # the container itself, not the Docker host.
+        # Gateway containers need to reach the OTLP Collector on the Docker host.
+        # Defaults to the Linux docker0 bridge gateway (172.17.0.1); on Docker
+        # Desktop / macOS that IP does not reach the host, so override with
+        # DOCKER_HOST_IP=host.docker.internal.
+        # 'localhost' inside a container refers to the container itself, not the host.
         container_env[OTEL_SERVICE_NAME]="gateway-${gateway_name}"
         container_env[OTEL_DEPLOYMENT_ENVIRONMENT]="${ENV_NAME}"
-        container_env[OTLP_ENDPOINT_HTTP]="http://172.17.0.1:4318"
-        container_env[OTLP_ENDPOINT_GRPC]="http://172.17.0.1:4317"
+        container_env[OTLP_ENDPOINT_HTTP]="http://${DOCKER_HOST_IP:-172.17.0.1}:4318"
+        container_env[OTLP_ENDPOINT_GRPC]="http://${DOCKER_HOST_IP:-172.17.0.1}:4317"
         
         # SSL/TLS Configuration (LOCAL DEVELOPMENT ONLY)
         # Disable certificate verification for self-signed certificates

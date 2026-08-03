@@ -64,7 +64,10 @@ export abstract class ContainerRunner {
     // to the Docker bridge gateway IP which routes to the host/dev container
     let addHostFlags = '';
     if (process.env.GATEWAY_DEV === '1') {
-      const hostIp = '172.17.0.1';
+      // Docker-host address. Defaults to the Linux docker0 bridge gateway
+      // (172.17.0.1). On Docker Desktop (macOS/Windows) that IP does not reach
+      // the host, so allow overriding via DOCKER_HOST_IP=host.docker.internal.
+      const hostIp = process.env.DOCKER_HOST_IP || '172.17.0.1';
       addHostFlags = `--add-host=${config.gateway_fqdn}:${hostIp} --add-host=${config.ganymede_fqdn}:${hostIp} `;
     }
 

@@ -261,8 +261,11 @@ SESSION_COOKIE_KEY=$(openssl rand -hex 32)
 # installations and won't change unless you manually reconfigure Docker's bridge network.
 #
 # Verified by: docker network inspect bridge | jq '.[0].IPAM.Config[0].Gateway'
-OTLP_ENDPOINT_HTTP=http://172.17.0.1:4318
-OTLP_ENDPOINT_GRPC=http://172.17.0.1:4317
+#
+# 172.17.0.1 is the Linux docker0 bridge gateway. On Docker Desktop (macOS/Windows)
+# it does NOT reach the host — override with DOCKER_HOST_IP=host.docker.internal.
+OTLP_ENDPOINT_HTTP=http://${DOCKER_HOST_IP:-172.17.0.1}:4318
+OTLP_ENDPOINT_GRPC=http://${DOCKER_HOST_IP:-172.17.0.1}:4317
 # Service name for this environment (used in traces/logs)
 OTEL_SERVICE_NAME=ganymede-${ENV_NAME}
 # Deployment environment (used for filtering in Grafana)

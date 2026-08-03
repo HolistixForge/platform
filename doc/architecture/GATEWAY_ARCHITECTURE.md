@@ -787,9 +787,11 @@ Registry of permission definitions registered by modules (no persistence).
 - `GET /permissions` (TJwtUser) - List all permissions
 - `GET /permissions/projects/{id}` (TJwtUser) - Get project user permissions
 - `PATCH /permissions/projects/{id}/users/{id}` (TJwtUser) - Update user permissions
-- `GET /oauth/authorize` (TJwtUser) - OAuth authorization for container apps
-- `POST /oauth/token` - OAuth token exchange
-- `POST /oauth/authenticate` (OAuth Bearer token) - Validate OAuth token
+> **Removed:** the gateway no longer hosts OAuth endpoints. OAuth was centralized
+> in Ganymede and per-container access is now enforced by the Auth Guard Proxy.
+> The former `GET /oauth/authorize`, `POST /oauth/token`, and `POST /oauth/authenticate`
+> on the gateway have been deleted (see `AUTH_GUARD_PROXY.md`); the gateway now
+> exposes `POST /containers/:id/verify-access` instead. Do not call gateway `/oauth/*`.
 
 ---
 
