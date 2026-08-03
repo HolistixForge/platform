@@ -209,6 +209,9 @@ export const ReactflowLayer = ({
 
   const lsdm = useLocalSharedDataManager<TWhiteboardSharedData>();
 
+  // Read before the drag handlers below: they depend on `mode`.
+  const { resetEdgeMenu, mode } = useSpaceContext();
+
   const { handleNodeDrag, handleNodeDragStop } = useMemo(() => {
     //
 
@@ -275,8 +278,16 @@ export const ReactflowLayer = ({
     ) => {
       const nodeView = spaceState.getNodes().find((n) => n.id === node.id);
       if (!nodeView) return;
-      if (nodeView.disabledFeatures?.includes('frontend-move-node')) {
-        console.log('node is disabled for moving');
+      // `frontend-move-node` exists so a node that needs the pointer for its
+      // own content — an Excalidraw drawing captures it to draw — is not
+      // dragged out from under the user. Move node mode is the deliberate
+      // escape hatch from exactly that, so the flag must not apply there:
+      // otherwise the mode silently does nothing on those nodes while working
+      // everywhere else, which is precisely how this was reported.
+      if (
+        mode !== 'move-node' &&
+        nodeView.disabledFeatures?.includes('frontend-move-node')
+      ) {
         return;
       }
       es.dispatch({
@@ -305,7 +316,7 @@ export const ReactflowLayer = ({
       handleNodeDrag,
       handleNodeDragStop,
     };
-  }, [dispatcher, lsdm, spaceState, viewId]);
+  }, [dispatcher, lsdm, spaceState, viewId, mode]);
 
   //
   //
@@ -395,8 +406,6 @@ export const ReactflowLayer = ({
   }, [selections, viewId]);
 
   //
-
-  const { resetEdgeMenu } = useSpaceContext();
 
   const handlePaneClick = useCallback(
     // Handle left click on pane here
