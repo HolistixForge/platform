@@ -25,6 +25,15 @@ async function waitUntilReady(page) {
 }
 
 module.exports = {
+  /**
+   * Stories tagged `no-visual-test` are skipped by the screenshot suite.
+   * Use it for stories whose rendering is time- or randomness-dependent
+   * (live counters, animated indicators) — they would diff on every run.
+   */
+  tags: {
+    skip: ['no-visual-test'],
+  },
+
   setup() {
     expect.extend({ toMatchImageSnapshot });
   },

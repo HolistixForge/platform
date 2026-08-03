@@ -30,7 +30,7 @@ export type ColorValue = {
   opacity: number;
 };
 
-interface ColorPickerProps {
+export interface ColorPickerProps {
   withTransparency?: boolean;
   initialColor?: string;
   initialOpacity?: number;

@@ -24,7 +24,9 @@ export interface PermissionsPageProps {
   defaultTab?: 'roles' | 'users';
 
   // Role management callbacks
-  onCreateRole: (role: Omit<Role, 'role_id' | 'system' | 'immutable'>) => Promise<void>;
+  onCreateRole: (
+    role: Omit<Role, 'role_id' | 'system' | 'immutable'>
+  ) => Promise<void>;
   onUpdateRole: (
     roleId: string,
     updates: Partial<Pick<Role, 'display_name' | 'description' | 'permissions'>>
@@ -38,7 +40,11 @@ export interface PermissionsPageProps {
     scope: 'org' | 'project',
     project_id?: string
   ) => Promise<void>;
-  onRemoveRole: (user_id: string, role_id: string, project_id?: string) => Promise<void>;
+  onRemoveRole: (
+    user_id: string,
+    role_id: string,
+    project_id?: string
+  ) => Promise<void>;
 }
 
 export const PermissionsPage = ({
@@ -70,10 +76,16 @@ export const PermissionsPage = ({
     <div className="permissions-page">
       <header className="page-header">
         <h1>Organization Permissions</h1>
-        <p className="subtitle">Manage roles and user access for your organization</p>
+        <p className="subtitle">
+          Manage roles and user access for your organization
+        </p>
       </header>
 
-      <Tabs.Root className="tabs-root" value={activeTab} onValueChange={setActiveTab}>
+      <Tabs.Root
+        className="tabs-root"
+        value={activeTab}
+        onValueChange={setActiveTab}
+      >
         <Tabs.List className="tabs-list">
           <Tabs.Trigger className="tabs-trigger" value="roles">
             Roles

@@ -332,6 +332,8 @@ npx nx test app-ganymede --coverage
 
 ## 📖 Storybook Stories
 
+> Full setup, screenshot baselines and CI behaviour: **[Storybook & Visual Regression](STORYBOOK.md)**.
+
 ### **Storybook Test Runner**
 
 For testing stories directly:
@@ -343,6 +345,11 @@ npx nx run ui-base:storybook
 # In another terminal, run tests
 npx nx run ui-base:test-storybook
 ```
+
+Every story is also screenshotted and compared against a committed baseline.
+Keep story fixtures deterministic (no `Math.random()`, no `Date.now()`, no
+remote images), and regenerate baselines on Linux only — see
+[STORYBOOK.md](STORYBOOK.md#screenshot-baselines).
 
 ### **Using Story Args in Tests**
 

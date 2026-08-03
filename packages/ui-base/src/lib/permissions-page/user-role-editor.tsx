@@ -23,7 +23,11 @@ export interface UserRoleEditorProps {
   availableRoles: Role[];
   loading: boolean;
   readonly?: boolean;
-  onAssignRole: (role_id: string, scope: 'org' | 'project', project_id?: string) => Promise<void>;
+  onAssignRole: (
+    role_id: string,
+    scope: 'org' | 'project',
+    project_id?: string
+  ) => Promise<void>;
   onRemoveRole: (role_id: string, project_id?: string) => Promise<void>;
 }
 
@@ -53,7 +57,10 @@ const RoleBadge = ({
       )}
       <Popover.Root open={showPermissions} onOpenChange={setShowPermissions}>
         <Popover.Trigger asChild>
-          <button className="info-btn" aria-label={`View permissions for ${role.display_name}`}>
+          <button
+            className="info-btn"
+            aria-label={`View permissions for ${role.display_name}`}
+          >
             <InfoCircledIcon />
           </button>
         </Popover.Trigger>
@@ -76,7 +83,10 @@ const RoleBadge = ({
                     ))}
                   </ul>
                 </ScrollArea.Viewport>
-                <ScrollArea.Scrollbar className="scroll-area-scrollbar" orientation="vertical">
+                <ScrollArea.Scrollbar
+                  className="scroll-area-scrollbar"
+                  orientation="vertical"
+                >
                   <ScrollArea.Thumb className="scroll-area-thumb" />
                 </ScrollArea.Scrollbar>
               </ScrollArea.Root>
@@ -101,16 +111,13 @@ export const UserRoleEditor = ({
 }: UserRoleEditorProps) => {
   const [selectedRoleId, setSelectedRoleId] = useState<string>('');
 
-  const assignAction = useAction(
-    async () => {
-      if (!selectedRoleId) return;
-      const role = availableRoles.find((r) => r.role_id === selectedRoleId);
-      if (!role) return;
-      await onAssignRole(selectedRoleId, role.scope);
-      setSelectedRoleId('');
-    },
-    [selectedRoleId, onAssignRole, availableRoles]
-  );
+  const assignAction = useAction(async () => {
+    if (!selectedRoleId) return;
+    const role = availableRoles.find((r) => r.role_id === selectedRoleId);
+    if (!role) return;
+    await onAssignRole(selectedRoleId, role.scope);
+    setSelectedRoleId('');
+  }, [selectedRoleId, onAssignRole, availableRoles]);
 
   // Filter out already assigned roles
   const assignableRoles = availableRoles.filter(
@@ -181,7 +188,9 @@ export const UserRoleEditor = ({
       )}
 
       {!readonly && assignableRoles.length === 0 && currentRoles.length > 0 && (
-        <p className="info-message">All available roles are already assigned.</p>
+        <p className="info-message">
+          All available roles are already assigned.
+        </p>
       )}
     </div>
   );
