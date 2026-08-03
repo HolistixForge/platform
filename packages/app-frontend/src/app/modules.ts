@@ -28,30 +28,37 @@ import { moduleFrontend as vscodeFrontend } from '@holistix-forge/vscode/fronten
  *
  * @returns Array of modules with config keys
  */
+const ALL_MODULES: {
+  module: TModule<never, object>;
+  configKey?: 'collab' | 'reducers';
+}[] = [
+  // Collab module - needs multi-project registry config
+  { module: collabFrontend, configKey: 'collab' },
+
+  // Reducers module - needs gateway fetch config
+  { module: reducersFrontend, configKey: 'reducers' },
+
+  // Core modules - no special config
+  { module: coreFrontend },
+  { module: spaceFrontend },
+  { module: tabsFrontend },
+
+  // Feature modules - no special config
+  { module: userContainersFrontend },
+  { module: notionFrontend },
+  { module: airtableFrontend },
+  { module: excalidrawFrontend },
+  { module: gatewayFrontend },
+  { module: socialsFrontend },
+  { module: chatsFrontend },
+  { module: vscodeFrontend },
+];
+
 export function getAllModules(): {
   module: TModule<never, object>;
   configKey?: 'collab' | 'reducers';
 }[] {
-  return [
-    // Collab module - needs multi-project registry config
-    { module: collabFrontend, configKey: 'collab' },
-
-    // Reducers module - needs gateway fetch config
-    { module: reducersFrontend, configKey: 'reducers' },
-
-    // Core modules - no special config
-    { module: coreFrontend },
-    { module: spaceFrontend },
-    { module: tabsFrontend },
-
-    // Feature modules - no special config
-    { module: userContainersFrontend },
-    { module: notionFrontend },
-    { module: airtableFrontend },
-    { module: excalidrawFrontend },
-    { module: gatewayFrontend },
-    { module: socialsFrontend },
-    { module: chatsFrontend },
-    { module: vscodeFrontend },
-  ];
+  // The same array every time, on purpose: callers pass this straight into a
+  // render and a fresh array would invalidate the memo that loads the modules.
+  return ALL_MODULES;
 }

@@ -68,6 +68,11 @@ export const ModuleDataProvider = ({
     }
   }, [gateway_hostname, organization_id, ganymedeApi]);
 
+  // Identify the module set by name+order rather than by array identity.
+  const moduleSignature = modules
+    .map(({ module, configKey }) => `${module.name}@${configKey ?? ''}`)
+    .join(',');
+
   // Create module configs and load modules when gateway is available
   // Memoized to avoid reloading unless gateway changes
   const moduleExports = useMemo(() => {
@@ -93,7 +98,19 @@ export const ModuleDataProvider = ({
     }));
 
     return loadModules(modulesWithConfig);
-  }, [gateway_hostname, organization_id, ganymedeApi, userInfo, modules]);
+    // Depend on the *values* that matter, not on the identity of `userInfo`
+    // and `modules`. Callers build both inline, so keying the memo on their
+    // references re-ran `loadModules` on every render: each pass produced a
+    // fresh set of module exports, which gave the whiteboard a new node
+    // component type and remounted every node in the project on every render.
+  }, [
+    gateway_hostname,
+    organization_id,
+    ganymedeApi,
+    userInfo.user_id,
+    userInfo.username,
+    moduleSignature,
+  ]);
 
   // Loading state - waiting for gateway info
   if (status === 'pending') {
