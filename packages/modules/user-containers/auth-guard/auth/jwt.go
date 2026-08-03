@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"time"
@@ -124,7 +123,7 @@ func fetchPublicKey(ganymedeURL string, httpClient *http.Client) (*rsa.PublicKey
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	body, err := io.ReadAll(resp.Body)
+	body, err := readResponseBody(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response: %w", err)
 	}

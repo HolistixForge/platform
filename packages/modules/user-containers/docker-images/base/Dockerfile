@@ -9,15 +9,27 @@
 #   COPY --from=tools /holistix/ /usr/local/bin/
 #
 # Build:
-#   docker build -t holistixforge/bootstrap-tools:latest packages/modules/user-containers/docker-images/base/
+#   docker buildx build --platform linux/amd64,linux/arm64 \
+#     -t holistixforge/bootstrap-tools:latest --push \
+#     packages/modules/user-containers/docker-images/base/
 #
-# Push:
-#   docker push holistixforge/bootstrap-tools:latest
+# The auth-guard binary is picked per target architecture, so every platform
+# passed to --platform needs its binary present in this directory beforehand:
+#
+#   make -C packages/modules/user-containers/auth-guard build-all
+#   cp packages/modules/user-containers/auth-guard/auth-guard-linux-* \
+#      packages/modules/user-containers/docker-images/base/auth-guard/
+#
+# A plain `docker build` works too and resolves TARGETARCH to the host's
+# architecture — but it produces a single-arch image.
 
 FROM scratch
+
+# Set by BuildKit from the target platform: amd64, arm64, ...
+ARG TARGETARCH
 
 # Copy shared bootstrap files
 COPY container-functions.sh /holistix/container-functions.sh
 
-# Copy auth guard binary (built with: make build-linux-amd64 in auth-guard/)
-COPY auth-guard/auth-guard-linux-amd64 /holistix/auth-guard
+# Copy the auth guard binary for the target architecture
+COPY auth-guard/auth-guard-linux-${TARGETARCH} /holistix/auth-guard

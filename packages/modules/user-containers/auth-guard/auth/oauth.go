@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -194,7 +193,7 @@ func (o *OAuthHandler) ExchangeCode(code string) (accessToken, refreshToken stri
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
+	body, err := readResponseBody(resp.Body)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to read token response: %w", err)
 	}
@@ -226,7 +225,7 @@ func (o *OAuthHandler) RefreshToken(refreshToken string) (newAccessToken, newRef
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
+	body, err := readResponseBody(resp.Body)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to read refresh response: %w", err)
 	}
