@@ -23,7 +23,11 @@ export const moduleBackend: TModule<TBackendRequired> = {
 export type { TTabEvents } from './lib/tabs-event';
 
 export type { TTabsSharedData } from './lib/tabs-shared-model';
-export { MAX_TAB_ROW } from './lib/tabs-types';
+export {
+  MAX_TAB_ROW,
+  DEFAULT_DASHBOARD_TAB_TITLE,
+  RESOURCES_TAB_TITLE,
+} from './lib/tabs-types';
 export type { TabPayload, TabPath } from './lib/tabs-types';
 
 export { ReadOnlyTree } from './lib/tree';

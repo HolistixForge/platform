@@ -1,0 +1,59 @@
+---
+# Local CA for *.local wildcard certificates. Development only — production
+# hosts use the certbot role instead.
+
+- name: Install the NSS tools mkcert needs for the browser trust stores
+  ansible.builtin.apt:
+    name: libnss3-tools
+    state: present
+
+- name: Check whether mkcert is already installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/mkcert
+  register: mkcert_bin
+
+- name: Download mkcert for {{ holistix_deb_arch }}
+  ansible.builtin.get_url:
+    url: 'https://dl.filippo.io/mkcert/latest?for=linux/{{ holistix_deb_arch }}'
+    dest: /usr/local/bin/mkcert
+    mode: '0755'
+    owner: root
+    group: root
+  when: not mkcert_bin.stat.exists
+
+- name: Read the mkcert CA root path
+  ansible.builtin.command: mkcert -CAROOT
+  register: mkcert_caroot
+  changed_when: false
+  environment:
+    HOME: /root
+
+- name: Check whether the local CA already exists
+  ansible.builtin.stat:
+    path: '{{ mkcert_caroot.stdout | trim }}/rootCA.pem'
+  register: mkcert_ca_file
+
+- name: Create and install the local CA
+  ansible.builtin.command: mkcert -install
+  environment:
+    HOME: /root
+  when: not mkcert_ca_file.stat.exists
+  changed_when: true
+
+- name: Publish the root CA where the host OS can pick it up
+  ansible.builtin.copy:
+    src: '{{ mkcert_caroot.stdout | trim }}/rootCA.pem'
+    dest: '{{ item }}'
+    remote_src: true
+    mode: '0644'
+  loop:
+    - '{{ holistix_local_dev_dir }}/rootCA.pem'
+    - '{{ holistix_workspace }}/rootCA.pem'
+  failed_when: false # the workspace mount may not be present on a first run
+
+- name: Explain how to trust the CA on the host OS
+  ansible.builtin.debug:
+    msg:
+      - 'Root CA: {{ holistix_local_dev_dir }}/rootCA.pem (also copied to the workspace)'
+      - 'macOS:   sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain rootCA.pem'
+      - 'Linux:   sudo cp rootCA.pem /usr/local/share/ca-certificates/mkcert-dev.crt && sudo update-ca-certificates'

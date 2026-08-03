@@ -105,12 +105,19 @@ start_gateway_container() {
     # Get dev container IP for DNS resolution (CoreDNS on port 53)
     local dev_container_ip=$(hostname -I | awk '{print $1}')
     
-    # Start container with DNS pointing to dev container's CoreDNS
+    # Start container with DNS pointing to dev container's CoreDNS.
+    #
+    # `--restart no` on purpose: Docker starts its containers before Ganymede,
+    # which systemd brings up via holistix-env@<env>. A self-restarting gateway
+    # therefore fetches /gateway/config, gets a 502, and parks itself idle with
+    # no project rooms — the WebSocket then answers 404 for every project. The
+    # systemd unit starts the pool after Ganymede instead, in the right order.
     docker run -d \
         --name "${container_name}" \
         --label "environment=${env_name}" \
         --label "gateway_id=${gateway_id}" \
         --network bridge \
+        --restart no \
         -p "${http_port_map}:${http_port}" \
         -p "${vpn_port_map}:${vpn_port}/udp" \
         --cap-add=NET_ADMIN \

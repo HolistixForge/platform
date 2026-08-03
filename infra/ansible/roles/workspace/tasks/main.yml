@@ -1,0 +1,145 @@
+---
+- name: Clone the monorepo
+  when: holistix_repo_mode == 'clone'
+  ansible.builtin.git:
+    repo: '{{ holistix_repo_url }}'
+    dest: '{{ holistix_workspace }}'
+    version: '{{ holistix_repo_version }}'
+    update: true
+    force: false
+
+- name: Verify the shared workspace is mounted
+  when: holistix_repo_mode == 'mount'
+  ansible.builtin.stat:
+    path: '{{ holistix_workspace }}/package.json'
+  register: workspace_marker
+
+- name: Fail with a useful message when the share is missing
+  when:
+    - holistix_repo_mode == 'mount'
+    - not workspace_marker.stat.exists
+  ansible.builtin.fail:
+    msg: >-
+      {{ holistix_workspace }}/package.json not found. In `mount` mode the
+      source tree must be shared from the host OS before provisioning —
+      check the `mounts:` section of infra/vm/lima-holistix.yaml (or run
+      infra/vm/vmctl.sh up, which sets it up for you).
+
+# --------------------------------------------------------------------------
+# Keep Linux build artefacts out of the shared mount
+# --------------------------------------------------------------------------
+# node_modules built for linux-arm64 must not overwrite the macOS ones sitting
+# in the same directory. Back these paths with host-local storage and bind
+# mount them over the workspace.
+- name: Isolate build directories from the host share
+  when:
+    - holistix_isolate_build_dirs | bool
+    - holistix_repo_mode == 'mount'
+  block:
+    - name: Create the backing directories
+      ansible.builtin.file:
+        path: '{{ holistix_isolated_backing_root }}/{{ item }}'
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      loop: '{{ holistix_isolated_dirs }}'
+
+    - name: Create the mount points inside the workspace
+      ansible.builtin.file:
+        path: '{{ holistix_workspace }}/{{ item }}'
+        state: directory
+        mode: '0755'
+      loop: '{{ holistix_isolated_dirs }}'
+
+    - name: Bind mount the backing directories over the workspace
+      ansible.posix.mount:
+        path: '{{ holistix_workspace }}/{{ item }}'
+        src: '{{ holistix_isolated_backing_root }}/{{ item }}'
+        opts: bind
+        fstype: none
+        state: mounted
+      loop: '{{ holistix_isolated_dirs }}'
+
+# --------------------------------------------------------------------------
+# Dependencies and images
+# --------------------------------------------------------------------------
+- name: Install npm dependencies
+  when: holistix_npm_install | bool
+  ansible.builtin.command:
+    cmd: npm ci --no-audit --fund=false
+    chdir: '{{ holistix_workspace }}'
+  register: workspace_npm_ci
+  changed_when: "'added' in workspace_npm_ci.stdout or 'removed' in workspace_npm_ci.stdout"
+  environment:
+    npm_config_cache: /var/cache/npm
+    CI: 'true'
+
+- name: Install the Playwright Chromium browser and its system libraries
+  when: holistix_install_playwright | bool
+  ansible.builtin.command:
+    cmd: '{{ item }}'
+    chdir: '{{ holistix_workspace }}'
+  loop:
+    - npx --yes playwright install --with-deps chromium
+  changed_when: true
+
+- name: Build the gateway Docker image
+  when: holistix_build_gateway_image | bool
+  ansible.builtin.command:
+    cmd: docker build -t gateway:latest .
+    chdir: '{{ holistix_workspace }}/docker-images/backend-images/gateway'
+  register: workspace_gateway_build
+  changed_when: "'Using cache' not in workspace_gateway_build.stdout"
+
+- name: Make the local-dev scripts executable
+  ansible.builtin.file:
+    path: '{{ holistix_workspace }}/scripts/local-dev'
+    mode: u+rwX,g+rX,o+rX
+    recurse: true
+  failed_when: false
+
+# Without this, Ganymede does not survive a reboot — envctl.sh backgrounds it
+# with a pid file rather than registering a service — and every request through
+# nginx returns 502 until someone runs `envctl.sh start` by hand.
+- name: Install the per-environment systemd template unit
+  ansible.builtin.template:
+    src: holistix-env@.service.j2
+    dest: /etc/systemd/system/holistix-env@.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reload systemd units
+
+- name: Enable the unit for every existing environment
+  ansible.builtin.shell: |
+    set -o pipefail
+    changed=0
+    for dir in {{ holistix_local_dev_dir }}/*/; do
+      [ -f "${dir}/.env.ganymede" ] || continue
+      env_name="$(basename "${dir}")"
+      if ! systemctl is-enabled --quiet "holistix-env@${env_name}" 2>/dev/null; then
+        systemctl enable "holistix-env@${env_name}" >/dev/null
+        changed=1
+      fi
+    done
+    echo "${changed}"
+  args:
+    executable: /bin/bash
+  register: workspace_env_units
+  changed_when: workspace_env_units.stdout | trim == '1'
+
+- name: Install convenience shell aliases
+  ansible.builtin.copy:
+    dest: /etc/profile.d/holistix-aliases.sh
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      # Managed by Ansible (infra/ansible/roles/workspace)
+      export HOLISTIX_WORKSPACE={{ holistix_workspace }}
+      alias hx='cd $HOLISTIX_WORKSPACE'
+      alias envctl='$HOLISTIX_WORKSPACE/scripts/local-dev/envctl.sh'
+      alias dev-diagnostic='$HOLISTIX_WORKSPACE/scripts/local-dev/infra-diagnostic.sh'
+      alias services-status='systemctl --no-pager status postgresql nginx coredns holistix-buildserver'
+      alias services-restart='systemctl restart postgresql nginx coredns holistix-buildserver'

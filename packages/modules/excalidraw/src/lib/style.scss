@@ -2,3 +2,20 @@
 .App-bottom-bar {
   display: none;
 }
+
+// Keep Excalidraw's own floating UI on the same left rail as the project
+// sidebar, so it follows the whiteboard layers panel as that expands and
+// collapses rather than sitting under it.
+//
+// The panel publishes its width into --holistix-left-rail (see
+// whiteboard.tsx); the fallback matches the panel's open width plus its gap.
+// Excalidraw positions these islands itself, which is why they are nudged from
+// the outside rather than laid out.
+.excalidraw {
+  .App-menu_top__left,
+  .layer-ui__wrapper__top-left,
+  .App-toolbar__extra-tools-dropdown {
+    margin-left: var(--holistix-left-rail, 255px);
+    transition: margin-left 120ms ease;
+  }
+}

@@ -35,6 +35,7 @@ import {
 } from '@holistix-forge/core-graph';
 import {
   useAwareness,
+  useAwarenessSelections,
   TValidSharedDataToCopy,
   useLocalSharedDataManager,
   TOverrideFunction,
@@ -381,6 +382,18 @@ export const ReactflowLayer = ({
 
   const { awareness } = useAwareness();
 
+  // Nodes selected in this view are raised above the rest so the selection ring
+  // (and the node itself) is never buried under an overlapping node. Remote
+  // selections count too — their highlight is just as hideable as ours.
+  const selections = useAwarenessSelections();
+  const selectedNodeIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const [nodeId, users] of Object.entries(selections)) {
+      if (users.some((u) => u.viewId === viewId)) ids.add(nodeId);
+    }
+    return ids;
+  }, [selections, viewId]);
+
   //
 
   const { resetEdgeMenu } = useSpaceContext();
@@ -415,7 +428,7 @@ export const ReactflowLayer = ({
       defaultViewport={toReactFlowViewport(INITIAL_VIEWPORT)}
       maxZoom={1}
       minZoom={0.001}
-      nodes={translateNodes(spaceState.getNodes(), viewId)}
+      nodes={translateNodes(spaceState.getNodes(), viewId, selectedNodeIds)}
       edges={translateEdges(spaceState.getEdges())}
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}

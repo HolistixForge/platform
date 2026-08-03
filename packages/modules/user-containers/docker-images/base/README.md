@@ -40,11 +40,27 @@ The `holistixforge/bootstrap-tools` image is a minimal image (based on `scratch`
 
 ### Building the Bootstrap Tools Image
 
+The image ships the `auth-guard` binary, so it is architecture-specific. Build
+the binary for every architecture you intend to publish and drop them in this
+directory first — the Dockerfile picks one by `TARGETARCH`:
+
 ```bash
 # From repo root
-docker build -t holistixforge/bootstrap-tools:latest packages/modules/user-containers/docker-images/base/
+make -C packages/modules/user-containers/auth-guard build-all
+cp packages/modules/user-containers/auth-guard/auth-guard-linux-* \
+   packages/modules/user-containers/docker-images/base/auth-guard/
+```
 
-# Push to registry (if needed)
+Then build:
+
+```bash
+# Multi-arch, pushed in one go (buildx cannot load a multi-arch image locally)
+docker buildx build --platform linux/amd64,linux/arm64 \
+  -t holistixforge/bootstrap-tools:latest --push \
+  packages/modules/user-containers/docker-images/base/
+
+# Or single-arch for the host, kept local
+docker build -t holistixforge/bootstrap-tools:latest packages/modules/user-containers/docker-images/base/
 docker push holistixforge/bootstrap-tools:latest
 ```
 

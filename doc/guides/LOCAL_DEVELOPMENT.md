@@ -1,5 +1,12 @@
 # Local Full-Stack Development Setup
 
+> **Running in a VM instead?** See **[VM_DEVELOPMENT.md](VM_DEVELOPMENT.md)**.
+> A dev container has no systemd, no real Docker daemon, and no path to a
+> production server. The Ansible playbook in `infra/ansible` provisions a real
+> Ubuntu 24.04 host — locally a VM, in production a VPS — and everything below
+> (`create-env.sh`, `envctl.sh`, the gateway pool) works identically there.
+> This guide documents the dev-container setup it replaces.
+
 ## Overview
 
 This guide sets up a **complete local development environment** inside your development container, closely mimicking production but optimized for rapid iteration.

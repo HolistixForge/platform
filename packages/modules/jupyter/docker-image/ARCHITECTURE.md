@@ -190,13 +190,13 @@ Two image variants are provided, sharing the same entrypoint and authentication 
 
 ### Common layers installed on both
 
-| Layer                           | Source                                | Contents                                                                                                         |
-| ------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `holistixforge/bootstrap-tools` | `user-containers/docker-images/base/` | `container-functions.sh`, `extract_settings`, `start_auth_guard`, `map_http_service`, `vpn_loop`, `watchdog`     |
-| `holistixforge/ttyd-tools`      | `user-containers/docker-images/ttyd/` | `ttyd` binary, `tmux`, web terminal support                                                                      |
-| `jupyter-collaboration`         | pip install                           | Real-time collaborative editing extension                                                                        |
-| Container-specific scripts      | `jupyter/docker-image/`               | `container-entrypoint.sh`, `hub-oauth-proxy.py`, `activity-server.py`, `start-singleuser.sh`, `page_config.json` |
-| System packages                 | apt                                   | `jq`, `curl`, `openvpn`, `iputils-ping`, `pciutils`                                                              |
+| Layer                           | Source                                | Contents                                                                                                     |
+| ------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `holistixforge/bootstrap-tools` | `user-containers/docker-images/base/` | `container-functions.sh`, `extract_settings`, `start_auth_guard`, `map_http_service`, `vpn_loop`, `watchdog` |
+| `holistixforge/ttyd-tools`      | `user-containers/docker-images/ttyd/` | `ttyd` binary, `tmux`, web terminal support                                                                  |
+| `jupyter-collaboration`         | pip install                           | Real-time collaborative editing extension                                                                    |
+| Container-specific scripts      | `jupyter/docker-image/`               | `container-entrypoint.sh`, `hub-oauth-proxy.py`, `activity-server.py`, `page_config.json`                    |
+| System packages                 | apt                                   | `jq`, `curl`, `openvpn`, `iputils-ping`, `pciutils`                                                          |
 
 ### Build commands
 

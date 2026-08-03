@@ -5,10 +5,15 @@
     <title>Holistix Forge</title>
     <base href="/" />
 
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-    
-    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, minimum-scale=1"
+    />
+
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="upgrade-insecure-requests"
+    />
 
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
 
@@ -17,6 +22,41 @@
 
     <script type="text/javascript">
       var __webpack_public_path__ = '';
+    </script>
+
+    <script type="text/javascript">
+      // index.html is the only file Vite does not fingerprint, so a browser
+      // holding a cached copy from an older build asks for bundle names that
+      // build no longer produces: the stylesheet 404s and the app renders
+      // unstyled. Nothing server-side can invalidate that cache entry, so
+      // recover here — nginx answers those 404s with Clear-Site-Data, which
+      // means one reload lands on the current build.
+      //
+      // Runs before Vite's injected <link>, so the listener is always in place
+      // when the error fires. Guarded by sessionStorage: a genuinely missing
+      // asset must not turn into a reload loop.
+      (function () {
+        var KEY = 'holistix:stale-bundle-reload';
+        var failed = false;
+
+        document.addEventListener(
+          'error',
+          function (event) {
+            var el = event.target;
+            if (!el || el.tagName !== 'LINK' || el.rel !== 'stylesheet') return;
+
+            failed = true;
+            if (sessionStorage.getItem(KEY)) return; // already retried once
+            sessionStorage.setItem(KEY, '1');
+            location.reload();
+          },
+          true // stylesheet errors do not bubble
+        );
+
+        window.addEventListener('load', function () {
+          if (!failed) sessionStorage.removeItem(KEY);
+        });
+      })();
     </script>
   </head>
   <body>

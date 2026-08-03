@@ -278,6 +278,18 @@ OTEL_DEPLOYMENT_ENVIRONMENT=${ENV_NAME}
 # (e.g., https://org-{uuid}.domain.local/collab/start) and Node.js would reject
 # self-signed certificates by default.
 NODE_TLS_REJECT_UNAUTHORIZED=0
+
+# Rate limits, relaxed for local development only.
+#
+# The defaults (5 auth / 20 OAuth per 15 minutes) are sized for a public
+# instance. In development the SPA retries the authorization-code flow on every
+# reload, so a single debugging session exhausts the OAuth budget and then locks
+# you out for the rest of the window with an opaque 429 — which looks exactly
+# like "the app is broken and shows no data".
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_AUTH_MAX=100
+RATE_LIMIT_OAUTH_MAX=500
+RATE_LIMIT_SENSITIVE_MAX=300
 EOF
 
 # 8. Create Nginx server blocks (Stage 1 - Main nginx with SSL termination)
@@ -299,9 +311,31 @@ server {
         try_files \$uri /index.html;
     }
 
-    location ~* \.(js|css|html|svg|ttf|woff|woff2)$ {
+    # index.html is the one file Vite does not fingerprint — it is what points
+    # at the hashed bundles. Caching it means that after a rebuild the browser
+    # keeps asking for asset names that no longer exist: the CSS 404s and the
+    # app renders unstyled until the user reloads by hand. It must revalidate.
+    location = /index.html {
+        expires -1;
+    }
+
+    # Everything else under /assets is content-hashed, so a given name never
+    # changes and can be cached indefinitely.
+    location ~* \.(js|css|svg|ttf|woff|woff2)$ {
         expires max;
         add_header Cache-Control public;
+        error_page 404 = @stale_bundle;
+    }
+
+    # A hashed asset that does not exist can only mean one thing: the browser
+    # is holding an index.html from an older build and is asking for bundles
+    # that build no longer produces. Nothing server-side can invalidate that
+    # entry — but this header can, and it costs one reload instead of the user
+    # hunting down every cached URL by hand. "cache" only: cookies and storage
+    # are left alone, so the session survives.
+    location @stale_bundle {
+        add_header Clear-Site-Data '"cache"' always;
+        return 404;
     }
 
     access_log ${LOGS_DIR}/frontend-access.log;
@@ -356,8 +390,16 @@ sudo service nginx reload
 # 10. Create CoreDNS zone file
 echo "🌐 Creating CoreDNS zone file..."
 
-# Get container IP
-DEV_CONTAINER_IP="127.0.0.1"
+# The address this zone hands out has to work for every consumer:
+#   - a browser on the host OS, resolving through /etc/resolver or delegation
+#   - gateway containers on the Docker bridge
+#   - this machine itself
+#
+# 127.0.0.1 only ever worked in the dev-container setup, where Docker published
+# 80/443 onto the host's own loopback. On a VM or a server it points each
+# caller at itself. PLATFORM_HOST_IP is exported by infra/ansible (see the
+# docker role) and should be an address the host OS can route to.
+DEV_CONTAINER_IP="${PLATFORM_HOST_IP:-127.0.0.1}"
 
 # Create zones directory if it doesn't exist
 sudo mkdir -p /etc/coredns/zones
@@ -430,6 +472,18 @@ echo "👤 App User: ${APP_DB_USER} (credentials in .env.ganymede)"
 echo "🌐 Domain: ${DOMAIN}"
 echo "📦 Gateway Pool: ${GATEWAY_POOL_SIZE} gateways ready"
 echo ""
+# Register the environment with systemd so it comes back after a reboot.
+# envctl.sh backgrounds Ganymede with a pid file rather than registering a
+# service, so without this it stays down and nginx answers 502.
+if command -v systemctl >/dev/null 2>&1 \
+  && systemctl list-unit-files "holistix-env@.service" >/dev/null 2>&1 \
+  && systemctl cat "holistix-env@.service" >/dev/null 2>&1; then
+  if sudo systemctl enable "holistix-env@${ENV_NAME}" >/dev/null 2>&1; then
+    echo "🔁 Registered with systemd: holistix-env@${ENV_NAME} (starts on boot)"
+    echo ""
+  fi
+fi
+
 echo "🔑 Database Admin Credentials (for manual operations):"
 echo "   User: postgres"
 echo "   Password: devpassword"

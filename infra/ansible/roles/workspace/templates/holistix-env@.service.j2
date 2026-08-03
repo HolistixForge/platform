@@ -1,0 +1,38 @@
+[Unit]
+# Brings a local-dev environment back after a reboot.
+#
+# Ganymede is started by envctl.sh as a background process with a pid file, so
+# without this unit it simply does not come back and every request through
+# nginx returns 502 until someone notices. Enable per environment:
+#
+#     systemctl enable --now holistix-env@<env-name>
+#
+# create-env.sh does that automatically for environments it creates.
+Description=Holistix environment %i
+Documentation=file://{{ holistix_workspace }}/doc/guides/VM_DEVELOPMENT.md
+After=network-online.target postgresql.service nginx.service docker.service
+Wants=network-online.target
+Requires=postgresql.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory={{ holistix_workspace }}
+ExecStart={{ holistix_workspace }}/scripts/local-dev/envctl.sh start %i
+
+# Order matters. Gateway containers fetch /gateway/config from Ganymede the
+# moment they start; if Ganymede is not listening yet they take a 502 and park
+# themselves idle with no project rooms, and the collaboration WebSocket then
+# answers 404 for every project. So wait for Ganymede, then start the pool —
+# this is also why the containers carry no Docker restart policy, which would
+# race ahead of this unit on boot.
+ExecStartPost=/bin/bash -c 'for i in $(seq 1 60); do \
+  ss -tln | grep -qE ":(6[0-9]{3})\\s" && break; sleep 2; done'
+ExecStartPost=/bin/bash -c 'docker start $(docker ps -aq --filter "label=environment=%i") 2>/dev/null || true'
+
+ExecStop={{ holistix_workspace }}/scripts/local-dev/envctl.sh stop %i
+ExecStop=/bin/bash -c 'docker stop $(docker ps -q --filter "label=environment=%i") 2>/dev/null || true'
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target

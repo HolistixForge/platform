@@ -61,3 +61,13 @@ data/*
 website/static/.playwright-mcp/
 
 .playwright-mcp
+
+# Infrastructure — machine-specific and secret
+infra/ansible/.ssh-config
+infra/ansible/inventory/production.yml
+infra/ansible/inventory/*.local.yml
+infra/ansible/secrets.yml
+infra/ansible/*.retry
+infra/ansible/collections/
+# mkcert root CA exported from the VM for host-OS trust
+rootCA.pem

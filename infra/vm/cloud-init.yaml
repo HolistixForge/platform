@@ -1,0 +1,42 @@
+#cloud-config
+# ---------------------------------------------------------------------------
+# Minimal cloud-init for a Holistix platform VM created WITHOUT Lima —
+# Multipass, UTM, Proxmox, or any cloud provider that accepts user-data.
+#
+#   multipass launch 24.04 --name holistix \
+#     --cpus 6 --memory 12G --disk 100G \
+#     --cloud-init infra/vm/cloud-init.yaml
+#
+# It only prepares the host for Ansible. Everything else comes from
+# infra/ansible/site.yml, pointed at this machine over SSH:
+#
+#   ansible-playbook -i <ip>, -u ubuntu --become site.yml \
+#     -e holistix_repo_mode=clone
+# ---------------------------------------------------------------------------
+
+package_update: true
+package_upgrade: false
+
+packages:
+  - python3
+  - python3-apt
+  - openssh-server
+  - ca-certificates
+  - sudo
+  - git
+  - curl
+
+write_files:
+  - path: /etc/sysctl.d/99-holistix.conf
+    content: |
+      fs.inotify.max_user_watches = 524288
+      fs.inotify.max_user_instances = 512
+
+runcmd:
+  - [mkdir, -p, /root/workspace, /root/.local-dev, /root/.local-dev-builds]
+  - [sysctl, --system]
+
+final_message: |
+  Holistix VM base ready after $UPTIME seconds.
+  Provision it with:
+    ansible-playbook -i '<this-host>,' -u ubuntu --become infra/ansible/site.yml

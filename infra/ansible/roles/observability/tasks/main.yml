@@ -1,0 +1,58 @@
+---
+# OTLP Collector + Loki + Tempo + Grafana.
+#
+# Delegates to scripts/local-dev/setup-observability.sh so there is one source
+# of truth for the stack. That script is idempotent: it exits early when all
+# four containers already exist.
+
+- name: Check which observability containers already exist
+  ansible.builtin.command: >-
+    docker container inspect
+    observability-otlp-collector observability-loki
+    observability-tempo observability-grafana
+  register: observability_containers
+  changed_when: false
+  failed_when: false
+
+- name: Deploy the observability stack
+  ansible.builtin.command:
+    cmd: ./scripts/local-dev/setup-observability.sh
+    chdir: '{{ holistix_workspace }}'
+  when: observability_containers.rc != 0
+  register: observability_setup
+  changed_when: true
+
+- name: Ensure the containers restart with the host
+  ansible.builtin.command: >-
+    docker update --restart unless-stopped
+    observability-otlp-collector observability-loki
+    observability-tempo observability-grafana
+  changed_when: false
+
+- name: Wait for Loki to become ready
+  ansible.builtin.uri:
+    url: http://127.0.0.1:3100/ready
+    status_code: [200]
+  register: observability_loki_ready
+  retries: 12
+  delay: 5
+  until: observability_loki_ready is succeeded
+  failed_when: false
+
+- name: Wait for Grafana to become ready
+  ansible.builtin.uri:
+    url: http://127.0.0.1:3000/api/health
+    status_code: [200]
+  register: observability_grafana_ready
+  retries: 12
+  delay: 5
+  until: observability_grafana_ready is succeeded
+  failed_when: false
+
+- name: Report the observability endpoints
+  ansible.builtin.debug:
+    msg:
+      - "OTLP  http://{{ holistix_docker_host_ip | default('172.17.0.1') }}:4318 (HTTP) / :4317 (gRPC)"
+      - "Loki  http://127.0.0.1:3100  — ready: {{ observability_loki_ready.status | default('n/a') }}"
+      - 'Tempo http://127.0.0.1:3200'
+      - "Grafana http://127.0.0.1:3000 — ready: {{ observability_grafana_ready.status | default('n/a') }}"

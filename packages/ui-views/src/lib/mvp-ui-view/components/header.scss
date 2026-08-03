@@ -1,5 +1,32 @@
+// `w-full` is `width: 100%`, and nothing in the app sets a global border-box
+// reset — so the 24px horizontal padding was added *on top* of the full width
+// and the bar rendered 48px wider than the viewport, pushing the notification
+// bell off the right edge.
+.app-header {
+  box-sizing: border-box;
+
+  // The three groups keep a gap between them even once the free space is gone,
+  // and only the middle one (the search field) gives ground: squashing the
+  // left icons or the right-hand buttons would clip them the same way.
+  gap: 16px;
+
+  > * {
+    min-width: 0;
+  }
+
+  > :first-child,
+  > :last-child {
+    flex: 0 0 auto;
+  }
+}
+
 .header-search {
   width: 365px;
+  min-width: 0;
+
+  input {
+    min-width: 0;
+  }
 }
 
 @media (max-width: 640px) {
@@ -32,5 +59,14 @@
 @media (max-width: 1000px) {
   .header-search {
     width: 260px;
+  }
+}
+
+// Past this point the search field has been squeezed down to its two icons and
+// is no longer usable, so drop it rather than leave a stub between the menu and
+// the account buttons.
+@media (max-width: 900px) {
+  .header-search {
+    display: none;
   }
 }

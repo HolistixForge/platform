@@ -9,6 +9,14 @@ export type TRunnerConfig = {
   ganymede_fqdn: string;
   gateway_fqdn: string;
   organization_id: string;
+  /**
+   * Secret for `container.auth_guard.client_id`.
+   *
+   * Passed alongside the container rather than on it: the container record
+   * lives in collab shared state and is replicated to every client in the
+   * project, so the secret must never be stored there.
+   */
+  auth_guard_client_secret?: string;
 };
 
 /**
@@ -39,15 +47,18 @@ export abstract class ContainerRunner {
       token: jwtToken,
       project_id: config.project_id,
       user_container_id: container.user_container_id,
-      // Auth Guard Proxy config (per-container OAuth client registered with Ganymede)
-      ...(container.auth_guard && {
-        auth_guard: {
-          client_id: container.auth_guard.client_id,
-          client_secret: container.auth_guard.client_secret,
-          container_id: container.user_container_id,
-          organization_id: config.organization_id,
-        },
-      }),
+      // Auth Guard Proxy config (per-container OAuth client registered with
+      // Ganymede). The secret comes from the config, not the container: it is
+      // never persisted in shared state.
+      ...(container.auth_guard &&
+        config.auth_guard_client_secret && {
+          auth_guard: {
+            client_id: container.auth_guard.client_id,
+            client_secret: config.auth_guard_client_secret,
+            container_id: container.user_container_id,
+            organization_id: config.organization_id,
+          },
+        }),
     };
 
     // Base64 encode settings

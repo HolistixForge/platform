@@ -49,9 +49,8 @@ USER root
 
 # Copy container-specific files
 COPY ./page_config.json /etc/jupyter/labconfig/
-COPY ./start-singleuser.sh ./activity-server.py ./hub-oauth-proxy.py ./container-entrypoint.sh /usr/local/bin/
+COPY ./activity-server.py ./hub-oauth-proxy.py ./container-entrypoint.sh /usr/local/bin/
 RUN chmod 755 /etc/jupyter/labconfig/page_config.json \
-    /usr/local/bin/start-singleuser.sh \
     /usr/local/bin/activity-server.py \
     /usr/local/bin/hub-oauth-proxy.py \
     /usr/local/bin/container-entrypoint.sh

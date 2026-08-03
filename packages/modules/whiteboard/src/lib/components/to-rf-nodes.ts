@@ -30,7 +30,32 @@ export type SpaceNode = Omit<RfNode, 'data'> & { data: SpaceNodePayload };
 //
 //
 
-const translateNode = (nw: TNodeView, viewId: string): SpaceNode => {
+/**
+ * Stacking order for nodes.
+ *
+ * Selection lives in awareness rather than in React Flow's own `selected` flag,
+ * so React Flow's `elevateNodesOnSelect` never fires — the elevation has to be
+ * expressed as an explicit `zIndex`.
+ *
+ * Groups sit below everything so that their children always draw on top of
+ * their background; groups are not selectable, so they never elevate.
+ */
+export const NODE_Z_INDEX = {
+  group: 0,
+  node: 1,
+  selected: 1000,
+};
+
+const nodeZIndex = (nw: TNodeView, isSelected: boolean) => {
+  if (nw.type === 'group') return NODE_Z_INDEX.group;
+  return isSelected ? NODE_Z_INDEX.selected : NODE_Z_INDEX.node;
+};
+
+const translateNode = (
+  nw: TNodeView,
+  viewId: string,
+  isSelected: boolean
+): SpaceNode => {
   const s = nw.status || nodeViewDefaultStatus();
   const data = {
     viewId,
@@ -44,7 +69,7 @@ const translateNode = (nw: TNodeView, viewId: string): SpaceNode => {
     data,
     className: statusToClassName(s),
     draggable: true,
-    // zIndex: nw.type === 'group' ? 1000 : 2000,
+    zIndex: nodeZIndex(nw, isSelected),
     selectable: nw.type !== 'group',
   };
 };
@@ -52,8 +77,12 @@ const translateNode = (nw: TNodeView, viewId: string): SpaceNode => {
 //
 //
 
-export const translateNodes = (nodes: Array<TNodeView>, viewId: string) =>
-  nodes.map((n) => translateNode(n, viewId));
+export const translateNodes = (
+  nodes: Array<TNodeView>,
+  viewId: string,
+  /** Ids selected in this view; those nodes are raised above the others. */
+  selectedNodeIds: ReadonlySet<string> = new Set()
+) => nodes.map((n) => translateNode(n, viewId, selectedNodeIds.has(n.id)));
 
 //
 //

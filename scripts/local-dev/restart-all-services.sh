@@ -4,6 +4,9 @@
 
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/coredns-common.sh"
+
 echo "🔄 Restarting all development services..."
 echo ""
 
@@ -22,33 +25,36 @@ sudo service nginx restart
 echo "   ✅ Nginx restarted"
 
 # Restart CoreDNS
+# restart_coredns() prefers the systemd unit when one exists (VM / bare-metal
+# installs provisioned by infra/ansible) and falls back to a bare background
+# process in dev containers, which have no systemd.
 echo "🌐 Restarting CoreDNS..."
-if pgrep -x coredns >/dev/null 2>&1; then
-    sudo killall coredns 2>/dev/null || true
-    sleep 1
-fi
 if command -v coredns &> /dev/null && [ -f /etc/coredns/Corefile ]; then
-    sudo coredns -conf /etc/coredns/Corefile &
-    sleep 2
-    if pgrep -x coredns >/dev/null 2>&1; then
-        echo "   ✅ CoreDNS restarted"
-    else
-        echo "   ⚠️  CoreDNS failed to start"
-    fi
+    restart_coredns true && echo "   ✅ CoreDNS restarted" || echo "   ⚠️  CoreDNS failed to start"
 else
     echo "   ⚠️  CoreDNS not installed or not configured"
 fi
 
-# Optionally restart build server
+# Restart the gateway build server
 BUILD_SERVER_PORT=8090
-if lsof -i :$BUILD_SERVER_PORT >/dev/null 2>&1; then
-    echo "🔧 Restarting build server..."
+echo "🔧 Restarting build server..."
+if command -v systemctl >/dev/null 2>&1 \
+   && systemctl list-unit-files holistix-buildserver.service >/dev/null 2>&1 \
+   && systemctl cat holistix-buildserver.service >/dev/null 2>&1; then
+    sudo systemctl restart holistix-buildserver
+    sleep 1
+    if sudo systemctl is-active --quiet holistix-buildserver; then
+        echo "   ✅ Build server restarted (systemd)"
+    else
+        echo "   ⚠️  Build server failed to start (journalctl -u holistix-buildserver)"
+    fi
+elif lsof -i :$BUILD_SERVER_PORT >/dev/null 2>&1; then
     BUILD_PID=$(lsof -t -i :$BUILD_SERVER_PORT)
     kill $BUILD_PID 2>/dev/null || true
     sleep 1
-    
+
     if [ -d "/root/.local-dev-builds" ]; then
-        (cd /root/workspace/monorepo/scripts/local-dev && nohup ./serve-builds.sh > /tmp/build-server.log 2>&1 &)
+        (cd "${SCRIPT_DIR}" && nohup ./serve-builds.sh > /tmp/build-server.log 2>&1 &)
         sleep 2
         if lsof -i :$BUILD_SERVER_PORT >/dev/null 2>&1; then
             echo "   ✅ Build server restarted"

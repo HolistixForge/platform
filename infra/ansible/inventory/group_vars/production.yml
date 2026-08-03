@@ -1,0 +1,33 @@
+---
+# Production / staging server (bare Ubuntu 24.04 VPS).
+#
+# Differences from the dev VM:
+#   - the repo is cloned on the server, not shared from a laptop
+#   - TLS comes from Let's Encrypt, not a local mkcert CA
+#   - CoreDNS is off by default (public DNS is handled by your registrar)
+#   - the PostgreSQL password MUST come from a vault, never from git
+#
+# Copy inventory/production.yml.example, fill it in, and keep it out of git.
+
+holistix_repo_mode: clone
+holistix_repo_version: main
+holistix_isolate_build_dirs: false
+
+holistix_tls_mode: letsencrypt
+# certbot_domains must be set in your inventory, e.g.:
+#   certbot_domains: ["app.holistix.so", "ganymede.app.holistix.so"]
+
+holistix_install_coredns: false
+coredns_manage_resolv_conf: false
+
+holistix_install_observability: true
+holistix_install_playwright: false
+holistix_build_gateway_image: true
+holistix_npm_install: true
+holistix_install_build_server: true
+
+# Never commit a real password. Provide it with either
+#   ansible-playbook ... -e postgres_password="$(pass show holistix/pg)"
+# or an ansible-vault encrypted var file.
+postgres_password: '{{ vault_postgres_password | mandatory }}'
+postgres_listen_addresses: localhost

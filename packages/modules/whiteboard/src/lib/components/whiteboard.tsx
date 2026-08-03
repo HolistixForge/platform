@@ -1,4 +1,12 @@
-import { FC, ReactNode, useCallback, useMemo, useRef, useState } from 'react';
+import {
+  FC,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { isEqual } from 'lodash';
 
@@ -42,6 +50,7 @@ import { CustomStoryEdge } from './edge';
 import { RightPanels, usePanelContext } from './right-panels';
 import { ModeIndicator } from './ModeIndicator';
 import { LayersTreePanel } from './panels/layers-tree-panel';
+
 import { LayerContextProvider } from './layer-context';
 import { buildNodeTree } from '../layer-tree-utils';
 import { TGraphView } from '../whiteboard-types';
@@ -51,6 +60,25 @@ import {
   TLayerTreeCollection,
 } from '../layer-tree-types';
 import { useModuleExports } from '@holistix-forge/module/frontend';
+
+/** Width of the layers panel when open, and when collapsed to its handle. */
+export const LAYERS_PANEL_WIDTH = 240;
+export const LAYERS_PANEL_COLLAPSED_WIDTH = 24;
+
+/** Gap between the panel and whatever sits to its right. */
+const LEFT_RAIL_GAP = 15;
+
+/**
+ * CSS custom property holding the x offset of the left rail — the column just
+ * right of the layers panel, where the project sidebar and Excalidraw's
+ * toolbar live.
+ *
+ * Both are fixed-positioned and so cannot be flex siblings of the panel. Rather
+ * than hardcode an offset that goes stale the moment the panel is collapsed,
+ * the panel publishes its own width here and they position against it. Anything
+ * on the rail should transition `left` over the same 120ms the panel animates.
+ */
+const LEFT_RAIL_VAR = '--holistix-left-rail';
 
 //
 
@@ -338,6 +366,19 @@ const WhiteboardWhiteboard = ({
   const [renderForm, setRenderForm] = useState<ReactNode | null>(null);
   const [showLayersPanel, setShowLayersPanel] = useState<boolean>(true);
 
+  // Publish the panel's width so the fixed-positioned rail tracks it instead
+  // of sitting at a constant offset that is wrong as soon as it collapses.
+  useEffect(() => {
+    const width = showLayersPanel
+      ? LAYERS_PANEL_WIDTH
+      : LAYERS_PANEL_COLLAPSED_WIDTH;
+    const root = document.documentElement;
+    root.style.setProperty(LEFT_RAIL_VAR, `${width + LEFT_RAIL_GAP}px`);
+    return () => {
+      root.style.removeProperty(LEFT_RAIL_VAR);
+    };
+  }, [showLayersPanel]);
+
   const gv: TGraphView | undefined = useLocalSharedData<TWhiteboardSharedData>(
     ['whiteboard:graphViews'],
     (sd) => {
@@ -371,11 +412,23 @@ const WhiteboardWhiteboard = ({
         updateLayerTree: handleUpdateLayerTree,
       }}
     >
-      <div style={{ display: 'flex', height: '100%' }}>
+      <div style={{ display: 'flex', height: '100%', position: 'relative' }}>
         <div
           style={{
-            flex: '0 0 ' + (showLayersPanel ? '240px' : '24px'),
-            transition: 'flex 120ms ease',
+            // Overlaid rather than a flex sibling, so the canvas keeps the full
+            // width and simply continues underneath. As a flex child the panel
+            // consumed 240px and the board visibly stopped at its edge.
+            position: 'absolute',
+            top: 0,
+            bottom: 0,
+            // Flush against the left edge: the panel comes first, and the
+            // project sidebar is offset to sit to its right (see
+            // PROJECT_SIDEBAR_CLEARANCE and ui-base sidebar.css).
+            left: 0,
+            width: showLayersPanel
+              ? LAYERS_PANEL_WIDTH
+              : LAYERS_PANEL_COLLAPSED_WIDTH,
+            transition: 'width 120ms ease',
             background: 'var(--surface-900)',
             border: '1px solid var(--color-border, #e5e7eb)',
             borderRadius: 6,

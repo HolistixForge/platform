@@ -1,0 +1,135 @@
+---
+# A real Docker Engine, not a socket mounted in from somewhere else.
+#
+# This is the main structural difference from the dev-container setup: the
+# platform host IS the Docker host, so 172.17.0.1 really is reachable from
+# gateway containers, and bind mounts from this filesystem work as written.
+
+- name: Fetch the Docker signing key
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+
+- name: Remove the legacy one-line Docker source list
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/docker.list
+    state: absent
+
+- name: Add the Docker apt repository
+  ansible.builtin.deb822_repository:
+    name: docker
+    types: [deb]
+    uris: https://download.docker.com/linux/ubuntu
+    suites: ["{{ ansible_facts['distribution_release'] }}"]
+    components: [stable]
+    architectures: ['{{ holistix_deb_arch }}']
+    signed_by: /etc/apt/keyrings/docker.asc
+    enabled: true
+    state: present
+
+- name: Install Docker Engine
+  ansible.builtin.apt:
+    update_cache: true
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+
+- name: Enable and start Docker
+  ansible.builtin.systemd_service:
+    name: docker
+    enabled: true
+    state: started
+
+- name: Add the login user to the docker group
+  ansible.builtin.user:
+    name: '{{ ansible_user_id }}'
+    groups: docker
+    append: true
+  when: ansible_user_id != 'root'
+
+# gateway-pool.sh runs every gateway with `--cap-add=NET_ADMIN --device
+# /dev/net/tun` for OpenVPN. If the tun module is absent, `docker run` fails
+# outright — no gateway container, therefore no collab WebSocket at all. Cloud
+# images do not always have it loaded, and a VM does not inherit it from the
+# host the way a dev container did.
+- name: Load the tun kernel module (required by gateway containers)
+  community.general.modprobe:
+    name: tun
+    state: present
+    persistent: present
+
+- name: Verify /dev/net/tun exists
+  ansible.builtin.stat:
+    path: /dev/net/tun
+  register: docker_tun_device
+  failed_when: not docker_tun_device.stat.exists
+
+- name: Confirm the docker0 bridge gateway address
+  ansible.builtin.command: >-
+    docker network inspect bridge -f '{{ "{{" }}(index .IPAM.Config 0).Gateway{{ "}}" }}'
+  register: docker_bridge_gateway
+  changed_when: false
+
+# Deliberately not docker_-prefixed: the observability role and the summary
+# output consume this fact, so it belongs to the playbook, not to this role.
+- name: Record the Docker host IP used by gateway containers # noqa: var-naming[no-role-prefix]
+  ansible.builtin.set_fact:
+    holistix_docker_host_ip: '{{ docker_bridge_gateway.stdout | trim }}'
+
+# create-env.sh and gateway-pool.sh default to 172.17.0.1 and honour
+# DOCKER_HOST_IP. On a real VM the default is already correct, but we write
+# the detected value out so envctl runs pick it up even on a custom bridge.
+- name: Persist the network addresses the local-dev scripts need
+  ansible.builtin.copy:
+    dest: /etc/profile.d/holistix-network.sh
+    mode: '0644'
+    content: |
+      # Managed by Ansible (infra/ansible/roles/docker)
+      # Reached by containers on the Docker bridge.
+      export DOCKER_HOST_IP={{ holistix_docker_host_ip }}
+      # Handed out by the CoreDNS zone files, so it must be routable from the
+      # host OS browser as well as from inside the guest and its containers.
+      export PLATFORM_HOST_IP={{ holistix_public_ip }}
+
+- name: Remove the superseded profile snippet
+  ansible.builtin.file:
+    path: /etc/profile.d/holistix-docker.sh
+    state: absent
+
+- name: Show the Docker host IP
+  ansible.builtin.debug:
+    msg: 'Gateway containers reach this host at {{ holistix_docker_host_ip }}'
+
+# Docker copies the host's /etc/resolv.conf into every container but strips
+# loopback addresses from it. Since the coredns role points the host at
+# 127.0.0.1, containers would be left with only the public fallback and could
+# not resolve ganymede.<domain> — which gateway containers must do to fetch
+# their configuration at startup. Point them at CoreDNS on the bridge address
+# instead, where it is listening (it binds 0.0.0.0:53).
+- name: Give containers a resolver that can see the local zones
+  when: holistix_install_coredns | bool
+  block:
+    - name: Configure the Docker daemon DNS
+      ansible.builtin.copy:
+        dest: /etc/docker/daemon.json
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          {
+            "dns": ["{{ holistix_docker_host_ip }}"{% for u in coredns_upstreams %}, "{{ u }}"{% endfor %}]
+          }
+      register: docker_daemon_config
+
+    # Not a handler: later roles start containers, and those containers must
+    # already have the new resolver. Handlers only run at the end of the play.
+    - name: Restart Docker to apply the resolver change # noqa: no-handler
+      ansible.builtin.systemd_service:
+        name: docker
+        state: restarted
+      when: docker_daemon_config is changed

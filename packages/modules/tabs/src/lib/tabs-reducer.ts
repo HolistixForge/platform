@@ -11,14 +11,16 @@ import {
   TTabEvents,
 } from './tabs-event';
 import {
+  DEFAULT_DASHBOARD_TAB_TITLE,
   MAX_TAB_ROW,
+  RESOURCES_TAB_TITLE,
   TabPath,
   TabPayload,
   TTabsTree,
   TUsersActiveTabs,
 } from './tabs-types';
 import { TTabsSharedData } from './tabs-shared-model';
-import { ReadWriteTree } from './tree';
+import { ReadWriteTree, TreeElement } from './tree';
 import { TCollabBackendExports } from '@holistix-forge/collab';
 import { TEventProjectInit } from '@holistix-forge/gateway';
 
@@ -195,7 +197,7 @@ export class TabsReducer extends ReducerWithCollab<
   }
 
   /**
-   * Initialize project with default tab
+   * Initialize project with default tabs
    * Called when a new project is created
    */
   private async _initProject(
@@ -212,30 +214,49 @@ export class TabsReducer extends ReducerWithCollab<
       `project:init called for project ${event.project_id}, current tabs children: ${childrenCount}`
     );
 
-    // Check if already initialized (idempotent)
+    // Already initialized: only make sure the default tabs are still there.
+    // Projects created before the Resources tab existed are missing it.
     if (tabsData && tabsData.tree.children.length > 0) {
+      if (hasTabOfType(tabsData.tree, 'resources-grid')) {
+        log(
+          EPriority.Info,
+          'TABS_INIT',
+          `Skipping initialization - tabs already has ${tabsData.tree.children.length} child(ren)`
+        );
+        return;
+      }
+
+      const patched: TTabsTree = {
+        ...tabsData,
+        tree: {
+          ...tabsData.tree,
+          children: [...tabsData.tree.children, resourcesTab()],
+        },
+      };
+      collab.sharedData['tabs:tabs'].set('unique', patched);
       log(
         EPriority.Info,
         'TABS_INIT',
-        `Skipping initialization - tabs already has ${tabsData.tree.children.length} child(ren)`
+        `✅ Restored missing '${RESOURCES_TAB_TITLE}' tab for project ${event.project_id}`
       );
       return;
     }
 
-    // Create default tab structure with "Default Dashboard" pointing to view-1
+    // Create default tab structure: dashboard on view-1 + resources grid
     const defaultTab: TTabsTree = {
       tree: {
         title: 'Root',
         payload: { type: 'group' },
         children: [
           {
-            title: 'Default Dashboard',
+            title: DEFAULT_DASHBOARD_TAB_TITLE,
             payload: {
               type: 'node-editor',
               viewId: 'view-1', // References whiteboard view-1
             },
             children: [],
           },
+          resourcesTab(),
         ],
       },
       actives: {},
@@ -245,7 +266,7 @@ export class TabsReducer extends ReducerWithCollab<
     log(
       EPriority.Info,
       'TABS_INIT',
-      `✅ Created default tab 'Default Dashboard' for project ${event.project_id}`
+      `✅ Created default tabs '${DEFAULT_DASHBOARD_TAB_TITLE}' and '${RESOURCES_TAB_TITLE}' for project ${event.project_id}`
     );
   }
 }
@@ -259,3 +280,19 @@ const newTabPayload = (): TabPayload => ({
 });
 
 const newGroup = (): TabPayload => ({ type: 'group' });
+
+const resourcesTab = (): TreeElement<TabPayload> => ({
+  title: RESOURCES_TAB_TITLE,
+  payload: { type: 'resources-grid' },
+  children: [],
+});
+
+/**
+ * Tabs can be nested inside groups, so the whole tree has to be walked.
+ */
+const hasTabOfType = (
+  node: TreeElement<TabPayload>,
+  type: TabPayload['type']
+): boolean =>
+  node.payload.type === type ||
+  node.children.some((child) => hasTabOfType(child, type));

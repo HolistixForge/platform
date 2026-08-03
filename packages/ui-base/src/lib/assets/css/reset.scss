@@ -8,6 +8,55 @@
   font-family: 'Roboto', sans-serif;
 }
 
+/**
+ * Form-control reset — the part of Tailwind's preflight the codebase still
+ * depends on. Tailwind was removed in aeeaeba5 and only its *utilities* were
+ * reimplemented (utilities.scss); nothing replaced `@tailwind base`, so every
+ * form control fell back to its User-Agent styling:
+ *
+ *   background: ButtonFace (#EFEFEF)  -> light grey box
+ *   border: 2px outset ButtonBorder   -> the beveled square around "Copy",
+ *                                        "New Tab", the card kebab menus, ...
+ *   color: ButtonText (black)         -> black label on a dark surface
+ *   font: 13.33px system UI           -> ignores the app's type scale
+ *
+ * No component overrode these because none had to while preflight was there.
+ * Components own their own box; the element itself must contribute none.
+ */
+button,
+input,
+optgroup,
+select,
+textarea {
+  margin: 0;
+  padding: 0;
+  border: 0 solid currentcolor;
+  background-color: transparent;
+  background-image: none;
+  color: inherit;
+  // Preflight writes `100%`; `inherit` is the same computed value for
+  // font-size and keeps the token lint rule satisfied.
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
+button,
+select {
+  text-transform: none;
+}
+
+button,
+[type='button'],
+[type='reset'],
+[type='submit'] {
+  // Preflight deliberately prefixes only -webkit-: the unprefixed
+  // `appearance: button` makes Firefox paint its *native* button chrome, which
+  // is the border this reset just removed.
+  -webkit-appearance: button;
+  cursor: pointer;
+}
+
 html body,
 .root {
   color: var(--white);

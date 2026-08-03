@@ -64,8 +64,10 @@ export const ServerStack = ({
         </p>
       </div>
 
-      {_children.map((child) => {
-        const key = (child as { props: ChildProps }).props.key;
+      {_children.map((child, index) => {
+        // Children.toArray() puts a stable key on the element itself;
+        // `props.key` is always undefined in React.
+        const key = (child as { key?: string | null }).key ?? index;
         return (
           <div key={key} className="flex-1">
             {child}

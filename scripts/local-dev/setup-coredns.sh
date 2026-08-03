@@ -16,8 +16,18 @@ if ! command -v coredns &> /dev/null; then
     
     # Download latest CoreDNS
     COREDNS_VERSION="1.11.1"
-    ARCH="amd64"
-    
+
+    # Detect the CPU architecture (x86_64 servers and arm64 VMs are both used)
+    case "$(uname -m)" in
+      x86_64 | amd64) ARCH="amd64" ;;
+      aarch64 | arm64) ARCH="arm64" ;;
+      *)
+        echo "   ❌ Unsupported architecture: $(uname -m)"
+        exit 1
+        ;;
+    esac
+    echo "   Architecture: ${ARCH}"
+
     cd /tmp
     wget -q "https://github.com/coredns/coredns/releases/download/v${COREDNS_VERSION}/coredns_${COREDNS_VERSION}_linux_${ARCH}.tgz" || {
         echo "   ⚠️  Failed to download CoreDNS, trying apt install..."

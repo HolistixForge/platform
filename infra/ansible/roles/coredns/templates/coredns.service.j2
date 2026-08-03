@@ -1,0 +1,21 @@
+[Unit]
+Description=CoreDNS (Holistix platform)
+Documentation=https://coredns.io
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/coredns -conf /etc/coredns/Corefile
+ExecReload=/bin/kill -SIGUSR1 $MAINPID
+Restart=on-failure
+RestartSec=2s
+LimitNOFILE=1048576
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+ProtectSystem=full
+ReadWritePaths=/etc/coredns
+
+[Install]
+WantedBy=multi-user.target

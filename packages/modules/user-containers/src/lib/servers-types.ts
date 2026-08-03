@@ -34,9 +34,16 @@ export type TUserContainer = {
   user_container_id: string;
   container_name: string;
   image_id: string;
+  /**
+   * Per-container OAuth client used by the auth guard.
+   *
+   * The matching secret is deliberately absent: this type is stored in collab
+   * shared state, which is a CRDT replicated to every client in the project.
+   * The secret stays on the gateway and reaches the container through its
+   * environment only — see `TRunnerConfig.auth_guard_client_secret`.
+   */
   auth_guard?: {
     client_id: string;
-    client_secret: string;
   };
   runner: { id: string } & TJsonObject;
   created_at: string;

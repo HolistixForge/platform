@@ -23,6 +23,18 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
+# Image versions — pinned on purpose.
+#
+# These were all `:latest`, which silently broke the stack: Tempo 3.0 dropped
+# the top-level `ingester` and `compactor` config keys used below, so the
+# container crash-looped on "field ingester not found in type app.Config"
+# while the rest of the stack looked healthy. Bump these deliberately, and
+# update the config in this file at the same time.
+OTEL_COLLECTOR_VERSION="${OTEL_COLLECTOR_VERSION:-0.157.0}"
+LOKI_VERSION="${LOKI_VERSION:-3.7.4}"
+TEMPO_VERSION="${TEMPO_VERSION:-2.7.2}"
+GRAFANA_VERSION="${GRAFANA_VERSION:-13.1.1}"
+
 # Port allocation (avoid conflicts with existing services)
 # Existing: 80, 443, 53, 5432, 6000-6999, 7100-7199, 8081, 49100-49199
 OTLP_COLLECTOR_HTTP_PORT=4318      # OTLP HTTP receiver (apps send here)
@@ -143,7 +155,7 @@ docker run -d \
   -p ${OTLP_COLLECTOR_HTTP_PORT}:4318 \
   -p ${OTLP_COLLECTOR_GRPC_PORT}:4317 \
   -v observability-otel-config:/config:ro \
-  otel/opentelemetry-collector-contrib:latest \
+  otel/opentelemetry-collector-contrib:${OTEL_COLLECTOR_VERSION} \
   --config=/config/config.yaml
 
 if [ $? -ne 0 ]; then
@@ -164,7 +176,7 @@ docker run -d \
   --network observability-network \
   -p ${LOKI_HTTP_PORT}:3100 \
   -v observability-loki-data:/loki \
-  grafana/loki:latest \
+  grafana/loki:${LOKI_VERSION} \
   -config.file=/etc/loki/local-config.yaml
 
 if [ $? -ne 0 ]; then
@@ -221,7 +233,7 @@ docker run -d \
   -p ${TEMPO_HTTP_PORT}:3200 \
   -v observability-tempo-data:/var/tempo \
   -v observability-tempo-config:/config:ro \
-  grafana/tempo:latest \
+  grafana/tempo:${TEMPO_VERSION} \
   -config.file=/config/config.yaml
 
 if [ $? -ne 0 ]; then
@@ -231,8 +243,11 @@ fi
 
 echo "✅ Tempo started"
 echo "   API endpoint: http://localhost:${TEMPO_HTTP_PORT}"
-echo "   OTLP gRPC: http://localhost:${TEMPO_OTLP_GRPC_PORT}"
-echo "   OTLP HTTP: http://localhost:${TEMPO_OTLP_HTTP_PORT}"
+# Tempo's OTLP receivers are reachable only on the observability network —
+# the collector forwards to observability-tempo:4317. They are deliberately
+# not published to the host.
+echo "   OTLP gRPC: observability-tempo:4317 (internal)"
+echo "   OTLP HTTP: observability-tempo:4318 (internal)"
 echo ""
 
 # Wait for Tempo to be ready
@@ -285,7 +300,7 @@ docker run -d \
   -e GF_AUTH_ANONYMOUS_ENABLED=true \
   -e GF_AUTH_ANONYMOUS_ORG_ROLE=Admin \
   -e GF_SECURITY_ADMIN_PASSWORD=admin \
-  grafana/grafana:latest
+  grafana/grafana:${GRAFANA_VERSION}
 
 if [ $? -ne 0 ]; then
     echo "❌ Failed to start Grafana"

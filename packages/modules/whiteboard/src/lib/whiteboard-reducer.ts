@@ -48,6 +48,7 @@ import {
   TNodeView,
 } from './whiteboard-types';
 import { getAbsolutePosition } from './utils/position-utils';
+import { purgeDeletedNodeViews } from './utils/node-view-utils';
 import { edgeId } from './whiteboard-edge-utils';
 import { TCollabBackendExports } from '@holistix-forge/collab';
 import { TGatewayExports } from '@holistix-forge/gateway';
@@ -733,6 +734,9 @@ export class WhiteboardReducer extends ReducerWithCollab<
     nodes: Readonly<Map<string, TGraphNode>>,
     edges: Readonly<Array<TEdge>>
   ) {
+    // `nodes` is a SharedMap cast to Map: it has `get`, but no `has`.
+    purgeDeletedNodeViews(gv, (id) => nodes.get(id) !== undefined);
+
     const nodesToRender = new Set<string>();
     const edgesToRender = new Set<TEdge>();
 

@@ -216,10 +216,8 @@ export const OrganizationDashboard = () => {
                       className="text-center"
                       style={{ padding: '16px 24px' }}
                     >
-                      <a
-                        href={`/p/${organization_id}/${project.name}/editor`}
-                        target="_blank"
-                        rel="noreferrer"
+                      <Link
+                        to={`/p/${organization_id}/${project.name}/editor`}
                         className="items-center justify-center font-medium"
                         style={{
                           display: 'inline-flex',
@@ -231,7 +229,7 @@ export const OrganizationDashboard = () => {
                         }}
                       >
                         Open
-                      </a>
+                      </Link>
                     </Table.Cell>
                   </Table.Row>
                 ))}

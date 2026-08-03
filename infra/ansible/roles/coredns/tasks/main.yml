@@ -1,0 +1,180 @@
+---
+# CoreDNS on 0.0.0.0:53, managed by systemd.
+#
+# Two things differ from the dev container:
+#   1. Ubuntu Server runs systemd-resolved, whose stub listener owns
+#      127.0.0.53:53 and blocks a 0.0.0.0 bind. It has to be turned off.
+#   2. `coredns ... &` does not survive a reboot. A unit file does.
+
+- name: Check whether CoreDNS is installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/coredns
+  register: coredns_bin
+
+- name: Read the installed CoreDNS version
+  ansible.builtin.command: /usr/local/bin/coredns -version
+  register: coredns_installed_version
+  changed_when: false
+  failed_when: false
+  when: coredns_bin.stat.exists
+
+- name: Install the CoreDNS binary
+  when: >-
+    not coredns_bin.stat.exists
+    or coredns_version not in (coredns_installed_version.stdout | default(''))
+  block:
+    - name: Create a staging directory
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: coredns
+      register: coredns_tmp
+
+    - name: Download the CoreDNS release for {{ holistix_deb_arch }}
+      ansible.builtin.get_url:
+        url: >-
+          https://github.com/coredns/coredns/releases/download/v{{ coredns_version }}/coredns_{{ coredns_version }}_linux_{{ holistix_deb_arch }}.tgz
+        dest: '{{ coredns_tmp.path }}/coredns.tgz'
+        mode: '0644'
+
+    - name: Unpack CoreDNS into /usr/local/bin
+      ansible.builtin.unarchive:
+        src: '{{ coredns_tmp.path }}/coredns.tgz'
+        dest: /usr/local/bin
+        remote_src: true
+        owner: root
+        group: root
+        mode: '0755'
+      notify: Restart CoreDNS
+
+  always:
+    - name: Clean up the staging directory
+      ansible.builtin.file:
+        path: '{{ coredns_tmp.path }}'
+        state: absent
+      when: coredns_tmp.path is defined
+
+- name: Allow CoreDNS to bind privileged ports
+  community.general.capabilities:
+    path: /usr/local/bin/coredns
+    capability: cap_net_bind_service+eip
+    state: present
+  failed_when: false
+
+- name: Create the CoreDNS configuration directories
+  ansible.builtin.file:
+    path: '{{ item }}'
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - /etc/coredns
+    - /etc/coredns/zones
+
+# create-env.sh regenerates the Corefile from the environments it knows about,
+# so only seed one when there is nothing there yet.
+- name: Check for an existing Corefile
+  ansible.builtin.stat:
+    path: /etc/coredns/Corefile
+  register: coredns_corefile
+
+- name: Seed a forward-only Corefile
+  ansible.builtin.template:
+    src: Corefile.j2
+    dest: /etc/coredns/Corefile
+    owner: root
+    group: root
+    mode: '0644'
+  when: not coredns_corefile.stat.exists
+  notify: Restart CoreDNS
+
+- name: Install the CoreDNS systemd unit
+  ansible.builtin.template:
+    src: coredns.service.j2
+    dest: /etc/systemd/system/coredns.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - Reload systemd
+    - Restart CoreDNS
+
+- name: Free port 53 from systemd-resolved
+  when: coredns_manage_resolv_conf | bool
+  block:
+    - name: Create the resolved drop-in directory
+      ansible.builtin.file:
+        path: /etc/systemd/resolved.conf.d
+        state: directory
+        mode: '0755'
+
+    - name: Disable the systemd-resolved stub listener
+      ansible.builtin.copy:
+        dest: /etc/systemd/resolved.conf.d/holistix-no-stub.conf
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          # Managed by Ansible (infra/ansible/roles/coredns)
+          # CoreDNS binds {{ coredns_bind_address }}:53, so the stub listener
+          # on 127.0.0.53:53 must be off.
+          [Resolve]
+          DNSStubListener=no
+      register: coredns_resolved_stub
+
+    # Not a handler on purpose: resolved has to release port 53 *before*
+    # CoreDNS is started later in this same role, and handlers only run at the
+    # end of the play.
+    - name: Restart systemd-resolved # noqa: no-handler
+      ansible.builtin.systemd_service:
+        name: systemd-resolved
+        state: restarted
+      when: coredns_resolved_stub is changed
+
+- name: Enable and start CoreDNS
+  ansible.builtin.systemd_service:
+    name: coredns
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Wait for CoreDNS to answer on port 53
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: 53
+    timeout: 30
+
+# Only repoint the resolver once CoreDNS is proven up, otherwise a failed
+# start would leave the host with no DNS at all.
+- name: Point the host resolver at CoreDNS
+  when: coredns_manage_resolv_conf | bool
+  block:
+    - name: Drop the /etc/resolv.conf symlink if there is one
+      ansible.builtin.file:
+        path: /etc/resolv.conf
+        state: absent
+      when: >-
+        ansible_facts['os_family'] == 'Debian'
+
+    - name: Write /etc/resolv.conf
+      ansible.builtin.copy:
+        dest: /etc/resolv.conf
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          # Managed by Ansible (infra/ansible/roles/coredns)
+          # CoreDNS serves the *.local zones and forwards everything else.
+          nameserver 127.0.0.1
+          {% for upstream in coredns_upstreams %}
+          nameserver {{ upstream }}
+          {% endfor %}
+          options timeout:1 attempts:2
+
+- name: Verify local and external resolution
+  ansible.builtin.command: 'dig +short +timeout=2 @127.0.0.1 {{ item }}'
+  loop:
+    - github.com
+  register: coredns_check
+  changed_when: false
+  failed_when: coredns_check.stdout | trim == ''

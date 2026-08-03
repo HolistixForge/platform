@@ -86,4 +86,5 @@ export const moduleFrontend: TModule<TRequired> = {
 
 export { StatusLed } from './lib/components/status-led';
 export { UserContainerCardInternal } from './lib/components/server-card';
+export { ServerCard } from './lib/components/node-server/node-server';
 export { NewContainerForm } from './lib/form/new-server';

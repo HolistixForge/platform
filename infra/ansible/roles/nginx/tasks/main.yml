@@ -1,0 +1,60 @@
+---
+- name: Install Nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+
+# org-<uuid>.<domain> server names blow past the default 32-byte bucket.
+- name: Raise server_names_hash_bucket_size
+  ansible.builtin.lineinfile:
+    path: /etc/nginx/nginx.conf
+    regexp: '^\s*#?\s*server_names_hash_bucket_size'
+    line: "\tserver_names_hash_bucket_size 128;"
+    insertafter: '^\s*http\s*{'
+  notify: Reload Nginx
+
+- name: Raise server_names_hash_max_size
+  ansible.builtin.lineinfile:
+    path: /etc/nginx/nginx.conf
+    regexp: '^\s*#?\s*server_names_hash_max_size'
+    line: "\tserver_names_hash_max_size 2048;"
+    insertafter: '^\s*http\s*{'
+  notify: Reload Nginx
+
+- name: Ensure the per-environment include directories exist
+  ansible.builtin.file:
+    path: '{{ item }}'
+    state: directory
+    mode: '0755'
+  loop:
+    - /etc/nginx/sites-available
+    - /etc/nginx/sites-enabled
+
+- name: Enable and start Nginx
+  ansible.builtin.systemd_service:
+    name: nginx
+    enabled: true
+    state: started
+
+# Nginx serves the built frontend straight from the workspace, but its workers
+# run as www-data and the workspace lives under /root, which is 0700. Without
+# traversal rights every page is a 403.
+#
+# An ACL rather than `chmod o+x /root`: this grants the search bit to the nginx
+# user alone instead of to every local account, which matters on a production
+# host where /root holds more than a checkout.
+- name: Let Nginx traverse into the workspace
+  ansible.posix.acl:
+    path: '{{ item }}'
+    entity: www-data
+    etype: user
+    permissions: x
+    state: present
+  loop:
+    - '{{ holistix_workspace | ansible.builtin.dirname | ansible.builtin.dirname }}'
+    - '{{ holistix_workspace | ansible.builtin.dirname }}'
+    - '{{ holistix_workspace }}'
+
+- name: Validate the Nginx configuration
+  ansible.builtin.command: nginx -t
+  changed_when: false

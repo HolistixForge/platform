@@ -1,0 +1,103 @@
+---
+# ============================================================================
+# Holistix platform host configuration — defaults shared by every target
+# ============================================================================
+# Override per-group in inventory/group_vars/dev_vm.yml or production.yml,
+# or per-host in the inventory file itself.
+
+# ---------------------------------------------------------------------------
+# Filesystem layout
+# ---------------------------------------------------------------------------
+# The local-dev scripts (scripts/local-dev/*.sh) assume these paths and run as
+# root. Keep them unless you also patch the scripts.
+holistix_workspace: /root/workspace/monorepo
+holistix_local_dev_dir: /root/.local-dev
+holistix_builds_dir: /root/.local-dev-builds
+
+# ---------------------------------------------------------------------------
+# How the source tree gets onto the host
+#   mount — the tree is already present (virtiofs/NFS share from the host OS).
+#           Ansible only creates the parent dirs and verifies the mount.
+#   clone — Ansible does a git clone/checkout of holistix_repo_url.
+# ---------------------------------------------------------------------------
+holistix_repo_mode: clone
+holistix_repo_url: https://github.com/HolistixForge/platform.git
+holistix_repo_version: dev
+
+# Keep build artefacts out of a shared mount. When the workspace is a virtiofs
+# share from macOS, node_modules built for linux-arm64 would collide with the
+# macOS ones. These paths are backed by host-local storage and bind-mounted
+# over the workspace.
+holistix_isolate_build_dirs: true
+holistix_isolated_dirs:
+  - node_modules
+  - .nx
+  - dist
+  - tmp
+holistix_isolated_backing_root: /var/lib/holistix/workspace
+
+# ---------------------------------------------------------------------------
+# Versions
+# ---------------------------------------------------------------------------
+node_major: 24
+coredns_version: '1.11.1'
+
+# ---------------------------------------------------------------------------
+# PostgreSQL
+# ---------------------------------------------------------------------------
+postgres_password: devpassword
+postgres_listen_addresses: localhost
+
+# ---------------------------------------------------------------------------
+# TLS
+#   mkcert      — local CA, wildcard certs for *.local (development only)
+#   letsencrypt — certbot + nginx plugin (production)
+#   none        — install nothing, bring your own certificates
+# ---------------------------------------------------------------------------
+holistix_tls_mode: mkcert
+certbot_email: contact@holistix.so
+certbot_domains: []
+
+# ---------------------------------------------------------------------------
+# DNS (CoreDNS)
+# ---------------------------------------------------------------------------
+# CoreDNS binds 0.0.0.0:53, so systemd-resolved's stub listener has to go.
+coredns_bind_address: '0.0.0.0'
+coredns_upstreams:
+  - 8.8.8.8
+  - 8.8.4.4
+coredns_manage_resolv_conf: true
+# The address the DNS zones hand out. It must be routable from the host OS
+# browser, not just from inside the guest — the default route address is wrong
+# on a VM with several NICs, so infra/vm/vmctl.sh overrides this with the one
+# it knows the host can reach.
+holistix_public_ip: "{{ ansible_facts['default_ipv4']['address'] }}"
+# Set false on a production host that uses an external DNS provider.
+holistix_install_coredns: true
+
+# ---------------------------------------------------------------------------
+# Optional components
+# ---------------------------------------------------------------------------
+holistix_install_observability: true
+holistix_install_playwright: false
+holistix_build_gateway_image: true
+holistix_npm_install: true
+holistix_install_build_server: true
+
+# Reclaim apt/npm/docker caches and fstrim after provisioning. Removes no
+# functionality — these regenerate on demand — but a sparse VM disk never
+# shrinks on its own, so skipping this leaves several GB allocated on the host
+# forever. Set false only when debugging a provisioning run.
+holistix_reclaim_disk: true
+
+# ---------------------------------------------------------------------------
+# Ports (informational — used by the firewall task and the summary output)
+# ---------------------------------------------------------------------------
+holistix_ports:
+  http: 80
+  https: 443
+  dns: 53
+  postgres: 5432
+  ganymede: 6000
+  build_server: 8090
+  grafana: 3000
