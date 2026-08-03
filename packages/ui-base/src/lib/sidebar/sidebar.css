@@ -5,10 +5,12 @@ aside {
   height: auto;
   position: fixed;
   top: 50%;
-  /* Sits to the right of the whiteboard layers panel, which is flush against
-     the window edge. Kept as a variable so the excalidraw toolbar can align to
-     the same rail; see LAYERS_PANEL_WIDTH in whiteboard.tsx. */
+  /* Sits on the left rail, just right of the whiteboard layers panel. The
+     panel publishes its own width into --holistix-left-rail as it expands and
+     collapses (see whiteboard.tsx), so this follows it instead of holding a
+     constant offset. The transition matches the panel's own 120ms. */
   left: var(--holistix-left-rail, 255px);
+  transition: left 120ms ease;
   transform: translateY(-50%);
 }
 
