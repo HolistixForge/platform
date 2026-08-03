@@ -194,36 +194,33 @@ or missing room) is immediately distinguishable from `[document propagation]`
 
 ## 6. Storybook
 
-Each package that ships a `.storybook/` directory gets its own static build and
-its own subdomain — the environment already has a wildcard certificate and
-wildcard DNS, so a subdomain each costs nothing and avoids the base-path
-rewriting Storybook needs when served from a subdirectory.
+One Storybook covers every package, with the sidebar grouped by the `title`
+each story declares. Config lives in `.storybook/` at the repository root.
 
 ```bash
 ./vmctl.sh shell 'cd /root/workspace/monorepo && ./scripts/local-dev/build-storybook.sh <env>'
 ```
 
 ```
-https://storybook.dev.test          index of everything available
-https://sb-ui-base.dev.test         one per package
-https://sb-whiteboard.dev.test
-...
+https://storybook.dev.test          196 stories, every package
 ```
 
-| Flag               | Effect                                         |
-| ------------------ | ---------------------------------------------- |
-| _(none)_           | build every package that is not built yet      |
-| `<pkg> [<pkg>...]` | build only these; the others keep their vhosts |
-| `--force`          | rebuild even when output already exists        |
-| `--no-build`       | only regenerate the vhosts and the index       |
+`--no-build` regenerates only the vhost. The per-package `.storybook/`
+directories are still there, so `nx run <pkg>:storybook` works for focused
+development on a single package.
 
-A selection narrows what is **built**, never what is **served** — re-running
-for one package leaves the other vhosts in place.
+**Memory.** The build spans every package at once and needs roughly 8 GiB. The
+script caps Node's heap at 70% of available RAM, because setting it at or above
+total memory lets the heap grow until the kernel OOM-killer fires — which
+surfaces as a bare `Killed`, not a heap error. On the default 6 GiB VM this
+build is OOM-killed; give it more first:
 
-`STORYBOOK_NODE_HEAP_MB` (default 6144) caps the build heap. Node sizes its
-heap from available memory, which is not enough for the heavier packages:
-excalidraw dies with "Ineffective mark-compacts near heap limit" on a 6 GiB VM
-at Node's default.
+```bash
+limactl stop holistix && limactl edit holistix --memory 10 && limactl start holistix
+```
+
+Memory is only consumed while running, unlike disk, so this costs nothing at
+rest.
 
 ---
 

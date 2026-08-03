@@ -18,7 +18,9 @@
     "stylelint": "stylelint 'packages/**/*.{scss,css}' --allow-empty-input",
     "stylelint:fix": "stylelint 'packages/**/*.{scss,css}' --fix --allow-empty-input",
     "test:visual": "npx nx run-many -t test-storybook --parallel=1",
-    "test:visual:update": "npx nx run-many -t test-storybook --parallel=1 -- --updateSnapshot"
+    "test:visual:update": "npx nx run-many -t test-storybook --parallel=1 -- --updateSnapshot",
+    "storybook": "storybook dev -p 6006 -c .storybook",
+    "build-storybook": "storybook build -c .storybook -o storybook-static"
   },
   "private": true,
   "devDependencies": {
