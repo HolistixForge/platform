@@ -115,6 +115,16 @@ receivers:
         endpoint: 0.0.0.0:4317
       http:
         endpoint: 0.0.0.0:4318
+        # The browser posts traces to this receiver from https://<domain>,
+        # a different origin, so it preflights. Without these headers every
+        # trace is rejected and the console fills with CORS errors — ~29 per
+        # page load, which buries any real error underneath.
+        cors:
+          allowed_origins:
+            - "https://*"
+            - "http://localhost:*"
+          allowed_headers:
+            - "*"
 
 processors:
   batch:
