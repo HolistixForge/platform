@@ -63,7 +63,6 @@ export const createStoryInitModule = (): TModule<
         runner: { id: 'local' },
         auth_guard: {
           client_id: STORY_JUPYTERLAB_CLIENT_ID,
-          client_secret: 'story-secret',
         },
       });
     },
