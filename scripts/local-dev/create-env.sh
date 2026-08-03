@@ -299,7 +299,17 @@ server {
         try_files \$uri /index.html;
     }
 
-    location ~* \.(js|css|html|svg|ttf|woff|woff2)$ {
+    # index.html is the one file Vite does not fingerprint — it is what points
+    # at the hashed bundles. Caching it means that after a rebuild the browser
+    # keeps asking for asset names that no longer exist: the CSS 404s and the
+    # app renders unstyled until the user reloads by hand. It must revalidate.
+    location = /index.html {
+        expires -1;
+    }
+
+    # Everything else under /assets is content-hashed, so a given name never
+    # changes and can be cached indefinitely.
+    location ~* \.(js|css|svg|ttf|woff|woff2)$ {
         expires max;
         add_header Cache-Control public;
     }

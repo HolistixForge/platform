@@ -1,5 +1,6 @@
 import { ButtonBase, ButtonBaseProps } from './buttonBase';
 import type { Meta, StoryObj } from '@storybook/react';
+import { expect, within } from '@storybook/test';
 import { useAction } from './useAction';
 import { CopyIcon, PlusCircledIcon } from '@radix-ui/react-icons';
 
@@ -22,7 +23,7 @@ const ButtonWrap = (props: Partial<ButtonBaseProps>) => {
           Copied to clipboard <CopyIcon />
         </span>
       ),
-    },
+    }
   );
 
   return (
@@ -124,7 +125,9 @@ const Story = () => (
               <ButtonWrap
                 {...variant}
                 {...style}
-                className={`${style.className || ''} ${variant.className || ''}`}
+                className={`${style.className || ''} ${
+                  variant.className || ''
+                }`}
               />
             </td>
           ))}
@@ -150,4 +153,23 @@ type Story = StoryObj<typeof Story>;
 
 export const Primary: Story = {
   args: {},
+
+  // Regression guard for the form-control reset in assets/css/reset.scss.
+  // Tailwind's preflight used to neutralize the UA `ButtonFace` background;
+  // when Tailwind was dropped (aeeaeba5) nothing replaced it and every button
+  // without its own background rendered as a light grey box with white text.
+  // Only a real browser sees UA defaults — this cannot be caught in jsdom.
+  play: async ({ canvasElement }) => {
+    const backgroundless = within(canvasElement)
+      .getAllByRole('button')
+      .filter((button) => !/submit|testhover/.test(button.className));
+
+    await expect(backgroundless.length).toBeGreaterThan(0);
+
+    for (const button of backgroundless) {
+      await expect(getComputedStyle(button).backgroundColor).toBe(
+        'rgba(0, 0, 0, 0)'
+      );
+    }
+  },
 };

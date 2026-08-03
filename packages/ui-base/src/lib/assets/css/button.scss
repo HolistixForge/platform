@@ -40,15 +40,20 @@ span.button-root {
       height: 28px;
     }
 
+    // The OKLCH ramp runs light (100) to dark (900), so the mechanical rename of
+    // the old `--c-pink-2` / `--c-pink-1` pair landed the primary button on
+    // --primary-200 (#ccb9f1) with white text — 1.6:1, and near-white on hover.
+    // The accent semantic token is what this shade was always meant to be.
     &.submit {
-      background-color: var(--primary-200);
-      border-color: var(--primary-200);
+      background-color: var(--color-accent);
+      border-color: var(--color-accent);
       color: var(--white);
       box-shadow: var(--shadow-md);
 
       &:hover,
       &.testhover {
-        background-color: var(--primary-100);
+        background-color: var(--color-accent-hover);
+        border-color: var(--color-accent-hover);
       }
     }
 

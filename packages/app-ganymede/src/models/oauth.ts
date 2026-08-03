@@ -106,10 +106,26 @@ export const model: AuthorizationCodeModel &
             ? JSON.parse(row['grants'])
             : row['grants'];
 
+        // The built-in client's redirect target is deployment configuration,
+        // not data: it is whatever host this instance serves the frontend on.
+        // 03-data.sql seeds the row with placeholders ("https://example.com")
+        // and a comment saying to update them after deployment, so taking the
+        // stored value at face value means every freshly created database
+        // ships a global client the frontend can never use — authorization
+        // fails with "redirect_uri does not match client value", no token is
+        // issued, and the app renders signed-in but empty. Databases created
+        // before that seed existed had no row at all and fell through to the
+        // config-derived fallback below, which is why this only surfaces on a
+        // new environment. Custom clients keep their own registered URIs.
+        const isGlobalClient = row['client_id'] === GLOBAL_CLIENT_ID;
+        const effectiveRedirectUris = isGlobalClient
+          ? [CONFIG.APP_FRONTEND_URL, CONFIG.APP_FRONTEND_URL_DEV]
+          : (redirectUris as string[]);
+
         const client: Client = {
           id: row['client_id'] as string,
           grants: grants as string[],
-          redirectUris: redirectUris as string[],
+          redirectUris: effectiveRedirectUris,
           accessTokenLifetime:
             (row['access_token_lifetime'] as number) || ACCESS_TOKEN_LIFETIME,
           refreshTokenLifetime:
