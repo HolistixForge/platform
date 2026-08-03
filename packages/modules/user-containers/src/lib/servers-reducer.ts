@@ -52,6 +52,19 @@ export class UserContainersReducer extends ReducerWithCollab<
 > {
   //
 
+  /**
+   * Auth guard OAuth client secrets, by container id.
+   *
+   * Kept in the gateway's memory rather than in shared state, which is a CRDT
+   * replicated to every client in the project — a secret written there is a
+   * secret handed to every collaborator's browser.
+   *
+   * Memory-only means a gateway restart loses them; `_authGuardSecretFor()`
+   * rotates the client in that case, which is cheap and leaves no way for a
+   * stale secret to linger.
+   */
+  private readonly authGuardSecrets = new Map<string, string>();
+
   constructor(private readonly depsExports: TRequired) {
     super(depsExports.collab.registry, 'user-containers');
   }
@@ -218,36 +231,15 @@ export class UserContainersReducer extends ReducerWithCollab<
     const organizationId = this.depsExports.gateway.organization_id;
     const gatewayFqdn = this.depsExports.gateway.gatewayFQDN;
     const domain = gatewayFqdn.split('.').slice(1).join('.') || 'domain.local';
-    let authGuardConfig:
-      | { client_id: string; client_secret: string }
-      | undefined;
+    let authGuardConfig: { client_id: string } | undefined;
 
     try {
-      const result = await this.depsExports.gateway.toGanymedeInternal<{
-        client_id: string;
-        client_secret: string;
-      }>({
-        url: '/internal/oauth/clients',
-        method: 'POST',
-        jsonBody: {
-          redirect_uris: [
-            `https://uc-${containerId}.org-${organizationId}.${domain}/__auth/callback`,
-          ],
-          grants: ['authorization_code', 'refresh_token'],
-          label: `guard:${containerId}`,
-        },
-      });
-      authGuardConfig = {
-        client_id: result.client_id,
-        client_secret: result.client_secret,
-      };
-
-      log(
-        EPriority.Info,
-        'AUTH_GUARD',
-        `Registered OAuth client for container ${containerId}`,
-        { client_id: result.client_id }
+      const client = await this._registerAuthGuardClient(
+        containerId,
+        organizationId,
+        domain
       );
+      authGuardConfig = { client_id: client.client_id };
     } catch (e: any) {
       log(
         EPriority.Warning,
@@ -552,15 +544,9 @@ export class UserContainersReducer extends ReducerWithCollab<
     // Delete auth guard OAuth client from Ganymede
     if (container.auth_guard?.client_id) {
       try {
-        await this.depsExports.gateway.toGanymedeInternal({
-          url: `/internal/oauth/clients/${container.auth_guard.client_id}`,
-          method: 'DELETE',
-        });
-        log(
-          EPriority.Info,
-          'AUTH_GUARD',
-          `Deleted OAuth client for container ${containerId}`,
-          { client_id: container.auth_guard.client_id }
+        await this._deleteAuthGuardClient(
+          containerId,
+          container.auth_guard.client_id
         );
       } catch (e: any) {
         log(
@@ -702,6 +688,14 @@ export class UserContainersReducer extends ReducerWithCollab<
     const gatewayFqdn = gatewayExports.gatewayFQDN;
     // Extract domain from gateway FQDN: org-{uuid}.{domain} -> {domain}
     const domain = gatewayFqdn.split('.').slice(1).join('.') || 'domain.local';
+    // The auth guard secret is held on the gateway, never in shared state, so
+    // it is resolved here and handed to the runner through the config.
+    const authGuard = await this._authGuardSecretFor(
+      container,
+      organization_id,
+      domain
+    );
+
     const config = {
       user_id,
       project_id,
@@ -709,12 +703,19 @@ export class UserContainersReducer extends ReducerWithCollab<
       ganymede_fqdn: `ganymede.${domain}`,
       gateway_fqdn: gatewayFqdn,
       organization_id,
+      auth_guard_client_secret: authGuard?.client_secret,
     };
+
+    // A rotation replaced the client, so the container must carry the new id.
+    const startedContainer: TUserContainer =
+      authGuard && authGuard.client_id !== container.auth_guard?.client_id
+        ? { ...container, auth_guard: { client_id: authGuard.client_id } }
+        : container;
 
     // Call runner - returns runner-specific data (e.g. docker command for local runner)
     const imageRegistry = this.depsExports['user-containers'].imageRegistry;
     const runnerResult = await runner.start(
-      container,
+      startedContainer,
       hostingToken,
       imageRegistry,
       config
@@ -722,12 +723,133 @@ export class UserContainersReducer extends ReducerWithCollab<
 
     // Merge runner result into container.runner in shared state
     sduc.set(containerId, {
-      ...container,
-      runner: { ...container.runner, ...runnerResult },
+      ...startedContainer,
+      runner: { ...startedContainer.runner, ...runnerResult },
     });
   }
 
   //
+
+  /**
+   * Register a per-container OAuth client with Ganymede.
+   *
+   * Ganymede returns the plaintext secret once and keeps only a bcrypt hash, so
+   * this is the only chance to capture it — it goes into `authGuardSecrets` and
+   * nowhere else.
+   */
+  private async _registerAuthGuardClient(
+    containerId: string,
+    organizationId: string,
+    domain: string
+  ): Promise<{ client_id: string; client_secret: string }> {
+    const result = await this.depsExports.gateway.toGanymedeInternal<{
+      client_id: string;
+      client_secret: string;
+    }>({
+      url: '/internal/oauth/clients',
+      method: 'POST',
+      jsonBody: {
+        redirect_uris: [
+          `https://uc-${containerId}.org-${organizationId}.${domain}/__auth/callback`,
+        ],
+        grants: ['authorization_code', 'refresh_token'],
+        label: `guard:${containerId}`,
+      },
+    });
+
+    this.authGuardSecrets.set(containerId, result.client_secret);
+
+    log(
+      EPriority.Info,
+      'AUTH_GUARD',
+      `Registered OAuth client for container ${containerId}`,
+      { client_id: result.client_id }
+    );
+
+    return result;
+  }
+
+  private async _deleteAuthGuardClient(
+    containerId: string,
+    clientId: string
+  ): Promise<void> {
+    this.authGuardSecrets.delete(containerId);
+    await this.depsExports.gateway.toGanymedeInternal({
+      url: `/internal/oauth/clients/${clientId}`,
+      method: 'DELETE',
+    });
+    log(
+      EPriority.Info,
+      'AUTH_GUARD',
+      `Deleted OAuth client for container ${containerId}`,
+      { client_id: clientId }
+    );
+  }
+
+  /**
+   * Resolve the auth guard secret to hand to a starting container.
+   *
+   * Secrets only live in this gateway's memory, so a gateway restart between
+   * container creation and container start leaves us with a client id we can no
+   * longer authenticate as. Ganymede cannot reveal the old secret (it stores a
+   * bcrypt hash), so rotate: drop the orphaned client and register a fresh one.
+   *
+   * Returns the client id actually in force — the caller must write it back to
+   * shared state when it changed.
+   */
+  private async _authGuardSecretFor(
+    container: TUserContainer,
+    organizationId: string,
+    domain: string
+  ): Promise<{ client_id: string; client_secret: string } | undefined> {
+    if (!container.auth_guard) return undefined;
+
+    const containerId = container.user_container_id;
+    const known = this.authGuardSecrets.get(containerId);
+    if (known) {
+      return {
+        client_id: container.auth_guard.client_id,
+        client_secret: known,
+      };
+    }
+
+    log(
+      EPriority.Info,
+      'AUTH_GUARD',
+      `No secret held for container ${containerId}, rotating its OAuth client`,
+      { client_id: container.auth_guard.client_id }
+    );
+
+    try {
+      await this._deleteAuthGuardClient(
+        containerId,
+        container.auth_guard.client_id
+      );
+    } catch (e: any) {
+      // A client we cannot delete is a leftover row in Ganymede, not a reason to
+      // refuse the start — the new client below is what the container will use.
+      log(
+        EPriority.Warning,
+        'AUTH_GUARD',
+        `Failed to delete stale auth guard OAuth client: ${e.message}`
+      );
+    }
+
+    try {
+      return await this._registerAuthGuardClient(
+        containerId,
+        organizationId,
+        domain
+      );
+    } catch (e: any) {
+      log(
+        EPriority.Warning,
+        'AUTH_GUARD',
+        `Failed to re-register auth guard OAuth client: ${e.message}`
+      );
+      return undefined;
+    }
+  }
 }
 
 export const userContainerNodeId = (user_container_id: string) =>
