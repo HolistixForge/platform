@@ -133,12 +133,48 @@ https://org-<uuid>.dev.test          Gateway
 
 ---
 
+## 5. Verify the collaboration WebSocket
+
+The whiteboard is built on one WebSocket room per project, streaming events to
+every connected client. If that does not work, nothing does — so verify it
+explicitly rather than inferring it from a page that loads.
+
+```bash
+./vmctl.sh verify-ws dev-001              # 3 clients
+./vmctl.sh verify-ws dev-001 --clients 5
+```
+
+`scripts/local-dev/verify-collab-websocket.mjs` runs on the platform host and
+exercises the whole chain — stage-1 nginx TLS and `Upgrade` headers, the
+gateway container's nginx, the `app-gateway` process, and the y-websocket room:
+
+1. resolves an organization, project and user from the database
+2. triggers gateway allocation via `POST /collab/start`
+3. signs an RS256 `access_token` with the environment's `jwt-key`
+4. opens N independent clients on `wss://org-<uuid>.<domain>/project/<project_id>`
+5. asserts a document update from client 0 reaches **every** other client
+6. asserts awareness (presence) converges across all clients
+
+It requires an existing project — the room is per project — and removes the
+marker key it wrote before exiting.
+
+> The clients set `disableBc: true` on purpose. Without it, y-websocket
+> providers inside one Node process sync through `BroadcastChannel` and the
+> test would pass with the WebSocket server completely down.
+
+A failure names the stage it broke at, so `[websocket connect]` (a rejected JWT
+or missing room) is immediately distinguishable from `[document propagation]`
+(the socket is open but events are not relayed).
+
+---
+
 ## Day-to-day
 
 | Command                          | Purpose                                             |
 | -------------------------------- | --------------------------------------------------- |
 | `./vmctl.sh status`              | VM state plus the status of every managed service   |
 | `./vmctl.sh diagnostic`          | runs `infra-diagnostic.sh` inside the VM            |
+| `./vmctl.sh verify-ws <env>`     | proves the collab WebSocket relays events           |
 | `./vmctl.sh shell`               | root shell in the guest                             |
 | `./vmctl.sh shell 'envctl list'` | run one command in the guest                        |
 | `./vmctl.sh stop` / `start`      | suspend / resume                                    |

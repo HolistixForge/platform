@@ -52,6 +52,23 @@
     append: true
   when: ansible_user_id != 'root'
 
+# gateway-pool.sh runs every gateway with `--cap-add=NET_ADMIN --device
+# /dev/net/tun` for OpenVPN. If the tun module is absent, `docker run` fails
+# outright — no gateway container, therefore no collab WebSocket at all. Cloud
+# images do not always have it loaded, and a VM does not inherit it from the
+# host the way a dev container did.
+- name: Load the tun kernel module (required by gateway containers)
+  community.general.modprobe:
+    name: tun
+    state: present
+    persistent: present
+
+- name: Verify /dev/net/tun exists
+  ansible.builtin.stat:
+    path: /dev/net/tun
+  register: docker_tun_device
+  failed_when: not docker_tun_device.stat.exists
+
 - name: Confirm the docker0 bridge gateway address
   ansible.builtin.command: >-
     docker network inspect bridge -f '{{ "{{" }}(index .IPAM.Config 0).Gateway{{ "}}" }}'

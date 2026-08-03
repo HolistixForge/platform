@@ -16,6 +16,7 @@
 #   ./vmctl.sh trust-ca      trust the VM's mkcert root CA on the host
 #   ./vmctl.sh status        VM state and the status of every managed service
 #   ./vmctl.sh diagnostic    run infra-diagnostic.sh inside the VM
+#   ./vmctl.sh verify-ws <env>  prove the collab WebSocket relays events
 #   ./vmctl.sh ssh-config    regenerate infra/ansible/.ssh-config
 #   ./vmctl.sh stop | start | destroy
 #
@@ -255,6 +256,17 @@ cmd_diagnostic() {
   cmd_shell '/root/workspace/monorepo/scripts/local-dev/infra-diagnostic.sh'
 }
 
+# Proves the collaboration WebSocket relays events between clients — the
+# foundation the whiteboard sits on.
+cmd_verify_ws() {
+  require_running
+  local env_name="${1:-}"
+  [ -n "${env_name}" ] || die "usage: $0 verify-ws <env-name> [--clients N]"
+  shift
+  cmd_shell "cd /root/workspace/monorepo && \
+    node scripts/local-dev/verify-collab-websocket.mjs ${env_name} $*"
+}
+
 cmd_start()   { require_limactl; limactl start "${VM_NAME}"; cmd_ssh_config; }
 cmd_stop()    { require_limactl; limactl stop "${VM_NAME}"; }
 
@@ -300,6 +312,7 @@ main() {
     trust-ca)    cmd_trust_ca ;;
     status)      cmd_status ;;
     diagnostic)  cmd_diagnostic ;;
+    verify-ws)   cmd_verify_ws "$@" ;;
     help|-h|--help) usage ;;
     *)           usage; die "Unknown command: ${cmd}" ;;
   esac

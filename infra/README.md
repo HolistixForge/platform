@@ -45,6 +45,8 @@ cd infra/vm
   ./scripts/local-dev/create-env.sh dev-001 dev.test
   ./scripts/local-dev/build-frontend.sh dev-001
   ./scripts/local-dev/envctl.sh start dev-001
+
+./vmctl.sh verify-ws dev-001   # prove the collab WebSocket relays events
 ```
 
 Then browse to `https://dev.test`.
