@@ -163,6 +163,46 @@ describe('Collab Hooks with CollabProjectProvider', () => {
       );
     });
 
+    it('should subscribe once across re-renders, despite a new key array each render', () => {
+      const { Wrapper, mocks } = createWrapper();
+
+      // Every call site passes an array literal, so the hook receives a new
+      // reference on every render. Re-subscribing on each of them dropped the
+      // last observer of the key, which made the overrider re-attach and
+      // replay — an infinite render loop.
+      const { rerender } = renderHook(
+        () => useLocalSharedData(['tabs:tabs'], (d) => d['tabs:tabs']),
+        { wrapper: Wrapper }
+      );
+
+      rerender();
+      rerender();
+
+      expect(mocks.localOverrider.observe).toHaveBeenCalledTimes(1);
+      expect(mocks.localOverrider.unobserve).not.toHaveBeenCalled();
+    });
+
+    it('should re-subscribe when the observed keys change', () => {
+      const { Wrapper, mocks } = createWrapper();
+
+      const { rerender } = renderHook(
+        ({ keys }: { keys: string[] }) =>
+          useLocalSharedData(keys, (d) => d[keys[0]]),
+        { wrapper: Wrapper, initialProps: { keys: ['tabs:tabs'] } }
+      );
+
+      rerender({ keys: ['whiteboard:views'] });
+
+      expect(mocks.localOverrider.unobserve).toHaveBeenCalledWith(
+        ['tabs:tabs'],
+        expect.any(Function)
+      );
+      expect(mocks.localOverrider.observe).toHaveBeenCalledWith(
+        ['whiteboard:views'],
+        expect.any(Function)
+      );
+    });
+
     it('should throw error when used without CollabProjectProvider', () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 

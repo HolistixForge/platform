@@ -42,6 +42,21 @@
       "path": "../modules/gateway/tsconfig.lib.json"
     },
     {
+      "path": "../modules/chats/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/socials/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/excalidraw/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/airtable/tsconfig.lib.json"
+    },
+    {
+      "path": "../modules/notion/tsconfig.lib.json"
+    },
+    {
       "path": "../modules/vscode/tsconfig.lib.json"
     },
     {

@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { InfoCircledIcon } from '@radix-ui/react-icons';
 
@@ -111,6 +111,27 @@ export const ProjectWrapper = ({ children }: { children: ReactNode }) => {
     error,
   } = useQueryProjectByName(owner || '', project_name || '');
 
+  // Extract user info for ModuleDataProvider's collab config. Memoized, and
+  // computed before the early returns below so the hook order stays fixed:
+  // this object is a dependency of the memo that loads every frontend module,
+  // and rebuilding it on each render reloaded them all — which handed the
+  // whiteboard a new node component type and remounted every node.
+  // Color is generated from the username hash in collab-config.ts.
+  const user = currentUserData?.user;
+  const user_id = user && 'user_id' in user ? user.user_id : null;
+  const username =
+    user && 'username' in user ? user.username || user.email : undefined;
+  const userInfo = useMemo(
+    () =>
+      user_id
+        ? { user_id, username: username || 'User' }
+        : {
+            user_id: '00000000-0000-0000-0000-000000000001',
+            username: 'Guest User',
+          },
+    [user_id, username]
+  );
+
   // Check for invalid URL first
   if (!owner || !project_name) {
     return <ProjectError message="Invalid project URL" />;
@@ -160,20 +181,6 @@ export const ProjectWrapper = ({ children }: { children: ReactNode }) => {
   }
 
   // Success - render with data providers
-  // Extract user info from useCurrentUser to pass to ModuleDataProvider for collab config
-  // At this point currentUserData is guaranteed to exist because we checked userStatus above
-  // Color will be generated from username hash in collab-config.ts
-  const userInfo = currentUserData?.user?.user_id
-    ? {
-        user_id: currentUserData.user.user_id,
-        username:
-          currentUserData.user.username || currentUserData.user.email || 'User',
-      }
-    : {
-        user_id: '00000000-0000-0000-0000-000000000001',
-        username: 'Guest User',
-      };
-
   return (
     <ModuleDataProvider
       organization_id={project.organization_id}

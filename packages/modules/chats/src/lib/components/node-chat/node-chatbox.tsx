@@ -103,7 +103,11 @@ export const NodeChatbox = ({ node }: { node: TGraphNode }) => {
     usersInfo.set(uid, u);
   });
 
-  const anchorNodeId = edges.length === 1 && edges[0].from.node;
+  // The anchor is whatever points at this node. Keyed off the incoming edge
+  // rather than "there is exactly one edge", so a second edge on the chat node
+  // does not silently turn the buttons below into no-ops.
+  const anchorNodeId = edges.find((e) => e.to.node === useNodeValue.id)?.from
+    .node;
 
   // we want to close the anchor node rather than this node
   const handleClose = () => {
