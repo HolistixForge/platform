@@ -278,6 +278,18 @@ OTEL_DEPLOYMENT_ENVIRONMENT=${ENV_NAME}
 # (e.g., https://org-{uuid}.domain.local/collab/start) and Node.js would reject
 # self-signed certificates by default.
 NODE_TLS_REJECT_UNAUTHORIZED=0
+
+# Rate limits, relaxed for local development only.
+#
+# The defaults (5 auth / 20 OAuth per 15 minutes) are sized for a public
+# instance. In development the SPA retries the authorization-code flow on every
+# reload, so a single debugging session exhausts the OAuth budget and then locks
+# you out for the rest of the window with an opaque 429 — which looks exactly
+# like "the app is broken and shows no data".
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_AUTH_MAX=100
+RATE_LIMIT_OAUTH_MAX=500
+RATE_LIMIT_SENSITIVE_MAX=300
 EOF
 
 # 8. Create Nginx server blocks (Stage 1 - Main nginx with SSL termination)
@@ -312,6 +324,18 @@ server {
     location ~* \.(js|css|svg|ttf|woff|woff2)$ {
         expires max;
         add_header Cache-Control public;
+        error_page 404 = @stale_bundle;
+    }
+
+    # A hashed asset that does not exist can only mean one thing: the browser
+    # is holding an index.html from an older build and is asking for bundles
+    # that build no longer produces. Nothing server-side can invalidate that
+    # entry — but this header can, and it costs one reload instead of the user
+    # hunting down every cached URL by hand. "cache" only: cookies and storage
+    # are left alone, so the session survives.
+    location @stale_bundle {
+        add_header Clear-Site-Data '"cache"' always;
+        return 404;
     }
 
     access_log ${LOGS_DIR}/frontend-access.log;

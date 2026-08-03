@@ -489,10 +489,8 @@ const ProjectsListItem = ({
         </span>
       </Table.Cell>
       <Table.Cell className="text-center" style={{ padding: '16px 24px' }}>
-        <a
-          href={`/p/${project.organization_id}/${project.name}/editor`}
-          target="_blank"
-          rel="noreferrer"
+        <Link
+          to={`/p/${project.organization_id}/${project.name}/editor`}
           className="items-center justify-center font-medium"
           style={{
             display: 'inline-flex',
@@ -504,7 +502,7 @@ const ProjectsListItem = ({
           }}
         >
           Open
-        </a>
+        </Link>
       </Table.Cell>
       <Table.Cell className="text-center" style={{ padding: '16px 24px' }}>
         <DeleteProjectFormLogic project_id={project.project_id} />
