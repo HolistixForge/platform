@@ -32,7 +32,9 @@ export const NodeChatAnchor = ({ node }: { node: TGraphNode }) => {
 
   const { data: currentUserData, status: currentUserStatus } = useCurrentUser();
 
-  const chatNodeId = edges.length === 1 && edges[0].to.node;
+  // Same as in node-chatbox: follow the outgoing edge instead of requiring
+  // this node to have exactly one.
+  const chatNodeId = edges.find((e) => e.from.node === node.id)?.to.node;
 
   // we want to open also the chat node
   const handleOpen = () => {
