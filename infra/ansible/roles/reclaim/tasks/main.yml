@@ -1,0 +1,66 @@
+---
+# Reclaim disk after provisioning.
+#
+# Runs last, because it has to follow apt, npm and docker. Nothing here removes
+# functionality — every path is cache or build residue that regenerates on
+# demand.
+#
+# The fstrim at the end matters most on a laptop: a Lima/QEMU disk image is
+# sparse and never shrinks on its own, so a gigabyte of npm cache written once
+# stays allocated on the host forever unless the guest discards those blocks.
+
+- name: Clean the apt package cache
+  ansible.builtin.apt:
+    clean: true
+
+- name: Remove downloaded package lists
+  ansible.builtin.file:
+    path: /var/lib/apt/lists
+    state: absent
+
+- name: Recreate the apt lists directory
+  ansible.builtin.file:
+    path: /var/lib/apt/lists/partial
+    state: directory
+    mode: '0755'
+
+# Only needed to speed up a re-install; npm refetches whatever it misses.
+- name: Clear the npm cache
+  ansible.builtin.command: npm cache clean --force
+  environment:
+    npm_config_cache: /var/cache/npm
+  changed_when: true
+  failed_when: false
+
+# Prunes the build cache only. Images, containers and volumes are untouched.
+- name: Prune the Docker build cache
+  ansible.builtin.command: docker builder prune --force
+  register: reclaim_docker_prune
+  changed_when: "'Total reclaimed space: 0B' not in reclaim_docker_prune.stdout"
+  failed_when: false
+
+- name: Cap the systemd journal
+  ansible.builtin.command: journalctl --vacuum-size=100M
+  changed_when: true
+  failed_when: false
+
+- name: Enable weekly TRIM so this keeps working without Ansible
+  ansible.builtin.systemd_service:
+    name: fstrim.timer
+    enabled: true
+    state: started
+  failed_when: false
+
+- name: Discard freed blocks back to the host
+  ansible.builtin.command: fstrim -av
+  register: reclaim_fstrim
+  changed_when: true
+
+- name: Measure the result
+  ansible.builtin.command: df -h --output=size,used,avail,pcent /
+  register: reclaim_df
+  changed_when: false
+
+- name: Report reclaimed space
+  ansible.builtin.debug:
+    msg: '{{ reclaim_fstrim.stdout_lines + reclaim_df.stdout_lines }}'

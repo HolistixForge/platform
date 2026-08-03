@@ -35,6 +35,10 @@ VM_NAME="${HOLISTIX_VM_NAME:-holistix}"
 REPO_PATH="${HOLISTIX_REPO_PATH:-${REPO_ROOT}}"
 SSH_CONFIG="${ANSIBLE_DIR}/.ssh-config"
 
+RENDERED_TEMPLATE=""
+cleanup_temp() { [ -n "${RENDERED_TEMPLATE}" ] && rm -f "${RENDERED_TEMPLATE}"; return 0; }
+trap cleanup_temp EXIT
+
 # ---------------------------------------------------------------------------
 # Output helpers
 # ---------------------------------------------------------------------------
@@ -93,13 +97,14 @@ cmd_up() {
   else
     [ -d "${REPO_PATH}" ] || die "Repo path does not exist: ${REPO_PATH}"
 
-    local rendered
-    rendered="$(mktemp -t lima-holistix.XXXXXX.yaml)"
-    trap 'rm -f "${rendered}"' RETURN
+    # Deliberately not a RETURN trap: bash keeps that trap armed for later
+    # function returns, by which point the local is out of scope and `set -u`
+    # aborts the script. RENDERED_TEMPLATE is global and cleaned on EXIT.
+    RENDERED_TEMPLATE="$(mktemp -t lima-holistix.XXXXXX.yaml)"
 
     # The mount location must be an absolute host path; substitute it in.
     sed "s|__REPO_PATH__|${REPO_PATH}|g" \
-      "${SCRIPT_DIR}/lima-holistix.yaml" > "${rendered}"
+      "${SCRIPT_DIR}/lima-holistix.yaml" > "${RENDERED_TEMPLATE}"
 
     local -a create_args=(--name "${VM_NAME}")
     [ -n "${HOLISTIX_VM_CPUS:-}" ]   && create_args+=(--cpus "${HOLISTIX_VM_CPUS}")
@@ -107,7 +112,7 @@ cmd_up() {
     [ -n "${HOLISTIX_VM_DISK:-}" ]   && create_args+=(--disk "${HOLISTIX_VM_DISK}")
 
     info "Creating VM '${VM_NAME}' (repo mounted from ${REPO_PATH})"
-    limactl create "${create_args[@]}" "${rendered}"
+    limactl create "${create_args[@]}" "${RENDERED_TEMPLATE}"
     limactl start "${VM_NAME}"
   fi
 
@@ -119,7 +124,16 @@ cmd_ssh_config() {
   require_limactl
   vm_exists || die "VM '${VM_NAME}' does not exist"
   mkdir -p "${ANSIBLE_DIR}"
-  limactl show-ssh --format=config "${VM_NAME}" > "${SSH_CONFIG}"
+
+  # Lima 1.0+ writes a ready-made ssh config per instance; `limactl show-ssh`
+  # is deprecated in 2.x. Prefer the file, fall back for older Lima.
+  local generated="${HOME}/.lima/${VM_NAME}/ssh.config"
+  if [ -f "${generated}" ]; then
+    cp "${generated}" "${SSH_CONFIG}"
+  else
+    limactl show-ssh --format=config "${VM_NAME}" > "${SSH_CONFIG}"
+  fi
+
   chmod 600 "${SSH_CONFIG}"
   ok "Wrote ${SSH_CONFIG#"${REPO_ROOT}"/}"
 }
@@ -174,11 +188,13 @@ EOF
 
 cmd_shell() {
   require_running
-  # The local-dev scripts assume root and /root paths.
+  # --workdir /tmp: without it limactl tries to cd to the host's current
+  # directory inside the guest, which prints two errors on every call.
+  # The local-dev scripts assume root and /root paths anyway.
   if [ $# -gt 0 ]; then
-    limactl shell "${VM_NAME}" -- sudo -i bash -lc "$*"
+    limactl shell --workdir /tmp "${VM_NAME}" -- sudo -i bash -lc "$*"
   else
-    limactl shell "${VM_NAME}" -- sudo -i
+    limactl shell --workdir /tmp "${VM_NAME}" -- sudo -i
   fi
 }
 

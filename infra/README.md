@@ -27,7 +27,7 @@ infra/
     ├── inventory/          # hosts + group_vars (dev_vm, production)
     └── roles/              # common, node, docker, postgres, nginx,
                             # mkcert, certbot, coredns, workspace,
-                            # buildserver, observability
+                            # buildserver, observability, reclaim
 ```
 
 ## Local development VM — quick start
@@ -46,7 +46,9 @@ cd infra/vm
   ./scripts/local-dev/build-frontend.sh dev-001
   ./scripts/local-dev/envctl.sh start dev-001
 
-./vmctl.sh verify-ws dev-001   # prove the collab WebSocket relays events
+# prove the collab WebSocket relays events (--bootstrap creates a
+# user/org/project on a fresh environment, since the room is per project)
+./vmctl.sh verify-ws dev-001 --bootstrap
 ```
 
 Then browse to `https://dev.test`.

@@ -49,8 +49,8 @@ cd infra/vm
 
 `bootstrap` is `up` followed by `provision`:
 
-- **`up`** — creates a Lima VM (Ubuntu 24.04, 6 CPU / 12 GiB / 100 GiB by
-  default) with this repository shared into the guest at
+- **`up`** — creates a Lima VM (Ubuntu 24.04, 4 CPU / 6 GiB / 40 GiB by
+  default — sized for a laptop; `disk` is a ceiling, not an allocation) with this repository shared into the guest at
   `/root/workspace/monorepo`, and a `vzNAT` interface so the host can reach the
   guest directly.
 - **`provision`** — runs `infra/ansible/site.yml` over SSH. Expect 10–15
@@ -77,6 +77,7 @@ HOLISTIX_VM_CPUS=8 HOLISTIX_VM_MEMORY=16GiB HOLISTIX_VM_DISK=150GiB ./vmctl.sh u
 | `workspace`     | npm dependencies, gateway image, shell aliases            |
 | `buildserver`   | gateway tarball server on `:8090` as a systemd unit       |
 | `observability` | OTLP Collector, Loki, Tempo, Grafana                      |
+| `reclaim`       | apt/npm/docker caches + `fstrim` (runs last)              |
 
 ---
 
@@ -140,8 +141,8 @@ every connected client. If that does not work, nothing does — so verify it
 explicitly rather than inferring it from a page that loads.
 
 ```bash
-./vmctl.sh verify-ws dev-001              # 3 clients
-./vmctl.sh verify-ws dev-001 --clients 5
+./vmctl.sh verify-ws dev-001 --bootstrap   # first run on a fresh environment
+./vmctl.sh verify-ws dev-001 --clients 5   # afterwards
 ```
 
 `scripts/local-dev/verify-collab-websocket.mjs` runs on the platform host and
@@ -149,14 +150,22 @@ exercises the whole chain — stage-1 nginx TLS and `Upgrade` headers, the
 gateway container's nginx, the `app-gateway` process, and the y-websocket room:
 
 1. resolves an organization, project and user from the database
-2. triggers gateway allocation via `POST /collab/start`
-3. signs an RS256 `access_token` with the environment's `jwt-key`
-4. opens N independent clients on `wss://org-<uuid>.<domain>/project/<project_id>`
-5. asserts a document update from client 0 reaches **every** other client
-6. asserts awareness (presence) converges across all clients
+2. signs an RS256 `access_token` with the environment's `jwt-key`
+3. allocates a gateway via `POST /gateway/start` on Ganymede — this is what
+   writes the `org-<uuid>.<domain>` nginx vhost; without it an upgrade falls
+   through to the frontend server block and returns 200 instead of 101
+4. probes with a real upgrade until the gateway serves one, since allocation
+   returns before nginx has reloaded and the container has fetched its config
+5. opens N independent clients on `wss://org-<uuid>.<domain>/project/<project_id>`
+6. asserts a document update from client 0 reaches **every** other client
+7. asserts awareness (presence) converges across all clients
 
-It requires an existing project — the room is per project — and removes the
-marker key it wrote before exiting.
+The room is per project, so a freshly created environment has nothing to join.
+`--bootstrap` creates what is missing through the real Ganymede API — signup
+(which also creates the organization, via `proc_users_new`) then `POST
+/projects` — rather than inserting rows, so the permissions the gateway checks
+are built exactly as they are for a human. It is idempotent and skips anything
+that already exists. The test removes the marker key it wrote before exiting.
 
 > The clients set `disableBc: true` on purpose. Without it, y-websocket
 > providers inside one Node process sync through `BroadcastChannel` and the
@@ -188,6 +197,29 @@ Services are systemd units now, so `systemctl` works as expected:
 systemctl status coredns nginx postgresql holistix-buildserver
 journalctl -u coredns -f
 ```
+
+### What survives a reboot
+
+Verified by stopping and starting the VM:
+
+| Layer                                                 | After reboot       |
+| ----------------------------------------------------- | ------------------ |
+| Docker, PostgreSQL, Nginx, CoreDNS, build server      | back automatically |
+| Observability containers (`--restart unless-stopped`) | back automatically |
+| Gateway pool containers                               | **stay stopped**   |
+| Ganymede (started by `envctl.sh`, not a unit)         | **stays stopped**  |
+
+So the infrastructure layer is self-healing but the application layer is not.
+Bring it back with:
+
+```bash
+./vmctl.sh shell 'cd /root/workspace/monorepo && ./scripts/local-dev/envctl.sh start <env>'
+./vmctl.sh shell 'docker start $(docker ps -aq --filter name=gw-pool-<env>)'
+```
+
+Putting Ganymede under systemd and giving pool containers a restart policy is
+outstanding work for production — see
+[#36](https://github.com/HolistixForge/platform/issues/36).
 
 ### Editing code
 
@@ -288,6 +320,13 @@ fully restart the browser. Firefox needs a separate manual import.
 
 **`npm ci` is slow** — it runs on a guest-local `node_modules`, not over
 virtiofs, so this is normal first-run cost, not share overhead.
+
+**The VM is using too much disk** — the `reclaim` role runs `fstrim`, and
+Lima's `vz` disk honours the discard, so the host file tracks what the guest
+actually uses. Measured on a full install (observability and Playwright
+included): 8.6 GiB inside the guest, 8.7 GiB allocated for
+`~/.lima/holistix/disk` even though it is a 40 GiB image. If the two have
+drifted apart, re-run `./vmctl.sh provision --tags reclaim`.
 
 ---
 

@@ -73,6 +73,11 @@
       when: holistix_install_observability | bool
       tags: [observability]
 
+    # Last on purpose: it cleans up after apt, npm and docker.
+    - role: reclaim
+      when: holistix_reclaim_disk | bool
+      tags: [reclaim]
+
   post_tasks:
     - name: Summary
       ansible.builtin.debug:

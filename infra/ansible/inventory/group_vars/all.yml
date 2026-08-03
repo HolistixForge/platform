@@ -79,6 +79,12 @@ holistix_build_gateway_image: true
 holistix_npm_install: true
 holistix_install_build_server: true
 
+# Reclaim apt/npm/docker caches and fstrim after provisioning. Removes no
+# functionality — these regenerate on demand — but a sparse VM disk never
+# shrinks on its own, so skipping this leaves several GB allocated on the host
+# forever. Set false only when debugging a provisioning run.
+holistix_reclaim_disk: true
+
 # ---------------------------------------------------------------------------
 # Ports (informational — used by the firewall task and the summary output)
 # ---------------------------------------------------------------------------

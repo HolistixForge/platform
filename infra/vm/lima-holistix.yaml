@@ -12,18 +12,27 @@ minimumLimaVersion: '0.23.0'
 
 vmType: 'vz'
 
+# The standard server image, not `minimal`. Minimal is ~370 MB smaller to
+# download, but ships a cut-down kernel flavour with no guarantee that the
+# `tun` module is present — and gateway containers are started with
+# `--device /dev/net/tun` for OpenVPN, so without it there is no gateway and
+# no collaboration WebSocket. Disk is reclaimed by the `reclaim` Ansible role
+# instead, which saves several times more and risks nothing.
 images:
   - location: 'https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-arm64.img'
     arch: 'aarch64'
   - location: 'https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-amd64.img'
     arch: 'x86_64'
 
-# The platform runs PostgreSQL, Nginx, CoreDNS, the observability stack and a
-# pool of gateway containers side by side. Trim in vmctl.sh via
-# HOLISTIX_VM_CPUS / HOLISTIX_VM_MEMORY / HOLISTIX_VM_DISK if needed.
-cpus: 6
-memory: '12GiB'
-disk: '100GiB'
+# Sized for a laptop. The platform runs PostgreSQL, Nginx, CoreDNS, the
+# observability stack and a pool of gateway containers side by side, and does
+# that comfortably in 6 GiB. `disk` is a ceiling, not an allocation — the image
+# is sparse and only grows as blocks are written (see the `reclaim` role, which
+# runs fstrim to hand freed blocks back to the host).
+# Scale up with HOLISTIX_VM_CPUS / HOLISTIX_VM_MEMORY / HOLISTIX_VM_DISK.
+cpus: 4
+memory: '6GiB'
+disk: '40GiB'
 
 mountType: virtiofs
 mounts:

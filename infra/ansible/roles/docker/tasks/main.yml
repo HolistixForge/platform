@@ -95,3 +95,32 @@
 - name: Show the Docker host IP
   ansible.builtin.debug:
     msg: 'Gateway containers reach this host at {{ holistix_docker_host_ip }}'
+
+# Docker copies the host's /etc/resolv.conf into every container but strips
+# loopback addresses from it. Since the coredns role points the host at
+# 127.0.0.1, containers would be left with only the public fallback and could
+# not resolve ganymede.<domain> — which gateway containers must do to fetch
+# their configuration at startup. Point them at CoreDNS on the bridge address
+# instead, where it is listening (it binds 0.0.0.0:53).
+- name: Give containers a resolver that can see the local zones
+  when: holistix_install_coredns | bool
+  block:
+    - name: Configure the Docker daemon DNS
+      ansible.builtin.copy:
+        dest: /etc/docker/daemon.json
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          {
+            "dns": ["{{ holistix_docker_host_ip }}"{% for u in coredns_upstreams %}, "{{ u }}"{% endfor %}]
+          }
+      register: docker_daemon_config
+
+    # Not a handler: later roles start containers, and those containers must
+    # already have the new resolver. Handlers only run at the end of the play.
+    - name: Restart Docker to apply the resolver change # noqa: no-handler
+      ansible.builtin.systemd_service:
+        name: docker
+        state: restarted
+      when: docker_daemon_config is changed

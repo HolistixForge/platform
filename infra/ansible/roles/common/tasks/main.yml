@@ -33,6 +33,16 @@
     state: directory
     mode: '0755'
 
+# Once CoreDNS owns /etc/resolv.conf the machine's own hostname no longer
+# resolves through the cloud image's default setup, and every sudo call pays a
+# DNS timeout and prints "unable to resolve host".
+- name: Map this host's own name in /etc/hosts
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: '^127\.0\.1\.1\s'
+    line: "127.0.1.1 {{ ansible_facts['hostname'] }}"
+    state: present
+
 - name: Create platform directories
   ansible.builtin.file:
     path: '{{ item }}'
