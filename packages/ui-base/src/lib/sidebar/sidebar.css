@@ -5,7 +5,10 @@ aside {
   height: auto;
   position: fixed;
   top: 50%;
-  left: 15px;
+  /* Sits to the right of the whiteboard layers panel, which is flush against
+     the window edge. Kept as a variable so the excalidraw toolbar can align to
+     the same rail; see LAYERS_PANEL_WIDTH in whiteboard.tsx. */
+  left: var(--holistix-left-rail, 255px);
   transform: translateY(-50%);
 }
 

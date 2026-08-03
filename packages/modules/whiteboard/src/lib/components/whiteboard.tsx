@@ -54,14 +54,14 @@ import {
 import { useModuleExports } from '@holistix-forge/module/frontend';
 
 /**
- * Horizontal room reserved for the project sidebar on the left edge.
+ * Width the layers panel occupies on the left edge.
  *
- * The sidebar is `position: fixed; left: 15px` with 32px icons plus padding,
- * so it never participates in this component's layout. The layers panel used
- * to start at x=0 and cover it, which is why the sidebar looked like it had
- * been removed.
+ * The project sidebar and Excalidraw's own toolbar are both fixed-positioned
+ * and never participate in this component's layout, so they are pushed clear
+ * of the panel by hand — see `--holistix-left-rail` in ui-base sidebar.css.
+ * Keep the three in sync.
  */
-const PROJECT_SIDEBAR_CLEARANCE = 80;
+export const LAYERS_PANEL_WIDTH = 240;
 
 //
 
@@ -391,11 +391,10 @@ const WhiteboardWhiteboard = ({
             position: 'absolute',
             top: 0,
             bottom: 0,
-            // Clear the project sidebar, which is `position: fixed; left: 15px`
-            // (see ui-base/src/lib/sidebar/sidebar.css) and therefore sits
-            // outside this flex flow. Without the offset the layers panel is
-            // drawn on top of it and the sidebar becomes unreachable.
-            left: PROJECT_SIDEBAR_CLEARANCE,
+            // Flush against the left edge: the panel comes first, and the
+            // project sidebar is offset to sit to its right (see
+            // PROJECT_SIDEBAR_CLEARANCE and ui-base sidebar.css).
+            left: 0,
             width: showLayersPanel ? 240 : 24,
             transition: 'width 120ms ease',
             background: 'var(--surface-900)',

@@ -34,7 +34,9 @@ textarea {
   background-color: transparent;
   background-image: none;
   color: inherit;
-  font-size: 100%;
+  // Preflight writes `100%`; `inherit` is the same computed value for
+  // font-size and keeps the token lint rule satisfied.
+  font-size: inherit;
   font-weight: inherit;
   line-height: inherit;
 }
