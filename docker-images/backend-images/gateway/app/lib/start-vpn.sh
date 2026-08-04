@@ -50,6 +50,33 @@ openvpn --genkey secret "${TA_KEY}" || error_exit "Failed to generate TLS key"
 EASYRSA_BATCH=1 ./easyrsa gen-req clients nopass || error_exit "Failed to generate clients request"
 EASYRSA_BATCH=1 ./easyrsa sign-req client clients || error_exit "Failed to sign clients request"
 
+# Per-client identity, off by default.
+#
+# The shared client certificate proves membership of the organization and
+# nothing more: with duplicate-cn every container presents the same common
+# name, so the server cannot tell them apart and cannot assign an address to a
+# particular one. That is what stops an allocated network range from becoming an
+# address a container actually holds.
+#
+# Turning this on makes the server *require* a username and password. Every
+# container that does not send them stops connecting — so it stays off until the
+# container bootstrap writes the credential file from SETTINGS. Enabling it
+# before that lands would take every service in every organization offline.
+PER_CLIENT_IDENTITY_CONFIG=""
+if [ "${VPN_PER_CLIENT_IDENTITY:-0}" = "1" ]; then
+  PER_CLIENT_IDENTITY_CONFIG=$(cat <<'IDENT'
+
+# The username the client sends is the container id, and becomes its common
+# name for the scripts below.
+verify-client-cert require
+username-as-common-name
+auth-user-pass-verify /app/lib/vpn-auth-verify.sh via-file
+client-connect /app/lib/vpn-client-connect.sh
+script-security 2
+IDENT
+)
+fi
+
 # Update OpenVPN configuration file with new paths and gateway VPN port
 cat <<EOF >"${TEMP_DIR}/server.conf" || error_exit "Failed to write to config file"
 dev tun
@@ -95,6 +122,7 @@ verb 5
 
 # All clients use the same cert/key pair
 duplicate-cn
+${PER_CLIENT_IDENTITY_CONFIG}
 
 explicit-exit-notify 1
 
