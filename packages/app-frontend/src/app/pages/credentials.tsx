@@ -186,9 +186,9 @@ export const CredentialsPage = () => {
               style={{
                 padding: '0.5rem 1rem',
                 background: 'transparent',
-                border: '1px solid var(--c-border, rgba(255, 255, 255, 0.2))',
+                border: '1px solid var(--color-border)',
                 borderRadius: '6px',
-                color: 'var(--c-text-secondary)',
+                color: 'var(--color-text-muted)',
                 cursor: 'pointer',
               }}
             >
@@ -199,10 +199,10 @@ export const CredentialsPage = () => {
               disabled={deleteMutation.isPending}
               style={{
                 padding: '0.5rem 1rem',
-                background: 'var(--c-danger, #ef4444)',
+                background: 'var(--color-error)',
                 border: 'none',
-                borderRadius: '6px',
-                color: '#fff',
+                borderRadius: 'var(--radius-sm)',
+                color: 'var(--color-text-on-color)',
                 cursor: deleteMutation.isPending ? 'not-allowed' : 'pointer',
                 opacity: deleteMutation.isPending ? 0.7 : 1,
               }}

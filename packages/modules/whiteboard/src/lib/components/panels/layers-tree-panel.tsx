@@ -91,8 +91,8 @@ export const LayersTreePanel: FC<{
                 background: 'transparent',
                 color:
                   item.type === 'layer' && item.id !== 'reactflow'
-                    ? 'var(--color-text-disabled, #9ca3af)'
-                    : 'var(--color-text-secondary, #6b7280)',
+                    ? 'var(--color-text-faint)'
+                    : 'var(--color-text-muted)',
                 fontWeight: item.type === 'layer' ? 400 : 300,
                 opacity:
                   item.type === 'layer' && item.id !== 'reactflow' ? 0.4 : 0.7,
@@ -126,7 +126,10 @@ export const LayersTreePanel: FC<{
                 // Additional highlight if this reactflow node is selected by me
                 ...(selectedByCurrentUser
                   ? {
-                      outline: '2px solid #60a5fa',
+                      outline: '2px solid var(--color-selection)',
+                      /* charter-exception: 25% tint of the selection colour,
+                         which has no token — the solid one would read as a
+                         second ring rather than a wash. */
                       boxShadow: '0 0 0 2px rgba(59,130,246,0.25) inset',
                     }
                   : {}),

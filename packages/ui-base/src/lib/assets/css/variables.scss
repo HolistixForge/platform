@@ -318,6 +318,12 @@
   --color-warning: var(--orange-500);
   --color-info: var(--cyan-500);
 
+  // Muted status fills, for badges and alert backgrounds rather than for the
+  // status colour itself. Same -600 convention as --color-accent-muted.
+  --color-success-muted: var(--green-600);
+  --color-error-muted: var(--red-600);
+  --color-info-muted: var(--cyan-600);
+
   // --- Interactive ---
   --color-selection: var(--cyan-500);
   --color-link: var(--white);
@@ -331,7 +337,15 @@
   // LAYOUT TOKENS
   // ============================================================================
 
-  --border-radius-box: 8px;
+  // Corner radius scale. Values match the fallbacks that credentials/ and
+  // permissions-page/ were already carrying inline, so defining them here is
+  // visually inert — it only makes the references resolve.
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --border-radius-box: var(--radius-md);
   --node-border-radius: var(--border-radius-box);
 
   // --- Form System ---

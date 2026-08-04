@@ -88,7 +88,7 @@ export const CredentialForm = ({
               <p
                 style={{
                   fontSize: '0.85rem',
-                  color: 'var(--c-text-muted)',
+                  color: 'var(--color-text-faint)',
                   margin: '0',
                 }}
               >
