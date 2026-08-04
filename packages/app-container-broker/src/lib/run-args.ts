@@ -62,6 +62,12 @@ export const buildRunArgs = (
 
   args.push('--env', `SETTINGS=${request.settings}`);
 
+  // The pull already happened, with this project's credential and its own
+  // config directory. Letting `run` fetch on its own would do it with the
+  // host's ambient credentials instead — which is how a project ends up
+  // starting an image it cannot actually pull.
+  args.push('--pull=never');
+
   // `--` so an image reference can never be read as a flag, whatever the
   // catalogue holds.
   args.push('--', image.reference);

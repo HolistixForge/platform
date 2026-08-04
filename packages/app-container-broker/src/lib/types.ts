@@ -40,6 +40,14 @@ export type TResolvedImage = {
   imageId: string;
   /** Fully qualified, digest-pinned: `repo:tag@sha256:…`. */
   reference: string;
+  /**
+   * Short-lived registry bearer for this pull, scoped to this repository.
+   *
+   * Minted by Ganymede from the project's stored `github_token`, so the PAT
+   * itself never reaches this host. Absent for built-in images, which are ours
+   * and need no tenant credential.
+   */
+  pullToken?: string;
 };
 
 export type TBrokerConfig = {

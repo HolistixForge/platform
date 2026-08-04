@@ -89,10 +89,9 @@ export abstract class ContainerRunner {
     config: TRunnerConfig,
     limits: TContainerLimits = DEFAULT_CONTAINER_LIMITS
   ): TContainerLaunchSpec {
-    const imageDef = imageRegistry.get(
-      container.image_id,
-      config.organization_id
-    );
+    // Scoped by project: that is where the pull credential lives, so the image
+    // and the token that fetches it are resolved against the same thing.
+    const imageDef = imageRegistry.get(container.image_id, config.project_id);
     if (!imageDef) {
       throw new Error(`Image ${container.image_id} not found in registry`);
     }

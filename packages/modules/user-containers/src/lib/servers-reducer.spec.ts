@@ -192,23 +192,23 @@ describe('UserContainersReducer - _initProject', () => {
     expect(mockImagesMap.has('jupyter:lab')).toBe(true);
   });
 
-  it('syncs only this organization catalogue, not another tenant one', async () => {
+  it('syncs only this project catalogue, not another one', async () => {
     // The shared map is a CRDT replicated to every client in the project, so an
     // unscoped sync would hand one tenant's image list to another's browsers.
-    mockImageRegistry.registerForOrganization('org-under-test', [
+    mockImageRegistry.registerForProject('test-project-123', [
       {
         imageId: 'ours:etl',
         imageName: 'Our ETL',
-        imageUri: 'registry.example/etl',
+        imageUri: 'ghcr.io/ours/etl',
         imageTag: '1.0.0',
         imageSha256: 'a'.repeat(64),
       },
     ]);
-    mockImageRegistry.registerForOrganization('some-other-org', [
+    mockImageRegistry.registerForProject('some-other-project', [
       {
         imageId: 'theirs:sim',
         imageName: 'Their Simulator',
-        imageUri: 'registry.example/sim',
+        imageUri: 'ghcr.io/theirs/sim',
         imageTag: '2.0.0',
         imageSha256: 'b'.repeat(64),
       },

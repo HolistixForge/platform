@@ -143,12 +143,19 @@ policy, per-org bandwidth accounting, or both.
 
 ## Staged plan
 
-**Stage 0 — org-scoped catalog.** _Done._ `ContainerImageRegistry` now has two
-tiers: built-in images registered in code, and per-organization images. `get()`
-and `getAll()` take an organization id; without one, only built-ins resolve. A
+**Stage 0 — project-scoped catalog.** _Done._ `ContainerImageRegistry` now has
+two tiers: built-in images registered in code, and per-project images. `get()`
+and `getAll()` take a project id; without one, only built-ins resolve. A
 built-in id cannot be shadowed by a tenant entry, and a tenant entry without a
-digest is refused at registration. `_initProject` scopes to
-`gateway.organization_id`. `imageReference()` emits `repo:tag@sha256:…`.
+digest is refused at registration. `imageReference()` emits `repo:tag@sha256:…`.
+
+Scoped by **project**, not organization, because that is where the pull
+credential lives: `credential_shares` already carries
+`share_scope = 'project'` with a `project_id`, and the resolution query already
+honours it (`routes/credentials/index.ts:159`). An image and the token that
+fetches it therefore resolve against the same thing. It is also the stricter of
+the two — it stops a leak between two projects of one organization, not merely
+between organizations.
 
 **Stage 1 — platform runner and broker.** _Written._ `PlatformRunnerBackend`
 registers beside `local`, but only where a broker is configured; the live set is
@@ -157,10 +164,28 @@ offer a mode the deployment lacks. `packages/app-container-broker` is the
 host-side service. `infra/ansible/roles/kata` and `roles/containerbroker`
 provision it, gated on `holistix_install_cloud_runner` (default false).
 
-**Stage 2 — open the catalog.** Not started. Org-supplied images need a
-persistence layer in Ganymede, per-org registry credentials, a pull policy and a
-scanning decision. The broker already asks Ganymede for
-`/internal/organizations/:id/images/:imageId` — that endpoint does not exist yet.
+**Stage 2 — open the catalog, from GHCR.** Partly done. Tenant images come from
+`ghcr.io`, pulled with a `github_token` from the credentials wallet shared at
+project scope — both the credential type and project-scoped sharing already
+exist in Ganymede, so there is no storage layer to build.
+
+Written: the broker asks Ganymede for
+`/internal/projects/:projectId/images/:imageId` and expects
+`{ imageId, reference, pull_token }`, then pulls with that token in a
+throw-away `--config` directory (`pull.ts`). **That endpoint does not exist
+yet** — it is the remaining work, along with tag→digest resolution at
+registration (GHCR answers it with one `HEAD` on the manifest, so a tenant can
+supply a tag and we pin it rather than demanding a digest).
+
+Two decisions still open: whether the pull credential is a machine-account PAT
+or a GitHub App installation token, and whether a project may reference any
+`ghcr.io/*` path or only repositories under a linked GitHub organization.
+Without the second, project A can register `ghcr.io/orgB/private` and, if its
+token happens to have access, the platform fetches it on A's behalf.
+
+Note the existing GitHub login OAuth is scoped `user:email`
+(`routes/auth/github.ts:55`) and cannot read packages, so the login identity is
+not reusable for pulls.
 
 **Stage 3 — limits and lifecycle.** Limits done: the broker clamps every request
 to host ceilings and refuses one carrying no limits at all. Reaping not started —
@@ -169,6 +194,26 @@ broker's `DELETE /containers/:id`.
 
 Stage 1 deliberately runs a _known_ image, so that a failure there is a failure of
 the runtime and not of the image.
+
+## The image cache is an access-control surface
+
+Worth stating on its own, because it looks like a caching question and is not.
+
+The layer cache belongs to the host; a pull credential belongs to one project.
+Once project A has pulled a private image, that image is local. If the broker
+treated "already present" as "nothing to do", project B could name the same
+digest and get it without ever proving it has access — and registering a known
+digest in your own catalog costs nothing.
+
+So the pull runs on **every** start, cached or not (`runtime.ts`,
+`startContainer`). The layers are local and cheap; the manifest fetch still goes
+to the registry, and that is the part that checks the token. `docker run` is
+given `--pull=never` so it cannot quietly refetch with the host's ambient
+credentials instead.
+
+For the same reason each pull gets its own `--config` directory rather than a
+shared `docker login`: one config for the whole host means two concurrent pulls
+race, and the last writer lends its access to the other.
 
 ## What is not verified
 

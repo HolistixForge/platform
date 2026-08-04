@@ -157,15 +157,52 @@ describe('PlatformRunnerBackend', () => {
     });
   });
 
-  it('refuses an image the organization cannot see', async () => {
+  it('refuses an image this project cannot see', async () => {
+    // Registered against another project, so it must not resolve here — the
+    // pull credential is project-scoped, and the catalogue follows it.
+    const registry = imageRegistry();
+    registry.registerForProject('someone-elses-project', [
+      {
+        imageId: 'acme:etl',
+        imageName: 'Acme ETL',
+        imageUri: 'ghcr.io/acme/etl',
+        imageTag: '1.4.0',
+        imageSha256: 'd'.repeat(64),
+      },
+    ]);
     const runner = new PlatformRunnerBackend({
       transport: async () => response,
     });
     const foreign = { ...container(), image_id: 'acme:etl' } as TUserContainer;
 
     await expect(
-      runner.start(foreign, 'jwt', imageRegistry(), config())
+      runner.start(foreign, 'jwt', registry, config())
     ).rejects.toThrow('not found in registry');
+  });
+
+  it('resolves an image registered for this project', async () => {
+    const registry = imageRegistry();
+    registry.registerForProject('project-1', [
+      {
+        imageId: 'acme:etl',
+        imageName: 'Acme ETL',
+        imageUri: 'ghcr.io/acme/etl',
+        imageTag: '1.4.0',
+        imageSha256: 'd'.repeat(64),
+      },
+    ]);
+    let captured: TBrokerStartRequest | undefined;
+    const runner = new PlatformRunnerBackend({
+      transport: async (r) => {
+        captured = r;
+        return response;
+      },
+    });
+    const own = { ...container(), image_id: 'acme:etl' } as TUserContainer;
+
+    await runner.start(own, 'jwt', registry, config());
+
+    expect(captured?.image_id).toBe('acme:etl');
   });
 
   it('fails loudly when no broker is configured', async () => {

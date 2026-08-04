@@ -10,7 +10,7 @@ export class UnknownImage extends Error {}
  * without the security-relevant part of the broker changing shape.
  */
 export type TCatalogueSource = (
-  organizationId: string,
+  projectId: string,
   imageId: string
 ) => Promise<TResolvedImage | undefined>;
 
@@ -31,14 +31,14 @@ const DIGEST_PINNED = /^[^\s]+@sha256:[0-9a-f]{64}$/;
  */
 export const resolveImage = async (
   source: TCatalogueSource,
-  organizationId: string,
+  projectId: string,
   imageId: string
 ): Promise<TResolvedImage> => {
-  const resolved = await source(organizationId, imageId);
+  const resolved = await source(projectId, imageId);
 
   if (!resolved) {
     throw new UnknownImage(
-      `image ${imageId} is not in the catalogue for organization ${organizationId}`
+      `image ${imageId} is not in the catalogue for project ${projectId}`
     );
   }
 
@@ -54,18 +54,18 @@ export const resolveImage = async (
 /**
  * Catalogue backed by Ganymede.
  *
- * Ganymede owns organization membership and, once tenants register images, the
- * per-organization catalogue. Asking it rather than trusting the gateway is
- * what keeps the gateway out of the decision.
+ * Ganymede owns the project catalogue and the credential wallet, so it is the
+ * one place that can both say "this project may run this image" and mint a
+ * token to fetch it. Asking it rather than trusting the gateway keeps the
+ * gateway out of the decision; having it mint the token rather than handing
+ * over the stored PAT keeps the tenant's GitHub credential off this host.
  */
 export const ganymedeCatalogue =
   (endpoint: string, token: string): TCatalogueSource =>
-  async (organizationId, imageId) => {
+  async (projectId, imageId) => {
     const url =
-      `${endpoint.replace(/\/$/, '')}/internal/organizations/` +
-      `${encodeURIComponent(organizationId)}/images/${encodeURIComponent(
-        imageId
-      )}`;
+      `${endpoint.replace(/\/$/, '')}/internal/projects/` +
+      `${encodeURIComponent(projectId)}/images/${encodeURIComponent(imageId)}`;
 
     const response = await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
@@ -81,6 +81,11 @@ export const ganymedeCatalogue =
     const body = (await response.json()) as {
       imageId: string;
       reference: string;
+      pull_token?: string;
     };
-    return { imageId: body.imageId, reference: body.reference };
+    return {
+      imageId: body.imageId,
+      reference: body.reference,
+      pullToken: body.pull_token,
+    };
   };

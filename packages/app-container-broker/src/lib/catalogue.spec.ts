@@ -12,17 +12,17 @@ const pinned = `holistixforge/ubuntu-terminal:24.04@sha256:${'c'.repeat(64)}`;
 
 const source =
   (entries: Record<string, string>): TCatalogueSource =>
-  async (organizationId, imageId) => {
-    const reference = entries[`${organizationId}/${imageId}`];
+  async (projectId, imageId) => {
+    const reference = entries[`${projectId}/${imageId}`];
     return reference ? { imageId, reference } : undefined;
   };
 
 describe('resolveImage', () => {
-  it('resolves an id the catalogue knows for that organization', async () => {
-    const catalogue = source({ 'org-a/ubuntu:terminal': pinned });
+  it('resolves an id the catalogue knows for that project', async () => {
+    const catalogue = source({ 'project-a/ubuntu:terminal': pinned });
 
     await expect(
-      resolveImage(catalogue, 'org-a', 'ubuntu:terminal')
+      resolveImage(catalogue, 'project-a', 'ubuntu:terminal')
     ).resolves.toEqual({ imageId: 'ubuntu:terminal', reference: pinned });
   });
 
@@ -32,37 +32,37 @@ describe('resolveImage', () => {
     const catalogue = source({});
 
     await expect(
-      resolveImage(catalogue, 'org-a', 'attacker/image')
+      resolveImage(catalogue, 'project-a', 'attacker/image')
     ).rejects.toThrow(UnknownImage);
   });
 
-  it('does not resolve another organization entry', async () => {
-    const catalogue = source({ 'org-b/acme:etl': pinned });
+  it('does not resolve another project entry', async () => {
+    const catalogue = source({ 'project-b/acme:etl': pinned });
 
-    await expect(resolveImage(catalogue, 'org-a', 'acme:etl')).rejects.toThrow(
-      UnknownImage
-    );
+    await expect(
+      resolveImage(catalogue, 'project-a', 'acme:etl')
+    ).rejects.toThrow(UnknownImage);
   });
 
   it('refuses an entry that resolved but is not pinned to a digest', async () => {
     // A tenant image pinned only by tag is not the same artifact from one
     // start to the next, and this is the last place that can still say so.
     const catalogue = source({
-      'org-a/acme:etl': 'registry.acme.example/etl:latest',
+      'project-a/acme:etl': 'registry.acme.example/etl:latest',
     });
 
-    await expect(resolveImage(catalogue, 'org-a', 'acme:etl')).rejects.toThrow(
-      'not pinned to a digest'
-    );
+    await expect(
+      resolveImage(catalogue, 'project-a', 'acme:etl')
+    ).rejects.toThrow('not pinned to a digest');
   });
 
   it('refuses a digest that is the wrong length', async () => {
     const catalogue = source({
-      'org-a/acme:etl': 'registry.acme.example/etl:1.0@sha256:abc',
+      'project-a/acme:etl': 'registry.acme.example/etl:1.0@sha256:abc',
     });
 
-    await expect(resolveImage(catalogue, 'org-a', 'acme:etl')).rejects.toThrow(
-      'not pinned to a digest'
-    );
+    await expect(
+      resolveImage(catalogue, 'project-a', 'acme:etl')
+    ).rejects.toThrow('not pinned to a digest');
   });
 });

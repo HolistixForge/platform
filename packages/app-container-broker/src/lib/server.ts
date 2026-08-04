@@ -128,11 +128,7 @@ const handleStart = async (
 
   let image;
   try {
-    image = await resolveImage(
-      catalogue,
-      request.organization_id,
-      request.image_id
-    );
+    image = await resolveImage(catalogue, request.project_id, request.image_id);
   } catch (e) {
     if (e instanceof UnknownImage) {
       log(EPriority.Warning, 'BROKER', e.message);

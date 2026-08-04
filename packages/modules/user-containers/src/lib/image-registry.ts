@@ -6,25 +6,31 @@ import { TContainerImageDefinition } from './container-image';
  * Two tiers, deliberately kept apart:
  *
  * - **Built-in** images are registered in code by feature modules (jupyter,
- *   n8n, pgadmin4, …). Every organization sees them.
- * - **Organization** images are supplied by a tenant. They are visible only to
- *   the organization that registered them.
+ *   n8n, pgadmin4, …). Every project sees them.
+ * - **Project** images are supplied by a tenant. They are visible only to the
+ *   project that registered them.
  *
  * The separation is what keeps `image_id` usable as an allowlist key. A runner
  * is handed an id and resolves it here; it never receives an image URI from the
  * caller. Once tenants can add images, that property is the only thing standing
  * between "pick a service from a list" and "run any image on the platform".
+ *
+ * Scoped by project rather than by organization because that is where the pull
+ * credential lives: `credential_shares` carries `share_scope = 'project'`, so
+ * an image and the token that fetches it belong to the same thing. It is also
+ * the stricter of the two — it stops a leak between projects of one
+ * organization, not merely between organizations.
  */
 export class ContainerImageRegistry {
   private readonly builtin: Map<string, TContainerImageDefinition> = new Map();
 
-  private readonly byOrganization: Map<
+  private readonly byProject: Map<
     string,
     Map<string, TContainerImageDefinition>
   > = new Map();
 
   /**
-   * Register built-in images, visible to every organization.
+   * Register built-in images, visible to every project.
    */
   register(images: TContainerImageDefinition[]): void {
     images.forEach((img) => {
@@ -36,26 +42,26 @@ export class ContainerImageRegistry {
   }
 
   /**
-   * Register images supplied by an organization.
+   * Register images supplied by a project.
    *
    * Two rules, both load-bearing:
    *
-   * - A built-in id cannot be taken over. Otherwise an organization could
-   *   register its own `jupyter:minimal`, and a user picking JupyterLab from
-   *   the catalogue would silently run someone else's image.
+   * - A built-in id cannot be taken over. Otherwise a project could register
+   *   its own `jupyter:minimal`, and a user picking JupyterLab from the
+   *   catalogue would silently run someone else's image.
    * - A digest is mandatory. A tenant image referenced by mutable tag is not
    *   the same artifact from one start to the next, and on shared
    *   infrastructure that is the difference between a review and a promise.
    */
-  registerForOrganization(
-    organizationId: string,
+  registerForProject(
+    projectId: string,
     images: TContainerImageDefinition[]
   ): void {
-    if (!organizationId) {
-      throw new Error('organizationId is required to register images');
+    if (!projectId) {
+      throw new Error('projectId is required to register images');
     }
 
-    const scoped = this.byOrganization.get(organizationId) ?? new Map();
+    const scoped = this.byProject.get(projectId) ?? new Map();
 
     images.forEach((img) => {
       if (this.builtin.has(img.imageId)) {
@@ -70,51 +76,51 @@ export class ContainerImageRegistry {
       }
       if (scoped.has(img.imageId)) {
         throw new Error(
-          `Image ${img.imageId} already registered for organization ${organizationId}`
+          `Image ${img.imageId} already registered for project ${projectId}`
         );
       }
       scoped.set(img.imageId, img);
     });
 
-    this.byOrganization.set(organizationId, scoped);
+    this.byProject.set(projectId, scoped);
   }
 
   /**
-   * Drop everything an organization registered.
+   * Drop everything a project registered.
    *
    * Gateway pool containers are reallocated between organizations, so a process
    * that keeps serving the previous tenant's catalogue is a cross-tenant leak
    * rather than merely stale data.
    */
-  clearOrganization(organizationId: string): void {
-    this.byOrganization.delete(organizationId);
+  clearProject(projectId: string): void {
+    this.byProject.delete(projectId);
   }
 
   /**
    * Resolve an image id.
    *
-   * Built-in images are checked first — see `registerForOrganization` for why
-   * shadowing them must not be possible. Without an `organizationId` only
-   * built-in images resolve.
+   * Built-in images are checked first — see `registerForProject` for why
+   * shadowing them must not be possible. Without a `projectId` only built-in
+   * images resolve.
    */
   get(
     imageId: string,
-    organizationId?: string
+    projectId?: string
   ): TContainerImageDefinition | undefined {
     const builtin = this.builtin.get(imageId);
     if (builtin) return builtin;
-    if (!organizationId) return undefined;
-    return this.byOrganization.get(organizationId)?.get(imageId);
+    if (!projectId) return undefined;
+    return this.byProject.get(projectId)?.get(imageId);
   }
 
   /**
-   * Every image an organization may start. Without an `organizationId` this is
-   * the built-in catalogue alone — never another tenant's images.
+   * Every image a project may start. Without a `projectId` this is the built-in
+   * catalogue alone — never another tenant's images.
    */
-  getAll(organizationId?: string): TContainerImageDefinition[] {
+  getAll(projectId?: string): TContainerImageDefinition[] {
     const all = Array.from(this.builtin.values());
-    if (!organizationId) return all;
-    const scoped = this.byOrganization.get(organizationId);
+    if (!projectId) return all;
+    const scoped = this.byProject.get(projectId);
     return scoped ? [...all, ...scoped.values()] : all;
   }
 }

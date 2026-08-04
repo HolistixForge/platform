@@ -113,13 +113,13 @@ export class UserContainersReducer extends ReducerWithCollab<
       `project:init called for project ${event.project_id}, current images size: ${currentSize}`
     );
 
-    // Only this organization's catalogue: built-in images plus whatever this
-    // org supplied. Passing no organization here would sync every tenant's
-    // images into every project's shared state, which is replicated to every
-    // client in the project.
-    const organizationId = this.depsExports.gateway.organization_id;
-    const allImages =
-      this.depsExports['user-containers'].imageRegistry.getAll(organizationId);
+    // Only this project's catalogue: built-in images plus whatever this project
+    // registered. Passing no scope here would sync every tenant's images into
+    // every project's shared state, which is replicated to every client in the
+    // project.
+    const allImages = this.depsExports['user-containers'].imageRegistry.getAll(
+      event.project_id
+    );
 
     let synced = 0;
     for (const img of allImages) {
@@ -237,12 +237,12 @@ export class UserContainersReducer extends ReducerWithCollab<
       ]);
     }
 
-    // Get image definition from registry, scoped to this organization: a
-    // built-in image, or one this org supplied. Never another tenant's.
+    // Get image definition from registry, scoped to this project: a built-in
+    // image, or one this project registered. Never another tenant's.
     const organizationId = this.depsExports.gateway.organization_id;
     const imageDef = this.depsExports['user-containers'].imageRegistry.get(
       event.imageId,
-      organizationId
+      project_id
     );
 
     if (!imageDef) {

@@ -1,6 +1,7 @@
 import { execFile } from 'node:child_process';
 import { TStartRequest, TBrokerConfig, TResolvedImage } from './types';
 import { buildRunArgs } from './run-args';
+import { pullImage } from './pull';
 
 /**
  * How a container is actually started.
@@ -39,12 +40,22 @@ export const dockerExec =
       );
     });
 
+/**
+ * Fetch, then run.
+ *
+ * Two steps rather than letting `docker run` pull implicitly, because the two
+ * need different credentials: the pull uses the project's registry token, the
+ * run uses nothing at all.
+ */
 export const startContainer = async (
   exec: TRuntimeExec,
   request: TStartRequest,
   image: TResolvedImage,
   config: TBrokerConfig
-): Promise<string> => exec(buildRunArgs(request, image, config));
+): Promise<string> => {
+  await pullImage(exec, image);
+  return exec(buildRunArgs(request, image, config));
+};
 
 /**
  * Stop and remove a container by the id the runtime gave us.
