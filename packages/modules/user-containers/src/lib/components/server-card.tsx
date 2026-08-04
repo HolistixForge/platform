@@ -233,38 +233,66 @@ export const UserContainerCardInternal = ({
       </div>
 
       <div>
-        {container.runner.id === 'none' && (
-          <>
-            <div style={{ color: 'var(--white)', fontSize: '12px' }}>
-              <p>Select a runner to start the container</p>
-            </div>
-            <div className="flex" style={{ gap: '8px' }}>
-              {Array.from(runners.entries()).map(([runnerId, runner]) => (
-                <div
-                  key={runnerId}
-                  className="flex items-center cursor-pointer"
-                  style={{
-                    gap: '8px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '4px',
-                    padding: '8px',
-                  }}
-                  onClick={() => {
-                    onSelectRunner(runnerId);
-                  }}
-                >
-                  <runner.icon />
-                  <p>{runner.label}</p>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
+        {/*
+          Shown whichever runner is active, not only before the first choice.
+          Where a service runs is a decision people revise — moving it from
+          their laptop to the platform, or back to debug it — and hiding the
+          control after one click left no way to do that but delete the
+          container and make another one.
+        */}
+        <div
+          style={{
+            color: 'var(--color-text-muted)',
+            fontSize: 'var(--font-size-sm)',
+          }}
+        >
+          <p>
+            {container.runner.id === 'none'
+              ? 'Select a runner to start the container'
+              : 'Runs on'}
+          </p>
+        </div>
+        <div className="flex" style={{ gap: 'var(--spacing-4)' }}>
+          {Array.from(runners.entries()).map(([runnerId, runner]) => {
+            const active = container.runner.id === runnerId;
+            return (
+              <div
+                key={runnerId}
+                className="flex items-center cursor-pointer"
+                title={
+                  active
+                    ? `Restart on ${runner.label}`
+                    : `Move to ${runner.label}`
+                }
+                style={{
+                  gap: 'var(--spacing-4)',
+                  // The active runner is the one piece of state on this card
+                  // that is otherwise invisible once chosen.
+                  border: `1px solid ${
+                    active ? 'var(--color-accent)' : 'var(--color-border)'
+                  }`,
+                  background: active ? 'var(--color-bg-hover)' : 'transparent',
+                  color: active
+                    ? 'var(--color-text)'
+                    : 'var(--color-text-muted)',
+                  borderRadius: 'var(--radius-xs)',
+                  padding: 'var(--spacing-4)',
+                  transition: 'background 0.15s ease, border-color 0.15s ease',
+                }}
+                onClick={() => {
+                  onSelectRunner(runnerId);
+                }}
+              >
+                <runner.icon />
+                <p>{runner.label}</p>
+              </div>
+            );
+          })}
+        </div>
 
-        {container.runner.id !== 'none' &&
-          typeof container.runner.command === 'string' && (
-            <DockerCommand command={container.runner.command} />
-          )}
+        {typeof container.runner.command === 'string' && (
+          <DockerCommand command={container.runner.command} />
+        )}
       </div>
 
       <TagsBar tags={tags} addTag={addTag} />

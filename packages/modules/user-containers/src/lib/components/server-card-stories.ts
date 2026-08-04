@@ -74,3 +74,30 @@ export const withServicesStory = (): StoryArgs => {
   ];
   return s;
 };
+
+/**
+ * A container already running on the platform.
+ *
+ * The runner row stays on the card whichever runner is active, so that moving
+ * a service between a laptop and the platform does not mean deleting it and
+ * making another one. This story is the state that used to render nothing.
+ */
+export const runningOnPlatformStory = (): StoryArgs => {
+  const args = withServicesStory();
+  args.container.runner = { id: 'platform', host: 'platform-host-1' };
+  return args;
+};
+
+/**
+ * The same container on the local runner, which also hands back the command to
+ * paste — so the card shows both the choice and the command.
+ */
+export const runningLocallyStory = (): StoryArgs => {
+  const args = withServicesStory();
+  args.container.runner = {
+    id: 'local',
+    command:
+      'docker run --rm -e SETTINGS=… holistixforge/ubuntu-terminal:24.04',
+  };
+  return args;
+};

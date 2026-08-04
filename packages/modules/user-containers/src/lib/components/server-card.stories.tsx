@@ -5,6 +5,8 @@ import {
   makeStoryArgs,
   recentActivityStory,
   withServicesStory,
+  runningOnPlatformStory,
+  runningLocallyStory,
   StoryArgs,
 } from './server-card-stories';
 import { localRunnerFrontend } from '../local-runner-frontend';
@@ -110,4 +112,16 @@ export const RunningRecentActivity: Story = {
 
 export const WithServices: Story = {
   args: { ...withServicesStory() },
+};
+
+//
+
+export const RunningOnPlatform: Story = {
+  args: { ...runningOnPlatformStory() },
+};
+
+//
+
+export const RunningLocally: Story = {
+  args: { ...runningLocallyStory() },
 };
