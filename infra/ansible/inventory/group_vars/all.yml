@@ -106,7 +106,11 @@ holistix_broker_secrets_file: /etc/holistix/container-broker.env
 holistix_broker_max_cpus: 4
 holistix_broker_max_memory_mb: 8192
 holistix_broker_max_pids: 2048
-holistix_broker_ganymede_url: http://127.0.0.1:6000
+# Ganymede's port comes from GANYMEDE_SERVER_BIND in each environment's
+# .env.ganymede, so it is per-environment while the broker is installed for the
+# whole host. A host running two environments needs either one broker per
+# environment or an environment-aware lookup — see doc/architecture/CLOUD_RUNNER.md.
+holistix_broker_ganymede_url: http://127.0.0.1:6870
 
 # Reclaim apt/npm/docker caches and fstrim after provisioning. Removes no
 # functionality — these regenerate on demand — but a sparse VM disk never

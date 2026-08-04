@@ -38,10 +38,27 @@ export const pullImage = async (
   exec: TRuntimeExec,
   image: TResolvedImage
 ): Promise<void> => {
-  if (!image.pullToken) {
-    // A built-in image: ours, no tenant credential involved.
+  if (image.builtin) {
+    // Ours, and no tenant credential is involved — so the always-pull rule
+    // above does not apply: there is no authorization to re-check. A built-in
+    // that is already on the host is used as-is, which is also what lets a
+    // platform build its own images locally rather than publishing them first.
+    const present = await exec([
+      'images',
+      '--quiet',
+      '--',
+      image.reference,
+    ]).catch(() => '');
+    if (present.trim()) return;
+
     await exec(['pull', '--', image.reference]);
     return;
+  }
+
+  if (!image.pullToken) {
+    throw new Error(
+      `image ${image.imageId} needs a pull token and carries none`
+    );
   }
 
   const dir = await mkdtemp(join(tmpdir(), 'holistix-pull-'));

@@ -3,6 +3,7 @@ import {
   TBrokerConfig,
   TResolvedImage,
   BASELINE_CAPABILITIES,
+  MICROVM_RUNTIMES,
 } from './types';
 import { privateNetworkName } from './networks';
 
@@ -64,6 +65,14 @@ export const buildRunArgs = (
   }
   // A container that can acquire new privileges can undo the drop above.
   args.push('--security-opt=no-new-privileges');
+
+  // Under a shared-kernel runtime the container has no guest kernel to get a
+  // tun device from, and its VPN client cannot come up without one. Under a
+  // microVM the guest provides it and passing the host's would be a hole
+  // through the isolation. Either way the caller does not get to decide.
+  if (!MICROVM_RUNTIMES.includes(config.runtime)) {
+    args.push('--device', '/dev/net/tun');
+  }
 
   args.push(`--cpus=${request.limits.cpus}`);
   args.push(`--memory=${request.limits.memoryMb}m`);

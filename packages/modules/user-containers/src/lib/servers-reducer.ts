@@ -730,8 +730,11 @@ export class UserContainersReducer extends ReducerWithCollab<
       auth_guard_client_secret: authGuard?.client_secret,
       // Only in local development, and only from the gateway's environment:
       // this module cannot read process.env for itself.
+      // `host-gateway` rather than the bridge address: a platform container
+      // sits on a private network of its own, where the default bridge's
+      // gateway is not routable. Docker resolves this one from any network.
       dev_host_ip: gatewayExports.environment?.devMode
-        ? gatewayExports.environment.dockerHostIp
+        ? 'host-gateway'
         : undefined,
     };
 

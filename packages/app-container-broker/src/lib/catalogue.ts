@@ -42,7 +42,11 @@ export const resolveImage = async (
     );
   }
 
-  if (!DIGEST_PINNED.test(resolved.reference)) {
+  // Tenant images only. A built-in comes from this host's own list and changes
+  // when the platform is deployed, not when a tenant pushes — pinning it by
+  // digest would mean a redeploy for every image bump while closing nothing a
+  // tenant could exploit.
+  if (!resolved.builtin && !DIGEST_PINNED.test(resolved.reference)) {
     throw new UnknownImage(
       `image ${imageId} is not pinned to a digest and will not be started`
     );

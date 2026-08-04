@@ -36,6 +36,10 @@
     NX_DAEMON: 'false'
   register: broker_build
   changed_when: "'Successfully ran target build' in broker_build.stdout"
+  # Without this the service keeps running the previous bundle: the unit file is
+  # unchanged, so nothing else notifies a restart, and a redeploy looks like it
+  # worked while the old code is still answering.
+  notify: Restart container broker
 
 - name: Create the directory the broker secrets live in
   ansible.builtin.file:

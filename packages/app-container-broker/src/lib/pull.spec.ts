@@ -106,17 +106,59 @@ describe('pullImage', () => {
     await expect(access(configDir)).rejects.toThrow();
   });
 
-  it('uses no credential for a built-in image', async () => {
-    // Ours, not a tenant's — there is no project token involved.
-    const { calls, exec } = recorder();
-    const image: TResolvedImage = {
+  describe('built-in images', () => {
+    const builtin: TResolvedImage = {
       imageId: 'ubuntu:terminal',
       reference: 'holistixforge/ubuntu-terminal:24.04',
+      builtin: true,
     };
 
-    await pullImage(exec, image);
+    it('uses no credential', async () => {
+      // Ours, not a tenant's — there is no project token involved.
+      const { calls, exec } = recorder();
 
-    expect(calls[0]).not.toContain('--config');
-    expect(calls[0]).toEqual(['pull', '--', image.reference]);
+      await pullImage(exec, builtin);
+
+      expect(calls.some((c) => c.includes('--config'))).toBe(false);
+    });
+
+    it('is used as-is when already on the host', async () => {
+      // The always-pull rule guards an access decision, and a built-in carries
+      // none. Skipping the fetch is also what lets a platform build its own
+      // images locally rather than having to publish them first.
+      const calls: string[][] = [];
+      const exec = async (args: string[]) => {
+        calls.push(args);
+        return args[0] === 'images' ? 'sha256:abc123' : '';
+      };
+
+      await pullImage(exec, builtin);
+
+      expect(calls.some((c) => c.includes('pull'))).toBe(false);
+    });
+
+    it('is fetched when absent', async () => {
+      const calls: string[][] = [];
+      const exec = async (args: string[]) => {
+        calls.push(args);
+        // `docker images --quiet` answers empty for an image not on the host.
+        return args[0] === 'images' ? '' : '';
+      };
+
+      await pullImage(exec, builtin);
+
+      expect(calls.at(-1)).toEqual(['pull', '--', builtin.reference]);
+    });
+  });
+
+  it('refuses a tenant image that carries no pull token', async () => {
+    // Not a built-in and no credential: something upstream failed to mint one,
+    // and pulling anonymously would either fail obscurely or — worse — succeed
+    // from the shared layer cache.
+    const { exec } = recorder();
+
+    await expect(
+      pullImage(exec, { imageId: 'acme:etl', reference })
+    ).rejects.toThrow('needs a pull token');
   });
 });

@@ -57,6 +57,14 @@ export type TResolvedImage = {
    * catches a mistake in that logic at the point where it would do damage.
    */
   githubOrganization?: string;
+  /**
+   * An image the platform ships, rather than one a tenant registered.
+   *
+   * Stated rather than inferred from the absence of a pull token: the digest
+   * requirement and the always-pull rule both turn on it, and "no token" would
+   * equally describe a tenant image whose credential failed to mint.
+   */
+  builtin?: boolean;
 };
 
 export type TBrokerConfig = {
@@ -108,6 +116,12 @@ export const BASELINE_CAPABILITIES = [
   'SETPCAP',
   'KILL',
   'NET_BIND_SERVICE',
+  // Raw sockets, which ping needs. Dropping it looked like a clean win — it
+  // takes away packet spoofing and scanning — and it broke the containers'
+  // own bootstrap, which pings its gateway to decide whether the VPN came up.
+  // Docker grants it by default; taking it away needs the bootstrap changed
+  // first, not the capability removed and the breakage discovered later.
+  'NET_RAW',
 ];
 
 /**
@@ -118,3 +132,23 @@ export const BASELINE_CAPABILITIES = [
  * host's, which is most of the reason for running one.
  */
 export const ALLOWED_CAPABILITIES = ['NET_ADMIN'];
+
+/**
+ * Runtimes that give each container its own kernel.
+ *
+ * The distinction decides where `/dev/net/tun` comes from. The container runs
+ * an OpenVPN client to reach its gateway, so it needs a tun device either way:
+ * under a microVM the guest kernel provides one, and passing the host's in
+ * would punch through the isolation the microVM exists for. Under a
+ * shared-kernel runtime there is no guest kernel, so the host device is the
+ * only source — OpenVPN otherwise connects to its peer and then exits.
+ *
+ * A request still cannot ask for a device. This is decided here, from the
+ * broker's own runtime, which the caller has no say over.
+ */
+export const MICROVM_RUNTIMES = [
+  'kata',
+  'kata-runtime',
+  'kata-qemu',
+  'kata-fc',
+];

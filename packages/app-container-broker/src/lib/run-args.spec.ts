@@ -89,6 +89,9 @@ describe('buildRunArgs', () => {
     // SYS_CHROOT, AUDIT_WRITE and SETFCAP.
     const args = buildRunArgs(request(), image, config).join(' ');
 
+    // NET_RAW is absent from this list on purpose: the container's own
+    // bootstrap pings its gateway to decide whether the VPN came up, and
+    // dropping it broke that. Docker grants it by default too.
     for (const cap of [
       'SYS_ADMIN',
       'SYS_MODULE',
@@ -96,7 +99,6 @@ describe('buildRunArgs', () => {
       'SYS_PTRACE',
       'SYS_BOOT',
       'MKNOD',
-      'NET_RAW',
       'SYS_CHROOT',
     ]) {
       expect(args).not.toContain(`--cap-add=${cap}`);
@@ -157,7 +159,9 @@ describe('buildRunArgs', () => {
     expect(args[envIndex + 1]).toBe('SETTINGS=eyJ1c2VyX2lkIjoidTEifQ==');
   });
 
-  it('passes no host devices whatever the request held', () => {
+  it('passes no host device under a microVM runtime', () => {
+    // The guest kernel provides tun there, and handing over the host's node
+    // would be a hole through the isolation the microVM exists for.
     const args = buildRunArgs(
       request({ devices: ['/dev/net/tun'] }),
       image,
@@ -166,6 +170,28 @@ describe('buildRunArgs', () => {
 
     expect(args).not.toContain('--device');
     expect(args.join(' ')).not.toContain('/dev/net/tun');
+  });
+
+  it('grants tun under a shared-kernel runtime', () => {
+    // There is no guest kernel to get one from, and the container's VPN client
+    // connects to its peer and then exits without it — learned by watching it
+    // happen.
+    const args = buildRunArgs(request(), image, {
+      ...config,
+      runtime: 'runc',
+    });
+
+    const i = args.indexOf('--device');
+    expect(args[i + 1]).toBe('/dev/net/tun');
+  });
+
+  it('decides that from its own runtime, not from the request', () => {
+    const args = buildRunArgs(request({ devices: ['/dev/mem'] }), image, {
+      ...config,
+      runtime: 'runc',
+    });
+
+    expect(args.join(' ')).not.toContain('/dev/mem');
   });
 
   it('builds an argv array, never a shell string', () => {

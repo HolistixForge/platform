@@ -75,7 +75,13 @@ export const validateStartRequest = (
     if (!isNonEmptyString(e?.host) || !SAFE_HOSTNAME.test(e.host)) {
       throw new InvalidRequest('extra_hosts entry has a malformed host');
     }
-    if (!isNonEmptyString(e?.ip) || !SAFE_IPV4.test(e.ip)) {
+    // `host-gateway` is Docker's own magic value for "the host". It is the only
+    // thing that works from a user-defined network, where the default bridge's
+    // 172.17.0.1 is not routable.
+    if (
+      !isNonEmptyString(e?.ip) ||
+      (e.ip !== 'host-gateway' && !SAFE_IPV4.test(e.ip))
+    ) {
       throw new InvalidRequest('extra_hosts entry has a malformed ip');
     }
   }

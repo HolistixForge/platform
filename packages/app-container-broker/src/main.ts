@@ -2,6 +2,7 @@ import { hostname } from 'node:os';
 import { log, EPriority } from '@holistix-forge/log';
 import { createBrokerServer } from './lib/server';
 import { ganymedeCatalogue } from './lib/catalogue';
+import { withBuiltins } from './lib/builtin-catalogue';
 import { dockerExec } from './lib/runtime';
 import { TBrokerConfig } from './lib/types';
 
@@ -40,9 +41,13 @@ const config: TBrokerConfig = {
 
 const server = createBrokerServer({
   config,
-  catalogue: ganymedeCatalogue(
-    required('GANYMEDE_INTERNAL_URL'),
-    required('GANYMEDE_INTERNAL_TOKEN')
+  // Built-in images resolve from this host's own list; anything else goes to
+  // Ganymede, which owns the per-project catalog and mints the pull token.
+  catalogue: withBuiltins(
+    ganymedeCatalogue(
+      required('GANYMEDE_INTERNAL_URL'),
+      required('GANYMEDE_INTERNAL_TOKEN')
+    )
   ),
   exec: dockerExec(process.env.BROKER_RUNTIME_BINARY || 'docker'),
 });
