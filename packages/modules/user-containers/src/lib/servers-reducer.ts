@@ -633,10 +633,28 @@ export class UserContainersReducer extends ReducerWithCollab<
       ]);
     }
 
-    // Update container with runner ID only (no token storage)
+    // Record whose machine a local placement lands on.
+    //
+    // "Local" is not one place: every member of a project has their own
+    // machine, so without an owner the platform cannot tell which runner to
+    // ask. Taken from the JWT rather than from the event — the first placement
+    // on a machine can only be made by its owner, which is how that machine
+    // opts into the project at all.
+    //
+    // Once it has, and while its runner stays connected, other members can
+    // place services there too. That is a real grant: a runner executes what
+    // the platform sends it, so opting a laptop into a project means agreeing
+    // to run the project's workloads on it.
+    //
+    // Absent for the platform runner, which belongs to no one in particular.
+    const owner: { user_id?: string } = runnerId === 'local' ? { user_id } : {};
+
+    // Runner data, not just the id: `start` writes what the runner reported
+    // back here — the docker command, the broker's container id — and this used
+    // to replace the whole object, so choosing a runner twice erased it.
     sduc.set(containerId, {
       ...container,
-      runner: { id: runnerId },
+      runner: { id: runnerId, ...owner },
     });
   }
 

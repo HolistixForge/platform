@@ -45,7 +45,19 @@ export type TUserContainer = {
   auth_guard?: {
     client_id: string;
   };
-  runner: { id: string } & TJsonObject;
+  /**
+   * Where this service runs, and for a local placement, whose machine.
+   *
+   * `{ id: 'local', user_id }` — the runner enrolled by that user. "Local" is
+   * not one place: every member of a project has their own machine, so without
+   * the owner the platform cannot tell which runner to ask, and cannot stop a
+   * member placing a service on someone else's laptop.
+   *
+   * `{ id: 'platform', host, runtime }` — the platform, owned by no one.
+   *
+   * Whatever the runner reports back on start is merged in alongside.
+   */
+  runner: { id: string; user_id?: string } & TJsonObject;
   created_at: string;
 } & TUserContainerPublishedInfo;
 
