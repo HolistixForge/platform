@@ -195,7 +195,7 @@ describe('UserContainersReducer - _initProject', () => {
   it('syncs only this project catalogue, not another one', async () => {
     // The shared map is a CRDT replicated to every client in the project, so an
     // unscoped sync would hand one tenant's image list to another's browsers.
-    mockImageRegistry.registerForProject('test-project-123', [
+    mockImageRegistry.registerForProject('test-project-123', 'ours', [
       {
         imageId: 'ours:etl',
         imageName: 'Our ETL',
@@ -204,7 +204,7 @@ describe('UserContainersReducer - _initProject', () => {
         imageSha256: 'a'.repeat(64),
       },
     ]);
-    mockImageRegistry.registerForProject('some-other-project', [
+    mockImageRegistry.registerForProject('some-other-project', 'theirs', [
       {
         imageId: 'theirs:sim',
         imageName: 'Their Simulator',

@@ -55,7 +55,7 @@ describe('ContainerImageRegistry', () => {
 
   describe('project images', () => {
     it('resolves only for the project that registered it', () => {
-      registry.registerForProject('project-a', [tenantImage()]);
+      registry.registerForProject('project-a', 'acme', [tenantImage()]);
 
       expect(registry.get('acme:etl', 'project-a')).toMatchObject({
         imageId: 'acme:etl',
@@ -67,7 +67,7 @@ describe('ContainerImageRegistry', () => {
       // getAll() with no scope is what a caller that forgot to pass one would
       // reach for. It must degrade to the built-in catalogue, never to
       // "everything anyone registered".
-      registry.registerForProject('project-a', [tenantImage()]);
+      registry.registerForProject('project-a', 'acme', [tenantImage()]);
 
       expect(registry.get('acme:etl')).toBeUndefined();
       expect(registry.getAll()).toEqual([builtin]);
@@ -76,9 +76,12 @@ describe('ContainerImageRegistry', () => {
     it('does not leak one project catalogue into another', () => {
       // Stricter than organization scoping: this also stops a leak between two
       // projects of the same organization.
-      registry.registerForProject('project-a', [tenantImage()]);
-      registry.registerForProject('project-b', [
-        tenantImage({ imageId: 'globex:sim' }),
+      registry.registerForProject('project-a', 'acme', [tenantImage()]);
+      registry.registerForProject('project-b', 'globex', [
+        tenantImage({
+          imageId: 'globex:sim',
+          imageUri: 'ghcr.io/globex/sim',
+        }),
       ]);
 
       expect(registry.getAll('project-a').map((i) => i.imageId)).toEqual([
@@ -95,7 +98,7 @@ describe('ContainerImageRegistry', () => {
       // Otherwise a user picking "Ubuntu Terminal" from the catalogue would
       // silently start whatever the project registered under that id.
       expect(() =>
-        registry.registerForProject('project-a', [
+        registry.registerForProject('project-a', 'acme', [
           tenantImage({ imageId: 'ubuntu:terminal' }),
         ])
       ).toThrow('cannot be overridden');
@@ -105,29 +108,76 @@ describe('ContainerImageRegistry', () => {
 
     it('refuses an image that is not pinned by digest', () => {
       expect(() =>
-        registry.registerForProject('project-a', [
+        registry.registerForProject('project-a', 'acme', [
           tenantImage({ imageSha256: undefined }),
         ])
       ).toThrow('must be pinned by digest');
     });
 
     it('refuses a duplicate id within the same project', () => {
-      registry.registerForProject('project-a', [tenantImage()]);
+      registry.registerForProject('project-a', 'acme', [tenantImage()]);
       expect(() =>
-        registry.registerForProject('project-a', [tenantImage()])
+        registry.registerForProject('project-a', 'acme', [tenantImage()])
       ).toThrow('already registered for project');
     });
 
     it('requires a project id', () => {
-      expect(() => registry.registerForProject('', [tenantImage()])).toThrow(
-        'projectId is required'
-      );
+      expect(() =>
+        registry.registerForProject('', 'acme', [tenantImage()])
+      ).toThrow('projectId is required');
+    });
+  });
+
+  describe('the GitHub organization a project is linked to', () => {
+    it('refuses an image under a different owner', () => {
+      // Otherwise a project registers ghcr.io/someoneElse/private and, if its
+      // token happens to have access, the platform fetches it on its behalf.
+      expect(() =>
+        registry.registerForProject('project-a', 'acme', [
+          tenantImage({ imageUri: 'ghcr.io/globex/secret' }),
+        ])
+      ).toThrow('must live under ghcr.io/acme/');
+    });
+
+    it('refuses an image from another registry entirely', () => {
+      expect(() =>
+        registry.registerForProject('project-a', 'acme', [
+          tenantImage({ imageUri: 'docker.io/acme/etl' }),
+        ])
+      ).toThrow('must live under ghcr.io/acme/');
+    });
+
+    it('refuses a bare Docker Hub namespace that looks like the owner', () => {
+      // `acme/etl` has no registry host, so it is Docker Hub — a different
+      // namespace that happens to share a name.
+      expect(() =>
+        registry.registerForProject('project-a', 'acme', [
+          tenantImage({ imageUri: 'acme/etl' }),
+        ])
+      ).toThrow('must live under ghcr.io/acme/');
+    });
+
+    it('compares owners case-insensitively', () => {
+      // GHCR lowercases the owner in image paths, so treating Acme and acme as
+      // different would leave a second, unreachable allowlist.
+      expect(() =>
+        registry.registerForProject('project-a', 'Acme', [
+          tenantImage({ imageUri: 'ghcr.io/ACME/etl' }),
+        ])
+      ).not.toThrow();
+    });
+
+    it('refuses tenant images when no organization is linked', () => {
+      // A project with no link runs built-in images only.
+      expect(() =>
+        registry.registerForProject('project-a', '', [tenantImage()])
+      ).toThrow('not linked to a GitHub organization');
     });
 
     it('drops a catalogue on clearProject', () => {
       // Gateway pool containers are reallocated between organizations; one that
       // keeps serving the previous tenant's catalogue is a leak, not staleness.
-      registry.registerForProject('project-a', [tenantImage()]);
+      registry.registerForProject('project-a', 'acme', [tenantImage()]);
       registry.clearProject('project-a');
 
       expect(registry.get('acme:etl', 'project-a')).toBeUndefined();

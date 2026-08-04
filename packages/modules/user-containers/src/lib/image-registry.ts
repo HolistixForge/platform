@@ -1,5 +1,20 @@
 import { TContainerImageDefinition } from './container-image';
 
+export const GHCR_HOST = 'ghcr.io';
+
+/**
+ * The owner segment of a GHCR reference, lowercased.
+ *
+ * `ghcr.io/acme/etl` → `acme`. Undefined for anything that is not a GHCR
+ * reference. GHCR lowercases the owner in image paths, so comparing anything
+ * else would leave `Acme` and `acme` as two separate allowlists.
+ */
+export const ghcrOwner = (imageUri: string): string | undefined => {
+  const [host, owner] = imageUri.split('/');
+  if (host !== GHCR_HOST || !owner) return undefined;
+  return owner.toLowerCase();
+};
+
 /**
  * Catalogue of images a container may be started from.
  *
@@ -44,8 +59,17 @@ export class ContainerImageRegistry {
   /**
    * Register images supplied by a project.
    *
-   * Two rules, both load-bearing:
+   * `githubOrganization` is the GitHub organization the project is linked to,
+   * and is required — a project with no link may run built-in images only.
    *
+   * Three rules, all load-bearing:
+   *
+   * - The image must live under `ghcr.io/<githubOrganization>/`. This is the
+   *   allowlist, and it is a string comparison: it holds before any network
+   *   call, so a registry that answers differently than expected cannot get
+   *   around it. Without it a project could register `ghcr.io/someoneElse/…`
+   *   and, if its token happened to have access, the platform would fetch it
+   *   on the project's behalf.
    * - A built-in id cannot be taken over. Otherwise a project could register
    *   its own `jupyter:minimal`, and a user picking JupyterLab from the
    *   catalogue would silently run someone else's image.
@@ -55,15 +79,28 @@ export class ContainerImageRegistry {
    */
   registerForProject(
     projectId: string,
+    githubOrganization: string,
     images: TContainerImageDefinition[]
   ): void {
     if (!projectId) {
       throw new Error('projectId is required to register images');
     }
+    if (!githubOrganization) {
+      throw new Error(
+        `Project ${projectId} is not linked to a GitHub organization and may only run built-in images`
+      );
+    }
 
+    const expectedOwner = githubOrganization.toLowerCase();
     const scoped = this.byProject.get(projectId) ?? new Map();
 
     images.forEach((img) => {
+      const owner = ghcrOwner(img.imageUri);
+      if (owner !== expectedOwner) {
+        throw new Error(
+          `Image ${img.imageId} must live under ${GHCR_HOST}/${expectedOwner}/, got ${img.imageUri}`
+        );
+      }
       if (this.builtin.has(img.imageId)) {
         throw new Error(
           `Image ${img.imageId} is a built-in image and cannot be overridden`

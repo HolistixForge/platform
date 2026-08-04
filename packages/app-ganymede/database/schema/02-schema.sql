@@ -147,8 +147,17 @@ CREATE TABLE IF NOT EXISTS public.projects
     organization_id uuid NOT NULL,
     name character varying(100) NOT NULL,
     public boolean NOT NULL DEFAULT false,
+    -- The GitHub organization this project may pull container images from.
+    -- NULL where none is linked, which is correct for a project that only runs
+    -- built-in images. Stored lowercase: GHCR lowercases the owner in image
+    -- paths, so a mixed-case value would be a second, unreachable allowlist.
+    github_organization character varying(39),
     created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (project_id),
+    CONSTRAINT projects_github_organization_format CHECK (
+        github_organization IS NULL
+        OR github_organization ~ '^[a-z0-9]([a-z0-9]|-(?=[a-z0-9])){0,38}$'
+    ),
     CONSTRAINT unique_org_project_name UNIQUE (organization_id, name),
     CONSTRAINT fk_projects_organizations_organization_id FOREIGN KEY (organization_id)
         REFERENCES public.organizations (organization_id) MATCH SIMPLE

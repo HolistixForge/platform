@@ -48,6 +48,15 @@ export type TResolvedImage = {
    * and need no tenant credential.
    */
   pullToken?: string;
+  /**
+   * The GitHub organization the project is linked to.
+   *
+   * Present exactly when `pullToken` is: a tenant image is legal only under
+   * `ghcr.io/<githubOrganization>/`, and the broker re-checks that rather than
+   * taking the reference on trust. Ganymede has already applied the rule; this
+   * catches a mistake in that logic at the point where it would do damage.
+   */
+  githubOrganization?: string;
 };
 
 export type TBrokerConfig = {

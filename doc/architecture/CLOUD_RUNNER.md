@@ -177,11 +177,24 @@ yet** — it is the remaining work, along with tag→digest resolution at
 registration (GHCR answers it with one `HEAD` on the manifest, so a tenant can
 supply a tag and we pin it rather than demanding a digest).
 
-Two decisions still open: whether the pull credential is a machine-account PAT
-or a GitHub App installation token, and whether a project may reference any
-`ghcr.io/*` path or only repositories under a linked GitHub organization.
-Without the second, project A can register `ghcr.io/orgB/private` and, if its
-token happens to have access, the platform fetches it on A's behalf.
+**Each project is linked to a GitHub organization.** `projects` carries a
+`github_organization` column (migration `003`), and a tenant image is legal only
+under `ghcr.io/<github_organization>/`. Without that binding, project A could
+register `ghcr.io/orgB/private` and, if its token happened to have access, the
+platform would fetch it on A's behalf — the platform as confused deputy.
+
+The check is a string comparison, so it holds before any network call and a
+registry answering differently than expected cannot get around it. It runs
+twice: at registration (`registerForProject`) and again in the broker
+(`resolveImage`), the second time to catch a mistake in the first at the point
+where the mistake would actually pull something. `NULL` means no link, which is
+the correct state for a project that only runs built-in images.
+
+One decision still open: whether the pull credential is a machine-account PAT
+or a GitHub App installation token. The App is the coherent fit — it is
+installed _on a GitHub organization_, which is exactly the binding above, its
+tokens are limited to selected repositories and rotate hourly, and it survives
+the person who set it up leaving.
 
 Note the existing GitHub login OAuth is scoped `user:email`
 (`routes/auth/github.ts:55`) and cannot read packages, so the login identity is

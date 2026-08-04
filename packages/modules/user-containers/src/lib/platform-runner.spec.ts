@@ -161,7 +161,7 @@ describe('PlatformRunnerBackend', () => {
     // Registered against another project, so it must not resolve here — the
     // pull credential is project-scoped, and the catalogue follows it.
     const registry = imageRegistry();
-    registry.registerForProject('someone-elses-project', [
+    registry.registerForProject('someone-elses-project', 'acme', [
       {
         imageId: 'acme:etl',
         imageName: 'Acme ETL',
@@ -182,7 +182,7 @@ describe('PlatformRunnerBackend', () => {
 
   it('resolves an image registered for this project', async () => {
     const registry = imageRegistry();
-    registry.registerForProject('project-1', [
+    registry.registerForProject('project-1', 'acme', [
       {
         imageId: 'acme:etl',
         imageName: 'Acme ETL',

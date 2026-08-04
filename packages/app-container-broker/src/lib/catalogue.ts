@@ -48,6 +48,24 @@ export const resolveImage = async (
     );
   }
 
+  // A tenant image — one that needs a project credential — is legal only under
+  // the GitHub organization the project is linked to. Ganymede has already
+  // applied that rule; re-checking here is cheap and catches a mistake in its
+  // logic at the point where the mistake would actually pull something.
+  if (resolved.pullToken) {
+    const owner = resolved.githubOrganization?.toLowerCase();
+    if (!owner) {
+      throw new UnknownImage(
+        `image ${imageId} carries a pull token but names no GitHub organization`
+      );
+    }
+    if (!resolved.reference.toLowerCase().startsWith(`ghcr.io/${owner}/`)) {
+      throw new UnknownImage(
+        `image ${imageId} is outside ghcr.io/${owner}/ and will not be started`
+      );
+    }
+  }
+
   return resolved;
 };
 
@@ -82,10 +100,12 @@ export const ganymedeCatalogue =
       imageId: string;
       reference: string;
       pull_token?: string;
+      github_organization?: string;
     };
     return {
       imageId: body.imageId,
       reference: body.reference,
       pullToken: body.pull_token,
+      githubOrganization: body.github_organization,
     };
   };
