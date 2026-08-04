@@ -169,13 +169,35 @@ provision it, gated on `holistix_install_cloud_runner` (default false).
 project scope — both the credential type and project-scoped sharing already
 exist in Ganymede, so there is no storage layer to build.
 
-Written: the broker asks Ganymede for
-`/internal/projects/:projectId/images/:imageId` and expects
-`{ imageId, reference, pull_token }`, then pulls with that token in a
-throw-away `--config` directory (`pull.ts`). **That endpoint does not exist
-yet** — it is the remaining work, along with tag→digest resolution at
-registration (GHCR answers it with one `HEAD` on the manifest, so a tenant can
-supply a tag and we pin it rather than demanding a digest).
+`/internal/projects/:projectId/images/:imageId` now exists
+(`routes/internal/container-images.ts`), gateway-token protected, returning
+`{ imageId, reference, pull_token, github_organization }`. The broker pulls with
+that token in a throw-away `--config` directory (`pull.ts`).
+
+**Credential: a GitHub App, not a personal access token.** The deciding factor
+was user effort. A PAT means creating a machine account, generating a token with
+`read:packages`, inviting it to the organization, granting repositories,
+copying, pasting, sharing — and again at every expiry. An App installation is
+three clicks, once, and GitHub tells us which organization and repositories were
+chosen, so `projects.github_organization` fills itself instead of being typed.
+
+It also means **no tenant secret is stored at all**. We keep an installation id,
+which is not a credential, and mint tokens on demand from the platform's own App
+key. The chain narrows at every hop:
+
+```
+App private key → app JWT (10 min, whole App)
+                → installation token (1 h, one organization)
+                → GHCR pull token (minutes, one repository, pull only)
+```
+
+Only the last leaves Ganymede. The platform host never holds a credential that
+can do anything but pull the one image it was asked for.
+
+Tag→digest resolution happens at registration (`resolveDigest`): a tenant
+supplies a readable tag, GHCR answers the digest with one `HEAD`, and
+`project_container_images.image_sha256` is `NOT NULL`. Demanding a digest from
+the user would buy only friction.
 
 **Each project is linked to a GitHub organization.** `projects` carries a
 `github_organization` column (migration `003`), and a tenant image is legal only
@@ -190,11 +212,18 @@ twice: at registration (`registerForProject`) and again in the broker
 where the mistake would actually pull something. `NULL` means no link, which is
 the correct state for a project that only runs built-in images.
 
-One decision still open: whether the pull credential is a machine-account PAT
-or a GitHub App installation token. The App is the coherent fit — it is
-installed _on a GitHub organization_, which is exactly the binding above, its
-tokens are limited to selected repositories and rotate hourly, and it survives
-the person who set it up leaving.
+The link is recorded by the App installation itself — GitHub returns
+`account.login`, so `projects.github_organization` is never typed by hand.
+
+What is still missing on this path is the **installation flow**: the routes that
+send a user to GitHub to install the App and record the callback into
+`github_app_installations`, and the UI to add an image to a project. The
+resolution side — everything the broker touches — is written and tested.
+
+Ganymede takes `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY` and `GITHUB_APP_SLUG`.
+All three are optional: a deployment running only built-in images needs none of
+them, and the internal route answers 503 rather than half-working when they are
+absent.
 
 Note the existing GitHub login OAuth is scoped `user:email`
 (`routes/auth/github.ts:55`) and cannot read packages, so the login identity is

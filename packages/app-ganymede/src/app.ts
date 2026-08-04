@@ -27,6 +27,7 @@ import { setupGatewayRoutes } from './routes/gateway';
 import { setupUserRoutes } from './routes/users';
 import { setupInternalProjectRoutes } from './routes/internal/projects';
 import { setupInternalOAuthClientRoutes } from './routes/internal/oauth-clients';
+import { setupInternalContainerImageRoutes } from './routes/internal/container-images';
 import { setupCredentialRoutes } from './routes/credentials';
 import {
   globalLimiter,
@@ -89,6 +90,7 @@ export function createApp(
       '/internal/oauth/clients/:client_id', // Internal OAuth client deletion (protected by gateway token)
       '/internal/projects/:project_id/members', // Internal project member add (protected by gateway token)
       '/internal/projects/:project_id/members/:user_id', // Internal project member remove (protected by gateway token)
+      '/internal/projects/:project_id/images/:image_id', // Broker resolves a catalog id to a pullable reference (protected by gateway token)
     ],
   });
 
@@ -211,6 +213,7 @@ export function createApp(
   // Internal API routes (gateway-only, protected by gateway token)
   setupInternalProjectRoutes(router, rateLimiters.api);
   setupInternalOAuthClientRoutes(router, rateLimiters.api);
+  setupInternalContainerImageRoutes(router, rateLimiters.api);
 
   // Additional routes (e.g., test routes)
   if (options.setupAdditionalRoutes) {
