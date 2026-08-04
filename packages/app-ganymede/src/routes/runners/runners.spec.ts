@@ -28,6 +28,10 @@ jest.mock('@holistix-forge/backend-engine', () => ({
   ),
 }));
 
+jest.mock('../../lib/url-helpers', () => ({
+  makeOrgGatewayHostname: (org: string) => `org-${org}.test.local`,
+}));
+
 jest.mock('../../middleware/auth', () => ({
   authenticateJwtUser: jest.fn((req: any, res: any, next: any) => {
     req.user = { id: 'user-123', username: 'owner' };
@@ -205,6 +209,80 @@ describe('Runner routes', () => {
       // Assert - same answer as a runner that does not exist, so a refusal
       // cannot be used to discover which ids are real
       expect(res.status).toBe(404);
+    });
+  });
+
+  describe('GET /runners/me/projects', () => {
+    const row = {
+      project_id: '8b1e2c3d-4f5a-6b7c-8d9e-0f1a2b3c4d5e',
+      project_name: 'Thing',
+      organization_id: '1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d',
+      owner_user_id: 'user-123',
+      owner_username: 'owner',
+    };
+
+    it('should mint one token per project, scoped to that project', async () => {
+      // Arrange
+      jest.mocked(pg.query).mockResolvedValue(rows(row) as any);
+
+      // Act
+      const res = await request(app).get('/runners/me/projects');
+
+      // Assert
+      expect(res.status).toBe(200);
+      const payload = JSON.parse(
+        res.body.projects[0].token.replace(/^signed:/, '')
+      );
+      expect(payload).toMatchObject({
+        type: 'runner_project_token',
+        runner_id: 'runner-1',
+        project_id: row.project_id,
+        // Naming the project in the scope is what stops the token being
+        // replayed against another one
+        scope: [`project:${row.project_id}:access`],
+      });
+    });
+
+    it('should carry the owner read from the database, not from the runner', async () => {
+      // Arrange
+      jest.mocked(pg.query).mockResolvedValue(rows(row) as any);
+
+      // Act
+      const res = await request(app).get('/runners/me/projects');
+
+      // Assert - the gateway's reducers record a machine against this user, so
+      // a runner able to state it could enrol itself into a project it was
+      // never invited to
+      const payload = JSON.parse(
+        res.body.projects[0].token.replace(/^signed:/, '')
+      );
+      expect(payload.user).toEqual({ id: 'user-123', username: 'owner' });
+      expect(jest.mocked(pg.query).mock.calls[0][1]).toEqual(['runner-1']);
+    });
+
+    it('should say where each project’s gateway answers', async () => {
+      // Arrange
+      jest.mocked(pg.query).mockResolvedValue(rows(row) as any);
+
+      // Act
+      const res = await request(app).get('/runners/me/projects');
+
+      // Assert
+      expect(res.body.projects[0].gateway_hostname).toBe(
+        `org-${row.organization_id}.test.local`
+      );
+    });
+
+    it('should return an empty list for a machine in no project', async () => {
+      // Arrange - freshly enrolled, nobody has placed anything on it
+      jest.mocked(pg.query).mockResolvedValue(rows(undefined) as any);
+
+      // Act
+      const res = await request(app).get('/runners/me/projects');
+
+      // Assert - not an error; there is simply nothing for it to do yet
+      expect(res.status).toBe(200);
+      expect(res.body.projects).toEqual([]);
     });
   });
 

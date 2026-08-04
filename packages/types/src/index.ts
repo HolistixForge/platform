@@ -20,6 +20,7 @@ export type {
   TJwtOrganization,
   TJwtGateway,
   TJwtRunner,
+  TJwtRunnerProject,
   TJwtUser,
 } from './lib/jwt/jwt';
 

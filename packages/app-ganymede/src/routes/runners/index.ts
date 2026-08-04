@@ -11,6 +11,7 @@ import {
 } from '../../middleware/auth';
 import { asyncHandler } from '../../middleware/route-handler';
 import { pg } from '../../database/pg';
+import { makeOrgGatewayHostname } from '../../lib/url-helpers';
 
 /**
  * A year. The point of a long-lived token here is that a machine which was shut
@@ -21,6 +22,16 @@ import { pg } from '../../database/pg';
  * claim either.
  */
 const RUNNER_TOKEN_LIFETIME = '365d';
+
+/**
+ * Short, because it is re-minted on every poll and never written down.
+ *
+ * The year-long token is the enrolment; this one is a working credential, and
+ * the shorter it is the smaller the window between a project being taken away
+ * from a machine and the machine noticing. The runner asks again long before
+ * this runs out.
+ */
+const RUNNER_PROJECT_TOKEN_LIFETIME = '1h';
 
 const MAX_LABEL_LENGTH = 128;
 
@@ -151,6 +162,71 @@ export const setupRunnerRoutes = (
         runner_id: row['runner_id'],
         revoked_at: row['revoked_at'],
       });
+    })
+  );
+
+  /**
+   * GET /runners/me/projects
+   *
+   * The projects this machine has been opted into, each with a token that
+   * speaks for that project and no other.
+   *
+   * One token per project rather than one for the machine: a runner executes
+   * what the platform sends it, so being in a project is a real grant, and a
+   * single token covering everything could be neither given one project at a
+   * time nor taken back from one alone.
+   *
+   * The tokens are minted on read and not stored. There is nothing here for a
+   * later request to leak, and a project the machine was removed from stops
+   * appearing rather than leaving a live token behind.
+   */
+  router.get(
+    '/runners/me/projects',
+    authenticateJwtRunner,
+    asyncHandler(async (req: RunnerAuthRequest, res) => {
+      const qr = await pg.query('select * from func_runner_projects_list($1)', [
+        req.runner.id,
+      ]);
+      const rows = qr.next()?.allRows() ?? [];
+
+      const projects = rows.map((row) => {
+        const project_id = String(row['project_id']);
+        const organization_id = String(row['organization_id']);
+
+        return {
+          project_id,
+          project_name: row['project_name'],
+          organization_id,
+          // Where to send events for this project. The same host the frontend
+          // talks to, derived the same way, so a runner and a browser in the
+          // same project are looking at one gateway rather than two ideas of
+          // where it is.
+          gateway_hostname: makeOrgGatewayHostname(organization_id),
+          token: generateJwtToken(
+            {
+              type: 'runner_project_token',
+              runner_id: req.runner.id,
+              project_id,
+              organization_id,
+              // Shaped like a user token's `user` claim on purpose: the
+              // gateway's reducers record a machine against the authenticated
+              // user, and this is that user — taken from the runners table
+              // here, so the runner never gets to say who owns it.
+              user: {
+                id: String(row['owner_user_id']),
+                username: String(row['owner_username']),
+              },
+              // What requireProjectAccess already understands from container
+              // tokens. Naming the project in the scope is what stops this
+              // token being replayed against another one.
+              scope: [`project:${project_id}:access`],
+            },
+            RUNNER_PROJECT_TOKEN_LIFETIME
+          ),
+        };
+      });
+
+      return res.json({ projects });
     })
   );
 

@@ -2,7 +2,11 @@ import { Request, Response, NextFunction } from 'express';
 import { jwtPayload } from '@holistix-forge/backend-engine';
 import { ForbiddenException } from '@holistix-forge/log';
 import { asyncHandler } from './route-handler';
-import type { TJwtUser, TJwtGateway } from '@holistix-forge/types';
+import type {
+  TJwtUser,
+  TJwtGateway,
+  TJwtRunnerProject,
+} from '@holistix-forge/types';
 import { trace } from '@opentelemetry/api';
 
 // Import TJwtOrganization directly from the file since it's not exported from index
@@ -12,7 +16,11 @@ import { getGatewayInstances } from '../initialization/gateway-instances';
 /**
  * Union type for all JWT token types
  */
-export type TAnyJwt = TJwtUser | TJwtOrganization | TJwtGateway;
+export type TAnyJwt =
+  | TJwtUser
+  | TJwtOrganization
+  | TJwtGateway
+  | TJwtRunnerProject;
 
 /**
  * Extract and verify JWT from token string
@@ -90,6 +98,17 @@ export const authenticateJwt = asyncHandler(
       jwtPayloadData.type === 'refresh_token'
     ) {
       // TJwtUser has user.id
+      user_id = jwtPayloadData.user?.id;
+    } else if (jwtPayloadData.type === 'runner_project_token') {
+      // A machine acting for its owner, in one project.
+      //
+      // The claim is shaped like a user token's because the reducers record a
+      // machine against the authenticated user, and this is that user. It is
+      // not the runner's word for it: Ganymede mints this token and reads the
+      // owner from the runners table, so the machine never gets to say whose
+      // it is. What the runner may then do is bounded by the token's scope —
+      // `project:<id>:access`, one project, which requireProjectAccess already
+      // understands from container tokens.
       user_id = jwtPayloadData.user?.id;
     }
     // Other token types (TJwtOrganization, TJwtGateway) don't have user_id
