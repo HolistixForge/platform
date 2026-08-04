@@ -108,30 +108,43 @@ export const setupRunnerRoutes = (
     })
   );
 
+  // The two /runners/me routes are registered before /runners/:runner_id on
+  // purpose. Express matches in registration order, and `me` is a perfectly
+  // good value for `:runner_id` — with the parameterised route first, a runner
+  // calling DELETE /runners/me would be handed to the owner-authenticated
+  // handler, which would reject its token as the wrong type. The failure would
+  // read as an auth problem rather than as a routing one.
+
   /**
-   * DELETE /runners/:runner_id
+   * DELETE /runners/me
    *
-   * Revoke. Ownership is settled inside the statement, so somebody else's
-   * runner and a runner that does not exist give the same answer.
+   * The machine withdrawing itself, which is how someone disconnects a runner
+   * from the machine rather than from the UI. Safe to expose to a runner token
+   * because the only runner such a token can name is the one it was issued for
+   * — there is no id in the request to get wrong.
+   *
+   * Deleting the local token alone would not do: the platform would go on
+   * listing this machine as somewhere to place services.
    */
   router.delete(
-    '/runners/:runner_id',
-    authenticateJwtUser,
-    asyncHandler(async (req: AuthRequest, res) => {
-      const qr = await pg.query('select * from func_runners_revoke($1, $2)', [
-        req.params.runner_id,
-        req.user.id,
+    '/runners/me',
+    authenticateJwtRunner,
+    asyncHandler(async (req: RunnerAuthRequest, res) => {
+      const qr = await pg.query('select * from func_runners_revoke_self($1)', [
+        req.runner.id,
       ]);
       const row = qr.next()?.oneRow();
 
       if (!row) {
-        return res.status(404).json({ error: 'Runner not found' });
+        // Already revoked. The middleware would not have let a revoked runner
+        // through, so this is a second call racing the first.
+        return res.status(404).json({ error: 'Runner is not enrolled' });
       }
 
       log(
         EPriority.Info,
         'RUNNER_REVOKE',
-        `Runner ${req.params.runner_id} revoked by user ${req.user.id}`
+        `Runner ${req.runner.id} disconnected itself`
       );
 
       return res.json({
@@ -159,5 +172,39 @@ export const setupRunnerRoutes = (
         label: req.runner.label,
       })
     )
+  );
+
+  /**
+   * DELETE /runners/:runner_id
+   *
+   * Revoke, from the owner's side. Ownership is settled inside the statement,
+   * so somebody else's runner and a runner that does not exist give the same
+   * answer.
+   */
+  router.delete(
+    '/runners/:runner_id',
+    authenticateJwtUser,
+    asyncHandler(async (req: AuthRequest, res) => {
+      const qr = await pg.query('select * from func_runners_revoke($1, $2)', [
+        req.params.runner_id,
+        req.user.id,
+      ]);
+      const row = qr.next()?.oneRow();
+
+      if (!row) {
+        return res.status(404).json({ error: 'Runner not found' });
+      }
+
+      log(
+        EPriority.Info,
+        'RUNNER_REVOKE',
+        `Runner ${req.params.runner_id} revoked by user ${req.user.id}`
+      );
+
+      return res.json({
+        runner_id: row['runner_id'],
+        revoked_at: row['revoked_at'],
+      });
+    })
   );
 };

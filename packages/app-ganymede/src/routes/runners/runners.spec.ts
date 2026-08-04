@@ -208,6 +208,46 @@ describe('Runner routes', () => {
     });
   });
 
+  describe('DELETE /runners/me', () => {
+    it('should let a runner withdraw itself', async () => {
+      // Arrange
+      jest.mocked(pg.query).mockResolvedValue(
+        rows({
+          runner_id: 'runner-1',
+          revoked_at: '2026-08-05T00:00:00.000Z',
+        }) as any
+      );
+
+      // Act
+      const res = await request(app).delete('/runners/me');
+
+      // Assert - revoked by its own id, taken from the token, with no id in the
+      // request that could name a different machine
+      expect(res.status).toBe(200);
+      expect(jest.mocked(pg.query).mock.calls[0]).toEqual([
+        'select * from func_runners_revoke_self($1)',
+        ['runner-1'],
+      ]);
+    });
+
+    it('should not be swallowed by the :runner_id route', async () => {
+      // Arrange - 'me' is a perfectly good value for :runner_id, so this only
+      // works because /runners/me is registered first
+      jest
+        .mocked(pg.query)
+        .mockResolvedValue(rows({ runner_id: 'runner-1' }) as any);
+
+      // Act
+      await request(app).delete('/runners/me');
+
+      // Assert - the owner-authenticated handler would have called the
+      // two-argument revoke instead
+      expect(jest.mocked(pg.query).mock.calls[0][0]).toContain(
+        'func_runners_revoke_self'
+      );
+    });
+  });
+
   describe('GET /runners/me', () => {
     it('should tell an enrolled runner who it is', async () => {
       // Act

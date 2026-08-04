@@ -104,6 +104,9 @@
     },
     {
       "path": "./packages/app-container-broker"
+    },
+    {
+      "path": "./packages/app-runner"
     }
   ],
   "ts-node": {
