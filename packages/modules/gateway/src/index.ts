@@ -8,6 +8,25 @@ import { TokenManager, PermissionManager } from './lib/managers';
 
 import { PermissionRegistry } from './lib/permission-registry';
 
+/**
+ * Environment a module cannot read for itself.
+ *
+ * Module packages are bundled through Vite with `vite-plugin-node-polyfills`,
+ * which substitutes a **browser** `process` shim. Inside a module,
+ * `process.env` is therefore an empty object at runtime in the gateway — it
+ * reads as "not configured" rather than failing, which is the worst way for it
+ * to be wrong. app-gateway's own code keeps the real `process`, so anything a
+ * module needs from the environment has to arrive through here.
+ */
+export type TGatewayEnvironment = {
+  /** Where user containers run when the platform runner is used. */
+  containerBroker?: { endpoint: string; token: string };
+  /** True in local development, where `.local` names need `--add-host`. */
+  devMode: boolean;
+  /** Address containers reach the Docker host at. */
+  dockerHostIp: string;
+};
+
 export type TGatewayExports = {
   toGanymede: <T>(r: TMyfetchRequest) => Promise<T>;
   toGanymedeInternal: <T>(r: TMyfetchRequest) => Promise<T>;
@@ -19,6 +38,7 @@ export type TGatewayExports = {
   tokenManager: TokenManager;
   permissionManager: PermissionManager;
   permissionRegistry: PermissionRegistry;
+  environment: TGatewayEnvironment;
 };
 
 //

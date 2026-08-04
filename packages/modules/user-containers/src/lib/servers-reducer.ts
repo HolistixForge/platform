@@ -728,6 +728,11 @@ export class UserContainersReducer extends ReducerWithCollab<
       gateway_fqdn: gatewayFqdn,
       organization_id,
       auth_guard_client_secret: authGuard?.client_secret,
+      // Only in local development, and only from the gateway's environment:
+      // this module cannot read process.env for itself.
+      dev_host_ip: gatewayExports.environment?.devMode
+        ? gatewayExports.environment.dockerHostIp
+        : undefined,
     };
 
     // A rotation replaced the client, so the container must carry the new id.

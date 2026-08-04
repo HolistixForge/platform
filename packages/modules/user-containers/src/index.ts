@@ -7,7 +7,7 @@ import type { TGatewayExports } from '@holistix-forge/gateway';
 import type { TContainerImageDefinition } from './lib/container-image';
 import type { ContainerRunner } from './lib/runner';
 import { localRunnerBackend } from './lib/local-runner';
-import { platformRunnerBackend } from './lib/platform-runner';
+import { PlatformRunnerBackend } from './lib/platform-runner';
 import { log, EPriority } from '@holistix-forge/log';
 
 //
@@ -22,17 +22,11 @@ export type TUserContainersExports = {
   listRunnerIds: () => string[];
 };
 
-/**
- * Whether this gateway can run containers on the platform.
- *
- * Absent broker configuration the runner would register and then fail at the
- * first start, which reads to the user as a broken button rather than as a
- * mode their deployment does not offer. Better to not offer it.
- */
-const platformRunnerConfigured = () =>
-  Boolean(
-    process.env.CONTAINER_BROKER_URL && process.env.CONTAINER_BROKER_TOKEN
-  );
+// Broker configuration arrives through `gateway.environment`, never through
+// `process.env`. Module packages are bundled with a browser `process` shim, so
+// reading the environment here yields an empty object and the platform runner
+// silently never registers — which is exactly what happened the first time this
+// was deployed.
 
 type TRequired = {
   collab: TCollabBackendExports;
@@ -116,12 +110,25 @@ export const moduleBackend: TModule<TRequired, TUserContainersExports> = {
 
     registerContainerRunner('local', localRunnerBackend);
 
-    if (platformRunnerConfigured()) {
-      registerContainerRunner('platform', platformRunnerBackend);
+    const broker = depsExports.gateway.environment?.containerBroker;
+    if (broker) {
+      registerContainerRunner(
+        'platform',
+        new PlatformRunnerBackend({
+          endpoint: broker.endpoint,
+          token: broker.token,
+        })
+      );
       log(
         EPriority.Info,
         'USER_CONTAINERS',
-        'Platform runner registered (container broker configured)'
+        `Platform runner registered (broker: ${broker.endpoint})`
+      );
+    } else {
+      log(
+        EPriority.Info,
+        'USER_CONTAINERS',
+        'No container broker configured; local runner only'
       );
     }
 

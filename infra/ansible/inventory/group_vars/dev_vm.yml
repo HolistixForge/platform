@@ -17,3 +17,10 @@ holistix_npm_install: true
 holistix_install_build_server: true
 
 postgres_password: devpassword
+
+# Cloud runner. On this VM the runtime is runc, not kata: Kata boots a VM per
+# container and Apple Silicon before M3 has no nested virtualisation, so
+# /dev/kvm does not exist inside the guest. Everything the broker does is
+# exercised — only isolation from the host kernel is not.
+holistix_install_cloud_runner: true
+holistix_broker_runtime: runc

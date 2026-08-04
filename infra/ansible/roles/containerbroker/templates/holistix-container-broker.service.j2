@@ -29,7 +29,13 @@ EnvironmentFile={{ holistix_broker_secrets_file }}
 # the gateway, which must never have it. Everything else is closed off.
 NoNewPrivileges=true
 ProtectSystem=strict
-ProtectHome=true
+# read-only rather than true: on a development VM the workspace — and so the
+# broker's own bundle — lives under /root, and ProtectHome=true hides it, which
+# systemd reports as the fairly opaque status=200/CHDIR. The broker only ever
+# reads it.
+ProtectHome=read-only
+# Its own /tmp, which is where the per-pull credential directories go. A
+# registry token must not land in a /tmp shared with anything else on the host.
 PrivateTmp=true
 ReadWritePaths=/var/run/docker.sock
 

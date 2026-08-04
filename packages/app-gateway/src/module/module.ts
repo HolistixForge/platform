@@ -5,7 +5,10 @@ import type { TModule } from '@holistix-forge/module';
 import { TMyfetchRequest } from '@holistix-forge/simple-types';
 import { TReducersBackendExports } from '@holistix-forge/reducers';
 import { TCollabBackendExports } from '@holistix-forge/collab';
-import type { TGatewayExports } from '@holistix-forge/gateway';
+import type {
+  TGatewayExports,
+  TGatewayEnvironment,
+} from '@holistix-forge/gateway';
 
 import { GatewayReducer } from './gateway-reducer';
 import type { PermissionManager, TokenManager } from '@holistix-forge/gateway';
@@ -27,6 +30,14 @@ export type GatewayModuleConfig = {
   permissionManager: PermissionManager;
   tokenManager: TokenManager;
   permissionRegistry: PermissionRegistry;
+  /**
+   * Values from the real environment, for modules that cannot read it.
+   *
+   * Module packages are bundled with a browser `process` shim, so `process.env`
+   * inside one is an empty object at runtime. This file still has the real
+   * `process`, which makes it the boundary.
+   */
+  environment: TGatewayEnvironment;
 };
 
 type TRequired = {
@@ -111,6 +122,8 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
       },
 
       gatewayFQDN: gatewayConfig.gatewayFQDN,
+
+      environment: gatewayConfig.environment,
 
       organization_id: gatewayConfig.organization_id,
 

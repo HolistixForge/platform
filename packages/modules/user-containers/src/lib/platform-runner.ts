@@ -106,12 +106,14 @@ export class PlatformRunnerBackend extends ContainerRunner {
   private transport(): TBrokerTransport {
     if (this.options.transport) return this.options.transport;
 
-    const endpoint = this.options.endpoint ?? process.env.CONTAINER_BROKER_URL;
-    const token = this.options.token ?? process.env.CONTAINER_BROKER_TOKEN;
-
+    // No fallback to process.env: module packages are bundled with a browser
+    // `process` shim, so it is empty here and reading it would turn a
+    // configuration mistake into a silent one. The endpoint and token come from
+    // `gateway.environment`, which app-gateway fills from the real environment.
+    const { endpoint, token } = this.options;
     if (!endpoint || !token) {
       throw new Error(
-        'Platform runner is not configured: CONTAINER_BROKER_URL and CONTAINER_BROKER_TOKEN are required'
+        'Platform runner is not configured: it needs a broker endpoint and token'
       );
     }
 
@@ -170,5 +172,3 @@ export class PlatformRunnerBackend extends ContainerRunner {
     };
   }
 }
-
-export const platformRunnerBackend = new PlatformRunnerBackend();

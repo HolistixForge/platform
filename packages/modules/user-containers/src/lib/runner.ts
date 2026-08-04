@@ -17,6 +17,16 @@ export type TRunnerConfig = {
    * project, so the secret must never be stored there.
    */
   auth_guard_client_secret?: string;
+  /**
+   * Local development only: hosts to map, because `.local` names do not
+   * resolve inside a container.
+   *
+   * Supplied by the caller rather than read from `process.env` here — module
+   * packages are bundled with a browser `process` shim, so this file's
+   * environment is empty at runtime in the gateway and the mapping was never
+   * actually emitted.
+   */
+  dev_host_ip?: string;
 };
 
 /**
@@ -131,14 +141,10 @@ export abstract class ContainerRunner {
     // In dev, containers can't resolve .local domains via DNS, so we map them
     // to the Docker bridge gateway IP which routes to the host/dev container
     const extraHosts: { host: string; ip: string }[] = [];
-    if (process.env.GATEWAY_DEV === '1') {
-      // Docker-host address. Defaults to the Linux docker0 bridge gateway
-      // (172.17.0.1). On Docker Desktop (macOS/Windows) that IP does not reach
-      // the host, so allow overriding via DOCKER_HOST_IP=host.docker.internal.
-      const ip = process.env.DOCKER_HOST_IP || '172.17.0.1';
+    if (config.dev_host_ip) {
       extraHosts.push(
-        { host: config.gateway_fqdn, ip },
-        { host: config.ganymede_fqdn, ip }
+        { host: config.gateway_fqdn, ip: config.dev_host_ip },
+        { host: config.ganymede_fqdn, ip: config.dev_host_ip }
       );
     }
 

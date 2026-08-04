@@ -95,10 +95,11 @@ holistix_install_cloud_runner: false
 # Never runc. A shared kernel between organizations is not defensible once
 # tenants supply their own images.
 holistix_broker_runtime: kata
-# Loopback: the broker is reached from gateway containers over the Docker
-# bridge. Binding 0.0.0.0 exposes container creation to anything that can route
-# to this host.
-holistix_broker_bind: 127.0.0.1
+# The Docker bridge address, because that is where gateway containers reach the
+# host from. Loopback would be unreachable to them; 0.0.0.0 would expose
+# container creation to anything that can route to this host. The bridge gateway
+# is neither — routable from this host and its containers, nowhere else.
+holistix_broker_bind: "{{ holistix_docker_host_ip | default('127.0.0.1') }}"
 holistix_broker_port: 9443
 holistix_broker_secrets_file: /etc/holistix/container-broker.env
 # Per-container ceilings. A request asking for more is clamped, not refused.

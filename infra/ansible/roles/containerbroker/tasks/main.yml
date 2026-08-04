@@ -8,6 +8,24 @@
 # role is what keeps that true while still letting a user start a service on
 # the platform.
 
+# holistix_docker_host_ip is set by the docker role, which does not run when
+# this role is invoked on its own with --tags broker. Without it the bind
+# address silently falls back to loopback, and gateway containers — which reach
+# the host over the bridge — cannot see the broker at all.
+- name: Resolve the Docker bridge address if the docker role did not run
+  when: holistix_docker_host_ip is not defined
+  block:
+    - name: Read the bridge gateway from Docker
+      ansible.builtin.command: >-
+        docker network inspect bridge
+        -f '{{ "{{" }}(index .IPAM.Config 0).Gateway{{ "}}" }}'
+      register: broker_bridge_gateway
+      changed_when: false
+
+    - name: Record it # noqa: var-naming[no-role-prefix]
+      ansible.builtin.set_fact:
+        holistix_docker_host_ip: '{{ broker_bridge_gateway.stdout | trim }}'
+
 - name: Build the container broker
   ansible.builtin.command:
     cmd: npx nx build @holistix-forge/app-container-broker
@@ -18,6 +36,14 @@
     NX_DAEMON: 'false'
   register: broker_build
   changed_when: "'Successfully ran target build' in broker_build.stdout"
+
+- name: Create the directory the broker secrets live in
+  ansible.builtin.file:
+    path: '{{ holistix_broker_secrets_file | dirname }}'
+    state: directory
+    owner: root
+    group: root
+    mode: '0750'
 
 - name: Generate a broker token
   # The gateway authenticates to the broker with this. Generated on the host

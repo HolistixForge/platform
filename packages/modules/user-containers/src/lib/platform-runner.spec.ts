@@ -206,10 +206,21 @@ describe('PlatformRunnerBackend', () => {
   });
 
   it('fails loudly when no broker is configured', async () => {
-    const previousUrl = process.env.CONTAINER_BROKER_URL;
-    const previousToken = process.env.CONTAINER_BROKER_TOKEN;
-    delete process.env.CONTAINER_BROKER_URL;
-    delete process.env.CONTAINER_BROKER_TOKEN;
+    const runner = new PlatformRunnerBackend();
+
+    await expect(
+      runner.start(container(), 'jwt', imageRegistry(), config())
+    ).rejects.toThrow('not configured');
+  });
+
+  it('never falls back to the ambient environment', async () => {
+    // Module packages are bundled with a browser `process` shim, so
+    // `process.env` is an empty object at runtime in the gateway. A fallback
+    // to it would not merely fail — it would read as "not configured" and the
+    // platform runner would silently never register, which is what happened
+    // the first time this was deployed.
+    process.env.CONTAINER_BROKER_URL = 'http://should-not-be-used:9443';
+    process.env.CONTAINER_BROKER_TOKEN = 'should-not-be-used';
 
     try {
       const runner = new PlatformRunnerBackend();
@@ -217,8 +228,8 @@ describe('PlatformRunnerBackend', () => {
         runner.start(container(), 'jwt', imageRegistry(), config())
       ).rejects.toThrow('not configured');
     } finally {
-      if (previousUrl) process.env.CONTAINER_BROKER_URL = previousUrl;
-      if (previousToken) process.env.CONTAINER_BROKER_TOKEN = previousToken;
+      delete process.env.CONTAINER_BROKER_URL;
+      delete process.env.CONTAINER_BROKER_TOKEN;
     }
   });
 });

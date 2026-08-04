@@ -77,7 +77,25 @@ export function createBackendModulesConfig(
   const domain = process.env.DOMAIN || 'domain.local';
   const gatewayFQDN = `org-${organizationId}.${domain}`;
 
+  // Read here, in app-gateway, because this is the last place with a real
+  // `process`. Module packages are bundled with a browser process shim, so a
+  // module reading process.env sees an empty object and concludes "not
+  // configured" — see TGatewayEnvironment.
+  const brokerEndpoint = process.env.CONTAINER_BROKER_URL;
+  const brokerToken = process.env.CONTAINER_BROKER_TOKEN;
+
   const gatewayConfig = {
+    environment: {
+      // Both or neither: a half-configured broker would let the platform runner
+      // register and then fail on the first start, which reads to the user as a
+      // broken button rather than as a mode this deployment does not offer.
+      containerBroker:
+        brokerEndpoint && brokerToken
+          ? { endpoint: brokerEndpoint, token: brokerToken }
+          : undefined,
+      devMode: process.env.GATEWAY_DEV === '1',
+      dockerHostIp: process.env.DOCKER_HOST_IP || '172.17.0.1',
+    },
     organization_id: organizationId,
     organization_token: organizationToken,
     gateway_id: gatewayId,
