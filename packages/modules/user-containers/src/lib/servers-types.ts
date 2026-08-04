@@ -72,6 +72,40 @@ export type TContainerRunnerInfo = {
   runnerId: string;
 };
 
+/**
+ * A machine enrolled in this project, and whether it is still there.
+ *
+ * Distinct from `TContainerRunnerInfo`, which lists the *kinds* of runner a
+ * deployment offers. This is the instances: "local" is not one place, and a
+ * project needs to know which machines it can actually reach.
+ *
+ * A machine appears here when its owner makes the first placement on it, which
+ * is how it opts into the project. It stays only while its runner keeps saying
+ * so — liveness is derived from `last_health_at` the same way a container's is
+ * derived from `last_watchdog_at`, on the same 30 second threshold, because a
+ * runner that stopped answering and a machine that was closed are the same
+ * thing to everyone else in the project.
+ */
+export type TRunnerMachine = {
+  /** Stable across restarts; assigned at enrolment. */
+  machine_id: string;
+  /** Whose machine. Only its owner can make the first placement on it. */
+  user_id: string;
+  /** What to show in the UI — a hostname, usually. */
+  label: string;
+  /** Last `health` from the runner, or null if it never sent one. */
+  last_health_at: string | null;
+};
+
+/**
+ * Whether a machine is still reachable.
+ *
+ * Shares the 30 second threshold with the container watchdog rather than
+ * inventing its own: the two mean the same thing to a user looking at a card,
+ * and two different timeouts would show a live container on a dead machine.
+ */
+export const MACHINE_HEALTH_TIMEOUT_SECONDS = 30;
+
 //
 
 export type UserContainerSystemInfo = {

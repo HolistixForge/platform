@@ -81,6 +81,11 @@ export const moduleBackend: TModule<TRequired, TUserContainersExports> = {
       'user-containers',
       'runners'
     );
+    depsExports.collab.registry.registerSharedData(
+      'map',
+      'user-containers',
+      'machines'
+    );
 
     const registry = new ContainerImageRegistry();
 

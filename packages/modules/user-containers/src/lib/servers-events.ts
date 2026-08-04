@@ -24,7 +24,7 @@ export type TEventDelete = {
 export type TEventWatchdog = {
   type: 'user-container:watchdog';
   system?: UserContainerSystemInfo;
-  systemEvent: true;  // Automated health check from container
+  systemEvent: true; // Automated health check from container
 };
 
 export type TEventActivity = {
@@ -44,6 +44,21 @@ export type TEventSelectRunner = {
   runner_id: string;
 };
 
+/**
+ * A runner saying it is still connected.
+ *
+ * The same shape as the container watchdog and read the same way: a machine
+ * that stops sending these disappears from the project's targets, because a
+ * runner that went quiet and a laptop that was closed are indistinguishable —
+ * and identical in consequence.
+ */
+export type TEventRunnerHealth = {
+  type: 'user-container:runner-health';
+  machine_id: string;
+  label: string;
+  systemEvent: true;
+};
+
 export type TEventStart = {
   type: 'user-container:start';
   user_container_id: string;
@@ -56,4 +71,5 @@ export type TUserContainersEvents =
   | TEventMapHttpService
   | TEventActivity
   | TEventSelectRunner
+  | TEventRunnerHealth
   | TEventStart;

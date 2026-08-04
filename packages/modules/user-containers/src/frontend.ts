@@ -55,6 +55,11 @@ export const moduleFrontend: TModule<TRequired> = {
       'user-containers',
       'runners'
     );
+    depsExports.collab.registry.registerSharedData(
+      'map',
+      'user-containers',
+      'machines'
+    );
 
     depsExports.whiteboard.registerMenuEntries(serversMenuEntries);
     depsExports.whiteboard.registerNodes({

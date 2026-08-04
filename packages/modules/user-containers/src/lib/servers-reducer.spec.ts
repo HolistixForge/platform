@@ -667,3 +667,130 @@ describe('UserContainersReducer - Auth Guard OAuth Client Lifecycle', () => {
     });
   });
 });
+
+describe('UserContainersReducer - runner machines', () => {
+  let reducer: UserContainersReducer;
+  let machines: Map<string, any>;
+
+  const sharedMap = (backing: Map<string, any>) => ({
+    get: (k: string) => backing.get(k),
+    set: (k: string, v: any) => backing.set(k, v),
+    delete: (k: string) => backing.delete(k),
+    forEach: (fn: (v: any) => void) => backing.forEach(fn),
+    copy: () => new Map(backing),
+  });
+
+  const health = (
+    userId: string | undefined,
+    machineId = 'm1',
+    label = 'mbp'
+  ) =>
+    reducer.reduce(
+      {
+        type: 'user-container:runner-health' as const,
+        machine_id: machineId,
+        label,
+        systemEvent: true as const,
+      },
+      {
+        project_id: 'p1',
+        jwt: userId ? { user: { id: userId } } : undefined,
+      } as any
+    );
+
+  beforeEach(() => {
+    machines = new Map();
+    reducer = new UserContainersReducer({
+      collab: {
+        registry: {
+          getCollabForProject: jest.fn(() => ({
+            sharedData: {
+              'user-containers:containers': sharedMap(new Map()),
+              'user-containers:machines': sharedMap(machines),
+            },
+          })),
+        },
+      },
+      gateway: {
+        organization_id: 'org-1',
+        // _periodic republishes the project's routes on every tick.
+        updateReverseProxy: jest.fn(),
+      },
+      'user-containers': {},
+    } as any);
+  });
+
+  it('records a machine against the authenticated user', async () => {
+    await health('user-a');
+
+    expect(machines.get('m1')).toMatchObject({
+      machine_id: 'm1',
+      user_id: 'user-a',
+      label: 'mbp',
+    });
+    expect(machines.get('m1').last_health_at).toBeTruthy();
+  });
+
+  it('takes the owner from the token, never from the event', async () => {
+    // A runner that could name its own owner could enrol itself into a project
+    // it was never invited to.
+    await expect(health(undefined)).rejects.toThrow();
+    expect(machines.size).toBe(0);
+  });
+
+  it('refuses a machine id already claimed by someone else', async () => {
+    // Not a naming collision to resolve — an id being reused, deliberately or
+    // from a restored backup. Letting it through would hand one member another
+    // member's placement.
+    await health('user-a');
+
+    // Asserting on the rejection rather than its text: the ForbiddenException
+    // mocked at the top of this file takes an array of messages and Error
+    // stringifies it, so the message never survives. What matters is that the
+    // owner is unchanged.
+    await expect(health('user-b')).rejects.toBeTruthy();
+    expect(machines.get('m1').user_id).toBe('user-a');
+  });
+
+  it('refreshes the timestamp on each health', async () => {
+    await health('user-a');
+    const first = machines.get('m1').last_health_at;
+
+    await new Promise((r) => setTimeout(r, 5));
+    await health('user-a');
+
+    expect(machines.get('m1').last_health_at).not.toBe(first);
+  });
+
+  it('drops a machine that stopped answering', async () => {
+    await health('user-a');
+    machines.set('m1', {
+      ...machines.get('m1'),
+      last_health_at: new Date('2020-01-01').toISOString(),
+    });
+
+    await reducer.reduce(
+      {
+        type: 'reducers:periodic' as const,
+        date: new Date().toISOString(),
+      } as any,
+      { project_id: 'p1' } as any
+    );
+
+    expect(machines.has('m1')).toBe(false);
+  });
+
+  it('keeps a machine that answered recently', async () => {
+    await health('user-a');
+
+    await reducer.reduce(
+      {
+        type: 'reducers:periodic' as const,
+        date: new Date().toISOString(),
+      } as any,
+      { project_id: 'p1' } as any
+    );
+
+    expect(machines.has('m1')).toBe(true);
+  });
+});

@@ -23,7 +23,10 @@ import {
   ReducerWithCollab,
 } from '@holistix-forge/collab';
 import { TUserContainersSharedData } from './servers-shared-model';
-import { TUserContainer } from './servers-types';
+import {
+  TUserContainer,
+  MACHINE_HEALTH_TIMEOUT_SECONDS,
+} from './servers-types';
 import {
   TEventNew,
   TEventWatchdog,
@@ -32,6 +35,7 @@ import {
   TEventMapHttpService,
   TEventDelete,
   TEventSelectRunner,
+  TEventRunnerHealth,
   TEventStart,
 } from './servers-events';
 import { TUserContainersExports } from '..';
@@ -88,6 +92,8 @@ export class UserContainersReducer extends ReducerWithCollab<
         return this._Activity(event, requestData);
       case 'user-container:set-runner':
         return this._setRunner(event, requestData);
+      case 'user-container:runner-health':
+        return this._runnerHealth(event, requestData);
       case 'user-container:start':
         return this._start(event, requestData);
 
@@ -529,6 +535,21 @@ export class UserContainersReducer extends ReducerWithCollab<
       }
     });
     this._updateNginx(project_id, sduc);
+
+    // A machine that stopped answering leaves the project's targets. Same
+    // threshold as the container watchdog above, because a live container on a
+    // dead machine is a state no one can act on.
+    const machines = collab.sharedData['user-containers:machines'];
+    machines.forEach((machine) => {
+      if (
+        machine.last_health_at &&
+        secondAgo(machine.last_health_at, event.date) <=
+          MACHINE_HEALTH_TIMEOUT_SECONDS
+      ) {
+        return;
+      }
+      machines.delete(machine.machine_id);
+    });
   }
 
   //
@@ -598,6 +619,45 @@ export class UserContainersReducer extends ReducerWithCollab<
     };
 
     this.depsExports.reducers.processEvent(e, requestData);
+  }
+
+  /**
+   * A runner reporting that it is still connected.
+   *
+   * The machine is recorded against the authenticated user, never against a
+   * value in the event: this is what makes a machine belong to someone, and a
+   * runner that could name its own owner could enrol itself into a project it
+   * was never invited to.
+   */
+  async _runnerHealth(event: TEventRunnerHealth, requestData: RequestData) {
+    const jwt = requestData.jwt as TJwtUser;
+    const user_id = jwt?.user?.id;
+
+    if (!user_id) {
+      throw new ForbiddenException([
+        { message: 'User authentication required' },
+      ]);
+    }
+
+    const collab = this.getCollab(requestData);
+    const machines = collab.sharedData['user-containers:machines'];
+    const existing = machines.get(event.machine_id);
+
+    // A machine already claimed by someone else is not a naming collision to
+    // resolve, it is a machine id being reused — deliberately or by a restored
+    // backup. Refusing keeps one member from taking over another's placement.
+    if (existing && existing.user_id !== user_id) {
+      throw new ForbiddenException([
+        { message: `Machine ${event.machine_id} belongs to another user` },
+      ]);
+    }
+
+    machines.set(event.machine_id, {
+      machine_id: event.machine_id,
+      user_id,
+      label: event.label,
+      last_health_at: new Date().toISOString(),
+    });
   }
 
   //
