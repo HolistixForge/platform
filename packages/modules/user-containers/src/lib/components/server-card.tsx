@@ -27,6 +27,26 @@ import { UseContainerProps } from './node-server/node-server';
 import { TContainerRunnerFrontend } from '../../frontend';
 
 /**
+ * The card's own box.
+ *
+ * 400 × 202 are the "add resource" card's dimensions — `server-stack.tsx` in
+ * ui-views — which is what this card sits beside in the grid, and whose column
+ * arithmetic (`Math.floor(width / (400 + 32))`, `minmax(400px, 1fr)`) is
+ * written against that same 400. The width already agreed; the height did not,
+ * so a service card and the dashed card next to it never lined up.
+ *
+ * `minHeight` and not `height`: a container exposing several services is
+ * taller than 202, and clipping it would hide the links that are the reason to
+ * look at the card at all. The floor is what makes the short ones align.
+ */
+const CARD_BOX = {
+  borderRadius: '8px',
+  padding: '20px',
+  width: '400px',
+  minHeight: '202px',
+} as const;
+
+/**
  *
  */
 
@@ -114,7 +134,7 @@ export const UserContainerCardInternal = ({
       className={`${
         color === 'red' ? 'node-background' : 'gradient-notebook-card'
       } flex flex-col relative pointer`}
-      style={{ borderRadius: '8px', padding: '20px', width: '400px' }}
+      style={CARD_BOX}
       onClick={() => {
         if (firstServiceName) {
           onOpenService?.(firstServiceName);
