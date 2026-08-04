@@ -76,7 +76,42 @@ export type TBrokerConfig = {
 };
 
 /**
- * Capabilities a container may be granted.
+ * Capabilities every container gets, on top of `--cap-drop=ALL`.
+ *
+ * Dropping everything and granting only what a request asks for is the
+ * appealing version, and it does not survive contact with real images: nginx,
+ * Jupyter, n8n and pgAdmin all chown their data directories at startup and then
+ * drop to a non-root user. Without CHOWN and SETUID/SETGID they exit before
+ * doing anything, with `chown(…) failed (Operation not permitted)`.
+ *
+ * So: the smallest set that lets a conventional entrypoint set itself up. What
+ * stays dropped is what matters —
+ *
+ *   SYS_ADMIN, SYS_MODULE, SYS_RAWIO, SYS_PTRACE, SYS_BOOT, SYS_TIME
+ *     the ones that reach the kernel or other processes
+ *   MKNOD        creating device nodes
+ *   NET_RAW      raw sockets: packet spoofing, ARP games, scanning
+ *   SYS_CHROOT, AUDIT_WRITE, SETFCAP
+ *
+ * Docker's own default grants MKNOD, NET_RAW, SYS_CHROOT, AUDIT_WRITE and
+ * SETFCAP as well. This is narrower than the default, not wider.
+ */
+export const BASELINE_CAPABILITIES = [
+  'CHOWN',
+  'DAC_OVERRIDE',
+  'FOWNER',
+  'FSETID',
+  'SETGID',
+  'SETUID',
+  // Needed by an entrypoint that drops its own capabilities before exec'ing
+  // the real process — su-exec, gosu and tini all do this.
+  'SETPCAP',
+  'KILL',
+  'NET_BIND_SERVICE',
+];
+
+/**
+ * Capabilities a request may ask for beyond the baseline.
  *
  * NET_ADMIN alone: the container runs an OpenVPN client to reach its gateway.
  * Under a microVM runtime that capability applies to the guest kernel, not the

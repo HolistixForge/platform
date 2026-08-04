@@ -257,17 +257,39 @@ For the same reason each pull gets its own `--config` directory rather than a
 shared `docker login`: one config for the whole host means two concurrent pulls
 race, and the last writer lends its access to the other.
 
+## What has been verified on a real runtime
+
+`scripts/local-dev/verify-container-broker.sh` runs the whole broker path
+against a live Docker daemon and reads the started container's privileges back
+out of Docker rather than trusting the argv we believe we sent. 26 checks, all
+passing in the dev VM: authentication, every refusal, and then a running
+container with `CapDrop=[ALL]`, no host devices, the cpu/memory/pids limits
+applied, swap capped at the memory limit, the digest we asked for, NET_ADMIN
+usable, SYS_ADMIN denied, the `SETTINGS` payload intact, and a real cgroup
+`memory.max`.
+
+This is where the capability policy was found to be wrong. `--cap-drop=ALL`
+with only NET_ADMIN added back is the appealing design and it does not run
+nginx: the entrypoint exits with `chown(…) failed (Operation not permitted)`.
+Jupyter, n8n and pgAdmin all do the same thing — chown a data directory, then
+drop to a non-root user. Hence `BASELINE_CAPABILITIES`, which is still narrower
+than Docker's own default.
+
 ## What is not verified
 
 Written and unit-tested is not the same as working. Specifically:
 
-- **No container has been started.** No VM, no KVM and no Kata in this
-  workspace. The broker's argv construction is tested; whether Docker accepts
-  that argv with `--runtime=kata` is not.
+- **Nothing has run under Kata.** The verification above ran under `runc`, so
+  everything it proves holds _except isolation from the host kernel_ — which is
+  the entire reason Kata is in the design. Apple Silicon before M3 has no nested
+  virtualisation: `/dev/kvm` is absent inside the dev VM on an M1, so Kata
+  cannot start there at all. This needs an x86 host, an M3+, or a cloud VM with
+  nested virtualisation enabled.
 - **The guest tun assumption.** The design holds that tun comes from the Kata
   guest kernel rather than a host `/dev/net/tun` passthrough, and the broker
   refuses `--device` on that basis. `roles/kata` ends with a task that checks it
-  on a real host. That task has never run.
+  on a real host. That task has never run — and it cannot, until the point
+  above is resolved.
 - **The two jupyter digests.** `imageSha256` was dead code until now.
   `holistixforge/jupyterlab-minimal` and `-pytorch` are private on Docker Hub,
   so the recorded digests could not be checked from here. If they are stale the

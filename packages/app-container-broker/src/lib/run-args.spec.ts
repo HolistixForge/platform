@@ -64,13 +64,43 @@ describe('buildRunArgs', () => {
     ]);
   });
 
-  it('drops all capabilities before adding the allowed one back', () => {
+  it('drops all capabilities before adding any back', () => {
     const args = buildRunArgs(request(), image, config);
     const dropIndex = args.indexOf('--cap-drop=ALL');
     const addIndex = args.indexOf('--cap-add=NET_ADMIN');
 
     expect(dropIndex).toBeGreaterThanOrEqual(0);
     expect(addIndex).toBeGreaterThan(dropIndex);
+  });
+
+  it('grants the baseline a conventional entrypoint needs', () => {
+    // Learned by running it: nginx, and every image that chowns its data
+    // directory and drops to a non-root user, exits with
+    // "chown(…) failed (Operation not permitted)" without these.
+    const args = buildRunArgs(request(), image, config);
+
+    for (const cap of ['CHOWN', 'SETUID', 'SETGID', 'DAC_OVERRIDE']) {
+      expect(args).toContain(`--cap-add=${cap}`);
+    }
+  });
+
+  it('keeps the dangerous capabilities dropped', () => {
+    // Narrower than Docker's own default, which grants MKNOD, NET_RAW,
+    // SYS_CHROOT, AUDIT_WRITE and SETFCAP.
+    const args = buildRunArgs(request(), image, config).join(' ');
+
+    for (const cap of [
+      'SYS_ADMIN',
+      'SYS_MODULE',
+      'SYS_RAWIO',
+      'SYS_PTRACE',
+      'SYS_BOOT',
+      'MKNOD',
+      'NET_RAW',
+      'SYS_CHROOT',
+    ]) {
+      expect(args).not.toContain(`--cap-add=${cap}`);
+    }
   });
 
   it('forbids acquiring new privileges', () => {

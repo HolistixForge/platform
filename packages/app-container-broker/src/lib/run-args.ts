@@ -1,4 +1,9 @@
-import { TStartRequest, TBrokerConfig, TResolvedImage } from './types';
+import {
+  TStartRequest,
+  TBrokerConfig,
+  TResolvedImage,
+  BASELINE_CAPABILITIES,
+} from './types';
 
 /**
  * Build the argv for one container start.
@@ -39,10 +44,14 @@ export const buildRunArgs = (
     `holistix.user_container=${request.user_container_id}`,
   ];
 
-  // Drop everything, then add back only what the allowlist permitted. Docker's
-  // default set is generous, and none of it is needed here beyond the VPN
-  // client's NET_ADMIN.
+  // Drop everything, then add back the baseline a conventional entrypoint
+  // needs, plus whatever the request asked for and validation allowed. Still
+  // narrower than Docker's default — see BASELINE_CAPABILITIES for what stays
+  // dropped and why.
   args.push('--cap-drop=ALL');
+  for (const capability of BASELINE_CAPABILITIES) {
+    args.push(`--cap-add=${capability}`);
+  }
   for (const capability of request.capabilities) {
     args.push(`--cap-add=${capability}`);
   }
