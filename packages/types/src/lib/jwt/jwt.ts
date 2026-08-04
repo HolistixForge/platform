@@ -19,6 +19,20 @@ export type TJwtGateway = {
 };
 
 /**
+ * token given to a runner when a machine is enrolled
+ *
+ * Not a user token on a laptop: it names one machine, carries no organization
+ * and no project, and is withdrawn by revoking the runner row rather than by
+ * signing its owner out of everywhere.
+ */
+export type TJwtRunner = {
+  type: 'runner_token';
+  runner_id: string;
+  user_id: string;
+  scope: string;
+};
+
+/**
  * token given to (human) users
  */
 export type TJwtUser = {

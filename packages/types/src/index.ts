@@ -16,7 +16,12 @@ export {
   RUNNER_CLIENT_ID,
 } from './lib/ganymede-api/oauth';
 
-export type { TJwtOrganization, TJwtGateway, TJwtUser } from './lib/jwt/jwt';
+export type {
+  TJwtOrganization,
+  TJwtGateway,
+  TJwtRunner,
+  TJwtUser,
+} from './lib/jwt/jwt';
 
 // Credentials Wallet types
 export type {

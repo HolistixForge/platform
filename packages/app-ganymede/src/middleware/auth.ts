@@ -6,8 +6,10 @@ import { trace } from '@opentelemetry/api';
 import {
   TJwtGateway,
   TJwtOrganization,
+  TJwtRunner,
   TJwtUser,
 } from '@holistix-forge/types';
+import { pg } from '../database/pg';
 
 export interface AuthRequest extends Request {
   user: {
@@ -30,6 +32,14 @@ export interface OrganizationAuthRequest extends Request {
     gateway_id: string;
     type: 'organization_token';
     scope: string;
+  };
+}
+
+export interface RunnerAuthRequest extends Request {
+  runner: {
+    id: string;
+    user_id: string;
+    label: string;
   };
 }
 
@@ -133,6 +143,79 @@ export const authenticateJwtGateway: RequestHandler = (
     const span = trace.getActiveSpan();
     if (span) {
       span.setAttribute('gateway.id', payload.gateway_id);
+    }
+
+    next();
+  } catch (error: any) {
+    return next(error);
+  }
+};
+
+/**
+ * Authenticate a runner JWT token (TJwtRunner)
+ *
+ * Token minted at enrolment, once, for one machine:
+ * {
+ *   type: 'runner_token',
+ *   runner_id: string,
+ *   user_id: string,
+ *   scope: 'runner:<runner_id>'
+ * }
+ *
+ * Unlike the other three, this one goes to the database on every request. A
+ * runner token lives a year on a machine its owner may lose, sell or lend, and
+ * revoking it has to mean something before that year is out — a signature stays
+ * valid however loudly the UI says otherwise, so the runner row is what decides.
+ * The same statement records that the runner was here, so the check costs one
+ * round trip rather than two.
+ */
+export const authenticateJwtRunner: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const authReq = req as RunnerAuthRequest;
+
+  try {
+    const payload: TJwtRunner = verifyJwtToken(authReq.headers.authorization, [
+      'Bearer ',
+    ]) as TJwtRunner;
+
+    if (payload.type !== 'runner_token') {
+      return next(new ForbiddenException([{ message: 'Invalid token type' }]));
+    }
+
+    // The scope names the machine, so a token whose scope and runner_id
+    // disagree was assembled rather than issued.
+    if (payload.scope !== `runner:${payload.runner_id}`) {
+      return next(new ForbiddenException([{ message: 'Invalid token scope' }]));
+    }
+
+    const qr = await pg.query('select * from func_runners_touch($1)', [
+      payload.runner_id,
+    ]);
+    const row = qr.next()?.oneRow();
+
+    if (!row) {
+      // Unknown or revoked — deliberately the same answer, so a refusal cannot
+      // be used to learn which runner ids exist.
+      return next(
+        new ForbiddenException([{ message: 'Runner is not enrolled' }])
+      );
+    }
+
+    // The owner comes from the row, not from the token: if a runner changes
+    // hands the row is what was updated.
+    authReq.runner = {
+      id: row['runner_id'] as string,
+      user_id: row['user_id'] as string,
+      label: row['label'] as string,
+    };
+
+    const span = trace.getActiveSpan();
+    if (span) {
+      span.setAttribute('runner.id', authReq.runner.id);
+      span.setAttribute('user.id', authReq.runner.user_id);
     }
 
     next();
