@@ -244,6 +244,11 @@ CREATE TABLE IF NOT EXISTS public.oauth_tokens
     code_expires_on timestamp without time zone,
     scope json NOT NULL,
     redirect_uri character varying(256),
+    -- PKCE (RFC 7636), for clients that cannot hold a secret. The challenge is
+    -- 43-128 unreserved characters; the method is 'S256' or 'plain'. Null for
+    -- confidential clients, which authenticate with their secret instead.
+    code_challenge character varying(128),
+    code_challenge_method character varying(16),
     access_token text,
     access_token_expires_on timestamp without time zone,
     refresh_token text,

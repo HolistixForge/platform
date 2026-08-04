@@ -40,6 +40,22 @@ const debug = (msg: string, o: any) => {
 
 //
 
+const parseUrl = (value: string): URL | undefined => {
+  try {
+    return new URL(value);
+  } catch {
+    return undefined;
+  }
+};
+
+// Only the addresses that cannot be routed to from another machine. Not
+// `localhost`: what it resolves to is up to the host's resolver, so it is not a
+// guarantee that the code stays on the machine (RFC 8252 §8.3 says the same).
+const isLoopback = (url: URL): boolean =>
+  url.hostname === '127.0.0.1' || url.hostname === '[::1]';
+
+//
+
 export const model: AuthorizationCodeModel &
   RefreshTokenModel & { verifyScope: AuthorizationCodeModel['verifyScope'] } = {
   //
@@ -152,6 +168,72 @@ export const model: AuthorizationCodeModel &
 
     debug('getClient', { args: { clientId, clientSecret }, r: false });
     return false;
+  },
+
+  //
+
+  /**
+   * Invoked to check that the `redirect_uri` of an authorize request is one the
+   * client registered.
+   *
+   * The library's own check is `client.redirectUris.includes(redirectUri)`, and
+   * that stays the rule here for everything that is not a loopback address —
+   * this function only ever widens the match for `127.0.0.1` and `[::1]`.
+   *
+   * Loopback needs the exception because of the port. A client running on
+   * someone's machine — the runner — receives its authorization code on a
+   * server it starts locally, and it cannot register the port in advance: a
+   * fixed port is one already-bound socket away from an enrolment that cannot
+   * start, on a laptop where anything else may hold it. RFC 8252 §7.3 has the
+   * client take whatever port the OS gives it and the server ignore the port
+   * when matching. Everything else still has to match — scheme, host, path —
+   * and only a host that cannot be reached from outside the machine qualifies,
+   * so widening this costs nothing: a code sent to 127.0.0.1 leaves no network.
+   */
+  validateRedirectUri: async (
+    redirectUri: string,
+    client: Client
+  ): Promise<boolean> => {
+    // The library types this as `string | string[]`, and `includes` on the
+    // string form would match a substring — a different rule than the one this
+    // is meant to preserve.
+    const registered =
+      typeof client.redirectUris === 'string'
+        ? [client.redirectUris]
+        : client.redirectUris ?? [];
+
+    if (registered.includes(redirectUri)) return true;
+
+    const requested = parseUrl(redirectUri);
+    if (!requested || !isLoopback(requested)) {
+      debug('validateRedirectUri', {
+        args: { redirectUri, clientId: client.id },
+        r: false,
+      });
+      return false;
+    }
+
+    // A redirect that already carries a query is refused: the response
+    // parameters are appended to it, and a client that put its own there is not
+    // one whose exact registration we can be sure we are matching.
+    if (requested.search || requested.hash) return false;
+
+    const r = registered.some((uri) => {
+      const candidate = parseUrl(uri);
+      return (
+        !!candidate &&
+        isLoopback(candidate) &&
+        candidate.protocol === requested.protocol &&
+        candidate.hostname === requested.hostname &&
+        candidate.pathname === requested.pathname
+      );
+    });
+
+    debug('validateRedirectUri', {
+      args: { redirectUri, clientId: client.id },
+      r,
+    });
+    return r;
   },
 
   //
@@ -334,6 +416,16 @@ export const model: AuthorizationCodeModel &
         expiresAt: row['code_expires_on'] as Date,
         redirectUri: row['code_redirect_uri'] as string, // seems never used ?
         scope: row['scope'] as string[],
+        // Only set when the authorize request carried a challenge. The library
+        // verifies a code_verifier if and only if it finds a challenge here —
+        // returning nothing means the exchange is accepted without proof, so
+        // these two lines are the whole of PKCE enforcement.
+        ...(row['code_challenge']
+          ? {
+              codeChallenge: row['code_challenge'] as string,
+              codeChallengeMethod: row['code_challenge_method'] as string,
+            }
+          : {}),
         client: {
           id: row['client_id'] as string,
           grants: row['client_grants'] as string[],
@@ -365,7 +457,7 @@ export const model: AuthorizationCodeModel &
     let r: AuthorizationCode | boolean = false;
     try {
       await pg.query(
-        'call proc_oauth_tokens_save_code($1, $2, $3, $4, $5, $6)',
+        'call proc_oauth_tokens_save_code($1, $2, $3, $4, $5, $6, $7, $8)',
         [
           client.id,
           user.session_id,
@@ -377,6 +469,11 @@ export const model: AuthorizationCodeModel &
           code.expiresAt,
           JSON.stringify(code.scope),
           code.redirectUri,
+          // The library already validated the shape of these on the way in
+          // (43-128 unreserved characters, method 'S256' or 'plain'); dropping
+          // them here is what left every public client unable to enrol.
+          code.codeChallenge ?? null,
+          code.codeChallengeMethod ?? null,
         ]
       );
       r = {

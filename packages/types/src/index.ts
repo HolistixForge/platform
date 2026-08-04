@@ -13,6 +13,7 @@ export type { TApi_Project } from './lib/ganymede-api/types';
 export {
   GLOBAL_CLIENT_ID,
   GLOBAL_CLIENT_SECRET,
+  RUNNER_CLIENT_ID,
 } from './lib/ganymede-api/oauth';
 
 export type { TJwtOrganization, TJwtGateway, TJwtUser } from './lib/jwt/jwt';
