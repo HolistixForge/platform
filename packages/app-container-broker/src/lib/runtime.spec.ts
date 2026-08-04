@@ -50,6 +50,58 @@ const recorder = () => {
 /** The single `run` argv from a recorded sequence. */
 const runCall = (calls: string[][]) => calls.find((c) => c[0] === 'run');
 
+describe('restarting an existing container', () => {
+  /** Answers a label for `container inspect`, records everything else. */
+  const withExisting = (label: string) => {
+    const calls: string[][] = [];
+    const exec = async (args: string[]) => {
+      calls.push(args);
+      if (args[1] === 'inspect') return label;
+      return 'kata-9f3';
+    };
+    return { calls, exec };
+  };
+
+  it('removes its own container so the start can proceed', async () => {
+    // Starting a service that already runs is how someone restarts it. Docker
+    // answers Conflict on the name, which says nothing to the person who
+    // clicked.
+    const { calls, exec } = withExisting('uc_abc12345');
+
+    await startContainer(exec, request, image, config);
+
+    const rm = calls.find((c) => c[0] === 'rm');
+    expect(rm).toEqual(['rm', '--force', '--', request.name]);
+    expect(calls.findIndex((c) => c[0] === 'rm')).toBeLessThan(
+      calls.findIndex((c) => c[0] === 'run')
+    );
+  });
+
+  it('leaves a name collision it does not own alone', async () => {
+    // This runs as root on the platform host. "Remove whatever is in the way"
+    // is not a power it should hold — the run is allowed to fail instead.
+    const { calls, exec } = withExisting('someone-elses-container');
+
+    await startContainer(exec, request, image, config);
+
+    expect(calls.some((c) => c[0] === 'rm')).toBe(false);
+  });
+
+  it('does nothing when there is no container to replace', async () => {
+    const calls: string[][] = [];
+    const exec = async (args: string[]) => {
+      calls.push(args);
+      if (args[1] === 'inspect') throw new Error('No such container');
+      return 'kata-9f3';
+    };
+
+    await startContainer(exec, request, image, config);
+
+    expect(calls.some((c) => c[0] === 'rm')).toBe(false);
+    expect(calls.some((c) => c[0] === 'run')).toBe(true);
+  });
+});
+
 describe('startContainer', () => {
   it('pulls, prepares the network, then runs — in that order', async () => {
     // The container's own network has to exist before the run references it,

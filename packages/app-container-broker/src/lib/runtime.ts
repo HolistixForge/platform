@@ -42,6 +42,37 @@ export const dockerExec =
     });
 
 /**
+ * Clear the way for a start that is really a restart.
+ *
+ * Starting a service that already runs is not an error — it is how someone
+ * restarts one, or moves it between runners. Docker disagrees: the name is
+ * taken, and the run fails with a Conflict that says nothing useful to the
+ * person who clicked.
+ *
+ * The container is only removed when its `holistix.user_container` label
+ * matches the request. A name collision with anything else is left alone and
+ * allowed to fail: this runs as root on the platform host, and "remove
+ * whatever is in the way" is not a power this service should hold.
+ */
+const replaceExisting = async (
+  exec: TRuntimeExec,
+  request: TStartRequest
+): Promise<void> => {
+  const owner = await exec([
+    'container',
+    'inspect',
+    '--format',
+    '{{index .Config.Labels "holistix.user_container"}}',
+    '--',
+    request.name,
+  ]).catch(() => '');
+
+  if (owner.trim() !== request.user_container_id) return;
+
+  await exec(['rm', '--force', '--', request.name]);
+};
+
+/**
  * Fetch, then run.
  *
  * Two steps rather than letting `docker run` pull implicitly, because the two
@@ -54,6 +85,7 @@ export const startContainer = async (
   image: TResolvedImage,
   config: TBrokerConfig
 ): Promise<string> => {
+  await replaceExisting(exec, request);
   await pullImage(exec, image);
   // The container's own network has to exist before the run references it.
   await ensureNetwork(
