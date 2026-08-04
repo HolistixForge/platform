@@ -1,0 +1,37 @@
+[Unit]
+Description=Holistix container broker ({{ holistix_broker_bind }}:{{ holistix_broker_port }})
+Documentation=file://{{ holistix_workspace }}/doc/architecture/CLOUD_RUNNER.md
+After=docker.service network-online.target
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory={{ holistix_workspace }}
+ExecStart=/usr/bin/node {{ holistix_workspace }}/dist/packages/app-container-broker/main.js
+Restart=on-failure
+RestartSec=2s
+
+# The broker composes every container start, so its configuration is the
+# platform's isolation policy. BROKER_RUNTIME has no default in the code: a
+# broker that quietly fell back to runc would put every tenant back on a shared
+# kernel.
+Environment=BROKER_RUNTIME={{ holistix_broker_runtime }}
+Environment=BROKER_BIND={{ holistix_broker_bind }}
+Environment=BROKER_PORT={{ holistix_broker_port }}
+Environment=BROKER_MAX_CPUS={{ holistix_broker_max_cpus }}
+Environment=BROKER_MAX_MEMORY_MB={{ holistix_broker_max_memory_mb }}
+Environment=BROKER_MAX_PIDS={{ holistix_broker_max_pids }}
+Environment=GANYMEDE_INTERNAL_URL={{ holistix_broker_ganymede_url }}
+EnvironmentFile={{ holistix_broker_secrets_file }}
+
+# It needs the Docker socket — that is the entire point of separating it from
+# the gateway, which must never have it. Everything else is closed off.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/run/docker.sock
+
+[Install]
+WantedBy=multi-user.target

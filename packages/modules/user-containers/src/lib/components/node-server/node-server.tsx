@@ -26,11 +26,31 @@ import {
 
 //
 
+/**
+ * The runners this project can actually use.
+ *
+ * The frontend registry is static — every runner a build knows about — while
+ * the gateway publishes the subset it is configured for. Intersecting the two
+ * is what keeps a "Platform" button off screens whose deployment has no
+ * container broker behind it. Before the gateway has published anything, fall
+ * back to the static set rather than showing no runner at all.
+ */
 export const useRunnerFrontend = () => {
   const exports = useModuleExports<{
     'user-containers': TUserContainersFrontendExports;
   }>('user-containers');
-  return exports['user-containers'].getRunners();
+  const registered = exports['user-containers'].getRunners();
+
+  const available = useLocalSharedData<TUserContainersSharedData>(
+    ['user-containers:runners'],
+    (sd) => sd['user-containers:runners']
+  );
+
+  if (!available || available.size === 0) return registered;
+
+  return new Map(
+    Array.from(registered.entries()).filter(([id]) => available.get(id))
+  );
 };
 
 export type UseContainerProps = {

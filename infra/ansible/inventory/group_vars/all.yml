@@ -84,6 +84,29 @@ holistix_build_gateway_image: true
 holistix_npm_install: true
 holistix_install_build_server: true
 
+# ---------------------------------------------------------------------------
+# Cloud runner — running user containers on this host
+# ---------------------------------------------------------------------------
+# Off by default. Turning it on means tenant-supplied container images execute
+# here, which needs both hardware virtualisation (Kata boots a VM per
+# container) and an egress policy — see doc/architecture/CLOUD_RUNNER.md.
+holistix_install_cloud_runner: false
+
+# Never runc. A shared kernel between organizations is not defensible once
+# tenants supply their own images.
+holistix_broker_runtime: kata
+# Loopback: the broker is reached from gateway containers over the Docker
+# bridge. Binding 0.0.0.0 exposes container creation to anything that can route
+# to this host.
+holistix_broker_bind: 127.0.0.1
+holistix_broker_port: 9443
+holistix_broker_secrets_file: /etc/holistix/container-broker.env
+# Per-container ceilings. A request asking for more is clamped, not refused.
+holistix_broker_max_cpus: 4
+holistix_broker_max_memory_mb: 8192
+holistix_broker_max_pids: 2048
+holistix_broker_ganymede_url: http://127.0.0.1:6000
+
 # Reclaim apt/npm/docker caches and fstrim after provisioning. Removes no
 # functionality — these regenerate on demand — but a sparse VM disk never
 # shrinks on its own, so skipping this leaves several GB allocated on the host

@@ -49,6 +49,17 @@ export type TUserContainer = {
   created_at: string;
 } & TUserContainerPublishedInfo;
 
+/**
+ * A runner this gateway actually offers.
+ *
+ * Replicated to the frontend because the set is deployment-dependent: the
+ * platform runner only registers where a container broker is configured, and a
+ * UI that offers it anyway hands the user a button that fails on click.
+ */
+export type TContainerRunnerInfo = {
+  runnerId: string;
+};
+
 //
 
 export type UserContainerSystemInfo = {

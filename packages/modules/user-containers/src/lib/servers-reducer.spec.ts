@@ -64,6 +64,7 @@ describe('ContainerImageRegistry - getAll', () => {
 describe('UserContainersReducer - _initProject', () => {
   let reducer: UserContainersReducer;
   let mockImagesMap: Map<string, any>;
+  let mockRunnersMap: Map<string, any>;
   let mockImageRegistry: ContainerImageRegistry;
   let mockDepsExports: any;
 
@@ -88,6 +89,13 @@ describe('UserContainersReducer - _initProject', () => {
       copy: () => new Map(mockImagesMap),
     };
 
+    mockRunnersMap = new Map();
+    const runnersSharedMap = {
+      get: (key: string) => mockRunnersMap.get(key),
+      set: (key: string, value: any) => mockRunnersMap.set(key, value),
+      copy: () => new Map(mockRunnersMap),
+    };
+
     mockDepsExports = {
       collab: {
         registry: {
@@ -95,17 +103,20 @@ describe('UserContainersReducer - _initProject', () => {
             sharedData: {
               'user-containers:containers': new Map(),
               'user-containers:images': imagesSharedMap,
+              'user-containers:runners': runnersSharedMap,
             },
           })),
         },
       },
       gateway: {
+        organization_id: 'org-under-test',
         permissionRegistry: {
           getPermissions: jest.fn(() => ({})),
         },
       },
       'user-containers': {
         imageRegistry: mockImageRegistry,
+        listRunnerIds: () => ['local'],
       },
     };
 
@@ -179,6 +190,57 @@ describe('UserContainersReducer - _initProject', () => {
     expect(mockImagesMap.size).toBe(2);
     expect(mockImagesMap.has('ubuntu:terminal')).toBe(true);
     expect(mockImagesMap.has('jupyter:lab')).toBe(true);
+  });
+
+  it('syncs only this organization catalogue, not another tenant one', async () => {
+    // The shared map is a CRDT replicated to every client in the project, so an
+    // unscoped sync would hand one tenant's image list to another's browsers.
+    mockImageRegistry.registerForOrganization('org-under-test', [
+      {
+        imageId: 'ours:etl',
+        imageName: 'Our ETL',
+        imageUri: 'registry.example/etl',
+        imageTag: '1.0.0',
+        imageSha256: 'a'.repeat(64),
+      },
+    ]);
+    mockImageRegistry.registerForOrganization('some-other-org', [
+      {
+        imageId: 'theirs:sim',
+        imageName: 'Their Simulator',
+        imageUri: 'registry.example/sim',
+        imageTag: '2.0.0',
+        imageSha256: 'b'.repeat(64),
+      },
+    ]);
+
+    await reducer.reduce(
+      {
+        type: 'project:init' as const,
+        project_id: 'test-project-123',
+        systemEvent: true as const,
+      },
+      { project_id: 'test-project-123' } as any
+    );
+
+    expect(mockImagesMap.has('ours:etl')).toBe(true);
+    expect(mockImagesMap.has('theirs:sim')).toBe(false);
+  });
+
+  it('publishes the runners this gateway actually offers', async () => {
+    // The platform runner only registers where a broker is configured, so the
+    // frontend has no way to know the set without being told.
+    await reducer.reduce(
+      {
+        type: 'project:init' as const,
+        project_id: 'test-project-123',
+        systemEvent: true as const,
+      },
+      { project_id: 'test-project-123' } as any
+    );
+
+    expect(Array.from(mockRunnersMap.keys())).toEqual(['local']);
+    expect(mockRunnersMap.get('local')).toEqual({ runnerId: 'local' });
   });
 });
 

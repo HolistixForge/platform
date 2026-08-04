@@ -101,6 +101,9 @@
     },
     {
       "path": "./packages/modules/vscode"
+    },
+    {
+      "path": "./packages/app-container-broker"
     }
   ],
   "ts-node": {

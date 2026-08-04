@@ -1,0 +1,216 @@
+# Cloud Runner — running user containers on the platform
+
+Tracks [TAC-129](https://linear.app/tachikoma/issue/TAC-129).
+
+**Status.** Stages 0 and 1 are written and unit-tested. Nothing has run on a
+real host: this workspace has no VM, no KVM and no Kata, so the Ansible roles
+below are syntax-checked only and the end-to-end path — a container booting in
+a microVM, joining the VPN, being routed by nginx — is unverified. See
+[What is not verified](#what-is-not-verified).
+
+## What this adds
+
+Today "starting a service" hands the user a `docker run` command to paste into
+their own terminal (`runner.ts:86`). The container joins its gateway over VPN, so
+a service on the user's laptop is reachable from the project. That mode works and
+**stays**.
+
+This document covers the second mode: the container runs on the platform, with
+the user choosing per container. `user-container:set-runner` already carries that
+decision, and `getRunner(runnerId)` is already a registry — a platform runner is
+a second entry beside `local`, not a replacement.
+
+## The decision that forces everything else
+
+Organizations supply their own images.
+
+That single choice cascades:
+
+| Because                                   | Therefore                                          |
+| ----------------------------------------- | -------------------------------------------------- |
+| The image is tenant input                 | It can be hostile at startup, before any user acts |
+| Hostile-at-startup code shares the kernel | Kernel sharing between orgs is not defensible      |
+| Isolation must be per-container           | A microVM runtime, not namespaces alone            |
+
+Note what this argument does _not_ rest on. Even with a closed catalog, Jupyter,
+VS Code and n8n are arbitrary code execution by design — a notebook cell is a
+shell. Tenant-supplied images do not introduce code execution; they remove the
+last moment where the platform sees the code before it runs.
+
+## Runtime: Kata Containers, not raw Firecracker
+
+**Kata Containers with a microVM hypervisor backend.**
+
+Kata is an OCI runtime: `docker run --runtime=kata …`. Each container gets its own
+kernel, and the command generation in `runner.ts` changes by roughly one flag.
+
+Raw Firecracker means building a VMM orchestrator — rootfs assembly, guest kernel,
+jailer, vsock plumbing, CNI networking, lifecycle. That is a reimplementation of
+what Kata already is, measured in months rather than weeks.
+
+Kata can run _on_ Firecracker, so choosing Kata does not give up Firecracker. The
+hypervisor backend (Firecracker / Cloud Hypervisor / QEMU) is deliberately left
+open — see [Open questions](#open-questions), since it depends on whether user
+containers ever need persistent storage.
+
+## The broker stays, and its shape does not change
+
+`gateway-pool.sh:115-127` runs the `gw-pool-*` containers **without**
+`/var/run/docker.sock`. The gateway — the tenant-facing process, holding user
+JWTs and running the reducer over user events — has no Docker access at all today.
+That is a property to preserve, not an oversight to fix.
+
+So: a broker daemon on the platform host, with a closed vocabulary.
+
+```
+gateway  ──►  broker  ──►  container runtime
+         POST /containers
+         { image_ref, settings_b64, limits, org_id }
+```
+
+The broker never accepts a command line, and never accepts a bare image URI from
+the gateway. It resolves `image_ref` against the persisted per-org catalog and
+composes the run itself. Exposing the Docker socket is the shortest path and the
+worst one: it is root-equivalent on the host. The Docker API over TLS is the same
+capability with authentication bolted on — it authenticates the caller, it does
+not reduce what the caller can do.
+
+## Code consequences
+
+Five concrete things, in the order they bite.
+
+### 1. The catalog leaks across tenants before it holds tenant data
+
+`servers-reducer.ts:117-132` (`_initProject`) syncs `imageRegistry.getAll()` into
+every project's shared state. The registry is one global in-memory `Map`
+(`image-registry.ts:4`).
+
+The moment images become per-organization, every project receives every
+organization's catalog. **The registry must become org-scoped before images become
+tenant data** — this is a prerequisite, not a follow-up.
+
+### 2. `--device /dev/net/tun` does not survive the move
+
+`runner.ts:86` passes `--cap-add=NET_ADMIN --device /dev/net/tun` because the
+container runs an OpenVPN client to reach its gateway (the hosting token carries
+`org:<id>:connect-vpn` for exactly this — `servers-reducer.ts:674`).
+
+`--device` is host device passthrough. Under a microVM runtime the guest has its
+own kernel, so tun must come from the guest image instead. `NET_ADMIN` stays and
+becomes _safer_ — it is now confined to a guest kernel rather than shared with the
+host. **To verify on the chosen backend before relying on it.**
+
+### 3. Digest pinning is currently dead code
+
+`TContainerImageDefinition.imageSha256` exists (`container-image.ts:6`) and
+jupyter fills it (`jupyter/src/index.ts:26,43`), but `generateCommand` builds
+`${imageUri}:${imageTag}` and ignores it.
+
+On the user's laptop, a mutable tag is a shrug. On shared infrastructure it means
+the image that ran yesterday is not necessarily the one that runs today. With
+tenant-supplied images, pinning by digest stops being optional.
+
+### 4. Nothing caps anything
+
+No CPU, memory, disk or PID limit is set anywhere, and nothing reaps. A microVM
+needs a fixed memory allocation at boot, so limits stop being a policy knob and
+become a required input to the broker.
+
+The reaping signal already exists: `last_watchdog_at` / `last_activity`
+(`servers-types.ts:26-28`) are populated, and `_periodic`
+(`servers-reducer.ts:483-508`) already runs and prunes services silent for 30s.
+
+### 5. Registry credentials are new secret material
+
+Pulling from an organization's private registry needs per-org credentials. These
+must never reach collab shared state — the same rule, for the same reason, as
+`auth_guard_client_secret`, whose handling is already documented at
+`runner.ts:12-19` and `servers-types.ts:37-44`. They travel gateway → broker and
+stop there.
+
+## Isolation is not abuse prevention
+
+Kata protects the platform's kernel from the workload. It does nothing about what
+the workload does _outward_.
+
+A tenant-supplied image with unrestricted egress on shared infrastructure is a
+mining rig, a spam relay, or a scanner running from the platform's IP addresses.
+Nothing today constrains egress, because nothing needed to when the container ran
+on the user's own machine and their own connection.
+
+This is a separate control from isolation and needs its own answer — egress
+policy, per-org bandwidth accounting, or both.
+
+## Staged plan
+
+**Stage 0 — org-scoped catalog.** _Done._ `ContainerImageRegistry` now has two
+tiers: built-in images registered in code, and per-organization images. `get()`
+and `getAll()` take an organization id; without one, only built-ins resolve. A
+built-in id cannot be shadowed by a tenant entry, and a tenant entry without a
+digest is refused at registration. `_initProject` scopes to
+`gateway.organization_id`. `imageReference()` emits `repo:tag@sha256:…`.
+
+**Stage 1 — platform runner and broker.** _Written._ `PlatformRunnerBackend`
+registers beside `local`, but only where a broker is configured; the live set is
+published through a new `user-containers:runners` shared map so the UI cannot
+offer a mode the deployment lacks. `packages/app-container-broker` is the
+host-side service. `infra/ansible/roles/kata` and `roles/containerbroker`
+provision it, gated on `holistix_install_cloud_runner` (default false).
+
+**Stage 2 — open the catalog.** Not started. Org-supplied images need a
+persistence layer in Ganymede, per-org registry credentials, a pull policy and a
+scanning decision. The broker already asks Ganymede for
+`/internal/organizations/:id/images/:imageId` — that endpoint does not exist yet.
+
+**Stage 3 — limits and lifecycle.** Limits done: the broker clamps every request
+to host ceilings and refuses one carrying no limits at all. Reaping not started —
+the signal exists (`last_watchdog_at`, `_periodic`) but nothing calls the
+broker's `DELETE /containers/:id`.
+
+Stage 1 deliberately runs a _known_ image, so that a failure there is a failure of
+the runtime and not of the image.
+
+## What is not verified
+
+Written and unit-tested is not the same as working. Specifically:
+
+- **No container has been started.** No VM, no KVM and no Kata in this
+  workspace. The broker's argv construction is tested; whether Docker accepts
+  that argv with `--runtime=kata` is not.
+- **The guest tun assumption.** The design holds that tun comes from the Kata
+  guest kernel rather than a host `/dev/net/tun` passthrough, and the broker
+  refuses `--device` on that basis. `roles/kata` ends with a task that checks it
+  on a real host. That task has never run.
+- **The two jupyter digests.** `imageSha256` was dead code until now.
+  `holistixforge/jupyterlab-minimal` and `-pytorch` are private on Docker Hub,
+  so the recorded digests could not be checked from here. If they are stale the
+  local runner will now fail the pull rather than silently start a different
+  image — intended, but it is a behaviour change to the existing local mode and
+  is worth confirming before release.
+- **The Kata package name.** `roles/kata` installs `kata-containers` from apt.
+  On Ubuntu 24.04 it may be named differently or only available from the
+  upstream release tarball; the role asserts the binary exists rather than
+  trusting the install.
+
+## What does not change
+
+Worth stating, because it is what makes the two modes interchangeable:
+
+- The `SETTINGS` payload (`runner.ts:42-66`)
+- VPN attachment to the gateway
+- Per-service FQDN routing — `_updateNginx` (`servers-reducer.ts:463-479`) routes
+  `FQDN → container.ip:port` where `ip` is the **VPN** address the container
+  publishes itself. Nothing in the routing path assumes where the container runs.
+
+## Open questions
+
+**Hypervisor backend.** Firecracker, Cloud Hypervisor or QEMU under Kata. This
+depends on persistent storage: `generateCommand` emits no `-v`, so user containers
+are ephemeral today. If Jupyter notebooks must survive a restart, the volume story
+comes first, and it constrains the backend — filesystem sharing support differs
+between them.
+
+**Egress policy.** See [above](#isolation-is-not-abuse-prevention).
+
+**Image scanning.** Whether a tenant image is admitted on push, on first run, or
+not at all.

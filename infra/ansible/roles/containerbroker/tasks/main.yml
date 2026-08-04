@@ -1,0 +1,86 @@
+---
+# The container broker.
+#
+# It exists so that app-gateway never needs Docker access. The gateway is the
+# tenant-facing process — it holds user JWTs and runs a reducer over user
+# events — and a Docker socket in it is root-equivalent on this host. The pool
+# containers run without one today (scripts/local-dev/gateway-pool.sh); this
+# role is what keeps that true while still letting a user start a service on
+# the platform.
+
+- name: Build the container broker
+  ansible.builtin.command:
+    cmd: npx nx build @holistix-forge/app-container-broker
+    chdir: '{{ holistix_workspace }}'
+  environment:
+    # The Nx daemon caches a stale view of the workspace on this VM and will
+    # happily rebuild from sources that are no longer there.
+    NX_DAEMON: 'false'
+  register: broker_build
+  changed_when: "'Successfully ran target build' in broker_build.stdout"
+
+- name: Generate a broker token
+  # The gateway authenticates to the broker with this. Generated on the host
+  # and never checked in — a token in the repository is a token in every
+  # clone of it.
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      umask 077
+      printf 'BROKER_TOKEN=%s\nGANYMEDE_INTERNAL_TOKEN=%s\n' \
+        "$(openssl rand -hex 32)" \
+        "$(openssl rand -hex 32)" \
+        > {{ holistix_broker_secrets_file }}
+    executable: /bin/bash
+    creates: '{{ holistix_broker_secrets_file }}'
+
+- name: Lock down the secrets file
+  ansible.builtin.file:
+    path: '{{ holistix_broker_secrets_file }}'
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Install the broker service unit
+  ansible.builtin.template:
+    src: holistix-container-broker.service.j2
+    dest: /etc/systemd/system/holistix-container-broker.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart container broker
+
+- name: Enable and start the broker
+  ansible.builtin.systemd_service:
+    name: holistix-container-broker
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Wait for the broker to answer
+  ansible.builtin.uri:
+    url: >-
+      http://{{ holistix_broker_bind }}:{{ holistix_broker_port }}/health
+    status_code: 200
+  register: broker_health
+  retries: 10
+  delay: 2
+  until: broker_health is succeeded
+
+- name: Confirm the broker reports the expected runtime
+  # A broker answering with runc means containers are not isolated, and the
+  # health check passing is worse than it failing.
+  ansible.builtin.assert:
+    that: broker_health.json.runtime == holistix_broker_runtime
+    fail_msg: >-
+      Broker reports runtime {{ broker_health.json.runtime }},
+      expected {{ holistix_broker_runtime }}.
+
+- name: Show how gateways should reach the broker
+  ansible.builtin.debug:
+    msg: >-
+      Container broker up on {{ holistix_broker_bind }}:{{ holistix_broker_port }}
+      (runtime {{ holistix_broker_runtime }}).
+      Gateway containers need CONTAINER_BROKER_URL=http://{{ holistix_docker_host_ip
+      | default('172.17.0.1') }}:{{ holistix_broker_port }} and the BROKER_TOKEN
+      from {{ holistix_broker_secrets_file }}.

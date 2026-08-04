@@ -113,9 +113,13 @@ export class UserContainersReducer extends ReducerWithCollab<
       `project:init called for project ${event.project_id}, current images size: ${currentSize}`
     );
 
-    // Get all images from the in-memory registry
+    // Only this organization's catalogue: built-in images plus whatever this
+    // org supplied. Passing no organization here would sync every tenant's
+    // images into every project's shared state, which is replicated to every
+    // client in the project.
+    const organizationId = this.depsExports.gateway.organization_id;
     const allImages =
-      this.depsExports['user-containers'].imageRegistry.getAll();
+      this.depsExports['user-containers'].imageRegistry.getAll(organizationId);
 
     let synced = 0;
     for (const img of allImages) {
@@ -135,6 +139,24 @@ export class UserContainersReducer extends ReducerWithCollab<
       EPriority.Info,
       'USER_CONTAINERS_INIT',
       `Synced ${synced} image(s) to shared map for project ${event.project_id} (${allImages.length} total in registry)`
+    );
+
+    // Which runners this deployment actually offers. The platform runner only
+    // registers where a container broker is configured, so the UI has no way to
+    // know the set without being told.
+    const runnersMap = collab.sharedData['user-containers:runners'];
+    const runnerIds = this.depsExports['user-containers'].listRunnerIds();
+    for (const runnerId of runnerIds) {
+      if (runnersMap.get(runnerId)) continue;
+      runnersMap.set(runnerId, { runnerId });
+    }
+
+    log(
+      EPriority.Info,
+      'USER_CONTAINERS_INIT',
+      `Available runners for project ${event.project_id}: ${runnerIds.join(
+        ', '
+      )}`
     );
   }
 
@@ -215,9 +237,12 @@ export class UserContainersReducer extends ReducerWithCollab<
       ]);
     }
 
-    // Get image definition from registry
+    // Get image definition from registry, scoped to this organization: a
+    // built-in image, or one this org supplied. Never another tenant's.
+    const organizationId = this.depsExports.gateway.organization_id;
     const imageDef = this.depsExports['user-containers'].imageRegistry.get(
-      event.imageId
+      event.imageId,
+      organizationId
     );
 
     if (!imageDef) {
@@ -228,7 +253,6 @@ export class UserContainersReducer extends ReducerWithCollab<
     const containerId = this.generateContainerId();
 
     // Register auth guard OAuth client in Ganymede (per-container)
-    const organizationId = this.depsExports.gateway.organization_id;
     const gatewayFqdn = this.depsExports.gateway.gatewayFQDN;
     const domain = gatewayFqdn.split('.').slice(1).join('.') || 'domain.local';
     let authGuardConfig: { client_id: string } | undefined;

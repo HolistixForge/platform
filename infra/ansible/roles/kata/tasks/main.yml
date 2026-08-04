@@ -1,0 +1,99 @@
+---
+# Kata Containers — one guest kernel per container.
+#
+# Why Kata and not Firecracker directly: Kata is an OCI runtime, so a container
+# starts with `docker run --runtime=kata` and the broker's argv barely changes.
+# Raw Firecracker means building a VMM orchestrator — rootfs assembly, guest
+# kernel, jailer, vsock, CNI, lifecycle — which is a reimplementation of what
+# Kata already is. Kata can run *on* Firecracker, so this gives that up nothing.
+#
+# Why at all: organizations supply their own container images. A tenant image
+# can be hostile at startup, before any user interacts with it, and namespaces
+# alone put it on the same kernel as every other tenant.
+
+- name: Fail early where hardware virtualisation is unavailable
+  # Kata boots a real VM per container. Without KVM it either refuses to start
+  # or silently falls back — and a silent fallback is every tenant back on a
+  # shared kernel, which is the one outcome this role exists to prevent.
+  ansible.builtin.stat:
+    path: /dev/kvm
+  register: kata_kvm
+  failed_when: not kata_kvm.stat.exists
+
+- name: Install Kata Containers
+  ansible.builtin.apt:
+    update_cache: true
+    name:
+      - kata-containers
+    state: present
+
+- name: Locate the Kata runtime binary
+  ansible.builtin.stat:
+    path: /usr/bin/kata-runtime
+  register: kata_runtime_binary
+
+- name: Fail when the runtime binary is missing
+  ansible.builtin.assert:
+    that: kata_runtime_binary.stat.exists
+    fail_msg: >-
+      kata-runtime was not installed. On this distribution the package may be
+      named differently or only available from the Kata release tarball —
+      see https://github.com/kata-containers/kata-containers/releases
+
+# Registering the runtime with Docker rather than replacing the default: the
+# gateway pool containers themselves keep running under runc. They are ours,
+# they hold no tenant code, and booting a VM per gateway would buy nothing.
+- name: Register the Kata runtime with Docker
+  ansible.builtin.copy:
+    dest: /etc/docker/daemon.d-kata.json
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      {
+        "runtimes": {
+          "kata": {
+            "path": "/usr/bin/kata-runtime"
+          }
+        }
+      }
+  register: kata_runtime_config
+
+# /etc/docker/daemon.json is written by the docker role, which owns the DNS
+# settings. Merging here rather than templating the whole file keeps the two
+# roles from overwriting each other.
+- name: Merge the Kata runtime into the Docker daemon configuration
+  ansible.builtin.shell:
+    cmd: >-
+      python3 -c "
+      import json;
+      base=json.load(open('/etc/docker/daemon.json'));
+      extra=json.load(open('/etc/docker/daemon.d-kata.json'));
+      base.update(extra);
+      json.dump(base, open('/etc/docker/daemon.json','w'), indent=2)"
+  changed_when: kata_runtime_config is changed
+  when: kata_runtime_config is changed
+
+- name: Restart Docker to pick up the runtime
+  ansible.builtin.systemd_service:
+    name: docker
+    state: restarted
+  when: kata_runtime_config is changed
+
+- name: Verify Docker knows the Kata runtime
+  ansible.builtin.command: docker info --format '{{ "{{" }}.Runtimes{{ "}}" }}'
+  register: kata_docker_runtimes
+  changed_when: false
+  failed_when: "'kata' not in kata_docker_runtimes.stdout"
+
+# The user container runs an OpenVPN client to reach its gateway, so the guest
+# needs tun. Under Kata that comes from the guest kernel, not from a host
+# device passthrough — the broker refuses `--device` for exactly this reason.
+- name: Confirm the guest image provides tun
+  ansible.builtin.command: >-
+    docker run --rm --runtime=kata --cap-add=NET_ADMIN
+    -- busybox:latest ls /dev/net/tun
+  register: kata_guest_tun
+  changed_when: false
+  failed_when: kata_guest_tun.rc != 0
+  tags: [kata_verify]

@@ -7,6 +7,8 @@ import type { TGatewayExports } from '@holistix-forge/gateway';
 import type { TContainerImageDefinition } from './lib/container-image';
 import type { ContainerRunner } from './lib/runner';
 import { localRunnerBackend } from './lib/local-runner';
+import { platformRunnerBackend } from './lib/platform-runner';
+import { log, EPriority } from '@holistix-forge/log';
 
 //
 
@@ -17,7 +19,20 @@ export type TUserContainersExports = {
     containerRunner: ContainerRunner
   ) => void;
   getRunner: (id: string) => ContainerRunner | undefined;
+  listRunnerIds: () => string[];
 };
+
+/**
+ * Whether this gateway can run containers on the platform.
+ *
+ * Absent broker configuration the runner would register and then fail at the
+ * first start, which reads to the user as a broken button rather than as a
+ * mode their deployment does not offer. Better to not offer it.
+ */
+const platformRunnerConfigured = () =>
+  Boolean(
+    process.env.CONTAINER_BROKER_URL && process.env.CONTAINER_BROKER_TOKEN
+  );
 
 type TRequired = {
   collab: TCollabBackendExports;
@@ -67,6 +82,11 @@ export const moduleBackend: TModule<TRequired, TUserContainersExports> = {
       'user-containers',
       'images'
     );
+    depsExports.collab.registry.registerSharedData(
+      'map',
+      'user-containers',
+      'runners'
+    );
 
     const registry = new ContainerImageRegistry();
 
@@ -96,11 +116,21 @@ export const moduleBackend: TModule<TRequired, TUserContainersExports> = {
 
     registerContainerRunner('local', localRunnerBackend);
 
+    if (platformRunnerConfigured()) {
+      registerContainerRunner('platform', platformRunnerBackend);
+      log(
+        EPriority.Info,
+        'USER_CONTAINERS',
+        'Platform runner registered (container broker configured)'
+      );
+    }
+
     // Export registry and images
     moduleExports({
       imageRegistry: registry,
       registerContainerRunner,
       getRunner: (id: string) => containerRunners.get(id),
+      listRunnerIds: () => Array.from(containerRunners.keys()),
     });
 
     // Load reducers
