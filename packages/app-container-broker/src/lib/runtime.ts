@@ -2,6 +2,7 @@ import { execFile } from 'node:child_process';
 import { TStartRequest, TBrokerConfig, TResolvedImage } from './types';
 import { buildRunArgs } from './run-args';
 import { pullImage } from './pull';
+import { ensureNetwork, privateNetworkName } from './networks';
 
 /**
  * How a container is actually started.
@@ -54,6 +55,12 @@ export const startContainer = async (
   config: TBrokerConfig
 ): Promise<string> => {
   await pullImage(exec, image);
+  // The container's own network has to exist before the run references it.
+  await ensureNetwork(
+    exec,
+    privateNetworkName(request.user_container_id),
+    request.project_id
+  );
   return exec(buildRunArgs(request, image, config));
 };
 

@@ -257,16 +257,52 @@ For the same reason each pull gets its own `--config` directory rather than a
 shared `docker login`: one config for the whole host means two concurrent pulls
 race, and the last writer lends its access to the other.
 
+## Networks, kept independent of images
+
+An image entry never names a network and a network never names an image. A
+network references _running containers_, so two services can be wired together
+long after both started — and a service that does not exist yet can be attached
+when it does.
+
+The floor is isolation, not connectivity. Every container starts on a private
+network of its own: it reaches the outside (its gateway over VPN, a registry)
+and reaches no sibling. Two services talk because someone attached both to a
+shared network, which is a single gesture on a whiteboard — an edge between two
+nodes.
+
+That floor also closes a hole that predates the feature. Without `--network`,
+Docker puts every container on the default bridge, where every container on the
+host reaches every other by IP — **including another tenant's**. Verified in the
+dev VM before the fix: a container labelled `project-B` fetched a page from one
+labelled `project-A`. Kata would not have helped; it isolates the kernel, not
+the L2 segment.
+
+Broker surface, deliberately separate from `/containers`:
+
+```
+POST   /networks                              create, scoped to a project
+POST   /networks/:name/members                attach a running container
+DELETE /networks/:name/members/:container     detach
+DELETE /networks/:name                        remove (Docker refuses if in use)
+```
+
+Attaching reads the project label off _both_ the network and the container,
+from the runtime rather than from the request. That single check is what stops
+a network from becoming a way across the tenant boundary; a cross-project
+attach answers 403.
+
 ## What has been verified on a real runtime
 
 `scripts/local-dev/verify-container-broker.sh` runs the whole broker path
 against a live Docker daemon and reads the started container's privileges back
-out of Docker rather than trusting the argv we believe we sent. 26 checks, all
+out of Docker rather than trusting the argv we believe we sent. 31 checks, all
 passing in the dev VM: authentication, every refusal, and then a running
 container with `CapDrop=[ALL]`, no host devices, the cpu/memory/pids limits
 applied, swap capped at the memory limit, the digest we asked for, NET_ADMIN
 usable, SYS_ADMIN denied, the `SETTINGS` payload intact, and a real cgroup
-`memory.max`.
+`memory.max`. The last five cover networks: two services isolated by default, a
+network created on its own, both attached and then able to reach each other
+**without a restart**, and a container from another project refused.
 
 This is where the capability policy was found to be wrong. `--cap-drop=ALL`
 with only NET_ADMIN added back is the appealing design and it does not run

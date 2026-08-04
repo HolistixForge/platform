@@ -4,6 +4,7 @@ import {
   TResolvedImage,
   BASELINE_CAPABILITIES,
 } from './types';
+import { privateNetworkName } from './networks';
 
 /**
  * Build the argv for one container start.
@@ -42,6 +43,12 @@ export const buildRunArgs = (
     `holistix.project=${request.project_id}`,
     '--label',
     `holistix.user_container=${request.user_container_id}`,
+    // A private network of its own, never the default bridge. On the default
+    // bridge every container on the host reaches every other by IP, including
+    // another tenant's — verified, not theorised. Connectivity between two
+    // services is then something someone asks for, by attaching both to a
+    // shared network after the fact.
+    `--network=${privateNetworkName(request.user_container_id)}`,
   ];
 
   // Drop everything, then add back the baseline a conventional entrypoint

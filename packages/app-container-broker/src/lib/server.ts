@@ -10,6 +10,14 @@ import { TBrokerConfig, TStartResponse } from './types';
 import { validateStartRequest, InvalidRequest } from './validate';
 import { TCatalogueSource, resolveImage, UnknownImage } from './catalogue';
 import { TRuntimeExec, startContainer, removeContainer } from './runtime';
+import {
+  ensureNetwork,
+  attachToNetwork,
+  detachFromNetwork,
+  removeNetwork,
+  sharedNetworkName,
+  NetworkError,
+} from './networks';
 
 const MAX_BODY_BYTES = 64 * 1024;
 
@@ -94,6 +102,37 @@ export const createBrokerServer = (deps: TBrokerDeps): Server => {
       return;
     }
 
+    // Networks, handled apart from containers on purpose: a network is created
+    // and populated independently of any image, and a container can be attached
+    // long after it started.
+    if (req.method === 'POST' && req.url === '/networks') {
+      await handleNetworkCreate(req, res, exec);
+      return;
+    }
+
+    const member = req.url?.match(
+      /^\/networks\/([A-Za-z0-9_.-]+)\/members(?:\/([A-Za-z0-9_.-]+))?$/
+    );
+    if (member && (req.method === 'POST' || req.method === 'DELETE')) {
+      await handleNetworkMember(req, res, exec, member[1], member[2]);
+      return;
+    }
+
+    const dropNetwork = req.url?.match(/^\/networks\/([A-Za-z0-9_.-]+)$/);
+    if (req.method === 'DELETE' && dropNetwork) {
+      try {
+        await removeNetwork(exec, dropNetwork[1]);
+        json(res, 200, { removed: dropNetwork[1] });
+      } catch (e) {
+        // Docker refuses while containers are still attached, which is what we
+        // want — pulling a network out from under a running service would break
+        // it silently.
+        log(EPriority.Warning, 'BROKER', `Network remove failed: ${String(e)}`);
+        json(res, 409, { error: 'could not remove the network' });
+      }
+      return;
+    }
+
     const remove = req.url?.match(/^\/containers\/([A-Za-z0-9_.-]+)$/);
     if (req.method === 'DELETE' && remove) {
       try {
@@ -157,5 +196,82 @@ const handleStart = async (
   } catch (e) {
     log(EPriority.Error, 'BROKER', `Start failed: ${String(e)}`);
     json(res, 500, { error: 'start failed' });
+  }
+};
+
+const readJson = async (
+  req: IncomingMessage
+): Promise<Record<string, unknown>> => {
+  const raw = await readBody(req);
+  const parsed = JSON.parse(raw);
+  if (typeof parsed !== 'object' || parsed === null) {
+    throw new InvalidRequest('body must be an object');
+  }
+  return parsed as Record<string, unknown>;
+};
+
+const handleNetworkCreate = async (
+  req: IncomingMessage,
+  res: ServerResponse,
+  exec: TRuntimeExec
+): Promise<void> => {
+  try {
+    const body = await readJson(req);
+    const projectId = String(body.project_id ?? '');
+    const name = String(body.name ?? '');
+    const networkName = sharedNetworkName(projectId, name);
+
+    await ensureNetwork(exec, networkName, projectId);
+
+    log(EPriority.Info, 'BROKER', `Network ${networkName} ready`);
+    json(res, 201, { network: networkName, project_id: projectId });
+  } catch (e) {
+    const message =
+      e instanceof NetworkError || e instanceof InvalidRequest
+        ? e.message
+        : 'could not create the network';
+    log(EPriority.Warning, 'BROKER', `Network create refused: ${message}`);
+    json(res, e instanceof SyntaxError ? 400 : 400, { error: message });
+  }
+};
+
+const handleNetworkMember = async (
+  req: IncomingMessage,
+  res: ServerResponse,
+  exec: TRuntimeExec,
+  networkName: string,
+  containerFromPath: string | undefined
+): Promise<void> => {
+  try {
+    const containerId =
+      containerFromPath ?? String((await readJson(req)).container_id ?? '');
+    if (!containerId) {
+      throw new InvalidRequest('container_id is required');
+    }
+
+    if (req.method === 'POST') {
+      await attachToNetwork(exec, networkName, containerId);
+      log(
+        EPriority.Info,
+        'BROKER',
+        `Attached ${containerId} to ${networkName}`
+      );
+      json(res, 200, { attached: containerId, network: networkName });
+      return;
+    }
+
+    await detachFromNetwork(exec, networkName, containerId);
+    json(res, 200, { detached: containerId, network: networkName });
+  } catch (e) {
+    if (e instanceof NetworkError) {
+      // A cross-project attach is the one refusal here that is a security
+      // decision rather than a malformed request, so it answers 403.
+      const crossProject = e.message.includes('belongs to project');
+      log(EPriority.Warning, 'BROKER', `Network attach refused: ${e.message}`);
+      json(res, crossProject ? 403 : 400, { error: e.message });
+      return;
+    }
+    log(EPriority.Error, 'BROKER', `Network member failed: ${String(e)}`);
+    json(res, 500, { error: 'could not change network membership' });
   }
 };

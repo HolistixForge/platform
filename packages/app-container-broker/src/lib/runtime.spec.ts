@@ -47,15 +47,37 @@ const recorder = () => {
   };
 };
 
+/** The single `run` argv from a recorded sequence. */
+const runCall = (calls: string[][]) => calls.find((c) => c[0] === 'run');
+
 describe('startContainer', () => {
-  it('pulls first, then runs', async () => {
+  it('pulls, prepares the network, then runs — in that order', async () => {
+    // The container's own network has to exist before the run references it,
+    // and the image has to be local before the run is told never to pull.
     const { calls, exec } = recorder();
 
     await startContainer(exec, request, image, config);
 
-    expect(calls).toHaveLength(2);
-    expect(calls[0]).toContain('pull');
-    expect(calls[1][0]).toBe('run');
+    // A credentialed pull leads with --config, so match on content rather than
+    // on the first argument.
+    const at = (p: (c: string[]) => boolean) => calls.findIndex(p);
+    const pull = at((c) => c.includes('pull'));
+    const network = at((c) => c[0] === 'network');
+    const run = at((c) => c[0] === 'run');
+
+    expect(pull).toBeGreaterThanOrEqual(0);
+    expect(network).toBeGreaterThan(pull);
+    expect(run).toBeGreaterThan(network);
+  });
+
+  it('puts the container on its own network, never the default bridge', async () => {
+    // On the default bridge every container on the host reaches every other by
+    // IP, including another tenant's.
+    const { calls, exec } = recorder();
+
+    await startContainer(exec, request, image, config);
+
+    expect(runCall(calls)).toContain('--network=holistix_uc_uc_abc12345');
   });
 
   it('re-authenticates on every start, cached or not', async () => {
@@ -80,7 +102,7 @@ describe('startContainer', () => {
 
     await startContainer(exec, request, image, config);
 
-    expect(calls[1]).toContain('--pull=never');
+    expect(runCall(calls)).toContain('--pull=never');
   });
 
   it('keeps the registry credential out of the run', async () => {
@@ -88,8 +110,8 @@ describe('startContainer', () => {
 
     await startContainer(exec, request, image, config);
 
-    expect(calls[1].join(' ')).not.toContain('project-scoped-token');
-    expect(calls[1]).not.toContain('--config');
+    expect(runCall(calls)?.join(' ')).not.toContain('project-scoped-token');
+    expect(runCall(calls)).not.toContain('--config');
   });
 
   it('does not run when the pull fails', async () => {

@@ -166,6 +166,48 @@ check "the memory limit is real inside the container" \
   "$(docker exec "$NAME" sh -c 'cat /sys/fs/cgroup/memory.max' 2>/dev/null)" "268435456"
 
 echo
+echo "Network isolation, and wiring services after the fact"
+# A second service in the same project, started independently.
+NAME2="${NAME}_peer"
+docker rm -f "$NAME2" >/dev/null 2>&1
+post2=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$B/containers" \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d "$(req "{\"name\":\"$NAME2\",\"user_container_id\":\"uc_verify02\"}")")
+check "a second service starts" "$post2" "201"
+sleep 2
+
+IP1=$(docker inspect "$NAME" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
+docker exec "$NAME2" sh -c "wget -q -T 3 -O /dev/null http://$IP1/" >/dev/null 2>&1 \
+  && ko "two services are isolated by default" "the second reached the first" \
+  || ok "two services are isolated by default"
+
+NET=$(curl -s -X POST "$B/networks" -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"project_id":"project-1","name":"link"}' \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin).get("network",""))')
+check "a network can be created on its own" "$NET" "holistix_net_project-1_link"
+
+for c in "$NAME" "$NAME2"; do
+  curl -s -o /dev/null -X POST "$B/networks/$NET/members" \
+    -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+    -d "{\"container_id\":\"$c\"}"
+done
+sleep 1
+IP1_ON_NET=$(docker inspect "$NAME" --format "{{(index .NetworkSettings.Networks \"$NET\").IPAddress}}" 2>/dev/null)
+docker exec "$NAME2" sh -c "wget -q -T 3 -O /dev/null http://$IP1_ON_NET/" >/dev/null 2>&1 \
+  && ok "attaching both to a network links them, with no restart" \
+  || ko "attaching both to a network links them" "still unreachable"
+
+# A container from another project must not be attachable to this network.
+docker rm -f netcross >/dev/null 2>&1
+docker run -d --name netcross --label holistix.project=other-project nginx:alpine >/dev/null 2>&1
+cross=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$B/networks/$NET/members" \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"container_id":"netcross"}')
+check "a container from another project is refused" "$cross" "403"
+docker rm -f netcross "$NAME2" >/dev/null 2>&1
+docker network rm "$NET" >/dev/null 2>&1
+
+echo
 echo "============================================="
 printf "passed: ${GREEN}%d${NC}   failed: ${RED}%d${NC}\n" "$pass" "$fail"
 if [ "$BROKER_RUNTIME" = "runc" ]; then
