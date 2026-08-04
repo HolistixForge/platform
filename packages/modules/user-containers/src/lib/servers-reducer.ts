@@ -478,13 +478,13 @@ export class UserContainersReducer extends ReducerWithCollab<
         ip: containerIp || s.ip, // Update IP from request
       });
 
-      await this._updateNginx(sduc);
+      await this._updateNginx(requestData.project_id ?? '', sduc);
     }
   }
 
   //
 
-  async _updateNginx(sduc: SharedMap<TUserContainer>) {
+  async _updateNginx(projectId: string, sduc: SharedMap<TUserContainer>) {
     // With distinct FQDNs, we route: uc-{uuid}.org-{uuid}.domain.local → VPN IP:port
     // Each container's httpServices contain the FQDN in "host" field
     const services: { host: string; ip: string; port: number }[] = [];
@@ -499,7 +499,7 @@ export class UserContainersReducer extends ReducerWithCollab<
         });
       }
     });
-    this.depsExports.gateway.updateReverseProxy(services);
+    this.depsExports.gateway.updateReverseProxy(projectId, services);
   }
 
   //
@@ -528,7 +528,7 @@ export class UserContainersReducer extends ReducerWithCollab<
         });
       }
     });
-    this._updateNginx(sduc);
+    this._updateNginx(project_id, sduc);
   }
 
   //
@@ -585,7 +585,10 @@ export class UserContainersReducer extends ReducerWithCollab<
     collab.sharedData['user-containers:containers'].delete(containerId);
 
     // Update nginx to remove container services
-    await this._updateNginx(collab.sharedData['user-containers:containers']);
+    await this._updateNginx(
+      requestData.project_id ?? '',
+      collab.sharedData['user-containers:containers']
+    );
 
     // Delete graph node
     const id = userContainerNodeId(containerId);

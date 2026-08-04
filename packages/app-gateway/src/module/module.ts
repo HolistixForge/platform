@@ -105,16 +105,33 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
       description: 'Write permissions',
     });
 
+    // Last published services per project. The nginx config file belongs to the
+    // gateway, the callers belong to projects, and this is where the two meet.
+    const reverseProxyByProject = new Map<
+      string,
+      { host: string; ip: string; port: number }[]
+    >();
+
     const myExports: TGatewayExports = {
       toGanymede,
       toGanymedeInternal,
 
       updateReverseProxy: async (
+        projectId: string,
         services: { host: string; ip: string; port: number }[]
       ) => {
+        // The script rewrites the whole file, but callers only ever know about
+        // their own project. Holding the last state of each one and writing the
+        // union is what keeps two projects on the same gateway from erasing
+        // each other — before this, a project with no containers wiped every
+        // route on the gateway about 130ms after they were written, and the
+        // container was unreachable while running perfectly.
+        reverseProxyByProject.set(projectId, services);
+
         // Input format: fqdn ip port (one per line)
         // Each service has a distinct FQDN (uc-{uuid}.org-{uuid}.domain.local)
-        const config = services
+        const config = Array.from(reverseProxyByProject.values())
+          .flat()
           .map((s) => `${s.host} ${s.ip} ${s.port}\n`)
           .join('');
         log(EPriority.Info, 'GATEWAY', 'update-nginx-locations', config);

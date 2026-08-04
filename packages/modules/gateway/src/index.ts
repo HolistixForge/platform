@@ -30,7 +30,17 @@ export type TGatewayEnvironment = {
 export type TGatewayExports = {
   toGanymede: <T>(r: TMyfetchRequest) => Promise<T>;
   toGanymedeInternal: <T>(r: TMyfetchRequest) => Promise<T>;
+  /**
+   * Publish the services one project exposes.
+   *
+   * Takes a project id because the underlying config file is per **gateway**
+   * while callers reason per **project**. Without it, a gateway serving two
+   * projects has each one overwrite the other's routes — and a project with no
+   * containers wipes every route on the gateway a few milliseconds after they
+   * were written.
+   */
   updateReverseProxy: (
+    projectId: string,
     services: { host: string; ip: string; port: number }[]
   ) => Promise<void>;
   gatewayFQDN: string;
