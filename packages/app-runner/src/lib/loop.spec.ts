@@ -8,7 +8,7 @@ jest.mock('@holistix-forge/log', () => ({
   log: jest.fn(),
 }));
 
-import { run, runOnce } from './loop';
+import { defaultReconcile, run, runOnce } from './loop';
 import { TRunnerProject } from './projects';
 
 const credentials = {
@@ -216,5 +216,120 @@ describe('run', () => {
 
     // Assert - and without waiting out the interval
     await expect(loop).resolves.toBeUndefined();
+  });
+});
+
+//
+
+describe('defaultReconcile', () => {
+  const DIGEST =
+    '@sha256:0000000000000000000000000000000000000000000000000000000000000000';
+
+  const placement = (overrides: Record<string, unknown> = {}) => ({
+    machine_id: 'machine-1',
+    project_id: 'project-1',
+    user_container_id: 'container-1',
+    name: 'holistix_thing',
+    imageRef: `ghcr.io/acme/thing:v1${DIGEST}`,
+    settings: 'eyJ9',
+    capabilities: [],
+    devices: [],
+    extraHosts: [],
+    networks: [],
+    ...overrides,
+  });
+
+  const dockerCalls = () => {
+    const calls: string[][] = [];
+    return { calls, exec: async (args: string[]) => (calls.push(args), '') };
+  };
+
+  const gatewayServing = (placements: unknown[]) =>
+    (async (input: string) =>
+      String(input).includes('/placements')
+        ? json({ placements })
+        : json({})) as unknown as typeof fetch;
+
+  it('should start what the project placed on this machine', async () => {
+    // Arrange
+    const { calls, exec } = dockerCalls();
+
+    // Act
+    await defaultReconcile(
+      credentials,
+      exec,
+      gatewayServing([placement()])
+    )(project());
+
+    // Assert
+    const run = calls.find((c) => c[0] === 'run');
+    expect(run).toBeDefined();
+    expect(run).toContain('holistix.machine=machine-1');
+  });
+
+  it('should refuse a placement addressed to another machine', async () => {
+    // Arrange - the gateway filters by the machine in the token, and this
+    // checks it anyway: two parties, neither the other's authority
+    const { calls, exec } = dockerCalls();
+
+    // Act
+    await defaultReconcile(
+      credentials,
+      exec,
+      gatewayServing([placement({ machine_id: 'somebody-else' })])
+    )(project());
+
+    // Assert
+    expect(calls.find((c) => c[0] === 'run')).toBeUndefined();
+  });
+
+  it('should refuse an image that is not digest-pinned', async () => {
+    // Arrange - a bare tag means the platform-side resolution did not happen
+    const { calls, exec } = dockerCalls();
+
+    // Act
+    await defaultReconcile(
+      credentials,
+      exec,
+      gatewayServing([placement({ imageRef: 'ghcr.io/acme/thing:v1' })])
+    )(project());
+
+    // Assert
+    expect(calls.find((c) => c[0] === 'run')).toBeUndefined();
+  });
+
+  it('should keep going past one bad placement to the good ones', async () => {
+    // Arrange
+    const { calls, exec } = dockerCalls();
+
+    // Act
+    await defaultReconcile(
+      credentials,
+      exec,
+      gatewayServing([
+        placement({ machine_id: 'somebody-else' }),
+        placement({ user_container_id: 'container-2', name: 'good' }),
+      ])
+    )(project());
+
+    // Assert - one misaddressed row must not stop the rest converging
+    const run = calls.find((c) => c[0] === 'run');
+    expect(run).toContain('holistix.user_container_id=container-2');
+  });
+
+  it('should refuse a placement for a project this pass is not about', async () => {
+    // Arrange - the token names one project; a row naming another has no
+    // business being acted on under it
+    const { calls, exec } = dockerCalls();
+
+    // Act
+    await defaultReconcile(
+      credentials,
+      exec,
+      gatewayServing([placement({ project_id: 'project-2' })])
+    )(project());
+
+    // Assert
+    expect(calls.find((c) => c[0] === 'run')).toBeUndefined();
   });
 });

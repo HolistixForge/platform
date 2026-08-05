@@ -8,7 +8,8 @@ import {
   writeCredentials,
 } from './lib/credentials';
 import { disconnect, enrol, whoAmI } from './lib/enrol';
-import { run, runOnce } from './lib/loop';
+import { dockerExec } from './lib/docker';
+import { defaultReconcile, run, runOnce } from './lib/loop';
 
 /**
  * The Holistix local runner — headless.
@@ -18,12 +19,10 @@ import { run, runOnce } from './lib/loop';
  * anything it had told someone to type. This is the other half — a worker
  * enrolled once, which the platform then drives.
  *
- * `login` enrols the machine, `run` keeps it announced and its services in
- * line. What is not wired yet is where placements come from: the containers
- * live in the project's collab state on the gateway, and there is no endpoint
- * that hands a machine its own. `run` therefore announces and reconciles
- * nothing — which is honest, because nothing has been placed on a named
- * machine either. `reconcileProject` is the seam that closes.
+ * `login` enrols the machine; `run` keeps it announced and its services in
+ * line. A pass asks Ganymede which projects this machine is in, announces
+ * itself to each project's gateway, asks that gateway what it placed here, and
+ * reconciles Docker against the answer.
  */
 
 const openInBrowser = async (url: string): Promise<void> => {
@@ -145,8 +144,10 @@ program
       return;
     }
 
+    const reconcileProject = defaultReconcile(credentials, dockerExec());
+
     if (options.once) {
-      const result = await runOnce({ credentials });
+      const result = await runOnce({ credentials, reconcileProject });
       if (result.revoked) {
         console.error('This machine is no longer enrolled.');
         process.exitCode = 1;
@@ -170,7 +171,12 @@ program
       process.once('SIGTERM', finish);
     });
 
-    await run({ credentials, intervalMs: options.interval, stop });
+    await run({
+      credentials,
+      reconcileProject,
+      intervalMs: options.interval,
+      stop,
+    });
   });
 
 program

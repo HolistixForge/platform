@@ -1,8 +1,12 @@
 import { EPriority, log } from '@holistix-forge/log';
 
 import { TRunnerCredentials } from './credentials';
+import { TDockerExec } from './docker';
 import { sendHeartbeats } from './heartbeat';
+import { assertPlacementIsForUs } from './placement';
+import { fetchPlacements } from './placements';
 import { fetchProjects, RunnerRevoked, TRunnerProject } from './projects';
+import { reconcile, runArgs } from './reconcile';
 
 /**
  * The worker loop: ask, announce, reconcile, wait.
@@ -25,8 +29,8 @@ export type TLoopDeps = {
   /**
    * What to do with the placements of one project.
    *
-   * Injected because it is the half that touches Docker, and because the
-   * placement feed itself is not built yet — see `runOnce` below.
+   * Injected because it is the half that touches Docker, and so a pass can be
+   * asserted on without one. `defaultReconcile` below is what the CLI passes.
    */
   reconcileProject?: (project: TRunnerProject) => Promise<void>;
   intervalMs?: number;
@@ -103,6 +107,63 @@ export const runOnce = async ({
     revoked: false,
   };
 };
+
+/**
+ * Ask a project what it placed here, refuse anything that is not for us, and
+ * bring Docker into line with what is left.
+ *
+ * The guard runs on every placement even though the gateway already filtered
+ * by the machine in the token. Two parties, and neither is the other's
+ * authority: a gateway holds one project's room, and this runs on someone's
+ * own machine. The check costs nothing and is the difference between trusting
+ * a filter and verifying it.
+ */
+export const defaultReconcile =
+  (credentials: TRunnerCredentials, exec: TDockerExec, fetchImpl = fetch) =>
+  async (project: TRunnerProject): Promise<void> => {
+    const remote = await fetchPlacements(project, fetchImpl);
+
+    const mine = remote.filter((placement) => {
+      try {
+        assertPlacementIsForUs(
+          placement,
+          credentials.runner_id,
+          new Set([project.project_id])
+        );
+        return true;
+      } catch (error) {
+        // Logged and dropped rather than failing the project: one malformed or
+        // misaddressed placement must not stop the others from converging.
+        log(
+          EPriority.Warning,
+          'RUNNER_LOOP',
+          `Refused a placement in ${project.project_name}: ${
+            (error as Error).message
+          }`
+        );
+        return false;
+      }
+    });
+
+    const actions = await reconcile(
+      exec,
+      project.project_id,
+      mine,
+      async (placement) =>
+        (await exec(runArgs(placement, credentials.runner_id))).trim()
+    );
+
+    const changed = actions.filter((a) => a.action !== 'keep');
+    if (changed.length) {
+      log(
+        EPriority.Info,
+        'RUNNER_LOOP',
+        `${project.project_name}: ${changed
+          .map((a) => `${a.action} ${a.user_container_id}`)
+          .join(', ')}`
+      );
+    }
+  };
 
 const wait = (ms: number, stop?: Promise<void>): Promise<void> =>
   new Promise((resolve) => {
