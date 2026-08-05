@@ -7,9 +7,13 @@
 # macOS engine, so the services a developer needs in front of them run in it.
 #
 #   ./ganymede-apple.sh up       Postgres + schema + Ganymede, from nothing
+#   ./ganymede-apple.sh seed     a project, its GitHub org link, two images
 #   ./ganymede-apple.sh status   where everything is listening
 #   ./ganymede-apple.sh logs     Ganymede's output
 #   ./ganymede-apple.sh down     remove both containers, keep the network
+#
+# `up` is destructive: the schema starts with `DROP SCHEMA public CASCADE`, so
+# every run empties the database. Re-run `seed` after it.
 #
 # What this is for: until now nothing in this repository had ever run against a
 # real Ganymede — the container broker's catalogue lookup, the runner's
@@ -148,6 +152,15 @@ stage_bundle() {
   local pgip
   pgip=$(ip_of "$PG")
 
+  # A GitHub App configured by hand survives a redeploy. Rewriting the env file
+  # from the template is what `up` does, and silently dropping these turned the
+  # image route back into a 503 that read like a regression in whatever had
+  # just been rebuilt.
+  local keep=""
+  if [ -f "${STATE}/ganymede.env" ]; then
+    keep=$(grep -E '^GITHUB_APP_(ID|SLUG|PRIVATE_KEY_B64)=' "${STATE}/ganymede.env" 2>/dev/null)
+  fi
+
   # Two of these are JSON and not strings, which is not obvious from their
   # names and costs a confusing 500 on the first request rather than a refusal
   # at startup: GANYMEDE_SERVER_BIND and ALLOWED_ORIGINS are both JSON.parse'd.
@@ -179,10 +192,18 @@ for name in ('PRIVATE', 'PUBLIC'):
 (d / 'ganymede.env').write_text('\n'.join(lines) + '\n')
 PY
 
+  if [ -n "$keep" ]; then
+    printf '%s\n' "$keep" >> "${STATE}/ganymede.env"
+    note "kept the GitHub App settings already staged here"
+  fi
+
   cat > "${STATE}/start.sh" <<'EOS'
 #!/bin/sh
 export JWT_PRIVATE_KEY=$(echo "$JWT_PRIVATE_KEY_B64" | base64 -d)
 export JWT_PUBLIC_KEY=$(echo "$JWT_PUBLIC_KEY_B64" | base64 -d)
+if [ -n "${GITHUB_APP_PRIVATE_KEY_B64:-}" ]; then
+  export GITHUB_APP_PRIVATE_KEY=$(echo "$GITHUB_APP_PRIVATE_KEY_B64" | base64 -d)
+fi
 exec node /app/main.js
 EOS
   chmod +x "${STATE}/start.sh"
@@ -206,6 +227,49 @@ up_ganymede() {
   ok "Ganymede up at http://${ip}:${PORT}"
 }
 
+
+# A catalog with something in it, and something that should be refused.
+#
+# The point is the second image. `resolveForBroker` checks that an entry lives
+# under the GitHub organization its project is bound to, *before* any call to
+# GitHub — so a project cannot have the platform fetch another organization's
+# private image on its behalf. That check had been in the design since stage 2
+# and had never once executed; this is what runs it.
+#
+#   acme:etl       ghcr.io/acme/etl        legal, project is bound to `acme`
+#   other:private  ghcr.io/otherorg/…      registered by the same project, and
+#                                          refused: 403, before any network call
+seed_catalogue() {
+  local sql="/tmp/holistix-seed-$$.sql"
+  cat > "$sql" <<'SQL'
+INSERT INTO users (user_id, type, username, email)
+VALUES ('11111111-1111-1111-1111-111111111111','local','apple-test','apple@test.local')
+ON CONFLICT DO NOTHING;
+INSERT INTO organizations (organization_id, owner_user_id, name)
+VALUES ('22222222-2222-2222-2222-222222222222','11111111-1111-1111-1111-111111111111','apple-org')
+ON CONFLICT DO NOTHING;
+INSERT INTO projects (project_id, organization_id, name, github_organization)
+VALUES ('33333333-3333-3333-3333-333333333333','22222222-2222-2222-2222-222222222222','apple-project','acme')
+ON CONFLICT (project_id) DO UPDATE SET github_organization = EXCLUDED.github_organization;
+INSERT INTO github_app_installations (installation_id, account_login)
+VALUES (987654,'acme') ON CONFLICT (installation_id) DO NOTHING;
+INSERT INTO project_container_images (project_id, image_id, image_name, image_uri, image_tag, image_sha256)
+VALUES ('33333333-3333-3333-3333-333333333333','acme:etl','Acme ETL','ghcr.io/acme/etl','1.4.0',repeat('a',64))
+ON CONFLICT (project_id, image_id) DO UPDATE SET image_uri = EXCLUDED.image_uri;
+INSERT INTO project_container_images (project_id, image_id, image_name, image_uri, image_tag, image_sha256)
+VALUES ('33333333-3333-3333-3333-333333333333','other:private','Someone elses','ghcr.io/otherorg/private','1.0.0',repeat('b',64))
+ON CONFLICT (project_id, image_id) DO UPDATE SET image_uri = EXCLUDED.image_uri;
+SQL
+  # Through a file, not a heredoc: `container exec` does not forward stdin, so
+  # a piped script is silently discarded and every statement quietly missing.
+  container cp "$sql" "${PG}:/tmp/seed.sql" >/dev/null 2>&1
+  container exec "$PG" psql -U postgres -d "$DB" -v ON_ERROR_STOP=1 -f /tmp/seed.sql >/dev/null 2>&1 \
+    && ok "catalog seeded — project 33333333-…, images acme:etl and other:private" \
+    || ko "seeding failed"
+  rm -f "$sql"
+  note "PROJECT=33333333-3333-3333-3333-333333333333"
+}
+
 case "${1:-up}" in
   up)
     echo "Postgres"
@@ -227,10 +291,11 @@ case "${1:-up}" in
     note "The internal routes the broker needs are gateway-token protected;"
     note "mint one with the RS256 key in ${STATE}/jwt.key."
     ;;
+  seed)   seed_catalogue ;;
   logs)   container logs "$GANY" ;;
   down)
     container delete --force "$GANY" "$PG" >/dev/null 2>&1
     ok "removed"
     ;;
-  *) echo "usage: $0 [up|status|logs|down]"; exit 1 ;;
+  *) echo "usage: $0 [up|seed|status|logs|down]"; exit 1 ;;
 esac

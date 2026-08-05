@@ -61,7 +61,10 @@
                       "format": "uuid",
                       "nullable": true
                     },
-                    "username": { "type": "string", "nullable": true },
+                    "username": {
+                      "type": "string",
+                      "nullable": true
+                    },
                     "email": {
                       "type": "string",
                       "format": "email",
@@ -72,7 +75,9 @@
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -536,7 +541,9 @@
         "summary": "List user's organizations",
         "tags": ["Organizations"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          }
         ],
         "responses": {
           "200": {
@@ -548,21 +555,27 @@
                   "properties": {
                     "organizations": {
                       "type": "array",
-                      "items": { "$ref": "#/components/schemas/organization" }
+                      "items": {
+                        "$ref": "#/components/schemas/organization"
+                      }
                     }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       },
       "post": {
         "summary": "Create organization",
         "tags": ["Organizations"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          }
         ],
         "requestBody": {
           "required": true,
@@ -571,7 +584,11 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "name": { "type": "string", "minLength": 1, "maxLength": 100 }
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  }
                 },
                 "required": ["name"]
               }
@@ -586,13 +603,18 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "organization_id": { "type": "string", "format": "uuid" }
+                    "organization_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -601,31 +623,47 @@
         "summary": "Get organization",
         "tags": ["Organizations"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
-          { "$ref": "#/components/parameters/org_id" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
+          {
+            "$ref": "#/components/parameters/org_id"
+          }
         ],
         "responses": {
           "200": {
             "description": "Organization details",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/organization" }
+                "schema": {
+                  "$ref": "#/components/schemas/organization"
+                }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       },
       "delete": {
         "summary": "Delete organization",
         "tags": ["Organizations"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
-          { "$ref": "#/components/parameters/org_id" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
+          {
+            "$ref": "#/components/parameters/org_id"
+          }
         ],
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -634,8 +672,12 @@
         "summary": "List organization members",
         "tags": ["Organizations"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
-          { "$ref": "#/components/parameters/org_id" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
+          {
+            "$ref": "#/components/parameters/org_id"
+          }
         ],
         "responses": {
           "200": {
@@ -656,15 +698,21 @@
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       },
       "post": {
         "summary": "Add organization member",
         "tags": ["Organizations"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
-          { "$ref": "#/components/parameters/org_id" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
+          {
+            "$ref": "#/components/parameters/org_id"
+          }
         ],
         "requestBody": {
           "required": true,
@@ -673,7 +721,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "user_id": { "type": "string", "format": "uuid" },
+                  "user_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
                   "role": {
                     "type": "string",
                     "enum": ["owner", "admin", "member"]
@@ -685,8 +736,12 @@
           }
         },
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -696,8 +751,12 @@
         "description": "Returns gateway hostname if gateway is active for the organization, null otherwise. Requires organization membership.",
         "tags": ["Organizations"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
-          { "$ref": "#/components/parameters/org_id" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
+          {
+            "$ref": "#/components/parameters/org_id"
+          }
         ],
         "responses": {
           "200": {
@@ -717,7 +776,9 @@
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -726,31 +787,49 @@
         "summary": "Remove organization member",
         "tags": ["Organizations"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
-          { "$ref": "#/components/parameters/org_id" },
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
+          {
+            "$ref": "#/components/parameters/org_id"
+          },
           {
             "in": "path",
             "name": "user_id",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       },
       "put": {
         "summary": "Update organization member role",
         "tags": ["Organizations"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
-          { "$ref": "#/components/parameters/org_id" },
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
+          {
+            "$ref": "#/components/parameters/org_id"
+          },
           {
             "in": "path",
             "name": "user_id",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
@@ -771,8 +850,12 @@
           }
         },
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -781,20 +864,27 @@
         "summary": "List user's projects or search by organization_id and name",
         "tags": ["Projects"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
           {
             "name": "organization_id",
             "in": "query",
             "required": false,
             "description": "Organization ID (when searching with 'name')",
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "name": "name",
             "in": "query",
             "required": false,
             "description": "Project name (when searching with 'organization_id')",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -804,13 +894,17 @@
               "application/json": {
                 "schema": {
                   "oneOf": [
-                    { "$ref": "#/components/schemas/project" },
+                    {
+                      "$ref": "#/components/schemas/project"
+                    },
                     {
                       "type": "object",
                       "properties": {
                         "projects": {
                           "type": "array",
-                          "items": { "$ref": "#/components/schemas/project" }
+                          "items": {
+                            "$ref": "#/components/schemas/project"
+                          }
                         }
                       }
                     }
@@ -819,14 +913,18 @@
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       },
       "post": {
         "summary": "Create project",
         "tags": ["Projects"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          }
         ],
         "requestBody": {
           "required": true,
@@ -835,13 +933,18 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "organization_id": { "type": "string", "format": "uuid" },
+                  "organization_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
                   "name": {
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 100
                   },
-                  "public": { "type": "boolean" }
+                  "public": {
+                    "type": "boolean"
+                  }
                 },
                 "required": ["organization_id", "name", "public"]
               }
@@ -856,13 +959,18 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "project_id": { "type": "string", "format": "uuid" }
+                    "project_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -871,31 +979,47 @@
         "summary": "Get project",
         "tags": ["Projects"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
-          { "$ref": "#/components/parameters/project_id" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
+          {
+            "$ref": "#/components/parameters/project_id"
+          }
         ],
         "responses": {
           "200": {
             "description": "Project details",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/project" }
+                "schema": {
+                  "$ref": "#/components/schemas/project"
+                }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       },
       "delete": {
         "summary": "Delete project",
         "tags": ["Projects"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
-          { "$ref": "#/components/parameters/project_id" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
+          {
+            "$ref": "#/components/parameters/project_id"
+          }
         ],
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -904,8 +1028,12 @@
         "summary": "List project members",
         "tags": ["Projects"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
-          { "$ref": "#/components/parameters/project_id" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
+          {
+            "$ref": "#/components/parameters/project_id"
+          }
         ],
         "responses": {
           "200": {
@@ -917,22 +1045,30 @@
                   "properties": {
                     "members": {
                       "type": "array",
-                      "items": { "$ref": "#/components/schemas/project_member" }
+                      "items": {
+                        "$ref": "#/components/schemas/project_member"
+                      }
                     }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       },
       "post": {
         "summary": "Add project member",
         "tags": ["Projects"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
-          { "$ref": "#/components/parameters/project_id" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
+          {
+            "$ref": "#/components/parameters/project_id"
+          }
         ],
         "requestBody": {
           "required": true,
@@ -941,7 +1077,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "user_id": { "type": "string", "format": "uuid" }
+                  "user_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
                 },
                 "required": ["user_id"]
               }
@@ -949,8 +1088,12 @@
           }
         },
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -959,18 +1102,29 @@
         "summary": "Remove project member",
         "tags": ["Projects"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
-          { "$ref": "#/components/parameters/project_id" },
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
+          {
+            "$ref": "#/components/parameters/project_id"
+          },
           {
             "in": "path",
             "name": "user_id",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -979,7 +1133,9 @@
         "summary": "Start gateway for organization",
         "tags": ["Gateway"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          }
         ],
         "requestBody": {
           "required": true,
@@ -988,7 +1144,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "organization_id": { "type": "string", "format": "uuid" }
+                  "organization_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
                 },
                 "required": ["organization_id"]
               }
@@ -1003,13 +1162,17 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "gateway_hostname": { "type": "string" }
+                    "gateway_hostname": {
+                      "type": "string"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -1019,7 +1182,9 @@
         "description": "Gateway calls this at startup to fetch organization config. Requires TJwtGateway authentication.",
         "tags": ["Gateway"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          }
         ],
         "requestBody": {
           "required": true,
@@ -1040,24 +1205,40 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "organization_id": { "type": "string", "format": "uuid" },
-                    "organization_name": { "type": "string" },
-                    "gateway_id": { "type": "string", "format": "uuid" },
+                    "organization_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "organization_name": {
+                      "type": "string"
+                    },
+                    "gateway_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
                     "organization_token": {
                       "type": "string",
                       "description": "TJwtOrganization for organization-bound operations"
                     },
                     "projects": {
                       "type": "array",
-                      "items": { "type": "string", "format": "uuid" }
+                      "items": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
                     },
                     "members": {
                       "type": "array",
                       "items": {
                         "type": "object",
                         "properties": {
-                          "user_id": { "type": "string", "format": "uuid" },
-                          "username": { "type": "string" },
+                          "user_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
                           "role": {
                             "type": "string",
                             "enum": ["owner", "admin", "member"],
@@ -1088,14 +1269,20 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "error": { "type": "string" }
+                    "error": {
+                      "type": "string"
+                    }
                   }
                 }
               }
             }
           },
-          "401": { "$ref": "#/components/responses/errors" },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "401": {
+            "$ref": "#/components/responses/errors"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -1104,7 +1291,9 @@
         "summary": "Gateway signals it's ready to be allocated",
         "tags": ["Gateway"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization_bearer" }
+          {
+            "$ref": "#/components/parameters/headers_authorization_bearer"
+          }
         ],
         "requestBody": {
           "required": true,
@@ -1113,7 +1302,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "gateway_id": { "type": "string", "format": "uuid" }
+                  "gateway_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
                 },
                 "required": ["gateway_id"]
               }
@@ -1128,15 +1320,23 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" }
+                    "success": {
+                      "type": "boolean"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         },
-        "security": [{ "gatewayToken": [] }]
+        "security": [
+          {
+            "gatewayToken": []
+          }
+        ]
       }
     },
     "/gateway/tokens/scoped": {
@@ -1145,7 +1345,9 @@
         "description": "Gateway calls this to get a signed JWT token. Ganymede validates project ownership and signs the payload - it is agnostic to token content. Only Ganymede has the private key.",
         "tags": ["Gateway"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization_bearer" }
+          {
+            "$ref": "#/components/parameters/headers_authorization_bearer"
+          }
         ],
         "requestBody": {
           "required": true,
@@ -1155,7 +1357,10 @@
                 "type": "object",
                 "required": ["project_id", "payload"],
                 "properties": {
-                  "project_id": { "type": "string", "format": "uuid" },
+                  "project_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
                   "payload": {
                     "type": "object",
                     "description": "Token payload to sign (Ganymede signs as-is, gateway defines structure)",
@@ -1174,15 +1379,23 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "token": { "type": "string" }
+                    "token": {
+                      "type": "string"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         },
-        "security": [{ "organizationToken": [] }]
+        "security": [
+          {
+            "organizationToken": []
+          }
+        ]
       }
     },
     "/gateway/stop": {
@@ -1190,7 +1403,9 @@
         "summary": "Stop gateway (deallocate from organization)",
         "tags": ["Gateway"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization_bearer" }
+          {
+            "$ref": "#/components/parameters/headers_authorization_bearer"
+          }
         ],
         "responses": {
           "200": {
@@ -1200,15 +1415,23 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" }
+                    "success": {
+                      "type": "boolean"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         },
-        "security": [{ "organizationToken": [] }]
+        "security": [
+          {
+            "organizationToken": []
+          }
+        ]
       }
     },
     "/gateway/data/push": {
@@ -1216,7 +1439,9 @@
         "summary": "Push organization data snapshot from gateway",
         "tags": ["Gateway"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization_bearer" }
+          {
+            "$ref": "#/components/parameters/headers_authorization_bearer"
+          }
         ],
         "requestBody": {
           "required": true,
@@ -1225,7 +1450,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "timestamp": { "type": "string", "format": "date-time" },
+                  "timestamp": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
                   "data": {
                     "type": "object",
                     "description": "Organization data snapshot (YJS state, permissions, OAuth tokens, etc.)",
@@ -1245,17 +1473,30 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "stored_at": { "type": "string", "format": "date-time" },
-                    "size_bytes": { "type": "integer" }
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "stored_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "size_bytes": {
+                      "type": "integer"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         },
-        "security": [{ "organizationToken": [] }]
+        "security": [
+          {
+            "organizationToken": []
+          }
+        ]
       }
     },
     "/gateway/data/pull": {
@@ -1263,7 +1504,9 @@
         "summary": "Pull organization data snapshot to gateway",
         "tags": ["Gateway"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization_bearer" }
+          {
+            "$ref": "#/components/parameters/headers_authorization_bearer"
+          }
         ],
         "responses": {
           "200": {
@@ -1273,8 +1516,12 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "exists": { "type": "boolean" },
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "exists": {
+                      "type": "boolean"
+                    },
                     "data": {
                       "type": "object",
                       "nullable": true,
@@ -1295,9 +1542,15 @@
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         },
-        "security": [{ "organizationToken": [] }]
+        "security": [
+          {
+            "organizationToken": []
+          }
+        ]
       }
     },
     "/gateway/data/{organization_id}": {
@@ -1305,12 +1558,17 @@
         "summary": "Delete organization data",
         "tags": ["Gateway"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
           {
             "in": "path",
             "name": "organization_id",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -1321,24 +1579,32 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "message": { "type": "string" }
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
     "/gateway/dns/register": {
       "post": {
-        "summary": "Register DNS record (FQDN → IP)",
+        "summary": "Register DNS record (FQDN \u2192 IP)",
         "description": "Generic DNS management endpoint. Called by gateway to register any DNS record.",
         "tags": ["Gateway"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization_bearer" }
+          {
+            "$ref": "#/components/parameters/headers_authorization_bearer"
+          }
         ],
         "requestBody": {
           "required": true,
@@ -1370,17 +1636,29 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "message": { "type": "string" }
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" },
-          "5XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         },
-        "security": [{ "organizationToken": [] }]
+        "security": [
+          {
+            "organizationToken": []
+          }
+        ]
       }
     },
     "/gateway/dns/deregister": {
@@ -1389,7 +1667,9 @@
         "description": "Generic DNS management endpoint. Called by gateway to remove a DNS record.",
         "tags": ["Gateway"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization_bearer" }
+          {
+            "$ref": "#/components/parameters/headers_authorization_bearer"
+          }
         ],
         "requestBody": {
           "required": true,
@@ -1416,17 +1696,29 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "message": { "type": "string" }
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" },
-          "5XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         },
-        "security": [{ "organizationToken": [] }]
+        "security": [
+          {
+            "organizationToken": []
+          }
+        ]
       }
     },
     "/users/search": {
@@ -1434,12 +1726,16 @@
         "summary": "Search users",
         "tags": ["Users"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
           {
             "name": "query",
             "in": "query",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1452,14 +1748,18 @@
                   "properties": {
                     "users": {
                       "type": "array",
-                      "items": { "$ref": "#/components/schemas/user" }
+                      "items": {
+                        "$ref": "#/components/schemas/user"
+                      }
                     }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -1468,12 +1768,17 @@
         "summary": "Get user by ID",
         "tags": ["Users"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
           {
             "in": "path",
             "name": "user_id",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -1481,7 +1786,9 @@
             "description": "User details",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/user" }
+                "schema": {
+                  "$ref": "#/components/schemas/user"
+                }
               }
             }
           },
@@ -1492,13 +1799,17 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "error": { "type": "string" }
+                    "error": {
+                      "type": "string"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -1512,31 +1823,44 @@
             "name": "response_type",
             "in": "query",
             "required": true,
-            "schema": { "type": "string", "enum": ["code"] }
+            "schema": {
+              "type": "string",
+              "enum": ["code"]
+            }
           },
           {
             "name": "client_id",
             "in": "query",
             "required": true,
-            "schema": { "type": "string", "example": "app-main-client-id" }
+            "schema": {
+              "type": "string",
+              "example": "app-main-client-id"
+            }
           },
           {
             "name": "redirect_uri",
             "in": "query",
             "required": true,
-            "schema": { "type": "string", "format": "uri" }
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            }
           },
           {
             "name": "scope",
             "in": "query",
             "required": false,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "state",
             "in": "query",
             "required": false,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1544,7 +1868,10 @@
             "description": "Redirect to redirect_uri with authorization code",
             "headers": {
               "Location": {
-                "schema": { "type": "string", "format": "uri" },
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
+                },
                 "description": "redirect_uri?code=...&state=..."
               }
             }
@@ -1556,16 +1883,26 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "location": { "type": "string" },
-                    "redirect": { "type": "string" },
-                    "client_id": { "type": "string" },
-                    "redirect_uri": { "type": "string" }
+                    "location": {
+                      "type": "string"
+                    },
+                    "redirect": {
+                      "type": "string"
+                    },
+                    "client_id": {
+                      "type": "string"
+                    },
+                    "redirect_uri": {
+                      "type": "string"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       },
       "post": {
@@ -1577,31 +1914,44 @@
             "name": "response_type",
             "in": "query",
             "required": true,
-            "schema": { "type": "string", "enum": ["code"] }
+            "schema": {
+              "type": "string",
+              "enum": ["code"]
+            }
           },
           {
             "name": "client_id",
             "in": "query",
             "required": true,
-            "schema": { "type": "string", "example": "app-main-client-id" }
+            "schema": {
+              "type": "string",
+              "example": "app-main-client-id"
+            }
           },
           {
             "name": "redirect_uri",
             "in": "query",
             "required": true,
-            "schema": { "type": "string", "format": "uri" }
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            }
           },
           {
             "name": "scope",
             "in": "query",
             "required": false,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "state",
             "in": "query",
             "required": false,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1612,8 +1962,12 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "code": { "type": "string" },
-                    "state": { "type": "string" }
+                    "code": {
+                      "type": "string"
+                    },
+                    "state": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -1626,16 +1980,26 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "location": { "type": "string" },
-                    "redirect": { "type": "string" },
-                    "client_id": { "type": "string" },
-                    "redirect_uri": { "type": "string" }
+                    "location": {
+                      "type": "string"
+                    },
+                    "redirect": {
+                      "type": "string"
+                    },
+                    "client_id": {
+                      "type": "string"
+                    },
+                    "redirect_uri": {
+                      "type": "string"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -1667,7 +2031,10 @@
                     "type": "string",
                     "example": "app-main-client-id"
                   },
-                  "client_secret": { "type": "string", "example": "none" },
+                  "client_secret": {
+                    "type": "string",
+                    "example": "none"
+                  },
                   "redirect_uri": {
                     "type": "string",
                     "format": "uri",
@@ -1687,18 +2054,33 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "access_token": { "type": "string" },
-                    "token_type": { "type": "string", "example": "Bearer" },
-                    "expires_in": { "type": "integer" },
-                    "refresh_token": { "type": "string" },
-                    "scope": { "type": "string" }
+                    "access_token": {
+                      "type": "string"
+                    },
+                    "token_type": {
+                      "type": "string",
+                      "example": "Bearer"
+                    },
+                    "expires_in": {
+                      "type": "integer"
+                    },
+                    "refresh_token": {
+                      "type": "string"
+                    },
+                    "scope": {
+                      "type": "string"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" },
-          "5XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -1715,7 +2097,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "publicKey": { "type": "string" }
+                    "publicKey": {
+                      "type": "string"
+                    }
                   },
                   "required": ["publicKey"]
                 }
@@ -1731,7 +2115,9 @@
         "description": "Returns all registered credential types with their metadata",
         "tags": ["Credentials"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          }
         ],
         "responses": {
           "200": {
@@ -1752,7 +2138,9 @@
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       },
       "post": {
@@ -1760,7 +2148,9 @@
         "description": "Register a new credential type (called by modules)",
         "tags": ["Credentials"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          }
         ],
         "requestBody": {
           "required": true,
@@ -1779,15 +2169,21 @@
                     "minLength": 1,
                     "maxLength": 255
                   },
-                  "description": { "type": "string" },
-                  "icon_url": { "type": "string" },
+                  "description": {
+                    "type": "string"
+                  },
+                  "icon_url": {
+                    "type": "string"
+                  },
                   "validation_schema": {
                     "type": "object",
                     "additionalProperties": true
                   },
                   "required_fields": {
                     "type": "array",
-                    "items": { "type": "string" }
+                    "items": {
+                      "type": "string"
+                    }
                   },
                   "module_name": {
                     "type": "string",
@@ -1808,13 +2204,17 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" }
+                    "success": {
+                      "type": "boolean"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -1824,36 +2224,52 @@
         "description": "Returns user's own credentials and optionally shared credentials they have access to",
         "tags": ["Credentials"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
           {
             "name": "type",
             "in": "query",
             "description": "Filter by credential type",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "organization_id",
             "in": "query",
             "description": "Include org-shared credentials",
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "name": "project_id",
             "in": "query",
             "description": "Include project-shared credentials",
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "name": "resource_id",
             "in": "query",
             "description": "Include resource-shared credentials",
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "name": "include_shared",
             "in": "query",
             "description": "Include all accessible shared credentials",
-            "schema": { "type": "string", "enum": ["true", "false"] }
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            }
           }
         ],
         "responses": {
@@ -1875,7 +2291,9 @@
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       },
       "post": {
@@ -1883,7 +2301,9 @@
         "description": "Store a new encrypted credential",
         "tags": ["Credentials"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          }
         ],
         "requestBody": {
           "required": true,
@@ -1892,14 +2312,22 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "credential_type": { "type": "string" },
+                  "credential_type": {
+                    "type": "string"
+                  },
                   "name": {
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 255
                   },
-                  "value": { "type": "string", "minLength": 1 },
-                  "metadata": { "type": "object", "additionalProperties": true }
+                  "value": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
                 },
                 "required": ["credential_type", "name", "value"]
               }
@@ -1922,7 +2350,9 @@
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -1932,8 +2362,12 @@
         "description": "Returns credential details including decrypted value (requires ownership or share access)",
         "tags": ["Credentials"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
-          { "$ref": "#/components/parameters/credential_id" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
+          {
+            "$ref": "#/components/parameters/credential_id"
+          }
         ],
         "responses": {
           "200": {
@@ -1958,13 +2392,17 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "error": { "type": "string" }
+                    "error": {
+                      "type": "string"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       },
       "patch": {
@@ -1972,8 +2410,12 @@
         "description": "Update credential name, value, metadata, or active status",
         "tags": ["Credentials"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
-          { "$ref": "#/components/parameters/credential_id" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
+          {
+            "$ref": "#/components/parameters/credential_id"
+          }
         ],
         "requestBody": {
           "required": true,
@@ -1987,12 +2429,17 @@
                     "minLength": 1,
                     "maxLength": 255
                   },
-                  "value": { "type": "string", "minLength": 1 },
+                  "value": {
+                    "type": "string",
+                    "minLength": 1
+                  },
                   "metadata": {
                     "type": "object",
                     "additionalProperties": true
                   },
-                  "is_active": { "type": "boolean" }
+                  "is_active": {
+                    "type": "boolean"
+                  }
                 }
               }
             }
@@ -2006,13 +2453,17 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" }
+                    "success": {
+                      "type": "boolean"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       },
       "delete": {
@@ -2020,8 +2471,12 @@
         "description": "Soft delete a credential (sets is_active to false)",
         "tags": ["Credentials"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
-          { "$ref": "#/components/parameters/credential_id" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
+          {
+            "$ref": "#/components/parameters/credential_id"
+          }
         ],
         "responses": {
           "200": {
@@ -2031,13 +2486,17 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" }
+                    "success": {
+                      "type": "boolean"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -2047,8 +2506,12 @@
         "description": "Test if a credential can be decrypted successfully",
         "tags": ["Credentials"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
-          { "$ref": "#/components/parameters/credential_id" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
+          {
+            "$ref": "#/components/parameters/credential_id"
+          }
         ],
         "responses": {
           "200": {
@@ -2058,14 +2521,20 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "valid": { "type": "boolean" },
-                    "message": { "type": "string" }
+                    "valid": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -2075,8 +2544,12 @@
         "description": "Share a credential at organization, project, or resource level",
         "tags": ["Credentials"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
-          { "$ref": "#/components/parameters/credential_id" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
+          {
+            "$ref": "#/components/parameters/credential_id"
+          }
         ],
         "requestBody": {
           "required": true,
@@ -2089,9 +2562,18 @@
                     "type": "string",
                     "enum": ["organization", "project", "resource"]
                   },
-                  "organization_id": { "type": "string", "format": "uuid" },
-                  "project_id": { "type": "string", "format": "uuid" },
-                  "resource_id": { "type": "string", "format": "uuid" }
+                  "organization_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "project_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "resource_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
                 },
                 "required": ["share_scope"]
               }
@@ -2106,13 +2588,17 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "share": { "$ref": "#/components/schemas/credential_share" }
+                    "share": {
+                      "$ref": "#/components/schemas/credential_share"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -2122,8 +2608,12 @@
         "description": "Get all shares for a credential (requires ownership)",
         "tags": ["Credentials"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
-          { "$ref": "#/components/parameters/credential_id" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
+          {
+            "$ref": "#/components/parameters/credential_id"
+          }
         ],
         "responses": {
           "200": {
@@ -2144,7 +2634,9 @@
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -2154,13 +2646,20 @@
         "description": "Revoke access to a shared credential",
         "tags": ["Credentials"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
-          { "$ref": "#/components/parameters/credential_id" },
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
+          {
+            "$ref": "#/components/parameters/credential_id"
+          },
           {
             "in": "path",
             "name": "share_id",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -2171,13 +2670,17 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" }
+                    "success": {
+                      "type": "boolean"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -2190,7 +2693,9 @@
             "in": "header",
             "name": "X-Gateway-Token",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -2202,15 +2707,26 @@
                 "properties": {
                   "redirect_uris": {
                     "type": "array",
-                    "items": { "type": "string", "format": "uri" }
+                    "items": {
+                      "type": "string",
+                      "format": "uri"
+                    }
                   },
                   "grants": {
                     "type": "array",
-                    "items": { "type": "string" }
+                    "items": {
+                      "type": "string"
+                    }
                   },
-                  "access_token_lifetime": { "type": "integer" },
-                  "refresh_token_lifetime": { "type": "integer" },
-                  "label": { "type": "string" }
+                  "access_token_lifetime": {
+                    "type": "integer"
+                  },
+                  "refresh_token_lifetime": {
+                    "type": "integer"
+                  },
+                  "label": {
+                    "type": "string"
+                  }
                 },
                 "required": ["redirect_uris", "grants"]
               }
@@ -2225,22 +2741,32 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "client_id": { "type": "string" },
-                    "client_secret": { "type": "string" },
+                    "client_id": {
+                      "type": "string"
+                    },
+                    "client_secret": {
+                      "type": "string"
+                    },
                     "redirect_uris": {
                       "type": "array",
-                      "items": { "type": "string" }
+                      "items": {
+                        "type": "string"
+                      }
                     },
                     "grants": {
                       "type": "array",
-                      "items": { "type": "string" }
+                      "items": {
+                        "type": "string"
+                      }
                     }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -2253,13 +2779,17 @@
             "in": "header",
             "name": "X-Gateway-Token",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "in": "path",
             "name": "client_id",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2270,13 +2800,17 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "deleted": { "type": "boolean" }
+                    "deleted": {
+                      "type": "boolean"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -2289,13 +2823,18 @@
             "in": "header",
             "name": "X-Gateway-Token",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "in": "path",
             "name": "project_id",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
@@ -2305,7 +2844,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "user_id": { "type": "string", "format": "uuid" }
+                  "user_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
                 },
                 "required": ["user_id"]
               }
@@ -2320,13 +2862,17 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" }
+                    "success": {
+                      "type": "boolean"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -2339,19 +2885,27 @@
             "in": "header",
             "name": "X-Gateway-Token",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "in": "path",
             "name": "project_id",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "in": "path",
             "name": "user_id",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -2362,14 +2916,455 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" }
+                    "success": {
+                      "type": "boolean"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
+      }
+    },
+    "/runners": {
+      "post": {
+        "summary": "Enrol this machine",
+        "description": "Returns the runner token once and never again \u2014 only its row is stored. Authenticated by the route middleware; see components.securitySchemes.",
+        "tags": ["Runners"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "maxLength": 128
+                  }
+                },
+                "required": ["label"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Enrolled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Enrolled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        }
+      },
+      "get": {
+        "summary": "List the caller's enrolled machines",
+        "tags": ["Runners"],
+        "responses": {
+          "200": {
+            "description": "Runners",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "properties": {
+                    "runners": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        },
+        "description": "Authenticated by the route middleware; see components.securitySchemes."
+      }
+    },
+    "/runners/{runner_id}": {
+      "delete": {
+        "summary": "Revoke a machine, by its owner",
+        "tags": ["Runners"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "runner_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        },
+        "description": "Authenticated by the route middleware; see components.securitySchemes."
+      }
+    },
+    "/runners/me": {
+      "get": {
+        "summary": "What this runner is",
+        "tags": ["Runners"],
+        "responses": {
+          "200": {
+            "description": "Runner",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        },
+        "description": "Authenticated by the route middleware; see components.securitySchemes."
+      },
+      "delete": {
+        "summary": "Withdraw this machine, from the machine itself",
+        "tags": ["Runners"],
+        "responses": {
+          "200": {
+            "description": "Withdrawn",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        },
+        "description": "Authenticated by the route middleware; see components.securitySchemes."
+      }
+    },
+    "/runners/me/projects": {
+      "get": {
+        "summary": "The placements this machine should be running",
+        "description": "Polled by the runner; the answer carries a short-lived per-project token. Authenticated by the route middleware; see components.securitySchemes.",
+        "tags": ["Runners"],
+        "responses": {
+          "200": {
+            "description": "Placements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        }
+      }
+    },
+    "/internal/projects/{project_id}/images/{image_id}": {
+      "get": {
+        "summary": "Resolve a catalog id to a pullable reference (gateway-only)",
+        "description": "Called by the container broker. Answers a digest-pinned reference and a GHCR token good for one repository, for minutes. 403 when the entry is outside the project's GitHub organization, 409 when the project has no link or no live installation, 404 when the id is not in this catalog \u2014 all three permanent.",
+        "tags": ["Internal"],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Gateway-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "image_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resolved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "properties": {
+                    "imageId": {
+                      "type": "string"
+                    },
+                    "reference": {
+                      "type": "string"
+                    },
+                    "pull_token": {
+                      "type": "string"
+                    },
+                    "github_organization": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        }
+      }
+    },
+    "/internal/projects/{project_id}/networks": {
+      "get": {
+        "summary": "List a project's private network ranges (gateway-only)",
+        "tags": ["Internal"],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Gateway-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Networks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "properties": {
+                    "networks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        }
+      },
+      "post": {
+        "summary": "Allocate a private network range (gateway-only)",
+        "tags": ["Internal"],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Gateway-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": {
+                  "organization_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "created_by": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Allocated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Allocated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        }
+      }
+    },
+    "/internal/runners/{runner_id}/projects": {
+      "post": {
+        "summary": "Opt a machine into a project (gateway-only)",
+        "tags": ["Internal"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "runner_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": {
+                  "project_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "user_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Opted in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Opted in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
+        },
+        "description": "Authenticated by the route middleware; see components.securitySchemes."
       }
     }
   },
@@ -2390,7 +3385,9 @@
         "description": "Error response",
         "content": {
           "application/json": {
-            "schema": { "$ref": "#/components/schemas/errors" }
+            "schema": {
+              "$ref": "#/components/schemas/errors"
+            }
           }
         }
       }
@@ -2399,14 +3396,20 @@
       "errors": {
         "type": "object",
         "properties": {
-          "uuid": { "type": "string" },
+          "uuid": {
+            "type": "string"
+          },
           "errors": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
-                "message": { "type": "string" },
-                "public": { "type": "boolean" }
+                "message": {
+                  "type": "string"
+                },
+                "public": {
+                  "type": "boolean"
+                }
               }
             }
           }
@@ -2415,99 +3418,233 @@
       "user": {
         "type": "object",
         "properties": {
-          "user_id": { "type": "string", "format": "uuid" },
-          "username": { "type": "string", "maxLength": 128 },
-          "email": { "type": "string", "format": "email" },
-          "picture": { "type": "string", "nullable": true },
-          "firstname": { "type": "string", "nullable": true },
-          "lastname": { "type": "string", "nullable": true }
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "username": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "picture": {
+            "type": "string",
+            "nullable": true
+          },
+          "firstname": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastname": {
+            "type": "string",
+            "nullable": true
+          }
         }
       },
       "organization": {
         "type": "object",
         "properties": {
-          "organization_id": { "type": "string", "format": "uuid" },
-          "owner_user_id": { "type": "string", "format": "uuid" },
-          "name": { "type": "string", "maxLength": 100 },
-          "created_at": { "type": "string", "format": "date-time" }
+          "organization_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "owner_user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
       },
       "organization_member": {
         "type": "object",
         "properties": {
-          "user_id": { "type": "string", "format": "uuid" },
-          "username": { "type": "string" },
-          "email": { "type": "string", "format": "email" },
-          "role": { "type": "string", "enum": ["owner", "admin", "member"] },
-          "added_at": { "type": "string", "format": "date-time" }
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["owner", "admin", "member"]
+          },
+          "added_at": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
       },
       "project": {
         "type": "object",
         "properties": {
-          "project_id": { "type": "string", "format": "uuid" },
-          "organization_id": { "type": "string", "format": "uuid" },
-          "name": { "type": "string", "maxLength": 100 },
-          "public": { "type": "boolean" },
-          "created_at": { "type": "string", "format": "date-time" },
-          "gateway_hostname": { "type": "string", "nullable": true }
+          "project_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "organization_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "public": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "gateway_hostname": {
+            "type": "string",
+            "nullable": true
+          }
         }
       },
       "project_member": {
         "type": "object",
         "properties": {
-          "user_id": { "type": "string", "format": "uuid" },
-          "username": { "type": "string" },
-          "email": { "type": "string", "format": "email" },
-          "added_at": { "type": "string", "format": "date-time" }
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "added_at": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
       },
       "credential_type": {
         "type": "object",
         "properties": {
-          "credential_type": { "type": "string" },
-          "display_name": { "type": "string" },
-          "description": { "type": "string", "nullable": true },
-          "icon_url": { "type": "string", "nullable": true },
+          "credential_type": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "icon_url": {
+            "type": "string",
+            "nullable": true
+          },
           "validation_schema": {
             "type": "object",
             "nullable": true,
             "additionalProperties": true
           },
-          "required_fields": { "type": "array", "items": { "type": "string" } },
-          "module_name": { "type": "string" }
+          "required_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "module_name": {
+            "type": "string"
+          }
         }
       },
       "credential_summary": {
         "type": "object",
         "properties": {
-          "credential_id": { "type": "string", "format": "uuid" },
-          "user_id": { "type": "string", "format": "uuid" },
-          "credential_type": { "type": "string" },
-          "name": { "type": "string" },
-          "metadata": { "type": "object", "additionalProperties": true },
-          "created_at": { "type": "string", "format": "date-time" },
-          "updated_at": { "type": "string", "format": "date-time" },
+          "credential_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "credential_type": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
           "last_used_at": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           },
-          "is_shared": { "type": "boolean" },
-          "share_scope": { "type": "string", "nullable": true }
+          "is_shared": {
+            "type": "boolean"
+          },
+          "share_scope": {
+            "type": "string",
+            "nullable": true
+          }
         }
       },
       "credential_detail": {
         "type": "object",
         "properties": {
-          "credential_id": { "type": "string", "format": "uuid" },
-          "user_id": { "type": "string", "format": "uuid" },
-          "credential_type": { "type": "string" },
-          "name": { "type": "string" },
-          "value": { "type": "string" },
-          "metadata": { "type": "object", "additionalProperties": true },
-          "created_at": { "type": "string", "format": "date-time" },
-          "updated_at": { "type": "string", "format": "date-time" },
+          "credential_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "credential_type": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
           "last_used_at": {
             "type": "string",
             "format": "date-time",
@@ -2518,8 +3655,14 @@
       "credential_share": {
         "type": "object",
         "properties": {
-          "share_id": { "type": "string", "format": "uuid" },
-          "credential_id": { "type": "string", "format": "uuid" },
+          "share_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "credential_id": {
+            "type": "string",
+            "format": "uuid"
+          },
           "share_scope": {
             "type": "string",
             "enum": ["organization", "project", "resource"]
@@ -2539,14 +3682,22 @@
             "format": "uuid",
             "nullable": true
           },
-          "granted_by": { "type": "string", "format": "uuid" },
-          "granted_at": { "type": "string", "format": "date-time" },
+          "granted_by": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "granted_at": {
+            "type": "string",
+            "format": "date-time"
+          },
           "revoked_at": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           },
-          "is_active": { "type": "boolean" }
+          "is_active": {
+            "type": "boolean"
+          }
         }
       }
     },
@@ -2575,19 +3726,28 @@
         "in": "path",
         "name": "org_id",
         "required": true,
-        "schema": { "type": "string", "format": "uuid" }
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
       },
       "project_id": {
         "in": "path",
         "name": "project_id",
         "required": true,
-        "schema": { "type": "string", "format": "uuid" }
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
       },
       "credential_id": {
         "in": "path",
         "name": "credential_id",
         "required": true,
-        "schema": { "type": "string", "format": "uuid" }
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
       }
     },
     "securitySchemes": {
@@ -2608,6 +3768,12 @@
         "scheme": "bearer",
         "bearerFormat": "JWT",
         "description": "Organization JWT token (TJwtOrganization)"
+      },
+      "runnerToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Runner JWT token (TJwtRunner) \u2014 names one enrolled machine"
       }
     }
   }
