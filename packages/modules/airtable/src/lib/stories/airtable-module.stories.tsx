@@ -223,7 +223,7 @@ const Story = () => {
 //
 
 const meta = {
-  title: 'Modules/Airtable/Main',
+  title: 'Modules/Airtable/Views/Main',
   component: Story,
   parameters: {
     layout: 'fullscreen',

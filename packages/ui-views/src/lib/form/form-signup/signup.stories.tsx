@@ -18,7 +18,7 @@ const StoryWrapper = () => {
 //
 
 const meta = {
-  title: 'Forms/Account/Signup',
+  title: 'Mvp/Components/Forms/Account/Signup',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

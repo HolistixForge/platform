@@ -46,7 +46,7 @@ const modulesFrontend: { module: TModule<never, object>; config: object }[] = [
             collab: TCollabFrontendExports;
           }
         ).collab;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         const images = collabExports.getCollabForProject('story').collab
           .sharedData['user-containers:images'] as any;
         images.set('test', {
@@ -81,7 +81,7 @@ const StoryWrapper = () => {
 //
 
 const meta = {
-  title: 'Modules/UserContainers/Forms/NewServer',
+  title: 'Modules/UserContainers/Components/Forms/NewServer',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

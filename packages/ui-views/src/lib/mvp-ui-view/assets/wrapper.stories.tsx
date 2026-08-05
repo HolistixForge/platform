@@ -7,7 +7,7 @@ import { Wrapper } from './wrapper';
 //
 
 const meta = {
-  title: 'Mvp/Assets/wrapper',
+  title: 'Mvp/Assets/Wrapper',
   component: Wrapper,
   decorators: [
     (Story) => (

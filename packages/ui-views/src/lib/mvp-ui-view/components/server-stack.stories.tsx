@@ -37,7 +37,7 @@ const StoryWrapper = ({ count }: { count: number }) => (
 //
 
 const meta = {
-  title: 'Mvp/Components/server-stack',
+  title: 'Mvp/Components/ServerStack',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

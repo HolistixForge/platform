@@ -5,7 +5,7 @@ import { UserInformations } from './user-informations';
 //
 
 const meta = {
-  title: 'Mvp/Components/user-informations',
+  title: 'Mvp/Components/UserInformations',
   component: UserInformations,
   parameters: {
     layout: 'centered',

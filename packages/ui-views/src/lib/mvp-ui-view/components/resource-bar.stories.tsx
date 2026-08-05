@@ -5,7 +5,7 @@ import { ResourceBar } from './resource-bar';
 //
 
 const meta = {
-  title: 'Mvp/Components/resource-bar',
+  title: 'Mvp/Components/ResourceBar',
   component: ResourceBar,
   parameters: {
     layout: 'centered',

@@ -8,7 +8,7 @@ import './credentials.scss';
 const noop = () => undefined;
 
 const meta = {
-  title: 'Credentials/CredentialCard',
+  title: 'Base/Resource/Credentials/CredentialCard',
   component: CredentialCard,
   parameters: { layout: 'centered' },
   args: {

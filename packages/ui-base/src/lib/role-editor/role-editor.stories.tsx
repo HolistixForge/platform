@@ -45,34 +45,52 @@ const mockRoles: Role[] = [
   },
 ];
 
-const Wrap = (props: Omit<RoleEditorProps, 'roles' | 'loading' | 'onCreateRole' | 'onUpdateRole' | 'onDeleteRole'>) => {
+const Wrap = (
+  props: Omit<
+    RoleEditorProps,
+    'roles' | 'loading' | 'onCreateRole' | 'onUpdateRole' | 'onDeleteRole'
+  >
+) => {
   const [roles, setRoles] = useState<Role[]>(mockRoles);
   const [loading, setLoading] = useState(false);
 
-  const onCreateRole = useCallback(async (role: Omit<Role, 'role_id' | 'system' | 'immutable'>) => {
-    setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const newRole: Role = {
-      ...role,
-      role_id: String(Date.now()),
-      system: false,
-      immutable: false,
-    };
-    setRoles(prev => [...prev, newRole]);
-    setLoading(false);
-  }, []);
+  const onCreateRole = useCallback(
+    async (role: Omit<Role, 'role_id' | 'system' | 'immutable'>) => {
+      setLoading(true);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const newRole: Role = {
+        ...role,
+        role_id: String(Date.now()),
+        system: false,
+        immutable: false,
+      };
+      setRoles((prev) => [...prev, newRole]);
+      setLoading(false);
+    },
+    []
+  );
 
-  const onUpdateRole = useCallback(async (roleId: string, updates: Partial<Pick<Role, 'display_name' | 'description' | 'permissions'>>) => {
-    setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setRoles(prev => prev.map(r => r.role_id === roleId ? { ...r, ...updates } : r));
-    setLoading(false);
-  }, []);
+  const onUpdateRole = useCallback(
+    async (
+      roleId: string,
+      updates: Partial<
+        Pick<Role, 'display_name' | 'description' | 'permissions'>
+      >
+    ) => {
+      setLoading(true);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setRoles((prev) =>
+        prev.map((r) => (r.role_id === roleId ? { ...r, ...updates } : r))
+      );
+      setLoading(false);
+    },
+    []
+  );
 
   const onDeleteRole = useCallback(async (roleId: string) => {
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setRoles(prev => prev.filter(r => r.role_id !== roleId));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setRoles((prev) => prev.filter((r) => r.role_id !== roleId));
     setLoading(false);
   }, []);
 
@@ -94,7 +112,7 @@ const Wrap = (props: Omit<RoleEditorProps, 'roles' | 'loading' | 'onCreateRole' 
 
 const meta: Meta<typeof Wrap> = {
   component: Wrap,
-  title: 'Users/RoleEditor',
+  title: 'Base/Views/RoleEditor',
 };
 
 export default meta;

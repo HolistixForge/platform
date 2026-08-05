@@ -39,7 +39,7 @@ const StoryWrapper = (props: {
 //
 
 const meta = {
-  title: 'Modules/Space/Components/Inputs Outputs',
+  title: 'Modules/Whiteboard/Assets/Inputs Outputs',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

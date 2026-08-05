@@ -56,7 +56,7 @@ const AllIcon = () => {
 };
 
 const meta = {
-  title: 'icons/all',
+  title: 'Base/Assets/Icons',
   component: AllIcon,
   parameters: {
     layout: 'centered',

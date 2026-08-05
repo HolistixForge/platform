@@ -32,7 +32,7 @@ const StoryWrapper = () => {
 //
 
 const meta = {
-  title: 'Modules/Socials/Forms/NewIframe',
+  title: 'Modules/Socials/Components/Forms/NewIframe',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

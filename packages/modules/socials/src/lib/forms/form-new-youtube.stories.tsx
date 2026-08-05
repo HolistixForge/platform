@@ -33,7 +33,7 @@ const StoryWrapper = () => {
 //
 
 const meta = {
-  title: 'Modules/Socials/Forms/NewYoutube',
+  title: 'Modules/Socials/Components/Forms/NewYoutube',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

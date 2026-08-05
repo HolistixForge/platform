@@ -3,7 +3,7 @@ import { Datetime } from './datetime';
 
 const meta: Meta<typeof Datetime> = {
   component: Datetime,
-  title: 'Basics/Datetime',
+  title: 'Base/Assets/Datetime',
 };
 export default meta;
 type Story = StoryObj<typeof Datetime>;

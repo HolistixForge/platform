@@ -121,7 +121,7 @@ const StoryWrapper = () => {
 //
 
 const meta = {
-  title: 'Modules/Space/Main',
+  title: 'Modules/Whiteboard/Views/Main',
   component: StoryWrapper,
   parameters: {
     layout: 'fullscreen',

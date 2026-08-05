@@ -241,7 +241,7 @@ const Story = () => {
 //
 
 const meta = {
-  title: 'Module/Chats/Main',
+  title: 'Modules/Chats/Views/Main',
   component: Story,
   parameters: {
     layout: 'fullscreen',

@@ -12,7 +12,7 @@ import './credentials.scss';
 const asyncNoop = async () => undefined;
 
 const meta = {
-  title: 'Credentials/CredentialShareDialog',
+  title: 'Base/Resource/Credentials/CredentialShareDialog',
   component: CredentialShareDialog,
   parameters: { layout: 'fullscreen' },
   args: {

@@ -5,7 +5,7 @@ import { Rules } from './rules';
 //
 
 const meta = {
-  title: 'Mvp/Components/rules',
+  title: 'Mvp/Components/Rules',
   component: Rules,
   parameters: {
     layout: 'centered',

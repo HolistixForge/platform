@@ -42,7 +42,7 @@ const SlotStory = (props: SlotProps) => {
 };
 
 const meta = {
-  title: 'Modules/Space/Components/Pin',
+  title: 'Modules/Whiteboard/Assets/Pin',
   component: SlotStory,
   parameters: {
     layout: 'centered',

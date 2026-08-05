@@ -22,7 +22,7 @@ const StoryWrapper = () => {
 //
 
 const meta = {
-  title: 'Modules/Jupyter/Forms/NewTerminal',
+  title: 'Modules/Jupyter/Components/Forms/NewTerminal',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

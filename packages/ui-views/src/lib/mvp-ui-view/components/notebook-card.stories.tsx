@@ -34,7 +34,7 @@ const StoryWrapper = (
 };
 
 const meta = {
-  title: 'Mvp/Components/notebook-card',
+  title: 'Mvp/Components/NotebookCard',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

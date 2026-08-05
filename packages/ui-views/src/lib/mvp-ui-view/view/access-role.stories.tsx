@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { AccessRole } from './access-role';
 
 const meta = {
-  title: 'Mvp/View/access-role',
+  title: 'Mvp/Views/AccessRole',
   component: AccessRole,
   parameters: {
     layout: 'fullscreen',

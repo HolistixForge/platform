@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { TagFilter } from './tag-filter';
 
 const meta = {
-  title: 'Mvp/View/tag-filter',
+  title: 'Mvp/Views/TagFilter',
   component: TagFilter,
   parameters: {
     layout: 'fullscreen',

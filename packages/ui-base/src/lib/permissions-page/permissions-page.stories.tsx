@@ -6,7 +6,7 @@ import { mockMembers, mockRoles, mockUserRoles } from './permissions-mocks';
 const asyncNoop = async () => undefined;
 
 const meta = {
-  title: 'Users/PermissionsPage',
+  title: 'Base/Views/PermissionsPage',
   component: PermissionsPage,
   parameters: { layout: 'fullscreen' },
   args: {

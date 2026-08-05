@@ -131,7 +131,7 @@ const Story = () => {
 };
 
 const meta = {
-  title: 'Modules/Jupyter/Main',
+  title: 'Modules/Jupyter/Views/Main',
   component: Story,
   parameters: {
     layout: 'fullscreen',

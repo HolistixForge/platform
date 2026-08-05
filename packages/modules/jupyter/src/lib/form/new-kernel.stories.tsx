@@ -22,7 +22,7 @@ const StoryWrapper = () => {
 //
 
 const meta = {
-  title: 'Modules/Jupyter/Forms/NewKernel',
+  title: 'Modules/Jupyter/Components/Forms/NewKernel',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

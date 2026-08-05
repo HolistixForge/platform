@@ -136,7 +136,7 @@ const Story = () => {
 };
 
 const meta = {
-  title: 'Modules/UserContainers/Main',
+  title: 'Modules/UserContainers/Views/Main',
   component: Story,
   parameters: {
     layout: 'fullscreen',

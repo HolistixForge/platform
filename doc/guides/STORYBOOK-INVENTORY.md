@@ -43,130 +43,116 @@ La distinction `Use/` et `Library/` se pose **au-dessus** de cette arborescence
 et n'est pas dans ce document : elle demande le graphe d'imports, pas un
 classement manuel. Voir TAC-180.
 
-## Reclassement des 117 stories présentes
+## Reclassement des 117 stories présentes — appliqué
 
-**82 sur 117 changent d'étage.** Colonne de gauche : le `title:` d'aujourd'hui.
-Colonne du milieu : où il va.
+**Fait.** 97 des 117 `title:` ont été réécrits ; les 20 autres étaient déjà
+conformes. Vérifié contre le Storybook en marche (`npm run storybook`,
+http://localhost:6006) : **257 stories servies, trois racines** au lieu de
+douze — `Base` 107, `Modules` 91, `Mvp` 59.
 
-| aujourd'hui                                          | cible                                                    | stories |
-| ---------------------------------------------------- | -------------------------------------------------------- | ------- |
-| `Basics/Buttons`                                     | `Base/Assets/button`                                     | 1       |
-| `Basics/Countdown`                                   | `Base/Assets/countdown`                                  | 2       |
-| `Basics/Datetime`                                    | `Base/Assets/datetime`                                   | 5       |
-| `Basics/LoadingDots`                                 | `Base/Assets/loading-dots`                               | 2       |
-| `Basics/Reset`                                       | `Base/Assets/reset`                                      | 1       |
-| `Basics/ResourceButtons`                             | `Base/Assets/resource-buttons`                           | 1       |
-| `Basics/Tags`                                        | `Base/Assets/tags`                                       | 4       |
-| `Credentials/CredentialCard`                         | `Base/Resource/Credentials/CredentialCard`               | 4       |
-| `Credentials/CredentialForm`                         | `Base/Resource/Credentials/CredentialForm`               | 3       |
-| `Credentials/CredentialShareDialog`                  | `Base/Resource/Credentials/CredentialShareDialog`        | 3       |
-| `Credentials/CredentialTypeSelector`                 | `Base/Resource/Credentials/CredentialTypeSelector`       | 4       |
-| `Credentials/CredentialsList`                        | `Base/Resource/Credentials/CredentialsList`              | 3       |
-| `Forms/Account/Login`                                | `Mvp/Components/Forms/login`                             | 1       |
-| `Forms/Account/MagicLink`                            | `Mvp/Components/Forms/magic-link`                        | 2       |
-| `Forms/Account/NewPassword`                          | `Mvp/Components/Forms/new-password`                      | 1       |
-| `Forms/Account/Signup`                               | `Mvp/Components/Forms/signup`                            | 1       |
-| `Forms/Account/Totp`                                 | `Mvp/Components/Forms/totp-setup`                        | 2       |
-| `Forms/Account/TotpLogin`                            | `Mvp/Components/Forms/totp-login`                        | 1       |
-| `Forms/DialogModal`                                  | `Base/Components/Forms/dialog`                           | 1       |
-| `Forms/Errors/FormError`                             | `Base/Components/Forms/form-error`                       | 1       |
-| `Forms/Errors/FormErrors`                            | `Base/Components/Forms/form-errors`                      | 1       |
-| `Forms/Fields/ColorPicker`                           | `Base/Components/Forms/color-picker`                     | 2       |
-| `Forms/Fields/Select`                                | `Base/Components/Forms/select-fieldset`                  | 1       |
-| `Forms/Fields/Slider`                                | `Base/Components/Forms/slider-fieldset`                  | 5       |
-| `Forms/Fields/Switch`                                | `Base/Components/Forms/switch-fieldset`                  | 2       |
-| `Forms/Fields/Text`                                  | `Base/Components/Forms/text-fieldset`                    | 5       |
-| `Forms/Fields/Totp`                                  | `Base/Components/Forms/totp-fieldset`                    | 1       |
-| `Forms/MountVolume`                                  | `Mvp/Components/Forms/mount-volume`                      | 1       |
-| `Forms/NewOrganization`                              | `Mvp/Components/Forms/new-organization`                  | 2       |
-| `Forms/NewProject`                                   | `Mvp/Components/Forms/new-project`                       | 1       |
-| `Module/Chats/Components/Chat Anchor`                | `Modules/Chats/Components/node-chat-anchor`              | 6       |
-| `Module/Chats/Components/Chat Box`                   | `Modules/Chats/Components/chatbox`                       | 6       |
-| `Module/Chats/Components/Discussion Item`            | `Modules/Chats/Components/discussionItem`                | 1       |
-| `Module/Chats/Components/Reply Item`                 | `Modules/Chats/Components/replyItem`                     | 1       |
-| `Module/Chats/Main`                                  | `Modules/Chats/Views/module`                             | 1       |
-| `Modules/Airtable/Main`                              | `Modules/Airtable/Views/airtable-module`                 | 1       |
-| `Modules/Excalidraw/Main`                            | `Modules/Excalidraw/Views/excalidraw-module`             | 1       |
-| `Modules/Jupyter/Components/Card Settings`           | `Modules/Jupyter/Components/card-settings`               | 1       |
-| `Modules/Jupyter/Components/Cells Hive`              | `Modules/Jupyter/Components/cells-hive`                  | 1       |
-| `Modules/Jupyter/Components/Code Editor`             | `Modules/Jupyter/Components/code-editor-monaco`          | 1       |
-| `Modules/Jupyter/Components/Control Bar`             | `Modules/Jupyter/Components/control-bar`                 | 1       |
-| `Modules/Jupyter/Components/Display Menu`            | `Modules/Jupyter/Components/display-menu`                | 1       |
-| `Modules/Jupyter/Components/Hive Tag`                | `Modules/Jupyter/Components/hive-tag`                    | 1       |
-| `Modules/Jupyter/Components/MenuExpanded`            | `Modules/Jupyter/Components/menuExpanded`                | 4       |
-| `Modules/Jupyter/Components/Node Dataset`            | `Modules/Jupyter/Components/node-dataset`                | 3       |
-| `Modules/Jupyter/Components/Node Notebook`           | `Modules/Jupyter/Components/node-notebook`               | 3       |
-| `Modules/Jupyter/Components/Node Notebook Component` | `Modules/Jupyter/Components/node-notebook-component`     | 3       |
-| `Modules/Jupyter/Components/Node Python`             | `Modules/Jupyter/Components/node-python`                 | 3       |
-| `Modules/Jupyter/Components/Node Screening`          | `Modules/Jupyter/Components/node-screening`              | 3       |
-| `Modules/Jupyter/Components/Node Vault`              | `Modules/Jupyter/Components/node-vault`                  | 3       |
-| `Modules/Jupyter/Components/Reduced Cells`           | `Modules/Jupyter/Components/reduced-cell`                | 6       |
-| `Modules/Jupyter/Components/Tag`                     | `Modules/Jupyter/Components/tag`                         | 3       |
-| `Modules/Jupyter/Forms/NewKernel`                    | `Modules/Jupyter/Components/Forms/new-kernel`            | 1       |
-| `Modules/Jupyter/Forms/NewTerminal`                  | `Modules/Jupyter/Components/Forms/new-terminal`          | 1       |
-| `Modules/Jupyter/Main`                               | `Modules/Jupyter/Views/jupyter-module`                   | 1       |
-| `Modules/Jupyter/Terminal`                           | `Modules/Jupyter/Components/terminal`                    | 1       |
-| `Modules/Notion/Components/NotionDatabase`           | `Modules/Notion/Components/notion-database`              | 1       |
-| `Modules/Notion/Main`                                | `Modules/Notion/Views/notion-module`                     | 1       |
-| `Modules/Socials/Forms/NewIframe`                    | `Modules/Socials/Components/Forms/form-new-iframe`       | 1       |
-| `Modules/Socials/Forms/NewNodeUser`                  | `Modules/Socials/Components/Forms/form-new-node-user`    | 1       |
-| `Modules/Socials/Forms/NewYoutube`                   | `Modules/Socials/Components/Forms/form-new-youtube`      | 1       |
-| `Modules/Socials/Main`                               | `Modules/Socials/Views/socials`                          | 1       |
-| `Modules/Space/Components/Cursor`                    | `Modules/Whiteboard/Assets/Cursor`                       | 1       |
-| `Modules/Space/Components/Edges`                     | `Modules/Whiteboard/Assets/edge`                         | 1       |
-| `Modules/Space/Components/Inputs Outputs`            | `Modules/Whiteboard/Assets/inputsOutputs`                | 4       |
-| `Modules/Space/Components/Node Toolbar`              | `Modules/Whiteboard/Assets/node-main-toolbar`            | 1       |
-| `Modules/Space/Components/Pin`                       | `Modules/Whiteboard/Assets/Slot`                         | 1       |
-| `Modules/Space/Main`                                 | `Modules/Whiteboard/Views/space-module`                  | 1       |
-| `Modules/UserContainers/Components/Led`              | `Modules/UserContainers/Components/status-led`           | 3       |
-| `Modules/UserContainers/Components/Node Server`      | `Modules/UserContainers/Components/node-server`          | 3       |
-| `Modules/UserContainers/Components/Server Card`      | `Modules/UserContainers/Components/server-card`          | 7       |
-| `Modules/UserContainers/Forms/Docker Options`        | `Modules/UserContainers/Components/Forms/docker-options` | 1       |
-| `Modules/UserContainers/Forms/NewServer`             | `Modules/UserContainers/Components/Forms/new-server`     | 1       |
-| `Modules/UserContainers/Main`                        | `Modules/UserContainers/Views/user-containers-module`    | 1       |
-| `Mvp/Assets/resource-selection`                      | `Mvp/Assets/resource-selection`                          | 2       |
-| `Mvp/Assets/user-bubble`                             | `Base/Assets/user-bubble`                                | 16      |
-| `Mvp/Assets/user-display`                            | `Mvp/Assets/user-display`                                | 1       |
-| `Mvp/Assets/user-display-item`                       | `Mvp/Assets/user-display-item`                           | 1       |
-| `Mvp/Assets/wrapper`                                 | `Mvp/Assets/wrapper`                                     | 2       |
-| `Mvp/Components/filter-box`                          | `Mvp/Components/filter-box`                              | 2       |
-| `Mvp/Components/header`                              | `Mvp/Components/header`                                  | 4       |
-| `Mvp/Components/notebook-card`                       | `Mvp/Components/notebook-card`                           | 7       |
-| `Mvp/Components/reource-list`                        | `Mvp/Components/resource-list`                           | 1       |
-| `Mvp/Components/resource-bar`                        | `Mvp/Components/resource-bar`                            | 1       |
-| `Mvp/Components/resource-description`                | `Mvp/Components/resource-description`                    | 2       |
-| `Mvp/Components/rules`                               | `Mvp/Components/rules`                                   | 2       |
-| `Mvp/Components/server-stack`                        | `Mvp/Components/server-stack`                            | 2       |
-| `Mvp/Components/summary-accesses`                    | `Mvp/Components/summary-accesses`                        | 3       |
-| `Mvp/Components/tabs`                                | `Mvp/Components/tabs`                                    | 1       |
-| `Mvp/Components/user-informations`                   | `Mvp/Components/user-informations`                       | 2       |
-| `Mvp/Components/user-list`                           | `Mvp/Components/user-list`                               | 1       |
-| `Mvp/Resource/Notebook/notebook-view`                | `Mvp/Resource/notebook-view`                             | 4       |
-| `Mvp/View/access-role`                               | `Mvp/Views/access-role`                                  | 1       |
-| `Mvp/View/accesses`                                  | `Mvp/Views/accesses`                                     | 1       |
-| `Mvp/View/group-view`                                | `Mvp/Views/group-view`                                   | 1       |
-| `Mvp/View/notebook-view`                             | `Mvp/Views/notebook-view`                                | 2       |
-| `Mvp/View/server-view`                               | `Mvp/Views/servers-view`                                 | 1       |
-| `Mvp/View/tag-filter`                                | `Mvp/Views/tag-filter`                                   | 1       |
-| `Mvp/View/user-view`                                 | `Mvp/Views/user-view`                                    | 2       |
-| `Palette/Default`                                    | `Base/Assets/palette`                                    | 1       |
-| `UI/LiveSpace`                                       | `Base/Components/liveSpace`                              | 1       |
-| `UI/Preview`                                         | `Base/Components/Preview`                                | 1       |
-| `UI/Sidebar`                                         | `Base/Components/Sidebar`                                | 1       |
-| `Users/IDCard`                                       | `Modules/Socials/Components/node-id-card`                | 1       |
-| `Users/PermissionsPage`                              | `Base/Views/permissions-page`                            | 4       |
-| `Users/PermissionsPage/RolesTab`                     | `Base/Views/roles-tab`                                   | 3       |
-| `Users/PermissionsPage/UserRoleEditor`               | `Base/Views/user-role-editor`                            | 5       |
-| `Users/PermissionsPage/UsersTab`                     | `Base/Views/users-tab`                                   | 4       |
-| `Users/RoleEditor`                                   | `Base/Views/role-editor`                                 | 2       |
-| `Users/UserAvatar`                                   | `Base/Assets/users-avatar`                               | 4       |
-| `Users/UserListItem`                                 | `Base/Assets/user-list-item`                             | 3       |
-| `Users/UserUsername`                                 | `Base/Assets/users-username`                             | 5       |
-| `icons/all`                                          | `Base/Assets/icons`                                      | 1       |
-| `icons/background`                                   | `Base/Assets/background`                                 | 1       |
-| `internals/Accordion`                                | `Base/Components/Accordion`                              | 2       |
-| `internals/WrapperCssCoordinates`                    | `Base/Components/wrapper-css-coordinates`                | 1       |
-| `root`                                               | `Modules/Tabs/Components/tabs-radix`                     | 1       |
+Les 155 baselines de capture ont été renommées avec, car l'identifiant d'une
+story dérive de son titre. Confrontées aux identifiants réellement servis :
+**zéro orpheline**. Les 102 stories sans baseline l'étaient déjà.
+
+| avant                                         | après                                                    |
+| --------------------------------------------- | -------------------------------------------------------- |
+| `Basics/Buttons`                              | `Base/Assets/Buttons`                                    |
+| `Basics/Countdown`                            | `Base/Assets/Countdown`                                  |
+| `Basics/Datetime`                             | `Base/Assets/Datetime`                                   |
+| `Basics/LoadingDots`                          | `Base/Assets/LoadingDots`                                |
+| `Basics/Reset`                                | `Base/Assets/CssReset`                                   |
+| `Basics/ResourceButtons`                      | `Base/Assets/ResourceButtons`                            |
+| `Basics/Tags`                                 | `Base/Assets/Tags`                                       |
+| `Credentials/CredentialCard`                  | `Base/Resource/Credentials/CredentialCard`               |
+| `Credentials/CredentialForm`                  | `Base/Resource/Credentials/CredentialForm`               |
+| `Credentials/CredentialShareDialog`           | `Base/Resource/Credentials/CredentialShareDialog`        |
+| `Credentials/CredentialTypeSelector`          | `Base/Resource/Credentials/CredentialTypeSelector`       |
+| `Credentials/CredentialsList`                 | `Base/Resource/Credentials/CredentialsList`              |
+| `Forms/Account/Login`                         | `Mvp/Components/Forms/Account/Login`                     |
+| `Forms/Account/MagicLink`                     | `Mvp/Components/Forms/Account/MagicLink`                 |
+| `Forms/Account/NewPassword`                   | `Mvp/Components/Forms/Account/NewPassword`               |
+| `Forms/Account/Signup`                        | `Mvp/Components/Forms/Account/Signup`                    |
+| `Forms/Account/Totp`                          | `Mvp/Components/Forms/Account/Totp`                      |
+| `Forms/Account/TotpLogin`                     | `Mvp/Components/Forms/Account/TotpLogin`                 |
+| `Forms/DialogModal`                           | `Base/Components/Forms/DialogModal`                      |
+| `Forms/Errors/FormError`                      | `Base/Components/Forms/Errors/FormError`                 |
+| `Forms/Errors/FormErrors`                     | `Base/Components/Forms/Errors/FormErrors`                |
+| `Forms/Fields/ColorPicker`                    | `Base/Components/Forms/Fields/ColorPicker`               |
+| `Forms/Fields/Select`                         | `Base/Components/Forms/Fields/Select`                    |
+| `Forms/Fields/Slider`                         | `Base/Components/Forms/Fields/Slider`                    |
+| `Forms/Fields/Switch`                         | `Base/Components/Forms/Fields/Switch`                    |
+| `Forms/Fields/Text`                           | `Base/Components/Forms/Fields/Text`                      |
+| `Forms/Fields/Totp`                           | `Base/Components/Forms/Fields/Totp`                      |
+| `Forms/MountVolume`                           | `Mvp/Components/Forms/MountVolume`                       |
+| `Forms/NewOrganization`                       | `Mvp/Components/Forms/NewOrganization`                   |
+| `Forms/NewProject`                            | `Mvp/Components/Forms/NewProject`                        |
+| `Module/Chats/Components/Chat Anchor`         | `Modules/Chats/Components/Chat Anchor`                   |
+| `Module/Chats/Components/Chat Box`            | `Modules/Chats/Components/Chat Box`                      |
+| `Module/Chats/Components/Discussion Item`     | `Modules/Chats/Components/Discussion Item`               |
+| `Module/Chats/Components/Reply Item`          | `Modules/Chats/Components/Reply Item`                    |
+| `Module/Chats/Main`                           | `Modules/Chats/Views/Main`                               |
+| `Modules/Airtable/Main`                       | `Modules/Airtable/Views/Main`                            |
+| `Modules/Excalidraw/Main`                     | `Modules/Excalidraw/Views/Main`                          |
+| `Modules/Jupyter/Forms/NewKernel`             | `Modules/Jupyter/Components/Forms/NewKernel`             |
+| `Modules/Jupyter/Forms/NewTerminal`           | `Modules/Jupyter/Components/Forms/NewTerminal`           |
+| `Modules/Jupyter/Main`                        | `Modules/Jupyter/Views/Main`                             |
+| `Modules/Jupyter/Terminal`                    | `Modules/Jupyter/Components/Terminal`                    |
+| `Modules/Notion/Main`                         | `Modules/Notion/Views/Main`                              |
+| `Modules/Socials/Forms/NewIframe`             | `Modules/Socials/Components/Forms/NewIframe`             |
+| `Modules/Socials/Forms/NewNodeUser`           | `Modules/Socials/Components/Forms/NewNodeUser`           |
+| `Modules/Socials/Forms/NewYoutube`            | `Modules/Socials/Components/Forms/NewYoutube`            |
+| `Modules/Socials/Main`                        | `Modules/Socials/Views/Main`                             |
+| `Modules/Space/Components/Cursor`             | `Modules/Whiteboard/Assets/Cursor`                       |
+| `Modules/Space/Components/Edges`              | `Modules/Whiteboard/Assets/Edges`                        |
+| `Modules/Space/Components/Inputs Outputs`     | `Modules/Whiteboard/Assets/Inputs Outputs`               |
+| `Modules/Space/Components/Node Toolbar`       | `Modules/Whiteboard/Assets/Node Toolbar`                 |
+| `Modules/Space/Components/Pin`                | `Modules/Whiteboard/Assets/Pin`                          |
+| `Modules/Space/Main`                          | `Modules/Whiteboard/Views/Main`                          |
+| `Modules/UserContainers/Forms/Docker Options` | `Modules/UserContainers/Components/Forms/Docker Options` |
+| `Modules/UserContainers/Forms/NewServer`      | `Modules/UserContainers/Components/Forms/NewServer`      |
+| `Modules/UserContainers/Main`                 | `Modules/UserContainers/Views/Main`                      |
+| `Mvp/Assets/resource-selection`               | `Mvp/Assets/ResourceSelection`                           |
+| `Mvp/Assets/user-bubble`                      | `Base/Assets/UserBubble`                                 |
+| `Mvp/Assets/user-display`                     | `Mvp/Assets/UserDisplay`                                 |
+| `Mvp/Assets/user-display-item`                | `Mvp/Assets/UserDisplayItem`                             |
+| `Mvp/Assets/wrapper`                          | `Mvp/Assets/Wrapper`                                     |
+| `Mvp/Components/filter-box`                   | `Mvp/Components/FilterBox`                               |
+| `Mvp/Components/header`                       | `Mvp/Components/Header`                                  |
+| `Mvp/Components/notebook-card`                | `Mvp/Components/NotebookCard`                            |
+| `Mvp/Components/reource-list`                 | `Mvp/Components/ResourceList`                            |
+| `Mvp/Components/resource-bar`                 | `Mvp/Components/ResourceBar`                             |
+| `Mvp/Components/resource-description`         | `Mvp/Components/ResourceDescription`                     |
+| `Mvp/Components/rules`                        | `Mvp/Components/Rules`                                   |
+| `Mvp/Components/server-stack`                 | `Mvp/Components/ServerStack`                             |
+| `Mvp/Components/summary-accesses`             | `Mvp/Components/SummaryAccesses`                         |
+| `Mvp/Components/tabs`                         | `Mvp/Components/Tabs`                                    |
+| `Mvp/Components/user-informations`            | `Mvp/Components/UserInformations`                        |
+| `Mvp/Components/user-list`                    | `Mvp/Components/UserList`                                |
+| `Mvp/Resource/Notebook/notebook-view`         | `Mvp/Resource/Notebook/NotebookView`                     |
+| `Mvp/View/access-role`                        | `Mvp/Views/AccessRole`                                   |
+| `Mvp/View/accesses`                           | `Mvp/Views/Accesses`                                     |
+| `Mvp/View/group-view`                         | `Mvp/Views/GroupView`                                    |
+| `Mvp/View/notebook-view`                      | `Mvp/Views/NotebookView`                                 |
+| `Mvp/View/server-view`                        | `Mvp/Views/ServerView`                                   |
+| `Mvp/View/tag-filter`                         | `Mvp/Views/TagFilter`                                    |
+| `Mvp/View/user-view`                          | `Mvp/Views/UserView`                                     |
+| `Palette/Default`                             | `Base/Assets/Palette`                                    |
+| `UI/LiveSpace`                                | `Base/Components/LiveSpace`                              |
+| `UI/Preview`                                  | `Base/Components/Preview`                                |
+| `UI/Sidebar`                                  | `Base/Components/Sidebar`                                |
+| `Users/IDCard`                                | `Modules/Socials/Components/IDCard`                      |
+| `Users/PermissionsPage`                       | `Base/Views/PermissionsPage`                             |
+| `Users/PermissionsPage/RolesTab`              | `Base/Views/PermissionsPage/RolesTab`                    |
+| `Users/PermissionsPage/UserRoleEditor`        | `Base/Views/PermissionsPage/UserRoleEditor`              |
+| `Users/PermissionsPage/UsersTab`              | `Base/Views/PermissionsPage/UsersTab`                    |
+| `Users/RoleEditor`                            | `Base/Views/RoleEditor`                                  |
+| `Users/UserAvatar`                            | `Base/Assets/UserAvatar`                                 |
+| `Users/UserListItem`                          | `Base/Assets/UserListItem`                               |
+| `Users/UserUsername`                          | `Base/Assets/UserUsername`                               |
+| `icons/all`                                   | `Base/Assets/Icons`                                      |
+| `icons/background`                            | `Base/Assets/Background`                                 |
+| `internals/Accordion`                         | `Base/Components/Accordion`                              |
+| `internals/WrapperCssCoordinates`             | `Base/Components/WrapperCssCoordinates`                  |
 
 ## Les 21 éléments perdus
 

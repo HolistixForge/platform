@@ -30,7 +30,7 @@ const Wrap = ({
 };
 
 const meta = {
-  title: 'Credentials/CredentialTypeSelector',
+  title: 'Base/Resource/Credentials/CredentialTypeSelector',
   component: Wrap,
   parameters: { layout: 'centered' },
   args: {

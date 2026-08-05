@@ -268,7 +268,7 @@ const Story = () => {
 //
 
 const meta = {
-  title: 'Modules/Socials/Main',
+  title: 'Modules/Socials/Views/Main',
   component: Story,
   parameters: {
     layout: 'fullscreen',

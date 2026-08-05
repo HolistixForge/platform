@@ -5,7 +5,7 @@ import { Tabs } from './tabs';
 //
 
 const meta = {
-  title: 'Mvp/Components/tabs',
+  title: 'Mvp/Components/Tabs',
   component: Tabs,
   parameters: {
     layout: 'centered',

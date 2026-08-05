@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Cursor } from './Cursor';
 
 const meta = {
-  title: 'Modules/Space/Components/Cursor',
+  title: 'Modules/Whiteboard/Assets/Cursor',
   component: Cursor,
   parameters: {
     layout: 'centered',

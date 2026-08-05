@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { ResourceSelection } from './resource-selection';
 
 const meta = {
-  title: 'Mvp/Assets/resource-selection',
+  title: 'Mvp/Assets/ResourceSelection',
   component: ResourceSelection,
   decorators: [
     (Story) => (

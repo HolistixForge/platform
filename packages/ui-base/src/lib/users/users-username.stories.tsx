@@ -19,7 +19,7 @@ const UserUsernameStory = ({
 };
 
 const meta = {
-  title: 'Users/UserUsername',
+  title: 'Base/Assets/UserUsername',
   component: UserUsernameStory,
   parameters: {
     layout: 'centered',

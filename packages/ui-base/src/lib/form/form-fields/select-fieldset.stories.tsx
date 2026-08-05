@@ -30,7 +30,7 @@ const StoryWrapper = (props: SelectFieldsetProps) => {
 //
 
 const meta = {
-  title: 'Forms/Fields/Select',
+  title: 'Base/Components/Forms/Fields/Select',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

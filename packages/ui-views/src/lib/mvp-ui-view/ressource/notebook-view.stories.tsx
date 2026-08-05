@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { NotebookView } from './notebook-view';
 
 const meta = {
-  title: 'Mvp/Resource/Notebook/notebook-view',
+  title: 'Mvp/Resource/Notebook/NotebookView',
   component: NotebookView,
   parameters: {
     layout: 'centered',

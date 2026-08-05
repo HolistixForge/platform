@@ -49,7 +49,7 @@ const StoryWrapper = () => {
 //
 
 const meta = {
-  title: 'Modules/UserContainers/Forms/Docker Options',
+  title: 'Modules/UserContainers/Components/Forms/Docker Options',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

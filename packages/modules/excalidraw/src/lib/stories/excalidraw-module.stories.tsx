@@ -101,7 +101,7 @@ const Story = () => {
 };
 
 const meta = {
-  title: 'Modules/Excalidraw/Main',
+  title: 'Modules/Excalidraw/Views/Main',
   component: Story,
   parameters: {
     layout: 'fullscreen',

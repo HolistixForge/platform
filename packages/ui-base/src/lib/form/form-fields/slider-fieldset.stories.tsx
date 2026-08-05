@@ -14,7 +14,7 @@ const Wrap = ({ value: initial, ...props }: SliderFieldsetProps) => {
 };
 
 const meta = {
-  title: 'Forms/Fields/Slider',
+  title: 'Base/Components/Forms/Fields/Slider',
   component: Wrap,
   parameters: { layout: 'centered' },
   args: {

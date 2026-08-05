@@ -222,7 +222,7 @@ const Story = () => {
 //
 
 const meta = {
-  title: 'Modules/Notion/Main',
+  title: 'Modules/Notion/Views/Main',
   component: Story,
   parameters: {
     layout: 'fullscreen',

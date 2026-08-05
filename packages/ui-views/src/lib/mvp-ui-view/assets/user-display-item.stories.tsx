@@ -7,7 +7,7 @@ import { UserDisplayItem } from './user-display-item';
 //
 
 const meta = {
-  title: 'Mvp/Assets/user-display-item',
+  title: 'Mvp/Assets/UserDisplayItem',
   component: UserDisplayItem,
   parameters: {
     layout: 'centered',

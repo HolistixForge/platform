@@ -4,7 +4,7 @@ import { Sidebar } from './Sidebar';
 import { icons } from '../assets/icons';
 
 const meta = {
-  title: 'UI/Sidebar',
+  title: 'Base/Components/Sidebar',
   component: Sidebar,
   parameters: {
     layout: 'centered',

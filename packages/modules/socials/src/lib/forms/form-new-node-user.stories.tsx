@@ -47,7 +47,7 @@ const StoryWrapper = () => {
 //
 
 const meta = {
-  title: 'Modules/Socials/Forms/NewNodeUser',
+  title: 'Modules/Socials/Components/Forms/NewNodeUser',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

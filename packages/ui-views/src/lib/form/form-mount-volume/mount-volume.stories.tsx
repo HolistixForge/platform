@@ -26,7 +26,7 @@ const StoryWrapper = () => {
 //
 
 const meta = {
-  title: 'Forms/MountVolume',
+  title: 'Mvp/Components/Forms/MountVolume',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

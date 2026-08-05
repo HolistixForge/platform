@@ -11,7 +11,7 @@ const ids = Object.keys(errors);
 
 const meta: Meta<typeof FormError> = {
   component: FormError,
-  title: 'Forms/Errors/FormError',
+  title: 'Base/Components/Forms/Errors/FormError',
   argTypes: {
     id: {
       options: ids,

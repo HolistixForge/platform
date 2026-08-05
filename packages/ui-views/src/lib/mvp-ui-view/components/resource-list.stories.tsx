@@ -5,7 +5,7 @@ import { ResourceList } from './resource-list';
 //
 
 const meta = {
-  title: 'Mvp/Components/reource-list',
+  title: 'Mvp/Components/ResourceList',
   component: ResourceList,
   parameters: {
     layout: 'centered',

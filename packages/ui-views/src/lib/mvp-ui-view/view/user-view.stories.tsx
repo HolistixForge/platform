@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { UserView } from './user-view';
 
 const meta = {
-  title: 'Mvp/View/user-view',
+  title: 'Mvp/Views/UserView',
   component: UserView,
   parameters: {
     layout: 'fullscreen',

@@ -26,7 +26,7 @@ const member: TCollaborator = {
 };
 
 const meta = {
-  title: 'Users/UserListItem',
+  title: 'Base/Assets/UserListItem',
   component: UserListItem,
   parameters: { layout: 'centered' },
   decorators: [

@@ -6,7 +6,7 @@ import { SwitchFieldset } from './switch-fieldset';
 //
 
 const meta = {
-  title: 'Forms/Fields/Switch',
+  title: 'Base/Components/Forms/Fields/Switch',
   component: SwitchFieldset,
   parameters: {
     layout: 'centered',

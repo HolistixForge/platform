@@ -5,7 +5,7 @@ import { UserList } from './user-list';
 //
 
 const meta = {
-  title: 'Mvp/Components/user-list',
+  title: 'Mvp/Components/UserList',
   component: UserList,
   parameters: {
     layout: 'centered',
