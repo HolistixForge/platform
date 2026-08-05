@@ -1,6 +1,10 @@
 import { EPriority, log } from '@holistix-forge/log';
 import { IPersistenceProvider } from './IPersistenceProvider';
-import { createGanymedeClient, GanymedeClient } from '../lib/ganymede-client';
+import {
+  createGanymedeClient,
+  GanymedeClient,
+  ganymedeBaseUrl,
+} from '../lib/ganymede-client';
 import { TJson } from '@holistix-forge/simple-types';
 
 type TGatewayDataSnapshot = Record<string, unknown>;
@@ -461,7 +465,7 @@ export class GatewayState {
       `Fetching fresh organization members from Ganymede: ${url}`
     );
 
-    const ganymedeUrl = process.env.GANYMEDE_URL || 'http://app-ganymede:3000';
+    const ganymedeUrl = ganymedeBaseUrl();
     const response = await fetch(`${ganymedeUrl}${url}`, {
       method: 'GET',
       headers: {

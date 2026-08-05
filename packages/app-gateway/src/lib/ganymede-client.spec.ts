@@ -1,4 +1,4 @@
-import { GanymedeClient } from './ganymede-client';
+import { GanymedeClient, ganymedeBaseUrl } from './ganymede-client';
 import { myfetch } from '@holistix-forge/backend-engine';
 import { TMyfetchRequest } from '@holistix-forge/simple-types';
 
@@ -358,5 +358,39 @@ describe('GanymedeClient', () => {
 
       expect(result).toEqual({ id: 'new-resource-123', created: true });
     });
+  });
+});
+
+/**
+ * Where the direct `fetch` calls go.
+ *
+ * The default that used to sit inline at four call sites — `http://app-ganymede:3000`
+ * — resolves in no deployment this repository builds, and the one caller that
+ * catches its failure logs an error and reports the project initialized anyway.
+ * So the interesting assertion is the *middle* case: nothing set but the FQDN.
+ */
+describe('ganymedeBaseUrl', () => {
+  const saved = { ...process.env };
+
+  afterEach(() => {
+    process.env = { ...saved };
+  });
+
+  it('prefers an explicit GANYMEDE_URL', () => {
+    process.env.GANYMEDE_URL = 'http://ganymede.internal:3000';
+    process.env.GANYMEDE_FQDN = 'ganymede.apollo.test:8443';
+    expect(ganymedeBaseUrl()).toBe('http://ganymede.internal:3000');
+  });
+
+  it('falls back to the FQDN, which a gateway can always reach', () => {
+    delete process.env.GANYMEDE_URL;
+    process.env.GANYMEDE_FQDN = 'ganymede.apollo.test:8443';
+    expect(ganymedeBaseUrl()).toBe('https://ganymede.apollo.test:8443');
+  });
+
+  it('keeps the port, because nginx may not be on 443', () => {
+    delete process.env.GANYMEDE_URL;
+    process.env.GANYMEDE_FQDN = 'ganymede.apollo.test:8443';
+    expect(ganymedeBaseUrl()).toContain(':8443');
   });
 });

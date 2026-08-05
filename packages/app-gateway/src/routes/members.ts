@@ -9,6 +9,7 @@ import {
   NotFoundException,
 } from '@holistix-forge/log';
 import { isUuid } from '@holistix-forge/simple-types';
+import { ganymedeBaseUrl } from '../lib/ganymede-client';
 
 /**
  * Member Management Routes
@@ -119,8 +120,7 @@ export const setupMembersRoutes = (
       }
 
       // 5. Call Ganymede internal API
-      const ganymedeUrl =
-        process.env.GANYMEDE_URL || 'http://app-ganymede:3000';
+      const ganymedeUrl = ganymedeBaseUrl();
       const gatewayToken = process.env.GATEWAY_TOKEN;
 
       if (!gatewayToken) {
@@ -206,8 +206,7 @@ export const setupMembersRoutes = (
       );
 
       // 3. Call Ganymede internal API
-      const ganymedeUrl =
-        process.env.GANYMEDE_URL || 'http://app-ganymede:3000';
+      const ganymedeUrl = ganymedeBaseUrl();
       const gatewayToken = process.env.GATEWAY_TOKEN;
 
       if (!gatewayToken) {

@@ -7,6 +7,7 @@ import {
 } from '@holistix-forge/collab-engine';
 import { IPersistenceProvider } from './IPersistenceProvider';
 import type { TReducersBackendExports } from '@holistix-forge/reducers';
+import { ganymedeBaseUrl } from '../lib/ganymede-client';
 
 // y-websocket utils for accessing the shared YJS document store
 // This ensures we use the SAME docs that WebSocket clients connect to
@@ -218,8 +219,7 @@ export class ProjectRoomsManager implements IPersistenceProvider {
 
     try {
       // Fetch project members from Ganymede
-      const ganymedeUrl =
-        process.env.GANYMEDE_URL || 'http://app-ganymede:3000';
+      const ganymedeUrl = ganymedeBaseUrl();
       const orgToken = instances.gatewayState.getOrganizationToken();
 
       if (!isUuid(project_id)) {

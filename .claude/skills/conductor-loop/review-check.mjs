@@ -68,7 +68,10 @@ const resolvePr = () => {
 
   if (prArg) return { number: Number(prArg), repo };
 
-  for (const head of [upstreamBranch(), sh('git', ['branch', '--show-current'])]) {
+  for (const head of [
+    upstreamBranch(),
+    sh('git', ['branch', '--show-current']),
+  ]) {
     if (!head) continue;
     const found = JSON.parse(
       sh('gh', [
@@ -99,18 +102,35 @@ const resolvePr = () => {
 // The severity Devin puts at the top of the body. Kept as the emoji it actually
 // writes rather than a normalised enum: the point is to match what is on the
 // page, so a finding can be found again by eye.
+//
+// Measured over PRs #53–#57 (156 root comments), Devin runs *three* review jobs
+// per PR and each one has its own pair of emoji:
+//
+//   BUG_…       🔴 critical   🟡 bug
+//   SEC_…       🟨 security                (the security swarm — one job, one emoji)
+//   ANALYSIS_…  🔍 analysis   📝 info
+//
+// 🟨 used to be missing here, which sank every security finding to the bottom
+// of the list under a blank severity — the worst possible place for it. The job
+// prefix is now read as a fallback so a *new* emoji degrades to the right
+// bucket instead of to `unmarked`.
 const SEVERITY = [
   ['🔴', 'critical'],
+  ['🟨', 'security'],
   ['🟡', 'bug'],
   ['🔍', 'analysis'],
   ['📝', 'info'],
 ];
+
+// The id in the marker is `<JOB>_pr-review-job-<hash>_NNNN`.
+const JOB_FALLBACK = { BUG: 'bug', SEC: 'security', ANALYSIS: 'analysis' };
 
 const parse = (body) => {
   // Every Devin finding opens with an HTML comment carrying its own id. Its
   // absence is how a human reply, or Devin's own resolution note, is told apart
   // from a finding.
   const marked = /^\s*<!--\s*devin-review-comment\s/.test(body);
+  const job = body.match(/"id":\s*"([A-Z]+)_pr-review/)?.[1] ?? null;
   const stripped = body.replace(/<!--[\s\S]*?-->/g, '').trim();
   const severity = SEVERITY.find(([emoji]) => stripped.startsWith(emoji));
   const headline =
@@ -118,11 +138,12 @@ const parse = (body) => {
       .split('\n')
       .find((line) => line.trim())
       ?.replace(/\*\*/g, '')
-      .replace(/^[🔴🟡🔍📝]\s*/u, '')
+      .replace(/^[🔴🟨🟡🔍📝]\s*/u, '')
       .trim() ?? '(empty)';
   return {
     isFinding: marked,
-    severity: severity ? severity[1] : 'unmarked',
+    job,
+    severity: severity ? severity[1] : JOB_FALLBACK[job] ?? 'unmarked',
     emoji: severity ? severity[0] : ' ',
     headline,
   };
@@ -205,12 +226,37 @@ const main = () => {
   const open = findings.filter((f) => !f.resolved);
   const done = findings.filter((f) => f.resolved);
 
+  // CodeQL is a *different bot* (`github-advanced-security[bot]`) posting a body
+  // with no Devin marker, so the filter above drops it on the floor — three such
+  // alerts sat unseen on #54 and one on #56. Its lifecycle lives in the security
+  // tab and it is never closed by a reply, so it is listed on its own and does
+  // not gate the exit status; dismissing it is a decision made on GitHub.
+  const codeql = comments
+    .filter(
+      (c) =>
+        !c.in_reply_to_id && c.user.login.startsWith('github-advanced-security')
+    )
+    .map((c) => ({
+      url: c.html_url,
+      file: c.path,
+      line: c.line ?? c.original_line ?? null,
+      headline: (c.body.split('\n').find((l) => l.trim()) ?? '(empty)')
+        .replace(/^#+\s*/, '')
+        .trim(),
+    }));
+
   if (asJson) {
-    console.log(JSON.stringify({ pr: number, repo, open, resolved: done }, null, 2));
+    console.log(
+      JSON.stringify(
+        { pr: number, repo, open, resolved: done, codeql },
+        null,
+        2
+      )
+    );
     return open.length === 0 ? 0 : 1;
   }
 
-  const order = ['critical', 'bug', 'analysis', 'info', 'unmarked'];
+  const order = ['critical', 'security', 'bug', 'analysis', 'info', 'unmarked'];
   const rank = (f) => {
     const i = order.indexOf(f.severity);
     return i === -1 ? order.length : i;
@@ -235,6 +281,17 @@ const main = () => {
   show(open, 'OPEN');
   if (showAll) show(done, 'RESOLVED');
   if (!open.length) console.log('Nothing open.');
+
+  if (codeql.length) {
+    console.log(
+      `\nCODEQL (${codeql.length}) — resolved on GitHub, not by reply`
+    );
+    for (const c of codeql) {
+      console.log(`  🛡️  ${c.headline}`);
+      console.log(`     ${c.line ? `${c.file}:${c.line}` : c.file}`);
+      console.log(`     ${c.url}`);
+    }
+  }
 
   return open.length === 0 ? 0 : 1;
 };

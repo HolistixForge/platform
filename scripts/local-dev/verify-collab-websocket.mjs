@@ -403,14 +403,37 @@ async function main() {
   // -- Environment configuration --------------------------------------------
   stage = 'environment';
   step(`Environment ${c.bold}${opts.envName}${c.reset}`);
-  const env = readEnvFile(path.join(envDir, '.env.ganymede'));
+  // Two layouts, because there are two ways to stand an environment up and
+  // both are current. create-env.sh writes `.env.ganymede` and `jwt-key` under
+  // /root/.local-dev; the macOS harness writes `ganymede.env` and `jwt.key`
+  // under ~/.holistix-macos. Nothing else here differs — DOMAIN simply carries
+  // a port on macOS, which every URL built from it already wanted.
+  const pick = (...names) => {
+    for (const name of names) {
+      const candidate = path.join(envDir, name);
+      if (fs.existsSync(candidate)) return candidate;
+    }
+    return null;
+  };
+
+  const envFile = pick('.env.ganymede', 'ganymede.env');
+  if (!envFile) {
+    throw new StageError(
+      `No environment file in ${envDir}`,
+      'Looked for .env.ganymede (Linux) and ganymede.env (macOS).',
+    );
+  }
+  const env = readEnvFile(envFile);
   const domain = env.DOMAIN;
-  if (!domain) throw new StageError('DOMAIN missing from .env.ganymede');
+  if (!domain) throw new StageError(`DOMAIN missing from ${envFile}`);
   info(`domain: ${domain}`);
 
-  const keyPath = path.join(envDir, 'jwt-key');
-  if (!fs.existsSync(keyPath)) {
-    throw new StageError(`JWT signing key not found at ${keyPath}`);
+  const keyPath = pick('jwt-key', 'jwt.key');
+  if (!keyPath) {
+    throw new StageError(
+      `JWT signing key not found in ${envDir}`,
+      'Looked for jwt-key (Linux) and jwt.key (macOS).',
+    );
   }
   const privateKey = fs.readFileSync(keyPath, 'utf8');
 

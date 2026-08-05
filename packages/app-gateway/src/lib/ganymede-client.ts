@@ -134,6 +134,31 @@ export class GanymedeClient {
 }
 
 /**
+ * The base URL for the handful of calls that use `fetch` directly.
+ *
+ * Four of them do — project members, organization members, and the two project
+ * role writes — and each read `GANYMEDE_URL`, which nothing sets. Neither pool
+ * script exports it and neither Ansible role writes it, so every one of those
+ * calls has been going to `http://app-ganymede:3000`, a compose hostname that
+ * resolves in no deployment this repository builds. The permission
+ * initialization that follows catches the failure and logs it, and the project
+ * still reports itself fully initialized — so a room comes up with nobody
+ * authorised in it and nothing above the log says why.
+ *
+ * `GANYMEDE_URL` still wins when it is set, so an operator who has been working
+ * around this keeps their override. Otherwise the FQDN, which is the one
+ * address a gateway can always reach Ganymede at: on Linux CoreDNS resolves it,
+ * on macOS the entrypoint writes it into /etc/hosts from the default route, and
+ * nginx picks the right server block from the name without a Host header.
+ */
+export function ganymedeBaseUrl(): string {
+  if (process.env.GANYMEDE_URL) return process.env.GANYMEDE_URL;
+  const fqdn = process.env.GANYMEDE_FQDN || CONFIG.GANYMEDE_FQDN;
+  if (fqdn) return `https://${fqdn}`;
+  return 'http://app-ganymede:3000';
+}
+
+/**
  * Create a Ganymede client instance
  * Uses GANYMEDE_API_URL and GANYMEDE_FQDN from environment
  *
