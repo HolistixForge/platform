@@ -65,6 +65,38 @@ describe('restarting an existing container', () => {
     return { calls, exec };
   };
 
+  it('returns the identifier alone, not the engine progress with it', async () => {
+    // engineExec joins stderr onto stdout so a refused network delete becomes
+    // visible. Apple `container run --detach` puts the name on stdout and six
+    // progress lines on stderr, so the joined output starts with the name and
+    // continues with noise. That value is stored and later compared —
+    // ownership, removal, reconciliation — so carrying the noise makes the
+    // container unremovable by the broker that started it.
+    const exec = async (args: string[]) => {
+      if (args[1] === 'inspect') return '';
+      if (args[0] === 'run') {
+        return 'holistix_svc_uc_abc12345\n[0/6] [0s]\n[6/6] Starting container [1s]';
+      }
+      return '';
+    };
+
+    const id = await startContainer(dockerEngine, exec, request, image, config);
+
+    expect(id).toBe('holistix_svc_uc_abc12345');
+  });
+
+  it('returns a plain identifier unchanged', async () => {
+    const exec = async (args: string[]) => {
+      if (args[1] === 'inspect') return '';
+      if (args[0] === 'run') return '  9f3ab21c7d4e  ';
+      return '';
+    };
+
+    expect(
+      await startContainer(dockerEngine, exec, request, image, config)
+    ).toBe('9f3ab21c7d4e');
+  });
+
   it('removes its own container so the start can proceed', async () => {
     // Starting a service that already runs is how someone restarts it. Docker
     // answers Conflict on the name, which says nothing to the person who

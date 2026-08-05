@@ -106,6 +106,18 @@ describe('PlatformRunnerBackend', () => {
     expect(request.capabilities).toEqual(['NET_ADMIN']);
   });
 
+  it('passes no extra hosts', async () => {
+    // Not every engine has `--add-host` — Apple `container` has none — and the
+    // broker refuses a start carrying them rather than dropping them quietly,
+    // which is right: a container that needed them and did not get them fails
+    // later and somewhere else. The gateway cannot know which engine is on the
+    // other end, and since dd0d0dd2 it does not need to: the container finds
+    // the host from the gateway of its own network, unprompted.
+    const { request } = await startAndCapture();
+
+    expect(request.extra_hosts).toEqual([]);
+  });
+
   it('carries the settings blob and scopes the request', async () => {
     const { request } = await startAndCapture();
 

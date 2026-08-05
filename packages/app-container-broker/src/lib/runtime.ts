@@ -109,7 +109,24 @@ export const startContainer = async (
     privateNetworkName(request.user_container_id),
     request.project_id
   );
-  return exec(engine.buildRunArgs(request, image, config));
+  const output = await exec(engine.buildRunArgs(request, image, config));
+
+  // The first line, not the whole output.
+  //
+  // `engineExec` joins stderr onto stdout, because a refused network delete is
+  // reported there with a zero exit status and had to become visible. That is
+  // the right call for the callers that *decide* on the output — and wrong for
+  // this one, which uses it as a value. Apple `container run --detach` writes
+  // the name on stdout and six lines of progress on stderr, so the returned
+  // identifier came back as `holistix_…_uc_msgac\n[0/6] [0s]\n[1/6] …`.
+  // Measured: `stdout` is exactly `id-probe`, every `[n/6]` line is stderr.
+  //
+  // That identifier is stored and later compared — ownership, removal,
+  // reconciliation — so a polluted one is not cosmetic: nothing would ever
+  // match it again, and the container becomes unremovable by the broker that
+  // started it. stdout is joined first, so the identifier is the first line on
+  // both engines; under Docker a pull notice lands on the lines after it.
+  return output.split('\n')[0].trim();
 };
 
 /** Raised when a delete names something this broker did not start. */

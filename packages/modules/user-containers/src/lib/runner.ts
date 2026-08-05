@@ -142,9 +142,18 @@ export abstract class ContainerRunner {
     // to the Docker bridge gateway IP which routes to the host/dev container
     const extraHosts: { host: string; ip: string }[] = [];
     if (config.dev_host_ip) {
+      // Without the port. The FQDNs carry one wherever nginx does not listen
+      // on 443 — every URL built from them is a link somebody follows — and a
+      // hosts entry is not a URL: `ganymede.apollo.test:8443` is not a
+      // hostname, and the broker refuses the whole start with "extra_hosts
+      // entry has a malformed host". It is right to; the fix belongs here.
+      //
+      // The same distinction as the nginx `server_name`, which strips the port
+      // for the same reason and would silently match nothing if it did not.
+      const hostname = (fqdn: string) => fqdn.split(':')[0];
       extraHosts.push(
-        { host: config.gateway_fqdn, ip: config.dev_host_ip },
-        { host: config.ganymede_fqdn, ip: config.dev_host_ip }
+        { host: hostname(config.gateway_fqdn), ip: config.dev_host_ip },
+        { host: hostname(config.ganymede_fqdn), ip: config.dev_host_ip }
       );
     }
 
