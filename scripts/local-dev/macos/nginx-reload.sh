@@ -6,9 +6,12 @@
 # `nginx -s reload` itself. On macOS Ganymede is in a container and nginx is
 # Homebrew's on the Mac: no signal crosses that boundary.
 #
-# So Ganymede touches a file in the directory it already shares with nginx —
-# NGINX_RELOAD_COMMAND, which defaults to `sudo nginx -s reload` and is set to
-# that touch here — and this watches the file.
+# So Ganymede drops a request file in the directory it already shares with
+# nginx — NGINX_RELOAD_COMMAND, which defaults to `sudo nginx -s reload`, runs
+# the requester instead — and this serves the queue. One file per request and
+# one acknowledgement per file: a single slot loses a request whenever two
+# arrive within a polling interval, and the loser waits out its timeout for a
+# confirmation nobody will write.
 #
 #   ./nginx-reload.sh watch    stay in the foreground and reload on demand
 #   ./nginx-reload.sh once     test and reload now
@@ -26,7 +29,8 @@ set -uo pipefail
 
 CONF_DIR="${HOME}/.holistix-macos"
 GATEWAYS_D="${NGINX_GATEWAYS_DIR:-${CONF_DIR}/nginx-gateways.d}"
-TRIGGER="${GATEWAYS_D}/.reload"
+REQUESTS="${GATEWAYS_D}/.requests"
+ACKS="${GATEWAYS_D}/.acks"
 LOG="${CONF_DIR}/nginx-reload.log"
 PIDFILE="${CONF_DIR}/nginx-reload.pid"
 INTERVAL="${NGINX_RELOAD_INTERVAL:-0.2}"
@@ -40,10 +44,10 @@ command -v nginx >/dev/null || { echo "nginx not found — brew install nginx"; 
 
 stamp() { date -u +"%Y-%m-%dT%H:%M:%SZ"; }
 
-# The token of the request being served, echoed back on success so the caller
-# can tell its own reload from somebody else's.
+# Every request taken in this pass is acknowledged, not just the last one seen.
+# The callers wait on their own token, and one reload satisfies all of them.
 reload_now() {
-  local token="${1:-}"
+  local tokens="${1:-}"
   local test_output
   if ! test_output="$(nginx -t 2>&1)"; then
     printf '%s  REFUSED\n%s\n' "$(stamp)" "$test_output" >>"$LOG"
@@ -52,11 +56,12 @@ reload_now() {
     return 1
   fi
   if nginx -s reload 2>>"$LOG"; then
-    # The acknowledgement. Whoever asked is waiting on this file being newer
-    # than the request, because "I touched a file" is not "nginx is serving the
-    # new configuration" — and a request made in between goes to the default
-    # server and gets a plausible answer from the wrong place.
-    printf '%s\n' "$token" >"${GATEWAYS_D}/.reloaded"
+    # The acknowledgements. Each caller waits for its own token to appear,
+    # because "I asked for a reload" is not "nginx is serving the new
+    # configuration" — a request made in between goes to the default server and
+    # gets a plausible answer from the wrong place.
+    mkdir -p "${GATEWAYS_D}/.acks"
+    for tok in $tokens; do : >"${GATEWAYS_D}/.acks/${tok}"; done
     printf '%s  reloaded\n' "$(stamp)" >>"$LOG"
     ok "nginx reloaded"
     return 0
@@ -69,24 +74,19 @@ reload_now() {
 }
 
 watch_loop() {
-  mkdir -p "$GATEWAYS_D"
-  # The mtime as it is *now*, before the loop. A trigger left behind by an
-  # earlier run is not a request, so starting the watcher must not reload; but
-  # the first touch after that must, and treating "no previous value" as
-  # "nothing to do" inside the loop silently swallowed exactly that one.
-  # The token as it stands *now*, before the loop. A request left behind by an
-  # earlier run has already been served, so starting the watcher must not
-  # reload; but the first request after that must, and treating "no previous
-  # value" as "nothing to do" inside the loop swallowed exactly that one.
-  local last
-  last="$(cat "$TRIGGER" 2>/dev/null || echo "")"
-  printf '%s  watching %s\n' "$(stamp)" "$TRIGGER" >>"$LOG"
+  mkdir -p "$GATEWAYS_D" "$REQUESTS" "$ACKS"
+  # Anything already queued was left by an earlier run and has no caller still
+  # waiting on it; serving it would reload for nobody.
+  rm -f "$REQUESTS"/* 2>/dev/null
+  printf '%s  watching %s\n' "$(stamp)" "$REQUESTS" >>"$LOG"
   while true; do
-    local now
-    now="$(cat "$TRIGGER" 2>/dev/null || echo "")"
-    if [ -n "$now" ] && [ "$now" != "$last" ]; then
-      last="$now"
-      reload_now "$now"
+    local pending
+    pending="$(ls -1 "$REQUESTS" 2>/dev/null)"
+    if [ -n "$pending" ]; then
+      # Claimed before the reload, so a request arriving during it is not
+      # swallowed — it stays queued and the next pass serves it.
+      for tok in $pending; do rm -f "${REQUESTS}/${tok}"; done
+      reload_now "$pending"
     fi
     sleep "$INTERVAL"
   done
@@ -105,7 +105,7 @@ case "${1:-watch}" in
     echo $! >"$PIDFILE"
     sleep 1
     kill -0 "$(cat "$PIDFILE")" 2>/dev/null \
-      && ok "watching ${TRIGGER} (pid $(cat "$PIDFILE"), log ${LOG})" \
+      && ok "watching ${REQUESTS} (pid $(cat "$PIDFILE"), log ${LOG})" \
       || { ko "did not start — ${LOG}"; exit 1; }
     ;;
   stop)

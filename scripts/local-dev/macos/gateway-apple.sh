@@ -408,6 +408,7 @@ cmd_up() {
       -e "GANYMEDE_API_URL=https://${host}:${HTTPS_PORT}" \
       -e "DOMAIN=${DOMAIN}:${HTTPS_PORT}" \
       -e "BUILD_SERVER_IP=${host}" \
+      -e "BUILD_SERVER_PORT=${BUILD_PORT}" \
       -e "ALLOWED_ORIGINS=[\"https://${DOMAIN}:${HTTPS_PORT}\"]" \
       -e "JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}" \
       -e "OTEL_SERVICE_NAME=gateway-${name}" \

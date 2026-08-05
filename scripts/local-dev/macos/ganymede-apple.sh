@@ -386,15 +386,24 @@ PY
   # back to the caller, since `nginx -t` can only run over there.
   cat > "${STATE}/request-nginx-reload.sh" <<'EOS'
 #!/bin/sh
-# A token and not a timestamp. Both files land in the same second more often
-# than not, and `-nt` compares whole seconds — so the acknowledgement for this
-# request was indistinguishable from no acknowledgement at all.
+# One file per request, not one slot.
+#
+# A token and not a timestamp, because both files land in the same second more
+# often than not and `-nt` compares whole seconds — an acknowledgement was
+# indistinguishable from none.
+#
+# And its own file, because a single `.reload` is a single slot: two gateways
+# set up moments apart, the second request overwrites the first before the
+# watcher has read it, and the first waits ten seconds for a confirmation
+# nobody will ever write. nginx did reload; Ganymede is told the reload failed
+# and abandons an allocation that was fine.
 D=/nginx-gateways.d
 TOKEN="$$-$(date +%s)-$(awk "BEGIN{srand();print int(rand()*100000)}")"
-echo "$TOKEN" >"$D/.reload" || exit 1
+mkdir -p "$D/.requests" "$D/.acks" || exit 1
+: >"$D/.requests/$TOKEN" || exit 1
 i=0
 while [ $i -lt 100 ]; do
-  [ "$(cat "$D/.reloaded" 2>/dev/null)" = "$TOKEN" ] && exit 0
+  [ -e "$D/.acks/$TOKEN" ] && { rm -f "$D/.acks/$TOKEN"; exit 0; }
   sleep 0.1
   i=$((i + 1))
 done

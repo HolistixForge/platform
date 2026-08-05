@@ -284,7 +284,15 @@ export const UserContainerCardInternal = ({
                 display: 'block',
                 lineHeight: '18px',
               }}
-              title={`${image.imageName} — ${image.description}`}
+              title={
+                // `description` is optional, so gluing it on unconditionally
+                // renders "ttyd ubuntu — undefined" for a catalogue entry
+                // without one — and the badge body is then empty too, so the
+                // tooltip is the only text there is.
+                image.description
+                  ? `${image.imageName} — ${image.description}`
+                  : image.imageName
+              }
             >
               {image.description}
             </span>

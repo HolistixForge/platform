@@ -11,7 +11,11 @@ if [ -z "$BUILD_SERVER_IP" ]; then
     exit 1
 fi
 
-BUILD_SERVER="http://${BUILD_SERVER_IP}:8090"
+# The port was hardcoded here while the server side made it configurable,
+# so moving the build server off 8090 gave every gateway a fetch failure
+# pointing at the download rather than at the setting. 8090 stays the
+# default, so nothing that does not set it changes.
+BUILD_SERVER="http://${BUILD_SERVER_IP}:${BUILD_SERVER_PORT:-8090}"
 BUILD_URL="${BUILD_SERVER}/gateway-${ENV_NAME}.tar.gz"
 EXTRACT_DIR="/opt"  # Extract to /opt (creates /opt/gateway/)
 
