@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import {
+  useLocalSharedData,
+  CollabProjectProvider,
+} from '@holistix-forge/collab/frontend';
 import {
   TUserContainer,
   TUserContainersSharedData,
@@ -71,11 +74,22 @@ export const createStoryInitModule = (): TModule<
 
 //
 
+// The provider has to sit *outside* the component that reads the context:
+// useInitStoryJupyterServer calls useLocalSharedData, which resolves the
+// project id during its own render. Wrapping the children would be too late,
+// and that is why NewKernel and NewTerminal died on "useCollabProjectId must
+// be used within CollabProjectProvider" while showing the container hint.
 export const JupyterStoryInit = ({
   children,
 }: {
   children: React.ReactNode;
-}) => {
+}) => (
+  <CollabProjectProvider project_id={STORY_PROJECT_ID}>
+    <JupyterStoryInitInner>{children}</JupyterStoryInitInner>
+  </CollabProjectProvider>
+);
+
+const JupyterStoryInitInner = ({ children }: { children: React.ReactNode }) => {
   const { isLoading, error } = useInitStoryJupyterServer();
 
   console.log('JupyterStoryInit', { isLoading, error });

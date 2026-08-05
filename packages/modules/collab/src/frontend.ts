@@ -1,8 +1,10 @@
 import { TModule } from '@holistix-forge/module';
 import { TValidSharedData } from '@holistix-forge/collab-engine';
 import { Collab } from './lib/collab';
-import { YjsClientCollabConfig } from './lib/collab';
-import { CollabRegistryFrontend } from './lib/collab-registry-frontend';
+import {
+  CollabRegistryFrontend,
+  type TRegistryCollabConfig,
+} from './lib/collab-registry-frontend';
 
 /**
  * Configuration for collab registry (multi-project support)
@@ -10,7 +12,7 @@ import { CollabRegistryFrontend } from './lib/collab-registry-frontend';
  */
 export type CollabRegistryConfig = {
   type: 'registry';
-  createConfigForProject: (project_id: string) => YjsClientCollabConfig;
+  createConfigForProject: (project_id: string) => TRegistryCollabConfig;
 };
 
 /**
@@ -26,7 +28,7 @@ export type TCollabFrontendExports = {
     collab: Collab<TValidSharedData>;
     localOverrider: any; // LocalOverrider
   };
-  
+
   /**
    * Registry for multi-project collab management
    * - At load time: call registry.registerSharedData() to register schema
@@ -37,11 +39,11 @@ export type TCollabFrontendExports = {
 
 /**
  * Collab frontend module
- * 
+ *
  * Now supports multi-project architecture via registry pattern.
  * Each project gets its own YJS document and WebSocket connection,
  * created lazily when first accessed.
- * 
+ *
  * Configuration should be of type CollabRegistryConfig.
  */
 export const moduleFrontend: TModule<undefined, TCollabFrontendExports> = {
@@ -51,20 +53,20 @@ export const moduleFrontend: TModule<undefined, TCollabFrontendExports> = {
   dependencies: [],
   load: (args) => {
     const config = args.config as CollabRegistryConfig;
-    
+
     if (config.type !== 'registry') {
       throw new Error(
         'Collab module frontend now requires CollabRegistryConfig. ' +
-        'Use { type: "registry", createConfigForProject: (project_id) => config }'
+          'Use { type: "registry", createConfigForProject: (project_id) => config }'
       );
     }
-    
+
     // Create registry (schema will be registered by other modules)
     const registry = new CollabRegistryFrontend(config.createConfigForProject);
-    
+
     // Export registry and convenience getter
     args.moduleExports({
-      getCollabForProject: (project_id: string) => 
+      getCollabForProject: (project_id: string) =>
         registry.getCollabForProject(project_id),
       registry,
     });

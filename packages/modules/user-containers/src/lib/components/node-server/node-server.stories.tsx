@@ -1,3 +1,4 @@
+import { CollabProjectProvider } from '@holistix-forge/collab/frontend';
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { useTestBoolean } from '@holistix-forge/ui-base';
@@ -37,20 +38,22 @@ const StoryWrapper = (
   const { is: isOpened } = useTestBoolean(true);
 
   return (
-    <ModuleProvider exports={exports}>
-      <StoryMockSpaceContextReactflowBgAndCss
-        selected={props.selected}
-        isOpened={isOpened}
-        outputs={0}
-      >
-        <MockNodeContext>
-          <NodeServerInternal
-            {...props}
-            runners={new Map([['local', localRunnerFrontend]])}
-          />
-        </MockNodeContext>
-      </StoryMockSpaceContextReactflowBgAndCss>
-    </ModuleProvider>
+    <CollabProjectProvider project_id="story-project">
+      <ModuleProvider exports={exports}>
+        <StoryMockSpaceContextReactflowBgAndCss
+          selected={props.selected}
+          isOpened={isOpened}
+          outputs={0}
+        >
+          <MockNodeContext>
+            <NodeServerInternal
+              {...props}
+              runners={new Map([['local', localRunnerFrontend]])}
+            />
+          </MockNodeContext>
+        </StoryMockSpaceContextReactflowBgAndCss>
+      </ModuleProvider>
+    </CollabProjectProvider>
   );
 };
 
