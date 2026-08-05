@@ -86,6 +86,20 @@ export const TagsBar = ({ tags = [], addTag, editTag }: TagsBarProps) => {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // The effect below resets both lists unconditionally, so it must not re-run
+  // on a render that changed nothing. Depending on `tags` did exactly that:
+  // every caller builds the array inline — `resource-list.tsx` and
+  // `server-card.tsx` both do — so each render of the *parent* handed down a
+  // new identity and replayed the whole measure-and-slice cascade, one frame
+  // per tag, from zero. In a view that re-renders often that is a page pinned
+  // to its own layout work; Storybook served one that never painted and would
+  // not answer a screenshot.
+  //
+  // Keying on the contents rather than the reference cuts it. `tags` is a
+  // short list of `{text, color}`, so stringifying it costs nothing next to
+  // the cascade it prevents.
+  const tagsKey = JSON.stringify(tags);
+
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -121,7 +135,7 @@ export const TagsBar = ({ tags = [], addTag, editTag }: TagsBarProps) => {
     };
 
     updateTagsVisibility();
-  }, [tags]);
+  }, [tagsKey]);
 
   const openMenu = () => {
     setOtherTagsOpened(!otherTagsOpened);
