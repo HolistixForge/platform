@@ -355,8 +355,14 @@ cmd_up() {
   JWT_PRIVATE_KEY="$(cat "${STATE}/jwt.key")"
   JWT_PUBLIC_KEY="$(cat "${STATE}/jwt.pub")"
 
+  # The highest suffix in use, not how many there are. With gw-pool-<env>-0
+  # deleted and -1 still running, a count of 1 names the new one -1 as well —
+  # and the loop below force-deletes whatever holds that name, taking a live
+  # gateway and its database row with it while the organization using it just
+  # loses its connection.
   local existing
-  existing="$(names | wc -l | tr -d ' ')"
+  existing="$(names | sed "s/^gw-pool-${ENV_NAME}-//" | sort -n | tail -1)"
+  existing=$(( ${existing:--1} + 1 ))
 
   local i
   for ((i = 0; i < count; i++)); do
