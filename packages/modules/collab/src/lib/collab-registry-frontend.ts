@@ -187,13 +187,14 @@ export class CollabRegistryFrontend {
   clearProject(project_id: string): void {
     const instance = this.collabs.get(project_id);
     if (instance) {
-      // Only the socket-backed collab has a connection to tear down;
-      // NoneCollab holds nothing but a local document.
-      if (
-        instance.collab instanceof YjsClientCollab &&
-        instance.collab.destroy
-      ) {
-        instance.collab.destroy();
+      // Only the socket-backed collab has a connection to tear down; NoneCollab
+      // holds nothing but a local document and has no `destroy`. Testing for
+      // the method rather than for the class is deliberate — the suite passes
+      // mocks here, and an `instanceof` check silently skipped them, which two
+      // existing tests caught immediately.
+      const disposable = instance.collab as { destroy?: () => void };
+      if (disposable.destroy) {
+        disposable.destroy();
       }
 
       this.collabs.delete(project_id);
