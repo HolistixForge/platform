@@ -49,17 +49,50 @@
     group: root
     mode: '0750'
 
-- name: Generate a broker token
-  # The gateway authenticates to the broker with this. Generated on the host
-  # and never checked in — a token in the repository is a token in every
-  # clone of it.
+# The broker holds two credentials and they are not the same kind of thing.
+#
+#   BROKER_TOKEN            the gateway proves itself to the broker.
+#                           A shared secret, compared with timingSafeEqual
+#                           against the broker's own config. A random string
+#                           is exactly right.
+#
+#   GANYMEDE_INTERNAL_TOKEN the broker proves itself to Ganymede.
+#                           Ganymede's `authenticateGatewayToken` verifies an
+#                           RS256 JWT of type `gateway_token` and reads no
+#                           other header. A random string can never satisfy it.
+#
+# This role generated both with `openssl rand -hex 32`. So every host it ever
+# provisioned answered 401 to Ganymede on every project image lookup, and the
+# broker reported that back as "this image is not in the catalog" — a
+# permission failure wearing the costume of a missing image. Measured against a
+# real Ganymede: an unsigned token is indistinguishable from sending no header.
+#
+# Rather than invent a token that cannot work, the role now refuses to
+# provision without one. Minting it belongs with whoever holds the
+# environment's JWT private key — `app-ganymede-cmds` already signs gateway
+# tokens with `generateJwtToken` — and wiring that here is a decision about
+# where that key may live, not a detail to guess at provisioning time.
+- name: Fail when no Ganymede token has been supplied
+  ansible.builtin.assert:
+    that: holistix_broker_ganymede_token | length > 0
+    fail_msg: >-
+      holistix_broker_ganymede_token is empty. The broker authenticates to
+      Ganymede with an RS256 `gateway_token` JWT, signed with that
+      environment's JWT private key — see app-ganymede-cmds/addGateway.ts for
+      how one is minted. A generated random string authenticates nothing and
+      makes every project image look like it does not exist.
+
+- name: Generate the broker token and write the secrets file
+  # The gateway authenticates to the broker with BROKER_TOKEN. Generated on the
+  # host and never checked in — a token in the repository is a token in every
+  # clone of it. The Ganymede token is supplied, for the reason above.
   ansible.builtin.shell:
     cmd: |
       set -o pipefail
       umask 077
       printf 'BROKER_TOKEN=%s\nGANYMEDE_INTERNAL_TOKEN=%s\n' \
         "$(openssl rand -hex 32)" \
-        "$(openssl rand -hex 32)" \
+        '{{ holistix_broker_ganymede_token }}' \
         > {{ holistix_broker_secrets_file }}
     executable: /bin/bash
     creates: '{{ holistix_broker_secrets_file }}'

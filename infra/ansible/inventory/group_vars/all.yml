@@ -113,6 +113,12 @@ holistix_broker_runtime: kata
 holistix_broker_bind: "{{ holistix_docker_host_ip | default('127.0.0.1') }}"
 holistix_broker_port: 9443
 holistix_broker_secrets_file: /etc/holistix/container-broker.env
+# The broker proves itself to Ganymede with this, and Ganymede verifies an
+# RS256 `gateway_token` JWT — so it is signed with that environment's JWT
+# private key, not generated. Empty by default and asserted by the role: a
+# generated random string authenticates nothing, and the failure it produced
+# was every project image reported as non-existent rather than as refused.
+holistix_broker_ganymede_token: ''
 # Per-container ceilings. A request asking for more is clamped, not refused.
 holistix_broker_max_cpus: 4
 holistix_broker_max_memory_mb: 8192
