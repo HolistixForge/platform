@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   useLocalSharedData,
@@ -9,7 +9,14 @@ import {
   TUserContainersSharedData,
 } from '@holistix-forge/user-containers';
 import { TCoreSharedData } from '@holistix-forge/core-graph';
-import type { TModule } from '@holistix-forge/module';
+import { ModuleProvider } from '@holistix-forge/module/frontend';
+import { loadModules, type TModule } from '@holistix-forge/module';
+import { moduleFrontend as collabFrontend } from '@holistix-forge/collab/frontend';
+import { moduleFrontend as reducersFrontend } from '@holistix-forge/reducers/frontend';
+import { moduleFrontend as coreFrontend } from '@holistix-forge/core-graph';
+import { moduleFrontend as whiteboardFrontend } from '@holistix-forge/whiteboard/frontend';
+import { moduleFrontend as tabsFrontend } from '@holistix-forge/tabs/frontend';
+import { moduleFrontend as userContainersFrontend } from '@holistix-forge/user-containers/frontend';
 import type { TCollabBackendExports } from '@holistix-forge/collab';
 
 //
@@ -79,6 +86,60 @@ export const createStoryInitModule = (): TModule<
 // project id during its own render. Wrapping the children would be too late,
 // and that is why NewKernel and NewTerminal died on "useCollabProjectId must
 // be used within CollabProjectProvider" while showing the container hint.
+/**
+ * Everything a Jupyter story needs that is not the component under test:
+ * the frontend module stack, the module context, the project context, and the
+ * server-init gate.
+ *
+ * The form stories — NewKernel, NewTerminal — mounted only the gate. They
+ * therefore reached for a module context nobody had provided, and died on
+ * `useCollabProjectId`, then on a registry that was never built. Mounting the
+ * stack here rather than in each story keeps the two from drifting apart
+ * again, which is how they got here.
+ *
+ * `Main` does not use this: it needs the backend modules too, and links its
+ * dispatcher to them.
+ */
+export const JupyterStoryProviders = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
+  const frontendModules = useMemo(
+    () =>
+      loadModules([
+        {
+          module: collabFrontend,
+          config: {
+            type: 'registry' as const,
+            createConfigForProject: () => ({
+              type: 'none' as const,
+              room_id: 'jupyter-story',
+              simulateUsers: true,
+              user: {
+                user_id: 'story-user',
+                username: 'test',
+                color: 'red',
+              },
+            }),
+          },
+        },
+        { module: reducersFrontend, config: {} },
+        { module: coreFrontend, config: {} },
+        { module: whiteboardFrontend, config: {} },
+        { module: tabsFrontend, config: {} },
+        { module: userContainersFrontend, config: {} },
+      ] as { module: TModule<never, object>; config: object }[]),
+    []
+  );
+
+  return (
+    <ModuleProvider exports={frontendModules}>
+      <JupyterStoryInit>{children}</JupyterStoryInit>
+    </ModuleProvider>
+  );
+};
+
 export const JupyterStoryInit = ({
   children,
 }: {
