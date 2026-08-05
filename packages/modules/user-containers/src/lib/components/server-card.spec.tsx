@@ -115,7 +115,7 @@ describe('UserContainerCardInternal — isolation', () => {
     const { getByText } = renderWith(runningOnAppleStory());
 
     // Assert
-    expect(getByText(/6 controls given up/)).toBeInTheDocument();
+    expect(getByText(/5 controls given up/)).toBeInTheDocument();
     expect(getByText(/no-new-privileges/)).toBeInTheDocument();
   });
 

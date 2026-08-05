@@ -1,5 +1,10 @@
+import { createHash } from 'node:crypto';
+import { execFile } from 'node:child_process';
+import { mkdtemp, writeFile, mkdir, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join, dirname } from 'node:path';
 import { TResolvedImage, TRuntimeExec } from './types';
-import { registryHost } from './pull';
+import { collectOciLayout, TFetchBlob } from './oci-archive';
 
 /**
  * Pulling under Apple `container`.
@@ -11,92 +16,95 @@ import { registryHost } from './pull';
  * otherwise get it without proving access; the manifest fetch is the part that
  * checks the token, and it has to happen every time.
  *
- * What changes is how the credential is carried. Docker gets a throw-away
- * `--config` directory per pull, so two projects pulling at once cannot lend
- * each other access. Apple `container` has no per-invocation credential store
- * at all — `container registry login` writes one host-wide store, and
- * `container image pull` takes no credential flag. That is the
- * `registry-login-is-host-wide` concession.
+ * How the credential is carried is where this used to go wrong, and the fix
+ * turned out to cost nothing. `container registry login` *performs* the
+ * registry's token exchange — it trades a credential for a bearer — and
+ * Ganymede does not send a credential. It sends the result of that exchange, a
+ * bearer scoped to one repository, for minutes, pull only. Login refused it,
+ * measured, 401, while the same token answered 200 on `/v2/` and on the
+ * manifest as a `Bearer`.
  *
- * A queue closes the window rather than narrowing it: while one tenant pull
- * holds the login, no other pull runs. It costs concurrency between two
- * private pulls on one host, which is latency, against a credential crossing
- * between tenants, which is not.
- *
- * Verified against the real GHCR as far as it can be from here: this exact
- * argv parses, the token is read from stdin, and the registry answers `401
- * access denied` for a token that is not one. A *successful* pull with a
- * minted installation token needs a real Ganymede and has not been run.
+ * So the engine is not asked to authenticate at all. The broker holds the
+ * bearer, fetches the image itself, and hands over an archive — see
+ * `oci-archive.ts`. No credential is installed on this host at any point,
+ * which is strictly better than the queue that used to serialise pulls around
+ * a host-wide login: there is no window left to serialise.
  */
 
-let queue: Promise<unknown> = Promise.resolve();
-
-/** Run `work` after every pull already queued, whether those passed or not. */
-const serialised = <T>(work: () => Promise<T>): Promise<T> => {
-  const next = queue.then(work, work);
-  // The chain must survive a rejection; the caller still gets it via `next`.
-  queue = next.then(
-    () => undefined,
-    () => undefined
-  );
-  return next;
+/** Where the bearer is spent. Injected so the traversal is testable. */
+export const httpsFetchBlob: TFetchBlob = async (url, headers) => {
+  const response = await fetch(url, { headers });
+  return {
+    ok: response.ok,
+    status: response.status,
+    bytes: new Uint8Array(await response.arrayBuffer()),
+  };
 };
 
-const pullTenantImage = (
-  exec: TRuntimeExec,
-  image: TResolvedImage
-): Promise<void> =>
-  serialised(async () => {
-    const host = registryHost(image.reference);
-    try {
-      // The token goes over stdin, never argv: an argv element is readable in
-      // `ps` by every user on the host, and `--password-stdin` is the only
-      // form this CLI offers anyway.
-      await exec(
-        [
-          'registry',
-          'login',
-          '--username',
-          'x-access-token',
-          '--password-stdin',
-          '--',
-          host,
-        ],
-        image.pullToken
-      ).catch((cause) => {
-        // A login refusal here has one likely cause and it is not a bad
-        // password, so say it rather than leave the next person to measure it
-        // again.
-        //
-        // `registry login` performs the registry's own token exchange: it
-        // pings /v2/, reads the challenge, and trades the credential for a
-        // bearer. That works with a *GitHub* credential and cannot work with
-        // an already-exchanged one — and `ghcrPullToken` in Ganymede hands
-        // over exactly that, a repository-scoped registry bearer.
-        //
-        // Measured against real GHCR with a real token: the scoped bearer
-        // answers 200 on /v2/ and on the manifest when sent as `Bearer`, and
-        // `registry login` refuses it 401. There is nothing left in it to
-        // exchange. See TAC-179.
-        throw new Error(
-          `registry login was refused by ${host}. If the token is a ` +
-            `repository-scoped registry bearer, it cannot be used here: ` +
-            `login exchanges a credential, and that token is the result of ` +
-            `an exchange. Cause: ${String(cause)}`
-        );
-      });
-      await exec(['image', 'pull', '--', image.reference]);
-    } finally {
-      // Even on failure. A login left behind is an ambient credential, and
-      // under this engine `container run` will pull with one — see the
-      // `run-may-pull` concession and `applePreflight`.
-      await exec(['registry', 'logout', '--', host]).catch(() => '');
-    }
+const sha256 = (bytes: Uint8Array): string =>
+  `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+
+/**
+ * `tar`, spawned with an argv array so nothing in a path reaches a shell.
+ *
+ * A hand-written ustar came first and `image load` refused what it produced —
+ * `unable to open the archive, code -30`. Fifty lines of bit-twiddling on the
+ * path a tenant image takes onto a platform host, to avoid a binary that is
+ * already on every host this runs on.
+ */
+const tar = (args: string[]): Promise<void> =>
+  new Promise((resolve, reject) => {
+    execFile('tar', args, { timeout: 300_000 }, (error, _out, stderr) => {
+      if (error) {
+        reject(new Error(`tar failed: ${stderr.trim() || error.message}`));
+        return;
+      }
+      resolve();
+    });
   });
+
+/**
+ * Fetch a tenant image with its own token and load it into the engine.
+ *
+ * The archive goes to a private temp directory and is removed even on failure:
+ * it holds a tenant's image, and nothing about it should outlive the request
+ * that asked for it.
+ */
+const pullTenantImage = async (
+  exec: TRuntimeExec,
+  image: TResolvedImage,
+  fetchBlob: TFetchBlob
+): Promise<void> => {
+  const entries = await collectOciLayout(
+    image.reference,
+    image.pullToken as string,
+    fetchBlob,
+    sha256
+  );
+
+  const dir = await mkdtemp(join(tmpdir(), 'holistix-oci-'));
+  try {
+    const layout = join(dir, 'layout');
+    for (const entry of entries) {
+      const target = join(layout, entry.path);
+      await mkdir(dirname(target), { recursive: true });
+      await writeFile(target, entry.bytes, { mode: 0o600 });
+    }
+
+    const archive = join(dir, 'image.tar');
+    await tar(['-cf', archive, '-C', layout, '.']);
+    await exec(['image', 'load', '--input', archive]);
+  } finally {
+    // Even on failure: this holds a tenant's image and should not outlive the
+    // request that asked for it.
+    await rm(dir, { recursive: true, force: true });
+  }
+};
 
 export const pullAppleImage = async (
   exec: TRuntimeExec,
-  image: TResolvedImage
+  image: TResolvedImage,
+  fetchBlob: TFetchBlob = httpsFetchBlob
 ): Promise<void> => {
   if (image.builtin) {
     const present = await exec(['image', 'inspect', '--', image.reference])
@@ -114,7 +122,7 @@ export const pullAppleImage = async (
     );
   }
 
-  await pullTenantImage(exec, image);
+  await pullTenantImage(exec, image, fetchBlob);
 };
 
 /**

@@ -58,11 +58,6 @@ const CONCESSIONS: readonly TEngineConcession[] = [
     lost: '`container run` fetches a missing image on its own, so the run is no longer structurally unable to reach a registry; what stands in is that no ambient credential is allowed to exist (see applePreflight)',
   },
   {
-    id: 'registry-login-is-host-wide',
-    control: 'docker --config <dir> pull',
-    lost: 'a tenant registry credential is host-wide for the duration of its pull, so tenant pulls are serialised rather than isolated from one another',
-  },
-  {
     id: 'no-hot-network-attach',
     control: 'docker network connect',
     lost: 'two services already running cannot be wired together; both have to be started on the shared network',

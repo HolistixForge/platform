@@ -96,7 +96,7 @@ export const runningOnPlatformStory = (): StoryArgs => {
 };
 
 /**
- * The same placement on a Mac host — a VM per container, and six controls the
+ * The same placement on a Mac host — a VM per container, and five controls the
  * engine cannot express.
  *
  * The card has to distinguish this from the story above. Both are microVMs and
@@ -116,7 +116,6 @@ export const runningOnAppleStory = (): StoryArgs => {
       'pids-cgroup',
       'restart-policy',
       'run-may-pull',
-      'registry-login-is-host-wide',
       'no-hot-network-attach',
     ],
   };

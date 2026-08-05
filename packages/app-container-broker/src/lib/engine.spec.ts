@@ -114,7 +114,6 @@ describe('the concession list itself', () => {
         'pids-cgroup',
         'restart-policy',
         'run-may-pull',
-        'registry-login-is-host-wide',
         'no-hot-network-attach',
       ])
     );

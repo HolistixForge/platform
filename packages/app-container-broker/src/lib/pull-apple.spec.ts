@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 /**
  * Pulling with a per-project credential on an engine that has no such thing.
  *
@@ -10,13 +11,6 @@
 
 import { pullAppleImage, applePreflight } from './pull-apple';
 import { TResolvedImage } from './types';
-
-const tenant: TResolvedImage = {
-  imageId: 'acme:etl',
-  reference: `ghcr.io/acme/etl:1.4.0@sha256:${'a'.repeat(64)}`,
-  pullToken: 'project-scoped-token',
-  githubOrganization: 'acme',
-};
 
 const builtin: TResolvedImage = {
   imageId: 'jupyter:minimal',
@@ -73,176 +67,189 @@ describe('a built-in image', () => {
   });
 });
 
+/**
+ * A tenant image is fetched by the broker and handed to the engine as bytes.
+ *
+ * Not through `registry login`: that performs the registry's token exchange,
+ * and Ganymede sends the result of an exchange rather than a credential — so
+ * login refuses it, measured, while the same token answers 200 as a `Bearer`.
+ * Holding the bearer here means no credential is ever installed on the host.
+ */
+
+const sha = (bytes: Uint8Array) =>
+  `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+
+const bytesOf = (value: unknown) =>
+  new TextEncoder().encode(
+    typeof value === 'string' ? value : JSON.stringify(value)
+  );
+
+// Built bottom-up so every digest is the real one: the traversal verifies each
+// body against the digest that named it, which a stub with invented digests
+// could never get past — and that check is most of what this file is about.
+const CONFIG_BYTES = bytesOf('config');
+const LAYER_BYTES = bytesOf('layer');
+const CONFIG_DIGEST = sha(CONFIG_BYTES);
+const LAYER_DIGEST = sha(LAYER_BYTES);
+
+const MANIFEST_BYTES = bytesOf({
+  mediaType: 'application/vnd.oci.image.manifest.v1+json',
+  config: { digest: CONFIG_DIGEST },
+  layers: [{ digest: LAYER_DIGEST }],
+});
+const MANIFEST_DIGEST = sha(MANIFEST_BYTES);
+
+const INDEX_BYTES = bytesOf({
+  mediaType: 'application/vnd.oci.image.index.v1+json',
+  manifests: [{ digest: MANIFEST_DIGEST }],
+});
+const INDEX_DIGEST = sha(INDEX_BYTES);
+
+/** A registry that answers correctly, and records what was asked of it. */
+const registry = () => {
+  const asked: { url: string; auth?: string }[] = [];
+  const bodies: Record<string, Uint8Array> = {
+    [INDEX_DIGEST]: INDEX_BYTES,
+    [MANIFEST_DIGEST]: MANIFEST_BYTES,
+    [CONFIG_DIGEST]: CONFIG_BYTES,
+    [LAYER_DIGEST]: LAYER_BYTES,
+  };
+  const fetchBlob = async (url: string, headers: Record<string, string>) => {
+    asked.push({ url, auth: headers.Authorization });
+    const digest = Object.keys(bodies).find((d) => url.endsWith(d));
+    return digest
+      ? { ok: true, status: 200, bytes: bodies[digest] }
+      : { ok: false, status: 404, bytes: new Uint8Array() };
+  };
+  return { asked, bodies, fetchBlob };
+};
+
+const digestPinned: TResolvedImage = {
+  imageId: 'acme:etl',
+  reference: `ghcr.io/acme/etl:1.4.0@${INDEX_DIGEST}`,
+  pullToken: 'project-scoped-token',
+  githubOrganization: 'acme',
+};
+
 describe('a tenant image', () => {
   it('is refused when it carries no token', async () => {
     // "No token" equally describes an image whose credential failed to mint,
     // so it is never read as "no credential needed".
     const { exec } = recorder();
+    const { fetchBlob } = registry();
 
     await expect(
-      pullAppleImage(exec, { ...tenant, pullToken: undefined })
+      pullAppleImage(exec, { ...digestPinned, pullToken: undefined }, fetchBlob)
     ).rejects.toThrow(/needs a pull token/);
   });
 
-  it('logs in, pulls, and logs out — in that order', async () => {
-    const { exec, verbs } = recorder();
-
-    await pullAppleImage(exec, tenant);
-
-    const order = verbs();
-    const login = order.findIndex((v) => v.startsWith('registry login'));
-    const pull = order.findIndex((v) => v.startsWith('image pull'));
-    const logout = order.findIndex((v) => v.startsWith('registry logout'));
-
-    expect(login).toBeGreaterThanOrEqual(0);
-    expect(pull).toBeGreaterThan(login);
-    expect(logout).toBeGreaterThan(pull);
-  });
-
-  it('passes the token over stdin, never in argv', async () => {
-    // An argv element is readable in `ps` by every user on the host.
+  it('spends the bearer on the registry, never on the engine', async () => {
     const { calls, exec } = recorder();
+    const { asked, fetchBlob } = registry();
 
-    await pullAppleImage(exec, tenant);
+    await pullAppleImage(exec, digestPinned, fetchBlob);
 
-    const login = calls.find((c) => c.args[0] === 'registry');
-    expect(login?.stdin).toBe('project-scoped-token');
+    expect(asked.every((a) => a.auth === 'Bearer project-scoped-token')).toBe(
+      true
+    );
     for (const call of calls) {
       expect(call.args.join(' ')).not.toContain('project-scoped-token');
+      expect(call.stdin ?? '').not.toContain('project-scoped-token');
     }
   });
 
-  it('logs in to the registry the reference names', async () => {
+  it('never logs in, so no credential lands on the host', async () => {
+    // The window this closes is the one a queue used to serialise: a host-wide
+    // login means one pull's token is installed while another could use it.
     const { calls, exec } = recorder();
+    const { fetchBlob } = registry();
 
-    await pullAppleImage(exec, tenant);
+    await pullAppleImage(exec, digestPinned, fetchBlob);
 
-    expect(calls[0].args).toEqual([
-      'registry',
-      'login',
-      '--username',
-      'x-access-token',
-      '--password-stdin',
-      '--',
-      'ghcr.io',
-    ]);
+    expect(calls.map((c) => c.args.join(' ')).join('|')).not.toContain(
+      'registry'
+    );
   });
 
-  it('is pulled again on every start, cached or not', async () => {
+  it('walks the index down to every blob', async () => {
+    const { exec } = recorder();
+    const { asked, fetchBlob } = registry();
+
+    await pullAppleImage(exec, digestPinned, fetchBlob);
+
+    for (const d of [
+      INDEX_DIGEST,
+      MANIFEST_DIGEST,
+      CONFIG_DIGEST,
+      LAYER_DIGEST,
+    ]) {
+      expect(asked.some((a) => a.url.endsWith(d))).toBe(true);
+    }
+  });
+
+  it('hands the engine an archive rather than a reference', async () => {
+    const { calls, exec } = recorder();
+    const { fetchBlob } = registry();
+
+    await pullAppleImage(exec, digestPinned, fetchBlob);
+
+    const load = calls.find((c) => c.args[1] === 'load');
+    expect(load?.args[0]).toBe('image');
+    expect(load?.args[2]).toBe('--input');
+    expect(load?.args[3]).toMatch(/holistix-oci-.*image\.tar$/);
+  });
+
+  it('refuses bytes that do not match the digest that named them', async () => {
+    // The whole point of pinning a digest. A registry answering with something
+    // else is refused here rather than started.
+    const { exec } = recorder();
+    const { bodies, fetchBlob } = registry();
+    bodies[LAYER_DIGEST] = bytesOf('something else entirely');
+
+    await expect(pullAppleImage(exec, digestPinned, fetchBlob)).rejects.toThrow(
+      /answered sha256:.*, not/
+    );
+  });
+
+  it('refuses a reference that is not pinned at all', async () => {
+    const { exec } = recorder();
+    const { fetchBlob } = registry();
+
+    await expect(
+      pullAppleImage(
+        exec,
+        { ...digestPinned, reference: 'ghcr.io/acme/etl:1.4.0' },
+        fetchBlob
+      )
+    ).rejects.toThrow(/not digest-pinned/);
+  });
+
+  it('is fetched again on every start, cached or not', async () => {
     // The layer cache belongs to the host and the credential to one project.
     // If "already present" meant "nothing to do", another project could name
     // the same digest and get it without proving access.
-    const { exec, verbs } = recorder();
+    const { exec } = recorder();
+    const { asked, fetchBlob } = registry();
 
-    await pullAppleImage(exec, tenant);
-    await pullAppleImage(exec, tenant);
+    await pullAppleImage(exec, digestPinned, fetchBlob);
+    await pullAppleImage(exec, digestPinned, fetchBlob);
 
-    expect(verbs().filter((v) => v.startsWith('image pull'))).toHaveLength(2);
+    expect(asked.filter((a) => a.url.endsWith(INDEX_DIGEST))).toHaveLength(2);
   });
 
-  it('logs out even when the pull fails', async () => {
-    // A login left behind is an ambient credential, and under this engine a
-    // run will pull with one.
-    const { exec, verbs } = recorder((args) => {
-      if (args[0] === 'image') throw new Error('unauthorized');
-      return '';
+  it('does not load anything when the registry refuses', async () => {
+    const { calls, exec } = recorder();
+    const fetchBlob = async () => ({
+      ok: false,
+      status: 401,
+      bytes: new Uint8Array(),
     });
 
-    await expect(pullAppleImage(exec, tenant)).rejects.toThrow('unauthorized');
-
-    expect(verbs().some((v) => v.startsWith('registry logout'))).toBe(true);
-  });
-
-  it('logs out even when the login itself fails', async () => {
-    const { exec, verbs } = recorder((args) => {
-      if (args[1] === 'login') throw new Error('bad credentials');
-      return '';
-    });
-
-    await expect(pullAppleImage(exec, tenant)).rejects.toThrow(
-      /bad credentials/
+    await expect(pullAppleImage(exec, digestPinned, fetchBlob)).rejects.toThrow(
+      /refused/
     );
 
-    expect(verbs().some((v) => v.startsWith('registry logout'))).toBe(true);
-  });
-
-  it('names the likely cause when login is refused', async () => {
-    // Measured against real GHCR: `registry login` performs the registry's
-    // own token exchange, so it works with a GitHub credential and refuses an
-    // already-exchanged one — and `ghcrPullToken` hands over exactly that, a
-    // repository-scoped bearer. The same bearer answers 200 on /v2/ when sent
-    // as `Bearer` and 401 through login.
-    //
-    // A bare "401 unauthorized" sends the next person to check the password.
-    const { exec } = recorder((args) => {
-      if (args[1] === 'login') throw new Error('401 Unauthorized');
-      return '';
-    });
-
-    await expect(pullAppleImage(exec, tenant)).rejects.toThrow(
-      /result of an exchange/
-    );
-  });
-});
-
-describe('two tenant pulls at once', () => {
-  it('never overlap, so one project cannot pull under the other login', async () => {
-    // This is the whole reason for the queue. The login is host-wide, so an
-    // interleaving would let project B's pull run while project A's credential
-    // is the one installed.
-    const order: string[] = [];
-    let releaseFirst: (() => void) | undefined;
-
-    const exec = async (args: string[]) => {
-      const verb = `${args[0]} ${args[1]}`;
-      order.push(`${verb}`);
-      if (args[0] === 'image' && !releaseFirst) {
-        // Hold the first pull open until the second has had every chance to
-        // start.
-        await new Promise<void>((resolve) => {
-          releaseFirst = resolve;
-        });
-      }
-      return '';
-    };
-
-    const first = pullAppleImage(exec, tenant);
-    const second = pullAppleImage(exec, {
-      ...tenant,
-      imageId: 'other:image',
-      pullToken: 'another-projects-token',
-    });
-
-    // Let the microtask queue drain: without serialisation the second login
-    // would already be recorded by now.
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(order.filter((v) => v === 'registry login')).toHaveLength(1);
-
-    releaseFirst?.();
-    await Promise.all([first, second]);
-
-    // The first pull is fully wound up — logout included — before the second
-    // one authenticates.
-    expect(order.indexOf('registry logout')).toBeLessThan(
-      order.lastIndexOf('registry login')
-    );
-  });
-
-  it('keeps the queue alive after one of them fails', async () => {
-    let attempt = 0;
-    const exec = async (args: string[]) => {
-      if (args[0] === 'image') {
-        attempt += 1;
-        if (attempt === 1) throw new Error('unauthorized');
-      }
-      return '';
-    };
-
-    const failing = pullAppleImage(exec, tenant);
-    const following = pullAppleImage(exec, tenant);
-
-    await expect(failing).rejects.toThrow('unauthorized');
-    await expect(following).resolves.toBeUndefined();
+    expect(calls.some((c) => c.args[1] === 'load')).toBe(false);
   });
 });
 

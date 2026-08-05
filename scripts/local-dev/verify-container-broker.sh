@@ -37,7 +37,7 @@ case "$ENGINE" in
     BROKER_RUNTIME="${BROKER_RUNTIME:-container-runtime-linux}"
     # Every one of these has to be named or the broker refuses to start. That
     # refusal is a feature and this line is what it costs.
-    CONCESSIONS="no-new-privileges,pids-cgroup,restart-policy,run-may-pull,registry-login-is-host-wide,no-hot-network-attach"
+    CONCESSIONS="no-new-privileges,pids-cgroup,restart-policy,run-may-pull,no-hot-network-attach"
     ;;
   *)
     echo "BROKER_ENGINE must be docker or apple; got $ENGINE"; exit 1 ;;
