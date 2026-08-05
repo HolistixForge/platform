@@ -21,8 +21,9 @@
 # command that stands the real thing up is what turns "unit-tested" into
 # "answered a request".
 #
-# Two containers on one network, because a database is not a thing to bind on
-# the host: Postgres never leaves `holistix_dev`.
+# Two containers on Apple's default network. The database is not a thing to
+# bind on the host and it does not: only Ganymede publishes a port, and only on
+# the loopback. Why the default network rather than one of ours is at NET.
 
 set -uo pipefail
 
@@ -54,7 +55,11 @@ PG=hx-postgres
 GANY="hx-ganymede-${ENV_NAME}"
 DB="ganymede_${ENV_NAME}"
 DB_USER="ganymede_app_${ENV_NAME}"
-DB_PASSWORD="${GANYMEDE_DB_PASSWORD:-applepass123}"
+# The old name is still honoured. It was GANYMEDE_APPLE_DB_PASSWORD before this
+# script served an environment rather than a single throwaway, and dropping it
+# would silently change the password for anyone who had set it — which shows up
+# as an authentication failure with no obvious cause.
+DB_PASSWORD="${GANYMEDE_DB_PASSWORD:-${GANYMEDE_APPLE_DB_PASSWORD:-applepass123}}"
 # Inside the container. The host sees GANYMEDE_PORT, published on loopback.
 PORT=6870
 CONF_DIR="${HOME}/.holistix-macos"
@@ -241,11 +246,6 @@ EOS
 
 up_ganymede() {
   container delete --force "$GANY" >/dev/null 2>&1
-  # Two networks, and the first one is not decoration. `--publish` is silently
-  # ignored on a named network — measured: the same image published on
-  # `default` answers 200 and on `holistix_dev` times out, with the port bound
-  # on the host either way. nginx reaches Ganymede over the published port, and
-  # Ganymede reaches Postgres over the private one, so it needs both.
   container run --detach --name "$GANY" --network "$NET" \
     --cpus 2 --memory 1024m \
     --publish "127.0.0.1:${GANYMEDE_PORT}:${PORT}" \
@@ -259,7 +259,7 @@ up_ganymede() {
     return 1
   }
   ip=$(ip_of "$GANY")
-  ok "Ganymede up at http://${ip}:${PORT}"
+  ok "Ganymede up at http://127.0.0.1:${GANYMEDE_PORT} (container ${ip}:${PORT})"
 }
 
 
@@ -320,9 +320,9 @@ case "${1:-up}" in
   status)
     echo "============================================="
     printf "Postgres   %s\n" "$(ip_of "$PG"):5432 ${DB}"
-    printf "Ganymede   http://127.0.0.1:%s  (conteneur %s:%s)\n" \
+    printf "Ganymede   http://127.0.0.1:%s  (container %s:%s)\n" \
       "$GANYMEDE_PORT" "$(ip_of "$GANY")" "$PORT"
-    printf "Plateforme https://ganymede.%s:%s\n" "$DOMAIN" "$HTTPS_PORT"
+    printf "Platform   https://ganymede.%s:%s\n" "$DOMAIN" "$HTTPS_PORT"
     printf "State      %s\n" "$STATE"
     echo "============================================="
     note "The internal routes the broker needs are gateway-token protected;"
@@ -331,8 +331,24 @@ case "${1:-up}" in
   seed)   seed_catalogue ;;
   logs)   container logs "$GANY" ;;
   down)
-    container delete --force "$GANY" "$PG" >/dev/null 2>&1
-    ok "removed"
+    # Only this environment's Ganymede. Postgres is one container holding every
+    # environment's database — the container name is global while the database
+    # name is not — so removing it here would take down whoever else is
+    # running, and it holds no volume, so their data would be gone with it.
+    container delete --force "$GANY" >/dev/null 2>&1
+    ok "removed ${GANY}; Postgres left running for the other environments"
+    note "drop just this database:  $0 drop-db"
+    note "remove Postgres and all:  $0 down-all"
     ;;
-  *) echo "usage: $0 [up|seed|status|logs|down]"; exit 1 ;;
+  drop-db)
+    container exec "$PG" psql -U postgres -c "DROP DATABASE IF EXISTS ${DB};" \
+      >/dev/null 2>&1 \
+      && ok "dropped ${DB}" || ko "could not drop ${DB}"
+    ;;
+  down-all)
+    # Stated rather than implied: this is the one that takes everyone's data.
+    container delete --force "$GANY" "$PG" >/dev/null 2>&1
+    ok "removed ${GANY} and Postgres — every environment's database is gone"
+    ;;
+  *) echo "usage: $0 [up|seed|status|logs|down|drop-db|down-all]"; exit 1 ;;
 esac
