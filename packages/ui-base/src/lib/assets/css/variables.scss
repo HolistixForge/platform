@@ -50,6 +50,7 @@
   //
   // Z-Index Layers
   //   --z-base:     0
+  //   --z-overlay:  10   above a component's own content, below everything else
   //   --z-dropdown: 100
   //   --z-sticky:   200
   //   --z-modal:    300
@@ -138,6 +139,11 @@
   // --- Z-Index Layers ---
   --z-base: 0;
   --z-behind: -1;
+  // Above a component's own content and below every global layer. For an
+  // overlay that must beat the stacking context its own children create — a
+  // node embedding a canvas, say — without ever covering a dropdown or a
+  // modal from elsewhere on the page.
+  --z-overlay: 10;
   --z-dropdown: 100;
   --z-sticky: 200;
   --z-modal: 300;
