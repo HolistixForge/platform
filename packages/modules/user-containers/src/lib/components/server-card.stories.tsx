@@ -12,6 +12,7 @@ import {
   StoryArgs,
 } from './server-card-stories';
 import { localRunnerFrontend } from '../local-runner-frontend';
+import { platformRunnerFrontend } from '../platform-runner-frontend';
 
 //
 
@@ -19,7 +20,15 @@ const StoryWrapper = (props: StoryArgs) => {
   return (
     <UserContainerCardInternal
       {...props}
-      runners={new Map([['local', localRunnerFrontend]])}
+      // Both runners, because the card's point is the choice between them:
+      // one registered runner drew a single button with nothing to compare it
+      // to, and the cloud half of the pair never appeared in any story.
+      runners={
+        new Map([
+          ['local', localRunnerFrontend],
+          ['platform', platformRunnerFrontend],
+        ])
+      }
     />
   );
 };

@@ -43,6 +43,7 @@ const types: ResourceButtonsProps['type'][] = [
   'pause',
   'enter',
   'host',
+  'local',
   'cloud',
   'share',
   'docker',

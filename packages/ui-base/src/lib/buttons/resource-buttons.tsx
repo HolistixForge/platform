@@ -11,6 +11,7 @@ export type ResourceButtonsProps = {
     | 'pause'
     | 'enter'
     | 'host'
+    | 'local'
     | 'cloud'
     | 'share'
     | 'docker'
@@ -31,6 +32,9 @@ export const ResourceButtons = (props: ResourceButtonsProps) => {
   else if (type === 'stop') Icon = icons.StopResource;
   else if (type === 'enter') Icon = icons.EnterResource;
   else if (type === 'cloud') Icon = icons.Cloud;
+  // `local` is `host` with a laptop where the word goes: same blue box, same
+  // size, so the pair reads as one choice rather than two unrelated buttons.
+  else if (type === 'local') Icon = icons.Laptop;
   else if (type === 'docker') Icon = ClipboardCopyIcon;
   else if (type === 'delete') Icon = TrashIcon;
 

@@ -19,6 +19,7 @@ import {
   DialogControlled,
   ButtonBase,
   ClickStopPropagation,
+  ResourceButtons,
 } from '@holistix-forge/ui-base';
 
 import { UserContainerSystemInfo, serviceUrl } from '../servers-types';
@@ -374,39 +375,56 @@ export const UserContainerCardInternal = ({
               : 'Runs on'}
           </p>
         </div>
-        <div className="flex" style={{ gap: 'var(--spacing-4)' }}>
+        {/*
+          The two runners are `ResourceButtons`, not bordered chips. Where a
+          service runs is the same kind of choice as host-or-not on a notebook
+          card, and it was being drawn in a vocabulary used nowhere else on the
+          card. `local` is the laptop button added beside `cloud`; both carry
+          the blue box `host` already had, so the pair reads as one choice.
+
+          A runner the registry does not know still renders — as its own label
+          on a plain button — rather than disappearing, because a third runner
+          silently vanishing from the card is worse than one that looks odd.
+        */}
+        <div className="flex items-center" style={{ gap: 'var(--spacing-4)' }}>
           {Array.from(runners.entries()).map(([runnerId, runner]) => {
             const active = container.runner.id === runnerId;
+            const known = runnerId === 'local' || runnerId === 'platform';
             return (
+              // The click stays on the wrapper rather than on the button:
+              // ResourceButtons takes a `useAction` result, and a hook cannot
+              // be called once per entry of a list. The button is here for its
+              // appearance; the wrapper carries the behaviour.
               <div
                 key={runnerId}
-                className="flex items-center cursor-pointer"
+                className="cursor-pointer"
                 title={
                   active
                     ? `Restart on ${runner.label}`
                     : `Move to ${runner.label}`
                 }
                 style={{
-                  gap: 'var(--spacing-4)',
                   // The active runner is the one piece of state on this card
-                  // that is otherwise invisible once chosen.
-                  border: `1px solid ${
-                    active ? 'var(--color-accent)' : 'var(--color-border)'
-                  }`,
-                  background: active ? 'var(--color-bg-hover)' : 'transparent',
-                  color: active
-                    ? 'var(--color-text)'
-                    : 'var(--color-text-muted)',
-                  borderRadius: 'var(--radius-xs)',
-                  padding: 'var(--spacing-4)',
-                  transition: 'background 0.15s ease, border-color 0.15s ease',
+                  // that is otherwise invisible once chosen. Opacity says it
+                  // without a second border around a button that has one.
+                  opacity: active ? 1 : 0.45,
+                  transition: 'opacity 0.15s ease',
                 }}
-                onClick={() => {
-                  onSelectRunner(runnerId);
-                }}
+                onClick={() => onSelectRunner(runnerId)}
               >
-                <runner.icon />
-                <p>{runner.label}</p>
+                {known ? (
+                  <ResourceButtons
+                    type={runnerId === 'local' ? 'local' : 'cloud'}
+                    size="small"
+                    actionOriginId={`runner-${runnerId}`}
+                  />
+                ) : (
+                  <ButtonBase
+                    Icon={runner.icon}
+                    text={runner.label}
+                    className="resource small"
+                  />
+                )}
               </div>
             );
           })}
