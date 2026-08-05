@@ -20,24 +20,63 @@
   register: kata_kvm
   failed_when: not kata_kvm.stat.exists
 
-- name: Install Kata Containers
+# Installed from the upstream release and not from apt, because apt does not
+# have it. Measured on Ubuntu 24.04 (noble) with all four components enabled —
+# main, universe, restricted, multiverse:
+#
+#   apt-cache policy kata-containers  → nothing
+#   apt-cache search kata             → unrelated fonts
+#   containerd 2.2.1, runc 1.3.4      → both present
+#
+# Ubuntu does not package Kata. The previous version of this role would have
+# failed on the install task the first time anyone ran it; its own assert
+# message said as much, and that guess is now a measurement.
+
+- name: Install zstd, which the release archives are compressed with
   ansible.builtin.apt:
     update_cache: true
     name:
-      - kata-containers
+      - zstd
     state: present
+
+- name: Map the machine architecture onto the release asset name
+  # The assets are published as amd64/arm64, which is not what uname reports.
+  ansible.builtin.set_fact:
+    kata_asset_arch: >-
+      {{ {'x86_64': 'amd64', 'aarch64': 'arm64'}[ansible_architecture] }}
+  failed_when: ansible_architecture not in ['x86_64', 'aarch64']
+
+- name: Download the Kata release archive
+  # Pinned, not "latest": a host provisioned in March and one provisioned in
+  # June must run the same runtime, or the isolation guarantee is whatever
+  # upstream happened to have released that week.
+  ansible.builtin.get_url:
+    url: >-
+      https://github.com/kata-containers/kata-containers/releases/download/{{ kata_version }}/kata-static-{{ kata_version }}-{{ kata_asset_arch }}.tar.zst
+    dest: /tmp/kata-static-{{ kata_version }}-{{ kata_asset_arch }}.tar.zst
+    mode: '0644'
+  register: kata_archive
+
+- name: Unpack it
+  # The archive is rooted at ./opt/kata, so it extracts at /.
+  ansible.builtin.unarchive:
+    src: /tmp/kata-static-{{ kata_version }}-{{ kata_asset_arch }}.tar.zst
+    dest: /
+    remote_src: true
+    extra_opts: ['--zstd']
+    creates: '{{ kata_runtime_path }}'
 
 - name: Locate the Kata runtime binary
   ansible.builtin.stat:
-    path: /usr/bin/kata-runtime
+    path: '{{ kata_runtime_path }}'
   register: kata_runtime_binary
 
 - name: Fail when the runtime binary is missing
   ansible.builtin.assert:
     that: kata_runtime_binary.stat.exists
     fail_msg: >-
-      kata-runtime was not installed. On this distribution the package may be
-      named differently or only available from the Kata release tarball —
+      kata-runtime is not at {{ kata_runtime_path }} after unpacking the
+      release archive. The layout inside kata-static may have changed —
       see https://github.com/kata-containers/kata-containers/releases
 
 # Registering the runtime with Docker rather than replacing the default: the
@@ -53,7 +92,7 @@
       {
         "runtimes": {
           "kata": {
-            "path": "/usr/bin/kata-runtime"
+            "path": "{{ kata_runtime_path }}"
           }
         }
       }
