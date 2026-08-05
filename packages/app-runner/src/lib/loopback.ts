@@ -30,10 +30,34 @@ export type TLoopbackListener = {
 
 const CALLBACK_PATH = '/callback';
 
+/**
+ * Escape before interpolating, because one of these values is attacker-chosen.
+ *
+ * The `error` parameter of the callback is put on the page to say why an
+ * enrolment was refused, and it arrives in a URL the browser was sent to. A
+ * crafted one closed the paragraph and opened a script tag — reflected XSS on
+ * a page this process serves to the user's own browser, on their own machine,
+ * with their session for whatever else 127.0.0.1 hosts.
+ */
+const escapeHtml = (value: string): string =>
+  value.replace(
+    /[&<>"']/g,
+    (c) =>
+      ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      }[c] as string)
+  );
+
 const page = (title: string, message: string) =>
-  `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title></head>` +
+  `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(
+    title
+  )}</title></head>` +
   `<body style="font-family:system-ui;padding:3rem;text-align:center">` +
-  `<h1>${title}</h1><p>${message}</p></body></html>`;
+  `<h1>${escapeHtml(title)}</h1><p>${escapeHtml(message)}</p></body></html>`;
 
 /**
  * @param expectedState the `state` sent to the authorize endpoint

@@ -108,3 +108,31 @@ describe('listenForCallback', () => {
     await expect(listener.waitForCode).rejects.toThrow(/timed out/i);
   });
 });
+
+/**
+ * The refusal page shows why an enrolment failed, and the reason comes out of
+ * a URL the browser was sent to.
+ */
+describe('the callback page', () => {
+  it('escapes an error the callback carried', async () => {
+    // Reflected XSS, and not a theoretical one: this page is served to the
+    // user's own browser on 127.0.0.1, where it shares an origin with whatever
+    // else that machine hosts.
+    const listener = await listenForCallback('state-123', 60_000);
+    const hostile = "</p><script>alert('xss')</script>";
+
+    const response = await fetch(
+      `${listener.redirectUri}?state=state-123&error=${encodeURIComponent(
+        hostile
+      )}`
+    );
+    const body = await response.text();
+
+    expect(response.status).toBe(400);
+    expect(body).not.toContain('<script>');
+    expect(body).toContain('&lt;script&gt;');
+
+    listener.close();
+    await listener.waitForCode.catch(() => undefined);
+  });
+});
