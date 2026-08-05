@@ -123,10 +123,15 @@ export const applePreflight = async (exec: TRuntimeExec): Promise<void> => {
   }
   if (!Array.isArray(entries) || entries.length === 0) return;
 
+  // `name` and `id` are what `container registry list --format json` actually
+  // carries — measured against a real login, where guessing `host` produced
+  // "this host holds registry logins (unnamed)": a refusal the operator cannot
+  // act on, which is most of the value of refusing. `host`/`hostname` stay in
+  // the list so a future field rename degrades to naming one rather than none.
   const hosts = entries
     .map((e) => {
       const row = (e ?? {}) as Record<string, unknown>;
-      return String(row.host ?? row.hostname ?? '');
+      return String(row.name ?? row.id ?? row.host ?? row.hostname ?? '');
     })
     .filter(Boolean)
     .join(', ');

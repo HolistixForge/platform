@@ -237,10 +237,32 @@ describe('applePreflight', () => {
   it('refuses to start while a login exists, and names it', async () => {
     // `container run` fetches a missing image by itself — measured. That is
     // only harmless while there is no credential for it to fetch with.
-    const exec = async () => JSON.stringify([{ host: 'ghcr.io' }]);
+    //
+    // The payload is the real one: `container registry list --format json`
+    // carries `name` and `id`, not `host`. Guessing produced "holds registry
+    // logins (unnamed)", which is a refusal nobody can act on — and most of
+    // the value of refusing is telling the operator what to clear.
+    const exec = async () =>
+      JSON.stringify([
+        {
+          creationDate: '2026-08-05T10:58:34Z',
+          id: 'ghcr.io',
+          labels: {},
+          name: 'ghcr.io',
+          username: 'someone',
+        },
+      ]);
 
     await expect(applePreflight(exec)).rejects.toThrow(/ghcr\.io/);
     await expect(applePreflight(exec)).rejects.toThrow(/registry logout/);
+  });
+
+  it('never says "unnamed" for a login it can see', async () => {
+    // A field rename upstream must degrade to naming one host rather than
+    // none: an unactionable refusal is the failure this test exists against.
+    const exec = async () => JSON.stringify([{ host: 'registry.example' }]);
+
+    await expect(applePreflight(exec)).rejects.toThrow(/registry\.example/);
   });
 
   it('does not block on a CLI that cannot list logins', async () => {
