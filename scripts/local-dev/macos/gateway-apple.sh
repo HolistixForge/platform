@@ -8,6 +8,8 @@
 #   ./gateway-apple.sh image     build gateway:latest for this machine
 #   ./gateway-apple.sh pack      build app-gateway and pack the tarball
 #   ./gateway-apple.sh serve     the build server the containers fetch from
+#   ./gateway-apple.sh broker    the container broker, without which the
+#                                service card offers only the local runner
 #   ./gateway-apple.sh up [n]    register n gateways and run them
 #   ./gateway-apple.sh list      what is running, and where
 #   ./gateway-apple.sh logs [i]  one container's gateway log
@@ -59,6 +61,7 @@ COUNT_DEFAULT=2
 HTTP_BASE="${HTTP_BASE:-7100}"
 VPN_BASE="${VPN_BASE:-49100}"
 BUILD_PORT="${BUILD_PORT:-8090}"
+BROKER_PORT="${BROKER_PORT:-9443}"
 
 NET=default
 PG=hx-postgres
@@ -191,6 +194,92 @@ cmd_serve() {
 }
 
 # --------------------------------------------------------------------------
+# broker — without it the gateway offers only the local runner
+# --------------------------------------------------------------------------
+# The gateway registers the platform runner only when it has *both* a broker
+# URL and a broker token; config/modules.ts says why, and it is the right rule:
+# half a broker would put a button in front of the user that fails on click.
+# The consequence when neither is set is quiet — the picker simply offers
+# "Local" alone, with nothing anywhere saying a mode is missing.
+#
+# It binds on the container network's gateway address, not the loopback: its
+# only client is a gateway *inside* a microVM, for which 127.0.0.1 is itself.
+cmd_broker() {
+  local bundle="${REPO_ROOT}/dist/packages/app-container-broker/main.js"
+  [ -f "$bundle" ] || {
+    ko "the broker is not built. Run:"
+    note "NX_DAEMON=false npx nx build app-container-broker"
+    return 1
+  }
+  [ -f "${STATE}/jwt.key" ] || {
+    ko "no JWT key for '${ENV_NAME}' — run ganymede-apple.sh up first"
+    return 1
+  }
+
+  local host
+  host="$(host_gateway)"
+  [ -n "$host" ] || { ko "could not read the network gateway from ${PG}"; return 1; }
+
+  # Generated once and kept, because the gateway is handed the same value and a
+  # regenerated secret would leave a running gateway holding one nothing
+  # accepts — which surfaces as the platform runner failing on start rather
+  # than as an authentication problem.
+  [ -f "${STATE}/broker.token" ] || {
+    openssl rand -hex 32 > "${STATE}/broker.token"
+    chmod 600 "${STATE}/broker.token"
+  }
+
+  # The *port*, not the process name. A broker left over from
+  # verify-container-broker.sh binds a random free port, so asking whether any
+  # broker process exists answers yes while nothing is listening where the
+  # gateway will look — and the gateway then registers a platform runner whose
+  # first request is refused.
+  if lsof -nP -iTCP@"${host}":"${BROKER_PORT}" -sTCP:LISTEN >/dev/null 2>&1; then
+    ok "broker already listening on ${host}:${BROKER_PORT}"
+    return 0
+  fi
+
+  # Ganymede verifies this as an RS256 `gateway_token`, so it is *signed*, not
+  # generated. A random string authenticates nothing, and the failure it
+  # produces is every project image reported as non-existent rather than as
+  # refused — the same defect the containerbroker Ansible role had.
+  local internal_token
+  internal_token="$(node -e '
+const crypto = require("crypto"), fs = require("fs");
+const key = fs.readFileSync(process.argv[1]);
+const b64 = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
+const h = b64({ alg: "RS256", typ: "JWT" });
+const now = Math.floor(Date.now() / 1000);
+const p = b64({
+  type: "gateway_token",
+  gateway_id: "00000000-0000-0000-0000-0000000000b0",
+  scope: "gateway:broker:catalogue",
+  iat: now, exp: now + 31536000,
+});
+process.stdout.write(h + "." + p + "." +
+  crypto.sign("RSA-SHA256", Buffer.from(h + "." + p), key).toString("base64url"));
+' "${STATE}/jwt.key")"
+
+  # Every concession the apple engine names has to be listed or the broker
+  # refuses to start — which is the point of them. See engine-apple.ts.
+  BROKER_ENGINE=apple \
+  BROKER_RUNTIME=container-runtime-linux \
+  BROKER_ACCEPT_CONCESSIONS=no-new-privileges,pids-cgroup,restart-policy,run-may-pull,no-hot-network-attach \
+  BROKER_TOKEN="$(cat "${STATE}/broker.token")" \
+  BROKER_PORT="$BROKER_PORT" \
+  BROKER_BIND="$host" \
+  GANYMEDE_INTERNAL_URL="https://ganymede.${DOMAIN}:${HTTPS_PORT}" \
+  GANYMEDE_INTERNAL_TOKEN="$internal_token" \
+  NODE_TLS_REJECT_UNAUTHORIZED=0 \
+    nohup node "$bundle" >"${CONF_DIR}/broker.log" 2>&1 &
+
+  sleep 3
+  lsof -nP -iTCP@"${host}":"${BROKER_PORT}" -sTCP:LISTEN >/dev/null 2>&1 \
+    && ok "broker on ${host}:${BROKER_PORT} (apple engine, log ${CONF_DIR}/broker.log)" \
+    || { ko "the broker did not start — ${CONF_DIR}/broker.log"; tail -8 "${CONF_DIR}/broker.log"; return 1; }
+}
+
+# --------------------------------------------------------------------------
 # up
 # --------------------------------------------------------------------------
 cmd_up() {
@@ -221,6 +310,7 @@ cmd_up() {
   [ -n "$host" ] || { ko "could not read the network gateway from ${PG}"; return 1; }
 
   cmd_serve || return 1
+  cmd_broker || return 1
 
   # app-ganymede-cmds signs the gateway's token with this environment's key and
   # writes the row itself, so it needs the database and the key — the same two
@@ -314,6 +404,8 @@ cmd_up() {
       -e "OTEL_SERVICE_NAME=gateway-${name}" \
       -e "OTEL_DEPLOYMENT_ENVIRONMENT=${ENV_NAME}" \
       -e "NODE_TLS_REJECT_UNAUTHORIZED=0" \
+      -e "CONTAINER_BROKER_URL=https://${host}:${BROKER_PORT}" \
+      -e "CONTAINER_BROKER_TOKEN=$(cat "${STATE}/broker.token")" \
       -- "$IMAGE" >/dev/null 2>&1
 
     local ip
@@ -368,6 +460,7 @@ case "${1:-}" in
   image) cmd_image ;;
   pack)  cmd_pack ;;
   serve) cmd_serve ;;
+  broker) cmd_broker ;;
   up)    shift; cmd_up "$@" ;;
   list)  cmd_list ;;
   logs)  shift; cmd_logs "$@" ;;
@@ -377,5 +470,5 @@ case "${1:-}" in
     cmd_pack  || exit 1
     cmd_up    || exit 1
     ;;
-  *) echo "usage: $0 [image|pack|serve|up [n]|list|logs [i]|down|all]"; exit 1 ;;
+  *) echo "usage: $0 [image|pack|serve|broker|up [n]|list|logs [i]|down|all]"; exit 1 ;;
 esac
