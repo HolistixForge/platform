@@ -40,6 +40,7 @@ import {
 } from './servers-events';
 import { TUserContainersExports } from '..';
 import { SharedMap } from '@holistix-forge/collab-engine';
+import { TRunnerPlacement } from './placement-shape';
 
 //
 
@@ -1099,6 +1100,119 @@ export class UserContainersReducer extends ReducerWithCollab<
       );
       return undefined;
     }
+  }
+
+  /**
+   * What one machine has been asked to run, in one project.
+   *
+   * Built here and not in the route, because everything a runner needs beyond
+   * the container's name lives on this gateway rather than in the collab
+   * document: the resolved image reference, the `SETTINGS` blob, and the
+   * hosting token — which is also the container's VPN password, and is kept
+   * out of the CRDT on purpose since that document reaches every browser in
+   * the project.
+   *
+   * The token is minted if this container has never been started. A machine
+   * that comes online for the first time and finds a placement waiting has to
+   * be able to act on it; refusing until somebody presses start again would
+   * make the runner useless for exactly the case it exists for.
+   */
+  async placementsFor(
+    project_id: string,
+    machine_id: string
+  ): Promise<TRunnerPlacement[]> {
+    const collab =
+      this.depsExports.collab.registry.getCollabForProject(project_id);
+    const sduc = collab.sharedData['user-containers:containers'];
+
+    const mine = Array.from(sduc.copy().values()).filter(
+      (c: TUserContainer) =>
+        c?.runner?.id === 'local' &&
+        (c.runner as { machine_id?: string })?.machine_id === machine_id
+    ) as TUserContainer[];
+
+    const gatewayExports = this.depsExports.gateway;
+    const organization_id = gatewayExports.organization_id;
+    const gatewayFqdn = gatewayExports.gatewayFQDN;
+    const domain = gatewayFqdn.split('.').slice(1).join('.') || 'domain.local';
+    const imageRegistry = this.depsExports['user-containers'].imageRegistry;
+    const runner = this.depsExports['user-containers'].getRunner('local');
+
+    const placements: TRunnerPlacement[] = [];
+
+    for (const container of mine) {
+      const containerId = container.user_container_id;
+      const user_id = (container.runner as { user_id?: string })?.user_id;
+
+      let hostingToken = this.hostingTokens.get(containerId);
+      if (!hostingToken) {
+        hostingToken =
+          await this.depsExports.gateway.tokenManager.generateProjectScopedToken(
+            project_id,
+            {
+              type: 'user_container_token',
+              user_container_id: containerId,
+              scope: `project:${project_id}:access org:${organization_id}:connect-vpn`,
+            }
+          );
+        this.hostingTokens.set(containerId, hostingToken);
+        await this._publishVpnCredentials();
+      }
+
+      const authGuard = await this._authGuardSecretFor(
+        container,
+        organization_id,
+        domain
+      );
+
+      const config = {
+        user_id,
+        project_id,
+        frontend_fqdn: domain,
+        ganymede_fqdn: `ganymede.${domain}`,
+        gateway_fqdn: gatewayFqdn,
+        organization_id,
+        auth_guard_client_secret: authGuard?.client_secret,
+        dev_host_ip: gatewayExports.environment?.devMode
+          ? 'host-gateway'
+          : undefined,
+      };
+
+      const withGuard =
+        authGuard && authGuard.client_id !== container.auth_guard?.client_id
+          ? { ...container, auth_guard: { client_id: authGuard.client_id } }
+          : container;
+
+      // The same builder the runners use, so a placement and the command the
+      // local button prints cannot drift apart.
+      const spec = (
+        runner as unknown as {
+          buildLaunchSpec: (...a: unknown[]) => {
+            name: string;
+            imageRef: string;
+            settings: string;
+            capabilities: string[];
+            devices: string[];
+            extraHosts: { host: string; ip: string }[];
+          };
+        }
+      ).buildLaunchSpec(withGuard, hostingToken, imageRegistry, config);
+
+      placements.push({
+        machine_id,
+        project_id,
+        user_container_id: containerId,
+        name: spec.name,
+        imageRef: spec.imageRef,
+        settings: spec.settings,
+        capabilities: spec.capabilities,
+        devices: spec.devices,
+        extraHosts: spec.extraHosts,
+        networks: [],
+      });
+    }
+
+    return placements;
   }
 }
 

@@ -9,6 +9,7 @@ import type { ContainerRunner } from './lib/runner';
 import { localRunnerBackend } from './lib/local-runner';
 import { PlatformRunnerBackend } from './lib/platform-runner';
 import { log, EPriority } from '@holistix-forge/log';
+import { setPlacementProvider } from './lib/placement-provider';
 
 //
 
@@ -146,10 +147,17 @@ export const moduleBackend: TModule<TRequired, TUserContainersExports> = {
     });
 
     // Load reducers
-    depsExports.reducers.loadReducers(
-      new UserContainersReducer(
-        depsExports as TRequired & { 'user-containers': TUserContainersExports }
-      )
+    const userContainersReducer = new UserContainersReducer(
+      depsExports as TRequired & { 'user-containers': TUserContainersExports }
+    );
+    depsExports.reducers.loadReducers(userContainersReducer);
+
+    // The gateway's /placements route asks the reducer, because everything a
+    // runner needs beyond a name — the resolved image, the SETTINGS blob, the
+    // hosting token that doubles as the container's VPN password — is held on
+    // the gateway and deliberately kept out of the collab document.
+    setPlacementProvider((project_id, machine_id) =>
+      userContainersReducer.placementsFor(project_id, machine_id)
     );
   },
 };
@@ -171,3 +179,6 @@ export type {
   TEventNew,
   TEventDelete,
 } from './lib/servers-events';
+
+export { getPlacementProvider } from './lib/placement-provider';
+export type { TRunnerPlacement } from './lib/placement-shape';
