@@ -3,10 +3,24 @@
 # it — measured on 24.04 with main, universe, restricted and multiverse all
 # enabled: `apt-cache policy kata-containers` returns nothing.
 
-# Pinned rather than "latest". A host provisioned in March and one provisioned
-# in June must run the same runtime, or the isolation guarantee is whatever
-# upstream happened to release that week. Bump deliberately.
-kata_version: '4.0.0'
+# Pinned rather than "latest", so a host provisioned in March and one
+# provisioned in June run the same runtime. Bump deliberately.
+#
+# 3.28.0 and not 4.0.0, which is the newest, for one reason that beats
+# freshness: this is the version we have actually run. Apple's `container`
+# installs kata-static-3.28.0 as its default guest kernel, and a container
+# booted on it on this machine — 6.18.15, with /dev/net/tun present. A version
+# nobody here has ever booted is a worse default than one that has.
+#
+# The dates say the same thing more quietly. 4.0.0 is a major bump published
+# 2026-07-20; Apple shipped `container` 1.2.0 nine days later and chose 3.28.0
+# (2026-03-17) over both it and 3.29.0. A major version is also exactly where
+# the archive layout this role asserts — /opt/kata/bin/kata-runtime — is most
+# likely to have moved.
+#
+# Both architectures exist at this version: amd64 1515 MB, arm64 569 MB, both
+# URLs checked.
+kata_version: '3.28.0'
 
 # Where kata-static unpacks to. The archive is rooted at ./opt/kata, so this is
 # not a choice — it is where the binary lands, and the role asserts it rather

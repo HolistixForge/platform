@@ -128,6 +128,17 @@
 # The user container runs an OpenVPN client to reach its gateway, so the guest
 # needs tun. Under Kata that comes from the guest kernel, not from a host
 # device passthrough — the broker refuses `--device` for exactly this reason.
+#
+# The kernel half of this is no longer an assumption. Apple's `container`
+# installs kata-static-3.28.0 as its default guest kernel, and a container
+# booted on that kernel here reported 6.18.15 with /dev/net/tun present as
+# crw------- 10:200, with nothing passed through from the host. So Kata's
+# guest kernel does carry TUN.
+#
+# What this task still has to prove is the other half: that the guest image
+# Kata boots — its rootfs and agent, which Apple does not use — creates the
+# device node. If it fails, that is a Kata guest image question and not a
+# microVM one, which is a much narrower thing to go and fix.
 - name: Confirm the guest image provides tun
   ansible.builtin.command: >-
     docker run --rm --runtime=kata --cap-add=NET_ADMIN
