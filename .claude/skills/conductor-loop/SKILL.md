@@ -185,9 +185,20 @@ mcp__linear-server__get_issue  id: "TAC-176"   → gitBranchName:
 ```
 
 A Conductor workspace branch is not that name. Here the local branch is
-`create-pr`, tracking `origin/commit-and-deploy-images-v1` — so nothing matched
-and **TAC-176 closed with `attachments: []`**: the issue that describes the work
-has no link to PR #57 that delivered it. Verified, not hypothetical.
+`create-pr`, tracking `origin/commit-and-deploy-images-v1` — neither is
+`chrysostome/tac-176-…`, so the branch heuristic has nothing to match on.
+
+The result is **per issue, and easy to misread**. For the same PR #57:
+
+| Issue   | `attachments`     |
+| ------- | ----------------- |
+| TAC-175 | PR #57 — linked   |
+| TAC-176 | `[]` — not linked |
+
+TAC-175 got its link (from the PR body, or by hand). TAC-176 — the ticket that
+describes the gateway work and closes with the fullest write-up of it — closed
+pointing at nothing. **Check the issue you actually care about**; one linked
+sibling says nothing about the others.
 
 So either branch as Linear asks, or attach the PR yourself:
 
