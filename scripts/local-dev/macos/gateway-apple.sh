@@ -11,6 +11,7 @@
 #   ./gateway-apple.sh broker    the container broker, without which the
 #                                service card offers only the local runner
 #   ./gateway-apple.sh up [n]    register n gateways and run them
+#   ./gateway-apple.sh resume    start the ones that already exist
 #   ./gateway-apple.sh list      what is running, and where
 #   ./gateway-apple.sh logs [i]  one container's gateway log
 #   ./gateway-apple.sh down      remove this environment's gateways, DB included
@@ -25,8 +26,9 @@
 #   not exist on macOS would only fail.
 #
 #   No `--restart`. Apple has no restart policy — the `restart-policy`
-#   concession the broker's engine already names. Nothing here brings a gateway
-#   back after a reboot; that is launchd's job and it is not written yet.
+#   concession the broker's engine already names. `resume` starts the gateways
+#   that already exist, and supervise.sh runs it at login, which is what stands
+#   in for the flag.
 #
 #   No `--dns`. Apple's takes an IP and no port, and the CoreDNS this platform
 #   runs on macOS is on 15353 precisely so it needs no root. Worse, its
@@ -213,6 +215,11 @@ cmd_serve() {
 # that is tolerable only because both ends sit on a host-local network — the
 # docker bridge on Linux, vmnet here — and it is worth saying out loud because
 # the port says the opposite.
+# The same broker, in the foreground: launchd needs a process it can watch, and
+# a job that backgrounds itself is a job launchd declares dead and restarts
+# forever. `foreground=1` is the only difference.
+cmd_broker_foreground() { BROKER_FOREGROUND=1 cmd_broker; }
+
 cmd_broker() {
   local bundle="${REPO_ROOT}/dist/packages/app-container-broker/main.js"
   [ -f "$bundle" ] || {
@@ -280,12 +287,25 @@ process.stdout.write(h + "." + p + "." +
   GANYMEDE_INTERNAL_URL="https://ganymede.${DOMAIN}:${HTTPS_PORT}" \
   GANYMEDE_INTERNAL_TOKEN="$internal_token" \
   NODE_TLS_REJECT_UNAUTHORIZED=0 \
-    nohup node "$bundle" >"${CONF_DIR}/broker.log" 2>&1 &
+    node_broker "$bundle"
 
+  # Under launchd the line above never returns, so nothing below runs — which is
+  # the point: a job that backgrounds itself is a job launchd sees exit, and it
+  # restarts it forever against a port the previous copy still holds.
   sleep 3
   lsof -nP -iTCP@"${host}":"${BROKER_PORT}" -sTCP:LISTEN >/dev/null 2>&1 \
     && ok "broker on ${host}:${BROKER_PORT} (apple engine, log ${CONF_DIR}/broker.log)" \
     || { ko "the broker did not start — ${CONF_DIR}/broker.log"; tail -8 "${CONF_DIR}/broker.log"; return 1; }
+}
+
+# Foreground for launchd, detached for a person at a terminal. `exec … &` is
+# neither: the `&` forks, so exec never replaces the shell and the job dies
+# anyway — which is what happened the first time.
+node_broker() {
+  if [ -n "${BROKER_FOREGROUND:-}" ]; then
+    exec node "$1"
+  fi
+  nohup node "$1" >"${CONF_DIR}/broker.log" 2>&1 &
 }
 
 # --------------------------------------------------------------------------
@@ -442,6 +462,30 @@ cmd_up() {
 # --------------------------------------------------------------------------
 # list / logs / down
 # --------------------------------------------------------------------------
+# Start the gateways that already exist. Not `up`, which registers new rows —
+# after a reboot the pool is down but its rows still say ready, and the next
+# organization to open a project is handed a gateway that answers nothing.
+cmd_resume() {
+  local any=0 n
+  while read -r n; do
+    [ -z "$n" ] && continue
+    any=1
+    if [ -n "$(ip_of "$n")" ]; then
+      ok "${n} already up"
+    else
+      container start "$n" >/dev/null 2>&1
+      local ip=""
+      for _ in $(seq 1 20); do
+        ip="$(ip_of "$n")"
+        [ -n "$ip" ] && break
+        sleep 1
+      done
+      [ -n "$ip" ] && ok "${n} resumed at ${ip}" || ko "${n} did not come back"
+    fi
+  done < <(names)
+  [ "$any" = 1 ] || note "no gateway containers for '${ENV_NAME}' — $0 up"
+}
+
 cmd_list() {
   local any=0 n
   while read -r n; do
@@ -481,6 +525,8 @@ case "${1:-}" in
   pack)  cmd_pack ;;
   serve) cmd_serve ;;
   broker) cmd_broker ;;
+  broker-foreground) cmd_broker_foreground ;;
+  resume) cmd_resume ;;
   up)    shift; cmd_up "$@" ;;
   list)  cmd_list ;;
   logs)  shift; cmd_logs "$@" ;;
@@ -490,5 +536,5 @@ case "${1:-}" in
     cmd_pack  || exit 1
     cmd_up    || exit 1
     ;;
-  *) echo "usage: $0 [image|pack|serve|broker|up [n]|list|logs [i]|down|all]"; exit 1 ;;
+  *) echo "usage: $0 [image|pack|serve|broker|up [n]|resume|list|logs [i]|down|all]"; exit 1 ;;
 esac
