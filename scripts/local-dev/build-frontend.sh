@@ -5,7 +5,13 @@
 set -e
 
 ENV_NAME=$1
-WORKSPACE_PATH=${2:-"/root/workspace/monorepo"}
+# The Linux default first, and only fall back to this checkout when it is not
+# there — a dev container has both, and picking the wrong one would build the
+# frontend from a different tree than the one being served.
+DEFAULT_WORKSPACE="/root/workspace/monorepo"
+[ -d "$DEFAULT_WORKSPACE" ] || \
+  DEFAULT_WORKSPACE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+WORKSPACE_PATH=${2:-"$DEFAULT_WORKSPACE"}
 
 if [ -z "$ENV_NAME" ]; then
   echo "Usage: $0 <env-name> [workspace-path]"
@@ -14,20 +20,27 @@ if [ -z "$ENV_NAME" ]; then
   exit 1
 fi
 
-ENV_DIR="/root/.local-dev/${ENV_NAME}"
+# Two layouts, because there are two ways to stand an environment up and both
+# are current: create-env.sh writes .env.ganymede under /root/.local-dev, the
+# macOS harness writes ganymede.env under ~/.holistix-macos. The Linux pair is
+# tried first, so nothing changes there.
+ENV_FILE=""
+for candidate in \
+  "/root/.local-dev/${ENV_NAME}/.env.ganymede" \
+  "${HOME}/.holistix-macos/${ENV_NAME}/ganymede.env"; do
+  [ -f "$candidate" ] && { ENV_FILE="$candidate"; break; }
+done
 
-if [ ! -d "$ENV_DIR" ]; then
+if [ -z "$ENV_FILE" ]; then
   echo "❌ Environment '${ENV_NAME}' not found"
+  echo "   Looked for:"
+  echo "     /root/.local-dev/${ENV_NAME}/.env.ganymede   (Linux)"
+  echo "     ${HOME}/.holistix-macos/${ENV_NAME}/ganymede.env   (macOS)"
   echo "   Create it first: ./create-env.sh ${ENV_NAME}"
+  echo "                or: ./macos/ganymede-apple.sh up"
   exit 1
 fi
-
-# Read domain from environment configuration
-ENV_FILE="${ENV_DIR}/.env.ganymede"
-if [ ! -f "$ENV_FILE" ]; then
-  echo "❌ Environment config not found: $ENV_FILE"
-  exit 1
-fi
+ENV_DIR="$(dirname "$ENV_FILE")"
 
 DOMAIN=$(grep "^DOMAIN=" "$ENV_FILE" | cut -d= -f2 | tr -d '"' || echo "")
 if [ -z "$DOMAIN" ]; then
@@ -65,7 +78,8 @@ echo "✅ Frontend built for ${ENV_NAME}"
 echo "   Output: packages/app-frontend/dist/"
 echo "   Served by Nginx at: https://${DOMAIN}"
 echo ""
-echo "💡 Restart Nginx to pick up changes:"
-echo "   sudo service nginx reload"
+echo "💡 Reload nginx to pick up changes:"
+echo "   sudo service nginx reload    # Linux"
+echo "   nginx -s reload              # macOS, Homebrew, no sudo"
 echo ""
 
