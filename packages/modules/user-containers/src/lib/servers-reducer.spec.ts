@@ -794,3 +794,153 @@ describe('UserContainersReducer - runner machines', () => {
     expect(machines.has('m1')).toBe(true);
   });
 });
+
+/**
+ * A local placement names a machine, and Ganymede decides whether it may.
+ *
+ * The rule — only a machine's own owner makes the first placement on it —
+ * cannot be checked against this document: the machine catalog here only holds
+ * machines whose runner is already heartbeating into this project, and the
+ * first placement is what puts one there. So the reducer asks Ganymede, and
+ * what these tests hold in place is that it asks *before* writing, and that a
+ * refusal leaves nothing behind.
+ */
+describe('UserContainersReducer - _setRunner and the machine it names', () => {
+  let reducer: UserContainersReducer;
+  let containers: Map<string, any>;
+  let toGanymede: jest.Mock;
+
+  const CONTAINER = 'uc-1';
+
+  beforeEach(() => {
+    containers = new Map([
+      [CONTAINER, { user_container_id: CONTAINER, runner: { id: 'none' } }],
+    ]);
+
+    toGanymede = jest.fn().mockResolvedValue({});
+
+    reducer = new UserContainersReducer({
+      collab: {
+        registry: {
+          getCollabForProject: jest.fn(() => ({
+            sharedData: {
+              'user-containers:containers': {
+                get: (k: string) => containers.get(k),
+                set: (k: string, v: any) => containers.set(k, v),
+                copy: () => new Map(containers),
+              },
+            },
+          })),
+        },
+      },
+      reducers: { processEvent: jest.fn() },
+      gateway: { toGanymede, organization_id: 'org-1' },
+      'user-containers': {
+        listRunnerIds: () => ['local', 'platform'],
+        getRunner: (id: string) => ({ id }),
+      },
+    } as any);
+  });
+
+  const setRunner = (extra: Record<string, unknown> = {}) =>
+    reducer.reduce(
+      {
+        type: 'user-container:set-runner',
+        user_container_id: CONTAINER,
+        runner_id: 'local',
+        ...extra,
+      } as any,
+      {
+        project_id: 'project-1',
+        jwt: { user: { id: 'user-1' } },
+      } as any
+    );
+
+  it('should opt the machine into the project before writing the placement', async () => {
+    // Act
+    await setRunner({ machine_id: 'machine-1' });
+
+    // Assert
+    expect(toGanymede).toHaveBeenCalledWith({
+      url: '/internal/runners/machine-1/projects',
+      method: 'POST',
+      jsonBody: { project_id: 'project-1', user_id: 'user-1' },
+    });
+    expect(containers.get(CONTAINER).runner).toEqual({
+      id: 'local',
+      user_id: 'user-1',
+      machine_id: 'machine-1',
+    });
+  });
+
+  it('should take the owner from the token and never from the event', async () => {
+    // Act - a client claiming the machine belongs to somebody else
+    await setRunner({ machine_id: 'machine-1', user_id: 'someone-else' });
+
+    // Assert - a client that could name the owner could opt a machine it does
+    // not own into a project it was never invited to
+    expect(toGanymede.mock.calls[0][0].jsonBody.user_id).toBe('user-1');
+    expect(containers.get(CONTAINER).runner.user_id).toBe('user-1');
+  });
+
+  it('should write nothing when Ganymede refuses the machine', async () => {
+    // Arrange - not this user's machine, revoked, or unknown; Ganymede answers
+    // the same way for all three
+    toGanymede.mockRejectedValue(new Error('403'));
+
+    // Act / Assert
+    await expect(setRunner({ machine_id: 'machine-1' })).rejects.toThrow();
+
+    // A container written here would sit forever looking like it was about to
+    // start, because no runner would ever be handed the placement
+    expect(containers.get(CONTAINER).runner).toEqual({ id: 'none' });
+  });
+
+  it('should still accept a placement that names no machine', async () => {
+    // Act - the mode that hands the user a `docker run` to paste, which works
+    // and which nothing here should break
+    await setRunner();
+
+    // Assert - no grant to record, because no machine was named
+    expect(toGanymede).not.toHaveBeenCalled();
+    expect(containers.get(CONTAINER).runner).toEqual({
+      id: 'local',
+      user_id: 'user-1',
+    });
+  });
+
+  it('should not opt anything in for a platform placement', async () => {
+    // Act
+    await reducer.reduce(
+      {
+        type: 'user-container:set-runner',
+        user_container_id: CONTAINER,
+        runner_id: 'platform',
+        machine_id: 'machine-1',
+      } as any,
+      { project_id: 'project-1', jwt: { user: { id: 'user-1' } } } as any
+    );
+
+    // Assert - the platform belongs to no one and is not a machine anyone
+    // opts into; a machine_id here is meaningless and must not be recorded
+    expect(toGanymede).not.toHaveBeenCalled();
+    expect(containers.get(CONTAINER).runner).toEqual({ id: 'platform' });
+  });
+
+  it('should refuse a local placement with no project to grant against', async () => {
+    // Arrange / Act
+    const refused = reducer.reduce(
+      {
+        type: 'user-container:set-runner',
+        user_container_id: CONTAINER,
+        runner_id: 'local',
+        machine_id: 'machine-1',
+      } as any,
+      { jwt: { user: { id: 'user-1' } } } as any
+    );
+
+    // Assert
+    await expect(refused).rejects.toThrow();
+    expect(toGanymede).not.toHaveBeenCalled();
+  });
+});

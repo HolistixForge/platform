@@ -727,6 +727,28 @@ export class UserContainersReducer extends ReducerWithCollab<
         }
       : {};
 
+    // Tell Ganymede this machine is now in this project, before writing the
+    // placement — because Ganymede is what decides whether it may be.
+    //
+    // Only a machine's own owner can make the first placement on it, and that
+    // rule lives there, against the runners table, rather than here against
+    // collab state: the machine catalog in this document only holds machines
+    // whose runner is already heartbeating into this project, and a machine's
+    // first placement is what puts it there. Asking this document would mean
+    // no machine could ever join.
+    //
+    // Failing loudly rather than writing anyway. A placement Ganymede refused
+    // is one no runner will ever be handed — the machine would never learn the
+    // project exists — so a container written here would sit forever looking
+    // like it was about to start. Somebody clicked; they should be told.
+    if (isLocal && event.machine_id) {
+      await this._optMachineIntoProject(
+        event.machine_id,
+        requestData.project_id,
+        user_id
+      );
+    }
+
     // Runner data, not just the id: `start` writes what the runner reported
     // back here — the docker command, the broker's container id — and this used
     // to replace the whole object, so choosing a runner twice erased it.
@@ -868,6 +890,59 @@ export class UserContainersReducer extends ReducerWithCollab<
    * this is the only chance to capture it — it goes into `authGuardSecrets` and
    * nowhere else.
    */
+  /**
+   * Record, in Ganymede, that a machine has been opted into a project.
+   *
+   * `toGanymede` and not `toGanymedeInternal`: the endpoint authenticates the
+   * organization token, the same way `/gateway/tokens/scoped` does, because it
+   * has to check that the project belongs to this gateway's organization. A
+   * gateway holds one organization's rooms and has no business granting a
+   * machine to another organization's project.
+   *
+   * The user is passed and checked there. It is taken from the JWT by the
+   * caller, never from the event — a client that could name the owner could
+   * opt somebody else's machine into a project it was never invited to.
+   */
+  private async _optMachineIntoProject(
+    machine_id: string,
+    project_id: string | undefined,
+    user_id: string
+  ): Promise<void> {
+    if (!project_id) {
+      throw new ForbiddenException([
+        { message: 'A local placement needs a project' },
+      ]);
+    }
+
+    try {
+      await this.depsExports.gateway.toGanymede({
+        url: `/internal/runners/${machine_id}/projects`,
+        method: 'POST',
+        jsonBody: { project_id, user_id },
+      });
+    } catch (e) {
+      // Ganymede answers the same way for an unknown machine, a revoked one
+      // and one belonging to somebody else, so that a refusal cannot be used
+      // to learn whose machines exist. This message says no more than that.
+      log(
+        EPriority.Warning,
+        'USER_CONTAINERS',
+        `Machine ${machine_id} refused for project ${project_id}`,
+        { user_id }
+      );
+      throw new ForbiddenException([
+        { message: 'This machine cannot be used for this project' },
+      ]);
+    }
+
+    log(
+      EPriority.Info,
+      'USER_CONTAINERS',
+      `Machine ${machine_id} is in project ${project_id}`,
+      { user_id }
+    );
+  }
+
   private async _registerAuthGuardClient(
     containerId: string,
     organizationId: string,
