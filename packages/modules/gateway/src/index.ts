@@ -43,6 +43,18 @@ export type TGatewayExports = {
     projectId: string,
     services: { host: string; ip: string; port: number }[]
   ) => Promise<void>;
+  /**
+   * Tell the VPN which hosting token belongs to which container.
+   *
+   * Read by `vpn-auth-verify.sh` when a container connects, so that the shared
+   * client certificate proves membership of the organization and the token
+   * proves which container. Inert until VPN_PER_CLIENT_IDENTITY is on, and
+   * writing it is what makes turning that on possible at all — until now
+   * nothing produced the file the script reads.
+   */
+  recordVpnCredentials: (
+    entries: { user_container_id: string; token: string }[]
+  ) => Promise<void>;
   gatewayFQDN: string;
   organization_id: string;
   tokenManager: TokenManager;

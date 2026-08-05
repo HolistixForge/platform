@@ -138,6 +138,19 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
         runScript('update-nginx-locations', config);
       },
 
+      recordVpnCredentials: async (
+        entries: { user_container_id: string; token: string }[]
+      ) => {
+        // The whole set, not a diff, for the same reason updateReverseProxy
+        // writes the union: the gateway holds the truth about which containers
+        // it started, and a credential for one it no longer knows about is one
+        // nobody can account for.
+        runScript(
+          'update-vpn-credentials',
+          entries.map((e) => `${e.user_container_id} ${e.token}\n`).join('')
+        );
+      },
+
       gatewayFQDN: gatewayConfig.gatewayFQDN,
 
       environment: gatewayConfig.environment,
@@ -155,7 +168,10 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
 
 //
 
-type EScripts = 'update-nginx-locations' | 'reset-gateway';
+type EScripts =
+  | 'update-nginx-locations'
+  | 'update-vpn-credentials'
+  | 'reset-gateway';
 
 export const runScript = (name: EScripts, inputString?: string) => {
   // Scripts are at /opt/gateway/app/ (standard app location in containers)

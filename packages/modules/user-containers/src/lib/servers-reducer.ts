@@ -69,6 +69,21 @@ export class UserContainersReducer extends ReducerWithCollab<
    */
   private readonly authGuardSecrets = new Map<string, string>();
 
+  /**
+   * The hosting token each started container is holding, for the VPN.
+   *
+   * `vpn-auth-verify.sh` compares what a connecting container presents against
+   * this, so that the client certificate — shared by every container in the
+   * organization — proves membership and the token proves *which* container.
+   *
+   * In memory and not in shared state, for the same reason the auth-guard
+   * secret is: shared state is a CRDT replicated to every client in the
+   * project, and a token that lets a container claim its own address has no
+   * business being replicated to a browser. A gateway restart loses the map,
+   * and the containers it had started are restarted through it anyway.
+   */
+  private readonly hostingTokens = new Map<string, string>();
+
   constructor(private readonly depsExports: TRequired) {
     super(depsExports.collab.registry, 'user-containers');
   }
@@ -586,6 +601,13 @@ export class UserContainersReducer extends ReducerWithCollab<
       ]);
     }
 
+    // The container is going; its credential should not outlive it. Rewritten
+    // rather than left, because a token still in the file is one that would
+    // still admit whatever presented it.
+    if (this.hostingTokens.delete(containerId)) {
+      await this._publishVpnCredentials();
+    }
+
     // Delete auth guard OAuth client from Ganymede
     if (container.auth_guard?.client_id) {
       try {
@@ -820,6 +842,13 @@ export class UserContainersReducer extends ReducerWithCollab<
       }
     );
 
+    // Recorded before the container is asked to start, so the credential is
+    // already there when it connects. The other order is a race the container
+    // loses by being refused, which looks from the UI like a service that will
+    // not come up.
+    this.hostingTokens.set(containerId, hostingToken);
+    await this._publishVpnCredentials();
+
     // Get runner from registry
     const runner = this.depsExports['user-containers'].getRunner(runnerId);
     if (!runner) {
@@ -940,6 +969,21 @@ export class UserContainersReducer extends ReducerWithCollab<
       'USER_CONTAINERS',
       `Machine ${machine_id} is in project ${project_id}`,
       { user_id }
+    );
+  }
+
+  /**
+   * Hand the VPN the whole set of container credentials this gateway knows.
+   *
+   * Every call writes all of them rather than appending: a container this
+   * gateway no longer knows about should lose its entry, not linger as a
+   * credential nobody can account for.
+   */
+  private async _publishVpnCredentials(): Promise<void> {
+    await this.depsExports.gateway.recordVpnCredentials(
+      Array.from(this.hostingTokens.entries()).map(
+        ([user_container_id, token]) => ({ user_container_id, token })
+      )
     );
   }
 

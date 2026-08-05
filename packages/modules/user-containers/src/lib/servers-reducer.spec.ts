@@ -304,6 +304,7 @@ describe('UserContainersReducer - Auth Guard OAuth Client Lifecycle', () => {
       },
       gateway: {
         toGanymedeInternal: mockToGanymedeInternal,
+        recordVpnCredentials: jest.fn(),
         updateReverseProxy: jest.fn(),
         gatewayFQDN: 'org-abc123.domain.local',
         organization_id: 'abc123',
@@ -942,5 +943,130 @@ describe('UserContainersReducer - _setRunner and the machine it names', () => {
     // Assert
     await expect(refused).rejects.toThrow();
     expect(toGanymede).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * The VPN needs to know which hosting token belongs to which container.
+ *
+ * `vpn-auth-verify.sh` has read that file since it was written and nothing has
+ * ever produced it — so the per-client identity it exists for could not have
+ * worked: a missing file means every connection refused. These tests are about
+ * producing it. Nothing here turns the feature on; the server only asks for a
+ * username and password when VPN_PER_CLIENT_IDENTITY is set, which it is not.
+ */
+describe('UserContainersReducer - VPN credentials', () => {
+  let reducer: UserContainersReducer;
+  let containers: Map<string, any>;
+  let recordVpnCredentials: jest.Mock;
+
+  beforeEach(() => {
+    containers = new Map([
+      [
+        'uc-1',
+        {
+          user_container_id: 'uc-1',
+          container_name: 'one',
+          image_id: 'ubuntu:terminal',
+          runner: { id: 'local', user_id: 'user-1' },
+          httpServices: [],
+        },
+      ],
+    ]);
+
+    recordVpnCredentials = jest.fn();
+
+    reducer = new UserContainersReducer({
+      collab: {
+        registry: {
+          getCollabForProject: jest.fn(() => ({
+            sharedData: {
+              'user-containers:containers': {
+                get: (k: string) => containers.get(k),
+                set: (k: string, v: any) => containers.set(k, v),
+                copy: () => new Map(containers),
+                delete: (k: string) => containers.delete(k),
+                forEach: (fn: any) => containers.forEach(fn),
+              },
+            },
+          })),
+        },
+      },
+      reducers: { processEvent: jest.fn() },
+      gateway: {
+        recordVpnCredentials,
+        toGanymedeInternal: jest.fn().mockResolvedValue({}),
+        updateReverseProxy: jest.fn(),
+        gatewayFQDN: 'org-1.domain.local',
+        organization_id: 'org-1',
+        environment: { devMode: false, dockerHostIp: '172.17.0.1' },
+        tokenManager: {
+          generateProjectScopedToken: jest
+            .fn()
+            .mockResolvedValue('the-hosting-token'),
+        },
+        permissionManager: { hasPermission: () => true },
+      },
+      'user-containers': {
+        getRunner: () => ({
+          start: jest.fn().mockResolvedValue({}),
+        }),
+        imageRegistry: {
+          get: () => ({
+            imageId: 'ubuntu:terminal',
+            imageUri: 'x',
+            imageTag: '1',
+          }),
+        },
+      },
+    } as any);
+  });
+
+  const start = () =>
+    reducer.reduce(
+      { type: 'user-container:start', user_container_id: 'uc-1' } as any,
+      { project_id: 'project-1', jwt: { user: { id: 'user-1' } } } as any
+    );
+
+  it('should record the token the container was given', async () => {
+    // Act
+    await start();
+
+    // Assert - this pair is exactly what vpn-auth-verify.sh compares against
+    expect(recordVpnCredentials).toHaveBeenCalledWith([
+      { user_container_id: 'uc-1', token: 'the-hosting-token' },
+    ]);
+  });
+
+  it('should record it before the container is asked to start', async () => {
+    // Arrange
+    const order: string[] = [];
+    recordVpnCredentials.mockImplementation(() => order.push('record'));
+    (reducer as any).depsExports['user-containers'].getRunner = () => ({
+      start: async () => (order.push('start'), {}),
+    });
+
+    // Act
+    await start();
+
+    // Assert - the other order is a race the container loses by being refused,
+    // which from the UI looks like a service that will not come up
+    expect(order).toEqual(['record', 'start']);
+  });
+
+  it('should drop the credential when the container is deleted', async () => {
+    // Arrange
+    await start();
+    recordVpnCredentials.mockClear();
+
+    // Act
+    await reducer.reduce(
+      { type: 'user-container:delete', user_container_id: 'uc-1' } as any,
+      { project_id: 'project-1', jwt: { user: { id: 'user-1' } } } as any
+    );
+
+    // Assert - a token left in the file is one that would still admit whatever
+    // presented it
+    expect(recordVpnCredentials).toHaveBeenCalledWith([]);
   });
 });
