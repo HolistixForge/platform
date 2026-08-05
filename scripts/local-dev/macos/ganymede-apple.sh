@@ -13,7 +13,9 @@
 #   ./ganymede-apple.sh down     remove both containers, keep the network
 #
 # `up` is destructive: the schema starts with `DROP SCHEMA public CASCADE`, so
-# every run empties the database. Re-run `seed` after it.
+# every run empties this environment's database — `ganymede_<env>`, and only
+# that one, even though one Postgres container holds them all. Re-run `seed`
+# after it.
 #
 # What this is for: until now nothing in this repository had ever run against a
 # real Ganymede — the container broker's catalogue lookup, the runner's
@@ -53,8 +55,13 @@ GANYMEDE_PORT="${GANYMEDE_PORT:-6100}"
 NET=default
 PG=hx-postgres
 GANY="hx-ganymede-${ENV_NAME}"
-DB="ganymede_${ENV_NAME}"
-DB_USER="ganymede_app_${ENV_NAME}"
+# Hyphens out. A container name takes them, an unquoted SQL identifier does not
+# — `CREATE DATABASE ganymede_dev-001` is a syntax error — and `dev-001` is the
+# name the rest of the repository uses in its examples. create-env.sh:79 does
+# the same substitution for the same reason, so the two paths also agree on the
+# database name for a given environment.
+DB="ganymede_${ENV_NAME//-/_}"
+DB_USER="ganymede_app_${ENV_NAME//-/_}"
 # The old name is still honoured. It was GANYMEDE_APPLE_DB_PASSWORD before this
 # script served an environment rather than a single throwaway, and dropping it
 # would silently change the password for anyone who had set it — which shows up
@@ -95,6 +102,16 @@ print(nets[0]["ipv4Address"].split("/")[0] if nets else "")
 '
 }
 
+net_of() {
+  container inspect "$1" 2>/dev/null | python3 -c '
+import json, sys
+try: doc = json.load(sys.stdin)[0]
+except Exception: sys.exit(0)
+nets = doc.get("status", {}).get("networks") or []
+print(nets[0].get("network", "") if nets else "")
+'
+}
+
 wait_for() {
   local what="$1" tries="${2:-30}"
   for _ in $(seq 1 "$tries"); do
@@ -105,9 +122,24 @@ wait_for() {
 }
 
 up_postgres() {
+  # Reused when it is already up *and on the right network*. An earlier version
+  # of this script put it on a named network; the address staged into
+  # PG_HOST would then be one Ganymede cannot route to from the default
+  # network, and every symptom appears at the first query rather than here.
+  # apply_schema would still pass — it goes through `container exec`, not the
+  # network — so nothing before the first request would notice.
+  local existing_net
+  existing_net=$(net_of "$PG")
   if [ -n "$(ip_of "$PG")" ]; then
-    ok "Postgres already up at $(ip_of "$PG")"
-    return 0
+    if [ "$existing_net" = "$NET" ]; then
+      ok "Postgres already up at $(ip_of "$PG")"
+      return 0
+    fi
+    ko "Postgres is on network '${existing_net}', this environment needs '${NET}'"
+    note "It holds every environment's database and has no volume, so removing"
+    note "it is not something this script does on its own. When nothing else"
+    note "needs it:  container delete --force ${PG}  &&  $0 up"
+    return 1
   fi
   container delete --force "$PG" >/dev/null 2>&1
   container run --detach --name "$PG" --network "$NET" \
@@ -246,6 +278,20 @@ EOS
 
 up_ganymede() {
   container delete --force "$GANY" >/dev/null 2>&1
+
+  # After the delete, so this environment's own previous container never counts
+  # as the conflict. What it catches is a *second* environment: GANYMEDE_PORT
+  # defaults to 6100 for everyone, and two of them cannot both have it. The
+  # bind failure lands in `container run`'s output, which is discarded, so
+  # without this the only symptom is "Ganymede did not start" — pointing at the
+  # bundle rather than at the port.
+  if lsof -nP -iTCP@127.0.0.1:"${GANYMEDE_PORT}" -sTCP:LISTEN >/dev/null 2>&1; then
+    ko "127.0.0.1:${GANYMEDE_PORT} is already listening — another environment?"
+    note "Give this one its own port, and nginx the same one:"
+    note "  GANYMEDE_PORT=6101 $0 up"
+    return 1
+  fi
+
   container run --detach --name "$GANY" --network "$NET" \
     --cpus 2 --memory 1024m \
     --publish "127.0.0.1:${GANYMEDE_PORT}:${PORT}" \
