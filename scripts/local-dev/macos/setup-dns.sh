@@ -99,15 +99,18 @@ if [ -f "$RESOLVER" ] && grep -q "port ${PORT}" "$RESOLVER" 2>/dev/null \
    && grep -q "nameserver 127.0.0.1" "$RESOLVER" 2>/dev/null; then
   printf "${GREEN}%s already points here.${NC}\n" "$RESOLVER"
 else
-  printf "${YELLOW}One step left, and it needs sudo — run it yourself:${NC}\n\n"
-  cat <<EOF
-  sudo mkdir -p /etc/resolver
-  sudo tee ${RESOLVER} >/dev/null <<'RESOLVER'
-nameserver 127.0.0.1
-port ${PORT}
-RESOLVER
+  # Written here, where a shell is not involved, and copied with one short
+  # command. The obvious version of this printed a heredoc for someone to
+  # paste — and a heredoc pasted into an interactive shell gets eaten, which
+  # is exactly what happened the first time: the file was reported as written
+  # and had not changed since the day before.
+  STAGED="${CONF_DIR}/resolver-${TLD}"
+  printf 'nameserver 127.0.0.1\nport %s\n' "$PORT" > "$STAGED"
 
-EOF
+  printf "${YELLOW}One step left, and it needs sudo. The file is written already:${NC}\n\n"
+  printf "  %s\n" "$STAGED"
+  sed 's/^/    /' "$STAGED"
+  printf "\n  ${GREEN}sudo cp %s %s${NC}\n\n" "$STAGED" "$RESOLVER"
   if [ -f "$RESOLVER" ]; then
     printf "${GRAY}  %s exists and points elsewhere:${NC}\n" "$RESOLVER"
     sed 's/^/    /' "$RESOLVER"
