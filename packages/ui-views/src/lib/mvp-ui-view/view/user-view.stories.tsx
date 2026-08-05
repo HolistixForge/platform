@@ -6,7 +6,7 @@ const meta = {
   title: 'Mvp/View/user-view',
   component: UserView,
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
   argTypes: {
     editingUser: { control: 'boolean' },

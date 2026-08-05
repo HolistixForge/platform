@@ -6,7 +6,7 @@ const meta = {
   title: 'Mvp/View/accesses',
   component: Accesses,
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
   argTypes: {},
 } satisfies Meta<typeof Accesses>;

@@ -5,7 +5,7 @@ const meta = {
   title: 'Mvp/View/access-role',
   component: AccessRole,
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
   argTypes: {},
 } satisfies Meta<typeof AccessRole>;

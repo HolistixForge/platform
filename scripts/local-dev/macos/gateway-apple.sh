@@ -204,6 +204,15 @@ cmd_serve() {
 #
 # It binds on the container network's gateway address, not the loopback: its
 # only client is a gateway *inside* a microVM, for which 127.0.0.1 is itself.
+#
+# And it is reached over `http`, not `https`, despite the port. 9443 means TLS
+# everywhere else, and the broker has none — no certificate option, no secure
+# server, `http.createServer` and nothing more. Writing the URL the port
+# implies costs a `fetch failed` in the gateway with no mention of TLS in it,
+# which is what happened here. The bearer token therefore travels in clear;
+# that is tolerable only because both ends sit on a host-local network — the
+# docker bridge on Linux, vmnet here — and it is worth saying out loud because
+# the port says the opposite.
 cmd_broker() {
   local bundle="${REPO_ROOT}/dist/packages/app-container-broker/main.js"
   [ -f "$bundle" ] || {
@@ -404,7 +413,7 @@ cmd_up() {
       -e "OTEL_SERVICE_NAME=gateway-${name}" \
       -e "OTEL_DEPLOYMENT_ENVIRONMENT=${ENV_NAME}" \
       -e "NODE_TLS_REJECT_UNAUTHORIZED=0" \
-      -e "CONTAINER_BROKER_URL=https://${host}:${BROKER_PORT}" \
+      -e "CONTAINER_BROKER_URL=http://${host}:${BROKER_PORT}" \
       -e "CONTAINER_BROKER_TOKEN=$(cat "${STATE}/broker.token")" \
       -- "$IMAGE" >/dev/null 2>&1
 

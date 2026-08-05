@@ -6,7 +6,7 @@ const meta = {
   title: 'Mvp/View/group-view',
   component: GroupView,
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
   argTypes: {},
 } satisfies Meta<typeof GroupView>;

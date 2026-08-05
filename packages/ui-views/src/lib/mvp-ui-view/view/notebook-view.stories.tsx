@@ -6,7 +6,7 @@ const meta = {
   title: 'Mvp/View/notebook-view',
   component: NotebookView,
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
   argTypes: {
     updateDescription: { control: 'boolean' },

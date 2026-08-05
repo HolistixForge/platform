@@ -6,7 +6,7 @@ const meta = {
   title: 'Mvp/View/tag-filter',
   component: TagFilter,
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
   argTypes: {},
 } satisfies Meta<typeof TagFilter>;

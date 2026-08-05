@@ -6,7 +6,7 @@ const meta = {
   title: 'Mvp/View/server-view',
   component: ServerView,
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
   argTypes: {},
 } satisfies Meta<typeof ServerView>;
