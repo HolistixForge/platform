@@ -64,6 +64,11 @@ HTTP_BASE="${HTTP_BASE:-7100}"
 VPN_BASE="${VPN_BASE:-49100}"
 BUILD_PORT="${BUILD_PORT:-8090}"
 BROKER_PORT="${BROKER_PORT:-9443}"
+# Off unless asked for. The VPN server then *requires* a username and password,
+# so every container built before the base image learned to send them stops
+# connecting. Turn it on only once every image in the catalogue is rebuilt —
+# start-vpn.sh says the same thing from the other side.
+VPN_PER_CLIENT_IDENTITY="${VPN_PER_CLIENT_IDENTITY:-0}"
 
 NET=default
 PG=hx-postgres
@@ -434,6 +439,7 @@ cmd_up() {
       -e "OTEL_SERVICE_NAME=gateway-${name}" \
       -e "OTEL_DEPLOYMENT_ENVIRONMENT=${ENV_NAME}" \
       -e "NODE_TLS_REJECT_UNAUTHORIZED=0" \
+      -e "VPN_PER_CLIENT_IDENTITY=${VPN_PER_CLIENT_IDENTITY:-0}" \
       -e "CONTAINER_BROKER_URL=http://${host}:${BROKER_PORT}" \
       -e "CONTAINER_BROKER_TOKEN=$(cat "${STATE}/broker.token")" \
       -- "$IMAGE" >/dev/null 2>&1

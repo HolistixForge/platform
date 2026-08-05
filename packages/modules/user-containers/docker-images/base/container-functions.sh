@@ -47,11 +47,52 @@ extract_settings
 # such a name: measured on macOS, the host's own CoreDNS answers 127.0.0.1 for
 # every platform name, which is right for the host and is this container
 # itself once inside a microVM.
-resolve_platform_hosts() {
-    HOST_IP=$(ip route 2>/dev/null | awk '/^default/{print $3; exit}')
-    [ -z "${HOST_IP}" ] && return 0
+# The default route, without needing `ip`.
+#
+# `ip route` was the only source, and iproute2 is not in every image — the
+# ubuntu-terminal image in this repository's own catalogue does not have it.
+# The function then found nothing, returned early, and wrote no hosts entries
+# at all: measured, a container whose /etc/hosts had no platform name in it and
+# which reported "Gateway Down ?" every ten seconds forever. Silent, because
+# "no default route" and "no `ip` command" looked the same.
+#
+# /proc/net/route is the kernel's own table and needs no package. The gateway
+# column is little-endian hex, which is why the bytes come out backwards.
+default_gateway() {
+    _gw=$(ip route 2>/dev/null | awk '/^default/{print $3; exit}')
+    if [ -n "${_gw}" ]; then
+        echo "${_gw}"
+        return 0
+    fi
 
-    for name in "${GATEWAY_FQDN}" "${GANYMEDE_FQDN}" "${FRONTEND_FQDN}"; do
+    # Shell rather than awk: mawk is what these images ship and it has no
+    # `strtonum`, so the hex has to be converted with printf instead.
+    while read -r _iface _dest _gwhex _flags _refcnt _use _metric _mask _rest; do
+        [ "${_dest}" = "00000000" ] || continue
+        [ "${_mask}" = "00000000" ] || continue
+        [ ${#_gwhex} -eq 8 ] || continue
+        printf '%d.%d.%d.%d\n' \
+            "0x$(printf '%s' "${_gwhex}" | cut -c7-8)" \
+            "0x$(printf '%s' "${_gwhex}" | cut -c5-6)" \
+            "0x$(printf '%s' "${_gwhex}" | cut -c3-4)" \
+            "0x$(printf '%s' "${_gwhex}" | cut -c1-2)"
+        return 0
+    done < /proc/net/route 2>/dev/null
+    return 1
+}
+
+resolve_platform_hosts() {
+    HOST_IP=$(default_gateway | head -1)
+    [ -z "${HOST_IP}" ] && { echo "No default route found — platform names will not resolve"; return 0; }
+
+    for entry in "${GATEWAY_FQDN}" "${GANYMEDE_FQDN}" "${FRONTEND_FQDN}"; do
+        # Without the port. These FQDNs carry one wherever nginx is not on 443,
+        # because every URL built from them is a link somebody follows — and a
+        # hosts entry is not a URL. Written with the port, the line is
+        # `192.168.68.1 org-….apollo.test:8443`, which resolves nothing: the
+        # container then reports "Gateway Down ?" every ten seconds with an
+        # /etc/hosts that looks, at a glance, exactly right.
+        name="${entry%%:*}"
         [ -z "${name}" ] && continue
         [ "${name}" = "null" ] && continue
         grep -qE "[[:space:]]${name}\$" /etc/hosts 2>/dev/null && continue
@@ -78,7 +119,42 @@ start_vpn() {
             value=$(printf "%s" "$certificates" | jq -r ".[\"${filename}\"]")
             echo "$value" >"$filename"
         done
-        printf "%s" "${CONFIG}" | jq -r '.config' | sed "s/GATEWAY_FQDN/${GATEWAY_FQDN}/g" >client.ovpn
+        # The hostname, not the FQDN, because the template is
+        # `remote GATEWAY_FQDN <vpn-port>` (collab.ts) — host and port are
+        # already two fields. Substituting a name that carries its own port
+        # produces `remote org-….apollo.test:8443 49200`, and openvpn spends
+        # forever on "Cannot resolve host address" for a name that is in
+        # /etc/hosts, correctly, without the port.
+        printf "%s" "${CONFIG}" | jq -r '.config' \
+            | sed "s/GATEWAY_FQDN/${GATEWAY_FQDN%%:*}/g" >client.ovpn
+
+        # Who this container is, on the tunnel.
+        #
+        # Every container in an organization shares one client certificate, so
+        # the certificate proves membership and nothing else: with
+        # `duplicate-cn` the server sees the common name `clients` for all of
+        # them, cannot tell two apart, and cannot give a particular one the
+        # address its network was allocated. The username is the container id
+        # and the password is the hosting token the gateway minted for it and
+        # handed over in SETTINGS — the pair `vpn-auth-verify.sh` compares
+        # against the credentials file the gateway writes.
+        #
+        # Sent whether or not the server asks. A server without
+        # `auth-user-pass-verify` ignores them, which is what makes the rollout
+        # safe in this order: every container learns to send them first, and
+        # only then can VPN_PER_CLIENT_IDENTITY be turned on — the other order
+        # takes every service in every organization offline at once.
+        if [ -n "${USER_CONTAINER_ID}" ] && [ -n "${TOKEN}" ]; then
+            printf '%s\n%s\n' "${USER_CONTAINER_ID}" "${TOKEN}" >vpn-credentials
+            chmod 600 vpn-credentials
+            # `auth-nocache` because openvpn otherwise keeps them in memory to
+            # replay on reconnect, and this loop re-reads the file anyway —
+            # after a gateway restart the token it holds may be a new one.
+            printf 'auth-user-pass %s/vpn-credentials\nauth-nocache\n' "$(pwd)" >>client.ovpn
+        else
+            echo "No container id or token in SETTINGS — connecting without an identity"
+        fi
+
         openvpn --config client.ovpn &
     else
         echo "Gateway Down ?"
