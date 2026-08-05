@@ -106,7 +106,25 @@ export const ganymedeCatalogue =
       headers: { 'X-Gateway-Token': token },
     });
 
-    if (response.status === 404) return undefined;
+    // A refusal is not an outage, and the difference is the whole value of
+    // this answer to the person waiting on it.
+    //
+    // Ganymede refuses permanently in three ways: 404 for an id this project
+    // does not have, 403 for an entry outside the GitHub organization the
+    // project is bound to, and 409 for a project with no link or no live App
+    // installation. None of them will start working if the gateway tries
+    // again — but everything that was not a 404 used to be thrown, and a
+    // thrown lookup becomes "catalogue unavailable", a 502 telling the caller
+    // to come back later about something that never resolves.
+    //
+    // All three answer `undefined`, which the caller turns into 404. That is
+    // also what keeps the refusals indistinguishable from one another, in the
+    // same way an image belonging to another project already is: the reason a
+    // registration was rejected is Ganymede's to log, not the gateway's to
+    // read. Observed statuses, against a real Ganymede with a seeded catalog.
+    const REFUSALS = [403, 404, 409];
+    if (REFUSALS.includes(response.status)) return undefined;
+
     if (!response.ok) {
       throw new Error(
         `catalogue lookup failed (${response.status}) for ${imageId}`

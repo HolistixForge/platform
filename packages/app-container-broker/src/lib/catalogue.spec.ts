@@ -197,3 +197,46 @@ describe('ganymedeCatalogue — the request it makes', () => {
     );
   });
 });
+
+describe('ganymedeCatalogue — refusal is not an outage', () => {
+  const stub = (status: number) =>
+    jest.fn(
+      async () =>
+        ({ status, ok: false, json: async () => ({}) } as unknown as Response)
+    );
+
+  const original = global.fetch;
+  afterEach(() => {
+    global.fetch = original;
+  });
+
+  // 403 is an entry outside the project's GitHub organization, 409 a project
+  // with no link or no live installation. Neither starts working on a retry,
+  // so neither may be reported as the catalogue being unavailable — that is a
+  // 502 telling the caller to come back later about something permanent.
+  it.each([403, 404, 409])(
+    'treats %i as unresolvable, not as a fault',
+    async (status) => {
+      global.fetch = stub(status) as unknown as typeof fetch;
+
+      await expect(
+        ganymedeCatalogue('http://ganymede:6870', 'gw-jwt')('p', 'acme:etl')
+      ).resolves.toBeUndefined();
+    }
+  );
+
+  it.each([500, 502, 503])(
+    'still raises on %i, which may pass',
+    async (status) => {
+      // A GitHub outage behind Ganymede, or Ganymede itself down. Retrying is
+      // the right answer there, so it must not be flattened into "no such
+      // image" — that would make a temporary fault look like a catalog the
+      // tenant never registered.
+      global.fetch = stub(status) as unknown as typeof fetch;
+
+      await expect(
+        ganymedeCatalogue('http://ganymede:6870', 'gw-jwt')('p', 'acme:etl')
+      ).rejects.toThrow(/catalogue lookup failed/);
+    }
+  );
+});
