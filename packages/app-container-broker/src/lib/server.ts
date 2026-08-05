@@ -9,7 +9,12 @@ import { log, EPriority } from '@holistix-forge/log';
 import { TBrokerConfig, TStartResponse } from './types';
 import { validateStartRequest, InvalidRequest } from './validate';
 import { TCatalogueSource, resolveImage, UnknownImage } from './catalogue';
-import { TRuntimeExec, startContainer, removeContainer } from './runtime';
+import {
+  TRuntimeExec,
+  startContainer,
+  removeContainer,
+  NotOurs,
+} from './runtime';
 import { TContainerEngine, UnsupportedByEngine } from './engine';
 import { sharedNetworkName, NetworkError } from './networks';
 
@@ -146,6 +151,14 @@ export const createBrokerServer = (deps: TBrokerDeps): Server => {
         await removeContainer(engine, exec, remove[1]);
         json(res, 200, { removed: remove[1] });
       } catch (e) {
+        // 404 rather than 403 for something this broker did not start: a
+        // caller must not be able to learn which containers exist on the host
+        // by watching which refusals differ.
+        if (e instanceof NotOurs) {
+          log(EPriority.Warning, 'BROKER', e.message);
+          json(res, 404, { error: 'no such container' });
+          return;
+        }
         log(EPriority.Warning, 'BROKER', `Remove failed: ${String(e)}`);
         json(res, 500, { error: 'remove failed' });
       }

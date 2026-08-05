@@ -38,7 +38,19 @@ export const engineExec =
             );
             return;
           }
-          resolve(stdout.trim());
+          // stderr joins stdout rather than being dropped.
+          //
+          // Apple `container network delete` refuses an in-use network on
+          // stderr and still exits 0, so a caller reading only stdout saw an
+          // empty string and reported success — `DELETE /networks/:name`
+          // answered 200 on a network that was still there. Anything deciding
+          // on this output has to be able to see the refusal.
+          //
+          // Safe for the callers that read a value out of it: they compare
+          // against an exact name or parse JSON, and both fail closed on
+          // extra text — `networkExists` matches whole lines, `readLabel`
+          // and `inspectApple` answer '' on anything they cannot parse.
+          resolve([stdout.trim(), stderr.trim()].filter(Boolean).join('\n'));
         }
       );
 
@@ -100,13 +112,38 @@ export const startContainer = async (
   return exec(engine.buildRunArgs(request, image, config));
 };
 
+/** Raised when a delete names something this broker did not start. */
+export class NotOurs extends Error {}
+
 /**
- * Stop and remove a container by the id the engine gave us.
+ * Stop and remove a container, and take its private network with it.
+ *
+ * Only a container this broker started. `replaceExisting` above already
+ * refuses to remove what it does not own — "remove whatever is in the way" is
+ * not a power a service running as root on the platform host should hold — and
+ * this route had none of that check: `DELETE /containers/gw-pool-apollo-4`
+ * would have taken down a gateway.
+ *
+ * The network goes too. `startContainer` creates one per container and nothing
+ * removed it, so a long-lived host accumulated a /24 per service ever started
+ * and eventually ran out of address space, at which point no service could
+ * start at all. Its failure is tolerated: a network still referenced must not
+ * turn a successful removal into an error, and under Apple `delete` returns
+ * before the VM has released its interfaces — so the sweep is what the next
+ * removal, or the reaper, finishes.
  */
 export const removeContainer = async (
   engine: TContainerEngine,
   exec: TRuntimeExec,
   containerId: string
 ): Promise<void> => {
+  const owner = await engine.ownerOf(exec, containerId);
+  if (!owner) {
+    throw new NotOurs(`${containerId} was not started by this broker`);
+  }
+
   await engine.removeContainer(exec, containerId);
+  await engine
+    .removeNetwork(exec, privateNetworkName(owner))
+    .catch(() => undefined);
 };

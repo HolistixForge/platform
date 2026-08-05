@@ -576,8 +576,46 @@ else
   docker rm -f netcross >/dev/null 2>&1
 fi
 
-eng_rm "$NAME2" >/dev/null 2>&1
 eng_net_rm "$NET" >/dev/null 2>&1
+
+echo
+echo "Removing a service"
+# Two things this suite let through for want of asking, both found in review:
+# the route removed whatever id it was handed, and the container's private
+# network outlived it. One /24 per service ever started, until the host ran out
+# of address space and nothing could start at all.
+drop() {
+  curl -s -o /dev/null -w '%{http_code}' -X DELETE "$B/containers/$1" \
+    -H "Authorization: Bearer $TOKEN"
+}
+
+# Something this broker never started. Under `apple` there is always the
+# database container to aim at; under `docker`, one is made and removed.
+FOREIGN=hx-postgres
+if [ "$ENGINE" = "docker" ]; then
+  FOREIGN=holistix_foreign_$$
+  docker run -d --name "$FOREIGN" "$BUILTIN_REF" >/dev/null 2>&1
+fi
+check contract "a container this broker did not start is refused" \
+  "$(drop "$FOREIGN")" "404"
+# And it is still there afterwards, which is the part that matters.
+if [ "$ENGINE" = "apple" ]; then
+  check contract "and it is still running" \
+    "$(eng_field "$FOREIGN" state)" "running"
+else
+  check contract "and it is still there" \
+    "$(docker inspect "$FOREIGN" --format '{{.State.Status}}' 2>/dev/null)" "running"
+  docker rm -f "$FOREIGN" >/dev/null 2>&1
+fi
+
+check contract "the service it did start is removed" "$(drop "$NAME2")" "200"
+sleep 2
+UCNET=holistix_uc_uc_verify02
+eng_net_ls | grep -qx "$UCNET" \
+  && ko "the private network goes with the service" "$UCNET is still there" \
+  || ok "the private network goes with the service"
+
+eng_rm "$NAME2" >/dev/null 2>&1
 
 echo
 echo "============================================="

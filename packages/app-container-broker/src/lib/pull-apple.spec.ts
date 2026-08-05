@@ -10,6 +10,8 @@ import { createHash } from 'node:crypto';
  */
 
 import { pullAppleImage, applePreflight } from './pull-apple';
+import { removeContainer, NotOurs } from './runtime';
+import { appleEngine as appleEngineForTest } from './engine-apple';
 import { TResolvedImage } from './types';
 
 const builtin: TResolvedImage = {
@@ -298,5 +300,69 @@ describe('applePreflight', () => {
       throw new Error('unknown subcommand');
     };
     await expect(applePreflight(exec)).resolves.toBeUndefined();
+  });
+});
+
+/**
+ * The removal path, which had two ways to do the wrong thing quietly.
+ */
+describe('removeContainer', () => {
+  const owned = (label: string) => {
+    const calls: string[][] = [];
+    const engine = {
+      ...appleEngineForTest,
+      ownerOf: async () => label,
+      removeContainer: async (_e: unknown, id: string) => {
+        calls.push(['delete', id]);
+      },
+      removeNetwork: async (_e: unknown, name: string) => {
+        calls.push(['network', 'delete', name]);
+      },
+    };
+    return { calls, engine };
+  };
+
+  it('refuses a container this broker did not start', async () => {
+    // The route had no ownership check at all, so
+    // `DELETE /containers/gw-pool-apollo-4` would have taken down a gateway.
+    // This runs as root on the platform host.
+    const { calls, engine } = owned('');
+
+    await expect(
+      removeContainer(engine as never, async () => '', 'gw-pool-apollo-4')
+    ).rejects.toThrow(NotOurs);
+
+    expect(calls).toHaveLength(0);
+  });
+
+  it('takes the private network with the container', async () => {
+    // One network per container is created on the way in and nothing removed
+    // it: a long-lived host ran out of address space and then could not start
+    // any service at all.
+    const { calls, engine } = owned('uc_abc12345');
+
+    await removeContainer(engine as never, async () => '', 'holistix_etl');
+
+    expect(calls).toEqual([
+      ['delete', 'holistix_etl'],
+      ['network', 'delete', 'holistix_uc_uc_abc12345'],
+    ]);
+  });
+
+  it('still reports success when the network will not go', async () => {
+    // A network someone else is still attached to must not turn a removal
+    // that did happen into an error.
+    const engine = {
+      ...appleEngineForTest,
+      ownerOf: async () => 'uc_abc12345',
+      removeContainer: async () => undefined,
+      removeNetwork: async () => {
+        throw new Error('still in use');
+      },
+    };
+
+    await expect(
+      removeContainer(engine as never, async () => '', 'holistix_etl')
+    ).resolves.toBeUndefined();
   });
 });
