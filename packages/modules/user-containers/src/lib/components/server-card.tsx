@@ -387,6 +387,34 @@ export const UserContainerCardInternal = ({
           silently vanishing from the card is worse than one that looks odd.
         */}
         <div className="flex items-center" style={{ gap: 'var(--spacing-4)' }}>
+          {/*
+            Run control, the same shape `notebook-card` uses: one button per
+            state rather than one button that changes meaning. `alive` comes
+            from the watchdog, so a container whose watchdog has gone quiet
+            offers play, and one still reporting offers stop.
+
+            No action is wired to them yet — neither is there on notebook-card,
+            which is the component this mirrors. `UseContainerProps` carries
+            `onDelete` and `onSelectRunner` and nothing to start or stop with,
+            so wiring these means adding to what the card is given, not to how
+            it draws. Left visible and inert rather than hidden, because the
+            control belonging here is itself the thing to see.
+          */}
+          <ResourceButtons
+            size="small"
+            type={alive ? 'stop' : 'play'}
+            actionOriginId={alive ? 'container-stop' : 'container-play'}
+          />
+
+          <div
+            style={{
+              width: '1px',
+              height: '20px',
+              background: 'var(--color-border)',
+              margin: '0 var(--spacing-4)',
+            }}
+          />
+
           {Array.from(runners.entries()).map(([runnerId, runner]) => {
             const active = container.runner.id === runnerId;
             const known = runnerId === 'local' || runnerId === 'platform';
