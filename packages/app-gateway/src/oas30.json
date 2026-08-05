@@ -11,7 +11,9 @@
         "summary": "Health check",
         "tags": ["Collab"],
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" }
+          "200": {
+            "$ref": "#/components/responses/empty"
+          }
         }
       }
     },
@@ -20,7 +22,9 @@
         "summary": "Process collaborative event",
         "tags": ["Collab"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          }
         ],
         "requestBody": {
           "required": true,
@@ -32,7 +36,9 @@
                   "event": {
                     "type": "object",
                     "properties": {
-                      "type": { "type": "string" }
+                      "type": {
+                        "type": "string"
+                      }
                     },
                     "additionalProperties": true,
                     "required": ["type"]
@@ -49,8 +55,12 @@
           }
         },
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -71,7 +81,9 @@
           }
         },
         "responses": {
-          "200": { "$ref": "#/components/responses/empty" },
+          "200": {
+            "$ref": "#/components/responses/empty"
+          },
           "404": {
             "description": "Gateway not allocated to any organization",
             "content": {
@@ -79,13 +91,17 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "error": { "type": "string" }
+                    "error": {
+                      "type": "string"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -95,7 +111,9 @@
         "description": "Returns the room ID for a specific project. Requires project access permission.",
         "tags": ["Collab"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
           {
             "in": "query",
             "name": "project_id",
@@ -115,14 +133,19 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "data": { "type": "string", "format": "uuid" }
+                    "data": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
                   },
                   "required": ["data"]
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -131,7 +154,9 @@
         "summary": "Get VPN configuration",
         "tags": ["VPN"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          }
         ],
         "responses": {
           "200": {
@@ -144,12 +169,24 @@
                     "data": {
                       "type": "object",
                       "properties": {
-                        "ca": { "type": "string" },
-                        "cert": { "type": "string" },
-                        "key": { "type": "string" },
-                        "ta": { "type": "string" },
-                        "port": { "type": "number" },
-                        "config": { "type": "string" }
+                        "ca": {
+                          "type": "string"
+                        },
+                        "cert": {
+                          "type": "string"
+                        },
+                        "key": {
+                          "type": "string"
+                        },
+                        "ta": {
+                          "type": "string"
+                        },
+                        "port": {
+                          "type": "number"
+                        },
+                        "config": {
+                          "type": "string"
+                        }
                       }
                     }
                   }
@@ -157,7 +194,9 @@
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -167,7 +206,9 @@
         "description": "Returns all permissions registered by modules. Requires gateway:[permissions:*]:read permission.",
         "tags": ["Permissions"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          }
         ],
         "responses": {
           "200": {
@@ -188,18 +229,22 @@
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
     "/permissions/projects/{project_id}": {
       "get": {
         "summary": "[DEPRECATED] Get user permissions for a project",
-        "description": "⚠️ DEPRECATED: Use GET /users/:user_id/roles instead. This endpoint is not compatible with RBAC and returns HTTP 410.",
+        "description": "\u26a0\ufe0f DEPRECATED: Use GET /users/:user_id/roles instead. This endpoint is not compatible with RBAC and returns HTTP 410.",
         "deprecated": true,
         "tags": ["Permissions"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
           {
             "in": "path",
             "name": "project_id",
@@ -223,7 +268,9 @@
                       "type": "object",
                       "additionalProperties": {
                         "type": "array",
-                        "items": { "type": "string" }
+                        "items": {
+                          "type": "string"
+                        }
                       },
                       "description": "Map of user_id to permissions array"
                     }
@@ -232,18 +279,22 @@
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
     "/permissions/projects/{project_id}/users/{user_id}": {
       "patch": {
         "summary": "[DEPRECATED] Update user permissions for a project",
-        "description": "⚠️ DEPRECATED: Use POST /users/:user_id/roles to assign roles instead. Direct permission assignment bypasses RBAC. Returns HTTP 410.",
+        "description": "\u26a0\ufe0f DEPRECATED: Use POST /users/:user_id/roles to assign roles instead. Direct permission assignment bypasses RBAC. Returns HTTP 410.",
         "deprecated": true,
         "tags": ["Permissions"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
           {
             "in": "path",
             "name": "project_id",
@@ -274,7 +325,9 @@
                 "properties": {
                   "permissions": {
                     "type": "array",
-                    "items": { "type": "string" },
+                    "items": {
+                      "type": "string"
+                    },
                     "description": "Array of permission strings"
                   }
                 },
@@ -291,13 +344,17 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" }
+                    "success": {
+                      "type": "boolean"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -307,7 +364,9 @@
         "description": "Returns all roles (system + custom). Requires gateway:roles:read permission.",
         "tags": ["RBAC"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          }
         ],
         "responses": {
           "200": {
@@ -319,14 +378,18 @@
                   "properties": {
                     "roles": {
                       "type": "array",
-                      "items": { "$ref": "#/components/schemas/role" }
+                      "items": {
+                        "$ref": "#/components/schemas/role"
+                      }
                     }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       },
       "post": {
@@ -334,7 +397,9 @@
         "description": "Creates a new custom role. Requires gateway:roles:write permission.",
         "tags": ["RBAC"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" }
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          }
         ],
         "requestBody": {
           "required": true,
@@ -357,7 +422,9 @@
                   },
                   "permissions": {
                     "type": "array",
-                    "items": { "type": "string" },
+                    "items": {
+                      "type": "string"
+                    },
                     "description": "Array of permission strings"
                   },
                   "scope": {
@@ -381,11 +448,15 @@
             "description": "Role created",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/role" }
+                "schema": {
+                  "$ref": "#/components/schemas/role"
+                }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -395,12 +466,17 @@
         "description": "Returns a specific role. Requires gateway:roles:read permission.",
         "tags": ["RBAC"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
           {
             "in": "path",
             "name": "role_id",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -408,12 +484,18 @@
             "description": "Role details",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/role" }
+                "schema": {
+                  "$ref": "#/components/schemas/role"
+                }
               }
             }
           },
-          "404": { "$ref": "#/components/responses/errors" },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "404": {
+            "$ref": "#/components/responses/errors"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       },
       "patch": {
@@ -421,12 +503,17 @@
         "description": "Updates a custom role. Cannot modify system roles. Requires gateway:roles:write permission.",
         "tags": ["RBAC"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
           {
             "in": "path",
             "name": "role_id",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
@@ -436,11 +523,17 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "display_name": { "type": "string" },
-                  "description": { "type": "string" },
+                  "display_name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
                   "permissions": {
                     "type": "array",
-                    "items": { "type": "string" }
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -452,13 +545,21 @@
             "description": "Role updated",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/role" }
+                "schema": {
+                  "$ref": "#/components/schemas/role"
+                }
               }
             }
           },
-          "403": { "$ref": "#/components/responses/errors" },
-          "404": { "$ref": "#/components/responses/errors" },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "403": {
+            "$ref": "#/components/responses/errors"
+          },
+          "404": {
+            "$ref": "#/components/responses/errors"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       },
       "delete": {
@@ -466,12 +567,17 @@
         "description": "Deletes a custom role and removes it from all users. Cannot delete system roles. Requires gateway:roles:write permission.",
         "tags": ["RBAC"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
           {
             "in": "path",
             "name": "role_id",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -482,15 +588,23 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" }
+                    "success": {
+                      "type": "boolean"
+                    }
                   }
                 }
               }
             }
           },
-          "403": { "$ref": "#/components/responses/errors" },
-          "404": { "$ref": "#/components/responses/errors" },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "403": {
+            "$ref": "#/components/responses/errors"
+          },
+          "404": {
+            "$ref": "#/components/responses/errors"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -500,18 +614,26 @@
         "description": "Returns user's organization and project roles. Requires gateway:roles:read permission.",
         "tags": ["RBAC"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
           {
             "in": "path",
             "name": "user_id",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "in": "query",
             "name": "project_id",
             "required": false,
-            "schema": { "type": "string", "format": "uuid" },
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
             "description": "Optional project ID to include project-specific roles"
           }
         ],
@@ -525,13 +647,17 @@
                   "properties": {
                     "org_roles": {
                       "type": "array",
-                      "items": { "$ref": "#/components/schemas/role" }
+                      "items": {
+                        "$ref": "#/components/schemas/role"
+                      }
                     },
                     "project_roles": {
                       "type": "object",
                       "additionalProperties": {
                         "type": "array",
-                        "items": { "$ref": "#/components/schemas/role" }
+                        "items": {
+                          "$ref": "#/components/schemas/role"
+                        }
                       },
                       "description": "Map of project_id to roles array"
                     }
@@ -540,7 +666,9 @@
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       },
       "post": {
@@ -548,12 +676,17 @@
         "description": "Assigns a role to a user at org or project level. Requires gateway:roles:write permission.",
         "tags": ["RBAC"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
           {
             "in": "path",
             "name": "user_id",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
@@ -592,16 +725,26 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" }
+                    "success": {
+                      "type": "boolean"
+                    }
                   }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/errors" },
-          "403": { "$ref": "#/components/responses/errors" },
-          "404": { "$ref": "#/components/responses/errors" },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "400": {
+            "$ref": "#/components/responses/errors"
+          },
+          "403": {
+            "$ref": "#/components/responses/errors"
+          },
+          "404": {
+            "$ref": "#/components/responses/errors"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -611,24 +754,35 @@
         "description": "Removes a role from a user. Requires gateway:roles:write permission.",
         "tags": ["RBAC"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
           {
             "in": "path",
             "name": "user_id",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "in": "path",
             "name": "role_id",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "in": "query",
             "name": "project_id",
             "required": false,
-            "schema": { "type": "string", "format": "uuid" },
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
             "description": "Required for project-scoped roles"
           }
         ],
@@ -640,14 +794,20 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" }
+                    "success": {
+                      "type": "boolean"
+                    }
                   }
                 }
               }
             }
           },
-          "404": { "$ref": "#/components/responses/errors" },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "404": {
+            "$ref": "#/components/responses/errors"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -657,12 +817,17 @@
         "description": "Adds a user to a project with specified roles. Gateway-orchestrated member management. Requires project:*:admin permission.",
         "tags": ["Members"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
           {
             "in": "path",
             "name": "project_id",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
@@ -679,7 +844,10 @@
                   },
                   "role_ids": {
                     "type": "array",
-                    "items": { "type": "string", "format": "uuid" },
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
                     "description": "Project-scoped roles to assign"
                   }
                 },
@@ -696,16 +864,26 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" }
+                    "success": {
+                      "type": "boolean"
+                    }
                   }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/errors" },
-          "403": { "$ref": "#/components/responses/errors" },
-          "404": { "$ref": "#/components/responses/errors" },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "400": {
+            "$ref": "#/components/responses/errors"
+          },
+          "403": {
+            "$ref": "#/components/responses/errors"
+          },
+          "404": {
+            "$ref": "#/components/responses/errors"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -715,18 +893,26 @@
         "description": "Removes a user from a project (removes all project roles). Requires project:*:admin permission.",
         "tags": ["Members"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
           {
             "in": "path",
             "name": "project_id",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "in": "path",
             "name": "user_id",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -737,14 +923,20 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" }
+                    "success": {
+                      "type": "boolean"
+                    }
                   }
                 }
               }
             }
           },
-          "403": { "$ref": "#/components/responses/errors" },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "403": {
+            "$ref": "#/components/responses/errors"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     },
@@ -754,12 +946,17 @@
         "description": "Called by Auth Guard Proxy to check if a user has permission to access a specific container. Checks org:owner, org:admin, project:member, and project:admin roles.",
         "tags": ["Containers"],
         "parameters": [
-          { "$ref": "#/components/parameters/headers_authorization" },
+          {
+            "$ref": "#/components/parameters/headers_authorization"
+          },
           {
             "in": "path",
             "name": "containerId",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" },
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
             "description": "User container ID"
           }
         ],
@@ -778,9 +975,16 @@
                     "user": {
                       "type": "object",
                       "properties": {
-                        "id": { "type": "string", "format": "uuid" },
-                        "username": { "type": "string" },
-                        "display_name": { "type": "string" }
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "display_name": {
+                          "type": "string"
+                        }
                       },
                       "description": "User info (only present when allowed=true)"
                     }
@@ -797,13 +1001,17 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "error": { "type": "string" }
+                    "error": {
+                      "type": "string"
+                    }
                   }
                 }
               }
             }
           },
-          "4XX": { "$ref": "#/components/responses/errors" }
+          "4XX": {
+            "$ref": "#/components/responses/errors"
+          }
         }
       }
     }
@@ -825,7 +1033,9 @@
         "description": "Error response",
         "content": {
           "application/json": {
-            "schema": { "$ref": "#/components/schemas/errors" }
+            "schema": {
+              "$ref": "#/components/schemas/errors"
+            }
           }
         }
       }
@@ -834,14 +1044,20 @@
       "errors": {
         "type": "object",
         "properties": {
-          "uuid": { "type": "string" },
+          "uuid": {
+            "type": "string"
+          },
           "errors": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
-                "message": { "type": "string" },
-                "public": { "type": "boolean" }
+                "message": {
+                  "type": "string"
+                },
+                "public": {
+                  "type": "boolean"
+                }
               }
             }
           }
@@ -895,7 +1111,9 @@
           },
           "permissions": {
             "type": "array",
-            "items": { "type": "string" },
+            "items": {
+              "type": "string"
+            },
             "description": "Array of permission strings (supports wildcards)"
           },
           "scope": {
@@ -927,11 +1145,11 @@
       "headers_authorization": {
         "in": "header",
         "name": "authorization",
-        "description": "JWT access token",
+        "description": "A JWT, optionally prefixed. `token ` is what browser callers send and `Bearer ` is what the runner sends \u2014 RFC 6750, and what every HTTP client reaches for. Accepting only one of them refused the other before the route, so the runner heartbeat could not reach any gateway: a machine stayed absent from every project catalogue with a 400 about a pattern.",
         "required": true,
         "schema": {
           "type": "string",
-          "pattern": "^(?:token\\s)?[-A-Za-z0-9_+./]*={0,3}$"
+          "pattern": "^(?:(?:token|Bearer)\\s)?[-A-Za-z0-9_+./]*={0,3}$"
         }
       }
     }

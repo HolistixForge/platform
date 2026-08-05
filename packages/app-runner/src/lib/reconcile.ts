@@ -1,10 +1,4 @@
 import {
-  connectNetwork,
-  disconnectNetwork,
-  ensureNetwork,
-  listOwned,
-  removeContainer,
-  startExisting,
   TDockerExec,
   TRunningContainer,
   LABEL_CONTAINER,
@@ -12,6 +6,7 @@ import {
   LABEL_PROJECT,
 } from './docker';
 import { TPlacement } from './placement';
+import { TRunnerEngine, UnsupportedByEngine } from './engine';
 
 /**
  * Bring what is running into line with what was placed — by comparing, not by
@@ -137,6 +132,7 @@ export type TCreateContainer = (placement: TPlacement) => Promise<string>;
  * without a registry.
  */
 export const applyReconcile = async (
+  engine: TRunnerEngine,
   exec: TDockerExec,
   actions: TAction[],
   placements: TPlacement[],
@@ -147,7 +143,7 @@ export const applyReconcile = async (
   // Networks first: attaching to one that does not exist fails, and a
   // container created into a missing network fails the same way.
   for (const network of new Set(placements.flatMap((p) => p.networks))) {
-    await ensureNetwork(exec, network);
+    await engine.ensureNetwork(exec, network);
   }
 
   for (const action of actions) {
@@ -157,20 +153,35 @@ export const applyReconcile = async (
       case 'keep':
         break;
       case 'start':
-        await startExisting(exec, action.id);
+        await engine.startExisting(exec, action.id);
         break;
       case 'create':
         if (placement) await create(placement);
         break;
       case 'recreate':
-        await removeContainer(exec, action.id);
+        await engine.removeContainer(exec, action.id);
         if (placement) await create(placement);
         break;
+      // An engine that cannot move a network on a live container recreates
+      // instead. The plan stays engine-agnostic — what a placement *should*
+      // look like does not depend on what started it — and the substitution
+      // happens once, here, where the refusal arrives.
+      //
+      // It costs a restart the Docker path does not pay. That is the
+      // `no-hot-network-attach` concession, and paying it is better than
+      // leaving a container on a network its placement no longer names while
+      // every log line says the pass converged.
       case 'attach':
-        await connectNetwork(exec, action.network, action.id);
-        break;
       case 'detach':
-        await disconnectNetwork(exec, action.network, action.id);
+        try {
+          await (action.action === 'attach'
+            ? engine.connectNetwork(exec, action.network, action.id)
+            : engine.disconnectNetwork(exec, action.network, action.id));
+        } catch (error) {
+          if (!(error instanceof UnsupportedByEngine)) throw error;
+          await engine.removeContainer(exec, action.id);
+          if (placement) await create(placement);
+        }
         break;
     }
   }
@@ -213,13 +224,14 @@ export const runArgs = (
 ];
 
 export const reconcile = async (
+  engine: TRunnerEngine,
   exec: TDockerExec,
   project_id: string,
   placements: TPlacement[],
   create: TCreateContainer
 ): Promise<TAction[]> => {
-  const running = await listOwned(exec, project_id);
+  const running = await engine.listOwned(exec, project_id);
   const actions = planReconcile(placements, running);
-  await applyReconcile(exec, actions, placements, create);
+  await applyReconcile(engine, exec, actions, placements, create);
   return actions;
 };

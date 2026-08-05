@@ -1,6 +1,8 @@
 import { TRunningContainer } from './docker';
 import { TPlacement } from './placement';
 import { applyReconcile, planReconcile, runArgs } from './reconcile';
+import { dockerEngine } from './engine-docker';
+import { appleEngine } from './engine-apple';
 
 const DIGEST =
   '@sha256:0000000000000000000000000000000000000000000000000000000000000000';
@@ -180,6 +182,7 @@ describe('applyReconcile', () => {
 
     // Act
     await applyReconcile(
+      dockerEngine,
       exec,
       planReconcile([p], [running()]),
       [p],
@@ -205,7 +208,13 @@ describe('applyReconcile', () => {
     };
 
     // Act
-    await applyReconcile(exec, [], [placement()], async () => 'id');
+    await applyReconcile(
+      dockerEngine,
+      exec,
+      [],
+      [placement()],
+      async () => 'id'
+    );
 
     // Assert
     expect(calls.map((c) => c.join(' '))).not.toContain(
@@ -221,6 +230,7 @@ describe('applyReconcile', () => {
 
     // Act
     await applyReconcile(
+      dockerEngine,
       exec,
       [
         {
@@ -248,6 +258,7 @@ describe('applyReconcile', () => {
 
     // Act
     await applyReconcile(
+      dockerEngine,
       exec,
       [{ action: 'keep', user_container_id: 'container-1', id: 'abc123' }],
       [],
@@ -311,5 +322,126 @@ describe('runArgs', () => {
 
     // Assert - it stays one argument, because nothing ever parses it
     expect(args).toContain('evil; rm -rf /');
+  });
+});
+
+/**
+ * What an engine that cannot move a network on a live container does instead.
+ *
+ * The plan does not change: what a placement should look like has nothing to
+ * do with what started it. The substitution happens where the refusal
+ * arrives, and it costs a restart the Docker path does not pay — the
+ * `no-hot-network-attach` concession, made visible rather than skipped.
+ */
+describe('applyReconcile — an engine that cannot attach live', () => {
+  const placement = {
+    project_id: 'proj-1',
+    user_container_id: 'uc_1',
+    name: 'holistix_svc_uc_1',
+    imageRef: 'ghcr.io/acme/etl@sha256:' + 'a'.repeat(64),
+    settings: 'x',
+    capabilities: [],
+    devices: [],
+    extraHosts: [],
+    networks: ['net-a', 'net-b'],
+  } as never;
+
+  const engineWithout = () => {
+    const calls: string[] = [];
+    return {
+      calls,
+      engine: {
+        ...appleEngine,
+        ensureNetwork: async () => {
+          calls.push('ensureNetwork');
+        },
+        removeContainer: async () => {
+          calls.push('removeContainer');
+          return '';
+        },
+      },
+    };
+  };
+
+  it('recreates rather than failing the pass', async () => {
+    const { calls, engine } = engineWithout();
+    const created: string[] = [];
+
+    await applyReconcile(
+      engine,
+      (async () => '') as never,
+      [
+        {
+          action: 'attach',
+          id: 'c1',
+          user_container_id: 'uc_1',
+          network: 'net-b',
+        } as never,
+      ],
+      [placement],
+      async (p) => {
+        created.push((p as { user_container_id: string }).user_container_id);
+        return 'new-id';
+      }
+    );
+
+    expect(calls).toContain('removeContainer');
+    expect(created).toEqual(['uc_1']);
+  });
+
+  it('does the same for a detach', async () => {
+    const { calls, engine } = engineWithout();
+    const created: string[] = [];
+
+    await applyReconcile(
+      engine,
+      (async () => '') as never,
+      [
+        {
+          action: 'detach',
+          id: 'c1',
+          user_container_id: 'uc_1',
+          network: 'net-z',
+        } as never,
+      ],
+      [placement],
+      async (p) => {
+        created.push((p as { user_container_id: string }).user_container_id);
+        return 'new-id';
+      }
+    );
+
+    expect(calls).toContain('removeContainer');
+    expect(created).toEqual(['uc_1']);
+  });
+
+  it('still lets a real failure through', async () => {
+    // Only the "this engine cannot" refusal becomes a recreate. Anything else
+    // is a fault, and swallowing it would hide a broken engine behind a
+    // service that silently restarts every pass.
+    const engine = {
+      ...appleEngine,
+      ensureNetwork: async () => undefined,
+      connectNetwork: async () => {
+        throw new Error('daemon is on fire');
+      },
+    };
+
+    await expect(
+      applyReconcile(
+        engine,
+        (async () => '') as never,
+        [
+          {
+            action: 'attach',
+            id: 'c1',
+            user_container_id: 'uc_1',
+            network: 'net-b',
+          } as never,
+        ],
+        [placement],
+        async () => 'new-id'
+      )
+    ).rejects.toThrow('daemon is on fire');
   });
 });
