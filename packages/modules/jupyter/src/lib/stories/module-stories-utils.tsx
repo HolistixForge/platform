@@ -17,6 +17,7 @@ import { moduleFrontend as coreFrontend } from '@holistix-forge/core-graph';
 import { moduleFrontend as whiteboardFrontend } from '@holistix-forge/whiteboard/frontend';
 import { moduleFrontend as tabsFrontend } from '@holistix-forge/tabs/frontend';
 import { moduleFrontend as userContainersFrontend } from '@holistix-forge/user-containers/frontend';
+import { moduleFrontend as jupyterFrontend } from '../../frontend';
 import type { TCollabBackendExports } from '@holistix-forge/collab';
 
 //
@@ -129,6 +130,9 @@ export const JupyterStoryProviders = ({
         { module: whiteboardFrontend, config: {} },
         { module: tabsFrontend, config: {} },
         { module: userContainersFrontend, config: {} },
+        // jupyter registers `jupyter:servers`; without it the gate reads an
+        // undefined shared map.
+        { module: jupyterFrontend, config: {} },
       ] as { module: TModule<never, object>; config: object }[]),
     []
   );

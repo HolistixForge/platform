@@ -32,6 +32,7 @@ import {
 import { moduleBackend as spaceBackend } from '@holistix-forge/whiteboard';
 import { moduleFrontend as spaceFrontend } from '@holistix-forge/whiteboard/frontend';
 import { moduleBackend as tabsBackend } from '@holistix-forge/tabs';
+import { moduleFrontend as tabsFrontend } from '@holistix-forge/tabs/frontend';
 //
 import {
   TUserContainersExports,
@@ -81,6 +82,14 @@ const modulesBackend: { module: TModule<never, object>; config: object }[] = [
       dependencies: ['collab', 'reducers'],
       load: ({ moduleExports }) => {
         moduleExports({
+          // user-containers registers its permissions against this at load.
+          // The stub predates it, so the module read `.register` off undefined
+          // and the whole story died before painting.
+          permissionRegistry: {
+            register: () => {
+              // A story enforces nothing; it only has to let the module load.
+            },
+          },
           project_id: 'test',
           updateReverseProxy: async () => {
             console.log('updateReverseProxy');
@@ -128,6 +137,9 @@ const modulesFrontend: { module: TModule<never, object>; config: object }[] = [
   { module: reducersFrontend, config: {} },
   { module: coreFrontend, config: {} },
   { module: spaceFrontend, config: {} },
+  // tabs comes first: loadModules walks this list in order and refuses a
+  // module whose dependency has not been loaded yet, which it says by name.
+  { module: tabsFrontend, config: {} },
   { module: userContainersFrontend, config: {} },
 ];
 
