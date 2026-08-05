@@ -100,6 +100,9 @@ export class JupyterReducer extends ReducerWithCollab<
    * by looking up its containerType in the image registry
    */
   private isJupyterImage(imageId: string): boolean {
+    // Deliberately unscoped, so only built-in images resolve: an
+    // organization-supplied image must not be able to claim the Jupyter driver
+    // by declaring `containerType: 'jupyter'` in its own catalogue entry.
     const imageDef =
       this.depsExports['user-containers'].imageRegistry.get(imageId);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

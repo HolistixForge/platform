@@ -84,6 +84,51 @@ holistix_build_gateway_image: true
 holistix_npm_install: true
 holistix_install_build_server: true
 
+# ---------------------------------------------------------------------------
+# Cloud runner — running user containers on this host
+# ---------------------------------------------------------------------------
+# Off by default. Turning it on means tenant-supplied container images execute
+# here, which needs both hardware virtualisation (Kata boots a VM per
+# container) and an egress policy — see doc/architecture/CLOUD_RUNNER.md.
+holistix_install_cloud_runner: false
+
+# Docker here, because these roles provision a Linux host with systemd. The
+# other engine is Apple `container`, which gives a VM per container at level 1
+# on any Apple Silicon — that is a Mac deployment and not something this play
+# installs. Stated rather than defaulted in the broker itself: the two engines
+# do not grant the same controls.
+holistix_broker_engine: docker
+# Empty, and it has to stay empty for Docker: the Linux path gives up none of
+# the controls the design rests on, and the broker refuses to start if this
+# names one it does not give up. Under the apple engine each of its concessions
+# has to be listed here — see doc/architecture/CLOUD_RUNNER.md.
+holistix_broker_accept_concessions: ''
+# Never runc. A shared kernel between organizations is not defensible once
+# tenants supply their own images.
+holistix_broker_runtime: kata
+# The Docker bridge address, because that is where gateway containers reach the
+# host from. Loopback would be unreachable to them; 0.0.0.0 would expose
+# container creation to anything that can route to this host. The bridge gateway
+# is neither — routable from this host and its containers, nowhere else.
+holistix_broker_bind: "{{ holistix_docker_host_ip | default('127.0.0.1') }}"
+holistix_broker_port: 9443
+holistix_broker_secrets_file: /etc/holistix/container-broker.env
+# The broker proves itself to Ganymede with this, and Ganymede verifies an
+# RS256 `gateway_token` JWT — so it is signed with that environment's JWT
+# private key, not generated. Empty by default and asserted by the role: a
+# generated random string authenticates nothing, and the failure it produced
+# was every project image reported as non-existent rather than as refused.
+holistix_broker_ganymede_token: ''
+# Per-container ceilings. A request asking for more is clamped, not refused.
+holistix_broker_max_cpus: 4
+holistix_broker_max_memory_mb: 8192
+holistix_broker_max_pids: 2048
+# Ganymede's port comes from GANYMEDE_SERVER_BIND in each environment's
+# .env.ganymede, so it is per-environment while the broker is installed for the
+# whole host. A host running two environments needs either one broker per
+# environment or an environment-aware lookup — see doc/architecture/CLOUD_RUNNER.md.
+holistix_broker_ganymede_url: http://127.0.0.1:6870
+
 # Reclaim apt/npm/docker caches and fstrim after provisioning. Removes no
 # functionality — these regenerate on demand — but a sparse VM disk never
 # shrinks on its own, so skipping this leaves several GB allocated on the host

@@ -1,0 +1,146 @@
+import { TResolvedImage } from './types';
+
+export class UnknownImage extends Error {}
+
+/**
+ * Where the broker looks up what an `image_id` actually means.
+ *
+ * Injected so the resolution source can move — a static built-in list while
+ * only curated images exist, Ganymede once organizations register their own —
+ * without the security-relevant part of the broker changing shape.
+ */
+export type TCatalogueSource = (
+  projectId: string,
+  imageId: string
+) => Promise<TResolvedImage | undefined>;
+
+const DIGEST_PINNED = /^[^\s]+@sha256:[0-9a-f]{64}$/;
+
+/**
+ * Resolve an `image_id` to the reference a runtime may be handed.
+ *
+ * Two refusals, both deliberate:
+ *
+ * - An id the catalogue does not know is an error, never a passthrough. The
+ *   whole reason the gateway sends an id rather than a URI is that this lookup
+ *   is the allowlist.
+ * - An entry without a digest is rejected even though it resolved. A tenant
+ *   image on shared infrastructure that is only pinned by tag is not the same
+ *   artifact from one start to the next, and the broker is the last place that
+ *   can still say so.
+ */
+export const resolveImage = async (
+  source: TCatalogueSource,
+  projectId: string,
+  imageId: string
+): Promise<TResolvedImage> => {
+  const resolved = await source(projectId, imageId);
+
+  if (!resolved) {
+    throw new UnknownImage(
+      `image ${imageId} is not in the catalogue for project ${projectId}`
+    );
+  }
+
+  // Tenant images only. A built-in comes from this host's own list and changes
+  // when the platform is deployed, not when a tenant pushes — pinning it by
+  // digest would mean a redeploy for every image bump while closing nothing a
+  // tenant could exploit.
+  if (!resolved.builtin && !DIGEST_PINNED.test(resolved.reference)) {
+    throw new UnknownImage(
+      `image ${imageId} is not pinned to a digest and will not be started`
+    );
+  }
+
+  // A tenant image — one that needs a project credential — is legal only under
+  // the GitHub organization the project is linked to. Ganymede has already
+  // applied that rule; re-checking here is cheap and catches a mistake in its
+  // logic at the point where the mistake would actually pull something.
+  if (resolved.pullToken) {
+    const owner = resolved.githubOrganization?.toLowerCase();
+    if (!owner) {
+      throw new UnknownImage(
+        `image ${imageId} carries a pull token but names no GitHub organization`
+      );
+    }
+    if (!resolved.reference.toLowerCase().startsWith(`ghcr.io/${owner}/`)) {
+      throw new UnknownImage(
+        `image ${imageId} is outside ghcr.io/${owner}/ and will not be started`
+      );
+    }
+  }
+
+  return resolved;
+};
+
+/**
+ * Catalogue backed by Ganymede.
+ *
+ * Ganymede owns the project catalogue and the credential wallet, so it is the
+ * one place that can both say "this project may run this image" and mint a
+ * token to fetch it. Asking it rather than trusting the gateway keeps the
+ * gateway out of the decision; having it mint the token rather than handing
+ * over the stored PAT keeps the tenant's GitHub credential off this host.
+ */
+export const ganymedeCatalogue =
+  (endpoint: string, token: string): TCatalogueSource =>
+  async (projectId, imageId) => {
+    const url =
+      `${endpoint.replace(/\/$/, '')}/internal/projects/` +
+      `${encodeURIComponent(projectId)}/images/${encodeURIComponent(imageId)}`;
+
+    // `X-Gateway-Token`, not `Authorization: Bearer`.
+    //
+    // Ganymede guards its `/internal/…` routes with `authenticateGatewayToken`,
+    // which reads this header and no other. Sending a bearer was indis-
+    // tinguishable from sending nothing at all — both answer 401 — so every
+    // tenant image lookup failed authentication and surfaced here as
+    // "catalogue unavailable", a 502 blaming Ganymede for refusing a request
+    // this side never addressed properly.
+    //
+    // It had never shown up because nothing had run against a real Ganymede;
+    // measured against one on the first attempt, and the value is a signed
+    // gateway JWT rather than a shared secret, which is what that middleware
+    // verifies.
+    const response = await fetch(url, {
+      headers: { 'X-Gateway-Token': token },
+    });
+
+    // A refusal is not an outage, and the difference is the whole value of
+    // this answer to the person waiting on it.
+    //
+    // Ganymede refuses permanently in three ways: 404 for an id this project
+    // does not have, 403 for an entry outside the GitHub organization the
+    // project is bound to, and 409 for a project with no link or no live App
+    // installation. None of them will start working if the gateway tries
+    // again — but everything that was not a 404 used to be thrown, and a
+    // thrown lookup becomes "catalogue unavailable", a 502 telling the caller
+    // to come back later about something that never resolves.
+    //
+    // All three answer `undefined`, which the caller turns into 404. That is
+    // also what keeps the refusals indistinguishable from one another, in the
+    // same way an image belonging to another project already is: the reason a
+    // registration was rejected is Ganymede's to log, not the gateway's to
+    // read. Observed statuses, against a real Ganymede with a seeded catalog.
+    const REFUSALS = [403, 404, 409];
+    if (REFUSALS.includes(response.status)) return undefined;
+
+    if (!response.ok) {
+      throw new Error(
+        `catalogue lookup failed (${response.status}) for ${imageId}`
+      );
+    }
+
+    const body = (await response.json()) as {
+      imageId: string;
+      reference: string;
+      pull_token?: string;
+      github_organization?: string;
+    };
+    return {
+      imageId: body.imageId,
+      reference: body.reference,
+      pullToken: body.pull_token,
+      githubOrganization: body.github_organization,
+    };
+  };

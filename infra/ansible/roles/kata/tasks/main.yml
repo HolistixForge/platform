@@ -1,0 +1,164 @@
+---
+# Kata Containers — one guest kernel per container.
+#
+# Why Kata and not Firecracker directly: Kata is an OCI runtime, so a container
+# starts with `docker run --runtime=kata` and the broker's argv barely changes.
+# Raw Firecracker means building a VMM orchestrator — rootfs assembly, guest
+# kernel, jailer, vsock, CNI, lifecycle — which is a reimplementation of what
+# Kata already is. Kata can run *on* Firecracker, so this gives that up nothing.
+#
+# Why at all: organizations supply their own container images. A tenant image
+# can be hostile at startup, before any user interacts with it, and namespaces
+# alone put it on the same kernel as every other tenant.
+
+- name: Fail early where hardware virtualisation is unavailable
+  # Kata boots a real VM per container. Without KVM it either refuses to start
+  # or silently falls back — and a silent fallback is every tenant back on a
+  # shared kernel, which is the one outcome this role exists to prevent.
+  ansible.builtin.stat:
+    path: /dev/kvm
+  register: kata_kvm
+  failed_when: not kata_kvm.stat.exists
+
+# Installed from the upstream release and not from apt, because apt does not
+# have it. Measured on Ubuntu 24.04 (noble) with all four components enabled —
+# main, universe, restricted, multiverse:
+#
+#   apt-cache policy kata-containers  → nothing
+#   apt-cache search kata             → unrelated fonts
+#   containerd 2.2.1, runc 1.3.4      → both present
+#
+# Ubuntu does not package Kata. The previous version of this role would have
+# failed on the install task the first time anyone ran it; its own assert
+# message said as much, and that guess is now a measurement.
+
+- name: Install zstd, which the release archives are compressed with
+  ansible.builtin.apt:
+    update_cache: true
+    name:
+      - zstd
+    state: present
+
+- name: Map the machine architecture onto the release asset name
+  # The assets are published as amd64/arm64, which is not what uname reports.
+  ansible.builtin.set_fact:
+    kata_asset_arch: >-
+      {{ {'x86_64': 'amd64', 'aarch64': 'arm64'}[ansible_architecture] }}
+  failed_when: ansible_architecture not in ['x86_64', 'aarch64']
+
+- name: Download the Kata release archive
+  # Pinned, not "latest": a host provisioned in March and one provisioned in
+  # June must run the same runtime, or the isolation guarantee is whatever
+  # upstream happened to have released that week.
+  ansible.builtin.get_url:
+    url: >-
+      https://github.com/kata-containers/kata-containers/releases/download/{{ kata_version }}/kata-static-{{ kata_version }}-{{ kata_asset_arch }}.tar.zst
+    dest: /tmp/kata-static-{{ kata_version }}-{{ kata_asset_arch }}.tar.zst
+    mode: '0644'
+  register: kata_archive
+
+- name: Unpack it
+  # The archive is rooted at ./opt/kata, so it extracts at /.
+  ansible.builtin.unarchive:
+    src: /tmp/kata-static-{{ kata_version }}-{{ kata_asset_arch }}.tar.zst
+    dest: /
+    remote_src: true
+    extra_opts: ['--zstd']
+    creates: '{{ kata_runtime_path }}'
+
+- name: Locate the Kata runtime binary
+  ansible.builtin.stat:
+    path: '{{ kata_runtime_path }}'
+  register: kata_runtime_binary
+
+- name: Fail when the runtime binary is missing
+  ansible.builtin.assert:
+    that: kata_runtime_binary.stat.exists
+    fail_msg: >-
+      kata-runtime is not at {{ kata_runtime_path }} after unpacking the
+      release archive. The layout inside kata-static may have changed —
+      see https://github.com/kata-containers/kata-containers/releases
+
+# Registering the runtime with Docker rather than replacing the default: the
+# gateway pool containers themselves keep running under runc. They are ours,
+# they hold no tenant code, and booting a VM per gateway would buy nothing.
+- name: Register the Kata runtime with Docker
+  ansible.builtin.copy:
+    dest: /etc/docker/daemon.d-kata.json
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      {
+        "runtimes": {
+          "kata": {
+            "path": "{{ kata_runtime_path }}"
+          }
+        }
+      }
+  register: kata_runtime_config
+
+# /etc/docker/daemon.json is written by the docker role, which owns the DNS
+# settings. Merging here rather than templating the whole file keeps the two
+# roles from overwriting each other.
+- name: Merge the Kata runtime into the Docker daemon configuration
+  ansible.builtin.shell:
+    cmd: >-
+      python3 -c "
+      import json;
+      base=json.load(open('/etc/docker/daemon.json'));
+      extra=json.load(open('/etc/docker/daemon.d-kata.json'));
+      base.update(extra);
+      json.dump(base, open('/etc/docker/daemon.json','w'), indent=2)"
+  changed_when: kata_runtime_config is changed
+  when: kata_runtime_config is changed
+
+- name: Restart Docker to pick up the runtime
+  ansible.builtin.systemd_service:
+    name: docker
+    state: restarted
+  when: kata_runtime_config is changed
+
+- name: Verify Docker knows the Kata runtime
+  ansible.builtin.command: docker info --format '{{ "{{" }}.Runtimes{{ "}}" }}'
+  register: kata_docker_runtimes
+  changed_when: false
+  failed_when: "'kata' not in kata_docker_runtimes.stdout"
+
+# The user container runs an OpenVPN client to reach its gateway, so the guest
+# needs tun. Under Kata that comes from the guest kernel, not from a host
+# device passthrough — the broker refuses `--device` for exactly this reason.
+#
+# This is no longer an assumption on either half. The release archive for the
+# pinned version was downloaded and read:
+#
+#   configuration.toml → configuration-qemu.toml, which sets
+#     kernel = vmlinux.container → vmlinux-6.18.15-186
+#     image  = kata-containers.img → kata-ubuntu-noble.image
+#   config-6.18.15-186 has CONFIG_TUN=y — built in, not a module —
+#     with CONFIG_DEVTMPFS=y and CONFIG_DEVTMPFS_MOUNT=y
+#
+# So nothing creates /dev/net/tun deliberately, and nothing needs to: a builtin
+# TUN driver registers misc device 10:200 and devtmpfs materialises the node.
+# That is exactly why it turned up under Apple `container`, which boots this
+# same kernel with a completely different VMM, rootfs and agent — measured
+# here, crw------- 10:200, with nothing passed in from the host.
+#
+# The initrd path was checked too, because CONFIG_DEVTMPFS_MOUNT does *not*
+# cover initramfs boots: kata-alpine-3.22.initrd ships static nodes for null,
+# zero, random, urandom and console but **not** for net/tun, and its /sbin/init
+# is the agent, whose string table carries devtmpfs beside /dev, /dev/shm and
+# /dev/pts. The agent mounts it. Both boot paths therefore end up with the node.
+#
+# All of the above is read from the shipped artefacts, not from a boot. This
+# task is what turns it into a boot, and its remaining failure modes are now
+# narrow: a kernel swapped for one without CONFIG_TUN, or a guest image whose
+# agent stops mounting devtmpfs.
+- name: Confirm the guest image provides tun
+  ansible.builtin.command: >-
+    docker run --rm --runtime=kata --cap-add=NET_ADMIN
+    -- busybox:latest ls /dev/net/tun
+  register: kata_guest_tun
+  changed_when: false
+  failed_when: kata_guest_tun.rc != 0
+  tags: [kata_verify]

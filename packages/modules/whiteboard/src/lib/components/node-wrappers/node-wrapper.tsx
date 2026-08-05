@@ -107,9 +107,18 @@ const MoveNodeMode = ({ moveNodeMode }: { moveNodeMode: boolean }) => {
 //
 //
 
-export const NodeWrapper =
-  (NodeComponent: FC) =>
-  ({ id, data }: SpaceNode) => {
+/**
+ * Wraps a node's own component in the chrome every node shares.
+ *
+ * The wrapped component is named rather than returned anonymously, which is
+ * what `react-hooks/rules-of-hooks` needs to see it as a component at all: an
+ * arrow function returned from a factory reads to the rule as a callback, and
+ * it reported all six hooks below as called outside a component. The code was
+ * right and the shape hid it — six errors, failing lint on this branch and on
+ * main. A name also gives React DevTools something better than `Anonymous`.
+ */
+export const NodeWrapper = (NodeComponent: FC) => {
+  const WrappedNode = ({ id, data }: SpaceNode) => {
     //
     const zoom = useStore(zoomSelector);
     const nodeRef = useRef<HTMLDivElement>(null);
@@ -301,6 +310,13 @@ export const NodeWrapper =
       </nodeContext.Provider>
     );
   };
+
+  WrappedNode.displayName = `NodeWrapper(${
+    NodeComponent.displayName || NodeComponent.name || 'Node'
+  })`;
+
+  return WrappedNode;
+};
 
 //
 //

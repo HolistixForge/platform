@@ -70,6 +70,15 @@
   .node-outputs-closed {
     bottom: 50%;
     z-index: var(--z-base);
+
+    /* Invisible, and it must stay out of the way too: `opacity: 0` still takes
+       the click. This 10px box is centred on a bubble barely bigger than it,
+       so it sat on top of the only thing there is to click and the collapsed
+       chat could not be expanded — the pointer never reached the glyph
+       underneath. The handle exists to give the edge to the chat node an
+       anchor point, not to be dragged. */
+    pointer-events: none;
+
     .edges-count {
       top: 0;
       transform: translate(-50%, -50%);

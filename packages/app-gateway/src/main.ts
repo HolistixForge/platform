@@ -13,6 +13,7 @@ import {
   TStart,
 } from '@holistix-forge/backend-engine';
 import { setupCollabRoutes } from './routes/collab';
+import { setupPlacementRoutes } from './routes/placements';
 import { setupPermissionsRoutes } from './routes/permissions';
 import { setupMembersRoutes } from './routes/members';
 import { setupRolesRoutes } from './routes/roles';
@@ -105,6 +106,7 @@ export const setupExpressApp = (options?: {
   };
 
   setupCollabRoutes(router, rateLimiters.api);
+  setupPlacementRoutes(router, rateLimiters.api);
   setupPermissionsRoutes(router, rateLimiters.api);
   setupMembersRoutes(router, rateLimiters.api);
   setupRolesRoutes(router, rateLimiters.api);

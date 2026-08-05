@@ -38,6 +38,14 @@ const envVars = [
 const optionalEnvVars = [
   // Credentials Wallet Encryption (defaults to test key if not set)
   'CREDENTIALS_ENCRYPTION_KEY',
+  // GitHub App, used to pull project container images from GHCR.
+  //
+  // Optional because a deployment that only runs built-in images needs none of
+  // it — those are ours and carry no tenant credential. The internal image
+  // route answers 503 rather than half-working when they are absent.
+  'GITHUB_APP_ID',
+  'GITHUB_APP_PRIVATE_KEY',
+  'GITHUB_APP_SLUG',
 ] as const;
 
 type EnvVars = (typeof envVars)[number];
@@ -67,6 +75,11 @@ envVars.forEach((varName) => {
 const optionalDefaults: Record<OptionalEnvVars, string> = {
   // Default key for testing only - MUST be overridden in production
   CREDENTIALS_ENCRYPTION_KEY: 'test-encryption-key-not-for-production-use',
+  // No defaults: a placeholder App id would turn "not configured" into a
+  // confusing 401 from GitHub instead of an honest 503 from us.
+  GITHUB_APP_ID: '',
+  GITHUB_APP_PRIVATE_KEY: '',
+  GITHUB_APP_SLUG: '',
 };
 
 optionalEnvVars.forEach((varName) => {

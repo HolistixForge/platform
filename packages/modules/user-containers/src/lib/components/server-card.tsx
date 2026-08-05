@@ -27,6 +27,26 @@ import { UseContainerProps } from './node-server/node-server';
 import { TContainerRunnerFrontend } from '../../frontend';
 
 /**
+ * The card's own box.
+ *
+ * 400 × 202 are the "add resource" card's dimensions — `server-stack.tsx` in
+ * ui-views — which is what this card sits beside in the grid, and whose column
+ * arithmetic (`Math.floor(width / (400 + 32))`, `minmax(400px, 1fr)`) is
+ * written against that same 400. The width already agreed; the height did not,
+ * so a service card and the dashed card next to it never lined up.
+ *
+ * `minHeight` and not `height`: a container exposing several services is
+ * taller than 202, and clipping it would hide the links that are the reason to
+ * look at the card at all. The floor is what makes the short ones align.
+ */
+const CARD_BOX = {
+  borderRadius: '8px',
+  padding: '20px',
+  width: '400px',
+  minHeight: '202px',
+} as const;
+
+/**
  *
  */
 
@@ -54,6 +74,80 @@ const isAlive = (last_watchdog_at: string | null) => {
   };
 
   return r;
+};
+
+/**
+ * What actually isolated this container, in one line under the runner.
+ *
+ * The platform ships two engines with different guarantees, and the whole
+ * reason the broker refuses to start without a stated runtime is that an
+ * absent isolation must never be reached by omission. That rule only holds as
+ * far as the value travels: if a deployment isolates less well and the card
+ * says nothing, the person whose code is running still believes they got a
+ * private kernel. So it comes out of the environment and onto the card.
+ *
+ * Three states, and the third is not a gap to be filled in:
+ *
+ *   own kernel     a microVM — Kata under Docker, or any Apple container
+ *   shared kernel  runc: the host's kernel, with every other tenant on it
+ *   unknown        the broker did not say. An older one, or a runner that is
+ *                  not the platform. Shown as unknown rather than assumed
+ *                  safe, because the safe-looking assumption is the one that
+ *                  costs something when it is wrong.
+ *
+ * Concessions are listed when there are any. They are the difference between
+ * two microVMs, and "own kernel" alone would flatten that back out.
+ */
+const IsolationLine = ({ runner }: { runner: Record<string, unknown> }) => {
+  const isolation = runner.isolation;
+  const engine = typeof runner.engine === 'string' ? runner.engine : undefined;
+  const runtime =
+    typeof runner.runtime === 'string' ? runner.runtime : undefined;
+  const concessions = Array.isArray(runner.concessions)
+    ? (runner.concessions as string[])
+    : [];
+
+  // Nothing was reported at all — a local placement, or a container that has
+  // not started yet. Silence is right here; there is no claim to correct.
+  if (!runtime && !engine && !isolation) return null;
+
+  const shared = isolation === 'shared-kernel';
+  const known = isolation === 'microvm' || shared;
+
+  const what = !known
+    ? 'Isolation not reported'
+    : shared
+    ? 'Shares the host kernel'
+    : 'Own kernel';
+
+  const detail = [engine, runtime].filter(Boolean).join(' · ');
+
+  return (
+    <div
+      style={{
+        marginTop: 'var(--spacing-4)',
+        fontSize: 'var(--font-size-sm)',
+        // A shared kernel is the one case worth interrupting someone for.
+        color: shared ? 'var(--color-warning)' : 'var(--color-text-muted)',
+      }}
+      title={
+        concessions.length > 0
+          ? `This deployment gives up: ${concessions.join(', ')}`
+          : undefined
+      }
+    >
+      <p>
+        {what}
+        {detail ? ` · ${detail}` : ''}
+      </p>
+      {concessions.length > 0 && (
+        <p>
+          {concessions.length} control{concessions.length > 1 ? 's' : ''} given
+          up: {concessions.join(', ')}
+        </p>
+      )}
+    </div>
+  );
 };
 
 //
@@ -114,7 +208,7 @@ export const UserContainerCardInternal = ({
       className={`${
         color === 'red' ? 'node-background' : 'gradient-notebook-card'
       } flex flex-col relative pointer`}
-      style={{ borderRadius: '8px', padding: '20px', width: '400px' }}
+      style={CARD_BOX}
       onClick={() => {
         if (firstServiceName) {
           onOpenService?.(firstServiceName);
@@ -233,38 +327,68 @@ export const UserContainerCardInternal = ({
       </div>
 
       <div>
-        {container.runner.id === 'none' && (
-          <>
-            <div style={{ color: 'var(--white)', fontSize: '12px' }}>
-              <p>Select a runner to start the container</p>
-            </div>
-            <div className="flex" style={{ gap: '8px' }}>
-              {Array.from(runners.entries()).map(([runnerId, runner]) => (
-                <div
-                  key={runnerId}
-                  className="flex items-center cursor-pointer"
-                  style={{
-                    gap: '8px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '4px',
-                    padding: '8px',
-                  }}
-                  onClick={() => {
-                    onSelectRunner(runnerId);
-                  }}
-                >
-                  <runner.icon />
-                  <p>{runner.label}</p>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
+        {/*
+          Shown whichever runner is active, not only before the first choice.
+          Where a service runs is a decision people revise — moving it from
+          their laptop to the platform, or back to debug it — and hiding the
+          control after one click left no way to do that but delete the
+          container and make another one.
+        */}
+        <div
+          style={{
+            color: 'var(--color-text-muted)',
+            fontSize: 'var(--font-size-sm)',
+          }}
+        >
+          <p>
+            {container.runner.id === 'none'
+              ? 'Select a runner to start the container'
+              : 'Runs on'}
+          </p>
+        </div>
+        <div className="flex" style={{ gap: 'var(--spacing-4)' }}>
+          {Array.from(runners.entries()).map(([runnerId, runner]) => {
+            const active = container.runner.id === runnerId;
+            return (
+              <div
+                key={runnerId}
+                className="flex items-center cursor-pointer"
+                title={
+                  active
+                    ? `Restart on ${runner.label}`
+                    : `Move to ${runner.label}`
+                }
+                style={{
+                  gap: 'var(--spacing-4)',
+                  // The active runner is the one piece of state on this card
+                  // that is otherwise invisible once chosen.
+                  border: `1px solid ${
+                    active ? 'var(--color-accent)' : 'var(--color-border)'
+                  }`,
+                  background: active ? 'var(--color-bg-hover)' : 'transparent',
+                  color: active
+                    ? 'var(--color-text)'
+                    : 'var(--color-text-muted)',
+                  borderRadius: 'var(--radius-xs)',
+                  padding: 'var(--spacing-4)',
+                  transition: 'background 0.15s ease, border-color 0.15s ease',
+                }}
+                onClick={() => {
+                  onSelectRunner(runnerId);
+                }}
+              >
+                <runner.icon />
+                <p>{runner.label}</p>
+              </div>
+            );
+          })}
+        </div>
 
-        {container.runner.id !== 'none' &&
-          typeof container.runner.command === 'string' && (
-            <DockerCommand command={container.runner.command} />
-          )}
+        <IsolationLine runner={container.runner as Record<string, unknown>} />
+
+        {typeof container.runner.command === 'string' && (
+          <DockerCommand command={container.runner.command} />
+        )}
       </div>
 
       <TagsBar tags={tags} addTag={addTag} />

@@ -28,7 +28,7 @@
      canvas — Excalidraw — establishes its own stacking context and swallows
      the pointer, so move mode silently stopped working on those while it kept
      working everywhere else. */
-  z-index: 10;
+  z-index: var(--z-overlay);
 }
 
 .easy-connect-handle-box {

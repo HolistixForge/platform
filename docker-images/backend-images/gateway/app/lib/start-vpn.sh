@@ -50,6 +50,33 @@ openvpn --genkey secret "${TA_KEY}" || error_exit "Failed to generate TLS key"
 EASYRSA_BATCH=1 ./easyrsa gen-req clients nopass || error_exit "Failed to generate clients request"
 EASYRSA_BATCH=1 ./easyrsa sign-req client clients || error_exit "Failed to sign clients request"
 
+# Per-client identity, off by default.
+#
+# The shared client certificate proves membership of the organization and
+# nothing more: with duplicate-cn every container presents the same common
+# name, so the server cannot tell them apart and cannot assign an address to a
+# particular one. That is what stops an allocated network range from becoming an
+# address a container actually holds.
+#
+# Turning this on makes the server *require* a username and password. Every
+# container that does not send them stops connecting — so it stays off until the
+# container bootstrap writes the credential file from SETTINGS. Enabling it
+# before that lands would take every service in every organization offline.
+PER_CLIENT_IDENTITY_CONFIG=""
+if [ "${VPN_PER_CLIENT_IDENTITY:-0}" = "1" ]; then
+  PER_CLIENT_IDENTITY_CONFIG=$(cat <<'IDENT'
+
+# The username the client sends is the container id, and becomes its common
+# name for the scripts below.
+verify-client-cert require
+username-as-common-name
+auth-user-pass-verify /app/lib/vpn-auth-verify.sh via-file
+client-connect /app/lib/vpn-client-connect.sh
+script-security 2
+IDENT
+)
+fi
+
 # Update OpenVPN configuration file with new paths and gateway VPN port
 cat <<EOF >"${TEMP_DIR}/server.conf" || error_exit "Failed to write to config file"
 dev tun
@@ -66,8 +93,23 @@ dh ${DH_FILE}
 # Use TLS-authentication
 tls-auth ${TA_KEY} 0
 
-# Allow client-to-client communication
-client-to-client
+# Deliberately NOT client-to-client.
+#
+# That option makes OpenVPN shuttle packets between clients inside its own
+# process, in userspace, without ever consulting the kernel. Traffic between two
+# containers therefore never reaches the routing table or the FORWARD chain, so
+# no route and no firewall rule on this gateway can see it — let alone stop it.
+#
+# With it on, every container in an organization could reach every other by
+# address regardless of project, which was verified from a running container
+# before this line changed. It also makes private network ranges meaningless:
+# allocating 172.16.16.0/24 to a network cannot isolate anything if the packets
+# bypass the layer where isolation is expressed.
+#
+# Without it, client-to-client traffic goes out to the kernel and back, where
+# the rules below apply. Nothing else changes: a container reaches this gateway,
+# and reaches another container's service through the reverse proxy here, which
+# is how per-service FQDNs have always worked.
 
 keepalive 10 120
 
@@ -80,6 +122,7 @@ verb 5
 
 # All clients use the same cert/key pair
 duplicate-cn
+${PER_CLIENT_IDENTITY_CONFIG}
 
 explicit-exit-notify 1
 
@@ -93,6 +136,41 @@ sudo openvpn --config "${TEMP_DIR}/server.conf" --daemon || error_exit "Failed t
 OPENVPN_PID_FILE="${TEMP_DIR}/openvpn.pid"
 OPENVPN_PID=$(pgrep -o openvpn) || error_exit "Failed to retrieve OpenVPN process PID"
 echo "${OPENVPN_PID}" >"${OPENVPN_PID_FILE}" || error_exit "Failed to write OpenVPN process PID to file"
+
+# Refuse to forward one client to another by default.
+#
+# Removing client-to-client sends that traffic through the kernel; it does not
+# stop it. Without this rule the kernel forwards tun0 back out tun0 and every
+# container still reaches every other, only more slowly.
+#
+# Default deny rather than a deny-list: a private network is meant to fail
+# closed, so a range that was never explicitly permitted is one nothing can
+# reach. Per-network allow rules are inserted above this one when a deployment
+# declares them.
+#
+# What this does not touch: a container reaching this gateway (tun0 -> local,
+# not forwarded), and this gateway's reverse proxy reaching a container
+# (local -> tun0, not forwarded). Those are how the platform has always worked
+# and both keep working.
+if ! command -v iptables >/dev/null 2>&1; then
+  # Loud, and in the log rather than only on stderr. The first version of this
+  # warned on stderr alone, iptables turned out not to be in the image, and the
+  # VPN looked isolated while it was not — which is the worst way for a security
+  # control to be absent.
+  {
+    echo "=============================================================="
+    echo "VPN CLIENT ISOLATION IS NOT ACTIVE: iptables is not installed."
+    echo "Every container on this organization's VPN can reach every"
+    echo "other one, across projects. Rebuild the gateway image."
+    echo "=============================================================="
+  } | tee -a "${SCRIPT_OUTPUTS}" >&2
+elif ! sudo iptables -C FORWARD -i tun0 -o tun0 -j DROP 2>/dev/null; then
+  sudo iptables -A FORWARD -i tun0 -o tun0 -j DROP \
+    || {
+      echo "VPN CLIENT ISOLATION IS NOT ACTIVE: could not install the rule." \
+        | tee -a "${SCRIPT_OUTPUTS}" >&2
+    }
+fi
 
 # Get public hostname of the machine
 HOSTNAME=$(hostname -f)

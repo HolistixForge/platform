@@ -8,17 +8,59 @@ import { TokenManager, PermissionManager } from './lib/managers';
 
 import { PermissionRegistry } from './lib/permission-registry';
 
+/**
+ * Environment a module cannot read for itself.
+ *
+ * Module packages are bundled through Vite with `vite-plugin-node-polyfills`,
+ * which substitutes a **browser** `process` shim. Inside a module,
+ * `process.env` is therefore an empty object at runtime in the gateway — it
+ * reads as "not configured" rather than failing, which is the worst way for it
+ * to be wrong. app-gateway's own code keeps the real `process`, so anything a
+ * module needs from the environment has to arrive through here.
+ */
+export type TGatewayEnvironment = {
+  /** Where user containers run when the platform runner is used. */
+  containerBroker?: { endpoint: string; token: string };
+  /** True in local development, where `.local` names need `--add-host`. */
+  devMode: boolean;
+  /** Address containers reach the Docker host at. */
+  dockerHostIp: string;
+};
+
 export type TGatewayExports = {
   toGanymede: <T>(r: TMyfetchRequest) => Promise<T>;
   toGanymedeInternal: <T>(r: TMyfetchRequest) => Promise<T>;
+  /**
+   * Publish the services one project exposes.
+   *
+   * Takes a project id because the underlying config file is per **gateway**
+   * while callers reason per **project**. Without it, a gateway serving two
+   * projects has each one overwrite the other's routes — and a project with no
+   * containers wipes every route on the gateway a few milliseconds after they
+   * were written.
+   */
   updateReverseProxy: (
+    projectId: string,
     services: { host: string; ip: string; port: number }[]
+  ) => Promise<void>;
+  /**
+   * Tell the VPN which hosting token belongs to which container.
+   *
+   * Read by `vpn-auth-verify.sh` when a container connects, so that the shared
+   * client certificate proves membership of the organization and the token
+   * proves which container. Inert until VPN_PER_CLIENT_IDENTITY is on, and
+   * writing it is what makes turning that on possible at all — until now
+   * nothing produced the file the script reads.
+   */
+  recordVpnCredentials: (
+    entries: { user_container_id: string; token: string }[]
   ) => Promise<void>;
   gatewayFQDN: string;
   organization_id: string;
   tokenManager: TokenManager;
   permissionManager: PermissionManager;
   permissionRegistry: PermissionRegistry;
+  environment: TGatewayEnvironment;
 };
 
 //

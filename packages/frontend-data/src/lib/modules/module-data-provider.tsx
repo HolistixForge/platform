@@ -149,7 +149,7 @@ const DefaultLoadingUI = () => (
       alignItems: 'center',
       justifyContent: 'center',
       height: '100vh',
-      color: 'var(--color-text-secondary, #666)',
+      color: 'var(--color-text-muted)',
     }}
   >
     Loading gateway information...
@@ -172,7 +172,7 @@ const DefaultUnavailableUI = ({
       alignItems: 'center',
       justifyContent: 'center',
       height: '100vh',
-      color: 'var(--color-text-secondary, #666)',
+      color: 'var(--color-text-muted)',
     }}
   >
     <p>Gateway unavailable for organization: {organization_id}</p>

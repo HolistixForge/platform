@@ -1,0 +1,49 @@
+[Unit]
+Description=Holistix container broker ({{ holistix_broker_bind }}:{{ holistix_broker_port }})
+Documentation=file://{{ holistix_workspace }}/doc/architecture/CLOUD_RUNNER.md
+After=docker.service network-online.target
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory={{ holistix_workspace }}
+ExecStart=/usr/bin/node {{ holistix_workspace }}/dist/packages/app-container-broker/main.js
+Restart=on-failure
+RestartSec=2s
+
+# The broker composes every container start, so its configuration is the
+# platform's isolation policy. Neither of the next two has a default in the
+# code: a broker that quietly fell back to runc would put every tenant back on
+# a shared kernel, and one that picked an engine by looking at which binary was
+# installed would decide the same question one level up.
+Environment=BROKER_ENGINE={{ holistix_broker_engine }}
+Environment=BROKER_RUNTIME={{ holistix_broker_runtime }}
+# Controls the chosen engine cannot express, named one by one. Empty for
+# Docker, which gives up none — and the broker refuses to start if this names a
+# control the running engine does in fact have.
+Environment=BROKER_ACCEPT_CONCESSIONS={{ holistix_broker_accept_concessions }}
+Environment=BROKER_BIND={{ holistix_broker_bind }}
+Environment=BROKER_PORT={{ holistix_broker_port }}
+Environment=BROKER_MAX_CPUS={{ holistix_broker_max_cpus }}
+Environment=BROKER_MAX_MEMORY_MB={{ holistix_broker_max_memory_mb }}
+Environment=BROKER_MAX_PIDS={{ holistix_broker_max_pids }}
+Environment=GANYMEDE_INTERNAL_URL={{ holistix_broker_ganymede_url }}
+EnvironmentFile={{ holistix_broker_secrets_file }}
+
+# It needs the Docker socket — that is the entire point of separating it from
+# the gateway, which must never have it. Everything else is closed off.
+NoNewPrivileges=true
+ProtectSystem=strict
+# read-only rather than true: on a development VM the workspace — and so the
+# broker's own bundle — lives under /root, and ProtectHome=true hides it, which
+# systemd reports as the fairly opaque status=200/CHDIR. The broker only ever
+# reads it.
+ProtectHome=read-only
+# Its own /tmp, which is where the per-pull credential directories go. A
+# registry token must not land in a /tmp shared with anything else on the host.
+PrivateTmp=true
+ReadWritePaths=/var/run/docker.sock
+
+[Install]
+WantedBy=multi-user.target

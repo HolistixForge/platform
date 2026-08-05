@@ -328,6 +328,19 @@ cmd_create() {
         # Disable certificate verification for self-signed certificates
         # Gateways make HTTPS calls to Ganymede (signalGatewayReady, etc.)
         container_env[NODE_TLS_REJECT_UNAUTHORIZED]="0"
+
+        # Container broker, for running user containers on the platform rather
+        # than handing the user a docker command to paste.
+        #
+        # Both must be present or the platform runner does not register at all
+        # — a half-configured gateway would offer the mode and then fail on
+        # click. Nothing is defaulted here: no broker means local-only, which
+        # is the correct behaviour for a laptop.
+        if [ -n "${CONTAINER_BROKER_URL}" ] && [ -n "${CONTAINER_BROKER_TOKEN}" ]; then
+            container_env[CONTAINER_BROKER_URL]="${CONTAINER_BROKER_URL}"
+            container_env[CONTAINER_BROKER_TOKEN]="${CONTAINER_BROKER_TOKEN}"
+            echo -e "${GRAY}     Platform runner enabled (broker: ${CONTAINER_BROKER_URL})${NC}"
+        fi
         
         # Start container (ports map to themselves for new containers)
         if start_gateway_container \

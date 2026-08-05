@@ -1,0 +1,36 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/jest",
+    "jsx": "react-jsx",
+    "lib": ["dom"],
+    // Same set as tsconfig.app.json — the specs pull in the components, and
+    // those read import.meta.env — plus jest and jest-dom's matchers.
+    "types": [
+      "jest",
+      "node",
+      "@testing-library/jest-dom",
+      "@nx/react/typings/cssmodule.d.ts",
+      "@nx/react/typings/image.d.ts",
+      "vite/client"
+    ],
+    "module": "esnext",
+    "moduleResolution": "bundler"
+  },
+  "include": [
+    "jest.config.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.js",
+    "src/**/*.jsx"
+  ],
+  "exclude": [
+    "out-tsc",
+    "dist",
+    "src/**/*.stories.ts",
+    "src/**/*.stories.tsx",
+    "src/**/*.stories.js",
+    "src/**/*.stories.jsx"
+  ],
+  "references": []
+}

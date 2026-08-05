@@ -5,6 +5,7 @@ import type { TCollabFrontendExports } from '@holistix-forge/collab/frontend';
 import type { TWhiteboardFrontendExports } from '@holistix-forge/whiteboard/frontend';
 import { serversMenuEntries } from './lib/servers-menu';
 import { localRunnerFrontend } from './lib/local-runner-frontend';
+import { platformRunnerFrontend } from './lib/platform-runner-frontend';
 import { TUserContainer } from './lib/servers-types';
 
 //
@@ -49,6 +50,16 @@ export const moduleFrontend: TModule<TRequired> = {
       'user-containers',
       'images'
     );
+    depsExports.collab.registry.registerSharedData(
+      'map',
+      'user-containers',
+      'runners'
+    );
+    depsExports.collab.registry.registerSharedData(
+      'map',
+      'user-containers',
+      'machines'
+    );
 
     depsExports.whiteboard.registerMenuEntries(serversMenuEntries);
     depsExports.whiteboard.registerNodes({
@@ -65,6 +76,9 @@ export const moduleFrontend: TModule<TRequired> = {
     };
 
     registerContainerRunner('local', localRunnerFrontend);
+    // Registered unconditionally; `useRunnerFrontend` intersects this with the
+    // set the gateway publishes, so it only surfaces where a broker exists.
+    registerContainerRunner('platform', platformRunnerFrontend);
 
     const exports: TUserContainersFrontendExports = {
       getToken: async (userContainer, serviceName) => {

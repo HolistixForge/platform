@@ -73,6 +73,27 @@
       when: holistix_install_observability | bool
       tags: [observability]
 
+    # Cloud runner. Kata first — the broker's health check asserts the runtime
+    # it reports, so a broker that came up before the runtime existed would
+    # fail the play rather than quietly serve runc.
+    #
+    # Installed when the broker is configured to *use* it, not merely when the
+    # runner is installed. The dev VM sets `holistix_broker_runtime: runc` and
+    # says why in its own comment — Apple Silicon before M3 has no nested
+    # virtualisation, so /dev/kvm is absent inside the guest — and the kata
+    # role's first task asserts /dev/kvm exists. Gating on the runner alone
+    # meant provisioning that machine aborted there, before installing
+    # anything, including the broker the VM exists to exercise.
+    - role: kata
+      when:
+        - holistix_install_cloud_runner | bool
+        - holistix_broker_runtime is match('^kata')
+      tags: [cloud-runner, kata]
+
+    - role: containerbroker
+      when: holistix_install_cloud_runner | bool
+      tags: [cloud-runner, broker]
+
     # Last on purpose: it cleans up after apt, npm and docker.
     - role: reclaim
       when: holistix_reclaim_disk | bool

@@ -16,7 +16,11 @@ RUN apt-get update && apt-get install -y \
   inotify-tools \
   sudo \
   inetutils-ping \
-  curl
+  curl \
+  # start-vpn.sh installs a default-deny FORWARD rule between VPN clients.
+  # Without this package the rule silently does not exist: the script warns on
+  # stderr and nobody reads it, so the VPN looks isolated and is not.
+  iptables
 
 # Copy app directory (contains scripts needed for startup)
 COPY ./app/ /app/

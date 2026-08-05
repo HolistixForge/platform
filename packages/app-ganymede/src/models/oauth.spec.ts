@@ -139,6 +139,236 @@ describe('OAuth Model', () => {
     });
   });
 
+  describe('saveAuthorizationCode - PKCE', () => {
+    const client = { id: 'holistix-runner', grants: ['authorization_code'] };
+    const user = {
+      id: 'user-123',
+      username: 'testuser',
+      session_id: 'session-456',
+    };
+
+    it('should persist the code challenge it was given', async () => {
+      // Arrange
+      const mockQuery = jest.mocked(pg.query);
+      mockQuery.mockResolvedValue(undefined as any);
+
+      const code = {
+        authorizationCode: 'code-abc',
+        expiresAt: new Date('2026-01-01T00:00:00Z'),
+        redirectUri: 'http://127.0.0.1:54321/callback',
+        scope: ['read'],
+        codeChallenge: 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+        codeChallengeMethod: 'S256',
+      };
+
+      // Act
+      const result = await model.saveAuthorizationCode(code, client, user);
+
+      // Assert - the challenge reaches the database, or nothing verifies later
+      expect(mockQuery).toHaveBeenCalledWith(
+        'call proc_oauth_tokens_save_code($1, $2, $3, $4, $5, $6, $7, $8)',
+        [
+          'holistix-runner',
+          'session-456',
+          'code-abc',
+          code.expiresAt,
+          JSON.stringify(['read']),
+          'http://127.0.0.1:54321/callback',
+          'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+          'S256',
+        ]
+      );
+      expect(result).toMatchObject({
+        codeChallenge: 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+        codeChallengeMethod: 'S256',
+      });
+    });
+
+    it('should pass nulls for a client that sent no challenge', async () => {
+      // Arrange
+      const mockQuery = jest.mocked(pg.query);
+      mockQuery.mockResolvedValue(undefined as any);
+
+      const code = {
+        authorizationCode: 'code-abc',
+        expiresAt: new Date('2026-01-01T00:00:00Z'),
+        redirectUri: 'https://example.com',
+        scope: ['read'],
+      };
+
+      // Act
+      await model.saveAuthorizationCode(code as any, client, user);
+
+      // Assert
+      const params = jest.mocked(pg.query).mock.calls[0][1] as unknown[];
+      expect(params[6]).toBeNull();
+      expect(params[7]).toBeNull();
+    });
+  });
+
+  describe('getAuthorizationCode - PKCE', () => {
+    const rowBase = {
+      code: 'code-abc',
+      code_expires_on: new Date('2026-01-01T00:00:00Z'),
+      code_redirect_uri: 'http://127.0.0.1:54321/callback',
+      scope: ['read'],
+      client_id: 'holistix-runner',
+      client_grants: ['authorization_code'],
+      user_id: 'user-123',
+      username: 'testuser',
+      session_id: 'session-456',
+    };
+
+    const mockRow = (row: Record<string, unknown>) => {
+      jest.mocked(pg.query).mockResolvedValue({
+        next: () => ({ oneRow: () => row }),
+      } as any);
+    };
+
+    it('should return the stored challenge so the verifier gets checked', async () => {
+      // Arrange
+      mockRow({
+        ...rowBase,
+        code_challenge: 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+        code_challenge_method: 'S256',
+      });
+
+      // Act
+      const result = await model.getAuthorizationCode('code-abc');
+
+      // Assert
+      expect(result).toMatchObject({
+        codeChallenge: 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+        codeChallengeMethod: 'S256',
+      });
+    });
+
+    it('should omit the challenge entirely when the code has none', async () => {
+      // Arrange - a confidential client's code: both columns null
+      mockRow({
+        ...rowBase,
+        code_challenge: null,
+        code_challenge_method: null,
+      });
+
+      // Act
+      const result = await model.getAuthorizationCode('code-abc');
+
+      // Assert - absent, not null: the library treats any truthy challenge as
+      // "a verifier is required" and would reject a valid confidential exchange
+      expect(result).not.toHaveProperty('codeChallenge');
+      expect(result).not.toHaveProperty('codeChallengeMethod');
+    });
+  });
+
+  describe('validateRedirectUri', () => {
+    const runner = {
+      id: 'holistix-runner',
+      grants: ['authorization_code'],
+      redirectUris: ['http://127.0.0.1/callback', 'http://[::1]/callback'],
+    };
+
+    it('should accept a loopback redirect on any port', async () => {
+      // Act
+      const result = await model.validateRedirectUri?.(
+        'http://127.0.0.1:54321/callback',
+        runner
+      );
+
+      // Assert - the runner cannot register the port it will be given
+      expect(result).toBe(true);
+    });
+
+    it('should accept the IPv6 loopback on any port', async () => {
+      // Act
+      const result = await model.validateRedirectUri?.(
+        'http://[::1]:8123/callback',
+        runner
+      );
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('should reject a different path on loopback', async () => {
+      // Act
+      const result = await model.validateRedirectUri?.(
+        'http://127.0.0.1:54321/steal',
+        runner
+      );
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('should reject a non-loopback host', async () => {
+      // Act - the port exception must not become "any host"
+      const result = await model.validateRedirectUri?.(
+        'http://evil.example.com:54321/callback',
+        runner
+      );
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('should reject localhost, whose resolution is not ours to trust', async () => {
+      // Act
+      const result = await model.validateRedirectUri?.(
+        'http://localhost:54321/callback',
+        runner
+      );
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('should reject a loopback redirect carrying its own query', async () => {
+      // Act
+      const result = await model.validateRedirectUri?.(
+        'http://127.0.0.1:54321/callback?next=http://evil.example.com',
+        runner
+      );
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('should keep exact matching for a client with no loopback URI', async () => {
+      // Arrange
+      const web = {
+        id: 'app-main-client-id',
+        grants: ['authorization_code'],
+        redirectUris: ['https://example.com/callback'],
+      };
+
+      // Act
+      const exact = await model.validateRedirectUri?.(
+        'https://example.com/callback',
+        web
+      );
+      const other = await model.validateRedirectUri?.(
+        'https://example.com/elsewhere',
+        web
+      );
+
+      // Assert
+      expect(exact).toBe(true);
+      expect(other).toBe(false);
+    });
+
+    it('should reject anything for a client with no registered URIs', async () => {
+      // Act
+      const result = await model.validateRedirectUri?.(
+        'http://127.0.0.1:54321/callback',
+        { id: 'bare', grants: ['authorization_code'] }
+      );
+
+      // Assert
+      expect(result).toBe(false);
+    });
+  });
+
   describe('saveToken', () => {
     it('should save token successfully', async () => {
       // Arrange

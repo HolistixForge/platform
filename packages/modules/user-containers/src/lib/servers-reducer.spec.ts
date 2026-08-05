@@ -64,6 +64,7 @@ describe('ContainerImageRegistry - getAll', () => {
 describe('UserContainersReducer - _initProject', () => {
   let reducer: UserContainersReducer;
   let mockImagesMap: Map<string, any>;
+  let mockRunnersMap: Map<string, any>;
   let mockImageRegistry: ContainerImageRegistry;
   let mockDepsExports: any;
 
@@ -88,6 +89,13 @@ describe('UserContainersReducer - _initProject', () => {
       copy: () => new Map(mockImagesMap),
     };
 
+    mockRunnersMap = new Map();
+    const runnersSharedMap = {
+      get: (key: string) => mockRunnersMap.get(key),
+      set: (key: string, value: any) => mockRunnersMap.set(key, value),
+      copy: () => new Map(mockRunnersMap),
+    };
+
     mockDepsExports = {
       collab: {
         registry: {
@@ -95,17 +103,20 @@ describe('UserContainersReducer - _initProject', () => {
             sharedData: {
               'user-containers:containers': new Map(),
               'user-containers:images': imagesSharedMap,
+              'user-containers:runners': runnersSharedMap,
             },
           })),
         },
       },
       gateway: {
+        organization_id: 'org-under-test',
         permissionRegistry: {
           getPermissions: jest.fn(() => ({})),
         },
       },
       'user-containers': {
         imageRegistry: mockImageRegistry,
+        listRunnerIds: () => ['local'],
       },
     };
 
@@ -180,6 +191,57 @@ describe('UserContainersReducer - _initProject', () => {
     expect(mockImagesMap.has('ubuntu:terminal')).toBe(true);
     expect(mockImagesMap.has('jupyter:lab')).toBe(true);
   });
+
+  it('syncs only this project catalogue, not another one', async () => {
+    // The shared map is a CRDT replicated to every client in the project, so an
+    // unscoped sync would hand one tenant's image list to another's browsers.
+    mockImageRegistry.registerForProject('test-project-123', 'ours', [
+      {
+        imageId: 'ours:etl',
+        imageName: 'Our ETL',
+        imageUri: 'ghcr.io/ours/etl',
+        imageTag: '1.0.0',
+        imageSha256: 'a'.repeat(64),
+      },
+    ]);
+    mockImageRegistry.registerForProject('some-other-project', 'theirs', [
+      {
+        imageId: 'theirs:sim',
+        imageName: 'Their Simulator',
+        imageUri: 'ghcr.io/theirs/sim',
+        imageTag: '2.0.0',
+        imageSha256: 'b'.repeat(64),
+      },
+    ]);
+
+    await reducer.reduce(
+      {
+        type: 'project:init' as const,
+        project_id: 'test-project-123',
+        systemEvent: true as const,
+      },
+      { project_id: 'test-project-123' } as any
+    );
+
+    expect(mockImagesMap.has('ours:etl')).toBe(true);
+    expect(mockImagesMap.has('theirs:sim')).toBe(false);
+  });
+
+  it('publishes the runners this gateway actually offers', async () => {
+    // The platform runner only registers where a broker is configured, so the
+    // frontend has no way to know the set without being told.
+    await reducer.reduce(
+      {
+        type: 'project:init' as const,
+        project_id: 'test-project-123',
+        systemEvent: true as const,
+      },
+      { project_id: 'test-project-123' } as any
+    );
+
+    expect(Array.from(mockRunnersMap.keys())).toEqual(['local']);
+    expect(mockRunnersMap.get('local')).toEqual({ runnerId: 'local' });
+  });
 });
 
 describe('UserContainersReducer - Auth Guard OAuth Client Lifecycle', () => {
@@ -242,6 +304,7 @@ describe('UserContainersReducer - Auth Guard OAuth Client Lifecycle', () => {
       },
       gateway: {
         toGanymedeInternal: mockToGanymedeInternal,
+        recordVpnCredentials: jest.fn(),
         updateReverseProxy: jest.fn(),
         gatewayFQDN: 'org-abc123.domain.local',
         organization_id: 'abc123',
@@ -603,5 +666,407 @@ describe('UserContainersReducer - Auth Guard OAuth Client Lifecycle', () => {
 
       expect(started.config.auth_guard_client_secret).toBeUndefined();
     });
+  });
+});
+
+describe('UserContainersReducer - runner machines', () => {
+  let reducer: UserContainersReducer;
+  let machines: Map<string, any>;
+
+  const sharedMap = (backing: Map<string, any>) => ({
+    get: (k: string) => backing.get(k),
+    set: (k: string, v: any) => backing.set(k, v),
+    delete: (k: string) => backing.delete(k),
+    forEach: (fn: (v: any) => void) => backing.forEach(fn),
+    copy: () => new Map(backing),
+  });
+
+  const health = (
+    userId: string | undefined,
+    machineId = 'm1',
+    label = 'mbp'
+  ) =>
+    reducer.reduce(
+      {
+        type: 'user-container:runner-health' as const,
+        machine_id: machineId,
+        label,
+        systemEvent: true as const,
+      },
+      {
+        project_id: 'p1',
+        jwt: userId ? { user: { id: userId } } : undefined,
+      } as any
+    );
+
+  beforeEach(() => {
+    machines = new Map();
+    reducer = new UserContainersReducer({
+      collab: {
+        registry: {
+          getCollabForProject: jest.fn(() => ({
+            sharedData: {
+              'user-containers:containers': sharedMap(new Map()),
+              'user-containers:machines': sharedMap(machines),
+            },
+          })),
+        },
+      },
+      gateway: {
+        organization_id: 'org-1',
+        // _periodic republishes the project's routes on every tick.
+        updateReverseProxy: jest.fn(),
+      },
+      'user-containers': {},
+    } as any);
+  });
+
+  it('records a machine against the authenticated user', async () => {
+    await health('user-a');
+
+    expect(machines.get('m1')).toMatchObject({
+      machine_id: 'm1',
+      user_id: 'user-a',
+      label: 'mbp',
+    });
+    expect(machines.get('m1').last_health_at).toBeTruthy();
+  });
+
+  it('takes the owner from the token, never from the event', async () => {
+    // A runner that could name its own owner could enrol itself into a project
+    // it was never invited to.
+    await expect(health(undefined)).rejects.toThrow();
+    expect(machines.size).toBe(0);
+  });
+
+  it('refuses a machine id already claimed by someone else', async () => {
+    // Not a naming collision to resolve — an id being reused, deliberately or
+    // from a restored backup. Letting it through would hand one member another
+    // member's placement.
+    await health('user-a');
+
+    // Asserting on the rejection rather than its text: the ForbiddenException
+    // mocked at the top of this file takes an array of messages and Error
+    // stringifies it, so the message never survives. What matters is that the
+    // owner is unchanged.
+    await expect(health('user-b')).rejects.toBeTruthy();
+    expect(machines.get('m1').user_id).toBe('user-a');
+  });
+
+  it('refreshes the timestamp on each health', async () => {
+    await health('user-a');
+    const first = machines.get('m1').last_health_at;
+
+    await new Promise((r) => setTimeout(r, 5));
+    await health('user-a');
+
+    expect(machines.get('m1').last_health_at).not.toBe(first);
+  });
+
+  it('drops a machine that stopped answering', async () => {
+    await health('user-a');
+    machines.set('m1', {
+      ...machines.get('m1'),
+      last_health_at: new Date('2020-01-01').toISOString(),
+    });
+
+    await reducer.reduce(
+      {
+        type: 'reducers:periodic' as const,
+        date: new Date().toISOString(),
+      } as any,
+      { project_id: 'p1' } as any
+    );
+
+    expect(machines.has('m1')).toBe(false);
+  });
+
+  it('keeps a machine that answered recently', async () => {
+    await health('user-a');
+
+    await reducer.reduce(
+      {
+        type: 'reducers:periodic' as const,
+        date: new Date().toISOString(),
+      } as any,
+      { project_id: 'p1' } as any
+    );
+
+    expect(machines.has('m1')).toBe(true);
+  });
+});
+
+/**
+ * A local placement names a machine, and Ganymede decides whether it may.
+ *
+ * The rule — only a machine's own owner makes the first placement on it —
+ * cannot be checked against this document: the machine catalog here only holds
+ * machines whose runner is already heartbeating into this project, and the
+ * first placement is what puts one there. So the reducer asks Ganymede, and
+ * what these tests hold in place is that it asks *before* writing, and that a
+ * refusal leaves nothing behind.
+ */
+describe('UserContainersReducer - _setRunner and the machine it names', () => {
+  let reducer: UserContainersReducer;
+  let containers: Map<string, any>;
+  let toGanymede: jest.Mock;
+
+  const CONTAINER = 'uc-1';
+
+  beforeEach(() => {
+    containers = new Map([
+      [CONTAINER, { user_container_id: CONTAINER, runner: { id: 'none' } }],
+    ]);
+
+    toGanymede = jest.fn().mockResolvedValue({});
+
+    reducer = new UserContainersReducer({
+      collab: {
+        registry: {
+          getCollabForProject: jest.fn(() => ({
+            sharedData: {
+              'user-containers:containers': {
+                get: (k: string) => containers.get(k),
+                set: (k: string, v: any) => containers.set(k, v),
+                copy: () => new Map(containers),
+              },
+            },
+          })),
+        },
+      },
+      reducers: { processEvent: jest.fn() },
+      gateway: { toGanymede, organization_id: 'org-1' },
+      'user-containers': {
+        listRunnerIds: () => ['local', 'platform'],
+        getRunner: (id: string) => ({ id }),
+      },
+    } as any);
+  });
+
+  const setRunner = (extra: Record<string, unknown> = {}) =>
+    reducer.reduce(
+      {
+        type: 'user-container:set-runner',
+        user_container_id: CONTAINER,
+        runner_id: 'local',
+        ...extra,
+      } as any,
+      {
+        project_id: 'project-1',
+        jwt: { user: { id: 'user-1' } },
+      } as any
+    );
+
+  it('should opt the machine into the project before writing the placement', async () => {
+    // Act
+    await setRunner({ machine_id: 'machine-1' });
+
+    // Assert
+    expect(toGanymede).toHaveBeenCalledWith({
+      url: '/internal/runners/machine-1/projects',
+      method: 'POST',
+      jsonBody: { project_id: 'project-1', user_id: 'user-1' },
+    });
+    expect(containers.get(CONTAINER).runner).toEqual({
+      id: 'local',
+      user_id: 'user-1',
+      machine_id: 'machine-1',
+    });
+  });
+
+  it('should take the owner from the token and never from the event', async () => {
+    // Act - a client claiming the machine belongs to somebody else
+    await setRunner({ machine_id: 'machine-1', user_id: 'someone-else' });
+
+    // Assert - a client that could name the owner could opt a machine it does
+    // not own into a project it was never invited to
+    expect(toGanymede.mock.calls[0][0].jsonBody.user_id).toBe('user-1');
+    expect(containers.get(CONTAINER).runner.user_id).toBe('user-1');
+  });
+
+  it('should write nothing when Ganymede refuses the machine', async () => {
+    // Arrange - not this user's machine, revoked, or unknown; Ganymede answers
+    // the same way for all three
+    toGanymede.mockRejectedValue(new Error('403'));
+
+    // Act / Assert
+    await expect(setRunner({ machine_id: 'machine-1' })).rejects.toThrow();
+
+    // A container written here would sit forever looking like it was about to
+    // start, because no runner would ever be handed the placement
+    expect(containers.get(CONTAINER).runner).toEqual({ id: 'none' });
+  });
+
+  it('should still accept a placement that names no machine', async () => {
+    // Act - the mode that hands the user a `docker run` to paste, which works
+    // and which nothing here should break
+    await setRunner();
+
+    // Assert - no grant to record, because no machine was named
+    expect(toGanymede).not.toHaveBeenCalled();
+    expect(containers.get(CONTAINER).runner).toEqual({
+      id: 'local',
+      user_id: 'user-1',
+    });
+  });
+
+  it('should not opt anything in for a platform placement', async () => {
+    // Act
+    await reducer.reduce(
+      {
+        type: 'user-container:set-runner',
+        user_container_id: CONTAINER,
+        runner_id: 'platform',
+        machine_id: 'machine-1',
+      } as any,
+      { project_id: 'project-1', jwt: { user: { id: 'user-1' } } } as any
+    );
+
+    // Assert - the platform belongs to no one and is not a machine anyone
+    // opts into; a machine_id here is meaningless and must not be recorded
+    expect(toGanymede).not.toHaveBeenCalled();
+    expect(containers.get(CONTAINER).runner).toEqual({ id: 'platform' });
+  });
+
+  it('should refuse a local placement with no project to grant against', async () => {
+    // Arrange / Act
+    const refused = reducer.reduce(
+      {
+        type: 'user-container:set-runner',
+        user_container_id: CONTAINER,
+        runner_id: 'local',
+        machine_id: 'machine-1',
+      } as any,
+      { jwt: { user: { id: 'user-1' } } } as any
+    );
+
+    // Assert
+    await expect(refused).rejects.toThrow();
+    expect(toGanymede).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * The VPN needs to know which hosting token belongs to which container.
+ *
+ * `vpn-auth-verify.sh` has read that file since it was written and nothing has
+ * ever produced it — so the per-client identity it exists for could not have
+ * worked: a missing file means every connection refused. These tests are about
+ * producing it. Nothing here turns the feature on; the server only asks for a
+ * username and password when VPN_PER_CLIENT_IDENTITY is set, which it is not.
+ */
+describe('UserContainersReducer - VPN credentials', () => {
+  let reducer: UserContainersReducer;
+  let containers: Map<string, any>;
+  let recordVpnCredentials: jest.Mock;
+
+  beforeEach(() => {
+    containers = new Map([
+      [
+        'uc-1',
+        {
+          user_container_id: 'uc-1',
+          container_name: 'one',
+          image_id: 'ubuntu:terminal',
+          runner: { id: 'local', user_id: 'user-1' },
+          httpServices: [],
+        },
+      ],
+    ]);
+
+    recordVpnCredentials = jest.fn();
+
+    reducer = new UserContainersReducer({
+      collab: {
+        registry: {
+          getCollabForProject: jest.fn(() => ({
+            sharedData: {
+              'user-containers:containers': {
+                get: (k: string) => containers.get(k),
+                set: (k: string, v: any) => containers.set(k, v),
+                copy: () => new Map(containers),
+                delete: (k: string) => containers.delete(k),
+                forEach: (fn: any) => containers.forEach(fn),
+              },
+            },
+          })),
+        },
+      },
+      reducers: { processEvent: jest.fn() },
+      gateway: {
+        recordVpnCredentials,
+        toGanymedeInternal: jest.fn().mockResolvedValue({}),
+        updateReverseProxy: jest.fn(),
+        gatewayFQDN: 'org-1.domain.local',
+        organization_id: 'org-1',
+        environment: { devMode: false, dockerHostIp: '172.17.0.1' },
+        tokenManager: {
+          generateProjectScopedToken: jest
+            .fn()
+            .mockResolvedValue('the-hosting-token'),
+        },
+        permissionManager: { hasPermission: () => true },
+      },
+      'user-containers': {
+        getRunner: () => ({
+          start: jest.fn().mockResolvedValue({}),
+        }),
+        imageRegistry: {
+          get: () => ({
+            imageId: 'ubuntu:terminal',
+            imageUri: 'x',
+            imageTag: '1',
+          }),
+        },
+      },
+    } as any);
+  });
+
+  const start = () =>
+    reducer.reduce(
+      { type: 'user-container:start', user_container_id: 'uc-1' } as any,
+      { project_id: 'project-1', jwt: { user: { id: 'user-1' } } } as any
+    );
+
+  it('should record the token the container was given', async () => {
+    // Act
+    await start();
+
+    // Assert - this pair is exactly what vpn-auth-verify.sh compares against
+    expect(recordVpnCredentials).toHaveBeenCalledWith([
+      { user_container_id: 'uc-1', token: 'the-hosting-token' },
+    ]);
+  });
+
+  it('should record it before the container is asked to start', async () => {
+    // Arrange
+    const order: string[] = [];
+    recordVpnCredentials.mockImplementation(() => order.push('record'));
+    (reducer as any).depsExports['user-containers'].getRunner = () => ({
+      start: async () => (order.push('start'), {}),
+    });
+
+    // Act
+    await start();
+
+    // Assert - the other order is a race the container loses by being refused,
+    // which from the UI looks like a service that will not come up
+    expect(order).toEqual(['record', 'start']);
+  });
+
+  it('should drop the credential when the container is deleted', async () => {
+    // Arrange
+    await start();
+    recordVpnCredentials.mockClear();
+
+    // Act
+    await reducer.reduce(
+      { type: 'user-container:delete', user_container_id: 'uc-1' } as any,
+      { project_id: 'project-1', jwt: { user: { id: 'user-1' } } } as any
+    );
+
+    // Assert - a token left in the file is one that would still admit whatever
+    // presented it
+    expect(recordVpnCredentials).toHaveBeenCalledWith([]);
   });
 });

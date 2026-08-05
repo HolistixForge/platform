@@ -1,0 +1,48 @@
+{
+  "name": "@holistix-forge/app-container-broker",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "name": "@holistix-forge/app-container-broker",
+    "projectType": "application",
+    "sourceRoot": "packages/app-container-broker/src",
+    "targets": {
+      "build": {
+        "executor": "@nx/esbuild:esbuild",
+        "outputs": [
+          "{options.outputPath}"
+        ],
+        "defaultConfiguration": "production",
+        "options": {
+          "platform": "node",
+          "outputPath": "dist/packages/app-container-broker",
+          "format": [
+            "cjs"
+          ],
+          "bundle": true,
+          "thirdParty": true,
+          "external": [],
+          "main": "packages/app-container-broker/src/main.ts",
+          "tsConfig": "packages/app-container-broker/tsconfig.app.json",
+          "esbuildOptions": {
+            "sourcemap": true,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        },
+        "configurations": {
+          "development": {},
+          "production": {
+            "esbuildOptions": {
+              "sourcemap": false,
+              "outExtension": {
+                ".js": ".js"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

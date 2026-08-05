@@ -74,3 +74,85 @@ export const withServicesStory = (): StoryArgs => {
   ];
   return s;
 };
+
+/**
+ * A container already running on the platform.
+ *
+ * The runner row stays on the card whichever runner is active, so that moving
+ * a service between a laptop and the platform does not mean deleting it and
+ * making another one. This story is the state that used to render nothing.
+ */
+export const runningOnPlatformStory = (): StoryArgs => {
+  const args = withServicesStory();
+  args.container.runner = {
+    id: 'platform',
+    host: 'platform-host-1',
+    engine: 'docker',
+    runtime: 'kata',
+    isolation: 'microvm',
+    concessions: [],
+  };
+  return args;
+};
+
+/**
+ * The same placement on a Mac host — a VM per container, and five controls the
+ * engine cannot express.
+ *
+ * The card has to distinguish this from the story above. Both are microVMs and
+ * they are not the same guarantee, which is why the concessions are listed
+ * rather than folded into "own kernel".
+ */
+export const runningOnAppleStory = (): StoryArgs => {
+  const args = withServicesStory();
+  args.container.runner = {
+    id: 'platform',
+    host: 'mac-host-1',
+    engine: 'apple',
+    runtime: 'container-runtime-linux',
+    isolation: 'microvm',
+    concessions: [
+      'no-new-privileges',
+      'pids-cgroup',
+      'restart-policy',
+      'run-may-pull',
+      'no-hot-network-attach',
+    ],
+  };
+  return args;
+};
+
+/**
+ * The state this whole line exists for: a container on the host's own kernel,
+ * beside every other tenant.
+ *
+ * It is reachable — `BROKER_RUNTIME=runc` is a stated choice, not a fallback —
+ * and a card that looked identical to the microVM one would be the silent
+ * failure the "no default runtime" rule was written to prevent.
+ */
+export const runningOnSharedKernelStory = (): StoryArgs => {
+  const args = withServicesStory();
+  args.container.runner = {
+    id: 'platform',
+    host: 'platform-host-1',
+    engine: 'docker',
+    runtime: 'runc',
+    isolation: 'shared-kernel',
+    concessions: [],
+  };
+  return args;
+};
+
+/**
+ * The same container on the local runner, which also hands back the command to
+ * paste — so the card shows both the choice and the command.
+ */
+export const runningLocallyStory = (): StoryArgs => {
+  const args = withServicesStory();
+  args.container.runner = {
+    id: 'local',
+    command:
+      'docker run --rm -e SETTINGS=… holistixforge/ubuntu-terminal:24.04',
+  };
+  return args;
+};

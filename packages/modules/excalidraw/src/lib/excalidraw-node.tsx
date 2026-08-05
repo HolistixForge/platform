@@ -100,10 +100,10 @@ export const ExcalidrawNode: FC<{ node: TGraphNode<never> }> = ({ node }) => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'var(--color-surface)',
+                background: 'var(--color-bg-surface)',
                 border: '2px dashed var(--color-border)',
                 borderRadius: '8px',
-                color: 'var(--color-text-secondary)',
+                color: 'var(--color-text-muted)',
                 fontSize: '14px',
               }}
             >

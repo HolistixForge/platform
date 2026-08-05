@@ -242,6 +242,15 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--alpha-white-10);
+  // The hover below changed the background instantly. `background` is named
+  // rather than left to the `all` default — the other two transitions in this
+  // file are bare `0.4s`, and a bare transition here would animate `transform`
+  // as well, on elements the user drags around a whiteboard.
+  //
+  // 150ms and not the 0.4s used elsewhere: those two are menus appearing,
+  // where a quarter-second reads as motion. On a hover tint the same duration
+  // reads as lag.
+  transition: background 150ms ease;
 
   &:hover {
     background: var(--alpha-white-15);

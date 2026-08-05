@@ -1,6 +1,6 @@
 import { TJsonObject } from '@holistix-forge/simple-types';
 import { TUserContainer } from './servers-types';
-import { ContainerImageRegistry } from './image-registry';
+import { ContainerImageRegistry, imageReference } from './image-registry';
 
 export type TRunnerConfig = {
   user_id: string;
@@ -17,6 +17,71 @@ export type TRunnerConfig = {
    * project, so the secret must never be stored there.
    */
   auth_guard_client_secret?: string;
+  /**
+   * Local development only: hosts to map, because `.local` names do not
+   * resolve inside a container.
+   *
+   * Supplied by the caller rather than read from `process.env` here — module
+   * packages are bundled with a browser `process` shim, so this file's
+   * environment is empty at runtime in the gateway and the mapping was never
+   * actually emitted.
+   */
+  dev_host_ip?: string;
+};
+
+/**
+ * Caps a container runs under.
+ *
+ * Meaningless when the container runs on the user's own machine — it is their
+ * CPU and their memory. On shared infrastructure they are mandatory, and a
+ * microVM needs a fixed memory figure at boot rather than a ceiling it may
+ * grow into.
+ */
+export type TContainerLimits = {
+  cpus: number;
+  memoryMb: number;
+  pidsLimit: number;
+};
+
+export const DEFAULT_CONTAINER_LIMITS: TContainerLimits = {
+  cpus: 2,
+  memoryMb: 2048,
+  pidsLimit: 512,
+};
+
+/**
+ * Everything needed to start one container, resolved and validated.
+ *
+ * This is what a runner receives — never a command line, and never an image
+ * URI chosen by the caller. `imageRef` has already been resolved from an
+ * `image_id` against the registry, which is what makes the id an allowlist key
+ * rather than a suggestion.
+ */
+export type TContainerLaunchSpec = {
+  name: string;
+  /**
+   * The catalogue key, carried alongside the resolved reference.
+   *
+   * The platform runner sends this rather than `imageRef`: the broker
+   * re-resolves it host-side, so a gateway cannot name an arbitrary image. The
+   * local runner has no such boundary to defend — the command it emits runs on
+   * the user's own machine — and uses `imageRef` directly.
+   */
+  imageId: string;
+  imageRef: string;
+  /** Base64 `SETTINGS` blob, the container's entire configuration channel. */
+  settings: string;
+  capabilities: string[];
+  /**
+   * Host devices to pass through.
+   *
+   * Empty under a microVM runtime: the guest has its own kernel, so tun comes
+   * from the guest image rather than from the host's `/dev/net/tun`.
+   */
+  devices: string[];
+  /** Extra host mappings, dev environments only. */
+  extraHosts: { host: string; ip: string }[];
+  limits: TContainerLimits;
 };
 
 /**
@@ -25,15 +90,18 @@ export type TRunnerConfig = {
  */
 export abstract class ContainerRunner {
   /**
-   * Generate Docker run command for a container.
+   * Resolve a container into the spec a runtime can start it from.
    */
-  generateCommand(
+  buildLaunchSpec(
     container: TUserContainer,
     jwtToken: string,
     imageRegistry: ContainerImageRegistry,
-    config: TRunnerConfig
-  ): string {
-    const imageDef = imageRegistry.get(container.image_id);
+    config: TRunnerConfig,
+    limits: TContainerLimits = DEFAULT_CONTAINER_LIMITS
+  ): TContainerLaunchSpec {
+    // Scoped by project: that is where the pull credential lives, so the image
+    // and the token that fetches it are resolved against the same thing.
+    const imageDef = imageRegistry.get(container.image_id, config.project_id);
     if (!imageDef) {
       throw new Error(`Image ${container.image_id} not found in registry`);
     }
@@ -68,22 +136,58 @@ export abstract class ContainerRunner {
     // Generate container name (sanitize: replace spaces with underscores)
     const shortUuid = container.user_container_id.substring(0, 8);
     const safeName = container.container_name.replace(/[^a-zA-Z0-9_.-]/g, '_');
-    const fullname = `holistix_${safeName}_${shortUuid}`;
 
     // Build --add-host entries for dev environments
     // In dev, containers can't resolve .local domains via DNS, so we map them
     // to the Docker bridge gateway IP which routes to the host/dev container
-    let addHostFlags = '';
-    if (process.env.GATEWAY_DEV === '1') {
-      // Docker-host address. Defaults to the Linux docker0 bridge gateway
-      // (172.17.0.1). On Docker Desktop (macOS/Windows) that IP does not reach
-      // the host, so allow overriding via DOCKER_HOST_IP=host.docker.internal.
-      const hostIp = process.env.DOCKER_HOST_IP || '172.17.0.1';
-      addHostFlags = `--add-host=${config.gateway_fqdn}:${hostIp} --add-host=${config.ganymede_fqdn}:${hostIp} `;
+    const extraHosts: { host: string; ip: string }[] = [];
+    if (config.dev_host_ip) {
+      extraHosts.push(
+        { host: config.gateway_fqdn, ip: config.dev_host_ip },
+        { host: config.ganymede_fqdn, ip: config.dev_host_ip }
+      );
     }
 
+    return {
+      name: `holistix_${safeName}_${shortUuid}`,
+      imageId: imageDef.imageId,
+      imageRef: imageReference(imageDef),
+      settings: env,
+      // The container runs an OpenVPN client to reach its gateway.
+      capabilities: ['NET_ADMIN'],
+      devices: ['/dev/net/tun'],
+      extraHosts,
+      limits,
+    };
+  }
+
+  /**
+   * Generate Docker run command for a container.
+   */
+  generateCommand(
+    container: TUserContainer,
+    jwtToken: string,
+    imageRegistry: ContainerImageRegistry,
+    config: TRunnerConfig
+  ): string {
+    const spec = this.buildLaunchSpec(
+      container,
+      jwtToken,
+      imageRegistry,
+      config
+    );
+
+    const addHostFlags = spec.extraHosts
+      .map((h) => `--add-host=${h.host}:${h.ip} `)
+      .join('');
+    const capFlags = spec.capabilities.map((c) => `--cap-add=${c} `).join('');
+    const deviceFlags = spec.devices.map((d) => `--device ${d} `).join('');
+
     // Return Docker run command
-    return `docker run ${addHostFlags}--restart unless-stopped --name ${fullname} -e SETTINGS=${env} --cap-add=NET_ADMIN --device /dev/net/tun ${imageDef.imageUri}:${imageDef.imageTag}`;
+    return (
+      `docker run ${addHostFlags}--restart unless-stopped --name ${spec.name} ` +
+      `-e SETTINGS=${spec.settings} ${capFlags}${deviceFlags}${spec.imageRef}`
+    );
   }
 
   /**

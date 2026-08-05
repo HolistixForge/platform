@@ -45,9 +45,73 @@ export type TUserContainer = {
   auth_guard?: {
     client_id: string;
   };
-  runner: { id: string } & TJsonObject;
+  /**
+   * Where this service runs, and for a local placement, which machine.
+   *
+   * `{ id: 'local', user_id, machine_id }` — one enrolled machine. Both
+   * fields, and not just the owner: "local" is not one place, and neither is
+   * one person. Enrolment mints an identifier per machine, so a member with a
+   * laptop and a desktop has two, and `user_id` alone cannot say which of them
+   * was asked. The runner on the other end refuses a placement that does not
+   * name it, so an ambiguous one is a placement nobody will act on.
+   *
+   * `{ id: 'platform', host, runtime }` — the platform, owned by no one, and
+   * carrying no machine: there is only one.
+   *
+   * Whatever the runner reports back on start is merged in alongside.
+   */
+  runner: {
+    id: string;
+    user_id?: string;
+    machine_id?: string;
+  } & TJsonObject;
   created_at: string;
 } & TUserContainerPublishedInfo;
+
+/**
+ * A runner this gateway actually offers.
+ *
+ * Replicated to the frontend because the set is deployment-dependent: the
+ * platform runner only registers where a container broker is configured, and a
+ * UI that offers it anyway hands the user a button that fails on click.
+ */
+export type TContainerRunnerInfo = {
+  runnerId: string;
+};
+
+/**
+ * A machine enrolled in this project, and whether it is still there.
+ *
+ * Distinct from `TContainerRunnerInfo`, which lists the *kinds* of runner a
+ * deployment offers. This is the instances: "local" is not one place, and a
+ * project needs to know which machines it can actually reach.
+ *
+ * A machine appears here when its owner makes the first placement on it, which
+ * is how it opts into the project. It stays only while its runner keeps saying
+ * so — liveness is derived from `last_health_at` the same way a container's is
+ * derived from `last_watchdog_at`, on the same 30 second threshold, because a
+ * runner that stopped answering and a machine that was closed are the same
+ * thing to everyone else in the project.
+ */
+export type TRunnerMachine = {
+  /** Stable across restarts; assigned at enrolment. */
+  machine_id: string;
+  /** Whose machine. Only its owner can make the first placement on it. */
+  user_id: string;
+  /** What to show in the UI — a hostname, usually. */
+  label: string;
+  /** Last `health` from the runner, or null if it never sent one. */
+  last_health_at: string | null;
+};
+
+/**
+ * Whether a machine is still reachable.
+ *
+ * Shares the 30 second threshold with the container watchdog rather than
+ * inventing its own: the two mean the same thing to a user looking at a card,
+ * and two different timeouts would show a live container on a dead machine.
+ */
+export const MACHINE_HEALTH_TIMEOUT_SECONDS = 30;
 
 //
 

@@ -1,0 +1,149 @@
+---
+# The container broker.
+#
+# It exists so that app-gateway never needs Docker access. The gateway is the
+# tenant-facing process — it holds user JWTs and runs a reducer over user
+# events — and a Docker socket in it is root-equivalent on this host. The pool
+# containers run without one today (scripts/local-dev/gateway-pool.sh); this
+# role is what keeps that true while still letting a user start a service on
+# the platform.
+
+# holistix_docker_host_ip is set by the docker role, which does not run when
+# this role is invoked on its own with --tags broker. Without it the bind
+# address silently falls back to loopback, and gateway containers — which reach
+# the host over the bridge — cannot see the broker at all.
+- name: Resolve the Docker bridge address if the docker role did not run
+  when: holistix_docker_host_ip is not defined
+  block:
+    - name: Read the bridge gateway from Docker
+      ansible.builtin.command: >-
+        docker network inspect bridge
+        -f '{{ "{{" }}(index .IPAM.Config 0).Gateway{{ "}}" }}'
+      register: broker_bridge_gateway
+      changed_when: false
+
+    - name: Record it # noqa: var-naming[no-role-prefix]
+      ansible.builtin.set_fact:
+        holistix_docker_host_ip: '{{ broker_bridge_gateway.stdout | trim }}'
+
+- name: Build the container broker
+  ansible.builtin.command:
+    cmd: npx nx build @holistix-forge/app-container-broker
+    chdir: '{{ holistix_workspace }}'
+  environment:
+    # The Nx daemon caches a stale view of the workspace on this VM and will
+    # happily rebuild from sources that are no longer there.
+    NX_DAEMON: 'false'
+  register: broker_build
+  changed_when: "'Successfully ran target build' in broker_build.stdout"
+  # Without this the service keeps running the previous bundle: the unit file is
+  # unchanged, so nothing else notifies a restart, and a redeploy looks like it
+  # worked while the old code is still answering.
+  notify: Restart container broker
+
+- name: Create the directory the broker secrets live in
+  ansible.builtin.file:
+    path: '{{ holistix_broker_secrets_file | dirname }}'
+    state: directory
+    owner: root
+    group: root
+    mode: '0750'
+
+# The broker holds two credentials and they are not the same kind of thing.
+#
+#   BROKER_TOKEN            the gateway proves itself to the broker.
+#                           A shared secret, compared with timingSafeEqual
+#                           against the broker's own config. A random string
+#                           is exactly right.
+#
+#   GANYMEDE_INTERNAL_TOKEN the broker proves itself to Ganymede.
+#                           Ganymede's `authenticateGatewayToken` verifies an
+#                           RS256 JWT of type `gateway_token` and reads no
+#                           other header. A random string can never satisfy it.
+#
+# This role generated both with `openssl rand -hex 32`. So every host it ever
+# provisioned answered 401 to Ganymede on every project image lookup, and the
+# broker reported that back as "this image is not in the catalog" — a
+# permission failure wearing the costume of a missing image. Measured against a
+# real Ganymede: an unsigned token is indistinguishable from sending no header.
+#
+# Rather than invent a token that cannot work, the role now refuses to
+# provision without one. Minting it belongs with whoever holds the
+# environment's JWT private key — `app-ganymede-cmds` already signs gateway
+# tokens with `generateJwtToken` — and wiring that here is a decision about
+# where that key may live, not a detail to guess at provisioning time.
+- name: Fail when no Ganymede token has been supplied
+  ansible.builtin.assert:
+    that: holistix_broker_ganymede_token | length > 0
+    fail_msg: >-
+      holistix_broker_ganymede_token is empty. The broker authenticates to
+      Ganymede with an RS256 `gateway_token` JWT, signed with that
+      environment's JWT private key — see app-ganymede-cmds/addGateway.ts for
+      how one is minted. A generated random string authenticates nothing and
+      makes every project image look like it does not exist.
+
+- name: Generate the broker token and write the secrets file
+  # The gateway authenticates to the broker with BROKER_TOKEN. Generated on the
+  # host and never checked in — a token in the repository is a token in every
+  # clone of it. The Ganymede token is supplied, for the reason above.
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      umask 077
+      printf 'BROKER_TOKEN=%s\nGANYMEDE_INTERNAL_TOKEN=%s\n' \
+        "$(openssl rand -hex 32)" \
+        '{{ holistix_broker_ganymede_token }}' \
+        > {{ holistix_broker_secrets_file }}
+    executable: /bin/bash
+    creates: '{{ holistix_broker_secrets_file }}'
+
+- name: Lock down the secrets file
+  ansible.builtin.file:
+    path: '{{ holistix_broker_secrets_file }}'
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Install the broker service unit
+  ansible.builtin.template:
+    src: holistix-container-broker.service.j2
+    dest: /etc/systemd/system/holistix-container-broker.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart container broker
+
+- name: Enable and start the broker
+  ansible.builtin.systemd_service:
+    name: holistix-container-broker
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Wait for the broker to answer
+  ansible.builtin.uri:
+    url: >-
+      http://{{ holistix_broker_bind }}:{{ holistix_broker_port }}/health
+    status_code: 200
+  register: broker_health
+  retries: 10
+  delay: 2
+  until: broker_health is succeeded
+
+- name: Confirm the broker reports the expected runtime
+  # A broker answering with runc means containers are not isolated, and the
+  # health check passing is worse than it failing.
+  ansible.builtin.assert:
+    that: broker_health.json.runtime == holistix_broker_runtime
+    fail_msg: >-
+      Broker reports runtime {{ broker_health.json.runtime }},
+      expected {{ holistix_broker_runtime }}.
+
+- name: Show how gateways should reach the broker
+  ansible.builtin.debug:
+    msg: >-
+      Container broker up on {{ holistix_broker_bind }}:{{ holistix_broker_port }}
+      (runtime {{ holistix_broker_runtime }}).
+      Gateway containers need CONTAINER_BROKER_URL=http://{{ holistix_docker_host_ip
+      | default('172.17.0.1') }}:{{ holistix_broker_port }} and the BROKER_TOKEN
+      from {{ holistix_broker_secrets_file }}.

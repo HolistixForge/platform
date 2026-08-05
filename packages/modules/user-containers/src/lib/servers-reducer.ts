@@ -23,7 +23,10 @@ import {
   ReducerWithCollab,
 } from '@holistix-forge/collab';
 import { TUserContainersSharedData } from './servers-shared-model';
-import { TUserContainer } from './servers-types';
+import {
+  TUserContainer,
+  MACHINE_HEALTH_TIMEOUT_SECONDS,
+} from './servers-types';
 import {
   TEventNew,
   TEventWatchdog,
@@ -32,6 +35,7 @@ import {
   TEventMapHttpService,
   TEventDelete,
   TEventSelectRunner,
+  TEventRunnerHealth,
   TEventStart,
 } from './servers-events';
 import { TUserContainersExports } from '..';
@@ -65,6 +69,21 @@ export class UserContainersReducer extends ReducerWithCollab<
    */
   private readonly authGuardSecrets = new Map<string, string>();
 
+  /**
+   * The hosting token each started container is holding, for the VPN.
+   *
+   * `vpn-auth-verify.sh` compares what a connecting container presents against
+   * this, so that the client certificate — shared by every container in the
+   * organization — proves membership and the token proves *which* container.
+   *
+   * In memory and not in shared state, for the same reason the auth-guard
+   * secret is: shared state is a CRDT replicated to every client in the
+   * project, and a token that lets a container claim its own address has no
+   * business being replicated to a browser. A gateway restart loses the map,
+   * and the containers it had started are restarted through it anyway.
+   */
+  private readonly hostingTokens = new Map<string, string>();
+
   constructor(private readonly depsExports: TRequired) {
     super(depsExports.collab.registry, 'user-containers');
   }
@@ -88,6 +107,8 @@ export class UserContainersReducer extends ReducerWithCollab<
         return this._Activity(event, requestData);
       case 'user-container:set-runner':
         return this._setRunner(event, requestData);
+      case 'user-container:runner-health':
+        return this._runnerHealth(event, requestData);
       case 'user-container:start':
         return this._start(event, requestData);
 
@@ -113,9 +134,13 @@ export class UserContainersReducer extends ReducerWithCollab<
       `project:init called for project ${event.project_id}, current images size: ${currentSize}`
     );
 
-    // Get all images from the in-memory registry
-    const allImages =
-      this.depsExports['user-containers'].imageRegistry.getAll();
+    // Only this project's catalogue: built-in images plus whatever this project
+    // registered. Passing no scope here would sync every tenant's images into
+    // every project's shared state, which is replicated to every client in the
+    // project.
+    const allImages = this.depsExports['user-containers'].imageRegistry.getAll(
+      event.project_id
+    );
 
     let synced = 0;
     for (const img of allImages) {
@@ -135,6 +160,24 @@ export class UserContainersReducer extends ReducerWithCollab<
       EPriority.Info,
       'USER_CONTAINERS_INIT',
       `Synced ${synced} image(s) to shared map for project ${event.project_id} (${allImages.length} total in registry)`
+    );
+
+    // Which runners this deployment actually offers. The platform runner only
+    // registers where a container broker is configured, so the UI has no way to
+    // know the set without being told.
+    const runnersMap = collab.sharedData['user-containers:runners'];
+    const runnerIds = this.depsExports['user-containers'].listRunnerIds();
+    for (const runnerId of runnerIds) {
+      if (runnersMap.get(runnerId)) continue;
+      runnersMap.set(runnerId, { runnerId });
+    }
+
+    log(
+      EPriority.Info,
+      'USER_CONTAINERS_INIT',
+      `Available runners for project ${event.project_id}: ${runnerIds.join(
+        ', '
+      )}`
     );
   }
 
@@ -215,9 +258,12 @@ export class UserContainersReducer extends ReducerWithCollab<
       ]);
     }
 
-    // Get image definition from registry
+    // Get image definition from registry, scoped to this project: a built-in
+    // image, or one this project registered. Never another tenant's.
+    const organizationId = this.depsExports.gateway.organization_id;
     const imageDef = this.depsExports['user-containers'].imageRegistry.get(
-      event.imageId
+      event.imageId,
+      project_id
     );
 
     if (!imageDef) {
@@ -228,7 +274,6 @@ export class UserContainersReducer extends ReducerWithCollab<
     const containerId = this.generateContainerId();
 
     // Register auth guard OAuth client in Ganymede (per-container)
-    const organizationId = this.depsExports.gateway.organization_id;
     const gatewayFqdn = this.depsExports.gateway.gatewayFQDN;
     const domain = gatewayFqdn.split('.').slice(1).join('.') || 'domain.local';
     let authGuardConfig: { client_id: string } | undefined;
@@ -454,13 +499,13 @@ export class UserContainersReducer extends ReducerWithCollab<
         ip: containerIp || s.ip, // Update IP from request
       });
 
-      await this._updateNginx(sduc);
+      await this._updateNginx(requestData.project_id ?? '', sduc);
     }
   }
 
   //
 
-  async _updateNginx(sduc: SharedMap<TUserContainer>) {
+  async _updateNginx(projectId: string, sduc: SharedMap<TUserContainer>) {
     // With distinct FQDNs, we route: uc-{uuid}.org-{uuid}.domain.local → VPN IP:port
     // Each container's httpServices contain the FQDN in "host" field
     const services: { host: string; ip: string; port: number }[] = [];
@@ -475,7 +520,7 @@ export class UserContainersReducer extends ReducerWithCollab<
         });
       }
     });
-    this.depsExports.gateway.updateReverseProxy(services);
+    this.depsExports.gateway.updateReverseProxy(projectId, services);
   }
 
   //
@@ -504,7 +549,22 @@ export class UserContainersReducer extends ReducerWithCollab<
         });
       }
     });
-    this._updateNginx(sduc);
+    this._updateNginx(project_id, sduc);
+
+    // A machine that stopped answering leaves the project's targets. Same
+    // threshold as the container watchdog above, because a live container on a
+    // dead machine is a state no one can act on.
+    const machines = collab.sharedData['user-containers:machines'];
+    machines.forEach((machine) => {
+      if (
+        machine.last_health_at &&
+        secondAgo(machine.last_health_at, event.date) <=
+          MACHINE_HEALTH_TIMEOUT_SECONDS
+      ) {
+        return;
+      }
+      machines.delete(machine.machine_id);
+    });
   }
 
   //
@@ -541,6 +601,13 @@ export class UserContainersReducer extends ReducerWithCollab<
       ]);
     }
 
+    // The container is going; its credential should not outlive it. Rewritten
+    // rather than left, because a token still in the file is one that would
+    // still admit whatever presented it.
+    if (this.hostingTokens.delete(containerId)) {
+      await this._publishVpnCredentials();
+    }
+
     // Delete auth guard OAuth client from Ganymede
     if (container.auth_guard?.client_id) {
       try {
@@ -561,7 +628,10 @@ export class UserContainersReducer extends ReducerWithCollab<
     collab.sharedData['user-containers:containers'].delete(containerId);
 
     // Update nginx to remove container services
-    await this._updateNginx(collab.sharedData['user-containers:containers']);
+    await this._updateNginx(
+      requestData.project_id ?? '',
+      collab.sharedData['user-containers:containers']
+    );
 
     // Delete graph node
     const id = userContainerNodeId(containerId);
@@ -571,6 +641,45 @@ export class UserContainersReducer extends ReducerWithCollab<
     };
 
     this.depsExports.reducers.processEvent(e, requestData);
+  }
+
+  /**
+   * A runner reporting that it is still connected.
+   *
+   * The machine is recorded against the authenticated user, never against a
+   * value in the event: this is what makes a machine belong to someone, and a
+   * runner that could name its own owner could enrol itself into a project it
+   * was never invited to.
+   */
+  async _runnerHealth(event: TEventRunnerHealth, requestData: RequestData) {
+    const jwt = requestData.jwt as TJwtUser;
+    const user_id = jwt?.user?.id;
+
+    if (!user_id) {
+      throw new ForbiddenException([
+        { message: 'User authentication required' },
+      ]);
+    }
+
+    const collab = this.getCollab(requestData);
+    const machines = collab.sharedData['user-containers:machines'];
+    const existing = machines.get(event.machine_id);
+
+    // A machine already claimed by someone else is not a naming collision to
+    // resolve, it is a machine id being reused — deliberately or by a restored
+    // backup. Refusing keeps one member from taking over another's placement.
+    if (existing && existing.user_id !== user_id) {
+      throw new ForbiddenException([
+        { message: `Machine ${event.machine_id} belongs to another user` },
+      ]);
+    }
+
+    machines.set(event.machine_id, {
+      machine_id: event.machine_id,
+      user_id,
+      label: event.label,
+      last_health_at: new Date().toISOString(),
+    });
   }
 
   //
@@ -606,10 +715,68 @@ export class UserContainersReducer extends ReducerWithCollab<
       ]);
     }
 
-    // Update container with runner ID only (no token storage)
+    // Record whose machine a local placement lands on.
+    //
+    // "Local" is not one place: every member of a project has their own
+    // machine, so without an owner the platform cannot tell which runner to
+    // ask. Taken from the JWT rather than from the event — the first placement
+    // on a machine can only be made by its owner, which is how that machine
+    // opts into the project at all.
+    //
+    // Once it has, and while its runner stays connected, other members can
+    // place services there too. That is a real grant: a runner executes what
+    // the platform sends it, so opting a laptop into a project means agreeing
+    // to run the project's workloads on it.
+    //
+    // Absent for the platform runner, which belongs to no one in particular.
+    const isLocal = runnerId === 'local';
+
+    // Which machine, and not only whose. Enrolment mints an identifier per
+    // machine, so a member with a laptop and a desktop has two, and `user_id`
+    // alone cannot say which of them was asked.
+    //
+    // Optional rather than required, deliberately. The mode that exists today
+    // hands the user a `docker run` to paste, and it works — refusing a
+    // placement that names no machine would break it before the machine picker
+    // that would supply one exists. So the strictness lives on the runner,
+    // where `assertPlacementIsForUs` refuses anything that does not name it:
+    // an unnamed placement is simply one no enrolled runner will pick up,
+    // which is exactly what it means today.
+    const placement: { user_id?: string; machine_id?: string } = isLocal
+      ? {
+          user_id,
+          ...(event.machine_id ? { machine_id: event.machine_id } : {}),
+        }
+      : {};
+
+    // Tell Ganymede this machine is now in this project, before writing the
+    // placement — because Ganymede is what decides whether it may be.
+    //
+    // Only a machine's own owner can make the first placement on it, and that
+    // rule lives there, against the runners table, rather than here against
+    // collab state: the machine catalog in this document only holds machines
+    // whose runner is already heartbeating into this project, and a machine's
+    // first placement is what puts it there. Asking this document would mean
+    // no machine could ever join.
+    //
+    // Failing loudly rather than writing anyway. A placement Ganymede refused
+    // is one no runner will ever be handed — the machine would never learn the
+    // project exists — so a container written here would sit forever looking
+    // like it was about to start. Somebody clicked; they should be told.
+    if (isLocal && event.machine_id) {
+      await this._optMachineIntoProject(
+        event.machine_id,
+        requestData.project_id,
+        user_id
+      );
+    }
+
+    // Runner data, not just the id: `start` writes what the runner reported
+    // back here — the docker command, the broker's container id — and this used
+    // to replace the whole object, so choosing a runner twice erased it.
     sduc.set(containerId, {
       ...container,
-      runner: { id: runnerId },
+      runner: { id: runnerId, ...placement },
     });
   }
 
@@ -675,6 +842,13 @@ export class UserContainersReducer extends ReducerWithCollab<
       }
     );
 
+    // Recorded before the container is asked to start, so the credential is
+    // already there when it connects. The other order is a race the container
+    // loses by being refused, which looks from the UI like a service that will
+    // not come up.
+    this.hostingTokens.set(containerId, hostingToken);
+    await this._publishVpnCredentials();
+
     // Get runner from registry
     const runner = this.depsExports['user-containers'].getRunner(runnerId);
     if (!runner) {
@@ -704,6 +878,14 @@ export class UserContainersReducer extends ReducerWithCollab<
       gateway_fqdn: gatewayFqdn,
       organization_id,
       auth_guard_client_secret: authGuard?.client_secret,
+      // Only in local development, and only from the gateway's environment:
+      // this module cannot read process.env for itself.
+      // `host-gateway` rather than the bridge address: a platform container
+      // sits on a private network of its own, where the default bridge's
+      // gateway is not routable. Docker resolves this one from any network.
+      dev_host_ip: gatewayExports.environment?.devMode
+        ? 'host-gateway'
+        : undefined,
     };
 
     // A rotation replaced the client, so the container must carry the new id.
@@ -737,6 +919,74 @@ export class UserContainersReducer extends ReducerWithCollab<
    * this is the only chance to capture it — it goes into `authGuardSecrets` and
    * nowhere else.
    */
+  /**
+   * Record, in Ganymede, that a machine has been opted into a project.
+   *
+   * `toGanymede` and not `toGanymedeInternal`: the endpoint authenticates the
+   * organization token, the same way `/gateway/tokens/scoped` does, because it
+   * has to check that the project belongs to this gateway's organization. A
+   * gateway holds one organization's rooms and has no business granting a
+   * machine to another organization's project.
+   *
+   * The user is passed and checked there. It is taken from the JWT by the
+   * caller, never from the event — a client that could name the owner could
+   * opt somebody else's machine into a project it was never invited to.
+   */
+  private async _optMachineIntoProject(
+    machine_id: string,
+    project_id: string | undefined,
+    user_id: string
+  ): Promise<void> {
+    if (!project_id) {
+      throw new ForbiddenException([
+        { message: 'A local placement needs a project' },
+      ]);
+    }
+
+    try {
+      await this.depsExports.gateway.toGanymede({
+        url: `/internal/runners/${machine_id}/projects`,
+        method: 'POST',
+        jsonBody: { project_id, user_id },
+      });
+    } catch (e) {
+      // Ganymede answers the same way for an unknown machine, a revoked one
+      // and one belonging to somebody else, so that a refusal cannot be used
+      // to learn whose machines exist. This message says no more than that.
+      log(
+        EPriority.Warning,
+        'USER_CONTAINERS',
+        `Machine ${machine_id} refused for project ${project_id}`,
+        { user_id }
+      );
+      throw new ForbiddenException([
+        { message: 'This machine cannot be used for this project' },
+      ]);
+    }
+
+    log(
+      EPriority.Info,
+      'USER_CONTAINERS',
+      `Machine ${machine_id} is in project ${project_id}`,
+      { user_id }
+    );
+  }
+
+  /**
+   * Hand the VPN the whole set of container credentials this gateway knows.
+   *
+   * Every call writes all of them rather than appending: a container this
+   * gateway no longer knows about should lose its entry, not linger as a
+   * credential nobody can account for.
+   */
+  private async _publishVpnCredentials(): Promise<void> {
+    await this.depsExports.gateway.recordVpnCredentials(
+      Array.from(this.hostingTokens.entries()).map(
+        ([user_container_id, token]) => ({ user_container_id, token })
+      )
+    );
+  }
+
   private async _registerAuthGuardClient(
     containerId: string,
     organizationId: string,

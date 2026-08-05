@@ -5,7 +5,10 @@ import type { TModule } from '@holistix-forge/module';
 import { TMyfetchRequest } from '@holistix-forge/simple-types';
 import { TReducersBackendExports } from '@holistix-forge/reducers';
 import { TCollabBackendExports } from '@holistix-forge/collab';
-import type { TGatewayExports } from '@holistix-forge/gateway';
+import type {
+  TGatewayExports,
+  TGatewayEnvironment,
+} from '@holistix-forge/gateway';
 
 import { GatewayReducer } from './gateway-reducer';
 import type { PermissionManager, TokenManager } from '@holistix-forge/gateway';
@@ -27,6 +30,14 @@ export type GatewayModuleConfig = {
   permissionManager: PermissionManager;
   tokenManager: TokenManager;
   permissionRegistry: PermissionRegistry;
+  /**
+   * Values from the real environment, for modules that cannot read it.
+   *
+   * Module packages are bundled with a browser `process` shim, so `process.env`
+   * inside one is an empty object at runtime. This file still has the real
+   * `process`, which makes it the boundary.
+   */
+  environment: TGatewayEnvironment;
 };
 
 type TRequired = {
@@ -94,23 +105,55 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
       description: 'Write permissions',
     });
 
+    // Last published services per project. The nginx config file belongs to the
+    // gateway, the callers belong to projects, and this is where the two meet.
+    const reverseProxyByProject = new Map<
+      string,
+      { host: string; ip: string; port: number }[]
+    >();
+
     const myExports: TGatewayExports = {
       toGanymede,
       toGanymedeInternal,
 
       updateReverseProxy: async (
+        projectId: string,
         services: { host: string; ip: string; port: number }[]
       ) => {
+        // The script rewrites the whole file, but callers only ever know about
+        // their own project. Holding the last state of each one and writing the
+        // union is what keeps two projects on the same gateway from erasing
+        // each other — before this, a project with no containers wiped every
+        // route on the gateway about 130ms after they were written, and the
+        // container was unreachable while running perfectly.
+        reverseProxyByProject.set(projectId, services);
+
         // Input format: fqdn ip port (one per line)
         // Each service has a distinct FQDN (uc-{uuid}.org-{uuid}.domain.local)
-        const config = services
+        const config = Array.from(reverseProxyByProject.values())
+          .flat()
           .map((s) => `${s.host} ${s.ip} ${s.port}\n`)
           .join('');
         log(EPriority.Info, 'GATEWAY', 'update-nginx-locations', config);
         runScript('update-nginx-locations', config);
       },
 
+      recordVpnCredentials: async (
+        entries: { user_container_id: string; token: string }[]
+      ) => {
+        // The whole set, not a diff, for the same reason updateReverseProxy
+        // writes the union: the gateway holds the truth about which containers
+        // it started, and a credential for one it no longer knows about is one
+        // nobody can account for.
+        runScript(
+          'update-vpn-credentials',
+          entries.map((e) => `${e.user_container_id} ${e.token}\n`).join('')
+        );
+      },
+
       gatewayFQDN: gatewayConfig.gatewayFQDN,
+
+      environment: gatewayConfig.environment,
 
       organization_id: gatewayConfig.organization_id,
 
@@ -125,7 +168,10 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
 
 //
 
-type EScripts = 'update-nginx-locations' | 'reset-gateway';
+type EScripts =
+  | 'update-nginx-locations'
+  | 'update-vpn-credentials'
+  | 'reset-gateway';
 
 export const runScript = (name: EScripts, inputString?: string) => {
   // Scripts are at /opt/gateway/app/ (standard app location in containers)

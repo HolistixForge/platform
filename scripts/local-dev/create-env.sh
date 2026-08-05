@@ -139,6 +139,15 @@ export LANGUAGE=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 PGPASSWORD=devpassword ./run.sh schema "${DB_NAME}"
+# Migrations run on a new database too, and not only on deployed ones. The
+# schema files were never brought back up to date as migrations landed, so a
+# database built from schema/ alone has no project_networks table and none of
+# the GitHub App columns — an environment created today would be missing the
+# tables the code it is about to run expects. They are all written with IF NOT
+# EXISTS, so applying them to a schema that already has the change is a no-op.
+# Before procedures: a procedure written against a column added here cannot be
+# created until the column is.
+PGPASSWORD=devpassword ./run.sh migrations "${DB_NAME}"
 PGPASSWORD=devpassword ./run.sh procedures "${DB_NAME}"
 PGPASSWORD=devpassword ./run.sh triggers "${DB_NAME}"
 

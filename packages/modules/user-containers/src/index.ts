@@ -7,6 +7,8 @@ import type { TGatewayExports } from '@holistix-forge/gateway';
 import type { TContainerImageDefinition } from './lib/container-image';
 import type { ContainerRunner } from './lib/runner';
 import { localRunnerBackend } from './lib/local-runner';
+import { PlatformRunnerBackend } from './lib/platform-runner';
+import { log, EPriority } from '@holistix-forge/log';
 
 //
 
@@ -17,7 +19,14 @@ export type TUserContainersExports = {
     containerRunner: ContainerRunner
   ) => void;
   getRunner: (id: string) => ContainerRunner | undefined;
+  listRunnerIds: () => string[];
 };
+
+// Broker configuration arrives through `gateway.environment`, never through
+// `process.env`. Module packages are bundled with a browser `process` shim, so
+// reading the environment here yields an empty object and the platform runner
+// silently never registers — which is exactly what happened the first time this
+// was deployed.
 
 type TRequired = {
   collab: TCollabBackendExports;
@@ -67,6 +76,16 @@ export const moduleBackend: TModule<TRequired, TUserContainersExports> = {
       'user-containers',
       'images'
     );
+    depsExports.collab.registry.registerSharedData(
+      'map',
+      'user-containers',
+      'runners'
+    );
+    depsExports.collab.registry.registerSharedData(
+      'map',
+      'user-containers',
+      'machines'
+    );
 
     const registry = new ContainerImageRegistry();
 
@@ -96,11 +115,34 @@ export const moduleBackend: TModule<TRequired, TUserContainersExports> = {
 
     registerContainerRunner('local', localRunnerBackend);
 
+    const broker = depsExports.gateway.environment?.containerBroker;
+    if (broker) {
+      registerContainerRunner(
+        'platform',
+        new PlatformRunnerBackend({
+          endpoint: broker.endpoint,
+          token: broker.token,
+        })
+      );
+      log(
+        EPriority.Info,
+        'USER_CONTAINERS',
+        `Platform runner registered (broker: ${broker.endpoint})`
+      );
+    } else {
+      log(
+        EPriority.Info,
+        'USER_CONTAINERS',
+        'No container broker configured; local runner only'
+      );
+    }
+
     // Export registry and images
     moduleExports({
       imageRegistry: registry,
       registerContainerRunner,
       getRunner: (id: string) => containerRunners.get(id),
+      listRunnerIds: () => Array.from(containerRunners.keys()),
     });
 
     // Load reducers
