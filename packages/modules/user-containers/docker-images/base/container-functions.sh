@@ -27,6 +27,38 @@ extract_settings() {
 
 extract_settings
 
+# Make the platform's names resolve, whatever engine started this container.
+#
+# The container reaches its gateway by FQDN — `start_vpn` below fetches the VPN
+# config over HTTPS before it has a tunnel to fetch it through. In production
+# those are real DNS names. In development they are `.local` names the host
+# serves, and the container has to be told where the host is.
+#
+# Docker was told, with `--add-host <name>:host-gateway`. Apple `container` has
+# no such flag, so the container works it out instead — from the one address it
+# always has and never has to be given: the gateway of its own network, which
+# is the host. Measured on both: a container on a private Docker network and a
+# container in an Apple microVM each reach the host at their default route.
+#
+# Only for names that do not already resolve. A real DNS name in production, or
+# an entry the engine put there, is left exactly as it is — overriding one
+# would send a container to the wrong place for a reason nobody could see from
+# the outside.
+resolve_platform_hosts() {
+    HOST_IP=$(ip route 2>/dev/null | awk '/^default/{print $3; exit}')
+    [ -z "${HOST_IP}" ] && return 0
+
+    for name in "${GATEWAY_FQDN}" "${GANYMEDE_FQDN}" "${FRONTEND_FQDN}"; do
+        [ -z "${name}" ] && continue
+        [ "${name}" = "null" ] && continue
+        getent hosts "${name}" >/dev/null 2>&1 && continue
+        grep -qE "[[:space:]]${name}\$" /etc/hosts 2>/dev/null && continue
+        echo "${HOST_IP} ${name}" >>/etc/hosts
+    done
+}
+
+resolve_platform_hosts
+
 start_vpn() {
     CONFIG=$(curl -k -X GET -H "Authorization: ${TOKEN}" https://${GATEWAY_FQDN}/collab/vpn-config 2>/dev/null)
     if ! [ -z "${CONFIG}" ]; then
