@@ -255,6 +255,19 @@ export const UserContainerCardInternal = ({
             {container.container_name}
           </p>
           {image && (
+            // One line, clipped, with the whole of it on hover.
+            //
+            // The height was fixed at 18px with nothing said about overflow, so
+            // a description of any length wrapped and spilled straight out of
+            // the coloured box — "Minimal Ubuntu 24.04 container exposing only
+            // a web-based terminal" renders as two lines of text with a badge
+            // sized for one behind them. Descriptions come from the image
+            // catalogue and are sentences, not words, so this is the normal
+            // case rather than an edge one.
+            //
+            // `minWidth: 0` because this sits in a flex row: without it a flex
+            // item refuses to shrink below its content, and the ellipsis never
+            // engages no matter what `overflow` says.
             <span
               className="flex items-center justify-center font-bold"
               style={{
@@ -263,8 +276,15 @@ export const UserContainerCardInternal = ({
                 height: '18px',
                 fontSize: '12px',
                 padding: '0 8px',
+                minWidth: '0px',
+                maxWidth: '240px',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                display: 'block',
+                lineHeight: '18px',
               }}
-              title={image.imageName}
+              title={`${image.imageName} — ${image.description}`}
             >
               {image.description}
             </span>

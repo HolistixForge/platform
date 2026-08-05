@@ -142,3 +142,58 @@ describe('UserContainerCardInternal — isolation', () => {
     expect(queryByText(/Own kernel/)).not.toBeInTheDocument();
   });
 });
+
+/**
+ * The image badge.
+ *
+ * Descriptions come from the image catalogue and are sentences — "Minimal
+ * Ubuntu 24.04 container exposing only a web-based terminal" is a real one.
+ * The badge had a fixed 18px height and said nothing about overflow, so that
+ * text wrapped to two lines and rendered *outside* the coloured box. The
+ * catalogue's own entries are the normal case, not an edge one, so the
+ * assertion uses one of them.
+ */
+describe('UserContainerCardInternal — image badge', () => {
+  const LONG =
+    'Minimal Ubuntu 24.04 container exposing only a web-based terminal';
+
+  const renderWithDescription = (description: string) => {
+    const args = makeStoryArgs();
+    args.image = {
+      imageId: '1',
+      imageName: 'ttyd ubuntu',
+      description,
+    };
+    return render(
+      <Tooltip.Provider>
+        <UserContainerCardInternal {...args} runners={new Map()} />
+      </Tooltip.Provider>
+    );
+  };
+
+  it('should keep a sentence-length description on one line', () => {
+    const { getByText } = renderWithDescription(LONG);
+    const badge = getByText(LONG);
+
+    expect(badge).toHaveStyle({ whiteSpace: 'nowrap' });
+    expect(badge).toHaveStyle({ overflow: 'hidden' });
+    expect(badge).toHaveStyle({ textOverflow: 'ellipsis' });
+  });
+
+  it('should be able to shrink inside the flex row it sits in', () => {
+    // Without this a flex item will not go below its content width, and the
+    // ellipsis never engages however the overflow is declared.
+    const { getByText } = renderWithDescription(LONG);
+    expect(getByText(LONG)).toHaveStyle({ minWidth: '0px' });
+  });
+
+  it('should offer the whole description, and the image, on hover', () => {
+    const { getByText } = renderWithDescription(LONG);
+    expect(getByText(LONG)).toHaveAttribute('title', `ttyd ubuntu — ${LONG}`);
+  });
+
+  it('should still show a short description in full', () => {
+    const { getByText } = renderWithDescription('jupyterlab pytorch');
+    expect(getByText('jupyterlab pytorch')).toBeInTheDocument();
+  });
+});
