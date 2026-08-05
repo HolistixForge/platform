@@ -104,6 +104,13 @@ eng_rm()     { case "$ENGINE" in docker) docker rm -f "$@";; apple) container de
 eng_exec()   { local c="$1"; shift; case "$ENGINE" in docker) docker exec "$c" "$@";; apple) container exec "$c" "$@";; esac; }
 eng_net_rm() { case "$ENGINE" in docker) docker network rm "$@";; apple) container network delete "$@";; esac; }
 eng_net_ls() { case "$ENGINE" in docker) docker network ls --format '{{.Name}}';; apple) container network list --quiet;; esac; }
+# Containers this script has ever created, from any run — see cleanup().
+eng_ls_verify() {
+  case "$ENGINE" in
+    docker) docker ps -a --filter 'name=holistix_verify_' --format '{{.Names}}' ;;
+    apple)  container list --all --quiet 2>/dev/null | grep '^holistix_verify_' ;;
+  esac
+}
 
 # eng_field <container> <logical field>
 #
@@ -182,6 +189,14 @@ PY
 
 cleanup() {
   eng_rm "$NAME" "${NAME}_peer" "${NAME}_hosts" >/dev/null 2>&1
+  # Anything left by an earlier run too, not only this one's. The names are
+  # PID-suffixed, so a run that died — `BROKER_RUNTIME=kata` on a host with no
+  # kata registered is the easy way to see it — leaves its containers behind
+  # and they go on holding the networks below, which are *not* PID-suffixed.
+  # The prefix is this script's own, so nothing else can match it.
+  for stale in $(eng_ls_verify); do
+    eng_rm "$stale" >/dev/null 2>&1
+  done
   # The per-container private networks the broker creates on the way in. They
   # outlive the containers, so without this a host accumulates a pair per run.
   #
