@@ -160,10 +160,28 @@ describe('a tenant image', () => {
     });
 
     await expect(pullAppleImage(exec, tenant)).rejects.toThrow(
-      'bad credentials'
+      /bad credentials/
     );
 
     expect(verbs().some((v) => v.startsWith('registry logout'))).toBe(true);
+  });
+
+  it('names the likely cause when login is refused', async () => {
+    // Measured against real GHCR: `registry login` performs the registry's
+    // own token exchange, so it works with a GitHub credential and refuses an
+    // already-exchanged one — and `ghcrPullToken` hands over exactly that, a
+    // repository-scoped bearer. The same bearer answers 200 on /v2/ when sent
+    // as `Bearer` and 401 through login.
+    //
+    // A bare "401 unauthorized" sends the next person to check the password.
+    const { exec } = recorder((args) => {
+      if (args[1] === 'login') throw new Error('401 Unauthorized');
+      return '';
+    });
+
+    await expect(pullAppleImage(exec, tenant)).rejects.toThrow(
+      /result of an exchange/
+    );
   });
 });
 

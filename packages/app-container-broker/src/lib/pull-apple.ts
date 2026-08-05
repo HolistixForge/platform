@@ -63,7 +63,28 @@ const pullTenantImage = (
           host,
         ],
         image.pullToken
-      );
+      ).catch((cause) => {
+        // A login refusal here has one likely cause and it is not a bad
+        // password, so say it rather than leave the next person to measure it
+        // again.
+        //
+        // `registry login` performs the registry's own token exchange: it
+        // pings /v2/, reads the challenge, and trades the credential for a
+        // bearer. That works with a *GitHub* credential and cannot work with
+        // an already-exchanged one — and `ghcrPullToken` in Ganymede hands
+        // over exactly that, a repository-scoped registry bearer.
+        //
+        // Measured against real GHCR with a real token: the scoped bearer
+        // answers 200 on /v2/ and on the manifest when sent as `Bearer`, and
+        // `registry login` refuses it 401. There is nothing left in it to
+        // exchange. See TAC-179.
+        throw new Error(
+          `registry login was refused by ${host}. If the token is a ` +
+            `repository-scoped registry bearer, it cannot be used here: ` +
+            `login exchanges a credential, and that token is the result of ` +
+            `an exchange. Cause: ${String(cause)}`
+        );
+      });
       await exec(['image', 'pull', '--', image.reference]);
     } finally {
       // Even on failure. A login left behind is an ambient credential, and
