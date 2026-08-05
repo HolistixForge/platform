@@ -46,18 +46,25 @@ export type TUserContainer = {
     client_id: string;
   };
   /**
-   * Where this service runs, and for a local placement, whose machine.
+   * Where this service runs, and for a local placement, which machine.
    *
-   * `{ id: 'local', user_id }` — the runner enrolled by that user. "Local" is
-   * not one place: every member of a project has their own machine, so without
-   * the owner the platform cannot tell which runner to ask, and cannot stop a
-   * member placing a service on someone else's laptop.
+   * `{ id: 'local', user_id, machine_id }` — one enrolled machine. Both
+   * fields, and not just the owner: "local" is not one place, and neither is
+   * one person. Enrolment mints an identifier per machine, so a member with a
+   * laptop and a desktop has two, and `user_id` alone cannot say which of them
+   * was asked. The runner on the other end refuses a placement that does not
+   * name it, so an ambiguous one is a placement nobody will act on.
    *
-   * `{ id: 'platform', host, runtime }` — the platform, owned by no one.
+   * `{ id: 'platform', host, runtime }` — the platform, owned by no one, and
+   * carrying no machine: there is only one.
    *
    * Whatever the runner reports back on start is merged in alongside.
    */
-  runner: { id: string; user_id?: string } & TJsonObject;
+  runner: {
+    id: string;
+    user_id?: string;
+    machine_id?: string;
+  } & TJsonObject;
   created_at: string;
 } & TUserContainerPublishedInfo;
 

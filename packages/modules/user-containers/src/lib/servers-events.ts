@@ -42,6 +42,17 @@ export type TEventSelectRunner = {
   type: 'user-container:set-runner';
   user_container_id: string;
   runner_id: string;
+  /**
+   * Which machine, for a local placement. Required when `runner_id` is
+   * `local`, meaningless otherwise.
+   *
+   * The list to choose from comes from Ganymede — `GET /runners` returns the
+   * caller's enrolled machines — and not from the project's machine catalog,
+   * which only holds machines whose runner is already heartbeating into this
+   * project. A machine's *first* placement is what puts it there, so requiring
+   * it to be there first would mean no machine could ever join.
+   */
+  machine_id?: string;
 };
 
 /**

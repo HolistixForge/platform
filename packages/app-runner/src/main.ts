@@ -8,6 +8,7 @@ import {
   writeCredentials,
 } from './lib/credentials';
 import { disconnect, enrol, whoAmI } from './lib/enrol';
+import { run, runOnce } from './lib/loop';
 
 /**
  * The Holistix local runner — headless.
@@ -17,9 +18,12 @@ import { disconnect, enrol, whoAmI } from './lib/enrol';
  * anything it had told someone to type. This is the other half — a worker
  * enrolled once, which the platform then drives.
  *
- * This build covers enrolment and identity. The worker loop (heartbeat,
- * placements, Ansible) comes next and needs what is here: nothing can be
- * driven before the machine has a name the platform trusts.
+ * `login` enrols the machine, `run` keeps it announced and its services in
+ * line. What is not wired yet is where placements come from: the containers
+ * live in the project's collab state on the gateway, and there is no endpoint
+ * that hands a machine its own. `run` therefore announces and reconciles
+ * nothing — which is honest, because nothing has been placed on a named
+ * machine either. `reconcileProject` is the seam that closes.
  */
 
 const openInBrowser = async (url: string): Promise<void> => {
@@ -121,6 +125,52 @@ program
         `  machine  ${me.label} (${me.runner_id})\n` +
         `  owner    ${me.user_id}`
     );
+  });
+
+program
+  .command('run')
+  .description('Stay up, announce this machine, and keep its services in line')
+  .option('--once', 'One pass and exit — for a cron, or for looking at it')
+  .option(
+    '-i, --interval <seconds>',
+    'Seconds between passes',
+    (v) => Number(v) * 1000,
+    15_000
+  )
+  .action(async (options: { once?: boolean; interval: number }) => {
+    const credentials = await readCredentials();
+    if (!credentials) {
+      console.error('Not enrolled. Run "holistix-runner login" first.');
+      process.exitCode = 1;
+      return;
+    }
+
+    if (options.once) {
+      const result = await runOnce({ credentials });
+      if (result.revoked) {
+        console.error('This machine is no longer enrolled.');
+        process.exitCode = 1;
+        return;
+      }
+      console.log(
+        `${result.projects} project(s) · ${result.heartbeats.ok} announced, ${result.heartbeats.failed} unreachable`
+      );
+      return;
+    }
+
+    // SIGINT and SIGTERM both resolve the same promise: a runner under a
+    // service manager and one someone pressed ctrl-c on should stop the same
+    // way, mid-wait rather than at the end of the interval.
+    const stop = new Promise<void>((resolve) => {
+      const finish = () => {
+        console.log('\nStopping.');
+        resolve();
+      };
+      process.once('SIGINT', finish);
+      process.once('SIGTERM', finish);
+    });
+
+    await run({ credentials, intervalMs: options.interval, stop });
   });
 
 program

@@ -707,14 +707,32 @@ export class UserContainersReducer extends ReducerWithCollab<
     // to run the project's workloads on it.
     //
     // Absent for the platform runner, which belongs to no one in particular.
-    const owner: { user_id?: string } = runnerId === 'local' ? { user_id } : {};
+    const isLocal = runnerId === 'local';
+
+    // Which machine, and not only whose. Enrolment mints an identifier per
+    // machine, so a member with a laptop and a desktop has two, and `user_id`
+    // alone cannot say which of them was asked.
+    //
+    // Optional rather than required, deliberately. The mode that exists today
+    // hands the user a `docker run` to paste, and it works — refusing a
+    // placement that names no machine would break it before the machine picker
+    // that would supply one exists. So the strictness lives on the runner,
+    // where `assertPlacementIsForUs` refuses anything that does not name it:
+    // an unnamed placement is simply one no enrolled runner will pick up,
+    // which is exactly what it means today.
+    const placement: { user_id?: string; machine_id?: string } = isLocal
+      ? {
+          user_id,
+          ...(event.machine_id ? { machine_id: event.machine_id } : {}),
+        }
+      : {};
 
     // Runner data, not just the id: `start` writes what the runner reported
     // back here — the docker command, the broker's container id — and this used
     // to replace the whole object, so choosing a runner twice erased it.
     sduc.set(containerId, {
       ...container,
-      runner: { id: runnerId, ...owner },
+      runner: { id: runnerId, ...placement },
     });
   }
 
