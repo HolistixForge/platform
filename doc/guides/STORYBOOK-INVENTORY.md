@@ -247,3 +247,243 @@ Trois limites à connaître avant de se fier aux chiffres :
   titre par story ; aucun fichier n'en use ici, mais rien ne l'empêche.
 - **Le comptage de stories est syntaxique** (`^export const`). Il inclut les
   constantes exportées qui ne sont pas des stories. Écart mesuré faible, non nul.
+
+## Les 97 qui n'ont jamais eu de story — jamais, dans aucun commit
+
+L'inventaire ci-dessus répond à « qu'est-ce qui a existé puis disparu ». La
+question voisine — « qu'est-ce qui aurait pu être là et ne l'a jamais été » —
+donne un chiffre plus grand, et c'est celui qui compte pour la suite.
+
+Sur **199 composants au HEAD**, 137 noms ont eu une story à un moment de
+l'histoire du dépôt. **97 n'en ont jamais eu aucune.** Ce ne sont pas des
+pertes : ce sont des absences d'origine.
+
+| groupe                    | jamais racontés |
+| ------------------------- | --------------- |
+| `Modules/whiteboard`      | **23**          |
+| `App`                     | **21**          |
+| `Modules/airtable`        | **11**          |
+| `Modules/notion`          | **9**           |
+| `Base`                    | **5**           |
+| `Modules/jupyter`         | **4**           |
+| `frontend-data`           | **4**           |
+| `Modules/excalidraw`      | **3**           |
+| `Modules/socials`         | **3**           |
+| `Modules/user-containers` | **3**           |
+| `Modules/chats`           | **2**           |
+| `Mvp`                     | **2**           |
+| `Modules/collab`          | **1**           |
+| `Modules/module`          | **1**           |
+| `Modules/n8n`             | **1**           |
+| `Modules/pgadmin4`        | **1**           |
+| `Modules/reducers`        | **1**           |
+| `Modules/tabs`            | **1**           |
+| `ui-toolkit`              | **1**           |
+
+Trois foyers portent l'essentiel :
+
+- **`Modules/whiteboard` — 22.** Le module le plus gros du dépôt, et celui dont
+  le Storybook ne montre que les briques (`cursor`, `edges`, `slot`). Ni les
+  panneaux, ni les groupes, ni les enveloppes de nœuds.
+- **`App` — 21.** Aucune story n'a jamais existé pour l'application elle-même.
+  13 sont des écrans routés.
+- **`Modules/airtable` et `Modules/notion` — 18 à eux deux.** Deux modules
+  entiers réduits à leur story `Main`.
+
+Le détail, rangé selon la hiérarchie cible :
+
+### `App/Components`
+
+- `app-frontend/src/app/MobileBlockOverlay.tsx`
+- `app-frontend/src/app/app.tsx`
+- `app-frontend/src/app/header/header-logic.tsx`
+
+### `App/Components/Forms`
+
+- `app-frontend/src/app/forms/login-form.tsx`
+- `app-frontend/src/app/forms/new-project-form.tsx`
+- `app-frontend/src/app/forms/password.tsx`
+- `app-frontend/src/app/forms/signup-form.tsx`
+- `app-frontend/src/app/forms/totp-form.tsx`
+
+### `App/Views`
+
+- `app-frontend/src/app/pages/account.tsx`
+- `app-frontend/src/app/pages/credentials.tsx`
+- `app-frontend/src/app/pages/home.tsx`
+- `app-frontend/src/app/pages/organization/dashboard.tsx`
+- `app-frontend/src/app/pages/organization/organization-context.tsx`
+- `app-frontend/src/app/pages/project/editor/editor-page.tsx`
+- `app-frontend/src/app/pages/project/editor/node-editor/node-editor-view.tsx`
+- `app-frontend/src/app/pages/project/editor/resources-page.tsx`
+- `app-frontend/src/app/pages/project/gateway-countdown.tsx`
+- `app-frontend/src/app/pages/project/project-loading.tsx`
+- `app-frontend/src/app/pages/project/project-root.tsx`
+- `app-frontend/src/app/pages/project/project-wrapper.tsx`
+- `app-frontend/src/app/pages/project/sidebar.tsx`
+
+### `Base/Components`
+
+- `ui-base/src/lib/buttons/buttonBase.tsx`
+- `ui-base/src/lib/buttons/buttonIcon.tsx`
+- `ui-base/src/lib/storybook-utils.tsx`
+- `ui-base/src/lib/users/users.tsx`
+- `ui-base/src/lib/utils/click-stop-propagation.tsx`
+
+### `Modules/airtable/Components`
+
+- `modules/airtable/src/lib/airtable-menu.tsx`
+- `modules/airtable/src/lib/components/node-airtable/AirtableRecordCard.tsx`
+- `modules/airtable/src/lib/components/node-airtable/airtable-base-table-list.tsx`
+- `modules/airtable/src/lib/components/node-airtable/airtable-table-gallery.tsx`
+- `modules/airtable/src/lib/components/node-airtable/airtable-table-kanban.tsx`
+- `modules/airtable/src/lib/components/node-airtable/airtable-table-list.tsx`
+- `modules/airtable/src/lib/components/node-airtable/node-airtable-kanban-column.tsx`
+- `modules/airtable/src/lib/components/node-airtable/node-airtable-record.tsx`
+- `modules/airtable/src/lib/components/node-airtable/node-airtable-table.tsx`
+- `modules/airtable/src/lib/components/node-airtable/right-panel.tsx`
+
+### `Modules/airtable/Components/Forms`
+
+- `modules/airtable/src/lib/components/forms/new-base.tsx`
+
+### `Modules/chats/Components`
+
+- `modules/chats/src/lib/components/node-chat/chatbox-logic.tsx`
+- `modules/chats/src/lib/components/node-chat/node-chatbox.tsx`
+
+### `Modules/collab/Components`
+
+- `modules/collab/src/lib/collab-project-context.tsx`
+
+### `Modules/excalidraw/Components`
+
+- `modules/excalidraw/src/lib/excalidraw-menu.tsx`
+- `modules/excalidraw/src/lib/excalidraw-node.tsx`
+- `modules/excalidraw/src/lib/layer.tsx`
+
+### `Modules/jupyter/Components`
+
+- `modules/jupyter/src/lib/components/code-editor-monaco/code-editor-monaco-lazy.tsx`
+- `modules/jupyter/src/lib/components/node-kernel/kernel-state-indicator.tsx`
+- `modules/jupyter/src/lib/jupyter-menu.tsx`
+- `modules/jupyter/src/lib/stories/module-stories-utils.tsx`
+
+### `Modules/module/Components`
+
+- `modules/module/src/lib/module-hooks.tsx`
+
+### `Modules/n8n/Components`
+
+- `modules/n8n/src/lib/n8n.tsx`
+
+### `Modules/notion/Components`
+
+- `modules/notion/src/lib/components/node-notion/node-notion-database.tsx`
+- `modules/notion/src/lib/components/node-notion/node-notion-kanban-column.tsx`
+- `modules/notion/src/lib/components/node-notion/node-notion-task.tsx`
+- `modules/notion/src/lib/components/node-notion/notion-database-gallery.tsx`
+- `modules/notion/src/lib/components/node-notion/notion-database-kanban.tsx`
+- `modules/notion/src/lib/components/node-notion/notion-database-list.tsx`
+- `modules/notion/src/lib/components/node-notion/notion-property-renderer.tsx`
+- `modules/notion/src/lib/notion-menu.tsx`
+
+### `Modules/notion/Components/Forms`
+
+- `modules/notion/src/lib/components/forms/new-database.tsx`
+
+### `Modules/pgadmin4/Components`
+
+- `modules/pgadmin4/src/lib/pgadmin4.tsx`
+
+### `Modules/reducers/Components`
+
+- `modules/reducers/src/lib/reducers-hooks.tsx`
+
+### `Modules/socials/Components`
+
+- `modules/socials/src/lib/components/node-iframe.tsx`
+- `modules/socials/src/lib/components/node-reservation.tsx`
+- `modules/socials/src/lib/socials-menu.tsx`
+
+### `Modules/tabs/Components`
+
+- `modules/tabs/src/lib/components/tabs-radix-logic.tsx`
+
+### `Modules/user-containers/Components`
+
+- `modules/user-containers/src/lib/local-runner-frontend.tsx`
+- `modules/user-containers/src/lib/platform-runner-frontend.tsx`
+- `modules/user-containers/src/lib/servers-menu.tsx`
+
+### `Modules/whiteboard/Assets`
+
+- `modules/whiteboard/src/lib/components/assets/edges/edge-menu.tsx`
+
+### `Modules/whiteboard/Components`
+
+- `modules/whiteboard/src/lib/components/ModeIndicator.tsx`
+- `modules/whiteboard/src/lib/components/apis/avatarStore.tsx`
+- `modules/whiteboard/src/lib/components/avatar.tsx`
+- `modules/whiteboard/src/lib/components/avatarsRenderer.tsx`
+- `modules/whiteboard/src/lib/components/contextual-menu.tsx`
+- `modules/whiteboard/src/lib/components/group/group.tsx`
+- `modules/whiteboard/src/lib/components/htmlAvatarStore.tsx`
+- `modules/whiteboard/src/lib/components/layer-context.tsx`
+- `modules/whiteboard/src/lib/components/node-wrappers/disable-zoom-drag-pan.tsx`
+- `modules/whiteboard/src/lib/components/node-wrappers/left-right-inputs-outputs.tsx`
+- `modules/whiteboard/src/lib/components/node-wrappers/node-wrapper.tsx`
+- `modules/whiteboard/src/lib/components/node-wrappers/selection-awareness.tsx`
+- `modules/whiteboard/src/lib/components/node.tsx`
+- `modules/whiteboard/src/lib/components/panels/layers-tree-panel.tsx`
+- `modules/whiteboard/src/lib/components/reactflow-layer-context.tsx`
+- `modules/whiteboard/src/lib/components/reactflow-layer.tsx`
+- `modules/whiteboard/src/lib/components/right-panels.tsx`
+- `modules/whiteboard/src/lib/components/shape/shape.tsx`
+- `modules/whiteboard/src/lib/components/whiteboard.tsx`
+- `modules/whiteboard/src/lib/stories/story-context-mocks.tsx`
+- `modules/whiteboard/src/lib/stories/story-whiteboard.tsx`
+- `modules/whiteboard/src/lib/whiteboard-menu.tsx`
+
+### `Mvp/Components/Forms`
+
+- `ui-views/src/lib/form/form-totp/totp.tsx`
+
+### `Mvp/Views`
+
+- `ui-views/src/lib/mvp-ui-view/view/server-view.tsx`
+
+### `frontend-data/Components`
+
+- `frontend-data/src/lib/api-context.tsx`
+- `frontend-data/src/lib/contexts/project-context.tsx`
+- `frontend-data/src/lib/modules/module-data-provider.tsx`
+- `frontend-data/src/lib/story-api-context.tsx`
+
+### `ui-toolkit/Components`
+
+- `ui-toolkit/src/lib/jwt/jwt.tsx`
+
+## Portée du balayage — ce qu'il couvre, ce qu'il ne couvre pas
+
+Vérifié plutôt que supposé, parce qu'un inventaire dont on ignore les angles
+morts ne vaut pas mieux qu'une estimation.
+
+`git log --all` couvre ici **416 références** : 394 checkpoints Conductor, 10
+branches locales, 10 distantes, 2 tags. C'est large — les checkpoints en
+particulier retiennent des états qu'aucune branche ne référence plus.
+
+Restent dehors, et mesurés :
+
+- **3 commits** visibles seulement dans le reflog. Vérifiés un par un : aucun
+  ne touche un fichier de story.
+- **0 stash.**
+- **Aucune autre convention de nommage.** Pas de `.story.`, pas de MDX orphelin,
+  rien sous un `stories/` qui serait une story sans en porter l'extension — les
+  fichiers qui s'y trouvent (`story-whiteboard.tsx`, `mockSpace.tsx`,
+  `graphs-data/`) sont des harnais et des fixtures, pas des entrées de sidebar.
+
+Ce que le balayage ne peut pas voir : un commit jamais écrit sur ce clone.
+Si un ancien dépôt a précédé celui-ci — `demiurge-ui-components` a été renommé
+`ui-base` en février 2025, ce qui suggère une vie antérieure — son histoire
+propre n'est pas ici.
