@@ -6,7 +6,12 @@
  * the tenant-facing process.
  */
 
-import { resolveImage, UnknownImage, TCatalogueSource } from './catalogue';
+import {
+  resolveImage,
+  UnknownImage,
+  TCatalogueSource,
+  ganymedeCatalogue,
+} from './catalogue';
 
 const pinned = `holistixforge/ubuntu-terminal:24.04@sha256:${'c'.repeat(64)}`;
 
@@ -113,5 +118,82 @@ describe('resolveImage', () => {
     await expect(
       resolveImage(catalogue, 'project-a', 'acme:etl')
     ).rejects.toThrow('not pinned to a digest');
+  });
+});
+
+/**
+ * How the broker authenticates to Ganymede.
+ *
+ * Its `/internal/…` routes are guarded by `authenticateGatewayToken`, which
+ * reads one header and no other. Sending the wrong one is indistinguishable
+ * from sending nothing — both answer 401 — so the failure arrives here as
+ * "catalogue unavailable" and reads as Ganymede's fault.
+ *
+ * There is no contract test between the two services, so this is the only
+ * place the header name is pinned on this side. It was wrong until a real
+ * Ganymede was stood up and asked.
+ */
+describe('ganymedeCatalogue — the request it makes', () => {
+  const captured: { url?: string; headers?: Record<string, string> } = {};
+
+  const stubFetch = (status: number, body: unknown = {}) =>
+    jest.fn(
+      async (url: string, init?: { headers?: Record<string, string> }) => {
+        captured.url = url;
+        captured.headers = init?.headers;
+        return {
+          status,
+          ok: status >= 200 && status < 300,
+          json: async () => body,
+        } as unknown as Response;
+      }
+    );
+
+  const original = global.fetch;
+  afterEach(() => {
+    global.fetch = original;
+  });
+
+  it('authenticates with X-Gateway-Token, the header Ganymede reads', async () => {
+    global.fetch = stubFetch(200, {
+      imageId: 'acme:etl',
+      reference: `ghcr.io/acme/etl@sha256:${'a'.repeat(64)}`,
+    }) as unknown as typeof fetch;
+
+    await ganymedeCatalogue('http://ganymede:6870', 'gw-jwt')(
+      'project-1',
+      'acme:etl'
+    );
+
+    expect(captured.headers).toEqual({ 'X-Gateway-Token': 'gw-jwt' });
+  });
+
+  it('never sends the token as a bearer', async () => {
+    // Which is what it did, and 401 was the same answer as sending nothing.
+    global.fetch = stubFetch(200, {
+      imageId: 'acme:etl',
+      reference: `ghcr.io/acme/etl@sha256:${'a'.repeat(64)}`,
+    }) as unknown as typeof fetch;
+
+    await ganymedeCatalogue('http://ganymede:6870', 'gw-jwt')(
+      'project-1',
+      'acme:etl'
+    );
+
+    expect(captured.headers?.['Authorization']).toBeUndefined();
+  });
+
+  it('asks for the project and image it was given, both encoded', async () => {
+    // `acme:etl` carries a colon, which is a path delimiter if left raw.
+    global.fetch = stubFetch(404) as unknown as typeof fetch;
+
+    await ganymedeCatalogue('http://ganymede:6870/', 'gw-jwt')(
+      'project-1',
+      'acme:etl'
+    );
+
+    expect(captured.url).toBe(
+      'http://ganymede:6870/internal/projects/project-1/images/acme%3Aetl'
+    );
   });
 });

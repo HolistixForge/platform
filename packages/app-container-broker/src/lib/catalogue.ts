@@ -89,8 +89,21 @@ export const ganymedeCatalogue =
       `${endpoint.replace(/\/$/, '')}/internal/projects/` +
       `${encodeURIComponent(projectId)}/images/${encodeURIComponent(imageId)}`;
 
+    // `X-Gateway-Token`, not `Authorization: Bearer`.
+    //
+    // Ganymede guards its `/internal/…` routes with `authenticateGatewayToken`,
+    // which reads this header and no other. Sending a bearer was indis-
+    // tinguishable from sending nothing at all — both answer 401 — so every
+    // tenant image lookup failed authentication and surfaced here as
+    // "catalogue unavailable", a 502 blaming Ganymede for refusing a request
+    // this side never addressed properly.
+    //
+    // It had never shown up because nothing had run against a real Ganymede;
+    // measured against one on the first attempt, and the value is a signed
+    // gateway JWT rather than a shared secret, which is what that middleware
+    // verifies.
     const response = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { 'X-Gateway-Token': token },
     });
 
     if (response.status === 404) return undefined;

@@ -211,7 +211,7 @@ cleanup() {
   #   the first attempt on a just-freed network still reports it in use.
   for _ in 1 2 3 4 5; do
     for net in holistix_uc_uc_verify01 holistix_uc_uc_verify02 \
-               holistix_uc_uc_verify03 holistix_net_project-1_link; do
+               holistix_uc_uc_verify03 "holistix_net_${PROJECT_ID}_link"; do
       eng_net_rm "$net" >/dev/null 2>&1
     done
     eng_net_ls | grep -q '^holistix_' || break
@@ -272,27 +272,58 @@ case "$ENGINE" in
     container image tag "$SOURCE_IMAGE" "$BUILTIN_REF" >/dev/null 2>&1 ;;
 esac
 
-# A stub in place of Ganymede: 404 for everything, so only the built-in list
-# resolves. That is the whole tenant catalogue for this run, and it is enough
-# to prove the refusal of an unknown id.
-cat > "/tmp/verify-stub-$$.mjs" <<EOF
+# Where the broker resolves a tenant image.
+#
+# By default a stub that answers 404 to everything, so only the built-in list
+# resolves — enough to prove the refusal of an unknown id and nothing more.
+#
+# Point it at a real one instead, which is what finally exercises the wire
+# between the two services:
+#
+#   ./ganymede-apple.sh up
+#   VERIFY_GANYMEDE_URL=http://<ip>:6870 \
+#   VERIFY_GANYMEDE_TOKEN=<a gateway JWT, signed with ~/.holistix-apple/jwt.key> \
+#     BROKER_ENGINE=apple ./verify-container-broker.sh
+#
+# That is not a nicety. Everything about this hop — the header, the status
+# mapping, the project id being a UUID — had never been exercised, and the
+# first attempt found the broker authenticating with a header Ganymede does
+# not read.
+# Ganymede's project_id columns are `uuid`, so a real one refuses "project-1"
+# in SQL before the catalogue is consulted — the broker then reports 502 and
+# blames Ganymede for a request this side malformed. Against the stub the
+# readable id is friendlier, so the default follows the catalogue.
+if [ -n "${VERIFY_GANYMEDE_URL:-}" ]; then
+  PROJECT_ID="${VERIFY_PROJECT_ID:-$(python3 -c 'import uuid;print(uuid.uuid4())')}"
+else
+  PROJECT_ID="${VERIFY_PROJECT_ID:-project-1}"
+fi
+
+CATALOGUE="${VERIFY_GANYMEDE_URL:-}"
+CATALOGUE_TOKEN="${VERIFY_GANYMEDE_TOKEN:-unused}"
+if [ -n "$CATALOGUE" ]; then
+  echo "Catalogue: real Ganymede at ${CATALOGUE}"
+else
+  cat > "/tmp/verify-stub-$$.mjs" <<EOF
 import { createServer } from 'node:http';
 createServer((req, res) => {
   res.writeHead(404).end('{}');
 }).listen(${STUB_PORT}, '127.0.0.1');
 EOF
-node "/tmp/verify-stub-$$.mjs" & STUB_PID=$!
-sleep 1
+  node "/tmp/verify-stub-$$.mjs" & STUB_PID=$!
+  sleep 1
+  CATALOGUE="http://127.0.0.1:${STUB_PORT}"
+fi
 
 BROKER_ENGINE="$ENGINE" BROKER_RUNTIME="$BROKER_RUNTIME" \
 BROKER_ACCEPT_CONCESSIONS="$CONCESSIONS" \
 BROKER_TOKEN="$TOKEN" BROKER_PORT="$BROKER_PORT" \
-BROKER_BIND=127.0.0.1 GANYMEDE_INTERNAL_URL="http://127.0.0.1:${STUB_PORT}" \
-GANYMEDE_INTERNAL_TOKEN=unused \
+BROKER_BIND=127.0.0.1 GANYMEDE_INTERNAL_URL="$CATALOGUE" \
+GANYMEDE_INTERNAL_TOKEN="$CATALOGUE_TOKEN" \
   node "$BUNDLE" > "/tmp/verify-broker-$$.log" 2>&1 & BROKER_PID=$!
 sleep 2
 
-SETTINGS=$(printf '%s' '{"user_id":"u1","project_id":"project-1"}' | base64 | tr -d '\n')
+SETTINGS=$(printf '{"user_id":"u1","project_id":"%s"}' "$PROJECT_ID" | base64 | tr -d '\n')
 
 # req <overrides-json> [name] [user_container_id]
 #
@@ -302,9 +333,9 @@ SETTINGS=$(printf '%s' '{"user_id":"u1","project_id":"project-1"}' | base64 | tr
 # one macOS ships — word-splits: the function ran twice, each half a fragment,
 # and curl was handed an empty body.
 req() {
-  python3 - "$1" "${2:-$NAME}" "$SETTINGS" "$BUILTIN_ID" "${3:-uc_verify01}" <<'PY'
+  python3 - "$1" "${2:-$NAME}" "$SETTINGS" "$BUILTIN_ID" "${3:-uc_verify01}" "$PROJECT_ID" <<'PY'
 import json, sys
-r = {"organization_id": "org-verify", "project_id": "project-1",
+r = {"organization_id": "org-verify", "project_id": sys.argv[6],
      "user_container_id": sys.argv[5], "name": sys.argv[2],
      "image_id": sys.argv[4], "settings": sys.argv[3],
      "capabilities": ["NET_ADMIN"], "devices": [], "extra_hosts": [],
@@ -511,9 +542,9 @@ eng_exec "$NAME2" sh -c "wget -q -T 3 -O /dev/null http://$IP1/" >/dev/null 2>&1
   || ok "two services are isolated by default"
 
 NET=$(curl -s -X POST "$B/networks" -H "Authorization: Bearer $TOKEN" \
-  -H 'Content-Type: application/json' -d '{"project_id":"project-1","name":"link"}' \
+  -H 'Content-Type: application/json' -d "{\"project_id\":\"$PROJECT_ID\",\"name\":\"link\"}" \
   | python3 -c 'import json,sys; print(json.load(sys.stdin).get("network",""))')
-check contract "a network can be created on its own" "$NET" "holistix_net_project-1_link"
+check contract "a network can be created on its own" "$NET" "holistix_net_${PROJECT_ID}_link"
 
 attach() {
   curl -s -o /dev/null -w '%{http_code}' -X POST "$B/networks/$NET/members" \
