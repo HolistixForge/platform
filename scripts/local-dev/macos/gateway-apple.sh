@@ -417,8 +417,18 @@ cmd_up() {
       -e "CONTAINER_BROKER_TOKEN=$(cat "${STATE}/broker.token")" \
       -- "$IMAGE" >/dev/null 2>&1
 
-    local ip
-    ip="$(ip_of "$name")"
+    # Polled, not read once. The address is Apple's to assign and it is not
+    # there the instant `container run --detach` returns — every other place in
+    # this harness already treats it that way. Read immediately, an empty
+    # result is the common case, and a perfectly healthy gateway is declared
+    # dead *after* its row is in the database: the pool aborts half-built with
+    # a message pointing at the container.
+    local ip=""
+    for _ in $(seq 1 20); do
+      ip="$(ip_of "$name")"
+      [ -n "$ip" ] && break
+      sleep 1
+    done
     [ -n "$ip" ] \
       && ok "${name} up at ${ip}" \
       || { ko "${name} did not start — container logs ${name}"; return 1; }

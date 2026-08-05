@@ -151,7 +151,14 @@ start_auth_guard() {
     fi
 
     # Build domain from gateway FQDN (org-{uuid}.{domain} -> {domain})
-    DOMAIN=$(echo "$GATEWAY_FQDN" | sed 's/^[^.]*\.//')
+    #
+    # Without the port. This becomes `--cookie-domain .${DOMAIN}`, and a cookie
+    # domain is a domain: a browser rejects `.apollo.test:8443` outright, so
+    # every container behind the auth guard would sign a user in and then hand
+    # them a cookie their browser drops. GATEWAY_FQDN carries a port wherever
+    # nginx is not on 443, because every URL built from it — the two lines
+    # below among them — is a link somebody follows.
+    DOMAIN=$(echo "$GATEWAY_FQDN" | sed 's/^[^.]*\.//' | cut -d: -f1)
 
     GUARD_FLAGS="--listen-port 8443 --admin-port 9999"
     GUARD_FLAGS="$GUARD_FLAGS --ganymede-url https://${GANYMEDE_FQDN}"

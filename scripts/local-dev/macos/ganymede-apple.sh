@@ -205,9 +205,20 @@ EOF
       || { ko "could not build ${DNS_IMAGE}"; return 1; }
   }
 
-  # Rewritten and restarted every time rather than reused: the address it hands
-  # out is Apple's to choose, and a stale answer here is a name that resolves
-  # to the wrong machine — which reads like the service being down.
+  # Reused when it is already up. `--dns` is baked into a container when it is
+  # created, and this resolver is one per machine while environments are not —
+  # so deleting and recreating it on every `up` gives it a new address from
+  # Apple's pool and leaves every environment started earlier pointing at one
+  # that no longer answers. That looks like the platform being down, in an
+  # environment nobody touched.
+  #
+  # The zone is a wildcard over the whole TLD answering the network gateway, so
+  # a running resolver is already correct for any environment; there is nothing
+  # per-environment in it to rewrite.
+  if [ -n "$(ip_of "$DNS")" ]; then
+    ok "CoreDNS for containers already up at $(ip_of "$DNS")"
+    return 0
+  fi
   container delete --force "$DNS" >/dev/null 2>&1
   container run --detach --name "$DNS" --network "$NET" \
     --cpus 1 --memory 256m \
@@ -267,7 +278,12 @@ stage_bundle() {
     note "NX_DAEMON=false npx nx build @holistix-forge/app-ganymede"
     return 1
   }
-  mkdir -p "$STATE"
+  # The bind-mount source has to exist: Apple `container` does not create a
+  # missing one, it refuses to bootstrap at all, and `container run`'s output
+  # is discarded — so the only symptom is "Ganymede did not start", pointing
+  # at the bundle. setup-nginx.sh happens to create this directory, which is
+  # why the order the scripts are run in decided whether `up` worked.
+  mkdir -p "$STATE" "${CONF_DIR}/nginx-gateways.d"
   cp -R "${BUNDLE_DIR}/"* "$STATE/"
 
   [ -f "${STATE}/jwt.key" ] || {
