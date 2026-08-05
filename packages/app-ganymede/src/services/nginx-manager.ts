@@ -19,13 +19,31 @@ export class NginxManager {
   private nginxGatewaysDir: string;
   private sslCertPath: string;
   private sslKeyPath: string;
+  private logsDir: string;
+  private listenPort: string;
+  private testCommand: string;
+  private reloadCommand: string;
 
+  // Every value below keeps the address it has always had when nothing is set,
+  // so a Linux environment behaves exactly as before. They are overridable
+  // because the same class now also runs where none of those addresses exist:
+  // on macOS nginx is Homebrew's, on 8443 because binding under 1024 needs
+  // root, its configuration lives under the user's home rather than
+  // /root/.local-dev, and Ganymede itself runs in a container — from which no
+  // `nginx -s reload` can reach the nginx on the host.
   constructor() {
     this.envName = process.env.ENV_NAME || 'dev-001';
     this.envDir = `/root/.local-dev/${this.envName}`;
-    this.nginxGatewaysDir = `${this.envDir}/nginx-gateways.d`;
-    this.sslCertPath = `${this.envDir}/ssl-cert.pem`;
-    this.sslKeyPath = `${this.envDir}/ssl-key.pem`;
+    this.nginxGatewaysDir =
+      process.env.NGINX_GATEWAYS_DIR || `${this.envDir}/nginx-gateways.d`;
+    this.sslCertPath =
+      process.env.NGINX_SSL_CERT || `${this.envDir}/ssl-cert.pem`;
+    this.sslKeyPath = process.env.NGINX_SSL_KEY || `${this.envDir}/ssl-key.pem`;
+    this.logsDir = process.env.NGINX_LOGS_DIR || `${this.envDir}/logs`;
+    this.listenPort = process.env.NGINX_LISTEN_PORT || '443';
+    this.testCommand = process.env.NGINX_TEST_COMMAND || 'sudo nginx -t 2>&1';
+    this.reloadCommand =
+      process.env.NGINX_RELOAD_COMMAND || 'sudo nginx -s reload';
   }
 
   /**
@@ -48,7 +66,13 @@ export class NginxManager {
       );
     }
 
-    const domain = process.env.DOMAIN || 'domain.local';
+    // Without the port, always. DOMAIN carries one where nginx does not listen
+    // on 443 — every URL built from it is a link somebody follows — and this
+    // one use is not a URL: it becomes a `server_name`, which nginx matches
+    // against the Host header with the port already taken off. A port here
+    // produces a regex that matches nothing, so every org request falls
+    // through to the default server and the gateway is simply never reached.
+    const domain = (process.env.DOMAIN || 'domain.local').split(':')[0];
     const orgDomain = `org-${orgId}.${domain}`;
     const configPath = path.join(this.nginxGatewaysDir, `org-${orgId}.conf`);
 
@@ -87,7 +111,7 @@ upstream org-${orgId}-gw {
 }
 
 server {
-    listen 443 ssl;
+    listen ${this.listenPort} ssl;
     server_name ~^(.+\\.)?org-${orgId}\\.${domainEscaped}$;
 
     ssl_certificate ${this.sslCertPath};
@@ -108,8 +132,8 @@ server {
         proxy_send_timeout 86400s;
     }
 
-    access_log ${this.envDir}/logs/gateway-${orgId}-access.log;
-    error_log ${this.envDir}/logs/gateway-${orgId}-error.log;
+    access_log ${this.logsDir}/gateway-${orgId}-access.log;
+    error_log ${this.logsDir}/gateway-${orgId}-error.log;
 }
 `;
 
@@ -182,7 +206,7 @@ server {
     try {
       // Test configuration first
       const { stdout: testOutput, stderr: testError } = await execAsync(
-        'sudo nginx -t 2>&1'
+        this.testCommand
       );
 
       if (testError && !testOutput.includes('syntax is ok')) {
@@ -191,7 +215,7 @@ server {
       }
 
       // Reload nginx using nginx -s reload (more reliable than service command)
-      await execAsync('sudo nginx -s reload');
+      await execAsync(this.reloadCommand);
 
       // Small delay to ensure reload command completes
       // Note: Actual readiness is verified via gateway health check in allocation flow

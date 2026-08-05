@@ -10,6 +10,7 @@
 #   ./ganymede-apple.sh seed     a project, its GitHub org link, two images
 #   ./ganymede-apple.sh status   where everything is listening
 #   ./ganymede-apple.sh logs     Ganymede's output
+#   ./ganymede-apple.sh restart  re-stage the bundle and re-run, schema untouched
 #   ./ganymede-apple.sh down     remove both containers, keep the network
 #
 # `up` is destructive: the schema starts with `DROP SCHEMA public CASCADE`, so
@@ -54,6 +55,11 @@ GANYMEDE_PORT="${GANYMEDE_PORT:-6100}"
 # neither binds anywhere but the loopback.
 NET=default
 PG=hx-postgres
+DNS=hx-coredns
+# Built from scripts/local-dev/macos/coredns — the official coredns image is
+# FROM scratch, so it has no directory for a Corefile to be mounted onto and
+# Apple `container` refuses to start it at all.
+DNS_IMAGE=hx-coredns:latest
 GANY="hx-ganymede-${ENV_NAME}"
 # Hyphens out. A container name takes them, an unquoted SQL identifier does not
 # — `CREATE DATABASE ganymede_dev-001` is a syntax error — and `dev-001` is the
@@ -153,6 +159,67 @@ up_postgres() {
     || { ko "Postgres did not come up"; return 1; }
 }
 
+# A resolver for containers, which is not the same thing as a resolver for this
+# Mac.
+#
+# The host's CoreDNS answers 127.0.0.1 for every platform name, which is where
+# nginx is listening — correct on the host, and inside a microVM that address
+# is the microVM. Ganymede needs `org-<uuid>.<domain>` to resolve, and cannot
+# use /etc/hosts for it because the name is minted per organization at runtime.
+#
+# So: the same template, answering the container network's gateway instead, in
+# a container of its own where port 53 is free and needs no root. One per
+# machine — the zone is a wildcard over the whole TLD, so every environment
+# gets the same answer from it.
+up_dns() {
+  local host
+  host="$(container inspect "$PG" 2>/dev/null | python3 -c '
+import json, sys
+try: doc = json.load(sys.stdin)[0]
+except Exception: sys.exit(0)
+nets = doc.get("status", {}).get("networks") or []
+print(nets[0].get("ipv4Gateway", "") if nets else "")
+')"
+  [ -n "$host" ] || { ko "could not read the network gateway from ${PG}"; return 1; }
+
+  mkdir -p "${CONF_DIR}/coredns-container"
+  cat > "${CONF_DIR}/coredns-container/Corefile" <<EOF
+${DOMAIN##*.}:53 {
+    template IN A {
+        answer "{{ .Name }} 60 IN A ${host}"
+    }
+    template IN AAAA {
+        rcode NOERROR
+    }
+}
+
+.:53 {
+    forward . 1.1.1.1 8.8.8.8
+    cache 30
+}
+EOF
+  container image ls 2>/dev/null | grep -q '^hx-coredns ' || {
+    note "building ${DNS_IMAGE} (alpine plus the coredns binary)"
+    ( cd "${REPO_ROOT}/scripts/local-dev/macos/coredns" \
+        && container build -t "$DNS_IMAGE" . ) >/dev/null 2>&1 \
+      || { ko "could not build ${DNS_IMAGE}"; return 1; }
+  }
+
+  # Rewritten and restarted every time rather than reused: the address it hands
+  # out is Apple's to choose, and a stale answer here is a name that resolves
+  # to the wrong machine — which reads like the service being down.
+  container delete --force "$DNS" >/dev/null 2>&1
+  container run --detach --name "$DNS" --network "$NET" \
+    --cpus 1 --memory 256m \
+    -v "${CONF_DIR}/coredns-container:/etc/coredns" \
+    -- "$DNS_IMAGE" -conf /etc/coredns/Corefile >/dev/null 2>&1
+
+  local ip
+  wait_for "[ -n \"\$(ip_of $DNS)\" ]" 15 || { ko "CoreDNS did not start"; return 1; }
+  ip="$(ip_of "$DNS")"
+  ok "CoreDNS for containers at ${ip} — *.${DOMAIN##*.} → ${host}"
+}
+
 apply_schema() {
   # Same order as create-env.sh, and for the same reason: the schema files were
   # never brought back up to date as migrations landed, so a database built
@@ -226,9 +293,9 @@ stage_bundle() {
   # names and costs a confusing 500 on the first request rather than a refusal
   # at startup: GANYMEDE_SERVER_BIND and ALLOWED_ORIGINS are both JSON.parse'd.
   python3 - "$pgip" "$STATE" "$DB" "$DB_USER" "$DB_PASSWORD" "$PORT" \
-    "$DOMAIN" "$HTTPS_PORT" <<'PY'
+    "$DOMAIN" "$HTTPS_PORT" "$ENV_NAME" "$CONF_DIR" <<'PY'
 import base64, pathlib, sys
-pgip, state, db, user, password, port, domain, https_port = sys.argv[1:9]
+pgip, state, db, user, password, port, domain, https_port, env_name, conf_dir = sys.argv[1:11]
 d = pathlib.Path(state)
 # The FQDNs carry the port. `CONFIG.APP_FRONTEND_URL` is `https://${FRONTEND_FQDN}`
 # and nginx does not listen on 443 here — binding under 1024 needs root — so a
@@ -248,6 +315,34 @@ env = {
   'MAILING_HOST': 'localhost', 'MAILING_PORT': '1025',
   'MAILING_USER': 'unset', 'MAILING_PASSWORD': 'unset',
   'SESSION_COOKIE_KEY': 'macos-session-key-not-for-production',
+  # Ganymede makes HTTPS calls to itself — it health-checks a gateway it has
+  # just allocated at `https://org-<uuid>.<domain>` — and the certificate is
+  # mkcert's, which nothing in this container has been told to trust. Node's
+  # `fetch` refuses it, the health check swallows the reason and reports the
+  # gateway as not ready, and the allocation is rolled back. create-env.sh:289
+  # sets exactly this, for exactly this, on the Linux side.
+  'NODE_TLS_REJECT_UNAUTHORIZED': '0',
+  # Where nginx is, for the server blocks Ganymede writes when it allocates a
+  # gateway. Three of these are paths on the *Mac* and not in this container:
+  # Ganymede only writes them into a file that nginx then reads. The directory
+  # is the one path that is both, through the bind mount below.
+  'ENV_NAME': env_name,
+  # With the port, like the other FQDNs: Ganymede builds
+  # `https://org-<uuid>.<DOMAIN>` from it and follows that link itself when it
+  # health-checks a gateway it has just allocated. The one place a port would
+  # be wrong — the nginx `server_name` — strips it there.
+  'DOMAIN': host,
+  'NGINX_GATEWAYS_DIR': '/nginx-gateways.d',
+  'NGINX_SSL_CERT': '%s/certs/%s.pem' % (conf_dir, domain),
+  'NGINX_SSL_KEY': '%s/certs/%s-key.pem' % (conf_dir, domain),
+  'NGINX_LOGS_DIR': '%s/logs' % conf_dir,
+  'NGINX_LISTEN_PORT': https_port,
+  # `nginx -t` needs the certificates and the main configuration, neither of
+  # which exists in here, so the host side tests before it reloads. And no
+  # signal reaches a process outside this container — so the reload is asked
+  # for through a file nginx-reload.sh watches, and waited for.
+  'NGINX_TEST_COMMAND': 'true',
+  'NGINX_RELOAD_COMMAND': '/app/request-nginx-reload.sh',
 }
 # An env file is KEY=VALUE per line, so a PEM cannot travel in one. They go
 # base64'd and start.sh decodes them inside the guest.
@@ -262,6 +357,35 @@ PY
     printf '%s\n' "$keep" >> "${STATE}/ganymede.env"
     note "kept the GitHub App settings already staged here"
   fi
+
+  # Asking is not the same as it having happened. Ganymede reloads nginx and
+  # immediately health-checks the gateway through it — if the reload has not
+  # landed, that request falls through to the default server, which answers
+  # 200 for a GET and makes the check pass on the wrong server entirely. The
+  # first thing that then notices is the POST handshake, with a 405 from nginx
+  # and nothing pointing at the reload.
+  #
+  # So this waits for the acknowledgement nginx-reload.sh writes, and fails if
+  # it does not come — which is also how a configuration the host refuses gets
+  # back to the caller, since `nginx -t` can only run over there.
+  cat > "${STATE}/request-nginx-reload.sh" <<'EOS'
+#!/bin/sh
+# A token and not a timestamp. Both files land in the same second more often
+# than not, and `-nt` compares whole seconds — so the acknowledgement for this
+# request was indistinguishable from no acknowledgement at all.
+D=/nginx-gateways.d
+TOKEN="$$-$(date +%s)-$(awk "BEGIN{srand();print int(rand()*100000)}")"
+echo "$TOKEN" >"$D/.reload" || exit 1
+i=0
+while [ $i -lt 100 ]; do
+  [ "$(cat "$D/.reloaded" 2>/dev/null)" = "$TOKEN" ] && exit 0
+  sleep 0.1
+  i=$((i + 1))
+done
+echo "nginx did not acknowledge the reload within 10s — is nginx-reload.sh running?" >&2
+exit 1
+EOS
+  chmod +x "${STATE}/request-nginx-reload.sh"
 
   cat > "${STATE}/start.sh" <<'EOS'
 #!/bin/sh
@@ -297,6 +421,8 @@ up_ganymede() {
     --publish "127.0.0.1:${GANYMEDE_PORT}:${PORT}" \
     --env-file "${STATE}/ganymede.env" \
     -v "${STATE}:/app" -w /app \
+    -v "${CONF_DIR}/nginx-gateways.d:/nginx-gateways.d" \
+    --dns "$(ip_of "$DNS")" \
     -- docker.io/library/node:22-alpine sh /app/start.sh >/dev/null 2>&1
 
   local ip
@@ -357,6 +483,9 @@ case "${1:-up}" in
     up_postgres || exit 1
     apply_schema || exit 1
     echo
+    echo "DNS for containers"
+    up_dns || exit 1
+    echo
     echo "Ganymede"
     stage_bundle || exit 1
     up_ganymede || exit 1
@@ -373,6 +502,15 @@ case "${1:-up}" in
     echo "============================================="
     note "The internal routes the broker needs are gateway-token protected;"
     note "mint one with the RS256 key in ${STATE}/jwt.key."
+    ;;
+  restart)
+    # `up` without the schema. A code change is the common reason to redeploy
+    # and `up` would take the database with it — including the gateway rows,
+    # so every gateway in the pool would then hold a token for a row that no
+    # longer exists and answer nothing.
+    up_dns || exit 1
+    stage_bundle || exit 1
+    up_ganymede || exit 1
     ;;
   seed)   seed_catalogue ;;
   logs)   container logs "$GANY" ;;
@@ -396,5 +534,5 @@ case "${1:-up}" in
     container delete --force "$GANY" "$PG" >/dev/null 2>&1
     ok "removed ${GANY} and Postgres — every environment's database is gone"
     ;;
-  *) echo "usage: $0 [up|seed|status|logs|down|drop-db|down-all]"; exit 1 ;;
+  *) echo "usage: $0 [up|restart|seed|status|logs|down|drop-db|down-all]"; exit 1 ;;
 esac

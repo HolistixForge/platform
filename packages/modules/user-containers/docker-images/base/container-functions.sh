@@ -40,10 +40,13 @@ extract_settings
 # is the host. Measured on both: a container on a private Docker network and a
 # container in an Apple microVM each reach the host at their default route.
 #
-# Only for names that do not already resolve. A real DNS name in production, or
-# an entry the engine put there, is left exactly as it is — overriding one
-# would send a container to the wrong place for a reason nobody could see from
-# the outside.
+# Only for names that do not already resolve *to somewhere this container can
+# go*. A real DNS name in production, or an entry the engine put there, is left
+# exactly as it is — overriding one would send a container to the wrong place
+# for a reason nobody could see from the outside. But a loopback answer is not
+# such a name: measured on macOS, the host's own CoreDNS answers 127.0.0.1 for
+# every platform name, which is right for the host and is this container
+# itself once inside a microVM.
 resolve_platform_hosts() {
     HOST_IP=$(ip route 2>/dev/null | awk '/^default/{print $3; exit}')
     [ -z "${HOST_IP}" ] && return 0
@@ -51,8 +54,15 @@ resolve_platform_hosts() {
     for name in "${GATEWAY_FQDN}" "${GANYMEDE_FQDN}" "${FRONTEND_FQDN}"; do
         [ -z "${name}" ] && continue
         [ "${name}" = "null" ] && continue
-        getent hosts "${name}" >/dev/null 2>&1 && continue
         grep -qE "[[:space:]]${name}\$" /etc/hosts 2>/dev/null && continue
+
+        RESOLVED=$(getent hosts "${name}" 2>/dev/null | awk '{print $1; exit}')
+        case "${RESOLVED}" in
+            '') ;;                       # nothing answered — ours to write
+            127.*|::1) ;;                # answered with itself — not usable here
+            *) continue ;;               # a real address, and not ours to move
+        esac
+
         echo "${HOST_IP} ${name}" >>/etc/hosts
     done
 }
