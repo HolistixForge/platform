@@ -13,10 +13,16 @@ Restart=on-failure
 RestartSec=2s
 
 # The broker composes every container start, so its configuration is the
-# platform's isolation policy. BROKER_RUNTIME has no default in the code: a
-# broker that quietly fell back to runc would put every tenant back on a shared
-# kernel.
+# platform's isolation policy. Neither of the next two has a default in the
+# code: a broker that quietly fell back to runc would put every tenant back on
+# a shared kernel, and one that picked an engine by looking at which binary was
+# installed would decide the same question one level up.
+Environment=BROKER_ENGINE={{ holistix_broker_engine }}
 Environment=BROKER_RUNTIME={{ holistix_broker_runtime }}
+# Controls the chosen engine cannot express, named one by one. Empty for
+# Docker, which gives up none — and the broker refuses to start if this names a
+# control the running engine does in fact have.
+Environment=BROKER_ACCEPT_CONCESSIONS={{ holistix_broker_accept_concessions }}
 Environment=BROKER_BIND={{ holistix_broker_bind }}
 Environment=BROKER_PORT={{ holistix_broker_port }}
 Environment=BROKER_MAX_CPUS={{ holistix_broker_max_cpus }}

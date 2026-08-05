@@ -11,7 +11,9 @@ import { validateStartRequest, InvalidRequest } from './validate';
 import { TBrokerConfig } from './types';
 
 const config: TBrokerConfig = {
+  engine: 'docker',
   runtime: 'kata',
+  acceptedConcessions: [],
   hostname: 'platform-host-1',
   token: 'broker-token',
   port: 9443,

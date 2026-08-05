@@ -7,10 +7,13 @@
  */
 
 import { startContainer } from './runtime';
+import { dockerEngine } from './engine-docker';
 import { TStartRequest, TBrokerConfig, TResolvedImage } from './types';
 
 const config: TBrokerConfig = {
+  engine: 'docker',
   runtime: 'kata',
+  acceptedConcessions: [],
   hostname: 'platform-host-1',
   token: 'broker-token',
   port: 9443,
@@ -68,7 +71,7 @@ describe('restarting an existing container', () => {
     // clicked.
     const { calls, exec } = withExisting('uc_abc12345');
 
-    await startContainer(exec, request, image, config);
+    await startContainer(dockerEngine, exec, request, image, config);
 
     const rm = calls.find((c) => c[0] === 'rm');
     expect(rm).toEqual(['rm', '--force', '--', request.name]);
@@ -82,7 +85,7 @@ describe('restarting an existing container', () => {
     // is not a power it should hold — the run is allowed to fail instead.
     const { calls, exec } = withExisting('someone-elses-container');
 
-    await startContainer(exec, request, image, config);
+    await startContainer(dockerEngine, exec, request, image, config);
 
     expect(calls.some((c) => c[0] === 'rm')).toBe(false);
   });
@@ -95,7 +98,7 @@ describe('restarting an existing container', () => {
       return 'kata-9f3';
     };
 
-    await startContainer(exec, request, image, config);
+    await startContainer(dockerEngine, exec, request, image, config);
 
     expect(calls.some((c) => c[0] === 'rm')).toBe(false);
     expect(calls.some((c) => c[0] === 'run')).toBe(true);
@@ -108,7 +111,7 @@ describe('startContainer', () => {
     // and the image has to be local before the run is told never to pull.
     const { calls, exec } = recorder();
 
-    await startContainer(exec, request, image, config);
+    await startContainer(dockerEngine, exec, request, image, config);
 
     // A credentialed pull leads with --config, so match on content rather than
     // on the first argument.
@@ -127,7 +130,7 @@ describe('startContainer', () => {
     // IP, including another tenant's.
     const { calls, exec } = recorder();
 
-    await startContainer(exec, request, image, config);
+    await startContainer(dockerEngine, exec, request, image, config);
 
     expect(runCall(calls)).toContain('--network=holistix_uc_uc_abc12345');
   });
@@ -141,8 +144,8 @@ describe('startContainer', () => {
     // token.
     const { calls, exec } = recorder();
 
-    await startContainer(exec, request, image, config);
-    await startContainer(exec, request, image, config);
+    await startContainer(dockerEngine, exec, request, image, config);
+    await startContainer(dockerEngine, exec, request, image, config);
 
     expect(calls.filter((c) => c.includes('pull'))).toHaveLength(2);
   });
@@ -152,7 +155,7 @@ describe('startContainer', () => {
     // credentials rather than this project's.
     const { calls, exec } = recorder();
 
-    await startContainer(exec, request, image, config);
+    await startContainer(dockerEngine, exec, request, image, config);
 
     expect(runCall(calls)).toContain('--pull=never');
   });
@@ -160,7 +163,7 @@ describe('startContainer', () => {
   it('keeps the registry credential out of the run', async () => {
     const { calls, exec } = recorder();
 
-    await startContainer(exec, request, image, config);
+    await startContainer(dockerEngine, exec, request, image, config);
 
     expect(runCall(calls)?.join(' ')).not.toContain('project-scoped-token');
     expect(runCall(calls)).not.toContain('--config');
@@ -174,9 +177,9 @@ describe('startContainer', () => {
       return 'kata-9f3';
     };
 
-    await expect(startContainer(exec, request, image, config)).rejects.toThrow(
-      'unauthorized'
-    );
+    await expect(
+      startContainer(dockerEngine, exec, request, image, config)
+    ).rejects.toThrow('unauthorized');
 
     expect(calls.filter((c) => c[0] === 'run')).toHaveLength(0);
   });
@@ -184,8 +187,8 @@ describe('startContainer', () => {
   it('returns the container id the runtime reported', async () => {
     const { exec } = recorder();
 
-    await expect(startContainer(exec, request, image, config)).resolves.toBe(
-      'kata-9f3'
-    );
+    await expect(
+      startContainer(dockerEngine, exec, request, image, config)
+    ).resolves.toBe('kata-9f3');
   });
 });

@@ -2,10 +2,11 @@
 
 Tracks [TAC-129](https://linear.app/tachikoma/issue/TAC-129).
 
-**Status.** Stages 0 and 1 are written and unit-tested. Nothing has run on a
-real host: this workspace has no VM, no KVM and no Kata, so the Ansible roles
-below are syntax-checked only and the end-to-end path — a container booting in
-a microVM, joining the VPN, being routed by nginx — is unverified. See
+**Status.** Stages 0 and 1 are written and unit-tested. A container now boots
+in a **real microVM** and the broker's guarantees have been read back out of it
+— under Apple `container` on an M1, which needs no nested virtualisation. What
+is still unverified is the Docker+Kata pairing specifically, and the end-to-end
+path beyond the container: joining the VPN, being routed by nginx. See
 [What is not verified](#what-is-not-verified).
 
 ## What this adds
@@ -52,6 +53,98 @@ Kata can run _on_ Firecracker, so choosing Kata does not give up Firecracker. Th
 hypervisor backend (Firecracker / Cloud Hypervisor / QEMU) is deliberately left
 open — see [Open questions](#open-questions), since it depends on whether user
 containers ever need persistent storage.
+
+## Two engines, because there are two kinds of host
+
+Kata is how a Linux host gets a kernel per container. It is not the only way,
+and on the hardware this was written on it is not an available way at all.
+
+So the broker drives one of two engines, named in configuration and with no
+default:
+
+| Engine   | Host  | Isolation                           |
+| -------- | ----- | ----------------------------------- |
+| `docker` | Linux | borrowed from the runtime under it  |
+| `apple`  | macOS | a VM per container, by construction |
+
+Apple `container` reaches microVM isolation at **level 1** — no nested
+virtualisation — so it runs on any Apple Silicon, including the M1 machines
+where `/dev/kvm` is absent inside a Linux VM and Kata cannot start. That is
+not a workaround: a Mac host is a real deployment target, because iOS builds
+need Apple hardware.
+
+`BROKER_ENGINE` has no default for the same reason `BROKER_RUNTIME` has none.
+The two engines do not grant the same controls, and picking one by looking at
+which binary happened to be installed would decide a security question by
+accident.
+
+### What the Apple engine gives up, said out loud
+
+Three of the Docker path's controls have no expression in Apple `container`,
+and three more properties differ. Each is a **concession**: it carries what was
+lost, and the broker refuses to start until the operator names every one of
+them in `BROKER_ACCEPT_CONCESSIONS`. Naming one the engine does _not_ give up
+is equally a refusal — that is a config copied from the other engine.
+
+| Concession                    | What is lost                                                             |
+| ----------------------------- | ------------------------------------------------------------------------ |
+| `no-new-privileges`           | a setuid binary in the guest can regain what `--cap-drop=ALL` took       |
+| `pids-cgroup`                 | `RLIMIT_NPROC` per uid instead of a cgroup `pids.max` over the container |
+| `restart-policy`              | a container that exits stays down until something outside restarts it    |
+| `run-may-pull`                | `container run` fetches a missing image itself; `--pull=never` is gone   |
+| `registry-login-is-host-wide` | a tenant credential is host-wide for its pull, so pulls serialise        |
+| `no-hot-network-attach`       | two running services cannot be wired together without a restart          |
+
+`pids-cgroup` is the reason a concession records what was lost rather than what
+replaced it. `--ulimit nproc=N` works and was verified (`ulimit -u` is 64 in
+the guest), and it is **not** the same control: `RLIMIT_NPROC` is a per-uid
+ceiling checked at fork, so two uids inside one guest get the ceiling each.
+
+Two of them are answered rather than merely accepted. `run-may-pull` would
+matter if there were an ambient credential for a run to pull with, so the
+broker refuses to start while this host holds any `container registry login`
+— a refusal, not a sweep, because those logins are the operator's. And
+`no-hot-network-attach` answers 501 on the attach route rather than quietly
+doing nothing: an edge drawn between two services on the whiteboard that meant
+nothing would be worse than being told it cannot be drawn.
+
+`--add-host` is missing too and is **not** a concession: a start carrying
+`extra_hosts` is refused outright. Nothing is lost quietly — a container that
+silently cannot resolve its gateway fails minutes later looking like a network
+fault.
+
+Two places Apple is stronger, and neither costs a flag:
+
+- **No swap in the guest.** The memory limit is hard by construction rather
+  than by setting `--memory-swap` equal to `--memory`.
+- **No `--device` at all.** What the Docker path refuses by policy under a
+  microVM runtime is refused here by there being nothing to ask for.
+
+### The tenant pull, as far as it can be checked from here
+
+`container registry login --username x-access-token --password-stdin -- ghcr.io`
+was run against the real GHCR: the argv parses, the token is read from stdin —
+never argv, where `ps` would show it to every user on the host — and GHCR
+answers `401 access denied or wrong credentials` for a token that is not one.
+`registry logout`, `image pull --` and `image inspect --` are all accepted, and
+`registry list` is empty afterwards.
+
+So the shape of the exchange is verified and the credential is not. A
+**successful** pull of a private image with a minted installation token still
+needs a real Ganymede and a GitHub App, and has not been done on either engine.
+
+One observation while doing it: `container image pull` fetches the whole
+multi-arch index — the progress line named `linux/s390x` — while `run` selects
+`arm64`. Disk and bandwidth, not correctness, and pinning `--platform` would
+refuse an amd64-only image that Rosetta could otherwise run. Left alone
+deliberately.
+
+### It is an addition, not a rewrite
+
+`run-args.ts`, `pull.ts` and `networks.ts` are untouched and still hold the
+Docker behaviour. `engine-docker.ts` is a table naming the functions that were
+already there; `engine-apple.ts` is a second table pointing at new files. Both
+engines ship, and both are verified — see below.
 
 ## The broker stays, and its shape does not change
 
@@ -294,15 +387,52 @@ attach answers 403.
 ## What has been verified on a real runtime
 
 `scripts/local-dev/verify-container-broker.sh` runs the whole broker path
-against a live Docker daemon and reads the started container's privileges back
-out of Docker rather than trusting the argv we believe we sent. 31 checks, all
-passing in the dev VM: authentication, every refusal, and then a running
-container with `CapDrop=[ALL]`, no host devices, the cpu/memory/pids limits
-applied, swap capped at the memory limit, the digest we asked for, NET_ADMIN
-usable, SYS_ADMIN denied, the `SETTINGS` payload intact, and a real cgroup
-`memory.max`. The last five cover networks: two services isolated by default, a
-network created on its own, both attached and then able to reach each other
-**without a restart**, and a container from another project refused.
+against a live engine and reads the started container's privileges back out of
+that engine rather than trusting the argv we believe we sent. It takes
+`BROKER_ENGINE`, and both were run on one machine — an M1 Pro, macOS 26.5.2:
+
+```
+./verify-container-broker.sh                       # docker/runc  → 34 passed, 0 failed
+BROKER_ENGINE=apple ./verify-container-broker.sh   # apple        → 35 passed, 0 failed
+```
+
+Common to both: authentication, every refusal, then a running container with
+capabilities dropped to `ALL`, the cpu and memory limits applied, the reference
+the catalog named, NET_ADMIN usable, SYS_ADMIN denied, the `SETTINGS` payload
+intact, and a real cgroup `memory.max` read from inside. Plus networks — two
+services isolated by default, and a network created on its own.
+
+**Under `apple` the `guest` group finally says something.** Every one of those
+checks happened inside a VM with its own kernel:
+
+- `uname -r` → **6.18.15**, the Kata guest kernel, not the host's
+- `/sys/fs/cgroup/memory.max` → 268435456 for a 256 MiB request
+- `/dev/net/tun` present with **no device passed in** — the guest provides it,
+  which is the assumption the whole `--device` policy rests on
+- `ulimit -u` → 128, the nproc ceiling standing in for `pids.max`
+- `SwapTotal` → 0
+
+Two checks are skipped under `apple` and say so: attaching two running services
+to a shared network, and the cross-project attach refusal, both unreachable
+because there is no attach verb. The refusal itself is checked — 501, not a
+silent success.
+
+Three things changed in the harness while getting there, and all three were the
+harness being wrong rather than the broker:
+
+- The device expectation was fixed at "absent", which is only right under a
+  microVM runtime. Under `docker`/`runc` the broker **deliberately** passes
+  `/dev/net/tun`, because there is no guest kernel to get one from. The check
+  now follows the runtime.
+- `ip link add … type dummy` was standing in for "NET_ADMIN works". The Kata
+  guest kernel has no dummy driver, so it answered `RTNETLINK: Not supported`
+  on a container that did hold the capability. It is now `ip addr add`, checked
+  on both engines to be denied without NET_ADMIN and allowed with it.
+- The stub Ganymede could never produce a startable image, which is why
+  thirteen checks had never run at all. It now serves nothing and the run goes
+  through a **built-in** id, with a public image tagged under the built-in
+  reference. What that still does not cover — and no offline run can — is the
+  tenant path: a digest-pinned `ghcr.io` pull with a minted token.
 
 This is where the capability policy was found to be wrong. `--cap-drop=ALL`
 with only NET_ADMIN added back is the appealing design and it does not run
@@ -315,17 +445,30 @@ than Docker's own default.
 
 Written and unit-tested is not the same as working. Specifically:
 
-- **Nothing has run under Kata.** The verification above ran under `runc`, so
-  everything it proves holds _except isolation from the host kernel_ — which is
-  the entire reason Kata is in the design. Apple Silicon before M3 has no nested
-  virtualisation: `/dev/kvm` is absent inside the dev VM on an M1, so Kata
-  cannot start there at all. This needs an x86 host, an M3+, or a cloud VM with
-  nested virtualisation enabled.
-- **The guest tun assumption.** The design holds that tun comes from the Kata
-  guest kernel rather than a host `/dev/net/tun` passthrough, and the broker
-  refuses `--device` on that basis. `roles/kata` ends with a task that checks it
-  on a real host. That task has never run — and it cannot, until the point
-  above is resolved.
+- **Nothing has run under Kata _via Docker_.** The Docker verification still
+  runs under `runc`, so what it proves holds _except isolation from the host
+  kernel_. Apple Silicon before M3 has no nested virtualisation: `/dev/kvm` is
+  absent inside the dev VM on an M1, so `--runtime=kata` cannot start there.
+  This still needs an x86 host, an M3+, or a cloud VM with nested
+  virtualisation.
+
+  What has changed is how much rides on it. The Apple engine runs the same
+  broker against a real microVM at level 1, and the whole `guest` group passes
+  there — so what remains unproven is narrowed to the Docker+Kata pairing
+  itself, not the design it is there to serve.
+
+- **The guest tun assumption is no longer an assumption.** The design holds
+  that tun comes from the guest kernel rather than a host `/dev/net/tun`
+  passthrough, and the broker refuses `--device` on that basis. Verified under
+  Apple `container`: `crw------- 10, 200` inside a container started with no
+  device at all. `roles/kata` still ends with a task that checks the same thing
+  on Kata specifically, and that task has still never run.
+- **A macOS deployment has no provisioning.** `infra/ansible` provisions a
+  Linux host with systemd; the Apple engine was run from a shell. A Mac host
+  needs a launchd equivalent, and the first `container system start` is
+  interactive — it offers to install the guest kernel. A headless runner has to
+  detect that and say so rather than block: observed, `container system start`
+  hangs without writing a line and the launchd service exits 78 (`EX_CONFIG`).
 - **The two jupyter digests.** `imageSha256` was dead code until now.
   `holistixforge/jupyterlab-minimal` and `-pytorch` are private on Docker Hub,
   so the recorded digests could not be checked from here. If they are stale the

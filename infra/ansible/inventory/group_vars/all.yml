@@ -92,6 +92,17 @@ holistix_install_build_server: true
 # container) and an egress policy — see doc/architecture/CLOUD_RUNNER.md.
 holistix_install_cloud_runner: false
 
+# Docker here, because these roles provision a Linux host with systemd. The
+# other engine is Apple `container`, which gives a VM per container at level 1
+# on any Apple Silicon — that is a Mac deployment and not something this play
+# installs. Stated rather than defaulted in the broker itself: the two engines
+# do not grant the same controls.
+holistix_broker_engine: docker
+# Empty, and it has to stay empty for Docker: the Linux path gives up none of
+# the controls the design rests on, and the broker refuses to start if this
+# names one it does not give up. Under the apple engine each of its concessions
+# has to be listed here — see doc/architecture/CLOUD_RUNNER.md.
+holistix_broker_accept_concessions: ''
 # Never runc. A shared kernel between organizations is not defensible once
 # tenants supply their own images.
 holistix_broker_runtime: kata

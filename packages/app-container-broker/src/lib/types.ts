@@ -27,7 +27,24 @@ export type TStartResponse = {
   container_id: string;
   host: string;
   runtime: string;
+  engine: string;
 };
+
+/**
+ * How a container engine is actually invoked.
+ *
+ * Injected so the argv-building and policy layers can be tested without a
+ * container runtime, and so either engine's front-end can be swapped in
+ * without touching them.
+ *
+ * `stdin` exists for one caller: Apple `container registry login` takes its
+ * password only from standard input. A registry token is therefore never an
+ * argv element, where it would be visible in `ps` to every user on the host.
+ *
+ * Declared here rather than beside `engineExec` so that `engine.ts` and
+ * `runtime.ts` can both name it without importing each other.
+ */
+export type TRuntimeExec = (args: string[], stdin?: string) => Promise<string>;
 
 /**
  * A catalogue entry, as the broker resolves it.
@@ -68,8 +85,26 @@ export type TResolvedImage = {
 };
 
 export type TBrokerConfig = {
+  /**
+   * Which container engine speaks to the host: `docker` or `apple`.
+   *
+   * No default, for the same reason `runtime` has none. The two engines do not
+   * grant the same things — see `ENGINE_CONCESSIONS` — so a broker that picked
+   * one on its own would decide a security question by guessing which binary
+   * was installed.
+   */
+  engine: string;
   /** Container runtime to hand every start to, e.g. `kata`. */
   runtime: string;
+  /**
+   * Controls the selected engine cannot express, named one by one.
+   *
+   * The engine declares what it cannot do; the operator has to write each one
+   * down before the broker will serve. An unacknowledged concession, or an
+   * acknowledgement of something the engine does support, is a refusal to
+   * start. See `assertConcessionsAccepted`.
+   */
+  acceptedConcessions: string[];
   /** Hostname reported back to the gateway. */
   hostname: string;
   /** Shared secret the gateway authenticates with. */

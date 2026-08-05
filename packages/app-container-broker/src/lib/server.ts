@@ -10,14 +10,8 @@ import { TBrokerConfig, TStartResponse } from './types';
 import { validateStartRequest, InvalidRequest } from './validate';
 import { TCatalogueSource, resolveImage, UnknownImage } from './catalogue';
 import { TRuntimeExec, startContainer, removeContainer } from './runtime';
-import {
-  ensureNetwork,
-  attachToNetwork,
-  detachFromNetwork,
-  removeNetwork,
-  sharedNetworkName,
-  NetworkError,
-} from './networks';
+import { TContainerEngine, UnsupportedByEngine } from './engine';
+import { sharedNetworkName, NetworkError } from './networks';
 
 const MAX_BODY_BYTES = 64 * 1024;
 
@@ -70,6 +64,12 @@ export type TBrokerDeps = {
   config: TBrokerConfig;
   catalogue: TCatalogueSource;
   exec: TRuntimeExec;
+  /**
+   * Which engine every verb goes through — Docker on Linux, Apple
+   * `container` on macOS. Chosen once at startup by `selectEngine`, never per
+   * request: a caller has no say in what its container is isolated by.
+   */
+  engine: TContainerEngine;
 };
 
 /**
@@ -82,11 +82,18 @@ export type TBrokerDeps = {
  * the run itself.
  */
 export const createBrokerServer = (deps: TBrokerDeps): Server => {
-  const { config, exec } = deps;
+  const { config, exec, engine } = deps;
 
   return createServer(async (req, res) => {
     if (req.method === 'GET' && req.url === '/health') {
-      json(res, 200, { status: 'ok', runtime: config.runtime });
+      json(res, 200, {
+        status: 'ok',
+        runtime: config.runtime,
+        engine: engine.name,
+        // What this deployment has given up, so it can be read from outside
+        // rather than inferred from which binary is installed.
+        concessions: engine.concessions.map((c) => c.id),
+      });
       return;
     }
 
@@ -106,7 +113,7 @@ export const createBrokerServer = (deps: TBrokerDeps): Server => {
     // and populated independently of any image, and a container can be attached
     // long after it started.
     if (req.method === 'POST' && req.url === '/networks') {
-      await handleNetworkCreate(req, res, exec);
+      await handleNetworkCreate(req, res, exec, engine);
       return;
     }
 
@@ -114,14 +121,14 @@ export const createBrokerServer = (deps: TBrokerDeps): Server => {
       /^\/networks\/([A-Za-z0-9_.-]+)\/members(?:\/([A-Za-z0-9_.-]+))?$/
     );
     if (member && (req.method === 'POST' || req.method === 'DELETE')) {
-      await handleNetworkMember(req, res, exec, member[1], member[2]);
+      await handleNetworkMember(req, res, exec, engine, member[1], member[2]);
       return;
     }
 
     const dropNetwork = req.url?.match(/^\/networks\/([A-Za-z0-9_.-]+)$/);
     if (req.method === 'DELETE' && dropNetwork) {
       try {
-        await removeNetwork(exec, dropNetwork[1]);
+        await engine.removeNetwork(exec, dropNetwork[1]);
         json(res, 200, { removed: dropNetwork[1] });
       } catch (e) {
         // Docker refuses while containers are still attached, which is what we
@@ -136,7 +143,7 @@ export const createBrokerServer = (deps: TBrokerDeps): Server => {
     const remove = req.url?.match(/^\/containers\/([A-Za-z0-9_.-]+)$/);
     if (req.method === 'DELETE' && remove) {
       try {
-        await removeContainer(exec, remove[1]);
+        await removeContainer(engine, exec, remove[1]);
         json(res, 200, { removed: remove[1] });
       } catch (e) {
         log(EPriority.Warning, 'BROKER', `Remove failed: ${String(e)}`);
@@ -152,7 +159,7 @@ export const createBrokerServer = (deps: TBrokerDeps): Server => {
 const handleStart = async (
   req: IncomingMessage,
   res: ServerResponse,
-  { config, catalogue, exec }: TBrokerDeps
+  { config, catalogue, exec, engine }: TBrokerDeps
 ): Promise<void> => {
   let request;
   try {
@@ -160,6 +167,17 @@ const handleStart = async (
     request = validateStartRequest(JSON.parse(raw), config);
   } catch (e) {
     const message = e instanceof InvalidRequest ? e.message : 'malformed body';
+    log(EPriority.Warning, 'BROKER', `Rejected start: ${message}`);
+    json(res, 400, { error: message });
+    return;
+  }
+
+  // Refused rather than started without them. `--add-host` has no equivalent
+  // under Apple `container`, and a container that silently cannot resolve its
+  // gateway fails minutes later in a way that reads as a network fault instead
+  // of a missing flag. This is not a concession — nothing is lost quietly.
+  if (!engine.supportsExtraHosts && request.extra_hosts.length > 0) {
+    const message = `engine ${engine.name} cannot set extra hosts`;
     log(EPriority.Warning, 'BROKER', `Rejected start: ${message}`);
     json(res, 400, { error: message });
     return;
@@ -180,11 +198,18 @@ const handleStart = async (
   }
 
   try {
-    const containerId = await startContainer(exec, request, image, config);
+    const containerId = await startContainer(
+      engine,
+      exec,
+      request,
+      image,
+      config
+    );
     const body: TStartResponse = {
       container_id: containerId,
       host: config.hostname,
       runtime: config.runtime,
+      engine: engine.name,
     };
     log(
       EPriority.Info,
@@ -213,7 +238,8 @@ const readJson = async (
 const handleNetworkCreate = async (
   req: IncomingMessage,
   res: ServerResponse,
-  exec: TRuntimeExec
+  exec: TRuntimeExec,
+  engine: TContainerEngine
 ): Promise<void> => {
   try {
     const body = await readJson(req);
@@ -221,7 +247,7 @@ const handleNetworkCreate = async (
     const name = String(body.name ?? '');
     const networkName = sharedNetworkName(projectId, name);
 
-    await ensureNetwork(exec, networkName, projectId);
+    await engine.ensureNetwork(exec, networkName, projectId);
 
     log(EPriority.Info, 'BROKER', `Network ${networkName} ready`);
     json(res, 201, { network: networkName, project_id: projectId });
@@ -239,6 +265,7 @@ const handleNetworkMember = async (
   req: IncomingMessage,
   res: ServerResponse,
   exec: TRuntimeExec,
+  engine: TContainerEngine,
   networkName: string,
   containerFromPath: string | undefined
 ): Promise<void> => {
@@ -250,7 +277,7 @@ const handleNetworkMember = async (
     }
 
     if (req.method === 'POST') {
-      await attachToNetwork(exec, networkName, containerId);
+      await engine.attachToNetwork(exec, networkName, containerId);
       log(
         EPriority.Info,
         'BROKER',
@@ -260,9 +287,18 @@ const handleNetworkMember = async (
       return;
     }
 
-    await detachFromNetwork(exec, networkName, containerId);
+    await engine.detachFromNetwork(exec, networkName, containerId);
     json(res, 200, { detached: containerId, network: networkName });
   } catch (e) {
+    // The engine cannot do this at all — not a bad request, and not a fault.
+    // 501 so a caller can tell "you asked wrongly" from "this deployment does
+    // not have that verb", which is the difference between fixing the request
+    // and restarting both services onto a shared network.
+    if (e instanceof UnsupportedByEngine) {
+      log(EPriority.Warning, 'BROKER', e.message);
+      json(res, 501, { error: e.message });
+      return;
+    }
     if (e instanceof NetworkError) {
       // A cross-project attach is the one refusal here that is a security
       // decision rather than a malformed request, so it answers 403.
