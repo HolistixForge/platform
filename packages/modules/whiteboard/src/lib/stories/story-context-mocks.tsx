@@ -2,6 +2,7 @@ import { ReactNode, useMemo } from 'react';
 
 import { TCoreSharedData, TGraphNode } from '@holistix-forge/core-graph';
 import { FrontendDispatcher } from '@holistix-forge/reducers/frontend';
+import { ModuleProvider } from '@holistix-forge/module/frontend';
 import { SharedTypes } from '@holistix-forge/collab-engine';
 
 import {
@@ -148,10 +149,32 @@ export const StoryMockWhiteboardContext = ({
     };
   }, [spaceState]);
 
+  // Any node component reaching for a connector calls `useConnector`, which
+  // calls `useDispatcher`, which reads `reducers.dispatcher` off the module
+  // context. Without a provider that context defaults to `{ exports: {} }`, so
+  // `reducers` is undefined and the read throws — killing the story before it
+  // paints, with a message ("Cannot read properties of undefined (reading
+  // 'dispatcher')") that names neither the hook nor the missing provider.
+  //
+  // It cost fourteen Jupyter stories: node-vault, node-python, node-screening,
+  // node-dataset, node-notebook and node-notebook-component, every state of
+  // each. They are not broken components — they were rendered without half
+  // their context. Whiteboard's own stories escaped only because none of them
+  // happens to reach a connector.
+  //
+  // A bare dispatcher is the right mock here: nothing in a story is listening,
+  // so dispatched events go nowhere, which is what a story wants.
+  const moduleExports = useMemo(
+    () => ({ reducers: { dispatcher: new FrontendDispatcher() } }),
+    []
+  );
+
   return (
-    <ReactflowLayerContext value={{ ...context }}>
-      {children}
-    </ReactflowLayerContext>
+    <ModuleProvider exports={moduleExports}>
+      <ReactflowLayerContext value={{ ...context }}>
+        {children}
+      </ReactflowLayerContext>
+    </ModuleProvider>
   );
 };
 

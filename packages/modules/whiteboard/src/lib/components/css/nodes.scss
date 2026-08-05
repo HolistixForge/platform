@@ -184,16 +184,27 @@
   border-radius: 100%;
 
   &.python {
-    background-image: url('../node-python-bg.svg');
+// The six backgrounds below live in ui-base, not here: whiteboard ships no SVG
+// at all. `url('../<name>.svg')` resolved to
+// packages/modules/whiteboard/src/lib/components/<name>.svg, which has never
+// existed, so every node background 404'd — silently, because a missing
+// background-image paints nothing and reports nothing. Storybook was the first
+// place it was visible, as a 404 in the network log of node-vault, node-python
+// and node-dataset.
+//
+// The path is relative because SCSS `url()` is resolved by the bundler against
+// the file, and no alias is configured for asset URLs in any of the eleven
+// Storybook Vite configs. Six levels up reaches packages/.
+    background-image: url('../../../../../../ui-base/src/lib/assets/node-python-bg.svg');
   }
   &.vault {
-    background-image: url('../node-vault-bg.svg');
+    background-image: url('../../../../../../ui-base/src/lib/assets/node-vault-bg.svg');
   }
   &.dataset {
-    background-image: url('../node-dataset-bg.svg');
+    background-image: url('../../../../../../ui-base/src/lib/assets/node-dataset-bg.svg');
   }
   &.screening {
-    background-image: url('../node-dataset-bg.svg');
+    background-image: url('../../../../../../ui-base/src/lib/assets/node-dataset-bg.svg');
   }
 
   .content {
@@ -283,16 +294,16 @@
   border-radius: 100%;
 
   &.python {
-    background-image: url('../node-python-bg.svg');
+    background-image: url('../../../../../../ui-base/src/lib/assets/node-python-bg.svg');
   }
   &.vault {
-    background-image: url('../node-vault-bg.svg');
+    background-image: url('../../../../../../ui-base/src/lib/assets/node-vault-bg.svg');
   }
   &.dataset {
-    background-image: url('../node-dataset-bg.svg');
+    background-image: url('../../../../../../ui-base/src/lib/assets/node-dataset-bg.svg');
   }
   &.screening {
-    background-image: url('../node-dataset-bg.svg');
+    background-image: url('../../../../../../ui-base/src/lib/assets/node-dataset-bg.svg');
   }
 
   .content {
@@ -388,16 +399,16 @@
 
 // Toolbar
 .bg-toolbar {
-  background: url('../bg-toolbar.svg') no-repeat;
+  background: url('../../../../../../ui-base/src/lib/assets/bg-toolbar.svg') no-repeat;
   background-size: cover;
 }
 
 .bg-addToolbar {
-  background: url('../bg-toolbar-secondary.svg') no-repeat;
+  background: url('../../../../../../ui-base/src/lib/assets/bg-toolbar-secondary.svg') no-repeat;
   background-size: cover;
 }
 
 .bg-toolbar-tertiary {
-  background: url('../bg-toolbar-tertiary.svg') no-repeat;
+  background: url('../../../../../../ui-base/src/lib/assets/bg-toolbar-tertiary.svg') no-repeat;
   background-size: cover;
 }
