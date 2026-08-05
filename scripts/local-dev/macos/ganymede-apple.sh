@@ -26,14 +26,39 @@
 
 set -uo pipefail
 
-NET=holistix_dev
+# Same knobs as the other macOS scripts, and the same defaults — setup-nginx.sh
+# writes a `proxy_pass` to GANYMEDE_PORT on the loopback, so this is the other
+# end of that.
+ENV_NAME="${ENV_NAME:-apollo}"
+DOMAIN="${DOMAIN:-apollo.test}"
+HTTPS_PORT="${HTTPS_PORT:-8443}"
+GANYMEDE_PORT="${GANYMEDE_PORT:-6100}"
+
+# Apple's own network, and not one of ours, for two reasons that both came out
+# of trying the other way:
+#
+#   `--publish` is silently ignored on a named network. Measured: the same
+#   image published on `default` answers 200, and on a named network the port
+#   binds on the host and times out. nginx reaches Ganymede over that port, so
+#   Ganymede has to be here.
+#
+#   A named network stopped carrying traffic mid-session — no route on the
+#   host, no reachability between two containers that both held an address on
+#   it. Nothing in this harness is worth debugging vmnet for.
+#
+# The isolation that matters is not weakened: a *user* container still gets a
+# private network of its own from the broker. These are platform services, and
+# neither binds anywhere but the loopback.
+NET=default
 PG=hx-postgres
-GANY=hx-ganymede
-DB=ganymede_apple
-DB_USER=ganymede_app_apple
-DB_PASSWORD="${GANYMEDE_APPLE_DB_PASSWORD:-applepass123}"
+GANY="hx-ganymede-${ENV_NAME}"
+DB="ganymede_${ENV_NAME}"
+DB_USER="ganymede_app_${ENV_NAME}"
+DB_PASSWORD="${GANYMEDE_DB_PASSWORD:-applepass123}"
+# Inside the container. The host sees GANYMEDE_PORT, published on loopback.
 PORT=6870
-STATE="${HOME}/.holistix-apple"
+CONF_DIR="${HOME}/.holistix-macos"
+STATE="${CONF_DIR}/${ENV_NAME}"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 BUNDLE_DIR="${REPO_ROOT}/dist/packages/app-ganymede"
 
@@ -75,7 +100,6 @@ wait_for() {
 }
 
 up_postgres() {
-  container network create "$NET" >/dev/null 2>&1
   if [ -n "$(ip_of "$PG")" ]; then
     ok "Postgres already up at $(ip_of "$PG")"
     return 0
@@ -164,15 +188,20 @@ stage_bundle() {
   # Two of these are JSON and not strings, which is not obvious from their
   # names and costs a confusing 500 on the first request rather than a refusal
   # at startup: GANYMEDE_SERVER_BIND and ALLOWED_ORIGINS are both JSON.parse'd.
-  python3 - "$pgip" "$STATE" "$DB" "$DB_USER" "$DB_PASSWORD" "$PORT" <<'PY'
+  python3 - "$pgip" "$STATE" "$DB" "$DB_USER" "$DB_PASSWORD" "$PORT" \
+    "$DOMAIN" "$HTTPS_PORT" <<'PY'
 import base64, pathlib, sys
-pgip, state, db, user, password, port = sys.argv[1:7]
+pgip, state, db, user, password, port, domain, https_port = sys.argv[1:9]
 d = pathlib.Path(state)
+# The FQDNs carry the port. `CONFIG.APP_FRONTEND_URL` is `https://${FRONTEND_FQDN}`
+# and nginx does not listen on 443 here — binding under 1024 needs root — so a
+# name without the port produces links nobody can follow.
+host = f'{domain}:{https_port}'
 env = {
-  'FRONTEND_FQDN': 'apple.local',
-  'GANYMEDE_FQDN': 'ganymede.apple.local',
+  'FRONTEND_FQDN': host,
+  'GANYMEDE_FQDN': f'ganymede.{host}',
   'GANYMEDE_SERVER_BIND': '[{"host":"0.0.0.0","port":%s}]' % port,
-  'ALLOWED_ORIGINS': '["https://apple.local"]',
+  'ALLOWED_ORIGINS': '["https://%s"]' % host,
   'PG_HOST': pgip, 'PG_PORT': '5432',
   'PG_DATABASE': db, 'PG_USER': user, 'PG_PASSWORD': password,
   'GITHUB_CLIENT_ID': 'unset', 'GITHUB_CLIENT_SECRET': 'unset',
@@ -181,7 +210,7 @@ env = {
   'DISCORD_CLIENT_ID': 'unset', 'DISCORD_CLIENT_SECRET': 'unset',
   'MAILING_HOST': 'localhost', 'MAILING_PORT': '1025',
   'MAILING_USER': 'unset', 'MAILING_PASSWORD': 'unset',
-  'SESSION_COOKIE_KEY': 'apple-session-key-not-for-production',
+  'SESSION_COOKIE_KEY': 'macos-session-key-not-for-production',
 }
 # An env file is KEY=VALUE per line, so a PEM cannot travel in one. They go
 # base64'd and start.sh decodes them inside the guest.
@@ -212,8 +241,14 @@ EOS
 
 up_ganymede() {
   container delete --force "$GANY" >/dev/null 2>&1
+  # Two networks, and the first one is not decoration. `--publish` is silently
+  # ignored on a named network — measured: the same image published on
+  # `default` answers 200 and on `holistix_dev` times out, with the port bound
+  # on the host either way. nginx reaches Ganymede over the published port, and
+  # Ganymede reaches Postgres over the private one, so it needs both.
   container run --detach --name "$GANY" --network "$NET" \
     --cpus 2 --memory 1024m \
+    --publish "127.0.0.1:${GANYMEDE_PORT}:${PORT}" \
     --env-file "${STATE}/ganymede.env" \
     -v "${STATE}:/app" -w /app \
     -- docker.io/library/node:22-alpine sh /app/start.sh >/dev/null 2>&1
@@ -285,7 +320,9 @@ case "${1:-up}" in
   status)
     echo "============================================="
     printf "Postgres   %s\n" "$(ip_of "$PG"):5432 ${DB}"
-    printf "Ganymede   http://%s:%s\n" "$(ip_of "$GANY")" "$PORT"
+    printf "Ganymede   http://127.0.0.1:%s  (conteneur %s:%s)\n" \
+      "$GANYMEDE_PORT" "$(ip_of "$GANY")" "$PORT"
+    printf "Plateforme https://ganymede.%s:%s\n" "$DOMAIN" "$HTTPS_PORT"
     printf "State      %s\n" "$STATE"
     echo "============================================="
     note "The internal routes the broker needs are gateway-token protected;"

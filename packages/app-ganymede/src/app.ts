@@ -166,7 +166,13 @@ export function createApp(
         name: 'sessid',
         cookie: {
           secure: true, // Works via X-Forwarded-Proto with trust proxy
-          domain: CONFIG.GANYMEDE_FQDN, // Explicitly set to ganymede.domain.local only
+          // The host without its port. A cookie domain is a domain — a browser
+          // rejects `ganymede.apollo.test:8443` outright — while
+          // GANYMEDE_FQDN has to carry the port, because every URL built from
+          // it is a link somebody follows and nginx does not listen on 443
+          // where binding under 1024 needs root. This is the one place the
+          // port has to come back off.
+          domain: CONFIG.GANYMEDE_FQDN.split(':')[0],
           maxAge: SESSION_MAX_AGE,
           httpOnly: true,
           path: '/',
