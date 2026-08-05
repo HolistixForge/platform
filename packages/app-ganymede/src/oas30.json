@@ -1861,6 +1861,25 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "code_challenge",
+            "in": "query",
+            "required": false,
+            "description": "PKCE challenge (RFC 7636). Required in practice for a public client, which cannot hold a secret; optional here so the confidential client that predates it keeps working.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code_challenge_method",
+            "in": "query",
+            "required": false,
+            "description": "Only S256. `plain` is not accepted.",
+            "schema": {
+              "type": "string",
+              "enum": ["S256"]
+            }
           }
         ],
         "responses": {
@@ -2033,15 +2052,20 @@
                   },
                   "client_secret": {
                     "type": "string",
-                    "example": "none"
+                    "example": "none",
+                    "description": "Omitted by a public client, which by definition cannot hold one \u2014 that is what PKCE replaces. Required here, no public client could ever exchange a code: the validator refused the request before the route, which accepts a missing secret (models/oauth.ts getClient)."
                   },
                   "redirect_uri": {
                     "type": "string",
                     "format": "uri",
                     "description": "Must match redirect_uri from authorization request"
+                  },
+                  "code_verifier": {
+                    "type": "string",
+                    "description": "PKCE verifier (RFC 7636), sent with an authorization_code grant."
                   }
                 },
-                "required": ["grant_type", "client_id", "client_secret"]
+                "required": ["grant_type", "client_id"]
               }
             }
           }
