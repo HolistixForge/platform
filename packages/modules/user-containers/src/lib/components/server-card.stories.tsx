@@ -7,6 +7,8 @@ import {
   withServicesStory,
   runningOnPlatformStory,
   runningLocallyStory,
+  runningOnAppleStory,
+  runningOnSharedKernelStory,
   StoryArgs,
 } from './server-card-stories';
 import { localRunnerFrontend } from '../local-runner-frontend';
@@ -124,4 +126,29 @@ export const RunningOnPlatform: Story = {
 
 export const RunningLocally: Story = {
   args: { ...runningLocallyStory() },
+};
+
+//
+
+/**
+ * The same placement on a Mac host.
+ *
+ * Beside `RunningOnPlatform` on purpose: both are microVMs and they are not
+ * the same guarantee. If these two stories ever render identically, the card
+ * has stopped saying the thing it was changed to say.
+ */
+export const RunningOnApple: Story = {
+  args: { ...runningOnAppleStory() },
+};
+
+//
+
+/**
+ * A container on the host's own kernel, beside every other tenant.
+ *
+ * Reachable — `BROKER_RUNTIME=runc` is a stated choice, never a fallback — and
+ * the one verdict on this card worth interrupting someone for.
+ */
+export const RunningOnSharedKernel: Story = {
+  args: { ...runningOnSharedKernelStory() },
 };

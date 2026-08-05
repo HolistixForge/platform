@@ -457,12 +457,33 @@ Written and unit-tested is not the same as working. Specifically:
   there — so what remains unproven is narrowed to the Docker+Kata pairing
   itself, not the design it is there to serve.
 
-- **The guest tun assumption is no longer an assumption.** The design holds
-  that tun comes from the guest kernel rather than a host `/dev/net/tun`
-  passthrough, and the broker refuses `--device` on that basis. Verified under
-  Apple `container`: `crw------- 10, 200` inside a container started with no
-  device at all. `roles/kata` still ends with a task that checks the same thing
-  on Kata specifically, and that task has still never run.
+- **The guest tun assumption is settled, and it was never about the rootfs.**
+  The design holds that tun comes from the guest kernel rather than a host
+  `/dev/net/tun` passthrough, and the broker refuses `--device` on that basis.
+
+  The pinned release archive was downloaded and read. `configuration.toml`
+  points at `configuration-qemu.toml`, which boots
+  `vmlinux.container → vmlinux-6.18.15-186` — the same kernel Apple installs —
+  from an **image**, not an initrd. That kernel ships `CONFIG_TUN=y`, built in
+  rather than a module, with `CONFIG_DEVTMPFS=y` and `CONFIG_DEVTMPFS_MOUNT=y`.
+
+  So nothing creates the node deliberately and nothing has to: a builtin TUN
+  driver registers misc device 10:200 and devtmpfs materialises it. Which is
+  precisely why it appeared under Apple `container`, booting that kernel with a
+  different VMM, rootfs and agent — measured, `crw------- 10, 200`, no device
+  passed in.
+
+  The initrd path was checked separately, because `CONFIG_DEVTMPFS_MOUNT` does
+  not cover initramfs boots: `kata-alpine-3.22.initrd` ships static nodes for
+  null, zero, random, urandom and console but **not** net/tun, and its
+  `/sbin/init` is the agent, whose string table carries `devtmpfs` beside
+  `/dev`, `/dev/shm` and `/dev/pts`. The agent mounts it.
+
+  All of that is read from shipped artefacts rather than from a boot. The task
+  at the end of `roles/kata` is what turns it into a boot, and it has still
+  never run — but its remaining failure modes are now narrow: a kernel swapped
+  for one without `CONFIG_TUN`, or an agent that stops mounting devtmpfs.
+
 - **A macOS deployment has no provisioning.** `infra/ansible` provisions a
   Linux host with systemd; the Apple engine was run from a shell. A Mac host
   needs a launchd equivalent, and the first `container system start` is
@@ -475,10 +496,15 @@ Written and unit-tested is not the same as working. Specifically:
   local runner will now fail the pull rather than silently start a different
   image — intended, but it is a behaviour change to the existing local mode and
   is worth confirming before release.
-- **The Kata package name.** `roles/kata` installs `kata-containers` from apt.
-  On Ubuntu 24.04 it may be named differently or only available from the
-  upstream release tarball; the role asserts the binary exists rather than
-  trusting the install.
+- **The Kata archive layout.** No longer a guess either. `roles/kata` installs
+  from the upstream release because Ubuntu does not package Kata, unpacks at
+  `/` and asserts `/opt/kata/bin/kata-runtime`. The arm64 archive was opened:
+  every entry is under `./opt/`, `VERSION` reads 3.28.0, and `bin/` holds
+  `kata-runtime` along with `containerd-shim-kata-v2` and `kata-monitor`. Both
+  architectures exist at the pinned URLs, at the sizes the role documents.
+
+  What is still unverified is the install _running_ — apt, zstd, the unarchive
+  step, and registering the runtime with Docker. That needs a Linux host.
 
 ## What does not change
 
@@ -492,11 +518,16 @@ Worth stating, because it is what makes the two modes interchangeable:
 
 ## Open questions
 
-**Hypervisor backend.** Firecracker, Cloud Hypervisor or QEMU under Kata. This
-depends on persistent storage: `generateCommand` emits no `-v`, so user containers
-are ephemeral today. If Jupyter notebooks must survive a restart, the volume story
-comes first, and it constrains the backend — filesystem sharing support differs
-between them.
+**Hypervisor backend.** Still open, but cheaper than it looked. The archive
+ships `qemu-system-aarch64`, `cloud-hypervisor`, `firecracker` and `jailer` in
+`/opt/kata/bin`, and a `configuration-*.toml` for each — so the choice is a
+config edit on a host that already has Kata, not another install. Kata's own
+default is QEMU.
+
+What the decision still waits on is persistent storage: `generateCommand` emits
+no `-v`, so user containers are ephemeral today. If Jupyter notebooks must
+survive a restart, the volume story comes first and it constrains the backend —
+filesystem sharing support differs between them.
 
 **Egress policy.** See [above](#isolation-is-not-abuse-prevention).
 

@@ -18,11 +18,19 @@
 # the archive layout this role asserts — /opt/kata/bin/kata-runtime — is most
 # likely to have moved.
 #
-# Both architectures exist at this version: amd64 1515 MB, arm64 569 MB, both
-# URLs checked.
+# Both architectures exist at this version: amd64 1 588 987 563 bytes, arm64
+# 596 775 193, both URLs checked.
+#
+# The arm64 archive has since been downloaded and opened, so the rest of this
+# file is measured rather than inferred. `opt/kata/VERSION` reads 3.28.0, and
+# `vmlinux.container` is a symlink to `vmlinux-6.18.15-186` — the same kernel
+# Apple `container` installs and boots, which is what made this the version we
+# had actually run.
 kata_version: '3.28.0'
 
-# Where kata-static unpacks to. The archive is rooted at ./opt/kata, so this is
-# not a choice — it is where the binary lands, and the role asserts it rather
-# than trusting it.
+# Where kata-static unpacks to. Confirmed by listing the archive: every entry
+# is under `./opt/`, so extracting at `/` puts the binary here. `bin/` holds
+# kata-runtime, containerd-shim-kata-v2, kata-monitor, and the hypervisors —
+# qemu-system-aarch64, cloud-hypervisor, firecracker and jailer, so the
+# backend choice is a config edit rather than another download.
 kata_runtime_path: /opt/kata/bin/kata-runtime

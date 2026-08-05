@@ -304,6 +304,13 @@ post() {
     -d "$(req "$1" "${2:-$NAME}" "${3:-uc_verify01}")"
 }
 
+# The start response body, for the fields the gateway forwards to the card.
+post_body() {
+  curl -s -X POST "$B/containers" \
+    -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+    -d "$(req "$1" "$2" "$3")"
+}
+
 echo
 echo "Broker answers"
 check contract "health reports the configured runtime" \
@@ -342,7 +349,33 @@ fi
 
 echo
 echo "An accepted start"
-check contract "the broker accepts a valid request" "$(post '{}')" "201"
+START_BODY=$(post_body '{}' "$NAME" uc_verify01)
+check contract "the broker accepts a valid request" \
+  "$(printf '%s' "$START_BODY" | python3 -c 'import json,sys; print("201" if json.load(sys.stdin).get("container_id") else "no")')" \
+  "201"
+
+# The isolation verdict, which the gateway forwards into shared state and the
+# service card renders. It is answered here, by the engine, rather than left
+# for a frontend to infer from a runtime name — a UI matching strings against a
+# list would quietly call an unfamiliar runtime safe.
+if [ "$ENGINE" = "apple" ]; then
+  # Every container is a VM here, whatever the runtime handler is called.
+  EXPECTED_ISOLATION=microvm
+else
+  case "$BROKER_RUNTIME" in
+    kata|kata-*) EXPECTED_ISOLATION=microvm ;;
+    *)           EXPECTED_ISOLATION=shared-kernel ;;
+  esac
+fi
+check contract "the start says what isolated the container" \
+  "$(printf '%s' "$START_BODY" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("isolation",""))')" \
+  "$EXPECTED_ISOLATION"
+check contract "the start says which engine ran it" \
+  "$(printf '%s' "$START_BODY" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("engine",""))')" \
+  "$ENGINE"
+check contract "the start carries what this deployment gave up" \
+  "$(printf '%s' "$START_BODY" | python3 -c 'import json,sys; print(",".join(json.load(sys.stdin).get("concessions",[])))')" \
+  "$CONCESSIONS"
 sleep 3
 check daemon "the container is running"  "$(eng_field "$NAME" state)" "running"
 check daemon "it is not privileged" "$(eng_field "$NAME" privileged)" \

@@ -129,16 +129,31 @@
 # needs tun. Under Kata that comes from the guest kernel, not from a host
 # device passthrough — the broker refuses `--device` for exactly this reason.
 #
-# The kernel half of this is no longer an assumption. Apple's `container`
-# installs kata-static-3.28.0 as its default guest kernel, and a container
-# booted on that kernel here reported 6.18.15 with /dev/net/tun present as
-# crw------- 10:200, with nothing passed through from the host. So Kata's
-# guest kernel does carry TUN.
+# This is no longer an assumption on either half. The release archive for the
+# pinned version was downloaded and read:
 #
-# What this task still has to prove is the other half: that the guest image
-# Kata boots — its rootfs and agent, which Apple does not use — creates the
-# device node. If it fails, that is a Kata guest image question and not a
-# microVM one, which is a much narrower thing to go and fix.
+#   configuration.toml → configuration-qemu.toml, which sets
+#     kernel = vmlinux.container → vmlinux-6.18.15-186
+#     image  = kata-containers.img → kata-ubuntu-noble.image
+#   config-6.18.15-186 has CONFIG_TUN=y — built in, not a module —
+#     with CONFIG_DEVTMPFS=y and CONFIG_DEVTMPFS_MOUNT=y
+#
+# So nothing creates /dev/net/tun deliberately, and nothing needs to: a builtin
+# TUN driver registers misc device 10:200 and devtmpfs materialises the node.
+# That is exactly why it turned up under Apple `container`, which boots this
+# same kernel with a completely different VMM, rootfs and agent — measured
+# here, crw------- 10:200, with nothing passed in from the host.
+#
+# The initrd path was checked too, because CONFIG_DEVTMPFS_MOUNT does *not*
+# cover initramfs boots: kata-alpine-3.22.initrd ships static nodes for null,
+# zero, random, urandom and console but **not** for net/tun, and its /sbin/init
+# is the agent, whose string table carries devtmpfs beside /dev, /dev/shm and
+# /dev/pts. The agent mounts it. Both boot paths therefore end up with the node.
+#
+# All of the above is read from the shipped artefacts, not from a boot. This
+# task is what turns it into a boot, and its remaining failure modes are now
+# narrow: a kernel swapped for one without CONFIG_TUN, or a guest image whose
+# agent stops mounting devtmpfs.
 - name: Confirm the guest image provides tun
   ansible.builtin.command: >-
     docker run --rm --runtime=kata --cap-add=NET_ADMIN

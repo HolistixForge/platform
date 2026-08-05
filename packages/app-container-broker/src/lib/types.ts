@@ -28,6 +28,25 @@ export type TStartResponse = {
   host: string;
   runtime: string;
   engine: string;
+  /**
+   * Whether this container got its own kernel, computed rather than named.
+   *
+   * The gateway must not have to know that `runc` shares one and `kata` does
+   * not, or that every Apple container is a VM whatever its runtime handler is
+   * called. That mapping lives in the engine, so the answer travels instead of
+   * the inputs to it — a frontend matching runtime strings would silently call
+   * a new runtime safe.
+   */
+  isolation: 'microvm' | 'shared-kernel';
+  /**
+   * What this deployment gave up, by id.
+   *
+   * Sent so the platform can show it. A Mac host that isolates differently and
+   * a UI that says nothing is the silent failure the "no default runtime" rule
+   * exists to prevent — the same failure one level up, where the person whose
+   * code is running cannot see which guarantee they got.
+   */
+  concessions: string[];
 };
 
 /**

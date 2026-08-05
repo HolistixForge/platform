@@ -76,6 +76,80 @@ const isAlive = (last_watchdog_at: string | null) => {
   return r;
 };
 
+/**
+ * What actually isolated this container, in one line under the runner.
+ *
+ * The platform ships two engines with different guarantees, and the whole
+ * reason the broker refuses to start without a stated runtime is that an
+ * absent isolation must never be reached by omission. That rule only holds as
+ * far as the value travels: if a deployment isolates less well and the card
+ * says nothing, the person whose code is running still believes they got a
+ * private kernel. So it comes out of the environment and onto the card.
+ *
+ * Three states, and the third is not a gap to be filled in:
+ *
+ *   own kernel     a microVM — Kata under Docker, or any Apple container
+ *   shared kernel  runc: the host's kernel, with every other tenant on it
+ *   unknown        the broker did not say. An older one, or a runner that is
+ *                  not the platform. Shown as unknown rather than assumed
+ *                  safe, because the safe-looking assumption is the one that
+ *                  costs something when it is wrong.
+ *
+ * Concessions are listed when there are any. They are the difference between
+ * two microVMs, and "own kernel" alone would flatten that back out.
+ */
+const IsolationLine = ({ runner }: { runner: Record<string, unknown> }) => {
+  const isolation = runner.isolation;
+  const engine = typeof runner.engine === 'string' ? runner.engine : undefined;
+  const runtime =
+    typeof runner.runtime === 'string' ? runner.runtime : undefined;
+  const concessions = Array.isArray(runner.concessions)
+    ? (runner.concessions as string[])
+    : [];
+
+  // Nothing was reported at all — a local placement, or a container that has
+  // not started yet. Silence is right here; there is no claim to correct.
+  if (!runtime && !engine && !isolation) return null;
+
+  const shared = isolation === 'shared-kernel';
+  const known = isolation === 'microvm' || shared;
+
+  const what = !known
+    ? 'Isolation not reported'
+    : shared
+    ? 'Shares the host kernel'
+    : 'Own kernel';
+
+  const detail = [engine, runtime].filter(Boolean).join(' · ');
+
+  return (
+    <div
+      style={{
+        marginTop: 'var(--spacing-4)',
+        fontSize: 'var(--font-size-sm)',
+        // A shared kernel is the one case worth interrupting someone for.
+        color: shared ? 'var(--color-warning)' : 'var(--color-text-muted)',
+      }}
+      title={
+        concessions.length > 0
+          ? `This deployment gives up: ${concessions.join(', ')}`
+          : undefined
+      }
+    >
+      <p>
+        {what}
+        {detail ? ` · ${detail}` : ''}
+      </p>
+      {concessions.length > 0 && (
+        <p>
+          {concessions.length} control{concessions.length > 1 ? 's' : ''} given
+          up: {concessions.join(', ')}
+        </p>
+      )}
+    </div>
+  );
+};
+
 //
 //
 
@@ -309,6 +383,8 @@ export const UserContainerCardInternal = ({
             );
           })}
         </div>
+
+        <IsolationLine runner={container.runner as Record<string, unknown>} />
 
         {typeof container.runner.command === 'string' && (
           <DockerCommand command={container.runner.command} />

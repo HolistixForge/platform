@@ -157,6 +157,72 @@ describe('PlatformRunnerBackend', () => {
     });
   });
 
+  it('records what isolated it, so the card can say', async () => {
+    // The platform ships two engines with different guarantees. A deployment
+    // that isolates less while the UI says nothing is the silent failure the
+    // broker's "no default runtime" rule exists to prevent — one level up,
+    // where the cost is a user believing they got a private kernel.
+    const runner = new PlatformRunnerBackend({
+      transport: async () => ({
+        ...response,
+        engine: 'apple',
+        isolation: 'microvm' as const,
+        concessions: ['no-new-privileges', 'pids-cgroup'],
+      }),
+    });
+
+    const result = await runner.start(
+      container(),
+      'jwt',
+      imageRegistry(),
+      config()
+    );
+
+    expect(result).toMatchObject({
+      engine: 'apple',
+      isolation: 'microvm',
+      concessions: ['no-new-privileges', 'pids-cgroup'],
+    });
+  });
+
+  it('carries a shared kernel through rather than dropping it', async () => {
+    // The one verdict worth interrupting someone for, so it must survive the
+    // hop that a happy-path-only forward would lose.
+    const runner = new PlatformRunnerBackend({
+      transport: async () => ({
+        ...response,
+        engine: 'docker',
+        runtime: 'runc',
+        isolation: 'shared-kernel' as const,
+        concessions: [],
+      }),
+    });
+
+    const result = await runner.start(
+      container(),
+      'jwt',
+      imageRegistry(),
+      config()
+    );
+
+    expect(result).toMatchObject({
+      runtime: 'runc',
+      isolation: 'shared-kernel',
+    });
+  });
+
+  it('says nothing rather than assuming safe when the broker was silent', async () => {
+    // An older broker sends host and runtime and no verdict. Defaulting to
+    // 'microvm' would invent an answer, and the safe-looking default is the
+    // one that costs something when it is wrong — so the field is absent and
+    // the card shows it as unknown.
+    const { result } = await startAndCapture();
+
+    expect(result).not.toHaveProperty('isolation');
+    expect(result).not.toHaveProperty('engine');
+    expect(result).not.toHaveProperty('concessions');
+  });
+
   it('refuses an image this project cannot see', async () => {
     // Registered against another project, so it must not resolve here — the
     // pull credential is project-scoped, and the catalogue follows it.

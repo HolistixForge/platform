@@ -43,6 +43,24 @@ export type TBrokerStartResponse = {
   /** Which platform host it landed on. */
   host: string;
   runtime: string;
+  /**
+   * Which container engine ran it — `docker` on Linux, `apple` on macOS.
+   *
+   * Optional because an older broker does not send it, and a gateway that
+   * threw on the missing field would refuse to start containers on a host that
+   * was working yesterday.
+   */
+  engine?: string;
+  /**
+   * Whether the container got its own kernel.
+   *
+   * Computed by the broker rather than derived here: what shares a kernel and
+   * what does not is the broker's own knowledge, and a gateway matching
+   * runtime names against a list would quietly call an unfamiliar one safe.
+   */
+  isolation?: 'microvm' | 'shared-kernel';
+  /** Controls this deployment's engine cannot express, by id. */
+  concessions?: string[];
 };
 
 /**
@@ -161,13 +179,34 @@ export class PlatformRunnerBackend extends ContainerRunner {
       EPriority.Info,
       'PLATFORM_RUNNER',
       `Started container ${container.user_container_id} on ${result.host}`,
-      { runtime: result.runtime, broker_container_id: result.container_id }
+      {
+        runtime: result.runtime,
+        engine: result.engine,
+        isolation: result.isolation,
+        broker_container_id: result.container_id,
+      }
     );
 
+    // What comes back is merged into `container.runner` in shared state, which
+    // is what puts it in front of the person whose code is running.
+    //
+    // That is the point of carrying it this far. The platform will have two
+    // versions with different guarantees, and a deployment that isolates less
+    // while the UI says nothing is the same silent failure the broker's "no
+    // default runtime" rule exists to prevent — one level up, where the
+    // consequence is a user believing they got a private kernel.
+    //
+    // `isolation` and `concessions` are omitted rather than defaulted when the
+    // broker did not send them: absent is "this broker is older and did not
+    // say", which the card can present as unknown. A default would invent an
+    // answer, and the safe-looking default is the dangerous one.
     return {
       broker_container_id: result.container_id,
       host: result.host,
       runtime: result.runtime,
+      ...(result.engine ? { engine: result.engine } : {}),
+      ...(result.isolation ? { isolation: result.isolation } : {}),
+      ...(result.concessions ? { concessions: result.concessions } : {}),
       limits: { ...spec.limits },
     };
   }

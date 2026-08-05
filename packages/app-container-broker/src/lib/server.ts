@@ -210,6 +210,10 @@ const handleStart = async (
       host: config.hostname,
       runtime: config.runtime,
       engine: engine.name,
+      // Answered here, from the engine, rather than left for the caller to
+      // work out from the runtime name.
+      isolation: engine.isMicroVm(config.runtime) ? 'microvm' : 'shared-kernel',
+      concessions: engine.concessions.map((c) => c.id),
     };
     log(
       EPriority.Info,
