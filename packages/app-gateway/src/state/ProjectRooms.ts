@@ -381,6 +381,32 @@ export class ProjectRoomsManager implements IPersistenceProvider {
    */
   getProjectSnapshots(): TProjectSnapshotCollection {
     const snapshots: TProjectSnapshotCollection = {};
+
+    // The projects nobody has opened yet, first.
+    //
+    // A restart restores the organization's data and, for every project whose
+    // room has not been asked for, *queues* the snapshot rather than applying
+    // it — `this.rooms` is empty at that point. Reading only `this.rooms` here
+    // therefore reported "this gateway holds nothing" while it was holding
+    // everything, and the autosave five minutes later pushed that emptiness to
+    // Ganymede on top of the real state.
+    //
+    // The loss is total and silent: whoever opens the project next gets a
+    // snapshot that no longer mentions their containers, the services keep
+    // running with no entry in shared state, every event they send is refused
+    // with 404, and the project shows none of them. Measured on apollo — four
+    // services gone from a project while their containers were still up.
+    //
+    // A queued snapshot is state this gateway is responsible for. Writing it
+    // back unchanged is what "I have not touched this project" should look
+    // like.
+    for (const [project_id, snapshot] of this.pendingSnapshots) {
+      snapshots[project_id] = snapshot;
+    }
+
+    // Then the live docs, which overwrite their own queued copy — `initializeProject`
+    // deletes the pending entry as it applies it, so the two sets are disjoint
+    // today and this order makes the live one win if that ever changes.
     for (const room of this.rooms.values()) {
       // Get the y-websocket managed doc
       const ydoc: Y.Doc = ywsUtils.getYDoc(room.room_id);

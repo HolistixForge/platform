@@ -443,4 +443,58 @@ describe('ProjectRoomsManager', () => {
       expect(room_id1).toBe(room_id2);
     });
   });
+
+  describe('persistence - a project nobody has opened is not erased', () => {
+    // The failure this pins: a gateway restarts, restores the organization and
+    // queues every project's snapshot because no room has been asked for yet,
+    // then the autosave fires five minutes later and writes what it believes
+    // it holds. Reading only the initialized rooms, that was nothing — and it
+    // landed on top of the real state in Ganymede.
+    //
+    // Measured on apollo before this: four services vanished from a project
+    // while their containers were still running, every event they sent
+    // answered 404, and nothing anywhere said the state had been overwritten.
+    const snapshot = {
+      'user-containers:containers': {
+        uc_abc: { user_container_id: 'uc_abc', container_name: 'notebook' },
+      },
+    };
+
+    it('keeps a queued snapshot in what it saves', () => {
+      projectRooms.loadFromSerialized({ 'project-1': snapshot });
+
+      // Nobody has opened project-1, so no room exists for it.
+      expect(projectRooms.getAllProjectIds()).not.toContain('project-1');
+
+      expect(projectRooms.saveToSerializable()).toEqual({
+        'project-1': snapshot,
+      });
+    });
+
+    it('does not lose one project because another was opened', async () => {
+      projectRooms.loadFromSerialized({
+        'project-1': snapshot,
+        'project-2': snapshot,
+      });
+      await projectRooms.initializeProject('project-2');
+
+      const saved = projectRooms.saveToSerializable();
+
+      expect(Object.keys(saved).sort()).toEqual(['project-1', 'project-2']);
+      expect(saved['project-1']).toEqual(snapshot);
+    });
+
+    it('prefers the live document once a project is opened', async () => {
+      projectRooms.loadFromSerialized({ 'project-1': snapshot });
+      await projectRooms.initializeProject('project-1');
+
+      // Applying the snapshot consumes the queued copy, so what is saved comes
+      // from the document — where a client's later edits actually land.
+      const saved = projectRooms.saveToSerializable();
+      expect(saved['project-1']).toBeDefined();
+      expect((saved['project-1'] as any)['user-containers:containers']).toEqual(
+        snapshot['user-containers:containers']
+      );
+    });
+  });
 });
