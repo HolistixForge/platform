@@ -20,6 +20,21 @@ type Middleware struct {
 	router        *proxy.Router
 	customDomains []string
 	baseFQDN      string
+	portSuffix    string
+}
+
+// guardOrigin is where this guard is reachable from a browser.
+//
+// `baseFQDN` is deliberately portless: it is a cookie domain and a routing key,
+// and neither of those may carry a port. Every *absolute URL* built from it has
+// to put the port back, or a deployment that does not serve on 443 sends people
+// to an address nothing is listening on.
+//
+// The two were consistent while both were wrong — the redirect URI had no port
+// either — so adding the port to the OAuth redirect alone is what made them
+// disagree. One helper, used everywhere an absolute URL is built.
+func guardOrigin(baseFQDN, portSuffix string) string {
+	return "https://" + baseFQDN + portSuffix
 }
 
 // MiddlewareConfig holds configuration for the auth middleware.
@@ -32,6 +47,9 @@ type MiddlewareConfig struct {
 	Router        *proxy.Router
 	CustomDomains []string
 	BaseFQDN      string
+	// PortSuffix is ":8443" or "", and belongs to every absolute URL built
+	// from BaseFQDN — never to a cookie domain or a Router lookup.
+	PortSuffix string
 }
 
 // NewMiddleware creates a new auth Middleware.
@@ -45,6 +63,7 @@ func NewMiddleware(cfg MiddlewareConfig) *Middleware {
 		router:        cfg.Router,
 		customDomains: cfg.CustomDomains,
 		baseFQDN:      cfg.BaseFQDN,
+		portSuffix:    cfg.PortSuffix,
 	}
 }
 
@@ -139,8 +158,8 @@ func (m *Middleware) Handler(next http.Handler) http.Handler {
 		// Priority 5: If custom domain, redirect to cross-domain login
 		if m.router.IsCustomDomain(r.Host, m.customDomains) {
 			originalURL := fmt.Sprintf("https://%s%s", r.Host, r.RequestURI)
-			crossDomainURL := fmt.Sprintf("https://%s/__auth/cross-domain-login?origin=%s&return_to=%s",
-				m.baseFQDN,
+			crossDomainURL := fmt.Sprintf("%s/__auth/cross-domain-login?origin=%s&return_to=%s",
+				guardOrigin(m.baseFQDN, m.portSuffix),
 				url.QueryEscape(stripPort(r.Host)),
 				url.QueryEscape(originalURL),
 			)

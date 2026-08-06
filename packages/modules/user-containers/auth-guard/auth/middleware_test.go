@@ -47,7 +47,7 @@ func setupMiddleware(t *testing.T) (*Middleware, *SessionStore, func(string) str
 		PermChecker:  permChecker,
 	})
 
-	relayHandler := NewRelayHandler("test-secret", sessions, ".example.local", "uc-abc.org-xyz.example.local", oauthHandler)
+	relayHandler := NewRelayHandler("test-secret", sessions, ".example.local", "uc-abc.org-xyz.example.local", "", oauthHandler)
 
 	middleware := NewMiddleware(MiddlewareConfig{
 		Sessions:      sessions,
@@ -193,6 +193,43 @@ func TestMiddlewareRedirectsToCrossDomainLoginForCustomDomain(t *testing.T) {
 	location := resp.Header.Get("Location")
 	if !contains(location, "cross-domain-login") {
 		t.Errorf("expected cross-domain-login URL, got %s", location)
+	}
+}
+
+// A deployment that does not serve on 443 has to keep its port in every
+// absolute URL. BaseFQDN is deliberately portless — it is a cookie domain and a
+// routing key — so the port has to be put back here, and it was not: the OAuth
+// redirect URI gained it and this one did not, so the two disagreed and a
+// custom-domain login landed on an address nothing was listening on.
+func TestCrossDomainLoginKeepsThePlatformPort(t *testing.T) {
+	if got := guardOrigin("uc-abc.org-xyz.apollo.test", ":8443"); got != "https://uc-abc.org-xyz.apollo.test:8443" {
+		t.Errorf("expected the port in the guard's origin, got %s", got)
+	}
+	// And nothing extra when the platform is on 443.
+	if got := guardOrigin("uc-abc.org-xyz.example.local", ""); got != "https://uc-abc.org-xyz.example.local" {
+		t.Errorf("expected a bare origin, got %s", got)
+	}
+}
+
+func TestMiddlewareCrossDomainRedirectCarriesThePort(t *testing.T) {
+	middleware, _, _ := setupMiddleware(t)
+	// The harness builds a portless deployment; this is the same middleware
+	// with a port, which is what a non-443 platform looks like.
+	middleware.portSuffix = ":8443"
+
+	handler := middleware.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("next handler should not be called")
+	}))
+
+	req := httptest.NewRequest("GET", "https://myapp.com/page", nil)
+	req.Host = "myapp.com"
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	location := w.Result().Header.Get("Location")
+	if !contains(location, "uc-abc.org-xyz.example.local:8443/__auth/cross-domain-login") {
+		t.Errorf("expected the platform port in the redirect, got %s", location)
 	}
 }
 

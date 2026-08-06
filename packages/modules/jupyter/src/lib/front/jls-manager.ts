@@ -115,12 +115,50 @@ export class JLsManager extends Listenable {
   public setProjectId(project_id: string) {
     if (this._project_id === project_id && this._sd) return;
 
+    // Off the previous project's documents first.
+    //
+    // `observe` was called without a matching `unobserve`, so every project
+    // switch left another live observer on a document nobody is looking at —
+    // and each of them still calls `_onChange`, which recomputes every pack
+    // against whichever project is current. They accumulate for the life of
+    // the page.
+    this._detachObservers();
+
     this._project_id = project_id;
     this._sd = this._getSharedData(project_id);
 
-    this._sd['user-containers:containers'].observe(() => this._onChange());
-    this._sd['jupyter:servers'].observe(() => this._onChange());
+    const onChange = () => this._onChange();
+    this._sd['user-containers:containers'].observe(onChange);
+    this._sd['jupyter:servers'].observe(onChange);
+    this._detachObservers = () => {
+      this._sd?.['user-containers:containers'].unobserve(onChange);
+      this._sd?.['jupyter:servers'].unobserve(onChange);
+      this._detachObservers = () => undefined;
+    };
+
+    // And recompute what already exists.
+    //
+    // `useKernelPack` calls `getKernelPack` during render, and this runs from
+    // an effect — so every pack on the first render was built while `_sd` was
+    // still null. `_updateKernelPack` returns early in that state, leaving the
+    // pack at its initial `SERVER_DOES_NOT_EXIST`, and nothing here recomputed
+    // it: the panel stayed greyed out with the server running until some
+    // unrelated shared-data change happened to fire.
+    this._onChange();
   }
+
+  /**
+   * Undoes the observers installed for the current project.
+   *
+   * Not unit-tested, and it is worth saying why rather than leaving the gap
+   * silent: this module cannot be loaded under Jest at all. Importing it
+   * reaches `@jupyter-widgets/html-manager`, which is ESM — and allowing Jest
+   * to transform it only gets as far as `@lumino/dragdrop` wanting a `DragEvent`
+   * that jsdom does not define. That is why this package has one dummy spec and
+   * nothing else. What does exercise it is the Storybook suite, which loads the
+   * Jupyter stories in a real browser.
+   */
+  private _detachObservers: () => void = () => undefined;
 
   /**
    * when shared data change

@@ -452,13 +452,31 @@ cmd_up() {
     # exist. Whoever holds the port is named, because on this machine it is
     # usually the Lima VM this platform is migrating out of, forwarding the
     # same range to the same loopback.
-    local holder
-    holder="$(lsof -nP -iTCP:"${http}" -sTCP:LISTEN -t 2>/dev/null | head -1)"
-    if [ -n "$holder" ]; then
-      ko "port ${http} is taken by $(ps -p "$holder" -o comm= 2>/dev/null || echo "pid ${holder}") (pid ${holder})"
-      note "Give this pool another range:  HTTP_BASE=7200 VPN_BASE=49200 $0 up ${count}"
-      return 1
-    fi
+    # Both published ports, not just the web one.
+    #
+    # The tunnel was UDP when this check was written, and `--publish` without
+    # `/udp` is TCP — so once VPN_PROTO started defaulting to tcp, a clash on
+    # ${vpn} produced exactly the failure this guard exists to prevent, one
+    # port later: `container run` exits on "Address already in use" with the
+    # row already written, and the next organization is handed a gateway that
+    # is not there. The leftover Lima VM named below forwards the same range,
+    # which is precisely what binds the tunnel port.
+    local port_holder proto
+    for port_holder in "${http}:tcp" "${vpn}:${VPN_PROTO}"; do
+      local port="${port_holder%%:*}"
+      proto="${port_holder##*:}"
+      local holder
+      if [ "$proto" = udp ]; then
+        holder="$(lsof -nP -iUDP:"${port}" -t 2>/dev/null | head -1)"
+      else
+        holder="$(lsof -nP -iTCP:"${port}" -sTCP:LISTEN -t 2>/dev/null | head -1)"
+      fi
+      if [ -n "$holder" ]; then
+        ko "port ${port}/${proto} is taken by $(ps -p "$holder" -o comm= 2>/dev/null || echo "pid ${holder}") (pid ${holder})"
+        note "Give this pool another range:  HTTP_BASE=7200 VPN_BASE=49200 $0 up ${count}"
+        return 1
+      fi
+    done
 
     echo "${name}  http ${http}  vpn ${vpn}  → ${upstream}"
 

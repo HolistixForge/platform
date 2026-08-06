@@ -75,7 +75,7 @@ func main() {
 	})
 
 	// Create relay handler
-	relayHandler := auth.NewRelayHandler(cfg.ClientSecret, sessions, cfg.CookieDomain, cfg.BaseFQDN, oauthHandler)
+	relayHandler := auth.NewRelayHandler(cfg.ClientSecret, sessions, cfg.CookieDomain, cfg.BaseFQDN, cfg.PortSuffix, oauthHandler)
 
 	// Create reverse proxy
 	reverseProxy := proxy.NewReverseProxy(router, cfg.InsecureSkipVerify)
@@ -90,6 +90,7 @@ func main() {
 		Router:        router,
 		CustomDomains: cfg.CustomDomains,
 		BaseFQDN:      cfg.BaseFQDN,
+		PortSuffix:    cfg.PortSuffix,
 	})
 
 	// Create the main handler

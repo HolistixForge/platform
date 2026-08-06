@@ -120,7 +120,7 @@ func setupTestEnv(t *testing.T) *testEnv {
 		PermChecker:  permChecker,
 	})
 
-	relayHandler := auth.NewRelayHandler("test-secret", sessions, cookieDomain, baseFQDN, oauthHandler)
+	relayHandler := auth.NewRelayHandler("test-secret", sessions, cookieDomain, baseFQDN, "", oauthHandler)
 	reverseProxy := proxy.NewReverseProxy(router, false)
 	adminSrv := admin.NewServer(router)
 
