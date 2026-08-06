@@ -544,6 +544,18 @@ check_nginx_watcher() {
     ok "nginx reload watcher running (pid $(cat "$pidfile"))"
     return 0
   fi
+  # The pidfile is written by `nginx-reload.sh start` and by nothing else.
+  # Under launchd — which is how supervise.sh runs it, and the arrangement this
+  # platform is meant to use — the agent runs `watch` directly and there is no
+  # pidfile at all. Checking only for one reported the watcher as missing, in
+  # red, while it was running: a false negative in the one line an operator has
+  # to believe, and it points at a fix that would start a second copy.
+  local pid
+  pid="$(pgrep -f "nginx-reload.sh watch" | head -1)"
+  if [ -n "$pid" ]; then
+    ok "nginx reload watcher running (pid ${pid}, under launchd)"
+    return 0
+  fi
   ko "the nginx reload watcher is not running"
   note "Gateway allocation reloads nginx through it and fails without it:"
   note "  ${REPO_ROOT}/scripts/local-dev/macos/nginx-reload.sh start"

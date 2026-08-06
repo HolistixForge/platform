@@ -42,6 +42,7 @@ import {
 import { TUserContainersExports } from '..';
 import { SharedMap } from '@holistix-forge/collab-engine';
 import { TRunnerPlacement } from './placement-shape';
+import { TRunnerConfig } from './runner';
 
 //
 
@@ -896,28 +897,15 @@ export class UserContainersReducer extends ReducerWithCollab<
       domain
     );
 
-    const config = {
+    const config = this._runnerConfig({
       user_id,
       project_id,
-      frontend_fqdn: domain,
-      ganymede_fqdn: `ganymede.${domain}`,
-      gateway_fqdn: gatewayFqdn,
+      containerId,
       organization_id,
-      auth_guard_client_secret: authGuard?.client_secret,
-      vpn_secret: this.vpnSecrets.get(containerId),
-      // Only in local development, and only from the gateway's environment:
-      // this module cannot read process.env for itself.
-      // `host-gateway` rather than the bridge address: a platform container
-      // sits on a private network of its own, where the default bridge's
-      // gateway is not routable. Docker resolves this one from any network.
-      dev_host_ip: gatewayExports.environment?.devMode
-        ? 'host-gateway'
-        : undefined,
-      // The same flag, for the auth guard rather than for /etc/hosts: a
-      // development platform serves TLS nothing in a container trusts, and
-      // the guard refuses to start rather than talk to it.
-      gateway_dev: gatewayExports.environment?.devMode,
-    };
+      domain,
+      gatewayFqdn,
+      authGuard,
+    });
 
     // A rotation replaced the client, so the container must carry the new id.
     const startedContainer: TUserContainer =
@@ -1141,6 +1129,52 @@ export class UserContainersReducer extends ReducerWithCollab<
    * Returns the client id actually in force — the caller must write it back to
    * shared state when it changed.
    */
+  /**
+   * Everything a container is told about the platform it belongs to.
+   *
+   * One builder, because there are two callers and they must not diverge:
+   * `_start`, when somebody presses start, and `placementsFor`, when a runner
+   * polls for what it should be running. They built the same object separately
+   * and drifted twice — first `auth_guard.client_id`, which broke sign-in after
+   * a gateway restart, then `gateway_dev`, without which a container's auth
+   * guard refuses the development platform's own TLS and the service answers
+   * 404. Both were a field added to one site and not the other, and neither is
+   * visible from either site alone.
+   *
+   * Read from `gateway.environment` and never from `process.env`: module
+   * packages are bundled with a browser `process` shim, so this file's
+   * environment is empty at runtime in the gateway.
+   */
+  private _runnerConfig(args: {
+    user_id: string;
+    project_id: string;
+    containerId: string;
+    organization_id: string;
+    domain: string;
+    gatewayFqdn: string;
+    authGuard?: { client_id: string; client_secret: string };
+  }): TRunnerConfig {
+    const devMode = this.depsExports.gateway.environment?.devMode;
+    return {
+      user_id: args.user_id,
+      project_id: args.project_id,
+      frontend_fqdn: args.domain,
+      ganymede_fqdn: `ganymede.${args.domain}`,
+      gateway_fqdn: args.gatewayFqdn,
+      organization_id: args.organization_id,
+      auth_guard_client_secret: args.authGuard?.client_secret,
+      vpn_secret: this.vpnSecrets.get(args.containerId),
+      // `host-gateway` rather than the bridge address: a platform container
+      // sits on a private network of its own, where the default bridge's
+      // gateway is not routable. Docker resolves this one from any network.
+      dev_host_ip: devMode ? 'host-gateway' : undefined,
+      // The same flag, for the auth guard rather than for /etc/hosts: a
+      // development platform serves TLS nothing in a container trusts, and the
+      // guard refuses to start rather than talk to it.
+      gateway_dev: devMode,
+    };
+  }
+
   private async _authGuardSecretFor(
     container: TUserContainer,
     organizationId: string,
@@ -1288,19 +1322,15 @@ export class UserContainersReducer extends ReducerWithCollab<
         domain
       );
 
-      const config = {
+      const config = this._runnerConfig({
         user_id,
         project_id,
-        frontend_fqdn: domain,
-        ganymede_fqdn: `ganymede.${domain}`,
-        gateway_fqdn: gatewayFqdn,
+        containerId,
         organization_id,
-        auth_guard_client_secret: authGuard?.client_secret,
-        vpn_secret: this.vpnSecrets.get(containerId),
-        dev_host_ip: gatewayExports.environment?.devMode
-          ? 'host-gateway'
-          : undefined,
-      };
+        domain,
+        gatewayFqdn,
+        authGuard,
+      });
 
       // A rotation replaced the OAuth client, so the container must carry the
       // new id — and so must the shared document.

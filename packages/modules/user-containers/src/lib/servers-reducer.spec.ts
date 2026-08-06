@@ -670,22 +670,33 @@ describe('UserContainersReducer - Auth Guard OAuth Client Lifecycle', () => {
 
   describe('placementsFor - what a polling runner is handed', () => {
     /** The extra deps the placement path needs, none of which `_new` uses. */
+    /** Arms the deps, and captures the config the runner is handed. */
     const armPlacements = () => {
+      const captured: { config?: any } = {};
       mockDepsExports.gateway.tokenManager = {
         generateProjectScopedToken: jest
           .fn()
           .mockResolvedValue('hosting-token'),
       };
       mockDepsExports['user-containers'].getRunner = jest.fn(() => ({
-        buildLaunchSpec: (container: any) => ({
-          name: `holistix_${container.user_container_id}`,
-          imageRef: 'holistixforge/ubuntu-terminal:24.04',
-          settings: 'e30=',
-          capabilities: [],
-          devices: [],
-          extraHosts: [],
-        }),
+        buildLaunchSpec: (
+          container: any,
+          _token: any,
+          _registry: any,
+          config: any
+        ) => {
+          captured.config = config;
+          return {
+            name: `holistix_${container.user_container_id}`,
+            imageRef: 'holistixforge/ubuntu-terminal:24.04',
+            settings: 'e30=',
+            capabilities: [],
+            devices: [],
+            extraHosts: [],
+          };
+        },
       }));
+      return captured;
     };
 
     const placedLocally = (extra: Record<string, unknown> = {}) => ({
@@ -727,6 +738,36 @@ describe('UserContainersReducer - Auth Guard OAuth Client Lifecycle', () => {
       expect(
         JSON.stringify(Array.from(mockContainersMap.values()))
       ).not.toContain('fresh-secret');
+    });
+
+    it('tells a machine-hosted container it is on a development platform', async () => {
+      // `gateway_dev` becomes `GATEWAY_DEV` in SETTINGS, and the container's
+      // auth guard passes `--insecure-skip-verify` on it. Without it the guard
+      // cannot fetch Ganymede's public key over the dev platform's self-signed
+      // TLS, exits, and the service answers 404 — while the same container
+      // started on the platform works, because `_start` did set the flag.
+      //
+      // The third field to be added to one config builder and not the other;
+      // both now come from `_runnerConfig`, so there is one place to forget.
+      mockDepsExports.gateway.environment = { devMode: true };
+      mockContainersMap.set('uc-1', placedLocally());
+      const captured = armPlacements();
+
+      await reducer.placementsFor('project-1', 'machine-1');
+
+      expect(captured.config.gateway_dev).toBe(true);
+      expect(captured.config.dev_host_ip).toBe('host-gateway');
+    });
+
+    it('says nothing about dev mode on a real deployment', async () => {
+      mockDepsExports.gateway.environment = { devMode: false };
+      mockContainersMap.set('uc-1', placedLocally());
+      const captured = armPlacements();
+
+      await reducer.placementsFor('project-1', 'machine-1');
+
+      expect(captured.config.gateway_dev).toBe(false);
+      expect(captured.config.dev_host_ip).toBeUndefined();
     });
 
     it('marks a placement of a built-in image as built-in', async () => {
