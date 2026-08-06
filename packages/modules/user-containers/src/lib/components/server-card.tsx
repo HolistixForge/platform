@@ -25,7 +25,11 @@ import {
 } from '@holistix-forge/ui-base';
 import { TF_User } from '@holistix-forge/types';
 
-import { UserContainerSystemInfo, serviceUrl } from '../servers-types';
+import {
+  UserContainerSystemInfo,
+  serviceUrl,
+  openableServices,
+} from '../servers-types';
 import { StatusLed } from './status-led';
 import { UseContainerProps } from './node-server/node-server';
 import { TContainerRunnerFrontend } from '../../frontend';
@@ -256,13 +260,14 @@ export const UserContainerCardInternal = ({
     }
   );
 
-  const firstServiceName =
-    container.httpServices.length > 0 && container.httpServices[0].name;
+  // Not `httpServices[0]`: the guard's internal names register too, and
+  // whichever wins the race would become what the card opens.
+  const openable = openableServices(container);
+
+  const firstServiceName = openable.length > 0 && openable[0].name;
 
   const firstServiceUrl =
-    container.httpServices.length > 0 &&
-    firstServiceName &&
-    serviceUrl(container, firstServiceName);
+    firstServiceName && serviceUrl(container, firstServiceName);
 
   // Terminal URL: use serviceUrl helper to construct proper FQDN-based URL
   const terminalService = container.httpServices.find(

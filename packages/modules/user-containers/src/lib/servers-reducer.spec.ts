@@ -729,6 +729,38 @@ describe('UserContainersReducer - Auth Guard OAuth Client Lifecycle', () => {
       ).not.toContain('fresh-secret');
     });
 
+    it('marks a placement of a built-in image as built-in', async () => {
+      // The runner refuses an image that is not digest-pinned, and no built-in
+      // carries a digest — so without this the default terminal image, the one
+      // thing everybody has, was refused on every machine. The flag comes from
+      // the registry rather than from the container document, so a tenant image
+      // cannot claim it.
+      mockContainersMap.set('uc-1', placedLocally());
+      armPlacements();
+
+      const [placement] = await reducer.placementsFor('project-1', 'machine-1');
+
+      expect(placement.builtin).toBe(true);
+    });
+
+    it('does not mark a tenant image as built-in', async () => {
+      mockImageRegistry.registerForProject('project-1', 'acme', [
+        {
+          imageId: 'acme:etl',
+          imageName: 'Our ETL',
+          imageUri: 'ghcr.io/acme/etl',
+          imageTag: '1.0.0',
+          imageSha256: 'a'.repeat(64),
+        },
+      ]);
+      mockContainersMap.set('uc-1', placedLocally({ image_id: 'acme:etl' }));
+      armPlacements();
+
+      const [placement] = await reducer.placementsFor('project-1', 'machine-1');
+
+      expect(placement.builtin).toBe(false);
+    });
+
     it('names no network, so the runner forms no opinion about them', async () => {
       mockContainersMap.set('uc-1', placedLocally());
       armPlacements();

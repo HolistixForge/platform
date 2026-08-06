@@ -17,6 +17,14 @@ export type TPlacement = {
   name: string;
   /** Fully qualified image reference, resolved platform-side. */
   imageRef: string;
+  /**
+   * Whether `imageRef` is one of the platform's own images rather than a
+   * tenant's. Decides whether it has to be digest-pinned — see below.
+   *
+   * Optional, because a gateway that predates this field sends nothing and the
+   * safe reading of nothing is "tenant", which keeps the stricter rule.
+   */
+  builtin?: boolean;
   /** Base64 SETTINGS blob — the container's entire configuration channel. */
   settings: string;
   capabilities: string[];
@@ -76,10 +84,22 @@ export const assertPlacementIsForUs = (
     throw new PlacementRefused('Placement names no image');
   }
 
+  // Tenant images only, which is the same line the broker draws in
+  // `catalogue.ts` — `!resolved.builtin && !DIGEST_PINNED.test(…)`.
+  //
   // The reference is resolved platform-side and digest-pinned there. A bare
   // name reaching here means the resolution did not happen, and starting it
-  // would pull whatever that tag points at today.
-  if (!/@sha256:[0-9a-f]{64}$/.test(placement.imageRef)) {
+  // would pull whatever that tag points at today. That holds for a tenant
+  // image: the registry refuses to record one without an `imageSha256`, so an
+  // unpinned tenant reference is always a fault.
+  //
+  // It does not hold for a built-in. Those come from the deployment's own
+  // catalogue, change when the platform is redeployed rather than when a tenant
+  // pushes, and have no digest recorded — pinning them would mean a redeploy
+  // for every image bump while closing nothing a tenant could exploit.
+  // Applied to both, this refused every placement of the default terminal
+  // image, which is the first thing anybody puts on their own machine.
+  if (!placement.builtin && !/@sha256:[0-9a-f]{64}$/.test(placement.imageRef)) {
     throw new PlacementRefused(
       `Image reference is not digest-pinned: ${placement.imageRef}`
     );

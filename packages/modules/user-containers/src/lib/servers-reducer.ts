@@ -1333,6 +1333,9 @@ export class UserContainersReducer extends ReducerWithCollab<
         user_container_id: containerId,
         name: spec.name,
         imageRef: spec.imageRef,
+        // From the registry, never from the container document: a tenant image
+        // must not be able to claim it is one of ours.
+        builtin: imageRegistry.isBuiltin(container.image_id),
         settings: spec.settings,
         capabilities: spec.capabilities,
         devices: spec.devices,

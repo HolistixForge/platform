@@ -157,6 +157,29 @@ export type UserContainerSystemInfo = {
 
 //
 
+/**
+ * The services a person can be offered.
+ *
+ * A container publishes more names than it has doors. `__guard_base` is the
+ * auth guard's own address and `__guard_hub` is the JupyterHub OAuth shim on
+ * port 15000 — both have to reach the gateway, because that is what writes
+ * their nginx blocks, and neither is a page anybody should be sent to.
+ *
+ * Measured: the hub shim registered a moment before JupyterLab did, the card
+ * opened `httpServices[0]`, and clicking the notebook answered
+ * `{"error": "not found"}` from a proxy doing exactly its job. Which service
+ * wins that race is timing, so the card cannot pick by position.
+ *
+ * The `__` prefix is the convention already in use for both, so this reads it
+ * rather than inventing a second marker or a list to keep in step.
+ */
+export const openableServices = (
+  s: Pick<TUserContainer, 'httpServices'>
+): TUserContainer['httpServices'] =>
+  s.httpServices.filter((service) => !service.name.startsWith('__'));
+
+//
+
 export const serviceUrl = (
   s: Pick<TUserContainer, 'ip' | 'httpServices'>,
   serviceName: string,
