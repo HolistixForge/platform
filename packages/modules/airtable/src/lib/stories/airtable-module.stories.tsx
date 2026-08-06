@@ -119,6 +119,22 @@ const ProxyCheckWrapper = ({ children }: { children: ReactNode }) => {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
+    // The same opt-in the notion story uses. Probing a proxy nobody started
+    // made the story show setup instructions instead of the module — the
+    // screenshot suite photographed the instructions, and the outcome depended
+    // on whether a process happened to be running. Set `AIRTABLE_STORY_PROXY`
+    // on the window to talk to a live proxy when you actually want to.
+    const wantsLiveProxy = Boolean(
+      (window as unknown as { AIRTABLE_STORY_PROXY?: boolean })
+        .AIRTABLE_STORY_PROXY
+    );
+
+    if (!wantsLiveProxy) {
+      setIsProxyRunning(true);
+      setIsChecking(false);
+      return;
+    }
+
     const checkProxy = async () => {
       try {
         const response = await fetch('http://localhost:3001/proxy', {

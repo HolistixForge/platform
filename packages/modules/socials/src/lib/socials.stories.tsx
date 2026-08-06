@@ -185,7 +185,17 @@ const loadStoryData = (
       id: 'node-3',
       type: 'iframe',
       data: {
-        src: 'https://www.google.com',
+        // A page served from the story itself, not google.com. Google sets
+        // X-Frame-Options, so the browser refused the frame and the story
+        // showed an error where the iframe node should be — and it needed the
+        // network to show even that.
+        src:
+          'data:text/html;charset=utf-8,' +
+          encodeURIComponent(
+            '<body style="margin:0;background:#1c1c3d;color:#fff;' +
+              'font:14px system-ui;display:flex;align-items:center;' +
+              'justify-content:center;height:100%">Framed page</body>'
+          ),
       },
       name: 'Node 3',
       root: true,
