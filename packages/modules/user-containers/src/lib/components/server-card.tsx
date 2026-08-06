@@ -221,10 +221,12 @@ export const UserContainerCardInternal = ({
           className="absolute flex items-center"
           style={{
             gap: '8px',
-            // Close to the card: at -25px the line floated free of what it
-            // describes. The wrapper header, when there is one, still gets
-            // its own room.
-            top: `calc(-18px - (var(--node-wrapper-header-height, 0px)))`,
+            // Above the card, 5px clear of it. `bottom: 100%` and not a
+            // negative `top`: the anchor is then the card's own top edge
+            // rather than a guess at how tall this line is, so the gap stays
+            // 5px whatever the font does to it. -18px put the line on the
+            // card; -25px left it floating.
+            bottom: `calc(100% + 5px + var(--node-wrapper-header-height, 0px))`,
           }}
         >
           <div
