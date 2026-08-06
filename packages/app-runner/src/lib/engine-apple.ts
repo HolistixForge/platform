@@ -74,6 +74,20 @@ const parse = (raw: string): TAppleContainer[] => {
  * Docker does the same selection server-side. Doing it in code is the whole
  * reason `listOwned` is one operation in the engine table rather than a
  * "list ids" and an "inspect" the caller stitches together.
+ *
+ * `ls --format json` carries the same shape as `inspect`, which is not
+ * obvious and is what makes reading it here safe. Measured on `container`
+ * 1.2.0 against a running container — every field `toRunning` reads is there:
+ *
+ *   configuration.id            "lblprobe"
+ *   configuration.labels        {"holistix.project":"p1","holistix.container":"uc1"}
+ *   configuration.image.reference  "docker.io/library/alpine:3"
+ *   status.state                "running"
+ *   status.networks[].network   ["default"]
+ *
+ * Worth having measured rather than assumed: absent labels would filter every
+ * container out as "not ours" and start a second copy of each on every pass,
+ * and an absent reference would never match a placement.
  */
 const listOwned = async (
   exec: TDockerExec,

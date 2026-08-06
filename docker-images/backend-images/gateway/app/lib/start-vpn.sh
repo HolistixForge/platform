@@ -2,6 +2,18 @@
 
 set -x
 
+# Where this script lives — resolved here, before anything changes directory.
+#
+# `BASH_SOURCE[0]` is the path the script was invoked with, verbatim. Invoked
+# the way this directory's README documents (`./start-vpn.sh`) that is `.`, and
+# resolving it after the `cd "${TEMP_DIR}/easy-rsa"` below answers the
+# temporary directory instead. The scripts named in the OpenVPN config would
+# then be looked for somewhere they have never been.
+#
+# The production caller passes an absolute path, so this only bites the manual
+# invocation — which is the one a person uses when something is already wrong.
+_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Function for displaying error messages and exiting
 function error_exit {
     echo "{\"status\": \"error\", \"error\": \"$1\"}"
@@ -96,15 +108,15 @@ IDENT
   # gateway called a stale verifier — which, once the server started asking for
   # credentials `via-env`, refused every client while the fixed copy sat
   # unused a directory away.
-  _lib_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  _lib_dir="${_LIB_DIR}"
   # Checked, because openvpn cannot say what is wrong with it.
   #
   # A missing `auth-user-pass-verify` script is reported as AUTH_FAILED for
   # every client — indistinguishable from a wrong password, which is the most
-  # expensive way for this to be misconfigured. `BASH_SOURCE[0]` names the
+  # expensive way for this to be misconfigured. `BASH_SOURCE[0]` also names the
   # caller's file when this script is sourced rather than executed, and a
   # symlinked script resolves to its own directory and not the target's, so the
-  # directory is right in every case that happens today and not by construction.
+  # directory is right in the cases that happen today and not by construction.
   if [ ! -x "${_lib_dir}/vpn-auth-verify.sh" ]; then
     error_exit "VPN_PER_CLIENT_IDENTITY=1 but ${_lib_dir}/vpn-auth-verify.sh is not executable — every client would be refused with AUTH_FAILED"
   fi

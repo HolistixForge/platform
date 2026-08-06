@@ -109,13 +109,20 @@ resolve_platform_hosts() {
         grep -qE "[[:space:]]${name}\$" /etc/hosts 2>/dev/null && continue
 
         RESOLVED=$(getent hosts "${name}" 2>/dev/null | awk '{print $1; exit}')
-        # Every spelling of loopback, not just the two short ones. `getent` can
-        # answer `0:0:0:0:0:0:0:1` or an IPv4-mapped form depending on the
-        # resolver, and those fell through to "a real address" — the exact
-        # failure this override exists to fix, differently formatted.
+        # Every spelling of loopback, and only loopback. `getent` can answer
+        # `0:0:0:0:0:0:0:1` or an IPv4-mapped form depending on the resolver,
+        # and those fell through to "a real address" — the exact failure this
+        # override exists to fix, differently formatted.
+        #
+        # `0.0.0.0` is deliberately *not* in this list. It is not loopback: it
+        # is what a resolver returns for a name it blackholes, which is an
+        # answer somebody configured on purpose. Overriding it would send the
+        # container to its default route past a deliberate block. The zero
+        # address does have to be rejected where it is genuinely meaningless —
+        # as a *default route* — and `default_gateway` does that on its own.
         case "${RESOLVED}" in
             '') ;;                       # nothing answered — ours to write
-            127.*|::1|0:0:0:0:0:0:0:1|::ffff:127.*|0.0.0.0) ;;
+            127.*|::1|0:0:0:0:0:0:0:1|::ffff:127.*) ;;
                                          # answered with itself — not usable here
             *) continue ;;               # a real address, and not ours to move
         esac
