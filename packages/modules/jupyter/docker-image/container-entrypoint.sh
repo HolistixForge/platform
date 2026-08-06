@@ -59,11 +59,35 @@ export JUPYTERHUB_OAUTH_ACCESS_SCOPES='["access:servers!server=jupyter-user/","a
 export JUPYTERHUB_OAUTH_SCOPES='["access:servers!server=jupyter-user/","access:servers!user=jupyter-user"]'
 export JUPYTERHUB_OAUTH_CALLBACK_URL="https://${JUPYTER_FQDN}/oauth_callback"
 
+# Who may put this notebook in a frame.
+#
+# JupyterLab sends `frame-ancestors 'none'; default-src 'none'` of its own, and
+# a browser enforces the intersection of every Content-Security-Policy header on
+# a response — so the gateway adding `frame-ancestors <platform>` alongside it
+# produces `'none'` ∩ `<platform>`, which is nothing. The notebook then fails to
+# render inside the project with ERR_BLOCKED_BY_RESPONSE, while answering 200 to
+# anything that is not a frame.
+#
+# Set here rather than stripped at the gateway: this is our image, and it can
+# say who may frame it. A third-party image with the same policy is still
+# unframeable, and that is the general problem the gateway will have to answer.
+#
+# `frame-ancestors` and nothing else. The policy Jupyter ships also carries
+# `default-src 'none'`, which is right on the JSON its API returns and would be
+# fatal on the page: this header replaces Jupyter's rather than adding to it, so
+# a `default-src` copied across would block the notebook's own scripts and
+# styles and leave a blank frame instead of a blocked one.
+#
+# ${DOMAIN} carries the port wherever nginx is not on 443, and an origin
+# includes it — the one place a port belongs in this file.
+CSP_FRAME_ANCESTORS="frame-ancestors https://${DOMAIN} https://*.${DOMAIN}"
+
 exec start.sh jupyterhub-singleuser \
     --ServerApp.ip='0.0.0.0' \
     --ServerApp.port=8888 \
     --ServerApp.allow_origin='*' \
     --ServerApp.disable_check_xsrf=True \
+    --ServerApp.tornado_settings="{'headers': {'Content-Security-Policy': \"${CSP_FRAME_ANCESTORS}\"}}" \
     --HubAuth.api_url="http://localhost:15000/hub/api" \
     --HubOAuth.oauth_authorization_url="https://${HUB_FQDN}/hub/api/oauth2/authorize" \
     --HubOAuth.oauth_token_url="http://localhost:15000/hub/api/oauth2/token" \
