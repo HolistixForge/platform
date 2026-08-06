@@ -15,6 +15,18 @@ import { fileURLToPath } from 'node:url';
 const fsShim = fileURLToPath(new URL('./fs-shim.js', import.meta.url));
 
 export default defineConfig({
+  define: {
+    // JupyterLab's packages are built for webpack and read this global to
+    // resolve their own chunks at runtime. Vite defines no such thing, so the
+    // module threw a ReferenceError on evaluation and took the Jupyter Main
+    // and Terminal stories with it, before either could render.
+    //
+    // An empty string is what webpack itself uses when assets sit at the
+    // server root, which is where Storybook serves them from. Nothing here
+    // splits chunks the way those packages expect anyway; the value only has
+    // to exist.
+    __webpack_public_path__: '""',
+  },
   plugins: [
     react(),
     // Several modules pull in libraries that expect Node globals in the

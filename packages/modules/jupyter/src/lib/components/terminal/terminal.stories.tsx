@@ -16,7 +16,7 @@ import {
 
 import { TJupyterEvent } from '../../jupyter-events';
 import {
-  JupyterStoryInit,
+  JupyterStoryProviders,
   STORY_USER_CONTAINER_ID,
 } from '../../stories/module-stories-utils';
 import { JupyterTerminal } from './terminal';
@@ -32,9 +32,9 @@ Logger.setPriority(EPriority.Debug);
 
 const StoryWrapper = () => {
   return (
-    <JupyterStoryInit>
+    <JupyterStoryProviders>
       <Terminals />
-    </JupyterStoryInit>
+    </JupyterStoryProviders>
   );
 };
 
