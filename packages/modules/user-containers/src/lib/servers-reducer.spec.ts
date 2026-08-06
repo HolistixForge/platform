@@ -1202,3 +1202,121 @@ describe('UserContainersReducer - VPN credentials', () => {
     expect(recordVpnCredentials).toHaveBeenCalledWith([]);
   });
 });
+
+//
+
+describe('UserContainersReducer - stopping a service without deleting it', () => {
+  let reducer: UserContainersReducer;
+  let containers: Map<string, any>;
+  let updateReverseProxy: jest.Mock;
+  let runnerStop: jest.Mock;
+
+  beforeEach(() => {
+    containers = new Map([
+      [
+        'uc-1',
+        {
+          user_container_id: 'uc-1',
+          container_name: 'one',
+          image_id: 'ubuntu:terminal',
+          runner: { id: 'platform' },
+          ip: '172.16.0.4',
+          httpServices: [
+            { host: 'n8n.uc-uc-1.org-1.domain.local', name: 'n8n', port: 5678 },
+          ],
+        },
+      ],
+    ]);
+
+    updateReverseProxy = jest.fn();
+    runnerStop = jest.fn().mockResolvedValue(undefined);
+
+    reducer = new UserContainersReducer({
+      collab: {
+        registry: {
+          getCollabForProject: jest.fn(() => ({
+            sharedData: {
+              'user-containers:containers': {
+                get: (k: string) => containers.get(k),
+                set: (k: string, v: any) => containers.set(k, v),
+                copy: () => new Map(containers),
+                delete: (k: string) => containers.delete(k),
+                forEach: (fn: any) => containers.forEach(fn),
+              },
+            },
+          })),
+        },
+      },
+      reducers: { processEvent: jest.fn() },
+      gateway: {
+        recordVpnCredentials: jest.fn(),
+        toGanymedeInternal: jest.fn().mockResolvedValue({}),
+        updateReverseProxy,
+        gatewayFQDN: 'org-1.domain.local',
+        organization_id: 'org-1',
+        permissionManager: { hasPermission: () => true },
+      },
+      'user-containers': {
+        getRunner: () => ({ start: jest.fn(), stop: runnerStop }),
+        imageRegistry: { get: () => ({ imageId: 'ubuntu:terminal' }) },
+      },
+    } as any);
+  });
+
+  const stop = () =>
+    reducer.reduce(
+      { type: 'user-container:stop', user_container_id: 'uc-1' } as any,
+      { project_id: 'project-1', jwt: { user: { id: 'user-1' } } } as any
+    );
+
+  it('asks the runner to stop and keeps the container', async () => {
+    await stop();
+
+    expect(runnerStop).toHaveBeenCalledTimes(1);
+    expect(containers.get('uc-1')).toBeDefined();
+    expect(containers.get('uc-1').stopped_at).toEqual(expect.any(String));
+  });
+
+  it('takes the service off the gateway rather than waiting for the watchdog', async () => {
+    // `_periodic` would clear these thirty seconds later, and in those thirty
+    // seconds the gateway proxies the FQDN to a VPN address nobody is on.
+    await stop();
+
+    expect(containers.get('uc-1').httpServices).toEqual([]);
+    expect(updateReverseProxy).toHaveBeenCalledWith('project-1', []);
+  });
+
+  it('refuses without an authenticated user', async () => {
+    await expect(
+      reducer.reduce(
+        { type: 'user-container:stop', user_container_id: 'uc-1' } as any,
+        { project_id: 'project-1', jwt: {} } as any
+      )
+    ).rejects.toThrow();
+    expect(runnerStop).not.toHaveBeenCalled();
+  });
+
+  it('does not mark a container stopped when the runner refused', async () => {
+    // The card would say stopped for a container that is still serving, and
+    // there would be no button left that tries again.
+    runnerStop.mockRejectedValue(new Error('broker is down'));
+
+    await expect(stop()).rejects.toThrow('broker is down');
+    expect(containers.get('uc-1').stopped_at).toBeUndefined();
+  });
+
+  it('leaves a local placement out of the list once stopped', async () => {
+    containers.set('uc-2', {
+      user_container_id: 'uc-2',
+      container_name: 'two',
+      image_id: 'ubuntu:terminal',
+      runner: { id: 'local', user_id: 'user-1', machine_id: 'm-1' },
+      httpServices: [],
+      stopped_at: new Date().toISOString(),
+    });
+
+    const placements = await reducer.placementsFor('project-1', 'm-1');
+
+    expect(placements.map((p) => p.user_container_id)).not.toContain('uc-2');
+  });
+});

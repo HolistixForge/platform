@@ -37,6 +37,7 @@ import {
   TEventSelectRunner,
   TEventRunnerHealth,
   TEventStart,
+  TEventStop,
 } from './servers-events';
 import { TUserContainersExports } from '..';
 import { SharedMap } from '@holistix-forge/collab-engine';
@@ -126,6 +127,8 @@ export class UserContainersReducer extends ReducerWithCollab<
         return this._runnerHealth(event, requestData);
       case 'user-container:start':
         return this._start(event, requestData);
+      case 'user-container:stop':
+        return this._stop(event, requestData);
 
       case 'reducers:periodic':
         return this._periodic(event, requestData);
@@ -928,10 +931,63 @@ export class UserContainersReducer extends ReducerWithCollab<
     );
 
     // Merge runner result into container.runner in shared state
+    //
+    // `stopped_at` goes with it. A container left marked stopped after a
+    // successful start is one `placementsFor` keeps skipping, so a local
+    // service would be started here and reconciled away moments later — and
+    // the card would offer play for something that had just run.
+    const { stopped_at: _stopped, ...restarted } = startedContainer;
     sduc.set(containerId, {
-      ...startedContainer,
+      ...restarted,
       runner: { ...startedContainer.runner, ...runnerResult },
     });
+  }
+
+  //
+
+  /**
+   * Stop a service without removing it.
+   */
+  async _stop(event: TEventStop, requestData: RequestData) {
+    const jwt = requestData.jwt as TJwtUser;
+    const user_id = jwt?.user?.id;
+    if (!user_id) {
+      throw new ForbiddenException([
+        { message: 'User authentication required' },
+      ]);
+    }
+
+    const containerId = event.user_container_id;
+    const collab = this.getCollab(requestData);
+    const sduc = collab.sharedData['user-containers:containers'];
+    const container = sduc.get(containerId);
+
+    if (!container) {
+      throw new NotFoundException([
+        { message: `Container ${containerId} not found` },
+      ]);
+    }
+
+    // Asked of the runner first, and the state written after. The other order
+    // marks a service stopped that is still serving, which is the one outcome
+    // nobody can act on: the card says stopped, the container answers, and
+    // there is no button left that would try again.
+    const runner = this.depsExports['user-containers'].getRunner(
+      container.runner?.id ?? ''
+    );
+    if (runner) await runner.stop(container);
+
+    // `httpServices` emptied here rather than left to the watchdog timeout.
+    // `_periodic` would clear them thirty seconds later anyway, and in those
+    // thirty seconds the gateway still proxies the service's FQDN to a VPN
+    // address nobody is on — which answers 502 rather than "stopped".
+    sduc.set(containerId, {
+      ...container,
+      httpServices: [],
+      stopped_at: new Date().toISOString(),
+    });
+
+    await this._updateNginx(requestData.project_id ?? '', sduc);
   }
 
   //
@@ -1160,7 +1216,13 @@ export class UserContainersReducer extends ReducerWithCollab<
     const mine = Array.from(sduc.copy().values()).filter(
       (c: TUserContainer) =>
         c?.runner?.id === 'local' &&
-        (c.runner as { machine_id?: string })?.machine_id === machine_id
+        (c.runner as { machine_id?: string })?.machine_id === machine_id &&
+        // A service somebody stopped is not a placement. This *is* how a local
+        // container stops: the runner reconciles against this list, and a
+        // container missing from it is one it removes — the same path that
+        // already handles a placement deleted from the whiteboard, rather than
+        // a second mechanism that would have to agree with it.
+        !c.stopped_at
     ) as TUserContainer[];
 
     const gatewayExports = this.depsExports.gateway;

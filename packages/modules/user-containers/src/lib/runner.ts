@@ -90,6 +90,20 @@ export type TContainerLaunchSpec = {
  * Abstract base class for container runners.
  * Provides command generation and container startup functionality.
  */
+/**
+ * The name a runtime knows this container by.
+ *
+ * Its own function because two operations need to agree on it and they are
+ * written far apart: `buildLaunchSpec` names the container when it starts it,
+ * and `stop` has to name the same one to reach it. Derived from the container
+ * alone, so neither has to carry it.
+ */
+export const launchName = (container: TUserContainer): string => {
+  const shortUuid = container.user_container_id.substring(0, 8);
+  const safeName = container.container_name.replace(/[^a-zA-Z0-9_.-]/g, '_');
+  return `holistix_${safeName}_${shortUuid}`;
+};
+
 export abstract class ContainerRunner {
   /**
    * Resolve a container into the spec a runtime can start it from.
@@ -149,10 +163,6 @@ export abstract class ContainerRunner {
     const json = JSON.stringify(settings);
     const env = Buffer.from(json).toString('base64');
 
-    // Generate container name (sanitize: replace spaces with underscores)
-    const shortUuid = container.user_container_id.substring(0, 8);
-    const safeName = container.container_name.replace(/[^a-zA-Z0-9_.-]/g, '_');
-
     // Build --add-host entries for dev environments
     // In dev, containers can't resolve .local domains via DNS, so we map them
     // to the Docker bridge gateway IP which routes to the host/dev container
@@ -174,7 +184,7 @@ export abstract class ContainerRunner {
     }
 
     return {
-      name: `holistix_${safeName}_${shortUuid}`,
+      name: launchName(container),
       imageId: imageDef.imageId,
       imageRef: imageReference(imageDef),
       settings: env,
@@ -225,4 +235,24 @@ export abstract class ContainerRunner {
     imageRegistry: ContainerImageRegistry,
     config: TRunnerConfig
   ): Promise<TJsonObject>;
+
+  /**
+   * Stop a running container.
+   *
+   * A no-op by default, and that is the honest answer for a runner that does
+   * not reach out to anything: the local runner hands a command to somebody
+   * else's machine, and what stops a container there is its disappearance from
+   * the placement list `app-runner` reconciles against — which the reducer
+   * does by marking the container stopped, not by calling anything here.
+   *
+   * Not abstract, for the same reason: a runner that has nothing to do on stop
+   * should not have to say so, and a `stop` that threw "not implemented" would
+   * make the button dead again for exactly the runner where it works.
+   */
+  async stop(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    container: TUserContainer
+  ): Promise<void> {
+    return;
+  }
 }

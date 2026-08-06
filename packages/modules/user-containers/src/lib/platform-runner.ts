@@ -5,6 +5,7 @@ import {
   TRunnerConfig,
   TContainerLimits,
   DEFAULT_CONTAINER_LIMITS,
+  launchName,
 } from './runner';
 import { ContainerImageRegistry } from './image-registry';
 import { TUserContainer } from './servers-types';
@@ -71,11 +72,28 @@ export type TBrokerTransport = (
   request: TBrokerStartRequest
 ) => Promise<TBrokerStartResponse>;
 
+/**
+ * Stop, which the broker spells as removal.
+ *
+ * There is no `POST /containers/:id/stop`: a start on the platform always goes
+ * through `replaceExisting`, which removes a container of the same name before
+ * creating it, so a stopped-but-present container is a state the broker has
+ * never had and starting again would not reuse. Removal is therefore what
+ * "stop" means here, and it is what makes the play button after it work.
+ *
+ * What that costs, said plainly: a container's writable layer does not survive
+ * a stop. Nothing in the catalogue keeps state there today — services that need
+ * it get a volume — but a service that did would lose it, and this is the line
+ * to change when one does.
+ */
+export type TBrokerStopTransport = (name: string) => Promise<void>;
+
 export type TPlatformRunnerOptions = {
   endpoint?: string;
   token?: string;
   limits?: TContainerLimits;
   transport?: TBrokerTransport;
+  stopTransport?: TBrokerStopTransport;
 };
 
 /**
@@ -104,6 +122,30 @@ const httpTransport =
     }
 
     return (await response.json()) as TBrokerStartResponse;
+  };
+
+const httpStopTransport =
+  (endpoint: string, token: string): TBrokerStopTransport =>
+  async (name) => {
+    const response = await fetch(
+      `${endpoint.replace(/\/$/, '')}/containers/${encodeURIComponent(name)}`,
+      {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    // 404 is success here. It means the container is not there, which is the
+    // state the caller asked for — and it is the ordinary outcome of stopping
+    // a service twice, or of stopping one the platform lost in a restart.
+    // Treating it as a failure would leave the card showing "running" for a
+    // container that does not exist.
+    if (response.ok || response.status === 404) return;
+
+    const detail = await response.text().catch(() => '');
+    throw new Error(
+      `Container broker refused the stop (${response.status}): ${detail}`
+    );
   };
 
 /**
@@ -136,6 +178,29 @@ export class PlatformRunnerBackend extends ContainerRunner {
     }
 
     return httpTransport(endpoint, token);
+  }
+
+  private stopTransport(): TBrokerStopTransport {
+    if (this.options.stopTransport) return this.options.stopTransport;
+
+    const { endpoint, token } = this.options;
+    if (!endpoint || !token) {
+      throw new Error(
+        'Platform runner is not configured: it needs a broker endpoint and token'
+      );
+    }
+
+    return httpStopTransport(endpoint, token);
+  }
+
+  override async stop(container: TUserContainer): Promise<void> {
+    const name = launchName(container);
+    await this.stopTransport()(name);
+    log(
+      EPriority.Info,
+      'PLATFORM_RUNNER',
+      `Stopped container ${container.user_container_id} (${name})`
+    );
   }
 
   async start(

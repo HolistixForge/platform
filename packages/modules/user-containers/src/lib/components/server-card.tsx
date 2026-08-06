@@ -165,6 +165,8 @@ export const UserContainerCardInternal = ({
   onDelete,
   onOpenService,
   onSelectRunner,
+  onStart,
+  onStop,
   runners,
   liveUsers,
   host,
@@ -206,6 +208,21 @@ export const UserContainerCardInternal = ({
   };
 
   const { alive, color } = isAlive(container.last_watchdog_at);
+
+  // The run control, wrapped the same way `deleteAction` is: a click on it
+  // reaches the gateway, and a gateway that refuses has to say so somewhere the
+  // person who clicked can see it. `useAction` is what the card already uses
+  // for that, and doing it by hand here would be a second convention.
+  const runAction = useAction(
+    async () => {
+      if (alive) await onStop();
+      else await onStart();
+    },
+    [alive, onStart, onStop],
+    {
+      errorLatchTime: 5000,
+    }
+  );
 
   const firstServiceName =
     container.httpServices.length > 0 && container.httpServices[0].name;
@@ -448,17 +465,23 @@ export const UserContainerCardInternal = ({
             from the watchdog, so a container whose watchdog has gone quiet
             offers play, and one still reporting offers stop.
 
-            No action is wired to them yet — neither is there on notebook-card,
-            which is the component this mirrors. `UseContainerProps` carries
-            `onDelete` and `onSelectRunner` and nothing to start or stop with,
-            so wiring these means adding to what the card is given, not to how
-            it draws. Left visible and inert rather than hidden, because the
-            control belonging here is itself the thing to see.
+            The callback goes on `ResourceButtons` itself, for the reason the
+            runner picker below spells out: `ButtonBase` opens its handler with
+            an unconditional `e.stopPropagation()`, so a handler on any wrapper
+            never fires and the click does not reach the card's own `onClick`
+            either. Drawn without one, this button did nothing at all and did
+            not open the service either — a control that looks alive.
+
+            `onSelectRunner` also starts the container, but as a consequence of
+            *choosing where it runs*: restarting a service should not require
+            pretending to move it, which is why `onStart` exists beside it.
           */}
           <ResourceButtons
+            {...runAction}
             size="small"
             type={alive ? 'stop' : 'play'}
             actionOriginId={alive ? 'container-stop' : 'container-play'}
+            ariaLabel={alive ? 'Stop this service' : 'Start this service'}
           />
 
           <div

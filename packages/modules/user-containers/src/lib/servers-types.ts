@@ -66,6 +66,23 @@ export type TUserContainer = {
     machine_id?: string;
   } & TJsonObject;
   created_at: string;
+  /**
+   * When someone last asked this service to stop, if they have since it last
+   * started.
+   *
+   * A stop is a *decision*, and the watchdog cannot express one: a container
+   * that stopped reporting is indistinguishable from one whose tunnel dropped,
+   * and the card would offer play for a service that is about to come back on
+   * its own. This says which of the two it is.
+   *
+   * It is also what stops a local placement. `placementsFor` skips a stopped
+   * container, so the runner on the user's machine reconciles it away — the
+   * same mechanism that already removes a container whose placement is gone,
+   * rather than a second path that would have to agree with it.
+   *
+   * Cleared by `_start`, so restarting is one field and not two states.
+   */
+  stopped_at?: string;
 } & TUserContainerPublishedInfo;
 
 /**
