@@ -350,6 +350,19 @@ env = {
   'MAILING_HOST': 'localhost', 'MAILING_PORT': '1025',
   'MAILING_USER': 'unset', 'MAILING_PASSWORD': 'unset',
   'SESSION_COOKIE_KEY': 'macos-session-key-not-for-production',
+  # The OAuth limiter counts per IP, and on this machine there is only one.
+  #
+  # Ganymede is in a container behind the Mac's nginx, so every request reaches
+  # it from the loopback: one browser tab, five browser tabs, and a test run all
+  # spend the same 20-per-15-minutes budget. Exhausted, `/oauth/token` answers
+  # 429 for the rest of the window, the frontend holds no access token at all,
+  # and the page simply never finishes loading — which reads as a frozen app and
+  # not as a limit, because nothing says so.
+  #
+  # Raised here rather than in the limiter's own defaults: 20 is a reasonable
+  # number where the IP identifies a client, and this arrangement is the one
+  # place where it does not. Still bounded, so a runaway client is still caught.
+  'RATE_LIMIT_OAUTH_MAX': '200',
   # Ganymede makes HTTPS calls to itself — it health-checks a gateway it has
   # just allocated at `https://org-<uuid>.<domain>` — and the certificate is
   # mkcert's, which nothing in this container has been told to trust. Node's

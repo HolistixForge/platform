@@ -217,6 +217,20 @@ export const useInitStoryJupyterServer =
     const [running, setRunning] = useState<boolean | null>(null);
 
     useEffect(() => {
+      // Probing a Jupyter server nobody started made these stories render
+      // setup instructions instead of the component — the same wall the notion
+      // and airtable stories put up, and the same answer: opt in with
+      // `JUPYTER_STORY_SERVER` on the window when you actually have one.
+      const wantsLiveServer = Boolean(
+        (window as unknown as { JUPYTER_STORY_SERVER?: boolean })
+          .JUPYTER_STORY_SERVER
+      );
+
+      if (!wantsLiveServer) {
+        setRunning(true);
+        return;
+      }
+
       fetch(`http://${STORY_JUPYTER_IP}:${STORY_JUPYTER_PORT}/api`)
         .then((r) => {
           if (r.status === 200) {

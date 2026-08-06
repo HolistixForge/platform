@@ -17,19 +17,35 @@ import {
 import { useDispatcher } from '@holistix-forge/reducers/frontend';
 
 import { ProjectLoading, ProjectError } from './project-loading';
+import { useModuleExports } from '@holistix-forge/module/frontend';
+
 import { getAllModules } from '../../modules';
 
 /**
- * Syncs the project_id from CollabProjectProvider into the dispatcher.
+ * Syncs the project_id from CollabProjectProvider into the dispatcher, and
+ * into anything else built once at module load that needs to know which
+ * project it is looking at.
+ *
  * Must be rendered inside both CollabProjectProvider and ModuleDataProvider.
  */
 const ProjectDispatcherSync = () => {
   const project_id = useCollabProjectId();
   const dispatcher = useDispatcher();
+  const moduleExports = useModuleExports<{
+    jupyter?: { jlsManager?: { setProjectId: (id: string) => void } };
+  }>('ProjectDispatcherSync');
 
   useEffect(() => {
     dispatcher.setProjectId(project_id);
   }, [project_id, dispatcher]);
+
+  // Jupyter's manager is constructed at module load, before any project
+  // exists, and resolves its shared data per project like everything else
+  // since the collab registry landed. Optional because the module is not
+  // always loaded, and a missing module must not take the page down.
+  useEffect(() => {
+    moduleExports.jupyter?.jlsManager?.setProjectId(project_id);
+  }, [project_id, moduleExports]);
 
   return null;
 };

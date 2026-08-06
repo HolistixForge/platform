@@ -69,20 +69,55 @@ export class JLsManager extends Listenable {
   _drivers: Map<string, Promise<JupyterlabDriver>> = new Map();
   _kernelPacks: Map<string, TKernelPack> = new Map();
 
-  _sd: TJupyterSharedData & TUserContainersSharedData;
+  /**
+   * Resolves shared data for a project. Collab holds one document per project
+   * since the registry landed, so there is no single set of shared data to
+   * hand a manager built once at module load.
+   */
+  _getSharedData: (
+    project_id: string
+  ) => TJupyterSharedData & TUserContainersSharedData;
+
+  _project_id: string | null = null;
+  _sd: (TJupyterSharedData & TUserContainersSharedData) | null = null;
+
   _dispatcher: FrontendDispatcher<TJupyterEvent>;
 
   getToken: (s: TUserContainer, serviceName: string) => Promise<string>;
 
   constructor(
-    sd: TJupyterSharedData & TUserContainersSharedData,
+    getSharedData: (
+      project_id: string
+    ) => TJupyterSharedData & TUserContainersSharedData,
     dispatcher: FrontendDispatcher<TJupyterEvent>,
     getToken: (s: TUserContainer, serviceName: string) => Promise<string>
   ) {
     super();
-    this._sd = sd;
+    // The accessor, not the data. `frontend.ts` has always passed a function
+    // here — `new JLsManager(getSharedData as any, …)` — and the constructor
+    // indexed it as if it were the shared data itself. `as any` silenced
+    // exactly the error that mattered, so the module threw on load with
+    // "Cannot read properties of undefined (reading 'observe')" and the whole
+    // Jupyter module failed to load. Four stories showed it; nothing else did.
+    this._getSharedData = getSharedData;
     this._dispatcher = dispatcher;
     this.getToken = getToken;
+  }
+
+  /**
+   * Point the manager at a project, the way `FrontendDispatcher.setProjectId`
+   * does. Observation starts here rather than in the constructor: at
+   * construction there is no project yet, and there is no longer one set of
+   * shared data to observe.
+   *
+   * Idempotent for the same project, so a re-render costs nothing.
+   */
+  public setProjectId(project_id: string) {
+    if (this._project_id === project_id && this._sd) return;
+
+    this._project_id = project_id;
+    this._sd = this._getSharedData(project_id);
+
     this._sd['user-containers:containers'].observe(() => this._onChange());
     this._sd['jupyter:servers'].observe(() => this._onChange());
   }
@@ -97,6 +132,10 @@ export class JLsManager extends Listenable {
   //
 
   private async _updateKernelPack(kp: TKernelPack) {
+    // Nothing to update before a project is chosen, and treating that as
+    // "server does not exist" would be a lie the kernel pack then acts on.
+    if (!this._sd) return;
+
     const server = this._sd['user-containers:containers'].get(
       `${kp.user_container_id}`
     );
