@@ -242,8 +242,15 @@ export const setupCollabRoutes = (
       // variable — see the reasoning in `start-vpn.sh`. A client that disagrees
       // with its server does not fail loudly: it retries forever against a port
       // that is listening for the other protocol.
+      // Lower-cased, like `start-vpn.sh` does before validating. Without it
+      // the two sides read the same variable differently: the server refuses
+      // to start on `TCP` while this handler treats anything that is not
+      // exactly `tcp` as UDP — so the only thing holding them together is that
+      // a bad value happens to kill the server first. Relax that validation
+      // and a client gets a UDP profile against a TCP listener, which retries
+      // forever instead of failing.
       const proto =
-        (process.env.GATEWAY_VPN_PROTO || 'udp') === 'tcp'
+        (process.env.GATEWAY_VPN_PROTO || 'udp').toLowerCase() === 'tcp'
           ? 'tcp-client'
           : 'udp';
 

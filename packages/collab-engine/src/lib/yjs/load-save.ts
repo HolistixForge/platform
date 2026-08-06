@@ -59,7 +59,13 @@ export function setAllSharedDataFromJSON(
     // string a Y.Text — which is restored from `editors` below, as before.
     try {
       if (Array.isArray(value)) {
-        doc.getArray(name).push(value);
+        // Only into an empty array. `push` appends, so applying one snapshot
+        // twice to the same document duplicates every element — the map branch
+        // below is idempotent by key and this one was not. The gateway
+        // restores once today, which is exactly why the asymmetry would go
+        // unnoticed until something restored twice.
+        const sharedType = doc.getArray(name);
+        if (sharedType.length === 0) sharedType.push(value);
       } else if (value !== null && typeof value === 'object') {
         const sharedType = doc.getMap(name);
         Object.entries(value).forEach(([key, entry]) => {

@@ -35,6 +35,16 @@ describe('setAllSharedDataFromJSON', () => {
     ]);
   });
 
+  it('does not duplicate array elements when a snapshot is applied twice', () => {
+    const doc = new Y.Doc();
+    const snapshot = { 'core:nodes': [{ id: 'n1' }, { id: 'n2' }] };
+
+    setAllSharedDataFromJSON(doc, snapshot);
+    setAllSharedDataFromJSON(doc, snapshot);
+
+    expect(doc.getArray('core:nodes').length).toBe(2);
+  });
+
   it('round-trips a document through save and load', () => {
     const source = new Y.Doc();
     source.getMap('user-containers:containers').set('uc_abc', { port: 5678 });

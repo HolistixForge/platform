@@ -148,7 +148,9 @@ fi
 #
 # The client is served the same value from `/collab/vpn-config`, out of the
 # same environment variable, so the two cannot disagree.
-VPN_PROTO="${GATEWAY_VPN_PROTO:-udp}"
+# Lower-cased before the comparison, and `/collab/vpn-config` does the same, so
+# `TCP` cannot mean one thing here and another there.
+VPN_PROTO="$(printf '%s' "${GATEWAY_VPN_PROTO:-udp}" | tr '[:upper:]' '[:lower:]')"
 case "${VPN_PROTO}" in
   udp) SERVER_PROTO="udp" ;;
   tcp) SERVER_PROTO="tcp-server" ;;
