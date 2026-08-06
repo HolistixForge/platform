@@ -15,7 +15,6 @@ const execAsync = promisify(exec);
 
 export class NginxManager {
   private envName: string;
-  private envDir: string;
   private nginxGatewaysDir: string;
   private sslCertPath: string;
   private sslKeyPath: string;
@@ -33,14 +32,29 @@ export class NginxManager {
   // `nginx -s reload` can reach the nginx on the host.
   constructor() {
     this.envName = process.env.ENV_NAME || 'dev-001';
-    this.envDir = `/root/.local-dev/${this.envName}`;
+    // The Linux layout, and the fallback for the four paths below and nothing
+    // else. A local rather than a field: kept as one it was dead on macOS,
+    // where all four are overridden, and the next path derived from it without
+    // an override of its own would have pointed silently into a directory that
+    // does not exist there.
+    const envDir = `/root/.local-dev/${this.envName}`;
     this.nginxGatewaysDir =
-      process.env.NGINX_GATEWAYS_DIR || `${this.envDir}/nginx-gateways.d`;
-    this.sslCertPath =
-      process.env.NGINX_SSL_CERT || `${this.envDir}/ssl-cert.pem`;
-    this.sslKeyPath = process.env.NGINX_SSL_KEY || `${this.envDir}/ssl-key.pem`;
-    this.logsDir = process.env.NGINX_LOGS_DIR || `${this.envDir}/logs`;
-    this.listenPort = process.env.NGINX_LISTEN_PORT || '443';
+      process.env.NGINX_GATEWAYS_DIR || `${envDir}/nginx-gateways.d`;
+    this.sslCertPath = process.env.NGINX_SSL_CERT || `${envDir}/ssl-cert.pem`;
+    this.sslKeyPath = process.env.NGINX_SSL_KEY || `${envDir}/ssl-key.pem`;
+    this.logsDir = process.env.NGINX_LOGS_DIR || `${envDir}/logs`;
+    // Interpolated straight into `listen ${port} ssl;`. Operator configuration
+    // rather than user input, so this is not an injection path — but a typo
+    // becomes a generated block nginx refuses, and on the macOS layout that
+    // refusal happens on the host, minutes and one confusing timeout later.
+    // Refusing at startup names the actual mistake.
+    const listenPort = process.env.NGINX_LISTEN_PORT || '443';
+    if (!/^\d{1,5}$/.test(listenPort) || Number(listenPort) > 65535) {
+      throw new Error(
+        `NGINX_LISTEN_PORT must be a port number, got: ${listenPort}`
+      );
+    }
+    this.listenPort = listenPort;
     this.testCommand = process.env.NGINX_TEST_COMMAND || 'sudo nginx -t 2>&1';
     this.reloadCommand =
       process.env.NGINX_RELOAD_COMMAND || 'sudo nginx -s reload';
