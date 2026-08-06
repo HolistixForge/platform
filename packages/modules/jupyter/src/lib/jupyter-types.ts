@@ -53,6 +53,14 @@ export type TUserContainerSettings = {
    * simply never reachable.
    */
   init?: ServerConnection.ISettings['init'];
+  /**
+   * How the request is actually made.
+   *
+   * The gateway needs one that keeps the service's name in the URL while
+   * connecting to the container's VPN address — see `hostRoutedFetch`. The
+   * browser needs nothing: the name resolves there.
+   */
+  fetch?: ServerConnection.ISettings['fetch'];
 };
 
 //
