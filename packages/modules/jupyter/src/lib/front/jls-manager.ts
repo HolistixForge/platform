@@ -7,7 +7,19 @@ import {
 import { Listenable } from '@holistix-forge/simple-types';
 import { FrontendDispatcher } from '@holistix-forge/reducers/frontend';
 
-import { BrowserWidgetManager } from './browser-widget-manager';
+// Type-only, so nothing of it is evaluated when this module loads.
+//
+// `BrowserWidgetManager` reaches `@jupyter-widgets/html-manager`, which pulls a
+// jQuery-UI slider that reads globals *while it is being evaluated* — built for
+// webpack, where a ProvidePlugin supplies them. Imported eagerly, loading the
+// Jupyter module took the whole application down before React mounted: a blank
+// page and "ReferenceError: jQuery is not defined", then "Cannot read
+// properties of undefined (reading 'mouse')" once jQuery was supplied.
+//
+// Widgets are an optional capability of one node type. Loading them the moment
+// a kernel connects — and only then — costs nothing anyone will notice and
+// keeps every other node, the terminal among them, independent of them.
+import type { BrowserWidgetManager } from './browser-widget-manager';
 import { JupyterlabDriver } from '../driver';
 import { TJupyterSharedData } from '../jupyter-shared-model';
 import { TJupyterEvent } from '../jupyter-events';
@@ -209,12 +221,16 @@ export class JLsManager extends Listenable {
           // connect kernel
           driver.connectKernel(kernel.kernel_id).then((kernelConnection) => {
             this._changeKernelPackState(kp, WIDGET_MANAGER_LOADING);
-            // instantiate widget manager
-            const bwm = new BrowserWidgetManager(kernelConnection);
-            kp.widgetManager = bwm;
-            bwm.loadFromKernelDone.then(() => {
-              this._changeKernelPackState(kp, READY);
-            });
+            // Loaded here rather than at module load — see the import above.
+            import('./browser-widget-manager').then(
+              ({ BrowserWidgetManager }) => {
+                const bwm = new BrowserWidgetManager(kernelConnection);
+                kp.widgetManager = bwm;
+                bwm.loadFromKernelDone.then(() => {
+                  this._changeKernelPackState(kp, READY);
+                });
+              }
+            );
           });
         }
       });

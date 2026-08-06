@@ -319,3 +319,28 @@ func TestExtractBearerTokenAcceptsJupytersScheme(t *testing.T) {
 		}
 	}
 }
+
+func TestConsumeQueryTokenRemovesTheCredentialItUsed(t *testing.T) {
+	// A WebSocket handshake carries no Authorization header, so the credential
+	// travels in the query. Left there, it reaches the service — which reads a
+	// parameter of that name as its own token: JupyterLab answered 403 to every
+	// terminal WebSocket while the guard had authenticated the request.
+	r := httptest.NewRequest("GET", "/terminals/websocket/2?token=a.b.c&keep=1", nil)
+
+	consumeQueryToken(r)
+
+	if r.URL.Query().Has("token") {
+		t.Fatal("the credential was forwarded to the service")
+	}
+	if got := r.URL.Query().Get("keep"); got != "1" {
+		t.Fatalf("an unrelated parameter was lost: keep=%q", got)
+	}
+}
+
+func TestConsumeQueryTokenLeavesAQuerylessRequestAlone(t *testing.T) {
+	r := httptest.NewRequest("GET", "/api/terminals", nil)
+	consumeQueryToken(r)
+	if r.URL.RawQuery != "" {
+		t.Fatalf("RawQuery = %q, want empty", r.URL.RawQuery)
+	}
+}

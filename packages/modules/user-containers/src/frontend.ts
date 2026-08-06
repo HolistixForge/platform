@@ -33,12 +33,23 @@ type TRequired = {
   whiteboard: TWhiteboardFrontendExports;
 };
 
+/**
+ * What this module is given by the application.
+ *
+ * `getAccessToken` is the signed-in user's own token. It is what the browser
+ * presents to a container's auth guard when it has no session for that
+ * container yet — a terminal node on the whiteboard has never opened one.
+ */
+type TConfig = {
+  getAccessToken?: () => string;
+};
+
 export const moduleFrontend: TModule<TRequired> = {
   name: 'user-containers',
   version: '0.0.1',
   description: 'User containers module',
   dependencies: ['core-graph', 'collab', 'whiteboard', 'tabs'],
-  load: ({ depsExports, moduleExports }) => {
+  load: ({ depsExports, moduleExports, config }) => {
     // Register shared data schema with registry
     depsExports.collab.registry.registerSharedData(
       'map',
@@ -106,7 +117,7 @@ export const moduleFrontend: TModule<TRequired> = {
         if (!service) {
           throw new Error(`Service ${serviceName} not found`);
         }
-        return '';
+        return (config as TConfig)?.getAccessToken?.() ?? '';
       },
       registerContainerRunner,
       getRunners: () => containerRunners,

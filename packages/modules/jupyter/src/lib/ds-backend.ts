@@ -11,14 +11,38 @@ export type TOnNewDriverCb = (s: TJupyterServerData) => Promise<void>;
 
 //
 
-export const jupyterlabIsReachable = async (s: TUserContainer) => {
+/**
+ * Whether this container's JupyterLab answers.
+ *
+ * `token` is the caller's credential, and leaving it out is not a lighter
+ * version of the same question: a container sits behind its auth guard, which
+ * refuses an anonymous request. Asked bare, from the platform's page, this
+ * always answered 401 and every terminal node sat on "Server is not reachable,
+ * will try again in 60 seconds" — a service that was running the whole time.
+ *
+ * `credentials: 'include'` as well, because the two ways the guard recognises a
+ * browser are a session cookie and this token, and only one of them exists at
+ * any given moment: a terminal node on the whiteboard has never opened the
+ * notebook's page, so it has no cookie for it; a tab that has been opened has
+ * one. Sending both means the answer does not depend on which.
+ */
+export const jupyterlabIsReachable = async (
+  s: TUserContainer,
+  token?: string
+) => {
   let r = false;
   const url = serviceUrl(s, 'jupyterlab');
   if (url)
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
-      const response = await fetch(`${url}/api`, { signal: controller.signal });
+      const response = await fetch(`${url}/api`, {
+        signal: controller.signal,
+        credentials: 'include',
+        // The scheme Jupyter's own clients use, which the guard reads as well
+        // as `Bearer` for exactly this reason.
+        headers: token ? { Authorization: `token ${token}` } : undefined,
+      });
       clearTimeout(timeoutId);
       if (response.status === 200) r = true;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars

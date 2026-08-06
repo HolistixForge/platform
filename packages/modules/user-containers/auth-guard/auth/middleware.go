@@ -126,6 +126,10 @@ func (m *Middleware) Handler(next http.Handler) http.Handler {
 		}
 
 		// Priority 3: Check token query parameter (for WebSocket connections)
+		//
+		// A browser cannot put an Authorization header on a WebSocket handshake,
+		// so the credential travels in the query instead. It is consumed here
+		// and removed before the request goes on — see `consumeQueryToken`.
 		if token := r.URL.Query().Get("token"); token != "" {
 			claims, err := m.jwtValidator.Validate(token)
 			if err != nil {
@@ -152,6 +156,7 @@ func (m *Middleware) Handler(next http.Handler) http.Handler {
 			r.Header.Set("X-Auth-User-Name", claims.Username)
 			r.Header.Set("X-Auth-Display-Name", claims.DisplayName)
 			r.Header.Set("X-Auth-Verified", "true")
+			consumeQueryToken(r)
 			m.presentUpstreamToken(r)
 			next.ServeHTTP(w, r)
 			return
@@ -256,4 +261,25 @@ func (m *Middleware) presentUpstreamToken(r *http.Request) {
 		return
 	}
 	r.Header.Set("Authorization", "token "+m.upstreamToken)
+}
+
+// consumeQueryToken removes the credential the guard just used.
+//
+// The platform's own JWT travelled in `?token=` because a WebSocket handshake
+// carries no Authorization header. Left in place, it reaches the service —
+// which reads a parameter of that name as *its* token. Measured: JupyterLab
+// answered 403 to every terminal WebSocket, then asked its hub who the user
+// was and was refused too, while the guard had authenticated the request
+// perfectly well and said so in the headers it added.
+//
+// The same reasoning as replacing the Authorization header: the guard consumes
+// the caller's credential and presents its own. A caller does not get to choose
+// what the service behind sees.
+func consumeQueryToken(r *http.Request) {
+	q := r.URL.Query()
+	if !q.Has("token") {
+		return
+	}
+	q.Del("token")
+	r.URL.RawQuery = q.Encode()
 }

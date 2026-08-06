@@ -132,9 +132,12 @@ export const JupyterTerminal = ({
 
     if (!isReachable) {
       const checkReachable = () => {
-        jupyterlabIsReachable(server).then((isReachable) =>
-          setIsReachable(isReachable)
-        );
+        // With the user's credential: the container is behind its auth guard,
+        // and an anonymous probe can only ever answer 401.
+        jlsManager
+          .getToken(server, 'jupyterlab')
+          .then((token) => jupyterlabIsReachable(server, token))
+          .then((isReachable) => setIsReachable(isReachable));
       };
 
       checkReachable();
