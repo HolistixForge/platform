@@ -199,9 +199,10 @@ export class JupyterlabDriver {
       const terminalModels = await fetch(
         `${this.km.serverSettings.baseUrl}api/terminals`,
         {
-          headers: {
-            Authorization: `Bearer ${this.km.serverSettings.token}`,
-          },
+          // The cookie, not a bearer token. The guard authenticates the browser
+          // by session and adds the service's own token upstream, so a token
+          // sent from here would be one the browser should never have held.
+          credentials: 'include',
         }
       );
 
@@ -216,9 +217,10 @@ export class JupyterlabDriver {
       const sessionsResponse = await fetch(
         `${this.km.serverSettings.baseUrl}api/sessions`,
         {
-          headers: {
-            Authorization: `Bearer ${this.km.serverSettings.token}`,
-          },
+          // The cookie, not a bearer token. The guard authenticates the browser
+          // by session and adds the service's own token upstream, so a token
+          // sent from here would be one the browser should never have held.
+          credentials: 'include',
         }
       );
       const sessions = await sessionsResponse.json();

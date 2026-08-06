@@ -21,6 +21,7 @@ type Middleware struct {
 	customDomains []string
 	baseFQDN      string
 	portSuffix    string
+	upstreamToken string
 }
 
 // guardOrigin is where this guard is reachable from a browser.
@@ -50,6 +51,10 @@ type MiddlewareConfig struct {
 	// PortSuffix is ":8443" or "", and belongs to every absolute URL built
 	// from BaseFQDN — never to a cookie domain or a Router lookup.
 	PortSuffix string
+	// UpstreamToken authenticates the guard to the service it fronts. Added
+	// only to requests the guard has already authorized, and never sent to a
+	// browser. Empty where the service needs nothing.
+	UpstreamToken string
 }
 
 // NewMiddleware creates a new auth Middleware.
@@ -64,6 +69,7 @@ func NewMiddleware(cfg MiddlewareConfig) *Middleware {
 		customDomains: cfg.CustomDomains,
 		baseFQDN:      cfg.BaseFQDN,
 		portSuffix:    cfg.PortSuffix,
+		upstreamToken: cfg.UpstreamToken,
 	}
 }
 
@@ -82,6 +88,7 @@ func (m *Middleware) Handler(next http.Handler) http.Handler {
 			r.Header.Set("X-Auth-User-Name", session.Username)
 			r.Header.Set("X-Auth-Display-Name", session.DisplayName)
 			r.Header.Set("X-Auth-Verified", "true")
+			m.presentUpstreamToken(r)
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -113,6 +120,7 @@ func (m *Middleware) Handler(next http.Handler) http.Handler {
 			r.Header.Set("X-Auth-User-Name", claims.Username)
 			r.Header.Set("X-Auth-Display-Name", claims.DisplayName)
 			r.Header.Set("X-Auth-Verified", "true")
+			m.presentUpstreamToken(r)
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -144,6 +152,7 @@ func (m *Middleware) Handler(next http.Handler) http.Handler {
 			r.Header.Set("X-Auth-User-Name", claims.Username)
 			r.Header.Set("X-Auth-Display-Name", claims.DisplayName)
 			r.Header.Set("X-Auth-Verified", "true")
+			m.presentUpstreamToken(r)
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -214,4 +223,21 @@ func stripPort(host string) string {
 		}
 	}
 	return host
+}
+
+// presentUpstreamToken authenticates this request to the service behind.
+//
+// Only on a request the guard has just authorized — that is the whole
+// arrangement: the browser proves who it is with a session, the guard checks
+// with the gateway that this user may reach this container, and the token that
+// opens the service is added here and never leaves the container's network.
+//
+// A caller's own Authorization header is replaced rather than kept. It has
+// already been consumed by the guard if it meant anything, and forwarding it
+// would let a caller choose what the service sees.
+func (m *Middleware) presentUpstreamToken(r *http.Request) {
+	if m.upstreamToken == "" {
+		return
+	}
+	r.Header.Set("Authorization", "token "+m.upstreamToken)
 }

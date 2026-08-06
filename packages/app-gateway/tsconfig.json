@@ -49,9 +49,6 @@
       "path": "../modules/n8n"
     },
     {
-      "path": "../modules/jupyter"
-    },
-    {
       "path": "../modules/user-containers"
     },
     {

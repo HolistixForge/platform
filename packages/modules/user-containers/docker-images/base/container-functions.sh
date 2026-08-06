@@ -294,6 +294,19 @@ start_auth_guard() {
     GUARD_FLAGS="$GUARD_FLAGS --organization-id ${AUTH_GUARD_ORG_ID}"
     GUARD_FLAGS="$GUARD_FLAGS --cookie-domain .${DOMAIN}"
 
+    # What opens the service behind the guard, when it needs anything.
+    #
+    # JupyterLab authenticates its own API with a token, and handing that token
+    # to the browser would give the notebook's whole API to whoever holds the
+    # page — undoing, one layer up, the per-user authorization the guard just
+    # performed against the gateway. So the browser presents its session, the
+    # guard authorizes it, and the guard adds this on the way through. The image
+    # sets AUTH_GUARD_UPSTREAM_TOKEN before calling us; ttyd and n8n set nothing
+    # and the flag is simply absent.
+    if [ -n "${AUTH_GUARD_UPSTREAM_TOKEN:-}" ]; then
+        GUARD_FLAGS="$GUARD_FLAGS --upstream-token ${AUTH_GUARD_UPSTREAM_TOKEN}"
+    fi
+
     # In dev mode (self-signed certs), skip TLS verification
     if [ "${GATEWAY_DEV:-0}" = "1" ]; then
         GUARD_FLAGS="$GUARD_FLAGS --insecure-skip-verify"

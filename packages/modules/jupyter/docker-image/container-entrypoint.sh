@@ -2,6 +2,18 @@
 
 . /usr/local/bin/container-functions.sh
 
+# The token that opens JupyterLab, minted before anything that needs it.
+#
+# The guard presents it upstream on every request it has already authorized, so
+# the browser never carries a Jupyter token of its own — handing one over would
+# give the notebook's whole API to whoever holds the page, undoing the per-user
+# check the guard just made against the gateway.
+#
+# Before `start_auth_guard`, necessarily: the guard reads it once, at startup,
+# and a value exported afterwards is a flag it never saw.
+HUB_API_TOKEN=$(python3 -c "import secrets; print(secrets.token_hex(32))")
+export AUTH_GUARD_UPSTREAM_TOKEN="${HUB_API_TOKEN}"
+
 # Start auth guard proxy (must start before services so it can intercept traffic)
 start_auth_guard
 
@@ -12,9 +24,6 @@ sh -c '. /usr/local/bin/container-functions.sh && vpn_loop' &
 sh -c '. /usr/local/bin/container-functions.sh && map_http_service jupyterlab 8888' &
 
 # --- Hub OAuth Proxy ---
-# Generate a shared API token for server-to-server communication
-HUB_API_TOKEN=$(python3 -c "import secrets; print(secrets.token_hex(32))")
-
 # Start the hub OAuth proxy on localhost:15000
 python3 /usr/local/bin/hub-oauth-proxy.py --port 15000 --api-token "$HUB_API_TOKEN" &
 

@@ -10,17 +10,28 @@ import (
 
 // Config holds all configuration for the auth guard proxy.
 type Config struct {
-	ListenPort          int
-	AdminPort           int
-	GanymedeURL         string
-	GatewayURL          string
-	ClientID            string
-	ClientSecret        string
-	ContainerID         string
-	OrganizationID      string
-	CookieDomain        string
-	SessionTTL          time.Duration
-	CustomDomains       []string
+	ListenPort     int
+	AdminPort      int
+	GanymedeURL    string
+	GatewayURL     string
+	ClientID       string
+	ClientSecret   string
+	ContainerID    string
+	OrganizationID string
+	CookieDomain   string
+	SessionTTL     time.Duration
+	CustomDomains  []string
+	// UpstreamToken is what the guard presents to the service it fronts.
+	//
+	// JupyterLab authenticates its own API with a token. Handing that token to
+	// the browser would give the notebook's full API to anyone holding the
+	// page, which is exactly the per-user authorization this guard performs
+	// against the gateway — undone one layer up. So the browser presents its
+	// session, the guard authorizes it, and only then does the guard add this.
+	//
+	// Empty means the service behind needs nothing, which is the case for ttyd
+	// and n8n.
+	UpstreamToken       string
 	InsecureSkipVerify  bool
 	SkipPermissionCheck bool
 	BaseFQDN            string // derived: uc-{ContainerID}.org-{OrganizationID}.{domain}, portless
@@ -45,6 +56,7 @@ func Parse(args []string) (*Config, error) {
 	fs.StringVar(&cfg.ContainerID, "container-id", "", "Container identifier")
 	fs.StringVar(&cfg.OrganizationID, "organization-id", "", "Organization identifier")
 	fs.StringVar(&cfg.CookieDomain, "cookie-domain", "", "Cookie domain for sessions")
+	fs.StringVar(&cfg.UpstreamToken, "upstream-token", "", "Token to present to the service behind the guard (never sent to the browser)")
 	fs.BoolVar(&cfg.InsecureSkipVerify, "insecure-skip-verify", false, "Skip TLS verification (dev only)")
 	fs.BoolVar(&cfg.SkipPermissionCheck, "skip-permission-check", false, "Skip gateway permission checks (dev only)")
 

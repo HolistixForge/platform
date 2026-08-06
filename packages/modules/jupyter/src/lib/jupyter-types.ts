@@ -43,6 +43,16 @@ export type TJupyterServerData = {
 export type TUserContainerSettings = {
   baseUrl: ServerConnection.ISettings['baseUrl'];
   token?: ServerConnection.ISettings['token'];
+  /**
+   * Passed to every request `@jupyterlab/services` makes.
+   *
+   * The platform's page and a container are different origins, so a request
+   * carries no cookie unless it is told to — and the cookie is what the
+   * container's auth guard authenticates on. Without this the guard sees an
+   * anonymous request, refuses it, and the notebook's kernels and terminals are
+   * simply never reachable.
+   */
+  init?: ServerConnection.ISettings['init'];
 };
 
 //

@@ -253,6 +253,10 @@ export class JLsManager extends Listenable {
     const r = {
       baseUrl: url,
       token,
+      // Cross-origin, so the session cookie only travels if asked for. It is
+      // what the container's guard authorizes on; the token that opens the
+      // service itself is added by the guard upstream and never comes here.
+      init: { credentials: 'include' as RequestCredentials },
     };
 
     return r;

@@ -81,6 +81,24 @@ export const moduleFrontend: TModule<TRequired> = {
     registerContainerRunner('platform', platformRunnerFrontend);
 
     const exports: TUserContainersFrontendExports = {
+      /**
+       * What the browser presents to a service. Nothing, deliberately.
+       *
+       * A container sits behind its auth guard, which authenticates the browser
+       * by session cookie and asks the gateway whether this user may reach this
+       * container — per user, on every request. The token that actually opens
+       * the service is added by the guard on the way through and never leaves
+       * the container's side.
+       *
+       * Returning a real token here would hand the notebook's whole API to
+       * whoever holds the page, undoing that check one layer up. So the caller
+       * gets an empty string and relies on its request carrying credentials —
+       * `serverSettings.init.credentials = 'include'`, because the platform's
+       * page and the container are different origins.
+       *
+       * The service is still looked up, so asking for one that does not exist
+       * fails here rather than as a puzzling 404 later.
+       */
       getToken: async (userContainer, serviceName) => {
         const service = userContainer.httpServices.find(
           (s) => s.name === serviceName
@@ -88,7 +106,7 @@ export const moduleFrontend: TModule<TRequired> = {
         if (!service) {
           throw new Error(`Service ${serviceName} not found`);
         }
-        throw new Error('Not implemented');
+        return '';
       },
       registerContainerRunner,
       getRunners: () => containerRunners,
