@@ -259,8 +259,39 @@ func generateCSRFToken() string {
 	return hex.EncodeToString(b)
 }
 
-// isAPIRequest checks if the request expects a JSON response (API client).
+// isAPIRequest reports whether answering with a redirect would be useless.
+//
+// The distinction is not "does it want JSON" — it is "can it follow a
+// redirect". A browser navigating can: it goes to Ganymede, signs in, and comes
+// back. A `fetch()` cannot follow one to another origin that answers without
+// CORS headers; it fails with a network error and the caller sees nothing it
+// can act on.
+//
+// Accept alone was the test, and JupyterLab's own calls send `Accept: */*`. So
+// its API requests were answered with a 302 to `/oauth/authorize`, the browser
+// refused the cross-origin hop, and the notebook mounted its shell with none of
+// its content — inside the project only, because a top-level load follows the
+// same redirect happily. Measured: five such failures per open, and a frame
+// that renders "Skip to main panel" and nothing else.
+//
+// `Sec-Fetch-Mode` is the browser saying which of the two this is, and every
+// engine this platform targets sends it. The older signals stay underneath for
+// clients that do not.
 func isAPIRequest(r *http.Request) bool {
+	switch r.Header.Get("Sec-Fetch-Mode") {
+	case "navigate":
+		// A real page load. Redirecting is exactly right, and this must win
+		// over the Accept check below: a navigation to a JSON endpoint still
+		// needs the sign-in flow.
+		return false
+	case "cors", "no-cors", "same-origin", "websocket":
+		return true
+	}
+
+	if strings.EqualFold(r.Header.Get("X-Requested-With"), "XMLHttpRequest") {
+		return true
+	}
+
 	accept := r.Header.Get("Accept")
 	return strings.Contains(accept, "application/json")
 }

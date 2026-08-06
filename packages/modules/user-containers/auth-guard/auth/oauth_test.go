@@ -289,3 +289,42 @@ func TestRefreshTokenSuccess(t *testing.T) {
 		t.Errorf("expected new-refresh-token, got %s", newRefresh)
 	}
 }
+
+func TestIsAPIRequestDistinguishesNavigationFromFetch(t *testing.T) {
+	// A redirect is only an answer to something that can follow one. A
+	// `fetch()` cannot follow a cross-origin hop to an endpoint with no CORS
+	// headers, so answering one with 302 leaves the caller with a network
+	// error — which is how JupyterLab came to render its shell and none of its
+	// content inside the project.
+	cases := []struct {
+		name    string
+		headers map[string]string
+		want    bool
+	}{
+		{"a page load", map[string]string{"Sec-Fetch-Mode": "navigate", "Accept": "text/html"}, false},
+		{"a page load asking for json still navigates",
+			map[string]string{"Sec-Fetch-Mode": "navigate", "Accept": "application/json"}, false},
+		{"JupyterLab's own fetch, which asks for anything",
+			map[string]string{"Sec-Fetch-Mode": "cors", "Accept": "*/*"}, true},
+		{"a no-cors subresource", map[string]string{"Sec-Fetch-Mode": "no-cors"}, true},
+		{"a same-origin fetch", map[string]string{"Sec-Fetch-Mode": "same-origin"}, true},
+		{"a websocket handshake", map[string]string{"Sec-Fetch-Mode": "websocket"}, true},
+		{"a client with no fetch metadata, asking for json",
+			map[string]string{"Accept": "application/json"}, true},
+		{"a client with no fetch metadata, asking for html",
+			map[string]string{"Accept": "text/html"}, false},
+		{"an old XHR", map[string]string{"X-Requested-With": "XMLHttpRequest", "Accept": "*/*"}, true},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := httptest.NewRequest("GET", "/lab/api/workspaces", nil)
+			for k, v := range tc.headers {
+				r.Header.Set(k, v)
+			}
+			if got := isAPIRequest(r); got != tc.want {
+				t.Fatalf("isAPIRequest = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
