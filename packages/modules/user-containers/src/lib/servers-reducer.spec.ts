@@ -1028,14 +1028,45 @@ describe('UserContainersReducer - VPN credentials', () => {
       { project_id: 'project-1', jwt: { user: { id: 'user-1' } } } as any
     );
 
-  it('should record the token the container was given', async () => {
-    // Act
+  it('should record a short secret, not the hosting token', async () => {
+    // OpenVPN keeps a password in a fixed buffer — 128 bytes on the Alpine
+    // build of 2.6, larger on the Ubuntu one, and `--max-password-size` only
+    // arrives in 2.7. A hosting token is a JWT of some 740 bytes, so the same
+    // container was admitted or refused depending on which base image it was
+    // built from, and the server could only say "wrong password". Measured: an
+    // Alpine container presented 127 characters of a 743-character token.
     await start();
 
-    // Assert - this pair is exactly what vpn-auth-verify.sh compares against
-    expect(recordVpnCredentials).toHaveBeenCalledWith([
-      { user_container_id: 'uc-1', token: 'the-hosting-token' },
-    ]);
+    const [recorded] = recordVpnCredentials.mock.calls.at(-1) as [
+      { user_container_id: string; token: string }[]
+    ];
+
+    expect(recorded).toHaveLength(1);
+    expect(recorded[0].user_container_id).toBe('uc-1');
+    expect(recorded[0].token).not.toBe('the-hosting-token');
+    // Well inside every build's buffer, and not guessable.
+    expect(recorded[0].token).toMatch(/^[0-9a-f]{32}$/);
+  });
+
+  it('should give the runner the same secret it recorded', async () => {
+    // Two halves of one comparison: what the gateway writes for
+    // vpn-auth-verify.sh, and what the container is told to present. Minted in
+    // one place precisely so they cannot drift — and the hosting token still
+    // travels beside it, for everything that is not the VPN.
+    const startSpy = jest.fn().mockResolvedValue({});
+    (reducer as any).depsExports['user-containers'].getRunner = () => ({
+      start: startSpy,
+    });
+
+    await start();
+
+    const [recorded] = recordVpnCredentials.mock.calls.at(-1) as [
+      { user_container_id: string; token: string }[]
+    ];
+    const [, hostingToken, , config] = startSpy.mock.calls[0];
+
+    expect(config.vpn_secret).toBe(recorded[0].token);
+    expect(hostingToken).toBe('the-hosting-token');
   });
 
   it('should record it before the container is asked to start', async () => {

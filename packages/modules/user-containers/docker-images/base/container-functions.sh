@@ -14,6 +14,12 @@ extract_settings() {
     export TOKEN=$(echo "$JSON_SETTINGS" | jq -r '.token')
     export PROJECT_ID=$(echo "$JSON_SETTINGS" | jq -r '.project_id')
     export USER_CONTAINER_ID=$(echo "$JSON_SETTINGS" | jq -r '.user_container_id')
+    # What this container presents on the VPN. Short on purpose — openvpn keeps
+    # a password in a fixed buffer and truncated the hosting token to 127
+    # characters on the Alpine build, which the server could only report as a
+    # wrong password. Falls back to the token so a container started by a
+    # gateway that predates this still connects.
+    export VPN_SECRET=$(echo "$JSON_SETTINGS" | jq -r '.vpn_secret // empty')
 
     # Auth Guard Proxy settings (per-container OAuth client)
     export AUTH_GUARD_CLIENT_ID=$(echo "$JSON_SETTINGS" | jq -r '.auth_guard.client_id // empty')
@@ -135,7 +141,7 @@ start_vpn() {
         # `duplicate-cn` the server sees the common name `clients` for all of
         # them, cannot tell two apart, and cannot give a particular one the
         # address its network was allocated. The username is the container id
-        # and the password is the hosting token the gateway minted for it and
+        # and the password is the short secret the gateway minted for it and
         # handed over in SETTINGS — the pair `vpn-auth-verify.sh` compares
         # against the credentials file the gateway writes.
         #
@@ -144,8 +150,9 @@ start_vpn() {
         # safe in this order: every container learns to send them first, and
         # only then can VPN_PER_CLIENT_IDENTITY be turned on — the other order
         # takes every service in every organization offline at once.
-        if [ -n "${USER_CONTAINER_ID}" ] && [ -n "${TOKEN}" ]; then
-            printf '%s\n%s\n' "${USER_CONTAINER_ID}" "${TOKEN}" >vpn-credentials
+        VPN_PASSWORD="${VPN_SECRET:-${TOKEN}}"
+        if [ -n "${USER_CONTAINER_ID}" ] && [ -n "${VPN_PASSWORD}" ]; then
+            printf '%s\n%s\n' "${USER_CONTAINER_ID}" "${VPN_PASSWORD}" >vpn-credentials
             chmod 600 vpn-credentials
             # `auth-nocache` because openvpn otherwise keeps them in memory to
             # replay on reconnect, and this loop re-reads the file anyway —

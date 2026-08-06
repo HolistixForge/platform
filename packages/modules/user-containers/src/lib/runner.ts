@@ -17,6 +17,8 @@ export type TRunnerConfig = {
    * project, so the secret must never be stored there.
    */
   auth_guard_client_secret?: string;
+  /** What this container presents on the VPN. Short by necessity — see settings. */
+  vpn_secret?: string;
   /**
    * Local development only: hosts to map, because `.local` names do not
    * resolve inside a container.
@@ -113,6 +115,20 @@ export abstract class ContainerRunner {
       ganymede_fqdn: config.ganymede_fqdn,
       gateway_fqdn: config.gateway_fqdn,
       token: jwtToken,
+      // What the container presents on the VPN, and deliberately *not* the
+      // token above.
+      //
+      // OpenVPN carries a password in a fixed buffer — 128 bytes on the Alpine
+      // build, more on the Ubuntu one, and `--max-password-size` only arrives
+      // in 2.7. A hosting token is a JWT of some 740 bytes, so it was silently
+      // truncated to 127 on one image and passed whole on another: the same
+      // container refused or admitted depending on which base it was built
+      // from, with the server reporting nothing but a wrong password.
+      //
+      // A short secret has no such ceiling, and keeps a bearer token out of
+      // openvpn's memory and its scripts' environment, where it had no reason
+      // to be.
+      ...(config.vpn_secret ? { vpn_secret: config.vpn_secret } : {}),
       project_id: config.project_id,
       user_container_id: container.user_container_id,
       // Auth Guard Proxy config (per-container OAuth client registered with

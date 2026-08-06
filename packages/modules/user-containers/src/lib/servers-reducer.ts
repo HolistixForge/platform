@@ -84,6 +84,20 @@ export class UserContainersReducer extends ReducerWithCollab<
    * and the containers it had started are restarted through it anyway.
    */
   private readonly hostingTokens = new Map<string, string>();
+  /**
+   * What each container presents on the VPN, and not its hosting token.
+   *
+   * OpenVPN keeps a password in a fixed buffer — 128 bytes on the Alpine build
+   * of 2.6, larger on the Ubuntu one, and `--max-password-size` only lands in
+   * 2.7. A JWT is some 740 bytes, so the same container was admitted or
+   * refused depending on which base image it was built from, and the server
+   * said nothing but "wrong password". Measured: an Alpine container presented
+   * 127 characters of a 743-character token.
+   *
+   * Short, random, and per container. It also keeps a bearer token out of
+   * openvpn's memory and out of the environment of the scripts it runs.
+   */
+  private readonly vpnSecrets = new Map<string, string>();
 
   constructor(private readonly depsExports: TRequired) {
     super(depsExports.collab.registry, 'user-containers');
@@ -605,6 +619,7 @@ export class UserContainersReducer extends ReducerWithCollab<
     // The container is going; its credential should not outlive it. Rewritten
     // rather than left, because a token still in the file is one that would
     // still admit whatever presented it.
+    this.vpnSecrets.delete(containerId);
     if (this.hostingTokens.delete(containerId)) {
       await this._publishVpnCredentials();
     }
@@ -848,6 +863,7 @@ export class UserContainersReducer extends ReducerWithCollab<
     // loses by being refused, which looks from the UI like a service that will
     // not come up.
     this.hostingTokens.set(containerId, hostingToken);
+    this.vpnSecrets.set(containerId, this._newVpnSecret());
     await this._publishVpnCredentials();
 
     // Get runner from registry
@@ -879,6 +895,7 @@ export class UserContainersReducer extends ReducerWithCollab<
       gateway_fqdn: gatewayFqdn,
       organization_id,
       auth_guard_client_secret: authGuard?.client_secret,
+      vpn_secret: this.vpnSecrets.get(containerId),
       // Only in local development, and only from the gateway's environment:
       // this module cannot read process.env for itself.
       // `host-gateway` rather than the bridge address: a platform container
@@ -980,9 +997,19 @@ export class UserContainersReducer extends ReducerWithCollab<
    * gateway no longer knows about should lose its entry, not linger as a
    * credential nobody can account for.
    */
+  /**
+   * 32 hex characters — well inside every OpenVPN build's buffer, and long
+   * enough that guessing it is not a strategy.
+   */
+  private _newVpnSecret(): string {
+    const bytes = new Uint8Array(16);
+    globalThis.crypto.getRandomValues(bytes);
+    return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+  }
+
   private async _publishVpnCredentials(): Promise<void> {
     await this.depsExports.gateway.recordVpnCredentials(
-      Array.from(this.hostingTokens.entries()).map(
+      Array.from(this.vpnSecrets.entries()).map(
         ([user_container_id, token]) => ({ user_container_id, token })
       )
     );
@@ -1156,6 +1183,7 @@ export class UserContainersReducer extends ReducerWithCollab<
             }
           );
         this.hostingTokens.set(containerId, hostingToken);
+        this.vpnSecrets.set(containerId, this._newVpnSecret());
         await this._publishVpnCredentials();
       }
 
@@ -1173,6 +1201,7 @@ export class UserContainersReducer extends ReducerWithCollab<
         gateway_fqdn: gatewayFqdn,
         organization_id,
         auth_guard_client_secret: authGuard?.client_secret,
+        vpn_secret: this.vpnSecrets.get(containerId),
         dev_host_ip: gatewayExports.environment?.devMode
           ? 'host-gateway'
           : undefined,
