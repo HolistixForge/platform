@@ -221,7 +221,10 @@ export const UserContainerCardInternal = ({
           className="absolute flex items-center"
           style={{
             gap: '8px',
-            top: `calc(-25px - (var(--node-wrapper-header-height, 0px)))`,
+            // Close to the card: at -25px the line floated free of what it
+            // describes. The wrapper header, when there is one, still gets
+            // its own room.
+            top: `calc(-18px - (var(--node-wrapper-header-height, 0px)))`,
           }}
         >
           <div
@@ -410,7 +413,10 @@ export const UserContainerCardInternal = ({
             style={{
               width: '1px',
               height: '20px',
-              background: 'var(--color-border)',
+              // Magenta, the card's own accent — the same #F72585 as the
+              // activity dot. A neutral border read as a table rule rather
+              // than as the seam between two kinds of control.
+              background: '#F72585',
               margin: '0 var(--spacing-4)',
             }}
           />
@@ -465,7 +471,16 @@ export const UserContainerCardInternal = ({
         )}
       </div>
 
-      <TagsBar tags={tags} addTag={addTag} />
+      {/*
+        `marginTop: auto` and not a fixed offset: the card is a column with a
+        `minHeight`, and its middle grows — a container exposing several
+        services pushes everything down. Anchoring the tags to the bottom of
+        the flex box keeps them on the same line whatever is above them, which
+        a margin cannot do.
+      */}
+      <div style={{ marginTop: 'auto' }}>
+        <TagsBar tags={tags} addTag={addTag} />
+      </div>
 
       <div className="absolute" style={{ right: '16px', bottom: '20px' }}>
         <StatusLed color={color} type="server-card" />
