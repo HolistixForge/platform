@@ -20,7 +20,7 @@ const config: TBrokerConfig = {
   acceptedConcessions: [],
   hostname: 'mac-host-1',
   token: 'broker-token',
-  port: 9443,
+  port: 9080,
   maxLimits: { cpus: 4, memoryMb: 8192, pidsLimit: 2048 },
 };
 

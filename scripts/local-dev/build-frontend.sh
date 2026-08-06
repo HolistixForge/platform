@@ -40,8 +40,6 @@ if [ -z "$ENV_FILE" ]; then
   echo "                or: ./macos/ganymede-apple.sh up"
   exit 1
 fi
-ENV_DIR="$(dirname "$ENV_FILE")"
-
 DOMAIN=$(grep "^DOMAIN=" "$ENV_FILE" | cut -d= -f2 | tr -d '"' || echo "")
 if [ -z "$DOMAIN" ]; then
   echo "❌ DOMAIN not found in $ENV_FILE"
@@ -59,6 +57,15 @@ echo "🏗️  Building frontend for ${ENV_NAME}..."
 echo "   Domain: ${DOMAIN}"
 
 # Create .env for frontend build
+#
+# VITE_DOMAIN_NAME carries the port on the macOS layout, where DOMAIN is
+# `apollo.test:8443` — nginx does not listen on 443 there because binding under
+# 1024 needs root. That is an authority, not a hostname, so it is only safe
+# while every consumer builds a URL from it. Checked: the sole consumer is
+# `ApiContext` (app.tsx), which forms `https://${domain}` and
+# `https://ganymede.${domain}` — both URLs, both correct with a port. A cookie
+# domain or a hostname comparison would not be, and would fail the way the
+# session cookie in app.ts already did once.
 cat > packages/app-frontend/.env <<EOF
 VITE_ENVIRONMENT=${ENV_NAME}
 VITE_DOMAIN_NAME=${DOMAIN}

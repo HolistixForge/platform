@@ -14,7 +14,9 @@
 #   ./gateway-apple.sh resume    start the ones that already exist
 #   ./gateway-apple.sh list      what is running, and where
 #   ./gateway-apple.sh logs [i]  one container's gateway log
-#   ./gateway-apple.sh down      remove this environment's gateways, DB included
+#   ./gateway-apple.sh down      remove this environment's gateway containers
+#                                and their rows. The database itself is left
+#                                alone — ganymede-apple.sh drop-db is that.
 #
 # `all` does image, pack, serve and up in that order — the usual first run.
 #
@@ -63,7 +65,7 @@ COUNT_DEFAULT=2
 HTTP_BASE="${HTTP_BASE:-7100}"
 VPN_BASE="${VPN_BASE:-49100}"
 BUILD_PORT="${BUILD_PORT:-8090}"
-BROKER_PORT="${BROKER_PORT:-9443}"
+BROKER_PORT="${BROKER_PORT:-9080}"
 # Off unless asked for. The VPN server then *requires* a username and password,
 # so every container built before the base image learned to send them stops
 # connecting. Turn it on only once every image in the catalogue is rebuilt —
@@ -212,14 +214,16 @@ cmd_serve() {
 # It binds on the container network's gateway address, not the loopback: its
 # only client is a gateway *inside* a microVM, for which 127.0.0.1 is itself.
 #
-# And it is reached over `http`, not `https`, despite the port. 9443 means TLS
-# everywhere else, and the broker has none — no certificate option, no secure
-# server, `http.createServer` and nothing more. Writing the URL the port
-# implies costs a `fetch failed` in the gateway with no mention of TLS in it,
-# which is what happened here. The bearer token therefore travels in clear;
-# that is tolerable only because both ends sit on a host-local network — the
-# docker bridge on Linux, vmnet here — and it is worth saying out loud because
-# the port says the opposite.
+# And it is reached over `http`, not `https`. The broker has no TLS at all —
+# no certificate option, no secure server, `http.createServer` and nothing
+# more — so the bearer token that authorises starting a tenant container
+# travels in clear. That is tolerable only because both ends sit on a
+# host-local network: the docker bridge on Linux, vmnet here.
+#
+# The port used to be 9443, which said the opposite of all of that. It cost one
+# debugging session here — a URL written as the port implied, and a `fetch
+# failed` in the gateway with no mention of TLS in it — and it was an invitation
+# to copy the same shape somewhere it would matter. 9080 claims nothing.
 # The same broker, in the foreground: launchd needs a process it can watch, and
 # a job that backgrounds itself is a job launchd declares dead and restarts
 # forever. `foreground=1` is the only difference.
@@ -441,6 +445,14 @@ cmd_up() {
       -e "BUILD_SERVER_IP=${host}" \
       -e "BUILD_SERVER_PORT=${BUILD_PORT}" \
       -e "ALLOWED_ORIGINS=[\"https://${DOMAIN}:${HTTPS_PORT}\"]" \
+      # A whole PEM in one -e, newlines and all.
+      #
+      # ganymede-apple.sh base64s the same key because an env *file* is
+      # KEY=VALUE per line and a PEM cannot travel in one. An exec argument is
+      # not an env file and has no such limit — measured on `container` 1.2.0:
+      # a four-line PEM passed this way arrives with all three newlines intact.
+      # Worth having measured, because a truncated key does not fail at
+      # start-up; it fails later, as token verification refusing everyone.
       -e "JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}" \
       -e "OTEL_SERVICE_NAME=gateway-${name}" \
       -e "OTEL_DEPLOYMENT_ENVIRONMENT=${ENV_NAME}" \

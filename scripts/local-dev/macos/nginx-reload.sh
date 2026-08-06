@@ -53,6 +53,18 @@ reload_now() {
     printf '%s  REFUSED\n%s\n' "$(stamp)" "$test_output" >>"$LOG"
     ko "nginx refused the configuration — it was NOT reloaded"
     note "$LOG"
+    # Answer the callers, with the reason.
+    #
+    # The tokens were claimed before this ran, so without an answer every
+    # waiting caller sat out its ten seconds and reported "nginx did not
+    # acknowledge the reload" — which points at a watcher that is not running,
+    # when in fact the watcher is running and the configuration is broken.
+    # `nginx -t` can only run on this side, so this file is the only way that
+    # sentence reaches the container that asked.
+    mkdir -p "${ACKS}"
+    for tok in $tokens; do
+      printf '%s\n' "$test_output" >"${ACKS}/${tok}.err"
+    done
     return 1
   fi
   if nginx -s reload 2>>"$LOG"; then
@@ -77,7 +89,12 @@ watch_loop() {
   mkdir -p "$GATEWAYS_D" "$REQUESTS" "$ACKS"
   # Anything already queued was left by an earlier run and has no caller still
   # waiting on it; serving it would reload for nobody.
+  #
+  # `.acks` too. A caller that gave up a moment before its acknowledgement
+  # landed never removes the file, so the directory grew by one entry per
+  # timeout and nothing ever swept it.
   rm -f "$REQUESTS"/* 2>/dev/null
+  rm -f "$ACKS"/* 2>/dev/null
   printf '%s  watching %s\n' "$(stamp)" "$REQUESTS" >>"$LOG"
   while true; do
     local pending

@@ -142,16 +142,26 @@ up_postgres() {
       return 0
     fi
     ko "Postgres is on network '${existing_net}', this environment needs '${NET}'"
-    note "It holds every environment's database and has no volume, so removing"
-    note "it is not something this script does on its own. When nothing else"
+    note "It holds every environment's database, so removing it is not"
+    note "something this script does on its own. When nothing else"
     note "needs it:  container delete --force ${PG}  &&  $0 up"
     return 1
   fi
   container delete --force "$PG" >/dev/null 2>&1
+  # A host directory, so the container is not the only copy.
+  #
+  # One container holds every environment's database. Without a volume, any
+  # `container delete --force hx-postgres` — including the one this script
+  # suggests a few lines up when the network does not match — destroyed all of
+  # them irrecoverably. It costs one line, and it makes the whole class of
+  # accident survivable.
+  mkdir -p "${CONF_DIR}/postgres"
   container run --detach --name "$PG" --network "$NET" \
     --cpus 2 --memory 1024m \
+    -v "${CONF_DIR}/postgres:/var/lib/postgresql/data" \
     -e POSTGRES_PASSWORD=devpassword -e POSTGRES_USER=postgres \
     -e POSTGRES_DB=postgres \
+    -e PGDATA=/var/lib/postgresql/data/pgdata \
     -- docker.io/library/postgres:16-alpine >/dev/null 2>&1
 
   wait_for "container exec $PG pg_isready -U postgres" 30 \
@@ -303,6 +313,15 @@ stage_bundle() {
   local keep=""
   if [ -f "${STATE}/ganymede.env" ]; then
     keep=$(grep -E '^GITHUB_APP_(ID|SLUG|PRIVATE_KEY_B64)=' "${STATE}/ganymede.env" 2>/dev/null)
+  elif [ -f "${HOME}/.holistix-apple/ganymede.env" ]; then
+    # The old single-environment location. This directory moved to
+    # ~/.holistix-macos/<env> when the script started serving more than one
+    # environment, and the preservation above then found nothing on the first
+    # run after the move — dropping a GitHub App somebody had configured by
+    # hand and turning the image route back into a 503 that reads like a
+    # regression in whatever was last rebuilt. Read once, from where it was.
+    keep=$(grep -E '^GITHUB_APP_(ID|SLUG|PRIVATE_KEY_B64)=' "${HOME}/.holistix-apple/ganymede.env" 2>/dev/null)
+    [ -n "$keep" ] && note "carried the GitHub App settings over from ~/.holistix-apple"
   fi
 
   # Two of these are JSON and not strings, which is not obvious from their
@@ -401,12 +420,36 @@ D=/nginx-gateways.d
 TOKEN="$$-$(date +%s)-$(awk "BEGIN{srand();print int(rand()*100000)}")"
 mkdir -p "$D/.requests" "$D/.acks" || exit 1
 : >"$D/.requests/$TOKEN" || exit 1
+
+# BusyBox `sleep` only takes a fraction when it was built with float support.
+# It is in current Alpine, but where it is not this errors on every iteration
+# and the loop spins through its hundred turns in milliseconds — reporting a
+# ten-second timeout that never happened, which reads as a watcher that is not
+# running. Measured once, then fixed to whole seconds.
+if sleep 0.1 2>/dev/null; then
+  TICK=0.1
+  TICKS=100
+else
+  TICK=1
+  TICKS=10
+fi
+
 i=0
-while [ $i -lt 100 ]; do
+while [ $i -lt $TICKS ]; do
+  # A refusal, not a silence. `nginx -t` can only run on the host, so this file
+  # is how its actual complaint gets back here instead of surfacing as a
+  # timeout that points at the wrong thing entirely.
+  if [ -e "$D/.acks/$TOKEN.err" ]; then
+    echo "nginx refused the configuration:" >&2
+    cat "$D/.acks/$TOKEN.err" >&2
+    rm -f "$D/.acks/$TOKEN.err"
+    exit 1
+  fi
   [ -e "$D/.acks/$TOKEN" ] && { rm -f "$D/.acks/$TOKEN"; exit 0; }
-  sleep 0.1
+  sleep "$TICK"
   i=$((i + 1))
 done
+rm -f "$D/.requests/$TOKEN"
 echo "nginx did not acknowledge the reload within 10s — is nginx-reload.sh running?" >&2
 exit 1
 EOS
@@ -434,12 +477,26 @@ up_ganymede() {
   # bind failure lands in `container run`'s output, which is discarded, so
   # without this the only symptom is "Ganymede did not start" — pointing at the
   # bundle rather than at the port.
-  if lsof -nP -iTCP@127.0.0.1:"${GANYMEDE_PORT}" -sTCP:LISTEN >/dev/null 2>&1; then
-    ko "127.0.0.1:${GANYMEDE_PORT} is already listening — another environment?"
-    note "Give this one its own port, and nginx the same one:"
-    note "  GANYMEDE_PORT=6101 $0 up"
-    return 1
-  fi
+  # Without `@127.0.0.1`. Qualified by address, `lsof` reports only sockets
+  # bound literally to loopback and says nothing about a process listening on
+  # 0.0.0.0 for the same port — which is the common shape of a conflicting
+  # listener, and precisely the case this guard exists to name.
+  #
+  # Retried, because the probe runs just after this environment's own container
+  # was force-deleted and the runtime tears its host-side forwarder down on its
+  # own schedule. Read once, the just-removed listener can still be there, and
+  # `up` aborts with "another environment?" having already destroyed this one's.
+  local waited=0
+  while lsof -nP -iTCP:"${GANYMEDE_PORT}" -sTCP:LISTEN >/dev/null 2>&1; do
+    [ "$waited" -ge 5 ] && {
+      ko "port ${GANYMEDE_PORT} is already listening — another environment?"
+      note "Give this one its own port, and nginx the same one:"
+      note "  GANYMEDE_PORT=6101 $0 up"
+      return 1
+    }
+    sleep 1
+    waited=$((waited + 1))
+  done
 
   container run --detach --name "$GANY" --network "$NET" \
     --cpus 2 --memory 1024m \
@@ -457,6 +514,27 @@ up_ganymede() {
   }
   ip=$(ip_of "$GANY")
   ok "Ganymede up at http://127.0.0.1:${GANYMEDE_PORT} (container ${ip}:${PORT})"
+}
+
+# The other half of the reload arrangement.
+#
+# `stage_bundle` points NGINX_RELOAD_COMMAND at request-nginx-reload.sh, which
+# blocks for ten seconds waiting for an acknowledgement only
+# `nginx-reload.sh watch` can write. Nothing here started or checked it, so an
+# `up` without a separate `nginx-reload.sh start` made every gateway allocation
+# stall and then fail with "nginx did not acknowledge the reload" — which
+# Ganymede turns into a thrown error and a rolled-back allocation, and which
+# reads as a defect in Ganymede.
+check_nginx_watcher() {
+  local pidfile="${CONF_DIR}/nginx-reload.pid"
+  if [ -f "$pidfile" ] && kill -0 "$(cat "$pidfile")" 2>/dev/null; then
+    ok "nginx reload watcher running (pid $(cat "$pidfile"))"
+    return 0
+  fi
+  ko "the nginx reload watcher is not running"
+  note "Gateway allocation reloads nginx through it and fails without it:"
+  note "  ${REPO_ROOT}/scripts/local-dev/macos/nginx-reload.sh start"
+  return 0
 }
 
 
@@ -515,6 +593,9 @@ case "${1:-up}" in
     stage_bundle || exit 1
     up_ganymede || exit 1
     echo
+    echo "nginx reload"
+    check_nginx_watcher
+    echo
     "$0" status
     ;;
   status)
@@ -536,6 +617,7 @@ case "${1:-up}" in
     up_dns || exit 1
     stage_bundle || exit 1
     up_ganymede || exit 1
+    check_nginx_watcher
     ;;
   seed)   seed_catalogue ;;
   logs)   container logs "$GANY" ;;
@@ -543,11 +625,11 @@ case "${1:-up}" in
     # Only this environment's Ganymede. Postgres is one container holding every
     # environment's database — the container name is global while the database
     # name is not — so removing it here would take down whoever else is
-    # running, and it holds no volume, so their data would be gone with it.
+    # running. DNS is likewise one per machine, not one per environment.
     container delete --force "$GANY" >/dev/null 2>&1
-    ok "removed ${GANY}; Postgres left running for the other environments"
+    ok "removed ${GANY}; Postgres and DNS left running for the other environments"
     note "drop just this database:  $0 drop-db"
-    note "remove Postgres and all:  $0 down-all"
+    note "remove Postgres, DNS and all:  $0 down-all"
     ;;
   drop-db)
     container exec "$PG" psql -U postgres -c "DROP DATABASE IF EXISTS ${DB};" \
@@ -556,8 +638,12 @@ case "${1:-up}" in
     ;;
   down-all)
     # Stated rather than implied: this is the one that takes everyone's data.
-    container delete --force "$GANY" "$PG" >/dev/null 2>&1
-    ok "removed ${GANY} and Postgres — every environment's database is gone"
+    #
+    # DNS goes too. It is one container per machine, recreated on every `up`,
+    # and leaving it behind meant "remove everything" left a resolver running —
+    # so the help text overstated what actually happened.
+    container delete --force "$GANY" "$PG" "$DNS" >/dev/null 2>&1
+    ok "removed ${GANY}, Postgres and DNS — every environment's database is gone"
     ;;
   *) echo "usage: $0 [up|restart|seed|status|logs|down|drop-db|down-all]"; exit 1 ;;
 esac

@@ -16,7 +16,7 @@ const config: TBrokerConfig = {
   acceptedConcessions: [],
   hostname: 'platform-host-1',
   token: 'broker-token',
-  port: 9443,
+  port: 9080,
   maxLimits: { cpus: 4, memoryMb: 8192, pidsLimit: 2048 },
 };
 
@@ -83,6 +83,22 @@ describe('restarting an existing container', () => {
     const id = await startContainer(dockerEngine, exec, request, image, config);
 
     expect(id).toBe('holistix_svc_uc_abc12345');
+  });
+
+  it('falls back to the name it asked for when the first line is prose', async () => {
+    // "The first line is the identifier" holds only while stdout is non-empty.
+    // An engine that warned before printing, or wrote the name to stderr, would
+    // otherwise hand a sentence back as an id — and every later comparison,
+    // ownership and removal included, would then match nothing.
+    const exec = async (args: string[]) => {
+      if (args[1] === 'inspect') return '';
+      if (args[0] === 'run') return 'WARNING: the pool is nearly full';
+      return '';
+    };
+
+    expect(
+      await startContainer(dockerEngine, exec, request, image, config)
+    ).toBe(request.name);
   });
 
   it('returns a plain identifier unchanged', async () => {

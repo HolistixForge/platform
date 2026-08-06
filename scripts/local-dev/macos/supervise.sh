@@ -32,7 +32,12 @@ ENV_NAME="${ENV_NAME:-apollo}"
 DOMAIN="${DOMAIN:-apollo.test}"
 DNS_PORT="${DNS_PORT:-15353}"
 BUILD_PORT="${BUILD_PORT:-8090}"
-BROKER_PORT="${BROKER_PORT:-9443}"
+BROKER_PORT="${BROKER_PORT:-9080}"
+# The same default and the same override as ganymede-apple.sh and
+# gateway-apple.sh. Pinned to 8443 here, `status` reported nginx as NO — in
+# red — on any environment started with another port, while nginx was in fact
+# listening. A false negative, in the one table that exists to be believed.
+HTTPS_PORT="${HTTPS_PORT:-8443}"
 
 CONF_DIR="${HOME}/.holistix-macos"
 STATE="${CONF_DIR}/${ENV_NAME}"
@@ -200,7 +205,7 @@ cmd_status() {
   printf "%-24s %-10s %s\n" "AGENT" "LAUNCHD" "LISTENING"
   local listens=(
     "${PREFIX}.coredns:127.0.0.1:${DNS_PORT}:udp"
-    "${PREFIX}.nginx:*:8443:tcp"
+    "${PREFIX}.nginx:*:${HTTPS_PORT}:tcp"
     "${PREFIX}.nginx-reload::"
     "${PREFIX}.buildserver:*:${BUILD_PORT}:tcp"
     "${PREFIX}.broker:*:${BROKER_PORT}:tcp"

@@ -111,7 +111,7 @@ holistix_broker_runtime: kata
 # container creation to anything that can route to this host. The bridge gateway
 # is neither — routable from this host and its containers, nowhere else.
 holistix_broker_bind: "{{ holistix_docker_host_ip | default('127.0.0.1') }}"
-holistix_broker_port: 9443
+holistix_broker_port: 9080
 holistix_broker_secrets_file: /etc/holistix/container-broker.env
 # The broker proves itself to Ganymede with this, and Ganymede verifies an
 # RS256 `gateway_token` JWT — so it is signed with that environment's JWT
