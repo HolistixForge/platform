@@ -213,7 +213,18 @@ get_system_info() {
 watchdog() {
     PAYLOAD='{"event":{"type":"user-container:watchdog","system": '$(get_system_info)'},"project_id":"'${PROJECT_ID}'"}'
     echo "--->$PAYLOAD<---"
-    curl -X POST http://${GATEWAY_VPN_IP}/collab/event \
+    # Bounded, because this call is inside the loop that repairs the tunnel.
+    #
+    # The address is on the tunnel. When the tunnel goes down between the ping
+    # that decided it was up and this report, the connection neither completes
+    # nor is refused — it hangs, and without a timeout `vpn_loop` hangs with
+    # it: the one thing that would notice the tunnel is down and rebuild it is
+    # blocked on the tunnel being up. Measured, a container sat in that state
+    # for minutes with a dead openvpn and no further output at all, while the
+    # gateway dropped its nginx location and its service answered 404.
+    #
+    # `map_http_service` below has carried the same guard from the start.
+    curl --max-time 5 -X POST http://${GATEWAY_VPN_IP}/collab/event \
         -H "Authorization: ${TOKEN}" \
         -H "Content-Type: application/json" \
         -d "${PAYLOAD}" \

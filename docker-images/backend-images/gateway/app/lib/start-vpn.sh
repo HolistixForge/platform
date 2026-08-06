@@ -126,10 +126,39 @@ IDENT
   PER_CLIENT_IDENTITY_CONFIG=${PER_CLIENT_IDENTITY_CONFIG//SCRIPT_DIR_PLACEHOLDER/${_lib_dir}}
 fi
 
+# The transport, which is UDP unless the engine underneath cannot carry it.
+#
+# UDP is the right default and stays the default everywhere it works: OpenVPN
+# over TCP puts a reliable transport inside a reliable transport, and a single
+# lost packet then stalls every tunnelled connection instead of one.
+#
+# Apple `container` cannot carry it. A published UDP port is proxied by the
+# runtime, and that proxy dies once traffic flows through it — measured: the
+# port is bound after `container start`, a client completes its handshake, and
+# about a minute later nothing is listening on the host at all while the
+# published TCP port beside it keeps serving. Nothing brings it back short of
+# restarting the container, and there is no way around it from outside: the
+# host cannot reach a container's own address (`ping 192.168.65.91` and a TCP
+# connect both fail), so a relay on the host has nothing to relay to.
+#
+# The symptom, before this was understood, is a platform that looks healthy:
+# every container running, every gateway answering HTTP, and every user service
+# a 404 — because the container's tunnel is down, its watchdog never lands, and
+# the gateway drops its nginx location thirty seconds later.
+#
+# The client is served the same value from `/collab/vpn-config`, out of the
+# same environment variable, so the two cannot disagree.
+VPN_PROTO="${GATEWAY_VPN_PROTO:-udp}"
+case "${VPN_PROTO}" in
+  udp) SERVER_PROTO="udp" ;;
+  tcp) SERVER_PROTO="tcp-server" ;;
+  *) error_exit "GATEWAY_VPN_PROTO must be udp or tcp, got '${VPN_PROTO}'" ;;
+esac
+
 # Update OpenVPN configuration file with new paths and gateway VPN port
 cat <<EOF >"${TEMP_DIR}/server.conf" || error_exit "Failed to write to config file"
 dev tun
-proto udp
+proto ${SERVER_PROTO}
 # Use gateway VPN port
 port ${GATEWAY_VPN_PORT}
 server 172.16.0.0 255.255.0.0

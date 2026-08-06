@@ -59,6 +59,26 @@ export const setupCollabRoutes = (
         ]);
       }
 
+      // The room, if this gateway has not opened it yet.
+      //
+      // Rooms initialize lazily, and until this the only route that did so was
+      // `/collab/room-id` — which a browser calls and a container never does.
+      // So after a gateway restart every event from a running container failed
+      // with "Project … not initialized. No room_id found.", the gateway's
+      // nginx never learned the container's service again, and the service
+      // answered 404 until somebody happened to open the project in a browser.
+      // A container holding a token scoped to this project is as good a reason
+      // to open its room as a person looking at it; `requireProjectAccess`
+      // above has already established that it holds one.
+      if (!instances.projectRooms.getRoomId(project_id)) {
+        log(
+          EPriority.Info,
+          'COLLAB',
+          `🔄 Lazy initializing project from event: ${project_id}`
+        );
+        await instances.projectRooms.initializeProject(project_id);
+      }
+
       const requestData = {
         ip,
         user_id,
@@ -218,11 +238,20 @@ export const setupCollabRoutes = (
         return res.status(503).json({ error: 'VPN not available' });
       }
 
+      // The same transport the server was started with, from the same
+      // variable — see the reasoning in `start-vpn.sh`. A client that disagrees
+      // with its server does not fail loudly: it retries forever against a port
+      // that is listening for the other protocol.
+      const proto =
+        (process.env.GATEWAY_VPN_PROTO || 'udp') === 'tcp'
+          ? 'tcp-client'
+          : 'udp';
+
       const vpnConfig = {
         ...vpn,
         config: `client
 dev tun
-proto udp
+proto ${proto}
 remote GATEWAY_FQDN ${vpn.port}
 resolv-retry infinite
 nobind

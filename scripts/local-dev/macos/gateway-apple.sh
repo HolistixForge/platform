@@ -71,6 +71,22 @@ BROKER_PORT="${BROKER_PORT:-9080}"
 # connecting. Turn it on only once every image in the catalogue is rebuilt —
 # start-vpn.sh says the same thing from the other side.
 VPN_PER_CLIENT_IDENTITY="${VPN_PER_CLIENT_IDENTITY:-0}"
+# TCP here, UDP everywhere else — a concession, and it is Apple's UDP proxy
+# that forces it.
+#
+# `--publish <p>:<p>/udp` binds on the Mac and works, until traffic goes
+# through it: measured, the port is listening after `container start`, a
+# container completes its handshake, and about a minute later nothing is bound
+# on the host while the TCP publish beside it carries every HTTP request of the
+# night without a hiccup. There is no repair from outside, either — the host
+# cannot reach a container's own address, so a relay has nowhere to relay to.
+#
+# The cost is real and is the reason this is not the default anywhere else:
+# OpenVPN over TCP nests one reliable transport in another, so a single lost
+# packet stalls every tunnelled connection rather than one. On a Mac talking to
+# containers on the same machine, that loss does not happen; a proxy that dies
+# under load does.
+VPN_PROTO="${VPN_PROTO:-tcp}"
 
 NET=default
 PG=hx-postgres
@@ -491,7 +507,7 @@ cmd_up() {
       --network "$NET" --cpus 2 --memory 2048m \
       --cap-add NET_ADMIN \
       --publish "${http}:${http}" \
-      --publish "${vpn}:${vpn}/udp" \
+      --publish "${vpn}:${vpn}$([ "$VPN_PROTO" = udp ] && echo /udp)" \
       -e "ENV_NAME=${ENV_NAME}" \
       -e "GATEWAY_ID=${id}" \
       -e "GATEWAY_TOKEN=${token}" \
@@ -508,6 +524,7 @@ cmd_up() {
       -e "OTEL_DEPLOYMENT_ENVIRONMENT=${ENV_NAME}" \
       -e "NODE_TLS_REJECT_UNAUTHORIZED=0" \
       -e "VPN_PER_CLIENT_IDENTITY=${VPN_PER_CLIENT_IDENTITY:-0}" \
+      -e "GATEWAY_VPN_PROTO=${VPN_PROTO}" \
       -e "CONTAINER_BROKER_URL=http://${host}:${BROKER_PORT}" \
       -e "CONTAINER_BROKER_TOKEN=$(cat "${STATE}/broker.token")" \
       -- "$IMAGE" >/dev/null 2>&1
