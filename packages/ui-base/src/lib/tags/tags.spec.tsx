@@ -1,4 +1,4 @@
-import { render, act } from '@testing-library/react';
+import { render, act, screen, fireEvent } from '@testing-library/react';
 import { useState } from 'react';
 
 import { TagsBar } from './tags';
@@ -62,6 +62,47 @@ describe('TagsBar', () => {
     } finally {
       window.requestAnimationFrame = real;
     }
+  });
+
+  // jsdom reports clientWidth 0, so every tag measures as overflowing and the
+  // whole list lands in the dropdown. That is what makes this reachable here:
+  // the dropdown entries are the ones whose index is offset by the visible
+  // count, and they are the ones a reference lookup got wrong.
+  it('edits the tag that was clicked, after a parent re-render', async () => {
+    const edited: [number, string][] = [];
+
+    let rerender: (n: number) => void = () => undefined;
+    const Parent = () => {
+      const [, setN] = useState(0);
+      rerender = setN;
+      // Equal contents, new objects — what every real caller passes.
+      return (
+        <TagsBar
+          tags={TAGS.map((t) => ({ ...t }))}
+          editTag={(index, newText) => edited.push([index, newText])}
+        />
+      );
+    };
+
+    render(<Parent />);
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+
+    // A parent render hands down a fresh array of fresh objects. Looking the
+    // tag up by reference in it answered -1 from here on.
+    await act(async () => {
+      rerender(1);
+      await new Promise((resolve) => setTimeout(resolve, 30));
+    });
+
+    fireEvent.click(screen.getByText('...'));
+    fireEvent.click(screen.getByText('Prediction'));
+    const input = screen.getByDisplayValue('Prediction');
+    fireEvent.change(input, { target: { value: 'Regression' } });
+    fireEvent.blur(input);
+
+    expect(edited).toEqual([[1, 'Regression']]);
   });
 });
 
