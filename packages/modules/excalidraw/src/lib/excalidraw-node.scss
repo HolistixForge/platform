@@ -2,6 +2,34 @@
   min-height: 200px;
   min-width: 200px;
 
+  // A drawing is not an object on the board, it is a layer over it.
+  //
+  // Every node gets `draggable: true` in `to-rf-nodes.ts`, with no exception,
+  // so this one behaved like a card: it could be dragged, and its rectangle
+  // swallowed clicks. Draw across a chat and the chat became unreachable —
+  // the drawing was in front of it in a way a drawing should never be.
+  //
+  // `pointer-events: none` by default hands every click straight through to
+  // whatever is underneath, which also means React Flow never sees a drag
+  // start on it. Selection still works: the header and the resize handles opt
+  // back in below, and they are the only parts that should answer a pointer.
+  pointer-events: none;
+
+  // Being edited is the one state where the node owns the surface — that is
+  // what editing a drawing is.
+  &.is-being-edited {
+    pointer-events: auto;
+  }
+
+  // The frame around the node: header, buttons, connectors, resize handles.
+  // These are how you reach the node at all once its body is transparent.
+  .node-header,
+  .node-resizer,
+  .react-flow__resize-control,
+  .inputs-outputs {
+    pointer-events: auto;
+  }
+
   .excalidraw-content {
     overflow: hidden; // Hide any content that exceeds the node bounds
 
