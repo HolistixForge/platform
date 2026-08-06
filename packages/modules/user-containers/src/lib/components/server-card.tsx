@@ -413,10 +413,11 @@ export const UserContainerCardInternal = ({
             style={{
               width: '1px',
               height: '20px',
-              // Magenta, the card's own accent — the same #F72585 as the
-              // activity dot. A neutral border read as a table rule rather
-              // than as the seam between two kinds of control.
-              background: '#F72585',
+              // The violet-pink of the design system's own ramp, not the
+              // activity dot's #F72585 — that one reads red against this
+              // card's purple and pulled the eye like a warning. A token
+              // rather than a hex, so it follows the ramp if it moves.
+              background: 'var(--primary-300)',
               margin: '0 var(--spacing-4)',
             }}
           />
