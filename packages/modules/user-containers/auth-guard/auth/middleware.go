@@ -203,13 +203,29 @@ func (m *Middleware) handleAuthEndpoints(w http.ResponseWriter, r *http.Request)
 }
 
 // extractBearerToken extracts the token from the Authorization: Bearer header.
+// extractBearerToken reads the credential a caller presents, under either name.
+//
+// `Bearer` is the HTTP one. `token` is Jupyter's, and it is not a detail we can
+// wave away: the gateway drives a notebook with `@jupyterlab/services`, which
+// writes `Authorization: token <credential>` and offers no way to change it —
+// so the very client this guard exists to front could not authenticate to it.
+// Measured: creating a terminal from a service card failed with
+// "Invalid response: 401 Unauthorized", raised by the gateway against its own
+// container.
+//
+// Accepting both costs nothing. What follows validates the credential as a JWT
+// and checks the permission with the gateway, so a scheme name is only a label
+// on the envelope — nothing is trusted because of how it was spelled.
 func extractBearerToken(r *http.Request) string {
 	auth := r.Header.Get("Authorization")
 	if auth == "" {
 		return ""
 	}
 	parts := strings.SplitN(auth, " ", 2)
-	if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
+	if len(parts) != 2 {
+		return ""
+	}
+	if !strings.EqualFold(parts[0], "Bearer") && !strings.EqualFold(parts[0], "token") {
 		return ""
 	}
 	return parts[1]

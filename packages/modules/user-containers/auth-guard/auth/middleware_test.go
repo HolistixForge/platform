@@ -291,3 +291,31 @@ func searchString(s, substr string) bool {
 	}
 	return false
 }
+
+func TestExtractBearerTokenAcceptsJupytersScheme(t *testing.T) {
+	// `@jupyterlab/services` writes `Authorization: token <credential>` and
+	// offers no way to change it, so the gateway driving a notebook could not
+	// authenticate to the guard fronting it — 401 on every terminal creation.
+	// The scheme is a label on the envelope; what follows still validates the
+	// JWT and checks the permission.
+	cases := []struct {
+		header string
+		want   string
+	}{
+		{"Bearer abc.def.ghi", "abc.def.ghi"},
+		{"token abc.def.ghi", "abc.def.ghi"},
+		{"TOKEN abc.def.ghi", "abc.def.ghi"},
+		{"Basic abc", ""},
+		{"abc.def.ghi", ""},
+		{"", ""},
+	}
+	for _, tc := range cases {
+		r := httptest.NewRequest("GET", "/api/terminals", nil)
+		if tc.header != "" {
+			r.Header.Set("Authorization", tc.header)
+		}
+		if got := extractBearerToken(r); got != tc.want {
+			t.Fatalf("header %q: got %q, want %q", tc.header, got, tc.want)
+		}
+	}
+}

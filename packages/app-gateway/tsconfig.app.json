@@ -66,6 +66,9 @@
       "path": "../modules/n8n/tsconfig.lib.json"
     },
     {
+      "path": "../modules/jupyter/tsconfig.lib.json"
+    },
+    {
       "path": "../modules/user-containers/tsconfig.lib.json"
     },
     {

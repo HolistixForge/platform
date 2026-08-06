@@ -9,6 +9,9 @@
       "path": "../observability"
     },
     {
+      "path": "../modules/jupyter"
+    },
+    {
       "path": "../collab-engine"
     },
     {

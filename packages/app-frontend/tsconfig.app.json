@@ -39,6 +39,9 @@
       "path": "../observability/tsconfig.lib.json"
     },
     {
+      "path": "../modules/jupyter/tsconfig.lib.json"
+    },
+    {
       "path": "../collab-engine/tsconfig.lib.json"
     },
     {
