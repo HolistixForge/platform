@@ -80,8 +80,23 @@ export abstract class ReducerWithCollab<
           `Ensure the event includes project context.`
       );
     }
+    return this.getCollabForProject(requestData.project_id);
+  }
+
+  /**
+   * The same instance, for the paths that hold a project id rather than a
+   * request.
+   *
+   * A reducer serving something other than an event — the placements a runner
+   * polls for, say — has the project id already and no `RequestData` to put it
+   * in. Without this it would reach for the registry directly and get
+   * `Collab<TValidSharedData>`, whose shared data is a union with no `set`; the
+   * one caller doing that cast the result to `unknown` and lost every type it
+   * had.
+   */
+  protected getCollabForProject(project_id: string): Collab<TSharedData> {
     return this.collabRegistry.getCollabForProject(
-      requestData.project_id
+      project_id
     ) as Collab<TSharedData>;
   }
 }

@@ -1148,8 +1148,7 @@ export class UserContainersReducer extends ReducerWithCollab<
     project_id: string,
     machine_id: string
   ): Promise<TRunnerPlacement[]> {
-    const collab =
-      this.depsExports.collab.registry.getCollabForProject(project_id);
+    const collab = this.getCollabForProject(project_id);
     const sduc = collab.sharedData['user-containers:containers'];
 
     const mine = Array.from(sduc.copy().values()).filter(
@@ -1163,13 +1162,37 @@ export class UserContainersReducer extends ReducerWithCollab<
     const gatewayFqdn = gatewayExports.gatewayFQDN;
     const domain = gatewayFqdn.split('.').slice(1).join('.') || 'domain.local';
     const imageRegistry = this.depsExports['user-containers'].imageRegistry;
+    // Refused here rather than as a TypeError from inside the request handler.
+    // The local runner is registered unconditionally at module load, so this
+    // cannot happen today — which is exactly why it would be a bare
+    // `Cannot read properties of undefined` if registration order ever changed.
     const runner = this.depsExports['user-containers'].getRunner('local');
+    if (!runner) {
+      throw new NotFoundException([{ message: 'Runner local not found' }]);
+    }
 
     const placements: TRunnerPlacement[] = [];
 
     for (const container of mine) {
       const containerId = container.user_container_id;
+      // Whose machine this was placed on, recorded by `_setRunner`. Absent, the
+      // record predates that and there is no owner to tell the container about
+      // — `_start` refuses the same case outright, so this skips rather than
+      // handing the runner a placement with an empty user.
+      //
+      // The cast this loop used to make hid the mismatch: `TRunnerConfig`
+      // requires a `user_id` and this one is optional, which the compiler could
+      // not see through `unknown`.
       const user_id = (container.runner as { user_id?: string })?.user_id;
+      if (!user_id) {
+        log(
+          EPriority.Warning,
+          'USER_CONTAINERS',
+          `Container ${containerId} is placed locally with no owner recorded — skipped`,
+          { machine_id }
+        );
+        continue;
+      }
 
       let hostingToken = this.hostingTokens.get(containerId);
       if (!hostingToken) {
@@ -1207,25 +1230,30 @@ export class UserContainersReducer extends ReducerWithCollab<
           : undefined,
       };
 
+      // A rotation replaced the OAuth client, so the container must carry the
+      // new id — and so must the shared document.
+      //
+      // Written back, and not only used locally. `_authGuardSecretFor` caches
+      // the new secret under the container id, so on the next poll it answers
+      // `known` and pairs it with `container.auth_guard.client_id` read from
+      // the document — the *old* id. Every request after a gateway restart
+      // then presented a stale id with a fresh secret, and the container's
+      // sign-in proxy was refused. `_startContainer` already persists this;
+      // this path did not.
       const withGuard =
         authGuard && authGuard.client_id !== container.auth_guard?.client_id
           ? { ...container, auth_guard: { client_id: authGuard.client_id } }
           : container;
+      if (withGuard !== container) sduc.set(containerId, withGuard);
 
       // The same builder the runners use, so a placement and the command the
       // local button prints cannot drift apart.
-      const spec = (
-        runner as unknown as {
-          buildLaunchSpec: (...a: unknown[]) => {
-            name: string;
-            imageRef: string;
-            settings: string;
-            capabilities: string[];
-            devices: string[];
-            extraHosts: { host: string; ip: string }[];
-          };
-        }
-      ).buildLaunchSpec(withGuard, hostingToken, imageRegistry, config);
+      const spec = runner.buildLaunchSpec(
+        withGuard,
+        hostingToken,
+        imageRegistry,
+        config
+      );
 
       placements.push({
         machine_id,

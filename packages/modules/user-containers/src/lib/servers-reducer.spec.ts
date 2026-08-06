@@ -667,6 +667,107 @@ describe('UserContainersReducer - Auth Guard OAuth Client Lifecycle', () => {
       expect(started.config.auth_guard_client_secret).toBeUndefined();
     });
   });
+
+  describe('placementsFor - what a polling runner is handed', () => {
+    /** The extra deps the placement path needs, none of which `_new` uses. */
+    const armPlacements = () => {
+      mockDepsExports.gateway.tokenManager = {
+        generateProjectScopedToken: jest
+          .fn()
+          .mockResolvedValue('hosting-token'),
+      };
+      mockDepsExports['user-containers'].getRunner = jest.fn(() => ({
+        buildLaunchSpec: (container: any) => ({
+          name: `holistix_${container.user_container_id}`,
+          imageRef: 'holistixforge/ubuntu-terminal:24.04',
+          settings: 'e30=',
+          capabilities: [],
+          devices: [],
+          extraHosts: [],
+        }),
+      }));
+    };
+
+    const placedLocally = (extra: Record<string, unknown> = {}) => ({
+      user_container_id: 'uc-1',
+      container_name: 'My Terminal',
+      image_id: 'ubuntu:terminal',
+      runner: { id: 'local', machine_id: 'machine-1', user_id: 'user-1' },
+      httpServices: [],
+      last_watchdog_at: null,
+      last_activity: null,
+      created_at: new Date().toISOString(),
+      ...extra,
+    });
+
+    it('writes a rotated OAuth client id back to shared state', async () => {
+      // The gateway restarted, so the secret is gone and the client is
+      // replaced. Used locally only, the next poll would answer from the
+      // secret cache and pair the *new* secret with the id still in the
+      // document — a login the container cannot complete, with nothing in
+      // either place looking wrong on its own.
+      mockContainersMap.set(
+        'uc-1',
+        placedLocally({
+          auth_guard: { client_id: 'stale-client' },
+        })
+      );
+      armPlacements();
+      mockToGanymedeInternal.mockResolvedValue({
+        client_id: 'fresh-client',
+        client_secret: 'fresh-secret',
+      });
+
+      await reducer.placementsFor('project-1', 'machine-1');
+
+      expect(mockContainersMap.get('uc-1').auth_guard).toEqual({
+        client_id: 'fresh-client',
+      });
+      // And the secret still never reaches the CRDT.
+      expect(
+        JSON.stringify(Array.from(mockContainersMap.values()))
+      ).not.toContain('fresh-secret');
+    });
+
+    it('names no network, so the runner forms no opinion about them', async () => {
+      mockContainersMap.set('uc-1', placedLocally());
+      armPlacements();
+
+      const [placement] = await reducer.placementsFor('project-1', 'machine-1');
+
+      expect(placement.networks).toEqual([]);
+    });
+
+    it('skips a container placed locally with no owner recorded', async () => {
+      // `_start` refuses the same case. Handing the runner a placement whose
+      // user is empty would start a container that cannot say who it is for.
+      mockContainersMap.set(
+        'uc-1',
+        placedLocally({
+          runner: { id: 'local', machine_id: 'machine-1' },
+        })
+      );
+      armPlacements();
+
+      expect(await reducer.placementsFor('project-1', 'machine-1')).toEqual([]);
+    });
+
+    it('answers only for the machine that asked', async () => {
+      mockContainersMap.set('uc-1', placedLocally());
+      mockContainersMap.set(
+        'uc-2',
+        placedLocally({
+          user_container_id: 'uc-2',
+          runner: { id: 'local', machine_id: 'machine-2', user_id: 'user-1' },
+        })
+      );
+      armPlacements();
+
+      const placements = await reducer.placementsFor('project-1', 'machine-1');
+
+      expect(placements.map((p) => p.user_container_id)).toEqual(['uc-1']);
+    });
+  });
 });
 
 describe('UserContainersReducer - runner machines', () => {
