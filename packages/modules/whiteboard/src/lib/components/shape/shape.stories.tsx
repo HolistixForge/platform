@@ -50,7 +50,7 @@ const StoryWrapper = ({
 );
 
 const meta = {
-  title: 'Modules/Whiteboard/Nodes/Shape',
+  title: 'Modules/Whiteboard/Components/Nodes/Shape',
   component: StoryWrapper,
   parameters: { layout: 'centered' },
   argTypes: {

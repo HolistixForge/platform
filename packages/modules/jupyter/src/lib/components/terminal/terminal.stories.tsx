@@ -116,7 +116,7 @@ const Terminals = () => {
 //
 
 const meta = {
-  title: 'Modules/Jupyter/Components/Terminal',
+  title: 'Modules/Jupyter/Components/Nodes/Terminal',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',
