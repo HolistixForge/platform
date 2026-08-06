@@ -17,7 +17,7 @@ func setupMiddleware(t *testing.T) (*Middleware, *SessionStore, func(string) str
 
 	privateKey, publicKey := generateTestKeyPair(t)
 
-	sessions := NewSessionStore(1 * time.Hour)
+	sessions := NewSessionStore(1*time.Hour, "")
 	jwtValidator := NewJWTValidatorFromKey(publicKey)
 
 	// Mock gateway for permission checks

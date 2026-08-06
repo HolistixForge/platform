@@ -11,7 +11,7 @@ import (
 )
 
 func TestGenerateAndValidateRelayToken(t *testing.T) {
-	sessions := NewSessionStore(1 * time.Hour)
+	sessions := NewSessionStore(1*time.Hour, "")
 	defer sessions.Stop()
 
 	oauthHandler := NewOAuthHandler(OAuthConfig{
@@ -61,7 +61,7 @@ func TestGenerateAndValidateRelayToken(t *testing.T) {
 }
 
 func TestRelayTokenExpired(t *testing.T) {
-	sessions := NewSessionStore(1 * time.Hour)
+	sessions := NewSessionStore(1*time.Hour, "")
 	defer sessions.Stop()
 
 	oauthHandler := NewOAuthHandler(OAuthConfig{
@@ -93,7 +93,7 @@ func TestRelayTokenExpired(t *testing.T) {
 }
 
 func TestRelayTokenWrongOrigin(t *testing.T) {
-	sessions := NewSessionStore(1 * time.Hour)
+	sessions := NewSessionStore(1*time.Hour, "")
 	defer sessions.Stop()
 
 	oauthHandler := NewOAuthHandler(OAuthConfig{
@@ -125,7 +125,7 @@ func TestRelayTokenWrongOrigin(t *testing.T) {
 }
 
 func TestRelayTokenInvalidSignature(t *testing.T) {
-	sessions := NewSessionStore(1 * time.Hour)
+	sessions := NewSessionStore(1*time.Hour, "")
 	defer sessions.Stop()
 
 	oauthHandler := NewOAuthHandler(OAuthConfig{
@@ -160,7 +160,7 @@ func TestRelayTokenInvalidSignature(t *testing.T) {
 }
 
 func TestRelayTokenNonceReuse(t *testing.T) {
-	sessions := NewSessionStore(1 * time.Hour)
+	sessions := NewSessionStore(1*time.Hour, "")
 	defer sessions.Stop()
 
 	oauthHandler := NewOAuthHandler(OAuthConfig{
@@ -198,7 +198,7 @@ func TestRelayTokenNonceReuse(t *testing.T) {
 }
 
 func TestRelayTokenInvalidFormat(t *testing.T) {
-	sessions := NewSessionStore(1 * time.Hour)
+	sessions := NewSessionStore(1*time.Hour, "")
 	defer sessions.Stop()
 
 	oauthHandler := NewOAuthHandler(OAuthConfig{

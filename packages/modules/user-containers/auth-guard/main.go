@@ -49,7 +49,7 @@ func main() {
 	router := proxy.NewRouter(cfg.BaseFQDN, cfg.Domain)
 
 	// Create session store
-	sessions := auth.NewSessionStore(cfg.SessionTTL)
+	sessions := auth.NewSessionStore(cfg.SessionTTL, cfg.ContainerID)
 	defer sessions.Stop()
 
 	// Create permission checker (skip in dev mode if flag is set)

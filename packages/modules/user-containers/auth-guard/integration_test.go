@@ -104,7 +104,7 @@ func setupTestEnv(t *testing.T) *testEnv {
 	cookieDomain := ".example.local"
 
 	router := proxy.NewRouter(baseFQDN, domain)
-	sessions := auth.NewSessionStore(1 * time.Hour)
+	sessions := auth.NewSessionStore(1*time.Hour, "")
 	jwtValidator := auth.NewJWTValidatorFromKey(publicKey)
 	permChecker := auth.NewPermissionChecker(gatewayServer.URL, "container-abc", gatewayServer.Client(), 1*time.Hour)
 

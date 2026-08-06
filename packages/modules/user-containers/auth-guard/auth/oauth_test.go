@@ -14,7 +14,7 @@ import (
 )
 
 func TestRedirectToAuth(t *testing.T) {
-	sessions := NewSessionStore(1 * time.Hour)
+	sessions := NewSessionStore(1*time.Hour, "")
 	defer sessions.Stop()
 
 	oauthHandler := NewOAuthHandler(OAuthConfig{
@@ -90,7 +90,7 @@ func TestExchangeCodeSuccess(t *testing.T) {
 	}))
 	defer ganymedeServer.Close()
 
-	sessions := NewSessionStore(1 * time.Hour)
+	sessions := NewSessionStore(1*time.Hour, "")
 	defer sessions.Stop()
 
 	oauthHandler := NewOAuthHandler(OAuthConfig{
@@ -123,7 +123,7 @@ func TestExchangeCodeFailure(t *testing.T) {
 	}))
 	defer ganymedeServer.Close()
 
-	sessions := NewSessionStore(1 * time.Hour)
+	sessions := NewSessionStore(1*time.Hour, "")
 	defer sessions.Stop()
 
 	oauthHandler := NewOAuthHandler(OAuthConfig{
@@ -183,7 +183,7 @@ func TestHandleCallbackSuccess(t *testing.T) {
 	}))
 	defer gatewayServer.Close()
 
-	sessions := NewSessionStore(1 * time.Hour)
+	sessions := NewSessionStore(1*time.Hour, "")
 	defer sessions.Stop()
 
 	jwtValidator := NewJWTValidatorFromKey(publicKey)
@@ -264,7 +264,7 @@ func TestRefreshTokenSuccess(t *testing.T) {
 	}))
 	defer ganymedeServer.Close()
 
-	sessions := NewSessionStore(1 * time.Hour)
+	sessions := NewSessionStore(1*time.Hour, "")
 	defer sessions.Stop()
 
 	oauthHandler := NewOAuthHandler(OAuthConfig{
