@@ -167,6 +167,18 @@ describe('planReconcile', () => {
     expect(actions.map((a) => a.action)).toContain('recreate');
   });
 
+  it('should see through Docker Hub’s implicit prefixes', () => {
+    // `alpine` and `docker.io/library/alpine` are one repository. An engine
+    // that normalises the name the way Apple normalises away the tag would
+    // otherwise produce the same restart loop, and a harder one to spot.
+    const actions = planReconcile(
+      [placement({ imageRef: `alpine:3${DIGEST}` })],
+      [running({ image: `docker.io/library/alpine${DIGEST}` })]
+    );
+
+    expect(actions.map((a) => a.action)).not.toContain('recreate');
+  });
+
   it('should still recreate when one digest arrived from another repository', () => {
     // Same bytes, different provenance. The repository is where the pull
     // credential applies, so "the content is identical" is not on its own a

@@ -79,8 +79,18 @@ reload_now() {
     return 0
   fi
   # Nothing to signal: nginx is not running. Starting it is not this script's
-  # decision to make silently, so it says so.
+  # decision to make silently, so it says so — here and to the callers.
+  #
+  # The tokens were claimed before the reload, so a branch that answers nothing
+  # leaves every waiting caller to sit out its ten seconds and then report that
+  # the watcher is not running. The watcher is running; nginx is not. The
+  # config-test branch above already answers; this one did not, and the two
+  # failures deserve the same treatment.
   printf '%s  reload failed — is nginx running?\n' "$(stamp)" >>"$LOG"
+  mkdir -p "${ACKS}"
+  for tok in $tokens; do
+    printf 'could not signal nginx — is it running?\n' >"${ACKS}/${tok}.err"
+  done
   ko "could not signal nginx — start it with:  nginx"
   return 1
 }

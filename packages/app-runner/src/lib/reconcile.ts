@@ -57,7 +57,16 @@ const sameImage = (running: string, placed: string): boolean => {
     const colon = nameAndTag.lastIndexOf(':');
     const slash = nameAndTag.lastIndexOf('/');
     // A colon after the last slash is a tag; before it, a registry port.
-    const repository = colon > slash ? nameAndTag.slice(0, colon) : nameAndTag;
+    let repository = colon > slash ? nameAndTag.slice(0, colon) : nameAndTag;
+    // Docker Hub's implicit prefixes, so `alpine` and
+    // `docker.io/library/alpine` are one repository rather than two.
+    //
+    // An engine that normalises the repository the way Apple normalises away
+    // the tag would otherwise produce the same never-converging restart loop,
+    // and a harder one to see: the two strings look like different images.
+    repository = repository
+      .replace(/^(docker\.io|index\.docker\.io|registry-1\.docker\.io)\//, '')
+      .replace(/^library\//, '');
     return { repository, digest };
   };
 

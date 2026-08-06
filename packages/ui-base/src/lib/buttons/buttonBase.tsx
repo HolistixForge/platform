@@ -17,6 +17,20 @@ export type ButtonBaseProps = {
   children?: ReactNode;
   tooltip?: ReactNode;
   successMessage?: ReactNode;
+  /**
+   * What this button is called, when its face is an icon.
+   *
+   * Most buttons here render `Icon` with no `text`, so the accessible name is
+   * empty and a screen reader announces "button" and nothing else. The tooltip
+   * does not stand in for it: Radix shows it on hover and focus, but it is not
+   * the button's name.
+   */
+  ariaLabel?: string;
+  /**
+   * For a button that is one of a set of choices, whether this is the chosen
+   * one — the non-visual half of saying it with a colour or an opacity.
+   */
+  ariaPressed?: boolean;
   _testTooltip?: boolean;
 } & Partial<TAction>;
 
@@ -37,6 +51,8 @@ export const ButtonBase = ({
   children,
   tooltip,
   successMessage,
+  ariaLabel,
+  ariaPressed,
   _testTooltip,
 }: ButtonBaseProps) => {
   //
@@ -66,11 +82,18 @@ export const ButtonBase = ({
         <span className="button-root">
           <button
             onClick={(e) => {
+              // Stopped here on purpose: these buttons sit inside cards that
+              // are themselves clickable, and a click meant for the button
+              // must not also open whatever it is drawn on.
               e.stopPropagation();
-              !isDisabled && callback?.(e, actionOriginId);
+              if (!isDisabled) callback?.(e, actionOriginId);
             }}
             disabled={isDisabled}
-            className={`transition-all ${className} ${isLoading ? 'button-loading' : ''} ${isDisabled ? 'disabled' : 'active'}`}
+            aria-label={ariaLabel}
+            aria-pressed={ariaPressed}
+            className={`transition-all ${className} ${
+              isLoading ? 'button-loading' : ''
+            } ${isDisabled ? 'disabled' : 'active'}`}
             style={style}
           >
             {isLoading && (
@@ -100,30 +123,21 @@ export const ButtonBase = ({
       <Tooltip.Portal>
         <>
           {tooltip && !errorsVisible && !successMessage && (
-            <Tooltip.Content
-              className="TooltipContent tooltip"
-              sideOffset={12}
-            >
+            <Tooltip.Content className="TooltipContent tooltip" sideOffset={12}>
               {tooltip}
               <Tooltip.Arrow className="TooltipArrow tooltip" />
             </Tooltip.Content>
           )}
 
           {errorsVisible && (
-            <Tooltip.Content
-              className="TooltipContent errors"
-              sideOffset={12}
-            >
+            <Tooltip.Content className="TooltipContent errors" sideOffset={12}>
               {errorsJoin(errors)}
               <Tooltip.Arrow className="TooltipArrow errors" />
             </Tooltip.Content>
           )}
 
           {successMessage && (
-            <Tooltip.Content
-              className="TooltipContent success"
-              sideOffset={12}
-            >
+            <Tooltip.Content className="TooltipContent success" sideOffset={12}>
               {successMessage}
               <Tooltip.Arrow className="TooltipArrow success" />
             </Tooltip.Content>

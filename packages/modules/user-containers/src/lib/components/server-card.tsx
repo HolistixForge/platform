@@ -477,63 +477,62 @@ export const UserContainerCardInternal = ({
           {Array.from(runners.entries()).map(([runnerId, runner]) => {
             const active = container.runner.id === runnerId;
             const known = runnerId === 'local' || runnerId === 'platform';
+            const label = active
+              ? `Restart on ${runner.label}`
+              : `Move to ${runner.label}`;
+            const select = () => onSelectRunner(runnerId);
             return (
-              // The click stays on the wrapper rather than on the button:
-              // ResourceButtons takes a `useAction` result, and a hook cannot
-              // be called once per entry of a list. The button is here for its
-              // appearance; the wrapper carries the behaviour.
+              // The click is on the button itself, and the wrapper only
+              // positions it.
               //
-              // So the wrapper has to be a button, not a div. A div with an
-              // onClick is not focusable, announces no role, and cannot be
-              // reached from the keyboard at all — and the chosen runner was
-              // said with opacity alone, which is nothing to a screen reader.
-              // `aria-pressed` is the same statement in a form that carries.
-              <button
-                type="button"
+              // It was on the wrapper — first a div, then a div made into a
+              // button — and it never fired either way: `ButtonBase` opens its
+              // own handler with an unconditional `e.stopPropagation()`, so the
+              // click died on the inner button and never reached anything
+              // outside it. Choosing a runner did nothing at all, which is a
+              // dead control that looks alive. A button inside a button is also
+              // invalid HTML, and React says so.
+              //
+              // `ResourceButtons` spreads the rest of its props into
+              // `ButtonBase`, and `callback` is one of them — so the real
+              // button carries the behaviour and no hook is called per list
+              // entry. `stopPropagation` then becomes right rather than
+              // fatal: it keeps the card's own onClick from opening a service
+              // when somebody meant to change where it runs.
+              <div
                 key={runnerId}
-                className="cursor-pointer"
-                aria-pressed={active}
-                aria-label={
-                  active
-                    ? `Restart on ${runner.label}`
-                    : `Move to ${runner.label}`
-                }
-                title={
-                  active
-                    ? `Restart on ${runner.label}`
-                    : `Move to ${runner.label}`
-                }
+                title={label}
                 style={{
                   // The active runner is the one piece of state on this card
                   // that is otherwise invisible once chosen. Opacity says it
-                  // without a second border around a button that has one.
+                  // without a second border around a button that has one, and
+                  // `aria-pressed` on the button says the same thing to a
+                  // screen reader, which an opacity cannot.
                   opacity: active ? 1 : 0.45,
                   transition: 'opacity 0.15s ease',
-                  // The wrapper is a button now; none of its own chrome is
-                  // wanted, only its semantics.
-                  background: 'none',
-                  border: 'none',
-                  padding: 0,
-                  font: 'inherit',
-                  color: 'inherit',
                   lineHeight: 0,
                 }}
-                onClick={() => onSelectRunner(runnerId)}
               >
                 {known ? (
                   <ResourceButtons
                     type={runnerId === 'local' ? 'local' : 'cloud'}
                     size="small"
                     actionOriginId={`runner-${runnerId}`}
+                    ariaLabel={label}
+                    ariaPressed={active}
+                    callback={select}
                   />
                 ) : (
                   <ButtonBase
                     Icon={runner.icon}
                     text={runner.label}
                     className="resource small"
+                    ariaLabel={label}
+                    ariaPressed={active}
+                    callback={select}
                   />
                 )}
-              </button>
+              </div>
             );
           })}
         </div>

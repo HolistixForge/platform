@@ -49,7 +49,14 @@ export class NginxManager {
     // refusal happens on the host, minutes and one confusing timeout later.
     // Refusing at startup names the actual mistake.
     const listenPort = process.env.NGINX_LISTEN_PORT || '443';
-    if (!/^\d{1,5}$/.test(listenPort) || Number(listenPort) > 65535) {
+    // `< 1` and not just `> 65535`: `0` and `00000` are digits in range and
+    // `listen 0 ssl;` is a directive nginx refuses — the delayed, confusing
+    // host-side refusal this check exists to prevent.
+    if (
+      !/^\d{1,5}$/.test(listenPort) ||
+      Number(listenPort) < 1 ||
+      Number(listenPort) > 65535
+    ) {
       throw new Error(
         `NGINX_LISTEN_PORT must be a port number, got: ${listenPort}`
       );

@@ -31,7 +31,30 @@ export const statSync = (path) => {
 };
 export const mkdirSync = nothing;
 export const readdirSync = () => [];
-export const promises = {};
+// The same answers, promised.
+//
+// An empty object left `fs.promises.readFile` as `undefined`, so a dependency
+// reaching for it died on "undefined is not a function" — naming neither this
+// file nor the filesystem, which is the failure the throwing accessors above
+// were written to stop.
+export const promises = {
+  readFile: async () => {
+    throw new Error('fs.promises.readFile is not available in the browser');
+  },
+  stat: async (path) => {
+    throw new Error(
+      `fs.promises.stat is not available in the browser (${path})`
+    );
+  },
+  access: async (path) => {
+    throw new Error(
+      `fs.promises.access is not available in the browser (${path})`
+    );
+  },
+  writeFile: async () => undefined,
+  mkdir: async () => undefined,
+  readdir: async () => [],
+};
 
 export default {
   existsSync,

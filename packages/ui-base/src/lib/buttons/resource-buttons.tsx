@@ -20,6 +20,13 @@ export type ResourceButtonsProps = {
   size?: 'small' | 'medium';
   actionOriginId?: string;
   style?: CSSProperties;
+  /**
+   * Passed through to `ButtonBase`. These buttons are icons with no text, so
+   * without a label the accessible name is empty — and `aria-pressed` is how
+   * "this is the chosen one" reaches anyone not looking at the colour.
+   */
+  ariaLabel?: string;
+  ariaPressed?: boolean;
 } & Partial<TAction>;
 
 //

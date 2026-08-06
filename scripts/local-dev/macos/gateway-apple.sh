@@ -470,6 +470,22 @@ cmd_up() {
     # GANYMEDE_API_URL is an address and not a name on purpose: this call is
     # made before anything has resolved anything, and the Host header carries
     # the name so nginx still picks the right server block.
+    #
+    # JWT_PUBLIC_KEY is a whole PEM in one `-e`, newlines and all.
+    # ganymede-apple.sh base64s the same key because an env *file* is
+    # KEY=VALUE per line and a PEM cannot travel in one; an exec argument is
+    # not an env file and has no such limit. Measured on `container` 1.2.0: a
+    # four-line PEM passed this way arrives with all three newlines intact.
+    # Worth having measured, because a truncated key does not fail at start-up
+    # — it fails later, as token verification refusing everyone.
+    #
+    # Every note about this command lives *here*, above it. A `#` inside a
+    # backslash continuation does not comment out one argument: it ends the
+    # command at that line. Written between two `-e` flags, this paragraph
+    # silently truncated the run — no image, no broker address, no key — and
+    # the remainder was parsed as a second command named `-e`, whose failure
+    # the trailing `>/dev/null 2>&1` swallowed. `bash -n` reports it as valid,
+    # because it is; it just means something else.
     container run --detach --name "$name" \
       --label "environment=${ENV_NAME}" --label "gateway_id=${id}" \
       --network "$NET" --cpus 2 --memory 2048m \
@@ -487,14 +503,6 @@ cmd_up() {
       -e "BUILD_SERVER_IP=${host}" \
       -e "BUILD_SERVER_PORT=${BUILD_PORT}" \
       -e "ALLOWED_ORIGINS=[\"https://${DOMAIN}:${HTTPS_PORT}\"]" \
-      # A whole PEM in one -e, newlines and all.
-      #
-      # ganymede-apple.sh base64s the same key because an env *file* is
-      # KEY=VALUE per line and a PEM cannot travel in one. An exec argument is
-      # not an env file and has no such limit — measured on `container` 1.2.0:
-      # a four-line PEM passed this way arrives with all three newlines intact.
-      # Worth having measured, because a truncated key does not fail at
-      # start-up; it fails later, as token verification refusing everyone.
       -e "JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}" \
       -e "OTEL_SERVICE_NAME=gateway-${name}" \
       -e "OTEL_DEPLOYMENT_ENVIRONMENT=${ENV_NAME}" \
