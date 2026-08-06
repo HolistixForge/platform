@@ -20,7 +20,10 @@ import {
   ButtonBase,
   ClickStopPropagation,
   ResourceButtons,
+  UserBubble,
+  UserAvatar,
 } from '@holistix-forge/ui-base';
+import { TF_User } from '@holistix-forge/types';
 
 import { UserContainerSystemInfo, serviceUrl } from '../servers-types';
 import { StatusLed } from './status-led';
@@ -163,7 +166,25 @@ export const UserContainerCardInternal = ({
   onOpenService,
   onSelectRunner,
   runners,
-}: UseContainerProps & { runners: Map<string, TContainerRunnerFrontend> }) => {
+  liveUsers,
+  host,
+}: UseContainerProps & {
+  runners: Map<string, TContainerRunnerFrontend>;
+  /**
+   * Who is on this service right now, and whose machine it runs on.
+   *
+   * The same two props `notebook-card` carries, drawn the same way and in the
+   * same places, because the two cards sit in the same grid and a person
+   * reading them should not have to learn the layout twice.
+   *
+   * Optional, and nothing in the platform passes them yet: a container has no
+   * awareness channel of its own, so the users would have to come from the
+   * project's collab session. Left as props rather than invented inside the
+   * card, so whoever wires that decides what "on this service" means.
+   */
+  liveUsers?: TF_User[];
+  host?: TF_User;
+}) => {
   //
 
   const deleteAction = useAction(
@@ -245,6 +266,39 @@ export const UserContainerCardInternal = ({
               showIcon={false}
             />
           </p>
+        </div>
+      )}
+
+      {alive && liveUsers && liveUsers.length > 0 && (
+        <div
+          className="absolute flex items-center"
+          style={{
+            right: '-16px',
+            zIndex: 20,
+            top: '50%',
+            transform: 'translateY(-50%)',
+          }}
+        >
+          <UserBubble
+            users={liveUsers}
+            direction="vertical"
+            live={true}
+            size="small"
+          />
+        </div>
+      )}
+
+      {host && (
+        <div
+          className="absolute flex items-center"
+          style={{
+            left: '-20px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 20,
+          }}
+        >
+          <UserAvatar size="small" {...host} host />
         </div>
       )}
 
