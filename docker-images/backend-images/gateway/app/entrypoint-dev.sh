@@ -31,10 +31,54 @@ fi
 # dd0d0dd2. Only names that do not already resolve: a real DNS name in
 # production is left exactly as it is, because overriding one would send this
 # gateway somewhere else for a reason invisible from outside.
+
+# The default route, without needing `ip`.
+#
+# iproute2 is not an explicit dependency of this image — it arrives only if
+# `openvpn` happens to pull it in — and `ip route` was the sole source here.
+# Absent, the function found nothing, returned quietly, and wrote no hosts
+# entry at all: the gateway then cannot reach Ganymede by name and nothing in
+# its output says why. The same trap was already paid for once in
+# `packages/modules/user-containers/docker-images/base/container-functions.sh`,
+# and this is the same fallback, kept deliberately identical to it.
+#
+# /proc/net/route is the kernel's own table and needs no package. The gateway
+# column is little-endian hex, which is why the bytes come out backwards.
+default_gateway() {
+    local gw
+    gw=$(ip route 2>/dev/null | awk '/^default/{print $3; exit}')
+    if [ -n "${gw}" ]; then
+        echo "${gw}"
+        return 0
+    fi
+
+    local iface dest gwhex flags refcnt use metric mask rest
+    while read -r iface dest gwhex flags refcnt use metric mask rest; do
+        [ "${dest}" = "00000000" ] || continue
+        [ "${mask}" = "00000000" ] || continue
+        [ ${#gwhex} -eq 8 ] || continue
+        # A link-scope default route has no gateway. Written out it becomes
+        # `0.0.0.0 ganymede....` in /etc/hosts — non-empty, so the caller's
+        # emptiness check passes, and every request to the platform then goes
+        # nowhere with a hosts file that looks right at a glance.
+        [ "${gwhex}" = "00000000" ] && continue
+        printf '%d.%d.%d.%d\n' \
+            "0x${gwhex:6:2}" "0x${gwhex:4:2}" "0x${gwhex:2:2}" "0x${gwhex:0:2}"
+        return 0
+    done < /proc/net/route 2>/dev/null
+    return 1
+}
+
 resolve_platform_hosts() {
     local host_ip
-    host_ip=$(ip route 2>/dev/null | awk '/^default/{print $3; exit}')
-    [ -z "${host_ip}" ] && return 0
+    host_ip=$(default_gateway | head -1)
+    if [ -z "${host_ip}" ]; then
+        # Loud rather than quiet. The silent return is what made the original
+        # failure invisible: the platform names simply were not there, and the
+        # first symptom was an unreachable Ganymede much later.
+        echo "⚠️  No default route — platform names will not resolve in this container"
+        return 0
+    fi
 
     for entry in "${GANYMEDE_FQDN:-}" "${DOMAIN:-}"; do
         # The FQDNs carry a port where nginx does not listen on 443. A port is
@@ -52,9 +96,14 @@ resolve_platform_hosts() {
         # as it is: a real DNS name in production never points at loopback, and
         # sending this gateway somewhere else would be invisible from outside.
         resolved=$(getent hosts "${name}" 2>/dev/null | awk '{print $1; exit}')
+        # Every spelling of loopback, not just the two short ones. `getent` can
+        # answer `0:0:0:0:0:0:0:1` or an IPv4-mapped form depending on the
+        # resolver, and those fell through to "a real address" — the exact
+        # failure this override exists to fix, differently formatted.
         case "${resolved}" in
             '') ;;                       # nothing answered — ours to write
-            127.*|::1) ;;                # answered with itself — not usable here
+            127.*|::1|0:0:0:0:0:0:0:1|::ffff:127.*|0.0.0.0) ;;
+                                         # answered with itself — not usable here
             *) continue ;;               # a real address, and not ours to move
         esac
 

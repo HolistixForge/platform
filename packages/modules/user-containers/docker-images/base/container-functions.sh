@@ -77,6 +77,11 @@ default_gateway() {
         [ "${_dest}" = "00000000" ] || continue
         [ "${_mask}" = "00000000" ] || continue
         [ ${#_gwhex} -eq 8 ] || continue
+        # A link-scope default route has no gateway, and its zero column would
+        # come out as the address `0.0.0.0`. That is non-empty, so the caller's
+        # emptiness check lets it through, and every platform name in
+        # /etc/hosts then points nowhere while looking, at a glance, correct.
+        [ "${_gwhex}" = "00000000" ] && continue
         printf '%d.%d.%d.%d\n' \
             "0x$(printf '%s' "${_gwhex}" | cut -c7-8)" \
             "0x$(printf '%s' "${_gwhex}" | cut -c5-6)" \
@@ -104,9 +109,14 @@ resolve_platform_hosts() {
         grep -qE "[[:space:]]${name}\$" /etc/hosts 2>/dev/null && continue
 
         RESOLVED=$(getent hosts "${name}" 2>/dev/null | awk '{print $1; exit}')
+        # Every spelling of loopback, not just the two short ones. `getent` can
+        # answer `0:0:0:0:0:0:0:1` or an IPv4-mapped form depending on the
+        # resolver, and those fell through to "a real address" — the exact
+        # failure this override exists to fix, differently formatted.
         case "${RESOLVED}" in
             '') ;;                       # nothing answered — ours to write
-            127.*|::1) ;;                # answered with itself — not usable here
+            127.*|::1|0:0:0:0:0:0:0:1|::ffff:127.*|0.0.0.0) ;;
+                                         # answered with itself — not usable here
             *) continue ;;               # a real address, and not ours to move
         esac
 
@@ -150,9 +160,19 @@ start_vpn() {
         # safe in this order: every container learns to send them first, and
         # only then can VPN_PER_CLIENT_IDENTITY be turned on — the other order
         # takes every service in every organization offline at once.
+        # `jq -r` prints the four characters `null` for a field that is not
+        # there, and those four characters are not empty. Without this the
+        # credentials file is written with `null` as the password and the
+        # container authenticates as a bogus identity instead of taking the
+        # branch below — which is a refusal at connect time that reads exactly
+        # like a wrong password. The FQDN loop above already tests for it; this
+        # is the same test, where it was missing.
         VPN_PASSWORD="${VPN_SECRET:-${TOKEN}}"
-        if [ -n "${USER_CONTAINER_ID}" ] && [ -n "${VPN_PASSWORD}" ]; then
-            printf '%s\n%s\n' "${USER_CONTAINER_ID}" "${VPN_PASSWORD}" >vpn-credentials
+        [ "${VPN_PASSWORD}" = "null" ] && VPN_PASSWORD=""
+        VPN_IDENTITY="${USER_CONTAINER_ID}"
+        [ "${VPN_IDENTITY}" = "null" ] && VPN_IDENTITY=""
+        if [ -n "${VPN_IDENTITY}" ] && [ -n "${VPN_PASSWORD}" ]; then
+            printf '%s\n%s\n' "${VPN_IDENTITY}" "${VPN_PASSWORD}" >vpn-credentials
             chmod 600 vpn-credentials
             # `auth-nocache` because openvpn otherwise keeps them in memory to
             # replay on reconnect, and this loop re-reads the file anyway —

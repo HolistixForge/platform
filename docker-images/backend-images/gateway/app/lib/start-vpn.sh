@@ -97,6 +97,20 @@ IDENT
   # credentials `via-env`, refused every client while the fixed copy sat
   # unused a directory away.
   _lib_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  # Checked, because openvpn cannot say what is wrong with it.
+  #
+  # A missing `auth-user-pass-verify` script is reported as AUTH_FAILED for
+  # every client — indistinguishable from a wrong password, which is the most
+  # expensive way for this to be misconfigured. `BASH_SOURCE[0]` names the
+  # caller's file when this script is sourced rather than executed, and a
+  # symlinked script resolves to its own directory and not the target's, so the
+  # directory is right in every case that happens today and not by construction.
+  if [ ! -x "${_lib_dir}/vpn-auth-verify.sh" ]; then
+    error_exit "VPN_PER_CLIENT_IDENTITY=1 but ${_lib_dir}/vpn-auth-verify.sh is not executable — every client would be refused with AUTH_FAILED"
+  fi
+  if [ ! -x "${_lib_dir}/vpn-client-connect.sh" ]; then
+    error_exit "VPN_PER_CLIENT_IDENTITY=1 but ${_lib_dir}/vpn-client-connect.sh is not executable"
+  fi
   PER_CLIENT_IDENTITY_CONFIG=${PER_CLIENT_IDENTITY_CONFIG//SCRIPT_DIR_PLACEHOLDER/${_lib_dir}}
 fi
 

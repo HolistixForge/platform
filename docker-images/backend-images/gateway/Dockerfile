@@ -20,7 +20,12 @@ RUN apt-get update && apt-get install -y \
   # start-vpn.sh installs a default-deny FORWARD rule between VPN clients.
   # Without this package the rule silently does not exist: the script warns on
   # stderr and nobody reads it, so the VPN looks isolated and is not.
-  iptables
+  iptables \
+  # `ip route` in entrypoint-dev.sh. It has a /proc/net/route fallback and does
+  # not need this — but it was only ever present because openvpn happened to
+  # pull it in, and a transitive dependency is not a dependency. Named here so
+  # a change upstream cannot quietly take it away.
+  iproute2
 
 # Copy app directory (contains scripts needed for startup)
 COPY ./app/ /app/
