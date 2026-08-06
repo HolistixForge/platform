@@ -523,6 +523,7 @@ cmd_up() {
       -e "OTEL_SERVICE_NAME=gateway-${name}" \
       -e "OTEL_DEPLOYMENT_ENVIRONMENT=${ENV_NAME}" \
       -e "NODE_TLS_REJECT_UNAUTHORIZED=0" \
+      -e "GATEWAY_DEV=1" \
       -e "VPN_PER_CLIENT_IDENTITY=${VPN_PER_CLIENT_IDENTITY:-0}" \
       -e "GATEWAY_VPN_PROTO=${VPN_PROTO}" \
       -e "CONTAINER_BROKER_URL=http://${host}:${BROKER_PORT}" \

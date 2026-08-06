@@ -18,6 +18,7 @@ type OAuthHandler struct {
 	clientID     string
 	clientSecret string
 	baseFQDN     string
+	portSuffix   string
 	httpClient   *http.Client
 	sessions     *SessionStore
 	cookieDomain string
@@ -31,6 +32,7 @@ type OAuthConfig struct {
 	ClientID     string
 	ClientSecret string
 	BaseFQDN     string
+	PortSuffix   string
 	HTTPClient   *http.Client
 	Sessions     *SessionStore
 	CookieDomain string
@@ -59,6 +61,7 @@ func NewOAuthHandler(cfg OAuthConfig) *OAuthHandler {
 		clientID:     cfg.ClientID,
 		clientSecret: cfg.ClientSecret,
 		baseFQDN:     cfg.BaseFQDN,
+		portSuffix:   cfg.PortSuffix,
 		httpClient:   cfg.HTTPClient,
 		sessions:     cfg.Sessions,
 		cookieDomain: cfg.CookieDomain,
@@ -85,7 +88,7 @@ func (o *OAuthHandler) RedirectToAuth(w http.ResponseWriter, r *http.Request, or
 
 	stateEncoded := base64.URLEncoding.EncodeToString(stateJSON)
 
-	redirectURI := fmt.Sprintf("https://%s/__auth/callback", o.baseFQDN)
+	redirectURI := fmt.Sprintf("https://%s%s/__auth/callback", o.baseFQDN, o.portSuffix)
 
 	params := url.Values{
 		"client_id":     {o.clientID},
@@ -169,7 +172,7 @@ func (o *OAuthHandler) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	// Redirect to original URL
 	redirectURL := state.OriginalURL
 	if redirectURL == "" {
-		redirectURL = fmt.Sprintf("https://%s/", o.baseFQDN)
+		redirectURL = fmt.Sprintf("https://%s%s/", o.baseFQDN, o.portSuffix)
 	}
 
 	http.Redirect(w, r, redirectURL, http.StatusFound)
@@ -177,7 +180,7 @@ func (o *OAuthHandler) HandleCallback(w http.ResponseWriter, r *http.Request) {
 
 // ExchangeCode exchanges an authorization code for access and refresh tokens.
 func (o *OAuthHandler) ExchangeCode(code string) (accessToken, refreshToken string, err error) {
-	redirectURI := fmt.Sprintf("https://%s/__auth/callback", o.baseFQDN)
+	redirectURI := fmt.Sprintf("https://%s%s/__auth/callback", o.baseFQDN, o.portSuffix)
 
 	data := url.Values{
 		"grant_type":    {"authorization_code"},

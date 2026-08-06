@@ -113,7 +113,17 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
-        proxy_set_header Host \$host;
+        # \$http_host, not \$host: the port the client asked for, kept.
+        #
+        # \$host is the name with the port stripped, and a backend that builds
+        # an absolute URL from the Host header then builds it without one.
+        # Measured: the auth guard captured \`original_url\` as
+        # \`https://jupyterlab.uc-….apollo.test/\` and sent the user there after
+        # login, where nothing is listening — "took too long to respond" on a
+        # service that was running the whole time. The guard is not special;
+        # any backend that reflects its own address has the same problem, so
+        # this belongs here rather than in one of them.
+        proxy_set_header Host \$http_host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;

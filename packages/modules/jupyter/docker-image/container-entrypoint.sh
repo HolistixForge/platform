@@ -24,13 +24,20 @@ for i in $(seq 1 20); do
     sleep 0.25
 done
 
-# Register hub proxy with auth guard so browser-facing /hub/api/oauth2/authorize
-# goes through the guard (which injects X-Auth-* headers)
-if [ "${AUTH_GUARD_RUNNING:-0}" = "1" ]; then
-    curl -s -X POST http://localhost:9999/services/register \
-        -H "Content-Type: application/json" \
-        -d '{"name":"__guard_hub","port":15000}'
-fi
+# Announce the hub proxy the same way the notebook itself is announced.
+#
+# It was registered with the auth guard only, and the guard's router is not
+# what puts a name on the network: `map_http_service` is, by reporting it to
+# the gateway, which writes the nginx server block. So JupyterLab redirected
+# the browser to `__guard_hub.uc-….{domain}` — a name the gateway had never
+# been told about — the request fell through to app-gateway, and the notebook
+# ended on "Cannot GET /hub/api/oauth2/authorize" after a login that had just
+# succeeded.
+#
+# `map_http_service` does both halves: it registers with the guard's admin API
+# when the guard is up, and reports to the gateway either way. Backgrounded
+# because it loops, like the jupyterlab one above.
+sh -c '. /usr/local/bin/container-functions.sh && map_http_service __guard_hub 15000' &
 
 # Build FQDNs for OAuth URLs
 DOMAIN=$(echo "$GATEWAY_FQDN" | sed 's/^[^.]*\.//')

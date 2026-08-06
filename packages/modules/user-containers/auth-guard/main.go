@@ -66,6 +66,7 @@ func main() {
 		ClientID:     cfg.ClientID,
 		ClientSecret: cfg.ClientSecret,
 		BaseFQDN:     cfg.BaseFQDN,
+		PortSuffix:   cfg.PortSuffix,
 		HTTPClient:   httpClient,
 		Sessions:     sessions,
 		CookieDomain: cfg.CookieDomain,

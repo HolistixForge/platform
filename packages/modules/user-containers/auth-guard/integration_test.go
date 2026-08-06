@@ -25,13 +25,13 @@ import (
 
 // testEnv holds all the components needed for integration tests.
 type testEnv struct {
-	router        *proxy.Router
-	sessions      *auth.SessionStore
-	jwtValidator  *auth.JWTValidator
-	permChecker   *auth.PermissionChecker
-	oauthHandler  *auth.OAuthHandler
-	relayHandler  *auth.RelayHandler
-	middleware    *auth.Middleware
+	router       *proxy.Router
+	sessions     *auth.SessionStore
+	jwtValidator *auth.JWTValidator
+	permChecker  *auth.PermissionChecker
+	oauthHandler *auth.OAuthHandler
+	relayHandler *auth.RelayHandler
+	middleware   *auth.Middleware
 	reverseProxy *proxy.ReverseProxy
 	adminServer  *admin.Server
 	mainHandler  http.Handler
@@ -160,10 +160,10 @@ func setupTestEnv(t *testing.T) *testEnv {
 		oauthHandler:   oauthHandler,
 		relayHandler:   relayHandler,
 		middleware:     mw,
-		reverseProxy:  reverseProxy,
-		adminServer:   adminSrv,
-		mainHandler:   mainHandler,
-		privateKey:    privateKey,
+		reverseProxy:   reverseProxy,
+		adminServer:    adminSrv,
+		mainHandler:    mainHandler,
+		privateKey:     privateKey,
 		ganymedeServer: ganymedeServer,
 		gatewayServer:  gatewayServer,
 	}

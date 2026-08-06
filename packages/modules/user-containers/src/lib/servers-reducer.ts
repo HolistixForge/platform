@@ -913,6 +913,10 @@ export class UserContainersReducer extends ReducerWithCollab<
       dev_host_ip: gatewayExports.environment?.devMode
         ? 'host-gateway'
         : undefined,
+      // The same flag, for the auth guard rather than for /etc/hosts: a
+      // development platform serves TLS nothing in a container trusts, and
+      // the guard refuses to start rather than talk to it.
+      gateway_dev: gatewayExports.environment?.devMode,
     };
 
     // A rotation replaced the client, so the container must carry the new id.

@@ -29,6 +29,23 @@ export type TRunnerConfig = {
    * actually emitted.
    */
   dev_host_ip?: string;
+  /**
+   * Whether the platform's own TLS is signed by something a container has no
+   * root for.
+   *
+   * The auth guard fetches Ganymede's public key over HTTPS before it will
+   * serve anything, and against a `mkcert` certificate that verification fails
+   * — "x509: failed to verify certificate" — so the guard never starts. What
+   * that costs is invisible from the guard: a JupyterLab container redirects
+   * to `__guard_hub.uc-….{domain}` for its OAuth flow, nothing is listening
+   * there because the guard is the thing that would have registered it, and
+   * the notebook answers 404. Measured on apollo.
+   *
+   * The guard has had `--insecure-skip-verify` from the start and the
+   * container has had the branch that passes it; the flag simply never
+   * reached one from the other.
+   */
+  gateway_dev?: boolean;
 };
 
 /**
@@ -143,6 +160,7 @@ export abstract class ContainerRunner {
       // openvpn's memory and its scripts' environment, where it had no reason
       // to be.
       ...(config.vpn_secret ? { vpn_secret: config.vpn_secret } : {}),
+      ...(config.gateway_dev ? { gateway_dev: true } : {}),
       project_id: config.project_id,
       user_container_id: container.user_container_id,
       // Auth Guard Proxy config (per-container OAuth client registered with

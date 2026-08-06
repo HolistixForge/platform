@@ -20,6 +20,10 @@ extract_settings() {
     # wrong password. Falls back to the token so a container started by a
     # gateway that predates this still connects.
     export VPN_SECRET=$(echo "$JSON_SETTINGS" | jq -r '.vpn_secret // empty')
+    # Whether the platform's TLS is signed by something this container has no
+    # root for. `start_auth_guard` passes --insecure-skip-verify on it, and
+    # without it the guard cannot fetch Ganymede's public key and never starts.
+    export GATEWAY_DEV=$(echo "$JSON_SETTINGS" | jq -r 'if .gateway_dev then "1" else "0" end')
 
     # Auth Guard Proxy settings (per-container OAuth client)
     export AUTH_GUARD_CLIENT_ID=$(echo "$JSON_SETTINGS" | jq -r '.auth_guard.client_id // empty')
