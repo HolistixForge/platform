@@ -675,4 +675,115 @@ describe('LocalStorageStore', () => {
       expect(result.value).toEqual(complexValue);
     });
   });
+
+  describe('Backoff on repeated failures', () => {
+    // A fixed thirty-second retry against a rate-limited endpoint can never
+    // recover: every attempt is refused and every refusal is another hit
+    // against the same limit. Measured against Ganymede's 20-per-15-minutes on
+    // /oauth/token — sixty consecutive refusals, no token held at all, and the
+    // chat unable to send.
+    const failTwice = async () => {
+      mockGet.mockRejectedValue(new Error('boom'));
+      store.get('user');
+      await Promise.resolve();
+      await Promise.resolve();
+      const first = mockLocalStorage['user'];
+
+      jest.advanceTimersByTime(first.wait - Date.now() + 6000);
+      await Promise.resolve();
+      await Promise.resolve();
+      return first;
+    };
+
+    it('waits longer after each consecutive failure', async () => {
+      const t0 = Date.now();
+      const first = await failTwice();
+      const second = mockLocalStorage['user'];
+
+      expect(first.attempt).toBe(1);
+      expect(first.wait - t0).toBeCloseTo(30_000, -3);
+
+      expect(second.attempt).toBe(2);
+      expect(second.wait - Date.now()).toBeGreaterThan(50_000);
+    });
+
+    it('stops growing at the ceiling', async () => {
+      // The interval each failure asks for, not the time left on the clock:
+      // after the last advance the deadline is already behind us, and what
+      // this is about is how long the store *asked* to wait.
+      mockGet.mockRejectedValue(new Error('boom'));
+      const intervals: number[] = [];
+
+      store.get('user');
+      for (let i = 0; i < 10; i++) {
+        await Promise.resolve();
+        await Promise.resolve();
+        const state = mockLocalStorage['user'];
+        if (!state?.wait) break;
+        intervals.push(state.wait - Date.now());
+        jest.advanceTimersByTime(state.wait - Date.now() + 6000);
+      }
+
+      // Grew (a constant wait would fail this) and stopped at the ceiling.
+      expect(intervals[0]).toBeLessThan(60_000);
+      expect(Math.max(...intervals)).toBeGreaterThan(4 * 60_000);
+      expect(Math.max(...intervals)).toBeLessThanOrEqual(5 * 60_000);
+    });
+
+    it('starts over once a fetch succeeds', async () => {
+      mockGet.mockRejectedValueOnce(new Error('boom'));
+      store.get('user');
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(mockLocalStorage['user'].attempt).toBe(1);
+
+      mockGet.mockResolvedValue({
+        value: 'ok',
+        expire: new Date(Date.now() + 3_600_000),
+      });
+      jest.advanceTimersByTime(40_000);
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(mockLocalStorage['user'].value).toBe('ok');
+      expect(mockLocalStorage['user'].attempt).toBeUndefined();
+    });
+
+    it('waits as long as the server asked when it says so', async () => {
+      // A guess shorter than the window the server named is a request
+      // guaranteed to be refused, and to count against the same limit.
+      const withRetryAfter = new LocalStorageStore<string>(
+        {
+          get: mockGet,
+          refresh: mockRefresh,
+          retryAfterMs: (err: any) =>
+            err?.status === 429 ? err.json.retryAfter * 1000 : undefined,
+        },
+        mockChannel
+      );
+      mockGet.mockRejectedValue({ status: 429, json: { retryAfter: 731 } });
+
+      const t0 = Date.now();
+      withRetryAfter.get('user');
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(mockLocalStorage['user'].wait - t0).toBeCloseTo(731_000, -3);
+    });
+
+    it('falls back to its own schedule when the server named nothing', async () => {
+      const withRetryAfter = new LocalStorageStore<string>(
+        { get: mockGet, refresh: mockRefresh, retryAfterMs: () => undefined },
+        mockChannel
+      );
+      mockGet.mockRejectedValue(new Error('boom'));
+
+      const t0 = Date.now();
+      withRetryAfter.get('user');
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(mockLocalStorage['user'].wait - t0).toBeCloseTo(30_000, -3);
+    });
+  });
 });

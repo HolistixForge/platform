@@ -52,6 +52,29 @@ export class GanymedeApi extends ApiFetch {
     super(baseUrl, { credentials: 'include' }); // Enable sending cookies cross-origin
     this._frontendUrl = frontendUrl;
     this._ts = new LocalStorageStore<TokenStoreValue>({
+      /**
+       * What a 429 from Ganymede actually asks for.
+       *
+       * `/oauth/token` is rate limited, and the refusal carries the number of
+       * seconds until the window resets. Retrying before then cannot succeed
+       * and counts as another hit, so a store guessing its own interval keeps
+       * the limit pinned and never recovers — measured, a tab retrying every
+       * thirty seconds against a 20-per-15-minutes limit spent an hour unable
+       * to hold a token at all, which reaches the user as a chat that will not
+       * send.
+       *
+       * A cap because this number comes from the network: an absurd one would
+       * otherwise wedge the tab for as long as it liked.
+       */
+      retryAfterMs: (err: unknown) => {
+        const e = err as
+          | { status?: number; json?: { retryAfter?: unknown } }
+          | undefined;
+        if (e?.status !== 429) return undefined;
+        const seconds = Number(e.json?.retryAfter);
+        if (!Number.isFinite(seconds) || seconds <= 0) return undefined;
+        return Math.min(seconds, 15 * 60) * 1000;
+      },
       //
       // IMPORTANT: Use super.fetch (not this.fetch) to avoid circular dependency!
       // this.fetch wraps calls in _doTokenLogic which tries to get a token,
