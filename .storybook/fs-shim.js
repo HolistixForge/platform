@@ -18,7 +18,17 @@ export const readFileSync = () => {
   throw new Error('fs.readFileSync is not available in the browser');
 };
 export const writeFileSync = nothing;
-export const statSync = nothing;
+// Throws rather than answering `undefined`.
+//
+// `existsSync` returning false keeps the browser branch correct for anything
+// that asks first. A library that does not ask — `statSync(p).isDirectory()`
+// straight off — got `undefined` back and failed with "Cannot read properties
+// of undefined (reading 'isDirectory')", which names neither this file nor the
+// filesystem. `readFileSync` already fails the way that says where it came
+// from; this now does too.
+export const statSync = (path) => {
+  throw new Error(`fs.statSync is not available in the browser (${path})`);
+};
 export const mkdirSync = nothing;
 export const readdirSync = () => [];
 export const promises = {};

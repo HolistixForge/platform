@@ -2,7 +2,10 @@ import { ReactNode, useMemo } from 'react';
 
 import { TCoreSharedData, TGraphNode } from '@holistix-forge/core-graph';
 import { FrontendDispatcher } from '@holistix-forge/reducers/frontend';
-import { ModuleProvider } from '@holistix-forge/module/frontend';
+import {
+  ModuleProvider,
+  useModuleExports,
+} from '@holistix-forge/module/frontend';
 import { SharedTypes } from '@holistix-forge/collab-engine';
 
 import {
@@ -164,9 +167,19 @@ export const StoryMockWhiteboardContext = ({
   //
   // A bare dispatcher is the right mock here: nothing in a story is listening,
   // so dispatched events go nowhere, which is what a story wants.
+  //
+  // Merged with whatever is already in context, not substituted for it.
+  // `ModuleProvider` replaces the value outright, so a story that wraps this
+  // mock in its own provider — node-chat-anchor, inputsOutputs and node-server
+  // all do — would have had every export it supplied disappear inside. Today
+  // those only supply `reducers`, so nothing breaks; the first story to pass
+  // core-graph or user-containers would have found them undefined for no
+  // visible reason. The parent wins where both have a key, since it is the
+  // more specific of the two.
+  const parent = useModuleExports<object>();
   const moduleExports = useMemo(
-    () => ({ reducers: { dispatcher: new FrontendDispatcher() } }),
-    []
+    () => ({ reducers: { dispatcher: new FrontendDispatcher() }, ...parent }),
+    [parent]
   );
 
   return (

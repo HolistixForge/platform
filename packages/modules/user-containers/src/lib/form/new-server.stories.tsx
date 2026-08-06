@@ -16,12 +16,23 @@ import { moduleFrontend as tabsFrontend } from '@holistix-forge/tabs/frontend';
 import { NewContainerForm } from './new-server';
 import { moduleFrontend as userContainersFrontend } from '../../frontend';
 
+// One project id, named once. The seeding module wrote to `'story'` while the
+// provider announced `'story-project'`: harmless only because the local
+// registry hands back the same document for every id, and a silent
+// "the form has no images" the moment it does not.
+const STORY_PROJECT_ID = 'story-project';
+
 //
+// `as const` on the type, and a `user_id` on the awareness user — the same
+// shape every other module story in this repository uses. Widened to `string`
+// the config still selected `NoneCollab` at runtime, so this worked; it was
+// simply the one file that would drift, and awareness code reading
+// `user.user_id` found nothing here.
 const collabConfig = {
-  type: 'none',
+  type: 'none' as const,
   room_id: 'whiteboard-story',
   simulateUsers: true,
-  user: { username: 'test', color: 'red' },
+  user: { user_id: 'story-user', username: 'test', color: 'red' },
 };
 
 // The frontend collab module takes the registry config; the backend still takes
@@ -61,8 +72,8 @@ const modulesFrontend: { module: TModule<never, object>; config: object }[] = [
           }
         ).collab;
 
-        const images = collabExports.getCollabForProject('story').collab
-          .sharedData['user-containers:images'] as any;
+        const images = collabExports.getCollabForProject(STORY_PROJECT_ID)
+          .collab.sharedData['user-containers:images'] as any;
         images.set('test', {
           imageId: 'test',
           imageName: 'Test',
@@ -81,7 +92,7 @@ const StoryWrapper = () => {
   }, []);
 
   return (
-    <CollabProjectProvider project_id="story-project">
+    <CollabProjectProvider project_id={STORY_PROJECT_ID}>
       <ModuleProvider exports={frontendModules}>
         <NewContainerForm
           projectId={''}

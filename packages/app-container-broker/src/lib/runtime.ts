@@ -126,7 +126,15 @@ export const startContainer = async (
   // match it again, and the container becomes unremovable by the broker that
   // started it. stdout is joined first, so the identifier is the first line on
   // both engines; under Docker a pull notice lands on the lines after it.
-  return output.split('\n')[0].trim();
+  //
+  // Checked rather than trusted, because "the first line" is only the
+  // identifier while stdout is non-empty — an engine that wrote a warning
+  // first, or the name to stderr, would hand back a line of prose that looks
+  // like an id to everything downstream. A container id and a container name
+  // are both one word; anything else is not one, and `--name` means the answer
+  // is already known.
+  const first = output.split('\n')[0].trim();
+  return /^[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(first) ? first : request.name;
 };
 
 /** Raised when a delete names something this broker did not start. */

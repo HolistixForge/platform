@@ -16,10 +16,7 @@ import {
   moduleBackend as collabBackend,
   createLocalCollabRegistry,
 } from '@holistix-forge/collab';
-import {
-  moduleFrontend as collabFrontend,
-  CollabProjectProvider,
-} from '@holistix-forge/collab/frontend';
+import { moduleFrontend as collabFrontend } from '@holistix-forge/collab/frontend';
 import {
   moduleBackend as reducersBackend,
   TReducersBackendExports,
@@ -140,16 +137,20 @@ const Story = () => {
   }, []);
 
   return (
+    // No `CollabProjectProvider` here: `JupyterStoryInit` opens one of its own
+    // for `STORY_PROJECT_ID`, and the inner provider wins for everything below
+    // it. Wrapping this in a second one with the project id spelled out again
+    // left two ids in play in one story — equal today, and a pair that could
+    // silently disagree the moment the registry became per-project. Nothing
+    // between here and `JupyterStoryInit` reads the project.
     <StoryApiContext>
-      <CollabProjectProvider project_id="story-project">
-        <ModuleProvider exports={frontendModules}>
-          <JupyterStoryInit>
-            <div style={{ height: '100vh', width: '100vw' }}>
-              <StoryWhiteboard />
-            </div>
-          </JupyterStoryInit>
-        </ModuleProvider>
-      </CollabProjectProvider>
+      <ModuleProvider exports={frontendModules}>
+        <JupyterStoryInit>
+          <div style={{ height: '100vh', width: '100vw' }}>
+            <StoryWhiteboard />
+          </div>
+        </JupyterStoryInit>
+      </ModuleProvider>
     </StoryApiContext>
   );
 };

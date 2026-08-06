@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Sidebar, icons } from '@holistix-forge/ui-base';
 
@@ -69,6 +69,11 @@ export const NotebookView = ({
   view = 'biome-server',
 }: NotebookViewProps) => {
   const [activeView, setActiveView] = useState<NotebookViewView>(view);
+  // `useState` seeds once, and Storybook re-renders rather than remounting when
+  // an arg changes — so toggling the `view` control in the canvas set state
+  // nobody read and the screen never switched. Only picking a different story
+  // worked, because that remounts.
+  useEffect(() => setActiveView(view), [view]);
   const [tags, setTags] = useState<any>([
     {
       text: 'Boosting',

@@ -221,7 +221,21 @@ const main = () => {
         ...meta,
       };
     })
-    .filter((f) => f.isFinding || f.author.startsWith('devin-ai-integration'));
+    // A marked finding, or something from Devin that looks like one.
+    //
+    // The author fallback catches a finding whose marker format changed
+    // upstream — losing those silently is the worse failure. But "any root
+    // comment by Devin" was too wide: a note carrying neither an id nor a
+    // severity is not a finding, nothing will ever reply `✅ **Resolved**` to
+    // it, and it therefore counted as open forever and held the exit status
+    // red with nothing to fix. `severity` falls back to the job prefix in the
+    // marker, so `unmarked` means neither was there.
+    .filter(
+      (f) =>
+        f.isFinding ||
+        (f.author.startsWith('devin-ai-integration') &&
+          f.severity !== 'unmarked')
+    );
 
   const open = findings.filter((f) => !f.resolved);
   const done = findings.filter((f) => f.resolved);

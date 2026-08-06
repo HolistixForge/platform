@@ -260,7 +260,11 @@ export const UserContainerCardInternal = ({
           >
             {container.container_name}
           </p>
-          {image && (
+          {/* On the description and not on the image: a catalogue entry
+              without one rendered an empty 18px coloured box whose only
+              content was a hover title, which reads as a rendering fault. No
+              description, no badge. */}
+          {image?.description && (
             // One line, clipped, with the whole of it on hover.
             //
             // The height was fixed at 18px with nothing said about overflow, so
@@ -290,15 +294,7 @@ export const UserContainerCardInternal = ({
                 display: 'block',
                 lineHeight: '18px',
               }}
-              title={
-                // `description` is optional, so gluing it on unconditionally
-                // renders "ttyd ubuntu — undefined" for a catalogue entry
-                // without one — and the badge body is then empty too, so the
-                // tooltip is the only text there is.
-                image.description
-                  ? `${image.imageName} — ${image.description}`
-                  : image.imageName
-              }
+              title={`${image.imageName} — ${image.description}`}
             >
               {image.description}
             </span>
@@ -432,9 +428,22 @@ export const UserContainerCardInternal = ({
               // ResourceButtons takes a `useAction` result, and a hook cannot
               // be called once per entry of a list. The button is here for its
               // appearance; the wrapper carries the behaviour.
-              <div
+              //
+              // So the wrapper has to be a button, not a div. A div with an
+              // onClick is not focusable, announces no role, and cannot be
+              // reached from the keyboard at all — and the chosen runner was
+              // said with opacity alone, which is nothing to a screen reader.
+              // `aria-pressed` is the same statement in a form that carries.
+              <button
+                type="button"
                 key={runnerId}
                 className="cursor-pointer"
+                aria-pressed={active}
+                aria-label={
+                  active
+                    ? `Restart on ${runner.label}`
+                    : `Move to ${runner.label}`
+                }
                 title={
                   active
                     ? `Restart on ${runner.label}`
@@ -446,6 +455,14 @@ export const UserContainerCardInternal = ({
                   // without a second border around a button that has one.
                   opacity: active ? 1 : 0.45,
                   transition: 'opacity 0.15s ease',
+                  // The wrapper is a button now; none of its own chrome is
+                  // wanted, only its semantics.
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  font: 'inherit',
+                  color: 'inherit',
+                  lineHeight: 0,
                 }}
                 onClick={() => onSelectRunner(runnerId)}
               >
@@ -462,7 +479,7 @@ export const UserContainerCardInternal = ({
                     className="resource small"
                   />
                 )}
-              </div>
+              </button>
             );
           })}
         </div>
