@@ -137,9 +137,28 @@ export const JupyterStoryProviders = ({
     []
   );
 
+  // The manager resolves shared data per project and does nothing until it is
+  // told which one — `project-wrapper.tsx` does this in the application, and a
+  // story that skips it gets "Server Does Not Exist" from a manager that never
+  // looked.
+  useEffect(() => {
+    (
+      frontendModules as {
+        jupyter?: { jlsManager?: { setProjectId: (id: string) => void } };
+      }
+    ).jupyter?.jlsManager?.setProjectId(STORY_PROJECT_ID);
+  }, [frontendModules]);
+
+  // Providers only — no server gate. `JupyterStoryInit` waits on a live
+  // Jupyter and renders setup instructions until it finds one, which is right
+  // for a story that drives a real kernel and wrong for one that only needs a
+  // module context: it swallowed the children whole, so a node story rendered
+  // nothing at all. A story that wants the gate wraps itself in it.
   return (
     <ModuleProvider exports={frontendModules}>
-      <JupyterStoryInit>{children}</JupyterStoryInit>
+      <CollabProjectProvider project_id={STORY_PROJECT_ID}>
+        {children}
+      </CollabProjectProvider>
     </ModuleProvider>
   );
 };
