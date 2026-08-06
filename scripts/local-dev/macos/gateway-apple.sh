@@ -184,21 +184,63 @@ EOF
 # --------------------------------------------------------------------------
 # serve — where the containers fetch that tarball from
 # --------------------------------------------------------------------------
-# Bound to every interface, not the loopback: the point is to be reachable from
-# inside a microVM, which the loopback is not. It serves one directory holding
-# nothing but build tarballs — no environment file, no key — and that is the
-# reason it can be bound that way at all.
+# Bound to the container network's gateway address, not the loopback and not
+# every interface.
+#
+# The loopback is not reachable from inside a microVM, which is the whole point
+# of this server — so it was bound to 0.0.0.0. That also serves it to every
+# host that can route to this machine, and on a laptop on an untrusted network
+# that is everyone in the room. The directory holds packed gateway builds:
+# no key and no environment file, but the platform's server-side code, and
+# nothing about "it is only a dev harness" makes handing that out on a café
+# network a good default.
+#
+# The bridge address is reachable from exactly the place that needs it and from
+# nowhere off the machine. Same address the broker binds to, for the same
+# reason.
+BUILD_BIND="${BUILD_BIND:-}"
+
+# Where to bind, worked out once and shared by both forms below.
+serve_bind() {
+  local bind="$BUILD_BIND"
+  [ -z "$bind" ] && bind="$(host_gateway)"
+  printf '%s' "$bind"
+}
+
+# In the foreground, for launchd. A job that backgrounds itself is a job
+# launchd sees exit, and it restarts it forever against a port the previous
+# copy still holds — the same reason the broker has this pair.
+cmd_serve_foreground() {
+  mkdir -p "$BUILDS"
+  local bind
+  bind="$(serve_bind)"
+  [ -n "$bind" ] || bind=0.0.0.0
+  exec python3 -m http.server "$BUILD_PORT" --bind "$bind" --directory "$BUILDS"
+}
+
 cmd_serve() {
   mkdir -p "$BUILDS"
   if pgrep -f "http.server ${BUILD_PORT}" >/dev/null 2>&1; then
     ok "build server already running on :${BUILD_PORT}"
     return 0
   fi
-  nohup python3 -m http.server "$BUILD_PORT" --bind 0.0.0.0 --directory "$BUILDS" \
+
+  local bind
+  bind="$(serve_bind)"
+  if [ -z "$bind" ]; then
+    # Reached by `serve` on its own, before anything is on the container
+    # network. Said out loud rather than silently widened.
+    ko "could not read the container network gateway — binding every interface"
+    note "Anyone who can route to this machine can fetch the gateway builds."
+    note "Start the environment first, or set BUILD_BIND explicitly."
+    bind=0.0.0.0
+  fi
+
+  nohup python3 -m http.server "$BUILD_PORT" --bind "$bind" --directory "$BUILDS" \
     >"${CONF_DIR}/build-server.log" 2>&1 &
   sleep 1
   pgrep -f "http.server ${BUILD_PORT}" >/dev/null 2>&1 \
-    && ok "build server on :${BUILD_PORT} serving ${BUILDS}" \
+    && ok "build server on ${bind}:${BUILD_PORT} serving ${BUILDS}" \
     || { ko "build server did not start — ${CONF_DIR}/build-server.log"; return 1; }
 }
 
@@ -548,6 +590,7 @@ case "${1:-}" in
   image) cmd_image ;;
   pack)  cmd_pack ;;
   serve) cmd_serve ;;
+  serve-foreground) cmd_serve_foreground ;;
   broker) cmd_broker ;;
   broker-foreground) cmd_broker_foreground ;;
   resume) cmd_resume ;;

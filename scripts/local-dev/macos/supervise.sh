@@ -117,9 +117,13 @@ write_agents() {
     /bin/bash "${REPO_ROOT}/scripts/local-dev/macos/nginx-reload.sh" watch \
     > "${AGENTS}/${PREFIX}.nginx-reload.plist"
 
+  # Through the script, for its bind address. Written straight here it was
+  # `--bind 0.0.0.0`, which serves the packed gateway builds to every host that
+  # can route to this laptop. gateway-apple.sh resolves the container network's
+  # gateway instead — reachable from the microVMs that need it, and from
+  # nowhere off the machine.
   plist "${PREFIX}.buildserver" true \
-    "$(command -v python3)" -m http.server "$BUILD_PORT" \
-    --bind 0.0.0.0 --directory "$BUILDS" \
+    /bin/bash "${REPO_ROOT}/scripts/local-dev/macos/gateway-apple.sh" serve-foreground \
     > "${AGENTS}/${PREFIX}.buildserver.plist"
 
   # Started through the script rather than directly: the broker needs its

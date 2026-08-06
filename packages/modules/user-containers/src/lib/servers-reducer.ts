@@ -619,8 +619,14 @@ export class UserContainersReducer extends ReducerWithCollab<
     // The container is going; its credential should not outlive it. Rewritten
     // rather than left, because a token still in the file is one that would
     // still admit whatever presented it.
-    this.vpnSecrets.delete(containerId);
-    if (this.hostingTokens.delete(containerId)) {
+    // Republished when *either* map gave something up, not only the token map.
+    // `_publishVpnCredentials` writes from `vpnSecrets`, so a secret removed
+    // while no hosting token happened to exist alongside it would have stayed
+    // live in the file the VPN checks against — the two are written together
+    // everywhere today, and that is a coincidence this should not rest on.
+    const hadSecret = this.vpnSecrets.delete(containerId);
+    const hadToken = this.hostingTokens.delete(containerId);
+    if (hadSecret || hadToken) {
       await this._publishVpnCredentials();
     }
 
