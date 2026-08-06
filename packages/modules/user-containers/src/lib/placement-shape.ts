@@ -33,9 +33,13 @@ export type TRunnerPlacement = {
    *
    * Empty for a local placement today: private network allocation is the
    * broker's, and nothing allocates one for a container running on somebody's
-   * own machine. Stated rather than omitted, because the runner reconciles
-   * against this list — an absent field and an empty one would mean the same
-   * thing to it, and only one of them is true.
+   * own machine.
+   *
+   * Empty means "no opinion about networks", not "belongs to none". The runner
+   * reconciles against this list, and the other reading would have it detach a
+   * container from the only network it had — leaving it unable to reach its
+   * gateway under Docker, and rebuilt on every interval under Apple, which
+   * refuses a live detach. See `planReconcile`.
    */
   networks: string[];
 };

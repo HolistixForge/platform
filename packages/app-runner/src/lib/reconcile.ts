@@ -33,6 +33,44 @@ export type TAction =
   | { action: 'keep'; user_container_id: string; id: string };
 
 /**
+ * Whether a running container holds the image its placement asks for.
+ *
+ * Not a string comparison, because the engines do not agree on how to spell a
+ * reference back. Measured on Apple `container` 1.2.0: started with
+ * `docker.io/library/alpine:3@sha256:28bd5f…`, `inspect` reports
+ * `docker.io/library/alpine@sha256:28bd5f…` — the tag is dropped. Placements
+ * are digest-pinned in `repo:tag@sha256:…` form, so byte-for-byte the two
+ * never match, every pass emitted `recreate`, and any service placed on a Mac
+ * restarted once per interval forever without ever converging.
+ *
+ * The digest is what actually identifies an image; the tag is a label somebody
+ * can move. So when both sides carry one it decides, and anything else falls
+ * back to the exact comparison — an unpinned reference says nothing about
+ * content and must not be treated as equal to a different unpinned one.
+ */
+const sameImage = (running: string, placed: string): boolean => {
+  if (running === placed) return true;
+
+  /** `registry:5000/acme/thing:v1@sha256:…` → repository and digest. */
+  const split = (ref: string) => {
+    const [nameAndTag, digest] = ref.split('@');
+    const colon = nameAndTag.lastIndexOf(':');
+    const slash = nameAndTag.lastIndexOf('/');
+    // A colon after the last slash is a tag; before it, a registry port.
+    const repository = colon > slash ? nameAndTag.slice(0, colon) : nameAndTag;
+    return { repository, digest };
+  };
+
+  const a = split(running);
+  const b = split(placed);
+  return (
+    Boolean(a.digest && b.digest) &&
+    a.digest === b.digest &&
+    a.repository === b.repository
+  );
+};
+
+/**
  * Decide what to do, without doing any of it.
  *
  * Separated from the execution below so the decision can be tested against a
@@ -65,7 +103,7 @@ export const planReconcile = (
 
     // The image is the one thing that cannot be changed on a container that
     // already exists. Everything else below is adjustable in place.
-    if (existing.image !== placement.imageRef) {
+    if (!sameImage(existing.image, placement.imageRef)) {
       actions.push({
         action: 'recreate',
         user_container_id: placement.user_container_id,
@@ -105,16 +143,32 @@ export const planReconcile = (
       }
     }
 
-    for (const network of existing.networks) {
-      // `bridge` is Docker's default and is not something a placement declares;
-      // detaching from it is the point of having private networks at all.
-      if (!placement.networks.includes(network)) {
-        actions.push({
-          action: 'detach',
-          user_container_id: placement.user_container_id,
-          id: existing.id,
-          network,
-        });
+    // A placement that names no network is not a placement asking for a
+    // container on no network at all.
+    //
+    // Those two readings differ, and only the first is ever useful: a container
+    // detached from everything cannot reach its gateway, or anything else.
+    // Local placements name none today — nothing allocates a private network
+    // for a container on somebody's own machine — so under Docker the pass
+    // would have run `network disconnect bridge` and cut the container off,
+    // and on Apple, where a live detach is refused, it would have rebuilt the
+    // container once per interval forever.
+    //
+    // So an empty list means "no opinion", and detaching only happens once a
+    // placement has actually said which networks it wants.
+    if (placement.networks.length > 0) {
+      for (const network of existing.networks) {
+        // `bridge` is Docker's default and is not something a placement
+        // declares; detaching from it is the point of having private networks
+        // at all.
+        if (!placement.networks.includes(network)) {
+          actions.push({
+            action: 'detach',
+            user_container_id: placement.user_container_id,
+            id: existing.id,
+            network,
+          });
+        }
       }
     }
   }
@@ -139,6 +193,18 @@ export const applyReconcile = async (
   create: TCreateContainer
 ): Promise<void> => {
   const byId = new Map(placements.map((p) => [p.user_container_id, p]));
+
+  // Which containers this pass has already rebuilt.
+  //
+  // A rebuild is how an engine that cannot move a network on a live container
+  // gets one onto the right networks — and it puts the container on *all* of
+  // them at once, so the second network action for the same container has
+  // nothing left to do. Worse, it would act on `action.id`, the identifier from
+  // before the rebuild: `delete` on a container that no longer exists throws,
+  // and the throw aborts the whole pass, leaving every placement after it
+  // unconverged. Measured as a service on two networks restarting on every
+  // interval and never converging.
+  const rebuilt = new Set<string>();
 
   // Networks first: attaching to one that does not exist fails, and a
   // container created into a missing network fails the same way.
@@ -173,12 +239,18 @@ export const applyReconcile = async (
       // every log line says the pass converged.
       case 'attach':
       case 'detach':
+        // Already rebuilt for an earlier network in this pass, and a rebuild
+        // creates the container into every network the placement names — so
+        // there is nothing left to do, and the identifier this action carries
+        // no longer refers to anything.
+        if (rebuilt.has(action.user_container_id)) break;
         try {
           await (action.action === 'attach'
             ? engine.connectNetwork(exec, action.network, action.id)
             : engine.disconnectNetwork(exec, action.network, action.id));
         } catch (error) {
           if (!(error instanceof UnsupportedByEngine)) throw error;
+          rebuilt.add(action.user_container_id);
           await engine.removeContainer(exec, action.id);
           if (placement) await create(placement);
         }
