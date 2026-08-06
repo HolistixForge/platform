@@ -5,6 +5,7 @@ import { authenticateJwt } from '../middleware/jwt-auth';
 import { requireProjectAccess } from '../middleware/permissions';
 import { asyncHandler } from '../middleware/route-handler';
 import { getGatewayInstances } from '../initialization/gateway-instances';
+import { getPlacementProvider } from '@holistix-forge/user-containers';
 
 /**
  * What one machine has been asked to run, in one project.
@@ -61,13 +62,28 @@ export const setupPlacementRoutes = (
         throw new NotFoundException([{ message: 'Gateway not initialized' }]);
       }
 
-      const collab = instances.collabRegistry.getCollabForProject(project_id);
-      const containers = collab.sharedData['user-containers:containers'];
+      // Asked of the module rather than read out of the collab document.
+      //
+      // This route used to return the raw documents — `{ runner: {…},
+      // httpServices, image_id, … }` — and a runner expects `machine_id`,
+      // `imageRef`, `settings` and `capabilities` at the top level. Every
+      // placement was therefore refused with "Placement names no machine", and
+      // would have been unstartable even if it had not been: no resolved
+      // image, no SETTINGS. Both halves were tested, each against its own idea
+      // of the shape, and neither test could see the other.
+      //
+      // The reducer builds it, because the pieces live there: the image
+      // registry, and the hosting token that is also the container's VPN
+      // password, which is kept out of the CRDT because that document reaches
+      // every browser in the project.
+      const buildPlacements = getPlacementProvider();
+      if (!buildPlacements) {
+        throw new NotFoundException([
+          { message: 'user-containers module is not loaded' },
+        ]);
+      }
 
-      const placements = Array.from(containers.copy().values()).filter(
-        (c: any) =>
-          c?.runner?.id === 'local' && c?.runner?.machine_id === machine_id
-      );
+      const placements = await buildPlacements(project_id, machine_id);
 
       log(
         EPriority.Debug,

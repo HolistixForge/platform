@@ -667,6 +667,107 @@ describe('UserContainersReducer - Auth Guard OAuth Client Lifecycle', () => {
       expect(started.config.auth_guard_client_secret).toBeUndefined();
     });
   });
+
+  describe('placementsFor - what a polling runner is handed', () => {
+    /** The extra deps the placement path needs, none of which `_new` uses. */
+    const armPlacements = () => {
+      mockDepsExports.gateway.tokenManager = {
+        generateProjectScopedToken: jest
+          .fn()
+          .mockResolvedValue('hosting-token'),
+      };
+      mockDepsExports['user-containers'].getRunner = jest.fn(() => ({
+        buildLaunchSpec: (container: any) => ({
+          name: `holistix_${container.user_container_id}`,
+          imageRef: 'holistixforge/ubuntu-terminal:24.04',
+          settings: 'e30=',
+          capabilities: [],
+          devices: [],
+          extraHosts: [],
+        }),
+      }));
+    };
+
+    const placedLocally = (extra: Record<string, unknown> = {}) => ({
+      user_container_id: 'uc-1',
+      container_name: 'My Terminal',
+      image_id: 'ubuntu:terminal',
+      runner: { id: 'local', machine_id: 'machine-1', user_id: 'user-1' },
+      httpServices: [],
+      last_watchdog_at: null,
+      last_activity: null,
+      created_at: new Date().toISOString(),
+      ...extra,
+    });
+
+    it('writes a rotated OAuth client id back to shared state', async () => {
+      // The gateway restarted, so the secret is gone and the client is
+      // replaced. Used locally only, the next poll would answer from the
+      // secret cache and pair the *new* secret with the id still in the
+      // document — a login the container cannot complete, with nothing in
+      // either place looking wrong on its own.
+      mockContainersMap.set(
+        'uc-1',
+        placedLocally({
+          auth_guard: { client_id: 'stale-client' },
+        })
+      );
+      armPlacements();
+      mockToGanymedeInternal.mockResolvedValue({
+        client_id: 'fresh-client',
+        client_secret: 'fresh-secret',
+      });
+
+      await reducer.placementsFor('project-1', 'machine-1');
+
+      expect(mockContainersMap.get('uc-1').auth_guard).toEqual({
+        client_id: 'fresh-client',
+      });
+      // And the secret still never reaches the CRDT.
+      expect(
+        JSON.stringify(Array.from(mockContainersMap.values()))
+      ).not.toContain('fresh-secret');
+    });
+
+    it('names no network, so the runner forms no opinion about them', async () => {
+      mockContainersMap.set('uc-1', placedLocally());
+      armPlacements();
+
+      const [placement] = await reducer.placementsFor('project-1', 'machine-1');
+
+      expect(placement.networks).toEqual([]);
+    });
+
+    it('skips a container placed locally with no owner recorded', async () => {
+      // `_start` refuses the same case. Handing the runner a placement whose
+      // user is empty would start a container that cannot say who it is for.
+      mockContainersMap.set(
+        'uc-1',
+        placedLocally({
+          runner: { id: 'local', machine_id: 'machine-1' },
+        })
+      );
+      armPlacements();
+
+      expect(await reducer.placementsFor('project-1', 'machine-1')).toEqual([]);
+    });
+
+    it('answers only for the machine that asked', async () => {
+      mockContainersMap.set('uc-1', placedLocally());
+      mockContainersMap.set(
+        'uc-2',
+        placedLocally({
+          user_container_id: 'uc-2',
+          runner: { id: 'local', machine_id: 'machine-2', user_id: 'user-1' },
+        })
+      );
+      armPlacements();
+
+      const placements = await reducer.placementsFor('project-1', 'machine-1');
+
+      expect(placements.map((p) => p.user_container_id)).toEqual(['uc-1']);
+    });
+  });
 });
 
 describe('UserContainersReducer - runner machines', () => {
@@ -1028,14 +1129,45 @@ describe('UserContainersReducer - VPN credentials', () => {
       { project_id: 'project-1', jwt: { user: { id: 'user-1' } } } as any
     );
 
-  it('should record the token the container was given', async () => {
-    // Act
+  it('should record a short secret, not the hosting token', async () => {
+    // OpenVPN keeps a password in a fixed buffer — 128 bytes on the Alpine
+    // build of 2.6, larger on the Ubuntu one, and `--max-password-size` only
+    // arrives in 2.7. A hosting token is a JWT of some 740 bytes, so the same
+    // container was admitted or refused depending on which base image it was
+    // built from, and the server could only say "wrong password". Measured: an
+    // Alpine container presented 127 characters of a 743-character token.
     await start();
 
-    // Assert - this pair is exactly what vpn-auth-verify.sh compares against
-    expect(recordVpnCredentials).toHaveBeenCalledWith([
-      { user_container_id: 'uc-1', token: 'the-hosting-token' },
-    ]);
+    const [recorded] = recordVpnCredentials.mock.calls.at(-1) as [
+      { user_container_id: string; token: string }[]
+    ];
+
+    expect(recorded).toHaveLength(1);
+    expect(recorded[0].user_container_id).toBe('uc-1');
+    expect(recorded[0].token).not.toBe('the-hosting-token');
+    // Well inside every build's buffer, and not guessable.
+    expect(recorded[0].token).toMatch(/^[0-9a-f]{32}$/);
+  });
+
+  it('should give the runner the same secret it recorded', async () => {
+    // Two halves of one comparison: what the gateway writes for
+    // vpn-auth-verify.sh, and what the container is told to present. Minted in
+    // one place precisely so they cannot drift — and the hosting token still
+    // travels beside it, for everything that is not the VPN.
+    const startSpy = jest.fn().mockResolvedValue({});
+    (reducer as any).depsExports['user-containers'].getRunner = () => ({
+      start: startSpy,
+    });
+
+    await start();
+
+    const [recorded] = recordVpnCredentials.mock.calls.at(-1) as [
+      { user_container_id: string; token: string }[]
+    ];
+    const [, hostingToken, , config] = startSpy.mock.calls[0];
+
+    expect(config.vpn_secret).toBe(recorded[0].token);
+    expect(hostingToken).toBe('the-hosting-token');
   });
 
   it('should record it before the container is asked to start', async () => {

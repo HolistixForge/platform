@@ -141,7 +141,7 @@ const Story = () => (
 
 const meta: Meta<typeof Story> = {
   component: Story,
-  title: 'Basics/Buttons',
+  title: 'Base/Assets/Buttons',
   parameters: {
     layout: 'centered',
   },

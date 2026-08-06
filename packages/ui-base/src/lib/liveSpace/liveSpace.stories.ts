@@ -4,7 +4,7 @@ import { createElement } from 'react';
 import { LiveSpace } from './liveSpace';
 
 const meta: Meta<typeof LiveSpace> = {
-  title: 'UI/LiveSpace',
+  title: 'Base/Components/LiveSpace',
   component: LiveSpace,
   decorators: [
     (Story) =>

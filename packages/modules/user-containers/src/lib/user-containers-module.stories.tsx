@@ -12,8 +12,14 @@ import {
   moduleBackend as coreBackend,
   moduleFrontend as coreFrontend,
 } from '@holistix-forge/core-graph';
-import { moduleBackend as collabBackend } from '@holistix-forge/collab';
-import { moduleFrontend as collabFrontend } from '@holistix-forge/collab/frontend';
+import {
+  moduleBackend as collabBackend,
+  createLocalCollabRegistry,
+} from '@holistix-forge/collab';
+import {
+  moduleFrontend as collabFrontend,
+  CollabProjectProvider,
+} from '@holistix-forge/collab/frontend';
 import {
   moduleBackend as reducersBackend,
   TReducersBackendExports,
@@ -26,6 +32,7 @@ import {
 import { moduleBackend as spaceBackend } from '@holistix-forge/whiteboard';
 import { moduleFrontend as spaceFrontend } from '@holistix-forge/whiteboard/frontend';
 import { moduleBackend as tabsBackend } from '@holistix-forge/tabs';
+import { moduleFrontend as tabsFrontend } from '@holistix-forge/tabs/frontend';
 //
 import {
   TUserContainersExports,
@@ -38,16 +45,32 @@ import { moduleFrontend as userContainersFrontend } from '../frontend';
 Logger.setPriority(EPriority.Debug);
 
 const collabConfig = {
-  type: 'none',
+  type: 'none' as const,
   room_id: 'whiteboard-story',
   simulateUsers: true,
-  user: { username: 'test', color: 'red' },
+  user: { user_id: 'story-user', username: 'test', color: 'red' },
+};
+
+// The frontend collab module takes the registry config; the backend still takes
+// the plain one. Wrapping rather than replacing keeps both honest, and the
+// factory hands back the same local document for every project — a story has
+// exactly one.
+const collabFrontendConfig = {
+  type: 'registry' as const,
+  createConfigForProject: () => collabConfig,
+};
+
+// The backend collab module re-exports whatever registry it is handed, and
+// core-graph reads it during its own load. Handing it nothing is what killed
+// these stories.
+const collabBackendConfig = {
+  registry: createLocalCollabRegistry(collabConfig),
 };
 
 const modulesBackend: { module: TModule<never, object>; config: object }[] = [
   {
     module: collabBackend,
-    config: collabConfig,
+    config: collabBackendConfig,
   },
   { module: reducersBackend, config: {} },
   { module: coreBackend, config: {} },
@@ -59,6 +82,14 @@ const modulesBackend: { module: TModule<never, object>; config: object }[] = [
       dependencies: ['collab', 'reducers'],
       load: ({ moduleExports }) => {
         moduleExports({
+          // user-containers registers its permissions against this at load.
+          // The stub predates it, so the module read `.register` off undefined
+          // and the whole story died before painting.
+          permissionRegistry: {
+            register: () => {
+              // A story enforces nothing; it only has to let the module load.
+            },
+          },
           project_id: 'test',
           updateReverseProxy: async () => {
             console.log('updateReverseProxy');
@@ -101,11 +132,14 @@ const modulesBackend: { module: TModule<never, object>; config: object }[] = [
 const modulesFrontend: { module: TModule<never, object>; config: object }[] = [
   {
     module: collabFrontend,
-    config: collabConfig,
+    config: collabFrontendConfig,
   },
   { module: reducersFrontend, config: {} },
   { module: coreFrontend, config: {} },
   { module: spaceFrontend, config: {} },
+  // tabs comes first: loadModules walks this list in order and refuses a
+  // module whose dependency has not been loaded yet, which it says by name.
+  { module: tabsFrontend, config: {} },
   { module: userContainersFrontend, config: {} },
 ];
 
@@ -126,17 +160,19 @@ const Story = () => {
 
   return (
     <StoryApiContext>
-      <ModuleProvider exports={frontendModules}>
-        <div style={{ height: '100vh', width: '100vw' }}>
-          <StoryWhiteboard />
-        </div>
-      </ModuleProvider>
+      <CollabProjectProvider project_id="story-project">
+        <ModuleProvider exports={frontendModules}>
+          <div style={{ height: '100vh', width: '100vw' }}>
+            <StoryWhiteboard />
+          </div>
+        </ModuleProvider>
+      </CollabProjectProvider>
     </StoryApiContext>
   );
 };
 
 const meta = {
-  title: 'Modules/UserContainers/Main',
+  title: 'Modules/UserContainers/Views/Main',
   component: Story,
   parameters: {
     layout: 'fullscreen',

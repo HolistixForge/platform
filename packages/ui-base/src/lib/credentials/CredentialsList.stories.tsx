@@ -6,7 +6,7 @@ import { mockCredentialTypes, mockCredentials } from './credentials-mocks';
 const noop = () => undefined;
 
 const meta = {
-  title: 'Credentials/CredentialsList',
+  title: 'Base/Resource/Credentials/CredentialsList',
   component: CredentialsList,
   parameters: { layout: 'centered' },
   args: {

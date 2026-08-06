@@ -1,3 +1,4 @@
+import { CollabProjectProvider } from '@holistix-forge/collab/frontend';
 import type { Meta, StoryObj } from '@storybook/react';
 import { InputsOutputs } from './inputsOutputs';
 import { StoryMockSpaceContextReactflowBgAndCss } from '../../../stories/story-context-mocks';
@@ -22,24 +23,26 @@ const StoryWrapper = (props: {
   const nodeId = 'whatever';
 
   return (
-    <ModuleProvider exports={fakeFrontendModules}>
-      <StoryMockSpaceContextReactflowBgAndCss
-        nodeId={nodeId}
-        inputs={props.pinCount}
-        outputs={props.pinCount}
-      >
-        <div style={{ position: 'relative' }}>
-          <InputsOutputs nodeId={nodeId} {...props} />
-        </div>
-      </StoryMockSpaceContextReactflowBgAndCss>
-    </ModuleProvider>
+    <CollabProjectProvider project_id="story-project">
+      <ModuleProvider exports={fakeFrontendModules}>
+        <StoryMockSpaceContextReactflowBgAndCss
+          nodeId={nodeId}
+          inputs={props.pinCount}
+          outputs={props.pinCount}
+        >
+          <div style={{ position: 'relative' }}>
+            <InputsOutputs nodeId={nodeId} {...props} />
+          </div>
+        </StoryMockSpaceContextReactflowBgAndCss>
+      </ModuleProvider>
+    </CollabProjectProvider>
   );
 };
 
 //
 
 const meta = {
-  title: 'Modules/Space/Components/Inputs Outputs',
+  title: 'Modules/Whiteboard/Assets/Inputs Outputs',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

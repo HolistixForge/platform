@@ -163,6 +163,60 @@ describe('Internal OAuth Client Routes', () => {
         .expect(201);
     });
 
+    // DOMAIN carries a port wherever nginx is not on 443 — every URL built from
+    // it is a link somebody follows. It is compared here against
+    // `URL.hostname`, which never has one, so a port made the check refuse
+    // every URI ever submitted. The caller is the gateway registering a user
+    // container's own sign-in endpoint: starting a service got a 400 saying
+    // its redirect was not a subdomain of a domain it plainly is one of.
+    describe('when DOMAIN carries a port', () => {
+      beforeEach(() => {
+        process.env.DOMAIN = 'apollo.test:8443';
+      });
+
+      it('should accept a subdomain of it', async () => {
+        const mockQuery = jest.mocked(pg.query);
+        mockQuery.mockResolvedValue(undefined as any);
+
+        await request(app)
+          .post('/internal/oauth/clients')
+          .set('X-Gateway-Token', GATEWAY_TOKEN)
+          .send({
+            redirect_uris: [
+              'https://uc-abc.org-def.apollo.test:8443/__auth/callback',
+            ],
+            grants: ['authorization_code'],
+          })
+          .expect(201);
+      });
+
+      it('should accept the bare domain', async () => {
+        const mockQuery = jest.mocked(pg.query);
+        mockQuery.mockResolvedValue(undefined as any);
+
+        await request(app)
+          .post('/internal/oauth/clients')
+          .set('X-Gateway-Token', GATEWAY_TOKEN)
+          .send({
+            redirect_uris: ['https://apollo.test:8443/callback'],
+            grants: ['authorization_code'],
+          })
+          .expect(201);
+      });
+
+      it('should still refuse somewhere else entirely', async () => {
+        // Stripping the port must not widen what is accepted.
+        await request(app)
+          .post('/internal/oauth/clients')
+          .set('X-Gateway-Token', GATEWAY_TOKEN)
+          .send({
+            redirect_uris: ['https://apollo.test.evil.com:8443/callback'],
+            grants: ['authorization_code'],
+          })
+          .expect(400);
+      });
+    });
+
     it('should reject without gateway token (401)', async () => {
       await request(app)
         .post('/internal/oauth/clients')

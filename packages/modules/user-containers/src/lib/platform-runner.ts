@@ -169,7 +169,36 @@ export class PlatformRunnerBackend extends ContainerRunner {
       // worst a hole punched straight through the isolation we run a microVM
       // for. NET_ADMIN stays, and is confined to the guest kernel.
       devices: [],
-      extra_hosts: spec.extraHosts,
+      // Deliberately empty too, and for a reason that is not the same one.
+      //
+      // These exist so a container can reach its gateway by FQDN before it has
+      // a tunnel, in a development environment where that name is in no DNS.
+      // But `--add-host` is not something every engine has: Apple `container`
+      // has no equivalent, and the broker refuses a start carrying them rather
+      // than dropping them silently — "engine apple cannot set extra hosts" —
+      // which is right, because a container that needed them and did not get
+      // them fails later and further away.
+      //
+      // The gateway cannot know which engine is on the other end, and should
+      // not have to. Since dd0d0dd2 it does not need to: the container works
+      // the host out from the gateway of its own network, on any engine,
+      // without being told. So the platform runner sends none and lets the
+      // container do it.
+      //
+      // The local runner still sends them. It builds a command for somebody
+      // else's machine, where nothing has been arranged at all.
+      //
+      // The coupling this creates, stated so it is not discovered: the
+      // platform runner is correct only while every image it can start
+      // resolves the host itself. That code lives in the user-container base
+      // image (`container-functions.sh`, `resolve_platform_hosts`), so a
+      // catalogue image built on a different base, or one whose entrypoint
+      // does not source it, has no way to reach its gateway by FQDN in a
+      // development environment where those names are in no DNS. The
+      // `--add-host` entries used to cover that case whatever the image was.
+      // Closing it properly means the broker telling the gateway what its
+      // engine can do *before* a start, rather than refusing after.
+      extra_hosts: [],
       limits: spec.limits,
     };
 

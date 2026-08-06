@@ -6,30 +6,55 @@ import { TModule, loadModules } from '@holistix-forge/module';
 import {
   moduleFrontend as collabFrontend,
   TCollabFrontendExports,
+  CollabProjectProvider,
 } from '@holistix-forge/collab/frontend';
 import { moduleFrontend as coreFrontend } from '@holistix-forge/core-graph';
 import { moduleFrontend as spaceFrontend } from '@holistix-forge/whiteboard/frontend';
 import { moduleFrontend as reducersFrontend } from '@holistix-forge/reducers/frontend';
+import { moduleFrontend as tabsFrontend } from '@holistix-forge/tabs/frontend';
 
 import { NewContainerForm } from './new-server';
 import { moduleFrontend as userContainersFrontend } from '../../frontend';
 
+// One project id, named once. The seeding module wrote to `'story'` while the
+// provider announced `'story-project'`: harmless only because the local
+// registry hands back the same document for every id, and a silent
+// "the form has no images" the moment it does not.
+const STORY_PROJECT_ID = 'story-project';
+
 //
+// `as const` on the type, and a `user_id` on the awareness user — the same
+// shape every other module story in this repository uses. Widened to `string`
+// the config still selected `NoneCollab` at runtime, so this worked; it was
+// simply the one file that would drift, and awareness code reading
+// `user.user_id` found nothing here.
 const collabConfig = {
-  type: 'none',
+  type: 'none' as const,
   room_id: 'whiteboard-story',
   simulateUsers: true,
-  user: { username: 'test', color: 'red' },
+  user: { user_id: 'story-user', username: 'test', color: 'red' },
+};
+
+// The frontend collab module takes the registry config; the backend still takes
+// the plain one. Wrapping rather than replacing keeps both honest, and the
+// factory hands back the same local document for every project — a story has
+// exactly one.
+const collabFrontendConfig = {
+  type: 'registry' as const,
+  createConfigForProject: () => collabConfig,
 };
 
 const modulesFrontend: { module: TModule<never, object>; config: object }[] = [
   {
     module: collabFrontend,
-    config: collabConfig,
+    config: collabFrontendConfig,
   },
   { module: reducersFrontend, config: {} },
   { module: coreFrontend, config: {} },
   { module: spaceFrontend, config: {} },
+  // user-containers declares tabs as a dependency; loadModules refuses to
+  // load it without one, and said so plainly.
+  { module: tabsFrontend, config: {} },
   {
     module: userContainersFrontend,
     config: {},
@@ -46,9 +71,9 @@ const modulesFrontend: { module: TModule<never, object>; config: object }[] = [
             collab: TCollabFrontendExports;
           }
         ).collab;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const images = collabExports.getCollabForProject('story').collab
-          .sharedData['user-containers:images'] as any;
+
+        const images = collabExports.getCollabForProject(STORY_PROJECT_ID)
+          .collab.sharedData['user-containers:images'] as any;
         images.set('test', {
           imageId: 'test',
           imageName: 'Test',
@@ -67,21 +92,23 @@ const StoryWrapper = () => {
   }, []);
 
   return (
-    <ModuleProvider exports={frontendModules}>
-      <NewContainerForm
-        projectId={''}
-        viewId={''}
-        position={{ x: 0, y: 0 }}
-        closeForm={() => null}
-      />
-    </ModuleProvider>
+    <CollabProjectProvider project_id={STORY_PROJECT_ID}>
+      <ModuleProvider exports={frontendModules}>
+        <NewContainerForm
+          projectId={''}
+          viewId={''}
+          position={{ x: 0, y: 0 }}
+          closeForm={() => null}
+        />
+      </ModuleProvider>
+    </CollabProjectProvider>
   );
 };
 
 //
 
 const meta = {
-  title: 'Modules/UserContainers/Forms/NewServer',
+  title: 'Modules/UserContainers/Components/Forms/NewServer',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

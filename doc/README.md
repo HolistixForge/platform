@@ -31,6 +31,7 @@ Welcome to the Holistix Forge documentation! This hub will guide you to the righ
 - 📦 **[Use Nx Workspace](guides/NX_WORKSPACE.md)** - Monorepo commands and workflows
 - 🎨 **[Build UI Components](guides/MODULES_TESTING.md)** - Module development with Storybook
 - 📸 **[Storybook & Visual Regression](guides/STORYBOOK.md)** - Story conventions, screenshot baselines, CI
+- 🗂️ **[Storybook Inventory](guides/STORYBOOK-INVENTORY.md)** - Every story ever added, what was lost, where each one belongs
 - 🔧 **[Package Architecture](guides/PACKAGE_ARCHITECTURE.md)** - React dependency management and package patterns
 - 🚀 **[Gateway Build Distribution](guides/GATEWAY_BUILD_DISTRIBUTION.md)** - HTTP build distribution system
 - 🔌 **[Module Reference](../packages/modules/README.md)** - Individual module documentation

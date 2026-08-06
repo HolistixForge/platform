@@ -16,7 +16,7 @@ const StoryWrapper = () => {
 //
 
 const meta = {
-  title: 'Forms/Fields/Totp',
+  title: 'Base/Components/Forms/Fields/Totp',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

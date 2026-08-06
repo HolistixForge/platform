@@ -5,7 +5,7 @@ import { SummaryAccesses } from './summary-accesses';
 //
 
 const meta = {
-  title: 'Mvp/Components/summary-accesses',
+  title: 'Mvp/Components/SummaryAccesses',
   component: SummaryAccesses,
   parameters: {
     layout: 'centered',

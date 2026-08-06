@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Sidebar, icons } from '@holistix-forge/ui-base';
 
@@ -10,8 +10,33 @@ import { SummaryAccesses } from '../components/summary-accesses';
 
 //
 
+export type NotebookViewView =
+  | 'biome-server'
+  | 'biome-server-view'
+  | 'biome-notebook';
+
 export type NotebookViewProps = {
   status: 'running' | 'loading' | 'stopped' | 'hosted';
+  /**
+   * Which of the three screens to open on.
+   *
+   * It exists because the component could not otherwise leave the first one.
+   * `activeView` started at `biome-server`, which has no content block at all —
+   * only the header, the resource bar and the sidebar — and the sole way to
+   * change it, `setActiveView`, is handed to `ResourceList` inside the
+   * `biome-server-view` branch. Reaching that branch required already being in
+   * it. So the screen painted its chrome around an empty column and stayed
+   * there, and `status` — read only under `biome-notebook` — never affected
+   * anything: the four stories rendered byte-identical DOM.
+   *
+   * It was never otherwise: `git log` over every revision since the file
+   * appeared on 2025-02-03 shows `useState('biome-server')` unchanged, and no
+   * content block for that view in any of them. The screen was born empty; it
+   * is not a regression to bisect.
+   *
+   * The default is unchanged, so nothing that mounts this component moves.
+   */
+  view?: NotebookViewView;
 };
 
 const Tags = ({ text, color }: { text: string; color?: string }) => {
@@ -39,8 +64,16 @@ const Tags = ({ text, color }: { text: string; color?: string }) => {
   );
 };
 
-export const NotebookView = ({ status }: NotebookViewProps) => {
-  const [activeView, setActiveView] = useState('biome-server');
+export const NotebookView = ({
+  status,
+  view = 'biome-server',
+}: NotebookViewProps) => {
+  const [activeView, setActiveView] = useState<NotebookViewView>(view);
+  // `useState` seeds once, and Storybook re-renders rather than remounting when
+  // an arg changes — so toggling the `view` control in the canvas set state
+  // nobody read and the screen never switched. Only picking a different story
+  // worked, because that remounts.
+  useEffect(() => setActiveView(view), [view]);
   const [tags, setTags] = useState<any>([
     {
       text: 'Boosting',
@@ -246,7 +279,13 @@ export const NotebookView = ({ status }: NotebookViewProps) => {
               </div>
               <div style={{ gridColumn: 'span 3' }}>
                 <ResourceList
-                  setActiveView={setActiveView}
+                  // ResourceList types this as `(view: string) => void`, so it
+                  // can hand back any string. Narrowing here keeps the state
+                  // honest without loosening the union the rest of the file
+                  // switches on.
+                  setActiveView={(v: string) =>
+                    setActiveView(v as NotebookViewView)
+                  }
                   displayTabs={false}
                 />
               </div>

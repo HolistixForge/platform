@@ -5,7 +5,7 @@ import { FilterBox } from './filter-box';
 //
 
 const meta = {
-  title: 'Mvp/Components/filter-box',
+  title: 'Mvp/Components/FilterBox',
   component: FilterBox,
   parameters: {
     layout: 'centered',

@@ -9,7 +9,7 @@ const ButtonWrap = (
   props: ResourceButtonsProps & {
     storyName: string;
     hover?: boolean;
-  },
+  }
 ) => {
   const action = useAction(
     () => {
@@ -29,7 +29,7 @@ const ButtonWrap = (
           Copied to clipboard <CopyIcon />
         </span>
       ),
-    },
+    }
   );
 
   return <ResourceButtons {...action} {...props} />;
@@ -43,6 +43,7 @@ const types: ResourceButtonsProps['type'][] = [
   'pause',
   'enter',
   'host',
+  'local',
   'cloud',
   'share',
   'docker',
@@ -117,7 +118,7 @@ const Story = () => (
 
 const meta: Meta<typeof Story> = {
   component: Story,
-  title: 'Basics/ResourceButtons',
+  title: 'Base/Assets/ResourceButtons',
   parameters: {
     layout: 'centered',
   },

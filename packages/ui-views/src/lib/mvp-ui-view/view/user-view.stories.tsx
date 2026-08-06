@@ -3,10 +3,10 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { UserView } from './user-view';
 
 const meta = {
-  title: 'Mvp/View/user-view',
+  title: 'Mvp/Views/UserView',
   component: UserView,
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
   argTypes: {
     editingUser: { control: 'boolean' },

@@ -5,7 +5,7 @@ import { ResourceDescription } from './resource-description';
 //
 
 const meta = {
-  title: 'Mvp/Components/resource-description',
+  title: 'Mvp/Components/ResourceDescription',
   component: ResourceDescription,
   parameters: {
     layout: 'centered',

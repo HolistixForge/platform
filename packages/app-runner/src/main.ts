@@ -9,6 +9,9 @@ import {
 } from './lib/credentials';
 import { disconnect, enrol, whoAmI } from './lib/enrol';
 import { dockerExec } from './lib/docker';
+import { selectEngine } from './lib/engine';
+import { appleEngine } from './lib/engine-apple';
+import { dockerEngine } from './lib/engine-docker';
 import { defaultReconcile, run, runOnce } from './lib/loop';
 
 /**
@@ -144,7 +147,28 @@ program
       return;
     }
 
-    const reconcileProject = defaultReconcile(credentials, dockerExec());
+    // Named by the environment, never sniffed from what is installed: a
+    // machine with both would get whichever the PATH happened to offer, and
+    // the two do not isolate the same way. On macOS this is `apple` — there is
+    // no Docker there at all, and a pass would stop at "cannot connect to the
+    // Docker daemon".
+    const engine = selectEngine(process.env.RUNNER_ENGINE, {
+      docker: dockerEngine,
+      apple: appleEngine,
+    });
+    const reconcileProject = defaultReconcile(
+      credentials,
+      engine,
+      dockerExec(process.env.RUNNER_ENGINE_BINARY || engine.binary)
+    );
+
+    if (engine.concessions.length) {
+      console.log(
+        `Engine ${engine.name}. Controls it cannot express: ${engine.concessions
+          .map((c) => c.id)
+          .join(', ')}`
+      );
+    }
 
     if (options.once) {
       const result = await runOnce({ credentials, reconcileProject });

@@ -16,7 +16,7 @@ const config: TBrokerConfig = {
   acceptedConcessions: [],
   hostname: 'platform-host-1',
   token: 'broker-token',
-  port: 9443,
+  port: 9080,
   maxLimits: { cpus: 4, memoryMb: 8192, pidsLimit: 2048 },
 };
 
@@ -64,6 +64,54 @@ describe('restarting an existing container', () => {
     };
     return { calls, exec };
   };
+
+  it('returns the identifier alone, not the engine progress with it', async () => {
+    // engineExec joins stderr onto stdout so a refused network delete becomes
+    // visible. Apple `container run --detach` puts the name on stdout and six
+    // progress lines on stderr, so the joined output starts with the name and
+    // continues with noise. That value is stored and later compared —
+    // ownership, removal, reconciliation — so carrying the noise makes the
+    // container unremovable by the broker that started it.
+    const exec = async (args: string[]) => {
+      if (args[1] === 'inspect') return '';
+      if (args[0] === 'run') {
+        return 'holistix_svc_uc_abc12345\n[0/6] [0s]\n[6/6] Starting container [1s]';
+      }
+      return '';
+    };
+
+    const id = await startContainer(dockerEngine, exec, request, image, config);
+
+    expect(id).toBe('holistix_svc_uc_abc12345');
+  });
+
+  it('falls back to the name it asked for when the first line is prose', async () => {
+    // "The first line is the identifier" holds only while stdout is non-empty.
+    // An engine that warned before printing, or wrote the name to stderr, would
+    // otherwise hand a sentence back as an id — and every later comparison,
+    // ownership and removal included, would then match nothing.
+    const exec = async (args: string[]) => {
+      if (args[1] === 'inspect') return '';
+      if (args[0] === 'run') return 'WARNING: the pool is nearly full';
+      return '';
+    };
+
+    expect(
+      await startContainer(dockerEngine, exec, request, image, config)
+    ).toBe(request.name);
+  });
+
+  it('returns a plain identifier unchanged', async () => {
+    const exec = async (args: string[]) => {
+      if (args[1] === 'inspect') return '';
+      if (args[0] === 'run') return '  9f3ab21c7d4e  ';
+      return '';
+    };
+
+    expect(
+      await startContainer(dockerEngine, exec, request, image, config)
+    ).toBe('9f3ab21c7d4e');
+  });
 
   it('removes its own container so the start can proceed', async () => {
     // Starting a service that already runs is how someone restarts it. Docker

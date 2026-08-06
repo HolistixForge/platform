@@ -1,3 +1,4 @@
+import { CollabProjectProvider } from '@holistix-forge/collab/frontend';
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { StoryApiContext } from '@holistix-forge/frontend-data';
@@ -20,34 +21,36 @@ const fakeFrontendModules = {
 
 const StoryWrapper = () => {
   return (
-    <ModuleProvider exports={fakeFrontendModules}>
-      <StoryApiContext
-        ganymedeApiMock={(r) => {
-          console.log({ r });
-          if (r.method === 'GET' && r.url.includes('users-search')) {
-            return Promise.resolve({
-              _0: randomGuys,
-            });
-          }
-          throw new Error('Not implemented');
-        }}
-      >
-        <NewNodeUserForm
-          viewId={''}
-          position={{ x: 0, y: 0 }}
-          closeForm={() => {
-            /**/
+    <CollabProjectProvider project_id="story-project">
+      <ModuleProvider exports={fakeFrontendModules}>
+        <StoryApiContext
+          ganymedeApiMock={(r) => {
+            console.log({ r });
+            if (r.method === 'GET' && r.url.includes('users-search')) {
+              return Promise.resolve({
+                _0: randomGuys,
+              });
+            }
+            throw new Error('Not implemented');
           }}
-        />
-      </StoryApiContext>
-    </ModuleProvider>
+        >
+          <NewNodeUserForm
+            viewId={''}
+            position={{ x: 0, y: 0 }}
+            closeForm={() => {
+              /**/
+            }}
+          />
+        </StoryApiContext>
+      </ModuleProvider>
+    </CollabProjectProvider>
   );
 };
 
 //
 
 const meta = {
-  title: 'Modules/Socials/Forms/NewNodeUser',
+  title: 'Modules/Socials/Components/Forms/NewNodeUser',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

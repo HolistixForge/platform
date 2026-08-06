@@ -3,10 +3,10 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { ServerView } from './server-view';
 
 const meta = {
-  title: 'Mvp/View/server-view',
+  title: 'Mvp/Views/ServerView',
   component: ServerView,
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
   argTypes: {},
 } satisfies Meta<typeof ServerView>;

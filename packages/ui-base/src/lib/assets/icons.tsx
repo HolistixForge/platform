@@ -3741,6 +3741,18 @@ export const icons = {
       </g>
     </svg>
   ),
+  /**
+   * The counterpart to `Cloud`: a service running on the user's own machine.
+   *
+   * Filled rather than stroked, because the resource buttons set `fill` and
+   * not `stroke` — a stroked path renders invisible on a `.host`-style button.
+   */
+  Laptop: ({ ...props }: IconProps) => (
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path d="M5 5.5A1.5 1.5 0 0 1 6.5 4h11A1.5 1.5 0 0 1 19 5.5v9.25H5V5.5Zm1.75.75v7h10.5v-7H6.75Z" />
+      <path d="M2.75 16.25h18.5c.41 0 .75.34.75.75v.5A2.5 2.5 0 0 1 19.5 20h-15A2.5 2.5 0 0 1 2 17.5V17c0-.41.34-.75.75-.75Z" />
+    </svg>
+  ),
   Discord: ({ ...props }: IconProps) => (
     <svg
       viewBox="0 -28.5 256 256"

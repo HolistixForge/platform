@@ -13,7 +13,7 @@ const StoryWrapper = (
 };
 
 const meta = {
-  title: 'Mvp/Assets/user-bubble',
+  title: 'Base/Assets/UserBubble',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

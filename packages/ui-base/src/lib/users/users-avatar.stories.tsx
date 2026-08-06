@@ -13,7 +13,7 @@ const UserAvatarStory = (props: UserAvatarProps) => {
 };
 
 const meta = {
-  title: 'Users/UserAvatar',
+  title: 'Base/Assets/UserAvatar',
   component: UserAvatarStory,
   parameters: {
     layout: 'centered',

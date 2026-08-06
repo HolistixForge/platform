@@ -31,7 +31,19 @@ export const moduleFrontend: TModule<TRequired> = {
   name: 'jupyter',
   version: '0.0.1',
   description: 'Jupyter module',
-  dependencies: ['core-graph', 'collab', 'whiteboard', 'user-containers'],
+  // `reducers` is read below as `depsExports.reducers.dispatcher`, and was
+  // missing here. `TRequired` declares it, so the compiler was satisfied while
+  // the loader — which injects from this array, not from the type — handed
+  // `undefined`. It went unnoticed because the only story that loaded this
+  // module also loaded reducers first for its own reasons; a story that loads
+  // the stack in dependency order crashes on it.
+  dependencies: [
+    'core-graph',
+    'collab',
+    'whiteboard',
+    'user-containers',
+    'reducers',
+  ],
   load: ({ depsExports, moduleExports }) => {
     // Register shared data schema with registry
     depsExports.collab.registry.registerSharedData('map', 'jupyter', 'servers');

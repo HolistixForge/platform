@@ -8,7 +8,7 @@ import './permissions-page.scss';
 const asyncNoop = async () => undefined;
 
 const meta = {
-  title: 'Users/PermissionsPage/RolesTab',
+  title: 'Base/Views/PermissionsPage/RolesTab',
   component: RolesTab,
   parameters: { layout: 'fullscreen' },
   args: {

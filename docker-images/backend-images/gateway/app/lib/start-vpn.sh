@@ -2,6 +2,18 @@
 
 set -x
 
+# Where this script lives — resolved here, before anything changes directory.
+#
+# `BASH_SOURCE[0]` is the path the script was invoked with, verbatim. Invoked
+# the way this directory's README documents (`./start-vpn.sh`) that is `.`, and
+# resolving it after the `cd "${TEMP_DIR}/easy-rsa"` below answers the
+# temporary directory instead. The scripts named in the OpenVPN config would
+# then be looked for somewhere they have never been.
+#
+# The production caller passes an absolute path, so this only bites the manual
+# invocation — which is the one a person uses when something is already wrong.
+_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Function for displaying error messages and exiting
 function error_exit {
     echo "{\"status\": \"error\", \"error\": \"$1\"}"
@@ -70,11 +82,48 @@ if [ "${VPN_PER_CLIENT_IDENTITY:-0}" = "1" ]; then
 # name for the scripts below.
 verify-client-cert require
 username-as-common-name
-auth-user-pass-verify /app/lib/vpn-auth-verify.sh via-file
-client-connect /app/lib/vpn-client-connect.sh
-script-security 2
+# `via-env`, not `via-file`.
+#
+# `via-file` has openvpn write the credentials to a temporary file and pass the
+# path. On 2.6.19 that fails outright — "could not write username/password to
+# file" — with the process running as root and `mktemp` in the same directory
+# succeeding by hand, and the method is deprecated upstream. Every client got
+# AUTH_FAILED: the identity check refusing everyone rather than checking
+# anything, which looks from the outside exactly like a wrong password.
+#
+# `via-env` needs `script-security 3` and puts the credentials in the script's
+# environment instead. No credential reaches the filesystem at all, which is
+# the better arrangement anyway; what it costs is that the environment of a
+# root-owned script is readable by root, which it already was.
+auth-user-pass-verify SCRIPT_DIR_PLACEHOLDER/vpn-auth-verify.sh via-env
+client-connect SCRIPT_DIR_PLACEHOLDER/vpn-client-connect.sh
+script-security 3
 IDENT
 )
+  # Next to *this* script, not /app/lib.
+  #
+  # The image bakes a copy of these scripts at /app/lib and the build tarball
+  # extracts another at /opt/gateway/app/lib. `pack` updates the second; the
+  # image only changes when it is rebuilt. Naming /app/lib meant the running
+  # gateway called a stale verifier — which, once the server started asking for
+  # credentials `via-env`, refused every client while the fixed copy sat
+  # unused a directory away.
+  _lib_dir="${_LIB_DIR}"
+  # Checked, because openvpn cannot say what is wrong with it.
+  #
+  # A missing `auth-user-pass-verify` script is reported as AUTH_FAILED for
+  # every client — indistinguishable from a wrong password, which is the most
+  # expensive way for this to be misconfigured. `BASH_SOURCE[0]` also names the
+  # caller's file when this script is sourced rather than executed, and a
+  # symlinked script resolves to its own directory and not the target's, so the
+  # directory is right in the cases that happen today and not by construction.
+  if [ ! -x "${_lib_dir}/vpn-auth-verify.sh" ]; then
+    error_exit "VPN_PER_CLIENT_IDENTITY=1 but ${_lib_dir}/vpn-auth-verify.sh is not executable — every client would be refused with AUTH_FAILED"
+  fi
+  if [ ! -x "${_lib_dir}/vpn-client-connect.sh" ]; then
+    error_exit "VPN_PER_CLIENT_IDENTITY=1 but ${_lib_dir}/vpn-client-connect.sh is not executable"
+  fi
+  PER_CLIENT_IDENTITY_CONFIG=${PER_CLIENT_IDENTITY_CONFIG//SCRIPT_DIR_PLACEHOLDER/${_lib_dir}}
 fi
 
 # Update OpenVPN configuration file with new paths and gateway VPN port

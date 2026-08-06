@@ -40,6 +40,7 @@ import {
 } from './servers-events';
 import { TUserContainersExports } from '..';
 import { SharedMap } from '@holistix-forge/collab-engine';
+import { TRunnerPlacement } from './placement-shape';
 
 //
 
@@ -83,6 +84,20 @@ export class UserContainersReducer extends ReducerWithCollab<
    * and the containers it had started are restarted through it anyway.
    */
   private readonly hostingTokens = new Map<string, string>();
+  /**
+   * What each container presents on the VPN, and not its hosting token.
+   *
+   * OpenVPN keeps a password in a fixed buffer — 128 bytes on the Alpine build
+   * of 2.6, larger on the Ubuntu one, and `--max-password-size` only lands in
+   * 2.7. A JWT is some 740 bytes, so the same container was admitted or
+   * refused depending on which base image it was built from, and the server
+   * said nothing but "wrong password". Measured: an Alpine container presented
+   * 127 characters of a 743-character token.
+   *
+   * Short, random, and per container. It also keeps a bearer token out of
+   * openvpn's memory and out of the environment of the scripts it runs.
+   */
+  private readonly vpnSecrets = new Map<string, string>();
 
   constructor(private readonly depsExports: TRequired) {
     super(depsExports.collab.registry, 'user-containers');
@@ -604,7 +619,14 @@ export class UserContainersReducer extends ReducerWithCollab<
     // The container is going; its credential should not outlive it. Rewritten
     // rather than left, because a token still in the file is one that would
     // still admit whatever presented it.
-    if (this.hostingTokens.delete(containerId)) {
+    // Republished when *either* map gave something up, not only the token map.
+    // `_publishVpnCredentials` writes from `vpnSecrets`, so a secret removed
+    // while no hosting token happened to exist alongside it would have stayed
+    // live in the file the VPN checks against — the two are written together
+    // everywhere today, and that is a coincidence this should not rest on.
+    const hadSecret = this.vpnSecrets.delete(containerId);
+    const hadToken = this.hostingTokens.delete(containerId);
+    if (hadSecret || hadToken) {
       await this._publishVpnCredentials();
     }
 
@@ -847,6 +869,7 @@ export class UserContainersReducer extends ReducerWithCollab<
     // loses by being refused, which looks from the UI like a service that will
     // not come up.
     this.hostingTokens.set(containerId, hostingToken);
+    this.vpnSecrets.set(containerId, this._newVpnSecret());
     await this._publishVpnCredentials();
 
     // Get runner from registry
@@ -878,6 +901,7 @@ export class UserContainersReducer extends ReducerWithCollab<
       gateway_fqdn: gatewayFqdn,
       organization_id,
       auth_guard_client_secret: authGuard?.client_secret,
+      vpn_secret: this.vpnSecrets.get(containerId),
       // Only in local development, and only from the gateway's environment:
       // this module cannot read process.env for itself.
       // `host-gateway` rather than the bridge address: a platform container
@@ -979,9 +1003,19 @@ export class UserContainersReducer extends ReducerWithCollab<
    * gateway no longer knows about should lose its entry, not linger as a
    * credential nobody can account for.
    */
+  /**
+   * 32 hex characters — well inside every OpenVPN build's buffer, and long
+   * enough that guessing it is not a strategy.
+   */
+  private _newVpnSecret(): string {
+    const bytes = new Uint8Array(16);
+    globalThis.crypto.getRandomValues(bytes);
+    return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+  }
+
   private async _publishVpnCredentials(): Promise<void> {
     await this.depsExports.gateway.recordVpnCredentials(
-      Array.from(this.hostingTokens.entries()).map(
+      Array.from(this.vpnSecrets.entries()).map(
         ([user_container_id, token]) => ({ user_container_id, token })
       )
     );
@@ -1099,6 +1133,149 @@ export class UserContainersReducer extends ReducerWithCollab<
       );
       return undefined;
     }
+  }
+
+  /**
+   * What one machine has been asked to run, in one project.
+   *
+   * Built here and not in the route, because everything a runner needs beyond
+   * the container's name lives on this gateway rather than in the collab
+   * document: the resolved image reference, the `SETTINGS` blob, and the
+   * hosting token — which is also the container's VPN password, and is kept
+   * out of the CRDT on purpose since that document reaches every browser in
+   * the project.
+   *
+   * The token is minted if this container has never been started. A machine
+   * that comes online for the first time and finds a placement waiting has to
+   * be able to act on it; refusing until somebody presses start again would
+   * make the runner useless for exactly the case it exists for.
+   */
+  async placementsFor(
+    project_id: string,
+    machine_id: string
+  ): Promise<TRunnerPlacement[]> {
+    const collab = this.getCollabForProject(project_id);
+    const sduc = collab.sharedData['user-containers:containers'];
+
+    const mine = Array.from(sduc.copy().values()).filter(
+      (c: TUserContainer) =>
+        c?.runner?.id === 'local' &&
+        (c.runner as { machine_id?: string })?.machine_id === machine_id
+    ) as TUserContainer[];
+
+    const gatewayExports = this.depsExports.gateway;
+    const organization_id = gatewayExports.organization_id;
+    const gatewayFqdn = gatewayExports.gatewayFQDN;
+    const domain = gatewayFqdn.split('.').slice(1).join('.') || 'domain.local';
+    const imageRegistry = this.depsExports['user-containers'].imageRegistry;
+    // Refused here rather than as a TypeError from inside the request handler.
+    // The local runner is registered unconditionally at module load, so this
+    // cannot happen today — which is exactly why it would be a bare
+    // `Cannot read properties of undefined` if registration order ever changed.
+    const runner = this.depsExports['user-containers'].getRunner('local');
+    if (!runner) {
+      throw new NotFoundException([{ message: 'Runner local not found' }]);
+    }
+
+    const placements: TRunnerPlacement[] = [];
+
+    for (const container of mine) {
+      const containerId = container.user_container_id;
+      // Whose machine this was placed on, recorded by `_setRunner`. Absent, the
+      // record predates that and there is no owner to tell the container about
+      // — `_start` refuses the same case outright, so this skips rather than
+      // handing the runner a placement with an empty user.
+      //
+      // The cast this loop used to make hid the mismatch: `TRunnerConfig`
+      // requires a `user_id` and this one is optional, which the compiler could
+      // not see through `unknown`.
+      const user_id = (container.runner as { user_id?: string })?.user_id;
+      if (!user_id) {
+        log(
+          EPriority.Warning,
+          'USER_CONTAINERS',
+          `Container ${containerId} is placed locally with no owner recorded — skipped`,
+          { machine_id }
+        );
+        continue;
+      }
+
+      let hostingToken = this.hostingTokens.get(containerId);
+      if (!hostingToken) {
+        hostingToken =
+          await this.depsExports.gateway.tokenManager.generateProjectScopedToken(
+            project_id,
+            {
+              type: 'user_container_token',
+              user_container_id: containerId,
+              scope: `project:${project_id}:access org:${organization_id}:connect-vpn`,
+            }
+          );
+        this.hostingTokens.set(containerId, hostingToken);
+        this.vpnSecrets.set(containerId, this._newVpnSecret());
+        await this._publishVpnCredentials();
+      }
+
+      const authGuard = await this._authGuardSecretFor(
+        container,
+        organization_id,
+        domain
+      );
+
+      const config = {
+        user_id,
+        project_id,
+        frontend_fqdn: domain,
+        ganymede_fqdn: `ganymede.${domain}`,
+        gateway_fqdn: gatewayFqdn,
+        organization_id,
+        auth_guard_client_secret: authGuard?.client_secret,
+        vpn_secret: this.vpnSecrets.get(containerId),
+        dev_host_ip: gatewayExports.environment?.devMode
+          ? 'host-gateway'
+          : undefined,
+      };
+
+      // A rotation replaced the OAuth client, so the container must carry the
+      // new id — and so must the shared document.
+      //
+      // Written back, and not only used locally. `_authGuardSecretFor` caches
+      // the new secret under the container id, so on the next poll it answers
+      // `known` and pairs it with `container.auth_guard.client_id` read from
+      // the document — the *old* id. Every request after a gateway restart
+      // then presented a stale id with a fresh secret, and the container's
+      // sign-in proxy was refused. `_startContainer` already persists this;
+      // this path did not.
+      const withGuard =
+        authGuard && authGuard.client_id !== container.auth_guard?.client_id
+          ? { ...container, auth_guard: { client_id: authGuard.client_id } }
+          : container;
+      if (withGuard !== container) sduc.set(containerId, withGuard);
+
+      // The same builder the runners use, so a placement and the command the
+      // local button prints cannot drift apart.
+      const spec = runner.buildLaunchSpec(
+        withGuard,
+        hostingToken,
+        imageRegistry,
+        config
+      );
+
+      placements.push({
+        machine_id,
+        project_id,
+        user_container_id: containerId,
+        name: spec.name,
+        imageRef: spec.imageRef,
+        settings: spec.settings,
+        capabilities: spec.capabilities,
+        devices: spec.devices,
+        extraHosts: spec.extraHosts,
+        networks: [],
+      });
+    }
+
+    return placements;
   }
 }
 

@@ -19,6 +19,15 @@ const LEGACY_SECRET_PLACEHOLDER = 'hashed';
  * Defense-in-depth: prevents rogue OAuth clients from redirecting to external domains.
  */
 function validateRedirectUris(redirectUris: string[], domain: string): boolean {
+  // Compared against `URL.hostname`, which never carries a port — so neither
+  // may this. DOMAIN does carry one wherever nginx is not on 443, and the
+  // comparison below is then false for every URI ever submitted: not a
+  // loosening of the check but a permanent refusal, and the caller is the
+  // gateway registering a user container's own sign-in endpoint. Starting a
+  // service would get a 400 saying its redirect is not a subdomain of a domain
+  // it plainly is a subdomain of.
+  const host = domain.split(':')[0];
+
   for (const uri of redirectUris) {
     let hostname: string;
     try {
@@ -27,7 +36,7 @@ function validateRedirectUris(redirectUris: string[], domain: string): boolean {
       return false;
     }
     // Must be exactly the domain or a subdomain of it
-    if (hostname !== domain && !hostname.endsWith('.' + domain)) {
+    if (hostname !== host && !hostname.endsWith('.' + host)) {
       return false;
     }
   }

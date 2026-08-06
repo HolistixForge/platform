@@ -3,10 +3,10 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { NotebookView } from './notebook-view';
 
 const meta = {
-  title: 'Mvp/View/notebook-view',
+  title: 'Mvp/Views/NotebookView',
   component: NotebookView,
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
   argTypes: {
     updateDescription: { control: 'boolean' },

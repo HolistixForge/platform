@@ -3,10 +3,10 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Accesses } from './accesses';
 
 const meta = {
-  title: 'Mvp/View/accesses',
+  title: 'Mvp/Views/Accesses',
   component: Accesses,
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
   argTypes: {},
 } satisfies Meta<typeof Accesses>;

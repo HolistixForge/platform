@@ -11,6 +11,7 @@ export type ResourceButtonsProps = {
     | 'pause'
     | 'enter'
     | 'host'
+    | 'local'
     | 'cloud'
     | 'share'
     | 'docker'
@@ -19,6 +20,13 @@ export type ResourceButtonsProps = {
   size?: 'small' | 'medium';
   actionOriginId?: string;
   style?: CSSProperties;
+  /**
+   * Passed through to `ButtonBase`. These buttons are icons with no text, so
+   * without a label the accessible name is empty — and `aria-pressed` is how
+   * "this is the chosen one" reaches anyone not looking at the colour.
+   */
+  ariaLabel?: string;
+  ariaPressed?: boolean;
 } & Partial<TAction>;
 
 //
@@ -31,6 +39,9 @@ export const ResourceButtons = (props: ResourceButtonsProps) => {
   else if (type === 'stop') Icon = icons.StopResource;
   else if (type === 'enter') Icon = icons.EnterResource;
   else if (type === 'cloud') Icon = icons.Cloud;
+  // `local` is `host` with a laptop where the word goes: same blue box, same
+  // size, so the pair reads as one choice rather than two unrelated buttons.
+  else if (type === 'local') Icon = icons.Laptop;
   else if (type === 'docker') Icon = ClipboardCopyIcon;
   else if (type === 'delete') Icon = TrashIcon;
 

@@ -12,8 +12,14 @@ import {
   moduleBackend as coreBackend,
   moduleFrontend as coreFrontend,
 } from '@holistix-forge/core-graph';
-import { moduleBackend as collabBackend } from '@holistix-forge/collab';
-import { moduleFrontend as collabFrontend } from '@holistix-forge/collab/frontend';
+import {
+  moduleBackend as collabBackend,
+  createLocalCollabRegistry,
+} from '@holistix-forge/collab';
+import {
+  moduleFrontend as collabFrontend,
+  CollabProjectProvider,
+} from '@holistix-forge/collab/frontend';
 import {
   moduleBackend as reducersBackend,
   TReducersBackendExports,
@@ -150,16 +156,32 @@ const ProxyCheckWrapper = ({ children }: { children: ReactNode }) => {
 //
 
 const collabConfig = {
-  type: 'none',
+  type: 'none' as const,
   room_id: 'whiteboard-story',
   simulateUsers: true,
-  user: { username: 'test', color: 'red' },
+  user: { user_id: 'story-user', username: 'test', color: 'red' },
+};
+
+// The frontend collab module takes the registry config; the backend still takes
+// the plain one. Wrapping rather than replacing keeps both honest, and the
+// factory hands back the same local document for every project — a story has
+// exactly one.
+const collabFrontendConfig = {
+  type: 'registry' as const,
+  createConfigForProject: () => collabConfig,
+};
+
+// The backend collab module re-exports whatever registry it is handed, and
+// core-graph reads it during its own load. Handing it nothing is what killed
+// these stories.
+const collabBackendConfig = {
+  registry: createLocalCollabRegistry(collabConfig),
 };
 
 const modulesBackend: { module: TModule<never, object>; config: object }[] = [
   {
     module: collabBackend,
-    config: collabConfig,
+    config: collabBackendConfig,
   },
   { module: reducersBackend, config: {} },
   { module: coreBackend, config: {} },
@@ -182,7 +204,7 @@ const modulesBackend: { module: TModule<never, object>; config: object }[] = [
 const modulesFrontend: { module: TModule<never, object>; config: object }[] = [
   {
     module: collabFrontend,
-    config: collabConfig,
+    config: collabFrontendConfig,
   },
   { module: reducersFrontend, config: {} },
   { module: coreFrontend, config: {} },
@@ -208,11 +230,13 @@ const Story = () => {
   return (
     <ProxyCheckWrapper>
       <StoryApiContext>
-        <ModuleProvider exports={frontendModules}>
-          <div style={{ height: '100vh', width: '100vw' }}>
-            <StoryWhiteboard />
-          </div>
-        </ModuleProvider>
+        <CollabProjectProvider project_id="story-project">
+          <ModuleProvider exports={frontendModules}>
+            <div style={{ height: '100vh', width: '100vw' }}>
+              <StoryWhiteboard />
+            </div>
+          </ModuleProvider>
+        </CollabProjectProvider>
       </StoryApiContext>
     </ProxyCheckWrapper>
   );
@@ -223,7 +247,7 @@ const Story = () => {
 //
 
 const meta = {
-  title: 'Modules/Airtable/Main',
+  title: 'Modules/Airtable/Views/Main',
   component: Story,
   parameters: {
     layout: 'fullscreen',

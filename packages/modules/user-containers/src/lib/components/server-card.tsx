@@ -19,7 +19,11 @@ import {
   DialogControlled,
   ButtonBase,
   ClickStopPropagation,
+  ResourceButtons,
+  UserBubble,
+  UserAvatar,
 } from '@holistix-forge/ui-base';
+import { TF_User } from '@holistix-forge/types';
 
 import { UserContainerSystemInfo, serviceUrl } from '../servers-types';
 import { StatusLed } from './status-led';
@@ -162,7 +166,25 @@ export const UserContainerCardInternal = ({
   onOpenService,
   onSelectRunner,
   runners,
-}: UseContainerProps & { runners: Map<string, TContainerRunnerFrontend> }) => {
+  liveUsers,
+  host,
+}: UseContainerProps & {
+  runners: Map<string, TContainerRunnerFrontend>;
+  /**
+   * Who is on this service right now, and whose machine it runs on.
+   *
+   * The same two props `notebook-card` carries, drawn the same way and in the
+   * same places, because the two cards sit in the same grid and a person
+   * reading them should not have to learn the layout twice.
+   *
+   * Optional, and nothing in the platform passes them yet: a container has no
+   * awareness channel of its own, so the users would have to come from the
+   * project's collab session. Left as props rather than invented inside the
+   * card, so whoever wires that decides what "on this service" means.
+   */
+  liveUsers?: TF_User[];
+  host?: TF_User;
+}) => {
   //
 
   const deleteAction = useAction(
@@ -220,7 +242,12 @@ export const UserContainerCardInternal = ({
           className="absolute flex items-center"
           style={{
             gap: '8px',
-            top: `calc(-25px - (var(--node-wrapper-header-height, 0px)))`,
+            // Above the card, 5px clear of it. `bottom: 100%` and not a
+            // negative `top`: the anchor is then the card's own top edge
+            // rather than a guess at how tall this line is, so the gap stays
+            // 5px whatever the font does to it. -18px put the line on the
+            // card; -25px left it floating.
+            bottom: `calc(100% + 5px + var(--node-wrapper-header-height, 0px))`,
           }}
         >
           <div
@@ -242,6 +269,39 @@ export const UserContainerCardInternal = ({
         </div>
       )}
 
+      {alive && liveUsers && liveUsers.length > 0 && (
+        <div
+          className="absolute flex items-center"
+          style={{
+            right: '-16px',
+            zIndex: 20,
+            top: '50%',
+            transform: 'translateY(-50%)',
+          }}
+        >
+          <UserBubble
+            users={liveUsers}
+            direction="vertical"
+            live={true}
+            size="small"
+          />
+        </div>
+      )}
+
+      {host && (
+        <div
+          className="absolute flex items-center"
+          style={{
+            left: '-20px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 20,
+          }}
+        >
+          <UserAvatar size="small" {...host} host />
+        </div>
+      )}
+
       <div className="flex justify-between">
         <div className="flex items-center" style={{ gap: '12px' }}>
           <p
@@ -254,7 +314,24 @@ export const UserContainerCardInternal = ({
           >
             {container.container_name}
           </p>
-          {image && (
+          {/* On the description and not on the image: a catalogue entry
+              without one rendered an empty 18px coloured box whose only
+              content was a hover title, which reads as a rendering fault. No
+              description, no badge. */}
+          {image?.description && (
+            // One line, clipped, with the whole of it on hover.
+            //
+            // The height was fixed at 18px with nothing said about overflow, so
+            // a description of any length wrapped and spilled straight out of
+            // the coloured box — "Minimal Ubuntu 24.04 container exposing only
+            // a web-based terminal" renders as two lines of text with a badge
+            // sized for one behind them. Descriptions come from the image
+            // catalogue and are sentences, not words, so this is the normal
+            // case rather than an edge one.
+            //
+            // `minWidth: 0` because this sits in a flex row: without it a flex
+            // item refuses to shrink below its content, and the ellipsis never
+            // engages no matter what `overflow` says.
             <span
               className="flex items-center justify-center font-bold"
               style={{
@@ -263,8 +340,15 @@ export const UserContainerCardInternal = ({
                 height: '18px',
                 fontSize: '12px',
                 padding: '0 8px',
+                minWidth: '0px',
+                maxWidth: '240px',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                display: 'block',
+                lineHeight: '18px',
               }}
-              title={image.imageName}
+              title={`${image.imageName} — ${image.description}`}
             >
               {image.description}
             </span>
@@ -346,39 +430,108 @@ export const UserContainerCardInternal = ({
               : 'Runs on'}
           </p>
         </div>
-        <div className="flex" style={{ gap: 'var(--spacing-4)' }}>
+        {/*
+          The two runners are `ResourceButtons`, not bordered chips. Where a
+          service runs is the same kind of choice as host-or-not on a notebook
+          card, and it was being drawn in a vocabulary used nowhere else on the
+          card. `local` is the laptop button added beside `cloud`; both carry
+          the blue box `host` already had, so the pair reads as one choice.
+
+          A runner the registry does not know still renders — as its own label
+          on a plain button — rather than disappearing, because a third runner
+          silently vanishing from the card is worse than one that looks odd.
+        */}
+        <div className="flex items-center" style={{ gap: 'var(--spacing-4)' }}>
+          {/*
+            Run control, the same shape `notebook-card` uses: one button per
+            state rather than one button that changes meaning. `alive` comes
+            from the watchdog, so a container whose watchdog has gone quiet
+            offers play, and one still reporting offers stop.
+
+            No action is wired to them yet — neither is there on notebook-card,
+            which is the component this mirrors. `UseContainerProps` carries
+            `onDelete` and `onSelectRunner` and nothing to start or stop with,
+            so wiring these means adding to what the card is given, not to how
+            it draws. Left visible and inert rather than hidden, because the
+            control belonging here is itself the thing to see.
+          */}
+          <ResourceButtons
+            size="small"
+            type={alive ? 'stop' : 'play'}
+            actionOriginId={alive ? 'container-stop' : 'container-play'}
+          />
+
+          <div
+            style={{
+              width: '1px',
+              height: '20px',
+              // The violet-pink of the design system's own ramp, not the
+              // activity dot's #F72585 — that one reads red against this
+              // card's purple and pulled the eye like a warning. A token
+              // rather than a hex, so it follows the ramp if it moves.
+              background: 'var(--primary-300)',
+              margin: '0 var(--spacing-4)',
+            }}
+          />
+
           {Array.from(runners.entries()).map(([runnerId, runner]) => {
             const active = container.runner.id === runnerId;
+            const known = runnerId === 'local' || runnerId === 'platform';
+            const label = active
+              ? `Restart on ${runner.label}`
+              : `Move to ${runner.label}`;
+            const select = () => onSelectRunner(runnerId);
             return (
+              // The click is on the button itself, and the wrapper only
+              // positions it.
+              //
+              // It was on the wrapper — first a div, then a div made into a
+              // button — and it never fired either way: `ButtonBase` opens its
+              // own handler with an unconditional `e.stopPropagation()`, so the
+              // click died on the inner button and never reached anything
+              // outside it. Choosing a runner did nothing at all, which is a
+              // dead control that looks alive. A button inside a button is also
+              // invalid HTML, and React says so.
+              //
+              // `ResourceButtons` spreads the rest of its props into
+              // `ButtonBase`, and `callback` is one of them — so the real
+              // button carries the behaviour and no hook is called per list
+              // entry. `stopPropagation` then becomes right rather than
+              // fatal: it keeps the card's own onClick from opening a service
+              // when somebody meant to change where it runs.
               <div
                 key={runnerId}
-                className="flex items-center cursor-pointer"
-                title={
-                  active
-                    ? `Restart on ${runner.label}`
-                    : `Move to ${runner.label}`
-                }
+                title={label}
                 style={{
-                  gap: 'var(--spacing-4)',
                   // The active runner is the one piece of state on this card
-                  // that is otherwise invisible once chosen.
-                  border: `1px solid ${
-                    active ? 'var(--color-accent)' : 'var(--color-border)'
-                  }`,
-                  background: active ? 'var(--color-bg-hover)' : 'transparent',
-                  color: active
-                    ? 'var(--color-text)'
-                    : 'var(--color-text-muted)',
-                  borderRadius: 'var(--radius-xs)',
-                  padding: 'var(--spacing-4)',
-                  transition: 'background 0.15s ease, border-color 0.15s ease',
-                }}
-                onClick={() => {
-                  onSelectRunner(runnerId);
+                  // that is otherwise invisible once chosen. Opacity says it
+                  // without a second border around a button that has one, and
+                  // `aria-pressed` on the button says the same thing to a
+                  // screen reader, which an opacity cannot.
+                  opacity: active ? 1 : 0.45,
+                  transition: 'opacity 0.15s ease',
+                  lineHeight: 0,
                 }}
               >
-                <runner.icon />
-                <p>{runner.label}</p>
+                {known ? (
+                  <ResourceButtons
+                    type={runnerId === 'local' ? 'local' : 'cloud'}
+                    size="small"
+                    actionOriginId={`runner-${runnerId}`}
+                    ariaLabel={label}
+                    ariaPressed={active}
+                    callback={select}
+                  />
+                ) : (
+                  <ButtonBase
+                    Icon={runner.icon}
+                    text={runner.label}
+                    className="resource small"
+                    ariaLabel={label}
+                    ariaPressed={active}
+                    callback={select}
+                  />
+                )}
               </div>
             );
           })}
@@ -391,7 +544,16 @@ export const UserContainerCardInternal = ({
         )}
       </div>
 
-      <TagsBar tags={tags} addTag={addTag} />
+      {/*
+        `marginTop: auto` and not a fixed offset: the card is a column with a
+        `minHeight`, and its middle grows — a container exposing several
+        services pushes everything down. Anchoring the tags to the bottom of
+        the flex box keeps them on the same line whatever is above them, which
+        a margin cannot do.
+      */}
+      <div style={{ marginTop: 'auto' }}>
+        <TagsBar tags={tags} addTag={addTag} />
+      </div>
 
       <div className="absolute" style={{ right: '16px', bottom: '20px' }}>
         <StatusLed color={color} type="server-card" />

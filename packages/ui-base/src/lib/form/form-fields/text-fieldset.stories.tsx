@@ -14,7 +14,7 @@ const StoryWrapper = (
     | 'disabled'
     | 'copyButton'
     | 'required'
-  >,
+  >
 ) => {
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     console.log(e.target.value);
@@ -24,7 +24,7 @@ const StoryWrapper = (
 //
 
 const meta = {
-  title: 'Forms/Fields/Text',
+  title: 'Base/Components/Forms/Fields/Text',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

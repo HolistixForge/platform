@@ -14,6 +14,12 @@ extract_settings() {
     export TOKEN=$(echo "$JSON_SETTINGS" | jq -r '.token')
     export PROJECT_ID=$(echo "$JSON_SETTINGS" | jq -r '.project_id')
     export USER_CONTAINER_ID=$(echo "$JSON_SETTINGS" | jq -r '.user_container_id')
+    # What this container presents on the VPN. Short on purpose — openvpn keeps
+    # a password in a fixed buffer and truncated the hosting token to 127
+    # characters on the Alpine build, which the server could only report as a
+    # wrong password. Falls back to the token so a container started by a
+    # gateway that predates this still connects.
+    export VPN_SECRET=$(echo "$JSON_SETTINGS" | jq -r '.vpn_secret // empty')
 
     # Auth Guard Proxy settings (per-container OAuth client)
     export AUTH_GUARD_CLIENT_ID=$(echo "$JSON_SETTINGS" | jq -r '.auth_guard.client_id // empty')
@@ -40,19 +46,87 @@ extract_settings
 # is the host. Measured on both: a container on a private Docker network and a
 # container in an Apple microVM each reach the host at their default route.
 #
-# Only for names that do not already resolve. A real DNS name in production, or
-# an entry the engine put there, is left exactly as it is — overriding one
-# would send a container to the wrong place for a reason nobody could see from
-# the outside.
-resolve_platform_hosts() {
-    HOST_IP=$(ip route 2>/dev/null | awk '/^default/{print $3; exit}')
-    [ -z "${HOST_IP}" ] && return 0
+# Only for names that do not already resolve *to somewhere this container can
+# go*. A real DNS name in production, or an entry the engine put there, is left
+# exactly as it is — overriding one would send a container to the wrong place
+# for a reason nobody could see from the outside. But a loopback answer is not
+# such a name: measured on macOS, the host's own CoreDNS answers 127.0.0.1 for
+# every platform name, which is right for the host and is this container
+# itself once inside a microVM.
+# The default route, without needing `ip`.
+#
+# `ip route` was the only source, and iproute2 is not in every image — the
+# ubuntu-terminal image in this repository's own catalogue does not have it.
+# The function then found nothing, returned early, and wrote no hosts entries
+# at all: measured, a container whose /etc/hosts had no platform name in it and
+# which reported "Gateway Down ?" every ten seconds forever. Silent, because
+# "no default route" and "no `ip` command" looked the same.
+#
+# /proc/net/route is the kernel's own table and needs no package. The gateway
+# column is little-endian hex, which is why the bytes come out backwards.
+default_gateway() {
+    _gw=$(ip route 2>/dev/null | awk '/^default/{print $3; exit}')
+    if [ -n "${_gw}" ]; then
+        echo "${_gw}"
+        return 0
+    fi
 
-    for name in "${GATEWAY_FQDN}" "${GANYMEDE_FQDN}" "${FRONTEND_FQDN}"; do
+    # Shell rather than awk: mawk is what these images ship and it has no
+    # `strtonum`, so the hex has to be converted with printf instead.
+    while read -r _iface _dest _gwhex _flags _refcnt _use _metric _mask _rest; do
+        [ "${_dest}" = "00000000" ] || continue
+        [ "${_mask}" = "00000000" ] || continue
+        [ ${#_gwhex} -eq 8 ] || continue
+        # A link-scope default route has no gateway, and its zero column would
+        # come out as the address `0.0.0.0`. That is non-empty, so the caller's
+        # emptiness check lets it through, and every platform name in
+        # /etc/hosts then points nowhere while looking, at a glance, correct.
+        [ "${_gwhex}" = "00000000" ] && continue
+        printf '%d.%d.%d.%d\n' \
+            "0x$(printf '%s' "${_gwhex}" | cut -c7-8)" \
+            "0x$(printf '%s' "${_gwhex}" | cut -c5-6)" \
+            "0x$(printf '%s' "${_gwhex}" | cut -c3-4)" \
+            "0x$(printf '%s' "${_gwhex}" | cut -c1-2)"
+        return 0
+    done < /proc/net/route 2>/dev/null
+    return 1
+}
+
+resolve_platform_hosts() {
+    HOST_IP=$(default_gateway | head -1)
+    [ -z "${HOST_IP}" ] && { echo "No default route found — platform names will not resolve"; return 0; }
+
+    for entry in "${GATEWAY_FQDN}" "${GANYMEDE_FQDN}" "${FRONTEND_FQDN}"; do
+        # Without the port. These FQDNs carry one wherever nginx is not on 443,
+        # because every URL built from them is a link somebody follows — and a
+        # hosts entry is not a URL. Written with the port, the line is
+        # `192.168.68.1 org-….apollo.test:8443`, which resolves nothing: the
+        # container then reports "Gateway Down ?" every ten seconds with an
+        # /etc/hosts that looks, at a glance, exactly right.
+        name="${entry%%:*}"
         [ -z "${name}" ] && continue
         [ "${name}" = "null" ] && continue
-        getent hosts "${name}" >/dev/null 2>&1 && continue
         grep -qE "[[:space:]]${name}\$" /etc/hosts 2>/dev/null && continue
+
+        RESOLVED=$(getent hosts "${name}" 2>/dev/null | awk '{print $1; exit}')
+        # Every spelling of loopback, and only loopback. `getent` can answer
+        # `0:0:0:0:0:0:0:1` or an IPv4-mapped form depending on the resolver,
+        # and those fell through to "a real address" — the exact failure this
+        # override exists to fix, differently formatted.
+        #
+        # `0.0.0.0` is deliberately *not* in this list. It is not loopback: it
+        # is what a resolver returns for a name it blackholes, which is an
+        # answer somebody configured on purpose. Overriding it would send the
+        # container to its default route past a deliberate block. The zero
+        # address does have to be rejected where it is genuinely meaningless —
+        # as a *default route* — and `default_gateway` does that on its own.
+        case "${RESOLVED}" in
+            '') ;;                       # nothing answered — ours to write
+            127.*|::1|0:0:0:0:0:0:0:1|::ffff:127.*) ;;
+                                         # answered with itself — not usable here
+            *) continue ;;               # a real address, and not ours to move
+        esac
+
         echo "${HOST_IP} ${name}" >>/etc/hosts
     done
 }
@@ -68,7 +142,53 @@ start_vpn() {
             value=$(printf "%s" "$certificates" | jq -r ".[\"${filename}\"]")
             echo "$value" >"$filename"
         done
-        printf "%s" "${CONFIG}" | jq -r '.config' | sed "s/GATEWAY_FQDN/${GATEWAY_FQDN}/g" >client.ovpn
+        # The hostname, not the FQDN, because the template is
+        # `remote GATEWAY_FQDN <vpn-port>` (collab.ts) — host and port are
+        # already two fields. Substituting a name that carries its own port
+        # produces `remote org-….apollo.test:8443 49200`, and openvpn spends
+        # forever on "Cannot resolve host address" for a name that is in
+        # /etc/hosts, correctly, without the port.
+        printf "%s" "${CONFIG}" | jq -r '.config' \
+            | sed "s/GATEWAY_FQDN/${GATEWAY_FQDN%%:*}/g" >client.ovpn
+
+        # Who this container is, on the tunnel.
+        #
+        # Every container in an organization shares one client certificate, so
+        # the certificate proves membership and nothing else: with
+        # `duplicate-cn` the server sees the common name `clients` for all of
+        # them, cannot tell two apart, and cannot give a particular one the
+        # address its network was allocated. The username is the container id
+        # and the password is the short secret the gateway minted for it and
+        # handed over in SETTINGS — the pair `vpn-auth-verify.sh` compares
+        # against the credentials file the gateway writes.
+        #
+        # Sent whether or not the server asks. A server without
+        # `auth-user-pass-verify` ignores them, which is what makes the rollout
+        # safe in this order: every container learns to send them first, and
+        # only then can VPN_PER_CLIENT_IDENTITY be turned on — the other order
+        # takes every service in every organization offline at once.
+        # `jq -r` prints the four characters `null` for a field that is not
+        # there, and those four characters are not empty. Without this the
+        # credentials file is written with `null` as the password and the
+        # container authenticates as a bogus identity instead of taking the
+        # branch below — which is a refusal at connect time that reads exactly
+        # like a wrong password. The FQDN loop above already tests for it; this
+        # is the same test, where it was missing.
+        VPN_PASSWORD="${VPN_SECRET:-${TOKEN}}"
+        [ "${VPN_PASSWORD}" = "null" ] && VPN_PASSWORD=""
+        VPN_IDENTITY="${USER_CONTAINER_ID}"
+        [ "${VPN_IDENTITY}" = "null" ] && VPN_IDENTITY=""
+        if [ -n "${VPN_IDENTITY}" ] && [ -n "${VPN_PASSWORD}" ]; then
+            printf '%s\n%s\n' "${VPN_IDENTITY}" "${VPN_PASSWORD}" >vpn-credentials
+            chmod 600 vpn-credentials
+            # `auth-nocache` because openvpn otherwise keeps them in memory to
+            # replay on reconnect, and this loop re-reads the file anyway —
+            # after a gateway restart the token it holds may be a new one.
+            printf 'auth-user-pass %s/vpn-credentials\nauth-nocache\n' "$(pwd)" >>client.ovpn
+        else
+            echo "No container id or token in SETTINGS — connecting without an identity"
+        fi
+
         openvpn --config client.ovpn &
     else
         echo "Gateway Down ?"
@@ -141,7 +261,14 @@ start_auth_guard() {
     fi
 
     # Build domain from gateway FQDN (org-{uuid}.{domain} -> {domain})
-    DOMAIN=$(echo "$GATEWAY_FQDN" | sed 's/^[^.]*\.//')
+    #
+    # Without the port. This becomes `--cookie-domain .${DOMAIN}`, and a cookie
+    # domain is a domain: a browser rejects `.apollo.test:8443` outright, so
+    # every container behind the auth guard would sign a user in and then hand
+    # them a cookie their browser drops. GATEWAY_FQDN carries a port wherever
+    # nginx is not on 443, because every URL built from it — the two lines
+    # below among them — is a link somebody follows.
+    DOMAIN=$(echo "$GATEWAY_FQDN" | sed 's/^[^.]*\.//' | cut -d: -f1)
 
     GUARD_FLAGS="--listen-port 8443 --admin-port 9999"
     GUARD_FLAGS="$GUARD_FLAGS --ganymede-url https://${GANYMEDE_FQDN}"

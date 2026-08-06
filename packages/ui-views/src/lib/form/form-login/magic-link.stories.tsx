@@ -19,7 +19,7 @@ const StoryWrapper = (
 //
 
 const meta = {
-  title: 'Forms/Account/MagicLink',
+  title: 'Mvp/Components/Forms/Account/MagicLink',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

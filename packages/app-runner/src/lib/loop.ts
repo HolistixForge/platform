@@ -6,7 +6,8 @@ import { sendHeartbeats } from './heartbeat';
 import { assertPlacementIsForUs } from './placement';
 import { fetchPlacements } from './placements';
 import { fetchProjects, RunnerRevoked, TRunnerProject } from './projects';
-import { reconcile, runArgs } from './reconcile';
+import { reconcile } from './reconcile';
+import { TRunnerEngine } from './engine';
 
 /**
  * The worker loop: ask, announce, reconcile, wait.
@@ -119,7 +120,12 @@ export const runOnce = async ({
  * a filter and verifying it.
  */
 export const defaultReconcile =
-  (credentials: TRunnerCredentials, exec: TDockerExec, fetchImpl = fetch) =>
+  (
+    credentials: TRunnerCredentials,
+    engine: TRunnerEngine,
+    exec: TDockerExec,
+    fetchImpl = fetch
+  ) =>
   async (project: TRunnerProject): Promise<void> => {
     const remote = await fetchPlacements(project, fetchImpl);
 
@@ -146,11 +152,12 @@ export const defaultReconcile =
     });
 
     const actions = await reconcile(
+      engine,
       exec,
       project.project_id,
       mine,
       async (placement) =>
-        (await exec(runArgs(placement, credentials.runner_id))).trim()
+        (await exec(engine.runArgs(placement, credentials.runner_id))).trim()
     );
 
     const changed = actions.filter((a) => a.action !== 'keep');

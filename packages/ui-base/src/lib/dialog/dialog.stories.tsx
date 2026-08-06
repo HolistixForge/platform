@@ -3,7 +3,7 @@ import { DialogControlled } from './dialog';
 
 const meta: Meta<typeof DialogControlled> = {
   component: DialogControlled,
-  title: 'Forms/DialogModal',
+  title: 'Base/Components/Forms/DialogModal',
 };
 export default meta;
 type Story = StoryObj<typeof DialogControlled>;

@@ -1,6 +1,6 @@
 import { TModule } from '@holistix-forge/module';
 import { TValidSharedData } from '@holistix-forge/collab-engine';
-import { Collab } from './lib/collab';
+import { Collab, NoneCollab, type NoneCollabConfig } from './lib/collab';
 import { Reducer, RequestData } from '@holistix-forge/reducers';
 
 //
@@ -80,8 +80,23 @@ export abstract class ReducerWithCollab<
           `Ensure the event includes project context.`
       );
     }
+    return this.getCollabForProject(requestData.project_id);
+  }
+
+  /**
+   * The same instance, for the paths that hold a project id rather than a
+   * request.
+   *
+   * A reducer serving something other than an event — the placements a runner
+   * polls for, say — has the project id already and no `RequestData` to put it
+   * in. Without this it would reach for the registry directly and get
+   * `Collab<TValidSharedData>`, whose shared data is a union with no `set`; the
+   * one caller doing that cast the result to `unknown` and lost every type it
+   * had.
+   */
+  protected getCollabForProject(project_id: string): Collab<TSharedData> {
     return this.collabRegistry.getCollabForProject(
-      requestData.project_id
+      project_id
     ) as Collab<TSharedData>;
   }
 }
@@ -97,6 +112,57 @@ export type TCollabBackendExports = {
    * - At runtime: passed to ReducerWithCollab constructor
    */
   registry: ICollabRegistry;
+};
+
+/**
+ * A registry over a single local document, for stories and tests.
+ *
+ * The backend collab module does nothing but re-export `config.registry`, so a
+ * caller that supplies no registry leaves every module loaded after it reading
+ * `depsExports.collab.registry` as undefined — which is how six module `Main`
+ * stories died, reporting "Cannot read properties of undefined (reading
+ * 'registerSharedData')" from inside core-graph rather than from collab.
+ *
+ * `NoneCollab` already exists for running without a server. What was missing is
+ * a registry shaped like `ICollabRegistry` to hand it back: the frontend
+ * registry cannot stand in, because it returns `{ collab, localOverrider }`
+ * where this interface returns the collab itself.
+ *
+ * One document is the right answer here rather than one per project — a story
+ * has exactly one — so every project id resolves to the same instance, and
+ * schema registered before it exists is applied when it is built.
+ */
+export const createLocalCollabRegistry = (
+  config: NoneCollabConfig
+): ICollabRegistry => {
+  const schema: {
+    sdtype: 'map' | 'array';
+    moduleName: string;
+    name: string;
+  }[] = [];
+  let collab: NoneCollab | undefined;
+
+  return {
+    registerSharedData: (sdtype, moduleName, name) => {
+      schema.push({ sdtype, moduleName, name });
+      // Modules register during load, which may be after the first read.
+      // loadSharedData is overloaded per literal, so the union has to be split.
+      if (!collab) return;
+      if (sdtype === 'map') collab.loadSharedData('map', moduleName, name);
+      else collab.loadSharedData('array', moduleName, name);
+    },
+    getCollabForProject: () => {
+      if (!collab) {
+        collab = new NoneCollab(config);
+        for (const e of schema) {
+          if (e.sdtype === 'map')
+            collab.loadSharedData('map', e.moduleName, e.name);
+          else collab.loadSharedData('array', e.moduleName, e.name);
+        }
+      }
+      return collab as unknown as Collab<TValidSharedData>;
+    },
+  };
 };
 
 export const moduleBackend: TModule<undefined, TCollabBackendExports> = {

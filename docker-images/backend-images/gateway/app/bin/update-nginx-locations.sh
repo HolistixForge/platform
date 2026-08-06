@@ -56,11 +56,21 @@ BEGIN { in_base_block = 0; base_block_count = 0; }
 # Nginx matches specific server_names before the catch-all server_name _, so these take precedence
 while read -r fqdn ip port; do
   if [[ -n "$fqdn" && -n "$ip" && -n "$port" ]]; then
+    # Without the port. These FQDNs are derived from DOMAIN, which carries one
+    # wherever nginx is not on 443 — every URL built from them is a link
+    # somebody follows, including the one on the service card. A `server_name`
+    # is not a URL: nginx matches it against the Host header with the port
+    # already stripped, so `server_name terminal.uc-x.org-y.apollo.test:8443`
+    # matches nothing at all. The request then falls through to the catch-all
+    # `server_name _` and is proxied to app-gateway instead of the container —
+    # every user service unreachable, answering something plausible from the
+    # wrong place.
+    server_host="${fqdn%%:*}"
     cat >> "${CONFIG_FILE}" <<EOF
 
 server {
     listen ${GATEWAY_HTTP_PORT};
-    server_name ${fqdn};
+    server_name ${server_host};
 
     location / {
         proxy_pass http://${ip}:${port};

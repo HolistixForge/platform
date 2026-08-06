@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Preview } from './Preview';
 
 const meta = {
-  title: 'UI/Preview',
+  title: 'Base/Components/Preview',
   component: Preview,
   parameters: {
     layout: 'centered',

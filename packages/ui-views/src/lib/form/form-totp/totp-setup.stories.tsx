@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { useAction } from '@holistix-forge/ui-base';
-import { TotpEnableFormData, TotpLoginFormData } from '@holistix-forge/frontend-data';
+import {
+  TotpEnableFormData,
+  TotpLoginFormData,
+} from '@holistix-forge/frontend-data';
 
 import { TotpSetupForm, TotpSetupFormProps } from './totp';
 
@@ -40,7 +43,7 @@ const StoryWrapper = (props: TotpSetupFormProps & { enabled: boolean }) => {
 //
 
 const meta = {
-  title: 'Forms/Account/Totp',
+  title: 'Mvp/Components/Forms/Account/Totp',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

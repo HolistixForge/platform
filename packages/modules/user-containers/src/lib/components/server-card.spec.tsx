@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { render, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import * as Tooltip from '@radix-ui/react-tooltip';
 
@@ -140,5 +140,142 @@ describe('UserContainerCardInternal — isolation', () => {
     // Assert
     expect(getByText(/Isolation not reported/)).toBeInTheDocument();
     expect(queryByText(/Own kernel/)).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * The image badge.
+ *
+ * Descriptions come from the image catalogue and are sentences — "Minimal
+ * Ubuntu 24.04 container exposing only a web-based terminal" is a real one.
+ * The badge had a fixed 18px height and said nothing about overflow, so that
+ * text wrapped to two lines and rendered *outside* the coloured box. The
+ * catalogue's own entries are the normal case, not an edge one, so the
+ * assertion uses one of them.
+ */
+describe('UserContainerCardInternal — image badge', () => {
+  const LONG =
+    'Minimal Ubuntu 24.04 container exposing only a web-based terminal';
+
+  const renderWithDescription = (description: string) => {
+    const args = makeStoryArgs();
+    args.image = {
+      imageId: '1',
+      imageName: 'ttyd ubuntu',
+      description,
+    };
+    return render(
+      <Tooltip.Provider>
+        <UserContainerCardInternal {...args} runners={new Map()} />
+      </Tooltip.Provider>
+    );
+  };
+
+  it('should keep a sentence-length description on one line', () => {
+    const { getByText } = renderWithDescription(LONG);
+    const badge = getByText(LONG);
+
+    expect(badge).toHaveStyle({ whiteSpace: 'nowrap' });
+    expect(badge).toHaveStyle({ overflow: 'hidden' });
+    expect(badge).toHaveStyle({ textOverflow: 'ellipsis' });
+  });
+
+  it('should be able to shrink inside the flex row it sits in', () => {
+    // Without this a flex item will not go below its content width, and the
+    // ellipsis never engages however the overflow is declared.
+    const { getByText } = renderWithDescription(LONG);
+    expect(getByText(LONG)).toHaveStyle({ minWidth: '0px' });
+  });
+
+  it('should offer the whole description, and the image, on hover', () => {
+    const { getByText } = renderWithDescription(LONG);
+    expect(getByText(LONG)).toHaveAttribute('title', `ttyd ubuntu — ${LONG}`);
+  });
+
+  it('should still show a short description in full', () => {
+    const { getByText } = renderWithDescription('jupyterlab pytorch');
+    expect(getByText('jupyterlab pytorch')).toBeInTheDocument();
+  });
+
+  it('should not render a badge for an image with no description', () => {
+    const args = makeStoryArgs();
+    args.image = { imageId: '1', imageName: 'ttyd ubuntu' };
+    const { queryByTitle } = render(
+      <Tooltip.Provider>
+        <UserContainerCardInternal {...args} runners={new Map()} />
+      </Tooltip.Provider>
+    );
+
+    // Guarded on the image alone it rendered an empty 18px coloured box whose
+    // only content was a hover title, which reads as a rendering fault.
+    expect(queryByTitle(/ttyd ubuntu/)).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * Choosing where a service runs is the card's one destructive-ish control, and
+ * it spent this branch inert: the wrapper carried the `onClick` while the
+ * button inside it opened with an unconditional `e.stopPropagation()`, so the
+ * event died before it left the button. Nothing looked wrong — the buttons
+ * render, they highlight, they have a tooltip — and clicking them did nothing.
+ *
+ * A rendering test cannot see that. Only firing the click can.
+ */
+describe('UserContainerCardInternal — choosing a runner', () => {
+  const RUNNERS = new Map([
+    ['local', { label: 'This machine', icon: () => null }],
+    ['platform', { label: 'Holistix', icon: () => null }],
+  ]) as never;
+
+  /** `makeStoryArgs` starts on no runner, so `on` says which one is chosen. */
+  const renderPicker = (on = 'none') => {
+    const picked: string[] = [];
+    const args = makeStoryArgs();
+    args.container = { ...args.container, runner: { id: on } };
+    args.onSelectRunner = async (id: string) => {
+      picked.push(id);
+    };
+    const r = render(
+      <Tooltip.Provider>
+        <UserContainerCardInternal {...args} runners={RUNNERS} />
+      </Tooltip.Provider>
+    );
+    return { ...r, picked };
+  };
+
+  it('tells the card which runner was clicked', () => {
+    const { getByLabelText, picked } = renderPicker();
+
+    fireEvent.click(getByLabelText('Move to This machine'));
+
+    expect(picked).toEqual(['local']);
+  });
+
+  it('offers the active runner as a restart rather than a move', () => {
+    const { getByLabelText, picked } = renderPicker('platform');
+
+    fireEvent.click(getByLabelText('Restart on Holistix'));
+
+    expect(picked).toEqual(['platform']);
+  });
+
+  it('says which runner is chosen in a form that is not an opacity', () => {
+    const { getByLabelText } = renderPicker('platform');
+
+    expect(getByLabelText('Restart on Holistix')).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(getByLabelText('Move to This machine')).toHaveAttribute(
+      'aria-pressed',
+      'false'
+    );
+  });
+
+  it('does not nest one button inside another', () => {
+    // Invalid HTML, and how the click came to be swallowed in the first place.
+    const { container } = renderPicker();
+
+    expect(container.querySelector('button button')).toBeNull();
   });
 });

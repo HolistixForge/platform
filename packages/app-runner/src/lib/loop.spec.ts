@@ -8,6 +8,7 @@ jest.mock('@holistix-forge/log', () => ({
   log: jest.fn(),
 }));
 
+import { dockerEngine } from './engine-docker';
 import { defaultReconcile, run, runOnce } from './loop';
 import { TRunnerProject } from './projects';
 
@@ -257,6 +258,7 @@ describe('defaultReconcile', () => {
     // Act
     await defaultReconcile(
       credentials,
+      dockerEngine,
       exec,
       gatewayServing([placement()])
     )(project());
@@ -275,6 +277,7 @@ describe('defaultReconcile', () => {
     // Act
     await defaultReconcile(
       credentials,
+      dockerEngine,
       exec,
       gatewayServing([placement({ machine_id: 'somebody-else' })])
     )(project());
@@ -290,6 +293,7 @@ describe('defaultReconcile', () => {
     // Act
     await defaultReconcile(
       credentials,
+      dockerEngine,
       exec,
       gatewayServing([placement({ imageRef: 'ghcr.io/acme/thing:v1' })])
     )(project());
@@ -305,6 +309,7 @@ describe('defaultReconcile', () => {
     // Act
     await defaultReconcile(
       credentials,
+      dockerEngine,
       exec,
       gatewayServing([
         placement({ machine_id: 'somebody-else' }),
@@ -325,6 +330,7 @@ describe('defaultReconcile', () => {
     // Act
     await defaultReconcile(
       credentials,
+      dockerEngine,
       exec,
       gatewayServing([placement({ project_id: 'project-2' })])
     )(project());

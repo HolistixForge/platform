@@ -11,7 +11,7 @@ const getUserRoles = (user_id: string) =>
   mockUserRoles[user_id]?.org_roles ?? [];
 
 const meta = {
-  title: 'Users/PermissionsPage/UsersTab',
+  title: 'Base/Views/PermissionsPage/UsersTab',
   component: UsersTab,
   parameters: { layout: 'fullscreen' },
   args: {

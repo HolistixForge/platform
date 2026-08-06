@@ -9,7 +9,7 @@ const errors = {
 
 const meta: Meta<typeof FormErrors> = {
   component: FormErrors,
-  title: 'Forms/Errors/FormErrors',
+  title: 'Base/Components/Forms/Errors/FormErrors',
 };
 export default meta;
 type Story = StoryObj<typeof FormErrors>;

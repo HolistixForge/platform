@@ -45,7 +45,7 @@ const Wrap = ({
 };
 
 const meta = {
-  title: 'Basics/Tags',
+  title: 'Base/Assets/Tags',
   component: Wrap,
   parameters: { layout: 'centered' },
 } satisfies Meta<typeof Wrap>;

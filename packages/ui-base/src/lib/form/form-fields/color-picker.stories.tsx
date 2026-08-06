@@ -8,7 +8,7 @@ import { ColorPicker } from './color-picker';
  * the canvas to inspect the grid and the opacity slider.
  */
 const meta = {
-  title: 'Forms/Fields/ColorPicker',
+  title: 'Base/Components/Forms/Fields/ColorPicker',
   component: ColorPicker,
   parameters: { layout: 'centered' },
   args: {

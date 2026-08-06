@@ -131,3 +131,54 @@ describe('ContainerRunner.generateCommand', () => {
     });
   });
 });
+
+/**
+ * The hosts entries handed to whatever starts the container.
+ *
+ * They exist because a container has to reach its gateway by FQDN before it
+ * has a tunnel, and in development that name is not in any DNS. They are
+ * *hostnames*, which is the whole point: the FQDNs they are built from carry a
+ * port wherever nginx does not listen on 443, and the broker refuses the entire
+ * start with "extra_hosts entry has a malformed host" — correctly.
+ */
+describe('ContainerRunner.buildLaunchSpec — extra hosts', () => {
+  const runner = new TestRunner();
+
+  const spec = (cfg: Partial<TRunnerConfig>) =>
+    runner.buildLaunchSpec(
+      container({ client_id: 'client-1' }),
+      'jwt-token',
+      imageRegistry(),
+      config({ dev_host_ip: '172.17.0.1', ...cfg })
+    );
+
+  it('should drop the port when the FQDNs carry one', () => {
+    const built = spec({
+      ganymede_fqdn: 'ganymede.apollo.test:8443',
+      gateway_fqdn: 'org-abc123.apollo.test:8443',
+    });
+
+    expect(built.extraHosts).toEqual([
+      { host: 'org-abc123.apollo.test', ip: '172.17.0.1' },
+      { host: 'ganymede.apollo.test', ip: '172.17.0.1' },
+    ]);
+    for (const entry of built.extraHosts) {
+      expect(entry.host).not.toContain(':');
+    }
+  });
+
+  it('should leave a portless FQDN exactly as it is', () => {
+    const built = spec({});
+
+    expect(built.extraHosts).toEqual([
+      { host: 'org-abc123.domain.local', ip: '172.17.0.1' },
+      { host: 'ganymede.domain.local', ip: '172.17.0.1' },
+    ]);
+  });
+
+  it('should send none at all when no dev host address is configured', () => {
+    // Production resolves these names for real; inventing entries there would
+    // send a container somewhere else for a reason invisible from outside.
+    expect(spec({ dev_host_ip: undefined }).extraHosts).toEqual([]);
+  });
+});

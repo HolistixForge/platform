@@ -1,3 +1,4 @@
+import { CollabProjectProvider } from '@holistix-forge/collab/frontend';
 import type { Meta, StoryObj } from '@storybook/react';
 
 import { useTestBoolean } from '@holistix-forge/ui-base';
@@ -33,30 +34,32 @@ const StoryWrapper = (
   const nodeId = 'whatever';
 
   return (
-    <ModuleProvider exports={fakeFrontendModules}>
-      <StoryMockSpaceContextReactflowBgAndCss
-        nodeId={nodeId}
-        selected={props.selected}
-        isOpened={isOpened}
-      >
-        <NodeChatAnchorInternal
+    <CollabProjectProvider project_id="story-project">
+      <ModuleProvider exports={fakeFrontendModules}>
+        <StoryMockSpaceContextReactflowBgAndCss
           nodeId={nodeId}
-          onOpen={open}
-          {...props}
+          selected={props.selected}
           isOpened={isOpened}
-          onClose={() => {
-            /**/
-          }}
-        />
-      </StoryMockSpaceContextReactflowBgAndCss>
-    </ModuleProvider>
+        >
+          <NodeChatAnchorInternal
+            nodeId={nodeId}
+            onOpen={open}
+            {...props}
+            isOpened={isOpened}
+            onClose={() => {
+              /**/
+            }}
+          />
+        </StoryMockSpaceContextReactflowBgAndCss>
+      </ModuleProvider>
+    </CollabProjectProvider>
   );
 };
 
 //
 
 const meta = {
-  title: 'Module/Chats/Components/Chat Anchor',
+  title: 'Modules/Chats/Components/Chat Anchor',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

@@ -5,10 +5,7 @@ import { useTestBoolean } from '../storybook-utils';
 //
 
 const StoryWrapper = (
-  props: Pick<
-    AccordionProps,
-    'title' | 'content' | 'isOpened' | 'functionName'
-  >,
+  props: Pick<AccordionProps, 'title' | 'content' | 'isOpened' | 'functionName'>
 ) => {
   const {
     is: isOpened,
@@ -21,7 +18,7 @@ const StoryWrapper = (
 //
 
 const meta = {
-  title: 'internals/Accordion',
+  title: 'Base/Components/Accordion',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

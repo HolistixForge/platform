@@ -30,7 +30,7 @@ const StoryWrapper = ({ failing }: { failing?: boolean }) => {
 //
 
 const meta = {
-  title: 'Forms/NewOrganization',
+  title: 'Mvp/Components/Forms/NewOrganization',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

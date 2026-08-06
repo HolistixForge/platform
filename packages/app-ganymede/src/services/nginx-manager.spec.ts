@@ -7,6 +7,7 @@
 
 import { NginxManager } from './nginx-manager';
 import fs from 'fs';
+import { exec } from 'child_process';
 
 // Mock dependencies
 jest.mock('child_process', () => ({
@@ -342,5 +343,123 @@ describe('NginxManager - Path Injection Protection', () => {
 
       expect(fs.promises.writeFile).not.toHaveBeenCalled();
     });
+  });
+});
+
+/**
+ * Where nginx is, and how it is told to reload.
+ *
+ * These are overridable so the same class can run on macOS, where nginx is
+ * Homebrew's on 8443 and Ganymede is in a container that cannot signal it. The
+ * point of the first block is the *defaults*: a Linux environment sets none of
+ * these, and must keep writing exactly what it wrote before.
+ */
+describe('NginxManager - placement', () => {
+  const ORG = '550e8400-e29b-41d4-a716-446655440000';
+  const OVERRIDES = [
+    'NGINX_GATEWAYS_DIR',
+    'NGINX_SSL_CERT',
+    'NGINX_SSL_KEY',
+    'NGINX_LOGS_DIR',
+    'NGINX_LISTEN_PORT',
+    'NGINX_TEST_COMMAND',
+    'NGINX_RELOAD_COMMAND',
+  ];
+
+  const written = () =>
+    (fs.promises.writeFile as jest.Mock).mock.calls[0] as [string, string];
+
+  beforeEach(() => {
+    process.env.ENV_NAME = 'test-env';
+    process.env.DOMAIN = 'test.local';
+    OVERRIDES.forEach((name) => delete process.env[name]);
+    jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    delete process.env.ENV_NAME;
+    delete process.env.DOMAIN;
+    OVERRIDES.forEach((name) => delete process.env[name]);
+  });
+
+  it('writes where it always has when nothing is set', async () => {
+    await new NginxManager().createGatewayConfig(ORG, '172.17.0.1:7100');
+
+    const [path, body] = written();
+    expect(path).toBe(
+      `/root/.local-dev/test-env/nginx-gateways.d/org-${ORG}.conf`
+    );
+    expect(body).toContain('listen 443 ssl;');
+    expect(body).toContain(
+      'ssl_certificate /root/.local-dev/test-env/ssl-cert.pem;'
+    );
+    expect(body).toContain(
+      'ssl_certificate_key /root/.local-dev/test-env/ssl-key.pem;'
+    );
+    expect(body).toContain('/root/.local-dev/test-env/logs/gateway-');
+  });
+
+  it('reloads the way it always has when nothing is set', async () => {
+    await new NginxManager().reloadNginx();
+
+    const commands = (exec as unknown as jest.Mock).mock.calls.map(
+      (call) => call[0]
+    );
+    expect(commands).toEqual(['sudo nginx -t 2>&1', 'sudo nginx -s reload']);
+  });
+
+  it('follows every override into the generated server block', async () => {
+    process.env.NGINX_GATEWAYS_DIR = '/Users/dev/.holistix-macos/gw.d';
+    process.env.NGINX_SSL_CERT = '/Users/dev/.holistix-macos/certs/d.pem';
+    process.env.NGINX_SSL_KEY = '/Users/dev/.holistix-macos/certs/d-key.pem';
+    process.env.NGINX_LOGS_DIR = '/Users/dev/.holistix-macos/logs';
+    process.env.NGINX_LISTEN_PORT = '8443';
+
+    await new NginxManager().createGatewayConfig(ORG, '127.0.0.1:7100');
+
+    const [path, body] = written();
+    expect(path).toBe(`/Users/dev/.holistix-macos/gw.d/org-${ORG}.conf`);
+    expect(body).toContain('listen 8443 ssl;');
+    expect(body).toContain(
+      'ssl_certificate /Users/dev/.holistix-macos/certs/d.pem;'
+    );
+    expect(body).toContain('/Users/dev/.holistix-macos/logs/gateway-');
+    // The address is still whatever the database holds, not a default.
+    expect(body).toContain('server 127.0.0.1:7100;');
+    // Nothing from the Linux layout leaked through.
+    expect(body).not.toContain('/root/.local-dev');
+  });
+
+  it('keeps the port out of server_name when DOMAIN carries one', async () => {
+    // DOMAIN has to carry the port wherever nginx does not listen on 443:
+    // every URL Ganymede builds from it is a link somebody follows, including
+    // the one it follows itself to health-check a gateway. `server_name` is
+    // the one place it must not appear — nginx matches it against the Host
+    // header with the port already removed, so a port here yields a regex
+    // that matches nothing and every org request lands on the default server.
+    process.env.DOMAIN = 'apollo.test:8443';
+    process.env.NGINX_LISTEN_PORT = '8443';
+
+    await new NginxManager().createGatewayConfig(ORG, '192.168.65.1:7200');
+
+    const [, body] = written();
+    expect(body).toContain(
+      `server_name ~^(.+\\.)?org-${ORG}\\.apollo\\.test$;`
+    );
+    expect(body).not.toContain('apollo\\.test:8443');
+    // The listen port is a port and stays one.
+    expect(body).toContain('listen 8443 ssl;');
+  });
+
+  it('runs the configured reload instead of signalling nginx directly', async () => {
+    process.env.NGINX_TEST_COMMAND = 'true';
+    process.env.NGINX_RELOAD_COMMAND = 'touch /shared/gw.d/.reload';
+
+    await new NginxManager().reloadNginx();
+
+    const commands = (exec as unknown as jest.Mock).mock.calls.map(
+      (call) => call[0]
+    );
+    expect(commands).toEqual(['true', 'touch /shared/gw.d/.reload']);
   });
 });

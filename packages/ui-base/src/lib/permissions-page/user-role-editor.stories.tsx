@@ -8,7 +8,7 @@ import './permissions-page.scss';
 const asyncNoop = async () => undefined;
 
 const meta = {
-  title: 'Users/PermissionsPage/UserRoleEditor',
+  title: 'Base/Views/PermissionsPage/UserRoleEditor',
   component: UserRoleEditor,
   parameters: { layout: 'centered' },
   args: {

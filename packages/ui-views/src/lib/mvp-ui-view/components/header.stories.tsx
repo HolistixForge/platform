@@ -26,7 +26,7 @@ const StoryWrapper = (
 };
 
 const meta = {
-  title: 'Mvp/Components/header',
+  title: 'Mvp/Components/Header',
   component: StoryWrapper,
   parameters: {
     layout: 'fullscreen',

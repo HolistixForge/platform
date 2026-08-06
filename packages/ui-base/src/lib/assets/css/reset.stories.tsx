@@ -32,7 +32,7 @@ const BareControls = () => (
 );
 
 const meta = {
-  title: 'Basics/Reset',
+  title: 'Base/Assets/CssReset',
   component: BareControls,
 } satisfies Meta<typeof BareControls>;
 

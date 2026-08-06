@@ -22,7 +22,7 @@ const StoryWrapper = ({
 //
 
 const meta = {
-  title: 'Modules/Space/Components/Node Toolbar',
+  title: 'Modules/Whiteboard/Assets/Node Toolbar',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

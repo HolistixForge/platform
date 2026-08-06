@@ -78,7 +78,7 @@ const StoryWrapper = (props: Record<string, never>) => {
 //
 
 const meta = {
-  title: 'Palette/Default',
+  title: 'Base/Assets/Palette',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

@@ -46,7 +46,7 @@ const config: TBrokerConfig = {
   acceptedConcessions: list('BROKER_ACCEPT_CONCESSIONS'),
   hostname: process.env.BROKER_HOSTNAME || hostname(),
   token: required('BROKER_TOKEN'),
-  port: number('BROKER_PORT', 9443),
+  port: number('BROKER_PORT', 9080),
   maxLimits: {
     cpus: number('BROKER_MAX_CPUS', 4),
     memoryMb: number('BROKER_MAX_MEMORY_MB', 8192),

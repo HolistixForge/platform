@@ -18,10 +18,19 @@
 CREDENTIALS="${VPN_CREDENTIALS:-/tmp/vpn-credentials}"
 VIA_FILE="$1"
 
-[ -f "${VIA_FILE}" ] || exit 1
-
-username=$(sed -n '1p' "${VIA_FILE}")
-password=$(sed -n '2p' "${VIA_FILE}")
+# Either method, because both exist in the wild: `via-env` puts them in the
+# environment, `via-file` writes a temporary file and passes the path. The
+# server asks for via-env — via-file is deprecated in OpenVPN 2.6 and, on
+# 2.6.19, simply fails to write the file — but a gateway still running an
+# older configuration must not start refusing everyone.
+if [ -n "${username:-}" ] && [ -n "${password:-}" ]; then
+  :
+elif [ -n "${VIA_FILE}" ] && [ -f "${VIA_FILE}" ]; then
+  username=$(sed -n '1p' "${VIA_FILE}")
+  password=$(sed -n '2p' "${VIA_FILE}")
+else
+  exit 1
+fi
 
 [ -z "${username}" ] && exit 1
 [ -z "${password}" ] && exit 1

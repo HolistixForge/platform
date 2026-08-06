@@ -6,7 +6,7 @@ import { expect } from '@storybook/test';
 
 const meta: Meta<typeof WrapperCssCoordinates> = {
   component: WrapperCssCoordinates,
-  title: 'internals/WrapperCssCoordinates',
+  title: 'Base/Components/WrapperCssCoordinates',
 };
 export default meta;
 type Story = StoryObj<typeof WrapperCssCoordinates>;

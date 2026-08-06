@@ -145,7 +145,7 @@ const StoryWrapper = ({ edgeShape }: { edgeShape: EdgeShape }) => {
 //
 
 const meta = {
-  title: 'Modules/Space/Components/Edges',
+  title: 'Modules/Whiteboard/Assets/Edges',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

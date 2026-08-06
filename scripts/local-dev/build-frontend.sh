@@ -5,7 +5,13 @@
 set -e
 
 ENV_NAME=$1
-WORKSPACE_PATH=${2:-"/root/workspace/monorepo"}
+# The Linux default first, and only fall back to this checkout when it is not
+# there — a dev container has both, and picking the wrong one would build the
+# frontend from a different tree than the one being served.
+DEFAULT_WORKSPACE="/root/workspace/monorepo"
+[ -d "$DEFAULT_WORKSPACE" ] || \
+  DEFAULT_WORKSPACE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+WORKSPACE_PATH=${2:-"$DEFAULT_WORKSPACE"}
 
 if [ -z "$ENV_NAME" ]; then
   echo "Usage: $0 <env-name> [workspace-path]"
@@ -14,21 +20,26 @@ if [ -z "$ENV_NAME" ]; then
   exit 1
 fi
 
-ENV_DIR="/root/.local-dev/${ENV_NAME}"
+# Two layouts, because there are two ways to stand an environment up and both
+# are current: create-env.sh writes .env.ganymede under /root/.local-dev, the
+# macOS harness writes ganymede.env under ~/.holistix-macos. The Linux pair is
+# tried first, so nothing changes there.
+ENV_FILE=""
+for candidate in \
+  "/root/.local-dev/${ENV_NAME}/.env.ganymede" \
+  "${HOME}/.holistix-macos/${ENV_NAME}/ganymede.env"; do
+  [ -f "$candidate" ] && { ENV_FILE="$candidate"; break; }
+done
 
-if [ ! -d "$ENV_DIR" ]; then
+if [ -z "$ENV_FILE" ]; then
   echo "❌ Environment '${ENV_NAME}' not found"
+  echo "   Looked for:"
+  echo "     /root/.local-dev/${ENV_NAME}/.env.ganymede   (Linux)"
+  echo "     ${HOME}/.holistix-macos/${ENV_NAME}/ganymede.env   (macOS)"
   echo "   Create it first: ./create-env.sh ${ENV_NAME}"
+  echo "                or: ./macos/ganymede-apple.sh up"
   exit 1
 fi
-
-# Read domain from environment configuration
-ENV_FILE="${ENV_DIR}/.env.ganymede"
-if [ ! -f "$ENV_FILE" ]; then
-  echo "❌ Environment config not found: $ENV_FILE"
-  exit 1
-fi
-
 DOMAIN=$(grep "^DOMAIN=" "$ENV_FILE" | cut -d= -f2 | tr -d '"' || echo "")
 if [ -z "$DOMAIN" ]; then
   echo "❌ DOMAIN not found in $ENV_FILE"
@@ -46,6 +57,15 @@ echo "🏗️  Building frontend for ${ENV_NAME}..."
 echo "   Domain: ${DOMAIN}"
 
 # Create .env for frontend build
+#
+# VITE_DOMAIN_NAME carries the port on the macOS layout, where DOMAIN is
+# `apollo.test:8443` — nginx does not listen on 443 there because binding under
+# 1024 needs root. That is an authority, not a hostname, so it is only safe
+# while every consumer builds a URL from it. Checked: the sole consumer is
+# `ApiContext` (app.tsx), which forms `https://${domain}` and
+# `https://ganymede.${domain}` — both URLs, both correct with a port. A cookie
+# domain or a hostname comparison would not be, and would fail the way the
+# session cookie in app.ts already did once.
 cat > packages/app-frontend/.env <<EOF
 VITE_ENVIRONMENT=${ENV_NAME}
 VITE_DOMAIN_NAME=${DOMAIN}
@@ -65,7 +85,8 @@ echo "✅ Frontend built for ${ENV_NAME}"
 echo "   Output: packages/app-frontend/dist/"
 echo "   Served by Nginx at: https://${DOMAIN}"
 echo ""
-echo "💡 Restart Nginx to pick up changes:"
-echo "   sudo service nginx reload"
+echo "💡 Reload nginx to pick up changes:"
+echo "   sudo service nginx reload    # Linux"
+echo "   nginx -s reload              # macOS, Homebrew, no sudo"
 echo ""
 

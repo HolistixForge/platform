@@ -132,6 +132,7 @@ span.button-root {
       }
 
       &.host,
+      &.local,
       &.docker,
       &.cloud,
       &.share {
@@ -208,6 +209,7 @@ span.button-root {
       }
 
       &.host,
+      &.local,
       &.docker {
         background: linear-gradient(
           257deg,

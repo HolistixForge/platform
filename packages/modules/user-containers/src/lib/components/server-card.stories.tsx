@@ -11,7 +11,10 @@ import {
   runningOnSharedKernelStory,
   StoryArgs,
 } from './server-card-stories';
+import { randomGuys } from '@holistix-forge/ui-base';
+
 import { localRunnerFrontend } from '../local-runner-frontend';
+import { platformRunnerFrontend } from '../platform-runner-frontend';
 
 //
 
@@ -19,7 +22,19 @@ const StoryWrapper = (props: StoryArgs) => {
   return (
     <UserContainerCardInternal
       {...props}
-      runners={new Map([['local', localRunnerFrontend]])}
+      // The same fixture the notebook card's story uses, so the two can be
+      // compared side by side — which is the whole reason they share a layout.
+      liveUsers={randomGuys.slice(0, 3)}
+      host={randomGuys[0]}
+      // Both runners, because the card's point is the choice between them:
+      // one registered runner drew a single button with nothing to compare it
+      // to, and the cloud half of the pair never appeared in any story.
+      runners={
+        new Map([
+          ['local', localRunnerFrontend],
+          ['platform', platformRunnerFrontend],
+        ])
+      }
     />
   );
 };

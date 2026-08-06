@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { dockerExec, listOwned, removeContainer, TDockerExec } from './docker';
 import { TPlacement } from './placement';
 import { planReconcile, reconcile, runArgs } from './reconcile';
+import { dockerEngine } from './engine-docker';
 
 /**
  * The reconcile loop against a real Docker daemon.
@@ -78,7 +79,13 @@ describeDocker('reconcile against a real daemon', () => {
     const p = placement();
 
     // Act
-    const actions = await reconcile(exec, project_id, [p], create);
+    const actions = await reconcile(
+      dockerEngine,
+      exec,
+      project_id,
+      [p],
+      create
+    );
     const owned = await listOwned(exec, project_id);
 
     // Assert - the labels are what make a second pass possible at all
@@ -95,7 +102,13 @@ describeDocker('reconcile against a real daemon', () => {
     const before = (await listOwned(exec, project_id))[0];
 
     // Act - the same placement again, which is the normal steady state
-    const actions = await reconcile(exec, project_id, [p], create);
+    const actions = await reconcile(
+      dockerEngine,
+      exec,
+      project_id,
+      [p],
+      create
+    );
     const after = (await listOwned(exec, project_id))[0];
 
     // Assert - same container id, so nothing was recreated behind the user's back
@@ -110,7 +123,13 @@ describeDocker('reconcile against a real daemon', () => {
     await exec(['stop', before.id]);
 
     // Act
-    const actions = await reconcile(exec, project_id, [p], create);
+    const actions = await reconcile(
+      dockerEngine,
+      exec,
+      project_id,
+      [p],
+      create
+    );
     const after = (await listOwned(exec, project_id))[0];
 
     // Assert - the same container, running again
@@ -126,6 +145,7 @@ describeDocker('reconcile against a real daemon', () => {
 
     // Act
     const actions = await reconcile(
+      dockerEngine,
       exec,
       project_id,
       [placement({ networks: [network, secondNetwork] })],
@@ -146,7 +166,13 @@ describeDocker('reconcile against a real daemon', () => {
     const before = (await listOwned(exec, project_id))[0];
 
     // Act
-    const actions = await reconcile(exec, project_id, [placement()], create);
+    const actions = await reconcile(
+      dockerEngine,
+      exec,
+      project_id,
+      [placement()],
+      create
+    );
     const after = (await listOwned(exec, project_id))[0];
 
     // Assert

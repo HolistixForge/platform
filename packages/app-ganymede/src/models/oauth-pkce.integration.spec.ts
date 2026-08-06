@@ -75,6 +75,7 @@ const challengeFor = (verifier: string) =>
 /** Stands in for oauth_clients and the code columns of oauth_tokens. */
 type StoredCode = {
   code: string;
+  client_id: string;
   code_expires_on: Date;
   code_redirect_uri: string;
   scope: string[];
@@ -96,6 +97,33 @@ const clientRow = {
   refresh_token_lifetime: 3600,
 };
 
+// A confidential client, alongside the public one.
+//
+// The OpenAPI schema stopped requiring `client_secret` on the token endpoint so
+// that a public client could exchange a code with PKCE. That widened what the
+// validator accepts for *every* client, so the tests below pin the other half:
+// a client that has a secret cannot get a token without presenting it, and
+// cannot buy its way past the check by attaching a code_verifier to a code that
+// never carried a challenge.
+const GUARD_CLIENT = 'auth-guard-client';
+const GUARD_SECRET = 'the-real-secret';
+
+const guardClientRow = {
+  client_id: GUARD_CLIENT,
+  client_secret: GUARD_SECRET,
+  client_secret_hash: null,
+  redirect_uris: ['https://svc.org-1.domain.local/callback'],
+  grants: ['authorization_code'],
+  expires_at: null,
+  access_token_lifetime: 600,
+  refresh_token_lifetime: 3600,
+};
+
+const CLIENTS: Record<string, unknown> = {
+  [RUNNER_CLIENT]: clientRow,
+  [GUARD_CLIENT]: guardClientRow,
+};
+
 const rows = (row: unknown | undefined) => ({
   next: () => (row ? { oneRow: () => row } : null),
 });
@@ -105,11 +133,12 @@ const installFakeDatabase = () => {
     .mocked(pg.query)
     .mockImplementation(async (sql: string, params: any[]) => {
       if (sql.startsWith('SELECT * FROM oauth_clients'))
-        return rows(params[0] === RUNNER_CLIENT ? clientRow : undefined) as any;
+        return rows(CLIENTS[params[0]]) as any;
 
       if (sql.startsWith('call proc_oauth_tokens_save_code')) {
         codes.set(params[2], {
           code: params[2],
+          client_id: params[0],
           code_expires_on: params[3],
           code_redirect_uri: params[5],
           scope: JSON.parse(params[4]),
@@ -124,7 +153,6 @@ const installFakeDatabase = () => {
         return rows(
           stored && {
             ...stored,
-            client_id: RUNNER_CLIENT,
             client_grants: ['authorization_code'],
             user_id: 'user-123',
             username: 'runner-tester',
@@ -158,7 +186,10 @@ const authorize = (params: Record<string, string>) => {
     query: {
       response_type: 'code',
       client_id: RUNNER_CLIENT,
-      redirect_uri: REDIRECT_URI,
+      redirect_uri:
+        params['client_id'] === GUARD_CLIENT
+          ? 'https://svc.org-1.domain.local/callback'
+          : REDIRECT_URI,
       state: 'a-state',
       scope: 'read',
       ...params,
@@ -184,7 +215,10 @@ const exchange = (body: Record<string, string>) => {
     body: {
       grant_type: 'authorization_code',
       client_id: RUNNER_CLIENT,
-      redirect_uri: REDIRECT_URI,
+      redirect_uri:
+        body['client_id'] === GUARD_CLIENT
+          ? 'https://svc.org-1.domain.local/callback'
+          : REDIRECT_URI,
       ...body,
     },
   });
@@ -279,6 +313,59 @@ describe('PKCE, end to end through the library', () => {
         code_challenge_method: 'S256',
       })
     ).rejects.toThrow(/redirect_uri/i);
+  });
+
+  // The other half of dropping `client_secret` from the OpenAPI `required`
+  // list. That change lets a public client through; these say it lets nothing
+  // else through with it.
+  describe('a client that has a secret still has to present it', () => {
+    const guardCode = () =>
+      authorize({ client_id: GUARD_CLIENT }).then((c) => c.authorizationCode);
+
+    it('issues a token when the secret is right', async () => {
+      const token = await exchange({
+        client_id: GUARD_CLIENT,
+        client_secret: GUARD_SECRET,
+        code: await guardCode(),
+      });
+
+      expect(token.accessToken).toBeTruthy();
+      expect(token.client.id).toBe(GUARD_CLIENT);
+    });
+
+    it('refuses an exchange with no secret at all', async () => {
+      // "cannot retrieve client credentials", not "missing client_secret": the
+      // library gives up in `getClientCredentials` before it reaches its own
+      // named check. The refusal is what matters; the wording is the library's.
+      await expect(
+        exchange({ client_id: GUARD_CLIENT, code: await guardCode() })
+      ).rejects.toThrow(/credential|client_secret/i);
+    });
+
+    it('refuses an exchange with the wrong secret', async () => {
+      await expect(
+        exchange({
+          client_id: GUARD_CLIENT,
+          client_secret: 'not-it',
+          code: await guardCode(),
+        })
+      ).rejects.toThrow();
+    });
+
+    it('refuses a code_verifier used to skip the secret', async () => {
+      // The gap worth pinning. The library waives the missing-secret check for
+      // anything that carries a `code_verifier` — that is what makes a public
+      // client work — so a stolen code plus any invented verifier would be a
+      // way past client authentication entirely. It is not: a code saved
+      // without a challenge and redeemed with a verifier is refused.
+      await expect(
+        exchange({
+          client_id: GUARD_CLIENT,
+          code: await guardCode(),
+          code_verifier: 'c'.repeat(43),
+        })
+      ).rejects.toThrow(/code verifier is invalid/);
+    });
   });
 
   it('leaves a used code unusable', async () => {
