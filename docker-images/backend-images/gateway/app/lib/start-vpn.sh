@@ -157,6 +157,19 @@ case "${VPN_PROTO}" in
   *) error_exit "GATEWAY_VPN_PROTO must be udp or tcp, got '${VPN_PROTO}'" ;;
 esac
 
+# `explicit-exit-notify` is a UDP-only option: it sends a datagram on exit so a
+# peer that has no connection state learns the session is over. TCP has that
+# state, so the option means nothing there.
+#
+# OpenVPN 2.6 says so and carries on — "NOTICE: --explicit-exit-notify ignored
+# for --proto tcp", measured on a gateway that then served every container
+# normally — so this is not what breaks a TCP tunnel. Emitting it anyway costs
+# a line of noise in a log people read while diagnosing, and leans on a
+# tolerance that earlier OpenVPN did not have: 2.4 treats the same
+# combination as a usage error and exits. Neither is worth relying on.
+EXIT_NOTIFY_CONFIG=""
+[ "${SERVER_PROTO}" = "udp" ] && EXIT_NOTIFY_CONFIG="explicit-exit-notify 1"
+
 # Update OpenVPN configuration file with new paths and gateway VPN port
 cat <<EOF >"${TEMP_DIR}/server.conf" || error_exit "Failed to write to config file"
 dev tun
@@ -204,7 +217,7 @@ verb 5
 duplicate-cn
 ${PER_CLIENT_IDENTITY_CONFIG}
 
-explicit-exit-notify 1
+${EXIT_NOTIFY_CONFIG}
 
 management 127.0.0.1 5555
 EOF

@@ -107,15 +107,27 @@ check_once() {
   local parents missing wanted
   parents="$(serving_parents)"
 
+  local sans
+  sans="$(cert_sans)"
+
+  # The union with what the certificate already covers, not a replacement.
+  #
+  # `serving_parents` is a snapshot, and a gateway that is restarting or slow
+  # contributes nothing to it — `container exec` fails and the failure is
+  # swallowed. Reissuing from that snapshot alone would drop every name whose
+  # gateway happened to be quiet during one pass, and `mkcert` writes only the
+  # names it is given: a service nobody touched would go unreachable in the
+  # browser the next time anything else triggered a rebuild. A name is only
+  # ever added here; the certificate is reissued from scratch when its own
+  # expiry comes, which is where forgetting belongs.
+  #
   # Every organization's own wildcard as well as every container's. The gateway
   # publishes `uc-{container}.org-{org}.{domain}` for the auth guard, whose
   # parent is the organization — so this falls out of the same list and there
   # is nothing extra to enumerate.
-  wanted="$(printf '%s\n' $parents | sort -u)"
+  wanted="$(printf '%s\n%s\n' "$parents" "$(printf '%s\n' "$sans" | grep '^\*\..*\.' || true)" \
+    | grep -v '^$' | sort -u)"
   [ -z "$wanted" ] && { note "no gateway is serving a user service yet"; return 0; }
-
-  local sans
-  sans="$(cert_sans)"
   missing=""
   local n
   for n in $wanted; do

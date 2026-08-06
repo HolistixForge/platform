@@ -54,12 +54,41 @@ const CARD_BOX = {
  *
  */
 
-const isAlive = (last_watchdog_at: string | null) => {
+export const isAlive = (
+  last_watchdog_at: string | null,
+  stopped_at?: string,
+  now: number = new Date().getTime()
+) => {
+  // Somebody stopped it, and that is not something a watchdog can say.
+  //
+  // The watchdog only reports; it cannot report *not* running, so for the
+  // thirty seconds after a stop the last report is still recent and the card
+  // went on showing the service as alive — offering "stop" for a container the
+  // broker had already removed, and no way to start it again until the window
+  // elapsed. Clicking stop again then did nothing visible, because the broker
+  // answers 404 for a container that is gone and this platform reads that as
+  // success.
+  //
+  // `_start` clears `stopped_at`, so this is one field rather than two states
+  // that have to agree.
+  if (stopped_at) {
+    const stoppedFor = (now - new Date(stopped_at).getTime()) / 1000;
+    // Only while it is the newer fact. A container that was stopped and later
+    // started reports again, and its own report is what should win from then
+    // on — otherwise a stale `stopped_at` would keep a running service looking
+    // dead. `_start` already clears the field; this holds if it ever does not.
+    const reportedAfter =
+      last_watchdog_at &&
+      new Date(last_watchdog_at).getTime() > new Date(stopped_at).getTime();
+    if (!reportedAfter && stoppedFor >= 0)
+      return { alive: false, color: 'red' as const };
+  }
+
   if (!last_watchdog_at) return { alive: false, color: 'red' as const };
 
   const d = new Date(last_watchdog_at);
 
-  const dateDiffSecondes = (new Date().getTime() - d.getTime()) / 1000;
+  const dateDiffSecondes = (now - d.getTime()) / 1000;
 
   let alive = false;
 
@@ -207,7 +236,10 @@ export const UserContainerCardInternal = ({
     setTags((prevState: Tag[]) => [...prevState, t]);
   };
 
-  const { alive, color } = isAlive(container.last_watchdog_at);
+  const { alive, color } = isAlive(
+    container.last_watchdog_at,
+    container.stopped_at
+  );
 
   // The run control, wrapped the same way `deleteAction` is: a click on it
   // reaches the gateway, and a gateway that refuses has to say so somewhere the
