@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   useCurrentUser,
   useMutationLogout,
@@ -23,6 +23,22 @@ export const HeaderLogic = () => {
     return logout.mutateAsync().then(() => navigate('/'));
   }, [logout, navigate]);
 
+  // The permissions key, on every page that has an organization to point it at.
+  //
+  // Only the project header passed this, so the key — and one of the two
+  // separators around it — vanished on the organization dashboard and on the
+  // permissions page itself, which is reached *through* that key. The same
+  // header, the same user, the entry appearing and disappearing by route.
+  //
+  // Read from the route rather than from project context, because that is what
+  // these pages have: they are all under `/org/:organization_id`. Where there
+  // is no organization in the URL — the account pages, the home page — there
+  // is nothing to link to and the key stays absent, as before.
+  const { organization_id } = useParams();
+  const permissionsLink = organization_id
+    ? `/org/${organization_id}/permissions`
+    : undefined;
+
   // Always render Header - it will show login/signup buttons when user is not logged in
   const user = meStatus === 'success' && me?.user.user_id ? me.user : undefined;
 
@@ -30,6 +46,7 @@ export const HeaderLogic = () => {
     <Header
       user={user}
       logoutAction={user ? logoutAction : undefined}
+      permissionsLink={permissionsLink}
       host
       share
       hasNotifications
