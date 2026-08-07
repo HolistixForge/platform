@@ -99,8 +99,8 @@ describe('assertPlacementIsForUs', () => {
   });
 
   it('should still refuse an unpinned tenant image', () => {
-    // The exemption is the flag, not the shape of the string. A tenant image
-    // reaching here unpinned is a resolution that did not happen.
+    // A tenant image reaching here unpinned is a resolution that did not
+    // happen.
     expect(() =>
       assertPlacementIsForUs(
         placement({ imageRef: 'ghcr.io/acme/thing:v1', builtin: false }),
@@ -120,6 +120,90 @@ describe('assertPlacementIsForUs', () => {
     expect(() =>
       assertPlacementIsForUs(withoutFlag as never, 'machine-1', projects)
     ).toThrow(/not digest-pinned/);
+  });
+
+  it('should refuse an unpinned image the message merely calls built-in', () => {
+    // The whole point. `builtin` arrives in the message, and this function is
+    // built on the opposite principle: `machine_id` comes from the runner's own
+    // credentials so the message cannot vouch for itself. Trusted, the flag let
+    // anything able to produce a placement for this runner start a mutable tag
+    // on a user's own machine.
+    expect(() =>
+      assertPlacementIsForUs(
+        placement({ imageRef: 'ghcr.io/attacker/thing:latest', builtin: true }),
+        'machine-1',
+        projects
+      )
+    ).toThrow(/not digest-pinned/);
+  });
+
+  it('should accept a platform image even when the message claims nothing', () => {
+    // The namespace decides, so the flag is a hint about intent and never the
+    // authority. A gateway that sends no flag at all still places the default
+    // terminal image.
+    expect(() =>
+      assertPlacementIsForUs(
+        placement({ imageRef: 'holistixforge/ubuntu-terminal:24.04' }),
+        'machine-1',
+        projects
+      )
+    ).not.toThrow();
+  });
+
+  it('should accept a platform image written with its registry host', () => {
+    // `holistixforge/x` and `docker.io/holistixforge/x` are the same image, and
+    // only the second form survives some resolvers.
+    expect(() =>
+      assertPlacementIsForUs(
+        placement({ imageRef: 'docker.io/holistixforge/n8n:1.97.1' }),
+        'machine-1',
+        projects
+      )
+    ).not.toThrow();
+  });
+
+  it('should refuse a namespace that merely ends with the platform one', () => {
+    // `evil.com/notholistixforge/x` contains the namespace without being under
+    // it — the check has to land on the boundary, not anywhere in the string.
+    for (const imageRef of [
+      'evil.com/notholistixforge/thing:latest',
+      'ghcr.io/holistixforge-evil/thing:latest',
+      'evil.com/x/holistixforge/thing:latest',
+    ]) {
+      expect(() =>
+        assertPlacementIsForUs(
+          placement({ imageRef, builtin: true }),
+          'machine-1',
+          projects
+        )
+      ).toThrow(/not digest-pinned/);
+    }
+  });
+
+  it('should let a deployment name its own namespace', () => {
+    // Said once, in the runner's own environment — the deployment speaking,
+    // not the placement.
+    const previous = process.env.PLATFORM_IMAGE_NAMESPACE;
+    process.env.PLATFORM_IMAGE_NAMESPACE = 'acme';
+    try {
+      expect(() =>
+        assertPlacementIsForUs(
+          placement({ imageRef: 'acme/thing:v1' }),
+          'machine-1',
+          projects
+        )
+      ).not.toThrow();
+      expect(() =>
+        assertPlacementIsForUs(
+          placement({ imageRef: 'holistixforge/thing:v1' }),
+          'machine-1',
+          projects
+        )
+      ).toThrow(/not digest-pinned/);
+    } finally {
+      if (previous === undefined) delete process.env.PLATFORM_IMAGE_NAMESPACE;
+      else process.env.PLATFORM_IMAGE_NAMESPACE = previous;
+    }
   });
 
   it('should refuse a digest that is not a full sha256', () => {

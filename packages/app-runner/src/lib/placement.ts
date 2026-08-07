@@ -99,9 +99,46 @@ export const assertPlacementIsForUs = (
   // for every image bump while closing nothing a tenant could exploit.
   // Applied to both, this refused every placement of the default terminal
   // image, which is the first thing anybody puts on their own machine.
-  if (!placement.builtin && !/@sha256:[0-9a-f]{64}$/.test(placement.imageRef)) {
+  //
+  // But the exemption is decided by the *reference*, not by the flag beside
+  // it. `builtin` arrives in the message, and this function is built on the
+  // opposite principle — `machine_id` comes from the runner's own credentials
+  // precisely so the message cannot vouch for itself. Read from the message,
+  // the flag let anything able to produce a placement for this runner start a
+  // mutable tag such as `ghcr.io/attacker/thing:latest` on a user's own
+  // machine, which is the whole outcome the pin exists to prevent.
+  //
+  // The namespace is a fact about the reference and cannot be asserted. Every
+  // built-in lives under one — see `BUILTIN_IMAGES` in the broker — so an
+  // unpinned reference is accepted only from there, and `builtin` becomes what
+  // it should always have been: a hint about intent, never the authority.
+  const unpinned = !/@sha256:[0-9a-f]{64}$/.test(placement.imageRef);
+  if (unpinned && !isPlatformImage(placement.imageRef)) {
     throw new PlacementRefused(
       `Image reference is not digest-pinned: ${placement.imageRef}`
     );
   }
+};
+
+/**
+ * Whether a reference names an image the platform itself publishes.
+ *
+ * The namespace, not a copy of the catalogue: a list duplicated onto every
+ * enrolled machine goes stale the moment an image is added, and the machines
+ * are laptops nobody redeploys. `PLATFORM_IMAGE_NAMESPACE` lets a deployment
+ * that publishes elsewhere say so once, in its own environment — which is the
+ * deployment speaking, not the placement.
+ *
+ * The registry host is optional in a reference: `holistixforge/x:1` and
+ * `docker.io/holistixforge/x:1` are the same image, and only the second form
+ * survives some resolvers. Both are accepted, and nothing else is — in
+ * particular a namespace that merely *ends* with ours, like
+ * `evil.com/notholistixforge/x`.
+ */
+const isPlatformImage = (imageRef: string): boolean => {
+  const ns = (
+    process.env.PLATFORM_IMAGE_NAMESPACE || 'holistixforge'
+  ).toLowerCase();
+  const ref = imageRef.toLowerCase();
+  return ref.startsWith(`${ns}/`) || ref.startsWith(`docker.io/${ns}/`);
 };
