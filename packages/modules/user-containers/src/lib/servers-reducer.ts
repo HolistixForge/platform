@@ -620,6 +620,25 @@ export class UserContainersReducer extends ReducerWithCollab<
       ]);
     }
 
+    // The container itself, first.
+    //
+    // Everything below removes a *reference* to it — the credential, the OAuth
+    // client, the entry in shared state, the nginx route, the node on the
+    // whiteboard. None of that touches the thing that is running. Deleting a
+    // service therefore left it alive on the platform with nothing in the
+    // platform pointing at it: measured, four such containers holding 9.4 GB,
+    // and nineteen private networks for three containers, because the broker
+    // removes a network with the container it belongs to and was never asked.
+    //
+    // Asked before the references go, and allowed to fail loudly. Removing them
+    // first and swallowing the error is what produces an orphan while reporting
+    // success — which is precisely the state this is fixing. A broker that
+    // cannot remove a container is a thing to see, not to route around.
+    const runner = this.depsExports['user-containers'].getRunner(
+      container.runner?.id ?? ''
+    );
+    if (runner) await runner.stop(container);
+
     // The container is going; its credential should not outlive it. Rewritten
     // rather than left, because a token still in the file is one that would
     // still admit whatever presented it.

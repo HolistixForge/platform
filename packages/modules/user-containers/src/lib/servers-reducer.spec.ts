@@ -317,6 +317,9 @@ describe('UserContainersReducer - Auth Guard OAuth Client Lifecycle', () => {
       },
       'user-containers': {
         imageRegistry: mockImageRegistry,
+        // `_delete` asks the runner to remove the container before it removes
+        // any reference to it, so a reducer without one cannot delete.
+        getRunner: () => ({ start: jest.fn(), stop: jest.fn() }),
       },
     };
 
@@ -1184,6 +1187,9 @@ describe('UserContainersReducer - VPN credentials', () => {
       'user-containers': {
         getRunner: () => ({
           start: jest.fn().mockResolvedValue({}),
+          // Deleting now reaches the runner, which is the point of the change
+          // this mock predates.
+          stop: jest.fn().mockResolvedValue(undefined),
         }),
         imageRegistry: {
           get: () => ({
@@ -1391,5 +1397,102 @@ describe('UserContainersReducer - stopping a service without deleting it', () =>
     const placements = await reducer.placementsFor('project-1', 'm-1');
 
     expect(placements.map((p) => p.user_container_id)).not.toContain('uc-2');
+  });
+});
+
+//
+
+describe('UserContainersReducer - deleting a service removes the service', () => {
+  let reducer: UserContainersReducer;
+  let containers: Map<string, any>;
+  let runnerStop: jest.Mock;
+  let updateReverseProxy: jest.Mock;
+  let processEvent: jest.Mock;
+
+  beforeEach(() => {
+    containers = new Map([
+      [
+        'uc-1',
+        {
+          user_container_id: 'uc-1',
+          container_name: 'one',
+          image_id: 'ubuntu:terminal',
+          runner: { id: 'platform' },
+          httpServices: [],
+        },
+      ],
+    ]);
+    runnerStop = jest.fn().mockResolvedValue(undefined);
+    updateReverseProxy = jest.fn();
+    processEvent = jest.fn();
+
+    reducer = new UserContainersReducer({
+      collab: {
+        registry: {
+          getCollabForProject: jest.fn(() => ({
+            sharedData: {
+              'user-containers:containers': {
+                get: (k: string) => containers.get(k),
+                set: (k: string, v: any) => containers.set(k, v),
+                copy: () => new Map(containers),
+                delete: (k: string) => containers.delete(k),
+                forEach: (fn: any) => containers.forEach(fn),
+              },
+            },
+          })),
+        },
+      },
+      reducers: { processEvent },
+      gateway: {
+        recordVpnCredentials: jest.fn(),
+        toGanymedeInternal: jest.fn().mockResolvedValue({}),
+        updateReverseProxy,
+        gatewayFQDN: 'org-1.domain.local',
+        organization_id: 'org-1',
+        permissionManager: { hasPermission: () => true },
+      },
+      'user-containers': {
+        getRunner: () => ({ start: jest.fn(), stop: runnerStop }),
+        imageRegistry: { get: () => ({ imageId: 'ubuntu:terminal' }) },
+      },
+    } as any);
+  });
+
+  const del = () =>
+    reducer.reduce(
+      { type: 'user-container:delete', user_container_id: 'uc-1' } as any,
+      { project_id: 'project-1', jwt: { user: { id: 'user-1' } } } as any
+    );
+
+  it('asks the runner to remove the container, not only its references', async () => {
+    // Everything else `_delete` does removes a *reference*: the credential, the
+    // OAuth client, the shared-state entry, the nginx route, the node. None of
+    // it touches what is running. Measured before this: four deleted services
+    // still alive on the platform holding 9.4 GB, and nineteen private networks
+    // for three containers — the broker removes a network with its container
+    // and was never asked.
+    await del();
+
+    expect(runnerStop).toHaveBeenCalledTimes(1);
+    expect(containers.get('uc-1')).toBeUndefined();
+  });
+
+  it('keeps the service when the runner could not remove it', async () => {
+    // Removing the references and swallowing the failure is what produces an
+    // orphan while reporting success.
+    runnerStop.mockRejectedValue(new Error('broker is down'));
+
+    await expect(del()).rejects.toThrow('broker is down');
+    expect(containers.get('uc-1')).toBeDefined();
+  });
+
+  it('still takes the service off the gateway and the whiteboard', async () => {
+    await del();
+
+    expect(updateReverseProxy).toHaveBeenCalledWith('project-1', []);
+    expect(processEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'core:delete-node' }),
+      expect.anything()
+    );
   });
 });
