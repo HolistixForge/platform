@@ -11,7 +11,8 @@
 #   ./gateway-apple.sh broker    the container broker, without which the
 #                                service card offers only the local runner
 #   ./gateway-apple.sh up [n]    register n gateways and run them
-#   ./gateway-apple.sh resume    start the ones that already exist
+#   ./gateway-apple.sh resume    reconcile, then start the ones that exist
+#   ./gateway-apple.sh reconcile make the containers and the rows agree
 #   ./gateway-apple.sh list      what is running, and where
 #   ./gateway-apple.sh logs [i]  one container's gateway log
 #   ./gateway-apple.sh down      remove this environment's gateway containers
@@ -100,11 +101,38 @@ STATE="${CONF_DIR}/${ENV_NAME}"
 BUILDS="${CONF_DIR}/builds"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 CMDS="${REPO_ROOT}/dist/packages/app-ganymede-cmds/main.js"
+CMDS_IMAGE="${CMDS_IMAGE:-docker.io/library/node:22-alpine}"
 
 GREEN='\033[0;32m'; RED='\033[0;31m'; GRAY='\033[0;90m'; NC='\033[0m'
 ok()   { printf "  ${GREEN}✓${NC} %s\n" "$1"; }
 ko()   { printf "  ${RED}✗${NC} %s\n" "$1"; }
 note() { printf "  ${GRAY}%s${NC}\n" "$1"; }
+
+# app-ganymede-cmds writes a gateway's row itself and signs its token, so it
+# needs the database. On macOS it cannot have it from this host: `node`
+# answers EHOSTUNREACH for every container address, every time, while `nc`,
+# `curl` and `python3` connect to the same address and port from the same
+# shell. That is the local-network privacy check, which exempts Apple's own
+# binaries in /usr/bin and not Homebrew's node — and a reboot resets it, so a
+# pool that registered yesterday fails to register today with no change to
+# anything here. Measured against Postgres at 192.168.65.35:5432.
+#
+# Granting the permission by hand fixes it until the next reset. Running the
+# bundle in a container on the same network removes the question: nothing on
+# the host opens the socket. It costs one microVM boot per call, a few seconds.
+run_cmds() {
+  container run --rm --network "$NET" \
+    --volume "$(dirname "$CMDS"):/cmds" \
+    -e "PG_HOST=${PG_HOST:-}" \
+    -e "PG_PORT=${PG_PORT:-5432}" \
+    -e "PG_DATABASE=${PG_DATABASE:-}" \
+    -e "PG_USER=${PG_USER:-}" \
+    -e "PG_PASSWORD=${PG_PASSWORD:-}" \
+    -e "JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY:-}" \
+    -e "JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY:-}" \
+    -e "LOG_LEVEL=${LOG_LEVEL:-3}" \
+    -- "$CMDS_IMAGE" node /cmds/main.js "$@"
+}
 
 command -v container >/dev/null || {
   echo "Apple 'container' is not installed — https://github.com/apple/container"
@@ -378,9 +406,11 @@ node_broker() {
 # --------------------------------------------------------------------------
 # up
 # --------------------------------------------------------------------------
-cmd_up() {
-  local count="${1:-$COUNT_DEFAULT}"
-
+# Everything a registration needs that is per-run rather than per-gateway.
+#
+# Sets HOST_GATEWAY, which the caller passes to create_gateway, and exports the
+# database and key environment run_cmds hands to app-ganymede-cmds.
+prepare_registration() {
   [ -f "$CMDS" ] || {
     ko "app-ganymede-cmds is not built. Run:"
     note "NX_DAEMON=false npx nx build app-ganymede-cmds"
@@ -399,11 +429,11 @@ cmd_up() {
     return 1
   }
 
-  local pgip host
+  local pgip
   pgip="$(ip_of "$PG")"
-  host="$(host_gateway)"
+  HOST_GATEWAY="$(host_gateway)"
   [ -n "$pgip" ] || { ko "Postgres is not running — ganymede-apple.sh up"; return 1; }
-  [ -n "$host" ] || { ko "could not read the network gateway from ${PG}"; return 1; }
+  [ -n "$HOST_GATEWAY" ] || { ko "could not read the network gateway from ${PG}"; return 1; }
 
   cmd_serve || return 1
   cmd_broker || return 1
@@ -416,6 +446,13 @@ cmd_up() {
   export JWT_PRIVATE_KEY JWT_PUBLIC_KEY
   JWT_PRIVATE_KEY="$(cat "${STATE}/jwt.key")"
   JWT_PUBLIC_KEY="$(cat "${STATE}/jwt.pub")"
+}
+
+cmd_up() {
+  local count="${1:-$COUNT_DEFAULT}"
+
+  prepare_registration || return 1
+  local host="$HOST_GATEWAY"
 
   # The highest suffix in use, not how many there are. With gw-pool-<env>-0
   # deleted and -1 still running, a count of 1 names the new one -1 as well —
@@ -428,7 +465,24 @@ cmd_up() {
 
   local i
   for ((i = 0; i < count; i++)); do
-    local index=$((existing + i))
+    create_gateway "$((existing + i))" "$host" || return 1
+  done
+
+  echo
+  cmd_list
+}
+
+# Register one gateway and run its container.
+#
+# Split out of cmd_up so `reconcile` can rebuild a single index without
+# renumbering the pool: a container whose row is gone has to be recreated, and
+# recreating it at the next free index would move its ports out from under the
+# nginx upstream that already points at them.
+#
+# The caller prepares the environment — Postgres address, JWT keys, the build
+# server and the broker — because those are per-run, not per-gateway.
+create_gateway() {
+    local index="$1" host="$2"
     local name="gw-pool-${ENV_NAME}-${index}"
     local http=$((HTTP_BASE + index))
     local vpn=$((VPN_BASE + index))
@@ -444,6 +498,19 @@ cmd_up() {
     # On Linux the docker0 bridge address plays exactly this role, for exactly
     # this reason.
     local upstream="${host}:${http}"
+
+    # The container this one replaces goes before the port check, not after.
+    #
+    # `reconcile` rebuilds a gateway at its own index, and that gateway is
+    # running: it holds ${http} and ${vpn}, so the check below named Apple's
+    # own runtime as the holder and refused — the pool could never repair
+    # itself, which is the whole point of reconcile. Measured, rebuilding
+    # gw-pool-apollo-0 with its row deleted.
+    #
+    # Nothing is lost by deleting first: this container is going to be replaced
+    # either way, and on the path where the port really is taken by something
+    # foreign it would have been force-deleted a few lines further down.
+    container delete --force "$name" >/dev/null 2>&1
 
     # Before the row, not after. `container run` reports a busy port as
     # "Address already in use" and exits without creating anything — while the
@@ -473,7 +540,7 @@ cmd_up() {
       fi
       if [ -n "$holder" ]; then
         ko "port ${port}/${proto} is taken by $(ps -p "$holder" -o comm= 2>/dev/null || echo "pid ${holder}") (pid ${holder})"
-        note "Give this pool another range:  HTTP_BASE=7200 VPN_BASE=49200 $0 up ${count}"
+        note "Give this pool another range:  HTTP_BASE=7200 VPN_BASE=49200 $0 up"
         return 1
       fi
     done
@@ -485,11 +552,11 @@ cmd_up() {
     # was computed from the containers that exist, so a row here with no
     # container behind it is an orphan. Left alone it makes every later `up`
     # fail on a constraint violation with a stack trace and no name in it.
-    node "$CMDS" remove-gateway -c "$name" >/dev/null 2>&1 \
+    run_cmds remove-gateway -c "$name" >/dev/null 2>&1 \
       && note "removed a leftover row for ${name}"
 
     local out id token
-    out="$(LOG_LEVEL=6 node "$CMDS" add-gateway \
+    out="$(LOG_LEVEL=6 run_cmds add-gateway \
       -gv 0.0.1 -c "$name" -hp "$http" -vp "$vpn" -nu "$upstream" 2>&1)"
     id="$(printf '%s' "$out" | grep 'gateway_id:' | grep -oE '[a-f0-9-]{36}' | head -1)"
     token="$(printf '%s' "$out" | grep '^token:' | awk '{print $2}')"
@@ -498,8 +565,6 @@ cmd_up() {
       printf '%s\n' "$out" | tail -5
       return 1
     fi
-
-    container delete --force "$name" >/dev/null 2>&1
 
     # GANYMEDE_API_URL is an address and not a name on purpose: this call is
     # made before anything has resolved anything, and the Host header carries
@@ -563,19 +628,83 @@ cmd_up() {
     [ -n "$ip" ] \
       && ok "${name} up at ${ip}" \
       || { ko "${name} did not start — container logs ${name}"; return 1; }
-  done
-
-  echo
-  cmd_list
 }
 
 # --------------------------------------------------------------------------
 # list / logs / down
 # --------------------------------------------------------------------------
+# The container names this environment has rows for.
+#
+# Read with psql inside the Postgres container rather than through
+# app-ganymede-cmds: this is a plain question about state, it needs no signing
+# key, and it is the same access ganymede-apple.sh already uses.
+registered_names() {
+  container exec "$PG" psql -U postgres -d "$DB" -tAc \
+    "SELECT container_name FROM gateways
+      WHERE container_name LIKE 'gw-pool-${ENV_NAME}-%';" 2>/dev/null \
+    | tr -d '\r' | sed 's/[[:space:]]*$//' | grep -v '^$'
+}
+
+# Make the containers and the rows agree.
+#
+# They can disagree in both directions and each one is silent:
+#
+#   A row with no container — a `container run` that failed after the row was
+#   written, or a container deleted by hand. The next organization to open a
+#   project is allocated a gateway that answers nothing.
+#
+#   A container with no row — the database was recreated under a running pool.
+#   The container keeps a GATEWAY_ID nobody recognises, `gateways` is empty,
+#   and *Start Organization* dies on `no_gateway_available` with nothing in the
+#   interface to say why. Measured on 2026-08-07: two gateways running, zero
+#   rows, and the only way out was `down` then `up` by hand.
+#
+# Rebuilt at its own index, never at the next free one. The ports come from the
+# index, and nginx already proxies an organization to the port this container
+# holds; renumbering would move the gateway out from under a live upstream.
+cmd_reconcile() {
+  local containers rows n orphan_rows="" orphan_containers=""
+  containers="$(names)"
+  rows="$(registered_names)"
+
+  for n in $rows; do
+    printf '%s\n' "$containers" | grep -qxF "$n" \
+      || orphan_rows="${orphan_rows} ${n}"
+  done
+  for n in $containers; do
+    printf '%s\n' "$rows" | grep -qxF "$n" \
+      || orphan_containers="${orphan_containers} ${n}"
+  done
+
+  [ -z "$orphan_rows" ] && [ -z "$orphan_containers" ] && return 0
+
+  # Only now: the checks it makes — a built bundle, a JWT key, a packed
+  # tarball — are what a rebuild needs, and demanding them when nothing has
+  # drifted would fail the common path for no reason.
+  prepare_registration || return 1
+
+  for n in $orphan_rows; do
+    run_cmds remove-gateway -c "$n" >/dev/null 2>&1 \
+      && ok "removed the row for ${n} — no container behind it" \
+      || ko "could not remove the row for ${n}"
+  done
+
+  for n in $orphan_containers; do
+    note "${n} holds a GATEWAY_ID no row knows — rebuilding it"
+    create_gateway "${n##*-}" "$HOST_GATEWAY" || return 1
+  done
+}
+
 # Start the gateways that already exist. Not `up`, which registers new rows —
 # after a reboot the pool is down but its rows still say ready, and the next
 # organization to open a project is handed a gateway that answers nothing.
+#
+# Reconciles first. supervise.sh runs this at login, which makes it the one
+# place that sees the pool and the database together before anyone opens a
+# project — so a drift that would otherwise surface as an unexplained
+# `no_gateway_available` is repaired before it can.
 cmd_resume() {
+  cmd_reconcile
   local any=0 n
   while read -r n; do
     [ -z "$n" ] && continue
@@ -624,7 +753,7 @@ cmd_down() {
     # The row goes first. A container removed while its row still says ready
     # gets handed to the next organization that opens a project, which then
     # waits on a handshake with something that no longer exists.
-    [ -f "$CMDS" ] && node "$CMDS" remove-gateway -c "$n" >/dev/null 2>&1
+    [ -f "$CMDS" ] && run_cmds remove-gateway -c "$n" >/dev/null 2>&1
     container delete --force "$n" >/dev/null 2>&1
     ok "removed ${n}"
   done < <(names)
@@ -638,6 +767,7 @@ case "${1:-}" in
   broker) cmd_broker ;;
   broker-foreground) cmd_broker_foreground ;;
   resume) cmd_resume ;;
+  reconcile) cmd_reconcile ;;
   up)    shift; cmd_up "$@" ;;
   list)  cmd_list ;;
   logs)  shift; cmd_logs "$@" ;;
@@ -647,5 +777,5 @@ case "${1:-}" in
     cmd_pack  || exit 1
     cmd_up    || exit 1
     ;;
-  *) echo "usage: $0 [image|pack|serve|broker|up [n]|resume|list|logs [i]|down|all]"; exit 1 ;;
+  *) echo "usage: $0 [image|pack|serve|broker|up [n]|resume|reconcile|list|logs [i]|down|all]"; exit 1 ;;
 esac
