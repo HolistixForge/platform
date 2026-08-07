@@ -49,7 +49,7 @@ func main() {
 	router := proxy.NewRouter(cfg.BaseFQDN, cfg.Domain)
 
 	// Create session store
-	sessions := auth.NewSessionStore(cfg.SessionTTL)
+	sessions := auth.NewSessionStore(cfg.SessionTTL, cfg.ContainerID)
 	defer sessions.Stop()
 
 	// Create permission checker (skip in dev mode if flag is set)
@@ -66,6 +66,7 @@ func main() {
 		ClientID:     cfg.ClientID,
 		ClientSecret: cfg.ClientSecret,
 		BaseFQDN:     cfg.BaseFQDN,
+		PortSuffix:   cfg.PortSuffix,
 		HTTPClient:   httpClient,
 		Sessions:     sessions,
 		CookieDomain: cfg.CookieDomain,
@@ -74,7 +75,7 @@ func main() {
 	})
 
 	// Create relay handler
-	relayHandler := auth.NewRelayHandler(cfg.ClientSecret, sessions, cfg.CookieDomain, cfg.BaseFQDN, oauthHandler)
+	relayHandler := auth.NewRelayHandler(cfg.ClientSecret, sessions, cfg.CookieDomain, cfg.BaseFQDN, cfg.PortSuffix, oauthHandler)
 
 	// Create reverse proxy
 	reverseProxy := proxy.NewReverseProxy(router, cfg.InsecureSkipVerify)
@@ -89,9 +90,16 @@ func main() {
 		Router:        router,
 		CustomDomains: cfg.CustomDomains,
 		BaseFQDN:      cfg.BaseFQDN,
+		PortSuffix:    cfg.PortSuffix,
+		UpstreamToken: cfg.UpstreamToken,
 	})
 
 	// Create the main handler
+	// CORS wraps the authentication rather than sitting inside it: a preflight
+	// carries no cookie, so passed to the middleware it would be refused and
+	// the real request would never be sent.
+	cors := auth.NewCORS(cfg.Domain + cfg.PortSuffix)
+
 	mainHandler := middleware.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authInfo := &proxy.AuthInfo{
 			UserID:      r.Header.Get("X-Auth-User-Id"),
@@ -116,7 +124,7 @@ func main() {
 	// Start main HTTP server
 	mainServer := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.ListenPort),
-		Handler:      mainHandler,
+		Handler:      cors.Handler(mainHandler),
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 60 * time.Second,
 		IdleTimeout:  120 * time.Second,

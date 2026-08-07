@@ -126,10 +126,54 @@ IDENT
   PER_CLIENT_IDENTITY_CONFIG=${PER_CLIENT_IDENTITY_CONFIG//SCRIPT_DIR_PLACEHOLDER/${_lib_dir}}
 fi
 
+# The transport, which is UDP unless the engine underneath cannot carry it.
+#
+# UDP is the right default and stays the default everywhere it works: OpenVPN
+# over TCP puts a reliable transport inside a reliable transport, and a single
+# lost packet then stalls every tunnelled connection instead of one.
+#
+# Apple `container` cannot carry it. A published UDP port is proxied by the
+# runtime, and that proxy dies once traffic flows through it — measured: the
+# port is bound after `container start`, a client completes its handshake, and
+# about a minute later nothing is listening on the host at all while the
+# published TCP port beside it keeps serving. Nothing brings it back short of
+# restarting the container, and there is no way around it from outside: the
+# host cannot reach a container's own address (`ping 192.168.65.91` and a TCP
+# connect both fail), so a relay on the host has nothing to relay to.
+#
+# The symptom, before this was understood, is a platform that looks healthy:
+# every container running, every gateway answering HTTP, and every user service
+# a 404 — because the container's tunnel is down, its watchdog never lands, and
+# the gateway drops its nginx location thirty seconds later.
+#
+# The client is served the same value from `/collab/vpn-config`, out of the
+# same environment variable, so the two cannot disagree.
+# Lower-cased before the comparison, and `/collab/vpn-config` does the same, so
+# `TCP` cannot mean one thing here and another there.
+VPN_PROTO="$(printf '%s' "${GATEWAY_VPN_PROTO:-udp}" | tr '[:upper:]' '[:lower:]')"
+case "${VPN_PROTO}" in
+  udp) SERVER_PROTO="udp" ;;
+  tcp) SERVER_PROTO="tcp-server" ;;
+  *) error_exit "GATEWAY_VPN_PROTO must be udp or tcp, got '${VPN_PROTO}'" ;;
+esac
+
+# `explicit-exit-notify` is a UDP-only option: it sends a datagram on exit so a
+# peer that has no connection state learns the session is over. TCP has that
+# state, so the option means nothing there.
+#
+# OpenVPN 2.6 says so and carries on — "NOTICE: --explicit-exit-notify ignored
+# for --proto tcp", measured on a gateway that then served every container
+# normally — so this is not what breaks a TCP tunnel. Emitting it anyway costs
+# a line of noise in a log people read while diagnosing, and leans on a
+# tolerance that earlier OpenVPN did not have: 2.4 treats the same
+# combination as a usage error and exits. Neither is worth relying on.
+EXIT_NOTIFY_CONFIG=""
+[ "${SERVER_PROTO}" = "udp" ] && EXIT_NOTIFY_CONFIG="explicit-exit-notify 1"
+
 # Update OpenVPN configuration file with new paths and gateway VPN port
 cat <<EOF >"${TEMP_DIR}/server.conf" || error_exit "Failed to write to config file"
 dev tun
-proto udp
+proto ${SERVER_PROTO}
 # Use gateway VPN port
 port ${GATEWAY_VPN_PORT}
 server 172.16.0.0 255.255.0.0
@@ -173,7 +217,7 @@ verb 5
 duplicate-cn
 ${PER_CLIENT_IDENTITY_CONFIG}
 
-explicit-exit-notify 1
+${EXIT_NOTIFY_CONFIG}
 
 management 127.0.0.1 5555
 EOF

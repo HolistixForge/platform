@@ -32,28 +32,55 @@ export function setAllSharedDataFromJSON(
   data: Record<string, any>
 ) {
   Object.entries(data).forEach(([name, value]) => {
-    if (name !== EDITORS_YTEXT_YMAP_KEY) {
-      const sharedType = doc.share.get(name);
+    if (name === EDITORS_YTEXT_YMAP_KEY) return;
 
-      if (sharedType instanceof Y.Map) {
-        // console.log('sharedType is a map');
-        if (data[name] && typeof data[name] === 'object') {
-          Object.entries(data[name]).forEach(([key, value]) => {
-            sharedType.set(key, value);
-          });
-        } else {
-          console.warn('sharedType is a map but data is not an object');
-        }
-      } else if (sharedType instanceof Y.Array) {
-        // console.log('sharedType is an array');
-        if (data[name] && Array.isArray(data[name])) {
-          sharedType.push(data[name]);
-        } else {
-          console.warn('sharedType is an array but data is not an array');
-        }
-      } else if (sharedType instanceof Y.Text) {
-        // console.log('sharedType is a text');
+    // The type is taken from the snapshot, not from the document.
+    //
+    // `doc.share` is populated by `doc.getMap`/`doc.getArray`, and a document
+    // that has just been created has called neither: reading it with
+    // `doc.share.get(name)` answered `undefined` for every key, all three
+    // branches were skipped, and the snapshot was applied silently as nothing.
+    // That is exactly the order a gateway restores in — `ywsUtils.getYDoc()`
+    // makes a fresh doc, `setAllSharedDataFromJSON` runs on it, and the
+    // reducers only touch it afterwards — so every project came back empty.
+    // Measured: user containers still running, absent from the document their
+    // gateway had just restored, unable to re-register, and unreachable while
+    // the platform reported the restart a success.
+    //
+    // `doc.share` is also the wrong source when it does hold something: yjs
+    // stores a generic placeholder for a name it has seen in an update but
+    // that nobody has read yet, and `instanceof Y.Map` is false for it. Going
+    // through `getMap`/`getArray` both creates the type and resolves that
+    // placeholder, which is what the writes below need in either case.
+    //
+    // The snapshot's own shape is the only description available here, and it
+    // is a faithful one: `getAllSharedDataAsJSON` wrote these values out of
+    // those same types. An array was a Y.Array, an object a Y.Map, and a
+    // string a Y.Text — which is restored from `editors` below, as before.
+    try {
+      if (Array.isArray(value)) {
+        // Only into an empty array. `push` appends, so applying one snapshot
+        // twice to the same document duplicates every element — the map branch
+        // below is idempotent by key and this one was not. The gateway
+        // restores once today, which is exactly why the asymmetry would go
+        // unnoticed until something restored twice.
+        const sharedType = doc.getArray(name);
+        if (sharedType.length === 0) sharedType.push(value);
+      } else if (value !== null && typeof value === 'object') {
+        const sharedType = doc.getMap(name);
+        Object.entries(value).forEach(([key, entry]) => {
+          sharedType.set(key, entry);
+        });
       }
+    } catch (e) {
+      // A name already defined with a different constructor. Loud, and only
+      // for that one key: a single disagreement between a snapshot and a live
+      // document should not cost the rest of the project its state.
+      console.warn(
+        `setAllSharedDataFromJSON: could not restore "${name}": ${
+          (e as Error).message
+        }`
+      );
     }
   });
 

@@ -25,7 +25,11 @@ import {
 } from '@holistix-forge/ui-base';
 import { TF_User } from '@holistix-forge/types';
 
-import { UserContainerSystemInfo, serviceUrl } from '../servers-types';
+import {
+  UserContainerSystemInfo,
+  serviceUrl,
+  openableServices,
+} from '../servers-types';
 import { StatusLed } from './status-led';
 import { UseContainerProps } from './node-server/node-server';
 import { TContainerRunnerFrontend } from '../../frontend';
@@ -54,12 +58,41 @@ const CARD_BOX = {
  *
  */
 
-const isAlive = (last_watchdog_at: string | null) => {
+export const isAlive = (
+  last_watchdog_at: string | null,
+  stopped_at?: string,
+  now: number = new Date().getTime()
+) => {
+  // Somebody stopped it, and that is not something a watchdog can say.
+  //
+  // The watchdog only reports; it cannot report *not* running, so for the
+  // thirty seconds after a stop the last report is still recent and the card
+  // went on showing the service as alive — offering "stop" for a container the
+  // broker had already removed, and no way to start it again until the window
+  // elapsed. Clicking stop again then did nothing visible, because the broker
+  // answers 404 for a container that is gone and this platform reads that as
+  // success.
+  //
+  // `_start` clears `stopped_at`, so this is one field rather than two states
+  // that have to agree.
+  if (stopped_at) {
+    const stoppedFor = (now - new Date(stopped_at).getTime()) / 1000;
+    // Only while it is the newer fact. A container that was stopped and later
+    // started reports again, and its own report is what should win from then
+    // on — otherwise a stale `stopped_at` would keep a running service looking
+    // dead. `_start` already clears the field; this holds if it ever does not.
+    const reportedAfter =
+      last_watchdog_at &&
+      new Date(last_watchdog_at).getTime() > new Date(stopped_at).getTime();
+    if (!reportedAfter && stoppedFor >= 0)
+      return { alive: false, color: 'red' as const };
+  }
+
   if (!last_watchdog_at) return { alive: false, color: 'red' as const };
 
   const d = new Date(last_watchdog_at);
 
-  const dateDiffSecondes = (new Date().getTime() - d.getTime()) / 1000;
+  const dateDiffSecondes = (now - d.getTime()) / 1000;
 
   let alive = false;
 
@@ -165,6 +198,8 @@ export const UserContainerCardInternal = ({
   onDelete,
   onOpenService,
   onSelectRunner,
+  onStart,
+  onStop,
   runners,
   liveUsers,
   host,
@@ -205,15 +240,34 @@ export const UserContainerCardInternal = ({
     setTags((prevState: Tag[]) => [...prevState, t]);
   };
 
-  const { alive, color } = isAlive(container.last_watchdog_at);
+  const { alive, color } = isAlive(
+    container.last_watchdog_at,
+    container.stopped_at
+  );
 
-  const firstServiceName =
-    container.httpServices.length > 0 && container.httpServices[0].name;
+  // The run control, wrapped the same way `deleteAction` is: a click on it
+  // reaches the gateway, and a gateway that refuses has to say so somewhere the
+  // person who clicked can see it. `useAction` is what the card already uses
+  // for that, and doing it by hand here would be a second convention.
+  const runAction = useAction(
+    async () => {
+      if (alive) await onStop();
+      else await onStart();
+    },
+    [alive, onStart, onStop],
+    {
+      errorLatchTime: 5000,
+    }
+  );
+
+  // Not `httpServices[0]`: the guard's internal names register too, and
+  // whichever wins the race would become what the card opens.
+  const openable = openableServices(container);
+
+  const firstServiceName = openable.length > 0 && openable[0].name;
 
   const firstServiceUrl =
-    container.httpServices.length > 0 &&
-    firstServiceName &&
-    serviceUrl(container, firstServiceName);
+    firstServiceName && serviceUrl(container, firstServiceName);
 
   // Terminal URL: use serviceUrl helper to construct proper FQDN-based URL
   const terminalService = container.httpServices.find(
@@ -448,17 +502,23 @@ export const UserContainerCardInternal = ({
             from the watchdog, so a container whose watchdog has gone quiet
             offers play, and one still reporting offers stop.
 
-            No action is wired to them yet — neither is there on notebook-card,
-            which is the component this mirrors. `UseContainerProps` carries
-            `onDelete` and `onSelectRunner` and nothing to start or stop with,
-            so wiring these means adding to what the card is given, not to how
-            it draws. Left visible and inert rather than hidden, because the
-            control belonging here is itself the thing to see.
+            The callback goes on `ResourceButtons` itself, for the reason the
+            runner picker below spells out: `ButtonBase` opens its handler with
+            an unconditional `e.stopPropagation()`, so a handler on any wrapper
+            never fires and the click does not reach the card's own `onClick`
+            either. Drawn without one, this button did nothing at all and did
+            not open the service either — a control that looks alive.
+
+            `onSelectRunner` also starts the container, but as a consequence of
+            *choosing where it runs*: restarting a service should not require
+            pretending to move it, which is why `onStart` exists beside it.
           */}
           <ResourceButtons
+            {...runAction}
             size="small"
             type={alive ? 'stop' : 'play'}
             actionOriginId={alive ? 'container-stop' : 'container-play'}
+            ariaLabel={alive ? 'Stop this service' : 'Start this service'}
           />
 
           <div

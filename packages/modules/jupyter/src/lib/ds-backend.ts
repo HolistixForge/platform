@@ -2,6 +2,7 @@ import { TUserContainer, serviceUrl } from '@holistix-forge/user-containers';
 
 import { TJupyterServerData, TUserContainerSettings } from './jupyter-types';
 import { JupyterlabDriver } from './driver';
+import { hostRoutedFetch } from './host-routed-fetch';
 import { SharedMap } from '@holistix-forge/collab-engine';
 
 //
@@ -10,14 +11,38 @@ export type TOnNewDriverCb = (s: TJupyterServerData) => Promise<void>;
 
 //
 
-export const jupyterlabIsReachable = async (s: TUserContainer) => {
+/**
+ * Whether this container's JupyterLab answers.
+ *
+ * `token` is the caller's credential, and leaving it out is not a lighter
+ * version of the same question: a container sits behind its auth guard, which
+ * refuses an anonymous request. Asked bare, from the platform's page, this
+ * always answered 401 and every terminal node sat on "Server is not reachable,
+ * will try again in 60 seconds" — a service that was running the whole time.
+ *
+ * `credentials: 'include'` as well, because the two ways the guard recognises a
+ * browser are a session cookie and this token, and only one of them exists at
+ * any given moment: a terminal node on the whiteboard has never opened the
+ * notebook's page, so it has no cookie for it; a tab that has been opened has
+ * one. Sending both means the answer does not depend on which.
+ */
+export const jupyterlabIsReachable = async (
+  s: TUserContainer,
+  token?: string
+) => {
   let r = false;
   const url = serviceUrl(s, 'jupyterlab');
   if (url)
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
-      const response = await fetch(`${url}/api`, { signal: controller.signal });
+      const response = await fetch(`${url}/api`, {
+        signal: controller.signal,
+        credentials: 'include',
+        // The scheme Jupyter's own clients use, which the guard reads as well
+        // as `Bearer` for exactly this reason.
+        headers: token ? { Authorization: `token ${token}` } : undefined,
+      });
       clearTimeout(timeoutId);
       if (response.status === 200) r = true;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -60,18 +85,36 @@ export class DriversStoreBackend {
 
   getServerSetting(psid: string, token: string): TUserContainerSettings {
     const server = this._servers.get(`${psid}`);
-    if (server) {
-      const url = serviceUrl(server, 'jupyterlab');
-      if (!url)
-        throw new Error(
-          `no such server or is down [${psid}, ${server.container_name}]`
-        );
-      return {
-        baseUrl: url,
-        token,
-      };
-    }
-    throw new Error(`no such server or is down [${psid}]`);
+    if (!server) throw new Error(`no such server or is down [${psid}]`);
+
+    const service = server.httpServices.find((s) => s.name === 'jupyterlab');
+    if (!service || !server.ip)
+      throw new Error(
+        `no such server or is down [${psid}, ${server.container_name}]`
+      );
+
+    // The name in the URL, the address on the socket.
+    //
+    // A container's auth guard routes by Host — it fronts several services and
+    // answers on `{service}.uc-X.org-Y.{domain}` — while the gateway reaches
+    // the container over the VPN, where it is an address. Sent as an address,
+    // the request matched no service and came back "Service not found".
+    //
+    // Both, then: `baseUrl` carries the name the guard routes on, and
+    // `hostRoutedFetch` connects to the VPN address anyway. Forcing the Host
+    // header on the platform's ordinary `fetch` does not work — undici discards
+    // it, measured on Node 25 — which is why this needs its own transport
+    // rather than one more option.
+    //
+    // The port is the one the container published, which is the guard's
+    // wherever the guard runs. Going straight to the service instead would take
+    // the guard off this path, and off the browser's too: the same value feeds
+    // `_updateNginx`.
+    return {
+      baseUrl: `http://${service.host}/`,
+      token,
+      fetch: hostRoutedFetch(server.ip, service.port),
+    };
   }
 
   //

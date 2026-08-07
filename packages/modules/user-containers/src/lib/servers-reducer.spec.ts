@@ -317,6 +317,9 @@ describe('UserContainersReducer - Auth Guard OAuth Client Lifecycle', () => {
       },
       'user-containers': {
         imageRegistry: mockImageRegistry,
+        // `_delete` asks the runner to remove the container before it removes
+        // any reference to it, so a reducer without one cannot delete.
+        getRunner: () => ({ start: jest.fn(), stop: jest.fn() }),
       },
     };
 
@@ -670,22 +673,33 @@ describe('UserContainersReducer - Auth Guard OAuth Client Lifecycle', () => {
 
   describe('placementsFor - what a polling runner is handed', () => {
     /** The extra deps the placement path needs, none of which `_new` uses. */
+    /** Arms the deps, and captures the config the runner is handed. */
     const armPlacements = () => {
+      const captured: { config?: any } = {};
       mockDepsExports.gateway.tokenManager = {
         generateProjectScopedToken: jest
           .fn()
           .mockResolvedValue('hosting-token'),
       };
       mockDepsExports['user-containers'].getRunner = jest.fn(() => ({
-        buildLaunchSpec: (container: any) => ({
-          name: `holistix_${container.user_container_id}`,
-          imageRef: 'holistixforge/ubuntu-terminal:24.04',
-          settings: 'e30=',
-          capabilities: [],
-          devices: [],
-          extraHosts: [],
-        }),
+        buildLaunchSpec: (
+          container: any,
+          _token: any,
+          _registry: any,
+          config: any
+        ) => {
+          captured.config = config;
+          return {
+            name: `holistix_${container.user_container_id}`,
+            imageRef: 'holistixforge/ubuntu-terminal:24.04',
+            settings: 'e30=',
+            capabilities: [],
+            devices: [],
+            extraHosts: [],
+          };
+        },
       }));
+      return captured;
     };
 
     const placedLocally = (extra: Record<string, unknown> = {}) => ({
@@ -727,6 +741,68 @@ describe('UserContainersReducer - Auth Guard OAuth Client Lifecycle', () => {
       expect(
         JSON.stringify(Array.from(mockContainersMap.values()))
       ).not.toContain('fresh-secret');
+    });
+
+    it('tells a machine-hosted container it is on a development platform', async () => {
+      // `gateway_dev` becomes `GATEWAY_DEV` in SETTINGS, and the container's
+      // auth guard passes `--insecure-skip-verify` on it. Without it the guard
+      // cannot fetch Ganymede's public key over the dev platform's self-signed
+      // TLS, exits, and the service answers 404 — while the same container
+      // started on the platform works, because `_start` did set the flag.
+      //
+      // The third field to be added to one config builder and not the other;
+      // both now come from `_runnerConfig`, so there is one place to forget.
+      mockDepsExports.gateway.environment = { devMode: true };
+      mockContainersMap.set('uc-1', placedLocally());
+      const captured = armPlacements();
+
+      await reducer.placementsFor('project-1', 'machine-1');
+
+      expect(captured.config.gateway_dev).toBe(true);
+      expect(captured.config.dev_host_ip).toBe('host-gateway');
+    });
+
+    it('says nothing about dev mode on a real deployment', async () => {
+      mockDepsExports.gateway.environment = { devMode: false };
+      mockContainersMap.set('uc-1', placedLocally());
+      const captured = armPlacements();
+
+      await reducer.placementsFor('project-1', 'machine-1');
+
+      expect(captured.config.gateway_dev).toBe(false);
+      expect(captured.config.dev_host_ip).toBeUndefined();
+    });
+
+    it('marks a placement of a built-in image as built-in', async () => {
+      // The runner refuses an image that is not digest-pinned, and no built-in
+      // carries a digest — so without this the default terminal image, the one
+      // thing everybody has, was refused on every machine. The flag comes from
+      // the registry rather than from the container document, so a tenant image
+      // cannot claim it.
+      mockContainersMap.set('uc-1', placedLocally());
+      armPlacements();
+
+      const [placement] = await reducer.placementsFor('project-1', 'machine-1');
+
+      expect(placement.builtin).toBe(true);
+    });
+
+    it('does not mark a tenant image as built-in', async () => {
+      mockImageRegistry.registerForProject('project-1', 'acme', [
+        {
+          imageId: 'acme:etl',
+          imageName: 'Our ETL',
+          imageUri: 'ghcr.io/acme/etl',
+          imageTag: '1.0.0',
+          imageSha256: 'a'.repeat(64),
+        },
+      ]);
+      mockContainersMap.set('uc-1', placedLocally({ image_id: 'acme:etl' }));
+      armPlacements();
+
+      const [placement] = await reducer.placementsFor('project-1', 'machine-1');
+
+      expect(placement.builtin).toBe(false);
     });
 
     it('names no network, so the runner forms no opinion about them', async () => {
@@ -1111,6 +1187,9 @@ describe('UserContainersReducer - VPN credentials', () => {
       'user-containers': {
         getRunner: () => ({
           start: jest.fn().mockResolvedValue({}),
+          // Deleting now reaches the runner, which is the point of the change
+          // this mock predates.
+          stop: jest.fn().mockResolvedValue(undefined),
         }),
         imageRegistry: {
           get: () => ({
@@ -1200,5 +1279,220 @@ describe('UserContainersReducer - VPN credentials', () => {
     // Assert - a token left in the file is one that would still admit whatever
     // presented it
     expect(recordVpnCredentials).toHaveBeenCalledWith([]);
+  });
+});
+
+//
+
+describe('UserContainersReducer - stopping a service without deleting it', () => {
+  let reducer: UserContainersReducer;
+  let containers: Map<string, any>;
+  let updateReverseProxy: jest.Mock;
+  let runnerStop: jest.Mock;
+
+  beforeEach(() => {
+    containers = new Map([
+      [
+        'uc-1',
+        {
+          user_container_id: 'uc-1',
+          container_name: 'one',
+          image_id: 'ubuntu:terminal',
+          runner: { id: 'platform' },
+          ip: '172.16.0.4',
+          httpServices: [
+            { host: 'n8n.uc-uc-1.org-1.domain.local', name: 'n8n', port: 5678 },
+          ],
+        },
+      ],
+    ]);
+
+    updateReverseProxy = jest.fn();
+    runnerStop = jest.fn().mockResolvedValue(undefined);
+
+    reducer = new UserContainersReducer({
+      collab: {
+        registry: {
+          getCollabForProject: jest.fn(() => ({
+            sharedData: {
+              'user-containers:containers': {
+                get: (k: string) => containers.get(k),
+                set: (k: string, v: any) => containers.set(k, v),
+                copy: () => new Map(containers),
+                delete: (k: string) => containers.delete(k),
+                forEach: (fn: any) => containers.forEach(fn),
+              },
+            },
+          })),
+        },
+      },
+      reducers: { processEvent: jest.fn() },
+      gateway: {
+        recordVpnCredentials: jest.fn(),
+        toGanymedeInternal: jest.fn().mockResolvedValue({}),
+        updateReverseProxy,
+        gatewayFQDN: 'org-1.domain.local',
+        organization_id: 'org-1',
+        permissionManager: { hasPermission: () => true },
+      },
+      'user-containers': {
+        getRunner: () => ({ start: jest.fn(), stop: runnerStop }),
+        imageRegistry: { get: () => ({ imageId: 'ubuntu:terminal' }) },
+      },
+    } as any);
+  });
+
+  const stop = () =>
+    reducer.reduce(
+      { type: 'user-container:stop', user_container_id: 'uc-1' } as any,
+      { project_id: 'project-1', jwt: { user: { id: 'user-1' } } } as any
+    );
+
+  it('asks the runner to stop and keeps the container', async () => {
+    await stop();
+
+    expect(runnerStop).toHaveBeenCalledTimes(1);
+    expect(containers.get('uc-1')).toBeDefined();
+    expect(containers.get('uc-1').stopped_at).toEqual(expect.any(String));
+  });
+
+  it('takes the service off the gateway rather than waiting for the watchdog', async () => {
+    // `_periodic` would clear these thirty seconds later, and in those thirty
+    // seconds the gateway proxies the FQDN to a VPN address nobody is on.
+    await stop();
+
+    expect(containers.get('uc-1').httpServices).toEqual([]);
+    expect(updateReverseProxy).toHaveBeenCalledWith('project-1', []);
+  });
+
+  it('refuses without an authenticated user', async () => {
+    await expect(
+      reducer.reduce(
+        { type: 'user-container:stop', user_container_id: 'uc-1' } as any,
+        { project_id: 'project-1', jwt: {} } as any
+      )
+    ).rejects.toThrow();
+    expect(runnerStop).not.toHaveBeenCalled();
+  });
+
+  it('does not mark a container stopped when the runner refused', async () => {
+    // The card would say stopped for a container that is still serving, and
+    // there would be no button left that tries again.
+    runnerStop.mockRejectedValue(new Error('broker is down'));
+
+    await expect(stop()).rejects.toThrow('broker is down');
+    expect(containers.get('uc-1').stopped_at).toBeUndefined();
+  });
+
+  it('leaves a local placement out of the list once stopped', async () => {
+    containers.set('uc-2', {
+      user_container_id: 'uc-2',
+      container_name: 'two',
+      image_id: 'ubuntu:terminal',
+      runner: { id: 'local', user_id: 'user-1', machine_id: 'm-1' },
+      httpServices: [],
+      stopped_at: new Date().toISOString(),
+    });
+
+    const placements = await reducer.placementsFor('project-1', 'm-1');
+
+    expect(placements.map((p) => p.user_container_id)).not.toContain('uc-2');
+  });
+});
+
+//
+
+describe('UserContainersReducer - deleting a service removes the service', () => {
+  let reducer: UserContainersReducer;
+  let containers: Map<string, any>;
+  let runnerStop: jest.Mock;
+  let updateReverseProxy: jest.Mock;
+  let processEvent: jest.Mock;
+
+  beforeEach(() => {
+    containers = new Map([
+      [
+        'uc-1',
+        {
+          user_container_id: 'uc-1',
+          container_name: 'one',
+          image_id: 'ubuntu:terminal',
+          runner: { id: 'platform' },
+          httpServices: [],
+        },
+      ],
+    ]);
+    runnerStop = jest.fn().mockResolvedValue(undefined);
+    updateReverseProxy = jest.fn();
+    processEvent = jest.fn();
+
+    reducer = new UserContainersReducer({
+      collab: {
+        registry: {
+          getCollabForProject: jest.fn(() => ({
+            sharedData: {
+              'user-containers:containers': {
+                get: (k: string) => containers.get(k),
+                set: (k: string, v: any) => containers.set(k, v),
+                copy: () => new Map(containers),
+                delete: (k: string) => containers.delete(k),
+                forEach: (fn: any) => containers.forEach(fn),
+              },
+            },
+          })),
+        },
+      },
+      reducers: { processEvent },
+      gateway: {
+        recordVpnCredentials: jest.fn(),
+        toGanymedeInternal: jest.fn().mockResolvedValue({}),
+        updateReverseProxy,
+        gatewayFQDN: 'org-1.domain.local',
+        organization_id: 'org-1',
+        permissionManager: { hasPermission: () => true },
+      },
+      'user-containers': {
+        getRunner: () => ({ start: jest.fn(), stop: runnerStop }),
+        imageRegistry: { get: () => ({ imageId: 'ubuntu:terminal' }) },
+      },
+    } as any);
+  });
+
+  const del = () =>
+    reducer.reduce(
+      { type: 'user-container:delete', user_container_id: 'uc-1' } as any,
+      { project_id: 'project-1', jwt: { user: { id: 'user-1' } } } as any
+    );
+
+  it('asks the runner to remove the container, not only its references', async () => {
+    // Everything else `_delete` does removes a *reference*: the credential, the
+    // OAuth client, the shared-state entry, the nginx route, the node. None of
+    // it touches what is running. Measured before this: four deleted services
+    // still alive on the platform holding 9.4 GB, and nineteen private networks
+    // for three containers — the broker removes a network with its container
+    // and was never asked.
+    await del();
+
+    expect(runnerStop).toHaveBeenCalledTimes(1);
+    expect(containers.get('uc-1')).toBeUndefined();
+  });
+
+  it('keeps the service when the runner could not remove it', async () => {
+    // Removing the references and swallowing the failure is what produces an
+    // orphan while reporting success.
+    runnerStop.mockRejectedValue(new Error('broker is down'));
+
+    await expect(del()).rejects.toThrow('broker is down');
+    expect(containers.get('uc-1')).toBeDefined();
+  });
+
+  it('still takes the service off the gateway and the whiteboard', async () => {
+    await del();
+
+    expect(updateReverseProxy).toHaveBeenCalledWith('project-1', []);
+    expect(processEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'core:delete-node' }),
+      expect.anything()
+    );
   });
 });

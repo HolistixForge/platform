@@ -3,13 +3,17 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   useLocalSharedData,
   CollabProjectProvider,
+  type TCollabFrontendExports,
 } from '@holistix-forge/collab/frontend';
 import {
   TUserContainer,
   TUserContainersSharedData,
 } from '@holistix-forge/user-containers';
 import { TCoreSharedData } from '@holistix-forge/core-graph';
-import { ModuleProvider } from '@holistix-forge/module/frontend';
+import {
+  ModuleProvider,
+  useModuleExports,
+} from '@holistix-forge/module/frontend';
 import { loadModules, type TModule } from '@holistix-forge/module';
 import { moduleFrontend as collabFrontend } from '@holistix-forge/collab/frontend';
 import { moduleFrontend as reducersFrontend } from '@holistix-forge/reducers/frontend';
@@ -137,11 +141,95 @@ export const JupyterStoryProviders = ({
     []
   );
 
+  // The manager resolves shared data per project and does nothing until it is
+  // told which one — `project-wrapper.tsx` does this in the application, and a
+  // story that skips it gets "Server Does Not Exist" from a manager that never
+  // looked.
+  useEffect(() => {
+    (
+      frontendModules as {
+        jupyter?: { jlsManager?: { setProjectId: (id: string) => void } };
+      }
+    ).jupyter?.jlsManager?.setProjectId(STORY_PROJECT_ID);
+  }, [frontendModules]);
+
+  // Providers only — no server gate. `JupyterStoryInit` waits on a live
+  // Jupyter and renders setup instructions until it finds one, which is right
+  // for a story that drives a real kernel and wrong for one that only needs a
+  // module context: it swallowed the children whole, so a node story rendered
+  // nothing at all. A story that wants the gate wraps itself in it.
   return (
     <ModuleProvider exports={frontendModules}>
-      <JupyterStoryInit>{children}</JupyterStoryInit>
+      <CollabProjectProvider project_id={STORY_PROJECT_ID}>
+        {children}
+      </CollabProjectProvider>
     </ModuleProvider>
   );
+};
+
+/**
+ * Puts a container and a Jupyter server into the shared data a story reads.
+ *
+ * Written through `collab.getCollabForProject(…).collab.sharedData`, never
+ * through `useLocalSharedData` — that hook returns `localOverrider.getData()`,
+ * the overrider's own local copy, so setting on it writes where JLsManager
+ * never looks and the node reports "Server Does Not Exist" while the story
+ * insists it just made one.
+ *
+ * The `jupyterlab` service is not optional: without it a node finds its server
+ * and then reports the service missing, which from outside is the same failure
+ * wearing a different message.
+ */
+export const JupyterStorySeed = ({
+  children,
+  kernels = {},
+  cells = {},
+}: {
+  children: React.ReactNode;
+  kernels?: Record<string, unknown>;
+  cells?: Record<string, unknown>;
+}) => {
+  const [seeded, setSeeded] = useState(false);
+  const exports = useModuleExports<{ collab: TCollabFrontendExports }>(
+    'JupyterStorySeed'
+  );
+  const sd = exports.collab.getCollabForProject(STORY_PROJECT_ID).collab
+    .sharedData as unknown as TUserContainersSharedData & TJupyterSharedData;
+
+  useEffect(() => {
+    sd['user-containers:containers'].set(STORY_USER_CONTAINER_ID, {
+      user_container_id: STORY_USER_CONTAINER_ID,
+      container_name: 'story-jupyter',
+      image_id: 'jupyter:minimal',
+      httpServices: [
+        {
+          name: 'jupyterlab',
+          host: STORY_JUPYTER_IP,
+          port: STORY_JUPYTER_PORT,
+          secure: false,
+        },
+      ],
+      ip: STORY_JUPYTER_IP,
+      last_watchdog_at: '2026-01-01T00:00:00.000Z',
+      last_activity: '2026-01-01T00:00:00.000Z',
+      created_at: '2026-01-01T00:00:00.000Z',
+      runner: { id: 'local' },
+      auth_guard: { client_id: STORY_JUPYTERLAB_CLIENT_ID },
+    } as unknown as TUserContainer);
+
+    sd['jupyter:servers'].set(STORY_USER_CONTAINER_ID, {
+      user_container_id: STORY_USER_CONTAINER_ID,
+      kernels,
+      cells,
+      terminals: {},
+    } as never);
+
+    setSeeded(true);
+  }, [sd, kernels, cells]);
+
+  // Rendering before the data exists shows the empty case for a frame and
+  // makes every screenshot a race.
+  return seeded ? <>{children}</> : null;
 };
 
 export const JupyterStoryInit = ({
@@ -217,6 +305,20 @@ export const useInitStoryJupyterServer =
     const [running, setRunning] = useState<boolean | null>(null);
 
     useEffect(() => {
+      // Probing a Jupyter server nobody started made these stories render
+      // setup instructions instead of the component — the same wall the notion
+      // and airtable stories put up, and the same answer: opt in with
+      // `JUPYTER_STORY_SERVER` on the window when you actually have one.
+      const wantsLiveServer = Boolean(
+        (window as unknown as { JUPYTER_STORY_SERVER?: boolean })
+          .JUPYTER_STORY_SERVER
+      );
+
+      if (!wantsLiveServer) {
+        setRunning(true);
+        return;
+      }
+
       fetch(`http://${STORY_JUPYTER_IP}:${STORY_JUPYTER_PORT}/api`)
         .then((r) => {
           if (r.status === 200) {

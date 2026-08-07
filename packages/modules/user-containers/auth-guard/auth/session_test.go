@@ -8,7 +8,7 @@ import (
 )
 
 func TestSessionCreate(t *testing.T) {
-	store := NewSessionStore(1 * time.Hour)
+	store := NewSessionStore(1*time.Hour, "")
 	defer store.Stop()
 
 	id := store.Create("user-123", "testuser", "Test User", "access-token", "refresh-token", nil, "example.local")
@@ -40,7 +40,7 @@ func TestSessionCreate(t *testing.T) {
 }
 
 func TestSessionExpired(t *testing.T) {
-	store := NewSessionStore(1 * time.Millisecond)
+	store := NewSessionStore(1*time.Millisecond, "")
 	defer store.Stop()
 
 	id := store.Create("user-123", "testuser", "Test User", "at", "rt", nil, "example.local")
@@ -55,7 +55,7 @@ func TestSessionExpired(t *testing.T) {
 }
 
 func TestSessionDelete(t *testing.T) {
-	store := NewSessionStore(1 * time.Hour)
+	store := NewSessionStore(1*time.Hour, "")
 	defer store.Stop()
 
 	id := store.Create("user-123", "testuser", "Test User", "at", "rt", nil, "example.local")
@@ -69,7 +69,7 @@ func TestSessionDelete(t *testing.T) {
 }
 
 func TestSessionGetNonExistent(t *testing.T) {
-	store := NewSessionStore(1 * time.Hour)
+	store := NewSessionStore(1*time.Hour, "")
 	defer store.Stop()
 
 	session := store.Get("non-existent")
@@ -106,7 +106,7 @@ func TestSessionCleanup(t *testing.T) {
 }
 
 func TestGetSessionFromRequest(t *testing.T) {
-	store := NewSessionStore(1 * time.Hour)
+	store := NewSessionStore(1*time.Hour, "")
 	defer store.Stop()
 
 	id := store.Create("user-123", "testuser", "Test User", "at", "rt", nil, "example.local")
@@ -127,7 +127,7 @@ func TestGetSessionFromRequest(t *testing.T) {
 }
 
 func TestGetSessionFromRequestNoCookie(t *testing.T) {
-	store := NewSessionStore(1 * time.Hour)
+	store := NewSessionStore(1*time.Hour, "")
 	defer store.Stop()
 
 	req := httptest.NewRequest("GET", "http://example.local/", nil)
@@ -139,7 +139,7 @@ func TestGetSessionFromRequestNoCookie(t *testing.T) {
 }
 
 func TestSetSessionCookie(t *testing.T) {
-	store := NewSessionStore(1 * time.Hour)
+	store := NewSessionStore(1*time.Hour, "")
 	defer store.Stop()
 
 	w := httptest.NewRecorder()
@@ -165,5 +165,43 @@ func TestSetSessionCookie(t *testing.T) {
 	}
 	if cookie.SameSite != http.SameSiteLaxMode {
 		t.Errorf("expected SameSite=Lax, got %v", cookie.SameSite)
+	}
+}
+
+func TestSessionCookieIsScopedToTheContainer(t *testing.T) {
+	// The cookie lives on the whole platform domain while each guard keeps its
+	// sessions in its own memory. Sharing one name means one container's guard
+	// receives another's session id, finds nothing, and refuses — which is what
+	// two notebooks open at once in a project did to each other.
+	a := NewSessionStore(time.Minute, "uc_aaa")
+	b := NewSessionStore(time.Minute, "uc_bbb")
+
+	id := a.Create("user-1", "u", "U", "at", "rt", nil, "")
+
+	wa := httptest.NewRecorder()
+	a.SetSessionCookie(wa, id, ".apollo.test")
+	cookies := wa.Result().Cookies()
+	if len(cookies) != 1 || cookies[0].Name != "__auth_session_uc_aaa" {
+		t.Fatalf("got cookie %+v, want __auth_session_uc_aaa", cookies)
+	}
+
+	// The browser sends every cookie on the domain to both guards.
+	r := httptest.NewRequest("GET", "/static/lab/main.js", nil)
+	r.AddCookie(cookies[0])
+
+	if a.GetSessionFromRequest(r) == nil {
+		t.Fatal("the guard that minted the session no longer recognises it")
+	}
+	if b.GetSessionFromRequest(r) != nil {
+		t.Fatal("a second container's guard accepted a session it never minted")
+	}
+}
+
+func TestSessionCookieKeepsItsNameWithoutAContainerId(t *testing.T) {
+	s := NewSessionStore(time.Minute, "")
+	w := httptest.NewRecorder()
+	s.SetSessionCookie(w, "sid", ".apollo.test")
+	if got := w.Result().Cookies()[0].Name; got != SessionCookieName {
+		t.Fatalf("got %q, want %q", got, SessionCookieName)
 	}
 }

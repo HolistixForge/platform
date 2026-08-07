@@ -29,7 +29,7 @@ import {
 } from '@holistix-forge/whiteboard/frontend';
 
 import { TJupyterSharedData } from '../../jupyter-shared-model';
-import { useJLsManager } from '../../jupyter-hooks';
+import { useJLsManager, useWatchedResources } from '../../jupyter-hooks';
 import { jupyterlabIsReachable } from '../../ds-backend';
 import {
   TUserContainerSettings,
@@ -122,6 +122,11 @@ export const JupyterTerminal = ({
 
   const jlsManager = useJLsManager();
 
+  // While this node is on screen, its container's kernels and terminals stay in
+  // the project's shared state — including the ones somebody opened inside
+  // JupyterLab, which nothing was watching for before.
+  useWatchedResources(server);
+
   const ref = useRef<HTMLDivElement>(null);
   const terminalWidgetRef = useRef<Terminal | null>(null); // Store the Terminal widget instance
 
@@ -132,9 +137,12 @@ export const JupyterTerminal = ({
 
     if (!isReachable) {
       const checkReachable = () => {
-        jupyterlabIsReachable(server).then((isReachable) =>
-          setIsReachable(isReachable)
-        );
+        // With the user's credential: the container is behind its auth guard,
+        // and an anonymous probe can only ever answer 401.
+        jlsManager
+          .getToken(server, 'jupyterlab')
+          .then((token) => jupyterlabIsReachable(server, token))
+          .then((isReachable) => setIsReachable(isReachable));
       };
 
       checkReachable();

@@ -1,11 +1,18 @@
-import { Sidebar, icons } from '@holistix-forge/ui-base';
+import { Sidebar, SidebarVariant, icons } from '@holistix-forge/ui-base';
 
 //
 
-export const ProjectSidebar = ({ active }: { active: string }) => {
+export const ProjectSidebar = ({
+  active,
+  variant,
+}: {
+  active: string;
+  variant?: SidebarVariant;
+}) => {
   return (
     <Sidebar
       active={active}
+      variant={variant}
       items={[
         // TODO_MENU
         // { title: 'planet', Icon: icons.Planet },

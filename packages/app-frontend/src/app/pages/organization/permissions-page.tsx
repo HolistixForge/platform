@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { PermissionsPage } from '@holistix-forge/ui-base';
+import { HeaderLogic } from '../../header/header-logic';
 import {
   useQueryRoles,
   useQueryOrgMembers,
@@ -45,8 +46,11 @@ export const OrganizationPermissionsPage = () => {
 
   if (!organization_id) {
     return (
-      <div style={{ padding: '2rem', color: '#ef4444' }}>
-        Error: Organization ID is required
+      <div>
+        <HeaderLogic />
+        <div style={{ padding: '2rem', color: '#ef4444' }}>
+          Error: Organization ID is required
+        </div>
       </div>
     );
   }
@@ -129,19 +133,25 @@ export const OrganizationPermissionsPage = () => {
   const members = membersQuery.data?.members || [];
 
   return (
-    <PermissionsPage
-      roles={roles}
-      rolesLoading={rolesQuery.isLoading}
-      members={members}
-      membersLoading={membersQuery.isLoading}
-      userRoles={userRolesMap}
-      userRolesLoading={false}
-      readonly={false}
-      onCreateRole={handleCreateRole}
-      onUpdateRole={handleUpdateRole}
-      onDeleteRole={handleDeleteRole}
-      onAssignRole={handleAssignRole}
-      onRemoveRole={handleRemoveRole}
-    />
+    // With the header, like every other page under `/org/:organization_id`.
+    // This one rendered none at all: the key in the header is the way in, and
+    // arriving here left no way back but the browser's own button.
+    <div>
+      <HeaderLogic />
+      <PermissionsPage
+        roles={roles}
+        rolesLoading={rolesQuery.isLoading}
+        members={members}
+        membersLoading={membersQuery.isLoading}
+        userRoles={userRolesMap}
+        userRolesLoading={false}
+        readonly={false}
+        onCreateRole={handleCreateRole}
+        onUpdateRole={handleUpdateRole}
+        onDeleteRole={handleDeleteRole}
+        onAssignRole={handleAssignRole}
+        onRemoveRole={handleRemoveRole}
+      />
+    </div>
   );
 };

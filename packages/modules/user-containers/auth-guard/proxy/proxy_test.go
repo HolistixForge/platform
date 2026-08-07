@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -132,5 +134,45 @@ func TestProxyRequestDetectsWebSocket(t *testing.T) {
 	ok := rp.ProxyRequest(w, req, &AuthInfo{UserID: "user-123"})
 	if !ok {
 		t.Fatal("expected proxy request to succeed for WebSocket")
+	}
+}
+
+func TestProxyDropsTheServicesOwnCorsAnswer(t *testing.T) {
+	// The guard writes its own CORS headers before this proxy copies the
+	// upstream ones, and a browser refuses a header with two values. JupyterLab
+	// runs with `--ServerApp.allow_origin='*'`, so the pair reached the browser
+	// as `https://platform, *` and every call from the platform's page failed.
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`[]`))
+	}))
+	defer upstream.Close()
+
+	router := NewRouter("uc-x.org-y.apollo.test", "apollo.test")
+	port, _ := strconv.Atoi(strings.Split(upstream.URL, ":")[2])
+	if _, err := router.RegisterService("jupyterlab", port); err != nil {
+		t.Fatal(err)
+	}
+
+	rp := NewReverseProxy(router, false)
+	r := httptest.NewRequest("GET", "http://jupyterlab.uc-x.org-y.apollo.test/api/kernels", nil)
+	r.Host = "jupyterlab.uc-x.org-y.apollo.test"
+	w := httptest.NewRecorder()
+	// What the guard would already have written.
+	w.Header().Set("Access-Control-Allow-Origin", "https://apollo.test:8443")
+
+	if !rp.ProxyRequest(w, r, nil) {
+		t.Fatal("no backend found")
+	}
+
+	got := w.Result().Header.Values("Access-Control-Allow-Origin")
+	if len(got) != 1 || got[0] != "https://apollo.test:8443" {
+		t.Fatalf("Access-Control-Allow-Origin = %v, want only the guard's", got)
+	}
+	if v := w.Result().Header.Get("Content-Type"); v != "application/json" {
+		t.Fatalf("an ordinary header was lost: Content-Type = %q", v)
 	}
 }

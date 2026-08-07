@@ -55,7 +55,9 @@ export const ExcalidrawNode: FC<{ node: TGraphNode<never> }> = ({ node }) => {
 
   return (
     <div
-      className="node-excalidraw node-resizable full-height"
+      className={`node-excalidraw node-resizable full-height ${
+        isBeingEdited ? 'is-being-edited' : ''
+      }`}
       style={{
         width: '100%',
         height: '100%',

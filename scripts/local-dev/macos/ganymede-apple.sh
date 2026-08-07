@@ -350,6 +350,19 @@ env = {
   'MAILING_HOST': 'localhost', 'MAILING_PORT': '1025',
   'MAILING_USER': 'unset', 'MAILING_PASSWORD': 'unset',
   'SESSION_COOKIE_KEY': 'macos-session-key-not-for-production',
+  # The OAuth limiter counts per IP, and on this machine there is only one.
+  #
+  # Ganymede is in a container behind the Mac's nginx, so every request reaches
+  # it from the loopback: one browser tab, five browser tabs, and a test run all
+  # spend the same 20-per-15-minutes budget. Exhausted, `/oauth/token` answers
+  # 429 for the rest of the window, the frontend holds no access token at all,
+  # and the page simply never finishes loading — which reads as a frozen app and
+  # not as a limit, because nothing says so.
+  #
+  # Raised here rather than in the limiter's own defaults: 20 is a reasonable
+  # number where the IP identifies a client, and this arrangement is the one
+  # place where it does not. Still bounded, so a runaway client is still caught.
+  'RATE_LIMIT_OAUTH_MAX': '200',
   # Ganymede makes HTTPS calls to itself — it health-checks a gateway it has
   # just allocated at `https://org-<uuid>.<domain>` — and the certificate is
   # mkcert's, which nothing in this container has been told to trust. Node's
@@ -529,6 +542,18 @@ check_nginx_watcher() {
   local pidfile="${CONF_DIR}/nginx-reload.pid"
   if [ -f "$pidfile" ] && kill -0 "$(cat "$pidfile")" 2>/dev/null; then
     ok "nginx reload watcher running (pid $(cat "$pidfile"))"
+    return 0
+  fi
+  # The pidfile is written by `nginx-reload.sh start` and by nothing else.
+  # Under launchd — which is how supervise.sh runs it, and the arrangement this
+  # platform is meant to use — the agent runs `watch` directly and there is no
+  # pidfile at all. Checking only for one reported the watcher as missing, in
+  # red, while it was running: a false negative in the one line an operator has
+  # to believe, and it points at a fix that would start a second copy.
+  local pid
+  pid="$(pgrep -f "nginx-reload.sh watch" | head -1)"
+  if [ -n "$pid" ]; then
+    ok "nginx reload watcher running (pid ${pid}, under launchd)"
     return 0
   fi
   ko "the nginx reload watcher is not running"

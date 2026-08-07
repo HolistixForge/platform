@@ -955,9 +955,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "pattern": "^uc_[a-z0-9]+$"
             },
-            "description": "User container ID"
+            "description": "User container ID, e.g. `uc_mshbta76f0wlq8`. Not a UUID: generateContainerId mints `uc_` followed by a base36 timestamp and a random suffix. Declared as `format: uuid`, express-openapi-validator refused every request with `must match format \"uuid\"` — so the auth guard's permission check could never succeed for any container, and the guard has never served one."
           }
         ],
         "responses": {

@@ -9,7 +9,19 @@ import (
 )
 
 const (
-	// SessionCookieName is the name of the session cookie.
+	// SessionCookieName is the base name of the session cookie.
+	//
+	// The container id is appended to it — see `sessionCookieName`. Every guard
+	// keeps its sessions in its own memory while the cookie is scoped to the
+	// whole platform domain, so one shared name means one container's guard
+	// receives another's session id, finds nothing, and refuses the request.
+	//
+	// Two notebooks opened at once in a project is enough to see it: both
+	// frames load together, both guards run an OAuth flow, both write
+	// `__auth_session` on `.{domain}`, and the last writer wins. The loser's
+	// page had already been served, so its document renders and then every
+	// script it asks for comes back 401 — a blank panel, and nothing in it that
+	// looks like an authentication problem.
 	SessionCookieName = "__auth_session"
 )
 
@@ -33,15 +45,31 @@ type SessionStore struct {
 	sessions map[string]*Session
 	ttl      time.Duration
 	stopCh   chan struct{}
+	// The cookie this guard owns — see sessionCookieName.
+	cookieName string
 }
 
 // NewSessionStore creates a new SessionStore with the given session TTL.
 // It starts a background goroutine to clean up expired sessions.
-func NewSessionStore(ttl time.Duration) *SessionStore {
+// sessionCookieName is the cookie this guard owns.
+//
+// Scoping by *name* rather than by domain, deliberately: the cookie has to stay
+// on the platform domain so that `{service}.uc-X.{domain}` and `uc-X.{domain}`
+// — the container's own services and its auth callback — share one session.
+// Narrowing the domain to the container would split those instead.
+func sessionCookieName(containerID string) string {
+	if containerID == "" {
+		return SessionCookieName
+	}
+	return SessionCookieName + "_" + containerID
+}
+
+func NewSessionStore(ttl time.Duration, containerID string) *SessionStore {
 	s := &SessionStore{
-		sessions: make(map[string]*Session),
-		ttl:      ttl,
-		stopCh:   make(chan struct{}),
+		sessions:   make(map[string]*Session),
+		ttl:        ttl,
+		stopCh:     make(chan struct{}),
+		cookieName: sessionCookieName(containerID),
 	}
 	go s.cleanupLoop()
 	return s
@@ -100,7 +128,7 @@ func (s *SessionStore) Delete(id string) {
 // SetSessionCookie writes the session cookie to the response.
 func (s *SessionStore) SetSessionCookie(w http.ResponseWriter, sessionID, cookieDomain string) {
 	http.SetCookie(w, &http.Cookie{
-		Name:     SessionCookieName,
+		Name:     s.cookieName,
 		Value:    sessionID,
 		Domain:   cookieDomain,
 		Path:     "/",
@@ -113,7 +141,7 @@ func (s *SessionStore) SetSessionCookie(w http.ResponseWriter, sessionID, cookie
 
 // GetSessionFromRequest extracts and validates the session from the request cookie.
 func (s *SessionStore) GetSessionFromRequest(r *http.Request) *Session {
-	cookie, err := r.Cookie(SessionCookieName)
+	cookie, err := r.Cookie(s.cookieName)
 	if err != nil {
 		return nil
 	}

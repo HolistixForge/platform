@@ -245,16 +245,20 @@ export class JupyterReducer extends ReducerWithCollab<
       return acc;
     }, {} as Record<string, Kernel>);
 
-    server.kernels = newKernels;
-
     const newTerminals = terminals.reduce((acc, terminal) => {
       acc[terminal.terminal_id] = terminal;
       return acc;
     }, {} as Record<string, Terminal>);
 
-    server.terminals = newTerminals;
-
-    servers.set(`${server.user_container_id}`, server);
+    // Replaced, not mutated — same reason as `_newTerminal`. Assigning a whole
+    // property happens to work on a frozen object only when the property is
+    // already there, so this one survived where adding a key threw: a
+    // difference nobody should have to hold in their head.
+    servers.set(`${server.user_container_id}`, {
+      ...server,
+      kernels: newKernels,
+      terminals: newTerminals,
+    });
   }
 
   makeKernelNodeId(id: string) {
@@ -486,12 +490,24 @@ export class JupyterReducer extends ReducerWithCollab<
 
     // manager.connectTo({model: session.model});
 
-    server.terminals[terminal_id] = {
-      terminal_id,
-      sessionModel: { name: terminal_id },
-    };
-
-    servers.set(`${server.user_container_id}`, server);
+    // A new object, not a mutation of the one the shared map handed back.
+    //
+    // `SharedMap.get` returns a frozen snapshot, so writing a key into it
+    // throws "Cannot add property …, object is not extensible" — after the
+    // terminal has already been created in the container, which leaves a live
+    // terminal nobody knows about and a 500 the user reads as "it did not
+    // work". The rest of this codebase writes `set(id, {...old, change})` for
+    // exactly this reason.
+    servers.set(`${server.user_container_id}`, {
+      ...server,
+      terminals: {
+        ...server.terminals,
+        [terminal_id]: {
+          terminal_id,
+          sessionModel: { name: terminal_id },
+        },
+      },
+    });
 
     await this.depsExports.reducers.processEvent(
       {

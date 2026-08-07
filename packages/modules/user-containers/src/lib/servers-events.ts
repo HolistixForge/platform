@@ -75,6 +75,18 @@ export type TEventStart = {
   user_container_id: string;
 };
 
+/**
+ * Stop a running service, keeping it.
+ *
+ * Distinct from `user-container:delete`, which takes the service off the
+ * whiteboard: this one leaves the card, its name, its runner and its image
+ * exactly where they are, so the play button beside it means something.
+ */
+export type TEventStop = {
+  type: 'user-container:stop';
+  user_container_id: string;
+};
+
 export type TUserContainersEvents =
   | TEventNew
   | TEventDelete
@@ -83,4 +95,5 @@ export type TUserContainersEvents =
   | TEventActivity
   | TEventSelectRunner
   | TEventRunnerHealth
-  | TEventStart;
+  | TEventStart
+  | TEventStop;

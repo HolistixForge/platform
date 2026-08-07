@@ -1,17 +1,27 @@
+/* The project rail, in two shapes.
+ *
+ * `dashboard` — a vertical bar docked to the left edge, full height. This is
+ * what a page with its own content wants: the rail owns a column and the page
+ * is indented past it.
+ *
+ * `island` — a floating rounded box, vertically centred. For a surface that
+ * has nothing to give up, where the rail sits over the content rather than
+ * beside it.
+ *
+ * Which one is a choice the page makes, so it is a prop. It used to be neither:
+ * one shape positioned from `--holistix-left-rail`, published only by the
+ * whiteboard's layers panel. Off the whiteboard the variable is unset, so the
+ * fallback applied — a guess at that panel's width — and the rail floated 255px
+ * into an empty page with nothing to its left. Measured on the Resources tab.
+ * A rail that is on every page cannot take its position from a panel that is
+ * on one. */
+:root {
+  --holistix-sidebar-width: 56px;
+}
+
 aside {
   background: var(--surface-700);
-  border-radius: 8px;
-  width: fit-content;
-  height: auto;
   position: fixed;
-  top: 50%;
-  /* Sits on the left rail, just right of the whiteboard layers panel. The
-     panel publishes its own width into --holistix-left-rail as it expands and
-     collapses (see whiteboard.tsx), so this follows it instead of holding a
-     constant offset. The transition matches the panel's own 120ms. */
-  left: var(--holistix-left-rail, 255px);
-  transition: left 120ms ease;
-  transform: translateY(-50%);
 }
 
 aside ul {
@@ -19,10 +29,8 @@ aside ul {
   flex-direction: column;
   gap: 24px;
   list-style: none;
-  width: fit-content;
   margin: 0;
   padding: 16px 0;
-  position: relative;
 }
 
 aside ul li {
@@ -30,25 +38,69 @@ aside ul li {
   margin: 0;
   height: 32px;
   cursor: pointer;
+  position: relative;
 }
 
-aside ul:before {
+/* ---- dashboard: a bar ---------------------------------------------------- */
+
+aside.sidebar--dashboard {
+  /* Below the header, down to the bottom. */
+  top: var(--header-height, 0px);
+  bottom: 0;
+  left: 0;
+  width: var(--holistix-sidebar-width);
+}
+
+aside.sidebar--dashboard ul {
+  /* Centred inside the full-height bar, which is where the icons sat when the
+     whole rail was an island and the only part of that look worth keeping. */
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ---- island: a floating box ---------------------------------------------- */
+
+aside.sidebar--island {
+  top: 50%;
+  transform: translateY(-50%);
+  /* Its own variable, not the whiteboard's: an island is placed by whoever
+     asks for one, and defaults to sitting just inside the left edge rather
+     than at some other component's width. */
+  left: var(--holistix-island-left, 16px);
+  width: fit-content;
+  height: auto;
+  border-radius: 8px;
+  transition: left 120ms ease;
+}
+
+aside.sidebar--island ul {
+  width: fit-content;
+}
+
+/* ---- shared -------------------------------------------------------------- */
+
+/* The active mark rides the active item.
+ *
+ * It used to be one `:before` on the list, offset from the top by an
+ * expression that restated the padding, the flex gap and the icon height —
+ * three numbers declared just above it, and wrong the moment any of them
+ * moved. Centring the list broke it outright, since it measures from the
+ * list's top edge and the items no longer start there.
+ *
+ * `:has()` asks the question directly instead: the item holding the active
+ * icon is the one that gets the mark. No arithmetic to keep in step, and it
+ * is right in both shapes. */
+aside ul li:has(svg.active):before {
   content: '';
   position: absolute;
   right: 0;
-  top: 0;
+  top: 4px; /* : centres a 24px mark on a 32px item */
   background: var(--white);
   width: 2px;
   height: 24px;
   border-radius: 8px;
-  transition: 0.4s;
-  top: calc(
-    (
-        var(--sidebar-active-item) * (32px + 24px)
-          /* : icon height + vertical flex gap */
-      ) + 16px /* : padding-top */ + (32px - 24px) / 2
-      /* : vertical center off 24px :before on 32px icon */
-  );
 }
 
 aside ul li svg {
@@ -65,5 +117,12 @@ aside ul li svg.active {
 @media (max-width: 1000px) {
   aside {
     display: none !important;
+  }
+
+  /* Zeroed here rather than in every consumer: whoever clears the bar reads
+     this one value, so hiding the rail and reclaiming its column stay the same
+     decision. */
+  :root {
+    --holistix-sidebar-width: 0px;
   }
 }

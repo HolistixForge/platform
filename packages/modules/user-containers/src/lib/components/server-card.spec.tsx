@@ -2,7 +2,7 @@ import { render, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import * as Tooltip from '@radix-ui/react-tooltip';
 
-import { UserContainerCardInternal } from './server-card';
+import { UserContainerCardInternal, isAlive } from './server-card';
 import {
   makeStoryArgs,
   runningOnPlatformStory,
@@ -277,5 +277,35 @@ describe('UserContainerCardInternal — choosing a runner', () => {
     const { container } = renderPicker();
 
     expect(container.querySelector('button button')).toBeNull();
+  });
+});
+
+//
+
+describe('isAlive - a stop is a decision the watchdog cannot express', () => {
+  const now = new Date('2026-01-01T12:00:00.000Z').getTime();
+  const at = (secondsAgo: number) =>
+    new Date(now - secondsAgo * 1000).toISOString();
+
+  it('reports a just-stopped service as not running', () => {
+    // The watchdog reported 5s ago and cannot report *not* running, so without
+    // stopped_at the card offered "stop" for a container already removed, and
+    // no way to start it again for half a minute.
+    expect(isAlive(at(5), at(1), now).alive).toBe(false);
+  });
+
+  it('still reports a running service as running', () => {
+    expect(isAlive(at(5), undefined, now).alive).toBe(true);
+  });
+
+  it('lets a report made after the stop win', () => {
+    // Started again: its own report is the newer fact, and a stale stopped_at
+    // must not keep a running service looking dead.
+    expect(isAlive(at(2), at(60), now).alive).toBe(true);
+  });
+
+  it('reports a silent service as not running, stopped or not', () => {
+    expect(isAlive(at(120), undefined, now).alive).toBe(false);
+    expect(isAlive(null, undefined, now).alive).toBe(false);
   });
 });

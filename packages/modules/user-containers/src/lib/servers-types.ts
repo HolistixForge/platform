@@ -66,6 +66,23 @@ export type TUserContainer = {
     machine_id?: string;
   } & TJsonObject;
   created_at: string;
+  /**
+   * When someone last asked this service to stop, if they have since it last
+   * started.
+   *
+   * A stop is a *decision*, and the watchdog cannot express one: a container
+   * that stopped reporting is indistinguishable from one whose tunnel dropped,
+   * and the card would offer play for a service that is about to come back on
+   * its own. This says which of the two it is.
+   *
+   * It is also what stops a local placement. `placementsFor` skips a stopped
+   * container, so the runner on the user's machine reconciles it away — the
+   * same mechanism that already removes a container whose placement is gone,
+   * rather than a second path that would have to agree with it.
+   *
+   * Cleared by `_start`, so restarting is one field and not two states.
+   */
+  stopped_at?: string;
 } & TUserContainerPublishedInfo;
 
 /**
@@ -137,6 +154,29 @@ export type UserContainerSystemInfo = {
     cards: string; // "Nvidia TRX3060 Cuda 12.6"
   };
 };
+
+//
+
+/**
+ * The services a person can be offered.
+ *
+ * A container publishes more names than it has doors. `__guard_base` is the
+ * auth guard's own address and `__guard_hub` is the JupyterHub OAuth shim on
+ * port 15000 — both have to reach the gateway, because that is what writes
+ * their nginx blocks, and neither is a page anybody should be sent to.
+ *
+ * Measured: the hub shim registered a moment before JupyterLab did, the card
+ * opened `httpServices[0]`, and clicking the notebook answered
+ * `{"error": "not found"}` from a proxy doing exactly its job. Which service
+ * wins that race is timing, so the card cannot pick by position.
+ *
+ * The `__` prefix is the convention already in use for both, so this reads it
+ * rather than inventing a second marker or a list to keep in step.
+ */
+export const openableServices = (
+  s: Pick<TUserContainer, 'httpServices'>
+): TUserContainer['httpServices'] =>
+  s.httpServices.filter((service) => !service.name.startsWith('__'));
 
 //
 

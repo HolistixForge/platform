@@ -35,7 +35,7 @@ import {
 import { TJupyterSharedData } from '../../jupyter-shared-model';
 import { useKernelPack } from '../../jupyter-hooks';
 import CodeEditorMonaco from '../code-editor-monaco/code-editor-monaco';
-import { BrowserWidgetManager } from '../../front/browser-widget-manager';
+import type { BrowserWidgetManager } from '../../front/browser-widget-manager';
 import { KernelStateIndicator } from '../node-kernel/kernel-state-indicator';
 import * as nbformat from '@jupyterlab/nbformat';
 
