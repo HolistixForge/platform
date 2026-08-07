@@ -23,6 +23,19 @@ type LSSOptions<T> = {
    * The key is a string controlled by the caller.
    */
   refresh: (key: string, t: T) => Promise<{ value: T; expire: Date } | null>;
+  /**
+   * How long the server said to wait, if it said.
+   *
+   * A store that only guesses cannot recover from being rate limited: it backs
+   * off for its own interval, asks again while the limit still holds, and the
+   * refusal it gets is another hit against the same limit. Given a server that
+   * names a number, waiting that long is both correct and cheaper than any
+   * schedule invented here.
+   *
+   * Optional, and transport-agnostic on purpose: this file knows nothing about
+   * HTTP, and the caller that threw the error is the one that can read it.
+   */
+  retryAfterMs?: (err: unknown) => number | undefined;
 };
 
 //
@@ -51,6 +64,17 @@ type WithValue<T> = {
 type AnError = {
   error: true;
   wait: number;
+  /**
+   * How many attempts have failed in a row, so the next wait can be longer.
+   *
+   * In localStorage rather than in memory because that is where the tabs agree
+   * on when to try again — a count held per tab would let a second tab reset
+   * the backoff of the first just by being opened.
+   *
+   * Absent on state written before this existed, which reads as the first
+   * failure and simply starts the backoff over.
+   */
+  attempt?: number;
 };
 
 type Deserialized<T> = NoValue | AnError | WithValue<T>;
@@ -93,6 +117,24 @@ const SOON = 1000 * 60 * 5; // 5 minutes
 // How long to wait before retrying after an error
 // This prevents retry storms and gives transient issues time to resolve
 const ERROR_WAIT = 1000 * 30; // 30 seconds
+
+// The ceiling on that wait once failures repeat.
+//
+// A fixed thirty seconds is right for one transient failure and wrong for a
+// persistent one, and the difference is not academic: Ganymede rate-limits
+// `/oauth/token` to 20 requests per 15 minutes, and a tab retrying every 30
+// seconds spends 30 of them per window. The bucket can then never refill while
+// a tab is open — measured, sixty consecutive refusals over half an hour, the
+// token store left holding nothing, and every collaborative action failing
+// because there was no token at all. The user sees a chat that will not send.
+//
+// Doubling from 30s reaches this ceiling in four failures, so a transient
+// error still recovers in half a minute and a persistent one stops making it
+// worse.
+const ERROR_WAIT_MAX = 1000 * 60 * 5; // 5 minutes
+
+const errorWait = (attempt: number): number =>
+  Math.min(ERROR_WAIT * Math.pow(2, Math.max(0, attempt)), ERROR_WAIT_MAX);
 
 // Jitter range for retry timing to prevent thundering herd across tabs
 // When multiple tabs schedule retries, they'll fire at slightly different times
@@ -237,10 +279,10 @@ export class LocalStorageStore<T> {
       const { value, expire } = r;
       this.write(key, { value, expire, pending: false, wait: undefined });
     } else {
-      // When get() or refresh() resolves to null, treat it as an error
-      // Write error state AND schedule automatic retry (same as rejection handling)
-      this.write(key, { error: true, wait: new Date().getTime() + ERROR_WAIT });
-      this.scheduleRetry(key);
+      // When get() or refresh() resolves to null, treat it as an error —
+      // through the same path as a rejection, so a getter that keeps answering
+      // null backs off exactly like one that keeps throwing.
+      this.failed(key, null);
     }
   };
 
@@ -254,27 +296,43 @@ export class LocalStorageStore<T> {
       .catch((err) => {
         debug(key, `start error`, err);
 
-        // STEP 1 of ERROR RECOVERY: Write error state with retry timestamp
-        //
-        // Example: If fetch fails at 10:00:00, we write:
-        //   { error: true, wait: 10:00:30 }
-        //
-        // This tells ALL tabs:
-        // - "There was an error"
-        // - "Don't retry before 10:00:30" (prevents retry storms)
-        //
-        // All tabs coordinate using this shared timestamp
-        this.write(key, {
-          error: true,
-          wait: new Date().getTime() + ERROR_WAIT, // now + 30 seconds
-        });
-
-        // STEP 2: Schedule automatic retry (internal, not triggered by get())
-        this.scheduleRetry(key);
+        // STEP 1 & 2 of ERROR RECOVERY: record the failure, which writes the
+        // shared "don't retry before" timestamp every tab coordinates on, and
+        // schedule the next attempt. The wait grows with consecutive failures
+        // — see `errorWait`.
+        this.failed(key, err);
       });
   };
 
   //
+
+  //
+
+  /**
+   * Record a failure and schedule the next attempt.
+   *
+   * The count comes from what is already in storage, so consecutive failures
+   * lengthen the wait and a success — which writes a value, not an error —
+   * starts it over. `retryAfterMs` wins when the server named a number,
+   * because a guess that is shorter than what the server will accept is a
+   * request guaranteed to be refused.
+   */
+  private failed = (key: Key, err: unknown): void => {
+    const previous = this.read<T>(key) as AnError | null;
+    const attempt = ((previous?.attempt ?? 0) as number) + 1;
+
+    const named = this._options.retryAfterMs?.(err);
+    const wait =
+      named !== undefined && named > 0 ? named : errorWait(attempt - 1);
+
+    this.write(key, {
+      error: true,
+      wait: new Date().getTime() + wait,
+      attempt,
+    });
+
+    this.scheduleRetry(key, new Date().getTime() + wait);
+  };
 
   private refresh = (key: Key, value: T): void => {
     debug(key, `refresh`);
@@ -284,15 +342,8 @@ export class LocalStorageStore<T> {
       .catch((err) => {
         debug(key, `refresh error`, err);
 
-        // STEP 1 of ERROR RECOVERY (same as start())
-        // Write error state with retry timestamp to coordinate all tabs
-        this.write(key, {
-          error: true,
-          wait: new Date().getTime() + ERROR_WAIT,
-        });
-
-        // STEP 2: Schedule automatic retry
-        this.scheduleRetry(key);
+        // Same as start(): record the failure and let the wait grow.
+        this.failed(key, err);
       });
   };
 
@@ -416,10 +467,15 @@ export class LocalStorageStore<T> {
           key,
           `restartAfterError: clearing stuck pending state and retrying`
         );
-        // Write a clean error state without pending
+        // Write a clean error state without pending, keeping the attempt
+        // count: this clears a stuck flag, it is not a fresh failure, and
+        // dropping the count here would restart the backoff every time a tab
+        // died mid-fetch — which is the state most likely to repeat.
+        const previous = this.read<T>(key) as AnError | null;
         this.write(key, {
           error: true,
           wait: new Date().getTime() + ERROR_WAIT,
+          attempt: previous?.attempt,
         });
         // Now start the retry
         this.start(key);

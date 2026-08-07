@@ -71,3 +71,6 @@ infra/ansible/*.retry
 infra/ansible/collections/
 # mkcert root CA exported from the VM for host-OS trust
 rootCA.pem
+# Throwaway probe scripts. Swept into a commit twice in one session by
+# `git add -A`, and removed twice.
+*.tmp.mjs

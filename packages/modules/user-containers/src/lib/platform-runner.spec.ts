@@ -310,4 +310,62 @@ describe('PlatformRunnerBackend', () => {
       delete process.env.CONTAINER_BROKER_TOKEN;
     }
   });
+
+  describe('stop', () => {
+    it('names the container the way the start named it', async () => {
+      // The two are written far apart and have to agree: `buildLaunchSpec`
+      // names it on the way up, `stop` has to reach the same one on the way
+      // down. A drift here stops nothing and reports success.
+      const stopped: string[] = [];
+      const runner = new PlatformRunnerBackend({
+        stopTransport: async (name) => {
+          stopped.push(name);
+        },
+      });
+
+      await runner.stop(container());
+
+      expect(stopped).toEqual(['holistix_My_Terminal_uc_abc12']);
+    });
+
+    it('treats a container that is already gone as stopped', async () => {
+      // 404 is the ordinary outcome of stopping twice, or of stopping one the
+      // platform lost in a restart. Raising would leave the card showing
+      // "running" for a container that does not exist.
+      const runner = new PlatformRunnerBackend({
+        endpoint: 'http://broker:9080',
+        token: 'tok',
+      });
+      const fetchMock = jest
+        .fn()
+        .mockResolvedValue({ ok: false, status: 404, text: async () => '' });
+      (global as any).fetch = fetchMock;
+
+      await expect(runner.stop(container())).resolves.toBeUndefined();
+      expect(fetchMock).toHaveBeenCalledWith(
+        'http://broker:9080/containers/holistix_My_Terminal_uc_abc12',
+        expect.objectContaining({ method: 'DELETE' })
+      );
+    });
+
+    it('raises when the broker refuses for any other reason', async () => {
+      const runner = new PlatformRunnerBackend({
+        endpoint: 'http://broker:9080',
+        token: 'tok',
+      });
+      (global as any).fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        text: async () => 'engine unavailable',
+      });
+
+      await expect(runner.stop(container())).rejects.toThrow('500');
+    });
+
+    it('fails loudly when no broker is configured', async () => {
+      await expect(
+        new PlatformRunnerBackend().stop(container())
+      ).rejects.toThrow('not configured');
+    });
+  });
 });

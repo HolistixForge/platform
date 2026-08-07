@@ -20,6 +20,10 @@ extract_settings() {
     # wrong password. Falls back to the token so a container started by a
     # gateway that predates this still connects.
     export VPN_SECRET=$(echo "$JSON_SETTINGS" | jq -r '.vpn_secret // empty')
+    # Whether the platform's TLS is signed by something this container has no
+    # root for. `start_auth_guard` passes --insecure-skip-verify on it, and
+    # without it the guard cannot fetch Ganymede's public key and never starts.
+    export GATEWAY_DEV=$(echo "$JSON_SETTINGS" | jq -r 'if .gateway_dev then "1" else "0" end')
 
     # Auth Guard Proxy settings (per-container OAuth client)
     export AUTH_GUARD_CLIENT_ID=$(echo "$JSON_SETTINGS" | jq -r '.auth_guard.client_id // empty')
@@ -213,7 +217,18 @@ get_system_info() {
 watchdog() {
     PAYLOAD='{"event":{"type":"user-container:watchdog","system": '$(get_system_info)'},"project_id":"'${PROJECT_ID}'"}'
     echo "--->$PAYLOAD<---"
-    curl -X POST http://${GATEWAY_VPN_IP}/collab/event \
+    # Bounded, because this call is inside the loop that repairs the tunnel.
+    #
+    # The address is on the tunnel. When the tunnel goes down between the ping
+    # that decided it was up and this report, the connection neither completes
+    # nor is refused — it hangs, and without a timeout `vpn_loop` hangs with
+    # it: the one thing that would notice the tunnel is down and rebuild it is
+    # blocked on the tunnel being up. Measured, a container sat in that state
+    # for minutes with a dead openvpn and no further output at all, while the
+    # gateway dropped its nginx location and its service answered 404.
+    #
+    # `map_http_service` below has carried the same guard from the start.
+    curl --max-time 5 -X POST http://${GATEWAY_VPN_IP}/collab/event \
         -H "Authorization: ${TOKEN}" \
         -H "Content-Type: application/json" \
         -d "${PAYLOAD}" \
@@ -278,6 +293,19 @@ start_auth_guard() {
     GUARD_FLAGS="$GUARD_FLAGS --container-id ${AUTH_GUARD_CONTAINER_ID}"
     GUARD_FLAGS="$GUARD_FLAGS --organization-id ${AUTH_GUARD_ORG_ID}"
     GUARD_FLAGS="$GUARD_FLAGS --cookie-domain .${DOMAIN}"
+
+    # What opens the service behind the guard, when it needs anything.
+    #
+    # JupyterLab authenticates its own API with a token, and handing that token
+    # to the browser would give the notebook's whole API to whoever holds the
+    # page — undoing, one layer up, the per-user authorization the guard just
+    # performed against the gateway. So the browser presents its session, the
+    # guard authorizes it, and the guard adds this on the way through. The image
+    # sets AUTH_GUARD_UPSTREAM_TOKEN before calling us; ttyd and n8n set nothing
+    # and the flag is simply absent.
+    if [ -n "${AUTH_GUARD_UPSTREAM_TOKEN:-}" ]; then
+        GUARD_FLAGS="$GUARD_FLAGS --upstream-token ${AUTH_GUARD_UPSTREAM_TOKEN}"
+    fi
 
     # In dev mode (self-signed certs), skip TLS verification
     if [ "${GATEWAY_DEV:-0}" = "1" ]; then

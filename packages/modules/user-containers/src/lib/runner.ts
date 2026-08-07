@@ -29,6 +29,23 @@ export type TRunnerConfig = {
    * actually emitted.
    */
   dev_host_ip?: string;
+  /**
+   * Whether the platform's own TLS is signed by something a container has no
+   * root for.
+   *
+   * The auth guard fetches Ganymede's public key over HTTPS before it will
+   * serve anything, and against a `mkcert` certificate that verification fails
+   * — "x509: failed to verify certificate" — so the guard never starts. What
+   * that costs is invisible from the guard: a JupyterLab container redirects
+   * to `__guard_hub.uc-….{domain}` for its OAuth flow, nothing is listening
+   * there because the guard is the thing that would have registered it, and
+   * the notebook answers 404. Measured on apollo.
+   *
+   * The guard has had `--insecure-skip-verify` from the start and the
+   * container has had the branch that passes it; the flag simply never
+   * reached one from the other.
+   */
+  gateway_dev?: boolean;
 };
 
 /**
@@ -90,6 +107,20 @@ export type TContainerLaunchSpec = {
  * Abstract base class for container runners.
  * Provides command generation and container startup functionality.
  */
+/**
+ * The name a runtime knows this container by.
+ *
+ * Its own function because two operations need to agree on it and they are
+ * written far apart: `buildLaunchSpec` names the container when it starts it,
+ * and `stop` has to name the same one to reach it. Derived from the container
+ * alone, so neither has to carry it.
+ */
+export const launchName = (container: TUserContainer): string => {
+  const shortUuid = container.user_container_id.substring(0, 8);
+  const safeName = container.container_name.replace(/[^a-zA-Z0-9_.-]/g, '_');
+  return `holistix_${safeName}_${shortUuid}`;
+};
+
 export abstract class ContainerRunner {
   /**
    * Resolve a container into the spec a runtime can start it from.
@@ -129,6 +160,7 @@ export abstract class ContainerRunner {
       // openvpn's memory and its scripts' environment, where it had no reason
       // to be.
       ...(config.vpn_secret ? { vpn_secret: config.vpn_secret } : {}),
+      ...(config.gateway_dev ? { gateway_dev: true } : {}),
       project_id: config.project_id,
       user_container_id: container.user_container_id,
       // Auth Guard Proxy config (per-container OAuth client registered with
@@ -148,10 +180,6 @@ export abstract class ContainerRunner {
     // Base64 encode settings
     const json = JSON.stringify(settings);
     const env = Buffer.from(json).toString('base64');
-
-    // Generate container name (sanitize: replace spaces with underscores)
-    const shortUuid = container.user_container_id.substring(0, 8);
-    const safeName = container.container_name.replace(/[^a-zA-Z0-9_.-]/g, '_');
 
     // Build --add-host entries for dev environments
     // In dev, containers can't resolve .local domains via DNS, so we map them
@@ -174,7 +202,7 @@ export abstract class ContainerRunner {
     }
 
     return {
-      name: `holistix_${safeName}_${shortUuid}`,
+      name: launchName(container),
       imageId: imageDef.imageId,
       imageRef: imageReference(imageDef),
       settings: env,
@@ -225,4 +253,24 @@ export abstract class ContainerRunner {
     imageRegistry: ContainerImageRegistry,
     config: TRunnerConfig
   ): Promise<TJsonObject>;
+
+  /**
+   * Stop a running container.
+   *
+   * A no-op by default, and that is the honest answer for a runner that does
+   * not reach out to anything: the local runner hands a command to somebody
+   * else's machine, and what stops a container there is its disappearance from
+   * the placement list `app-runner` reconciles against — which the reducer
+   * does by marking the container stopped, not by calling anything here.
+   *
+   * Not abstract, for the same reason: a runner that has nothing to do on stop
+   * should not have to say so, and a `stop` that threw "not implemented" would
+   * make the button dead again for exactly the runner where it works.
+   */
+  async stop(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    container: TUserContainer
+  ): Promise<void> {
+    return;
+  }
 }

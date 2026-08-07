@@ -43,6 +43,24 @@ export type TJupyterServerData = {
 export type TUserContainerSettings = {
   baseUrl: ServerConnection.ISettings['baseUrl'];
   token?: ServerConnection.ISettings['token'];
+  /**
+   * Passed to every request `@jupyterlab/services` makes.
+   *
+   * The platform's page and a container are different origins, so a request
+   * carries no cookie unless it is told to — and the cookie is what the
+   * container's auth guard authenticates on. Without this the guard sees an
+   * anonymous request, refuses it, and the notebook's kernels and terminals are
+   * simply never reachable.
+   */
+  init?: ServerConnection.ISettings['init'];
+  /**
+   * How the request is actually made.
+   *
+   * The gateway needs one that keeps the service's name in the URL while
+   * connecting to the container's VPN address — see `hostRoutedFetch`. The
+   * browser needs nothing: the name resolves there.
+   */
+  fetch?: ServerConnection.ISettings['fetch'];
 };
 
 //

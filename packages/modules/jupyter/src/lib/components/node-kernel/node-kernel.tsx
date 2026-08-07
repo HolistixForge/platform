@@ -22,7 +22,7 @@ import {
   TKernelNodeDataPayload,
 } from '../../jupyter-types';
 import { TJupyterSharedData } from '../../jupyter-shared-model';
-import { useKernelPack } from '../../jupyter-hooks';
+import { useKernelPack, useWatchedResources } from '../../jupyter-hooks';
 import { TJupyterEvent } from '../../jupyter-events';
 
 //
@@ -48,6 +48,10 @@ export const NodeKernel = ({
       ps: sd['user-containers:containers'].get(`${user_container_id}`),
     };
   });
+
+  // Same as the terminal node: while this is on screen, its container's kernels
+  // and terminals stay in the project's shared state, whoever created them.
+  useWatchedResources(s.ps);
 
   const kernel = s.js?.kernels[kernel_id];
 

@@ -59,6 +59,18 @@ export type UseContainerProps = {
   onDelete: () => Promise<void>;
   onOpenService: (name: string) => void;
   onSelectRunner: (runner_id: string) => Promise<void>;
+  /**
+   * Start and stop the service where it already is.
+   *
+   * Separate from `onSelectRunner`, which starts it too but as a side effect of
+   * *choosing* where it runs. Restarting a service should not require pretending
+   * to move it, and the run control on the card had nothing else to call: it was
+   * drawn with no callback at all, so clicking it did nothing and — because
+   * `ButtonBase` stops propagation unconditionally — did not open the card
+   * either. A control that looks alive and is not.
+   */
+  onStart: () => Promise<void>;
+  onStop: () => Promise<void>;
 };
 
 export const useContainerProps = (
@@ -112,6 +124,24 @@ export const useContainerProps = (
 
   //
 
+  const onStart = useCallback(async () => {
+    if (uc)
+      await dispatcher.dispatch({
+        type: 'user-container:start',
+        user_container_id: container_id,
+      });
+  }, [dispatcher, container_id, uc]);
+
+  const onStop = useCallback(async () => {
+    if (uc)
+      await dispatcher.dispatch({
+        type: 'user-container:stop',
+        user_container_id: container_id,
+      });
+  }, [dispatcher, container_id, uc]);
+
+  //
+
   const onOpenService = useCallback(
     async (name: string) => {
       if (uc) {
@@ -139,6 +169,8 @@ export const useContainerProps = (
       onDelete,
       onOpenService,
       onSelectRunner,
+      onStart,
+      onStop,
       container: uc,
       image: containerImages.get(`${uc.image_id}`),
     };

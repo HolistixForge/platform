@@ -17,7 +17,7 @@ func setupMiddleware(t *testing.T) (*Middleware, *SessionStore, func(string) str
 
 	privateKey, publicKey := generateTestKeyPair(t)
 
-	sessions := NewSessionStore(1 * time.Hour)
+	sessions := NewSessionStore(1*time.Hour, "")
 	jwtValidator := NewJWTValidatorFromKey(publicKey)
 
 	// Mock gateway for permission checks
@@ -47,7 +47,7 @@ func setupMiddleware(t *testing.T) (*Middleware, *SessionStore, func(string) str
 		PermChecker:  permChecker,
 	})
 
-	relayHandler := NewRelayHandler("test-secret", sessions, ".example.local", "uc-abc.org-xyz.example.local", oauthHandler)
+	relayHandler := NewRelayHandler("test-secret", sessions, ".example.local", "uc-abc.org-xyz.example.local", "", oauthHandler)
 
 	middleware := NewMiddleware(MiddlewareConfig{
 		Sessions:      sessions,
@@ -196,6 +196,43 @@ func TestMiddlewareRedirectsToCrossDomainLoginForCustomDomain(t *testing.T) {
 	}
 }
 
+// A deployment that does not serve on 443 has to keep its port in every
+// absolute URL. BaseFQDN is deliberately portless — it is a cookie domain and a
+// routing key — so the port has to be put back here, and it was not: the OAuth
+// redirect URI gained it and this one did not, so the two disagreed and a
+// custom-domain login landed on an address nothing was listening on.
+func TestCrossDomainLoginKeepsThePlatformPort(t *testing.T) {
+	if got := guardOrigin("uc-abc.org-xyz.apollo.test", ":8443"); got != "https://uc-abc.org-xyz.apollo.test:8443" {
+		t.Errorf("expected the port in the guard's origin, got %s", got)
+	}
+	// And nothing extra when the platform is on 443.
+	if got := guardOrigin("uc-abc.org-xyz.example.local", ""); got != "https://uc-abc.org-xyz.example.local" {
+		t.Errorf("expected a bare origin, got %s", got)
+	}
+}
+
+func TestMiddlewareCrossDomainRedirectCarriesThePort(t *testing.T) {
+	middleware, _, _ := setupMiddleware(t)
+	// The harness builds a portless deployment; this is the same middleware
+	// with a port, which is what a non-443 platform looks like.
+	middleware.portSuffix = ":8443"
+
+	handler := middleware.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("next handler should not be called")
+	}))
+
+	req := httptest.NewRequest("GET", "https://myapp.com/page", nil)
+	req.Host = "myapp.com"
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	location := w.Result().Header.Get("Location")
+	if !contains(location, "uc-abc.org-xyz.example.local:8443/__auth/cross-domain-login") {
+		t.Errorf("expected the platform port in the redirect, got %s", location)
+	}
+}
+
 func TestMiddlewareReturns401ForUnauthenticatedAPIRequest(t *testing.T) {
 	middleware, _, _ := setupMiddleware(t)
 
@@ -253,4 +290,57 @@ func searchString(s, substr string) bool {
 		}
 	}
 	return false
+}
+
+func TestExtractBearerTokenAcceptsJupytersScheme(t *testing.T) {
+	// `@jupyterlab/services` writes `Authorization: token <credential>` and
+	// offers no way to change it, so the gateway driving a notebook could not
+	// authenticate to the guard fronting it — 401 on every terminal creation.
+	// The scheme is a label on the envelope; what follows still validates the
+	// JWT and checks the permission.
+	cases := []struct {
+		header string
+		want   string
+	}{
+		{"Bearer abc.def.ghi", "abc.def.ghi"},
+		{"token abc.def.ghi", "abc.def.ghi"},
+		{"TOKEN abc.def.ghi", "abc.def.ghi"},
+		{"Basic abc", ""},
+		{"abc.def.ghi", ""},
+		{"", ""},
+	}
+	for _, tc := range cases {
+		r := httptest.NewRequest("GET", "/api/terminals", nil)
+		if tc.header != "" {
+			r.Header.Set("Authorization", tc.header)
+		}
+		if got := extractBearerToken(r); got != tc.want {
+			t.Fatalf("header %q: got %q, want %q", tc.header, got, tc.want)
+		}
+	}
+}
+
+func TestConsumeQueryTokenRemovesTheCredentialItUsed(t *testing.T) {
+	// A WebSocket handshake carries no Authorization header, so the credential
+	// travels in the query. Left there, it reaches the service — which reads a
+	// parameter of that name as its own token: JupyterLab answered 403 to every
+	// terminal WebSocket while the guard had authenticated the request.
+	r := httptest.NewRequest("GET", "/terminals/websocket/2?token=a.b.c&keep=1", nil)
+
+	consumeQueryToken(r)
+
+	if r.URL.Query().Has("token") {
+		t.Fatal("the credential was forwarded to the service")
+	}
+	if got := r.URL.Query().Get("keep"); got != "1" {
+		t.Fatalf("an unrelated parameter was lost: keep=%q", got)
+	}
+}
+
+func TestConsumeQueryTokenLeavesAQuerylessRequestAlone(t *testing.T) {
+	r := httptest.NewRequest("GET", "/api/terminals", nil)
+	consumeQueryToken(r)
+	if r.URL.RawQuery != "" {
+		t.Fatalf("RawQuery = %q, want empty", r.URL.RawQuery)
+	}
 }

@@ -1,3 +1,6 @@
+// First, and on its own line: see the file for why it cannot be inlined here.
+import './jquery-global';
+
 // Initialize OpenTelemetry BEFORE any other imports
 // This ensures auto-instrumentation works correctly
 import { initializeBrowserObservability } from '@holistix-forge/observability/browser';
@@ -24,8 +27,10 @@ import './index.scss';
 
 // Initialize observability for browser
 // Configuration is read from Vite environment variables
-const otlpEndpoint = import.meta.env.VITE_OTLP_ENDPOINT_HTTP || 'http://localhost:4318';
-const environment = import.meta.env.VITE_ENVIRONMENT || import.meta.env.MODE || 'development';
+const otlpEndpoint =
+  import.meta.env.VITE_OTLP_ENDPOINT_HTTP || 'http://localhost:4318';
+const environment =
+  import.meta.env.VITE_ENVIRONMENT || import.meta.env.MODE || 'development';
 
 console.log('[Observability] Browser SDK initializing:', {
   serviceName: 'frontend',

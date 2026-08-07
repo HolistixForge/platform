@@ -14,6 +14,7 @@ import { moduleFrontend as gatewayFrontend } from '@holistix-forge/gateway';
 import { moduleFrontend as socialsFrontend } from '@holistix-forge/socials/frontend';
 import { moduleFrontend as chatsFrontend } from '@holistix-forge/chats/frontend';
 import { moduleFrontend as vscodeFrontend } from '@holistix-forge/vscode/frontend';
+import { moduleFrontend as jupyterFrontend } from '@holistix-forge/jupyter/frontend';
 
 /**
  * Get all frontend modules
@@ -30,7 +31,7 @@ import { moduleFrontend as vscodeFrontend } from '@holistix-forge/vscode/fronten
  */
 const ALL_MODULES: {
   module: TModule<never, object>;
-  configKey?: 'collab' | 'reducers';
+  configKey?: 'collab' | 'reducers' | 'user-containers';
 }[] = [
   // Collab module - needs multi-project registry config
   { module: collabFrontend, configKey: 'collab' },
@@ -44,7 +45,7 @@ const ALL_MODULES: {
   { module: tabsFrontend },
 
   // Feature modules - no special config
-  { module: userContainersFrontend },
+  { module: userContainersFrontend, configKey: 'user-containers' },
   { module: notionFrontend },
   { module: airtableFrontend },
   { module: excalidrawFrontend },
@@ -52,11 +53,19 @@ const ALL_MODULES: {
   { module: socialsFrontend },
   { module: chatsFrontend },
   { module: vscodeFrontend },
+  // Loaded by the gateway since it existed, and never here — only its
+  // stylesheet was imported, in main.tsx. So `registerNodes` never ran and the
+  // whiteboard had no component for `jupyter-terminal`: a terminal pulled out
+  // of a notebook's card appeared as a node rendering its own payload,
+  // `{ "user_container_id": …, "terminal_id": "2" }`, with no error anywhere.
+  // `registerMenuEntries` never ran either, so the menu that offers "New
+  // Terminal" had no jupyter entry to show in the first place.
+  { module: jupyterFrontend },
 ];
 
 export function getAllModules(): {
   module: TModule<never, object>;
-  configKey?: 'collab' | 'reducers';
+  configKey?: 'collab' | 'reducers' | 'user-containers';
 }[] {
   // The same array every time, on purpose: callers pass this straight into a
   // render and a fresh array would invalidate the memo that loads the modules.

@@ -11,7 +11,7 @@ import (
 )
 
 func TestGenerateAndValidateRelayToken(t *testing.T) {
-	sessions := NewSessionStore(1 * time.Hour)
+	sessions := NewSessionStore(1*time.Hour, "")
 	defer sessions.Stop()
 
 	oauthHandler := NewOAuthHandler(OAuthConfig{
@@ -23,7 +23,7 @@ func TestGenerateAndValidateRelayToken(t *testing.T) {
 		CookieDomain: ".example.local",
 	})
 
-	relay := NewRelayHandler("test-secret", sessions, ".example.local", "uc-abc.org-xyz.example.local", oauthHandler)
+	relay := NewRelayHandler("test-secret", sessions, ".example.local", "uc-abc.org-xyz.example.local", "", oauthHandler)
 
 	session := &Session{
 		UserID:      "user-123",
@@ -61,7 +61,7 @@ func TestGenerateAndValidateRelayToken(t *testing.T) {
 }
 
 func TestRelayTokenExpired(t *testing.T) {
-	sessions := NewSessionStore(1 * time.Hour)
+	sessions := NewSessionStore(1*time.Hour, "")
 	defer sessions.Stop()
 
 	oauthHandler := NewOAuthHandler(OAuthConfig{
@@ -73,7 +73,7 @@ func TestRelayTokenExpired(t *testing.T) {
 		CookieDomain: ".example.local",
 	})
 
-	relay := NewRelayHandler("test-secret", sessions, ".example.local", "uc-abc.org-xyz.example.local", oauthHandler)
+	relay := NewRelayHandler("test-secret", sessions, ".example.local", "uc-abc.org-xyz.example.local", "", oauthHandler)
 
 	// Create a custom expired token
 	expiredPayload := relayTokenPayload{
@@ -93,7 +93,7 @@ func TestRelayTokenExpired(t *testing.T) {
 }
 
 func TestRelayTokenWrongOrigin(t *testing.T) {
-	sessions := NewSessionStore(1 * time.Hour)
+	sessions := NewSessionStore(1*time.Hour, "")
 	defer sessions.Stop()
 
 	oauthHandler := NewOAuthHandler(OAuthConfig{
@@ -105,7 +105,7 @@ func TestRelayTokenWrongOrigin(t *testing.T) {
 		CookieDomain: ".example.local",
 	})
 
-	relay := NewRelayHandler("test-secret", sessions, ".example.local", "uc-abc.org-xyz.example.local", oauthHandler)
+	relay := NewRelayHandler("test-secret", sessions, ".example.local", "uc-abc.org-xyz.example.local", "", oauthHandler)
 
 	session := &Session{
 		UserID:   "user-123",
@@ -125,7 +125,7 @@ func TestRelayTokenWrongOrigin(t *testing.T) {
 }
 
 func TestRelayTokenInvalidSignature(t *testing.T) {
-	sessions := NewSessionStore(1 * time.Hour)
+	sessions := NewSessionStore(1*time.Hour, "")
 	defer sessions.Stop()
 
 	oauthHandler := NewOAuthHandler(OAuthConfig{
@@ -137,10 +137,10 @@ func TestRelayTokenInvalidSignature(t *testing.T) {
 		CookieDomain: ".example.local",
 	})
 
-	relay := NewRelayHandler("test-secret", sessions, ".example.local", "uc-abc.org-xyz.example.local", oauthHandler)
+	relay := NewRelayHandler("test-secret", sessions, ".example.local", "uc-abc.org-xyz.example.local", "", oauthHandler)
 
 	// Create a token with a different secret
-	otherRelay := NewRelayHandler("other-secret", sessions, ".example.local", "uc-abc.org-xyz.example.local", oauthHandler)
+	otherRelay := NewRelayHandler("other-secret", sessions, ".example.local", "uc-abc.org-xyz.example.local", "", oauthHandler)
 
 	session := &Session{
 		UserID:   "user-123",
@@ -160,7 +160,7 @@ func TestRelayTokenInvalidSignature(t *testing.T) {
 }
 
 func TestRelayTokenNonceReuse(t *testing.T) {
-	sessions := NewSessionStore(1 * time.Hour)
+	sessions := NewSessionStore(1*time.Hour, "")
 	defer sessions.Stop()
 
 	oauthHandler := NewOAuthHandler(OAuthConfig{
@@ -172,7 +172,7 @@ func TestRelayTokenNonceReuse(t *testing.T) {
 		CookieDomain: ".example.local",
 	})
 
-	relay := NewRelayHandler("test-secret", sessions, ".example.local", "uc-abc.org-xyz.example.local", oauthHandler)
+	relay := NewRelayHandler("test-secret", sessions, ".example.local", "uc-abc.org-xyz.example.local", "", oauthHandler)
 
 	session := &Session{
 		UserID:   "user-123",
@@ -198,7 +198,7 @@ func TestRelayTokenNonceReuse(t *testing.T) {
 }
 
 func TestRelayTokenInvalidFormat(t *testing.T) {
-	sessions := NewSessionStore(1 * time.Hour)
+	sessions := NewSessionStore(1*time.Hour, "")
 	defer sessions.Stop()
 
 	oauthHandler := NewOAuthHandler(OAuthConfig{
@@ -210,7 +210,7 @@ func TestRelayTokenInvalidFormat(t *testing.T) {
 		CookieDomain: ".example.local",
 	})
 
-	relay := NewRelayHandler("test-secret", sessions, ".example.local", "uc-abc.org-xyz.example.local", oauthHandler)
+	relay := NewRelayHandler("test-secret", sessions, ".example.local", "uc-abc.org-xyz.example.local", "", oauthHandler)
 
 	_, err := relay.ValidateRelayToken("invalid-token-no-dot", "myapp.com")
 	if err == nil {

@@ -117,6 +117,16 @@ write_agents() {
     /bin/bash "${REPO_ROOT}/scripts/local-dev/macos/nginx-reload.sh" watch \
     > "${AGENTS}/${PREFIX}.nginx-reload.plist"
 
+  # A wildcard covers one label, and a user service is two below its
+  # organization — so every container needs its own name on the certificate,
+  # minted when the container is. Nothing minted them: a service created after
+  # the certificate was issued was unreachable in the browser and perfectly
+  # reachable with `curl -k`, which is a symptom that points anywhere but at
+  # TLS. This watches what the gateways are actually serving and reissues.
+  plist "${PREFIX}.certwatch" true \
+    /bin/bash "${REPO_ROOT}/scripts/local-dev/macos/certwatch.sh" watch \
+    > "${AGENTS}/${PREFIX}.certwatch.plist"
+
   # Through the script, for its bind address. Written straight here it was
   # `--bind 0.0.0.0`, which serves the packed gateway builds to every host that
   # can route to this laptop. gateway-apple.sh resolves the container network's
@@ -142,7 +152,7 @@ write_agents() {
 }
 
 labels() {
-  echo "${PREFIX}.coredns ${PREFIX}.nginx ${PREFIX}.nginx-reload ${PREFIX}.buildserver ${PREFIX}.broker ${PREFIX}.gateways"
+  echo "${PREFIX}.coredns ${PREFIX}.nginx ${PREFIX}.nginx-reload ${PREFIX}.certwatch ${PREFIX}.buildserver ${PREFIX}.broker ${PREFIX}.gateways"
 }
 
 # --------------------------------------------------------------------------
@@ -162,6 +172,7 @@ cmd_install() {
   echo "Stopping anything started by hand"
   pkill -f "coredns -conf ${CONF_DIR}/Corefile" 2>/dev/null && note "coredns"
   pkill -f "nginx-reload.sh watch" 2>/dev/null && note "nginx-reload"
+  pkill -f "certwatch.sh watch" 2>/dev/null && note "certwatch"
   pkill -f "http.server ${BUILD_PORT}" 2>/dev/null && note "build server"
   pkill -f "app-container-broker/main.js" 2>/dev/null && note "broker"
   nginx -s quit 2>/dev/null && note "nginx"
@@ -211,6 +222,7 @@ cmd_status() {
     "${PREFIX}.coredns:127.0.0.1:${DNS_PORT}:udp"
     "${PREFIX}.nginx:*:${HTTPS_PORT}:tcp"
     "${PREFIX}.nginx-reload::"
+    "${PREFIX}.certwatch::"
     "${PREFIX}.buildserver:*:${BUILD_PORT}:tcp"
     "${PREFIX}.broker:*:${BROKER_PORT}:tcp"
     "${PREFIX}.gateways::"

@@ -46,6 +46,8 @@ import {
 
 Logger.setPriority(EPriority.Debug);
 
+const STORY_PROJECT_ID = 'story-project';
+
 const collabConfig = {
   type: 'none' as const,
   room_id: 'jupyter-story',
@@ -132,6 +134,14 @@ const Story = () => {
       backendModules as { reducers: TReducersBackendExports },
       frontendModules as { reducers: TReducersFrontendExports }
     );
+
+    // The dispatcher refuses to send without one, and says so — "No project_id
+    // set" — from inside the browser dispatcher rather than from the story.
+    // `project-wrapper.tsx` sets it in the app; nothing set it here, so every
+    // event a module story dispatched was dropped on the floor.
+    (
+      frontendModules as { reducers: TReducersFrontendExports }
+    ).reducers.dispatcher.setProjectId(STORY_PROJECT_ID);
 
     return { backendModules, frontendModules };
   }, []);

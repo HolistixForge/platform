@@ -151,6 +151,25 @@ export class ContainerImageRegistry {
   }
 
   /**
+   * Whether this id names one of the platform's own images.
+   *
+   * The distinction decides whether a reference has to be digest-pinned. A
+   * built-in comes from this deployment's own list and changes when the
+   * platform is redeployed, not when a tenant pushes; a tenant image is
+   * required to carry `imageSha256` at registration, above. The broker has
+   * drawn the same line since it was written — `catalogue.ts`, `!builtin &&
+   * !DIGEST_PINNED` — and this is how the other half of the platform can ask
+   * the same question.
+   *
+   * Not derived from the reference: an unpinned reference and a built-in are
+   * the same string today, and reading trust out of a shape rather than out of
+   * the catalogue is how the two would drift apart.
+   */
+  isBuiltin(imageId: string): boolean {
+    return this.builtin.has(imageId);
+  }
+
+  /**
    * Every image a project may start. Without a `projectId` this is the built-in
    * catalogue alone — never another tenant's images.
    */

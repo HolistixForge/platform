@@ -18,6 +18,7 @@ type OAuthHandler struct {
 	clientID     string
 	clientSecret string
 	baseFQDN     string
+	portSuffix   string
 	httpClient   *http.Client
 	sessions     *SessionStore
 	cookieDomain string
@@ -31,6 +32,7 @@ type OAuthConfig struct {
 	ClientID     string
 	ClientSecret string
 	BaseFQDN     string
+	PortSuffix   string
 	HTTPClient   *http.Client
 	Sessions     *SessionStore
 	CookieDomain string
@@ -59,6 +61,7 @@ func NewOAuthHandler(cfg OAuthConfig) *OAuthHandler {
 		clientID:     cfg.ClientID,
 		clientSecret: cfg.ClientSecret,
 		baseFQDN:     cfg.BaseFQDN,
+		portSuffix:   cfg.PortSuffix,
 		httpClient:   cfg.HTTPClient,
 		sessions:     cfg.Sessions,
 		cookieDomain: cfg.CookieDomain,
@@ -85,7 +88,7 @@ func (o *OAuthHandler) RedirectToAuth(w http.ResponseWriter, r *http.Request, or
 
 	stateEncoded := base64.URLEncoding.EncodeToString(stateJSON)
 
-	redirectURI := fmt.Sprintf("https://%s/__auth/callback", o.baseFQDN)
+	redirectURI := fmt.Sprintf("https://%s%s/__auth/callback", o.baseFQDN, o.portSuffix)
 
 	params := url.Values{
 		"client_id":     {o.clientID},
@@ -169,7 +172,7 @@ func (o *OAuthHandler) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	// Redirect to original URL
 	redirectURL := state.OriginalURL
 	if redirectURL == "" {
-		redirectURL = fmt.Sprintf("https://%s/", o.baseFQDN)
+		redirectURL = fmt.Sprintf("https://%s%s/", o.baseFQDN, o.portSuffix)
 	}
 
 	http.Redirect(w, r, redirectURL, http.StatusFound)
@@ -177,7 +180,7 @@ func (o *OAuthHandler) HandleCallback(w http.ResponseWriter, r *http.Request) {
 
 // ExchangeCode exchanges an authorization code for access and refresh tokens.
 func (o *OAuthHandler) ExchangeCode(code string) (accessToken, refreshToken string, err error) {
-	redirectURI := fmt.Sprintf("https://%s/__auth/callback", o.baseFQDN)
+	redirectURI := fmt.Sprintf("https://%s%s/__auth/callback", o.baseFQDN, o.portSuffix)
 
 	data := url.Values{
 		"grant_type":    {"authorization_code"},
@@ -256,8 +259,39 @@ func generateCSRFToken() string {
 	return hex.EncodeToString(b)
 }
 
-// isAPIRequest checks if the request expects a JSON response (API client).
+// isAPIRequest reports whether answering with a redirect would be useless.
+//
+// The distinction is not "does it want JSON" — it is "can it follow a
+// redirect". A browser navigating can: it goes to Ganymede, signs in, and comes
+// back. A `fetch()` cannot follow one to another origin that answers without
+// CORS headers; it fails with a network error and the caller sees nothing it
+// can act on.
+//
+// Accept alone was the test, and JupyterLab's own calls send `Accept: */*`. So
+// its API requests were answered with a 302 to `/oauth/authorize`, the browser
+// refused the cross-origin hop, and the notebook mounted its shell with none of
+// its content — inside the project only, because a top-level load follows the
+// same redirect happily. Measured: five such failures per open, and a frame
+// that renders "Skip to main panel" and nothing else.
+//
+// `Sec-Fetch-Mode` is the browser saying which of the two this is, and every
+// engine this platform targets sends it. The older signals stay underneath for
+// clients that do not.
 func isAPIRequest(r *http.Request) bool {
+	switch r.Header.Get("Sec-Fetch-Mode") {
+	case "navigate":
+		// A real page load. Redirecting is exactly right, and this must win
+		// over the Accept check below: a navigation to a JSON endpoint still
+		// needs the sign-in flow.
+		return false
+	case "cors", "no-cors", "same-origin", "websocket":
+		return true
+	}
+
+	if strings.EqualFold(r.Header.Get("X-Requested-With"), "XMLHttpRequest") {
+		return true
+	}
+
 	accept := r.Header.Get("Accept")
 	return strings.Contains(accept, "application/json")
 }

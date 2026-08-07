@@ -54,6 +54,68 @@ function getOrgDataPath(orgId: string): string {
   return dataPath;
 }
 
+/**
+ * Take over what an older Ganymede left in a file.
+ *
+ * Runs once per organization, on the first pull that finds nothing in the
+ * database, and writes what it finds back through the same table as any save.
+ * The file is left where it is: reading it again is harmless once a row exists,
+ * and deleting the only copy of a project's state during a migration is not a
+ * risk worth taking for tidiness.
+ *
+ * Returns null when there is no file, which is the ordinary case for a new
+ * organization and for every deployment after the first run.
+ */
+async function migrateOrgDataFile(orgId: string): Promise<{
+  data: unknown;
+  timestamp: string | null;
+  stored_at: string | null;
+} | null> {
+  let content: string;
+  try {
+    content = await fs.promises.readFile(getOrgDataPath(orgId), 'utf-8');
+  } catch {
+    return null;
+  }
+
+  // `data` typed as the query layer wants it: this is a document whose shape
+  // the collaborative engine owns, and the file it comes from has no schema to
+  // check it against — the only honest claim is that it is JSON.
+  let pkg: {
+    data?: Record<string, unknown>;
+    timestamp?: string;
+    stored_at?: string;
+  };
+  try {
+    pkg = JSON.parse(content);
+  } catch (error) {
+    // A truncated file is exactly what the old write could leave behind, and
+    // it is worth saying out loud rather than treating as "no state".
+    log(
+      EPriority.Error,
+      'GATEWAY_DATA',
+      `Data file for org ${orgId} could not be parsed and was not migrated`,
+      error
+    );
+    return null;
+  }
+
+  if (!pkg.data) return null;
+
+  await pg.query(
+    `INSERT INTO organization_state (organization_id, gateway_id, data, saved_at, updated_at)
+     VALUES ($1, NULL, $2, $3, now())
+     ON CONFLICT (organization_id) DO NOTHING`,
+    [orgId, pkg.data as never, pkg.timestamp ?? null]
+  );
+
+  return {
+    data: pkg.data,
+    timestamp: pkg.timestamp ?? null,
+    stored_at: pkg.stored_at ?? null,
+  };
+}
+
 export const setupGatewayDataRoutes = (router: Router) => {
   /**
    * Push organization data snapshot from gateway
@@ -101,43 +163,44 @@ export const setupGatewayDataRoutes = (router: Router) => {
       );
 
       try {
-        // Ensure data directory exists
-        const dataDir = getDataDir();
-        await fs.promises.mkdir(dataDir, { recursive: true });
+        const stored_at = new Date().toISOString();
 
-        // Prepare data package
-        const dataPackage = {
-          organization_id,
-          gateway_id,
-          timestamp: timestamp || new Date().toISOString(),
-          stored_at: new Date().toISOString(),
-          data,
-        };
-
-        // Write to file (atomic write via temp file + rename)
-        const dataPath = getOrgDataPath(organization_id);
-        const tempPath = `${dataPath}.tmp`;
-
-        await fs.promises.writeFile(
-          tempPath,
-          JSON.stringify(dataPackage, null, 2),
-          'utf-8'
+        // In the database, not in a file.
+        //
+        // It was `/root/.local-dev/{env}/org-data/{org}.json`, which survives
+        // only while Ganymede is a process on the platform host. Where it runs
+        // in a container — macOS today — the path is inside that container, so
+        // recreating it destroyed every node, edge and position the projects
+        // had. Measured twice in one day, with all the services still running
+        // and the whiteboard knowing nothing of them.
+        //
+        // One statement, so a save is whole or not at all: the file version
+        // wrote a temporary copy and renamed it, which is atomic on one host
+        // and says nothing about two gateways writing at once.
+        const result = await pg.query(
+          `INSERT INTO organization_state (organization_id, gateway_id, data, saved_at, updated_at)
+           VALUES ($1, $2, $3, $4, now())
+           ON CONFLICT (organization_id) DO UPDATE
+             SET gateway_id = EXCLUDED.gateway_id,
+                 data = EXCLUDED.data,
+                 saved_at = EXCLUDED.saved_at,
+                 updated_at = now()
+           RETURNING octet_length(data::text) AS size_bytes`,
+          [organization_id, gateway_id, data, timestamp || stored_at]
         );
 
-        await fs.promises.rename(tempPath, dataPath);
-
-        const stats = await fs.promises.stat(dataPath);
+        const size_bytes = Number(result.next()?.oneRow()['size_bytes'] ?? 0);
 
         log(
           EPriority.Info,
           'GATEWAY_DATA',
-          `✅ Data stored for org ${organization_id} (${stats.size} bytes)`
+          `✅ Data stored for org ${organization_id} (${size_bytes} bytes)`
         );
 
         return res.json({
           success: true,
-          stored_at: dataPackage.stored_at,
-          size_bytes: stats.size,
+          stored_at,
+          size_bytes,
         });
       } catch (error: any) {
         log(
@@ -192,12 +255,38 @@ export const setupGatewayDataRoutes = (router: Router) => {
       );
 
       try {
-        const dataPath = getOrgDataPath(organization_id);
+        const stored = await pg.query(
+          `SELECT data, saved_at, updated_at
+             FROM organization_state
+            WHERE organization_id = $1`,
+          [organization_id]
+        );
 
-        // Check if data exists
-        try {
-          await fs.promises.access(dataPath, fs.constants.R_OK);
-        } catch {
+        // The file left behind by an older Ganymede.
+        //
+        // Read once, on the first pull that finds nothing in the database, and
+        // written back through the same path as any other save. Without it the
+        // move to a table is indistinguishable from the loss it exists to
+        // prevent: every project that had state would come back empty.
+        const row = stored.next()?.oneRow();
+
+        if (!row) {
+          const migrated = await migrateOrgDataFile(organization_id);
+          if (migrated) {
+            log(
+              EPriority.Notice,
+              'GATEWAY_DATA',
+              `Migrated org ${organization_id} from its data file into the database`
+            );
+            return res.json({
+              success: true,
+              exists: true,
+              data: migrated.data,
+              timestamp: migrated.timestamp,
+              stored_at: migrated.stored_at,
+            });
+          }
+
           log(
             EPriority.Info,
             'GATEWAY_DATA',
@@ -211,22 +300,18 @@ export const setupGatewayDataRoutes = (router: Router) => {
           });
         }
 
-        // Read data
-        const content = await fs.promises.readFile(dataPath, 'utf-8');
-        const dataPackage = JSON.parse(content);
-
         log(
           EPriority.Info,
           'GATEWAY_DATA',
-          `✅ Data retrieved for org ${organization_id} (stored: ${dataPackage.stored_at})`
+          `✅ Data retrieved for org ${organization_id} (stored: ${row['updated_at']})`
         );
 
         return res.json({
           success: true,
           exists: true,
-          data: dataPackage.data,
-          timestamp: dataPackage.timestamp,
-          stored_at: dataPackage.stored_at,
+          data: row['data'],
+          timestamp: row['saved_at'],
+          stored_at: row['updated_at'],
         });
       } catch (error: any) {
         log(

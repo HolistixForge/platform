@@ -73,11 +73,57 @@ server {
     server_name ${server_host};
 
     location / {
+        # The service is shown inside the project, in an iframe, and some
+        # images refuse to be framed at all.
+        #
+        # n8n sends \`X-Frame-Options: SAMEORIGIN\` and
+        # \`Cross-Origin-Resource-Policy: same-origin\`. The platform is at
+        # \`\${DOMAIN}\` and the service at \`{service}.uc-….\${DOMAIN}\` — different
+        # origins — so Chrome refuses the frame with ERR_BLOCKED_BY_RESPONSE and
+        # draws its own "the web page might be temporarily down" inside it. The
+        # response is a perfectly good 200; \`curl\` sees the page and the browser
+        # will not show it, which is why this reads as a network fault and is
+        # not one. ttyd sends neither header, so the terminal always worked and
+        # n8n never did — the difference is the image, not the platform.
+        #
+        # Hidden here rather than configured per image: the whole catalogue is
+        # framed the same way, and an image's author has no reason to know about
+        # this platform.
+        proxy_hide_header X-Frame-Options;
+        proxy_hide_header Cross-Origin-Resource-Policy;
+        proxy_hide_header Cross-Origin-Opener-Policy;
+        proxy_hide_header Cross-Origin-Embedder-Policy;
+
+        # Not simply removed — replaced by the same restriction expressed for
+        # the one embedder that should have it. \`frame-ancestors\` keeps a
+        # hostile page elsewhere from framing somebody's service, which is what
+        # \`X-Frame-Options\` was there for.
+        #
+        # With the port. An origin includes it, and \`\${DOMAIN}\` carries one
+        # wherever nginx is not on 443 — the same value that is wrong in a
+        # \`server_name\` and right here.
+        #
+        # A second Content-Security-Policy header is safe on purpose: browsers
+        # enforce the intersection of all of them, so an image that ships its
+        # own policy keeps it and gains this restriction rather than losing it.
+        add_header Content-Security-Policy "frame-ancestors https://${DOMAIN} https://*.${DOMAIN}" always;
+        add_header Cross-Origin-Resource-Policy "cross-origin" always;
+
         proxy_pass http://${ip}:${port};
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
-        proxy_set_header Host \$host;
+        # \$http_host, not \$host: the port the client asked for, kept.
+        #
+        # \$host is the name with the port stripped, and a backend that builds
+        # an absolute URL from the Host header then builds it without one.
+        # Measured: the auth guard captured \`original_url\` as
+        # \`https://jupyterlab.uc-….apollo.test/\` and sent the user there after
+        # login, where nothing is listening — "took too long to respond" on a
+        # service that was running the whole time. The guard is not special;
+        # any backend that reflects its own address has the same problem, so
+        # this belongs here rather than in one of them.
+        proxy_set_header Host \$http_host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;

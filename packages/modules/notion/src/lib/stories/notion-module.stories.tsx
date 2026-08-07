@@ -113,11 +113,34 @@ const ProxyInstructions = ({ loading }: { loading?: boolean }) => (
   </div>
 );
 
+/**
+ * The story used to probe a proxy on localhost:3001 and, finding none, show
+ * setup instructions instead of the module. That made the outcome depend on
+ * whether somebody had started a server — the screenshot suite saw the
+ * instructions, and a reader saw a wall of text where a component should be.
+ *
+ * `example-1.json` beside this file is what that proxy would have returned.
+ * Serving it directly means the story renders the same thing every time, on
+ * any machine, with no process to remember to start.
+ *
+ * The probe is kept behind an opt-in: set `NOTION_STORY_PROXY` on the window
+ * to talk to a live proxy when you actually want to.
+ */
 const ProxyCheckWrapper = ({ children }: { children: ReactNode }) => {
   const [isProxyRunning, setIsProxyRunning] = useState<boolean | null>(null);
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
+    const wantsLiveProxy = Boolean(
+      (window as unknown as { NOTION_STORY_PROXY?: boolean }).NOTION_STORY_PROXY
+    );
+
+    if (!wantsLiveProxy) {
+      setIsProxyRunning(true);
+      setIsChecking(false);
+      return;
+    }
+
     const checkProxy = async () => {
       try {
         const response = await fetch('http://localhost:3001/proxy', {
@@ -152,6 +175,7 @@ const ProxyCheckWrapper = ({ children }: { children: ReactNode }) => {
   return children;
 };
 
+const STORY_PROJECT_ID = 'story-project';
 //
 
 const collabConfig = {
@@ -222,6 +246,14 @@ const Story = () => {
       backendModules as { reducers: TReducersBackendExports },
       frontendModules as { reducers: TReducersFrontendExports }
     );
+
+    // The dispatcher refuses to send without one, and says so — "No project_id
+    // set" — from inside the browser dispatcher rather than from the story.
+    // `project-wrapper.tsx` sets it in the app; nothing set it here, so every
+    // event a module story dispatched was dropped on the floor.
+    (
+      frontendModules as { reducers: TReducersFrontendExports }
+    ).reducers.dispatcher.setProjectId(STORY_PROJECT_ID);
 
     return { backendModules, frontendModules };
   }, []);

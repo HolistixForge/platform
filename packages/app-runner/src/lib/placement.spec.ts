@@ -78,6 +78,50 @@ describe('assertPlacementIsForUs', () => {
     ).toThrow(/not digest-pinned/);
   });
 
+  it('should accept a built-in image that carries no digest', () => {
+    // The platform's own catalogue. Those images change when the platform is
+    // redeployed rather than when a tenant pushes, and none of them has a
+    // digest recorded — the default terminal image least of all, which is the
+    // first thing anybody places on their own machine. Refusing it here made
+    // the local runner unable to start the one image everybody has.
+    //
+    // Same line the broker draws: `!resolved.builtin && !DIGEST_PINNED`.
+    expect(() =>
+      assertPlacementIsForUs(
+        placement({
+          imageRef: 'holistixforge/ubuntu-terminal:24.04',
+          builtin: true,
+        }),
+        'machine-1',
+        projects
+      )
+    ).not.toThrow();
+  });
+
+  it('should still refuse an unpinned tenant image', () => {
+    // The exemption is the flag, not the shape of the string. A tenant image
+    // reaching here unpinned is a resolution that did not happen.
+    expect(() =>
+      assertPlacementIsForUs(
+        placement({ imageRef: 'ghcr.io/acme/thing:v1', builtin: false }),
+        'machine-1',
+        projects
+      )
+    ).toThrow(/not digest-pinned/);
+  });
+
+  it('should treat a placement with no builtin field as a tenant image', () => {
+    // A gateway that predates the field sends nothing, and the safe reading of
+    // nothing is the stricter rule.
+    const { builtin: _omitted, ...withoutFlag } = placement({
+      imageRef: 'ghcr.io/acme/thing:v1',
+    }) as Record<string, unknown>;
+
+    expect(() =>
+      assertPlacementIsForUs(withoutFlag as never, 'machine-1', projects)
+    ).toThrow(/not digest-pinned/);
+  });
+
   it('should refuse a digest that is not a full sha256', () => {
     // Act / Assert - a truncated digest is not a weaker pin, it is no pin
     expect(() =>

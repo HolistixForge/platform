@@ -71,6 +71,22 @@ BROKER_PORT="${BROKER_PORT:-9080}"
 # connecting. Turn it on only once every image in the catalogue is rebuilt —
 # start-vpn.sh says the same thing from the other side.
 VPN_PER_CLIENT_IDENTITY="${VPN_PER_CLIENT_IDENTITY:-0}"
+# TCP here, UDP everywhere else — a concession, and it is Apple's UDP proxy
+# that forces it.
+#
+# `--publish <p>:<p>/udp` binds on the Mac and works, until traffic goes
+# through it: measured, the port is listening after `container start`, a
+# container completes its handshake, and about a minute later nothing is bound
+# on the host while the TCP publish beside it carries every HTTP request of the
+# night without a hiccup. There is no repair from outside, either — the host
+# cannot reach a container's own address, so a relay has nowhere to relay to.
+#
+# The cost is real and is the reason this is not the default anywhere else:
+# OpenVPN over TCP nests one reliable transport in another, so a single lost
+# packet stalls every tunnelled connection rather than one. On a Mac talking to
+# containers on the same machine, that loss does not happen; a proxy that dies
+# under load does.
+VPN_PROTO="${VPN_PROTO:-tcp}"
 
 NET=default
 PG=hx-postgres
@@ -436,13 +452,31 @@ cmd_up() {
     # exist. Whoever holds the port is named, because on this machine it is
     # usually the Lima VM this platform is migrating out of, forwarding the
     # same range to the same loopback.
-    local holder
-    holder="$(lsof -nP -iTCP:"${http}" -sTCP:LISTEN -t 2>/dev/null | head -1)"
-    if [ -n "$holder" ]; then
-      ko "port ${http} is taken by $(ps -p "$holder" -o comm= 2>/dev/null || echo "pid ${holder}") (pid ${holder})"
-      note "Give this pool another range:  HTTP_BASE=7200 VPN_BASE=49200 $0 up ${count}"
-      return 1
-    fi
+    # Both published ports, not just the web one.
+    #
+    # The tunnel was UDP when this check was written, and `--publish` without
+    # `/udp` is TCP — so once VPN_PROTO started defaulting to tcp, a clash on
+    # ${vpn} produced exactly the failure this guard exists to prevent, one
+    # port later: `container run` exits on "Address already in use" with the
+    # row already written, and the next organization is handed a gateway that
+    # is not there. The leftover Lima VM named below forwards the same range,
+    # which is precisely what binds the tunnel port.
+    local port_holder proto
+    for port_holder in "${http}:tcp" "${vpn}:${VPN_PROTO}"; do
+      local port="${port_holder%%:*}"
+      proto="${port_holder##*:}"
+      local holder
+      if [ "$proto" = udp ]; then
+        holder="$(lsof -nP -iUDP:"${port}" -t 2>/dev/null | head -1)"
+      else
+        holder="$(lsof -nP -iTCP:"${port}" -sTCP:LISTEN -t 2>/dev/null | head -1)"
+      fi
+      if [ -n "$holder" ]; then
+        ko "port ${port}/${proto} is taken by $(ps -p "$holder" -o comm= 2>/dev/null || echo "pid ${holder}") (pid ${holder})"
+        note "Give this pool another range:  HTTP_BASE=7200 VPN_BASE=49200 $0 up ${count}"
+        return 1
+      fi
+    done
 
     echo "${name}  http ${http}  vpn ${vpn}  → ${upstream}"
 
@@ -491,7 +525,7 @@ cmd_up() {
       --network "$NET" --cpus 2 --memory 2048m \
       --cap-add NET_ADMIN \
       --publish "${http}:${http}" \
-      --publish "${vpn}:${vpn}/udp" \
+      --publish "${vpn}:${vpn}$([ "$VPN_PROTO" = udp ] && echo /udp)" \
       -e "ENV_NAME=${ENV_NAME}" \
       -e "GATEWAY_ID=${id}" \
       -e "GATEWAY_TOKEN=${token}" \
@@ -507,7 +541,9 @@ cmd_up() {
       -e "OTEL_SERVICE_NAME=gateway-${name}" \
       -e "OTEL_DEPLOYMENT_ENVIRONMENT=${ENV_NAME}" \
       -e "NODE_TLS_REJECT_UNAUTHORIZED=0" \
+      -e "GATEWAY_DEV=1" \
       -e "VPN_PER_CLIENT_IDENTITY=${VPN_PER_CLIENT_IDENTITY:-0}" \
+      -e "GATEWAY_VPN_PROTO=${VPN_PROTO}" \
       -e "CONTAINER_BROKER_URL=http://${host}:${BROKER_PORT}" \
       -e "CONTAINER_BROKER_TOKEN=$(cat "${STATE}/broker.token")" \
       -- "$IMAGE" >/dev/null 2>&1
