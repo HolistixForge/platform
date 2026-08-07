@@ -199,10 +199,19 @@ export class JupyterlabDriver {
       const terminalModels = await fetch(
         `${this.km.serverSettings.baseUrl}api/terminals`,
         {
-          // The cookie, not a bearer token. The guard authenticates the browser
-          // by session and adds the service's own token upstream, so a token
-          // sent from here would be one the browser should never have held.
+          // Both, because the guard recognises a browser two ways and only one
+          // of them exists at any moment: a session cookie, which is there once
+          // that container's page has been opened, and a credential it
+          // validates. A node on the whiteboard has opened nothing — sending
+          // the cookie alone answered 401, the poll reported no terminals at
+          // all, and the shared state was overwritten with an empty list.
+          //
+          // The token is the user's own, never the service's: the guard checks
+          // the permission and swaps in the service's token upstream.
           credentials: 'include',
+          headers: this.km.serverSettings.token
+            ? { Authorization: `token ${this.km.serverSettings.token}` }
+            : undefined,
         }
       );
 
@@ -217,10 +226,19 @@ export class JupyterlabDriver {
       const sessionsResponse = await fetch(
         `${this.km.serverSettings.baseUrl}api/sessions`,
         {
-          // The cookie, not a bearer token. The guard authenticates the browser
-          // by session and adds the service's own token upstream, so a token
-          // sent from here would be one the browser should never have held.
+          // Both, because the guard recognises a browser two ways and only one
+          // of them exists at any moment: a session cookie, which is there once
+          // that container's page has been opened, and a credential it
+          // validates. A node on the whiteboard has opened nothing — sending
+          // the cookie alone answered 401, the poll reported no terminals at
+          // all, and the shared state was overwritten with an empty list.
+          //
+          // The token is the user's own, never the service's: the guard checks
+          // the permission and swaps in the service's token upstream.
           credentials: 'include',
+          headers: this.km.serverSettings.token
+            ? { Authorization: `token ${this.km.serverSettings.token}` }
+            : undefined,
         }
       );
       const sessions = await sessionsResponse.json();

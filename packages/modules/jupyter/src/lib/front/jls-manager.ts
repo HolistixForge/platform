@@ -79,6 +79,9 @@ export type TOnNewDriverCb = (s: TUserContainer) => Promise<void>;
 
 export class JLsManager extends Listenable {
   _drivers: Map<string, Promise<JupyterlabDriver>> = new Map();
+
+  /** How many things are showing each container. See `watchResources`. */
+  private _watchers: Map<string, number> = new Map();
   _kernelPacks: Map<string, TKernelPack> = new Map();
 
   /**
@@ -316,6 +319,54 @@ export class JLsManager extends Listenable {
   // just ensure a driver is created, it will start polling resources
   public startPollingResources(server: TUserContainer) {
     this._getDriver(server);
+  }
+
+  /**
+   * Watch a container's kernels and terminals for as long as something shows
+   * them, and stop when nothing does.
+   *
+   * The driver already counts its listeners and polls only while it has one —
+   * `subscribeResourceListener` starts, the last `unsubscribe` stops. What was
+   * missing is anyone subscribing outside a creation form: `startPollingResources`
+   * was called from `new-terminal` and `new-kernel` and nowhere else, so with no
+   * form open nothing polled, no `jupyter:resources-changed` ever reached the
+   * gateway, and a terminal opened inside JupyterLab stayed invisible to the
+   * project. Measured: two terminals live in the container, zero events.
+   *
+   * Reference-counted per container rather than per component, so three nodes
+   * showing the same notebook cost one timer, and the timer goes away with the
+   * last of them.
+   *
+   * Returns the release. A caller that drops it leaves a container polling for
+   * the life of the page, which is the failure this is meant to end.
+   */
+  public watchResources(server: TUserContainer): () => void {
+    const id = server.user_container_id;
+    let released = false;
+
+    const count = (this._watchers.get(id) ?? 0) + 1;
+    this._watchers.set(id, count);
+    if (count === 1) this.startPollingResources(server);
+
+    return () => {
+      // Idempotent: React calls a cleanup once, but a caller that releases
+      // twice would otherwise stop a poll another node still needs.
+      if (released) return;
+      released = true;
+
+      const left = (this._watchers.get(id) ?? 1) - 1;
+      if (left > 0) {
+        this._watchers.set(id, left);
+        return;
+      }
+      this._watchers.delete(id);
+      this._drivers
+        .get(id)
+        ?.then((driver) => driver.stopPollingResources())
+        .catch(() => {
+          // A driver that never resolved has nothing to stop.
+        });
+    };
   }
 
   //

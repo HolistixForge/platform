@@ -29,7 +29,7 @@ import {
 } from '@holistix-forge/whiteboard/frontend';
 
 import { TJupyterSharedData } from '../../jupyter-shared-model';
-import { useJLsManager } from '../../jupyter-hooks';
+import { useJLsManager, useWatchedResources } from '../../jupyter-hooks';
 import { jupyterlabIsReachable } from '../../ds-backend';
 import {
   TUserContainerSettings,
@@ -121,6 +121,11 @@ export const JupyterTerminal = ({
   );
 
   const jlsManager = useJLsManager();
+
+  // While this node is on screen, its container's kernels and terminals stay in
+  // the project's shared state — including the ones somebody opened inside
+  // JupyterLab, which nothing was watching for before.
+  useWatchedResources(server);
 
   const ref = useRef<HTMLDivElement>(null);
   const terminalWidgetRef = useRef<Terminal | null>(null); // Store the Terminal widget instance
