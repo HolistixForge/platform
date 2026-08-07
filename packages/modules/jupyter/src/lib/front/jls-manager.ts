@@ -284,34 +284,52 @@ export class JLsManager extends Listenable {
   //
 
   private _getDriver(server: TUserContainer): Promise<JupyterlabDriver> {
-    const p = this._drivers.get(server.user_container_id);
-    if (!p) {
-      const np = new Promise<JupyterlabDriver>((resolve, reject) => {
-        this._onNewDriver(server).then(() => {
-          this.getServerSetting(server).then((ss) => {
-            const driver = new JupyterlabDriver(ss);
-            driver.subscribeResourceListener(() => {
-              const resources = {
-                kernels: driver.getKernels(),
-                terminals: driver.getTerminals(),
-              };
-              // send new resource to backend, that it will push back through shared state
-              // that will trig _onChange() and update kernel packs and UI
-              this._dispatcher.dispatch({
-                type: 'jupyter:resources-changed',
-                user_container_id: server.user_container_id,
-                resources,
-                systemEvent: true,
-              });
-            });
-            resolve(driver);
+    const existing = this._drivers.get(server.user_container_id);
+    if (existing) return existing;
+
+    // Chained, not wrapped in a `new Promise` whose `reject` nobody called.
+    //
+    // It was: two nested `.then` inside an executor that took a `reject` and
+    // never used it. Any failure on the way — the container not answering, the
+    // token not resolving — left the promise pending forever. No driver, no
+    // poll, and no error: the resources of a notebook simply never appeared,
+    // and the silence was the same as a container with nothing in it.
+    //
+    // Measured: not one request to `api/terminals` left the browser, and not
+    // one line was logged, while three terminals were running.
+    const np = this._onNewDriver(server)
+      .then(() => this.getServerSetting(server))
+      .then((ss) => {
+        const driver = new JupyterlabDriver(ss);
+        driver.subscribeResourceListener(() => {
+          const resources = {
+            kernels: driver.getKernels(),
+            terminals: driver.getTerminals(),
+          };
+          // send new resource to backend, that it will push back through shared
+          // state, which triggers _onChange() and updates kernel packs and UI
+          this._dispatcher.dispatch({
+            type: 'jupyter:resources-changed',
+            user_container_id: server.user_container_id,
+            resources,
+            systemEvent: true,
           });
         });
+        return driver;
+      })
+      .catch((error) => {
+        // Forgotten, so the next mount tries again rather than being handed a
+        // promise that will never resolve for the life of the page.
+        this._drivers.delete(server.user_container_id);
+        console.error(
+          `[jupyter] could not open a driver for ${server.user_container_id}`,
+          error
+        );
+        throw error;
       });
-      this._drivers.set(server.user_container_id, np);
-      return np;
-    }
-    return p;
+
+    this._drivers.set(server.user_container_id, np);
+    return np;
   }
 
   //
