@@ -4,7 +4,7 @@ import { Sidebar } from './Sidebar';
 
 /**
  * SIMPLIFIED REACT COMPONENT TESTING GUIDE
- * 
+ *
  * This is a minimal, working example that demonstrates:
  * - Testing React components with @testing-library/react
  * - Basic rendering tests
@@ -36,14 +36,14 @@ describe('Sidebar Component - Simple Example', () => {
   describe('Basic Rendering', () => {
     it('should render without crashing', () => {
       render(<Sidebar items={simpleItems} active="Home" />);
-      
+
       // Component should be in the document
       expect(screen.getByRole('list')).toBeInTheDocument();
     });
 
     it('should render all items', () => {
       render(<Sidebar items={simpleItems} active="Home" />);
-      
+
       // Check if all items are rendered
       expect(screen.getByTitle('Home')).toBeInTheDocument();
       expect(screen.getByTitle('Settings')).toBeInTheDocument();
@@ -52,7 +52,7 @@ describe('Sidebar Component - Simple Example', () => {
 
     it('should render correct number of items', () => {
       render(<Sidebar items={simpleItems} active="Home" />);
-      
+
       const listItems = screen.getAllByRole('listitem');
       expect(listItems).toHaveLength(3);
     });
@@ -61,29 +61,98 @@ describe('Sidebar Component - Simple Example', () => {
   describe('Active State', () => {
     it('should mark the active item', () => {
       render(<Sidebar items={simpleItems} active="Settings" />);
-      
+
       // Get the Settings item
       const settingsItem = screen.getByTitle('Settings');
       const icon = settingsItem.querySelector('svg');
-      
+
       // Should have active class
       expect(icon).toHaveClass('active');
     });
 
     it('should change active item on click', () => {
       render(<Sidebar items={simpleItems} active="Home" />);
-      
+
       // Initially Home is active
       const homeIcon = screen.getByTitle('Home').querySelector('svg');
       expect(homeIcon).toHaveClass('active');
-      
+
       // Click on Settings
       const settingsItem = screen.getByTitle('Settings');
       fireEvent.click(settingsItem);
-      
+
       // Now Settings should be active
       const settingsIcon = settingsItem.querySelector('svg');
       expect(settingsIcon).toHaveClass('active');
+    });
+  });
+
+  describe('Variant', () => {
+    it('is a dashboard bar unless asked otherwise', () => {
+      // The default is the shape a page with content wants. An island default
+      // would put a stray floating square on every page that forgot to choose.
+      const { container } = render(
+        <Sidebar items={simpleItems} active="Home" />
+      );
+      expect(container.querySelector('aside')).toHaveClass(
+        'sidebar--dashboard'
+      );
+    });
+
+    it('takes the island shape when asked', () => {
+      const { container } = render(
+        <Sidebar items={simpleItems} active="Home" variant="island" />
+      );
+      expect(container.querySelector('aside')).toHaveClass('sidebar--island');
+    });
+  });
+
+  describe('Placement', () => {
+    // The rail is on every page. It used to position itself from
+    // `--holistix-left-rail`, published only by the whiteboard's layers panel,
+    // so off the whiteboard it fell back to a guess at that panel's width and
+    // rendered as a small box floating in the middle of an empty page.
+    //
+    // Read from the stylesheet rather than from computed style: jsdom does not
+    // apply an imported CSS file, so `getComputedStyle` would report nothing
+    // either way and the test would pass on a broken rule.
+    //
+    // Comments stripped: they explain the arrangement this replaced and name
+    // the old variable while doing so, which is worth keeping and is not a
+    // declaration.
+    const css = require('fs')
+      .readFileSync(require('path').join(__dirname, 'sidebar.css'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '');
+
+    const rule = (selector: string) => {
+      const at = css.indexOf(selector + ' {');
+      expect(at).toBeGreaterThan(-1);
+      return css.slice(at, css.indexOf('}', at));
+    };
+
+    it('does not position either shape from the whiteboard panel', () => {
+      expect(css).not.toContain('--holistix-left-rail');
+    });
+
+    it('draws the dashboard shape as a bar on the left edge', () => {
+      const bar = rule('aside.sidebar--dashboard');
+      expect(bar).toContain('left: 0');
+      expect(bar).toContain('bottom: 0');
+      // A bar has no corners to round — that is the island's shape.
+      expect(bar).not.toContain('border-radius');
+    });
+
+    it('draws the island shape as a floating box', () => {
+      const island = rule('aside.sidebar--island');
+      expect(island).toContain('border-radius');
+      expect(island).toContain('top: 50%');
+      expect(island).not.toContain('bottom: 0');
+    });
+
+    it('publishes the bar width for whoever has to clear it', () => {
+      // The page indents past the bar by reading this. A rail that knew its
+      // own width privately would leave every consumer restating it.
+      expect(css).toContain('--holistix-sidebar-width: 56px');
     });
   });
 
@@ -93,13 +162,13 @@ describe('Sidebar Component - Simple Example', () => {
       const itemsWithHandler = [
         { title: 'Button', Icon: MockIcon, onclick: mockClick },
       ];
-      
+
       render(<Sidebar items={itemsWithHandler} active="Button" />);
-      
+
       // Click the item
       const button = screen.getByTitle('Button');
       fireEvent.click(button);
-      
+
       // Handler should be called
       expect(mockClick).toHaveBeenCalledTimes(1);
     });
@@ -109,16 +178,16 @@ describe('Sidebar Component - Simple Example', () => {
       const itemsWithHandler = [
         { title: 'Clickable', Icon: MockIcon, onclick: mockClick },
       ];
-      
+
       render(<Sidebar items={itemsWithHandler} active="Clickable" />);
-      
+
       const item = screen.getByTitle('Clickable');
-      
+
       // Click multiple times
       fireEvent.click(item);
       fireEvent.click(item);
       fireEvent.click(item);
-      
+
       expect(mockClick).toHaveBeenCalledTimes(3);
     });
   });
@@ -126,22 +195,22 @@ describe('Sidebar Component - Simple Example', () => {
   describe('Edge Cases', () => {
     it('should handle empty items array', () => {
       render(<Sidebar items={[]} active="" />);
-      
+
       const list = screen.getByRole('list');
       expect(list.children).toHaveLength(0);
     });
 
     it('should handle single item', () => {
       const singleItem = [{ title: 'Only', Icon: MockIcon }];
-      
+
       render(<Sidebar items={singleItem} active="Only" />);
-      
+
       expect(screen.getAllByRole('listitem')).toHaveLength(1);
     });
 
     it('should default to first item when active not found', () => {
       render(<Sidebar items={simpleItems} active="NonExistent" />);
-      
+
       // First item should be active by default
       const firstIcon = screen.getByTitle('Home').querySelector('svg');
       expect(firstIcon).toHaveClass('active');
@@ -155,7 +224,7 @@ describe('Sidebar Component - Simple Example', () => {
  * npx nx test ui-base --testFile=Sidebar-simple.spec.tsx
  * npx nx test ui-base --testFile=Sidebar-simple.spec.tsx --watch
  * ```
- * 
+ *
  * WHAT THIS TESTS:
  * ✅ Component renders without errors
  * ✅ All items appear in the DOM
@@ -163,7 +232,7 @@ describe('Sidebar Component - Simple Example', () => {
  * ✅ Click interactions work
  * ✅ Callbacks are called
  * ✅ Edge cases (empty, single item)
- * 
+ *
  * NEXT STEPS:
  * Once comfortable with these patterns:
  * 1. Add tests for links (with proper router setup)

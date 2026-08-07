@@ -3,14 +3,15 @@
   display: none;
 }
 
-// Keep Excalidraw's own floating UI on the same left rail as the project
-// sidebar, so it follows the whiteboard layers panel as that expands and
-// collapses rather than sitting under it.
+// Keep Excalidraw's own floating UI clear of the whiteboard layers panel,
+// following it as it expands and collapses rather than sitting under it.
 //
-// The panel publishes its width into --holistix-left-rail (see
+// The panel publishes where it ends into --holistix-left-rail (see
 // whiteboard.tsx); the fallback matches the panel's open width plus its gap.
-// Excalidraw positions these islands itself, which is why they are nudged from
-// the outside rather than laid out.
+// Both are measured from the page's content box, which is already indented
+// past the project rail — so the rail is not counted again here. Excalidraw
+// positions these islands itself, which is why they are nudged from the
+// outside rather than laid out.
 .excalidraw {
   .App-menu_top__left,
   .layer-ui__wrapper__top-left,

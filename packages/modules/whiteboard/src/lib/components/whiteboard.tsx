@@ -69,14 +69,19 @@ export const LAYERS_PANEL_COLLAPSED_WIDTH = 24;
 const LEFT_RAIL_GAP = 15;
 
 /**
- * CSS custom property holding the x offset of the left rail — the column just
- * right of the layers panel, where the project sidebar and Excalidraw's
- * toolbar live.
+ * CSS custom property holding the x offset just right of the layers panel,
+ * where Excalidraw's toolbar lives.
  *
- * Both are fixed-positioned and so cannot be flex siblings of the panel. Rather
+ * It is fixed-positioned and so cannot be a flex sibling of the panel. Rather
  * than hardcode an offset that goes stale the moment the panel is collapsed,
- * the panel publishes its own width here and they position against it. Anything
- * on the rail should transition `left` over the same 120ms the panel animates.
+ * the panel publishes where it ends here and the toolbar positions against it.
+ * Anything using it should transition `left` over the same 120ms the panel
+ * animates.
+ *
+ * The project rail is *not* one of these any more. It is on every page and
+ * this panel is on one, so it docks at the left edge and the panel starts
+ * after it — see ui-base/sidebar.css. Positioning it from here meant every
+ * page without a whiteboard fell back to a guess at this panel's width.
  */
 const LEFT_RAIL_VAR = '--holistix-left-rail';
 
@@ -366,8 +371,10 @@ const WhiteboardWhiteboard = ({
   const [renderForm, setRenderForm] = useState<ReactNode | null>(null);
   const [showLayersPanel, setShowLayersPanel] = useState<boolean>(true);
 
-  // Publish the panel's width so the fixed-positioned rail tracks it instead
-  // of sitting at a constant offset that is wrong as soon as it collapses.
+  // Publish where the panel ends so anything overlaying the canvas clears it
+  // instead of sitting at a constant offset that is wrong the moment it
+  // collapses. Measured from the content box, not the viewport: the project
+  // rail is already outside it.
   useEffect(() => {
     const width = showLayersPanel
       ? LAYERS_PANEL_WIDTH
@@ -421,9 +428,11 @@ const WhiteboardWhiteboard = ({
             position: 'absolute',
             top: 0,
             bottom: 0,
-            // Flush against the left edge: the panel comes first, and the
-            // project sidebar is offset to sit to its right (see
-            // PROJECT_SIDEBAR_CLEARANCE and ui-base sidebar.css).
+            // Flush against the left edge of the page's content box, which
+            // EditorPage already indents past the project rail. Nothing about
+            // the rail is restated here: it is fixed, out of flow and hidden
+            // under 1000px, and every one of those is a fact this panel would
+            // otherwise have to track.
             left: 0,
             width: showLayersPanel
               ? LAYERS_PANEL_WIDTH

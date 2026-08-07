@@ -25,16 +25,53 @@ import { ResourcePage } from './resources-page';
 
 //
 
-export const EditorTabsSystemLogic = () => {
-  //
+/**
+ * Which tab is open, and what it holds.
+ *
+ * A hook rather than a value computed in the tab system, because the page
+ * around the tabs needs the answer too — the project rail is a bar beside the
+ * content on most tabs and an island over it on the whiteboard. Two copies of
+ * "which tab is active" is the kind of thing that agrees until one of them is
+ * changed.
+ */
+export const useActiveTab = () => {
   const sdTabs: TTabsTree = useLocalSharedData<TTabsSharedData>(
     ['tabs:tabs'],
     (d) => d['tabs:tabs'].get('unique')
   );
+  const { data, status } = useCurrentUser();
+
+  let active: TabPath = [];
+  if (sdTabs) {
+    if (
+      status === 'success' &&
+      data.user.user_id &&
+      sdTabs.actives[data.user.user_id]
+    )
+      active = sdTabs.actives[data.user.user_id];
+    else
+      active = sdTabs.tree.children[0] ? [sdTabs.tree.children[0].title] : [];
+  }
+
+  const tree = sdTabs?.tree || {
+    payload: { type: 'group' as const },
+    title: 'root',
+    children: [],
+  };
+
+  const roTree = new ReadOnlyTree(tree);
+  const payload = roTree.get(active, active.length)?.payload as
+    | TabPayload
+    | undefined;
+
+  return { roTree, active, payload };
+};
+
+export const EditorTabsSystemLogic = () => {
+  //
+  const { roTree, active } = useActiveTab();
 
   const dispatcher = useDispatcher();
-
-  const { data, status } = useCurrentUser();
 
   //
 
@@ -72,51 +109,24 @@ export const EditorTabsSystemLogic = () => {
 
   //
 
-  let active: TabPath = [];
-  if (sdTabs) {
-    if (
-      status === 'success' &&
-      data.user.user_id &&
-      sdTabs.actives[data.user.user_id]
-    )
-      active = sdTabs.actives[data.user.user_id];
-    else
-      active = sdTabs.tree.children[0] ? [sdTabs.tree.children[0].title] : [];
-  }
-
-  const tree = sdTabs?.tree || {
-    payload: { type: 'group' },
-    title: 'root',
-    children: [],
-  };
-
-  if (tree) {
-    const roTree = new ReadOnlyTree(tree);
-    return (
-      <div style={{ height: '100%', position: 'relative' }}>
-        <TabsRadix
-          tree={roTree}
-          maxRow={MAX_TAB_ROW}
-          active={active}
-          onTabChange={onTabChange}
-          onTabAdd={onTabAdd}
-          onTabDelete={onTabDelete}
-          onTabRowAdd={onTabRowAdd}
-          onTabRename={onTabRename}
-        >
-          {roTree.flat().map((tab) => (
-            <TabTypeRouter
-              key={tab.path.join('.')}
-              tabPath={tab.path}
-              {...tab}
-            />
-          ))}
-        </TabsRadix>
-      </div>
-    );
-  }
-
-  return null;
+  return (
+    <div style={{ height: '100%', position: 'relative' }}>
+      <TabsRadix
+        tree={roTree}
+        maxRow={MAX_TAB_ROW}
+        active={active}
+        onTabChange={onTabChange}
+        onTabAdd={onTabAdd}
+        onTabDelete={onTabDelete}
+        onTabRowAdd={onTabRowAdd}
+        onTabRename={onTabRename}
+      >
+        {roTree.flat().map((tab) => (
+          <TabTypeRouter key={tab.path.join('.')} tabPath={tab.path} {...tab} />
+        ))}
+      </TabsRadix>
+    </div>
+  );
 };
 
 //
