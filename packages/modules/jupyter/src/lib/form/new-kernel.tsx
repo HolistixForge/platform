@@ -15,7 +15,7 @@ import { TPosition } from '@holistix-forge/core-graph';
 import { TEventNewKernelNode } from '../jupyter-events';
 import { TJupyterSharedData } from '../jupyter-shared-model';
 import { TJupyterServerData } from '../jupyter-types';
-import { useJLsManager } from '../jupyter-hooks';
+import { useWatchedResources } from '../jupyter-hooks';
 import {
   TUserContainer,
   TUserContainersSharedData,
@@ -46,8 +46,6 @@ export const NewKernelForm = ({
 
   const dispatcher = useDispatcher<TEventNewKernelNode>();
 
-  const jlsManager = useJLsManager();
-
   const sd = useLocalSharedData<TUserContainersSharedData & TJupyterSharedData>(
     ['user-containers:containers', 'jupyter:servers'],
     (sd) => sd
@@ -59,11 +57,12 @@ export const NewKernelForm = ({
   const jupyter: TJupyterServerData | undefined =
     sd['jupyter:servers'].get(user_container_id);
 
-  useEffect(() => {
-    if (jupyter && server) {
-      jlsManager.startPollingResources(server);
-    }
-  }, [jupyter, jlsManager, server]);
+  // A form listing this container's kernels is something showing them, so it
+  // watches like any node does. It used to call `startPollingResources` from an
+  // effect with no cleanup, which left the container polling for the life of
+  // the page — and, once the timer became a property of being watched rather
+  // than of driver creation, would have polled nothing at all.
+  useWatchedResources(server);
 
   const action = useAction<NewKernelFormData>(
     (d) => {

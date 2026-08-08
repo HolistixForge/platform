@@ -16,7 +16,15 @@ import { makeVirtualOutputArea } from './output-area';
 //
 //
 
-type ResourceListener = (kernels: Kernel[], terminals: Terminal[]) => void;
+/**
+ * Exported because the manager has to keep the reference it subscribed in
+ * order to unsubscribe it again — which is what makes the driver's own
+ * listener count, and therefore its poll timer, follow the watchers.
+ */
+export type ResourceListener = (
+  kernels: Kernel[],
+  terminals: Terminal[]
+) => void;
 
 function deepEqualKernels(a: Kernel[], b: Kernel[]): boolean {
   return isEqual(a, b);
