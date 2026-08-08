@@ -3,7 +3,11 @@ import {
   parseElementKey,
   TExcalidrawElementEntry,
 } from './excalidraw-shared-model';
-import { pickDrawingElements, versionsById } from './excalidraw-scene';
+import {
+  pickDrawingElements,
+  sceneSignature,
+  versionsById,
+} from './excalidraw-scene';
 
 const entry = (
   drawingId: string,
@@ -83,5 +87,41 @@ describe('versionsById', () => {
     const v = versionsById([{ version: 3 }, { id: 'b' }]);
     expect(v.size).toBe(1);
     expect(v.get('b')).toBe(0);
+  });
+});
+
+//
+
+describe('sceneSignature', () => {
+  it('is stable for the same scene', () => {
+    const scene = [
+      { id: 'a', version: 1 },
+      { id: 'b', version: 4 },
+    ];
+    expect(sceneSignature(scene)).toBe(sceneSignature([...scene]));
+  });
+
+  it('changes when an element is mutated', () => {
+    const before = sceneSignature([{ id: 'a', version: 1 }]);
+    const after = sceneSignature([{ id: 'a', version: 2 }]);
+    expect(after).not.toBe(before);
+  });
+
+  it('changes when an element is deleted', () => {
+    // Excalidraw tombstones rather than removes, so a deletion arrives as the
+    // same id at the same version with a flag. Reading only id and version
+    // would call that an unchanged scene and never report the removal.
+    const before = sceneSignature([{ id: 'a', version: 1 }]);
+    const after = sceneSignature([{ id: 'a', version: 1, isDeleted: true }]);
+    expect(after).not.toBe(before);
+  });
+
+  it('changes when an element is added or removed', () => {
+    const one = sceneSignature([{ id: 'a', version: 1 }]);
+    const two = sceneSignature([
+      { id: 'a', version: 1 },
+      { id: 'b', version: 1 },
+    ]);
+    expect(two).not.toBe(one);
   });
 });

@@ -78,6 +78,23 @@ export const withStackingIndex = (
   }));
 };
 
+/**
+ * What a scene looks like right now, as one comparable string.
+ *
+ * Excalidraw calls `onChange` for everything, including the `appState` writes
+ * our own viewport sync makes — so a handler that reacts to every call reacts
+ * to itself. This is the value a handler compares against to tell an actual
+ * edit from an echo. Versions rather than contents: Excalidraw bumps `version`
+ * on every mutation, so there is nothing to gain from stringifying the scene.
+ */
+export const sceneSignature = (elements: readonly TJsonObject[]): string =>
+  elements
+    .map(
+      (e) =>
+        `${String(e['id'])}@${String(e['version'])}${e['isDeleted'] ? '!' : ''}`
+    )
+    .join(',');
+
 /** `id` → `version`, the shape the change diff compares against. */
 export const versionsById = (
   elements: readonly TJsonObject[]

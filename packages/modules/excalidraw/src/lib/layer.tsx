@@ -25,7 +25,11 @@ import {
 
 import { TExcalidrawSharedData } from './excalidraw-shared-model';
 import { TExcalidrawEvent } from './excalidraw-events';
-import { readDrawingElements, versionsById } from './excalidraw-scene';
+import {
+  readDrawingElements,
+  sceneSignature,
+  versionsById,
+} from './excalidraw-scene';
 
 //
 
@@ -194,6 +198,8 @@ export const ExcalidrawLayerComponent: FC<{
   const sentVersions = useRef<Map<string, number>>(new Map());
   /** Latest scene, read by the flush instead of captured by it. */
   const pendingElements = useRef<readonly OrderedExcalidrawElement[]>([]);
+  /** The scene the last onChange acted on — see the note in handleChange. */
+  const lastSignature = useRef<string | null>(null);
 
   // Pull remote changes into the scene.
   //
@@ -293,6 +299,19 @@ export const ExcalidrawLayerComponent: FC<{
   const handleChange = useCallback(
     (elements: readonly OrderedExcalidrawElement[]) => {
       pendingElements.current = elements;
+
+      // Everything below reaches out of this component — the layer tree lives
+      // in the whiteboard's state, and the flush dispatches. Excalidraw calls
+      // onChange for `appState` too, including the viewport writes this layer
+      // makes itself, so without this the handler answers its own echo:
+      // onChange → updateLayerTree → whiteboard re-render → updateScene →
+      // onChange. That loop is what took the whole editor down with React's
+      // "maximum update depth", and it did so from whichever component
+      // happened to hold a Radix popper — never from anything named
+      // Excalidraw, which is why it read as a third-party problem.
+      const signature = sceneSignature(elements as unknown as TJsonObject[]);
+      if (signature === lastSignature.current) return;
+      lastSignature.current = signature;
 
       // Update tree data for the layer panel
       if (updateLayerTree && nodeId) {
