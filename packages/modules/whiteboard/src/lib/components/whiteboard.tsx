@@ -769,19 +769,31 @@ const ReactFlowBaseLayer = ({
   //
   return (
     <ReactflowLayerContext value={context}>
-      <ReactflowLayer
-        active={active}
-        viewId={viewId}
-        nodeComponent={Node}
-        edgeComponent={CustomStoryEdge}
-        spaceState={ss}
-        pointerTracker={pointerTracker}
-        onContextMenu={onContextMenu}
-        onContextMenuNewEdge={onContextMenuNewEdge}
-        onConnect={onConnect}
-        onDrop={onDrop}
-        viewport={viewport}
-      />
+      {/*
+        The canvas only when it is the surface. With the drawing surface up,
+        every node is already in the Excalidraw scene, and ReactFlow was
+        rendering all of them again underneath — 47 000 DOM nodes for 2000,
+        invisible, and a second viewport to keep in step with the first.
+
+        The context above stays either way: it carries the space state and
+        ReactFlow's store, which the node components reach for wherever they
+        are drawn.
+      */}
+      {active && (
+        <ReactflowLayer
+          active={active}
+          viewId={viewId}
+          nodeComponent={Node}
+          edgeComponent={CustomStoryEdge}
+          spaceState={ss}
+          pointerTracker={pointerTracker}
+          onContextMenu={onContextMenu}
+          onContextMenuNewEdge={onContextMenuNewEdge}
+          onConnect={onConnect}
+          onDrop={onDrop}
+          viewport={viewport}
+        />
+      )}
       {/*
         Rendered whichever layer is active. It used to be tied to `active`, so
         the mode switch and the "+" that opens the node menu vanished the
