@@ -3,6 +3,8 @@ import {
   TCollabBackendExports,
   ReducerWithCollab,
 } from '@holistix-forge/collab';
+import { TEventProjectInit } from '@holistix-forge/gateway';
+import { EPriority, log } from '@holistix-forge/log';
 
 import {
   TExcalidrawEvent,
@@ -12,9 +14,12 @@ import {
 } from './excalidraw-events';
 import {
   TExcalidrawSharedData,
+  TExcalidrawLegacySharedData,
+  TExcalidrawLegacyDrawing,
   elementKey,
   parseElementKey,
 } from './excalidraw-shared-model';
+import { withStackingIndex } from './excalidraw-scene';
 
 //
 
@@ -31,15 +36,15 @@ type TRequired = {
  * nothing could arbitrate, so the last writer won the whole scene.
  */
 export class ExcalidrawReducer extends ReducerWithCollab<
-  TExcalidrawEvent,
-  TExcalidrawSharedData
+  TExcalidrawEvent | TEventProjectInit,
+  TExcalidrawSharedData & TExcalidrawLegacySharedData
 > {
   constructor(depsExports: TRequired) {
     super(depsExports.collab.registry, 'excalidraw');
   }
 
   override reduce(
-    event: TExcalidrawEvent,
+    event: TExcalidrawEvent | TEventProjectInit,
     requestData: RequestData
   ): Promise<void> {
     switch (event.type) {
@@ -52,9 +57,57 @@ export class ExcalidrawReducer extends ReducerWithCollab<
       case 'excalidraw:delete-drawing':
         return this._deleteDrawing(event, requestData);
 
+      case 'project:init':
+        return this._migrateLegacyDrawings(requestData);
+
       default:
         return Promise.resolve();
     }
+  }
+
+  /**
+   * Move drawings written in the old one-entry-per-drawing shape across to
+   * one entry per element.
+   *
+   * Runs on `project:init`, which the gateway dispatches once per project
+   * room after any snapshot is applied — server side, one writer, and before
+   * a client can have drawn anything.
+   *
+   * Idempotent by construction rather than by a version marker: each drawing
+   * is deleted as it is moved, so a second run has nothing to move. Two runs
+   * racing each other write the same keys with the same values, because the
+   * keys are derived from the data, so a duplicate is a no-op rather than a
+   * duplicated element.
+   */
+  async _migrateLegacyDrawings(requestData: RequestData) {
+    const collab = this.getCollab(requestData);
+    const legacy = collab.sharedData['excalidraw:drawing'];
+    const elements = collab.sharedData['excalidraw:elements'];
+
+    // A deployment that never registered the legacy map, or a fresh project.
+    if (!legacy || !elements) return;
+
+    const drawings: [string, TExcalidrawLegacyDrawing][] = [];
+    legacy.forEach((drawing, drawingId) => drawings.push([drawingId, drawing]));
+    if (!drawings.length) return;
+
+    let moved = 0;
+    for (const [drawingId, drawing] of drawings) {
+      for (const element of withStackingIndex(drawing?.elements ?? [])) {
+        const id =
+          typeof element['id'] === 'string' ? element['id'] : undefined;
+        if (!id) continue;
+        elements.set(elementKey(drawingId, id), { drawingId, element });
+        moved += 1;
+      }
+      legacy.delete(drawingId);
+    }
+
+    log(
+      EPriority.Info,
+      'EXCALIDRAW',
+      `Migrated ${drawings.length} drawing(s), ${moved} element(s), to per-element storage`
+    );
   }
 
   /**

@@ -3,19 +3,22 @@
   "include": [],
   "references": [
     {
-      "path": "../../log"
-    },
-    {
       "path": "../../frontend-data"
     },
     {
       "path": "../../collab-engine"
     },
     {
-      "path": "../../simple-types"
+      "path": "../../log"
+    },
+    {
+      "path": "../gateway"
     },
     {
       "path": "../core-graph"
+    },
+    {
+      "path": "../../simple-types"
     },
     {
       "path": "../reducers"

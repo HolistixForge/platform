@@ -53,6 +53,31 @@ export const pickDrawingElements = (
   });
 };
 
+/**
+ * Give a drawing's elements an explicit stacking index when they have none.
+ *
+ * Order used to be carried by the array. A keyed map has no order, so it is
+ * carried by Excalidraw's fractional `index` instead — and a drawing written
+ * before that field existed would come back in whatever order the map yields,
+ * silently restacked.
+ *
+ * Synthesized for the whole drawing at once, never element by element: real
+ * and synthetic indices sort against each other in ways that depend on
+ * Excalidraw's alphabet, so the two must not interleave.
+ */
+export const withStackingIndex = (
+  elements: readonly TJsonObject[]
+): TJsonObject[] => {
+  const complete = elements.every((e) => typeof e['index'] === 'string');
+  if (complete) return [...elements];
+
+  const width = String(Math.max(elements.length - 1, 0)).length;
+  return elements.map((element, i) => ({
+    ...element,
+    index: `a${String(i).padStart(width, '0')}`,
+  }));
+};
+
 /** `id` → `version`, the shape the change diff compares against. */
 export const versionsById = (
   elements: readonly TJsonObject[]

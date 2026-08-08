@@ -23,27 +23,32 @@ const element = (id: string, version = 1, extra: Record<string, any> = {}) => ({
   ...extra,
 });
 
+/** A stand-in for a shared map: the four methods the reducer uses. */
+const fakeSharedMap = <T>(store: Map<string, T>) => ({
+  get: (k: string) => store.get(k),
+  set: (k: string, v: T) => store.set(k, v),
+  delete: (k: string) => store.delete(k),
+  forEach: (f: (v: T, k: string) => void) => store.forEach((v, k) => f(v, k)),
+  copy: () => new Map(store),
+});
+
 describe('ExcalidrawReducer', () => {
   let reducer: ExcalidrawReducer;
   let store: Map<string, TExcalidrawElementEntry>;
+  let legacyStore: Map<string, any>;
 
   beforeEach(() => {
     store = new Map();
-
-    const elementsMap = {
-      get: (k: string) => store.get(k),
-      set: (k: string, v: TExcalidrawElementEntry) => store.set(k, v),
-      delete: (k: string) => store.delete(k),
-      forEach: (f: (v: TExcalidrawElementEntry, k: string) => void) =>
-        store.forEach((v, k) => f(v, k)),
-      copy: () => new Map(store),
-    };
+    legacyStore = new Map();
 
     const depsExports = {
       collab: {
         registry: {
           getCollabForProject: jest.fn(() => ({
-            sharedData: { 'excalidraw:elements': elementsMap },
+            sharedData: {
+              'excalidraw:elements': fakeSharedMap(store),
+              'excalidraw:drawing': fakeSharedMap(legacyStore),
+            },
           })),
           registerSharedData: jest.fn(),
         },
@@ -239,5 +244,111 @@ describe('ExcalidrawReducer', () => {
   it('ignores an event it does not handle', async () => {
     await reducer.reduce({ type: 'something:else' } as any, requestData);
     expect(store.size).toBe(0);
+  });
+
+  /**
+   * Migration of drawings written in the one-entry-per-drawing shape.
+   *
+   * Idempotent by construction: each drawing is deleted as it is moved, and
+   * the keys are derived from the data, so a second run has nothing to move
+   * and a racing run writes the same keys with the same values.
+   */
+  describe('project:init migration', () => {
+    const init = {
+      type: 'project:init' as const,
+      project_id: PROJECT_ID,
+      systemEvent: true as const,
+    };
+
+    it('moves each element across and consumes the drawing', async () => {
+      legacyStore.set(DRAWING, {
+        elements: [
+          element('e1', 1, { index: 'a1' }),
+          element('e2', 1, { index: 'a2' }),
+        ],
+        fromUser: 'someone',
+        svg: '<svg/>',
+      });
+
+      await reducer.reduce(init, requestData);
+
+      expect(store.size).toBe(2);
+      expect(store.get(elementKey(DRAWING, 'e1'))?.drawingId).toBe(DRAWING);
+      expect(legacyStore.size).toBe(0);
+    });
+
+    it('is idempotent: a second run changes nothing', async () => {
+      legacyStore.set(DRAWING, {
+        elements: [element('e1', 1, { index: 'a1' })],
+        fromUser: 'someone',
+        svg: '',
+      });
+
+      await reducer.reduce(init, requestData);
+      const afterFirst = new Map(store);
+
+      await reducer.reduce(init, requestData);
+
+      expect(store).toEqual(afterFirst);
+      expect(store.size).toBe(1);
+    });
+
+    /**
+     * Order used to live in the array. The map has none, so a drawing written
+     * before Excalidraw's fractional `index` existed would come back
+     * restacked.
+     */
+    it('synthesizes a stacking index when the drawing has none', async () => {
+      legacyStore.set(DRAWING, {
+        elements: [element('bottom'), element('middle'), element('top')],
+        fromUser: 'someone',
+        svg: '',
+      });
+
+      await reducer.reduce(init, requestData);
+
+      const indexOf = (id: string) =>
+        store.get(elementKey(DRAWING, id))?.element['index'] as string;
+      expect(indexOf('bottom') < indexOf('middle')).toBe(true);
+      expect(indexOf('middle') < indexOf('top')).toBe(true);
+    });
+
+    it('leaves an existing index alone', async () => {
+      legacyStore.set(DRAWING, {
+        elements: [element('e1', 1, { index: 'zz9' })],
+        fromUser: 'someone',
+        svg: '',
+      });
+
+      await reducer.reduce(init, requestData);
+
+      expect(store.get(elementKey(DRAWING, 'e1'))?.element['index']).toBe(
+        'zz9'
+      );
+    });
+
+    it('migrates several drawings and keeps them apart', async () => {
+      legacyStore.set(DRAWING, {
+        elements: [element('e1')],
+        fromUser: 'a',
+        svg: '',
+      });
+      legacyStore.set(OTHER_DRAWING, {
+        elements: [element('e1')],
+        fromUser: 'b',
+        svg: '',
+      });
+
+      await reducer.reduce(init, requestData);
+
+      expect(store.size).toBe(2);
+      expect(store.has(elementKey(DRAWING, 'e1'))).toBe(true);
+      expect(store.has(elementKey(OTHER_DRAWING, 'e1'))).toBe(true);
+    });
+
+    it('does nothing when there is nothing to migrate', async () => {
+      await reducer.reduce(init, requestData);
+      expect(store.size).toBe(0);
+    });
   });
 });

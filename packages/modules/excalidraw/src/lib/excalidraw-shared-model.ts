@@ -44,3 +44,22 @@ export const parseElementKey = (
 export type TExcalidrawSharedData = {
   'excalidraw:elements': SharedMap<TExcalidrawElementEntry>;
 };
+
+/**
+ * The shape before the split: one entry per drawing, holding every element
+ * and a serialized SVG of them.
+ *
+ * Registered on the backend only, and only so the migration can read it.
+ * Nothing writes to it any more; each drawing is deleted as it is moved
+ * across, which is what makes the migration idempotent — a second run finds
+ * nothing left to move.
+ */
+export type TExcalidrawLegacyDrawing = {
+  elements: TJsonObject[];
+  fromUser: string;
+  svg: string;
+};
+
+export type TExcalidrawLegacySharedData = {
+  'excalidraw:drawing': SharedMap<TExcalidrawLegacyDrawing>;
+};
