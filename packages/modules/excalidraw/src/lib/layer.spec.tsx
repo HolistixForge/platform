@@ -209,6 +209,79 @@ describe('ExcalidrawLayerComponent', () => {
     }
   });
 
+  it('sends a node that was moved on the surface back to the graph', async () => {
+    jest.useFakeTimers();
+    mockNodeViews = [{ id: 'node-a', position: { x: 10, y: 20 } }];
+    try {
+      await mount();
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      // Someone drags it. Excalidraw reports the new box through onChange.
+      const moved = {
+        ...mockScene.find((e) => String(e.id).startsWith('holistix-node-')),
+        x: 300,
+        y: 400,
+        version: 9,
+      };
+      act(() => {
+        mockCapturedOnChange?.([moved]);
+      });
+      await act(async () => {
+        jest.advanceTimersByTime(400);
+        await Promise.resolve();
+      });
+
+      const moves = mockDispatch.mock.calls
+        .map(([e]) => e)
+        .filter((e) => e?.type === 'whiteboard:move-node');
+
+      expect(moves).toHaveLength(1);
+      expect(moves[0]).toMatchObject({
+        nid: 'node-a',
+        viewId: 'view-1',
+        position: { x: 300, y: 400 },
+      });
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('does not read its own projection back as a move', async () => {
+    // The projection writes the graph's position into the scene. Excalidraw
+    // reports that as a change like any other, and dispatching it would send
+    // the position straight home again — every time, forever.
+    jest.useFakeTimers();
+    mockNodeViews = [{ id: 'node-a', position: { x: 10, y: 20 } }];
+    try {
+      await mount();
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      act(() => {
+        mockCapturedOnChange?.([...mockScene]);
+      });
+      await act(async () => {
+        jest.advanceTimersByTime(400);
+        await Promise.resolve();
+      });
+
+      const geometry = mockDispatch.mock.calls
+        .map(([e]) => e)
+        .filter(
+          (e) =>
+            e?.type === 'whiteboard:move-node' ||
+            e?.type === 'whiteboard:resize-node'
+        );
+
+      expect(geometry).toHaveLength(0);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('projects nothing when a user has turned the projection off', async () => {
     localStorage.setItem('holistix:excalidraw-nodes', '0');
     mockNodeViews = [{ id: 'node-a', position: { x: 0, y: 0 } }];

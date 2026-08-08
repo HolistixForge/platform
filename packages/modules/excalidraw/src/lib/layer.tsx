@@ -239,6 +239,11 @@ export const ExcalidrawLayerComponent: FC<{
     [graphView?.nodeViews]
   );
 
+  /** Where the projection last put each node — see the write-back below. */
+  const projectedGeometry = useRef<
+    Map<string, { x: number; y: number; width: number; height: number }>
+  >(new Map());
+
   /** Read by the projection effect, so its identity is not a dependency. */
   const latestNodeViews = useRef<TNodeView[]>(nodeViews);
   latestNodeViews.current = nodeViews;
@@ -336,6 +341,21 @@ export const ExcalidrawLayerComponent: FC<{
       // element validated fine and was then judged invisible, so it never
       // rendered. Measured: 12 fields against the 27 a real element carries.
       const restored = restoreElements(identified, null);
+
+      // What the graph says each node's box is. The write-back compares the
+      // scene against this: without it, projecting a position would read back
+      // as a move and be dispatched straight back to the graph.
+      projectedGeometry.current = new Map(
+        views.map((nv) => [
+          nv.id,
+          {
+            x: nv.position.x,
+            y: nv.position.y,
+            width: nv.size?.width ?? 320,
+            height: nv.size?.height ?? 220,
+          },
+        ])
+      );
 
       api.updateScene({ elements: [...drawing, ...restored] });
     })();
@@ -459,11 +479,60 @@ export const ExcalidrawLayerComponent: FC<{
               elementIds: deletedIds,
             });
           }
+
+          // A node moved on the surface goes back to the graph, which owns it.
+          //
+          // Only a difference against what the projection last wrote counts:
+          // the projection puts the graph's own position into the scene, and
+          // reading that back as a move would dispatch it straight home again,
+          // forever. Rounded to the pixel because Excalidraw carries
+          // sub-pixel geometry and the graph does not.
+          for (const element of pendingElements.current) {
+            const nodeId = embeddedNodeId(element);
+            if (!nodeId) continue;
+
+            const was = projectedGeometry.current.get(nodeId);
+            if (!was) continue;
+
+            const moved =
+              Math.round(element.x) !== Math.round(was.x) ||
+              Math.round(element.y) !== Math.round(was.y);
+            const resized =
+              Math.round(element.width) !== Math.round(was.width) ||
+              Math.round(element.height) !== Math.round(was.height);
+            if (!moved && !resized) continue;
+
+            // Recorded before dispatching, so the echo of this write is not
+            // read as another move.
+            projectedGeometry.current.set(nodeId, {
+              x: element.x,
+              y: element.y,
+              width: element.width,
+              height: element.height,
+            });
+
+            if (moved) {
+              await dispatcher.dispatch({
+                type: 'whiteboard:move-node',
+                viewId,
+                nid: nodeId,
+                position: { x: element.x, y: element.y },
+              });
+            }
+            if (resized) {
+              await dispatcher.dispatch({
+                type: 'whiteboard:resize-node',
+                viewId,
+                nid: nodeId,
+                size: { width: element.width, height: element.height },
+              });
+            }
+          }
         },
         250,
         { maxWait: 250 }
       ),
-    [dispatcher, drawingId]
+    [dispatcher, drawingId, viewId]
   );
 
   const handleChange = useCallback(

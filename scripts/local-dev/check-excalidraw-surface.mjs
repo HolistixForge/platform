@@ -54,6 +54,21 @@ const main = async () => {
 
   // A blank board is usually a thrown error, and the message is the whole
   // diagnosis. Collected rather than inferred.
+  // Every event the board dispatches, by type. The surface is supposed to
+  // send a move back to the graph, and this is the only place that shows it
+  // without trusting the DOM to have caught up.
+  report.dispatched = {};
+  page.on('request', (r) => {
+    if (!r.url().includes('/collab/event')) return;
+    try {
+      const body = JSON.parse(r.postData() ?? '{}');
+      const t = body?.event?.type;
+      if (t) report.dispatched[t] = (report.dispatched[t] ?? 0) + 1;
+    } catch (e) {
+      /* preflight and the like carry no body */
+    }
+  });
+
   report.pageErrors = [];
   page.on('pageerror', (e) => {
     if (report.pageErrors.length < 4) report.pageErrors.push(String(e.message).slice(0, 200));
@@ -266,6 +281,52 @@ const main = async () => {
       text: document.body.innerText.replace(/\s+/g, ' ').trim().slice(0, 100),
     }))
   );
+
+  // Drag the first projected node and see whether the graph followed. The
+  // whole point of the surface is that moving a node there moves the node.
+  if (process.argv.includes('--drag')) {
+    // A real mouse, not synthesised events: Excalidraw's own hit testing runs
+    // on trusted input, and the embed's centre belongs to the node inside it
+    // — so the grab is on the element's edge, which is the canvas.
+    const target = await ask(page, () => {
+      // Clear of the layers panel on the left and of the toolbar on top —
+      // grabbing at x=53 landed on the panel and moved nothing.
+      const c = [...document.querySelectorAll('.excalidraw__embeddable-container')]
+        .map((el) => ({ el, b: el.getBoundingClientRect() }))
+        .filter(
+          ({ b }) =>
+            b.left > 360 &&
+            b.top > 180 &&
+            b.right < window.innerWidth - 120 &&
+            b.bottom < window.innerHeight - 120
+        )
+        .sort((p, q) => p.b.left - q.b.left)[0]?.el;
+      if (!c) return null;
+      const b = c.getBoundingClientRect();
+      const nodeEl = document.querySelector('.react-flow__node');
+      return {
+        edgeX: b.left + 3,
+        edgeY: b.top + b.height / 2,
+        probeId: nodeEl?.getAttribute('data-id') ?? null,
+        probeBefore: nodeEl?.style.transform ?? null,
+      };
+    });
+
+    if (target && target.edgeX) {
+      await page.mouse.move(target.edgeX, target.edgeY);
+      await page.mouse.down();
+      for (let i = 1; i <= 12; i++) {
+        await page.mouse.move(target.edgeX + i * 10, target.edgeY + i * 7);
+        await page.waitForTimeout(16);
+      }
+      await page.mouse.up();
+      await page.waitForTimeout(8000);
+      report.drag = { grabbedAt: [target.edgeX, target.edgeY] };
+      report.afterDrag = await snapshot();
+    } else {
+      report.drag = { error: 'nothing projected in view' };
+    }
+  }
 
   const shot = process.argv.find((a) => a.startsWith('--shot='));
   if (shot) {
