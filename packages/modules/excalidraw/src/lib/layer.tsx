@@ -5,7 +5,7 @@ import { OrderedExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 import { AppState, Collaborator, SocketId } from '@excalidraw/excalidraw/types';
 
 import { TJsonObject } from '@holistix-forge/simple-types';
-import { TCoreSharedData, TGraphNode } from '@holistix-forge/core-graph';
+import { TCoreSharedData, TEdge, TGraphNode } from '@holistix-forge/core-graph';
 import {
   LayerViewportAdapter,
   TLayerProvider,
@@ -117,6 +117,9 @@ const NATIVE_SHAPES: Record<string, { type: string; roundness?: number }> = {
   square: { type: 'rectangle' },
   'round-rectangle': { type: 'rectangle', roundness: 3 },
 };
+
+/** The scene element that stands for a node, by the node's own id. */
+const elementIdForNode = (nodeId: string) => `holistix-node-${nodeId}`;
 
 /** The node a projected embeddable stands for, or nothing. */
 export const embeddedNodeId = (element: {
@@ -274,6 +277,14 @@ export const ExcalidrawLayerComponent: FC<{
     (sd) => (active ? sd['core-graph:nodes'] : undefined)
   );
 
+  // The graph's edges, drawn as Excalidraw's own arrows. The spike showed a
+  // native arrow binds to an embeddable the way it binds to a shape, so an
+  // edge needs no element of ours at all — only the two ids to bind to.
+  const graphEdges = useLocalSharedData<TCoreSharedData>(
+    ['core-graph:edges'],
+    (sd) => (active ? sd['core-graph:edges'] : undefined)
+  );
+
   const nodesById = useMemo(() => {
     const map = new Map<string, TGraphNode<never>>();
     graphNodes?.forEach?.((node: TGraphNode<never>, id: string) =>
@@ -283,6 +294,25 @@ export const ExcalidrawLayerComponent: FC<{
   }, [graphNodes]);
   const latestNodes = useRef(nodesById);
   latestNodes.current = nodesById;
+  const edgeList = useMemo(() => {
+    const out: { from: string; to: string }[] = [];
+    (
+      graphEdges as unknown as { forEach?: (f: (e: TEdge) => void) => void }
+    )?.forEach?.((e: TEdge) => {
+      if (e?.from?.node && e?.to?.node)
+        out.push({ from: e.from.node, to: e.to.node });
+    });
+    return out;
+  }, [graphEdges]);
+
+  const latestEdges = useRef(edgeList);
+  latestEdges.current = edgeList;
+
+  const edgesRevision = useMemo(
+    () => edgeList.map((e) => `${e.from}>${e.to}`).join('|'),
+    [edgeList]
+  );
+
   /** Changes when the set of nodes or their types does, so the signature can
    * depend on it without depending on an array rebuilt on every change. */
   const nodesRevision = useMemo(
@@ -326,7 +356,7 @@ export const ExcalidrawLayerComponent: FC<{
           }`;
         })
         .join('|'),
-    [nodeViews, nodesRevision]
+    [nodeViews, nodesRevision, edgesRevision]
   );
 
   /**
@@ -373,7 +403,9 @@ export const ExcalidrawLayerComponent: FC<{
       if (cancelled) return;
 
       const scene = api.getSceneElementsIncludingDeleted?.() ?? [];
-      const drawing = scene.filter((e) => !embeddedNodeId(e));
+      const drawing = scene.filter(
+        (e) => !embeddedNodeId(e) && !e.customData?.['holistixEdge']
+      );
 
       const views = latestNodeViews.current;
       const nodesById = latestNodes.current;
@@ -442,17 +474,48 @@ export const ExcalidrawLayerComponent: FC<{
       // Rewriting it *before* `restoreElements` matters: an id patched onto
       // an already-normalised element leaves a half-built object, which is
       // how the first attempt at this locked the tab up.
+      // The edges, as Excalidraw's own arrows bound to the two elements they
+      // join. Nothing of ours draws them: binding is the canvas's job, and it
+      // keeps them attached while a node is dragged — which is the half of
+      // the phase-2 bet the spike checked first.
+      const known = new Set(views.map((nv) => nv.id));
+      const arrows = latestEdges.current
+        .filter((e) => known.has(e.from) && known.has(e.to))
+        .map((e) => {
+          const a = views.find((nv) => nv.id === e.from);
+          const b = views.find((nv) => nv.id === e.to);
+          const ax = (a?.position.x ?? 0) + (a?.size?.width ?? 320) / 2;
+          const ay = (a?.position.y ?? 0) + (a?.size?.height ?? 220) / 2;
+          const bx = (b?.position.x ?? 0) + (b?.size?.width ?? 320) / 2;
+          const by = (b?.position.y ?? 0) + (b?.size?.height ?? 220) / 2;
+          return {
+            type: 'arrow',
+            x: ax,
+            y: ay,
+            width: bx - ax,
+            height: by - ay,
+            strokeColor: '#672aa4',
+            start: { id: elementIdForNode(e.from) },
+            end: { id: elementIdForNode(e.to) },
+            customData: { holistixEdge: `${e.from}>${e.to}` },
+          };
+        });
+
       const identified = projected.map((element, i) => ({
         ...element,
-        id: `holistix-node-${views[i].id}`,
+        id: elementIdForNode(views[i].id),
       }));
+
+      const arrowElements = arrows.length
+        ? convertToExcalidrawElements(arrows)
+        : [];
 
       // Normalised before it goes in. `convertToExcalidrawElements` leaves an
       // embeddable with only the fields the skeleton named — no `angle`, no
       // `opacity`, no `seed` — and Excalidraw's viewport test needs them: the
       // element validated fine and was then judged invisible, so it never
       // rendered. Measured: 12 fields against the 27 a real element carries.
-      const restored = restoreElements(identified, null);
+      const restored = restoreElements([...identified, ...arrowElements], null);
 
       // What the graph says each node's box is. The write-back compares the
       // scene against this: without it, projecting a position would read back

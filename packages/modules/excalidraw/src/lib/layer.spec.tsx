@@ -130,6 +130,12 @@ const mockCoreNodes = () => ({
     mockGraphNodes.forEach((n) => fn(n, n.id)),
 });
 
+/** The graph's edges. Set per test. */
+let mockEdges: { from: { node: string }; to: { node: string } }[] = [];
+const mockCoreEdges = () => ({
+  forEach: (fn: (e: unknown) => void) => mockEdges.forEach((e) => fn(e)),
+});
+
 /** Counts the layer's scene writes, so a runaway shows up as a number. */
 let mockUpdateSceneCalls = 0;
 
@@ -144,8 +150,11 @@ jest.mock('@holistix-forge/collab/frontend', () => ({
   // The graph view the layer projects into the scene. A *fresh object on every
   // call*, which is what the real hook does — the layer must not read that
   // identity as a change, or it re-projects forever.
-  useLocalSharedData: (keys: string[]) =>
-    keys?.[0] === 'core-graph:nodes' ? mockCoreNodes() : mockGraphView(),
+  useLocalSharedData: (keys: string[]) => {
+    if (keys?.[0] === 'core-graph:nodes') return mockCoreNodes();
+    if (keys?.[0] === 'core-graph:edges') return mockCoreEdges();
+    return mockGraphView();
+  },
 }));
 
 jest.mock('@holistix-forge/reducers/frontend', () => ({
@@ -192,6 +201,7 @@ describe('ExcalidrawLayerComponent', () => {
     mockScene = [];
     mockNodeViews = [];
     mockGraphNodes = [];
+    mockEdges = [];
     mockUpdateSceneCalls = 0;
     mockRemote.clear();
     mockUpdateLayerTree.mockClear();
@@ -394,6 +404,47 @@ describe('ExcalidrawLayerComponent', () => {
 
     expect(projected?.type).toBe('embeddable');
     expect(projected?.link).toContain('node.holistix.invalid');
+  });
+
+  it('draws an edge as a native arrow bound to both nodes', async () => {
+    // Binding is the canvas's job: an arrow bound to two elements stays
+    // attached while either is dragged, which is what the phase-2 bet needs
+    // and what nothing of ours would have to reimplement.
+    mockNodeViews = [
+      { id: 'node-a', position: { x: 0, y: 0 } },
+      { id: 'node-b', position: { x: 600, y: 0 } },
+    ];
+    mockEdges = [{ from: { node: 'node-a' }, to: { node: 'node-b' } }];
+
+    await mount();
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    const arrow = mockScene.find(
+      (e) => (e as unknown as { type?: string }).type === 'arrow'
+    ) as unknown as
+      | { start?: { id: string }; end?: { id: string } }
+      | undefined;
+
+    expect(arrow?.start?.id).toBe('holistix-node-node-a');
+    expect(arrow?.end?.id).toBe('holistix-node-node-b');
+  });
+
+  it('skips an edge whose ends are not both on this view', async () => {
+    mockNodeViews = [{ id: 'node-a', position: { x: 0, y: 0 } }];
+    mockEdges = [{ from: { node: 'node-a' }, to: { node: 'elsewhere' } }];
+
+    await mount();
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(
+      mockScene.filter(
+        (e) => (e as unknown as { type?: string }).type === 'arrow'
+      )
+    ).toHaveLength(0);
   });
 
   it('projects nothing when a user has turned the projection off', async () => {
