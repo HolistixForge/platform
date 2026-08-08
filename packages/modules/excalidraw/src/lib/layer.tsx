@@ -366,10 +366,14 @@ export const ExcalidrawLayerComponent: FC<{
       // would feed the loop, so only touch the scene when it actually differs.
       if (getSceneVersion(reconciled) === getSceneVersion(local)) return;
 
-      // Only what actually came from the shared map counts as sent — see the
-      // same fix on the PR branch. Recording the whole reconciliation marked
-      // strokes still sitting in the debounce as already saved, and the flush
-      // then dropped them.
+      // Only what actually came from the shared map counts as sent.
+      //
+      // `reconcileElements` returns the union of local and remote, so recording
+      // the whole reconciliation marked the strokes someone had just drawn —
+      // still sitting in the 250 ms debounce, never dispatched — as already
+      // saved. The next flush then found no delta and dropped them: they
+      // vanished for everyone else and did not survive a reload, and only came
+      // back if the element happened to be edited again.
       const merged = new Map(sentVersions.current);
       for (const [id, version] of versionsById(
         remote as unknown as TJsonObject[]

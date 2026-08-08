@@ -22,10 +22,11 @@ import { ExcalidrawLayerComponent } from './layer';
 
 /** Captures Excalidraw's props so a test can drive onChange by hand. */
 let mockCapturedOnChange: ((elements: unknown[]) => void) | null = null;
-/** The scene the fake Excalidraw holds. */
-let mockScene: { id: string; version: number }[] = [];
 
 jest.mock('@excalidraw/excalidraw/index.css', () => ({}), { virtual: true });
+
+/** The scene the fake Excalidraw holds, so `pull` can read it back. */
+let mockScene: { id: string; version: number }[] = [];
 
 jest.mock(
   '@excalidraw/excalidraw',
@@ -37,15 +38,26 @@ jest.mock(
     }) => {
       mockCapturedOnChange = props.onChange ?? null;
       props.excalidrawAPI?.({
-        updateScene: (u: { elements?: unknown[] }) => {
+        updateScene: (s: { elements?: { id: string; version: number }[] }) => {
           mockUpdateSceneCalls++;
-          if (u.elements) mockScene = u.elements as typeof mockScene;
+          if (s.elements) mockScene = s.elements;
         },
         getAppState: () => ({}),
         getSceneElementsIncludingDeleted: () => mockScene,
       });
       return null;
     },
+    // The real one returns the union of local and remote, which is the whole
+    // point of the regression below: a local element the flush has not sent
+    // yet is in there too.
+    reconcileElements: (local: { id: string }[], remote: { id: string }[]) => {
+      const byId = new Map(local.map((e) => [e.id, e]));
+      remote.forEach((e) => byId.set(e.id, e));
+      return [...byId.values()];
+    },
+    // Anything but equal, so `pull` does not take its early return.
+    getSceneVersion: (els: unknown[]) => els.length,
+    getCommonBounds: () => [0, 0, 0, 0],
     convertToExcalidrawElements: (skeletons: unknown[]) =>
       skeletons.map((sk, i) => ({
         ...(sk as object),
@@ -53,9 +65,6 @@ jest.mock(
         version: 1,
       })),
     restoreElements: (els: unknown) => els,
-    reconcileElements: (local: unknown[]) => local,
-    getSceneVersion: () => 0,
-    getCommonBounds: () => [0, 0, 0, 0],
   }),
   { virtual: true }
 );
@@ -72,23 +81,40 @@ const mockDispatch = jest.fn().mockResolvedValue(undefined);
 // mock.
 const mockLayerContext = { updateLayerTree: mockUpdateLayerTree };
 const mockDispatcher = { dispatch: mockDispatch };
+/** What the shared map currently holds, keyed as the real one keys it. */
+const mockRemote = new Map<
+  string,
+  { element: { id: string; version: number } }
+>();
+/** The layer's own observer, so a test can play a remote change arriving. */
+let mockOnRemoteChange: (() => void) | null = null;
+
 const mockSharedData = {
   'excalidraw:elements': {
-    forEach: () => undefined,
-    observe: () => undefined,
-    unobserve: () => undefined,
+    forEach: (
+      fn: (
+        entry: { element: { id: string; version: number } },
+        key: string
+      ) => void
+    ) => mockRemote.forEach((entry, key) => fn(entry, key)),
+    observe: (cb: () => void) => {
+      mockOnRemoteChange = cb;
+    },
+    unobserve: () => {
+      mockOnRemoteChange = null;
+    },
   },
 };
 const mockUsers: unknown[] = [];
 
-/** Node views the layer should project. Set per test. */
+/** Node views the layer should project into the scene. Set per test. */
 let mockNodeViews: { id: string; position: { x: number; y: number } }[] = [];
 const mockGraphView = () =>
   mockNodeViews.length
     ? { nodeViews: mockNodeViews.map((nv) => ({ ...nv, status: {} })) }
     : undefined;
 
-/** Every updateScene the layer performs, so a loop is visible as a count. */
+/** Counts the layer's scene writes, so a runaway shows up as a number. */
 let mockUpdateSceneCalls = 0;
 
 jest.mock('@holistix-forge/whiteboard/frontend', () => ({
@@ -98,8 +124,8 @@ jest.mock('@holistix-forge/whiteboard/frontend', () => ({
 jest.mock('@holistix-forge/collab/frontend', () => ({
   useAwarenessUserList: () => mockUsers,
   useSharedDataDirect: () => mockSharedData,
-  // The graph view the layer projects into the scene. A *fresh object every
-  // call*, which is what the real hook does — the layer must not treat that
+  // The graph view the layer projects into the scene. A *fresh object on every
+  // call*, which is what the real hook does — the layer must not read that
   // identity as a change, or it re-projects forever.
   useLocalSharedData: () => mockGraphView(),
 }));
@@ -144,27 +170,76 @@ const mount = async () => {
 describe('ExcalidrawLayerComponent', () => {
   beforeEach(() => {
     mockCapturedOnChange = null;
+    mockOnRemoteChange = null;
     mockScene = [];
     mockNodeViews = [];
     mockUpdateSceneCalls = 0;
+    mockRemote.clear();
     mockUpdateLayerTree.mockClear();
     mockDispatch.mockClear();
   });
 
-  it('projects the graph\u2019s nodes once, not on every shared-data change', async () => {
-    // The freeze this reproduces: the projection effect depended on the array
-    // the graph-view hook returns, that hook returns a fresh array every call,
-    // and the projection itself causes a call. The tab locked up.
+  //
+
+  it('projects the graph’s nodes without re-projecting on every change', async () => {
+    // The freeze this pins down: the projection effect depended on the array
+    // the graph-view hook returns, that hook returns a fresh one on every
+    // call, and the projection itself causes a call. The tab locked up, which
+    // costs a reload to even see — hence a test rather than another attempt.
+    localStorage.setItem('holistix:excalidraw-nodes', '1');
     mockNodeViews = [{ id: 'node-a', position: { x: 0, y: 0 } }];
+    try {
+      await mount();
+      await act(async () => {
+        await Promise.resolve();
+      });
 
-    await mount();
-    await act(async () => {
-      await Promise.resolve();
-    });
+      // The drawing and the projection are a couple of writes. A loop is not.
+      expect(mockUpdateSceneCalls).toBeLessThan(5);
+    } finally {
+      localStorage.removeItem('holistix:excalidraw-nodes');
+    }
+  });
 
-    // A handful of scene writes is fine — the drawing and the projection. A
-    // runaway loop is not.
-    expect(mockUpdateSceneCalls).toBeLessThan(5);
+  it('still sends a stroke drawn just before someone else’s change arrives', async () => {
+    // The 250 ms debounce is the window this happens in: the stroke is
+    // recorded locally, a remote change lands, and the flush runs after.
+    jest.useFakeTimers();
+    try {
+      await mount();
+
+      // Someone draws. `flush` is now pending, nothing dispatched yet.
+      const mine = element('mine', 1);
+      mockScene = [mine];
+      act(() => {
+        mockCapturedOnChange?.([mine]);
+      });
+
+      // Their change lands inside the window.
+      mockRemote.set('drawing-1::theirs', { element: element('theirs', 4) });
+      await act(async () => {
+        mockOnRemoteChange?.();
+        await Promise.resolve();
+      });
+
+      // The debounce fires.
+      await act(async () => {
+        jest.advanceTimersByTime(400);
+        await Promise.resolve();
+      });
+
+      const upserts = mockDispatch.mock.calls
+        .map(([e]) => e)
+        .filter((e) => e?.type === 'excalidraw:upsert-elements')
+        .flatMap((e) => e.elements as { id: string }[]);
+
+      // Recording the whole reconciliation as "sent" marked this element as
+      // already saved, and it was never written — lost for everyone else and
+      // gone after a reload.
+      expect(upserts.map((e) => e.id)).toContain('mine');
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it('reports the layer tree once for a scene that has not changed', async () => {
