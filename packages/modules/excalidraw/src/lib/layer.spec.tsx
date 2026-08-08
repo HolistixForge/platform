@@ -25,16 +25,37 @@ let mockCapturedOnChange: ((elements: unknown[]) => void) | null = null;
 
 jest.mock('@excalidraw/excalidraw/index.css', () => ({}), { virtual: true });
 
+/** The scene the fake Excalidraw holds, so `pull` can read it back. */
+let mockScene: { id: string; version: number }[] = [];
+
 jest.mock(
   '@excalidraw/excalidraw',
   () => ({
     __esModule: true,
-    Excalidraw: (props: { onChange?: (e: unknown[]) => void }) => {
+    Excalidraw: (props: {
+      onChange?: (e: unknown[]) => void;
+      excalidrawAPI?: (api: unknown) => void;
+    }) => {
       mockCapturedOnChange = props.onChange ?? null;
+      props.excalidrawAPI?.({
+        updateScene: (s: { elements?: { id: string; version: number }[] }) => {
+          if (s.elements) mockScene = s.elements;
+        },
+        getAppState: () => ({}),
+        getSceneElementsIncludingDeleted: () => mockScene,
+      });
       return null;
     },
-    reconcileElements: (local: unknown[]) => local,
-    getSceneVersion: () => 0,
+    // The real one returns the union of local and remote, which is the whole
+    // point of the regression below: a local element the flush has not sent
+    // yet is in there too.
+    reconcileElements: (local: { id: string }[], remote: { id: string }[]) => {
+      const byId = new Map(local.map((e) => [e.id, e]));
+      remote.forEach((e) => byId.set(e.id, e));
+      return [...byId.values()];
+    },
+    // Anything but equal, so `pull` does not take its early return.
+    getSceneVersion: (els: unknown[]) => els.length,
     getCommonBounds: () => [0, 0, 0, 0],
   }),
   { virtual: true }
@@ -52,11 +73,28 @@ const mockDispatch = jest.fn().mockResolvedValue(undefined);
 // mock.
 const mockLayerContext = { updateLayerTree: mockUpdateLayerTree };
 const mockDispatcher = { dispatch: mockDispatch };
+/** What the shared map currently holds, keyed as the real one keys it. */
+const mockRemote = new Map<
+  string,
+  { element: { id: string; version: number } }
+>();
+/** The layer's own observer, so a test can play a remote change arriving. */
+let mockOnRemoteChange: (() => void) | null = null;
+
 const mockSharedData = {
   'excalidraw:elements': {
-    forEach: () => undefined,
-    observe: () => undefined,
-    unobserve: () => undefined,
+    forEach: (
+      fn: (
+        entry: { element: { id: string; version: number } },
+        key: string
+      ) => void
+    ) => mockRemote.forEach((entry, key) => fn(entry, key)),
+    observe: (cb: () => void) => {
+      mockOnRemoteChange = cb;
+    },
+    unobserve: () => {
+      mockOnRemoteChange = null;
+    },
   },
 };
 const mockUsers: unknown[] = [];
@@ -110,8 +148,54 @@ const mount = async () => {
 describe('ExcalidrawLayerComponent', () => {
   beforeEach(() => {
     mockCapturedOnChange = null;
+    mockOnRemoteChange = null;
+    mockScene = [];
+    mockRemote.clear();
     mockUpdateLayerTree.mockClear();
     mockDispatch.mockClear();
+  });
+
+  //
+
+  it('still sends a stroke drawn just before someone else’s change arrives', async () => {
+    // The 250 ms debounce is the window this happens in: the stroke is
+    // recorded locally, a remote change lands, and the flush runs after.
+    jest.useFakeTimers();
+    try {
+      await mount();
+
+      // Someone draws. `flush` is now pending, nothing dispatched yet.
+      const mine = element('mine', 1);
+      mockScene = [mine];
+      act(() => {
+        mockCapturedOnChange?.([mine]);
+      });
+
+      // Their change lands inside the window.
+      mockRemote.set('drawing-1::theirs', { element: element('theirs', 4) });
+      await act(async () => {
+        mockOnRemoteChange?.();
+        await Promise.resolve();
+      });
+
+      // The debounce fires.
+      await act(async () => {
+        jest.advanceTimersByTime(400);
+        await Promise.resolve();
+      });
+
+      const upserts = mockDispatch.mock.calls
+        .map(([e]) => e)
+        .filter((e) => e?.type === 'excalidraw:upsert-elements')
+        .flatMap((e) => e.elements as { id: string }[]);
+
+      // Recording the whole reconciliation as "sent" marked this element as
+      // already saved, and it was never written — lost for everyone else and
+      // gone after a reload.
+      expect(upserts.map((e) => e.id)).toContain('mine');
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it('reports the layer tree once for a scene that has not changed', async () => {
