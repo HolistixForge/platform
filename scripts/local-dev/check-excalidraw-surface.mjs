@@ -425,6 +425,25 @@ const main = async () => {
         return { buttons, reachable };
       });
 
+      // The card opens its service on a click on the card itself, not on a
+      // button — server-card.tsx puts the handler on the card's own div. The
+      // element is clicked directly rather than hunting for a pixel no button
+      // covers, which found none on a card this size.
+      const card = page
+        .locator('.gradient-notebook-card, .node-background')
+        .first();
+      if (await card.count().catch(() => 0)) {
+        await card
+          .click({ position: { x: 10, y: 10 }, timeout: 8000 })
+          .catch((e) => {
+            report.cardClickError = String(e.message).slice(0, 120);
+          });
+        await page.waitForTimeout(5000);
+        report.cardClicked = true;
+      } else {
+        report.cardClicked = false;
+      }
+
       // Click whichever button the card offers for its service.
       // Passed in, not read from process.env: this runs in the page.
       const clicked = await ask(page, () => {
