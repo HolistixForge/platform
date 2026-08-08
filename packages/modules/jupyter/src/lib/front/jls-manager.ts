@@ -20,7 +20,7 @@ import { FrontendDispatcher } from '@holistix-forge/reducers/frontend';
 // a kernel connects — and only then — costs nothing anyone will notice and
 // keeps every other node, the terminal among them, independent of them.
 import type { BrowserWidgetManager } from './browser-widget-manager';
-import { JupyterlabDriver } from '../driver';
+import { JupyterlabDriver, ResourceListener } from '../driver';
 import { TJupyterSharedData } from '../jupyter-shared-model';
 import { TJupyterEvent } from '../jupyter-events';
 import { jupyterlabIsReachable } from '../ds-backend';
@@ -82,6 +82,12 @@ export class JLsManager extends Listenable {
 
   /** How many things are showing each container. See `watchResources`. */
   private _watchers: Map<string, number> = new Map();
+
+  /**
+   * The listener each watched container has on its driver, kept so it can be
+   * unsubscribed by the same reference. Present exactly when `_watchers` is.
+   */
+  private _resourceListeners: Map<string, ResourceListener> = new Map();
   _kernelPacks: Map<string, TKernelPack> = new Map();
 
   /**
@@ -162,17 +168,7 @@ export class JLsManager extends Listenable {
     this._onChange();
   }
 
-  /**
-   * Undoes the observers installed for the current project.
-   *
-   * Not unit-tested, and it is worth saying why rather than leaving the gap
-   * silent: this module cannot be loaded under Jest at all. Importing it
-   * reaches `@jupyter-widgets/html-manager`, which is ESM — and allowing Jest
-   * to transform it only gets as far as `@lumino/dragdrop` wanting a `DragEvent`
-   * that jsdom does not define. That is why this package has one dummy spec and
-   * nothing else. What does exercise it is the Storybook suite, which loads the
-   * Jupyter stories in a real browser.
-   */
+  /** Undoes the observers installed for the current project. */
   private _detachObservers: () => void = () => undefined;
 
   /**
@@ -299,24 +295,11 @@ export class JLsManager extends Listenable {
     // one line was logged, while three terminals were running.
     const np = this._onNewDriver(server)
       .then(() => this.getServerSetting(server))
-      .then((ss) => {
-        const driver = new JupyterlabDriver(ss);
-        driver.subscribeResourceListener(() => {
-          const resources = {
-            kernels: driver.getKernels(),
-            terminals: driver.getTerminals(),
-          };
-          // send new resource to backend, that it will push back through shared
-          // state, which triggers _onChange() and updates kernel packs and UI
-          this._dispatcher.dispatch({
-            type: 'jupyter:resources-changed',
-            user_container_id: server.user_container_id,
-            resources,
-            systemEvent: true,
-          });
-        });
-        return driver;
-      })
+      // No listener subscribed here. It used to be, and that is what made the
+      // poll timer a property of *creation* rather than of being watched: the
+      // driver is cached, so a second mount got the cached promise and nothing
+      // ever subscribed again. See `watchResources`.
+      .then((ss) => new JupyterlabDriver(ss))
       .catch((error) => {
         // Forgotten, so the next mount tries again rather than being handed a
         // promise that will never resolve for the life of the page.
@@ -334,9 +317,30 @@ export class JLsManager extends Listenable {
 
   //
 
-  // just ensure a driver is created, it will start polling resources
-  public startPollingResources(server: TUserContainer) {
-    this._getDriver(server);
+  /**
+   * What a watched container reports back to the project.
+   *
+   * Built per container and kept, because unsubscribing needs the same
+   * reference that was subscribed.
+   */
+  private _resourcesListener(
+    server: TUserContainer,
+    driver: JupyterlabDriver
+  ): ResourceListener {
+    return () => {
+      const resources = {
+        kernels: driver.getKernels(),
+        terminals: driver.getTerminals(),
+      };
+      // send new resource to backend, that it will push back through shared
+      // state, which triggers _onChange() and updates kernel packs and UI
+      this._dispatcher.dispatch({
+        type: 'jupyter:resources-changed',
+        user_container_id: server.user_container_id,
+        resources,
+        systemEvent: true,
+      });
+    };
   }
 
   /**
@@ -345,11 +349,21 @@ export class JLsManager extends Listenable {
    *
    * The driver already counts its listeners and polls only while it has one —
    * `subscribeResourceListener` starts, the last `unsubscribe` stops. What was
-   * missing is anyone subscribing outside a creation form: `startPollingResources`
-   * was called from `new-terminal` and `new-kernel` and nowhere else, so with no
-   * form open nothing polled, no `jupyter:resources-changed` ever reached the
-   * gateway, and a terminal opened inside JupyterLab stayed invisible to the
-   * project. Measured: two terminals live in the container, zero events.
+   * missing is anyone subscribing outside a creation form, so with no form open
+   * nothing polled, no `jupyter:resources-changed` ever reached the gateway, and
+   * a terminal opened inside JupyterLab stayed invisible to the project.
+   * Measured: two terminals live in the container, zero events.
+   *
+   * So a watcher *is* a listener, and there is one mechanism rather than two.
+   *
+   * The first attempt kept the subscription inside driver creation and released
+   * with `stopPollingResources()`. Both halves were wrong, and together they
+   * were worse than the bug they replaced: the timer was cleared while the
+   * listener stayed in the set, so the set never emptied and no later subscribe
+   * could restart it — and the acquire path went through `_getDriver`, which
+   * returns the *cached* promise for a container that already has a driver and
+   * therefore subscribes nothing. Close a notebook's card and reopen it, and
+   * its terminals and kernels never updated again for the life of the page.
    *
    * Reference-counted per container rather than per component, so three nodes
    * showing the same notebook cost one timer, and the timer goes away with the
@@ -364,7 +378,23 @@ export class JLsManager extends Listenable {
 
     const count = (this._watchers.get(id) ?? 0) + 1;
     this._watchers.set(id, count);
-    if (count === 1) this.startPollingResources(server);
+
+    if (count === 1) {
+      this._getDriver(server)
+        .then((driver) => {
+          // Released while the driver was still opening. Subscribing now would
+          // poll a container nothing is looking at, with no release left to
+          // stop it.
+          if ((this._watchers.get(id) ?? 0) === 0) return;
+          const listener = this._resourcesListener(server, driver);
+          this._resourceListeners.set(id, listener);
+          driver.subscribeResourceListener(listener);
+        })
+        .catch(() => {
+          // `_getDriver` already logged it and forgot the promise, so the next
+          // mount tries again.
+        });
+    }
 
     return () => {
       // Idempotent: React calls a cleanup once, but a caller that releases
@@ -378,11 +408,15 @@ export class JLsManager extends Listenable {
         return;
       }
       this._watchers.delete(id);
+
+      const listener = this._resourceListeners.get(id);
+      if (!listener) return;
+      this._resourceListeners.delete(id);
       this._drivers
         .get(id)
-        ?.then((driver) => driver.stopPollingResources())
+        ?.then((driver) => driver.unsubscribeResourceListener(listener))
         .catch(() => {
-          // A driver that never resolved has nothing to stop.
+          // A driver that never resolved has nothing to unsubscribe from.
         });
     };
   }

@@ -1,41 +1,46 @@
 import { useMemo, FC, useEffect, useRef, useState, useCallback } from 'react';
 import { debounce } from 'lodash';
 
-import { useCurrentUser } from '@holistix-forge/frontend-data';
 import { OrderedExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 import { AppState, Collaborator, SocketId } from '@excalidraw/excalidraw/types';
-import { BinaryFiles } from '@excalidraw/excalidraw/types';
 
 import { TJsonObject } from '@holistix-forge/simple-types';
-import { LayerViewportAdapter, TLayerProvider } from '@holistix-forge/whiteboard/frontend';
+import {
+  LayerViewportAdapter,
+  TLayerProvider,
+} from '@holistix-forge/whiteboard/frontend';
 import {
   useAwarenessUserList,
   useSharedDataDirect,
 } from '@holistix-forge/collab/frontend';
-import { useDispatcher, FrontendDispatcher } from '@holistix-forge/reducers/frontend';
+import {
+  useDispatcher,
+  FrontendDispatcher,
+} from '@holistix-forge/reducers/frontend';
 import { TWhiteboardEvent } from '@holistix-forge/whiteboard';
-import { useLayerContext, TLayerTreeItem } from '@holistix-forge/whiteboard/frontend';
+import {
+  useLayerContext,
+  TLayerTreeItem,
+} from '@holistix-forge/whiteboard/frontend';
 
 import { TExcalidrawSharedData } from './excalidraw-shared-model';
+import { TExcalidrawEvent } from './excalidraw-events';
+import {
+  readDrawingElements,
+  sceneSignature,
+  versionsById,
+} from './excalidraw-scene';
 
 //
 
-// Excalidraw export helpers will be dynamically imported when needed
-type ExportToSvgArgs = {
-  elements: readonly OrderedExcalidrawElement[];
-  appState: Partial<AppState> & {
-    exportBackground?: boolean;
-    exportWithDarkMode?: boolean;
-  };
-  files: BinaryFiles;
-};
-
-//
+/** The layer writes its own elements and moves the node that stands for them. */
+type TLayerEvent = TWhiteboardEvent | TExcalidrawEvent;
 
 type ExcalidrawAPI = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateScene: (scene: any) => void;
   getAppState: () => AppState;
+  getSceneElementsIncludingDeleted?: () => readonly OrderedExcalidrawElement[];
 };
 
 //
@@ -50,23 +55,6 @@ const ensureCss = async () => {
 
 //
 
-// Simple fast hash function for objects/arrays
-function simpleHash(obj: TJsonObject[]): string {
-  const str = JSON.stringify(obj);
-  let hash = 0,
-    i,
-    chr;
-  if (str.length === 0) return hash.toString();
-  for (i = 0; i < str.length; i++) {
-    chr = str.charCodeAt(i);
-    hash = (hash << 5) - hash + chr;
-    hash |= 0; // Convert to 32bit integer
-  }
-  return hash.toString();
-}
-
-//
-
 const appState = {
   viewModeEnabled: false,
   zenModeEnabled: false,
@@ -77,90 +65,49 @@ const appState = {
 
 //
 
-// Debounced function for setting drawing data
-const debouncedHandleChange = debounce(
-  async (
-    sharedData: TExcalidrawSharedData,
-    viewId: string,
-    dispatcher: FrontendDispatcher<TWhiteboardEvent>,
-    nodeId: string,
-    elements: readonly OrderedExcalidrawElement[],
-    files: BinaryFiles,
-    api: ExcalidrawAPI,
-    userid: string
-  ) => {
-    // Generate SVG using Excalidraw export helper (dynamic import)
-    let svgString = '';
+/**
+ * Keep the ExcalidrawNode's box on the drawing it stands for.
+ *
+ * Still driven from here, which keeps the node following rather than owning
+ * its own geometry. That inversion is phase 2's problem; what this no longer
+ * does is serialize an SVG of the whole scene into Yjs on every keystroke.
+ */
+const fitNodeToDrawing = async (
+  dispatcher: FrontendDispatcher<TLayerEvent>,
+  viewId: string,
+  nodeId: string,
+  elements: readonly OrderedExcalidrawElement[]
+) => {
+  if (!elements.length) return;
 
-    try {
-      const { exportToSvg, getCommonBounds } = (await import(
-        '@excalidraw/excalidraw'
-      )) as unknown as {
-        exportToSvg: (args: ExportToSvgArgs) => Promise<SVGSVGElement>;
-        getCommonBounds: (
-          elements: readonly OrderedExcalidrawElement[]
-        ) => [number, number, number, number];
-      };
+  const { getCommonBounds } = (await import(
+    '@excalidraw/excalidraw'
+  )) as unknown as {
+    getCommonBounds: (
+      elements: readonly OrderedExcalidrawElement[]
+    ) => [number, number, number, number];
+  };
 
-      if (elements.length > 0) {
-        // Get the bounds of the actual drawing content
-        const [minX, minY, maxX, maxY] = getCommonBounds(
-          elements as readonly OrderedExcalidrawElement[]
-        );
+  const [minX, minY, maxX, maxY] = getCommonBounds(elements);
+  const padding = 25; // look for css : .selection-awareness-box
 
-        const currentAppState = api.getAppState() || ({} as AppState);
+  dispatcher.dispatch({
+    type: 'whiteboard:move-node',
+    viewId,
+    nid: nodeId,
+    position: { x: minX - padding, y: minY - padding },
+  });
+  dispatcher.dispatch({
+    type: 'whiteboard:resize-node',
+    viewId,
+    nid: nodeId,
+    size: {
+      width: maxX - minX + padding * 2,
+      height: maxY - minY + padding * 2,
+    },
+  });
+};
 
-        const svgEl = await exportToSvg({
-          elements: elements as readonly OrderedExcalidrawElement[],
-          appState: {
-            ...currentAppState,
-            exportBackground: false,
-            exportWithDarkMode: false,
-            // Set the viewport to focus on the drawing bounds
-            scrollX: minX,
-            scrollY: minY,
-          },
-          files,
-        });
-
-        svgString = new XMLSerializer().serializeToString(svgEl);
-
-        const selectionAwarenessBoxPadding = 25; // look for css : .selection-awareness-box
-
-        // move the excalidraw node to the xmin, ymin
-        dispatcher.dispatch({
-          type: 'whiteboard:move-node',
-          viewId: viewId,
-          nid: nodeId,
-          position: {
-            x: minX - selectionAwarenessBoxPadding,
-            y: minY - selectionAwarenessBoxPadding,
-          },
-        });
-        dispatcher.dispatch({
-          type: 'whiteboard:resize-node',
-          viewId: viewId,
-          nid: nodeId,
-          size: {
-            width: maxX - minX + selectionAwarenessBoxPadding * 2,
-            height: maxY - minY + selectionAwarenessBoxPadding * 2,
-          },
-        });
-      }
-
-      sharedData['excalidraw:drawing'].set(nodeId, {
-        elements: elements as unknown as TJsonObject[],
-        fromUser: userid,
-        svg: svgString,
-      });
-    } catch (e) {
-      console.error('exportToSvg failed', e);
-      // best-effort; keep svg empty on failure
-    }
-  },
-  250,
-  { maxWait: 250 }
-);
 //
 
 export type TExcalidrawLayerPayload = { nodeId: string; viewId: string };
@@ -173,13 +120,9 @@ export const ExcalidrawLayerComponent: FC<{
   viewport: LayerViewportAdapter;
   payload?: TExcalidrawLayerPayload;
 }> = ({ active, viewport, payload }) => {
-  const { data, status } = useCurrentUser();
-  const userid =
-    status === 'success' && data.user.user_id ? data.user.user_id : '';
-
   const { nodeId = '', viewId = '' } = payload || {};
 
-  const dispatcher = useDispatcher<TWhiteboardEvent>();
+  const dispatcher = useDispatcher<TLayerEvent>();
   const { updateLayerTree } = useLayerContext();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -251,97 +194,180 @@ export const ExcalidrawLayerComponent: FC<{
 
   const sharedData = useSharedDataDirect<TExcalidrawSharedData>();
 
+  /** What we last pushed, so a change is diffed rather than resent whole. */
+  const sentVersions = useRef<Map<string, number>>(new Map());
+  /** Latest scene, read by the flush instead of captured by it. */
+  const pendingElements = useRef<readonly OrderedExcalidrawElement[]>([]);
+  /** The scene the last onChange acted on — see the note in handleChange. */
+  const lastSignature = useRef<string | null>(null);
+
+  // Pull remote changes into the scene.
+  //
+  // Excalidraw's own reconciler decides element by element, on
+  // `version`/`versionNonce`. The previous code compared a `fromUser` field on
+  // the whole drawing and, when it differed, replaced the entire scene — so
+  // two people drawing at once overwrote each other wholesale.
   useEffect(() => {
-    // On mount, ensure drawing entry exists or initialize it
     if (!nodeId) return;
-    const d = sharedData['excalidraw:drawing'].get(nodeId);
-    if (!d) {
-      const elements: TJsonObject[] = [];
-      sharedData['excalidraw:drawing'].set(nodeId, {
-        elements,
-        fromUser: userid,
-        svg: '',
-      });
-    }
-    // Observe remote changes
-    sharedData['excalidraw:drawing'].observe(() => {
-      const d = sharedData['excalidraw:drawing'].get(nodeId);
-      if (d?.fromUser !== userid) {
-        // update the drawing if it is from another user
-        previousHash.current = simpleHash(d?.elements || []);
-        apiRef.current?.updateScene({
-          elements: structuredClone(d?.elements) || [],
-        });
+    const map = sharedData['excalidraw:elements'];
+
+    const pull = async () => {
+      const api = apiRef.current;
+      if (!api) return;
+
+      const { reconcileElements, getSceneVersion } = (await import(
+        '@excalidraw/excalidraw'
+      )) as unknown as {
+        reconcileElements: (
+          local: readonly OrderedExcalidrawElement[],
+          remote: readonly OrderedExcalidrawElement[],
+          appState: AppState
+        ) => OrderedExcalidrawElement[];
+        getSceneVersion: (e: readonly OrderedExcalidrawElement[]) => number;
+      };
+
+      const remote = readDrawingElements(
+        sharedData,
+        nodeId
+      ) as unknown as readonly OrderedExcalidrawElement[];
+      const local = api.getSceneElementsIncludingDeleted?.() ?? [];
+      const reconciled = reconcileElements(local, remote, api.getAppState());
+
+      // Our own write comes back through this same observer. Applying it again
+      // would feed the loop, so only touch the scene when it actually differs.
+      if (getSceneVersion(reconciled) === getSceneVersion(local)) return;
+
+      // Only what actually came from the shared map counts as sent.
+      //
+      // `reconcileElements` returns the union of local and remote, so recording
+      // the whole reconciliation marked the strokes someone had just drawn —
+      // still sitting in the 250 ms debounce, never dispatched — as already
+      // saved. The next flush then found no delta and dropped them: they
+      // vanished for everyone else and did not survive a reload, and only came
+      // back if the element happened to be edited again.
+      const merged = new Map(sentVersions.current);
+      for (const [id, version] of versionsById(
+        remote as unknown as TJsonObject[]
+      )) {
+        merged.set(id, version);
       }
-    });
-  }, [nodeId, sharedData, userid]);
+      sentVersions.current = merged;
+
+      api.updateScene({ elements: reconciled });
+    };
+
+    map.observe(pull);
+    pull();
+    // The previous version never unobserved: every mount left a listener
+    // behind, still writing into the scene of a component that was gone.
+    return () => map.unobserve(pull);
+  }, [nodeId, sharedData]);
 
   //
 
-  const previousHash = useRef<string | null>(null);
+  /**
+   * Recomputes the delta from the current scene on every run rather than
+   * carrying one in, so a debounced-away change is never a lost change.
+   */
+  const flush = useMemo(
+    () =>
+      debounce(
+        async () => {
+          if (!nodeId) return;
+          const elements = pendingElements.current;
+          const current = versionsById(elements as unknown as TJsonObject[]);
+
+          const upserts = elements.filter(
+            (e) => sentVersions.current.get(e.id) !== e.version
+          );
+          const deletedIds = [...sentVersions.current.keys()].filter(
+            (id) => !current.has(id)
+          );
+
+          sentVersions.current = current;
+
+          if (upserts.length) {
+            await dispatcher.dispatch({
+              type: 'excalidraw:upsert-elements',
+              drawingId: nodeId,
+              elements: upserts as unknown as TJsonObject[],
+            });
+          }
+          if (deletedIds.length) {
+            await dispatcher.dispatch({
+              type: 'excalidraw:delete-elements',
+              drawingId: nodeId,
+              elementIds: deletedIds,
+            });
+          }
+
+          await fitNodeToDrawing(dispatcher, viewId, nodeId, elements);
+        },
+        250,
+        { maxWait: 250 }
+      ),
+    [dispatcher, nodeId, viewId]
+  );
 
   const handleChange = useCallback(
-    (
-      elements: readonly OrderedExcalidrawElement[],
-      _appState: AppState,
-      files: BinaryFiles
-    ) => {
-      const hash = simpleHash(elements as unknown as TJsonObject[]);
-      if (hash !== previousHash.current) {
-        previousHash.current = hash;
+    (elements: readonly OrderedExcalidrawElement[]) => {
+      pendingElements.current = elements;
 
-        // Update tree data for the layer panel
-        if (updateLayerTree && nodeId) {
-          // console.log('elements', elements);
-          const treeItems: TLayerTreeItem[] = elements
-            .filter((e) => !e.isDeleted)
-            .map((element, index) => ({
-              id: `${nodeId}-element-${index}`,
-              type: 'node',
-              title:
-                element.type === 'text'
-                  ? element.text || `Text ${index + 1}`
-                  : `${
-                      element.type.charAt(0).toUpperCase() +
-                      element.type.slice(1)
-                    } ${index + 1}`,
-              level: 1,
-              visible: true,
-              expanded: false,
-              locked: false,
-              nodeData: {
-                id: `${nodeId}-element-${index}`,
-                type: 'excalidraw-element',
-                position: { x: element.x, y: element.y },
-                status: {
-                  mode: 'EXPANDED' as const,
-                  forceOpened: false,
-                  forceClosed: false,
-                  isFiltered: false,
-                  rank: 0,
-                  maxRank: 1,
-                },
+      // Everything below reaches out of this component — the layer tree lives
+      // in the whiteboard's state, and the flush dispatches. Excalidraw calls
+      // onChange for `appState` too, including the viewport writes this layer
+      // makes itself, so without this the handler answers its own echo:
+      // onChange → updateLayerTree → whiteboard re-render → updateScene →
+      // onChange. That loop is what took the whole editor down with React's
+      // "maximum update depth", and it did so from whichever component
+      // happened to hold a Radix popper — never from anything named
+      // Excalidraw, which is why it read as a third-party problem.
+      const signature = sceneSignature(elements as unknown as TJsonObject[]);
+      if (signature === lastSignature.current) return;
+      lastSignature.current = signature;
+
+      // Update tree data for the layer panel
+      if (updateLayerTree && nodeId) {
+        const treeItems: TLayerTreeItem[] = elements
+          .filter((e) => !e.isDeleted)
+          .map((element, index) => ({
+            // Keyed on the element's own id, not its position in the array:
+            // indices shift on every delete, so the tree used to re-label and
+            // re-target its rows behind the user's back.
+            id: `${nodeId}-element-${element.id}`,
+            type: 'node',
+            title:
+              element.type === 'text'
+                ? element.text || `Text ${index + 1}`
+                : `${
+                    element.type.charAt(0).toUpperCase() + element.type.slice(1)
+                  } ${index + 1}`,
+            level: 1,
+            visible: true,
+            expanded: false,
+            locked: false,
+            nodeData: {
+              id: `${nodeId}-element-${element.id}`,
+              type: 'excalidraw-element',
+              position: { x: element.x, y: element.y },
+              status: {
+                mode: 'EXPANDED' as const,
+                forceOpened: false,
+                forceClosed: false,
+                isFiltered: false,
+                rank: 0,
+                maxRank: 1,
               },
-              layerId: 'excalidraw',
-            }));
+            },
+            layerId: 'excalidraw',
+          }));
 
-          updateLayerTree('excalidraw', treeItems, 'Excalidraw');
-        }
-
-        debouncedHandleChange(
-          sharedData,
-          viewId,
-          dispatcher,
-          nodeId,
-          elements,
-          files,
-          apiRef.current as ExcalidrawAPI,
-          userid
-        );
+        updateLayerTree('excalidraw', treeItems, 'Excalidraw');
       }
-    },
 
-    [dispatcher, nodeId, sharedData, viewId, userid, updateLayerTree]
+      flush();
+    },
+    [flush, nodeId, updateLayerTree]
   );
 
   // mode switch, collaborators update, content update
@@ -361,13 +387,12 @@ export const ExcalidrawLayerComponent: FC<{
   // Cancel debounce on unmount, clear layer tree
   useEffect(() => {
     return () => {
-      debouncedHandleChange.cancel();
-      previousHash.current = null;
+      flush.cancel();
       if (updateLayerTree && nodeId) {
         updateLayerTree('excalidraw', [], 'Excalidraw');
       }
     };
-  }, [updateLayerTree, nodeId]);
+  }, [flush, updateLayerTree, nodeId]);
 
   //
   //
@@ -392,10 +417,9 @@ export const ExcalidrawLayerComponent: FC<{
         }}
         initialData={{
           appState: { ...appState, ...toExcalidrawViewport(initialVp) },
-          elements:
-            (structuredClone(
-              sharedData['excalidraw:drawing'].get(nodeId)?.elements
-            ) as unknown as OrderedExcalidrawElement[]) || [],
+          elements: structuredClone(
+            readDrawingElements(sharedData, nodeId)
+          ) as unknown as OrderedExcalidrawElement[],
         }}
         onChange={handleChange}
         onScrollChange={handleScrollChange}

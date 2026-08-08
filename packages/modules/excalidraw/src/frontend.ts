@@ -24,7 +24,7 @@ export const moduleFrontend: TModule<TRequired> = {
     depsExports.collab.registry.registerSharedData(
       'map',
       'excalidraw',
-      'drawing'
+      'elements'
     );
 
     depsExports.whiteboard.registerMenuEntries(excalidrawMenuEntries);

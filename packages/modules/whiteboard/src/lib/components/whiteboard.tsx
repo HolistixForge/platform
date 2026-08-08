@@ -348,6 +348,17 @@ const WhiteboardWhiteboard = ({
         );
 
         if (existingLayerIndex !== -1) {
+          // Same tree, same state object. Returning a fresh object for an
+          // unchanged tree re-renders every layer and every consumer of the
+          // layer context, and a caller that reports its tree on each frame
+          // then drives an unbounded render loop — which is exactly how the
+          // Excalidraw layer took the editor down. The layer has its own guard
+          // now; this one is here so the next caller cannot do it again.
+          const existing = prev.layers[existingLayerIndex];
+          if (existing.title === title && isEqual(existing.items, items)) {
+            return prev;
+          }
+
           // Update existing layer in place
           return {
             layers: prev.layers.map((layer) => {
