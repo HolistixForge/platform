@@ -512,33 +512,36 @@ const WhiteboardWhiteboard = ({
             onContextMenu={handleContextualMenu}
             onContextMenuNewEdge={handleContextualMenuNewEdge}
             active={activeLayer.layerId === 'reactflow'}
-          />
-
-          {
-            // module defined layers - inactive by default
-          }
-          {layersProviders?.map((provider) => (
-            <div
-              key={provider.id}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                pointerEvents:
-                  activeLayer.layerId === provider.id ? 'auto' : 'none',
-                zIndex: provider.zIndexHint ?? 1,
-              }}
-            >
-              <provider.Component
-                viewId={viewId}
-                active={activeLayer.layerId === provider.id}
-                viewport={viewport}
-                payload={activeLayer.payload}
-              />
-            </div>
-          ))}
+          >
+            {
+              // The module layers, rendered inside the base layer's context
+              // rather than beside it — a node on the drawing surface needs
+              // the same space context and ReactFlow store as one on the
+              // canvas.
+            }
+            {layersProviders?.map((provider) => (
+              <div
+                key={provider.id}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  pointerEvents:
+                    activeLayer.layerId === provider.id ? 'auto' : 'none',
+                  zIndex: provider.zIndexHint ?? 1,
+                }}
+              >
+                <provider.Component
+                  viewId={viewId}
+                  active={activeLayer.layerId === provider.id}
+                  viewport={viewport}
+                  payload={activeLayer.payload}
+                />
+              </div>
+            ))}
+          </ReactFlowBaseLayer>
 
           <AvatarsRenderer avatarsStore={logics.as} />
 
@@ -573,6 +576,16 @@ const WhiteboardWhiteboard = ({
  * @returns
  */
 
+/**
+ * `children` are the other layers, rendered inside this one's context.
+ *
+ * Not nesting for its own sake: a node rendered on the drawing surface is
+ * still one of this board's nodes, and its component reaches for the space
+ * context (`useSpaceContext`, for its connectors) and for ReactFlow's store.
+ * Rendered as a sibling, the surface had neither, and clicking the canvas
+ * threw "Cannot destructure property 'spaceState' of null" and blanked the
+ * board.
+ */
 const ReactFlowBaseLayer = ({
   viewId,
   nodeTypes,
@@ -581,6 +594,7 @@ const ReactFlowBaseLayer = ({
   onContextMenu,
   onContextMenuNewEdge,
   active,
+  children,
 }: {
   viewId: string;
   nodeTypes: TNodeTypes;
@@ -593,6 +607,7 @@ const ReactFlowBaseLayer = ({
     clientPosition: TPosition
   ) => void;
   active: boolean;
+  children?: ReactNode;
 }) => {
   //
 
@@ -790,6 +805,7 @@ const ReactFlowBaseLayer = ({
           }}
         />
       )}
+      {children}
     </ReactflowLayerContext>
   );
 };

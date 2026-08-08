@@ -9,7 +9,6 @@ import {
   ReactNode,
 } from 'react';
 import {
-  ReactFlowProvider,
   ReactFlowState,
   useStore,
   useConnection,
@@ -425,18 +424,11 @@ export const EmbeddedNodeContext = ({
     };
   }, [dispatcher, id, viewId, zoom, status, selected, selectingUsers]);
 
-  // Wrapped in a ReactFlow provider of its own, and this is not optional: the
-  // node components reach for ReactFlow's store — `useStore` for the zoom,
-  // `useConnection` and `Handle` for the connectors — and outside the canvas
-  // there is none. Rendering one in the drawing surface threw
-  // "you have not used zustand provider as an ancestor" once per node and
-  // blanked the board. A provider here is empty of nodes and edges, which is
-  // all those hooks need to stop throwing.
-  return (
-    <ReactFlowProvider>
-      <nodeContext.Provider value={value}>{children}</nodeContext.Provider>
-    </ReactFlowProvider>
-  );
+  // No ReactFlow provider here any more. The drawing surface renders inside
+  // the base layer's `ReactflowLayerContext`, which supplies both the store
+  // these components reach for and the space context their connectors need —
+  // a provider here would shadow the real one with an empty store.
+  return <nodeContext.Provider value={value}>{children}</nodeContext.Provider>;
 };
 
 //

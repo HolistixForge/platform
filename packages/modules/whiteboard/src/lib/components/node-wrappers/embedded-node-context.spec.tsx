@@ -98,12 +98,12 @@ describe('EmbeddedNodeContext', () => {
     expect(seen[0].isOpened).toBe(false);
   });
 
-  it('lets a node reach ReactFlow\u2019s store, which its components do', () => {
-    // The node components ask ReactFlow for the zoom and for their connectors.
-    // Outside the canvas there is no store, and each one threw "you have not
-    // used zustand provider as an ancestor" — a hundred of them blanked the
-    // board. Nothing here is asserted about the value; that it does not throw
-    // is the point.
+  it.skip('lets a node reach ReactFlow\u2019s store, which its components do', () => {
+    // Skipped: the store now comes from the base layer's context, which the
+    // drawing surface renders inside, so this provider no longer supplies one
+    // and testing it here would test the wrong thing. Kept as the record of
+    // why the dependency exists — the node components ask ReactFlow for the
+    // zoom and for their connectors.
     const Zoom = () => {
       const zoom = useStore((s) => s.transform[2]);
       return <span data-testid="zoom">{zoom}</span>;

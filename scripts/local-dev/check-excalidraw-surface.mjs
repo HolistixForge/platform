@@ -255,10 +255,23 @@ const main = async () => {
   // from the state before it, because a page that dies here dies of the fit
   // and not of the projection.
   if (wantSurface) {
+    // The shortcut goes to whatever has focus, so the canvas is given it
+    // first — on an empty corner, because clicking an embed puts the click
+    // inside the node rendered in it.
+    const empty = await ask(page, () => {
+      const c = document.querySelector('.excalidraw canvas.interactive');
+      if (!c) return null;
+      const b = c.getBoundingClientRect();
+      return { x: b.right - 80, y: b.bottom - 140 };
+    });
+    if (empty?.x) {
+      await page.mouse.click(empty.x, empty.y).catch(() => {});
+      await page.waitForTimeout(500);
+    }
     await page.keyboard.press('Shift+Digit1').catch((e) => {
       report.fitError = e.message;
     });
-    await page.waitForTimeout(4000);
+    await page.waitForTimeout(5000);
     report.afterFit = await snapshot();
   }
 
