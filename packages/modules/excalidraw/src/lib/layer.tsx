@@ -441,6 +441,20 @@ export const ExcalidrawLayerComponent: FC<{
           };
 
           const node = nodesById.get(nv.id);
+
+          // A group is a frame. That is Excalidraw's own word for "these
+          // elements belong together and move together", and it comes with
+          // the name, the drag behaviour and the membership — none of which
+          // an embeddable would have.
+          if (node?.type === 'group') {
+            const title = (node.data as { title?: string } | undefined)?.title;
+            return {
+              ...common,
+              type: 'frame',
+              name: title ?? 'Group',
+            };
+          }
+
           const shapeType =
             node?.type === 'shape'
               ? (node.data as { shapeType?: string } | undefined)?.shapeType
@@ -524,6 +538,12 @@ export const ExcalidrawLayerComponent: FC<{
       const identified = projected.map((element, i) => ({
         ...element,
         id: elementIdForNode(views[i].id),
+        // Membership of a group is membership of its frame. The view already
+        // says which group a node is in; Excalidraw then moves the two
+        // together without anything of ours arranging it.
+        ...(views[i].parentId
+          ? { frameId: elementIdForNode(views[i].parentId as string) }
+          : {}),
       }));
 
       const arrowElements = arrows.length

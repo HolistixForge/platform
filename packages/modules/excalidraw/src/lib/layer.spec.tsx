@@ -116,7 +116,11 @@ const mockAwareness = {
 };
 
 /** Node views the layer should project into the scene. Set per test. */
-let mockNodeViews: { id: string; position: { x: number; y: number } }[] = [];
+let mockNodeViews: {
+  id: string;
+  position: { x: number; y: number };
+  parentId?: string;
+}[] = [];
 /** The graph's nodes behind those views. Set per test. */
 let mockGraphNodes: { id: string; type: string; data?: unknown }[] = [];
 const mockGraphView = () =>
@@ -569,6 +573,35 @@ describe('ExcalidrawLayerComponent', () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+
+  it('draws a group as a frame, and puts its children in it', async () => {
+    // A frame is Excalidraw's own word for "these belong together and move
+    // together" — the name, the drag behaviour and the membership all come
+    // with it, and none of them would with an embeddable.
+    mockNodeViews = [
+      { id: 'grp', position: { x: 0, y: 0 } },
+      { id: 'node-a', position: { x: 20, y: 20 }, parentId: 'grp' },
+    ];
+    mockGraphNodes = [
+      { id: 'grp', type: 'group', data: { title: 'Ideas' } },
+      { id: 'node-a', type: 'shape', data: { shapeType: 'circle' } },
+    ];
+
+    await mount();
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    const frame = mockScene.find(
+      (e) => (e as unknown as { type?: string }).type === 'frame'
+    ) as unknown as { name?: string; id: string } | undefined;
+    const child = mockScene.find((e) => e.id === 'holistix-node-node-a') as
+      | unknown as { frameId?: string } | undefined;
+
+    expect(frame?.name).toBe('Ideas');
+    expect(frame?.id).toBe('holistix-node-grp');
+    expect(child?.frameId).toBe('holistix-node-grp');
   });
 
   it('projects nothing when a user has turned the projection off', async () => {
