@@ -40,10 +40,38 @@ export const EmbeddedNode: FC<{ nodeId: string; viewId: string }> = ({
         ?.nodeViews?.find((nv: TNodeView) => nv.id === nodeId)
   ) as TNodeView | undefined;
 
-  if (!node || !nodeView) return null;
+  // Returning null here is not neutral: Excalidraw falls back to an <iframe>
+  // pointing at the sentinel URL, which resolves nowhere — so a node that
+  // fails to resolve looks exactly like an empty box. Each branch says which
+  // one it was instead.
+  const fail = (why: string) => (
+    <div
+      data-testid="embedded-node-error"
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#2a1020',
+        color: '#ff8fa3',
+        border: '1px dashed #ff8fa3',
+        borderRadius: 6,
+        fontSize: 12,
+        fontFamily: 'ui-monospace, monospace',
+        textAlign: 'center',
+        padding: 8,
+      }}
+    >
+      {why}
+    </div>
+  );
+
+  if (!node) return fail(`no node ${nodeId.slice(0, 12)}`);
+  if (!nodeView) return fail(`no nodeView ${nodeId.slice(0, 12)}`);
 
   const NodeComponent = whiteboard.uiElements.nodes[node.type];
-  if (!NodeComponent) return null;
+  if (!NodeComponent) return fail(`type not registered: ${node.type}`);
 
   return (
     <EmbeddedNodeContext

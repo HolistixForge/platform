@@ -144,17 +144,11 @@ export const ExcalidrawLayerComponent: FC<{
   const [Excalidraw, setExcalidraw] = useState<FC<any> | null>(null);
   const apiRef = useRef<ExcalidrawAPI | null>(null);
   /**
-   * The graph's nodes as scene elements, built before Excalidraw mounts.
-   *
-   * They cannot be injected after the fact: Excalidraw decides whether an
-   * element is embeddable as it enters the scene, and an embeddable pushed in
-   * with `updateScene` is accepted into the scene and then never rendered —
-   * `validateEmbeddable` returns true for it and `renderEmbeddable` is still
-   * never called. Measured. So they go in through `initialData` instead.
+   * Set when Excalidraw hands its API over, which it does after this
+   * component's own effects have already run — so the projection has to be
+   * told rather than read the ref.
    */
-  const [projected, setProjected] = useState<OrderedExcalidrawElement[] | null>(
-    null
-  );
+  const [apiReady, setApiReady] = useState(false);
 
   const toExcalidrawViewport = useCallback(
     (vp: { absoluteX: number; absoluteY: number; zoom: number }) => ({
@@ -243,6 +237,10 @@ export const ExcalidrawLayerComponent: FC<{
     [graphView?.nodeViews]
   );
 
+  /** Read by the projection effect, so its identity is not a dependency. */
+  const latestNodeViews = useRef<TNodeView[]>(nodeViews);
+  latestNodeViews.current = nodeViews;
+
   /** Rebuilt whenever a node moves, is added or is removed. */
   const nodeSignature = useMemo(
     () =>
@@ -257,47 +255,74 @@ export const ExcalidrawLayerComponent: FC<{
     [nodeViews]
   );
 
-  // Built here, handed to Excalidraw at mount — not pushed in afterwards.
+  /**
+   * Injected after mount, deliberately.
+   *
+   * Excalidraw validates an embeddable in `updateEmbeddables()`, and that runs
+   * from `componentDidUpdate` only — never from `componentDidMount`
+   * (App.tsx:2704 in 0.18.0). An element present in `initialData` is therefore
+   * never validated, `embedsValidationStatus` has no entry for it, and
+   * `renderEmbeddables()` filters it out:
+   *
+   *     .filter(a => isIframeLikeElement(a) &&
+   *                  this.embedsValidationStatus.get(a.id) === true || ...)
+   *
+   * So the nodes go in through `updateScene`, whose update cycle is what gets
+   * them validated.
+   */
   useEffect(() => {
+    const api = apiRef.current;
+    if (!api) return;
+
     let cancelled = false;
 
     (async () => {
-      if (!nodeViews.length) {
-        setProjected([]);
-        return;
-      }
-
-      const { convertToExcalidrawElements } = (await import(
+      const { convertToExcalidrawElements, restoreElements } = (await import(
         '@excalidraw/excalidraw'
       )) as unknown as {
         convertToExcalidrawElements: (
           skeletons: unknown[]
         ) => OrderedExcalidrawElement[];
+        restoreElements: (
+          elements: unknown,
+          localElements: unknown
+        ) => OrderedExcalidrawElement[];
       };
       if (cancelled) return;
 
-      setProjected(
-        convertToExcalidrawElements(
-          nodeViews.map((nv) => ({
-            type: 'embeddable',
-            x: nv.position.x,
-            y: nv.position.y,
-            width: nv.size?.width ?? 320,
-            height: nv.size?.height ?? 220,
-            link: nodeLink(nv.id),
-            customData: { holistixNodeId: nv.id, holistixViewId: viewId },
-          }))
-        )
+      const scene = api.getSceneElementsIncludingDeleted?.() ?? [];
+      const drawing = scene.filter((e) => !embeddedNodeId(e));
+
+      const views = latestNodeViews.current;
+      const projected = convertToExcalidrawElements(
+        views.map((nv) => ({
+          type: 'embeddable',
+          x: nv.position.x,
+          y: nv.position.y,
+          width: nv.size?.width ?? 320,
+          height: nv.size?.height ?? 220,
+          link: nodeLink(nv.id),
+          customData: { holistixNodeId: nv.id, holistixViewId: viewId },
+        }))
       );
+
+      // Normalised before it goes in. `convertToExcalidrawElements` leaves an
+      // embeddable with only the fields the skeleton named — no `angle`, no
+      // `opacity`, no `seed` — and Excalidraw's viewport test needs them: the
+      // element validated fine and was then judged invisible, so it never
+      // rendered. Measured: 12 fields against the 27 a real element carries.
+      const restored = restoreElements(projected, null);
+
+      api.updateScene({ elements: [...drawing, ...restored] });
     })();
 
     return () => {
       cancelled = true;
     };
-    // Keyed on the signature, not on `nodeViews`: that array is rebuilt on
-    // every shared-data change, and the signature is what says a node actually
-    // moved.
-  }, [nodeSignature, nodeViews, viewId]);
+    // Keyed on the signature alone. `nodeViews` is a fresh array on every
+    // shared-data change and this effect causes one, so depending on it is a
+    // loop — it froze the tab. The signature is what says a node moved.
+  }, [nodeSignature, viewId, apiReady]);
 
   // Pull remote changes into the scene.
   //
@@ -499,9 +524,6 @@ export const ExcalidrawLayerComponent: FC<{
 
   if (!active) return null;
   if (!Excalidraw) return null;
-  // Waiting on the projection rather than mounting without it: an embeddable
-  // added after mount is never rendered.
-  if (projected === null) return null;
 
   const initialVp = viewport.getViewport
     ? viewport.getViewport()
@@ -515,15 +537,15 @@ export const ExcalidrawLayerComponent: FC<{
       <Excalidraw
         excalidrawAPI={(api: ExcalidrawAPI) => {
           apiRef.current = api;
+          setApiReady(true);
+          // TEMP debug handle — removed once the integration renders.
+          (window as unknown as { __exApi: ExcalidrawAPI }).__exApi = api;
         }}
         initialData={{
           appState: { ...appState, ...toExcalidrawViewport(initialVp) },
-          elements: [
-            ...(structuredClone(
-              readDrawingElements(sharedData, drawingId)
-            ) as unknown as OrderedExcalidrawElement[]),
-            ...projected,
-          ],
+          elements: structuredClone(
+            readDrawingElements(sharedData, drawingId)
+          ) as unknown as OrderedExcalidrawElement[],
         }}
         onChange={handleChange}
         onScrollChange={handleScrollChange}
