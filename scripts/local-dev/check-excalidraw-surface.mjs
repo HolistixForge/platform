@@ -20,6 +20,8 @@ const PROJECT = process.env.HOLISTIX_PROJECT ?? 'sync-test';
 const EMAIL = process.env.HOLISTIX_EMAIL ?? 'claude@test.local';
 const PASSWORD = process.env.HOLISTIX_PASSWORD ?? 'TestUser123!';
 
+/** `--peer` opens a second browser on the same board, as the second account. */
+const wantPeer = process.argv.includes('--peer');
 const wantSurface = process.argv.includes('--surface');
 const wantNodes = process.argv.includes('--nodes');
 /** `--generate=N` tops the board up to N shape nodes before measuring. */
@@ -476,6 +478,60 @@ const main = async () => {
       }
       report.afterOpen = await snapshot();
     }
+  }
+
+  // A second person on the same board. The surface has to be the same scene
+  // for both and each has to see the other — collaboration is not a property
+  // of one client.
+  if (wantPeer) {
+    const peer = await browser.newContext({ ignoreHTTPSErrors: true });
+    const peerPage = await peer.newPage();
+    await peerPage.goto(`${BASE}/account/login`, {
+      waitUntil: 'domcontentloaded',
+    });
+    // The second test account does not exist on the macOS path — its
+    // bootstrap script only knows /root/.local-dev — so the peer is the same
+    // person in another browser. That still shows one scene shared by two
+    // clients; it does not show two *people* seeing each other.
+    await peerPage.fill(
+      'input[type=email]',
+      process.env.HOLISTIX_PEER_EMAIL ?? EMAIL
+    );
+    await peerPage.fill('input[type=password]', PASSWORD);
+    await peerPage.click('button.submit:has-text("Login")');
+    await peerPage
+      .waitForURL((u) => !u.pathname.includes('/login'), { timeout: 30000 })
+      .catch(() => undefined);
+    await peerPage.goto(`${BASE}/p/${ORG}/${PROJECT}/editor`, {
+      waitUntil: 'domcontentloaded',
+    });
+    await peerPage.waitForTimeout(18000);
+
+    report.peer = await Promise.race([
+      peerPage.evaluate(() => ({
+        excalidraw: !!document.querySelector('.excalidraw'),
+        embeds: document.querySelectorAll('.excalidraw__embeddable-container')
+          .length,
+        blank: document.body.innerText.trim() === '',
+        url: location.pathname,
+        text: document.body.innerText.replace(/\s+/g, ' ').trim().slice(0, 120),
+      })),
+      new Promise((r) => setTimeout(() => r({ frozen: true }), 15000)),
+    ]);
+
+    // Each side counts the avatars the other's presence puts on the board.
+    report.peerAwareness = {
+      here: await ask(page, () =>
+        document.querySelectorAll('[class*=avatar]').length
+      ),
+      there: await Promise.race([
+        peerPage.evaluate(
+          () => document.querySelectorAll('[class*=avatar]').length
+        ),
+        new Promise((r) => setTimeout(() => r('timeout'), 10000)),
+      ]),
+    };
+    await peer.close();
   }
 
   const shot = process.argv.find((a) => a.startsWith('--shot='));
