@@ -346,6 +346,72 @@ const NodeStatusDebugOverlay = (s: TNodeViewStatus & { zoom: number }) => {
 
 //
 
+/**
+ * A node's context for a node rendered outside the ReactFlow canvas.
+ *
+ * `NodeWrapper` cannot be reused for this: it reads the zoom from ReactFlow's
+ * own store and the view from the ReactFlow layer's context, so it only exists
+ * where ReactFlow does. A node embedded in the drawing surface needs the same
+ * context and none of that — hence a second, smaller provider here, in the
+ * module that owns the context, rather than a copy of it in the caller.
+ *
+ * What it does not provide is the chrome: no header, no connectors, no resize
+ * handle. Inside the drawing surface those belong to the element that holds
+ * the node, not to the node.
+ */
+export const EmbeddedNodeContext = ({
+  id,
+  viewId,
+  zoom,
+  status,
+  children,
+}: {
+  id: string;
+  viewId: string;
+  zoom: number;
+  status: TNodeViewStatus;
+  children: ReactNode;
+}) => {
+  const dispatcher = useDispatcher<TWhiteboardEvent>();
+  const { awareness } = useAwareness();
+  const selections = useAwarenessSelections();
+  const selectingUsers = selections[id] || [];
+
+  const selected = awareness.getUser()
+    ? selectingUsers.some(
+        (u) =>
+          u.user.username === awareness.getUser().username &&
+          u.viewId === viewId
+      )
+    : false;
+
+  const send = (type: TWhiteboardEvent['type']) => () =>
+    dispatcher.dispatch({ type, nid: id, viewId } as TWhiteboardEvent);
+
+  return (
+    <nodeContext.Provider
+      value={{
+        id,
+        zoom,
+        viewId,
+        viewStatus: status,
+        isOpened: isNodeOpened(status),
+        selected,
+        selectingUsers,
+        open: send('whiteboard:open-node'),
+        close: send('whiteboard:close-node'),
+        reduce: send('whiteboard:reduce-node'),
+        expand: send('whiteboard:expand-node'),
+        filterOut: send('whiteboard:filter-out-node'),
+      }}
+    >
+      {children}
+    </nodeContext.Provider>
+  );
+};
+
+//
+
 export const MockNodeContext = ({ children }: { children: ReactNode }) => {
   return (
     <nodeContext.Provider

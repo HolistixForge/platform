@@ -68,6 +68,9 @@ jest.mock('@holistix-forge/whiteboard/frontend', () => ({
 jest.mock('@holistix-forge/collab/frontend', () => ({
   useAwarenessUserList: () => mockUsers,
   useSharedDataDirect: () => mockSharedData,
+  // The layer reads the graph view through this to project its nodes into the
+  // scene. No nodes here: these tests are about the drawing.
+  useLocalSharedData: () => undefined,
 }));
 
 jest.mock('@holistix-forge/reducers/frontend', () => ({

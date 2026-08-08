@@ -11,10 +11,15 @@ import {
 } from '@holistix-forge/whiteboard/frontend';
 import {
   useAwarenessUserList,
+  useLocalSharedData,
   useSharedDataDirect,
 } from '@holistix-forge/collab/frontend';
 import { useDispatcher } from '@holistix-forge/reducers/frontend';
-import { TWhiteboardEvent } from '@holistix-forge/whiteboard';
+import {
+  TNodeView,
+  TWhiteboardEvent,
+  TWhiteboardSharedData,
+} from '@holistix-forge/whiteboard';
 import {
   useLayerContext,
   TLayerTreeItem,
@@ -27,7 +32,7 @@ import {
   sceneSignature,
   versionsById,
 } from './excalidraw-scene';
-import { SpikeEmbeddable } from './spike-embeddable';
+import { EmbeddedNode } from './embedded-node';
 
 //
 
@@ -68,73 +73,50 @@ const appState = {
 // so a drawing no longer needs anything in the graph to represent it.
 
 /**
- * TAC-211 probe — throwaway, removed with spike-embeddable.tsx.
+ * The link every projected node carries.
  *
- * `validateEmbeddable` is what Excalidraw consults to decide whether an
- * element may be embedded. It is documented in terms of links, and our
- * elements have none; a permissive predicate is how the spike finds out
- * whether the absence of a URL is itself the gate.
+ * Excalidraw never calls `renderEmbeddable` for an embeddable whose `link` is
+ * null, and `validateEmbeddable` does not rescue one — measured on the
+ * installed version. The link also has to be there when the element is
+ * created: setting it afterwards does not re-validate, and the element stays
+ * blank. So a node gets a sentinel URL that resolves to nothing and is never
+ * followed, and what actually identifies it travels in `customData`.
  */
-const alwaysValid = () => true;
+const NODE_LINK_PREFIX = 'https://node.holistix.invalid/';
 
-const renderSpikeEmbeddable = (element: {
-  id: string;
-  customData?: Record<string, unknown>;
-}) => <SpikeEmbeddable id={element.id} data={element.customData ?? {}} />;
+const nodeLink = (nodeId: string) => `${NODE_LINK_PREFIX}${nodeId}`;
 
 /**
- * Drop an embeddable into the scene, with a rectangle beside it: whether a
- * native Excalidraw arrow binds to an embeddable the way it binds to a shape
- * is half of what the phase-2 architecture is betting on.
+ * Only that host, and nothing else, is embeddable.
+ *
+ * The scheme is not decoration: a custom one (`holistix:node/…`) produced an
+ * element Excalidraw accepted into the scene and then never rendered — it
+ * resolves the link before consulting this predicate. `.invalid` is reserved
+ * by RFC 2606 and resolves nowhere, so the URL is inert even if something ever
+ * tried to follow it.
  */
-const insertSpikeEmbeddable = async (api: ExcalidrawAPI | null) => {
-  if (!api) return;
+const validateEmbeddable = (link: string) => link.startsWith(NODE_LINK_PREFIX);
 
-  const { convertToExcalidrawElements } = (await import(
-    '@excalidraw/excalidraw'
-  )) as unknown as {
-    convertToExcalidrawElements: (
-      skeletons: unknown[]
-    ) => OrderedExcalidrawElement[];
-  };
+/** The node a projected embeddable stands for, or nothing. */
+export const embeddedNodeId = (element: {
+  customData?: Record<string, unknown>;
+}): string | undefined => {
+  const id = element.customData?.['holistixNodeId'];
+  return typeof id === 'string' ? id : undefined;
+};
 
-  const existing = api.getSceneElementsIncludingDeleted?.() ?? [];
-  const n = existing.filter((e) => e.type === 'embeddable').length;
-
-  // Two variants side by side, because the first run showed the element being
-  // created without `renderEmbeddable` ever being called. The only difference
-  // between them is the link, which makes one run answer whether the absence
-  // of a URL is the gate.
-  const added = convertToExcalidrawElements([
-    {
-      type: 'embeddable',
-      x: 150 + n * 720,
-      y: 150,
-      width: 300,
-      height: 220,
-      link: null,
-      customData: { label: `no-link #${n + 1}` },
-    },
-    {
-      type: 'embeddable',
-      x: 500 + n * 720,
-      y: 150,
-      width: 300,
-      height: 220,
-      link: `https://holistix.invalid/node/${n + 1}`,
-      customData: { label: `with-link #${n + 1}` },
-    },
-    {
-      type: 'rectangle',
-      x: 150 + n * 720,
-      y: 460,
-      width: 160,
-      height: 70,
-      label: { text: `target ${n + 1}` },
-    },
-  ]);
-
-  api.updateScene({ elements: [...existing, ...added] });
+/**
+ * Excalidraw reads this prop once, as a stable identity — an inline arrow here
+ * is the React #185 loop. So it cannot close over the view, and the view
+ * travels in `customData` beside the node id.
+ */
+const renderNode = (element: {
+  customData?: Record<string, unknown>;
+}): JSX.Element | null => {
+  const nodeId = embeddedNodeId(element);
+  const viewId = element.customData?.['holistixViewId'];
+  if (!nodeId || typeof viewId !== 'string') return null;
+  return <EmbeddedNode nodeId={nodeId} viewId={viewId} />;
 };
 
 //
@@ -161,6 +143,18 @@ export const ExcalidrawLayerComponent: FC<{
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [Excalidraw, setExcalidraw] = useState<FC<any> | null>(null);
   const apiRef = useRef<ExcalidrawAPI | null>(null);
+  /**
+   * The graph's nodes as scene elements, built before Excalidraw mounts.
+   *
+   * They cannot be injected after the fact: Excalidraw decides whether an
+   * element is embeddable as it enters the scene, and an embeddable pushed in
+   * with `updateScene` is accepted into the scene and then never rendered —
+   * `validateEmbeddable` returns true for it and `renderEmbeddable` is still
+   * never called. Measured. So they go in through `initialData` instead.
+   */
+  const [projected, setProjected] = useState<OrderedExcalidrawElement[] | null>(
+    null
+  );
 
   const toExcalidrawViewport = useCallback(
     (vp: { absoluteX: number; absoluteY: number; zoom: number }) => ({
@@ -234,6 +228,77 @@ export const ExcalidrawLayerComponent: FC<{
   /** The scene the last onChange acted on — see the note in handleChange. */
   const lastSignature = useRef<string | null>(null);
 
+  // The graph's nodes, projected into the scene as embeddables.
+  //
+  // They are *not* part of the drawing: the graph already owns them, and
+  // writing them into `excalidraw:elements` would give every node two homes
+  // that drift apart. They are injected locally and excluded from the flush.
+  const graphView = useLocalSharedData<TWhiteboardSharedData>(
+    ['whiteboard:graphViews'],
+    (sd) => sd['whiteboard:graphViews']?.get(viewId)
+  );
+
+  const nodeViews: TNodeView[] = useMemo(
+    () => graphView?.nodeViews ?? [],
+    [graphView?.nodeViews]
+  );
+
+  /** Rebuilt whenever a node moves, is added or is removed. */
+  const nodeSignature = useMemo(
+    () =>
+      nodeViews
+        .map(
+          (nv) =>
+            `${nv.id}@${Math.round(nv.position.x)},${Math.round(
+              nv.position.y
+            )}:${nv.size?.width ?? 0}x${nv.size?.height ?? 0}`
+        )
+        .join('|'),
+    [nodeViews]
+  );
+
+  // Built here, handed to Excalidraw at mount — not pushed in afterwards.
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      if (!nodeViews.length) {
+        setProjected([]);
+        return;
+      }
+
+      const { convertToExcalidrawElements } = (await import(
+        '@excalidraw/excalidraw'
+      )) as unknown as {
+        convertToExcalidrawElements: (
+          skeletons: unknown[]
+        ) => OrderedExcalidrawElement[];
+      };
+      if (cancelled) return;
+
+      setProjected(
+        convertToExcalidrawElements(
+          nodeViews.map((nv) => ({
+            type: 'embeddable',
+            x: nv.position.x,
+            y: nv.position.y,
+            width: nv.size?.width ?? 320,
+            height: nv.size?.height ?? 220,
+            link: nodeLink(nv.id),
+            customData: { holistixNodeId: nv.id, holistixViewId: viewId },
+          }))
+        )
+      );
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // Keyed on the signature, not on `nodeViews`: that array is rebuilt on
+    // every shared-data change, and the signature is what says a node actually
+    // moved.
+  }, [nodeSignature, nodeViews, viewId]);
+
   // Pull remote changes into the scene.
   //
   // Excalidraw's own reconciler decides element by element, on
@@ -270,9 +335,18 @@ export const ExcalidrawLayerComponent: FC<{
       // would feed the loop, so only touch the scene when it actually differs.
       if (getSceneVersion(reconciled) === getSceneVersion(local)) return;
 
-      sentVersions.current = versionsById(
-        reconciled as unknown as TJsonObject[]
-      );
+      // Only what actually came from the shared map counts as sent — see the
+      // same fix on the PR branch. Recording the whole reconciliation marked
+      // strokes still sitting in the debounce as already saved, and the flush
+      // then dropped them.
+      const merged = new Map(sentVersions.current);
+      for (const [id, version] of versionsById(
+        remote as unknown as TJsonObject[]
+      )) {
+        merged.set(id, version);
+      }
+      sentVersions.current = merged;
+
       api.updateScene({ elements: reconciled });
     };
 
@@ -294,7 +368,13 @@ export const ExcalidrawLayerComponent: FC<{
       debounce(
         async () => {
           if (!drawingId) return;
-          const elements = pendingElements.current;
+
+          // Projected nodes are the graph's, not the drawing's. Letting them
+          // through would write every node into `excalidraw:elements` as well,
+          // so each would exist twice and the two copies would drift.
+          const elements = pendingElements.current.filter(
+            (e) => !embeddedNodeId(e)
+          );
           const current = versionsById(elements as unknown as TJsonObject[]);
 
           const upserts = elements.filter(
@@ -419,6 +499,9 @@ export const ExcalidrawLayerComponent: FC<{
 
   if (!active) return null;
   if (!Excalidraw) return null;
+  // Waiting on the projection rather than mounting without it: an embeddable
+  // added after mount is never rendered.
+  if (projected === null) return null;
 
   const initialVp = viewport.getViewport
     ? viewport.getViewport()
@@ -429,48 +512,26 @@ export const ExcalidrawLayerComponent: FC<{
       className="excalidraw-layer"
       style={{ position: 'absolute', inset: 0 }}
     >
-      {/* TAC-211 probe control — throwaway */}
-      <button
-        data-testid="spike-insert-embeddable"
-        onClick={() => insertSpikeEmbeddable(apiRef.current)}
-        style={{
-          position: 'absolute',
-          top: 8,
-          right: 150,
-          zIndex: 50,
-          background: '#672aa4',
-          color: '#fff',
-          border: 'none',
-          borderRadius: 4,
-          padding: '6px 10px',
-          cursor: 'pointer',
-          fontSize: 12,
-        }}
-      >
-        + spike embeddable
-      </button>
-
       <Excalidraw
         excalidrawAPI={(api: ExcalidrawAPI) => {
           apiRef.current = api;
-          // TAC-211 probe handle — throwaway, lets the spike inspect and
-          // mutate the live scene from the console instead of rebuilding.
-          (window as unknown as { __exApi: ExcalidrawAPI }).__exApi = api;
         }}
         initialData={{
           appState: { ...appState, ...toExcalidrawViewport(initialVp) },
-          elements: structuredClone(
-            readDrawingElements(sharedData, drawingId)
-          ) as unknown as OrderedExcalidrawElement[],
+          elements: [
+            ...(structuredClone(
+              readDrawingElements(sharedData, drawingId)
+            ) as unknown as OrderedExcalidrawElement[]),
+            ...projected,
+          ],
         }}
         onChange={handleChange}
         onScrollChange={handleScrollChange}
-        // TAC-211 probe. Both are module constants, never inline arrows: a
-        // fresh identity per render sends Excalidraw into a re-render loop
-        // through its own ref callbacks, React error #185, before an
-        // embeddable even exists.
-        validateEmbeddable={alwaysValid}
-        renderEmbeddable={renderSpikeEmbeddable}
+        // Module constants, never inline arrows: a fresh identity per render
+        // sends Excalidraw into a re-render loop through its own ref
+        // callbacks — React error #185 — before an embeddable even exists.
+        validateEmbeddable={validateEmbeddable}
+        renderEmbeddable={renderNode}
         UIOptions={{
           canvasActions: {
             loadScene: false,

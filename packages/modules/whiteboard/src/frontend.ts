@@ -37,6 +37,7 @@ export {
 export { useTestToolbarButtons } from './lib/components/assets/node-header/node-main-toolbar';
 export { useConnector } from './lib/components/assets/inputsOutputs/inputsOutputs';
 export { useNodeContext } from './lib/components/node-wrappers/node-wrapper';
+export { EmbeddedNodeContext } from './lib/components/node-wrappers/node-wrapper';
 export {
   LabelEnd,
   LabelMiddle,
