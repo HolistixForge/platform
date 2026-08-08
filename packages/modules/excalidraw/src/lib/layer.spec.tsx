@@ -22,6 +22,8 @@ import { ExcalidrawLayerComponent } from './layer';
 
 /** Captures Excalidraw's props so a test can drive onChange by hand. */
 let mockCapturedOnChange: ((elements: unknown[]) => void) | null = null;
+/** The scene the fake Excalidraw holds. */
+let mockScene: { id: string; version: number }[] = [];
 
 jest.mock('@excalidraw/excalidraw/index.css', () => ({}), { virtual: true });
 
@@ -29,10 +31,28 @@ jest.mock(
   '@excalidraw/excalidraw',
   () => ({
     __esModule: true,
-    Excalidraw: (props: { onChange?: (e: unknown[]) => void }) => {
+    Excalidraw: (props: {
+      onChange?: (e: unknown[]) => void;
+      excalidrawAPI?: (api: unknown) => void;
+    }) => {
       mockCapturedOnChange = props.onChange ?? null;
+      props.excalidrawAPI?.({
+        updateScene: (u: { elements?: unknown[] }) => {
+          mockUpdateSceneCalls++;
+          if (u.elements) mockScene = u.elements as typeof mockScene;
+        },
+        getAppState: () => ({}),
+        getSceneElementsIncludingDeleted: () => mockScene,
+      });
       return null;
     },
+    convertToExcalidrawElements: (skeletons: unknown[]) =>
+      skeletons.map((sk, i) => ({
+        ...(sk as object),
+        id: `gen-${i}`,
+        version: 1,
+      })),
+    restoreElements: (els: unknown) => els,
     reconcileElements: (local: unknown[]) => local,
     getSceneVersion: () => 0,
     getCommonBounds: () => [0, 0, 0, 0],
@@ -61,6 +81,16 @@ const mockSharedData = {
 };
 const mockUsers: unknown[] = [];
 
+/** Node views the layer should project. Set per test. */
+let mockNodeViews: { id: string; position: { x: number; y: number } }[] = [];
+const mockGraphView = () =>
+  mockNodeViews.length
+    ? { nodeViews: mockNodeViews.map((nv) => ({ ...nv, status: {} })) }
+    : undefined;
+
+/** Every updateScene the layer performs, so a loop is visible as a count. */
+let mockUpdateSceneCalls = 0;
+
 jest.mock('@holistix-forge/whiteboard/frontend', () => ({
   useLayerContext: () => mockLayerContext,
 }));
@@ -68,9 +98,10 @@ jest.mock('@holistix-forge/whiteboard/frontend', () => ({
 jest.mock('@holistix-forge/collab/frontend', () => ({
   useAwarenessUserList: () => mockUsers,
   useSharedDataDirect: () => mockSharedData,
-  // The layer reads the graph view through this to project its nodes into the
-  // scene. No nodes here: these tests are about the drawing.
-  useLocalSharedData: () => undefined,
+  // The graph view the layer projects into the scene. A *fresh object every
+  // call*, which is what the real hook does — the layer must not treat that
+  // identity as a change, or it re-projects forever.
+  useLocalSharedData: () => mockGraphView(),
 }));
 
 jest.mock('@holistix-forge/reducers/frontend', () => ({
@@ -113,8 +144,27 @@ const mount = async () => {
 describe('ExcalidrawLayerComponent', () => {
   beforeEach(() => {
     mockCapturedOnChange = null;
+    mockScene = [];
+    mockNodeViews = [];
+    mockUpdateSceneCalls = 0;
     mockUpdateLayerTree.mockClear();
     mockDispatch.mockClear();
+  });
+
+  it('projects the graph\u2019s nodes once, not on every shared-data change', async () => {
+    // The freeze this reproduces: the projection effect depended on the array
+    // the graph-view hook returns, that hook returns a fresh array every call,
+    // and the projection itself causes a call. The tab locked up.
+    mockNodeViews = [{ id: 'node-a', position: { x: 0, y: 0 } }];
+
+    await mount();
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    // A handful of scene writes is fine — the drawing and the projection. A
+    // runaway loop is not.
+    expect(mockUpdateSceneCalls).toBeLessThan(5);
   });
 
   it('reports the layer tree once for a scene that has not changed', async () => {

@@ -3,6 +3,7 @@ import {
   FC,
   useContext,
   MouseEvent,
+  useMemo,
   useRef,
   useState,
   ReactNode,
@@ -27,7 +28,11 @@ import { useDispatcher } from '@holistix-forge/reducers/frontend';
 import { TNodeContext } from '../apis/types/node';
 import { SelectionsAwareness } from './selection-awareness';
 import { useSpaceContext } from '../reactflow-layer-context';
-import { isNodeOpened, TNodeViewStatus } from '../../whiteboard-types';
+import {
+  isNodeOpened,
+  TNodeViewStatus,
+  TSelectingUsers,
+} from '../../whiteboard-types';
 import { SpaceNode } from '../to-rf-nodes';
 import { DisableZoomDragPan } from './disable-zoom-drag-pan';
 import { TWhiteboardEvent } from '../../whiteboard-events';
@@ -346,6 +351,9 @@ const NodeStatusDebugOverlay = (s: TNodeViewStatus & { zoom: number }) => {
 
 //
 
+/** One shared empty array, so "nobody selected this" has a stable identity. */
+const EMPTY_SELECTION: TSelectingUsers = [];
+
 /**
  * A node's context for a node rendered outside the ReactFlow canvas.
  *
@@ -375,7 +383,13 @@ export const EmbeddedNodeContext = ({
   const dispatcher = useDispatcher<TWhiteboardEvent>();
   const { awareness } = useAwareness();
   const selections = useAwarenessSelections();
-  const selectingUsers = selections[id] || [];
+  // `selections[id]` is absent for a node nobody has selected, and `|| []`
+  // would then hand out a new array on every render — enough on its own to
+  // defeat the memo below.
+  const selectingUsers = useMemo(
+    () => selections[id] ?? EMPTY_SELECTION,
+    [selections, id]
+  );
 
   const selected = awareness.getUser()
     ? selectingUsers.some(
@@ -385,29 +399,32 @@ export const EmbeddedNodeContext = ({
       )
     : false;
 
-  const send = (type: TWhiteboardEvent['type']) => () =>
-    dispatcher.dispatch({ type, nid: id, viewId } as TWhiteboardEvent);
+  // Memoised, and not a formality. A fresh value object on every render makes
+  // every consumer re-render on every render of this provider — and the nodes
+  // that go in here are the live ones, with their own polling and state. Built
+  // inline, it locked the tab up the moment a node first rendered inside the
+  // drawing surface.
+  const value = useMemo<TNodeContext>(() => {
+    const send = (type: TWhiteboardEvent['type']) => () =>
+      dispatcher.dispatch({ type, nid: id, viewId } as TWhiteboardEvent);
 
-  return (
-    <nodeContext.Provider
-      value={{
-        id,
-        zoom,
-        viewId,
-        viewStatus: status,
-        isOpened: isNodeOpened(status),
-        selected,
-        selectingUsers,
-        open: send('whiteboard:open-node'),
-        close: send('whiteboard:close-node'),
-        reduce: send('whiteboard:reduce-node'),
-        expand: send('whiteboard:expand-node'),
-        filterOut: send('whiteboard:filter-out-node'),
-      }}
-    >
-      {children}
-    </nodeContext.Provider>
-  );
+    return {
+      id,
+      zoom,
+      viewId,
+      viewStatus: status,
+      isOpened: isNodeOpened(status),
+      selected,
+      selectingUsers,
+      open: send('whiteboard:open-node'),
+      close: send('whiteboard:close-node'),
+      reduce: send('whiteboard:reduce-node'),
+      expand: send('whiteboard:expand-node'),
+      filterOut: send('whiteboard:filter-out-node'),
+    };
+  }, [dispatcher, id, viewId, zoom, status, selected, selectingUsers]);
+
+  return <nodeContext.Provider value={value}>{children}</nodeContext.Provider>;
 };
 
 //
