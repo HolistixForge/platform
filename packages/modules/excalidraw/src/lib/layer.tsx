@@ -275,12 +275,14 @@ export const ExcalidrawLayerComponent: FC<{
   useEffect(() => {
     const api = apiRef.current;
     if (!active || !api) return;
-    // Off unless asked for. Projecting the graph into the drawing surface is
-    // the experiment, and it is the half that can take a tab down — keeping it
-    // behind a switch means the board still loads while it is being worked on,
-    // and means it can be turned on with the page already open:
-    //   localStorage.setItem('holistix:excalidraw-nodes', '1')
-    if (localStorage.getItem('holistix:excalidraw-nodes') !== '1') return;
+    // On by default — a surface with no nodes on it is not the whiteboard.
+    // Measured to 2000 nodes: the page holds, and Excalidraw only builds a
+    // container for an embeddable it is drawing, so the projection costs what
+    // the viewport shows rather than what the graph holds.
+    //
+    // Escapable the same way as the surface itself:
+    //   localStorage.setItem('holistix:excalidraw-nodes', '0')
+    if (localStorage.getItem('holistix:excalidraw-nodes') === '0') return;
 
     let cancelled = false;
 

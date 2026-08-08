@@ -312,15 +312,18 @@ const WhiteboardWhiteboard = ({
     layerId: string;
     payload: object;
   }>(() => ({
-    // Opening on the drawing surface is the experiment, and while it is being
-    // worked on it is opt-in: it freezes the editor on load and the cause is
-    // not yet isolated. Turn it on with
-    //   localStorage.setItem('holistix:excalidraw-surface', '1')
+    // The drawing surface is what a board opens on. Measured on 100, 500 and
+    // 2000 nodes with scripts/local-dev/check-excalidraw-surface.mjs: it
+    // loads, and the embed count stays at what fits the viewport rather than
+    // following the node count.
+    //
+    // Still escapable, because the surface is new and the board is not:
+    //   localStorage.setItem('holistix:excalidraw-surface', '0')
     layerId:
       typeof localStorage !== 'undefined' &&
-      localStorage.getItem('holistix:excalidraw-surface') === '1'
-        ? 'excalidraw'
-        : 'reactflow',
+      localStorage.getItem('holistix:excalidraw-surface') === '0'
+        ? 'reactflow'
+        : 'excalidraw',
     payload: {},
   }));
 

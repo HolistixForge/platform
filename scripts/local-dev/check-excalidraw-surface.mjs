@@ -9,7 +9,8 @@
  *   node scripts/local-dev/check-excalidraw-surface.mjs [--surface] [--nodes]
  *
  * `--surface` opens on the drawing surface, `--nodes` projects the graph's
- * nodes into it; both are off by default, matching the app.
+ * nodes into it. Both are the app's default; without the flags this checks
+ * the board as it was, which is what the escape hatches give a user.
  */
 import { chromium } from 'playwright';
 
@@ -21,6 +22,11 @@ const PASSWORD = process.env.HOLISTIX_PASSWORD ?? 'TestUser123!';
 
 const wantSurface = process.argv.includes('--surface');
 const wantNodes = process.argv.includes('--nodes');
+/** `--generate=N` tops the board up to N shape nodes before measuring. */
+const generateTo = Number(
+  (process.argv.find((a) => a.startsWith('--generate=')) ?? '').split('=')[1] ??
+    0
+);
 
 /**
  * Whether the page still answers.
@@ -75,10 +81,11 @@ const main = async () => {
   // the board is opened rather than by rebuilding between attempts.
   await page.evaluate(
     ([s, n]) => {
-      if (s) localStorage.setItem('holistix:excalidraw-surface', '1');
-      else localStorage.removeItem('holistix:excalidraw-surface');
-      if (n) localStorage.setItem('holistix:excalidraw-nodes', '1');
-      else localStorage.removeItem('holistix:excalidraw-nodes');
+      // Both are on by default now, so the flags turn them *off*.
+      if (s) localStorage.removeItem('holistix:excalidraw-surface');
+      else localStorage.setItem('holistix:excalidraw-surface', '0');
+      if (n) localStorage.removeItem('holistix:excalidraw-nodes');
+      else localStorage.setItem('holistix:excalidraw-nodes', '0');
     },
     [wantSurface, wantNodes]
   );
@@ -134,7 +141,97 @@ const main = async () => {
         ...document.querySelectorAll('[data-testid=embedded-node-error]'),
       ].map((e) => e.textContent.trim()),
       blank: document.body.innerText.trim() === '',
+      graphNodes: document.querySelectorAll('.react-flow__node').length,
+      domNodes: document.querySelectorAll('*').length,
+      heapMB: performance.memory
+        ? Math.round(performance.memory.usedJSHeapSize / 1048576)
+        : null,
     }));
+
+  if (generateTo) {
+    // Through the real event, `whiteboard:new-shape`, using the app's own
+    // dispatcher — reached through the React tree rather than reimplemented,
+    // so the auth and the project id are the app's and not a copy of them.
+    report.generated = await page.evaluate(async (target) => {
+      const rootEl = [...document.querySelectorAll('*')].find((el) =>
+        Object.keys(el).some((k) => k.startsWith('__reactFiber$'))
+      );
+      if (!rootEl) return { error: 'no react tree' };
+      let f = rootEl[Object.keys(rootEl).find((k) => k.startsWith('__reactFiber$'))];
+      while (f?.return) f = f.return;
+
+      let dispatcher = null;
+      const seenObj = new WeakSet();
+      const scan = (o, d) => {
+        if (!o || d > 4 || typeof o !== 'object' || seenObj.has(o) || dispatcher)
+          return;
+        seenObj.add(o);
+        if ('_project_id' in o && typeof o.dispatch === 'function') {
+          dispatcher = o;
+          return;
+        }
+        for (const k of Object.keys(o)) {
+          try {
+            scan(o[k], d + 1);
+          } catch (e) {
+            /* getters that throw */
+          }
+        }
+      };
+      const stack = [f];
+      const seenFiber = new WeakSet();
+      let guard = 0;
+      while (stack.length && guard++ < 40000 && !dispatcher) {
+        const fb = stack.pop();
+        if (!fb || seenFiber.has(fb)) continue;
+        seenFiber.add(fb);
+        scan(fb.memoizedProps, 0);
+        scan(fb.memoizedState, 0);
+        if (fb.child) stack.push(fb.child);
+        if (fb.sibling) stack.push(fb.sibling);
+      }
+      if (!dispatcher) return { error: 'no dispatcher' };
+
+      const have = document.querySelectorAll('.react-flow__node').length;
+      const missing = Math.max(0, target - have);
+      if (!missing) return { have, added: 0 };
+
+      const COLS = 40;
+      const GAP = 220;
+      const jobs = [];
+      for (let i = 0; i < missing; i++) {
+        const k = have + i;
+        jobs.push({ x: (k % COLS) * GAP, y: Math.floor(k / COLS) * GAP });
+      }
+
+      let added = 0;
+      let failed = 0;
+      const workers = Array.from({ length: 12 }, async () => {
+        while (jobs.length) {
+          const j = jobs.pop();
+          if (!j) break;
+          try {
+            await dispatcher.dispatch({
+              type: 'whiteboard:new-shape',
+              shapeId: crypto.randomUUID(),
+              shapeType: 'circle',
+              origin: { viewId: 'view-1', position: j },
+            });
+            added++;
+          } catch (e) {
+            failed++;
+          }
+        }
+      });
+      await Promise.all(workers);
+      return { have, added, failed };
+    }, generateTo);
+
+    // The graph has to come back through collab before it can be projected.
+    await page.waitForTimeout(8000);
+    await page.reload({ waitUntil: 'domcontentloaded' }).catch(() => {});
+    await page.waitForTimeout(15000);
+  }
 
   report.beforeFit = await snapshot();
 

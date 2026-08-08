@@ -186,7 +186,6 @@ describe('ExcalidrawLayerComponent', () => {
     // the graph-view hook returns, that hook returns a fresh one on every
     // call, and the projection itself causes a call. The tab locked up, which
     // costs a reload to even see — hence a test rather than another attempt.
-    localStorage.setItem('holistix:excalidraw-nodes', '1');
     mockNodeViews = [{ id: 'node-a', position: { x: 0, y: 0 } }];
     try {
       await mount();
@@ -205,6 +204,23 @@ describe('ExcalidrawLayerComponent', () => {
       );
       expect(projected).toHaveLength(1);
       expect(projected[0].id).toBe('holistix-node-node-a');
+    } finally {
+      localStorage.removeItem('holistix:excalidraw-nodes');
+    }
+  });
+
+  it('projects nothing when a user has turned the projection off', async () => {
+    localStorage.setItem('holistix:excalidraw-nodes', '0');
+    mockNodeViews = [{ id: 'node-a', position: { x: 0, y: 0 } }];
+    try {
+      await mount();
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(
+        mockScene.filter((e) => String(e.id).startsWith('holistix-node-'))
+      ).toHaveLength(0);
     } finally {
       localStorage.removeItem('holistix:excalidraw-nodes');
     }
