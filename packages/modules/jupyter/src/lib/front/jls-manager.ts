@@ -168,17 +168,7 @@ export class JLsManager extends Listenable {
     this._onChange();
   }
 
-  /**
-   * Undoes the observers installed for the current project.
-   *
-   * Not unit-tested, and it is worth saying why rather than leaving the gap
-   * silent: this module cannot be loaded under Jest at all. Importing it
-   * reaches `@jupyter-widgets/html-manager`, which is ESM — and allowing Jest
-   * to transform it only gets as far as `@lumino/dragdrop` wanting a `DragEvent`
-   * that jsdom does not define. That is why this package has one dummy spec and
-   * nothing else. What does exercise it is the Storybook suite, which loads the
-   * Jupyter stories in a real browser.
-   */
+  /** Undoes the observers installed for the current project. */
   private _detachObservers: () => void = () => undefined;
 
   /**

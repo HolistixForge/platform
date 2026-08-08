@@ -209,3 +209,91 @@ describe('JLsManager.watchResources', () => {
     );
   });
 });
+
+/**
+ * A kernel pack is built during render and the project is set from an effect,
+ * so every pack on the first render exists before the manager knows which
+ * document to read. `_updateKernelPack` returns early in that state — refusing
+ * to claim a server is missing when it cannot yet tell — which leaves the pack
+ * at its initial `SERVER_DOES_NOT_EXIST`.
+ *
+ * Correct until the project arrives, and wrong from then on: nothing recomputed
+ * the packs, so a panel stayed greyed out with the service running until some
+ * unrelated shared-data change happened to fire.
+ */
+
+/** A SharedMap stand-in that records who is observing it. */
+const sharedMap = (entries: Record<string, unknown> = {}) => {
+  const observers = new Set<() => void>();
+  return {
+    observers,
+    get: (k: string) => entries[k],
+    observe: (cb: () => void) => observers.add(cb),
+    unobserve: (cb: () => void) => observers.delete(cb),
+  };
+};
+
+const projectDocs = () => ({
+  'user-containers:containers': sharedMap(),
+  'jupyter:servers': sharedMap(),
+});
+
+const withProjects = () => {
+  const docs = new Map<string, ReturnType<typeof projectDocs>>();
+  const manager = new JLsManager(
+    ((project_id: string) => {
+      if (!docs.has(project_id)) docs.set(project_id, projectDocs());
+      return docs.get(project_id);
+    }) as never,
+    { dispatch: async () => undefined } as never,
+    (async () => 'token') as never
+  );
+  return { manager, docs };
+};
+
+describe('JLsManager.setProjectId', () => {
+  it('recomputes packs that were created before the project was known', () => {
+    const { manager } = withProjects();
+
+    // Built during render, while `_sd` is still null — which is when
+    // `useKernelPack` actually calls this.
+    manager.getKernelPack('uc-1', 'kernel-1');
+
+    const onChange = jest.spyOn(
+      manager as unknown as { _onChange: () => void },
+      '_onChange' as never
+    );
+
+    manager.setProjectId('project-1');
+
+    expect(onChange).toHaveBeenCalled();
+    onChange.mockRestore();
+  });
+
+  it('lets go of the previous project before observing the next', () => {
+    // Every switch used to add an observer and remove none, so a document
+    // nobody is looking at kept calling back for the life of the page — each
+    // one recomputing every pack against whichever project is current.
+    const { manager, docs } = withProjects();
+
+    manager.setProjectId('project-1');
+    const first = docs.get('project-1');
+    expect(first?.['jupyter:servers'].observers.size).toBe(1);
+    expect(first?.['user-containers:containers'].observers.size).toBe(1);
+
+    manager.setProjectId('project-2');
+
+    expect(first?.['jupyter:servers'].observers.size).toBe(0);
+    expect(first?.['user-containers:containers'].observers.size).toBe(0);
+    expect(docs.get('project-2')?.['jupyter:servers'].observers.size).toBe(1);
+  });
+
+  it('does not observe twice for the same project', () => {
+    const { manager, docs } = withProjects();
+
+    manager.setProjectId('project-1');
+    manager.setProjectId('project-1');
+
+    expect(docs.get('project-1')?.['jupyter:servers'].observers.size).toBe(1);
+  });
+});
