@@ -304,8 +304,15 @@ const WhiteboardWhiteboard = ({
   //
   //
 
-  const [activeLayer, setActiveLayer] = useState({
-    layerId: 'reactflow',
+  // The drawing surface is what a whiteboard opens on. It used to open on
+  // `reactflow` and reach Excalidraw only by clicking Edit on a node that
+  // stood for a drawing — so the drawing tools were behind a node, rather than
+  // the surface the nodes live on.
+  const [activeLayer, setActiveLayer] = useState<{
+    layerId: string;
+    payload: object;
+  }>({
+    layerId: 'excalidraw',
     payload: {},
   });
 
@@ -749,14 +756,20 @@ const ReactFlowBaseLayer = ({
         onDrop={onDrop}
         viewport={viewport}
       />
-      {active && (
-        <ModeIndicator
-          mode={mode}
-          onModeChange={setMode}
-          onContextMenu={onContextMenu}
-          getViewport={viewport.getViewport}
-        />
-      )}
+      {/*
+        Rendered whichever layer is active. It used to be tied to `active`, so
+        the mode switch and the "+" that opens the node menu vanished the
+        moment the drawing surface came up — and with Excalidraw as the
+        default layer, that meant no way to add a Holistix node at all. The bar
+        belongs to the whiteboard, not to the ReactFlow layer; Excalidraw's own
+        toolbar sits above it and the two do not overlap.
+      */}
+      <ModeIndicator
+        mode={mode}
+        onModeChange={setMode}
+        onContextMenu={onContextMenu}
+        getViewport={viewport.getViewport}
+      />
       {edgeMenu && (
         <EdgeMenu
           eid={edgeMenu.edgeId}

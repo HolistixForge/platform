@@ -13,10 +13,7 @@ import {
   useAwarenessUserList,
   useSharedDataDirect,
 } from '@holistix-forge/collab/frontend';
-import {
-  useDispatcher,
-  FrontendDispatcher,
-} from '@holistix-forge/reducers/frontend';
+import { useDispatcher } from '@holistix-forge/reducers/frontend';
 import { TWhiteboardEvent } from '@holistix-forge/whiteboard';
 import {
   useLayerContext,
@@ -30,6 +27,7 @@ import {
   sceneSignature,
   versionsById,
 } from './excalidraw-scene';
+import { SpikeEmbeddable } from './spike-embeddable';
 
 //
 
@@ -65,62 +63,97 @@ const appState = {
 
 //
 
-/**
- * Keep the ExcalidrawNode's box on the drawing it stands for.
- *
- * Still driven from here, which keeps the node following rather than owning
- * its own geometry. That inversion is phase 2's problem; what this no longer
- * does is serialize an SVG of the whole scene into Yjs on every keystroke.
- */
-const fitNodeToDrawing = async (
-  dispatcher: FrontendDispatcher<TLayerEvent>,
-  viewId: string,
-  nodeId: string,
-  elements: readonly OrderedExcalidrawElement[]
-) => {
-  if (!elements.length) return;
+// There used to be a `fitNodeToDrawing` here, keeping an ExcalidrawNode's box
+// on the drawing it stood for. The node is gone: the layer is the whiteboard,
+// so a drawing no longer needs anything in the graph to represent it.
 
-  const { getCommonBounds } = (await import(
+/**
+ * TAC-211 probe — throwaway, removed with spike-embeddable.tsx.
+ *
+ * `validateEmbeddable` is what Excalidraw consults to decide whether an
+ * element may be embedded. It is documented in terms of links, and our
+ * elements have none; a permissive predicate is how the spike finds out
+ * whether the absence of a URL is itself the gate.
+ */
+const alwaysValid = () => true;
+
+const renderSpikeEmbeddable = (element: {
+  id: string;
+  customData?: Record<string, unknown>;
+}) => <SpikeEmbeddable id={element.id} data={element.customData ?? {}} />;
+
+/**
+ * Drop an embeddable into the scene, with a rectangle beside it: whether a
+ * native Excalidraw arrow binds to an embeddable the way it binds to a shape
+ * is half of what the phase-2 architecture is betting on.
+ */
+const insertSpikeEmbeddable = async (api: ExcalidrawAPI | null) => {
+  if (!api) return;
+
+  const { convertToExcalidrawElements } = (await import(
     '@excalidraw/excalidraw'
   )) as unknown as {
-    getCommonBounds: (
-      elements: readonly OrderedExcalidrawElement[]
-    ) => [number, number, number, number];
+    convertToExcalidrawElements: (
+      skeletons: unknown[]
+    ) => OrderedExcalidrawElement[];
   };
 
-  const [minX, minY, maxX, maxY] = getCommonBounds(elements);
-  const padding = 25; // look for css : .selection-awareness-box
+  const existing = api.getSceneElementsIncludingDeleted?.() ?? [];
+  const n = existing.filter((e) => e.type === 'embeddable').length;
 
-  dispatcher.dispatch({
-    type: 'whiteboard:move-node',
-    viewId,
-    nid: nodeId,
-    position: { x: minX - padding, y: minY - padding },
-  });
-  dispatcher.dispatch({
-    type: 'whiteboard:resize-node',
-    viewId,
-    nid: nodeId,
-    size: {
-      width: maxX - minX + padding * 2,
-      height: maxY - minY + padding * 2,
+  // Two variants side by side, because the first run showed the element being
+  // created without `renderEmbeddable` ever being called. The only difference
+  // between them is the link, which makes one run answer whether the absence
+  // of a URL is the gate.
+  const added = convertToExcalidrawElements([
+    {
+      type: 'embeddable',
+      x: 150 + n * 720,
+      y: 150,
+      width: 300,
+      height: 220,
+      link: null,
+      customData: { label: `no-link #${n + 1}` },
     },
-  });
+    {
+      type: 'embeddable',
+      x: 500 + n * 720,
+      y: 150,
+      width: 300,
+      height: 220,
+      link: `https://holistix.invalid/node/${n + 1}`,
+      customData: { label: `with-link #${n + 1}` },
+    },
+    {
+      type: 'rectangle',
+      x: 150 + n * 720,
+      y: 460,
+      width: 160,
+      height: 70,
+      label: { text: `target ${n + 1}` },
+    },
+  ]);
+
+  api.updateScene({ elements: [...existing, ...added] });
 };
 
 //
 
-export type TExcalidrawLayerPayload = { nodeId: string; viewId: string };
-
-// nodeId will be determined from payload
+export type TExcalidrawLayerPayload = { nodeId?: string; viewId?: string };
 
 export const ExcalidrawLayerComponent: FC<{
   viewId: string;
   active: boolean;
   viewport: LayerViewportAdapter;
   payload?: TExcalidrawLayerPayload;
-}> = ({ active, viewport, payload }) => {
-  const { nodeId = '', viewId = '' } = payload || {};
+}> = ({ viewId: viewIdProp, active, viewport, payload }) => {
+  const viewId = payload?.viewId || viewIdProp;
+
+  // The drawing belongs to the view. It used to be keyed on the id of the
+  // ExcalidrawNode that stood for it, which only worked because opening the
+  // layer meant clicking Edit on that node. The layer is the whiteboard now:
+  // there is no node to key it on, and one view is one drawing.
+  const drawingId = viewId;
 
   const dispatcher = useDispatcher<TLayerEvent>();
   const { updateLayerTree } = useLayerContext();
@@ -208,7 +241,7 @@ export const ExcalidrawLayerComponent: FC<{
   // the whole drawing and, when it differed, replaced the entire scene — so
   // two people drawing at once overwrote each other wholesale.
   useEffect(() => {
-    if (!nodeId) return;
+    if (!drawingId) return;
     const map = sharedData['excalidraw:elements'];
 
     const pull = async () => {
@@ -228,7 +261,7 @@ export const ExcalidrawLayerComponent: FC<{
 
       const remote = readDrawingElements(
         sharedData,
-        nodeId
+        drawingId
       ) as unknown as readonly OrderedExcalidrawElement[];
       const local = api.getSceneElementsIncludingDeleted?.() ?? [];
       const reconciled = reconcileElements(local, remote, api.getAppState());
@@ -248,7 +281,7 @@ export const ExcalidrawLayerComponent: FC<{
     // The previous version never unobserved: every mount left a listener
     // behind, still writing into the scene of a component that was gone.
     return () => map.unobserve(pull);
-  }, [nodeId, sharedData]);
+  }, [drawingId, sharedData]);
 
   //
 
@@ -260,7 +293,7 @@ export const ExcalidrawLayerComponent: FC<{
     () =>
       debounce(
         async () => {
-          if (!nodeId) return;
+          if (!drawingId) return;
           const elements = pendingElements.current;
           const current = versionsById(elements as unknown as TJsonObject[]);
 
@@ -276,24 +309,22 @@ export const ExcalidrawLayerComponent: FC<{
           if (upserts.length) {
             await dispatcher.dispatch({
               type: 'excalidraw:upsert-elements',
-              drawingId: nodeId,
+              drawingId: drawingId,
               elements: upserts as unknown as TJsonObject[],
             });
           }
           if (deletedIds.length) {
             await dispatcher.dispatch({
               type: 'excalidraw:delete-elements',
-              drawingId: nodeId,
+              drawingId: drawingId,
               elementIds: deletedIds,
             });
           }
-
-          await fitNodeToDrawing(dispatcher, viewId, nodeId, elements);
         },
         250,
         { maxWait: 250 }
       ),
-    [dispatcher, nodeId, viewId]
+    [dispatcher, drawingId]
   );
 
   const handleChange = useCallback(
@@ -314,14 +345,14 @@ export const ExcalidrawLayerComponent: FC<{
       lastSignature.current = signature;
 
       // Update tree data for the layer panel
-      if (updateLayerTree && nodeId) {
+      if (updateLayerTree && drawingId) {
         const treeItems: TLayerTreeItem[] = elements
           .filter((e) => !e.isDeleted)
           .map((element, index) => ({
             // Keyed on the element's own id, not its position in the array:
             // indices shift on every delete, so the tree used to re-label and
             // re-target its rows behind the user's back.
-            id: `${nodeId}-element-${element.id}`,
+            id: `${drawingId}-element-${element.id}`,
             type: 'node',
             title:
               element.type === 'text'
@@ -334,7 +365,7 @@ export const ExcalidrawLayerComponent: FC<{
             expanded: false,
             locked: false,
             nodeData: {
-              id: `${nodeId}-element-${element.id}`,
+              id: `${drawingId}-element-${element.id}`,
               type: 'excalidraw-element',
               position: { x: element.x, y: element.y },
               status: {
@@ -354,7 +385,7 @@ export const ExcalidrawLayerComponent: FC<{
 
       flush();
     },
-    [flush, nodeId, updateLayerTree]
+    [flush, drawingId, updateLayerTree]
   );
 
   // mode switch, collaborators update, content update
@@ -375,11 +406,11 @@ export const ExcalidrawLayerComponent: FC<{
   useEffect(() => {
     return () => {
       flush.cancel();
-      if (updateLayerTree && nodeId) {
+      if (updateLayerTree && drawingId) {
         updateLayerTree('excalidraw', [], 'Excalidraw');
       }
     };
-  }, [flush, updateLayerTree, nodeId]);
+  }, [flush, updateLayerTree, drawingId]);
 
   //
   //
@@ -398,18 +429,48 @@ export const ExcalidrawLayerComponent: FC<{
       className="excalidraw-layer"
       style={{ position: 'absolute', inset: 0 }}
     >
+      {/* TAC-211 probe control — throwaway */}
+      <button
+        data-testid="spike-insert-embeddable"
+        onClick={() => insertSpikeEmbeddable(apiRef.current)}
+        style={{
+          position: 'absolute',
+          top: 8,
+          right: 150,
+          zIndex: 50,
+          background: '#672aa4',
+          color: '#fff',
+          border: 'none',
+          borderRadius: 4,
+          padding: '6px 10px',
+          cursor: 'pointer',
+          fontSize: 12,
+        }}
+      >
+        + spike embeddable
+      </button>
+
       <Excalidraw
         excalidrawAPI={(api: ExcalidrawAPI) => {
           apiRef.current = api;
+          // TAC-211 probe handle — throwaway, lets the spike inspect and
+          // mutate the live scene from the console instead of rebuilding.
+          (window as unknown as { __exApi: ExcalidrawAPI }).__exApi = api;
         }}
         initialData={{
           appState: { ...appState, ...toExcalidrawViewport(initialVp) },
           elements: structuredClone(
-            readDrawingElements(sharedData, nodeId)
+            readDrawingElements(sharedData, drawingId)
           ) as unknown as OrderedExcalidrawElement[],
         }}
         onChange={handleChange}
         onScrollChange={handleScrollChange}
+        // TAC-211 probe. Both are module constants, never inline arrows: a
+        // fresh identity per render sends Excalidraw into a re-render loop
+        // through its own ref callbacks, React error #185, before an
+        // embeddable even exists.
+        validateEmbeddable={alwaysValid}
+        renderEmbeddable={renderSpikeEmbeddable}
         UIOptions={{
           canvasActions: {
             loadScene: false,

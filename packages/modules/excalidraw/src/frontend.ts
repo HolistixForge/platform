@@ -3,8 +3,6 @@ import { TCollabFrontendExports } from '@holistix-forge/collab/frontend';
 import { TWhiteboardFrontendExports } from '@holistix-forge/whiteboard/frontend';
 
 import { layer } from './lib/layer';
-import { ExcalidrawNode } from './lib/excalidraw-node';
-import { excalidrawMenuEntries } from './lib/excalidraw-menu';
 import './lib/style.scss';
 
 //
@@ -27,10 +25,10 @@ export const moduleFrontend: TModule<TRequired> = {
       'elements'
     );
 
-    depsExports.whiteboard.registerMenuEntries(excalidrawMenuEntries);
-    depsExports.whiteboard.registerNodes({
-      ExcalidrawNode,
-    });
+    // No node and no menu entry any more. "New Excalidraw Drawing" created a
+    // node whose only purpose was to hold a drawing and open the layer from
+    // its Edit button; the layer is the drawing surface itself now, so both
+    // the node and the way in are gone.
     depsExports.whiteboard.registerLayer(layer);
   },
 };
