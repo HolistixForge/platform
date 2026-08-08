@@ -21,7 +21,9 @@ import { ExcalidrawLayerComponent } from './layer';
 //
 
 /** Captures Excalidraw's props so a test can drive onChange by hand. */
-let mockCapturedOnChange: ((elements: unknown[]) => void) | null = null;
+let mockCapturedOnChange:
+  | ((elements: unknown[], appState?: unknown) => void)
+  | null = null;
 
 jest.mock('@excalidraw/excalidraw/index.css', () => ({}), { virtual: true });
 
@@ -33,7 +35,7 @@ jest.mock(
   () => ({
     __esModule: true,
     Excalidraw: (props: {
-      onChange?: (e: unknown[]) => void;
+      onChange?: (e: unknown[], appState?: unknown) => void;
       excalidrawAPI?: (api: unknown) => void;
     }) => {
       mockCapturedOnChange = props.onChange ?? null;
@@ -107,6 +109,12 @@ const mockSharedData = {
 };
 const mockUsers: unknown[] = [];
 
+/** Selections the layer announces to the other people on the board. */
+const mockEmitSelection = jest.fn();
+const mockAwareness = {
+  awareness: { emitSelectionAwareness: mockEmitSelection },
+};
+
 /** Node views the layer should project into the scene. Set per test. */
 let mockNodeViews: { id: string; position: { x: number; y: number } }[] = [];
 const mockGraphView = () =>
@@ -122,6 +130,7 @@ jest.mock('@holistix-forge/whiteboard/frontend', () => ({
 }));
 
 jest.mock('@holistix-forge/collab/frontend', () => ({
+  useAwareness: () => mockAwareness,
   useAwarenessUserList: () => mockUsers,
   useSharedDataDirect: () => mockSharedData,
   // The graph view the layer projects into the scene. A *fresh object on every
@@ -177,6 +186,7 @@ describe('ExcalidrawLayerComponent', () => {
     mockRemote.clear();
     mockUpdateLayerTree.mockClear();
     mockDispatch.mockClear();
+    mockEmitSelection.mockClear();
   });
 
   //
@@ -280,6 +290,58 @@ describe('ExcalidrawLayerComponent', () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+
+  it('announces the nodes selected on the surface, and only those', async () => {
+    mockNodeViews = [{ id: 'node-a', position: { x: 0, y: 0 } }];
+    await mount();
+    await act(async () => {
+      await Promise.resolve();
+    });
+    mockEmitSelection.mockClear();
+
+    const node = mockScene.find((e) =>
+      String(e.id).startsWith('holistix-node-')
+    );
+    if (!node) throw new Error('nothing was projected');
+    const stroke = element('a-stroke', 1);
+
+    await act(async () => {
+      mockCapturedOnChange?.([node, stroke], {
+        selectedElementIds: { [node.id]: true, [stroke.id]: true },
+      });
+    });
+
+    // The stroke is selected too, and is not announced: the graph has no word
+    // for it.
+    expect(mockEmitSelection).toHaveBeenCalledWith({
+      nodes: ['node-a'],
+      viewId: 'view-1',
+    });
+  });
+
+  it('does not re-announce a selection that has not changed', async () => {
+    // onChange fires for everything, and awareness goes to every peer.
+    mockNodeViews = [{ id: 'node-a', position: { x: 0, y: 0 } }];
+    await mount();
+    await act(async () => {
+      await Promise.resolve();
+    });
+    mockEmitSelection.mockClear();
+
+    const node = mockScene.find((e) =>
+      String(e.id).startsWith('holistix-node-')
+    );
+    if (!node) throw new Error('nothing was projected');
+    const selection = { selectedElementIds: { [node.id]: true } };
+
+    await act(async () => {
+      mockCapturedOnChange?.([node], selection);
+      mockCapturedOnChange?.([node], selection);
+      mockCapturedOnChange?.([node], selection);
+    });
+
+    expect(mockEmitSelection).toHaveBeenCalledTimes(1);
   });
 
   it('projects nothing when a user has turned the projection off', async () => {

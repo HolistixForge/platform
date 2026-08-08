@@ -10,6 +10,7 @@ import {
   TLayerProvider,
 } from '@holistix-forge/whiteboard/frontend';
 import {
+  useAwareness,
   useAwarenessUserList,
   useLocalSharedData,
   useSharedDataDirect,
@@ -221,6 +222,10 @@ export const ExcalidrawLayerComponent: FC<{
   const pendingElements = useRef<readonly OrderedExcalidrawElement[]>([]);
   /** The scene the last onChange acted on — see the note in handleChange. */
   const lastSignature = useRef<string | null>(null);
+
+  const { awareness } = useAwareness();
+  /** The selection last announced, so an unchanged one is not re-announced. */
+  const lastSelection = useRef<string>('');
 
   // The graph's nodes, projected into the scene as embeddables.
   //
@@ -536,8 +541,28 @@ export const ExcalidrawLayerComponent: FC<{
   );
 
   const handleChange = useCallback(
-    (elements: readonly OrderedExcalidrawElement[]) => {
+    (elements: readonly OrderedExcalidrawElement[], state?: AppState) => {
       pendingElements.current = elements;
+
+      // Selecting a node on the surface is selecting the node, so the other
+      // people on the board see it. Excalidraw's selection is by element; the
+      // ones that stand for a node are translated back, and the drawing's own
+      // elements are not announced — the graph has no word for them.
+      //
+      // Announced only on a change: onChange fires for everything, and
+      // awareness is a broadcast to every peer.
+      if (state?.selectedElementIds) {
+        const selectedNodes = elements
+          .filter((e) => state.selectedElementIds[e.id])
+          .map((e) => embeddedNodeId(e))
+          .filter((id): id is string => !!id)
+          .sort();
+        const key = selectedNodes.join(',');
+        if (key !== lastSelection.current) {
+          lastSelection.current = key;
+          awareness.emitSelectionAwareness({ nodes: selectedNodes, viewId });
+        }
+      }
 
       // Everything below reaches out of this component — the layer tree lives
       // in the whiteboard's state, and the flush dispatches. Excalidraw calls
@@ -593,7 +618,7 @@ export const ExcalidrawLayerComponent: FC<{
 
       flush();
     },
-    [flush, drawingId, updateLayerTree]
+    [flush, drawingId, updateLayerTree, awareness, viewId]
   );
 
   // mode switch, collaborators update, content update
