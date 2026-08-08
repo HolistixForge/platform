@@ -502,10 +502,34 @@ const main = async () => {
     await peerPage
       .waitForURL((u) => !u.pathname.includes('/login'), { timeout: 30000 })
       .catch(() => undefined);
+    // Home first, then the board. Going straight to the board after logging
+    // in asked for the organisation's projects before the session could
+    // answer for them and came back 403 — which reads exactly like a missing
+    // permission and is not one: the same call succeeds a moment later.
+    await peerPage.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
+    await peerPage.waitForTimeout(9000);
     await peerPage.goto(`${BASE}/p/${ORG}/${PROJECT}/editor`, {
       waitUntil: 'domcontentloaded',
     });
-    await peerPage.waitForTimeout(18000);
+    await peerPage.waitForTimeout(8000);
+    // The same idle-out the first client handles.
+    const peerNeedsStart = await peerPage
+      .evaluate(() => /shut down due to inactivity/.test(document.body.innerText))
+      .catch(() => false);
+    if (peerNeedsStart) {
+      await peerPage
+        .click('button:has-text("Start Organization")')
+        .catch(() => undefined);
+      await peerPage.waitForTimeout(15000);
+    }
+    // Poll rather than sleep: the board takes as long as it takes.
+    for (let i = 0; i < 12; i++) {
+      const up = await peerPage
+        .evaluate(() => !!document.querySelector('.excalidraw'))
+        .catch(() => false);
+      if (up) break;
+      await peerPage.waitForTimeout(3000);
+    }
 
     report.peer = await Promise.race([
       peerPage.evaluate(() => ({
