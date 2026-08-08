@@ -273,6 +273,12 @@ export const ExcalidrawLayerComponent: FC<{
   useEffect(() => {
     const api = apiRef.current;
     if (!api) return;
+    // Off unless asked for. Projecting the graph into the drawing surface is
+    // the experiment, and it is the half that can take a tab down — keeping it
+    // behind a switch means the board still loads while it is being worked on,
+    // and means it can be turned on with the page already open:
+    //   localStorage.setItem('holistix:excalidraw-nodes', '1')
+    if (localStorage.getItem('holistix:excalidraw-nodes') !== '1') return;
 
     let cancelled = false;
 
