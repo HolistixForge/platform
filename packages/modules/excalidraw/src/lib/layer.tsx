@@ -5,7 +5,12 @@ import { OrderedExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 import { AppState, Collaborator, SocketId } from '@excalidraw/excalidraw/types';
 
 import { TJsonObject } from '@holistix-forge/simple-types';
-import { TCoreSharedData, TEdge, TGraphNode } from '@holistix-forge/core-graph';
+import {
+  TCoreEvent,
+  TCoreSharedData,
+  TEdge,
+  TGraphNode,
+} from '@holistix-forge/core-graph';
 import {
   LayerViewportAdapter,
   TLayerProvider,
@@ -38,8 +43,14 @@ import { EmbeddedNode } from './embedded-node';
 
 //
 
-/** The layer writes its own elements and moves the node that stands for them. */
-type TLayerEvent = TWhiteboardEvent | TExcalidrawEvent;
+/**
+ * What the layer sends.
+ *
+ * It writes its own elements, moves the nodes it projects, and — since the
+ * surface is where nodes are drawn now — creates and deletes them, which is
+ * core-graph's vocabulary rather than the whiteboard's.
+ */
+type TLayerEvent = TWhiteboardEvent | TExcalidrawEvent | TCoreEvent;
 
 type ExcalidrawAPI = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -120,6 +131,12 @@ const NATIVE_SHAPES: Record<string, { type: string; roundness?: number }> = {
 
 /** The scene element that stands for a node, by the node's own id. */
 const elementIdForNode = (nodeId: string) => `holistix-node-${nodeId}`;
+
+/** The node an element id stands for, or nothing if it is not one of ours. */
+const nodeIdForElement = (elementId?: string) =>
+  elementId?.startsWith('holistix-node-')
+    ? elementId.slice('holistix-node-'.length)
+    : undefined;
 
 /** The node a projected embeddable stands for, or nothing. */
 export const embeddedNodeId = (element: {
@@ -327,6 +344,9 @@ export const ExcalidrawLayerComponent: FC<{
         .join('|'),
     [nodesById]
   );
+
+  /** Arrows already turned into edges, so one is not sent twice. */
+  const sentEdges = useRef<Set<string>>(new Set());
 
   /** Where the projection last put each node — see the write-back below. */
   const projectedGeometry = useRef<
@@ -655,6 +675,61 @@ export const ExcalidrawLayerComponent: FC<{
             });
           }
 
+          // An arrow drawn between two nodes becomes an edge in the graph.
+          //
+          // Excalidraw binds an arrow to what it lands on, so the two ends are
+          // already the elements it joined — there is no hit testing to do
+          // here, only a translation back to node ids. Arrows the projection
+          // put there are skipped: they carry `holistixEdge` and are already
+          // the graph's.
+          for (const element of pendingElements.current) {
+            const el = element as unknown as {
+              type?: string;
+              id: string;
+              isDeleted?: boolean;
+              customData?: Record<string, unknown>;
+              startBinding?: { elementId?: string } | null;
+              endBinding?: { elementId?: string } | null;
+            };
+            if (el.type !== 'arrow' || el.isDeleted) continue;
+            if (el.customData?.['holistixEdge']) continue;
+            if (sentEdges.current.has(el.id)) continue;
+
+            const from = nodeIdForElement(el.startBinding?.elementId);
+            const to = nodeIdForElement(el.endBinding?.elementId);
+            // An arrow with a loose end is a drawing, not an edge.
+            if (!from || !to || from === to) continue;
+
+            sentEdges.current.add(el.id);
+            await dispatcher.dispatch({
+              type: 'core:new-edge',
+              edge: {
+                from: { node: from, connectorName: 'outputs' },
+                to: { node: to, connectorName: 'inputs' },
+                semanticType: 'easy-connect',
+              },
+            });
+          }
+
+          // A node erased on the surface is erased in the graph. Excalidraw
+          // tombstones rather than removes, so a deletion arrives as our own
+          // element carrying `isDeleted` — and the projection would put it
+          // straight back if the graph still held the node.
+          for (const element of pendingElements.current) {
+            const nodeId = embeddedNodeId(element);
+            if (!nodeId || !element.isDeleted) continue;
+            if (!projectedGeometry.current.has(nodeId)) continue;
+
+            // Forgotten first, so the projection's next run does not read the
+            // tombstone as a move and the delete is not sent twice.
+            projectedGeometry.current.delete(nodeId);
+
+            await dispatcher.dispatch({
+              type: 'core:delete-node',
+              id: nodeId,
+            });
+          }
+
           // A node moved on the surface goes back to the graph, which owns it.
           //
           // Only a difference against what the projection last wrote counts:
@@ -664,7 +739,7 @@ export const ExcalidrawLayerComponent: FC<{
           // sub-pixel geometry and the graph does not.
           for (const element of pendingElements.current) {
             const nodeId = embeddedNodeId(element);
-            if (!nodeId) continue;
+            if (!nodeId || element.isDeleted) continue;
 
             const was = projectedGeometry.current.get(nodeId);
             if (!was) continue;

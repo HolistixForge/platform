@@ -447,6 +447,130 @@ describe('ExcalidrawLayerComponent', () => {
     ).toHaveLength(0);
   });
 
+  it('deletes the node when its element is erased on the surface', async () => {
+    jest.useFakeTimers();
+    mockNodeViews = [{ id: 'node-a', position: { x: 0, y: 0 } }];
+    try {
+      await mount();
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      // Excalidraw tombstones rather than removes.
+      const gone = {
+        ...mockScene.find((e) => String(e.id).startsWith('holistix-node-')),
+        isDeleted: true,
+        version: 9,
+      };
+      act(() => {
+        mockCapturedOnChange?.([gone]);
+      });
+      await act(async () => {
+        jest.advanceTimersByTime(400);
+        await Promise.resolve();
+      });
+
+      const deletes = mockDispatch.mock.calls
+        .map(([e]) => e)
+        .filter((e) => e?.type === 'core:delete-node');
+
+      expect(deletes).toEqual([{ type: 'core:delete-node', id: 'node-a' }]);
+
+      // And not as a move as well: a tombstone still carries a box.
+      expect(
+        mockDispatch.mock.calls
+          .map(([e]) => e)
+          .filter((e) => e?.type === 'whiteboard:move-node')
+      ).toHaveLength(0);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('turns an arrow drawn between two nodes into an edge', async () => {
+    jest.useFakeTimers();
+    mockNodeViews = [
+      { id: 'node-a', position: { x: 0, y: 0 } },
+      { id: 'node-b', position: { x: 600, y: 0 } },
+    ];
+    try {
+      await mount();
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      // Excalidraw binds an arrow to whatever it lands on, so the ends are
+      // already the two elements — no hit testing of our own.
+      act(() => {
+        mockCapturedOnChange?.([
+          ...mockScene,
+          {
+            id: 'drawn-arrow',
+            type: 'arrow',
+            version: 1,
+            startBinding: { elementId: 'holistix-node-node-a' },
+            endBinding: { elementId: 'holistix-node-node-b' },
+          },
+        ]);
+      });
+      await act(async () => {
+        jest.advanceTimersByTime(400);
+        await Promise.resolve();
+      });
+
+      const edges = mockDispatch.mock.calls
+        .map(([e]) => e)
+        .filter((e) => e?.type === 'core:new-edge');
+
+      expect(edges).toHaveLength(1);
+      expect(edges[0].edge).toMatchObject({
+        from: { node: 'node-a' },
+        to: { node: 'node-b' },
+      });
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('leaves an arrow with a loose end as a drawing', async () => {
+    // Half-drawn, or joined to something someone sketched: that is not an
+    // edge, and inventing one would put a relation in the graph nobody asked
+    // for.
+    jest.useFakeTimers();
+    mockNodeViews = [{ id: 'node-a', position: { x: 0, y: 0 } }];
+    try {
+      await mount();
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      act(() => {
+        mockCapturedOnChange?.([
+          ...mockScene,
+          {
+            id: 'loose-arrow',
+            type: 'arrow',
+            version: 1,
+            startBinding: { elementId: 'holistix-node-node-a' },
+            endBinding: null,
+          },
+        ]);
+      });
+      await act(async () => {
+        jest.advanceTimersByTime(400);
+        await Promise.resolve();
+      });
+
+      expect(
+        mockDispatch.mock.calls
+          .map(([e]) => e)
+          .filter((e) => e?.type === 'core:new-edge')
+      ).toHaveLength(0);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('projects nothing when a user has turned the projection off', async () => {
     localStorage.setItem('holistix:excalidraw-nodes', '0');
     mockNodeViews = [{ id: 'node-a', position: { x: 0, y: 0 } }];
