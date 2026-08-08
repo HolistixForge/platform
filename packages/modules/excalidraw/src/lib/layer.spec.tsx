@@ -117,10 +117,18 @@ const mockAwareness = {
 
 /** Node views the layer should project into the scene. Set per test. */
 let mockNodeViews: { id: string; position: { x: number; y: number } }[] = [];
+/** The graph's nodes behind those views. Set per test. */
+let mockGraphNodes: { id: string; type: string; data?: unknown }[] = [];
 const mockGraphView = () =>
   mockNodeViews.length
     ? { nodeViews: mockNodeViews.map((nv) => ({ ...nv, status: {} })) }
     : undefined;
+
+/** `core-graph:nodes`, which is where a node's own data actually lives. */
+const mockCoreNodes = () => ({
+  forEach: (fn: (n: unknown, id: string) => void) =>
+    mockGraphNodes.forEach((n) => fn(n, n.id)),
+});
 
 /** Counts the layer's scene writes, so a runaway shows up as a number. */
 let mockUpdateSceneCalls = 0;
@@ -136,7 +144,8 @@ jest.mock('@holistix-forge/collab/frontend', () => ({
   // The graph view the layer projects into the scene. A *fresh object on every
   // call*, which is what the real hook does — the layer must not read that
   // identity as a change, or it re-projects forever.
-  useLocalSharedData: () => mockGraphView(),
+  useLocalSharedData: (keys: string[]) =>
+    keys?.[0] === 'core-graph:nodes' ? mockCoreNodes() : mockGraphView(),
 }));
 
 jest.mock('@holistix-forge/reducers/frontend', () => ({
@@ -182,6 +191,7 @@ describe('ExcalidrawLayerComponent', () => {
     mockOnRemoteChange = null;
     mockScene = [];
     mockNodeViews = [];
+    mockGraphNodes = [];
     mockUpdateSceneCalls = 0;
     mockRemote.clear();
     mockUpdateLayerTree.mockClear();
@@ -342,6 +352,48 @@ describe('ExcalidrawLayerComponent', () => {
     });
 
     expect(mockEmitSelection).toHaveBeenCalledTimes(1);
+  });
+
+  it('draws a shape Excalidraw knows as a native element, not an embeddable', async () => {
+    // A circle costs the scene an ellipse rather than a DOM subtree and a
+    // React tree. Only the four shapes with a native equivalent qualify.
+    mockNodeViews = [{ id: 'node-a', position: { x: 0, y: 0 } }];
+    mockGraphNodes = [
+      { id: 'node-a', type: 'shape', data: { shapeType: 'circle' } },
+    ];
+
+    await mount();
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    const projected = mockScene.find((e) =>
+      String(e.id).startsWith('holistix-node-')
+    ) as unknown as { type: string; link?: string } | undefined;
+
+    expect(projected?.type).toBe('ellipse');
+    expect(projected?.link).toBeUndefined();
+  });
+
+  it('leaves a shape it has no native form for as an embeddable', async () => {
+    // A hexagon has no Excalidraw equivalent, and drawing one as a polygon
+    // would be a second rendering of what the node component already draws.
+    mockNodeViews = [{ id: 'node-a', position: { x: 0, y: 0 } }];
+    mockGraphNodes = [
+      { id: 'node-a', type: 'shape', data: { shapeType: 'hexagon' } },
+    ];
+
+    await mount();
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    const projected = mockScene.find((e) =>
+      String(e.id).startsWith('holistix-node-')
+    ) as unknown as { type: string; link?: string } | undefined;
+
+    expect(projected?.type).toBe('embeddable');
+    expect(projected?.link).toContain('node.holistix.invalid');
   });
 
   it('projects nothing when a user has turned the projection off', async () => {

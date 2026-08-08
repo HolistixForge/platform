@@ -5,6 +5,7 @@ import { OrderedExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 import { AppState, Collaborator, SocketId } from '@excalidraw/excalidraw/types';
 
 import { TJsonObject } from '@holistix-forge/simple-types';
+import { TCoreSharedData, TGraphNode } from '@holistix-forge/core-graph';
 import {
   LayerViewportAdapter,
   TLayerProvider,
@@ -97,6 +98,25 @@ const nodeLink = (nodeId: string) => `${NODE_LINK_PREFIX}${nodeId}`;
  * tried to follow it.
  */
 const validateEmbeddable = (link: string) => link.startsWith(NODE_LINK_PREFIX);
+
+/**
+ * Holistix shapes that Excalidraw draws itself.
+ *
+ * These need no embeddable and no React: they are the two of the twenty node
+ * types that can live in a canvas, so they are projected as native elements
+ * and cost the scene a shape rather than a DOM subtree.
+ *
+ * The other six — hexagon, plus, parallelogram, cylinder, arrow-rectangle,
+ * triangle — have no native equivalent and stay embeddables. Drawing them as
+ * polygons would be a second rendering of something the node component
+ * already draws, and the two would drift.
+ */
+const NATIVE_SHAPES: Record<string, { type: string; roundness?: number }> = {
+  circle: { type: 'ellipse' },
+  diamond: { type: 'diamond' },
+  square: { type: 'rectangle' },
+  'round-rectangle': { type: 'rectangle', roundness: 3 },
+};
 
 /** The node a projected embeddable stands for, or nothing. */
 export const embeddedNodeId = (element: {
@@ -244,6 +264,40 @@ export const ExcalidrawLayerComponent: FC<{
     [graphView?.nodeViews]
   );
 
+  // The node's own data — its shape type, its colours — lives in
+  // `core-graph:nodes`. The view's `graph.nodes` carries only id, type,
+  // status and position, which is enough to lay a node out and not enough to
+  // know a circle from a hexagon; reading it instead left every shape an
+  // embeddable.
+  const graphNodes = useLocalSharedData<TCoreSharedData>(
+    ['core-graph:nodes'],
+    (sd) => (active ? sd['core-graph:nodes'] : undefined)
+  );
+
+  const nodesById = useMemo(() => {
+    const map = new Map<string, TGraphNode<never>>();
+    graphNodes?.forEach?.((node: TGraphNode<never>, id: string) =>
+      map.set(id, node)
+    );
+    return map;
+  }, [graphNodes]);
+  const latestNodes = useRef(nodesById);
+  latestNodes.current = nodesById;
+  /** Changes when the set of nodes or their types does, so the signature can
+   * depend on it without depending on an array rebuilt on every change. */
+  const nodesRevision = useMemo(
+    () =>
+      [...nodesById.values()]
+        .map(
+          (n) =>
+            `${n.id}:${n.type}:${
+              (n.data as { shapeType?: string } | undefined)?.shapeType ?? ''
+            }`
+        )
+        .join('|'),
+    [nodesById]
+  );
+
   /** Where the projection last put each node — see the write-back below. */
   const projectedGeometry = useRef<
     Map<string, { x: number; y: number; width: number; height: number }>
@@ -253,18 +307,26 @@ export const ExcalidrawLayerComponent: FC<{
   const latestNodeViews = useRef<TNodeView[]>(nodeViews);
   latestNodeViews.current = nodeViews;
 
-  /** Rebuilt whenever a node moves, is added or is removed. */
+  /** Rebuilt whenever a node moves, is added, removed or changes shape. */
   const nodeSignature = useMemo(
     () =>
       nodeViews
-        .map(
-          (nv) =>
-            `${nv.id}@${Math.round(nv.position.x)},${Math.round(
-              nv.position.y
-            )}:${nv.size?.width ?? 0}x${nv.size?.height ?? 0}`
-        )
+        .map((nv) => {
+          const node = latestNodes.current.get(nv.id);
+          const shapeType = (node?.data as { shapeType?: string } | undefined)
+            ?.shapeType;
+          // The shape type is in here because it decides whether the node is
+          // projected as a native element or as an embeddable, and the graph's
+          // nodes arrive separately from its views — keyed on the views alone,
+          // a shape loaded second stayed an embeddable forever.
+          return `${nv.id}@${Math.round(nv.position.x)},${Math.round(
+            nv.position.y
+          )}:${nv.size?.width ?? 0}x${nv.size?.height ?? 0}:${
+            shapeType ?? node?.type ?? ''
+          }`;
+        })
         .join('|'),
-    [nodeViews]
+    [nodeViews, nodesRevision]
   );
 
   /**
@@ -314,16 +376,61 @@ export const ExcalidrawLayerComponent: FC<{
       const drawing = scene.filter((e) => !embeddedNodeId(e));
 
       const views = latestNodeViews.current;
+      const nodesById = latestNodes.current;
+
       const projected = convertToExcalidrawElements(
-        views.map((nv) => ({
-          type: 'embeddable',
-          x: nv.position.x,
-          y: nv.position.y,
-          width: nv.size?.width ?? 320,
-          height: nv.size?.height ?? 220,
-          link: nodeLink(nv.id),
-          customData: { holistixNodeId: nv.id, holistixViewId: viewId },
-        }))
+        views.map((nv) => {
+          const common = {
+            x: nv.position.x,
+            y: nv.position.y,
+            width: nv.size?.width ?? 320,
+            height: nv.size?.height ?? 220,
+            customData: { holistixNodeId: nv.id, holistixViewId: viewId },
+          };
+
+          const node = nodesById.get(nv.id);
+          const shapeType =
+            node?.type === 'shape'
+              ? (node.data as { shapeType?: string } | undefined)?.shapeType
+              : undefined;
+          const native = shapeType ? NATIVE_SHAPES[shapeType] : undefined;
+
+          if (native) {
+            const data = node?.data as
+              | {
+                  borderColor?: string;
+                  fillColor?: string;
+                  fillOpacity?: number;
+                }
+              | undefined;
+
+            // A shape node carries its fill and a separate opacity for it,
+            // and the default is 0 — an outline. Excalidraw has no separate
+            // fill opacity, so a transparent fill is the absence of a
+            // background rather than a background at zero.
+            const filled = (data?.fillOpacity ?? 0) > 0;
+
+            // Square unless the view says otherwise: the 320x220 default is a
+            // node's box, and a circle in it comes out an ellipse.
+            const side = nv.size?.width ?? 320;
+            return {
+              ...common,
+              width: nv.size?.width ?? side,
+              height: nv.size?.height ?? side,
+              type: native.type,
+              roundness: native.roundness
+                ? { type: native.roundness }
+                : undefined,
+              strokeColor: data?.borderColor ?? '#672aa4',
+              backgroundColor: filled
+                ? data?.fillColor ?? 'transparent'
+                : 'transparent',
+            };
+          }
+
+          // Everything else is React, and needs the link — see nodeLink.
+          return { ...common, type: 'embeddable', link: nodeLink(nv.id) };
+        })
       );
 
       // The id is derived from the node, and rewritten between the two calls

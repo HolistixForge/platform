@@ -328,6 +328,51 @@ const main = async () => {
     }
   }
 
+  if (process.argv.includes('--probe')) {
+    report.probe = await ask(page, () => {
+      const rootEl = [...document.querySelectorAll('*')].find((el) =>
+        Object.keys(el).some((k) => k.startsWith('__reactFiber$'))
+      );
+      let f = rootEl?.[Object.keys(rootEl).find((k) => k.startsWith('__reactFiber$'))];
+      while (f?.return) f = f.return;
+      let sd = null;
+      const seen = new WeakSet();
+      const scan = (o, d) => {
+        if (!o || d > 4 || typeof o !== 'object' || seen.has(o) || sd) return;
+        seen.add(o);
+        if (typeof o.getData === 'function') {
+          try {
+            const got = o.getData();
+            if (got && got['whiteboard:graphViews']) sd = got;
+          } catch (e) { /* */ }
+        }
+        for (const k of Object.keys(o)) { try { scan(o[k], d + 1); } catch (e) { /* */ } }
+      };
+      const st = [f]; const sf = new WeakSet(); let g = 0;
+      while (st.length && g++ < 40000 && !sd) {
+        const fb = st.pop(); if (!fb || sf.has(fb)) continue; sf.add(fb);
+        scan(fb.memoizedProps, 0); scan(fb.memoizedState, 0);
+        if (fb.child) st.push(fb.child); if (fb.sibling) st.push(fb.sibling);
+      }
+      if (!sd) return { error: 'no shared data' };
+      const gv = sd['whiteboard:graphViews']?.get('view-1');
+      const nodes = gv?.graph?.nodes ?? [];
+      return {
+        hasGraph: !!gv?.graph,
+        nodeCount: nodes.length,
+        firstNode: nodes[0]
+          ? {
+              id: String(nodes[0].id).slice(0, 10),
+              type: nodes[0].type,
+              keys: Object.keys(nodes[0]),
+              data: JSON.parse(JSON.stringify(nodes[0].data ?? null)),
+            }
+          : null,
+        nodeViewCount: (gv?.nodeViews ?? []).length,
+      };
+    });
+  }
+
   const shot = process.argv.find((a) => a.startsWith('--shot='));
   if (shot) {
     const path = shot.slice('--shot='.length);
