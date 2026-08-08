@@ -386,6 +386,79 @@ const main = async () => {
     });
   }
 
+  // The decisive scenario of TAC-211: a node in the scene, clicked, opening
+  // its service in a tab. Two clicks, because Excalidraw keeps its canvas over
+  // an embed until that embed is the active one — the first click activates,
+  // the second reaches the node.
+  if (process.argv.includes('--open-service')) {
+    const spot = await ask(page, () => {
+      const withNode = [
+        ...document.querySelectorAll('.excalidraw__embeddable-container'),
+      ].find((c) => (c.textContent || '').trim().length > 0);
+      if (!withNode) return null;
+      const b = withNode.getBoundingClientRect();
+      return { x: b.left + b.width / 2, y: b.top + b.height / 2 };
+    });
+
+    if (!spot?.x) {
+      report.openService = { error: 'no node rendered in view' };
+    } else {
+      await page.evaluate(
+        (w) => ((window.__wantedButton = w), undefined),
+        process.env.HOLISTIX_BUTTON ?? ''
+      );
+      await page.mouse.click(spot.x, spot.y);
+      await page.waitForTimeout(1200);
+
+      report.openService = await ask(page, () => {
+        const c = [
+          ...document.querySelectorAll('.excalidraw__embeddable-container'),
+        ].find((x) => (x.textContent || '').trim().length > 0);
+        const buttons = [...(c?.querySelectorAll('button') ?? [])].map((b) =>
+          (b.textContent || b.getAttribute('aria-label') || '').trim().slice(0, 24)
+        );
+        const reachable =
+          document.elementFromPoint(
+            (c?.getBoundingClientRect().left ?? 0) + 20,
+            (c?.getBoundingClientRect().top ?? 0) + 20
+          )?.tagName ?? null;
+        return { buttons, reachable };
+      });
+
+      // Click whichever button the card offers for its service.
+      // Passed in, not read from process.env: this runs in the page.
+      const clicked = await ask(page, () => {
+        const c = [
+          ...document.querySelectorAll('.excalidraw__embeddable-container'),
+        ].find((x) => (x.textContent || '').trim().length > 0);
+        // Never the destructive ones: a loose /service/i matched "Stop this
+        // service" and stopped a running notebook.
+        const label = (x) =>
+          ((x.textContent || '') + ' ' + (x.getAttribute('aria-label') || '') +
+            ' ' + (x.title || '')).trim();
+        const wanted = window.__wantedButton;
+        const b = [...(c?.querySelectorAll('button') ?? [])].find((x) => {
+          const t = label(x);
+          if (wanted) return t.toLowerCase().includes(wanted.toLowerCase());
+          if (/stop|delete|remove/i.test(t)) return false;
+          return /open|jupyter|lab|notebook/i.test(t);
+        });
+        if (!b) return { error: 'no service button on the card' };
+        const r = b.getBoundingClientRect();
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      });
+
+      if (clicked?.x) {
+        await page.mouse.click(clicked.x, clicked.y);
+        await page.waitForTimeout(4000);
+        report.openService.clickedAt = [clicked.x, clicked.y];
+      } else {
+        report.openService.clickError = clicked;
+      }
+      report.afterOpen = await snapshot();
+    }
+  }
+
   const shot = process.argv.find((a) => a.startsWith('--shot='));
   if (shot) {
     const path = shot.slice('--shot='.length);
