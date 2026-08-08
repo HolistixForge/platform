@@ -36,10 +36,12 @@ describe('ExcalidrawReducer', () => {
   let reducer: ExcalidrawReducer;
   let store: Map<string, TExcalidrawElementEntry>;
   let legacyStore: Map<string, any>;
+  let viewStore: Map<string, any>;
 
   beforeEach(() => {
     store = new Map();
     legacyStore = new Map();
+    viewStore = new Map();
 
     const depsExports = {
       collab: {
@@ -48,6 +50,9 @@ describe('ExcalidrawReducer', () => {
             sharedData: {
               'excalidraw:elements': fakeSharedMap(store),
               'excalidraw:drawing': fakeSharedMap(legacyStore),
+              // whiteboard's, not this module's — the re-keying migration
+              // reads it to learn which view held which node.
+              'whiteboard:graphViews': fakeSharedMap(viewStore),
             },
           })),
           registerSharedData: jest.fn(),
@@ -238,6 +243,83 @@ describe('ExcalidrawReducer', () => {
 
       expect(store.size).toBe(1);
       expect(store.has(elementKey(OTHER_DRAWING, 'e3'))).toBe(true);
+    });
+  });
+
+  describe('project:init — moving a node\u2019s drawing onto its view', () => {
+    const init = { type: 'project:init' } as any;
+
+    it('re-keys a drawing from the node that held it to the view', async () => {
+      viewStore.set('view-1', { nodeViews: [{ id: 'node-a' }] });
+      store.set(elementKey('node-a', 'e1'), {
+        drawingId: 'node-a',
+        element: element('e1'),
+      });
+
+      await reducer.reduce(init, requestData);
+
+      expect(store.get(elementKey('node-a', 'e1'))).toBeUndefined();
+      expect(store.get(elementKey('view-1', 'e1'))?.drawingId).toBe('view-1');
+    });
+
+    it('leaves a drawing that is already the view\u2019s alone', async () => {
+      viewStore.set('view-1', { nodeViews: [] });
+      store.set(elementKey('view-1', 'e1'), {
+        drawingId: 'view-1',
+        element: element('e1'),
+      });
+
+      await reducer.reduce(init, requestData);
+
+      expect(store.get(elementKey('view-1', 'e1'))?.drawingId).toBe('view-1');
+      expect(store.size).toBe(1);
+    });
+
+    it('merges two node drawings that sat on the same view', async () => {
+      viewStore.set('view-1', {
+        nodeViews: [{ id: 'node-a' }, { id: 'node-b' }],
+      });
+      store.set(elementKey('node-a', 'e1'), {
+        drawingId: 'node-a',
+        element: element('e1'),
+      });
+      store.set(elementKey('node-b', 'e2'), {
+        drawingId: 'node-b',
+        element: element('e2'),
+      });
+
+      await reducer.reduce(init, requestData);
+
+      expect(store.get(elementKey('view-1', 'e1'))).toBeDefined();
+      expect(store.get(elementKey('view-1', 'e2'))).toBeDefined();
+      expect(store.size).toBe(2);
+    });
+
+    it('keeps a drawing whose node is in no view rather than guessing', async () => {
+      // Unreachable is recoverable; misfiled is silently wrong.
+      viewStore.set('view-1', { nodeViews: [] });
+      store.set(elementKey('orphan', 'e1'), {
+        drawingId: 'orphan',
+        element: element('e1'),
+      });
+
+      await reducer.reduce(init, requestData);
+
+      expect(store.get(elementKey('orphan', 'e1'))).toBeDefined();
+    });
+
+    it('is idempotent', async () => {
+      viewStore.set('view-1', { nodeViews: [{ id: 'node-a' }] });
+      store.set(elementKey('node-a', 'e1'), {
+        drawingId: 'node-a',
+        element: element('e1'),
+      });
+
+      await reducer.reduce(init, requestData);
+      const after = new Map(store);
+      await reducer.reduce(init, requestData);
+
+      expect([...store.keys()].sort()).toEqual([...after.keys()].sort());
     });
   });
 

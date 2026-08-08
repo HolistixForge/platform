@@ -5,6 +5,7 @@ import {
 } from '@holistix-forge/collab';
 import { TEventProjectInit } from '@holistix-forge/gateway';
 import { EPriority, log } from '@holistix-forge/log';
+import { TJsonObject } from '@holistix-forge/simple-types';
 
 import {
   TExcalidrawEvent,
@@ -58,7 +59,9 @@ export class ExcalidrawReducer extends ReducerWithCollab<
         return this._deleteDrawing(event, requestData);
 
       case 'project:init':
-        return this._migrateLegacyDrawings(requestData);
+        return this._migrateLegacyDrawings(requestData).then(() =>
+          this._migrateDrawingsOntoViews(requestData)
+        );
 
       default:
         return Promise.resolve();
@@ -108,6 +111,85 @@ export class ExcalidrawReducer extends ReducerWithCollab<
       'EXCALIDRAW',
       `Migrated ${drawings.length} drawing(s), ${moved} element(s), to per-element storage`
     );
+  }
+
+  /**
+   * Re-key drawings from the node that held them to the view they are on.
+   *
+   * A drawing used to belong to an ExcalidrawNode and was keyed on that node's
+   * id, because the only way to open one was that node's Edit button. The
+   * drawing surface belongs to the view now and there is no such node, so a
+   * drawing still keyed on one is unreachable — it exists in the shared map
+   * and nothing reads it.
+   *
+   * Which view a drawing belongs to is the view that held its node. That is
+   * whiteboard's data, not this module's; reading it from here is a crossing
+   * this module makes nowhere else, and it is why this is a migration rather
+   * than a permanent lookup. Several node drawings landing on one view are
+   * merged, which is safe: element ids are unique across drawings.
+   *
+   * Runs after `_migrateLegacyDrawings`, on the same `project:init`, so it
+   * sees the per-element shape that migration produces. Idempotent the same
+   * way: an element is deleted as it is moved, and a drawing already keyed on
+   * a view is left alone.
+   */
+  async _migrateDrawingsOntoViews(requestData: RequestData) {
+    const collab = this.getCollab(requestData);
+    const elements = collab.sharedData['excalidraw:elements'];
+    if (!elements) return;
+
+    // Not in this module's own schema — see the note above.
+    const graphViews = (
+      collab.sharedData as unknown as {
+        'whiteboard:graphViews'?: {
+          forEach: (
+            fn: (view: { nodeViews?: { id: string }[] }, id: string) => void
+          ) => void;
+        };
+      }
+    )['whiteboard:graphViews'];
+    if (!graphViews) return;
+
+    /** node id → the view that holds it, and the set of ids that are views. */
+    const viewOfNode = new Map<string, string>();
+    const viewIds = new Set<string>();
+    graphViews.forEach((view, viewId) => {
+      viewIds.add(viewId);
+      for (const nv of view?.nodeViews ?? []) viewOfNode.set(nv.id, viewId);
+    });
+    if (!viewIds.size) return;
+
+    const entries: [string, { drawingId: string; element: TJsonObject }][] = [];
+    elements.forEach((entry, key) => entries.push([key, entry]));
+
+    let moved = 0;
+    for (const [key, entry] of entries) {
+      const parsed = parseElementKey(key);
+      if (!parsed) continue;
+      // Already a view's drawing.
+      if (viewIds.has(parsed.drawingId)) continue;
+
+      const viewId = viewOfNode.get(parsed.drawingId);
+      // The node is gone from every view. Left where it is rather than
+      // guessed at: an unreachable drawing is recoverable, a misfiled one is
+      // silently wrong.
+      if (!viewId) continue;
+
+      elements.set(elementKey(viewId, parsed.elementId), {
+        drawingId: viewId,
+        element: entry.element,
+      });
+      elements.delete(key);
+      moved += 1;
+    }
+
+    if (moved) {
+      log(
+        EPriority.Info,
+        'EXCALIDRAW',
+        `Moved ${moved} element(s) from node-keyed drawings onto their view`
+      );
+    }
   }
 
   /**
