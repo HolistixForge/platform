@@ -16,6 +16,7 @@ import { render, act } from '@testing-library/react';
 import { EmbeddedNodeContext, useNodeContext } from './node-wrapper';
 import { TNodeContext } from '../apis/types/node';
 import { TNodeViewStatus } from '../../whiteboard-types';
+import { useStore } from '@xyflow/react';
 
 //
 
@@ -95,6 +96,31 @@ describe('EmbeddedNodeContext', () => {
     expect(seen[0].viewId).toBe('view-1');
     // `rank < maxRank` is what "opened" means, and this status has 0 < 0.
     expect(seen[0].isOpened).toBe(false);
+  });
+
+  it('lets a node reach ReactFlow\u2019s store, which its components do', () => {
+    // The node components ask ReactFlow for the zoom and for their connectors.
+    // Outside the canvas there is no store, and each one threw "you have not
+    // used zustand provider as an ancestor" — a hundred of them blanked the
+    // board. Nothing here is asserted about the value; that it does not throw
+    // is the point.
+    const Zoom = () => {
+      const zoom = useStore((s) => s.transform[2]);
+      return <span data-testid="zoom">{zoom}</span>;
+    };
+
+    expect(() =>
+      render(
+        <EmbeddedNodeContext
+          id="node-a"
+          viewId="view-1"
+          zoom={1}
+          status={status}
+        >
+          <Zoom />
+        </EmbeddedNodeContext>
+      )
+    ).not.toThrow();
   });
 
   it('dispatches against the node it was given', () => {

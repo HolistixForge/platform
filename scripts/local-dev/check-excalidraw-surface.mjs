@@ -46,6 +46,18 @@ const main = async () => {
 
   const report = { surface: wantSurface, nodes: wantNodes };
 
+  // A blank board is usually a thrown error, and the message is the whole
+  // diagnosis. Collected rather than inferred.
+  report.pageErrors = [];
+  page.on('pageerror', (e) => {
+    if (report.pageErrors.length < 4) report.pageErrors.push(String(e.message).slice(0, 200));
+  });
+  page.on('console', (m) => {
+    if (m.type() !== 'error') return;
+    if (report.pageErrors.length < 4)
+      report.pageErrors.push(m.text().slice(0, 200));
+  });
+
   await page.goto(`${BASE}/account/login`, { waitUntil: 'domcontentloaded' });
   await page.fill('input[type=email]', EMAIL);
   await page.fill('input[type=password]', PASSWORD);
@@ -157,6 +169,13 @@ const main = async () => {
       text: document.body.innerText.replace(/\s+/g, ' ').trim().slice(0, 100),
     }))
   );
+
+  const shot = process.argv.find((a) => a.startsWith('--shot='));
+  if (shot) {
+    const path = shot.slice('--shot='.length);
+    await page.screenshot({ path }).catch(() => {});
+    report.screenshot = path;
+  }
 
   console.log(JSON.stringify(report, null, 1));
   await browser.close();
