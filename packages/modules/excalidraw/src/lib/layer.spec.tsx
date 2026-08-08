@@ -196,6 +196,15 @@ describe('ExcalidrawLayerComponent', () => {
 
       // The drawing and the projection are a couple of writes. A loop is not.
       expect(mockUpdateSceneCalls).toBeLessThan(5);
+
+      // And the element carries an id derived from the node, not a fresh one:
+      // Excalidraw caches an embeddable's validation by id and never evicts
+      // it, so a new id per projection grows that map without bound.
+      const projected = mockScene.filter((e) =>
+        String(e.id).startsWith('holistix-node-')
+      );
+      expect(projected).toHaveLength(1);
+      expect(projected[0].id).toBe('holistix-node-node-a');
     } finally {
       localStorage.removeItem('holistix:excalidraw-nodes');
     }

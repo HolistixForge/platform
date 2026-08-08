@@ -229,7 +229,9 @@ export const ExcalidrawLayerComponent: FC<{
   // that drift apart. They are injected locally and excluded from the flush.
   const graphView = useLocalSharedData<TWhiteboardSharedData>(
     ['whiteboard:graphViews'],
-    (sd) => sd['whiteboard:graphViews']?.get(viewId)
+    // Only while the surface is on screen: this subscribes the layer to every
+    // graph change, and an inactive layer has nothing to project into.
+    (sd) => (active ? sd['whiteboard:graphViews']?.get(viewId) : undefined)
   );
 
   const nodeViews: TNodeView[] = useMemo(
@@ -272,7 +274,7 @@ export const ExcalidrawLayerComponent: FC<{
    */
   useEffect(() => {
     const api = apiRef.current;
-    if (!api) return;
+    if (!active || !api) return;
     // Off unless asked for. Projecting the graph into the drawing surface is
     // the experiment, and it is the half that can take a tab down — keeping it
     // behind a switch means the board still loads while it is being worked on,
@@ -312,12 +314,26 @@ export const ExcalidrawLayerComponent: FC<{
         }))
       );
 
+      // The id is derived from the node, and rewritten between the two calls
+      // on purpose. `convertToExcalidrawElements` mints its own and ignores
+      // the one the skeleton gives it, and Excalidraw caches an embeddable's
+      // validation by id without ever evicting it — so a fresh id per
+      // projection grows that map for as long as the board is open.
+      //
+      // Rewriting it *before* `restoreElements` matters: an id patched onto
+      // an already-normalised element leaves a half-built object, which is
+      // how the first attempt at this locked the tab up.
+      const identified = projected.map((element, i) => ({
+        ...element,
+        id: `holistix-node-${views[i].id}`,
+      }));
+
       // Normalised before it goes in. `convertToExcalidrawElements` leaves an
       // embeddable with only the fields the skeleton named — no `angle`, no
       // `opacity`, no `seed` — and Excalidraw's viewport test needs them: the
       // element validated fine and was then judged invisible, so it never
       // rendered. Measured: 12 fields against the 27 a real element carries.
-      const restored = restoreElements(projected, null);
+      const restored = restoreElements(identified, null);
 
       api.updateScene({ elements: [...drawing, ...restored] });
     })();
@@ -328,7 +344,7 @@ export const ExcalidrawLayerComponent: FC<{
     // Keyed on the signature alone. `nodeViews` is a fresh array on every
     // shared-data change and this effect causes one, so depending on it is a
     // loop — it froze the tab. The signature is what says a node moved.
-  }, [nodeSignature, viewId, apiReady]);
+  }, [active, nodeSignature, viewId, apiReady]);
 
   // Pull remote changes into the scene.
   //
@@ -337,7 +353,13 @@ export const ExcalidrawLayerComponent: FC<{
   // the whole drawing and, when it differed, replaced the entire scene — so
   // two people drawing at once overwrote each other wholesale.
   useEffect(() => {
-    if (!drawingId) return;
+    // Nothing to pull into a layer that is not on screen. This used to be
+    // implied: the drawing was keyed on a node, and the id only arrived in the
+    // payload when someone opened the layer. Keying it on the view made the id
+    // always present, so every board — including those never showing a drawing
+    // — subscribed to the element map and pushed into an Excalidraw that was
+    // not mounted.
+    if (!active || !drawingId) return;
     const map = sharedData['excalidraw:elements'];
 
     const pull = async () => {
@@ -390,7 +412,7 @@ export const ExcalidrawLayerComponent: FC<{
     // The previous version never unobserved: every mount left a listener
     // behind, still writing into the scene of a component that was gone.
     return () => map.unobserve(pull);
-  }, [drawingId, sharedData]);
+  }, [active, drawingId, sharedData]);
 
   //
 
@@ -548,8 +570,6 @@ export const ExcalidrawLayerComponent: FC<{
         excalidrawAPI={(api: ExcalidrawAPI) => {
           apiRef.current = api;
           setApiReady(true);
-          // TEMP debug handle — removed once the integration renders.
-          (window as unknown as { __exApi: ExcalidrawAPI }).__exApi = api;
         }}
         initialData={{
           appState: { ...appState, ...toExcalidrawViewport(initialVp) },
