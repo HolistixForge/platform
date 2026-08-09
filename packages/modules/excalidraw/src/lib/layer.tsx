@@ -657,6 +657,13 @@ export const ExcalidrawLayerComponent: FC<{
   /** Arrows already turned into edges, so one is not sent twice. */
   const sentEdges = useRef<Set<string>>(new Set());
 
+  /**
+   * The nodes the last projection actually drew.
+   *
+   * Guards the only destructive path this layer has. See where it is filled.
+   */
+  const projectedNodeIds = useRef<Set<string>>(new Set());
+
   /** Where the projection last put each node — see the write-back below. */
   const projectedGeometry = useRef<
     Map<string, { x: number; y: number; width: number; height: number }>
@@ -924,6 +931,17 @@ export const ExcalidrawLayerComponent: FC<{
         ])
       );
 
+      // Exactly the nodes this projection put in the scene.
+      //
+      // The write-back consults it before deleting anything: `updateScene`
+      // replaces the element list, so a node missing from what *we* wrote
+      // comes back tombstoned on the next change — and that tombstone is
+      // ours, not a person reaching for the eraser. Read as an erasure, it
+      // deleted a real node from a real board. It did, once, on the test
+      // board, and the service behind it went on running with nothing left
+      // pointing at it.
+      projectedNodeIds.current = new Set(views.map((nv) => nv.id));
+
       api.updateScene({
         elements: byLayerOrder([...drawing, ...restored], stackRef.current),
       });
@@ -1133,6 +1151,12 @@ export const ExcalidrawLayerComponent: FC<{
             const nodeId = embeddedNodeId(element);
             if (!nodeId || !element.isDeleted) continue;
             if (!projectedGeometry.current.has(nodeId)) continue;
+
+            // Only a node the last projection actually drew. A tombstone for
+            // one it did not is the projection's own doing — an incomplete
+            // write, a graph view not loaded yet — and deleting the node
+            // because of it destroys work nobody asked to destroy.
+            if (!projectedNodeIds.current.has(nodeId)) continue;
 
             // Forgotten first, so the projection's next run does not read the
             // tombstone as a move and the delete is not sent twice.

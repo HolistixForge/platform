@@ -919,3 +919,67 @@ describe('ExcalidrawLayerComponent — layers', () => {
     ]);
   });
 });
+
+/**
+ * The one destructive path this layer has, and the way it went wrong.
+ *
+ * `updateScene` replaces the element list, so a node missing from a
+ * projection comes back tombstoned on the next change. Read as an erasure,
+ * that deleted a real node from a real board — and the service behind it went
+ * on running with nothing left pointing at it. The case where somebody
+ * actually reached for the eraser is covered above; this is the other one.
+ */
+describe('ExcalidrawLayerComponent — a tombstone the projection made itself', () => {
+  beforeEach(() => {
+    mockCapturedOnChange = null;
+    mockScene = [];
+    mockNodeViews = [];
+    mockGraphNodes = [];
+    mockEdges = [];
+    mockLayers = [];
+    mockRemote.clear();
+    mockDispatch.mockClear();
+  });
+
+  it('deletes nothing for a node the projection never drew', async () => {
+    jest.useFakeTimers();
+    // No views, so the projection draws no node — and any tombstone carrying
+    // a node id is therefore the projection's own doing.
+    mockNodeViews = [];
+    try {
+      await mount();
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      act(() => {
+        mockCapturedOnChange?.([
+          {
+            id: 'holistix-node-ghost',
+            version: 9,
+            type: 'embeddable',
+            x: 0,
+            y: 0,
+            isDeleted: true,
+            customData: {
+              holistixNodeId: 'ghost',
+              holistixViewId: 'view-1',
+            },
+          } as never,
+        ]);
+      });
+      await act(async () => {
+        jest.advanceTimersByTime(400);
+        await Promise.resolve();
+      });
+
+      expect(
+        mockDispatch.mock.calls
+          .map(([e]) => e)
+          .filter((e) => e?.type === 'core:delete-node')
+      ).toEqual([]);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+});
