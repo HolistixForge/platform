@@ -531,8 +531,12 @@ const WhiteboardWhiteboard = ({
               : LAYERS_PANEL_COLLAPSED_WIDTH,
             transition: 'width 120ms ease',
             background: 'var(--surface-900)',
-            border: '1px solid var(--color-border, #e5e7eb)',
-            borderRadius: 6,
+            // Docked, not floating. It was drawn as a card — a border on all
+            // four sides and rounded corners — against a board that has no
+            // cards in it, so the panel read as three vertical bands: its own
+            // edge, the collapse strip, and the rule between them. One
+            // hairline where it actually meets the board says the same thing.
+            borderRight: '1px solid var(--color-border-muted)',
             overflow: 'hidden',
             zIndex: 20,
             display: 'flex',
@@ -548,8 +552,8 @@ const WhiteboardWhiteboard = ({
               width: 24,
               border: 'none',
               background: 'transparent',
+              color: 'var(--color-text-faint)',
               cursor: 'pointer',
-              borderLeft: '1px solid var(--color-border, #e5e7eb)',
             }}
           >
             {showLayersPanel ? '<' : '>'}
