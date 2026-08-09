@@ -59,6 +59,7 @@ describe('the rail inside a space', () => {
     expect(railAt('/p/org-1/proj/editor')).toEqual([
       { title: 'organizations', href: '/' },
       { title: 'organization', href: '/org/org-uuid' },
+      { title: 'credentials', href: '/account/credentials' },
       { title: 'accesses', href: '/org/org-uuid/permissions' },
       { title: 'whiteboard', href: '/p/org-1/proj/editor' },
       { title: 'resources', href: '/p/org-1/proj/resources' },
@@ -71,6 +72,7 @@ describe('the rail inside a space', () => {
     expect(railAt('/p/org-1/proj/resources')).toEqual([
       { title: 'organizations', href: '/' },
       { title: 'organization', href: '/org/org-uuid' },
+      { title: 'credentials', href: '/account/credentials' },
       { title: 'accesses', href: '/org/org-uuid/permissions' },
       { title: 'whiteboard', href: '/p/org-1/proj/editor' },
       { title: 'resources', href: '/p/org-1/proj/resources' },
@@ -88,7 +90,7 @@ describe('the rail inside a space', () => {
     );
 
     expect(groups).toEqual([
-      ['organizations', 'organization', 'accesses'],
+      ['organizations', 'organization', 'credentials', 'accesses'],
       ['whiteboard', 'resources'],
     ]);
   });

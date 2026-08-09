@@ -62,6 +62,7 @@ describe('the rail outside a space', () => {
     expect(railAt('/org/org-uuid/permissions')).toEqual([
       { title: 'organizations', href: '/', off: false },
       { title: 'organization', href: '/org/org-uuid', off: false },
+      { title: 'credentials', href: '/account/credentials', off: false },
       { title: 'accesses', href: '/org/org-uuid/permissions', off: false },
       { title: 'whiteboard', href: '/p/org-1/proj/editor', off: false },
       { title: 'resources', href: '/p/org-1/proj/resources', off: false },
@@ -75,7 +76,7 @@ describe('the rail outside a space', () => {
 
     // The title carries the reason once the entry is out of reach — the
     // tooltip is the only room a 56px column has for one.
-    expect(rail.slice(3)).toEqual([
+    expect(rail.slice(4)).toEqual([
       {
         title: 'whiteboard — open a project first',
         href: undefined,
@@ -90,9 +91,10 @@ describe('the rail outside a space', () => {
     // wants to get back to the one they were in.
     rememberOrganization('org-remembered');
 
-    expect(railAt('/').slice(0, 3)).toEqual([
+    expect(railAt('/').slice(0, 4)).toEqual([
       { title: 'organizations', href: '/', off: false },
       { title: 'organization', href: '/org/org-remembered', off: false },
+      { title: 'credentials', href: '/account/credentials', off: false },
       {
         title: 'accesses',
         href: '/org/org-remembered/permissions',
@@ -102,8 +104,11 @@ describe('the rail outside a space', () => {
   });
 
   it('greys them for someone who has never opened one', () => {
-    expect(railAt('/').slice(1, 3)).toEqual([
+    expect(railAt('/').slice(1, 4)).toEqual([
       { title: 'organization — pick one first', href: undefined, off: true },
+      // The wallet is the person's, so it is live even here: nothing in the
+      // route could name it and nothing needs to.
+      { title: 'credentials', href: '/account/credentials', off: false },
       {
         title: 'accesses — pick an organization first',
         href: undefined,
@@ -131,9 +136,9 @@ describe('the rail outside a space', () => {
 
   it('is the same length wherever it is rendered', () => {
     // The whole reason entries are greyed rather than dropped.
-    expect(railAt('/')).toHaveLength(5);
-    expect(railAt('/org/org-uuid')).toHaveLength(5);
-    expect(railAt('/org/org-uuid/permissions')).toHaveLength(5);
+    expect(railAt('/')).toHaveLength(6);
+    expect(railAt('/org/org-uuid')).toHaveLength(6);
+    expect(railAt('/org/org-uuid/permissions')).toHaveLength(6);
   });
 
   it('separates the space from the organization, here too', () => {
@@ -142,7 +147,7 @@ describe('the rail outside a space', () => {
       (ul) => ul.querySelectorAll('li').length
     );
 
-    expect(sizes).toEqual([3, 2]);
+    expect(sizes).toEqual([4, 2]);
   });
 
   it('says why an entry is out of reach', () => {

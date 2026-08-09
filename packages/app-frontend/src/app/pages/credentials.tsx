@@ -21,6 +21,8 @@ import {
   TCreateCredentialRequest,
 } from '@holistix-forge/types';
 import { HeaderLogic } from '../header/header-logic';
+import { PageFrame } from './page-frame';
+import { OrganizationSidebar } from './organization/sidebar';
 
 type CredentialsPageView = 'list' | 'add' | 'edit';
 
@@ -137,96 +139,110 @@ export const CredentialsPage = () => {
   return (
     <>
       <HeaderLogic />
-      <div
-        style={{
-          maxWidth: '800px',
-          margin: '0 auto',
-          padding: '2rem 1rem',
-        }}
+      {/*
+        With the rail, like every other page. It is an account page and names
+        no organization, so the rail falls back to the last one visited — which
+        is what keeps a wallet from being a dead end.
+      */}
+      <PageFrame
+        rail="dashboard"
+        sidebar={(variant) => (
+          <OrganizationSidebar active="credentials" variant={variant} />
+        )}
       >
-        {view === 'list' && (
-          <CredentialsList
-            credentials={credentials || []}
-            credentialTypes={credentialTypes || []}
-            onAdd={handleAdd}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onShare={handleShare}
-            loading={isLoading}
-          />
-        )}
-
-        {(view === 'add' || view === 'edit') && (
-          <CredentialForm
-            types={credentialTypes || []}
-            initialType={selectedCredential?.credential_type}
-            onSubmit={handleSubmit}
-            onCancel={handleCancel}
-            isSubmitting={createMutation.isPending}
-          />
-        )}
-
-        {/* Delete Confirmation Dialog */}
-        <DialogControlled
-          open={deleteDialogOpen}
-          onOpenChange={setDeleteDialogOpen}
-          title="Delete Credential"
-          description={`Are you sure you want to delete "${credentialToDelete?.name}"? This action cannot be undone.`}
+        <div
+          style={{
+            maxWidth: '800px',
+            margin: '0 auto',
+            padding: '2rem 1rem',
+            height: '100%',
+            overflowY: 'auto',
+          }}
         >
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: '0.5rem',
-              marginTop: '1rem',
-            }}
-          >
-            <button
-              onClick={() => setDeleteDialogOpen(false)}
-              style={{
-                padding: '0.5rem 1rem',
-                background: 'transparent',
-                border: '1px solid var(--color-border)',
-                borderRadius: '6px',
-                color: 'var(--color-text-muted)',
-                cursor: 'pointer',
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={confirmDelete}
-              disabled={deleteMutation.isPending}
-              style={{
-                padding: '0.5rem 1rem',
-                background: 'var(--color-error)',
-                border: 'none',
-                borderRadius: 'var(--radius-sm)',
-                color: 'var(--color-text-on-color)',
-                cursor: deleteMutation.isPending ? 'not-allowed' : 'pointer',
-                opacity: deleteMutation.isPending ? 0.7 : 1,
-              }}
-            >
-              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-            </button>
-          </div>
-        </DialogControlled>
+          {view === 'list' && (
+            <CredentialsList
+              credentials={credentials || []}
+              credentialTypes={credentialTypes || []}
+              onAdd={handleAdd}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onShare={handleShare}
+              loading={isLoading}
+            />
+          )}
 
-        {/* Share Dialog */}
-        {shareDialogOpen && credentialToShare && (
-          <CredentialShareDialog
-            credentialId={credentialToShare.credential_id}
-            credentialName={credentialToShare.name}
-            shares={currentShares || []}
-            organizations={orgsForDialog}
-            projects={projectsForDialog}
-            onShare={handleShareSubmit}
-            onRevoke={handleRevokeShare}
-            onClose={closeShareDialog}
-            isLoading={orgsLoading || projectsLoading}
-          />
-        )}
-      </div>
+          {(view === 'add' || view === 'edit') && (
+            <CredentialForm
+              types={credentialTypes || []}
+              initialType={selectedCredential?.credential_type}
+              onSubmit={handleSubmit}
+              onCancel={handleCancel}
+              isSubmitting={createMutation.isPending}
+            />
+          )}
+
+          {/* Delete Confirmation Dialog */}
+          <DialogControlled
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            title="Delete Credential"
+            description={`Are you sure you want to delete "${credentialToDelete?.name}"? This action cannot be undone.`}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '0.5rem',
+                marginTop: '1rem',
+              }}
+            >
+              <button
+                onClick={() => setDeleteDialogOpen(false)}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: 'transparent',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: '6px',
+                  color: 'var(--color-text-muted)',
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleteMutation.isPending}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: 'var(--color-error)',
+                  border: 'none',
+                  borderRadius: 'var(--radius-sm)',
+                  color: 'var(--color-text-on-color)',
+                  cursor: deleteMutation.isPending ? 'not-allowed' : 'pointer',
+                  opacity: deleteMutation.isPending ? 0.7 : 1,
+                }}
+              >
+                {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </DialogControlled>
+
+          {/* Share Dialog */}
+          {shareDialogOpen && credentialToShare && (
+            <CredentialShareDialog
+              credentialId={credentialToShare.credential_id}
+              credentialName={credentialToShare.name}
+              shares={currentShares || []}
+              organizations={orgsForDialog}
+              projects={projectsForDialog}
+              onShare={handleShareSubmit}
+              onRevoke={handleRevokeShare}
+              onClose={closeShareDialog}
+              isLoading={orgsLoading || projectsLoading}
+            />
+          )}
+        </div>
+      </PageFrame>
     </>
   );
 };

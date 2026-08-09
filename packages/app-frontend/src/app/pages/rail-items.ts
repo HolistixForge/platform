@@ -43,6 +43,16 @@ export const railItems = ({
       label: organizationId ? 'organization' : 'organization — pick one first',
     },
     {
+      // Above the accesses, and never out of reach: a wallet belongs to the
+      // person, not to an organization, so there is nothing for the route to
+      // name and nothing to fall back to. It was a padlock in the header,
+      // where it sat beside the settings gear and read as one — a preference
+      // rather than a place.
+      title: 'credentials',
+      Icon: icons.Lock,
+      link: '/account/credentials',
+    },
+    {
       title: 'accesses',
       Icon: icons.Key,
       link: organizationId ? `/org/${organizationId}/permissions` : undefined,
