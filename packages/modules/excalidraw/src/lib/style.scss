@@ -3,6 +3,158 @@
   display: none;
 }
 
+// ---- Excalidraw's chrome, in Holistix's colours ---------------------------
+//
+// Excalidraw ships a light theme built for its own white canvas. Ours is a
+// dark board it floats over, so its toolbar, panels and dialogs arrived as
+// white slabs — the only bright thing on the screen, and reading as another
+// application rather than as part of this one.
+//
+// Retheming through its variables rather than by restyling its elements: the
+// names below are its public theming surface, while the class names under
+// them are not, and a rule written against `.App-toolbar__foo` breaks on an
+// upgrade with nothing to say so.
+//
+// Its own dark theme is not used, deliberately. `theme: 'dark'` works by
+// putting an invert filter over the canvas, which would flip every colour
+// anyone draws — pick white, get black — and undo the white default stroke
+// this layer sets. The chrome is dark; the canvas is left alone.
+.excalidraw-layer {
+  // Holistix's tokens, captured before entering Excalidraw's scope.
+  //
+  // Not a stylistic choice: Excalidraw defines `--color-selection` and
+  // `--color-success` on `.excalidraw` itself, so those names mean something
+  // else inside it. Read from out here, they are ours.
+  --hx-surface: var(--color-bg-surface);
+  --hx-elevated: var(--color-bg-elevated);
+  --hx-app: var(--color-bg-app);
+  --hx-input: var(--color-bg-input);
+  --hx-hover: var(--color-bg-hover);
+  --hx-text: var(--color-text);
+  --hx-text-muted: var(--color-text-muted);
+  --hx-text-faint: var(--color-text-faint);
+  --hx-on-color: var(--color-text-on-color);
+  --hx-border: var(--color-border);
+  --hx-border-muted: var(--color-border-muted);
+  --hx-accent: var(--color-accent);
+  --hx-accent-hover: var(--color-accent-hover);
+  --hx-accent-muted: var(--color-accent-muted);
+  --hx-accent-strong: var(--color-accent-strong);
+  --hx-danger: var(--color-error);
+  --hx-ok: var(--color-success);
+  --hx-link: var(--color-link);
+  --hx-shadow: var(--shadow-lg);
+
+  .excalidraw {
+    // Surfaces: islands, popups, dialogs, the sidebar.
+    --island-bg-color: var(--hx-elevated);
+    --default-bg-color: var(--hx-surface);
+    --popup-bg-color: var(--hx-elevated);
+    --popup-secondary-bg-color: var(--hx-surface);
+    --sidebar-bg-color: var(--hx-elevated);
+    --overlay-bg-color: var(--alpha-black-75);
+
+    // Excalidraw's own surface ramp, which its buttons and hovers read.
+    --color-surface-lowest: var(--hx-app);
+    --color-surface-low: var(--hx-surface);
+    --color-surface-mid: var(--hx-surface);
+    --color-surface-high: var(--hx-hover);
+    --color-surface-primary-container: var(--hx-accent-muted);
+    --color-on-primary-container: var(--hx-on-color);
+
+    // Text and icons. `--color-on-surface` is what `--icon-fill-color`
+    // resolves to, so every icon follows from it.
+    --text-primary-color: var(--hx-text);
+    --popup-text-color: var(--hx-text);
+    --popup-text-inverted-color: var(--hx-app);
+    --color-on-surface: var(--hx-text);
+    --color-muted: var(--hx-text-muted);
+    --color-muted-darker: var(--hx-text-faint);
+    --color-muted-darkest: var(--hx-text-faint);
+    --color-muted-background: var(--hx-surface);
+    --color-muted-background-darker: var(--hx-app);
+    --color-disabled: var(--hx-text-faint);
+    --keybinding-color: var(--hx-text-faint);
+    --link-color: var(--hx-link);
+
+    // Borders and separators.
+    --default-border-color: var(--hx-border);
+    --dialog-border-color: var(--hx-border);
+    --sidebar-border-color: var(--hx-border);
+    --color-border-outline: var(--hx-border);
+    --color-border-outline-variant: var(--hx-border-muted);
+    --input-border-color: var(--hx-border);
+
+    // Inputs.
+    --input-bg-color: var(--hx-input);
+    --input-hover-bg-color: var(--hx-hover);
+    --input-label-color: var(--hx-text-muted);
+    --placeholder: var(--hx-text-faint);
+
+    // The accent, which drives the selected tool, focus rings and links.
+    --color-primary: var(--hx-accent);
+    --color-primary-hover: var(--hx-accent-hover);
+    --color-primary-darker: var(--hx-accent-hover);
+    --color-primary-darkest: var(--hx-accent-strong);
+    --color-primary-light: var(--hx-accent-muted);
+    --color-primary-light-darker: var(--hx-accent-muted);
+    --color-brand-hover: var(--hx-accent-hover);
+    --color-brand-active: var(--hx-accent-strong);
+    --color-selection: var(--hx-accent);
+    --select-highlight-color: var(--hx-accent-strong);
+    --focus-highlight-color: var(--hx-accent-muted);
+
+    // Buttons.
+    --button-hover-bg: var(--hx-hover);
+    --button-active-bg: var(--hx-hover);
+    --button-active-border: var(--hx-accent-strong);
+    --button-destructive-bg-color: var(--hx-surface);
+    --button-destructive-color: var(--hx-danger);
+    --button-special-active-bg-color: var(--hx-surface);
+
+    // Status.
+    --color-danger: var(--hx-danger);
+    --color-danger-text: var(--hx-danger);
+    --color-success: var(--hx-ok);
+    --color-success-text: var(--hx-ok);
+
+    // Scrollbars, sliders, spinner.
+    --scrollbar-thumb: var(--hx-border);
+    --scrollbar-thumb-hover: var(--hx-text-faint);
+    --color-slider-track: var(--hx-surface);
+    --color-slider-thumb: var(--hx-accent);
+    --spinner-color: var(--hx-accent);
+
+    // Depth and type, so a panel sits in the page like ours do.
+    --shadow-island: var(--hx-shadow);
+    --ui-font: 'Roboto', sans-serif;
+  }
+
+  // The dark-mode entry in Excalidraw's menu, removed.
+  //
+  // It sets `theme: 'dark'`, which works by putting an invert filter over the
+  // canvas — every colour anyone drew comes out flipped, and the white
+  // default stroke this layer sets comes out black. And the layer re-applies
+  // `theme: 'light'` whenever the collaborator list changes, so the toggle
+  // would appear to work and then undo itself when someone joined.
+  //
+  // A control that lies is worse than one that is not there, and the chrome
+  // it was for is already dark. Hooked on the test id rather than a class
+  // because it is the only stable handle Excalidraw gives this item; if an
+  // upgrade drops it the entry comes back, which is visible rather than
+  // silent.
+  //
+  // `!important` because the rule it has to beat —
+  // `.excalidraw .dropdown-menu .dropdown-menu-item-base` — has exactly the
+  // same specificity and its stylesheet is loaded after this one, the layer
+  // importing Excalidraw's CSS on mount. Measured, not assumed: without it
+  // the entry stayed visible. The alternative is naming two more of their
+  // internal classes to outweigh it, which is a worse bet on an upgrade.
+  .excalidraw [data-testid='toggle-dark-mode'] {
+    display: none !important;
+  }
+}
+
 // Keep Excalidraw's own floating UI clear of the whiteboard layers panel,
 // following it as it expands and collapses rather than sitting under it.
 //
