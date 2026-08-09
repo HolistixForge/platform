@@ -1,4 +1,5 @@
-import { ProjectPageFrame } from '../project-page-frame';
+import { PageFrame } from '../../page-frame';
+import { ProjectSidebar } from '../sidebar';
 import { ResourcePage } from '../editor/resources-page';
 
 //
@@ -16,7 +17,12 @@ import { ResourcePage } from '../editor/resources-page';
  * grid, and content wants a column beside the rail rather than under it.
  */
 export const ProjectResourcesPage = () => (
-  <ProjectPageFrame rail="dashboard" active="resources">
+  <PageFrame
+    rail="dashboard"
+    sidebar={(variant) => (
+      <ProjectSidebar active="resources" variant={variant} />
+    )}
+  >
     <ResourcePage />
-  </ProjectPageFrame>
+  </PageFrame>
 );

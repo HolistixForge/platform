@@ -1,11 +1,11 @@
 import { CSSProperties, ReactNode } from 'react';
 
-import { ProjectSidebar } from './sidebar';
+import type { SidebarVariant } from '@holistix-forge/ui-base';
 
 //
 
 /**
- * A project page, with the rail beside it or over it.
+ * A page, with its rail beside it or over it.
  *
  * Both halves of one decision, kept in one place so they cannot disagree: the
  * shape the rail takes, and whether the page gives up a column for it. A bar
@@ -24,14 +24,19 @@ import { ProjectSidebar } from './sidebar';
  * keeps it usable on a surface that has none. Custom properties inherit, so
  * the rail picks this up through the tree despite being fixed-positioned, and
  * it transitions `left` over the same 120ms the panel animates.
+ *
+ * Which rail is the caller's business — a project has places an organization
+ * page cannot reach — but the placement is not, or the two would drift. So
+ * the rail arrives as a function of the shape rather than as an element:
+ * there is then no way to hand it a variant the frame did not choose.
  */
-export const ProjectPageFrame = ({
+export const PageFrame = ({
   rail,
-  active,
+  sidebar,
   children,
 }: {
-  rail: 'island' | 'dashboard';
-  active: string;
+  rail: SidebarVariant;
+  sidebar: (variant: SidebarVariant) => ReactNode;
   children: ReactNode;
 }) => {
   const placement =
@@ -55,7 +60,7 @@ export const ProjectPageFrame = ({
       }
     >
       {children}
-      <ProjectSidebar active={active} variant={rail} />
+      {sidebar(rail)}
     </div>
   );
 };

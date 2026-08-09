@@ -5,13 +5,17 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { HeaderLogic } from './header-logic';
 
 /**
- * The permissions key is the only way into the permissions page from the
- * chrome. It was passed by the project header and by nothing else, so it
- * disappeared on the organization dashboard — and on the permissions page
- * itself, which is reached through it.
+ * The header offers no way into permissions, anywhere.
  *
- * Everything below the link is mocked out: this is about which pages offer the
- * entry, not about the header's rendering.
+ * It used to, and the key moved to the rail — which every page has now,
+ * organization pages included. Two doors to the same room on one screen is
+ * one more than there should be, and the header is the wrong one: it is
+ * identical on every page, so a question about *this* organization's people
+ * read there as a global setting.
+ *
+ * Asserted rather than assumed, because the way this regresses is by someone
+ * passing `permissionsLink` again to fix a page that looks bare — and the
+ * duplicate is easy to miss, the two entries being far apart on screen.
  */
 jest.mock('@holistix-forge/frontend-data', () => ({
   useCurrentUser: () => ({
@@ -47,29 +51,26 @@ const renderAt = (path: string, pattern: string) =>
   );
 
 describe('HeaderLogic permissions entry', () => {
-  it('offers the permissions key on an organization page', () => {
+  it('offers no permissions key on an organization page', () => {
     renderAt('/org/org-123', '/org/:organization_id');
 
     expect(screen.getByTestId('header')).toHaveAttribute(
       'data-permissions-link',
-      '/org/org-123/permissions'
+      ''
     );
   });
 
-  it('offers it on the permissions page itself', () => {
-    // Reached through the key. Without this the entry vanished exactly where
-    // the user had just used it.
+  it('offers none on the permissions page itself', () => {
+    // Where the rail is showing the entry, marked as the current one.
     renderAt('/org/org-123/permissions', '/org/:organization_id/permissions');
 
     expect(screen.getByTestId('header')).toHaveAttribute(
       'data-permissions-link',
-      '/org/org-123/permissions'
+      ''
     );
   });
 
-  it('offers nothing where the route names no organization', () => {
-    // An account page has no organization to point at. A link built anyway
-    // would read `/org/undefined/permissions`.
+  it('offers none where the route names no organization', () => {
     renderAt('/account/settings', '/account/settings');
 
     expect(screen.getByTestId('header')).toHaveAttribute(

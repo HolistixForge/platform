@@ -1,4 +1,5 @@
-import { ProjectPageFrame } from '../project-page-frame';
+import { PageFrame } from '../../page-frame';
+import { ProjectSidebar } from '../sidebar';
 import { EditorTabsSystemLogic, useActiveTab } from './tabs';
 
 //
@@ -13,11 +14,13 @@ export const EditorPage = () => {
   const onWhiteboard = payload?.type === 'node-editor';
 
   return (
-    <ProjectPageFrame
+    <PageFrame
       rail={onWhiteboard ? 'island' : 'dashboard'}
-      active="project-main"
+      sidebar={(variant) => (
+        <ProjectSidebar active="project-main" variant={variant} />
+      )}
     >
       <EditorTabsSystemLogic />
-    </ProjectPageFrame>
+    </PageFrame>
   );
 };

@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { PermissionsPage } from '@holistix-forge/ui-base';
 import { HeaderLogic } from '../../header/header-logic';
+import { PageFrame } from '../page-frame';
+import { OrganizationSidebar } from './sidebar';
 import {
   useQueryRoles,
   useQueryOrgMembers,
@@ -133,25 +135,33 @@ export const OrganizationPermissionsPage = () => {
   const members = membersQuery.data?.members || [];
 
   return (
-    // With the header, like every other page under `/org/:organization_id`.
-    // This one rendered none at all: the key in the header is the way in, and
-    // arriving here left no way back but the browser's own button.
+    // With the header, like every other page under `/org/:organization_id`,
+    // and with the rail — which is part of the interface rather than a feature
+    // of the project pages. Arriving here from a project used to leave the
+    // whole left column empty, which reads as chrome that failed to load.
     <div>
       <HeaderLogic />
-      <PermissionsPage
-        roles={roles}
-        rolesLoading={rolesQuery.isLoading}
-        members={members}
-        membersLoading={membersQuery.isLoading}
-        userRoles={userRolesMap}
-        userRolesLoading={false}
-        readonly={false}
-        onCreateRole={handleCreateRole}
-        onUpdateRole={handleUpdateRole}
-        onDeleteRole={handleDeleteRole}
-        onAssignRole={handleAssignRole}
-        onRemoveRole={handleRemoveRole}
-      />
+      <PageFrame
+        rail="dashboard"
+        sidebar={(variant) => (
+          <OrganizationSidebar active="accesses" variant={variant} />
+        )}
+      >
+        <PermissionsPage
+          roles={roles}
+          rolesLoading={rolesQuery.isLoading}
+          members={members}
+          membersLoading={membersQuery.isLoading}
+          userRoles={userRolesMap}
+          userRolesLoading={false}
+          readonly={false}
+          onCreateRole={handleCreateRole}
+          onUpdateRole={handleUpdateRole}
+          onDeleteRole={handleDeleteRole}
+          onAssignRole={handleAssignRole}
+          onRemoveRole={handleRemoveRole}
+        />
+      </PageFrame>
     </div>
   );
 };
