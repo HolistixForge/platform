@@ -39,7 +39,11 @@ import {
   sceneSignature,
   versionsById,
 } from './excalidraw-scene';
-import { EmbeddedNode } from './embedded-node';
+import {
+  EmbeddedNode,
+  EmbeddedNodeMeasure,
+  EMBED_MARGIN,
+} from './embedded-node';
 
 //
 
@@ -160,6 +164,31 @@ const NATIVE_SHAPES: Record<string, { type: string; roundness?: number }> = {
   square: { type: 'rectangle' },
   'round-rectangle': { type: 'rectangle', roundness: 3 },
 };
+
+/**
+ * The box the scene gives a node: the node's own size, plus the margin.
+ *
+ * The size is the node's, never the box's — the view's if it has one, the
+ * measured one otherwise, and 320x220 for the one frame before it has been
+ * drawn and can be measured. The margin is then added on every side, so it
+ * is room around the node rather than room taken out of it.
+ *
+ * Getting that the wrong way round is what this had to be rewritten for: with
+ * the margin subtracted from a box the user had dragged, a node they had just
+ * sized to fit came out clipped by exactly the margin.
+ *
+ * The default is why every card wider than 320 used to be cut off. The
+ * ReactFlow canvas sets no width at all on an unsized node and lets it take
+ * the room it needs; an element in a scene has to be given a box before
+ * anything can be drawn in it, and 320 was that box.
+ */
+export const nodeBoxSize = (
+  size: { width?: number; height?: number } | undefined,
+  measured: { width: number; height: number } | undefined
+): { width: number; height: number } => ({
+  width: (size?.width ?? measured?.width ?? 320) + 2 * EMBED_MARGIN,
+  height: (size?.height ?? measured?.height ?? 220) + 2 * EMBED_MARGIN,
+});
 
 /** The scene element that stands for a node, by the node's own id. */
 const elementIdForNode = (nodeId: string) => `holistix-node-${nodeId}`;
@@ -389,6 +418,46 @@ export const ExcalidrawLayerComponent: FC<{
   const latestNodeViews = useRef<TNodeView[]>(nodeViews);
   latestNodeViews.current = nodeViews;
 
+  /**
+   * How big each node turned out to be, once drawn.
+   *
+   * Only consulted for a node whose view carries no size — that is the case
+   * the scene cannot handle on its own, since an element needs a box before
+   * anything can be drawn in it while a DOM node simply takes the room it
+   * needs. Kept in a ref and paired with a counter: the projection reads the
+   * map, and the counter is what tells it to look again.
+   */
+  const measured = useRef(new Map<string, { width: number; height: number }>());
+  const [measureTick, setMeasureTick] = useState(0);
+
+  /**
+   * Debounced, because the first paint reports every node at once and each
+   * report would otherwise re-project the whole scene. One pixel of noise is
+   * ignored for the same reason — a card that reflows by a hair should not
+   * move the box around it.
+   */
+  const bumpMeasureTick = useMemo(
+    () => debounce(() => setMeasureTick((t) => t + 1), 120),
+    []
+  );
+
+  const reportSize = useCallback(
+    (nodeId: string, size: { width: number; height: number }) => {
+      const known = measured.current.get(nodeId);
+      if (
+        known &&
+        Math.abs(known.width - size.width) < 2 &&
+        Math.abs(known.height - size.height) < 2
+      )
+        return;
+      measured.current.set(nodeId, size);
+      bumpMeasureTick();
+    },
+    [bumpMeasureTick]
+  );
+
+  useEffect(() => () => bumpMeasureTick.cancel(), [bumpMeasureTick]);
+
   /** Rebuilt whenever a node moves, is added, removed or changes shape. */
   const nodeSignature = useMemo(
     () =>
@@ -467,8 +536,7 @@ export const ExcalidrawLayerComponent: FC<{
           const common = {
             x: nv.position.x,
             y: nv.position.y,
-            width: nv.size?.width ?? 320,
-            height: nv.size?.height ?? 220,
+            ...nodeBoxSize(nv.size, measured.current.get(nv.id)),
             customData: { holistixNodeId: nv.id, holistixViewId: viewId },
           };
 
@@ -592,14 +660,18 @@ export const ExcalidrawLayerComponent: FC<{
       // What the graph says each node's box is. The write-back compares the
       // scene against this: without it, projecting a position would read back
       // as a move and be dispatched straight back to the graph.
+      // The same box the projection just drew, and not the view's size: they
+      // differ by the margin, and by the whole of it for a node that has
+      // never been sized. Read from the view alone, growing a box to fit its
+      // node came back as a resize the user never made — and was written to
+      // the graph as one.
       projectedGeometry.current = new Map(
         views.map((nv) => [
           nv.id,
           {
             x: nv.position.x,
             y: nv.position.y,
-            width: nv.size?.width ?? 320,
-            height: nv.size?.height ?? 220,
+            ...nodeBoxSize(nv.size, measured.current.get(nv.id)),
           },
         ])
       );
@@ -613,7 +685,7 @@ export const ExcalidrawLayerComponent: FC<{
     // Keyed on the signature alone. `nodeViews` is a fresh array on every
     // shared-data change and this effect causes one, so depending on it is a
     // loop — it froze the tab. The signature is what says a node moved.
-  }, [active, nodeSignature, viewId, apiReady]);
+  }, [active, nodeSignature, viewId, apiReady, measureTick]);
 
   // Pull remote changes into the scene.
   //
@@ -822,11 +894,18 @@ export const ExcalidrawLayerComponent: FC<{
               });
             }
             if (resized) {
+              // The margin comes back off: what the graph stores is the
+              // node's size, and the box the user dragged is that plus the
+              // margin. Stored as the box, the next projection would add the
+              // margin again and the node would grow by 16px per resize.
               await dispatcher.dispatch({
                 type: 'whiteboard:resize-node',
                 viewId,
                 nid: nodeId,
-                size: { width: element.width, height: element.height },
+                size: {
+                  width: Math.max(1, element.width - 2 * EMBED_MARGIN),
+                  height: Math.max(1, element.height - 2 * EMBED_MARGIN),
+                },
               });
             }
           }
@@ -959,42 +1038,50 @@ export const ExcalidrawLayerComponent: FC<{
       className="excalidraw-layer"
       style={{ position: 'absolute', inset: 0 }}
     >
-      <Excalidraw
-        excalidrawAPI={(api: ExcalidrawAPI) => {
-          apiRef.current = api;
-          setApiReady(true);
-        }}
-        initialData={{
-          appState: {
-            ...itemDefaults,
-            ...ownedAppState,
-            ...toExcalidrawViewport(initialVp),
-          },
-          elements: structuredClone(
-            readDrawingElements(sharedData, drawingId)
-          ) as unknown as OrderedExcalidrawElement[],
-        }}
-        onChange={handleChange}
-        onScrollChange={handleScrollChange}
-        // Module constants, never inline arrows: a fresh identity per render
-        // sends Excalidraw into a re-render loop through its own ref
-        // callbacks — React error #185 — before an embeddable even exists.
-        validateEmbeddable={validateEmbeddable}
-        renderEmbeddable={renderNode}
-        UIOptions={{
-          canvasActions: {
-            loadScene: false,
-            saveToActiveFile: false,
-            export: false,
-            saveAsImage: false,
-            changeViewBackgroundColor: false,
-            clearCanvas: false,
-          },
-          tools: {
-            image: false,
-          },
-        }}
-      />
+      {/*
+        Every node Excalidraw draws is rendered inside this, so it can report
+        how big it turned out to be. Excalidraw renders `renderEmbeddable`'s
+        output inside its own tree, which is inside this one — the same reason
+        a node can read the board's mode from here.
+      */}
+      <EmbeddedNodeMeasure value={reportSize}>
+        <Excalidraw
+          excalidrawAPI={(api: ExcalidrawAPI) => {
+            apiRef.current = api;
+            setApiReady(true);
+          }}
+          initialData={{
+            appState: {
+              ...itemDefaults,
+              ...ownedAppState,
+              ...toExcalidrawViewport(initialVp),
+            },
+            elements: structuredClone(
+              readDrawingElements(sharedData, drawingId)
+            ) as unknown as OrderedExcalidrawElement[],
+          }}
+          onChange={handleChange}
+          onScrollChange={handleScrollChange}
+          // Module constants, never inline arrows: a fresh identity per render
+          // sends Excalidraw into a re-render loop through its own ref
+          // callbacks — React error #185 — before an embeddable even exists.
+          validateEmbeddable={validateEmbeddable}
+          renderEmbeddable={renderNode}
+          UIOptions={{
+            canvasActions: {
+              loadScene: false,
+              saveToActiveFile: false,
+              export: false,
+              saveAsImage: false,
+              changeViewBackgroundColor: false,
+              clearCanvas: false,
+            },
+            tools: {
+              image: false,
+            },
+          }}
+        />
+      </EmbeddedNodeMeasure>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, createContext, useContext, useLayoutEffect, useRef } from 'react';
 
 import {
   EmbeddedNodeContext,
@@ -57,6 +57,38 @@ export const nodePointerEvents = (
 //
 
 /**
+ * Room between the node and the edge of the box that holds it.
+ *
+ * Excalidraw draws the embeddable's own border on that edge, so a node laid
+ * out flush against it reads as clipped even when it is not. Eight pixels is
+ * enough to see the border as a border.
+ */
+export const EMBED_MARGIN = 8;
+
+/**
+ * How a node tells the layer how big it actually is.
+ *
+ * A node that has never been resized has no size in its view, and on the
+ * ReactFlow canvas that means "size yourself" — the wrapper sets no width or
+ * height at all and the card comes out at its natural size. The scene has no
+ * such thing: an element needs a box before it can be drawn, so the projection
+ * used 320x220 for want of anything better and every card wider than that was
+ * cut off.
+ *
+ * The box is therefore measured from the node itself. This is only a
+ * fallback: a view that carries a size carries the user's own choice, and
+ * that is left alone.
+ */
+type TReportSize = (
+  nodeId: string,
+  size: { width: number; height: number }
+) => void;
+
+const measureContext = createContext<TReportSize | null>(null);
+
+export const EmbeddedNodeMeasure = measureContext.Provider;
+
+/**
  * A Holistix node, rendered inside the Excalidraw scene.
  *
  * The element in the scene carries nothing but the node's id: the node itself
@@ -78,6 +110,47 @@ export const EmbeddedNode: FC<{ nodeId: string; viewId: string }> = ({
   ) as TGraphNode<never> | undefined;
 
   const mode = useWhiteboardMode();
+
+  const report = useContext(measureContext);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * The node's own size, reported up so the box can be made to fit it.
+   *
+   * `scrollWidth` rather than the bounding rect: the box clips, so the rect
+   * only ever says how big the box is, while the scroll size says how big the
+   * content wanted to be. Read before paint, so the first projection after it
+   * is the only correction anyone sees.
+   *
+   * The observer watches the node's own root, not this wrapper — the wrapper
+   * is pinned to the box and never changes size, so watching it would catch
+   * the first layout and nothing after it. A card that grows a row later has
+   * to widen the box it sits in.
+   */
+  useLayoutEffect(() => {
+    const el = contentRef.current;
+    if (!el || !report) return;
+
+    const send = () => {
+      const width = el.scrollWidth;
+      const height = el.scrollHeight;
+      // Zero means it has not been laid out yet; reporting it would shrink
+      // the box to nothing and take the node off screen with it.
+      if (width > 0 && height > 0) report(nodeId, { width, height });
+    };
+
+    send();
+
+    // jsdom has no ResizeObserver, and neither does any environment where
+    // nothing is being laid out. The one measurement above is the whole of
+    // the behaviour there; watching for later changes is the extra.
+    if (typeof ResizeObserver === 'undefined') return;
+
+    const observer = new ResizeObserver(send);
+    observer.observe(el);
+    if (el.firstElementChild) observer.observe(el.firstElementChild);
+    return () => observer.disconnect();
+  }, [nodeId, report]);
 
   const nodeView = useLocalSharedData<TWhiteboardSharedData>(
     ['whiteboard:graphViews'],
@@ -137,10 +210,16 @@ export const EmbeddedNode: FC<{ nodeId: string; viewId: string }> = ({
           width: '100%',
           height: '100%',
           overflow: 'hidden',
+          // The margin is padding here, so the box the projection sizes and
+          // the space the node is laid out in differ by exactly it.
+          padding: EMBED_MARGIN,
+          boxSizing: 'border-box',
           pointerEvents: nodePointerEvents(node.type, mode),
         }}
       >
-        <NodeComponent node={node} />
+        <div ref={contentRef} style={{ width: '100%', height: '100%' }}>
+          <NodeComponent node={node} />
+        </div>
       </div>
     </EmbeddedNodeContext>
   );

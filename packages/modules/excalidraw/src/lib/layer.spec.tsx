@@ -16,7 +16,7 @@
  */
 import { render, act } from '@testing-library/react';
 
-import { ExcalidrawLayerComponent, ownedAppState } from './layer';
+import { ExcalidrawLayerComponent, ownedAppState, nodeBoxSize } from './layer';
 
 //
 
@@ -735,5 +735,63 @@ describe('ExcalidrawLayerComponent', () => {
       expect(ownedAppState).not.toHaveProperty('currentItemStrokeColor');
       expect(ownedAppState).not.toHaveProperty('currentItemBackgroundColor');
     });
+  });
+});
+
+//
+
+describe('the box the scene gives a node', () => {
+  it('adds the margin around the size the user chose', () => {
+    // The margin is room around the node, not room taken out of it. Taken
+    // out, a node the user had just dragged to fit came back clipped by
+    // exactly the margin.
+    expect(nodeBoxSize({ width: 500, height: 300 }, undefined)).toEqual({
+      width: 516,
+      height: 316,
+    });
+  });
+
+  it('prefers the size the user chose over what the node measured', () => {
+    expect(
+      nodeBoxSize({ width: 500, height: 300 }, { width: 400, height: 260 })
+    ).toEqual({ width: 516, height: 316 });
+  });
+
+  it('fits an unsized node to itself, with room on every side', () => {
+    // The bug this fixes: a card 400 wide was drawn in a 320 box and cut off,
+    // because the ReactFlow canvas sets no width on an unsized node and lets
+    // it take the room it needs, while a scene element has to be given a box.
+    expect(nodeBoxSize(undefined, { width: 400, height: 260 })).toEqual({
+      width: 416,
+      height: 276,
+    });
+  });
+
+  it('falls back to a default until the node has been drawn once', () => {
+    // Nothing to measure before the first paint. One frame at the wrong size
+    // is unavoidable; staying there was the defect.
+    expect(nodeBoxSize(undefined, undefined)).toEqual({
+      width: 336,
+      height: 236,
+    });
+  });
+
+  it('takes each dimension from wherever it is known', () => {
+    // A view can carry one and not the other, and the half that is missing
+    // should still fit the node rather than fall to the default.
+    expect(nodeBoxSize({ width: 500 }, { width: 400, height: 260 })).toEqual({
+      width: 516,
+      height: 276,
+    });
+  });
+
+  it('gives back the box it was handed, so a resize settles', () => {
+    // The write-back stores `box - 2 * margin` and this adds it again. If the
+    // two disagreed, every resize would grow the node by the difference and
+    // keep growing it.
+    const box = nodeBoxSize({ width: 500, height: 300 }, undefined);
+    const stored = { width: box.width - 16, height: box.height - 16 };
+
+    expect(nodeBoxSize(stored, undefined)).toEqual(box);
   });
 });
