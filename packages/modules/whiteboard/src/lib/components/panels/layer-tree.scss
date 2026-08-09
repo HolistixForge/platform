@@ -117,3 +117,52 @@
   font-size: var(--font-size-2xs);
   opacity: 0.7;
 }
+
+/* ---- rearranging ---------------------------------------------------------- */
+
+/* The row being carried. Faded rather than removed, so the list does not
+   collapse under the cursor and change what is where mid-drag. */
+.layer-tree__row[data-dragging] {
+  opacity: 0.4;
+}
+
+/* Where it would land. A line rather than a fill: a fill reads as "selected",
+   which is a different thing and is already spoken for. */
+.layer-tree__row[data-over] {
+  box-shadow: inset 0 2px 0 0 var(--color-accent-strong);
+}
+
+/* ---- the panel's own header ---------------------------------------------- */
+
+.layer-tree-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-4);
+}
+
+.layer-tree-head__title {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-faint);
+}
+
+.layer-tree-head__add {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-lg);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.layer-tree-head__add:hover {
+  background-color: var(--color-bg-hover);
+  color: var(--color-text);
+}

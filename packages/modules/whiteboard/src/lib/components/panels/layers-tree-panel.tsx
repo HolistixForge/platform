@@ -25,7 +25,8 @@ import { LayerTree } from './layer-tree';
  * most of its time listing things nobody could touch.
  */
 export const LayersTreePanel: FC<{ viewId: string }> = ({ viewId }) => {
-  const { activeLayerId, activateLayer, treeCollection } = useLayerContext();
+  const { activeLayerId, activateLayer, treeCollection, layerActions } =
+    useLayerContext();
 
   const { awareness } = useAwareness();
   const selections = useAwarenessSelections();
@@ -49,19 +50,41 @@ export const LayersTreePanel: FC<{ viewId: string }> = ({ viewId }) => {
 
   if (!treeCollection) return null;
 
+  /**
+   * The one provider that owns a stack, today.
+   *
+   * Its verbs arrive with its layers rather than being reached for, so this
+   * panel never learns a provider's vocabulary — it only asks whether anyone
+   * offered a way to add, and shows the control if so. No offer, no control:
+   * a `+` that does nothing is worse than no `+`.
+   */
+  const stacked = Object.entries(layerActions ?? {}).find(
+    ([, actions]) => actions?.addLayer || actions?.reorderLayers
+  );
+  const [providerId, actions] = stacked ?? [];
+
+  /** The panel's ids carry their provider; the provider's verbs do not. */
+  const bare = (id: string) =>
+    providerId && id.startsWith(`${providerId}:`)
+      ? id.slice(providerId.length + 1)
+      : id;
+
   return (
     <div style={{ padding: 'var(--spacing-5)' }}>
-      <h3
-        style={{
-          margin: '0 0 var(--spacing-4)',
-          fontSize: 'var(--font-size-sm)',
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-          color: 'var(--color-text-faint)',
-        }}
-      >
-        Layers
-      </h3>
+      <div className="layer-tree-head">
+        <h3 className="layer-tree-head__title">Layers</h3>
+        {actions?.addLayer && (
+          <button
+            type="button"
+            className="layer-tree-head__add"
+            title="New layer"
+            aria-label="New layer"
+            onClick={() => actions.addLayer?.()}
+          >
+            +
+          </button>
+        )}
+      </div>
 
       <LayerTree
         collection={treeCollection}
@@ -70,6 +93,14 @@ export const LayersTreePanel: FC<{ viewId: string }> = ({ viewId }) => {
         onActivateLayer={activateLayer}
         onSelect={(item) =>
           awareness.emitSelectionAwareness({ nodes: [item.id], viewId })
+        }
+        onReorderLayers={
+          actions?.reorderLayers
+            ? (frontToBack) =>
+                // Flipped here, where both facts are known: the panel shows
+                // the stack front-first and the scene is painted back-first.
+                actions.reorderLayers?.([...frontToBack].reverse().map(bare))
+            : undefined
         }
       />
     </div>

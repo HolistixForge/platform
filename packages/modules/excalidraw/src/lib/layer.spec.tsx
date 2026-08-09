@@ -699,6 +699,11 @@ describe('ExcalidrawLayerComponent', () => {
     await mount();
     expect(mockCapturedOnChange).toBeTruthy();
 
+    // Counted from after the mount, which publishes the stack once on its
+    // own — a layer created in the panel has to reach it without waiting for
+    // the next stroke. What is under test is the scene, so the baseline is
+    // taken and the deltas are what matter.
+    const before = mockUpdateLayerTrees.mock.calls.length;
     const scene = [element('a', 1)];
 
     // Three calls, one scene. Excalidraw really does this: any appState change
@@ -709,29 +714,31 @@ describe('ExcalidrawLayerComponent', () => {
       mockCapturedOnChange?.(scene);
     });
 
-    expect(mockUpdateLayerTrees).toHaveBeenCalledTimes(1);
+    expect(mockUpdateLayerTrees.mock.calls.length - before).toBe(1);
   });
 
   it('reports again once an element actually changes', async () => {
     await mount();
+    const before = mockUpdateLayerTrees.mock.calls.length;
 
     await act(async () => {
       mockCapturedOnChange?.([element('a', 1)]);
       mockCapturedOnChange?.([element('a', 2)]);
     });
 
-    expect(mockUpdateLayerTrees).toHaveBeenCalledTimes(2);
+    expect(mockUpdateLayerTrees.mock.calls.length - before).toBe(2);
   });
 
   it('reports again when an element is deleted', async () => {
     await mount();
+    const before = mockUpdateLayerTrees.mock.calls.length;
 
     await act(async () => {
       mockCapturedOnChange?.([element('a', 1)]);
       mockCapturedOnChange?.([{ ...element('a', 1), isDeleted: true }]);
     });
 
-    expect(mockUpdateLayerTrees).toHaveBeenCalledTimes(2);
+    expect(mockUpdateLayerTrees.mock.calls.length - before).toBe(2);
   });
 
   //

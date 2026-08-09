@@ -59,6 +59,7 @@ import {
   TLayerTreeItem,
   TLayerTreeCollection,
   TLayerTreeData,
+  TLayerActions,
 } from '../layer-tree-types';
 import { useModuleExports } from '@holistix-forge/module/frontend';
 
@@ -374,10 +375,27 @@ const WhiteboardWhiteboard = ({
    * `providerId` prefixes the ids it publishes, so two providers cannot
    * collide on a name and the panel can still tell which one a row came from.
    */
+  const [layerActions, setLayerActions] = useState<
+    Record<string, TLayerActions>
+  >({});
+
   const handleUpdateLayerTrees = useCallback(
-    (providerId: string, layers: TLayerTreeData[]) => {
+    (providerId: string, layers: TLayerTreeData[], actions?: TLayerActions) => {
+      // Kept out of the tree state on purpose: the actions are new closures on
+      // every render of the provider, so folding them into the collection
+      // would make it change identity every frame and re-render every
+      // consumer — the loop this file has a guard against three lines down.
+      setLayerActions((prev) =>
+        prev[providerId] === actions
+          ? prev
+          : { ...prev, [providerId]: actions ?? {} }
+      );
       setTreeCollection((prev) => {
-        const mine = (id: string) => id.startsWith(`${providerId}:`);
+        // The provider's own entries, *and* the placeholder seeded for it
+        // before it had spoken. Left in, the panel showed the placeholder and
+        // the real first layer as two rows with the same name.
+        const mine = (id: string) =>
+          id === providerId || id.startsWith(`${providerId}:`);
         const others = prev.layers.filter((l) => !mine(l.layerId));
         const next = [
           ...others,
@@ -490,6 +508,7 @@ const WhiteboardWhiteboard = ({
         onTreeOperation: handleTreeOperation,
         updateLayerTree: handleUpdateLayerTree,
         updateLayerTrees: handleUpdateLayerTrees,
+        layerActions,
       }}
     >
       <div style={{ display: 'flex', height: '100%', position: 'relative' }}>

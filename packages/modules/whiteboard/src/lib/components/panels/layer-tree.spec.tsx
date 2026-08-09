@@ -214,3 +214,85 @@ describe('LayerTree', () => {
     expect(container.querySelectorAll('li')).toHaveLength(1);
   });
 });
+
+/**
+ * Rearranging the stack.
+ *
+ * The panel shows layers front-first, which is how every drawing tool shows
+ * them and how the eye reads a board. The scene is painted the other way
+ * round. That flip is not this component's business — it hands back the order
+ * it was showing, and whoever knows about painting turns it over.
+ */
+describe('LayerTree — dragging a layer', () => {
+  const stacked: TLayerTreeCollection = {
+    layers: [
+      { layerId: 'front', title: 'Front', items: [node('f')] },
+      { layerId: 'middle', title: 'Middle', items: [] },
+      { layerId: 'back', title: 'Back', items: [node('b')] },
+    ],
+  };
+
+  const dragTo = (from: string, to: string) => {
+    const onReorderLayers = jest.fn();
+    const { getByTitle } = render(
+      <LayerTree collection={stacked} onReorderLayers={onReorderLayers} />
+    );
+
+    fireEvent.dragStart(getByTitle(from));
+    fireEvent.dragOver(getByTitle(to));
+    fireEvent.drop(getByTitle(to));
+
+    return onReorderLayers;
+  };
+
+  it('hands back the stack as the panel was showing it', () => {
+    expect(dragTo('Back', 'Front')).toHaveBeenCalledWith([
+      'back',
+      'front',
+      'middle',
+    ]);
+  });
+
+  it('moves one down as well as up', () => {
+    expect(dragTo('Front', 'Back')).toHaveBeenCalledWith([
+      'middle',
+      'back',
+      'front',
+    ]);
+  });
+
+  it('says nothing when a layer is dropped on itself', () => {
+    expect(dragTo('Middle', 'Middle')).not.toHaveBeenCalled();
+  });
+
+  it('lifts only layers, never their contents', () => {
+    // A row that lifts under the cursor and goes nowhere is a worse answer
+    // than one that does not lift.
+    const { getByTitle } = render(
+      <LayerTree collection={stacked} onReorderLayers={jest.fn()} />
+    );
+
+    expect(getByTitle('Front').getAttribute('draggable')).toBe('true');
+    expect(getByTitle('f').getAttribute('draggable')).toBe('false');
+  });
+
+  it('lifts nothing at all when nobody is listening', () => {
+    const { getByTitle } = render(<LayerTree collection={stacked} />);
+
+    expect(getByTitle('Front').getAttribute('draggable')).toBe('false');
+  });
+
+  it('marks where a row would land, and marks it as a line', () => {
+    // Not as a fill: a fill reads as "selected", which is a different thing
+    // and is already spoken for.
+    const { getByTitle } = render(
+      <LayerTree collection={stacked} onReorderLayers={jest.fn()} />
+    );
+
+    fireEvent.dragStart(getByTitle('Back'));
+    fireEvent.dragOver(getByTitle('Front'));
+
+    expect(getByTitle('Front').getAttribute('data-over')).toBe('true');
+    expect(getByTitle('Back').getAttribute('data-dragging')).toBe('true');
+  });
+});

@@ -458,6 +458,38 @@ export const ExcalidrawLayerComponent: FC<{
   const activeLayer =
     stack.find((l) => l.id === activeLayerId) ?? stack[stack.length - 1];
 
+  /**
+   * The two verbs the panel is allowed to use on this stack.
+   *
+   * Published with the stack rather than reached for: the panel draws layers
+   * and does not know how one is made, and a panel that dispatched
+   * `excalidraw:new-layer` itself would know one provider by name.
+   *
+   * In a ref because they are new closures on every render, and the panel
+   * stores what it is given — handing it a fresh object each frame would
+   * re-render every consumer of the layer context.
+   */
+  const layerActionsRef = useRef({
+    addLayer: () =>
+      dispatcher.dispatch({
+        type: 'excalidraw:new-layer',
+        drawingId: viewId,
+        // Minted here so a stroke can land on it in the same breath, rather
+        // than drawing into nowhere while waiting to be told its name.
+        layerId: `layer-${Date.now().toString(36)}`,
+        title: `Layer ${stackRef.current.length + 1}`,
+      }),
+    reorderLayers: (layerIds: string[]) =>
+      dispatcher.dispatch({
+        type: 'excalidraw:reorder-layers',
+        drawingId: viewId,
+        layerIds,
+      }),
+  });
+
+  /** What the stack is, as a string, so an effect can depend on it. */
+  const stackSignature = stack.map((l) => `${l.id}:${l.title}`).join('|');
+
   /** The stack, read from inside handlers that must not depend on it. */
   const stackRef = useRef<TExcalidrawLayer[]>([]);
   stackRef.current = stack;
@@ -481,8 +513,50 @@ export const ExcalidrawLayerComponent: FC<{
    * of the stack whether or not the bottom has a name yet. Naming it is what
    * gives the panel something to list and the next stroke somewhere to go.
    */
+  /**
+   * The rows the scene last produced, kept so the stack can be republished
+   * without waiting for the next stroke.
+   */
+  const itemsByLayer = useRef<Map<string, TLayerTreeItem[]>>(new Map());
+
+  /**
+   * The panel's section: one entry per layer, front of the stack first.
+   *
+   * Front first because a layers panel is read top-down as the eye reads the
+   * board front-to-back — the convention every drawing tool shares.
+   */
+  const publishLayers = useCallback(() => {
+    updateLayerTrees?.(
+      'excalidraw',
+      [...stackRef.current].reverse().map((layer) => ({
+        layerId: layer.id,
+        title: layer.title,
+        items: itemsByLayer.current.get(layer.id) ?? [],
+      })),
+      layerActionsRef.current
+    );
+  }, [updateLayerTrees]);
+
+  /**
+   * Publish when the stack changes, and not only when the scene does.
+   *
+   * Published from `onChange` alone, a layer someone had just created did not
+   * reach the panel until the next stroke — so the `+` looked like it had
+   * done nothing, which is how this was found.
+   */
+  useEffect(() => {
+    if (active) publishLayers();
+  }, [active, stackSignature, publishLayers]);
+
+  const askedForFirst = useRef<string | null>(null);
   useEffect(() => {
     if (!active || !layers || stack.length) return;
+    // Once per drawing, not once per render. The write takes a round trip
+    // through the gateway, and the effect runs again on every render until it
+    // lands — which sent the same request five times before the first reply.
+    if (askedForFirst.current === viewId) return;
+    askedForFirst.current = viewId;
+
     dispatcher.dispatch({
       type: 'excalidraw:new-layer',
       drawingId: viewId,
@@ -1281,14 +1355,8 @@ export const ExcalidrawLayerComponent: FC<{
           byLayer.set(id, kids);
         });
 
-        updateLayerTrees?.(
-          'excalidraw',
-          [...stackRef.current].reverse().map((layer) => ({
-            layerId: layer.id,
-            title: layer.title,
-            items: byLayer.get(layer.id) ?? [],
-          }))
-        );
+        itemsByLayer.current = byLayer;
+        publishLayers();
       }
 
       flush();

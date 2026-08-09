@@ -4,6 +4,7 @@ import {
   TLayerTreeOperation,
   TLayerTreeItem,
   TLayerTreeData,
+  TLayerActions,
 } from '../layer-tree-types';
 
 export type LayerContextValue = {
@@ -28,7 +29,13 @@ export type LayerContextValue = {
    * cannot express a removal — a layer someone deleted would stay in the
    * panel until a reload, because nothing said it was gone.
    */
-  updateLayerTrees?: (providerId: string, layers: TLayerTreeData[]) => void;
+  updateLayerTrees?: (
+    providerId: string,
+    layers: TLayerTreeData[],
+    actions?: TLayerActions
+  ) => void;
+  /** What each provider says can be done to its layers, by provider id. */
+  layerActions?: Record<string, TLayerActions>;
 };
 
 export const LayerContext = createContext<LayerContextValue | null>(null);

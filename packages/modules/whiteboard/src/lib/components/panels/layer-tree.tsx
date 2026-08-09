@@ -91,12 +91,22 @@ export const LayerTree: FC<{
   selectedIds?: string[];
   onSelect?: (item: TLayerTreeItem) => void;
   onActivateLayer?: (layerId: string) => void;
+  /**
+   * The stack, front to back, after a row was dropped somewhere else.
+   *
+   * Front to back because that is the order the panel shows and therefore the
+   * order the person was rearranging. Whoever receives it flips it — the
+   * scene is painted the other way round, and the flip belongs where that is
+   * known rather than here.
+   */
+  onReorderLayers?: (layerIds: string[]) => void;
 }> = ({
   collection,
   activeLayerId,
   selectedIds = [],
   onSelect,
   onActivateLayer,
+  onReorderLayers,
 }) => {
   /**
    * What is shut, rather than what is open.
@@ -109,6 +119,23 @@ export const LayerTree: FC<{
 
   const rows = useMemo(() => rowsOf(collection, closed), [collection, closed]);
   const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
+
+  /** The row being dragged, and the one it is currently over. */
+  const [dragging, setDragging] = useState<string | null>(null);
+  const [over, setOver] = useState<string | null>(null);
+
+  const drop = (targetId: string) => {
+    const order = collection.layers.map((l) => l.layerId);
+    const from = order.indexOf(dragging ?? '');
+    const to = order.indexOf(targetId);
+    setDragging(null);
+    setOver(null);
+    if (from < 0 || to < 0 || from === to) return;
+
+    const next = [...order];
+    next.splice(to, 0, ...next.splice(from, 1));
+    onReorderLayers?.(next);
+  };
 
   const toggle = (id: string) =>
     setClosed((prev) => {
@@ -151,6 +178,47 @@ export const LayerTree: FC<{
             onClick={() =>
               isLayer ? onActivateLayer?.(item.id) : onSelect?.(item)
             }
+            // Only layers are draggable, and only when someone is listening.
+            // A row that lifts under the cursor and then goes nowhere is a
+            // worse answer than one that does not lift.
+            draggable={isLayer && !!onReorderLayers}
+            onDragStart={
+              isLayer && onReorderLayers
+                ? (e) => {
+                    e.stopPropagation();
+                    setDragging(item.id);
+                  }
+                : undefined
+            }
+            onDragOver={
+              isLayer && onReorderLayers
+                ? (e) => {
+                    // Without this the drop never fires: the default action
+                    // for a dragover is to refuse the drop.
+                    e.preventDefault();
+                    if (dragging && dragging !== item.id) setOver(item.id);
+                  }
+                : undefined
+            }
+            onDragLeave={isLayer ? () => setOver(null) : undefined}
+            onDrop={
+              isLayer && onReorderLayers
+                ? (e) => {
+                    e.preventDefault();
+                    drop(item.id);
+                  }
+                : undefined
+            }
+            onDragEnd={
+              isLayer
+                ? () => {
+                    setDragging(null);
+                    setOver(null);
+                  }
+                : undefined
+            }
+            data-dragging={dragging === item.id || undefined}
+            data-over={over === item.id || undefined}
           >
             <button
               type="button"
