@@ -71,12 +71,44 @@ const ensureCss = async () => {
 
 //
 
-const appState = {
+/**
+ * The parts of Excalidraw's state this layer owns, and keeps owning.
+ *
+ * Re-applied over the live state whenever the collaborator list changes, so
+ * everything here is an invariant of the surface rather than a preference:
+ * the canvas is transparent because the board shows through it, and view mode
+ * is off because this is the board itself and not a preview of it.
+ *
+ * Nothing the user can change belongs here — it would be reset under them the
+ * next time someone joined.
+ */
+export const ownedAppState = {
   viewModeEnabled: false,
   zenModeEnabled: false,
   gridSize: undefined as number | undefined,
   theme: 'light' as const,
   viewBackgroundColor: 'transparent',
+};
+
+/**
+ * What a new element is drawn with, before anyone picks anything.
+ *
+ * Excalidraw's default stroke is `#1e1e1e`, a near-black meant for its own
+ * white canvas. Ours is transparent over a dark board, so the first stroke a
+ * user drew was invisible — not faint, invisible — and the natural reading is
+ * that the drawing tool is broken.
+ *
+ * Applied through `initialData` only, deliberately: it is a starting point,
+ * not an invariant. Put in `ownedAppState` above it would be pushed back over
+ * the user's own colour every time a collaborator joined or left.
+ *
+ * Excalidraw's five swatches are still its own, and white is not among them —
+ * a user who moves off white comes back through the custom colour field.
+ * `topPicks` is not a prop in 0.18.0, so that row cannot be replaced from
+ * here.
+ */
+const itemDefaults = {
+  currentItemStrokeColor: '#ffffff',
 };
 
 //
@@ -893,7 +925,7 @@ export const ExcalidrawLayerComponent: FC<{
       apiRef.current.updateScene({
         appState: {
           ...apiRef.current.getAppState(),
-          ...appState,
+          ...ownedAppState,
           collaborators,
         },
       });
@@ -933,7 +965,11 @@ export const ExcalidrawLayerComponent: FC<{
           setApiReady(true);
         }}
         initialData={{
-          appState: { ...appState, ...toExcalidrawViewport(initialVp) },
+          appState: {
+            ...itemDefaults,
+            ...ownedAppState,
+            ...toExcalidrawViewport(initialVp),
+          },
           elements: structuredClone(
             readDrawingElements(sharedData, drawingId)
           ) as unknown as OrderedExcalidrawElement[],

@@ -16,7 +16,7 @@
  */
 import { render, act } from '@testing-library/react';
 
-import { ExcalidrawLayerComponent } from './layer';
+import { ExcalidrawLayerComponent, ownedAppState } from './layer';
 
 //
 
@@ -37,8 +37,10 @@ jest.mock(
     Excalidraw: (props: {
       onChange?: (e: unknown[], appState?: unknown) => void;
       excalidrawAPI?: (api: unknown) => void;
+      initialData?: { appState?: Record<string, unknown> };
     }) => {
       mockCapturedOnChange = props.onChange ?? null;
+      mockInitialAppState = props.initialData?.appState ?? null;
       props.excalidrawAPI?.({
         updateScene: (s: { elements?: { id: string; version: number }[] }) => {
           mockUpdateSceneCalls++;
@@ -143,6 +145,9 @@ const mockCoreEdges = () => ({
 /** Counts the layer's scene writes, so a runaway shows up as a number. */
 let mockUpdateSceneCalls = 0;
 
+/** The state the layer starts Excalidraw with. */
+let mockInitialAppState: Record<string, unknown> | null = null;
+
 jest.mock('@holistix-forge/whiteboard/frontend', () => ({
   useLayerContext: () => mockLayerContext,
 }));
@@ -207,6 +212,7 @@ describe('ExcalidrawLayerComponent', () => {
     mockGraphNodes = [];
     mockEdges = [];
     mockUpdateSceneCalls = 0;
+    mockInitialAppState = null;
     mockRemote.clear();
     mockUpdateLayerTree.mockClear();
     mockDispatch.mockClear();
@@ -699,5 +705,35 @@ describe('ExcalidrawLayerComponent', () => {
     });
 
     expect(mockUpdateLayerTree).toHaveBeenCalledTimes(2);
+  });
+
+  //
+
+  describe('what a new element is drawn with', () => {
+    it('starts white, because the board underneath is dark', async () => {
+      // Excalidraw's own default is `#1e1e1e`, for its own white canvas. Ours
+      // is transparent over a dark board, so that default drew strokes nobody
+      // could see — which reads as a broken tool, not as a colour choice.
+      await mount();
+
+      expect(mockInitialAppState?.['currentItemStrokeColor']).toBe('#ffffff');
+    });
+
+    it('keeps the canvas transparent and the board in charge of the background', async () => {
+      await mount();
+
+      expect(mockInitialAppState?.['viewBackgroundColor']).toBe('transparent');
+      expect(mockInitialAppState?.['viewModeEnabled']).toBe(false);
+    });
+
+    it('never pushes a colour back over the one the user picked', () => {
+      // The layer re-applies the state it owns over the live one whenever the
+      // collaborator list changes. A default living in there would be pushed
+      // over the user's own colour every time someone joined or left the
+      // board — mid-stroke. So the invariant is about which of the two objects
+      // the default sits in, and that is what is asserted.
+      expect(ownedAppState).not.toHaveProperty('currentItemStrokeColor');
+      expect(ownedAppState).not.toHaveProperty('currentItemBackgroundColor');
+    });
   });
 });
