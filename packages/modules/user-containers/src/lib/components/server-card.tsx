@@ -58,6 +58,81 @@ const CARD_BOX = {
  *
  */
 
+/** What the light on a card can say. */
+export type TLedColor = 'red' | 'yellow' | 'blue' | 'green';
+
+/**
+ * The colour a service takes once it is up, by where it runs.
+ *
+ * The light is not only "is it alive" — it is also "where". Blue is a
+ * machine somebody owns; green is the platform. Everything ran blue before,
+ * so a service on the platform looked like a service on a laptop, and the one
+ * fact the card most needed to carry was the one it did not.
+ *
+ * A runner nobody here knows still lights blue rather than going dark: it is
+ * running, and that is the more important half.
+ */
+const RUNNER_LED: Record<string, TLedColor> = {
+  local: 'blue',
+  platform: 'green',
+};
+
+/**
+ * How long a service has to come up before its silence means failure.
+ *
+ * Generous on purpose: an image that has to be pulled takes longer than one
+ * already on the machine, and a light that gives up early is worse than one
+ * that waits — the first says "broken" about something that is about to work.
+ */
+const STARTING_WINDOW_S = 90;
+
+/**
+ * The light on the card, in one place.
+ *
+ * Four states, and the order they are tested in is the whole of the logic:
+ *
+ *   red      stopped, or silent past the starting window
+ *   yellow   asked to start, nothing heard back yet
+ *   blue     running, on somebody's machine
+ *   green    running, on the platform
+ *
+ * Yellow comes before red because they describe the same absence of news.
+ * What separates them is only how long it has been going on.
+ */
+export const ledColor = (
+  container: {
+    last_watchdog_at: string | null;
+    stopped_at?: string;
+    started_at?: string;
+    runner?: { id?: string };
+  },
+  now: number = new Date().getTime()
+): TLedColor => {
+  const { alive } = isAlive(
+    container.last_watchdog_at,
+    container.stopped_at,
+    now
+  );
+
+  if (alive) return RUNNER_LED[container.runner?.id ?? ''] ?? 'blue';
+
+  // A stop is a decision, and it outranks a start that came before it.
+  if (container.stopped_at && container.started_at) {
+    if (
+      new Date(container.stopped_at).getTime() >=
+      new Date(container.started_at).getTime()
+    )
+      return 'red';
+  } else if (container.stopped_at) {
+    return 'red';
+  }
+
+  if (!container.started_at) return 'red';
+
+  const since = (now - new Date(container.started_at).getTime()) / 1000;
+  return since >= 0 && since < STARTING_WINDOW_S ? 'yellow' : 'red';
+};
+
 export const isAlive = (
   last_watchdog_at: string | null,
   stopped_at?: string,
@@ -240,10 +315,8 @@ export const UserContainerCardInternal = ({
     setTags((prevState: Tag[]) => [...prevState, t]);
   };
 
-  const { alive, color } = isAlive(
-    container.last_watchdog_at,
-    container.stopped_at
-  );
+  const { alive } = isAlive(container.last_watchdog_at, container.stopped_at);
+  const color = ledColor(container);
 
   // The run control, wrapped the same way `deleteAction` is: a click on it
   // reaches the gateway, and a gateway that refuses has to say so somewhere the

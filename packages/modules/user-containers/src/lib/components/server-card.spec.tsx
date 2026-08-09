@@ -2,7 +2,7 @@ import { render, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import * as Tooltip from '@radix-ui/react-tooltip';
 
-import { UserContainerCardInternal, isAlive } from './server-card';
+import { UserContainerCardInternal, isAlive, ledColor } from './server-card';
 import {
   makeStoryArgs,
   runningOnPlatformStory,
@@ -307,5 +307,108 @@ describe('isAlive - a stop is a decision the watchdog cannot express', () => {
   it('reports a silent service as not running, stopped or not', () => {
     expect(isAlive(at(120), undefined, now).alive).toBe(false);
     expect(isAlive(null, undefined, now).alive).toBe(false);
+  });
+});
+
+/**
+ * The light on a resource card says two things at once: whether the service is
+ * running, and where. Everything ran blue before, so a service on the platform
+ * looked exactly like one on somebody's laptop — the card carried the state and
+ * dropped the placement, which is the half a person cannot guess.
+ *
+ * And pressing play made red stay red: between the ask and the container's
+ * first report there is a window where nothing is true yet, and it reads
+ * exactly like a service that died in silence.
+ */
+describe('ledColor', () => {
+  const now = new Date('2026-01-01T12:00:00.000Z').getTime();
+  const at = (secondsAgo: number) =>
+    new Date(now - secondsAgo * 1000).toISOString();
+
+  const card = (over: {
+    last_watchdog_at?: string | null;
+    stopped_at?: string;
+    started_at?: string;
+    runner?: { id?: string };
+  }) =>
+    ledColor(
+      { last_watchdog_at: null, ...over } as Parameters<typeof ledColor>[0],
+      now
+    );
+
+  describe('running', () => {
+    it('is green on the platform', () => {
+      expect(
+        card({ last_watchdog_at: at(5), runner: { id: 'platform' } })
+      ).toBe('green');
+    });
+
+    it('is blue on somebody’s machine', () => {
+      expect(card({ last_watchdog_at: at(5), runner: { id: 'local' } })).toBe(
+        'blue'
+      );
+    });
+
+    it('is blue for a runner this build has never heard of', () => {
+      // Still running, and that is the more important half. Going dark would
+      // report a healthy service as broken because a newer gateway named its
+      // runner something this frontend does not know.
+      expect(
+        card({ last_watchdog_at: at(5), runner: { id: 'kata-next' } })
+      ).toBe('blue');
+    });
+  });
+
+  describe('starting', () => {
+    it('is yellow as soon as someone presses play', () => {
+      expect(card({ started_at: at(1), runner: { id: 'platform' } })).toBe(
+        'yellow'
+      );
+    });
+
+    it('stays yellow while the image could still be pulling', () => {
+      expect(card({ started_at: at(60) })).toBe('yellow');
+    });
+
+    it('gives up once nothing has come back for long enough', () => {
+      expect(card({ started_at: at(120) })).toBe('red');
+    });
+
+    it('turns the runner’s colour the moment the first report lands', () => {
+      expect(
+        card({
+          started_at: at(10),
+          last_watchdog_at: at(1),
+          runner: { id: 'platform' },
+        })
+      ).toBe('green');
+    });
+  });
+
+  describe('stopped', () => {
+    it('is red when someone stopped it', () => {
+      expect(
+        card({
+          last_watchdog_at: at(5),
+          stopped_at: at(1),
+          runner: { id: 'platform' },
+        })
+      ).toBe('red');
+    });
+
+    it('is red rather than yellow when the stop came after the start', () => {
+      // Pressing play then stop inside the window: the newer decision wins,
+      // or the card would sit yellow for a minute and a half on a service
+      // nobody is starting.
+      expect(card({ started_at: at(30), stopped_at: at(2) })).toBe('red');
+    });
+
+    it('is yellow again when the start came after the stop', () => {
+      expect(card({ stopped_at: at(30), started_at: at(2) })).toBe('yellow');
+    });
+  });
+
+  it('is red for a service that has never run and nobody asked for', () => {
+    expect(card({})).toBe('red');
   });
 });

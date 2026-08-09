@@ -950,6 +950,10 @@ export class UserContainersReducer extends ReducerWithCollab<
     const { stopped_at: _stopped, ...restarted } = startedContainer;
     sduc.set(containerId, {
       ...restarted,
+      // Stamped so the card can tell "starting" from "died in silence". Both
+      // look the same from the outside — no stop, no report — and they were
+      // shown the same, which made pressing play look like nothing happened.
+      started_at: new Date().toISOString(),
       runner: { ...startedContainer.runner, ...runnerResult },
     });
   }

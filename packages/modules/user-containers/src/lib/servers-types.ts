@@ -83,6 +83,20 @@ export type TUserContainer = {
    * Cleared by `_start`, so restarting is one field and not two states.
    */
   stopped_at?: string;
+  /**
+   * When someone last asked this service to start.
+   *
+   * Between the ask and the container's first report there is a window where
+   * nothing is true yet: `stopped_at` is cleared and the watchdog has not
+   * spoken, which reads exactly like a service that died in silence. The card
+   * showed red, so pressing play made the light go from red to red and the
+   * only feedback was that nothing happened.
+   *
+   * This says which of the two it is, and for how long: a service still
+   * within the window is starting, and one past it with nothing to say has
+   * failed to come up.
+   */
+  started_at?: string;
 } & TUserContainerPublishedInfo;
 
 /**
