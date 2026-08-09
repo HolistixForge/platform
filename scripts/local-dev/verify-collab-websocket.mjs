@@ -439,26 +439,49 @@ async function main() {
 
   // -- Pick org / project / user -------------------------------------------
   stage = 'database';
-  const db = new pg.Client({
-    host: env.PG_HOST || 'localhost',
-    port: Number(env.PG_PORT || 5432),
-    user: env.PG_USER,
-    password: env.PG_PASSWORD,
-    database: env.PG_DATABASE,
-  });
-  await db.connect().catch((err) => {
-    throw new StageError(
-      `Cannot connect to PostgreSQL: ${err.message}`,
-      `Checked ${env.PG_USER}@${env.PG_HOST}/${env.PG_DATABASE}`,
-    );
-  });
 
   let orgId = opts.orgId;
   let projectId = opts.projectId;
   let userId = opts.userId;
   let accounts = null;
 
+  /**
+   * Postgres is only consulted to answer questions the caller did not.
+   *
+   * It sits on the container network, which on macOS a Homebrew `node` cannot
+   * reach at all — the same address answers `nc` and refuses node, because of
+   * the local-network privacy check. The application itself is reachable, so
+   * connecting three clients and watching them converge works fine there; it
+   * was only this lookup that made the whole script unrunnable. Told which
+   * org, project and user to use, it now never opens the connection.
+   */
+  const needsDb = opts.bootstrap || !orgId || !projectId || !userId;
+  const db = needsDb
+    ? new pg.Client({
+        host: env.PG_HOST || 'localhost',
+        port: Number(env.PG_PORT || 5432),
+        user: env.PG_USER,
+        password: env.PG_PASSWORD,
+        database: env.PG_DATABASE,
+      })
+    : null;
+
+  if (!db) {
+    info('database: not consulted — org, project and user were all given');
+  } else {
+    await db.connect().catch((err) => {
+      throw new StageError(
+        `Cannot connect to PostgreSQL: ${err.message}`,
+        `Checked ${env.PG_USER}@${env.PG_HOST}/${env.PG_DATABASE}. ` +
+          'Passing --org, --project and --user skips this step entirely.',
+      );
+    });
+  }
+
   try {
+    if (!db) {
+      info(`project: ${projectId}`);
+    }
     if (opts.bootstrap) {
       const bootstrapped = await bootstrap({ db, domain, privateKey, jwt });
       orgId = orgId || bootstrapped.orgId;
@@ -505,7 +528,7 @@ async function main() {
     info(`user:    ${userId}`);
     ok('resolved org / project / user');
   } finally {
-    await db.end().catch(() => undefined);
+    await db?.end().catch(() => undefined);
   }
 
   // -- Mint an access token --------------------------------------------------
@@ -739,9 +762,90 @@ async function main() {
     });
     ok(`awareness converged across ${clients.length} clients`);
 
+    // -- Two people drawing at once ------------------------------------------
+    //
+    // The scenario TAC-213 asks for, and the recipe test for phase 1.
+    //
+    // A drawing used to be one entry in the shared map — the whole element
+    // array, rewritten on every stroke. Two people drawing at the same time
+    // wrote the same key, so the later write replaced the earlier one whole
+    // and one of them lost their work. Nothing reported it: both clients
+    // converged, on the wrong scene.
+    //
+    // One entry per element instead, keyed `<drawingId>::<elementId>`, so the
+    // map's own per-key concurrency does the merging. This test would have
+    // failed before that change and is expected to pass now.
+    //
+    // The two clients are disconnected while they draw, so the divergence is
+    // real rather than two writes that happen to be ordered by the server.
+    stage = 'per-element concurrency';
+    const [alice, bob] = clients;
+    const drawing = `smoke-${Date.now()}`;
+    const elementsOf = (cl) => cl.doc.getMap('excalidraw:elements');
+    const keyA = `${drawing}::el-alice`;
+    const keyB = `${drawing}::el-bob`;
+    const stroke = (id, x) => ({
+      drawingId: drawing,
+      element: { id, type: 'rectangle', x, y: 0, width: 10, height: 10, version: 1 },
+    });
+
+    step('Two clients draw at the same time, offline; neither may lose work');
+
+    alice.provider.disconnect();
+    bob.provider.disconnect();
+    await waitFor(
+      'both clients to be offline',
+      () => !alice.provider.wsconnected && !bob.provider.wsconnected,
+      opts.timeout,
+    );
+
+    elementsOf(alice).set(keyA, stroke('el-alice', 0));
+    elementsOf(bob).set(keyB, stroke('el-bob', 100));
+    info('each drew one element while the other could not see it');
+
+    alice.provider.connect();
+    bob.provider.connect();
+
+    const hasBoth = (cl) =>
+      elementsOf(cl).has(keyA) && elementsOf(cl).has(keyB);
+
+    await waitFor(
+      'both drawings to reach both clients',
+      () => hasBoth(alice) && hasBoth(bob),
+      opts.timeout,
+    ).catch(() => {
+      const missing = [alice, bob]
+        .map((cl) => {
+          const lost = [keyA, keyB].filter((k) => !elementsOf(cl).has(k));
+          return lost.length ? `client ${cl.i} is missing ${lost.join(', ')}` : null;
+        })
+        .filter(Boolean);
+      throw new StageError(
+        `Concurrent edits did not merge: ${missing.join('; ')}`,
+        'One writer replaced the other. That is the whole-drawing-per-entry ' +
+          'model coming back: elements must be one shared-map entry each.',
+      );
+    });
+
+    // Merged is not enough — the surviving elements have to be the ones that
+    // were drawn, not one of them twice under two keys.
+    const drawn = (cl) => [keyA, keyB].map((k) => elementsOf(cl).get(k).element.id);
+    for (const cl of [alice, bob]) {
+      const ids = drawn(cl);
+      if (ids.join() !== 'el-alice,el-bob') {
+        throw new StageError(
+          `Client ${cl.i} holds [${ids.join(', ')}], expected [el-alice, el-bob]`,
+          'The keys merged but the elements behind them did not.',
+        );
+      }
+    }
+    ok('both drawings survived; per-element granularity holds');
+
     // -- Leave the document as we found it -----------------------------------
     stage = 'cleanup';
     clients[0].map.delete('marker');
+    elementsOf(alice).delete(keyA);
+    elementsOf(alice).delete(keyB);
     await sleep(500);
 
     console.log(
