@@ -1,6 +1,6 @@
 import { icons } from '@holistix-forge/ui-base';
 
-import type { TSpace } from './last-space';
+import type { TSpace } from './last-visited';
 
 //
 

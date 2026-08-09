@@ -17,7 +17,11 @@ import { render } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 import { OrganizationSidebar } from './sidebar';
-import { rememberSpace } from '../last-space';
+import {
+  rememberSpace,
+  rememberOrganization,
+  lastOrganization,
+} from '../last-visited';
 
 //
 
@@ -81,11 +85,24 @@ describe('the rail outside a space', () => {
     ]);
   });
 
-  it('greys the organization entries where the route names none', () => {
-    rememberSpace({ owner: 'org-1', projectName: 'proj' });
+  it('falls back to the last organization where the route names none', () => {
+    // The list of organizations names none, and it is exactly where someone
+    // wants to get back to the one they were in.
+    rememberOrganization('org-remembered');
 
     expect(railAt('/').slice(0, 3)).toEqual([
       { title: 'organizations', href: '/', off: false },
+      { title: 'organization', href: '/org/org-remembered', off: false },
+      {
+        title: 'accesses',
+        href: '/org/org-remembered/permissions',
+        off: false,
+      },
+    ]);
+  });
+
+  it('greys them for someone who has never opened one', () => {
+    expect(railAt('/').slice(1, 3)).toEqual([
       { title: 'organization — pick one first', href: undefined, off: true },
       {
         title: 'accesses — pick an organization first',
@@ -93,6 +110,23 @@ describe('the rail outside a space', () => {
         off: true,
       },
     ]);
+  });
+
+  it('lets the route win over the memory', () => {
+    // Two organizations open in two tabs would otherwise show each other's.
+    rememberOrganization('org-remembered');
+
+    expect(railAt('/org/org-in-route')[1]).toEqual({
+      title: 'organization',
+      href: '/org/org-in-route',
+      off: false,
+    });
+  });
+
+  it('records the organization it is on', () => {
+    renderRail('/org/org-visited');
+
+    expect(lastOrganization()).toBe('org-visited');
   });
 
   it('is the same length wherever it is rendered', () => {

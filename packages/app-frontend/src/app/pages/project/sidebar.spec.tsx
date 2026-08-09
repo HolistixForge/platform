@@ -13,7 +13,7 @@ import { render } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 import { ProjectSidebar } from './sidebar';
-import { lastSpace } from '../last-space';
+import { lastSpace, lastOrganization } from '../last-visited';
 
 jest.mock('@holistix-forge/frontend-data', () => ({
   useProject: () => ({ organization_id: 'org-uuid' }),
@@ -98,5 +98,13 @@ describe('the rail inside a space', () => {
     renderRail('/p/org-1/proj/editor');
 
     expect(lastSpace()).toEqual({ owner: 'org-1', projectName: 'proj' });
+  });
+
+  it('records the organization too, entering a space being entering one', () => {
+    // Otherwise the list of organizations would have nothing to point back
+    // to for anyone who went straight from it into a project.
+    renderRail('/p/org-1/proj/editor');
+
+    expect(lastOrganization()).toBe('org-uuid');
   });
 });
