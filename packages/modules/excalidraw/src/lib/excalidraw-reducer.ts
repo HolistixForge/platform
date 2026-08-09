@@ -12,6 +12,9 @@ import {
   TEventExcalidrawUpsertElements,
   TEventExcalidrawDeleteElements,
   TEventExcalidrawDeleteDrawing,
+  TEventExcalidrawNewLayer,
+  TEventExcalidrawReorderLayers,
+  TEventExcalidrawRenameLayer,
 } from './excalidraw-events';
 import {
   TExcalidrawSharedData,
@@ -19,6 +22,8 @@ import {
   TExcalidrawLegacyDrawing,
   elementKey,
   parseElementKey,
+  layerKey,
+  TExcalidrawLayer,
 } from './excalidraw-shared-model';
 import { withStackingIndex } from './excalidraw-scene';
 
@@ -57,6 +62,15 @@ export class ExcalidrawReducer extends ReducerWithCollab<
 
       case 'excalidraw:delete-drawing':
         return this._deleteDrawing(event, requestData);
+
+      case 'excalidraw:new-layer':
+        return this._newLayer(event, requestData);
+
+      case 'excalidraw:reorder-layers':
+        return this._reorderLayers(event, requestData);
+
+      case 'excalidraw:rename-layer':
+        return this._renameLayer(event, requestData);
 
       case 'project:init':
         return this._migrateLegacyDrawings(requestData).then(() =>
@@ -195,6 +209,89 @@ export class ExcalidrawReducer extends ReducerWithCollab<
   /**
    * One `set` per element, so two people drawing at once write two keys.
    */
+  /**
+   * Every layer of a drawing, back to front.
+   *
+   * By id on a tie, so two layers created in the same millisecond do not swap
+   * places between two readers.
+   */
+  private _layersOf(
+    layers: { forEach: (f: (l: TExcalidrawLayer) => void) => void },
+    drawingId: string
+  ): TExcalidrawLayer[] {
+    const found: TExcalidrawLayer[] = [];
+    layers.forEach((layer) => {
+      if (layer.drawingId === drawingId) found.push(layer);
+    });
+    return found.sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
+  }
+
+  async _newLayer(
+    event: TEventExcalidrawNewLayer,
+    requestData: RequestData
+  ): Promise<void> {
+    const collab = this.getCollab(requestData);
+    const layers = collab.sharedData['excalidraw:layers'];
+    const key = layerKey(event.drawingId, event.layerId);
+
+    // Idempotent: a retried event must not move a layer someone has since
+    // dragged elsewhere in the stack.
+    if (layers.get(key)) return;
+
+    const existing = this._layersOf(layers, event.drawingId);
+    const order = existing.length ? existing[existing.length - 1].order + 1 : 0;
+
+    layers.set(key, {
+      id: event.layerId,
+      drawingId: event.drawingId,
+      title: event.title,
+      order,
+    });
+
+    log(
+      EPriority.Info,
+      'EXCALIDRAW',
+      `New layer '${event.title}' on ${event.drawingId} at ${order}`
+    );
+  }
+
+  async _reorderLayers(
+    event: TEventExcalidrawReorderLayers,
+    requestData: RequestData
+  ): Promise<void> {
+    const collab = this.getCollab(requestData);
+    const layers = collab.sharedData['excalidraw:layers'];
+
+    // Only the layers named, and only those that exist. A stale list from a
+    // client that has not seen a new layer yet must not delete it — it keeps
+    // the order it had, which puts it wherever that number falls among the
+    // rewritten ones.
+    event.layerIds.forEach((layerId, index) => {
+      const key = layerKey(event.drawingId, layerId);
+      const layer = layers.get(key);
+      if (!layer || layer.order === index) return;
+      layers.set(key, { ...layer, order: index });
+    });
+  }
+
+  async _renameLayer(
+    event: TEventExcalidrawRenameLayer,
+    requestData: RequestData
+  ): Promise<void> {
+    const collab = this.getCollab(requestData);
+    const layers = collab.sharedData['excalidraw:layers'];
+    const key = layerKey(event.drawingId, event.layerId);
+    const layer = layers.get(key);
+    if (!layer) return;
+
+    // An empty name is not a name. Refused here rather than in the input, so
+    // it is true for every client including one running an older build.
+    const title = event.title.trim();
+    if (!title) return;
+
+    layers.set(key, { ...layer, title });
+  }
+
   async _upsertElements(
     event: TEventExcalidrawUpsertElements,
     requestData: RequestData

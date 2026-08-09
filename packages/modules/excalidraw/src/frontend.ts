@@ -24,6 +24,11 @@ export const moduleFrontend: TModule<TRequired> = {
       'excalidraw',
       'elements'
     );
+    depsExports.collab.registry.registerSharedData(
+      'map',
+      'excalidraw',
+      'layers'
+    );
 
     // No node and no menu entry any more. "New Excalidraw Drawing" created a
     // node whose only purpose was to hold a drawing and open the layer from

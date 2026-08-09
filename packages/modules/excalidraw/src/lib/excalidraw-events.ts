@@ -27,7 +27,45 @@ export type TEventExcalidrawDeleteDrawing = {
   drawingId: string;
 };
 
+/**
+ * A new layer, on top of the stack.
+ *
+ * The id is minted by the caller so the browser can put an element on it in
+ * the same breath, rather than drawing into nowhere while it waits to be told
+ * what the layer is called.
+ */
+export type TEventExcalidrawNewLayer = {
+  type: 'excalidraw:new-layer';
+  drawingId: string;
+  layerId: string;
+  title: string;
+};
+
+/**
+ * The whole stack, back to front.
+ *
+ * The order arrives complete rather than as "move this one there": a move is
+ * only meaningful against the list the mover was looking at, and two people
+ * moving at once against different lists produce an order neither of them
+ * asked for. A full list is the state they intended.
+ */
+export type TEventExcalidrawReorderLayers = {
+  type: 'excalidraw:reorder-layers';
+  drawingId: string;
+  layerIds: string[];
+};
+
+export type TEventExcalidrawRenameLayer = {
+  type: 'excalidraw:rename-layer';
+  drawingId: string;
+  layerId: string;
+  title: string;
+};
+
 export type TExcalidrawEvent =
+  | TEventExcalidrawNewLayer
+  | TEventExcalidrawReorderLayers
+  | TEventExcalidrawRenameLayer
   | TEventExcalidrawUpsertElements
   | TEventExcalidrawDeleteElements
   | TEventExcalidrawDeleteDrawing;

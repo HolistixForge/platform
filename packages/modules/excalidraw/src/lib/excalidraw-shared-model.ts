@@ -41,8 +41,50 @@ export const parseElementKey = (
   return { drawingId: key.slice(0, at), elementId };
 };
 
+/**
+ * A layer of a drawing, and where it sits in the stack.
+ *
+ * Layers are not a second canvas. Excalidraw's scene is an ordered array and
+ * that order *is* the paint order, so a layer is a contiguous block in it —
+ * reordering layers reorders their blocks, and the whole thing costs one
+ * canvas and one render. Two stacked Excalidraw instances would have doubled
+ * the cost measured at 2000 nodes, and left a focus and a z-order to arbitrate
+ * between them.
+ *
+ * `order` is a number rather than a position in a list because this is a
+ * shared map and two people may reorder at once: per-key last-writer-wins on
+ * a number converges on *an* order, where a shared list rebuilt by two
+ * writers can converge on a list with holes in it.
+ */
+export type TExcalidrawLayer = {
+  id: string;
+  /** The drawing this layer belongs to — a view, today. */
+  drawingId: string;
+  title: string;
+  /** Ascending, back to front. The front of the stack has the largest. */
+  order: number;
+};
+
+/** Keys are `<drawingId>::<layerId>`, as elements are. */
+export const layerKey = (drawingId: string, layerId: string): string =>
+  `${drawingId}${KEY_SEPARATOR}${layerId}`;
+
+/**
+ * The layer an element is on, or nothing for one drawn before layers existed.
+ *
+ * Nothing is not an error and does not need repairing: an untagged element
+ * belongs to the bottom of the stack, which is where it was when it was the
+ * only place there was.
+ */
+export const elementLayerId = (element: TJsonObject): string | undefined => {
+  const custom = element['customData'] as Record<string, unknown> | undefined;
+  const id = custom?.['holistixLayer'];
+  return typeof id === 'string' ? id : undefined;
+};
+
 export type TExcalidrawSharedData = {
   'excalidraw:elements': SharedMap<TExcalidrawElementEntry>;
+  'excalidraw:layers': SharedMap<TExcalidrawLayer>;
 };
 
 /**

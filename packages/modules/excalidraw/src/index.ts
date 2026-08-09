@@ -21,6 +21,11 @@ export const moduleBackend: TModule<TRequired> = {
       'excalidraw',
       'elements'
     );
+    depsExports.collab.registry.registerSharedData(
+      'map',
+      'excalidraw',
+      'layers'
+    );
     // The pre-split shape, backend only and read once: `project:init` moves
     // each drawing across and deletes it. The frontend never sees it.
     depsExports.collab.registry.registerSharedData(

@@ -37,11 +37,13 @@ describe('ExcalidrawReducer', () => {
   let store: Map<string, TExcalidrawElementEntry>;
   let legacyStore: Map<string, any>;
   let viewStore: Map<string, any>;
+  let layerStore: Map<string, any>;
 
   beforeEach(() => {
     store = new Map();
     legacyStore = new Map();
     viewStore = new Map();
+    layerStore = new Map();
 
     const depsExports = {
       collab: {
@@ -50,6 +52,7 @@ describe('ExcalidrawReducer', () => {
             sharedData: {
               'excalidraw:elements': fakeSharedMap(store),
               'excalidraw:drawing': fakeSharedMap(legacyStore),
+              'excalidraw:layers': fakeSharedMap(layerStore),
               // whiteboard's, not this module's — the re-keying migration
               // reads it to learn which view held which node.
               'whiteboard:graphViews': fakeSharedMap(viewStore),
@@ -431,6 +434,161 @@ describe('ExcalidrawReducer', () => {
     it('does nothing when there is nothing to migrate', async () => {
       await reducer.reduce(init, requestData);
       expect(store.size).toBe(0);
+    });
+  });
+
+  /**
+   * Layers are a stack, and the stack is shared.
+   *
+   * Excalidraw's scene is an ordered array and that order is the paint order,
+   * so a layer is a contiguous block in it. Everything below is about the one
+   * thing the browser cannot be trusted with: what the order *is*, when two
+   * people are changing it.
+   */
+  describe('layers', () => {
+    const on = (drawingId: string) =>
+      Array.from(layerStore.values())
+        .filter((l) => l.drawingId === drawingId)
+        .sort((a, b) => a.order - b.order)
+        .map((l) => l.id);
+
+    const newLayer = (layerId: string, title = layerId, drawingId = 'd1') =>
+      reducer.reduce(
+        { type: 'excalidraw:new-layer', drawingId, layerId, title } as any,
+        requestData
+      );
+
+    it('puts a new layer on top of the stack', async () => {
+      await newLayer('a');
+      await newLayer('b');
+
+      expect(on('d1')).toEqual(['a', 'b']);
+    });
+
+    it('is idempotent, so a retry does not move a layer someone dragged', async () => {
+      await newLayer('a');
+      await newLayer('b');
+      await reducer.reduce(
+        {
+          type: 'excalidraw:reorder-layers',
+          drawingId: 'd1',
+          layerIds: ['b', 'a'],
+        } as any,
+        requestData
+      );
+
+      await newLayer('a');
+
+      expect(on('d1')).toEqual(['b', 'a']);
+    });
+
+    it('keeps one drawing’s stack out of another’s', async () => {
+      await newLayer('a');
+      await newLayer('x', 'x', 'd2');
+      await newLayer('b');
+
+      expect(on('d1')).toEqual(['a', 'b']);
+      expect(on('d2')).toEqual(['x']);
+    });
+
+    it('reorders to exactly the list it was given', async () => {
+      await newLayer('a');
+      await newLayer('b');
+      await newLayer('c');
+
+      await reducer.reduce(
+        {
+          type: 'excalidraw:reorder-layers',
+          drawingId: 'd1',
+          layerIds: ['c', 'a', 'b'],
+        } as any,
+        requestData
+      );
+
+      expect(on('d1')).toEqual(['c', 'a', 'b']);
+    });
+
+    it('does not delete a layer missing from a stale list', async () => {
+      // Someone reorders while a layer they have not seen yet exists. Losing
+      // it would be a client deleting another client's work by omission.
+      await newLayer('a');
+      await newLayer('b');
+      await newLayer('fresh');
+
+      await reducer.reduce(
+        {
+          type: 'excalidraw:reorder-layers',
+          drawingId: 'd1',
+          layerIds: ['b', 'a'],
+        } as any,
+        requestData
+      );
+
+      expect(on('d1')).toContain('fresh');
+      expect(on('d1')).toHaveLength(3);
+    });
+
+    it('ignores an id that is not a layer of this drawing', async () => {
+      await newLayer('a');
+
+      await reducer.reduce(
+        {
+          type: 'excalidraw:reorder-layers',
+          drawingId: 'd1',
+          layerIds: ['a', 'ghost'],
+        } as any,
+        requestData
+      );
+
+      expect(on('d1')).toEqual(['a']);
+    });
+
+    it('renames a layer', async () => {
+      await newLayer('a', 'Layer 1');
+
+      await reducer.reduce(
+        {
+          type: 'excalidraw:rename-layer',
+          drawingId: 'd1',
+          layerId: 'a',
+          title: 'Annotations',
+        } as any,
+        requestData
+      );
+
+      expect(layerStore.get('d1::a').title).toBe('Annotations');
+    });
+
+    it('refuses a name that is only spaces', async () => {
+      // Refused here rather than in the input, so it is true for every
+      // client — including one running an older build.
+      await newLayer('a', 'Layer 1');
+
+      await reducer.reduce(
+        {
+          type: 'excalidraw:rename-layer',
+          drawingId: 'd1',
+          layerId: 'a',
+          title: '   ',
+        } as any,
+        requestData
+      );
+
+      expect(layerStore.get('d1::a').title).toBe('Layer 1');
+    });
+
+    it('does nothing for a rename of a layer that is not there', async () => {
+      await reducer.reduce(
+        {
+          type: 'excalidraw:rename-layer',
+          drawingId: 'd1',
+          layerId: 'ghost',
+          title: 'x',
+        } as any,
+        requestData
+      );
+
+      expect(layerStore.size).toBe(0);
     });
   });
 });
