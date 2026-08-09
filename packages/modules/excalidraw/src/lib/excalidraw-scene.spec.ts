@@ -11,7 +11,7 @@ import {
 // The sort lives with the layer that owns the scene, not with the scene
 // helpers — it is the projection's last step, and the only place layers touch
 // rendering at all.
-import { byLayerOrder } from './layer';
+import { byLayerOrder, layerFromPosition } from './layer';
 
 const entry = (
   drawingId: string,
@@ -208,5 +208,99 @@ describe('byLayerOrder', () => {
     const elements = [on('a'), on('b')];
 
     expect(byLayerOrder(elements, [])).toBe(elements);
+  });
+});
+
+/**
+ * Moving between layers, by moving in the scene.
+ *
+ * Excalidraw already has send-to-back and bring-to-front, and they reorder
+ * the array — which is where layers live. So pushing an element past a
+ * boundary is how you move it to the layer behind. Sorting it back into its
+ * block instead would have made those two commands do nothing across a
+ * boundary and look broken.
+ */
+describe('layerFromPosition', () => {
+  const on = (id: string, layer: string) => ({
+    id,
+    customData: { holistixLayer: layer },
+  });
+  const stack = (...ids: string[]) => ids.map((id) => ({ id }));
+  const back = stack('l1', 'l2');
+
+  it('moves an element sent to the very back into the layer behind', () => {
+    const moved = layerFromPosition(
+      [on('f2', 'l2'), on('b1', 'l1'), on('b2', 'l1'), on('f1', 'l2')],
+      back
+    );
+
+    expect(moved.get('f2')).toBe('l1');
+  });
+
+  it('moves an element brought to the very front into the layer in front', () => {
+    const moved = layerFromPosition(
+      [on('b2', 'l1'), on('f1', 'l2'), on('f2', 'l2'), on('b1', 'l1')],
+      back
+    );
+
+    expect(moved.get('b1')).toBe('l2');
+  });
+
+  it('moves one nudged a single step across the boundary', () => {
+    // Both neighbours agree and disagree with it — which is what a dragged
+    // element looks like from the array.
+    const moved = layerFromPosition(
+      [on('b1', 'l1'), on('f1', 'l2'), on('b2', 'l1'), on('f2', 'l2')],
+      back
+    );
+
+    expect(moved.get('f1')).toBe('l1');
+  });
+
+  it('leaves a scene nobody reordered exactly alone', () => {
+    const moved = layerFromPosition(
+      [on('b1', 'l1'), on('b2', 'l1'), on('f1', 'l2'), on('f2', 'l2')],
+      back
+    );
+
+    expect(moved.size).toBe(0);
+  });
+
+  it('leaves the boundary itself alone', () => {
+    // The last element of one block and the first of the next have
+    // neighbours that disagree with each other. Nothing has moved; the two
+    // blocks simply meet there, and a rule that fired here would shuffle the
+    // scene every time it was read.
+    const moved = layerFromPosition([on('b1', 'l1'), on('f1', 'l2')], back);
+
+    expect(moved.size).toBe(0);
+  });
+
+  it('says nothing about a move inside one layer', () => {
+    // Which is still how front and back work within a layer — the order of
+    // the elements, changed by Excalidraw's own commands.
+    const moved = layerFromPosition(
+      [on('a', 'l1'), on('c', 'l1'), on('b', 'l1')],
+      back
+    );
+
+    expect(moved.size).toBe(0);
+  });
+
+  it('treats an untagged element as belonging to the bottom', () => {
+    const moved = layerFromPosition(
+      [{ id: 'old' }, on('b1', 'l1'), on('f1', 'l2')],
+      back
+    );
+
+    expect(moved.size).toBe(0);
+  });
+
+  it('does nothing at all with fewer than two layers', () => {
+    // Nowhere to move to, and every element would look like an outlier
+    // against a stack of one.
+    expect(
+      layerFromPosition([on('a', 'l1'), on('b', 'l1')], stack('l1')).size
+    ).toBe(0);
   });
 });

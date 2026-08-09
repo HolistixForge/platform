@@ -198,20 +198,24 @@ export const nodeBoxSize = (
 });
 
 /**
- * The scene, sorted into its layers.
+ * The scene, laid out back to front.
  *
  * Excalidraw's array *is* the paint order, so this is the whole of what a
- * layer does: elements of the layer at the back come first, elements of the
- * one in front come last. Nothing else in the pipeline has to know layers
- * exist.
+ * layer does. Used when the stack itself changes — a layer dragged in the
+ * panel — to put the blocks back in the order the stack now says.
  *
- * Stable within a layer — the sort only compares layer positions, so two
- * elements on the same layer keep the order the scene already gave them,
- * which is what Excalidraw's own bring-to-front works on.
+ * It is not an invariant enforced on every change. Excalidraw already has
+ * send-to-back and bring-to-front, and those stay meaningful: an element
+ * pushed past a boundary *changes layer*, which `layerFromPosition` below
+ * reads back. The stack decides where blocks sit; the user's own ordering
+ * decides which block a thing is in.
+ *
+ * Stable within a layer, so two elements on the same one keep the order the
+ * scene gave them.
  *
  * An element with no layer sorts to the bottom, which is where it was when
- * the bottom was the only place there was. A board that predates layers is
- * therefore unchanged, without a migration.
+ * the bottom was the only place there was — so a board that predates layers
+ * is unchanged, without a migration.
  */
 export const byLayerOrder = <
   T extends { customData?: Record<string, unknown> }
@@ -229,6 +233,62 @@ export const byLayerOrder = <
     .map((element, index) => ({ element, index }))
     .sort((a, b) => of(a.element) - of(b.element) || a.index - b.index)
     .map(({ element }) => element);
+};
+
+/**
+ * The layer an element has moved into, if it has moved out of its own.
+ *
+ * Excalidraw's send-to-back and bring-to-front reorder the scene, and the
+ * scene is where layers live — so pushing an element past a boundary is how
+ * you move it to the layer behind. Membership follows position; the
+ * alternative was to sort it back into its block, which would have made those
+ * two commands do nothing across a boundary and look broken.
+ *
+ * The scene is meant to read back to front, so an element that breaks that
+ * order is the one that moved — and it moved into the layer of whatever it
+ * jumped over. A first attempt asked its neighbours instead, and that pushed
+ * an element which is simply the only one on its layer into its neighbour's:
+ * at an end there is one neighbour, and one neighbour is not a vote.
+ *
+ * Returns only the changes, keyed by element id, so the caller writes nothing
+ * for a scene nobody reordered.
+ */
+export const layerFromPosition = <
+  T extends { id: string; customData?: Record<string, unknown> }
+>(
+  elements: T[],
+  stack: { id: string }[]
+): Map<string, string> => {
+  const moved = new Map<string, string>();
+  if (stack.length < 2 || elements.length < 2) return moved;
+
+  const bottom = stack[0].id;
+  const rank = new Map(stack.map((layer, i) => [layer.id, i]));
+  const layerOf = (e: T) => {
+    const id = elementLayerId(e as unknown as TJsonObject);
+    return id && rank.has(id) ? id : bottom;
+  };
+  const rankOf = (e: T) => rank.get(layerOf(e)) ?? 0;
+
+  elements.forEach((element, i) => {
+    const mine = rankOf(element);
+    const before = i > 0 ? rankOf(elements[i - 1]) : undefined;
+    const after = i < elements.length - 1 ? rankOf(elements[i + 1]) : undefined;
+
+    // Dropped further back than it belongs: it now sits before something of a
+    // lower layer. The `before <= after` half is what tells a moved element
+    // from the boundary between two blocks, where the break is expected.
+    if (after !== undefined && mine > after && (before ?? -1) <= after) {
+      moved.set(element.id, layerOf(elements[i + 1]));
+      return;
+    }
+
+    // Pulled further forward than it belongs.
+    if (before !== undefined && mine < before && (after ?? Infinity) >= before)
+      moved.set(element.id, layerOf(elements[i - 1]));
+  });
+
+  return moved;
 };
 
 /** The scene element that stands for a node, by the node's own id. */
@@ -892,27 +952,48 @@ export const ExcalidrawLayerComponent: FC<{
           const current = versionsById(elements as unknown as TJsonObject[]);
 
           /**
-           * A new element joins the layer its author was working on.
+           * Where each element belongs now.
            *
-           * Only a new one: an element that already carries a layer keeps it,
-           * or every edit would drag the whole scene onto whichever layer the
-           * editor happened to have selected.
+           * Two ways an element gets a layer. A new one joins the layer its
+           * author was working on — only a new one, or every edit would drag
+           * the whole scene onto whichever layer the editor had selected. And
+           * an existing one pushed past a boundary by send-to-back or
+           * bring-to-front moves to the layer it landed in, which is what
+           * makes those two commands mean something across layers instead of
+           * being quietly undone.
+           *
+           * Within a layer nothing changes: the order of the elements is
+           * still what says which is in front, and Excalidraw's own commands
+           * are what change it.
            */
-          const onActiveLayer = (e: OrderedExcalidrawElement) =>
-            elementLayerId(e as unknown as TJsonObject) ||
-            !activeLayerRef.current
-              ? e
-              : ({
-                  ...e,
-                  customData: {
-                    ...(e.customData ?? {}),
-                    holistixLayer: activeLayerRef.current,
-                  },
-                } as OrderedExcalidrawElement);
+          const relocated = layerFromPosition(
+            pendingElements.current as unknown as {
+              id: string;
+              customData?: Record<string, unknown>;
+            }[],
+            stackRef.current
+          );
 
+          const withLayer = (e: OrderedExcalidrawElement) => {
+            const own = elementLayerId(e as unknown as TJsonObject);
+            const layer = relocated.get(e.id) ?? own ?? activeLayerRef.current;
+            if (!layer || layer === own) return e;
+            return {
+              ...e,
+              customData: { ...(e.customData ?? {}), holistixLayer: layer },
+            } as OrderedExcalidrawElement;
+          };
+
+          // A move past a boundary changes no version — Excalidraw renumbers
+          // on a mutation, not on a reorder — so the version gate alone would
+          // drop it and the element would snap back on the next reload.
           const upserts = elements
-            .filter((e) => sentVersions.current.get(e.id) !== e.version)
-            .map(onActiveLayer);
+            .filter(
+              (e) =>
+                sentVersions.current.get(e.id) !== e.version ||
+                relocated.has(e.id)
+            )
+            .map(withLayer);
           const deletedIds = [...sentVersions.current.keys()].filter(
             (id) => !current.has(id)
           );
