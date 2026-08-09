@@ -414,12 +414,12 @@ describe('ledColor', () => {
 });
 
 /**
- * The light says where a service runs by its colour, and a colour on its own
- * is a legend nobody was given. The glyph beside it says the same thing in a
- * form that needs no key — so the two must never disagree, which is only
- * guaranteed while they are handed the same value.
+ * On a machine somebody owns, the badge beside the run control holds their
+ * face. On the platform there is nobody to show, and the slot was simply
+ * empty — which does not read as "nobody owns this", it reads as a card
+ * missing a piece.
  */
-describe('the runner glyph, beside the light', () => {
+describe('the platform badge', () => {
   const cardWith = (runnerId: string, args = makeStoryArgs()) =>
     render(
       <Tooltip.Provider>
@@ -436,41 +436,30 @@ describe('the runner glyph, beside the light', () => {
       </Tooltip.Provider>
     );
 
-  it('shows one for a service on the platform', () => {
-    const { container } = cardWith('platform');
+  it('stands in for the missing face on a running platform service', () => {
+    const { queryByTestId } = cardWith('platform', runningOnPlatformStory());
 
-    expect(
-      container.querySelector('[title="Runs on the platform"]')
-    ).toBeInTheDocument();
+    expect(queryByTestId('platform-badge')).toBeInTheDocument();
   });
 
-  it('shows one for a service on somebody’s machine', () => {
-    const { container } = cardWith('local');
+  it('is absent while the service is not running', () => {
+    // Only while the light is blue or green. On a stopped service it would
+    // answer "where would this run" — which the runner picker already owns,
+    // and which nobody asked.
+    const { queryByTestId } = cardWith('platform');
 
-    expect(
-      container.querySelector('[title="Runs on a machine"]')
-    ).toBeInTheDocument();
+    expect(queryByTestId('platform-badge')).not.toBeInTheDocument();
   });
 
-  it('shows none for a runner this build has never heard of', () => {
-    // Rather than a placeholder. "Running somewhere I cannot name" is what
-    // the light already says on its own, and a question mark beside it would
-    // add doubt without adding fact.
-    const { container } = cardWith('kata-next');
+  it('leaves the slot to the person on somebody’s machine', () => {
+    const { queryByTestId } = cardWith('local', runningOnAppleStory());
 
-    expect(container.querySelector('[title^="Runs on"]')).toBeNull();
+    expect(queryByTestId('platform-badge')).not.toBeInTheDocument();
   });
 
-  it('is inked with the same colour as the light', () => {
-    // Handed the same value, so they cannot drift: a green light beside a
-    // blue cloud would be worse than no cloud at all.
-    const { container } = cardWith('platform', runningOnPlatformStory());
-    const glyph = container.querySelector(
-      '[title="Runs on the platform"]'
-    ) as HTMLElement;
-    const led = container.querySelector('.status-led');
+  it('shows none before a runner has been chosen', () => {
+    const { queryByTestId } = cardWith('none');
 
-    expect(led?.className).toContain('led-green');
-    expect(glyph.getAttribute('data-ink')).toBe('var(--green-300)');
+    expect(queryByTestId('platform-badge')).not.toBeInTheDocument();
   });
 });

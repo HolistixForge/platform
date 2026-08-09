@@ -1,4 +1,4 @@
-import { useState, useCallback, FC, CSSProperties } from 'react';
+import { useState, useCallback } from 'react';
 import {
   InfoCircledIcon,
   TrashIcon,
@@ -317,6 +317,18 @@ export const UserContainerCardInternal = ({
 
   const { alive } = isAlive(container.last_watchdog_at, container.stopped_at);
   const color = ledColor(container);
+  const onPlatform = container.runner.id === 'platform';
+
+  /**
+   * Whether the badge beside the run control is shown at all.
+   *
+   * Only while the service is actually up — which is exactly when the light
+   * is blue or green, so the condition is written as that rather than as a
+   * second reading of the same facts. A badge on a stopped service answers
+   * "where would this run", which nobody asked; the runner picker below is
+   * already the place for that question.
+   */
+  const running = color === 'blue' || color === 'green';
 
   // The run control, wrapped the same way `deleteAction` is: a click on it
   // reaches the gateway, and a gateway that refuses has to say so somewhere the
@@ -415,7 +427,7 @@ export const UserContainerCardInternal = ({
         </div>
       )}
 
-      {host && (
+      {host && running && (
         <div
           className="absolute flex items-center"
           style={{
@@ -426,6 +438,20 @@ export const UserContainerCardInternal = ({
           }}
         >
           <UserAvatar size="small" {...host} host />
+        </div>
+      )}
+
+      {onPlatform && running && (
+        <div
+          className="absolute flex items-center"
+          style={{
+            left: '-20px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 20,
+          }}
+        >
+          <PlatformBadge />
         </div>
       )}
 
@@ -692,12 +718,7 @@ export const UserContainerCardInternal = ({
         <StatusLed color={color} type="server-card" />
       </div>
 
-      {/* Left of the light, and reading the same value it does. */}
       <div className="absolute" style={{ right: '36px', bottom: '19px' }}>
-        <RunnerGlyph runnerId={container.runner.id} color={color} />
-      </div>
-
-      <div className="absolute" style={{ right: '58px', bottom: '19px' }}>
         {alive && container.system && <SystemInfo {...container.system} />}
       </div>
 
@@ -757,62 +778,43 @@ const DockerCommand = ({ command }: { command: string }) => {
 
 //
 /**
- * Where this service runs, beside the light that says it is running.
+ * Who — or what — is running this service, beside the run control.
  *
- * The light carries the colour — blue for a machine somebody owns, green for
- * the platform — and a colour alone is a legend nobody was given. The glyph
- * next to it says the same thing in a form that needs no key, and the two
- * agree by construction: they are handed the same value.
+ * On a machine somebody owns, that slot holds their face: a round badge with
+ * a blue ring, so the card says whose laptop is doing the work before it says
+ * anything else. On the platform there is no one to show, and the slot was
+ * simply empty — which does not read as "nobody owns this", it reads as a
+ * card missing a piece.
  *
- * Nothing for a runner this build does not know, rather than a placeholder.
- * "Running somewhere I cannot name" is what the light already says on its
- * own, and a question mark beside it would add doubt without adding fact.
+ * So the platform gets a face of its own: the same badge, the same ring, a
+ * cloud instead of a person and green instead of blue. Green because that is
+ * what the light says for the platform, and one fact should not be told in
+ * two colours.
+ *
+ * Shown only while the service is actually up, like the face it stands in
+ * for. On a stopped one it would answer "where would this run" — a question
+ * the runner picker below already owns, and one nobody asked.
  */
-const RUNNER_GLYPH: Record<string, FC<{ style?: CSSProperties }>> = {
-  local: icons.Laptop,
-  platform: icons.Cloud,
-};
-
-const LED_INK: Record<TLedColor, string> = {
-  blue: 'var(--c-led-blue)',
-  green: 'var(--green-300)',
-  yellow: 'var(--c-led-yellow)',
-  red: 'var(--c-led-red)',
-};
-
-const RunnerGlyph = ({
-  runnerId,
-  color,
-}: {
-  runnerId: string;
-  color: TLedColor;
-}) => {
-  const Glyph = RUNNER_GLYPH[runnerId];
-  if (!Glyph) return null;
-
-  return (
-    <span
-      title={
-        runnerId === 'platform' ? 'Runs on the platform' : 'Runs on a machine'
-      }
-      // The ink, said twice on purpose. jsdom drops a `var()` from a standard
-      // property outright — it does not even reach the style attribute — so
-      // the inline colour is unreadable from a test, and "the glyph agrees
-      // with the light" is exactly the thing worth asserting.
-      data-ink={LED_INK[color]}
-      style={{
-        display: 'inline-flex',
-        // `currentColor` inside the icon, so one value drives the whole glyph
-        // and it can never disagree with the light beside it.
-        color: LED_INK[color],
-        lineHeight: 0,
-        filter: `drop-shadow(0 0 4px ${LED_INK[color]})`,
-      }}
-    >
-      <Glyph style={{ width: '14px', height: '14px' }} />
-    </span>
-  );
-};
+const PlatformBadge = () => (
+  <span
+    title="Runs on the platform"
+    data-testid="platform-badge"
+    style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '38px',
+      height: '38px',
+      borderRadius: '9999px',
+      backgroundColor: 'var(--surface-700)',
+      border: '1px solid var(--green-300)',
+      color: 'var(--green-300)',
+      filter: 'drop-shadow(0px 0px 4px var(--green-300))',
+    }}
+  >
+    <icons.Cloud style={{ width: '20px', height: '20px' }} />
+  </span>
+);
 
 //
 
