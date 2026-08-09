@@ -462,4 +462,16 @@ describe('the platform badge', () => {
 
     expect(queryByTestId('platform-badge')).not.toBeInTheDocument();
   });
+
+  it('carries the cloud, and lets it take the badge’s colour', () => {
+    // The icon's path has no fill of its own, so it falls to the SVG default
+    // — black — and the parent's `color` never reaches it. On a dark badge
+    // that reads as a hole rather than as a cloud. The stylesheet sets `fill`
+    // on the svg, which is inherited; this checks the icon is there for it to
+    // apply to, since jsdom applies no external CSS.
+    const { getByTestId } = cardWith('platform', runningOnPlatformStory());
+
+    expect(getByTestId('platform-badge').querySelector('svg')).toBeTruthy();
+    expect(getByTestId('platform-badge').className).toBe('platform-badge');
+  });
 });

@@ -31,6 +31,7 @@ import {
   openableServices,
 } from '../servers-types';
 import { StatusLed } from './status-led';
+import './platform-badge.scss';
 import { UseContainerProps } from './node-server/node-server';
 import { TContainerRunnerFrontend } from '../../frontend';
 
@@ -797,22 +798,11 @@ const DockerCommand = ({ command }: { command: string }) => {
  */
 const PlatformBadge = () => (
   <span
+    className="platform-badge"
     title="Runs on the platform"
     data-testid="platform-badge"
-    style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      width: '38px',
-      height: '38px',
-      borderRadius: '9999px',
-      backgroundColor: 'var(--surface-700)',
-      border: '1px solid var(--green-300)',
-      color: 'var(--green-300)',
-      filter: 'drop-shadow(0px 0px 4px var(--green-300))',
-    }}
   >
-    <icons.Cloud style={{ width: '20px', height: '20px' }} />
+    <icons.Cloud />
   </span>
 );
 

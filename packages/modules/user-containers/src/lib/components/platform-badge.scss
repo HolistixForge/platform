@@ -1,0 +1,63 @@
+/**
+ * The badge that stands where a person's face stands, for a service on the
+ * platform.
+ *
+ * Same shape and same ring as the avatar it replaces, in the colour the light
+ * uses for the platform. It pulses for the same reason the avatar does: a
+ * running service is a thing in motion, and a still badge beside a still
+ * light says only "configured".
+ */
+.platform-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 9999px;
+  background-color: var(--surface-700);
+  border: 1px solid var(--green-300);
+  color: var(--green-300);
+  filter: drop-shadow(0px 0px 4px var(--green-300));
+}
+
+.platform-badge svg {
+  width: 20px;
+  height: 20px;
+  /* `fill`, not `color`. The icon's path carries no fill of its own, so it
+     falls to the SVG default — black — and the parent's `color` never reaches
+     it. On a dark badge that reads as a hole rather than as a cloud. `fill`
+     is inherited, so declaring it on the svg is enough for every path in it. */
+  fill: currentColor;
+}
+
+/**
+ * The pulse: a disc the size of the badge, growing out of it and fading.
+ *
+ * Behind the badge's own background, so only the part that has grown past the
+ * edge is ever seen — which is what makes it a ring rather than a flash over
+ * the icon.
+ *
+ * Its own keyframes rather than the `ping` ui-base declares for avatars.
+ * That one is only in the document because this card happens to import an
+ * avatar component from the same barrel, and a rule that works by accident of
+ * an unrelated import is a rule that stops working without warning.
+ */
+.platform-badge::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 9999px;
+  background-color: var(--green-300);
+  z-index: var(--z-behind);
+  transform-origin: center;
+  animation: platform-badge-ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes platform-badge-ping {
+  75%,
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
