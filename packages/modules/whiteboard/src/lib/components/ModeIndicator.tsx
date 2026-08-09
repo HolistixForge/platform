@@ -16,6 +16,20 @@ import { LayerViewport } from './layer-types';
  * - taking the viewport's absoluteX/absoluteY (top-left corner in space units)
  * - adding half of the screen size expressed in space units (width / zoom, height / zoom)
  */
+/**
+ * Above every layer, whichever one is up.
+ *
+ * The layers are stacked by `zIndexHint` — the drawing surface is 10 — and
+ * each of them fills the board and takes the pointer while it is active. This
+ * bar sat at 5, so with the surface up it was both behind it and unclickable:
+ * no way to reach move mode, which is the only way to select a node once the
+ * node itself takes the click.
+ *
+ * It is the board's chrome rather than a layer's, so it is above all of them
+ * by construction and not by being one more than the current highest.
+ */
+const BOARD_CHROME_Z = 1000;
+
 export const ModeIndicator = ({
   mode,
   onModeChange,
@@ -35,6 +49,7 @@ export const ModeIndicator = ({
 
   return (
     <div
+      data-testid="mode-indicator"
       style={{
         position: 'absolute',
         bottom: '10px',
@@ -44,7 +59,11 @@ export const ModeIndicator = ({
         gap: '8px',
         backgroundColor: 'rgba(0, 0, 0, 0.7)',
         borderRadius: '5px',
-        zIndex: 5,
+        zIndex: BOARD_CHROME_Z,
+        // The layer above it is inert where it is transparent, but this bar
+        // is a sibling of that layer rather than a child, so it has to say
+        // for itself that it is not.
+        pointerEvents: 'auto',
         overflow: 'hidden',
       }}
     >
