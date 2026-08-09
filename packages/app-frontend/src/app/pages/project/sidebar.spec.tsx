@@ -77,11 +77,20 @@ describe('the rail inside a space', () => {
     ]);
   });
 
-  it('separates the space from the organization', () => {
+  it('separates the space from the organization, in the DOM', () => {
+    // Two lists, not a border: as an island the groups are separate boxes
+    // with air between them, and a rule inside one list cannot become two.
     const { container } = renderRail('/p/org-1/proj/editor');
-    const rule = container.querySelector('li.sidebar-group-start');
+    const groups = Array.from(container.querySelectorAll('ul')).map((ul) =>
+      Array.from(ul.querySelectorAll('li')).map((li) =>
+        li.getAttribute('title')
+      )
+    );
 
-    expect(rule?.getAttribute('title')).toBe('whiteboard');
+    expect(groups).toEqual([
+      ['organizations', 'organization', 'accesses'],
+      ['whiteboard', 'resources'],
+    ]);
   });
 
   it('greys nothing out', () => {

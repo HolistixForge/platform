@@ -144,9 +144,18 @@ describe('Sidebar Component - Simple Example', () => {
 
     it('draws the island shape as a floating box', () => {
       const island = rule('aside.sidebar--island');
-      expect(island).toContain('border-radius');
       expect(island).toContain('top: 50%');
       expect(island).not.toContain('bottom: 0');
+    });
+
+    it('gives each group of the island its own box', () => {
+      // The rounded edge is on the lists, not on the aside: as an island the
+      // two levels are separate boxes with air between them, and one box with
+      // a rule in it reads as a single panel — the opposite of what they are.
+      const group = rule('aside.sidebar--island ul');
+      expect(group).toContain('border-radius');
+      expect(group).toContain('background');
+      expect(rule('aside.sidebar--island')).toContain('gap');
     });
 
     it('publishes the bar width for whoever has to clear it', () => {

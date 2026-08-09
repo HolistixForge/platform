@@ -22,6 +22,8 @@
 aside {
   background: var(--surface-700);
   position: fixed;
+  display: flex;
+  flex-direction: column;
   /* Fixed is not enough to stay on top. With no z-index the rail paints at
      the same level as the page's own content, so anything positive above it
      covers it — and the whiteboard's drawing surface is a full-screen canvas
@@ -50,21 +52,7 @@ aside ul li {
   position: relative;
 }
 
-/* ---- groups and reach --------------------------------------------------- */
-
-/* The rail carries two levels — the organization's places and a space's — and
-   they are not interchangeable. A rule says so without spending a label in a
-   56px column. The gap is the list's own, doubled by the margin. */
-aside ul li.sidebar-group-start {
-  /* `--color-border`, not `--color-border-muted`: the muted one resolves to
-     the same surface as the rail's own background, so the rule was there and
-     invisible. Measured on the page, not read off the palette. */
-  border-top: 1px solid var(--color-border);
-  padding-top: 16px;
-  margin-top: 8px;
-  height: 48px;
-  box-sizing: border-box;
-}
+/* ---- reach --------------------------------------------------------------- */
 
 /* Out of reach from this page, and still there. Removing it instead would
    change the rail's length by page, so the thing under a given position would
@@ -84,13 +72,24 @@ aside.sidebar--dashboard {
   width: var(--holistix-sidebar-width);
 }
 
-aside.sidebar--dashboard ul {
-  /* Centred inside the full-height bar, which is where the icons sat when the
-     whole rail was an island and the only part of that look worth keeping. */
+/* Centred inside the full-height bar, which is where the icons sat when the
+   whole rail was an island and the only part of that look worth keeping.
+   Centring is on the bar now that it holds more than one list. */
+aside.sidebar--dashboard {
   justify-content: center;
-  height: 100%;
+}
+
+aside.sidebar--dashboard ul {
   width: 100%;
   box-sizing: border-box;
+}
+
+/* One column, so the levels are told apart by a rule rather than by air.
+   `--color-border`, not `--color-border-muted`: the muted one resolves to the
+   same surface as the rail's own background, so the first rule drawn here was
+   present and invisible. Seen on the page, not read off the palette. */
+aside.sidebar--dashboard ul + ul {
+  border-top: 1px solid var(--color-border);
 }
 
 /* ---- island: a floating box ---------------------------------------------- */
@@ -104,12 +103,19 @@ aside.sidebar--island {
   left: var(--holistix-island-left, 16px);
   width: fit-content;
   height: auto;
-  border-radius: 8px;
+  /* The aside is only the stack; each group is its own box. Over a canvas a
+     rule between two lists reads as one panel with a line in it, which is the
+     opposite of what the two levels are — so they are separated by air and by
+     their own edges instead. */
+  background: transparent;
+  gap: var(--spacing-6);
   transition: left 120ms ease;
 }
 
 aside.sidebar--island ul {
   width: fit-content;
+  background: var(--surface-700);
+  border-radius: 8px;
 }
 
 /* ---- shared -------------------------------------------------------------- */

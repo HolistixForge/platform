@@ -138,10 +138,11 @@ describe('the rail outside a space', () => {
 
   it('separates the space from the organization, here too', () => {
     const { container } = renderRail('/org/org-uuid');
+    const sizes = Array.from(container.querySelectorAll('ul')).map(
+      (ul) => ul.querySelectorAll('li').length
+    );
 
-    expect(
-      container.querySelector('li.sidebar-group-start')?.getAttribute('title')
-    ).toMatch(/^whiteboard/);
+    expect(sizes).toEqual([3, 2]);
   });
 
   it('says why an entry is out of reach', () => {
