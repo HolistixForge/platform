@@ -123,7 +123,18 @@ aside ul li svg.active {
   opacity: 1;
 }
 
-@media (max-width: 1000px) {
+/* Below the app's own small-screen line, and not before.
+ *
+ * This was 1000px, which is a laptop. A window at 917 lost the rail outright
+ * — no island, no bar, nothing — and since a missing element leaves no trace,
+ * it read as a component that had stopped rendering. Two people looked for it
+ * in the wrong place.
+ *
+ * 640 is where the header already collapses and `.not-bellow-640` clears out
+ * (ui-views/mvp-ui-view/components/header.scss): the app's existing line for
+ * "there is no room for chrome here". A 56px rail carrying one item is worth
+ * 6% of a 917px window and is not what makes that window cramped. */
+@media (max-width: 640px) {
   aside {
     display: none !important;
   }

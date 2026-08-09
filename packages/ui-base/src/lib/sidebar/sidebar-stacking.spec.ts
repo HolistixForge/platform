@@ -35,6 +35,33 @@ const tierValue = (name: string): number => {
 /** The `aside { … }` block, which is where every variant gets its position. */
 const asideRule = /aside\s*\{([^}]*)\}/.exec(css)?.[1] ?? '';
 
+describe('the project rail, at narrow widths', () => {
+  /** Where the header collapses — the app's own line for "no room for chrome". */
+  const SMALL_SCREEN = 640;
+
+  const hidesBelow = (): number => {
+    const found =
+      /@media\s*\(max-width:\s*(\d+)px\)\s*\{[^@]*aside\s*\{[^}]*display:\s*none/.exec(
+        css
+      );
+    if (!found) throw new Error('no rule hiding the rail was found');
+    return Number(found[1]);
+  };
+
+  it('is hidden only below the app’s small-screen line', () => {
+    // It used to go at 1000px, which is a laptop. A 917px window lost the rail
+    // outright — and a missing element leaves nothing to inspect, so it read
+    // as a component that had stopped rendering rather than as a breakpoint.
+    expect(hidesBelow()).toBe(SMALL_SCREEN);
+  });
+
+  it('survives the window sizes people actually work in', () => {
+    for (const width of [917, 1024, 1280, 1440]) {
+      expect([width, width > hidesBelow()]).toEqual([width, true]);
+    }
+  });
+});
+
 describe('the project rail, in the stack', () => {
   it('is positioned out of flow, so nothing gives way to it', () => {
     expect(asideRule).toMatch(/position:\s*fixed/);
