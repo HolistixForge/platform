@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, FC, CSSProperties } from 'react';
 import {
   InfoCircledIcon,
   TrashIcon,
@@ -692,7 +692,12 @@ export const UserContainerCardInternal = ({
         <StatusLed color={color} type="server-card" />
       </div>
 
+      {/* Left of the light, and reading the same value it does. */}
       <div className="absolute" style={{ right: '36px', bottom: '19px' }}>
+        <RunnerGlyph runnerId={container.runner.id} color={color} />
+      </div>
+
+      <div className="absolute" style={{ right: '58px', bottom: '19px' }}>
         {alive && container.system && <SystemInfo {...container.system} />}
       </div>
 
@@ -751,6 +756,66 @@ const DockerCommand = ({ command }: { command: string }) => {
 };
 
 //
+/**
+ * Where this service runs, beside the light that says it is running.
+ *
+ * The light carries the colour — blue for a machine somebody owns, green for
+ * the platform — and a colour alone is a legend nobody was given. The glyph
+ * next to it says the same thing in a form that needs no key, and the two
+ * agree by construction: they are handed the same value.
+ *
+ * Nothing for a runner this build does not know, rather than a placeholder.
+ * "Running somewhere I cannot name" is what the light already says on its
+ * own, and a question mark beside it would add doubt without adding fact.
+ */
+const RUNNER_GLYPH: Record<string, FC<{ style?: CSSProperties }>> = {
+  local: icons.Laptop,
+  platform: icons.Cloud,
+};
+
+const LED_INK: Record<TLedColor, string> = {
+  blue: 'var(--c-led-blue)',
+  green: 'var(--green-300)',
+  yellow: 'var(--c-led-yellow)',
+  red: 'var(--c-led-red)',
+};
+
+const RunnerGlyph = ({
+  runnerId,
+  color,
+}: {
+  runnerId: string;
+  color: TLedColor;
+}) => {
+  const Glyph = RUNNER_GLYPH[runnerId];
+  if (!Glyph) return null;
+
+  return (
+    <span
+      title={
+        runnerId === 'platform' ? 'Runs on the platform' : 'Runs on a machine'
+      }
+      // The ink, said twice on purpose. jsdom drops a `var()` from a standard
+      // property outright — it does not even reach the style attribute — so
+      // the inline colour is unreadable from a test, and "the glyph agrees
+      // with the light" is exactly the thing worth asserting.
+      data-ink={LED_INK[color]}
+      style={{
+        display: 'inline-flex',
+        // `currentColor` inside the icon, so one value drives the whole glyph
+        // and it can never disagree with the light beside it.
+        color: LED_INK[color],
+        lineHeight: 0,
+        filter: `drop-shadow(0 0 4px ${LED_INK[color]})`,
+      }}
+    >
+      <Glyph style={{ width: '14px', height: '14px' }} />
+    </span>
+  );
+};
+
+//
+
 const SystemInfo = ({
   cpu,
   memory,

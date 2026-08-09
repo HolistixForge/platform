@@ -412,3 +412,65 @@ describe('ledColor', () => {
     expect(card({})).toBe('red');
   });
 });
+
+/**
+ * The light says where a service runs by its colour, and a colour on its own
+ * is a legend nobody was given. The glyph beside it says the same thing in a
+ * form that needs no key — so the two must never disagree, which is only
+ * guaranteed while they are handed the same value.
+ */
+describe('the runner glyph, beside the light', () => {
+  const cardWith = (runnerId: string, args = makeStoryArgs()) =>
+    render(
+      <Tooltip.Provider>
+        <UserContainerCardInternal
+          {...args}
+          container={
+            {
+              ...args.container,
+              runner: { ...args.container.runner, id: runnerId },
+            } as StoryArgs['container']
+          }
+          runners={new Map()}
+        />
+      </Tooltip.Provider>
+    );
+
+  it('shows one for a service on the platform', () => {
+    const { container } = cardWith('platform');
+
+    expect(
+      container.querySelector('[title="Runs on the platform"]')
+    ).toBeInTheDocument();
+  });
+
+  it('shows one for a service on somebody’s machine', () => {
+    const { container } = cardWith('local');
+
+    expect(
+      container.querySelector('[title="Runs on a machine"]')
+    ).toBeInTheDocument();
+  });
+
+  it('shows none for a runner this build has never heard of', () => {
+    // Rather than a placeholder. "Running somewhere I cannot name" is what
+    // the light already says on its own, and a question mark beside it would
+    // add doubt without adding fact.
+    const { container } = cardWith('kata-next');
+
+    expect(container.querySelector('[title^="Runs on"]')).toBeNull();
+  });
+
+  it('is inked with the same colour as the light', () => {
+    // Handed the same value, so they cannot drift: a green light beside a
+    // blue cloud would be worse than no cloud at all.
+    const { container } = cardWith('platform', runningOnPlatformStory());
+    const glyph = container.querySelector(
+      '[title="Runs on the platform"]'
+    ) as HTMLElement;
+    const led = container.querySelector('.status-led');
+
+    expect(led?.className).toContain('led-green');
+    expect(glyph.getAttribute('data-ink')).toBe('var(--green-300)');
+  });
+});
