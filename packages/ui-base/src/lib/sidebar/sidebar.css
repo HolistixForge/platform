@@ -22,6 +22,15 @@
 aside {
   background: var(--surface-700);
   position: fixed;
+  /* Fixed is not enough to stay on top. With no z-index the rail paints at
+     the same level as the page's own content, so anything positive above it
+     covers it — and the whiteboard's drawing surface is a full-screen canvas
+     at 10. The rail went on being there, correctly placed, entirely hidden.
+
+     `sticky` rather than a number: it is the tier for chrome that stays put
+     while content scrolls under it, which is what this is. Above every layer,
+     below dropdowns, modals and toasts, which should still open over it. */
+  z-index: var(--z-sticky);
 }
 
 aside ul {

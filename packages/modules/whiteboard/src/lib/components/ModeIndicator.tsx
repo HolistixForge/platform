@@ -25,10 +25,13 @@ import { LayerViewport } from './layer-types';
  * no way to reach move mode, which is the only way to select a node once the
  * node itself takes the click.
  *
- * It is the board's chrome rather than a layer's, so it is above all of them
- * by construction and not by being one more than the current highest.
+ * It is the board's chrome rather than a layer's, so it takes the design
+ * system's tier for chrome that stays put while content moves under it —
+ * above every layer, below the dropdowns, modals and toasts that should still
+ * open over it. The project rail sits at the same tier for the same reason,
+ * and the two do not overlap.
  */
-const BOARD_CHROME_Z = 1000;
+const BOARD_CHROME_Z = 'var(--z-sticky, 200)';
 
 export const ModeIndicator = ({
   mode,

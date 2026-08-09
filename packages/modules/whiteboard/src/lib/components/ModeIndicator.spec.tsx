@@ -19,8 +19,13 @@ import { ModeIndicator } from './ModeIndicator';
 
 //
 
-/** The highest `zIndexHint` any layer declares — the drawing surface's. */
-const HIGHEST_LAYER_Z = 10;
+/**
+ * The tier for chrome that stays put while content moves under it. The layers
+ * are stacked by `zIndexHint`, the highest being the drawing surface at 10, so
+ * anything on this tier is above all of them — and below the dropdowns,
+ * modals and toasts that should still open over the bar.
+ */
+const STICKY_TIER = 'var(--z-sticky, 200)';
 
 const viewport = () => ({ absoluteX: 0, absoluteY: 0, zoom: 1 });
 
@@ -49,7 +54,7 @@ describe('ModeIndicator', () => {
   it('sits above every layer', () => {
     const { bar } = renderBar();
 
-    expect(Number(bar.style.zIndex)).toBeGreaterThan(HIGHEST_LAYER_Z);
+    expect(bar.style.zIndex).toBe(STICKY_TIER);
   });
 
   it('takes the pointer, being a sibling of the layer that covers the board', () => {
