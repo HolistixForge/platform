@@ -130,6 +130,25 @@
     --ui-font: 'Roboto', sans-serif;
   }
 
+  // A node's shadow has to be able to leave its box.
+  //
+  // Excalidraw clips every embed to its element — right for an embedded web
+  // page, which must not paint outside the rectangle someone drew. Ours are
+  // not pages: they are this application's own cards, and one of them glows
+  // on hover with 90px of blur. Clipped, the glow came out sliced off square
+  // on all four sides, which reads as a rendering fault rather than as a
+  // glow.
+  //
+  // Safe to lift here and nowhere else: `validateEmbeddable` admits one host
+  // and it is ours, so every embed inside this layer is a node we drew.
+  //
+  // No `!important` — measured, not assumed. Excalidraw's rule is two classes
+  // and this is three, so it wins on specificity despite loading first. That
+  // is not true of everything here: the menu entry below needed one.
+  .excalidraw .excalidraw__embeddable-container__inner {
+    overflow: visible;
+  }
+
   // The dark-mode entry in Excalidraw's menu, removed.
   //
   // It sets `theme: 'dark'`, which works by putting an invert filter over the

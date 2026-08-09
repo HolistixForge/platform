@@ -134,6 +134,15 @@ describe('EmbeddedNode', () => {
     expect(renderNode('shape').style.pointerEvents).toBe('');
   });
 
+  it('lets a node’s shadow leave its box', () => {
+    // A card glows on hover with 90px of blur, and the box around it is its
+    // own size plus eight pixels. Clipped, the glow came out sliced off
+    // square, which reads as a rendering fault rather than as a glow. The
+    // clip used to guard against a node outgrowing its box; the measurement
+    // does that properly now, by making the box fit.
+    expect(renderNode('user-container').style.overflow).toBe('visible');
+  });
+
   it('leaves room between the node and the edge of its box', () => {
     // Excalidraw draws the embeddable's border on that edge, so a node laid
     // out flush against it reads as clipped even when it is not.
@@ -192,8 +201,10 @@ describe('EmbeddedNode — reporting how big it is', () => {
   };
 
   it('reports the size the node wanted, not the size of the box', () => {
-    // `scrollWidth`, because the box clips: its own rect only ever says how
-    // big the box is, which is the number that was wrong to begin with.
+    // `scrollWidth`, not the rect: the rect only ever says how big this
+    // element is — which is the box, and the box is the number being
+    // corrected. True whether or not anything clips, which matters since
+    // nothing does any more.
     expect(reportsFor('user-container', 400, 260)).toEqual([
       { id: 'node-a', size: { width: 400, height: 260 } },
     ]);

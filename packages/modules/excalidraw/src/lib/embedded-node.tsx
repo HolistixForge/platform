@@ -117,10 +117,12 @@ export const EmbeddedNode: FC<{ nodeId: string; viewId: string }> = ({
   /**
    * The node's own size, reported up so the box can be made to fit it.
    *
-   * `scrollWidth` rather than the bounding rect: the box clips, so the rect
-   * only ever says how big the box is, while the scroll size says how big the
-   * content wanted to be. Read before paint, so the first projection after it
-   * is the only correction anyone sees.
+   * `scrollWidth` rather than the bounding rect: the rect only ever says how
+   * big this element is — which is the box, and the box is the number being
+   * corrected — while the scroll size says how big the content wanted to be.
+   * True whether or not anything clips, which matters since nothing does any
+   * more. Read before paint, so the first projection after it is the only
+   * correction anyone sees.
    *
    * The observer watches the node's own root, not this wrapper — the wrapper
    * is pinned to the box and never changes size, so watching it would catch
@@ -209,7 +211,15 @@ export const EmbeddedNode: FC<{ nodeId: string; viewId: string }> = ({
         style={{
           width: '100%',
           height: '100%',
-          overflow: 'hidden',
+          // Not hidden, so a node's own shadow can leave its box.
+          //
+          // A card glows on hover — 90px of blur — and the box around it is
+          // its own size plus eight pixels. Clipped here it came out sliced
+          // off square, which reads as a rendering fault rather than as a
+          // glow. The clip was a guard against a node outgrowing its box, and
+          // that guard is what the measurement above now does properly: the
+          // box is made to fit the node instead of cutting it to size.
+          overflow: 'visible',
           // The margin is padding here, so the box the projection sizes and
           // the space the node is laid out in differ by exactly it.
           padding: EMBED_MARGIN,
