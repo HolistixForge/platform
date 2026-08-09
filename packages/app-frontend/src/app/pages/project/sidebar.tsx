@@ -19,6 +19,14 @@ export const ProjectSidebar = ({
         // { title: 'solar system', Icon: icons.SolarSystem },
         // { title: 'galaxy', Icon: icons.Galaxy },
         { title: 'project-main', Icon: icons.NodeMother, link: '../editor' },
+        // Resources used to be a tab, which put a permanent tab in everyone's
+        // tab bar for a page they open occasionally — and made it look like
+        // one board among the boards, which it is not. It is a place in the
+        // project, so it belongs where the project's places are.
+        //
+        // The link is relative: `..` drops the last segment, so it resolves
+        // from `/p/:owner/:project/editor` and from the resources page itself.
+        { title: 'resources', Icon: icons.EnterResource, link: '../resources' },
         // { title: 'tree', Icon: icons.Tree },
         // { title: 'biome', Icon: icons.Biome },
         // { title: 'seed', Icon: icons.Seed },

@@ -214,10 +214,13 @@ export class TabsReducer extends ReducerWithCollab<
       `project:init called for project ${event.project_id}, current tabs children: ${childrenCount}`
     );
 
-    // Already initialized: only make sure the default tabs are still there.
-    // Projects created before the Resources tab existed are missing it.
+    // Already initialized: the only thing left to do is retire the Resources
+    // tab, which is now an entry in the project rail instead. Projects created
+    // before that change still carry it, and it used to be *restored* here —
+    // so leaving this out would not merely skip the migration, it would put
+    // the tab back on the next start.
     if (tabsData && tabsData.tree.children.length > 0) {
-      if (hasTabOfType(tabsData.tree, 'resources-grid')) {
+      if (!hasTabOfType(tabsData.tree, 'resources-grid')) {
         log(
           EPriority.Info,
           'TABS_INIT',
@@ -227,17 +230,17 @@ export class TabsReducer extends ReducerWithCollab<
       }
 
       const patched: TTabsTree = {
-        ...tabsData,
-        tree: {
-          ...tabsData.tree,
-          children: [...tabsData.tree.children, resourcesTab()],
-        },
+        tree: withoutResources(tabsData.tree),
+        // Anyone whose active tab was the one being removed is moved to the
+        // first tab that is left. A stale path leaves the editor with no tab
+        // to render and nothing to say why.
+        actives: repointActives(tabsData, withoutResources(tabsData.tree)),
       };
       collab.sharedData['tabs:tabs'].set('unique', patched);
       log(
         EPriority.Info,
         'TABS_INIT',
-        `✅ Restored missing '${RESOURCES_TAB_TITLE}' tab for project ${event.project_id}`
+        `✅ Retired the '${RESOURCES_TAB_TITLE}' tab for project ${event.project_id} — it is in the project rail now`
       );
       return;
     }
@@ -256,7 +259,6 @@ export class TabsReducer extends ReducerWithCollab<
             },
             children: [],
           },
-          resourcesTab(),
         ],
       },
       actives: {},
@@ -266,7 +268,7 @@ export class TabsReducer extends ReducerWithCollab<
     log(
       EPriority.Info,
       'TABS_INIT',
-      `✅ Created default tabs '${DEFAULT_DASHBOARD_TAB_TITLE}' and '${RESOURCES_TAB_TITLE}' for project ${event.project_id}`
+      `✅ Created default tab '${DEFAULT_DASHBOARD_TAB_TITLE}' for project ${event.project_id}`
     );
   }
 }
@@ -281,11 +283,58 @@ const newTabPayload = (): TabPayload => ({
 
 const newGroup = (): TabPayload => ({ type: 'group' });
 
-const resourcesTab = (): TreeElement<TabPayload> => ({
-  title: RESOURCES_TAB_TITLE,
-  payload: { type: 'resources-grid' },
-  children: [],
+/**
+ * The tree without the Resources tab, wherever it sits.
+ *
+ * Walked rather than filtered at the root: a tab can be dragged into a group,
+ * and one that was would have survived a shallower removal and come back on
+ * every start.
+ */
+const withoutResources = (
+  node: TreeElement<TabPayload>
+): TreeElement<TabPayload> => ({
+  ...node,
+  children: node.children
+    .filter((child) => child.payload.type !== 'resources-grid')
+    .map(withoutResources),
 });
+
+/** The first tab that is not a group — what to fall back to. */
+const firstTabPath = (
+  node: TreeElement<TabPayload>,
+  path: string[] = []
+): string[] | undefined => {
+  for (const child of node.children) {
+    const here = [...path, child.title];
+    if (child.payload.type !== 'group') return here;
+    const deeper = firstTabPath(child, here);
+    if (deeper) return deeper;
+  }
+  return undefined;
+};
+
+/** Every active pointer, with the ones aiming at a removed tab moved. */
+const repointActives = (
+  before: TTabsTree,
+  after: TreeElement<TabPayload>
+): TUsersActiveTabs => {
+  const fallback = firstTabPath(after);
+  const survives = (path: TabPath): boolean => {
+    let node: TreeElement<TabPayload> | undefined = after;
+    for (const title of path) {
+      node = node?.children.find((c) => c.title === title);
+      if (!node) return false;
+    }
+    return true;
+  };
+
+  const repointed: TUsersActiveTabs = {};
+  for (const [user, path] of Object.entries(before.actives)) {
+    if (survives(path)) repointed[user] = path;
+    else if (fallback) repointed[user] = fallback;
+  }
+  return repointed;
+};
 
 /**
  * Tabs can be nested inside groups, so the whole tree has to be walked.
