@@ -37,4 +37,21 @@ export const ReactflowLayerContext = ({
 
 //
 
-export const useSpaceContext = () => useContext(spaceContext) as TWhiteboardContext;
+export const useSpaceContext = () =>
+  useContext(spaceContext) as TWhiteboardContext;
+
+//
+
+/**
+ * The board's interaction mode, on its own.
+ *
+ * Narrower than `useSpaceContext` on purpose: a node drawn inside the
+ * Excalidraw scene needs to know whether the board is in move mode, and
+ * nothing else from the context. Reaching for the whole thing would make it
+ * re-render on every edge-menu open.
+ *
+ * Falls back to `default` outside a provider — a node rendered in a story or
+ * a test is not in move mode, and throwing there would say nothing useful.
+ */
+export const useWhiteboardMode = (): WhiteboardMode =>
+  useContext(spaceContext)?.mode ?? 'default';

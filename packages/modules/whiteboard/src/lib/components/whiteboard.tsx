@@ -637,17 +637,23 @@ const ReactFlowBaseLayer = ({
 
   const [mode, setMode] = useState<WhiteboardMode>('default');
 
-  // Toggle pan-only mode with Shift+Z
+  /**
+   * Shift+Z toggles move mode.
+   *
+   * It used to be guarded by `active`, which is true only while ReactFlow is
+   * the surface — so with the drawing surface up, the shortcut did nothing.
+   * The same mistake as the mode bar, which used to vanish for the same
+   * reason: the mode belongs to the board, not to one of its layers. On the
+   * drawing surface it is what lets a node be selected and moved at all, since
+   * a live node otherwise keeps the pointer for itself.
+   *
+   * The updater form rather than reading `mode`: the handler is registered
+   * once and would otherwise close over the mode it was registered with.
+   */
   useHotkeys(
     'shift+z',
-    () => {
-      if (active) {
-        setMode(mode === 'move-node' ? 'default' : 'move-node');
-      }
-    },
-    {
-      preventDefault: true,
-    }
+    () => setMode((m) => (m === 'move-node' ? 'default' : 'move-node')),
+    { preventDefault: true }
   );
 
   /**

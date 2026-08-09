@@ -38,6 +38,7 @@ export { useTestToolbarButtons } from './lib/components/assets/node-header/node-
 export { useConnector } from './lib/components/assets/inputsOutputs/inputsOutputs';
 export { useNodeContext } from './lib/components/node-wrappers/node-wrapper';
 export { EmbeddedNodeContext } from './lib/components/node-wrappers/node-wrapper';
+export { useWhiteboardMode } from './lib/components/reactflow-layer-context';
 export {
   LabelEnd,
   LabelMiddle,
