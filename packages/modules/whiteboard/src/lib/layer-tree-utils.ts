@@ -1,5 +1,5 @@
 import { TNodeView } from './whiteboard-types';
-import { TLayerTreeItem, TLayerTreeCollection } from './layer-tree-types';
+import { TLayerTreeItem } from './layer-tree-types';
 
 /**
  * Builds hierarchical node tree from flat node array
@@ -83,53 +83,13 @@ function getNodeLevel(
   return level;
 }
 
-/**
- * Flattens tree structure for rendering
+/*
+ * The two flatteners that used to live here are gone with the panel that
+ * needed them.
+ *
+ * They turned the tree into a list and wrote the depth into a margin, because
+ * the panel drew a flat list. It draws a tree now — `LayerTree` walks the
+ * children itself and skips whole branches that are shut, which a
+ * pre-flattened list cannot do: everything is already in it by the time
+ * anyone asks what is open.
  */
-export function flattenTreeItems(items: TLayerTreeItem[]): TLayerTreeItem[] {
-  const flattened: TLayerTreeItem[] = [];
-
-  function flatten(items: TLayerTreeItem[]) {
-    for (const item of items) {
-      flattened.push(item);
-      if (item.children && item.expanded) {
-        flatten(item.children);
-      }
-    }
-  }
-
-  flatten(items);
-  return flattened;
-}
-
-/**
- * Flattens layer tree collection for rendering
- */
-export function flattenLayerTreeCollection(
-  collection: TLayerTreeCollection,
-  activeLayerId: string | null
-): TLayerTreeItem[] {
-  const flattened: TLayerTreeItem[] = [];
-
-  for (const layer of collection.layers) {
-    // Add layer header
-    flattened.push({
-      id: layer.layerId,
-      type: 'layer',
-      title: layer.title,
-      level: 0,
-      visible: layer.layerId === activeLayerId,
-      expanded: true,
-      locked: false,
-      layerId: layer.layerId,
-    });
-
-    // Add layer items
-    if (layer.items.length > 0) {
-      const layerItems = flattenTreeItems(layer.items);
-      flattened.push(...layerItems);
-    }
-  }
-
-  return flattened;
-}
