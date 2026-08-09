@@ -90,7 +90,19 @@ export const LayersTreePanel: FC<{ viewId: string }> = ({ viewId }) => {
         collection={treeCollection}
         activeLayerId={activeLayerId}
         selectedIds={selectedIds}
-        onActivateLayer={activateLayer}
+        // The provider, not the row.
+        //
+        // A row's id carries its provider — `excalidraw:layer-2` — and the
+        // board picks which layer renders by comparing the active id to a
+        // *provider* id. Handed the row's, nothing matched, the surface got
+        // `active={false}` and unmounted: clicking a layer in the panel made
+        // the whole board vanish. Which layer was clicked belongs in the
+        // payload, where the surface already looks for it.
+        onActivateLayer={(id) =>
+          providerId && id.startsWith(`${providerId}:`)
+            ? activateLayer(providerId, { layerId: bare(id) })
+            : activateLayer(id)
+        }
         onSelect={(item) =>
           awareness.emitSelectionAwareness({ nodes: [item.id], viewId })
         }
