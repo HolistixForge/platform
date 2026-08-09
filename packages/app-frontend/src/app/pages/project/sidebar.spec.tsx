@@ -18,6 +18,13 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 import { ProjectSidebar } from './sidebar';
 
+// The rail needs to know which organization owns the project, because access
+// control lives at the organization and no number of `..` reaches it from a
+// project route.
+jest.mock('@holistix-forge/frontend-data', () => ({
+  useProject: () => ({ organization_id: 'org-uuid' }),
+}));
+
 //
 
 /**
@@ -59,10 +66,11 @@ const railAt = (path: string) => {
 //
 
 describe('the project rail', () => {
-  it('offers the board and the resources', () => {
+  it('offers the board, the resources and the accesses', () => {
     expect(railAt('/p/org-1/proj/editor').map((i) => i.title)).toEqual([
       'project-main',
       'resources',
+      'accesses',
     ]);
   });
 
@@ -70,6 +78,7 @@ describe('the project rail', () => {
     expect(railAt('/p/org-1/proj/editor')).toEqual([
       { title: 'project-main', href: '/p/org-1/proj/editor' },
       { title: 'resources', href: '/p/org-1/proj/resources' },
+      { title: 'accesses', href: '/org/org-uuid/permissions' },
     ]);
   });
 
@@ -80,12 +89,15 @@ describe('the project rail', () => {
     expect(railAt('/p/org-1/proj/resources')).toEqual([
       { title: 'project-main', href: '/p/org-1/proj/editor' },
       { title: 'resources', href: '/p/org-1/proj/resources' },
+      // Absolute, so it is the same from anywhere. A relative one would
+      // resolve against the project route and land nowhere.
+      { title: 'accesses', href: '/org/org-uuid/permissions' },
     ]);
   });
 
   it('gives every entry a real icon', () => {
     const { container } = renderRail('/p/org-1/proj/editor');
 
-    expect(container.querySelectorAll('li svg')).toHaveLength(2);
+    expect(container.querySelectorAll('li svg')).toHaveLength(3);
   });
 });

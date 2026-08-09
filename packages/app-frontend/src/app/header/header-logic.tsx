@@ -3,7 +3,6 @@ import {
   useCurrentUser,
   useMutationLogout,
   useQueriesUsers,
-  useProject,
 } from '@holistix-forge/frontend-data';
 import { useAction } from '@holistix-forge/ui-base';
 import { Header } from '@holistix-forge/ui-views';
@@ -69,9 +68,11 @@ export const HeaderLogicProject = () => {
 
   const users = useAwarenessUserList();
 
-  // Get organization_id from project context for permissions link
-  const { organization_id } = useProject();
-  const permissionsLink = `/org/${organization_id}/permissions`;
+  // No permissions key here: on a project page it lives in the rail, beside
+  // the project's other places. Two ways in, on the same screen, is one more
+  // than there should be — and the rail is where a question about *this*
+  // project's people belongs. The organization header keeps its key, having
+  // no rail to put one in.
 
   // Filter out guest user ID before fetching user details
   // The guest user ID is used as a fallback in collab config and should not be fetched
@@ -103,7 +104,6 @@ export const HeaderLogicProject = () => {
       user={user}
       otherUsers={otherUsers}
       logoutAction={user ? logoutAction : undefined}
-      permissionsLink={permissionsLink}
       host
       share
       hasNotifications
