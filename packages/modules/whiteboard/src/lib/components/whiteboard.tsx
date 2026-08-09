@@ -58,6 +58,7 @@ import {
   TLayerTreeOperation,
   TLayerTreeItem,
   TLayerTreeCollection,
+  TLayerTreeData,
 } from '../layer-tree-types';
 import { useModuleExports } from '@holistix-forge/module/frontend';
 
@@ -363,6 +364,39 @@ const WhiteboardWhiteboard = ({
   }, []);
 
   // Handle layer tree updates
+  /**
+   * A provider's whole section of the panel, in one go.
+   *
+   * The drawing surface owns several layers, not one, and publishing them one
+   * at a time cannot express a removal: a layer someone deleted would stay in
+   * the panel until a reload, because nothing said it was gone.
+   *
+   * `providerId` prefixes the ids it publishes, so two providers cannot
+   * collide on a name and the panel can still tell which one a row came from.
+   */
+  const handleUpdateLayerTrees = useCallback(
+    (providerId: string, layers: TLayerTreeData[]) => {
+      setTreeCollection((prev) => {
+        const mine = (id: string) => id.startsWith(`${providerId}:`);
+        const others = prev.layers.filter((l) => !mine(l.layerId));
+        const next = [
+          ...others,
+          ...layers.map((l) => ({
+            ...l,
+            layerId: `${providerId}:${l.layerId}`,
+          })),
+        ];
+
+        // Same section, same state object — for the reason spelled out below:
+        // a fresh object for an unchanged tree re-renders every layer and
+        // every consumer, and a caller reporting on each frame then drives an
+        // unbounded loop.
+        return isEqual(prev.layers, next) ? prev : { layers: next };
+      });
+    },
+    []
+  );
+
   const handleUpdateLayerTree = useCallback(
     (layerId: string, items: TLayerTreeItem[], title: string) => {
       setTreeCollection((prev) => {
@@ -455,6 +489,7 @@ const WhiteboardWhiteboard = ({
         treeCollection,
         onTreeOperation: handleTreeOperation,
         updateLayerTree: handleUpdateLayerTree,
+        updateLayerTrees: handleUpdateLayerTrees,
       }}
     >
       <div style={{ display: 'flex', height: '100%', position: 'relative' }}>

@@ -32,7 +32,11 @@ import {
   TLayerTreeItem,
 } from '@holistix-forge/whiteboard/frontend';
 
-import { TExcalidrawSharedData } from './excalidraw-shared-model';
+import {
+  TExcalidrawSharedData,
+  TExcalidrawLayer,
+  elementLayerId,
+} from './excalidraw-shared-model';
 import { TExcalidrawEvent } from './excalidraw-events';
 import {
   readDrawingElements,
@@ -193,6 +197,40 @@ export const nodeBoxSize = (
   height: (size?.height ?? measured?.height ?? 220) + 2 * EMBED_MARGIN,
 });
 
+/**
+ * The scene, sorted into its layers.
+ *
+ * Excalidraw's array *is* the paint order, so this is the whole of what a
+ * layer does: elements of the layer at the back come first, elements of the
+ * one in front come last. Nothing else in the pipeline has to know layers
+ * exist.
+ *
+ * Stable within a layer — the sort only compares layer positions, so two
+ * elements on the same layer keep the order the scene already gave them,
+ * which is what Excalidraw's own bring-to-front works on.
+ *
+ * An element with no layer sorts to the bottom, which is where it was when
+ * the bottom was the only place there was. A board that predates layers is
+ * therefore unchanged, without a migration.
+ */
+export const byLayerOrder = <
+  T extends { customData?: Record<string, unknown> }
+>(
+  elements: T[],
+  stack: { id: string }[]
+): T[] => {
+  if (stack.length < 2) return elements;
+
+  const rank = new Map(stack.map((layer, i) => [layer.id, i]));
+  const of = (e: T) =>
+    rank.get(elementLayerId(e as unknown as TJsonObject) ?? '') ?? -1;
+
+  return elements
+    .map((element, index) => ({ element, index }))
+    .sort((a, b) => of(a.element) - of(b.element) || a.index - b.index)
+    .map(({ element }) => element);
+};
+
 /** The scene element that stands for a node, by the node's own id. */
 const elementIdForNode = (nodeId: string) => `holistix-node-${nodeId}`;
 
@@ -226,7 +264,12 @@ const renderNode = (element: {
 
 //
 
-export type TExcalidrawLayerPayload = { nodeId?: string; viewId?: string };
+export type TExcalidrawLayerPayload = {
+  nodeId?: string;
+  viewId?: string;
+  /** Which of the drawing's layers new strokes land on. */
+  layerId?: string;
+};
 
 export const ExcalidrawLayerComponent: FC<{
   viewId: string;
@@ -243,7 +286,7 @@ export const ExcalidrawLayerComponent: FC<{
   const drawingId = viewId;
 
   const dispatcher = useDispatcher<TLayerEvent>();
-  const { updateLayerTree } = useLayerContext();
+  const { updateLayerTree, updateLayerTrees } = useLayerContext();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [Excalidraw, setExcalidraw] = useState<FC<any> | null>(null);
@@ -319,6 +362,74 @@ export const ExcalidrawLayerComponent: FC<{
   //
 
   const sharedData = useSharedDataDirect<TExcalidrawSharedData>();
+
+  /**
+   * The stack, back to front.
+   *
+   * Shared, because two people must see the same order — an element's place
+   * in the paint order is a fact about the board, not a preference.
+   */
+  const layers = useLocalSharedData<TExcalidrawSharedData>(
+    ['excalidraw:layers'],
+    (sd) => {
+      const found: TExcalidrawLayer[] = [];
+      sd['excalidraw:layers']?.forEach((layer: TExcalidrawLayer) => {
+        if (layer.drawingId === viewId) found.push(layer);
+      });
+      return found.sort(
+        (a, b) => a.order - b.order || a.id.localeCompare(b.id)
+      );
+    }
+  ) as TExcalidrawLayer[];
+
+  /**
+   * Which layer a new stroke lands on. This user's choice, not the board's.
+   *
+   * It rides in the layer payload, which is per-client state the panel
+   * already owns — rather than shared, because two people drawing on one
+   * board are usually on different layers and sharing it would have each of
+   * them moving the other's pen.
+   *
+   * The top of the stack by default: a new layer is made to be drawn on.
+   */
+  const activeLayerId = payload?.layerId;
+
+  const stack = layers ?? [];
+  const activeLayer =
+    stack.find((l) => l.id === activeLayerId) ?? stack[stack.length - 1];
+
+  /** The stack, read from inside handlers that must not depend on it. */
+  const stackRef = useRef<TExcalidrawLayer[]>([]);
+  stackRef.current = stack;
+
+  /** Where an element with no layer of its own belongs: the bottom. */
+  const bottomLayerRef = useRef<string | undefined>(undefined);
+  bottomLayerRef.current = stack[0]?.id;
+
+  /**
+   * Read by the flush, which is debounced and would otherwise close over the
+   * layer that was active when it was created.
+   */
+  const activeLayerRef = useRef<string | undefined>(undefined);
+  activeLayerRef.current = activeLayer?.id;
+
+  /**
+   * A board has at least one layer.
+   *
+   * Created on first sight rather than by a migration: a board that predates
+   * layers has elements with no layer at all, and those belong at the bottom
+   * of the stack whether or not the bottom has a name yet. Naming it is what
+   * gives the panel something to list and the next stroke somewhere to go.
+   */
+  useEffect(() => {
+    if (!active || !layers || stack.length) return;
+    dispatcher.dispatch({
+      type: 'excalidraw:new-layer',
+      drawingId: viewId,
+      layerId: 'layer-1',
+      title: 'Layer 1',
+    });
+  }, [active, layers, stack.length, dispatcher, viewId]);
 
   /** What we last pushed, so a change is diffed rather than resent whole. */
   const sentVersions = useRef<Map<string, number>>(new Map());
@@ -679,7 +790,9 @@ export const ExcalidrawLayerComponent: FC<{
         ])
       );
 
-      api.updateScene({ elements: [...drawing, ...restored] });
+      api.updateScene({
+        elements: byLayerOrder([...drawing, ...restored], stackRef.current),
+      });
     })();
 
     return () => {
@@ -778,9 +891,28 @@ export const ExcalidrawLayerComponent: FC<{
           );
           const current = versionsById(elements as unknown as TJsonObject[]);
 
-          const upserts = elements.filter(
-            (e) => sentVersions.current.get(e.id) !== e.version
-          );
+          /**
+           * A new element joins the layer its author was working on.
+           *
+           * Only a new one: an element that already carries a layer keeps it,
+           * or every edit would drag the whole scene onto whichever layer the
+           * editor happened to have selected.
+           */
+          const onActiveLayer = (e: OrderedExcalidrawElement) =>
+            elementLayerId(e as unknown as TJsonObject) ||
+            !activeLayerRef.current
+              ? e
+              : ({
+                  ...e,
+                  customData: {
+                    ...(e.customData ?? {}),
+                    holistixLayer: activeLayerRef.current,
+                  },
+                } as OrderedExcalidrawElement);
+
+          const upserts = elements
+            .filter((e) => sentVersions.current.get(e.id) !== e.version)
+            .map(onActiveLayer);
           const deletedIds = [...sentVersions.current.keys()].filter(
             (id) => !current.has(id)
           );
@@ -1048,12 +1180,47 @@ export const ExcalidrawLayerComponent: FC<{
               : row;
           });
 
-        updateLayerTree('excalidraw', treeItems, LAYER_TITLE);
+        /**
+         * One panel entry per layer, front of the stack first.
+         *
+         * Reversed because a layers panel is read top-down as the eye reads
+         * the board front-to-back — the row at the top is the thing in front,
+         * which is the convention every drawing tool shares.
+         */
+        const byLayer = new Map<string, TLayerTreeItem[]>();
+        treeItems.forEach((row) => {
+          const id =
+            elementLayerId(
+              (alive.find((e) => `${drawingId}-element-${e.id}` === row.id) ??
+                {}) as unknown as TJsonObject
+            ) ?? bottomLayerRef.current;
+          if (!id) return;
+          const kids = byLayer.get(id) ?? [];
+          kids.push(row);
+          byLayer.set(id, kids);
+        });
+
+        updateLayerTrees?.(
+          'excalidraw',
+          [...stackRef.current].reverse().map((layer) => ({
+            layerId: layer.id,
+            title: layer.title,
+            items: byLayer.get(layer.id) ?? [],
+          }))
+        );
       }
 
       flush();
     },
-    [flush, drawingId, updateLayerTree, awareness, viewId, nodeTitle]
+    [
+      flush,
+      drawingId,
+      updateLayerTree,
+      updateLayerTrees,
+      awareness,
+      viewId,
+      nodeTitle,
+    ]
   );
 
   // mode switch, collaborators update, content update
@@ -1074,11 +1241,9 @@ export const ExcalidrawLayerComponent: FC<{
   useEffect(() => {
     return () => {
       flush.cancel();
-      if (updateLayerTree && drawingId) {
-        updateLayerTree('excalidraw', [], LAYER_TITLE);
-      }
+      if (drawingId) updateLayerTrees?.('excalidraw', []);
     };
-  }, [flush, updateLayerTree, drawingId]);
+  }, [flush, updateLayerTrees, drawingId]);
 
   //
   //

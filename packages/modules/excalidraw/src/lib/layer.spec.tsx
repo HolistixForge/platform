@@ -83,7 +83,11 @@ const mockDispatch = jest.fn().mockResolvedValue(undefined);
 // its cleanup re-run — which reports an empty tree and would be counted here
 // as a report. The real hooks are stable; a mock that is not would measure the
 // mock.
-const mockLayerContext = { updateLayerTree: mockUpdateLayerTree };
+const mockUpdateLayerTrees = jest.fn();
+const mockLayerContext = {
+  updateLayerTree: mockUpdateLayerTree,
+  updateLayerTrees: mockUpdateLayerTrees,
+};
 const mockDispatcher = { dispatch: mockDispatch };
 /** What the shared map currently holds, keyed as the real one keys it. */
 const mockRemote = new Map<
@@ -142,6 +146,14 @@ const mockCoreEdges = () => ({
   forEach: (fn: (e: unknown) => void) => mockEdges.forEach((e) => fn(e)),
 });
 
+/** The drawing's layers, back to front. Set per test. */
+let mockLayers: {
+  id: string;
+  drawingId: string;
+  title: string;
+  order: number;
+}[] = [];
+
 /** Counts the layer's scene writes, so a runaway shows up as a number. */
 let mockUpdateSceneCalls = 0;
 
@@ -159,9 +171,22 @@ jest.mock('@holistix-forge/collab/frontend', () => ({
   // The graph view the layer projects into the scene. A *fresh object on every
   // call*, which is what the real hook does — the layer must not read that
   // identity as a change, or it re-projects forever.
-  useLocalSharedData: (keys: string[]) => {
+  useLocalSharedData: (
+    keys: string[],
+    select?: (sd: Record<string, unknown>) => unknown
+  ) => {
     if (keys?.[0] === 'core-graph:nodes') return mockCoreNodes();
     if (keys?.[0] === 'core-graph:edges') return mockCoreEdges();
+    // The stack, and the one key whose *selector* is run rather than
+    // bypassed: the filtering by drawing lives in it, and a mock that
+    // answered with the raw list would let a test pass on another board's
+    // layers.
+    if (keys?.[0] === 'excalidraw:layers')
+      return select?.({
+        'excalidraw:layers': {
+          forEach: (f: (l: unknown) => void) => mockLayers.forEach(f),
+        },
+      });
     return mockGraphView();
   },
 }));
@@ -211,10 +236,12 @@ describe('ExcalidrawLayerComponent', () => {
     mockNodeViews = [];
     mockGraphNodes = [];
     mockEdges = [];
+    mockLayers = [];
     mockUpdateSceneCalls = 0;
     mockInitialAppState = null;
     mockRemote.clear();
     mockUpdateLayerTree.mockClear();
+    mockUpdateLayerTrees.mockClear();
     mockDispatch.mockClear();
     mockEmitSelection.mockClear();
   });
@@ -682,7 +709,7 @@ describe('ExcalidrawLayerComponent', () => {
       mockCapturedOnChange?.(scene);
     });
 
-    expect(mockUpdateLayerTree).toHaveBeenCalledTimes(1);
+    expect(mockUpdateLayerTrees).toHaveBeenCalledTimes(1);
   });
 
   it('reports again once an element actually changes', async () => {
@@ -693,7 +720,7 @@ describe('ExcalidrawLayerComponent', () => {
       mockCapturedOnChange?.([element('a', 2)]);
     });
 
-    expect(mockUpdateLayerTree).toHaveBeenCalledTimes(2);
+    expect(mockUpdateLayerTrees).toHaveBeenCalledTimes(2);
   });
 
   it('reports again when an element is deleted', async () => {
@@ -704,7 +731,7 @@ describe('ExcalidrawLayerComponent', () => {
       mockCapturedOnChange?.([{ ...element('a', 1), isDeleted: true }]);
     });
 
-    expect(mockUpdateLayerTree).toHaveBeenCalledTimes(2);
+    expect(mockUpdateLayerTrees).toHaveBeenCalledTimes(2);
   });
 
   //
@@ -793,5 +820,95 @@ describe('the box the scene gives a node', () => {
     const stored = { width: box.width - 16, height: box.height - 16 };
 
     expect(nodeBoxSize(stored, undefined)).toEqual(box);
+  });
+});
+
+/**
+ * The layer stack, from the surface's side.
+ *
+ * The reducer owns what the stack *is*; this is about the two things only the
+ * surface can do — ask for a first layer when a board has none, and put a new
+ * stroke on the one its author was working on.
+ */
+describe('ExcalidrawLayerComponent — layers', () => {
+  // Its own reset: the suite above has one, and a `beforeEach` does not reach
+  // a sibling describe. Without this the first test's dispatch is still on
+  // the mock when the second one asserts nothing was dispatched.
+  beforeEach(() => {
+    mockCapturedOnChange = null;
+    mockScene = [];
+    mockNodeViews = [];
+    mockGraphNodes = [];
+    mockEdges = [];
+    mockLayers = [];
+    mockRemote.clear();
+    mockDispatch.mockClear();
+    mockUpdateLayerTrees.mockClear();
+  });
+
+  it('asks for a first layer on a board that has never had one', async () => {
+    // Created on first sight rather than by a migration: a board that
+    // predates layers has elements with no layer at all, and those belong at
+    // the bottom whether or not the bottom has a name yet.
+    mockLayers = [];
+
+    await mount();
+
+    expect(mockDispatch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'excalidraw:new-layer',
+        drawingId: 'view-1',
+        title: 'Layer 1',
+      })
+    );
+  });
+
+  it('asks for none when the board already has one', async () => {
+    mockLayers = [
+      { id: 'layer-1', drawingId: 'view-1', title: 'Layer 1', order: 0 },
+    ];
+
+    await mount();
+
+    expect(mockDispatch).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'excalidraw:new-layer' })
+    );
+  });
+
+  it('ignores another drawing’s layers when deciding', async () => {
+    // The stack is per drawing. Counting someone else's would leave this
+    // board with no layer and nowhere for a stroke to go.
+    mockLayers = [
+      { id: 'other', drawingId: 'view-2', title: 'Layer 1', order: 0 },
+    ];
+
+    await mount();
+
+    expect(mockDispatch).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'excalidraw:new-layer' })
+    );
+  });
+
+  it('publishes one panel entry per layer, front of the stack first', async () => {
+    // Front first because a layers panel is read top-down as the eye reads
+    // the board front-to-back — the convention every drawing tool shares.
+    mockLayers = [
+      { id: 'back', drawingId: 'view-1', title: 'Back', order: 0 },
+      { id: 'front', drawingId: 'view-1', title: 'Front', order: 1 },
+    ];
+
+    await mount();
+    await act(async () => {
+      mockCapturedOnChange?.([element('a', 1)]);
+    });
+
+    const [, published] =
+      mockUpdateLayerTrees.mock.calls[
+        mockUpdateLayerTrees.mock.calls.length - 1
+      ];
+    expect(published.map((l: { title: string }) => l.title)).toEqual([
+      'Front',
+      'Back',
+    ]);
   });
 });

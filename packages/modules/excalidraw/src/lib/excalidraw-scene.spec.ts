@@ -8,6 +8,10 @@ import {
   sceneSignature,
   versionsById,
 } from './excalidraw-scene';
+// The sort lives with the layer that owns the scene, not with the scene
+// helpers — it is the projection's last step, and the only place layers touch
+// rendering at all.
+import { byLayerOrder } from './layer';
 
 const entry = (
   drawingId: string,
@@ -123,5 +127,86 @@ describe('sceneSignature', () => {
       { id: 'b', version: 1 },
     ]);
     expect(two).not.toBe(one);
+  });
+});
+
+/**
+ * Layers, as the only thing a layer actually is.
+ *
+ * Excalidraw's scene array *is* the paint order, so stacking is a sort and
+ * nothing else in the pipeline has to know layers exist. Which makes this the
+ * one place the feature can be wrong quietly: a bad sort does not throw, it
+ * just puts somebody's drawing behind somebody else's.
+ */
+describe('byLayerOrder', () => {
+  const on = (id: string, layer?: string) => ({
+    id,
+    customData: layer ? { holistixLayer: layer } : undefined,
+  });
+  const stack = (...ids: string[]) => ids.map((id) => ({ id }));
+  const ids = (els: { id: string }[]) => els.map((e) => e.id);
+
+  it('paints the back layer first and the front one last', () => {
+    const sorted = byLayerOrder(
+      [on('front', 'l2'), on('back', 'l1')],
+      stack('l1', 'l2')
+    );
+
+    expect(ids(sorted)).toEqual(['back', 'front']);
+  });
+
+  it('follows the stack rather than the order of the array', () => {
+    // The same elements, the stack reversed: the answer must reverse too, or
+    // dragging a layer in the panel would change nothing on the board.
+    const elements = [on('a', 'l1'), on('b', 'l2')];
+
+    expect(ids(byLayerOrder(elements, stack('l1', 'l2')))).toEqual(['a', 'b']);
+    expect(ids(byLayerOrder(elements, stack('l2', 'l1')))).toEqual(['b', 'a']);
+  });
+
+  it('keeps the order elements already had within one layer', () => {
+    // Excalidraw's own bring-to-front works on that order, so a sort that
+    // shuffled within a layer would silently undo it.
+    const sorted = byLayerOrder(
+      [on('1', 'l1'), on('2', 'l1'), on('3', 'l1')],
+      stack('l1', 'l2')
+    );
+
+    expect(ids(sorted)).toEqual(['1', '2', '3']);
+  });
+
+  it('puts an element with no layer at the bottom', () => {
+    // Where it was when the bottom was the only place there was. A board that
+    // predates layers is unchanged, and needs no migration.
+    const sorted = byLayerOrder(
+      [on('tagged', 'l1'), on('untagged')],
+      stack('l1', 'l2')
+    );
+
+    expect(ids(sorted)).toEqual(['untagged', 'tagged']);
+  });
+
+  it('puts an element on a layer nobody knows at the bottom too', () => {
+    // A layer somebody deleted, or one from a newer client. Guessing a
+    // position for it would move drawings around on a stale build.
+    const sorted = byLayerOrder(
+      [on('known', 'l1'), on('orphan', 'gone')],
+      stack('l1', 'l2')
+    );
+
+    expect(ids(sorted)).toEqual(['orphan', 'known']);
+  });
+
+  it('leaves the scene exactly alone when there is one layer', () => {
+    // The common case, and the one where a sort could only cost something.
+    const elements = [on('a', 'l1'), on('b'), on('c', 'l1')];
+
+    expect(byLayerOrder(elements, stack('l1'))).toBe(elements);
+  });
+
+  it('leaves it alone when there are none', () => {
+    const elements = [on('a'), on('b')];
+
+    expect(byLayerOrder(elements, [])).toBe(elements);
   });
 });
