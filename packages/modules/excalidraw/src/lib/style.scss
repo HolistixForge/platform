@@ -190,4 +190,23 @@
     margin-left: var(--holistix-left-rail, 255px);
     transition: margin-left 120ms ease;
   }
+
+  // The zoom and undo controls, for the same reason and by the same amount.
+  //
+  // They were left out when the rule above was written, so they sat under the
+  // panel — the one piece of Excalidraw's chrome the panel could cover, and
+  // the one nobody thinks to look for because the rest had moved.
+  //
+  // Padding rather than margin: this element is `justify-content:
+  // space-between`, so a left margin would drag the right-hand group along
+  // with it and push the help button off the board.
+  //
+  // The class twice, to outweigh `.excalidraw .App-menu_bottom { padding: 0
+  // 1rem }` — same specificity as a single mention, and its stylesheet loads
+  // after this one, so the shorthand won and the padding never applied.
+  // Measured: the controls stayed at x=16, under the panel.
+  .App-menu_bottom.App-menu_bottom {
+    padding-left: calc(1rem + var(--holistix-left-rail, 255px));
+    transition: padding-left 120ms ease;
+  }
 }
