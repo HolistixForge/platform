@@ -50,6 +50,30 @@ aside ul li {
   position: relative;
 }
 
+/* ---- groups and reach --------------------------------------------------- */
+
+/* The rail carries two levels — the organization's places and a space's — and
+   they are not interchangeable. A rule says so without spending a label in a
+   56px column. The gap is the list's own, doubled by the margin. */
+aside ul li.sidebar-group-start {
+  /* `--color-border`, not `--color-border-muted`: the muted one resolves to
+     the same surface as the rail's own background, so the rule was there and
+     invisible. Measured on the page, not read off the palette. */
+  border-top: 1px solid var(--color-border);
+  padding-top: 16px;
+  margin-top: 8px;
+  height: 48px;
+  box-sizing: border-box;
+}
+
+/* Out of reach from this page, and still there. Removing it instead would
+   change the rail's length by page, so the thing under a given position would
+   move — and a person navigating by muscle memory would click the wrong one. */
+aside ul li.sidebar-item-disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
 /* ---- dashboard: a bar ---------------------------------------------------- */
 
 aside.sidebar--dashboard {

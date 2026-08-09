@@ -1,19 +1,24 @@
-import { Sidebar, SidebarVariant, icons } from '@holistix-forge/ui-base';
+import { useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { Sidebar, SidebarVariant } from '@holistix-forge/ui-base';
 import { useProject } from '@holistix-forge/frontend-data';
+
+import { railItems } from '../rail-items';
+import { rememberSpace } from '../last-space';
 
 //
 
 /**
- * The project's places, in one column.
+ * The rail, inside a space.
  *
- * Access control is one of them again. It was here, moved to a key in the
- * header when it became organization-scoped, and that put a project-shaped
- * question in the one bar that is the same on every page — where it read as a
- * global setting rather than as somewhere you go from a project.
+ * The same list as everywhere else — the organization's places above the
+ * rule, the space's below it — with every entry live, this being the one page
+ * where both levels are in reach without help.
  *
- * It is still an organization page; what changed is only where you reach it
- * from. The header keeps the key on organization pages, which have no rail to
- * carry it.
+ * It is also where the space is remembered, which is what keeps the entries
+ * below the rule working from an organization page. The route's own
+ * parameters are what gets stored: they are what the URL is rebuilt from, so
+ * the memory cannot drift from the routing.
  */
 export const ProjectSidebar = ({
   active,
@@ -23,40 +28,24 @@ export const ProjectSidebar = ({
   variant?: SidebarVariant;
 }) => {
   const { organization_id } = useProject();
+  const { owner, project_name } = useParams<{
+    owner: string;
+    project_name: string;
+  }>();
+
+  useEffect(() => {
+    if (owner && project_name)
+      rememberSpace({ owner, projectName: project_name });
+  }, [owner, project_name]);
+
+  const space =
+    owner && project_name ? { owner, projectName: project_name } : undefined;
 
   return (
     <Sidebar
       active={active}
       variant={variant}
-      items={[
-        // TODO_MENU
-        // { title: 'planet', Icon: icons.Planet },
-        // { title: 'solar system', Icon: icons.SolarSystem },
-        // { title: 'galaxy', Icon: icons.Galaxy },
-        { title: 'project-main', Icon: icons.NodeMother, link: '../editor' },
-        // Resources used to be a tab, which put a permanent tab in everyone's
-        // tab bar for a page they open occasionally — and made it look like
-        // one board among the boards, which it is not. It is a place in the
-        // project, so it belongs where the project's places are.
-        //
-        // The link is relative: `..` drops the last segment, so it resolves
-        // from `/p/:owner/:project/editor` and from the resources page itself.
-        { title: 'resources', Icon: icons.EnterResource, link: '../resources' },
-        // Absolute, unlike the two above: permissions belong to the
-        // organization, not to the project, so there is no number of `..`
-        // that reaches them from here.
-        {
-          title: 'accesses',
-          Icon: icons.Key,
-          link: `/org/${organization_id}/permissions`,
-        },
-        // { title: 'tree', Icon: icons.Tree },
-        // { title: 'biome', Icon: icons.Biome },
-        // { title: 'seed', Icon: icons.Seed },
-        // { title: 'artefact', Icon: icons.Artefact },
-        // { title: 'agora', Icon: icons.Agora },
-        // { title: 'jupyterlabs', Icon: icons.Jupyter, link: '../jupyterlabs' },
-      ]}
+      items={railItems({ organizationId: organization_id, space })}
     />
   );
 };

@@ -1,25 +1,27 @@
 /**
  * @jest-environment jsdom
  *
- * The rail on an organization page.
+ * The rail outside a space.
  *
- * It exists because the rail is part of the interface rather than a feature
- * of the project pages. Arriving on permissions from a project used to leave
- * the whole left column empty, which reads as chrome that failed to load
- * rather than as a page that has none.
+ * Same list, same order, same positions as inside one — an entry out of reach
+ * is greyed, never dropped. Dropped, the rail would change length by page and
+ * the thing under a given position would move, so anyone navigating by muscle
+ * memory would click the wrong one.
  *
- * It carries less than a project's rail, and that is not an omission: an
- * organization page is not inside a project, so there is no board and no
- * resources it could point at.
+ * And it is usually not out of reach at all: the last space anyone opened is
+ * remembered, so the entries below the rule still work from here. A rail that
+ * went half-dead on leaving a project would be dead exactly where someone is
+ * most likely to want to go back to work.
  */
 import { render } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 import { OrganizationSidebar } from './sidebar';
+import { rememberSpace } from '../last-space';
 
 //
 
-const renderRail = (path: string, active = 'accesses') =>
+const renderRail = (path: string, active = 'organization') =>
   render(
     <MemoryRouter initialEntries={[path]}>
       <Routes>
@@ -41,50 +43,83 @@ const railAt = (path: string) => {
   return Array.from(container.querySelectorAll('li')).map((li) => ({
     title: li.getAttribute('title'),
     href: li.querySelector('a')?.getAttribute('href'),
+    off: li.classList.contains('sidebar-item-disabled'),
   }));
 };
 
 //
 
-describe('the organization rail', () => {
-  it('carries the organization and its accesses, taken from the route', () => {
-    // From the route rather than a context: none of these pages is inside a
-    // project provider, and the one the project rail uses would throw here.
+describe('the rail outside a space', () => {
+  beforeEach(() => localStorage.clear());
+
+  it('keeps the space entries live, pointing at the last one opened', () => {
+    rememberSpace({ owner: 'org-1', projectName: 'proj' });
+
     expect(railAt('/org/org-uuid/permissions')).toEqual([
-      { title: 'organization', href: '/org/org-uuid' },
-      { title: 'accesses', href: '/org/org-uuid/permissions' },
+      { title: 'organizations', href: '/', off: false },
+      { title: 'organization', href: '/org/org-uuid', off: false },
+      { title: 'accesses', href: '/org/org-uuid/permissions', off: false },
+      { title: 'whiteboard', href: '/p/org-1/proj/editor', off: false },
+      { title: 'resources', href: '/p/org-1/proj/resources', off: false },
     ]);
   });
 
-  it('carries the same two on the organization’s own page', () => {
-    expect(railAt('/org/org-uuid')).toEqual([
-      { title: 'organization', href: '/org/org-uuid' },
-      { title: 'accesses', href: '/org/org-uuid/permissions' },
+  it('greys the space entries for someone who has never opened one', () => {
+    // First visit, and the only case left where they are dead. Saying so is
+    // more honest than a link that lands on `/p/undefined/undefined/editor`.
+    const rail = railAt('/org/org-uuid');
+
+    // The title carries the reason once the entry is out of reach — the
+    // tooltip is the only room a 56px column has for one.
+    expect(rail.slice(3)).toEqual([
+      {
+        title: 'whiteboard — open a project first',
+        href: undefined,
+        off: true,
+      },
+      { title: 'resources — open a project first', href: undefined, off: true },
     ]);
   });
 
-  it('offers the list where the route names no organization', () => {
-    // Rather than nothing: an empty rail is a 56px stripe down the page that
-    // reads as chrome which failed to load. And an accesses entry here would
-    // point at `/org/undefined/permissions`.
-    expect(railAt('/')).toEqual([{ title: 'organizations', href: '/' }]);
+  it('greys the organization entries where the route names none', () => {
+    rememberSpace({ owner: 'org-1', projectName: 'proj' });
+
+    expect(railAt('/').slice(0, 3)).toEqual([
+      { title: 'organizations', href: '/', off: false },
+      { title: 'organization — pick one first', href: undefined, off: true },
+      {
+        title: 'accesses — pick an organization first',
+        href: undefined,
+        off: true,
+      },
+    ]);
   });
 
-  it('is there at all, which is the whole point', () => {
-    const { container } = renderRail('/org/org-uuid/permissions');
-
-    expect(container.querySelector('aside')).toBeTruthy();
-    expect(container.querySelectorAll('li svg')).toHaveLength(2);
+  it('is the same length wherever it is rendered', () => {
+    // The whole reason entries are greyed rather than dropped.
+    expect(railAt('/')).toHaveLength(5);
+    expect(railAt('/org/org-uuid')).toHaveLength(5);
+    expect(railAt('/org/org-uuid/permissions')).toHaveLength(5);
   });
 
-  it('points at the page it is already on, so the entry can be marked', () => {
-    // The rail marks the active entry by matching `active` against the
-    // titles. An entry that is never the active one would never be marked.
-    const { container } = renderRail('/org/org-uuid/permissions', 'accesses');
-    const marked = Array.from(container.querySelectorAll('li')).findIndex(
-      (li) => li.querySelector('svg.active')
-    );
+  it('separates the space from the organization, here too', () => {
+    const { container } = renderRail('/org/org-uuid');
 
-    expect(marked).toBe(1);
+    expect(
+      container.querySelector('li.sidebar-group-start')?.getAttribute('title')
+    ).toMatch(/^whiteboard/);
+  });
+
+  it('says why an entry is out of reach', () => {
+    // The tooltip is the only room a 56px column has for a reason.
+    const { container } = renderRail('/org/org-uuid');
+    const off = Array.from(
+      container.querySelectorAll('li.sidebar-item-disabled')
+    ).map((li) => li.getAttribute('title'));
+
+    expect(off).toEqual([
+      'whiteboard — open a project first',
+      'resources — open a project first',
+    ]);
   });
 });

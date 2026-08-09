@@ -17,7 +17,7 @@ export const EditorPage = () => {
     <PageFrame
       rail={onWhiteboard ? 'island' : 'dashboard'}
       sidebar={(variant) => (
-        <ProjectSidebar active="project-main" variant={variant} />
+        <ProjectSidebar active="whiteboard" variant={variant} />
       )}
     >
       <EditorTabsSystemLogic />
