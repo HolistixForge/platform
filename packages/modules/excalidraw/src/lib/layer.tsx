@@ -786,73 +786,109 @@ export const ExcalidrawLayerComponent: FC<{
       const views = latestNodeViews.current;
       const nodesById = latestNodes.current;
 
-      const projected = convertToExcalidrawElements(
-        views.map((nv) => {
-          const common = {
-            x: nv.position.x,
-            y: nv.position.y,
-            ...nodeBoxSize(nv.size, measured.current.get(nv.id)),
-            customData: { holistixNodeId: nv.id, holistixViewId: viewId },
+      const skeletons = views.map((nv) => {
+        const common = {
+          x: nv.position.x,
+          y: nv.position.y,
+          ...nodeBoxSize(nv.size, measured.current.get(nv.id)),
+          customData: { holistixNodeId: nv.id, holistixViewId: viewId },
+        };
+
+        const node = nodesById.get(nv.id);
+
+        // A group is a frame. That is Excalidraw's own word for "these
+        // elements belong together and move together", and it comes with
+        // the name, the drag behaviour and the membership — none of which
+        // an embeddable would have.
+        if (node?.type === 'group') {
+          const title = (node.data as { title?: string } | undefined)?.title;
+          return {
+            ...common,
+            type: 'frame',
+            name: title ?? 'Group',
+            // Mandatory, and empty on purpose.
+            //
+            // `convertToExcalidrawElements` walks `children` unconditionally
+            // for a frame — `element.children.forEach(...)`, no guard — so a
+            // skeleton without the key threw, and the throw was inside the
+            // async projection where nothing catches it. One group node on a
+            // board therefore blanked *every* node on it, silently: the
+            // canvas drew, the layers panel listed its shapes, and not one
+            // service card appeared.
+            //
+            // Empty rather than populated because membership is already
+            // ours: `identified` sets `frameId` from the view's `parentId`
+            // below. Excalidraw's own path wants ids that exist in this same
+            // batch and throws on any it cannot map — which our node ids,
+            // assigned after the conversion, are not.
+            children: [],
           };
+        }
 
-          const node = nodesById.get(nv.id);
+        const shapeType =
+          node?.type === 'shape'
+            ? (node.data as { shapeType?: string } | undefined)?.shapeType
+            : undefined;
+        const native = shapeType ? NATIVE_SHAPES[shapeType] : undefined;
 
-          // A group is a frame. That is Excalidraw's own word for "these
-          // elements belong together and move together", and it comes with
-          // the name, the drag behaviour and the membership — none of which
-          // an embeddable would have.
-          if (node?.type === 'group') {
-            const title = (node.data as { title?: string } | undefined)?.title;
-            return {
-              ...common,
-              type: 'frame',
-              name: title ?? 'Group',
-            };
-          }
+        if (native) {
+          const data = node?.data as
+            | {
+                borderColor?: string;
+                fillColor?: string;
+                fillOpacity?: number;
+              }
+            | undefined;
 
-          const shapeType =
-            node?.type === 'shape'
-              ? (node.data as { shapeType?: string } | undefined)?.shapeType
-              : undefined;
-          const native = shapeType ? NATIVE_SHAPES[shapeType] : undefined;
+          // A shape node carries its fill and a separate opacity for it,
+          // and the default is 0 — an outline. Excalidraw has no separate
+          // fill opacity, so a transparent fill is the absence of a
+          // background rather than a background at zero.
+          const filled = (data?.fillOpacity ?? 0) > 0;
 
-          if (native) {
-            const data = node?.data as
-              | {
-                  borderColor?: string;
-                  fillColor?: string;
-                  fillOpacity?: number;
-                }
-              | undefined;
+          // Square unless the view says otherwise: the 320x220 default is a
+          // node's box, and a circle in it comes out an ellipse.
+          const side = nv.size?.width ?? 320;
+          return {
+            ...common,
+            width: nv.size?.width ?? side,
+            height: nv.size?.height ?? side,
+            type: native.type,
+            roundness: native.roundness
+              ? { type: native.roundness }
+              : undefined,
+            strokeColor: data?.borderColor ?? '#672aa4',
+            backgroundColor: filled
+              ? data?.fillColor ?? 'transparent'
+              : 'transparent',
+          };
+        }
 
-            // A shape node carries its fill and a separate opacity for it,
-            // and the default is 0 — an outline. Excalidraw has no separate
-            // fill opacity, so a transparent fill is the absence of a
-            // background rather than a background at zero.
-            const filled = (data?.fillOpacity ?? 0) > 0;
+        // Everything else is React, and needs the link — see nodeLink.
+        return { ...common, type: 'embeddable', link: nodeLink(nv.id) };
+      });
 
-            // Square unless the view says otherwise: the 320x220 default is a
-            // node's box, and a circle in it comes out an ellipse.
-            const side = nv.size?.width ?? 320;
-            return {
-              ...common,
-              width: nv.size?.width ?? side,
-              height: nv.size?.height ?? side,
-              type: native.type,
-              roundness: native.roundness
-                ? { type: native.roundness }
-                : undefined,
-              strokeColor: data?.borderColor ?? '#672aa4',
-              backgroundColor: filled
-                ? data?.fillColor ?? 'transparent'
-                : 'transparent',
-            };
-          }
-
-          // Everything else is React, and needs the link — see nodeLink.
-          return { ...common, type: 'embeddable', link: nodeLink(nv.id) };
-        })
-      );
+      // Loudly, if a skeleton is malformed.
+      //
+      // This conversion throws on bad input and it runs inside an async
+      // effect, so the rejection went nowhere: the board came up with a
+      // working canvas, a populated layers panel and no nodes at all, which
+      // reads as "the node was deleted" rather than as a crash. It cost a day.
+      //
+      // Still fatal to the projection — one skeleton cannot be dropped
+      // without dropping its view, and the two are matched by index below —
+      // but no longer silent.
+      let projected: OrderedExcalidrawElement[];
+      try {
+        projected = convertToExcalidrawElements(skeletons);
+      } catch (error) {
+        console.error(
+          '[whiteboard] node projection failed — no nodes drawn',
+          error,
+          skeletons
+        );
+        return;
+      }
 
       // The id is derived from the node, and rewritten between the two calls
       // on purpose. `convertToExcalidrawElements` mints its own and ignores
