@@ -36,6 +36,10 @@ export type TLayerActions = {
   addLayer?: () => void;
   /** The whole stack, back to front. See the event for why not "move one". */
   reorderLayers?: (layerIds: string[]) => void;
+  /** Put everything on this layer into the surface's selection. */
+  selectLayer?: (layerId: string) => void;
+  /** Bring the board to the thing a row names, by that row's id. */
+  focusItem?: (itemId: string) => void;
 };
 
 // Complete tree data structure for the layer panel

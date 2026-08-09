@@ -65,6 +65,10 @@ type ExcalidrawAPI = {
   updateScene: (scene: any) => void;
   getAppState: () => AppState;
   getSceneElementsIncludingDeleted?: () => readonly OrderedExcalidrawElement[];
+  scrollToContent?: (
+    target: OrderedExcalidrawElement | readonly OrderedExcalidrawElement[],
+    opts?: { animate?: boolean; duration?: number; fitToContent?: boolean }
+  ) => void;
 };
 
 //
@@ -351,6 +355,13 @@ export const ExcalidrawLayerComponent: FC<{
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [Excalidraw, setExcalidraw] = useState<FC<any> | null>(null);
   const apiRef = useRef<ExcalidrawAPI | null>(null);
+
+  /**
+   * The viewport adapter, read from the verbs below — which are made once and
+   * would otherwise hold the one this component was first given.
+   */
+  const viewportRef = useRef(viewport);
+  viewportRef.current = viewport;
   /**
    * Set when Excalidraw hands its API over, which it does after this
    * component's own effects have already run — so the projection has to be
@@ -459,7 +470,7 @@ export const ExcalidrawLayerComponent: FC<{
     stack.find((l) => l.id === activeLayerId) ?? stack[stack.length - 1];
 
   /**
-   * The two verbs the panel is allowed to use on this stack.
+   * The verbs the panel is allowed to use on this stack.
    *
    * Published with the stack rather than reached for: the panel draws layers
    * and does not know how one is made, and a panel that dispatched
@@ -485,6 +496,78 @@ export const ExcalidrawLayerComponent: FC<{
         drawingId: viewId,
         layerIds,
       }),
+
+    /**
+     * Clicking a layer picks up everything on it.
+     *
+     * Selection is the canvas's, not the panel's: what the panel knows is a
+     * list of rows, and reaching for the elements behind them would mean
+     * teaching it how a row's id maps to a scene element. It asks instead,
+     * and the layer — which owns both — answers.
+     *
+     * Untagged elements count as the bottom layer's, the same reading the
+     * tree uses to list them there. Selecting Layer 1 and getting less than
+     * Layer 1 shows would be the panel disagreeing with itself.
+     */
+    selectLayer: (layerId: string) => {
+      const api = apiRef.current;
+      if (!api) return;
+      const ids = (api.getSceneElementsIncludingDeleted?.() ?? [])
+        .filter((e) => !e.isDeleted)
+        .filter(
+          (e) =>
+            (elementLayerId(e as unknown as TJsonObject) ??
+              bottomLayerRef.current) === layerId
+        )
+        .map((e) => e.id);
+      api.updateScene({
+        appState: {
+          selectedElementIds: Object.fromEntries(ids.map((id) => [id, true])),
+        },
+      });
+    },
+
+    /**
+     * Clicking a row brings the board to it.
+     *
+     * A panel row and the thing it names can be a screen apart — on a board
+     * wide enough to need layers they usually are — so a click that only
+     * highlighted the row answered "which one" and not "where".
+     *
+     * Not `api.scrollToContent`, which is the obvious call and does nothing
+     * here: this layer owns the viewport, pushing the shared one back into
+     * Excalidraw whenever it changes, so Excalidraw's own scroll is overwritten
+     * as soon as it is set. Verified — the call ran, found its element, and
+     * the board did not move.
+     *
+     * So the same road a mouse scroll takes: report a viewport, and let the
+     * callback put it on the canvas. Which also keeps the whiteboard's own
+     * viewport in step, where scrolling behind its back would not.
+     *
+     * Centred at the current zoom rather than zoomed to fit — a click asked to
+     * be shown the thing, not to have its zoom taken away.
+     */
+    focusItem: (itemId: string) => {
+      const api = apiRef.current;
+      if (!api) return;
+      const at = itemId.indexOf('-element-');
+      const elementId = at < 0 ? itemId : itemId.slice(at + '-element-'.length);
+      const element = (api.getSceneElementsIncludingDeleted?.() ?? []).find(
+        (e) => e.id === elementId && !e.isDeleted
+      );
+      if (!element) return;
+
+      const state = api.getAppState();
+      const zoom = state.zoom?.value || 1;
+      // Excalidraw draws at `(scene + scroll) * zoom`, so the scroll that puts
+      // a point in the middle of the canvas is half the canvas, in scene
+      // units, minus the point.
+      viewportRef.current.onViewportChange({
+        absoluteX: state.width / (2 * zoom) - (element.x + element.width / 2),
+        absoluteY: state.height / (2 * zoom) - (element.y + element.height / 2),
+        zoom,
+      });
+    },
   });
 
   /** What the stack is, as a string, so an effect can depend on it. */
@@ -497,6 +580,9 @@ export const ExcalidrawLayerComponent: FC<{
   /** Where an element with no layer of its own belongs: the bottom. */
   const bottomLayerRef = useRef<string | undefined>(undefined);
   bottomLayerRef.current = stack[0]?.id;
+
+  /** Whether the one-time adoption of pre-layers elements has run. */
+  const adopted = useRef(false);
 
   /**
    * Read by the flush, which is debounced and would otherwise close over the
@@ -1323,6 +1409,39 @@ export const ExcalidrawLayerComponent: FC<{
       // Update tree data for the layer panel
       if (updateLayerTree && drawingId) {
         const alive = elements.filter((e) => !e.isDeleted);
+
+        /**
+         * Elements that predate layers are written into the bottom one.
+         *
+         * They already read as belonging there — the grouping below falls
+         * back to `bottomLayerRef` for anything untagged — but reading is not
+         * being: nothing had actually written the layer down, so the board's
+         * data said "no layer" while the panel said "Layer 1". Reordering the
+         * stack then moved rows that were only there by default, and the two
+         * answers came apart.
+         *
+         * Once per board, and only when there is a bottom layer to adopt
+         * into. Afterwards every element carries its own, so the filter finds
+         * nothing and this costs a pass over the scene.
+         */
+        const bottom = bottomLayerRef.current;
+        if (bottom && !adopted.current) {
+          const orphans = alive.filter(
+            (e) => !elementLayerId(e as unknown as TJsonObject)
+          );
+          adopted.current = true;
+          if (orphans.length) {
+            dispatcher.dispatch({
+              type: 'excalidraw:upsert-elements',
+              drawingId,
+              elements: orphans.map((e) => ({
+                ...e,
+                customData: { ...(e.customData ?? {}), holistixLayer: bottom },
+              })) as unknown as TJsonObject[],
+            });
+          }
+        }
+
         const rowFor = (
           element: (typeof alive)[number],
           index: number

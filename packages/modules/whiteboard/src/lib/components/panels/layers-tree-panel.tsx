@@ -98,14 +98,22 @@ export const LayersTreePanel: FC<{ viewId: string }> = ({ viewId }) => {
         // `active={false}` and unmounted: clicking a layer in the panel made
         // the whole board vanish. Which layer was clicked belongs in the
         // payload, where the surface already looks for it.
-        onActivateLayer={(id) =>
-          providerId && id.startsWith(`${providerId}:`)
-            ? activateLayer(providerId, { layerId: bare(id) })
-            : activateLayer(id)
-        }
-        onSelect={(item) =>
-          awareness.emitSelectionAwareness({ nodes: [item.id], viewId })
-        }
+        onActivateLayer={(id) => {
+          if (providerId && id.startsWith(`${providerId}:`)) {
+            activateLayer(providerId, { layerId: bare(id) });
+            // And pick its contents up. Making a layer current and having
+            // nothing to show for it left the click looking like it missed;
+            // a layers panel is also how you grab a layer's worth of board.
+            actions?.selectLayer?.(bare(id));
+            return;
+          }
+          activateLayer(id);
+        }}
+        onSelect={(item) => {
+          awareness.emitSelectionAwareness({ nodes: [item.id], viewId });
+          // Selecting says which; this says where. The two are one click.
+          actions?.focusItem?.(item.id);
+        }}
         onReorderLayers={
           actions?.reorderLayers
             ? (frontToBack) =>
