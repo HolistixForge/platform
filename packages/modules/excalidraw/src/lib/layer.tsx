@@ -115,6 +115,9 @@ const itemDefaults = {
   currentItemStrokeColor: '#ffffff',
 };
 
+/** What the panel calls this layer. See the provider at the bottom. */
+const LAYER_TITLE = 'Layer 1';
+
 //
 
 // There used to be a `fitNodeToDrawing` here, keeping an ExcalidrawNode's box
@@ -916,6 +919,23 @@ export const ExcalidrawLayerComponent: FC<{
     [dispatcher, drawingId, viewId]
   );
 
+  /**
+   * What to call an element that stands for a node.
+   *
+   * `undefined` for anything else, so the caller keeps its own naming for a
+   * rectangle or a line — this only answers for the elements that have a
+   * better name available.
+   */
+  const nodeTitle = useCallback(
+    (element: { customData?: Record<string, unknown> }): string | undefined => {
+      const nodeId = embeddedNodeId(element);
+      if (!nodeId) return undefined;
+      const node = latestNodes.current.get(nodeId);
+      return node?.name || node?.type || undefined;
+    },
+    []
+  );
+
   const handleChange = useCallback(
     (elements: readonly OrderedExcalidrawElement[], state?: AppState) => {
       pendingElements.current = elements;
@@ -955,46 +975,85 @@ export const ExcalidrawLayerComponent: FC<{
 
       // Update tree data for the layer panel
       if (updateLayerTree && drawingId) {
-        const treeItems: TLayerTreeItem[] = elements
-          .filter((e) => !e.isDeleted)
-          .map((element, index) => ({
-            // Keyed on the element's own id, not its position in the array:
-            // indices shift on every delete, so the tree used to re-label and
-            // re-target its rows behind the user's back.
+        const alive = elements.filter((e) => !e.isDeleted);
+        const rowFor = (
+          element: (typeof alive)[number],
+          index: number
+        ): TLayerTreeItem => ({
+          // Keyed on the element's own id, not its position in the array:
+          // indices shift on every delete, so the tree used to re-label and
+          // re-target its rows behind the user's back.
+          id: `${drawingId}-element-${element.id}`,
+          type: 'node',
+          // An embeddable is a node, and calling it "Embeddable 3" says
+          // nothing anyone can act on. Its name comes from the graph, which
+          // is where a node's name lives; the element only carries the id.
+          //
+          // This is also the whole reason the board no longer lists its
+          // nodes twice. It used to have a second layer for them — properly
+          // named there, and named "Embeddable 3" here — which is two
+          // listings of one board, disagreeing.
+          title:
+            nodeTitle(element) ??
+            (element.type === 'text'
+              ? element.text || `Text ${index + 1}`
+              : `${
+                  element.type.charAt(0).toUpperCase() + element.type.slice(1)
+                } ${index + 1}`),
+          level: 1,
+          visible: true,
+          expanded: false,
+          locked: false,
+          nodeData: {
             id: `${drawingId}-element-${element.id}`,
-            type: 'node',
-            title:
-              element.type === 'text'
-                ? element.text || `Text ${index + 1}`
-                : `${
-                    element.type.charAt(0).toUpperCase() + element.type.slice(1)
-                  } ${index + 1}`,
-            level: 1,
-            visible: true,
-            expanded: false,
-            locked: false,
-            nodeData: {
-              id: `${drawingId}-element-${element.id}`,
-              type: 'excalidraw-element',
-              position: { x: element.x, y: element.y },
-              status: {
-                mode: 'EXPANDED' as const,
-                forceOpened: false,
-                forceClosed: false,
-                isFiltered: false,
-                rank: 0,
-                maxRank: 1,
-              },
+            type: 'excalidraw-element',
+            position: { x: element.x, y: element.y },
+            status: {
+              mode: 'EXPANDED' as const,
+              forceOpened: false,
+              forceClosed: false,
+              isFiltered: false,
+              rank: 0,
+              maxRank: 1,
             },
-            layerId: 'excalidraw',
-          }));
+          },
+          layerId: 'excalidraw',
+        });
 
-        updateLayerTree('excalidraw', treeItems, 'Excalidraw');
+        /**
+         * A frame's contents go inside it.
+         *
+         * Excalidraw says which frame an element belongs to and then keeps
+         * the scene flat, so the panel listed a group and its contents as
+         * siblings — the one arrangement that makes a group look like a
+         * neighbour. Grouping here is reading a fact the scene already
+         * carries, not inventing one.
+         */
+        const inFrame = new Map<string, TLayerTreeItem[]>();
+        alive.forEach((element, index) => {
+          const frameId = (element as { frameId?: string | null }).frameId;
+          if (!frameId) return;
+          const kids = inFrame.get(frameId) ?? [];
+          kids.push(rowFor(element, index));
+          inFrame.set(frameId, kids);
+        });
+
+        const treeItems: TLayerTreeItem[] = alive
+          .filter((e) => !(e as { frameId?: string | null }).frameId)
+          .map((element, index) => {
+            const row = rowFor(element, index);
+            const children = inFrame.get(element.id);
+            return children?.length
+              ? { ...row, type: 'group' as const, children }
+              : row;
+          });
+
+        updateLayerTree('excalidraw', treeItems, LAYER_TITLE);
       }
 
       flush();
     },
-    [flush, drawingId, updateLayerTree, awareness, viewId]
+    [flush, drawingId, updateLayerTree, awareness, viewId, nodeTitle]
   );
 
   // mode switch, collaborators update, content update
@@ -1016,7 +1075,7 @@ export const ExcalidrawLayerComponent: FC<{
     return () => {
       flush.cancel();
       if (updateLayerTree && drawingId) {
-        updateLayerTree('excalidraw', [], 'Excalidraw');
+        updateLayerTree('excalidraw', [], LAYER_TITLE);
       }
     };
   }, [flush, updateLayerTree, drawingId]);
@@ -1087,8 +1146,21 @@ export const ExcalidrawLayerComponent: FC<{
 };
 
 export const layer: TLayerProvider = {
+  /**
+   * The id stays `excalidraw` and the title does not.
+   *
+   * One is the registry key — what a saved payload and an allocation refer to
+   * — and renaming it would break boards that already name it. The other is
+   * what a person reads in the panel, and "Excalidraw" is the name of a
+   * library we happen to draw with. Nobody using this board picked it, and
+   * nothing about it tells them what the layer holds.
+   *
+   * `Layer 1` because there will be a second: the surface is the board now,
+   * so layers are what a board is divided into rather than which renderer is
+   * in charge.
+   */
   id: 'excalidraw',
-  title: 'Excalidraw',
+  title: LAYER_TITLE,
   zIndexHint: 10,
   Component: ExcalidrawLayerComponent,
 };

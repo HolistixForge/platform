@@ -336,11 +336,16 @@ const WhiteboardWhiteboard = ({
     () => {
       return {
         layers: [
-          {
-            layerId: 'reactflow',
-            title: 'Base layer',
-            items: [],
-          },
+          // No 'reactflow' entry here any more.
+          //
+          // It held the graph's nodes, and the drawing surface holds them
+          // too — as the elements it projects them into — so the panel
+          // listed one board twice, naming the same node properly in one
+          // list and "Embeddable 3" in the other. The surface names them
+          // properly now, and the second list is gone with the reason for it.
+          //
+          // It comes back below, and only while ReactFlow is the surface:
+          // there the nodes really are somewhere else.
           ...(layersProviders?.map((provider) => ({
             layerId: provider.id,
             title: provider.title,
@@ -431,8 +436,12 @@ const WhiteboardWhiteboard = ({
 
   const nodes = gv?.graph.nodes || [];
   const nodeViews = gv?.nodeViews || [];
-  const treeItems = buildNodeTree(nodes, nodeViews);
-  if (!isEqual(treeItems, previousTreeItemsRef.current)) {
+  // Only while ReactFlow is the surface. With the drawing surface up, these
+  // same nodes are already in its scene and already in its list — reported
+  // here as well, they appeared twice, under two different names.
+  const onReactFlow = activeLayer.layerId === 'reactflow';
+  const treeItems = onReactFlow ? buildNodeTree(nodes, nodeViews) : [];
+  if (onReactFlow && !isEqual(treeItems, previousTreeItemsRef.current)) {
     previousTreeItemsRef.current = treeItems;
     handleUpdateLayerTree('reactflow', treeItems, 'Base layer');
   }

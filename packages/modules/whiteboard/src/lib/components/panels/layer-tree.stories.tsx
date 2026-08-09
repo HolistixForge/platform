@@ -36,7 +36,7 @@ const board: TLayerTreeCollection = {
   layers: [
     {
       layerId: 'excalidraw',
-      title: 'Excalidraw',
+      title: 'Layer 1',
       items: [
         node('n-notebook', 'notebook'),
         node('n-terminal', 'terminal', { locked: true }),
@@ -47,11 +47,6 @@ const board: TLayerTreeCollection = {
         ]),
         node('e-rect-2', 'Rectangle 4'),
       ],
-    },
-    {
-      layerId: 'reactflow',
-      title: 'Base layer',
-      items: [node('n-user', 'user-container', { layerId: 'reactflow' })],
     },
   ],
 };
@@ -97,9 +92,27 @@ export const Board: Story = {
   args: { collection: board, activeLayerId: 'excalidraw' },
 };
 
-/** Everything below the active layer is dimmed, not hidden. */
-export const OtherLayerActive: Story = {
-  args: { collection: board, activeLayerId: 'reactflow' },
+/**
+ * A second layer, dimmed rather than hidden.
+ *
+ * A board has one layer today, and the tree is drawn for a list rather than
+ * for one. This is what a second looks like when it is not the one being
+ * edited: dimmed, still legible, still clickable.
+ */
+export const TwoLayers: Story = {
+  args: {
+    collection: {
+      layers: [
+        ...board.layers,
+        {
+          layerId: 'annotations',
+          title: 'Layer 2',
+          items: [node('a-1', 'review note', { layerId: 'annotations' })],
+        },
+      ],
+    },
+    activeLayerId: 'excalidraw',
+  },
 };
 
 /** The one filled row: it answers "where is the thing I clicked". */
@@ -118,7 +131,7 @@ export const Flags: Story = {
       layers: [
         {
           layerId: 'excalidraw',
-          title: 'Excalidraw',
+          title: 'Layer 1',
           items: [
             node('a', 'ordinary'),
             node('b', 'locked', { locked: true }),
@@ -136,7 +149,7 @@ export const Flags: Story = {
 export const Empty: Story = {
   args: {
     collection: {
-      layers: [{ layerId: 'excalidraw', title: 'Excalidraw', items: [] }],
+      layers: [{ layerId: 'excalidraw', title: 'Layer 1', items: [] }],
     },
     activeLayerId: 'excalidraw',
   },
@@ -149,7 +162,7 @@ export const Nested: Story = {
       layers: [
         {
           layerId: 'excalidraw',
-          title: 'Excalidraw',
+          title: 'Layer 1',
           items: [
             group('g1', 'Pipeline', [
               node('g1a', 'source'),

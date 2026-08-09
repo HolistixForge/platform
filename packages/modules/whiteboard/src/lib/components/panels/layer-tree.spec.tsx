@@ -38,7 +38,7 @@ const collection: TLayerTreeCollection = {
   layers: [
     {
       layerId: 'excalidraw',
-      title: 'Excalidraw',
+      title: 'Layer 1',
       items: [
         node('alone'),
         {
@@ -72,7 +72,7 @@ const draw = (props: Partial<Parameters<typeof LayerTree>[0]> = {}) => {
 describe('LayerTree', () => {
   it('draws every layer and what is in it, in order', () => {
     expect(draw().titles()).toEqual([
-      'Excalidraw',
+      'Layer 1',
       'alone',
       'grp',
       'inside-1',
@@ -88,7 +88,7 @@ describe('LayerTree', () => {
     fireEvent.click(getByTitle('grp').querySelector('button') as HTMLElement);
 
     expect(titles()).toEqual([
-      'Excalidraw',
+      'Layer 1',
       'alone',
       'grp',
       'Base layer',
@@ -100,10 +100,10 @@ describe('LayerTree', () => {
     const { titles, getByTitle } = draw();
 
     fireEvent.click(
-      getByTitle('Excalidraw').querySelector('button') as HTMLElement
+      getByTitle('Layer 1').querySelector('button') as HTMLElement
     );
 
-    expect(titles()).toEqual(['Excalidraw', 'Base layer', 'other']);
+    expect(titles()).toEqual(['Layer 1', 'Base layer', 'other']);
   });
 
   it('does not walk what is closed', () => {
@@ -112,7 +112,7 @@ describe('LayerTree', () => {
     const { container, getByTitle } = draw();
 
     fireEvent.click(
-      getByTitle('Excalidraw').querySelector('button') as HTMLElement
+      getByTitle('Layer 1').querySelector('button') as HTMLElement
     );
 
     expect(container.querySelectorAll('li')).toHaveLength(3);
@@ -181,9 +181,7 @@ describe('LayerTree', () => {
     // full width — a hover that stops short reads as a chip, not a row.
     const { getByTitle } = draw();
 
-    expect(getByTitle('Excalidraw').style.getPropertyValue('--depth')).toBe(
-      '0'
-    );
+    expect(getByTitle('Layer 1').style.getPropertyValue('--depth')).toBe('0');
     expect(getByTitle('alone').style.getPropertyValue('--depth')).toBe('1');
     expect(getByTitle('inside-1').style.getPropertyValue('--depth')).toBe('2');
   });
@@ -207,7 +205,7 @@ describe('LayerTree', () => {
     const { container } = render(
       <LayerTree
         collection={{
-          layers: [{ layerId: 'excalidraw', title: 'Excalidraw', items: [] }],
+          layers: [{ layerId: 'excalidraw', title: 'Layer 1', items: [] }],
         }}
         activeLayerId="excalidraw"
       />
