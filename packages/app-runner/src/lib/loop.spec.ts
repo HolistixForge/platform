@@ -201,6 +201,52 @@ describe('run', () => {
     expect(calls).toBeGreaterThanOrEqual(3);
   });
 
+  // The interval timer is the only thing referencing the event loop between
+  // two passes: a pass opens no listener and holds no socket, and `process.once`
+  // on a signal does not reference it. Unref'd — as it was — node finds nothing
+  // left to do and exits cleanly, code 0, no message. Measured against a real
+  // Ganymede: one pass, one `last_seen_at`, gone, on a runner that was meant to
+  // announce itself every fifteen seconds.
+  //
+  // Asserted on the timer rather than on the number of passes, because a test
+  // runner holds the loop open by itself and every pass-counting test here
+  // passed throughout.
+  it('should keep the process alive between passes', async () => {
+    // Arrange
+    const unrefs: unknown[] = [];
+    const real = global.setTimeout;
+    const spy = jest.spyOn(global, 'setTimeout').mockImplementation(((
+      fn: () => void,
+      ms?: number
+    ) => {
+      const timer = real(fn, ms);
+      const originalUnref = timer.unref?.bind(timer);
+      timer.unref = () => {
+        unrefs.push(timer);
+        return originalUnref ? originalUnref() : timer;
+      };
+      return timer;
+    }) as unknown as typeof setTimeout);
+
+    // Act - two passes, so at least one interval is waited out
+    let calls = 0;
+    const fetchImpl = (async (input: string) => {
+      if (String(input).includes('/runners/me/projects')) {
+        calls++;
+        if (calls >= 2) return json({}, 403);
+        return json({ projects: [] });
+      }
+      return json({});
+    }) as unknown as typeof fetch;
+
+    await run({ credentials, fetchImpl, intervalMs: 1 });
+    spy.mockRestore();
+
+    // Assert
+    expect(calls).toBeGreaterThanOrEqual(2);
+    expect(unrefs).toHaveLength(0);
+  });
+
   it('should stop when asked', async () => {
     // Arrange
     let stopNow = () => undefined as void;

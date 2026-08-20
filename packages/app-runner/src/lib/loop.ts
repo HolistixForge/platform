@@ -175,9 +175,19 @@ export const defaultReconcile =
 const wait = (ms: number, stop?: Promise<void>): Promise<void> =>
   new Promise((resolve) => {
     const timer = setTimeout(resolve, ms);
-    // A pending wait must not be what keeps the process alive when the loop
-    // has been asked to stop.
-    timer.unref?.();
+    // Deliberately *not* unref'd, and it was.
+    //
+    // The intent was that a pending wait should not delay shutdown, which is
+    // right — but `unref` does not apply only when stopping. Between two
+    // ordinary passes this timer is the sole thing referencing the event loop:
+    // a pass opens no listener and holds no socket, and `process.once` on a
+    // signal does not reference it either. So node found nothing left to do
+    // and exited cleanly, code 0, no message. Measured: one pass, one
+    // `last_seen_at`, gone — on a machine that was supposed to keep announcing
+    // itself every fifteen seconds.
+    //
+    // Shutdown is already handled below, by clearing the timer rather than by
+    // hoping nothing holds it.
     stop?.then(() => {
       clearTimeout(timer);
       resolve();
