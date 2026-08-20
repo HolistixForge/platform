@@ -4,6 +4,7 @@ import {
   LABEL_PROJECT,
   TDockerExec,
   TRunningContainer,
+  containerIdFromLabels,
 } from './docker';
 import { TRunnerEngine, UnsupportedByEngine } from './engine';
 import { TPlacement } from './placement';
@@ -49,7 +50,7 @@ const toRunning = (c: TAppleContainer): TRunningContainer => {
     image: cfg.image?.reference ?? '',
     state: status.state ?? 'unknown',
     project_id: labels[LABEL_PROJECT],
-    user_container_id: labels[LABEL_CONTAINER],
+    user_container_id: containerIdFromLabels(labels),
     networks: (status.networks ?? [])
       .map((n) => n.network)
       .filter((n): n is string => Boolean(n)),
