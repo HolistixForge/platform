@@ -31,6 +31,7 @@ import {
   openableServices,
 } from '../servers-types';
 import { StatusLed } from './status-led';
+import { ConnectedMachinePicker } from './machine-picker-connected';
 import './platform-badge.scss';
 import { UseContainerProps } from './node-server/node-server';
 import { TContainerRunnerFrontend } from '../../frontend';
@@ -297,6 +298,10 @@ export const UserContainerCardInternal = ({
   host?: TF_User;
 }) => {
   //
+
+  // Open only while somebody is choosing, so the query behind it does not run
+  // on every card of a project that has several.
+  const [pickingMachine, setPickingMachine] = useState(false);
 
   const deleteAction = useAction(
     async () => {
@@ -640,7 +645,14 @@ export const UserContainerCardInternal = ({
             const label = active
               ? `Restart on ${runner.label}`
               : `Move to ${runner.label}`;
-            const select = () => onSelectRunner(runnerId);
+            // "local" is not one place. Every other runner is a single
+            // destination and goes straight through; this one asks which
+            // machine, because a placement that names none is refused by every
+            // enrolled runner and the service would sit there looking placed.
+            const select = () =>
+              runnerId === 'local'
+                ? Promise.resolve(setPickingMachine(true))
+                : onSelectRunner(runnerId);
             return (
               // The click is on the button itself, and the wrapper only
               // positions it.
@@ -722,6 +734,22 @@ export const UserContainerCardInternal = ({
       <div className="absolute" style={{ right: '36px', bottom: '19px' }}>
         {alive && container.system && <SystemInfo {...container.system} />}
       </div>
+
+      {/*
+        Mounted only while open: the picker polls Ganymede for this person's
+        machines, and a project with several cards would poll once per card for
+        a list nobody is looking at.
+      */}
+      {pickingMachine && (
+        <ConnectedMachinePicker
+          open
+          onOpenChange={setPickingMachine}
+          onPick={(machineId) => {
+            setPickingMachine(false);
+            onSelectRunner('local', machineId);
+          }}
+        />
+      )}
 
       <DialogControlled
         title="Are you sure ?"

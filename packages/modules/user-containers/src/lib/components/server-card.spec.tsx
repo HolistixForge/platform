@@ -2,6 +2,14 @@ import { render, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import * as Tooltip from '@radix-ui/react-tooltip';
 
+// The picker asks Ganymede for this person's machines, so mounting it needs an
+// ApiContext and a query client that say nothing about this card. What the
+// dialog does with what it gets is `machine-picker.spec.tsx`; what the card
+// does is open it, which is all these tests need to see.
+jest.mock('./machine-picker-connected', () => ({
+  ConnectedMachinePicker: () => <div data-testid="machine-picker" />,
+}));
+
 import { UserContainerCardInternal, isAlive, ledColor } from './server-card';
 import {
   makeStoryArgs,
@@ -244,11 +252,26 @@ describe('UserContainerCardInternal — choosing a runner', () => {
   };
 
   it('tells the card which runner was clicked', () => {
-    const { getByLabelText, picked } = renderPicker();
+    const { getByLabelText, picked } = renderPicker('none');
+
+    fireEvent.click(getByLabelText('Move to Holistix'));
+
+    expect(picked).toEqual(['platform']);
+  });
+
+  // "local" is the one runner that is not a destination — it is a set of
+  // machines, and a placement naming none of them is refused by every enrolled
+  // runner. So this click opens the picker instead of choosing, and what
+  // reaches `onSelectRunner` comes from there with a machine beside it.
+  it('asks which machine instead of placing nowhere', () => {
+    const { getByLabelText, queryByTestId, picked } = renderPicker('none');
+
+    expect(queryByTestId('machine-picker')).not.toBeInTheDocument();
 
     fireEvent.click(getByLabelText('Move to This machine'));
 
-    expect(picked).toEqual(['local']);
+    expect(picked).toEqual([]);
+    expect(queryByTestId('machine-picker')).toBeInTheDocument();
   });
 
   it('offers the active runner as a restart rather than a move', () => {

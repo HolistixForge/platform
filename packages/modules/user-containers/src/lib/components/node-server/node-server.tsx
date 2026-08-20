@@ -58,7 +58,15 @@ export type UseContainerProps = {
   image: TContainerImageInfo | undefined;
   onDelete: () => Promise<void>;
   onOpenService: (name: string) => void;
-  onSelectRunner: (runner_id: string) => Promise<void>;
+  /**
+   * `machine_id` is required when `runner_id` is `local` and meaningless
+   * otherwise — a placement that names no machine is refused by every enrolled
+   * runner (`assertPlacementIsForUs`), so it would be a service that looks
+   * placed and never starts. Optional in the type because the older mode, the
+   * one that hands out a `docker run` to paste, has no machine to name and
+   * TAC-129 says to keep it.
+   */
+  onSelectRunner: (runner_id: string, machine_id?: string) => Promise<void>;
   /**
    * Start and stop the service where it already is.
    *
@@ -104,13 +112,14 @@ export const useContainerProps = (
   //
 
   const onSelectRunner = useCallback(
-    async (runner_id: string) => {
+    async (runner_id: string, machine_id?: string) => {
       if (uc) {
         // First set the runner
         await dispatcher.dispatch({
           type: 'user-container:set-runner',
           user_container_id: container_id,
           runner_id,
+          ...(machine_id ? { machine_id } : {}),
         });
         // Then start the container
         await dispatcher.dispatch({

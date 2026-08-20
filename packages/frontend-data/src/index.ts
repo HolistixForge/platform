@@ -85,6 +85,15 @@ export {
 } from './lib/credentials-queries';
 
 export {
+  useQueryMachines,
+  describeMachines,
+  machineKeys,
+  MACHINE_STALE_AFTER_MS,
+  type TMachine,
+  type TMachineUnavailable,
+} from './lib/machines-queries';
+
+export {
   ProjectProvider,
   useProject,
   useProjectId,
