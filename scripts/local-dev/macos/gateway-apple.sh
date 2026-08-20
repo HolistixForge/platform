@@ -196,11 +196,40 @@ cmd_image() {
 # --------------------------------------------------------------------------
 cmd_pack() {
   local dist="${REPO_ROOT}/dist/packages/app-gateway"
-  [ -d "$dist" ] || {
-    ko "app-gateway is not built. Run:"
-    note "NX_DAEMON=false npx nx build app-gateway"
-    return 1
-  }
+
+  # Builds, rather than refusing when there is nothing and trusting whatever is
+  # there when there is.
+  #
+  # It used to only check the directory existed. A directory from an earlier
+  # build satisfies that perfectly, so `pack` would package code from before
+  # the change, `reload-gateway.sh` would install it, and the gateway would
+  # come back running exactly what it was running. Measured: a whole diagnosis
+  # cycle spent looking for the fix inside a bundle that had never contained
+  # it, twice, because every step reported success.
+  #
+  # nx is already incremental — a no-op pack costs the graph read and nothing
+  # else — so there is no case where skipping the build is worth the risk of
+  # shipping the previous one. `PACK_NO_BUILD=1` exists for the one that is
+  # not about this repository: packing a tree you did not build, on purpose.
+  if [ "${PACK_NO_BUILD:-}" = "1" ]; then
+    [ -d "$dist" ] || {
+      ko "PACK_NO_BUILD=1 and app-gateway is not built"
+      note "unset it, or run: NX_DAEMON=false npx nx build app-gateway"
+      return 1
+    }
+    note "PACK_NO_BUILD=1 — packing whatever is in dist/, unbuilt"
+  else
+    echo "Building app-gateway"
+    # NX_DAEMON=false: the daemon caches the project graph per workspace, and
+    # this repository is checked out twice on this machine — the same reason
+    # the note it replaces said so.
+    (cd "$REPO_ROOT" && NX_DAEMON=false npx nx build app-gateway) \
+      || { ko "app-gateway build failed — not packing"; return 1; }
+    [ -d "$dist" ] || {
+      ko "build reported success but ${dist} is missing"
+      return 1
+    }
+  fi
 
   mkdir -p "$BUILDS"
   local tmp

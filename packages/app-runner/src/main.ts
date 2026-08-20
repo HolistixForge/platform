@@ -8,6 +8,7 @@ import {
   writeCredentials,
 } from './lib/credentials';
 import { disconnect, enrol, whoAmI } from './lib/enrol';
+import { fetchWithHint } from './lib/fetch-hint';
 import { dockerExec } from './lib/docker';
 import { selectEngine } from './lib/engine';
 import { appleEngine } from './lib/engine-apple';
@@ -52,6 +53,18 @@ const openInBrowser = async (url: string): Promise<void> => {
   child.on('error', () => undefined);
   child.unref();
 };
+
+// Every request this binary makes, with the reason attached when it fails.
+//
+// Installed on the global rather than threaded through `enrol`, `whoAmI`,
+// `disconnect`, `runOnce`, `run` and `defaultReconcile` — six call sites, all
+// of which default to the global today, and a seventh added later would be
+// silently left out. This is the process's own entry point, which is the one
+// place where replacing its fetch is a decision rather than a surprise.
+//
+// `fetchWithHint` only ever adds a sentence and rethrows; it never swallows an
+// error and never changes a response, so nothing downstream reads differently.
+globalThis.fetch = fetchWithHint;
 
 const program = new Command();
 
