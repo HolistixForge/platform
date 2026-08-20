@@ -123,14 +123,39 @@ export class ContainerImageRegistry {
   }
 
   /**
-   * Drop everything a project registered.
+   * Catalogues that are scoped by the same project and have to go at the same
+   * time — the stack catalogue is one, and any later one will be too.
+   */
+  private readonly dependents: ((projectId: string) => void)[] = [];
+
+  /**
+   * Be cleared whenever this registry is.
+   *
+   * A second catalogue keyed by project is a second thing to forget. Making it
+   * this registry's business rather than the caller's means whoever wires
+   * clearing on reallocation wires it once and cannot get it half right —
+   * which is the failure mode that matters here, because a catalogue that
+   * outlives its tenant is a cross-tenant leak and not merely stale data.
+   */
+  onProjectCleared(listener: (projectId: string) => void): void {
+    this.dependents.push(listener);
+  }
+
+  /**
+   * Drop everything a project registered, here and in every catalogue that
+   * hangs off this one.
    *
    * Gateway pool containers are reallocated between organizations, so a process
    * that keeps serving the previous tenant's catalogue is a cross-tenant leak
    * rather than merely stale data.
+   *
+   * Nothing calls this yet. `registerForProject` has no caller either — the
+   * per-project tier is written and not wired — so there is no leak today, only
+   * one waiting for the day the two halves are connected. Tracked in Linear.
    */
   clearProject(projectId: string): void {
     this.byProject.delete(projectId);
+    this.dependents.forEach((clear) => clear(projectId));
   }
 
   /**
