@@ -816,6 +816,44 @@ export class UserContainersReducer extends ReducerWithCollab<
       );
     }
 
+    // Moving a service means taking it off where it was.
+    //
+    // Nothing did. The new runner was written and the old one was never told,
+    // so the container it started went on running — and the two do not even
+    // recognise each other's: the broker labels `holistix.user_container`, the
+    // local runner `holistix.user_container_id` and `holistix.machine`, so
+    // `listOwned` returns nothing and the runner tries to create a container
+    // whose name is already taken. Measured on Apple `container`, moving a
+    // notebook from the platform to a laptop: `container with id
+    // holistix_notebook_uc_msiod already exists`, every ten seconds, for ever
+    // — a service that can never converge and never says why.
+    //
+    // Asked of the runner that had it, before the write, because after it the
+    // document no longer says who to ask.
+    //
+    // Failing softly, unlike the Ganymede check above: the old runner may be
+    // an engine that is now unreachable, and refusing the move would leave the
+    // service pinned to a machine nobody can reach. A container left behind is
+    // recoverable by hand; a placement that cannot be moved is not.
+    const previousRunnerId = container.runner?.id;
+    if (previousRunnerId && previousRunnerId !== runnerId) {
+      const previous =
+        this.depsExports['user-containers'].getRunner(previousRunnerId);
+      if (previous) {
+        try {
+          await previous.stop(container);
+        } catch (error) {
+          log(
+            EPriority.Warning,
+            'USER_CONTAINERS',
+            `Moving ${containerId} off ${previousRunnerId} failed, continuing: ${
+              (error as Error).message
+            }`
+          );
+        }
+      }
+    }
+
     // Runner data, not just the id: `start` writes what the runner reported
     // back here — the docker command, the broker's container id — and this used
     // to replace the whole object, so choosing a runner twice erased it.

@@ -182,3 +182,70 @@ describe('ContainerRunner.buildLaunchSpec — extra hosts', () => {
     expect(spec({ dev_host_ip: undefined }).extraHosts).toEqual([]);
   });
 });
+
+//
+
+/**
+ * Which reference a runner is handed.
+ *
+ * The distinction is not cosmetic: a digest makes the runtime resolve the
+ * manifest at the registry even when the tag is on disk, and a runner holds no
+ * registry credentials. Measured on Apple `container` — with the digest, `401
+ * Unauthorized, no credentials found for host registry-1.docker.io`; with the
+ * tag alone, the same image started from disk in five seconds.
+ */
+describe('ContainerRunner.buildLaunchSpec — image reference', () => {
+  class Spec extends ContainerRunner {
+    async start() {
+      return {};
+    }
+  }
+
+  const build = (registry: ContainerImageRegistry, imageId: string) =>
+    new Spec().buildLaunchSpec(
+      { ...container(), image_id: imageId } as TUserContainer,
+      'jwt-token',
+      registry,
+      config()
+    );
+
+  it('references a built-in by tag, never by digest', () => {
+    // Arrange - a built-in that happens to carry a digest, as jupyter's do
+    const registry = new ContainerImageRegistry();
+    registry.register([
+      {
+        imageId: 'jupyter:minimal',
+        imageName: 'JupyterLab',
+        imageUri: 'holistixforge/jupyterlab-minimal',
+        imageTag: 'lab-4.2.0',
+        imageSha256: 'a'.repeat(64),
+      },
+    ]);
+
+    // Act / Assert - trusted by being in this deployment's catalogue, not by
+    // the digest, and the digest is what costs the start
+    expect(build(registry, 'jupyter:minimal').imageRef).toBe(
+      'holistixforge/jupyterlab-minimal:lab-4.2.0'
+    );
+  });
+
+  it('keeps the digest on a tenant image', () => {
+    // Arrange
+    const registry = new ContainerImageRegistry();
+    registry.registerForProject('project-1', 'acme', [
+      {
+        imageId: 'acme:etl',
+        imageName: 'Acme ETL',
+        imageUri: 'ghcr.io/acme/etl',
+        imageTag: '1.4.0',
+        imageSha256: 'b'.repeat(64),
+      },
+    ]);
+
+    // Act / Assert - a tenant image is trusted *because* it is pinned, and the
+    // runner refuses one that is not
+    expect(build(registry, 'acme:etl').imageRef).toBe(
+      `ghcr.io/acme/etl:1.4.0@sha256:${'b'.repeat(64)}`
+    );
+  });
+});

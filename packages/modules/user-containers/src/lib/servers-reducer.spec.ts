@@ -987,6 +987,8 @@ describe('UserContainersReducer - _setRunner and the machine it names', () => {
   let reducer: UserContainersReducer;
   let containers: Map<string, any>;
   let toGanymede: jest.Mock;
+  /** One `stop` spy per runner id, so a move can be seen from the other side. */
+  let stops: Record<string, jest.Mock>;
 
   const CONTAINER = 'uc-1';
 
@@ -994,6 +996,12 @@ describe('UserContainersReducer - _setRunner and the machine it names', () => {
     containers = new Map([
       [CONTAINER, { user_container_id: CONTAINER, runner: { id: 'none' } }],
     ]);
+
+    stops = {
+      local: jest.fn().mockResolvedValue(undefined),
+      platform: jest.fn().mockResolvedValue(undefined),
+      none: jest.fn().mockResolvedValue(undefined),
+    };
 
     toGanymede = jest.fn().mockResolvedValue({});
 
@@ -1015,7 +1023,7 @@ describe('UserContainersReducer - _setRunner and the machine it names', () => {
       gateway: { toGanymede, organization_id: 'org-1' },
       'user-containers': {
         listRunnerIds: () => ['local', 'platform'],
-        getRunner: (id: string) => ({ id }),
+        getRunner: (id: string) => ({ id, stop: stops[id] }),
       },
     } as any);
   });
@@ -1033,6 +1041,58 @@ describe('UserContainersReducer - _setRunner and the machine it names', () => {
         jwt: { user: { id: 'user-1' } },
       } as any
     );
+
+  // Moving a service has to take it off where it was. Nothing did, and the two
+  // runners do not recognise each other's containers — the broker labels
+  // `holistix.user_container`, the local runner `holistix.user_container_id` —
+  // so the new one tried to create a name the old one still held. Measured on
+  // Apple `container`: "already exists", every ten seconds, for ever.
+  it('should take the service off the runner that had it', async () => {
+    // Arrange - running on the platform
+    containers.set(CONTAINER, {
+      user_container_id: CONTAINER,
+      runner: { id: 'platform' },
+    });
+
+    // Act
+    await setRunner({ machine_id: 'machine-1' });
+
+    // Assert
+    expect(stops['platform']).toHaveBeenCalledTimes(1);
+    expect(containers.get(CONTAINER).runner.id).toBe('local');
+  });
+
+  it('should not stop anything when the runner has not changed', async () => {
+    // Arrange - already local
+    containers.set(CONTAINER, {
+      user_container_id: CONTAINER,
+      runner: { id: 'local' },
+    });
+
+    // Act - the same runner again is a restart, not a move
+    await setRunner({ machine_id: 'machine-1' });
+
+    // Assert
+    expect(stops['local']).not.toHaveBeenCalled();
+  });
+
+  // Softly, unlike the Ganymede check: the old runner may be an engine that is
+  // now unreachable, and refusing the move would pin the service to a machine
+  // nobody can reach. A container left behind can be removed by hand.
+  it('should move the service anyway when the old runner cannot be reached', async () => {
+    // Arrange
+    containers.set(CONTAINER, {
+      user_container_id: CONTAINER,
+      runner: { id: 'platform' },
+    });
+    stops['platform'].mockRejectedValue(new Error('broker unreachable'));
+
+    // Act
+    await setRunner({ machine_id: 'machine-1' });
+
+    // Assert
+    expect(containers.get(CONTAINER).runner.id).toBe('local');
+  });
 
   it('should opt the machine into the project before writing the placement', async () => {
     // Act

@@ -201,10 +201,32 @@ export abstract class ContainerRunner {
       );
     }
 
+    // A built-in is referenced by tag, never by digest.
+    //
+    // Not a relaxation — the same line `TRunnerPlacement.builtin` already
+    // draws. A tenant image is trusted *because* it is pinned; a built-in is
+    // trusted because it is in this deployment's own catalogue, and changes
+    // when the platform is redeployed rather than when somebody pushes.
+    //
+    // Sending the digest anyway costs the start. A digest reference makes the
+    // runtime resolve the manifest at the registry even when the tag is
+    // already present locally, and a runner holds no registry credentials —
+    // the broker has the project's, a laptop has nothing. Measured on Apple
+    // `container`: with the digest, `401 Unauthorized, no credentials found
+    // for host registry-1.docker.io`; with the tag alone, the same image
+    // started from disk in five seconds.
+    //
+    // Only the runner paths read this. The broker is handed `imageId` and
+    // re-resolves it host-side, which is what keeps a gateway from naming an
+    // arbitrary image, so nothing there loosens.
+    const builtin = imageRegistry.isBuiltin(container.image_id);
+
     return {
       name: launchName(container),
       imageId: imageDef.imageId,
-      imageRef: imageReference(imageDef),
+      imageRef: builtin
+        ? `${imageDef.imageUri}:${imageDef.imageTag}`
+        : imageReference(imageDef),
       settings: env,
       // The container runs an OpenVPN client to reach its gateway.
       capabilities: ['NET_ADMIN'],
