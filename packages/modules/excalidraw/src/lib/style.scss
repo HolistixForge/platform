@@ -191,6 +191,45 @@
     transition: margin-left 120ms ease;
   }
 
+  // Clearing the layers panel is not enough on a whiteboard: the project rail
+  // is an island there, floating over the canvas at exactly this offset. So
+  // the rule above puts Excalidraw's top-left column and the rail in the same
+  // place, and the rail paints above it — `--z-sticky` against a column with
+  // no stacking of its own.
+  //
+  // The menu button survives that. It is 36px tall in the corner and the rail
+  // is vertically centred, so the two never meet. The properties panel opens
+  // underneath it and is 564px tall — measured, with a shape tool active — and
+  // it runs the whole height of the rail: 40px of its left edge, the column
+  // holding one of every row's controls, sat under the icons and could not be
+  // clicked.
+  //
+  // So the panel is moved out from under the rail by the rail's own width. It
+  // keeps its place below the button rather than beside it: the panel is
+  // 200px and Excalidraw centres the shapes toolbar in the middle third of the
+  // canvas, which at 1280px starts at x=505 — a panel raised to the button's
+  // row would then run into it. Below the button there is no such row to
+  // share, at any width.
+  //
+  // On the section, not on `.App-menu__left`: the island inside it is
+  // `position: absolute`, so this is its static position, and the class it
+  // carries is shared with the mobile menu.
+  //
+  // Both sides key off `--holistix-left-rail`, so the clearance holds as the
+  // layers panel opens and collapses without being restated here.
+  .App-menu_top__left > .selected-shape-actions {
+    margin-left: var(--holistix-sidebar-width, 56px);
+  }
+
+  // The button's own menu, by the same amount and for the same reason. It is
+  // `position: absolute; left: 0` against the button's wrapper, so it opened
+  // flush with the button and its last two entries — 40px of them — ran under
+  // the rail's first icons. Easy to miss: the menu is short enough that it
+  // only reaches the rail at all because the rail is vertically centred.
+  .App-menu_top__left > *:first-child .dropdown-menu {
+    left: var(--holistix-sidebar-width, 56px);
+  }
+
   // The zoom and undo controls, for the same reason and by the same amount.
   //
   // They were left out when the rule above was written, so they sat under the
