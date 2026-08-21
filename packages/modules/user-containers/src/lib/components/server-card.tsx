@@ -177,10 +177,13 @@ export const UserContainerCardInternal = ({
    * same places, because the two cards sit in the same grid and a person
    * reading them should not have to learn the layout twice.
    *
-   * Optional, and nothing in the platform passes them yet: a container has no
-   * awareness channel of its own, so the users would have to come from the
-   * project's collab session. Left as props rather than invented inside the
-   * card, so whoever wires that decides what "on this service" means.
+   * Still props rather than hooks: a container has no presence channel of its
+   * own, so what counts as "on this service" is a decision made where the card
+   * is mounted, not inside it. `useContainerPresence` in `node-server` is what
+   * decides it for the whiteboard and the resources page — the card itself
+   * stays mountable from a story with no collab session behind it.
+   *
+   * Both optional for that reason.
    */
   liveUsers?: TF_User[];
   host?: TF_User;
@@ -206,6 +209,23 @@ export const UserContainerCardInternal = ({
   };
 
   const { alive, color } = isAlive(container.last_watchdog_at);
+
+  /**
+   * Green is the platform, blue is somebody's machine.
+   *
+   * The same rule `notebook-card` follows, and the two cards sit in one grid:
+   * a green LED on one and a blue LED on the other has to mean the same thing
+   * on both, or it means nothing. It was blue for everything that answered,
+   * which said only "alive" — a fact the card states four other ways.
+   *
+   * Red still wins. A container nobody can reach is not a question about where
+   * it was placed.
+   */
+  const ledColor = !alive
+    ? color
+    : container.runner.id === 'platform'
+    ? 'green'
+    : 'blue';
 
   const firstServiceName =
     container.httpServices.length > 0 && container.httpServices[0].name;
@@ -556,7 +576,7 @@ export const UserContainerCardInternal = ({
       </div>
 
       <div className="absolute" style={{ right: '16px', bottom: '20px' }}>
-        <StatusLed color={color} type="server-card" />
+        <StatusLed color={ledColor} type="server-card" />
       </div>
 
       <div className="absolute" style={{ right: '36px', bottom: '19px' }}>
@@ -575,6 +595,12 @@ export const UserContainerCardInternal = ({
   );
 };
 
+/** The caption and the copy button read as one line, so they share a style. */
+const LABEL = {
+  fontSize: 'var(--font-size-xs)',
+  color: 'rgba(255, 255, 255, 0.6)',
+} as const;
+
 const DockerCommand = ({ command }: { command: string }) => {
   const [copied, setCopied] = useState(false);
 
@@ -586,28 +612,65 @@ const DockerCommand = ({ command }: { command: string }) => {
 
   return (
     <ClickStopPropagation>
-      <div className="mt-2">
-        <div className="flex items-center justify-between mb-1">
-          <p className="text-white/60 text-[11px]">
-            Run this command to start the container:
-          </p>
+      <div style={{ marginTop: 'var(--spacing-2)', minWidth: 0 }}>
+        <div
+          className="flex items-center justify-between"
+          style={{ marginBottom: 'var(--spacing-1)' }}
+        >
+          <p style={LABEL}>Run this command to start the container:</p>
           <button
-            className="flex items-center gap-1 text-white/60 hover:text-white text-[11px] cursor-pointer"
+            className="flex items-center cursor-pointer"
+            style={{ ...LABEL, gap: 'var(--spacing-1)' }}
             onClick={onCopy}
           >
             {copied ? (
               <>
-                <CheckIcon className="h-3 w-3" /> Copied
+                <CheckIcon width={12} height={12} /> Copied
               </>
             ) : (
               <>
-                <CopyIcon className="h-3 w-3" /> Copy
+                <CopyIcon width={12} height={12} /> Copy
               </>
             )}
           </button>
         </div>
+        {/*
+          The command is one unbroken word to a browser — no spaces survive
+          inside `--add-host=…` or a base64 `SETTINGS=…`, and the whole line is
+          several hundred characters. A `<pre>` defaults to `white-space: pre`,
+          so it laid that line out at its natural width and, with nothing
+          clipping it, drew it straight across the board past the card's right
+          edge and out over the canvas.
+
+          It read as styled before because it carried Tailwind class names
+          (`whitespace-pre-wrap break-all bg-black/40 …`) and Tailwind was
+          removed from this workspace — only a hand-written subset of utilities
+          survived it, and none of these are in it. So every one of those
+          classes was inert and the element had no styling at all.
+
+          `overflowWrap: anywhere` beside `wordBreak: break-all` because the
+          two disagree about where a `=` or a `/` may break; together they
+          break wherever they must. `minWidth: 0` on the wrapper for the same
+          reason it is on the image badge above: a flex item will not shrink
+          below its content without it.
+        */}
         <pre
-          className="bg-black/40 rounded-[4px] p-2 text-[10px] text-green-400 overflow-x-auto max-h-[80px] whitespace-pre-wrap break-all cursor-text select-all"
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            borderRadius: 'var(--radius-xs)',
+            padding: 'var(--spacing-4)',
+            fontSize: '10px',
+            lineHeight: '14px',
+            color: 'var(--green-300)',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-all',
+            overflowWrap: 'anywhere',
+            maxWidth: '100%',
+            maxHeight: '80px',
+            overflowY: 'auto',
+            cursor: 'text',
+            userSelect: 'all',
+          }}
           onClick={onCopy}
         >
           {command}
