@@ -1,5 +1,29 @@
 /**
- * context menu 
+ * Every Radix popover, above the page rather than under it.
+ *
+ * Radix portals a menu to the end of `<body>` and positions it with a wrapper
+ * of its own. That wrapper carries no `z-index`, so it painted at the bottom of
+ * the stack — under anything that has one. On the whiteboard that is the whole
+ * board: each layer fills the viewport at `zIndexHint` (the drawing surface is
+ * 10) and takes the pointer while it is active, so the "+" menu opened, drew
+ * under the Excalidraw canvas, and every click on it went to the canvas
+ * instead. `document.elementFromPoint` at the centre of the open menu returned
+ * `canvas.excalidraw__canvas`, not the item under the cursor.
+ *
+ * It was invisible before the drawing surface became the default layer: an
+ * inactive layer is `pointer-events: none`, so clicks fell through it to the
+ * menu underneath and only the painting was wrong.
+ *
+ * `--z-dropdown` rather than a number, because the scale in `variables.scss`
+ * already says where a popover belongs: above the overlay tier the layers use,
+ * below the sticky chrome, modals and toasts.
+ */
+[data-radix-popper-content-wrapper] {
+  z-index: var(--z-dropdown, 100);
+}
+
+/**
+ * context menu
  */
 
 .ContextMenuContent,
@@ -38,7 +62,9 @@
 .ContextMenuRadioItem[data-disabled],
 .ContextMenuSubTrigger[data-disabled] {
   color: var(--neutral-6);
-  pointer-events: 'none';
+  // Unquoted: `'none'` is a string, not the keyword, so the browser dropped
+  // the declaration and a greyed-out item was still clickable.
+  pointer-events: none;
 }
 .ContextMenuItem[data-highlighted],
 .ContextMenuCheckboxItem[data-highlighted],
@@ -94,7 +120,12 @@
 }
 
 .DialogContent {
-  background-color: rgba(43, 43, 68, 0.92); /* charter-exception: unique color */
+  background-color: rgba(
+    43,
+    43,
+    68,
+    0.92
+  ); /* charter-exception: unique color */
   backdrop-filter: blur(2px);
   border-radius: var(--border-radius-box);
   box-shadow: var(--shadow-xl);
