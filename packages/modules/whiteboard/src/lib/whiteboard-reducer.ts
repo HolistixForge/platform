@@ -48,6 +48,7 @@ import {
   TNodeView,
 } from './whiteboard-types';
 import { getAbsolutePosition } from './utils/position-utils';
+import { resolveNodeMove } from './utils/move-node-utils';
 import { purgeDeletedNodeViews } from './utils/node-view-utils';
 import { edgeId } from './whiteboard-edge-utils';
 import { TCollabBackendExports } from '@holistix-forge/collab';
@@ -470,16 +471,6 @@ export class WhiteboardReducer extends ReducerWithCollab<
     this.resolveDrawnEdges(gv);
   }
 
-  private getChildren(nid: string, gv: TGraphView, childs: Set<string>) {
-    for (const node of gv.nodeViews) {
-      if (node.parentId === nid) {
-        childs.add(node.id);
-        this.getChildren(node.id, gv, childs);
-      }
-    }
-    return childs;
-  }
-
   private moveNode(
     action: TEventMoveNode,
     gv: TGraphView,
@@ -498,85 +489,16 @@ export class WhiteboardReducer extends ReducerWithCollab<
       return;
     }
 
-    const absolutePosition = getAbsolutePosition(
+    const { position, parentId } = resolveNodeMove(
+      gv,
+      node,
       action.position,
-      node.parentId,
-      gv
+      !!action.stop
     );
 
-    if (!action.stop) {
-      delete node.parentId;
-      node.position = absolutePosition;
-    } else {
-      const groups = gv.graph.nodes.filter(
-        (n) => n.type === 'group' && n.id !== action.nid
-      );
-
-      const candidatesGroups = new Map<
-        string,
-        {
-          id: string;
-          absPosition: { x: number; y: number };
-          area: number;
-        }
-      >();
-
-      groups.forEach((group) => {
-        if (!group.position) return;
-        const groupAbsolutePos = getAbsolutePosition(
-          group.position,
-          group.parentId,
-          gv
-        );
-
-        if (
-          group.size &&
-          absolutePosition.x >= groupAbsolutePos.x &&
-          absolutePosition.x <= groupAbsolutePos.x + group.size.width &&
-          absolutePosition.y >= groupAbsolutePos.y &&
-          absolutePosition.y <= groupAbsolutePos.y + group.size.height
-        ) {
-          candidatesGroups.set(group.id, {
-            id: group.id,
-            absPosition: groupAbsolutePos,
-            area: group.size.width * group.size.height,
-          });
-        }
-      });
-
-      const childs = new Set<string>();
-      this.getChildren(action.nid, gv, childs);
-      childs.forEach((c) => {
-        candidatesGroups.delete(c);
-      });
-
-      let targetGroup = undefined;
-      if (candidatesGroups.size > 0) {
-        targetGroup = Array.from(candidatesGroups.values()).reduce(
-          (smallest, current) => {
-            return current.area < smallest.area ? current : smallest;
-          }
-        );
-      }
-
-      if (targetGroup) {
-        // Check if the node can be grouped
-        if (node.disabledFeatures?.includes('grouping')) {
-          // Node cannot be grouped, just move it without grouping
-          delete node.parentId;
-          node.position = absolutePosition;
-        } else {
-          node.parentId = targetGroup.id;
-          node.position = {
-            x: absolutePosition.x - targetGroup.absPosition.x,
-            y: absolutePosition.y - targetGroup.absPosition.y,
-          };
-        }
-      } else {
-        delete node.parentId;
-        node.position = absolutePosition;
-      }
-    }
+    node.position = position;
+    if (parentId) node.parentId = parentId;
+    else delete node.parentId;
 
     this.updateGraphview(gv, nodes, edges);
   }
