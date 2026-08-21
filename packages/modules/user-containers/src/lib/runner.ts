@@ -17,6 +17,14 @@ export type TRunnerConfig = {
    * project, so the secret must never be stored there.
    */
   auth_guard_client_secret?: string;
+  /**
+   * Leftmost label a service of this container is published under, without
+   * the service name: `uc-<id>` or `uc-<id>--<space>`.
+   *
+   * For images that build their own service URLs — an OAuth callback has to
+   * be a name that resolves, so it has to be the name the gateway routes.
+   */
+  service_label_prefix?: string;
   /** What this container presents on the VPN. Short by necessity — see settings. */
   vpn_secret?: string;
   /**
@@ -141,6 +149,17 @@ export abstract class ContainerRunner {
             client_secret: config.auth_guard_client_secret,
             container_id: container.user_container_id,
             organization_id: config.organization_id,
+            // The leftmost label every one of this container's service names
+            // starts with — `uc-<id>` plus the space it belongs to.
+            //
+            // Handed over whole rather than left to the image to assemble.
+            // The Jupyter entrypoint has to name itself the same way the
+            // gateway publishes it, or its OAuth callback points at a
+            // hostname nginx routes nowhere; before this it rebuilt the rule
+            // from parts, so every change to the rule had to be made twice,
+            // in two languages, and would fail at OAuth-callback time rather
+            // than at start.
+            service_label_prefix: config.service_label_prefix,
           },
         }),
     };

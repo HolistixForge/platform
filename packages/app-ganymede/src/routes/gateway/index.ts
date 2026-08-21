@@ -374,6 +374,20 @@ export const setupGatewayRoutes = (
         gateway_id: String(gateway_id),
         organization_token: organizationToken,
         projects: projects.map((p) => String(p['project_id'])),
+        // The names, alongside the ids. A container's services are published
+        // under the project they belong to, and the gateway is the one that
+        // mints those hostnames — but the rows it needs were already being
+        // read here and thrown away.
+        //
+        // A separate field rather than turning `projects` into objects: a
+        // gateway older than this reads `projects` exactly as before and
+        // ignores what it does not know, and a gateway newer than a Ganymede
+        // that does not send this gets `undefined` and falls back to naming
+        // services without the project — which is what they were called
+        // before. Neither half of a mixed deployment breaks.
+        project_names: Object.fromEntries(
+          projects.map((p) => [String(p['project_id']), String(p['name'])])
+        ),
         members: members.map((m) => ({
           user_id: String(m['user_id']),
           username: String(m['username']),

@@ -25,6 +25,8 @@ export type GatewayModuleConfig = {
   organization_token: string;
   gateway_id: string;
   gatewayFQDN: string;
+  /** See TGatewayExports.projectName. */
+  projectName: (projectId: string) => string | undefined;
   ganymedeFQDN: string;
   gatewayToken: string;
   permissionManager: PermissionManager;
@@ -152,6 +154,8 @@ export const moduleBackend: TModule<TRequired, TGatewayExports> = {
       },
 
       gatewayFQDN: gatewayConfig.gatewayFQDN,
+
+      projectName: gatewayConfig.projectName,
 
       environment: gatewayConfig.environment,
 

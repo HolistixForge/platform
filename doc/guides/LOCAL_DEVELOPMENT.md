@@ -776,7 +776,9 @@ Each container gets a distinct FQDN that routes directly to its VPN IP:
 **Accessing Container Services:**
 
 - Main service: `https://uc-{uuid}.org-{uuid}.domain.local/`
-- Named service: `https://uc-{uuid}--{service}.org-{uuid}.domain.local/`
+- Named service: `https://uc-{uuid}--{space}--{service}.org-{uuid}.domain.local/`
+  (`{space}` is the whiteboard project the container belongs to, slugified;
+  omitted when the gateway has not been told the name)
 - Terminal (if ttyd enabled): Same URL (ttyd serves at root path)
 - Gateway internal paths:
   - `/collab/*` - Collaboration, events, VPN config (used by containers over VPN)

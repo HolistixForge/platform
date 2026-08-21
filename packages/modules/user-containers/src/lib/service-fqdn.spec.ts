@@ -185,6 +185,69 @@ describe('serviceFqdn', () => {
     ).toBe(`uc-uc_msiod5zqhlj4ws.org-${ORG}.example.com`);
   });
 
+  // The space is the whiteboard project a container belongs to. It is in the
+  // name because a hostname is what people read and paste, and
+  // `uc-uc_msiod5zqhlj4ws` says nothing about which project it is.
+  describe('the space a service belongs to', () => {
+    it('sits between the container and the service', () => {
+      expect(
+        serviceFqdn({
+          containerId: CONTAINER,
+          organizationId: ORG,
+          domain: 'example.com',
+          serviceName: 'jupyterlab',
+          qualifiers: ['sync-test'],
+        })
+      ).toBe(
+        `uc-uc_msiod5zqhlj4ws--sync-test--jupyterlab.org-${ORG}.example.com`
+      );
+    });
+
+    // What a gateway older than the change gets, and what one gets before
+    // Ganymede has told it the names. It has to be the name the service had
+    // before, not a placeholder nobody can route.
+    it('is left out entirely when the space is unknown', () => {
+      expect(
+        serviceFqdn({
+          containerId: CONTAINER,
+          organizationId: ORG,
+          domain: 'example.com',
+          serviceName: 'jupyterlab',
+          qualifiers: [undefined],
+        })
+      ).toBe(`uc-uc_msiod5zqhlj4ws--jupyterlab.org-${ORG}.example.com`);
+    });
+
+    it('survives a name a user typed', () => {
+      expect(
+        serviceFqdn({
+          containerId: CONTAINER,
+          organizationId: ORG,
+          domain: 'example.com',
+          serviceName: 'jupyterlab',
+          qualifiers: ['Mon Espace de Travail !'],
+        })
+      ).toBe(
+        `uc-uc_msiod5zqhlj4ws--mon-espace-de-travail--jupyterlab.org-${ORG}.example.com`
+      );
+    });
+
+    // The prefix handed to a container so it can name its own services the
+    // same way — `serviceLabel` with the space and no service name.
+    it('gives a container the same prefix the gateway will publish', () => {
+      const prefix = serviceLabel(CONTAINER, ['sync-test']);
+      const published = serviceFqdn({
+        containerId: CONTAINER,
+        organizationId: ORG,
+        domain: 'example.com',
+        serviceName: 'jupyterlab',
+        qualifiers: ['sync-test'],
+      });
+
+      expect(`${prefix}--jupyterlab.org-${ORG}.example.com`).toBe(published);
+    });
+  });
+
   it('never produces a label over the DNS limit, whatever it is given', () => {
     const fqdn = serviceFqdn({
       containerId: CONTAINER,

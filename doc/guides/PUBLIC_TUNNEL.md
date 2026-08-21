@@ -170,9 +170,20 @@ tunnel cannot reach them, and no amount of nginx will change that.
 With a domain you own they work, and cheaply:
 
 ```
-uc-<id>.org-<uuid>.example.com             a container
-uc-<id>--<service>.org-<uuid>.example.com  one of its services
+uc-<id>.org-<uuid>.example.com                      a container
+uc-<id>--<space>--<service>.org-<uuid>.example.com  one of its services
 ```
+
+`<space>` is the whiteboard project the container belongs to, slugified — a
+hostname is what people read and paste, and `uc-uc_msiod5zqhlj4ws` says nothing
+about which project it is. It is dropped when the gateway has not been told the
+name, and the service then keeps the name it had without it.
+
+> **Renaming a space renames its services.** The hostname follows the project
+> name, so a rename invalidates saved links, and the OAuth callback baked into
+> a running container's environment at start stays on the old name until the
+> container is restarted. If that matters more than legibility, the space is
+> the part to drop.
 
 Two labels below the domain, never three — the service is folded into the
 container's label precisely so that **one** `*.org-<uuid>.example.com` per

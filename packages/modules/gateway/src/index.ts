@@ -56,6 +56,19 @@ export type TGatewayExports = {
     entries: { user_container_id: string; token: string }[]
   ) => Promise<void>;
   gatewayFQDN: string;
+  /**
+   * What a project is called, or undefined when this gateway was not told.
+   *
+   * A container's services are published under the project they belong to, so
+   * a module minting those names needs more than the id. Undefined is a real
+   * answer and not an error: a Ganymede older than this one sends no names,
+   * and a service named without its project is what services were called
+   * before — so the absent case degrades to the previous behaviour.
+   *
+   * A lookup rather than a map, so nothing can hold a copy that stops being
+   * true when a project is renamed.
+   */
+  projectName: (projectId: string) => string | undefined;
   organization_id: string;
   tokenManager: TokenManager;
   permissionManager: PermissionManager;

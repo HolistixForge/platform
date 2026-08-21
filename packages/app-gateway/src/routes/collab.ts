@@ -95,7 +95,8 @@ export const setupCollabRoutes = (
         config.gateway_id,
         config.organization_token,
         servers,
-        config.members
+        config.members,
+        config.project_names
       );
 
       // Start VPN asynchronously AFTER gateway init (VPN not critical for frontend)

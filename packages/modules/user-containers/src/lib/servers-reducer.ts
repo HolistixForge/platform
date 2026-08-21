@@ -1,6 +1,6 @@
 import { TJwtUser } from '@holistix-forge/types';
 import { TJwtUserContainer } from './servers-types';
-import { serviceFqdn } from './service-fqdn';
+import { serviceFqdn, serviceLabel } from './service-fqdn';
 import { secondAgo } from '@holistix-forge/simple-types';
 import {
   ForbiddenException,
@@ -238,9 +238,10 @@ export class UserContainersReducer extends ReducerWithCollab<
    * @param containerId - Container ID
    * @param organizationId - Organization ID
    * @param serviceName - Service name (e.g., 'terminal', 'vscode')
+   * @param projectId - Project the container belongs to, for the space in the name
    * @returns FQDN:
    *   - Main service (empty/main): uc-{containerId}.org-{orgId}.{domain}
-   *   - Named service: uc-{containerId}--{service}.org-{orgId}.{domain}
+   *   - Named service: uc-{containerId}--{space}--{service}.org-{orgId}.{domain}
    *
    * The named form used to be `{service}.uc-{containerId}.org-{orgId}.{domain}`
    * — one label deeper, and that depth is what made every container need a
@@ -248,18 +249,38 @@ export class UserContainersReducer extends ReducerWithCollab<
    * Folded into the container's label, the deepest name a deployment ever
    * serves is two below the domain, and one `*.org-{orgId}.{domain}` per
    * organization covers all of them. See service-fqdn.ts.
+   *
+   * The space — the project the container belongs to — is in the name because
+   * a hostname is what people read and paste, and `uc-uc_msiod5zqhlj4ws` says
+   * nothing about which of their projects it is. It is dropped when this
+   * gateway was not told the name, which is what a Ganymede older than this
+   * one does, and the service then keeps the name it had before.
    */
   private generateServiceFQDN(
     containerId: string,
     organizationId: string,
-    serviceName: string
+    serviceName: string,
+    projectId?: string
   ): string {
     return serviceFqdn({
       containerId,
       organizationId,
       domain: this.platformDomain(),
       serviceName,
+      qualifiers: [this.spaceName(projectId)],
     });
+  }
+
+  /**
+   * The name of the space a container belongs to — a whiteboard project.
+   *
+   * Undefined rather than a placeholder when it is not known: `serviceFqdn`
+   * drops empty qualifiers, so an unknown space produces exactly the name the
+   * service had before this existed instead of a `unknown` nobody can read.
+   */
+  private spaceName(projectId: string | undefined): string | undefined {
+    if (!projectId) return undefined;
+    return this.depsExports.gateway.projectName?.(projectId);
   }
 
   async _new(event: TEventNew, requestData: RequestData) {
@@ -486,12 +507,13 @@ export class UserContainersReducer extends ReducerWithCollab<
       )
     ) {
       // Generate per-service FQDN for routing
-      // Format: uc-{containerId}--{service}.org-{orgId}.{domain}
+      // Format: uc-{containerId}--{space}--{service}.org-{orgId}.{domain}
       // Main/default service: uc-{containerId}.org-{orgId}.{domain}
       const serviceFQDN = this.generateServiceFQDN(
         containerId,
         this.depsExports.gateway.organization_id,
-        event.name
+        event.name,
+        requestData.project_id
       );
 
       httpServices.push({
@@ -917,6 +939,11 @@ export class UserContainersReducer extends ReducerWithCollab<
       gateway_fqdn: gatewayFqdn,
       organization_id,
       auth_guard_client_secret: authGuard?.client_secret,
+      // The one place the naming rule is applied for a container that will
+      // apply it again itself. See TRunnerConfig.service_label_prefix.
+      service_label_prefix: serviceLabel(containerId, [
+        this.spaceName(project_id),
+      ]),
       vpn_secret: this.vpnSecrets.get(containerId),
       // Only in local development, and only from the gateway's environment:
       // this module cannot read process.env for itself.

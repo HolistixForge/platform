@@ -261,7 +261,8 @@ let servers: (http.Server | https.Server)[] = [];
         orgConfig.gateway_id,
         orgConfig.organization_token,
         servers,
-        orgConfig.members
+        orgConfig.members,
+        orgConfig.project_names
       );
 
       log(

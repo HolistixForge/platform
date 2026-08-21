@@ -26,6 +26,15 @@ extract_settings() {
     export AUTH_GUARD_CLIENT_SECRET=$(echo "$JSON_SETTINGS" | jq -r '.auth_guard.client_secret // empty')
     export AUTH_GUARD_CONTAINER_ID=$(echo "$JSON_SETTINGS" | jq -r '.auth_guard.container_id // empty')
     export AUTH_GUARD_ORG_ID=$(echo "$JSON_SETTINGS" | jq -r '.auth_guard.organization_id // empty')
+    # The leftmost label this container's services are published under, minus
+    # the service name: `uc-<id>` or `uc-<id>--<space>`. Sent whole so an image
+    # that builds its own service URLs concatenates rather than reimplements —
+    # a name assembled from the wrong rule routes nowhere, and only fails when
+    # somebody follows an OAuth callback. Empty from a gateway older than this;
+    # the fallback below is what that gateway would have produced.
+    export AUTH_GUARD_SERVICE_PREFIX=$(echo "$JSON_SETTINGS" | jq -r '.auth_guard.service_label_prefix // empty')
+    [ -n "$AUTH_GUARD_SERVICE_PREFIX" ] || \
+        export AUTH_GUARD_SERVICE_PREFIX="uc-${AUTH_GUARD_CONTAINER_ID}"
 
     # Backward-compatible alias used in some nginx paths
     export PROJECT_SERVER_ID="${USER_CONTAINER_ID}"

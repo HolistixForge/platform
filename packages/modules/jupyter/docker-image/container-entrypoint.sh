@@ -35,18 +35,21 @@ fi
 # Build FQDNs for OAuth URLs
 #
 # A service is a suffix on the container's own label, not a label of its own:
-# `uc-<id>--jupyterlab.org-<uuid>.<domain>`, two below the domain rather than
-# three. A TLS wildcard covers exactly one label, so the third level is what
-# forced a certificate per container; folded in here, one wildcard per
-# organization covers every service. These two names have to agree, character
-# for character, with what the gateway publishes — see
-# packages/modules/user-containers/src/lib/service-fqdn.ts, which is where the
-# rule lives and where it is tested.
+# `uc-<id>--<space>--jupyterlab.org-<uuid>.<domain>`, two below the domain
+# rather than three. A TLS wildcard covers exactly one label, so the third
+# level is what forced a certificate per container; folded in here, one
+# wildcard per organization covers every service.
+#
+# AUTH_GUARD_SERVICE_PREFIX is everything left of the service name, handed over
+# by the gateway rather than assembled here. These names have to agree with
+# what the gateway publishes character for character — they are OAuth callbacks
+# and nginx routes them by exact `server_name` — and the rule that builds them
+# lives, with its tests, in
+# packages/modules/user-containers/src/lib/service-fqdn.ts.
 DOMAIN=$(echo "$GATEWAY_FQDN" | sed 's/^[^.]*\.//')
-CONTAINER_LABEL="uc-${AUTH_GUARD_CONTAINER_ID}"
-BASE_FQDN="${CONTAINER_LABEL}.org-${AUTH_GUARD_ORG_ID}.${DOMAIN}"
-JUPYTER_FQDN="${CONTAINER_LABEL}--jupyterlab.org-${AUTH_GUARD_ORG_ID}.${DOMAIN}"
-HUB_FQDN="${CONTAINER_LABEL}--guard-hub.org-${AUTH_GUARD_ORG_ID}.${DOMAIN}"
+BASE_FQDN="uc-${AUTH_GUARD_CONTAINER_ID}.org-${AUTH_GUARD_ORG_ID}.${DOMAIN}"
+JUPYTER_FQDN="${AUTH_GUARD_SERVICE_PREFIX}--jupyterlab.org-${AUTH_GUARD_ORG_ID}.${DOMAIN}"
+HUB_FQDN="${AUTH_GUARD_SERVICE_PREFIX}--guard-hub.org-${AUTH_GUARD_ORG_ID}.${DOMAIN}"
 
 # Start activity server for gateway heartbeats
 python3 /usr/local/bin/activity-server.py &
