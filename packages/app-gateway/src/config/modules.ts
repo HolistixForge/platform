@@ -61,7 +61,8 @@ export function createBackendModulesConfig(
   permissionManager: PermissionManager,
   tokenManager: TokenManager,
   permissionRegistry: PermissionRegistry,
-  collabRegistry: ICollabRegistry
+  collabRegistry: ICollabRegistry,
+  projectNames: Record<string, string> = {}
 ): { module: TModule<never, object>; config: object }[] {
   // Collab config - multi-project architecture
   // Each project has its own YJS document managed by ProjectRoomsManager
@@ -100,6 +101,11 @@ export function createBackendModulesConfig(
     organization_token: organizationToken,
     gateway_id: gatewayId,
     gatewayFQDN,
+    // What a project is called, for the hostnames a container's services are
+    // published under. A lookup rather than the map itself, so a module cannot
+    // hold on to a copy that stops being true when a project is renamed.
+    projectName: (projectId: string): string | undefined =>
+      projectNames[projectId],
     ganymedeFQDN: CONFIG.GANYMEDE_FQDN,
     gatewayToken: CONFIG.GATEWAY_TOKEN,
     permissionManager,

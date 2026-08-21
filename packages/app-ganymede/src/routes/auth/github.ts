@@ -6,6 +6,7 @@ import { Exception } from '@holistix-forge/log';
 
 import { githubFindOrCreate, TGithubReturnedProfile } from '../../models/users';
 import { UserSerializedInfo } from '../../types';
+import { frontendUrlFor } from '../../lib/public-routing';
 import { CONFIG } from '../../config';
 
 //
@@ -48,7 +49,7 @@ export const setupGithubRoutes = (
 ) => {
   // Apply rate limiter to OAuth initiation and callback
   const handlers = rateLimiter ? [rateLimiter] : [];
-  
+
   router.get(
     '/github',
     ...handlers,
@@ -105,7 +106,9 @@ export const OAuthCallback = (
       }
       respond(req, res, {
         type: 'redirect',
-        url: CONFIG.APP_FRONTEND_URL,
+        // The host this callback arrived on, so a sign-in started through a
+        // tunnel lands back on the tunnel rather than on a local name.
+        url: frontendUrlFor(req),
       });
     });
   }

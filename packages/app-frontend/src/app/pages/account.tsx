@@ -8,25 +8,28 @@ import { ReactNode } from 'react';
 import { NewPasswordFormLogic } from '../forms/password';
 
 export const LoginPage = () => {
-  const { ganymedeFQDN } = useApi();
+  // ganymedeUrl rather than `https://${ganymedeFQDN}`: these are links the
+  // browser follows, and through a tunnel Ganymede is a path on this same host
+  // rather than a hostname of its own.
+  const { ganymedeUrl } = useApi();
 
   return (
     <LoginFormLogic
-      githubLoginUrl={`https://${ganymedeFQDN}/github`}
-      gitLabLoginUrl={`https://${ganymedeFQDN}/gitlab`}
-      linkedinLoginUrl={`https://${ganymedeFQDN}/linkedin`}
-      discordLoginUrl={`https://${ganymedeFQDN}/discord`}
+      githubLoginUrl={`${ganymedeUrl}/github`}
+      gitLabLoginUrl={`${ganymedeUrl}/gitlab`}
+      linkedinLoginUrl={`${ganymedeUrl}/linkedin`}
+      discordLoginUrl={`${ganymedeUrl}/discord`}
     />
   );
 };
 
 export const LoginLinkedinPage = () => {
-  const { ganymedeFQDN } = useApi();
+  const { ganymedeUrl } = useApi();
 
   return (
     <LoginFormLogic
       local={false}
-      linkedinLoginUrl={`https://${ganymedeFQDN}/linkedin`}
+      linkedinLoginUrl={`${ganymedeUrl}/linkedin`}
     />
   );
 };

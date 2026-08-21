@@ -23,4 +23,16 @@ export interface TOrganizationConfig {
 
   // Projects in this organization
   projects: string[]; // Array of project_ids
+
+  /**
+   * Project id to project name.
+   *
+   * A container's services are published under the project they belong to, so
+   * the gateway needs the name and not only the id. Optional because a
+   * Ganymede older than this one does not send it — and a service named
+   * without its project is exactly what services were called before, so the
+   * absent case degrades to the previous behaviour rather than to a broken
+   * one.
+   */
+  project_names?: Record<string, string>;
 }

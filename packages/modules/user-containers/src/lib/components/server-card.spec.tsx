@@ -1,14 +1,7 @@
 import { render, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import * as Tooltip from '@radix-ui/react-tooltip';
-
-// The picker asks Ganymede for this person's machines, so mounting it needs an
-// ApiContext and a query client that say nothing about this card. What the
-// dialog does with what it gets is `machine-picker.spec.tsx`; what the card
-// does is open it, which is all these tests need to see.
-jest.mock('./machine-picker-connected', () => ({
-  ConnectedMachinePicker: () => <div data-testid="machine-picker" />,
-}));
+import { TF_User } from '@holistix-forge/types';
 
 import { UserContainerCardInternal, isAlive, ledColor } from './server-card';
 import {
@@ -16,8 +9,22 @@ import {
   runningOnPlatformStory,
   runningOnAppleStory,
   runningOnSharedKernelStory,
+  runningLocallyStory,
   StoryArgs,
 } from './server-card-stories';
+
+// The picker asks Ganymede for this person's machines, so mounting it needs an
+// ApiContext and a query client that say nothing about this card. What the
+// dialog does with what it gets is `machine-picker.spec.tsx`; what the card
+// does is open it, which is all these tests need to see.
+//
+// Below the imports, not above them: `jest.mock` is hoisted above the whole
+// module by babel, so where it is written changes nothing at runtime — and
+// written first it puts two imports in the body of the module, which
+// `import/first` refuses.
+jest.mock('./machine-picker-connected', () => ({
+  ConnectedMachinePicker: () => <div data-testid="machine-picker" />,
+}));
 
 /**
  * The card's box is a set of numbers with a reason, and the reason lives in
@@ -496,5 +503,170 @@ describe('the platform badge', () => {
 
     expect(getByTestId('platform-badge').querySelector('svg')).toBeTruthy();
     expect(getByTestId('platform-badge').className).toBe('platform-badge');
+  });
+});
+
+//
+
+/**
+ * The command to paste for a local placement.
+ *
+ * It is one unbroken word to a browser — no space survives inside
+ * `--add-host=…` or a base64 `SETTINGS=…` — and several hundred characters
+ * long. A `<pre>` defaults to `white-space: pre`, so it drew that line at its
+ * natural width and, with nothing clipping it, ran off the card and across the
+ * board.
+ *
+ * It *looked* handled: the element carried `whitespace-pre-wrap break-all
+ * bg-black/40 …`. Tailwind was removed from this workspace and only a
+ * hand-written subset of utilities replaced it, so every one of those class
+ * names was inert. That is why these assertions read the computed style rather
+ * than the className — a class that does not exist passes a className check.
+ */
+describe('UserContainerCardInternal — the command to paste', () => {
+  const commandBlock = (): HTMLElement => {
+    const { container } = render(
+      <Tooltip.Provider>
+        <UserContainerCardInternal
+          {...runningLocallyStory()}
+          runners={new Map()}
+        />
+      </Tooltip.Provider>
+    );
+    const pre = container.querySelector('pre');
+    if (!pre) throw new Error('the local runner story has no command block');
+    return pre as HTMLElement;
+  };
+
+  it('should wrap the command instead of laying it out in one line', () => {
+    expect(commandBlock()).toHaveStyle({ whiteSpace: 'pre-wrap' });
+  });
+
+  it('should break inside a word, because the command is one word', () => {
+    // `wordBreak` and `overflowWrap` disagree about whether a `=` or a `/` is
+    // a break opportunity; together they break wherever they have to.
+    const pre = commandBlock();
+    expect(pre).toHaveStyle({ wordBreak: 'break-all' });
+    expect(pre).toHaveStyle({ overflowWrap: 'anywhere' });
+  });
+
+  it('should stay inside the card', () => {
+    const pre = commandBlock();
+    expect(pre).toHaveStyle({ maxWidth: '100%' });
+    expect(pre).toHaveStyle({ maxHeight: '80px' });
+    expect(pre).toHaveStyle({ overflowY: 'auto' });
+  });
+
+  it('should not rely on class names no stylesheet defines', () => {
+    // The regression, stated directly: Tailwind is gone (see reset.scss), so a
+    // `bg-black/40` here is a decorative string and nothing more.
+    expect(commandBlock().className).toBe('');
+  });
+});
+
+/**
+ * Green is the platform, blue is somebody's machine.
+ *
+ * `notebook-card` already draws it that way and the two cards sit in one grid,
+ * so the same colour has to mean the same thing on both. This card lit blue
+ * for anything that answered its watchdog, which said only "alive" — something
+ * the card states four other ways already.
+ */
+describe('UserContainerCardInternal — where it runs, in one colour', () => {
+  const ledOf = (args: StoryArgs) => {
+    const { container } = render(
+      <Tooltip.Provider>
+        <UserContainerCardInternal {...args} runners={new Map()} />
+      </Tooltip.Provider>
+    );
+    return container.querySelector('.status-led');
+  };
+
+  it('should be green for a container on the platform', () => {
+    expect(ledOf(runningOnPlatformStory())).toHaveClass('led-green');
+  });
+
+  it('should be blue for a container on somebody machine', () => {
+    expect(ledOf(runningLocallyStory())).toHaveClass('led-blue');
+  });
+
+  it('should still be red when nothing answers', () => {
+    // Unreachable is not a question about placement, and it outranks one.
+    const dead = runningLocallyStory();
+    dead.container.last_watchdog_at = new Date('1970-01-01').toISOString();
+    expect(ledOf(dead)).toHaveClass('led-red');
+  });
+});
+
+/**
+ * The two presence marks: whose machine this runs on, and who is in the
+ * project looking at it.
+ *
+ * The card has drawn both since it was written and nothing ever handed it
+ * either one — `useContainerPresence` is the wiring that was missing. These
+ * assert the card's half of that contract: given the props, it draws them.
+ */
+describe('UserContainerCardInternal — presence', () => {
+  const HOST = {
+    user_id: 'u-host',
+    username: 'local:ada',
+    firstname: 'Ada',
+    lastname: 'Lovelace',
+    picture: null,
+  };
+
+  const GUEST = {
+    user_id: 'u-guest',
+    username: 'local:alan',
+    firstname: 'Alan',
+    lastname: 'Turing',
+    picture: null,
+  };
+
+  const renderPresence = (
+    args: StoryArgs,
+    presence: { liveUsers?: TF_User[]; host?: TF_User }
+  ) =>
+    render(
+      <Tooltip.Provider>
+        <UserContainerCardInternal
+          {...args}
+          {...presence}
+          runners={new Map()}
+        />
+      </Tooltip.Provider>
+    );
+
+  it('should mark the machine owner as the host', () => {
+    // The blue ring and the "host" label on hover are what say "this is
+    // running on Ada's laptop" rather than somewhere unattributed.
+    const { getByText } = renderPresence(runningLocallyStory(), { host: HOST });
+
+    expect(getByText('host')).toBeInTheDocument();
+  });
+
+  it('should show who else is in the project', () => {
+    const { getByTitle } = renderPresence(runningLocallyStory(), {
+      liveUsers: [HOST, GUEST],
+    });
+
+    expect(getByTitle('local:ada')).toBeInTheDocument();
+    expect(getByTitle('local:alan')).toBeInTheDocument();
+  });
+
+  it('should claim no host for a container on the platform', () => {
+    // The platform is owned by nobody. A card that showed an owner for it
+    // would be inventing one.
+    const { queryByText } = renderPresence(runningOnPlatformStory(), {});
+
+    expect(queryByText('host')).not.toBeInTheDocument();
+  });
+
+  it('should not draw live users for a container nothing can reach', () => {
+    const dead = runningLocallyStory();
+    dead.container.last_watchdog_at = null;
+    const { queryByTitle } = renderPresence(dead, { liveUsers: [GUEST] });
+
+    expect(queryByTitle('local:alan')).not.toBeInTheDocument();
   });
 });

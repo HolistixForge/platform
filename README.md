@@ -116,6 +116,7 @@ See [doc/architecture/OVERVIEW.md](doc/architecture/OVERVIEW.md) for detailed ar
 
 - 🏗️ [Architecture Overview](doc/architecture/OVERVIEW.md)
 - 🚀 [Local Development](doc/guides/LOCAL_DEVELOPMENT.md)
+- 🌍 [Put an environment on the internet](doc/guides/PUBLIC_TUNNEL.md)
 - 📖 [API Reference](doc/reference/API.md)
 
 ## 🎯 Use Cases

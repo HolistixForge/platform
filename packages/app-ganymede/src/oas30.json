@@ -1248,6 +1248,13 @@
                         "required": ["user_id", "username", "role"]
                       },
                       "description": "Organization members for Gateway RBAC initialization"
+                    },
+                    "project_names": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "description": "Project id to project name, for the names services are published under. Optional: a gateway talking to an older Ganymede simply gets none."
                     }
                   },
                   "required": [

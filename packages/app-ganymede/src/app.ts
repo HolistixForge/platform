@@ -11,6 +11,7 @@ import {
 } from '@holistix-forge/backend-engine';
 
 import { CONFIG } from './config';
+import { isTunnelRequest, withTunnelOrigin } from './lib/public-routing';
 import { PgSessionModel } from './models/session';
 import oas from './oas30.json';
 import { setupGithubRoutes } from './routes/auth/github';
@@ -74,6 +75,10 @@ export function createApp(
 ): Express {
   const app = express();
   app.set('trust proxy', 1);
+
+  // First, so everything below runs with the request's own origin in scope.
+  // The OAuth model reads it from there; see lib/public-routing.ts.
+  app.use(withTunnelOrigin);
 
   // Basic Express setup (CORS, body parsing, etc.)
   // Ganymede-specific CSRF exemptions:
@@ -157,28 +162,75 @@ export function createApp(
     //
     // Flow: Browser (HTTPS) → Nginx (SSL term) → Ganymede (HTTP, trusts proxy)
 
-    app.use(
-      expressSession({
-        store: new PgSessionModel(),
-        secret: CONFIG.SESSION_COOKIE_KEY,
-        resave: false,
-        saveUninitialized: false,
-        name: 'sessid',
-        cookie: {
-          secure: true, // Works via X-Forwarded-Proto with trust proxy
-          // The host without its port. A cookie domain is a domain — a browser
-          // rejects `ganymede.apollo.test:8443` outright — while
-          // GANYMEDE_FQDN has to carry the port, because every URL built from
-          // it is a link somebody follows and nginx does not listen on 443
-          // where binding under 1024 needs root. This is the one place the
-          // port has to come back off.
-          domain: CONFIG.GANYMEDE_FQDN.split(':')[0],
-          maxAge: SESSION_MAX_AGE,
-          httpOnly: true,
-          path: '/',
-          sameSite: 'none', // Required for cross-site cookies with credentials
-        },
-      })
+    // Two session middlewares, differing in one attribute of the cookie.
+    //
+    // A browser refuses a `Set-Cookie` whose `Domain` is not a suffix of the
+    // host it is talking to. So a session issued to a visitor on
+    // `foo.trycloudflare.com` carrying `Domain=ganymede.apollo.test` is
+    // dropped on the floor, silently, and every flow that needs the session —
+    // the OAuth authorize step, so: signing in — loops without saying why.
+    //
+    // Two middlewares rather than one plus a per-request fix-up, which is what
+    // this was first written as and which does not work: `req.login()` calls
+    // `req.session.regenerate()`, and regenerate builds a *fresh* Cookie from
+    // the options the middleware was constructed with. Any mutation made
+    // earlier in the request is discarded at exactly the moment the cookie
+    // that matters is minted — a login, verified against the running binary,
+    // still handed out the local domain.
+    //
+    // A store instance each, and that is not an oversight to tidy up later.
+    // express-session installs its own `generate` *onto the store object* —
+    // and `regenerate()`, which `req.login()` calls, goes through it. Handed
+    // one shared store, the second middleware constructed overwrites the
+    // first's, so every login on either arrangement mints the cookie of
+    // whichever was created last. Measured: with a shared store, a login on
+    // the configured domain came back with no `Domain` at all.
+    //
+    // Two instances cost nothing and share everything that matters: the model
+    // holds no state, and both read and write the same sessions table. A
+    // session started on either can be read by either.
+    const sessionCookie: expressSession.CookieOptions = {
+      secure: true, // Works via X-Forwarded-Proto with trust proxy
+      maxAge: SESSION_MAX_AGE,
+      httpOnly: true,
+      path: '/',
+      sameSite: 'none', // Required for cross-site cookies with credentials
+    };
+    const sessionBase = {
+      secret: CONFIG.SESSION_COOKIE_KEY,
+      resave: false,
+      saveUninitialized: false,
+      name: 'sessid',
+    };
+
+    const localSession = expressSession({
+      ...sessionBase,
+      store: new PgSessionModel(),
+      cookie: {
+        ...sessionCookie,
+        // The host without its port. A cookie domain is a domain — a browser
+        // rejects `ganymede.apollo.test:8443` outright — while GANYMEDE_FQDN
+        // has to carry the port, because every URL built from it is a link
+        // somebody follows and nginx does not listen on 443 where binding
+        // under 1024 needs root. This is the one place the port has to come
+        // back off.
+        domain: CONFIG.GANYMEDE_FQDN.split(':')[0],
+      },
+    });
+
+    // No domain at all, which scopes the cookie to exactly the host that set
+    // it. That is what a single-hostname arrangement wants: there are no
+    // sibling subdomains to share it with.
+    const tunnelSession = expressSession({
+      ...sessionBase,
+      store: new PgSessionModel(),
+      cookie: { ...sessionCookie },
+    });
+
+    app.use((req, res, next) =>
+      isTunnelRequest(req)
+        ? tunnelSession(req, res, next)
+        : localSession(req, res, next)
     );
   }
 

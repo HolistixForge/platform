@@ -241,6 +241,18 @@ ENV_NAME=${ENV_NAME}
 GANYMEDE_SERVER_BIND='[{"host":"127.0.0.1","port":${GANYMEDE_PORT}}]'
 ALLOWED_ORIGINS='["https://${DOMAIN}"]'
 
+# Whether this instance may be reached on hostnames it was not configured with.
+#
+# Off. The names above are the only ones a browser is expected to use, and
+# every origin decision — CORS, CSRF, the session cookie, the OAuth redirect
+# target — is made against them. Turning this on additionally accepts a request
+# whose Origin is the origin it was sent to, which is what lets the platform
+# answer on a tunnel hostname minted after this file was written.
+#
+# scripts/local-dev/tunnel.sh flips it, and flips it back. See
+# doc/guides/PUBLIC_TUNNEL.md.
+PUBLIC_TUNNEL=0
+
 
 
 # Magic link email (optional)
@@ -393,9 +405,13 @@ server {
 }
 EOF
 
-# Create directory for dynamic gateway nginx configs
-mkdir -p "${ENV_DIR}/nginx-gateways.d"
-sudo chmod 755 "${ENV_DIR}/nginx-gateways.d"
+# Create directory for dynamic gateway nginx configs, and the by-path form of
+# the same configs that the public server block includes when this environment
+# is tunnelled (scripts/local-dev/tunnel.sh).
+mkdir -p "${ENV_DIR}/nginx-gateways.d/locations"
+sudo chmod 755 "${ENV_DIR}/nginx-gateways.d" "${ENV_DIR}/nginx-gateways.d/locations"
+printf '# Ganymede writes one location here per gateway.\n' \
+  > "${ENV_DIR}/nginx-gateways.d/locations/00-placeholder.conf"
 
 # Enable site
 sudo ln -sf "/etc/nginx/sites-available/${ENV_NAME}" "/etc/nginx/sites-enabled/${ENV_NAME}"

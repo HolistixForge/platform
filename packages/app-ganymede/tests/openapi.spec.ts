@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import * as OpenApiValidator from 'express-openapi-validator';
 import oas from '../src/oas30.json';
 
@@ -7,7 +7,12 @@ describe('OpenAPI Specification', () => {
     // This test uses Python's openapi-spec-validator
     // The script will install Python if needed
     const scriptPath = `${process.env.NX_WORKSPACE_ROOT}/packages/app-ganymede/tests/openapi.spec.install.sh`;
-    execSync(`bash ${scriptPath}`, { encoding: 'utf8' });
+    // execFileSync, not execSync: the latter builds a shell command string, and
+    // a checkout on an external volume carries that volume's name — which has
+    // spaces. `bash /Volumes/External Mac Book Pro/…` runs `/Volumes/External`
+    // and this suite then reported the OpenAPI specification as invalid when it
+    // had never been read. Passing the path as an argument has no such hazard.
+    execFileSync('bash', [scriptPath], { encoding: 'utf8' });
     // If no error is thrown, the test passes
   });
 

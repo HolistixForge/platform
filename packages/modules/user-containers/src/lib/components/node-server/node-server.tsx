@@ -8,11 +8,16 @@ import {
   useNodeHeaderButtons,
 } from '@holistix-forge/whiteboard/frontend';
 import { TGraphNode } from '@holistix-forge/core-graph';
-import { useLocalSharedData } from '@holistix-forge/collab/frontend';
+import {
+  useLocalSharedData,
+  useAwarenessUserList,
+} from '@holistix-forge/collab/frontend';
 import { useDispatcher } from '@holistix-forge/reducers/frontend';
 import { TTabEvents } from '@holistix-forge/tabs';
 import { TJsonObject } from '@holistix-forge/simple-types';
 import { useModuleExports } from '@holistix-forge/module/frontend';
+import { useQueriesUsers } from '@holistix-forge/frontend-data';
+import { TF_User, TG_User } from '@holistix-forge/types';
 
 import { UserContainerCardInternal } from '../server-card';
 import { TUserContainer } from '../../servers-types';
@@ -189,6 +194,110 @@ export const useContainerProps = (
 
 //
 
+/**
+ * The guest identity the collab config falls back to. Not a person, and the
+ * users API has nothing to say about it — the header filters it out of its own
+ * avatar row for the same reason.
+ */
+const GUEST_USER_ID = '00000000-0000-0000-0000-000000000001';
+
+export type TContainerPresence = {
+  /** Who is in the project right now. */
+  liveUsers: TF_User[];
+  /** Whose machine this container runs on, for a local placement. */
+  host?: TF_User;
+};
+
+/**
+ * Who is on this service, and whose machine it runs on.
+ *
+ * `server-card` has drawn both since it was written and nothing ever handed it
+ * either one, so the pulsing avatars that say "this is running on Marc's
+ * laptop, and three of us are looking at it" simply never appeared. This is
+ * the wiring that was missing, kept out of the card so the card stays a
+ * component that draws what it is given.
+ *
+ * **liveUsers** is the project's collab session. A container has no presence
+ * channel of its own — nothing reports who has a notebook open inside it — so
+ * "on this service" can only mean "in the project this service belongs to".
+ * Everyone, including you: a solo session still has a person in it, and a
+ * bubble that vanished when you were alone would read as a broken bubble.
+ * Deduplicated by user, because awareness is keyed by *connection* and someone
+ * with two tabs open is still one person.
+ *
+ * **host** only exists for a local placement, which is the whole point of the
+ * distinction the blue ring draws: the platform is owned by nobody, and a card
+ * that showed an owner for it would be inventing one. The host is fetched
+ * whether or not they are connected — the machine keeps running the container
+ * after they close the board.
+ */
+export const useContainerPresence = (
+  container: TUserContainer | undefined
+): TContainerPresence => {
+  const live = useAwarenessUserList();
+
+  const host_user_id =
+    container?.runner.id === 'local' &&
+    typeof container.runner.user_id === 'string'
+      ? container.runner.user_id
+      : undefined;
+
+  const liveIds = Array.from(
+    new Set(
+      live.map((u) => u.user_id).filter((id) => id && id !== GUEST_USER_ID)
+    )
+  );
+
+  // One query per person either way — `useQueriesUsers` keys on `['user', id]`,
+  // so the host already in the session costs nothing extra.
+  const ids =
+    host_user_id && !liveIds.includes(host_user_id)
+      ? [...liveIds, host_user_id]
+      : liveIds;
+
+  const queries = useQueriesUsers(ids);
+
+  const fetched = new Map<string, TG_User>();
+  queries.forEach((q) => {
+    if (q.status === 'success' && q.data?.user_id)
+      fetched.set(q.data.user_id, q.data);
+  });
+
+  // A user whose record has not arrived is left out rather than drawn as a
+  // blank avatar: the bubble is a count of people, and a placeholder in it is
+  // a person who is not there.
+  //
+  // `flatMap` and not `map().filter()`: a type guard on the filter has to be
+  // written against the mapped literal, and `TF_User` is not assignable to it
+  // — `live` is optional there and required here. Returning nothing for an
+  // absent record says the same thing without the cast.
+  const liveUsers: TF_User[] = liveIds.flatMap((id) => {
+    const u = fetched.get(id);
+    if (!u) return [];
+    return [
+      {
+        ...u,
+        color: live.find((l) => l.user_id === id)?.color,
+        live: true,
+      },
+    ];
+  });
+
+  const hostRecord = host_user_id ? fetched.get(host_user_id) : undefined;
+
+  return {
+    liveUsers,
+    host: hostRecord
+      ? {
+          ...hostRecord,
+          color: live.find((l) => l.user_id === host_user_id)?.color,
+        }
+      : undefined,
+  };
+};
+
+//
+
 export const NodeServer = ({
   node,
 }: {
@@ -203,9 +312,16 @@ export const NodeServer = ({
 
   const props = useContainerProps(container_id);
 
+  const presence = useContainerPresence(props?.container);
+
   if (props)
     return (
-      <NodeServerInternal {...useNodeValue} {...props} runners={runners} />
+      <NodeServerInternal
+        {...useNodeValue}
+        {...props}
+        {...presence}
+        runners={runners}
+      />
     );
 
   return null;
@@ -218,10 +334,12 @@ export const ServerCard = ({ container_id }: { container_id: string }) => {
 
   const runners = useRunnerFrontend();
 
+  const presence = useContainerPresence(props?.container);
+
   if (props)
     return (
       <div style={{ '--node-wrapper-header-height': '-8px' } as CSSProperties}>
-        <UserContainerCardInternal {...props} runners={runners} />
+        <UserContainerCardInternal {...props} {...presence} runners={runners} />
       </div>
     );
 
@@ -233,7 +351,12 @@ export const ServerCard = ({ container_id }: { container_id: string }) => {
  */
 
 export const NodeServerInternal = (
-  props: UseContainerProps & { runners: Map<string, TContainerRunnerFrontend> }
+  // `Partial`: the stories mount this component directly, with no collab
+  // session behind it to have a presence in.
+  props: UseContainerProps &
+    Partial<TContainerPresence> & {
+      runners: Map<string, TContainerRunnerFrontend>;
+    }
 ) => {
   //
 

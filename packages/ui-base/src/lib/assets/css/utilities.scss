@@ -154,6 +154,28 @@
   font-weight: var(--font-weight-medium);
 }
 
+// --- Animation ---
+// `animate-ping` outlived Tailwind. `status-led` and jupyter's reduced cell
+// both still ask for it, and with nothing left to define it the "pulsing" LED
+// sat perfectly still — a live container looked exactly like a stopped one
+// that happened to be a different colour.
+//
+// The keyframes are the ones `user-bubble.scss` already animates the live and
+// host rings with, restated here so a page that pulls in the utilities gets
+// the animation whether or not it ever renders an avatar. Same curve, same
+// duration: one pulse on screen, not two that nearly match.
+.animate-ping {
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes ping {
+  75%,
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
 // --- Grid ---
 .grid {
   display: grid;

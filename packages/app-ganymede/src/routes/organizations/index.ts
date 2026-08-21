@@ -2,7 +2,7 @@ import { Router, RequestHandler } from 'express';
 import { authenticateJwtUser } from '../../middleware/auth';
 import { pg } from '../../database/pg';
 import { asyncHandler, AuthRequest } from '../../middleware/route-handler';
-import { makeOrgGatewayHostname } from '../../lib/url-helpers';
+import { gatewayHostnameFor } from '../../lib/public-routing';
 
 export const setupOrganizationRoutes = (
   router: Router,
@@ -224,9 +224,10 @@ export const setupOrganizationRoutes = (
       const gateway = gatewayResult.next()?.oneRow();
 
       // Gateway hostname is deterministic: org-{organization_id}.domain.local
+      // — or the path form under it, for a caller that came through a tunnel.
       // But we only return it if gateway is actually allocated
       if (gateway) {
-        const gateway_hostname = makeOrgGatewayHostname(req.params.org_id);
+        const gateway_hostname = gatewayHostnameFor(req.params.org_id, req);
         return res.json({ gateway_hostname });
       } else {
         return res.json({ gateway_hostname: null });

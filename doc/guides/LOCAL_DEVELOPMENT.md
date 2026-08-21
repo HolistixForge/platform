@@ -776,15 +776,48 @@ Each container gets a distinct FQDN that routes directly to its VPN IP:
 **Accessing Container Services:**
 
 - Main service: `https://uc-{uuid}.org-{uuid}.domain.local/`
+- Named service: `https://uc-{uuid}--{space}--{service}.org-{uuid}.domain.local/`
+  (`{space}` is the whiteboard project the container belongs to, slugified;
+  omitted when the gateway has not been told the name)
 - Terminal (if ttyd enabled): Same URL (ttyd serves at root path)
 - Gateway internal paths:
   - `/collab/*` - Collaboration, events, VPN config (used by containers over VPN)
   - `/oauth/*` - OAuth2 provider for container apps
 
+A named service is a suffix on the container's label rather than a label of its
+own, so the deepest name the platform ever serves is two below the domain. That
+is what lets **one** `*.org-{uuid}.{domain}` wildcard cover an organization's
+containers and all their services, instead of a certificate per container:
+
+```bash
+./scripts/local-dev/macos/setup-tls.sh domain.local <org-uuid> [<org-uuid> ...]
+```
+
+The rule lives in `packages/modules/user-containers/src/lib/service-fqdn.ts`.
+
+---
+
+---
+
+## Reaching the environment from outside this machine
+
+Every name above resolves here and nowhere else. To put the same environment on
+a public URL — for a colleague, a phone, an OAuth callback or a webhook:
+
+```bash
+./scripts/local-dev/tunnel.sh up      # prints the public URL
+./scripts/local-dev/tunnel.sh down
+```
+
+The platform switches to path routing on the public hostname, because a tunnel
+has no wildcard subdomains to offer. Details, providers and limits:
+[PUBLIC_TUNNEL.md](PUBLIC_TUNNEL.md).
+
 ---
 
 ## Related Documentation
 
+- [Put an environment on the internet](PUBLIC_TUNNEL.md) - Tunnels and public URLs
 - [Modules Testing](MODULES_TESTING.md) - Testing modules in Storybook
 - [System Architecture](../architecture/SYSTEM_ARCHITECTURE.md) - Complete system diagram
 - [Gateway Architecture](../architecture/GATEWAY_ARCHITECTURE.md) - Multi-gateway architecture

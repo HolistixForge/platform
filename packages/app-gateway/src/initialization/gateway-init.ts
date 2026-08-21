@@ -177,7 +177,11 @@ export async function initializeGatewayForOrganization(
   gatewayId: string,
   organizationToken: string,
   servers?: (http.Server | https.Server)[],
-  members?: Array<{ user_id: string; username: string; role: string }>
+  members?: Array<{ user_id: string; username: string; role: string }>,
+  // Project id to name, as the handshake config carried them. Optional for
+  // the same reason `members` is: a caller that has none still gets a working
+  // gateway, with services named the way they were named before.
+  projectNames?: Record<string, string>
 ): Promise<GatewayInstances> {
   log(
     EPriority.Info,
@@ -270,7 +274,8 @@ export async function initializeGatewayForOrganization(
     permissionManager, // ← Passed to modules for permission registration
     tokenManager, // ← Passed to modules for token management
     permissionRegistry, // ← Passed to modules for permission registration
-    collabRegistry // ← Passed to modules for shared data schema registration
+    collabRegistry, // ← Passed to modules for shared data schema registration
+    projectNames // ← Passed to modules, for the names services are published under
   );
   log(
     EPriority.Info,

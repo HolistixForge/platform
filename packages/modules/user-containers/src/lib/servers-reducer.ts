@@ -1,5 +1,6 @@
 import { TJwtUser } from '@holistix-forge/types';
 import { TJwtUserContainer } from './servers-types';
+import { serviceFqdn, serviceLabel } from './service-fqdn';
 import { secondAgo } from '@holistix-forge/simple-types';
 import {
   ForbiddenException,
@@ -218,11 +219,22 @@ export class UserContainersReducer extends ReducerWithCollab<
     containerId: string,
     organizationId: string
   ): string {
-    // Extract domain from gateway FQDN (org-{uuid}.{domain} -> {domain})
-    // process.env.DOMAIN is not available at runtime in bundled modules
+    return serviceFqdn({
+      containerId,
+      organizationId,
+      domain: this.platformDomain(),
+    });
+  }
+
+  /**
+   * The domain this deployment serves, taken off the gateway's own name.
+   *
+   * `process.env.DOMAIN` is not available at runtime in bundled modules, so it
+   * is read back out of `org-{uuid}.{domain}` instead.
+   */
+  private platformDomain(): string {
     const gatewayFqdn = this.depsExports.gateway.gatewayFQDN;
-    const domain = gatewayFqdn.split('.').slice(1).join('.') || 'domain.local';
-    return `uc-${containerId}.org-${organizationId}.${domain}`;
+    return gatewayFqdn.split('.').slice(1).join('.') || 'domain.local';
   }
 
   /**
@@ -230,24 +242,49 @@ export class UserContainersReducer extends ReducerWithCollab<
    * @param containerId - Container ID
    * @param organizationId - Organization ID
    * @param serviceName - Service name (e.g., 'terminal', 'vscode')
+   * @param projectId - Project the container belongs to, for the space in the name
    * @returns FQDN:
    *   - Main service (empty/main): uc-{containerId}.org-{orgId}.{domain}
-   *   - Named service: {service}.uc-{containerId}.org-{orgId}.{domain}
+   *   - Named service: uc-{containerId}--{space}--{service}.org-{orgId}.{domain}
+   *
+   * The named form used to be `{service}.uc-{containerId}.org-{orgId}.{domain}`
+   * — one label deeper, and that depth is what made every container need a
+   * certificate of its own, since a TLS wildcard covers exactly one label.
+   * Folded into the container's label, the deepest name a deployment ever
+   * serves is two below the domain, and one `*.org-{orgId}.{domain}` per
+   * organization covers all of them. See service-fqdn.ts.
+   *
+   * The space — the project the container belongs to — is in the name because
+   * a hostname is what people read and paste, and `uc-uc_msiod5zqhlj4ws` says
+   * nothing about which of their projects it is. It is dropped when this
+   * gateway was not told the name, which is what a Ganymede older than this
+   * one does, and the service then keeps the name it had before.
    */
   private generateServiceFQDN(
     containerId: string,
     organizationId: string,
-    serviceName: string
+    serviceName: string,
+    projectId?: string
   ): string {
-    const baseFqdn = this.generateContainerFQDN(containerId, organizationId);
+    return serviceFqdn({
+      containerId,
+      organizationId,
+      domain: this.platformDomain(),
+      serviceName,
+      qualifiers: [this.spaceName(projectId)],
+    });
+  }
 
-    // Main/default service uses base FQDN
-    if (!serviceName || serviceName === 'main' || serviceName === 'default') {
-      return baseFqdn;
-    }
-
-    // Named services get subdomain: {service}.uc-{id}.org-{org}.{domain}
-    return `${serviceName}.${baseFqdn}`;
+  /**
+   * The name of the space a container belongs to — a whiteboard project.
+   *
+   * Undefined rather than a placeholder when it is not known: `serviceFqdn`
+   * drops empty qualifiers, so an unknown space produces exactly the name the
+   * service had before this existed instead of a `unknown` nobody can read.
+   */
+  private spaceName(projectId: string | undefined): string | undefined {
+    if (!projectId) return undefined;
+    return this.depsExports.gateway.projectName?.(projectId);
   }
 
   async _new(event: TEventNew, requestData: RequestData) {
@@ -474,12 +511,13 @@ export class UserContainersReducer extends ReducerWithCollab<
       )
     ) {
       // Generate per-service FQDN for routing
-      // Format: {service}.uc-{containerId}.org-{orgId}.{domain}
+      // Format: uc-{containerId}--{space}--{service}.org-{orgId}.{domain}
       // Main/default service: uc-{containerId}.org-{orgId}.{domain}
       const serviceFQDN = this.generateServiceFQDN(
         containerId,
         this.depsExports.gateway.organization_id,
-        event.name
+        event.name,
+        requestData.project_id
       );
 
       httpServices.push({
@@ -1224,6 +1262,17 @@ export class UserContainersReducer extends ReducerWithCollab<
       gateway_fqdn: args.gatewayFqdn,
       organization_id: args.organization_id,
       auth_guard_client_secret: args.authGuard?.client_secret,
+      // The one place the naming rule is applied for a container that will
+      // apply it again itself. See TRunnerConfig.service_label_prefix.
+      //
+      // Arrived on main while this construction was being pulled out of its
+      // two call sites — which is the very drift the extraction exists to
+      // stop. Kept here rather than at either caller so it cannot be added to
+      // one and forgotten at the other, the way `auth_guard.client_id` and
+      // `gateway_dev` both were.
+      service_label_prefix: serviceLabel(args.containerId, [
+        this.spaceName(args.project_id),
+      ]),
       vpn_secret: this.vpnSecrets.get(args.containerId),
       // `host-gateway` rather than the bridge address: a platform container
       // sits on a private network of its own, where the default bridge's

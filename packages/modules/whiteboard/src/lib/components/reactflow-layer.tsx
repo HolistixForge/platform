@@ -50,7 +50,7 @@ import { NodeWrapper } from './node-wrappers/node-wrapper';
 import { WhiteboardState } from './apis/whiteboardState';
 import { translateEdges, translateNodes } from './to-rf-nodes';
 import { TEventMoveNode } from '../whiteboard-events';
-import { getAbsolutePosition } from '../utils/position-utils';
+import { resolveNodeMove } from '../utils/move-node-utils';
 import { TWhiteboardSharedData } from '../..';
 import { INITIAL_VIEWPORT } from './whiteboard';
 import { useSpaceContext } from './reactflow-layer-context';
@@ -226,21 +226,34 @@ export const ReactflowLayer = ({
       if (!gv) return;
 
       const draggedNode = gv.graph.nodes.find((n) => n.id === nodeId);
+      if (!draggedNode) return;
 
-      if (draggedNode) {
-        // if action is done and node has a group id, return.
-        if (draggedNode.parentId)
-          // the very last overide, (backend have computed group) draggedNode.parentId will be the group id,
-          // and event.position will still be absolute.
-          // do nothing.
-          return;
+      // The exact same resolution the reducer runs, so the optimistic position
+      // shown during the drag is the one that comes back from the backend. A
+      // node inside a group used to get no local move at all — it only shifted
+      // once the backend answered, in a frame the frontend was no longer using,
+      // which is what made it jump between stale positions instead of following
+      // the pointer.
+      const placement = resolveNodeMove(
+        gv,
+        draggedNode,
+        event.position,
+        !!event.stop
+      );
 
-        draggedNode.position = getAbsolutePosition(
-          event.position,
-          draggedNode.parentId,
-          gv
-        );
-        draggedNode.parentId = undefined;
+      // The rendered list and the stored views hold distinct objects once the
+      // graph view has round-tripped through the collab document, and group
+      // positions are read off `nodeViews` — so both copies have to move or the
+      // next event resolves against a stale parent.
+      const nodeView = gv.nodeViews.find((n) => n.id === nodeId);
+      const moved =
+        nodeView && nodeView !== draggedNode
+          ? [draggedNode, nodeView]
+          : [draggedNode];
+
+      for (const n of moved) {
+        n.position = placement.position;
+        n.parentId = placement.parentId;
       }
     };
 

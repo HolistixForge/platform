@@ -17,6 +17,7 @@ import { GLOBAL_CLIENT_ID, TJwtUser } from '@holistix-forge/types';
 import bcrypt from 'bcryptjs';
 
 import { CONFIG } from '../config';
+import { tunnelRedirectUris } from '../lib/public-routing';
 import { pg } from '../database/pg';
 import { userFromSession } from '../routes/auth/totp';
 import { Req, UserSerializedInfo } from '../types';
@@ -133,9 +134,19 @@ export const model: AuthorizationCodeModel &
         // before that seed existed had no row at all and fell through to the
         // config-derived fallback below, which is why this only surfaces on a
         // new environment. Custom clients keep their own registered URIs.
+        //
+        // The tunnel origin joins that list for the same reason and by the
+        // same argument: it is deployment configuration, only discovered per
+        // request rather than at startup. It is empty unless this request came
+        // in on a hostname outside the configured domain — see
+        // lib/public-routing.ts.
         const isGlobalClient = row['client_id'] === GLOBAL_CLIENT_ID;
         const effectiveRedirectUris = isGlobalClient
-          ? [CONFIG.APP_FRONTEND_URL, CONFIG.APP_FRONTEND_URL_DEV]
+          ? [
+              CONFIG.APP_FRONTEND_URL,
+              CONFIG.APP_FRONTEND_URL_DEV,
+              ...tunnelRedirectUris(),
+            ]
           : (redirectUris as string[]);
 
         const client: Client = {
@@ -160,7 +171,11 @@ export const model: AuthorizationCodeModel &
       return {
         id: GLOBAL_CLIENT_ID,
         grants: ['authorization_code', 'refresh_token'],
-        redirectUris: [CONFIG.APP_FRONTEND_URL, CONFIG.APP_FRONTEND_URL_DEV],
+        redirectUris: [
+          CONFIG.APP_FRONTEND_URL,
+          CONFIG.APP_FRONTEND_URL_DEV,
+          ...tunnelRedirectUris(),
+        ],
         accessTokenLifetime: ACCESS_TOKEN_LIFETIME,
         refreshTokenLifetime: REFRESH_TOKEN_LIFETIME,
       };

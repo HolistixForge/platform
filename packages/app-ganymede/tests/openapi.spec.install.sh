@@ -2,9 +2,21 @@
 
 set -e 
 
-TST_DIR=$NX_WORKSPACE_ROOT/packages/app-ganymede/tests
+# Where this script's work happens. Every expansion of it below is quoted, and
+# that is the whole point: a checkout on an external volume carries that
+# volume's name, and those have spaces. Unquoted, `cd $TST_DIR` split on the
+# first one and the script died on its first useful line with
+# `cd: /Volumes/External: No such file or directory` — after which the suite
+# reported the OpenAPI specification as invalid, which it was not. It had
+# never been read.
+#
+# Falls back to this script's own directory when NX_WORKSPACE_ROOT is unset, so
+# it runs by hand as well as under nx; unset, the expansion was `/packages/…`,
+# an absolute path to nowhere.
+TST_DIR="${NX_WORKSPACE_ROOT:+${NX_WORKSPACE_ROOT}/packages/app-ganymede/tests}"
+TST_DIR="${TST_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 
-cd $TST_DIR
+cd "$TST_DIR"
 
 # Check if Python3 is installed
 if ! command -v python3 &> /dev/null; then
@@ -63,16 +75,16 @@ fi
 rm -rf "$TEST_VENV"
 
 # Check if virtual environment exists and is valid
-if [ -d $TST_DIR/.venv ]; then
+if [ -d "$TST_DIR/.venv" ]; then
     # Check if pip exists in venv (validates venv integrity)
-    if ! [ -f $TST_DIR/.venv/bin/pip ]; then
+    if ! [ -f "$TST_DIR/.venv/bin/pip" ]; then
         echo "Virtual environment is corrupted. Recreating..."
-        rm -rf $TST_DIR/.venv
+        rm -rf "$TST_DIR/.venv"
     fi
 fi
 
 # Create virtual environment if it doesn't exist
-if ! [ -d $TST_DIR/.venv ]; then
+if ! [ -d "$TST_DIR/.venv" ]; then
     echo "Creating Python virtual environment..."
     python3 -m venv ./.venv || {
         echo "ERROR: Failed to create virtual environment"
