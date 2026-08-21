@@ -12,10 +12,8 @@ import { asyncHandler, AuthRequest } from '../../middleware/route-handler';
 import { setupGatewayDataRoutes } from './data';
 import { nginxManager } from '../../services/nginx-manager';
 import { EPriority, log } from '@holistix-forge/log';
-import {
-  makeOrgGatewayHostname,
-  makeOrgGatewayUrl,
-} from '../../lib/url-helpers';
+import { makeOrgGatewayUrl } from '../../lib/url-helpers';
+import { gatewayHostnameFor } from '../../lib/public-routing';
 
 /**
  * Cleanup/rollback gateway allocation on failure
@@ -140,7 +138,7 @@ export const setupGatewayRoutes = (
       const existing = existingCheck.next()?.oneRow();
 
       if (existing) {
-        const gateway_hostname = makeOrgGatewayHostname(organization_id);
+        const gateway_hostname = gatewayHostnameFor(organization_id, req);
         log(
           EPriority.Info,
           'GATEWAY_ALLOC',
@@ -188,7 +186,14 @@ export const setupGatewayRoutes = (
         await nginxManager.reloadNginx();
 
         // 4. Construct gateway hostname and URL
-        const gateway_hostname = makeOrgGatewayHostname(organization_id);
+        //
+        // Two different things, and the difference matters here. The hostname
+        // is what the *caller's browser* will use, so it follows the host this
+        // request arrived on. The URL is what *this process* is about to
+        // follow for the health check and the handshake below — a call that
+        // never leaves the platform host — so it stays the local name, which
+        // resolves and whose certificate this container is configured for.
+        const gateway_hostname = gatewayHostnameFor(organization_id, req);
         const gateway_url = makeOrgGatewayUrl(organization_id);
 
         log(

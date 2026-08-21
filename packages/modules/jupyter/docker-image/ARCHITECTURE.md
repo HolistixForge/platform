@@ -217,7 +217,7 @@ docker build -t holistixforge/jupyter-pytorch:latest \
 Each service inside the container gets a unique FQDN:
 
 ```
-{service}.uc-{container_id}.org-{organization_id}.{domain}
+uc-{container_id}--{service}.org-{organization_id}.{domain}
 ```
 
 Examples:

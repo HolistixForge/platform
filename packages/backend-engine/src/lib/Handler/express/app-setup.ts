@@ -13,6 +13,7 @@ import {
 import { TJson } from '@holistix-forge/simple-types';
 
 import { respond } from './responses';
+import { isSameOriginRequest } from './public-origin';
 import { trace, SpanStatusCode } from '@opentelemetry/api';
 
 //
@@ -46,8 +47,16 @@ export const setupBasicExpressApp = (
       process.env.ALLOWED_ORIGINS || '[]'
     );
     const origin = req.headers.origin;
+    // A request from the very page it was sent to is same-origin, so this
+    // header does not decide anything for it — the browser does not consult
+    // CORS at all. It is echoed anyway because the fallback below is
+    // ALLOWED_ORIGINS[0], and answering a tunnel request with the *local*
+    // origin is what turns a browser's "no CORS needed" into a mismatch the
+    // moment anything upgrades the request to a cross-origin one.
     const allowedOrigin =
-      origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+      origin && (allowedOrigins.includes(origin) || isSameOriginRequest(req))
+        ? origin
+        : allowedOrigins[0];
 
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader(
@@ -158,8 +167,7 @@ export const setupBasicExpressApp = (
         if (pattern.includes(':')) {
           // Convert Express param pattern to regex
           // Example: /collab/:id → /^\/collab\/[^/]+$/
-          const regexPattern =
-            '^' + pattern.replace(/:[^/]+/g, '[^/]+') + '$';
+          const regexPattern = '^' + pattern.replace(/:[^/]+/g, '[^/]+') + '$';
           const regex = new RegExp(regexPattern);
           return regex.test(req.path);
         }
@@ -189,6 +197,15 @@ export const setupBasicExpressApp = (
       origin &&
       allowedOrigins.some((allowed) => origin.startsWith(allowed))
     ) {
+      return next();
+    }
+
+    // Reached on a name this instance was not configured with — a tunnel. The
+    // rule is the same one this check has always applied, only stated without
+    // a list: a request whose Origin is the origin it was sent to came from
+    // this application's own page, and a cross-site page cannot produce that
+    // header. See public-origin.ts; off unless PUBLIC_TUNNEL is set.
+    if (isSameOriginRequest(req)) {
       return next();
     }
 

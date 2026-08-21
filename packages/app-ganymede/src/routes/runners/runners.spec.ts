@@ -28,8 +28,12 @@ jest.mock('@holistix-forge/backend-engine', () => ({
   ),
 }));
 
-jest.mock('../../lib/url-helpers', () => ({
-  makeOrgGatewayHostname: (org: string) => `org-${org}.test.local`,
+// The route asks public-routing rather than url-helpers, because the answer
+// depends on the host the request arrived on. Stubbed at that boundary: what
+// this suite is about is the shape of the projects list, and the two
+// arrangements it can name are covered in public-routing.spec.ts.
+jest.mock('../../lib/public-routing', () => ({
+  gatewayHostnameFor: (org: string) => `org-${org}.test.local`,
 }));
 
 jest.mock('../../middleware/auth', () => ({

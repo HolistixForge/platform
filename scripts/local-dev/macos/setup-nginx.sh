@@ -46,6 +46,14 @@ mkdir -p "$GATEWAYS_D" "$LOGS" "$SERVERS_DIR"
   printf '# Ganymede writes one file here per gateway. This keeps the glob\n# non-empty until it does.\n' \
     > "${GATEWAYS_D}/00-placeholder.conf"
 
+# The same, for the by-path form of those gateway configs, which the public
+# server block below includes. Ganymede writes one per organization next to the
+# server block it already wrote; see services/nginx-manager.ts.
+mkdir -p "${GATEWAYS_D}/locations"
+[ -f "${GATEWAYS_D}/locations/00-placeholder.conf" ] || \
+  printf '# Ganymede writes one location here per gateway.\n' \
+    > "${GATEWAYS_D}/locations/00-placeholder.conf"
+
 cat > "$SITE" <<EOF
 # Holistix, ${DOMAIN} — written by scripts/local-dev/macos/setup-nginx.sh
 

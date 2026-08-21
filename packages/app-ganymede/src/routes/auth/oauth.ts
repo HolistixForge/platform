@@ -13,6 +13,7 @@ import { ForbiddenException } from '@holistix-forge/log';
 import { authenticateHandler, model } from '../../models/oauth';
 import { userIsAuthenticated } from '../../models/users';
 import { Req } from '../../types';
+import { frontendUrlFor, ganymedeUrlFor } from '../../lib/public-routing';
 import { CONFIG } from '../../config';
 
 //
@@ -50,7 +51,7 @@ export const setupOauthRoutes = (
 ) => {
   // Apply rate limiter to token endpoint (most sensitive)
   const tokenHandlers = rateLimiter ? [rateLimiter] : [];
-  
+
   //
 
   async function handleAuthorize(
@@ -58,8 +59,14 @@ export const setupOauthRoutes = (
     res: express.Response,
     next: express.NextFunction
   ) {
+    // Both of these are links a browser is about to follow, so they have to
+    // point at the host that browser is on. On the configured domain these are
+    // exactly CONFIG.APP_GANYMEDE_URL and CONFIG.LOGIN_PAGE_URL; through a
+    // tunnel they follow the request, which is what keeps a sign-in from
+    // bouncing the visitor onto a name their machine cannot resolve.
+    const loginPageUrl = `${frontendUrlFor(req)}/account/login`;
     const queryParameters = {
-      redirect: `${CONFIG.APP_GANYMEDE_URL}${req.path}`,
+      redirect: `${ganymedeUrlFor(req)}${req.path}`,
       client_id: req.query.client_id as string,
       redirect_uri: req.query.redirect_uri as string,
     };
@@ -70,14 +77,14 @@ export const setupOauthRoutes = (
       if (req.method === 'GET')
         respond(req, res, {
           type: 'redirect',
-          url: CONFIG.LOGIN_PAGE_URL,
+          url: loginPageUrl,
           queryParameters,
         });
       else
         respond(req, res, {
           type: 'json',
           status: 401,
-          json: { location: CONFIG.LOGIN_PAGE_URL, ...queryParameters },
+          json: { location: loginPageUrl, ...queryParameters },
         });
     } else {
       const request = new Request(req);

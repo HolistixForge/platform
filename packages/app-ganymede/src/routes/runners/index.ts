@@ -11,7 +11,7 @@ import {
 } from '../../middleware/auth';
 import { asyncHandler } from '../../middleware/route-handler';
 import { pg } from '../../database/pg';
-import { makeOrgGatewayHostname } from '../../lib/url-helpers';
+import { gatewayHostnameFor } from '../../lib/public-routing';
 
 /**
  * A year. The point of a long-lived token here is that a machine which was shut
@@ -201,7 +201,14 @@ export const setupRunnerRoutes = (
           // talks to, derived the same way, so a runner and a browser in the
           // same project are looking at one gateway rather than two ideas of
           // where it is.
-          gateway_hostname: makeOrgGatewayHostname(organization_id),
+          //
+          // "Derived the same way" now carries its weight: a runner on
+          // somebody else's machine reached this route through whatever
+          // address it can actually get to, and if that was the tunnel it gets
+          // the tunnel form back. `org-<uuid>.<domain>` is a name that
+          // resolves on the platform host and nowhere else, so the previous
+          // fixed answer was one a remote runner could never follow.
+          gateway_hostname: gatewayHostnameFor(organization_id, req),
           token: generateJwtToken(
             {
               type: 'runner_project_token',

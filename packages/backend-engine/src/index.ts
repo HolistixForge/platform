@@ -4,6 +4,13 @@ export {
   setupErrorsHandler,
 } from './lib/Handler/express/app-setup';
 
+export {
+  declaredOrigin,
+  isPublicTunnelEnabled,
+  isSameOriginRequest,
+  requestOrigin,
+} from './lib/Handler/express/public-origin';
+
 export { setupValidator } from './lib/Handler/express/openapi-validator';
 export { respond } from './lib/Handler/express/responses';
 

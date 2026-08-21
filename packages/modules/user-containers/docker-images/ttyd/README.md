@@ -56,7 +56,7 @@ https://terminal.uc-xxx.org-yyy.domain/?arg=logs  → "logs" session
 # Start ttyd on port 7681
 /usr/local/bin/start-ttyd.sh 7681 &
 
-# Register with gateway (creates {service}.uc-{id}.org-{org}.{domain} FQDN)
+# Register with gateway (creates uc-{id}--{service}.org-{org}.{domain} FQDN)
 map_http_service terminal 7681 &
 ```
 

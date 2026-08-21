@@ -503,6 +503,7 @@ cmd_up() {
       -e "BUILD_SERVER_IP=${host}" \
       -e "BUILD_SERVER_PORT=${BUILD_PORT}" \
       -e "ALLOWED_ORIGINS=[\"https://${DOMAIN}:${HTTPS_PORT}\"]" \
+      -e "PUBLIC_TUNNEL=${PUBLIC_TUNNEL:-0}" \
       -e "JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}" \
       -e "OTEL_SERVICE_NAME=gateway-${name}" \
       -e "OTEL_DEPLOYMENT_ENVIRONMENT=${ENV_NAME}" \

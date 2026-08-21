@@ -51,6 +51,7 @@ export const StoryApiContext = ({
 
     return {
       ganymedeApi,
+      ganymedeUrl: ganymedeFQDN,
       ganymedeFQDN,
       queryClient,
     };

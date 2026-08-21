@@ -1,5 +1,6 @@
 import { TJwtUser } from '@holistix-forge/types';
 import { TJwtUserContainer } from './servers-types';
+import { serviceFqdn } from './service-fqdn';
 import { secondAgo } from '@holistix-forge/simple-types';
 import {
   ForbiddenException,
@@ -214,11 +215,22 @@ export class UserContainersReducer extends ReducerWithCollab<
     containerId: string,
     organizationId: string
   ): string {
-    // Extract domain from gateway FQDN (org-{uuid}.{domain} -> {domain})
-    // process.env.DOMAIN is not available at runtime in bundled modules
+    return serviceFqdn({
+      containerId,
+      organizationId,
+      domain: this.platformDomain(),
+    });
+  }
+
+  /**
+   * The domain this deployment serves, taken off the gateway's own name.
+   *
+   * `process.env.DOMAIN` is not available at runtime in bundled modules, so it
+   * is read back out of `org-{uuid}.{domain}` instead.
+   */
+  private platformDomain(): string {
     const gatewayFqdn = this.depsExports.gateway.gatewayFQDN;
-    const domain = gatewayFqdn.split('.').slice(1).join('.') || 'domain.local';
-    return `uc-${containerId}.org-${organizationId}.${domain}`;
+    return gatewayFqdn.split('.').slice(1).join('.') || 'domain.local';
   }
 
   /**
@@ -228,22 +240,26 @@ export class UserContainersReducer extends ReducerWithCollab<
    * @param serviceName - Service name (e.g., 'terminal', 'vscode')
    * @returns FQDN:
    *   - Main service (empty/main): uc-{containerId}.org-{orgId}.{domain}
-   *   - Named service: {service}.uc-{containerId}.org-{orgId}.{domain}
+   *   - Named service: uc-{containerId}--{service}.org-{orgId}.{domain}
+   *
+   * The named form used to be `{service}.uc-{containerId}.org-{orgId}.{domain}`
+   * — one label deeper, and that depth is what made every container need a
+   * certificate of its own, since a TLS wildcard covers exactly one label.
+   * Folded into the container's label, the deepest name a deployment ever
+   * serves is two below the domain, and one `*.org-{orgId}.{domain}` per
+   * organization covers all of them. See service-fqdn.ts.
    */
   private generateServiceFQDN(
     containerId: string,
     organizationId: string,
     serviceName: string
   ): string {
-    const baseFqdn = this.generateContainerFQDN(containerId, organizationId);
-
-    // Main/default service uses base FQDN
-    if (!serviceName || serviceName === 'main' || serviceName === 'default') {
-      return baseFqdn;
-    }
-
-    // Named services get subdomain: {service}.uc-{id}.org-{org}.{domain}
-    return `${serviceName}.${baseFqdn}`;
+    return serviceFqdn({
+      containerId,
+      organizationId,
+      domain: this.platformDomain(),
+      serviceName,
+    });
   }
 
   async _new(event: TEventNew, requestData: RequestData) {
@@ -470,7 +486,7 @@ export class UserContainersReducer extends ReducerWithCollab<
       )
     ) {
       // Generate per-service FQDN for routing
-      // Format: {service}.uc-{containerId}.org-{orgId}.{domain}
+      // Format: uc-{containerId}--{service}.org-{orgId}.{domain}
       // Main/default service: uc-{containerId}.org-{orgId}.{domain}
       const serviceFQDN = this.generateServiceFQDN(
         containerId,

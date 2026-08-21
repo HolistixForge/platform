@@ -306,6 +306,18 @@ stage_bundle() {
   local pgip
   pgip=$(ip_of "$PG")
 
+  # Whether this environment is being tunnelled. Set in the environment it
+  # wins; unset, whatever is already staged is kept — because this file is
+  # rewritten from the template on every restart, and a plain
+  # `ganymede-apple.sh restart` silently switching a live tunnel back off would
+  # look like the tunnel breaking on its own. tunnel.sh passes it explicitly
+  # both ways. See doc/guides/PUBLIC_TUNNEL.md.
+  local staged_tunnel=""
+  [ -f "${STATE}/ganymede.env" ] && staged_tunnel=$(
+    grep '^PUBLIC_TUNNEL=' "${STATE}/ganymede.env" 2>/dev/null | head -1 | cut -d= -f2
+  )
+  local public_tunnel="${PUBLIC_TUNNEL:-${staged_tunnel:-0}}"
+
   # A GitHub App configured by hand survives a redeploy. Rewriting the env file
   # from the template is what `up` does, and silently dropping these turned the
   # image route back into a 503 that read like a regression in whatever had
@@ -328,9 +340,10 @@ stage_bundle() {
   # names and costs a confusing 500 on the first request rather than a refusal
   # at startup: GANYMEDE_SERVER_BIND and ALLOWED_ORIGINS are both JSON.parse'd.
   python3 - "$pgip" "$STATE" "$DB" "$DB_USER" "$DB_PASSWORD" "$PORT" \
-    "$DOMAIN" "$HTTPS_PORT" "$ENV_NAME" "$CONF_DIR" <<'PY'
+    "$DOMAIN" "$HTTPS_PORT" "$ENV_NAME" "$CONF_DIR" "$public_tunnel" <<'PY'
 import base64, pathlib, sys
-pgip, state, db, user, password, port, domain, https_port, env_name, conf_dir = sys.argv[1:11]
+(pgip, state, db, user, password, port, domain, https_port, env_name,
+ conf_dir, public_tunnel) = sys.argv[1:12]
 d = pathlib.Path(state)
 # The FQDNs carry the port. `CONFIG.APP_FRONTEND_URL` is `https://${FRONTEND_FQDN}`
 # and nginx does not listen on 443 here — binding under 1024 needs root — so a
@@ -378,6 +391,10 @@ env = {
   # for through a file nginx-reload.sh watches, and waited for.
   'NGINX_TEST_COMMAND': 'true',
   'NGINX_RELOAD_COMMAND': '/app/request-nginx-reload.sh',
+  # Trust the host a request arrived on when it is not one of the names above.
+  # Only a tunnel produces such a request; scripts/local-dev/tunnel.sh sets
+  # this, and with it at 0 nothing about origin handling changes.
+  'PUBLIC_TUNNEL': public_tunnel,
 }
 # An env file is KEY=VALUE per line, so a PEM cannot travel in one. They go
 # base64'd and start.sh decodes them inside the guest.

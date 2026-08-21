@@ -33,10 +33,20 @@ if [ "${AUTH_GUARD_RUNNING:-0}" = "1" ]; then
 fi
 
 # Build FQDNs for OAuth URLs
+#
+# A service is a suffix on the container's own label, not a label of its own:
+# `uc-<id>--jupyterlab.org-<uuid>.<domain>`, two below the domain rather than
+# three. A TLS wildcard covers exactly one label, so the third level is what
+# forced a certificate per container; folded in here, one wildcard per
+# organization covers every service. These two names have to agree, character
+# for character, with what the gateway publishes — see
+# packages/modules/user-containers/src/lib/service-fqdn.ts, which is where the
+# rule lives and where it is tested.
 DOMAIN=$(echo "$GATEWAY_FQDN" | sed 's/^[^.]*\.//')
-BASE_FQDN="uc-${AUTH_GUARD_CONTAINER_ID}.org-${AUTH_GUARD_ORG_ID}.${DOMAIN}"
-JUPYTER_FQDN="jupyterlab.${BASE_FQDN}"
-HUB_FQDN="__guard_hub.${BASE_FQDN}"
+CONTAINER_LABEL="uc-${AUTH_GUARD_CONTAINER_ID}"
+BASE_FQDN="${CONTAINER_LABEL}.org-${AUTH_GUARD_ORG_ID}.${DOMAIN}"
+JUPYTER_FQDN="${CONTAINER_LABEL}--jupyterlab.org-${AUTH_GUARD_ORG_ID}.${DOMAIN}"
+HUB_FQDN="${CONTAINER_LABEL}--guard-hub.org-${AUTH_GUARD_ORG_ID}.${DOMAIN}"
 
 # Start activity server for gateway heartbeats
 python3 /usr/local/bin/activity-server.py &

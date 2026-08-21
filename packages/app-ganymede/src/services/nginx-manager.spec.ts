@@ -31,6 +31,9 @@ jest.mock('fs', () => {
       mkdir: jest.fn().mockResolvedValue(undefined),
       writeFile: jest.fn().mockResolvedValue(undefined),
       unlink: jest.fn().mockResolvedValue(undefined),
+      // The by-path form of a gateway config is removed with rm/force, so it
+      // does not need its own existence check.
+      rm: jest.fn().mockResolvedValue(undefined),
       access: jest.fn().mockResolvedValue(undefined), // Mock access for removeGatewayConfig
     },
     constants: {
@@ -38,6 +41,29 @@ jest.mock('fs', () => {
     },
   };
 });
+
+/**
+ * The two files an allocation writes, picked apart by where they land: the
+ * server block directly in the gateways directory, the by-path location in the
+ * `locations/` subdirectory beside it.
+ */
+const writeCall = (predicate: (p: string) => boolean): [string, string] => {
+  const calls = (fs.promises.writeFile as jest.Mock).mock.calls as [
+    string,
+    string
+  ][];
+  const found = calls.find(([p]) => predicate(p));
+  if (!found) {
+    throw new Error(
+      `no writeFile matched; wrote: ${calls.map(([p]) => p).join(', ')}`
+    );
+  }
+  return found;
+};
+
+const serverBlockCall = () => writeCall((p) => !p.includes('/locations/'));
+const serverBlock = () => serverBlockCall()[1];
+const locationCall = () => writeCall((p) => p.includes('/locations/'));
 
 describe('NginxManager - Path Injection Protection', () => {
   let nginxManager: NginxManager;
@@ -89,10 +115,13 @@ describe('NginxManager - Path Injection Protection', () => {
   describe('createGatewayConfig - server_name regex escaping', () => {
     const validUuid = '550e8400-e29b-41d4-a716-446655440000';
 
+    // Selected by path, not by position. Allocating a gateway writes two
+    // files now — the server block and the by-path location that stands in for
+    // it when the platform is tunnelled — and "the last one written" silently
+    // became the wrong one when the second appeared.
     const writtenConfig = async (): Promise<string> => {
       await nginxManager.createGatewayConfig(validUuid, '172.17.0.1:7100');
-      const calls = (fs.promises.writeFile as jest.Mock).mock.calls;
-      return calls[calls.length - 1][1] as string;
+      return serverBlock();
     };
 
     it('escapes domain dots with a SINGLE backslash (not double)', async () => {
@@ -366,8 +395,7 @@ describe('NginxManager - placement', () => {
     'NGINX_RELOAD_COMMAND',
   ];
 
-  const written = () =>
-    (fs.promises.writeFile as jest.Mock).mock.calls[0] as [string, string];
+  const written = () => serverBlockCall();
 
   beforeEach(() => {
     process.env.ENV_NAME = 'test-env';
@@ -449,6 +477,80 @@ describe('NginxManager - placement', () => {
     expect(body).not.toContain('apollo\\.test:8443');
     // The listen port is a port and stays one.
     expect(body).toContain('listen 8443 ssl;');
+  });
+
+  describe('the by-path form, for a tunnelled environment', () => {
+    it('writes one location beside the server block', async () => {
+      process.env.NGINX_GATEWAYS_DIR = '/Users/dev/.holistix-macos/gw.d';
+
+      await new NginxManager().createGatewayConfig(ORG, '127.0.0.1:7100');
+
+      const [path, body] = locationCall();
+      expect(path).toBe(
+        `/Users/dev/.holistix-macos/gw.d/locations/org-${ORG}.conf`
+      );
+      expect(body).toContain(`location ^~ /-/gw/org-${ORG}/ {`);
+    });
+
+    // Both trailing slashes together are what strip the prefix. Without the
+    // one on proxy_pass the gateway would receive `/-/gw/org-<uuid>/collab/ping`
+    // and answer 404 for every route it has.
+    it('strips the prefix before the gateway sees the request', async () => {
+      await new NginxManager().createGatewayConfig(ORG, '127.0.0.1:7100');
+
+      const [, body] = locationCall();
+      expect(body).toContain(`location ^~ /-/gw/org-${ORG}/ {`);
+      expect(body).toContain(`proxy_pass http://org-${ORG}-gw/;`);
+    });
+
+    it('points at the upstream the server block defines', async () => {
+      await new NginxManager().createGatewayConfig(ORG, '192.168.65.1:7200');
+
+      expect(serverBlock()).toContain(`upstream org-${ORG}-gw {`);
+      expect(locationCall()[1]).toContain(`proxy_pass http://org-${ORG}-gw/;`);
+    });
+
+    it('carries the WebSocket upgrade through', async () => {
+      await new NginxManager().createGatewayConfig(ORG, '127.0.0.1:7100');
+
+      const [, body] = locationCall();
+      expect(body).toContain('proxy_set_header Upgrade $http_upgrade;');
+      expect(body).toContain('proxy_set_header Connection "upgrade";');
+    });
+
+    // The name the browser used, which is not necessarily the Host nginx got.
+    it('forwards the public host rather than the dialled one', async () => {
+      await new NginxManager().createGatewayConfig(ORG, '127.0.0.1:7100');
+
+      const [, body] = locationCall();
+      expect(body).toContain('proxy_set_header Host $public_host;');
+      expect(body).toContain('proxy_set_header X-Forwarded-Host $public_host;');
+    });
+
+    // An orphaned location proxies to an upstream that no longer exists, and
+    // nginx refuses to load a configuration containing one — which would take
+    // down every environment on the host, not just this organization.
+    it('is removed with the server block', async () => {
+      process.env.NGINX_GATEWAYS_DIR = '/Users/dev/.holistix-macos/gw.d';
+
+      await new NginxManager().removeGatewayConfig(ORG);
+
+      expect(fs.promises.rm).toHaveBeenCalledWith(
+        `/Users/dev/.holistix-macos/gw.d/locations/org-${ORG}.conf`,
+        { force: true }
+      );
+    });
+
+    it('is removed even when the server block was already gone', async () => {
+      (fs.promises.access as jest.Mock).mockRejectedValueOnce(
+        new Error('ENOENT')
+      );
+
+      await new NginxManager().removeGatewayConfig(ORG);
+
+      expect(fs.promises.rm).toHaveBeenCalled();
+      expect(fs.promises.unlink).not.toHaveBeenCalled();
+    });
   });
 
   it('runs the configured reload instead of signalling nginx directly', async () => {

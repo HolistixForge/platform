@@ -9,6 +9,7 @@ import { EPriority, log } from '@holistix-forge/log';
 import { sendMail } from '../../lib/send-mail';
 import { MagicLinkModel } from '../../models/magic-link';
 import { userGetLocalByEmail } from '../../models/users';
+import { frontendUrlFor } from '../../lib/public-routing';
 import { CONFIG } from '../../config';
 import { makeUuid } from '@holistix-forge/simple-types';
 
@@ -109,7 +110,7 @@ export const setupMagicLinkRoutes = (
 ) => {
   // Apply rate limiter to magic link request (prevents email flooding)
   const requestHandlers = rateLimiter ? [rateLimiter] : [];
-  
+
   /**
    * request token:
    * In this situation the passport authenticate middleware will send a token produced
@@ -205,7 +206,9 @@ export const setupMagicLinkRoutes = (
           else if (info) {
             respond(req, res, {
               type: 'redirect',
-              url: CONFIG.MAGIC_LINK_FAILED_URL,
+              // Built from the host this link was followed on, so a magic
+              // link opened through a tunnel fails onto a page that exists.
+              url: `${frontendUrlFor(req)}/account/link-failed`,
               queryParameters: {
                 message: info.message,
               },
@@ -226,7 +229,7 @@ export const setupMagicLinkRoutes = (
 
               respond(req, res, {
                 type: 'redirect',
-                url: CONFIG.APP_FRONTEND_URL,
+                url: frontendUrlFor(req),
                 queryParameters: {
                   context: user.context,
                 },

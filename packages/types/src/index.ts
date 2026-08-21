@@ -16,6 +16,14 @@ export {
   RUNNER_CLIENT_ID,
 } from './lib/ganymede-api/oauth';
 
+export {
+  PUBLIC_GANYMEDE_PATH,
+  PUBLIC_GATEWAY_PATH,
+  PUBLIC_ROUTE_PREFIX,
+  isConfiguredHost,
+  publicGatewayPath,
+} from './lib/public-routing';
+
 export type {
   TJwtOrganization,
   TJwtGateway,
