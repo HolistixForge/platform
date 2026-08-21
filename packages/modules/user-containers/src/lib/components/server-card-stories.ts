@@ -146,13 +146,30 @@ export const runningOnSharedKernelStory = (): StoryArgs => {
 /**
  * The same container on the local runner, which also hands back the command to
  * paste — so the card shows both the choice and the command.
+ *
+ * The command is the real shape and not an elided one. A local placement's
+ * `--add-host` flags carry a UUID and a domain, and `SETTINGS` is a base64
+ * blob; the whole line runs to several hundred characters with no space a
+ * browser is willing to break at. Shortened to a tidy example, the story
+ * rendered fine while the product drew the command straight off the card and
+ * across the board.
+ *
+ * `user_id` and `machine_id` because "local" is neither one place nor one
+ * person — the type says both are carried, and the host avatar on the card is
+ * read from `user_id`.
  */
 export const runningLocallyStory = (): StoryArgs => {
   const args = withServicesStory();
   args.container.runner = {
     id: 'local',
+    user_id: 'b3f5c1a2-0d4e-4f6a-9c8b-7e2d1a0f5c34',
+    machine_id: 'm-9f2c1b',
     command:
-      'docker run --rm -e SETTINGS=… holistixforge/ubuntu-terminal:24.04',
+      'docker run --add-host=org-5b927daf-4ca8-45a7-adbe-32bce35988f7.apollo.test:host-gateway ' +
+      '--add-host=ganymede.apollo.test:host-gateway --restart unless-stopped ' +
+      '--name holistix_notebook_uc_msiod -e SETTINGS=eyJ1c2VyX2NvbnRhaW5lcl9pZCI6' +
+      'IjRkNDQxNy00ZmRmLWJhZDgtZmY5MmMwNTNlZTQzIiwiZ2F0ZXdheSI6Imh0dHBzOi8vb3JnLTVi' +
+      'OTI3ZGFmLmFwb2xsby50ZXN0In0= holistixforge/ubuntu-terminal:24.04',
   };
   return args;
 };
