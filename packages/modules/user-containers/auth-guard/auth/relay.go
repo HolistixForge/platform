@@ -40,6 +40,7 @@ type RelayHandler struct {
 	sessions     *SessionStore
 	cookieDomain string
 	baseFQDN     string
+	portSuffix   string
 	oauthHandler *OAuthHandler
 
 	// Nonce tracking to prevent replay attacks
@@ -48,12 +49,13 @@ type RelayHandler struct {
 }
 
 // NewRelayHandler creates a new RelayHandler.
-func NewRelayHandler(clientSecret string, sessions *SessionStore, cookieDomain, baseFQDN string, oauthHandler *OAuthHandler) *RelayHandler {
+func NewRelayHandler(clientSecret string, sessions *SessionStore, cookieDomain, baseFQDN, portSuffix string, oauthHandler *OAuthHandler) *RelayHandler {
 	r := &RelayHandler{
 		clientSecret: clientSecret,
 		sessions:     sessions,
 		cookieDomain: cookieDomain,
 		baseFQDN:     baseFQDN,
+		portSuffix:   portSuffix,
 		oauthHandler: oauthHandler,
 		usedNonces:   make(map[string]time.Time),
 	}
@@ -182,8 +184,8 @@ func (r *RelayHandler) HandleCrossDomainLogin(w http.ResponseWriter, req *http.R
 
 	// No platform session, redirect to OAuth first
 	// After OAuth completes, it will redirect back here
-	crossDomainURL := fmt.Sprintf("https://%s/__auth/cross-domain-login?origin=%s&return_to=%s",
-		r.baseFQDN,
+	crossDomainURL := fmt.Sprintf("%s/__auth/cross-domain-login?origin=%s&return_to=%s",
+		guardOrigin(r.baseFQDN, r.portSuffix),
 		url.QueryEscape(origin),
 		url.QueryEscape(returnTo),
 	)

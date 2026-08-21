@@ -55,15 +55,17 @@ export const moduleFrontend: TModule<TRequired> = {
       'jupyter-terminal': NodeTerminal,
     });
 
-    // TODO: Refactor JLsManager to use per-project collab via getCollabForProject()
-    // For now, shared data is resolved lazily at runtime when a project context is available
+    // Resolved per project, when one is known — see JLsManager.setProjectId.
+    // This used to be handed over as `getSharedData as any`, which let a
+    // function be indexed as if it were the shared data and made the module
+    // throw on load.
     const getSharedData = (project_id: string) =>
       depsExports.collab.getCollabForProject(project_id).collab
         .sharedData as TJupyterSharedData & TUserContainersSharedData;
 
     moduleExports({
       jlsManager: new JLsManager(
-        getSharedData as any,
+        getSharedData,
         depsExports.reducers.dispatcher,
         depsExports['user-containers'].getToken
       ),

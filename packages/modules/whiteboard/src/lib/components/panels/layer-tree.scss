@@ -1,0 +1,168 @@
+/**
+ * The board's contents, drawn the way a layers panel is drawn.
+ *
+ * What it replaced: every row a saturated gradient — violet for the active
+ * layer, pink for everything in it — so the panel was the loudest thing on a
+ * screen whose subject is the board. A layers panel is a list you scan, and a
+ * list you scan should be quiet: one weight of text, one accent, and the only
+ * colour on the row you are actually on.
+ *
+ * Rows run the full width of the panel. Indentation is a variable read into
+ * the padding rather than a margin, so a hover covers the whole row instead
+ * of stopping short of the left edge and reading as a chip.
+ */
+.layer-tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+.layer-tree__row {
+  --depth: 0;
+
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  height: 28px;
+  padding-right: var(--spacing-4);
+  padding-left: calc(var(--spacing-2) + var(--depth) * 14px);
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.layer-tree__row:hover {
+  background-color: var(--color-bg-hover);
+  color: var(--color-text);
+}
+
+/* A layer is a heading among its contents: same row, more weight. */
+.layer-tree__row--layer {
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium, 500);
+}
+
+/* The layer being edited. One accent, on the left edge, where a list is read
+   from — rather than a fill, which competes with the selection below it. */
+.layer-tree__row--active {
+  color: var(--color-text);
+  font-weight: var(--font-weight-bold, 700);
+  box-shadow: inset 2px 0 0 0 var(--color-accent-strong);
+}
+
+/* Selected on the board. The one filled row, because it answers "where is
+   the thing I clicked" and that question deserves the strongest signal here. */
+.layer-tree__row--selected {
+  background-color: var(--color-accent-muted);
+  color: var(--color-text-on-color);
+}
+
+.layer-tree__row--selected:hover {
+  background-color: var(--color-accent);
+}
+
+/* Belongs to a layer that is not the one being edited. Still legible, still
+   clickable — dimming says "not here", not "not available". */
+.layer-tree__row--dimmed {
+  opacity: 0.55;
+}
+
+.layer-tree__twist {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: var(--font-size-2xs);
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.layer-tree__twist:hover {
+  opacity: 1;
+}
+
+.layer-tree__glyph {
+  flex: 0 0 auto;
+  font-size: var(--font-size-2xs);
+  opacity: 0.7;
+}
+
+/* The layer's own glyph carries the accent, so a layer is findable by colour
+   in a column that has none anywhere else. */
+.layer-tree__row--layer .layer-tree__glyph {
+  color: var(--color-accent-strong);
+  opacity: 1;
+}
+
+.layer-tree__row--selected .layer-tree__glyph {
+  color: inherit;
+}
+
+.layer-tree__title {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.layer-tree__flag {
+  flex: 0 0 auto;
+  font-size: var(--font-size-2xs);
+  opacity: 0.7;
+}
+
+/* ---- rearranging ---------------------------------------------------------- */
+
+/* The row being carried. Faded rather than removed, so the list does not
+   collapse under the cursor and change what is where mid-drag. */
+.layer-tree__row[data-dragging] {
+  opacity: 0.4;
+}
+
+/* Where it would land. A line rather than a fill: a fill reads as "selected",
+   which is a different thing and is already spoken for. */
+.layer-tree__row[data-over] {
+  box-shadow: inset 0 2px 0 0 var(--color-accent-strong);
+}
+
+/* ---- the panel's own header ---------------------------------------------- */
+
+.layer-tree-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-4);
+}
+
+.layer-tree-head__title {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-faint);
+}
+
+.layer-tree-head__add {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-lg);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.layer-tree-head__add:hover {
+  background-color: var(--color-bg-hover);
+  color: var(--color-text);
+}

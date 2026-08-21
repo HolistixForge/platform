@@ -59,7 +59,7 @@ const StoryWrapper = (
 //
 
 const meta = {
-  title: 'Modules/Chats/Components/Chat Anchor',
+  title: 'Modules/Chats/Components/Nodes/Chat Anchor',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

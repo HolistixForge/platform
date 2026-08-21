@@ -58,6 +58,8 @@ import {
   TLayerTreeOperation,
   TLayerTreeItem,
   TLayerTreeCollection,
+  TLayerTreeData,
+  TLayerActions,
 } from '../layer-tree-types';
 import { useModuleExports } from '@holistix-forge/module/frontend';
 
@@ -69,14 +71,19 @@ export const LAYERS_PANEL_COLLAPSED_WIDTH = 24;
 const LEFT_RAIL_GAP = 15;
 
 /**
- * CSS custom property holding the x offset of the left rail — the column just
- * right of the layers panel, where the project sidebar and Excalidraw's
- * toolbar live.
+ * CSS custom property holding the x offset just right of the layers panel,
+ * where Excalidraw's toolbar lives.
  *
- * Both are fixed-positioned and so cannot be flex siblings of the panel. Rather
+ * It is fixed-positioned and so cannot be a flex sibling of the panel. Rather
  * than hardcode an offset that goes stale the moment the panel is collapsed,
- * the panel publishes its own width here and they position against it. Anything
- * on the rail should transition `left` over the same 120ms the panel animates.
+ * the panel publishes where it ends here and the toolbar positions against it.
+ * Anything using it should transition `left` over the same 120ms the panel
+ * animates.
+ *
+ * The project rail is *not* one of these any more. It is on every page and
+ * this panel is on one, so it docks at the left edge and the panel starts
+ * after it — see ui-base/sidebar.css. Positioning it from here meant every
+ * page without a whiteboard fell back to a guess at this panel's width.
  */
 const LEFT_RAIL_VAR = '--holistix-left-rail';
 
@@ -299,10 +306,28 @@ const WhiteboardWhiteboard = ({
   //
   //
 
-  const [activeLayer, setActiveLayer] = useState({
-    layerId: 'reactflow',
+  // The drawing surface is what a whiteboard opens on. It used to open on
+  // `reactflow` and reach Excalidraw only by clicking Edit on a node that
+  // stood for a drawing — so the drawing tools were behind a node, rather than
+  // the surface the nodes live on.
+  const [activeLayer, setActiveLayer] = useState<{
+    layerId: string;
+    payload: object;
+  }>(() => ({
+    // The drawing surface is what a board opens on. Measured on 100, 500 and
+    // 2000 nodes with scripts/local-dev/check-excalidraw-surface.mjs: it
+    // loads, and the embed count stays at what fits the viewport rather than
+    // following the node count.
+    //
+    // Still escapable, because the surface is new and the board is not:
+    //   localStorage.setItem('holistix:excalidraw-surface', '0')
+    layerId:
+      typeof localStorage !== 'undefined' &&
+      localStorage.getItem('holistix:excalidraw-surface') === '0'
+        ? 'reactflow'
+        : 'excalidraw',
     payload: {},
-  });
+  }));
 
   const activateLayer = useCallback((layerId: string, payload?: object) => {
     setActiveLayer({ layerId, payload: payload || {} });
@@ -313,11 +338,16 @@ const WhiteboardWhiteboard = ({
     () => {
       return {
         layers: [
-          {
-            layerId: 'reactflow',
-            title: 'Base layer',
-            items: [],
-          },
+          // No 'reactflow' entry here any more.
+          //
+          // It held the graph's nodes, and the drawing surface holds them
+          // too — as the elements it projects them into — so the panel
+          // listed one board twice, naming the same node properly in one
+          // list and "Embeddable 3" in the other. The surface names them
+          // properly now, and the second list is gone with the reason for it.
+          //
+          // It comes back below, and only while ReactFlow is the surface:
+          // there the nodes really are somewhere else.
           ...(layersProviders?.map((provider) => ({
             layerId: provider.id,
             title: provider.title,
@@ -335,6 +365,56 @@ const WhiteboardWhiteboard = ({
   }, []);
 
   // Handle layer tree updates
+  /**
+   * A provider's whole section of the panel, in one go.
+   *
+   * The drawing surface owns several layers, not one, and publishing them one
+   * at a time cannot express a removal: a layer someone deleted would stay in
+   * the panel until a reload, because nothing said it was gone.
+   *
+   * `providerId` prefixes the ids it publishes, so two providers cannot
+   * collide on a name and the panel can still tell which one a row came from.
+   */
+  const [layerActions, setLayerActions] = useState<
+    Record<string, TLayerActions>
+  >({});
+
+  const handleUpdateLayerTrees = useCallback(
+    (providerId: string, layers: TLayerTreeData[], actions?: TLayerActions) => {
+      // Kept out of the tree state on purpose: the actions are new closures on
+      // every render of the provider, so folding them into the collection
+      // would make it change identity every frame and re-render every
+      // consumer — the loop this file has a guard against three lines down.
+      setLayerActions((prev) =>
+        prev[providerId] === actions
+          ? prev
+          : { ...prev, [providerId]: actions ?? {} }
+      );
+      setTreeCollection((prev) => {
+        // The provider's own entries, *and* the placeholder seeded for it
+        // before it had spoken. Left in, the panel showed the placeholder and
+        // the real first layer as two rows with the same name.
+        const mine = (id: string) =>
+          id === providerId || id.startsWith(`${providerId}:`);
+        const others = prev.layers.filter((l) => !mine(l.layerId));
+        const next = [
+          ...others,
+          ...layers.map((l) => ({
+            ...l,
+            layerId: `${providerId}:${l.layerId}`,
+          })),
+        ];
+
+        // Same section, same state object — for the reason spelled out below:
+        // a fresh object for an unchanged tree re-renders every layer and
+        // every consumer, and a caller reporting on each frame then drives an
+        // unbounded loop.
+        return isEqual(prev.layers, next) ? prev : { layers: next };
+      });
+    },
+    []
+  );
+
   const handleUpdateLayerTree = useCallback(
     (layerId: string, items: TLayerTreeItem[], title: string) => {
       setTreeCollection((prev) => {
@@ -343,6 +423,17 @@ const WhiteboardWhiteboard = ({
         );
 
         if (existingLayerIndex !== -1) {
+          // Same tree, same state object. Returning a fresh object for an
+          // unchanged tree re-renders every layer and every consumer of the
+          // layer context, and a caller that reports its tree on each frame
+          // then drives an unbounded render loop — which is exactly how the
+          // Excalidraw layer took the editor down. The layer has its own guard
+          // now; this one is here so the next caller cannot do it again.
+          const existing = prev.layers[existingLayerIndex];
+          if (existing.title === title && isEqual(existing.items, items)) {
+            return prev;
+          }
+
           // Update existing layer in place
           return {
             layers: prev.layers.map((layer) => {
@@ -366,8 +457,10 @@ const WhiteboardWhiteboard = ({
   const [renderForm, setRenderForm] = useState<ReactNode | null>(null);
   const [showLayersPanel, setShowLayersPanel] = useState<boolean>(true);
 
-  // Publish the panel's width so the fixed-positioned rail tracks it instead
-  // of sitting at a constant offset that is wrong as soon as it collapses.
+  // Publish where the panel ends so anything overlaying the canvas clears it
+  // instead of sitting at a constant offset that is wrong the moment it
+  // collapses. Measured from the content box, not the viewport: the project
+  // rail is already outside it.
   useEffect(() => {
     const width = showLayersPanel
       ? LAYERS_PANEL_WIDTH
@@ -395,8 +488,12 @@ const WhiteboardWhiteboard = ({
 
   const nodes = gv?.graph.nodes || [];
   const nodeViews = gv?.nodeViews || [];
-  const treeItems = buildNodeTree(nodes, nodeViews);
-  if (!isEqual(treeItems, previousTreeItemsRef.current)) {
+  // Only while ReactFlow is the surface. With the drawing surface up, these
+  // same nodes are already in its scene and already in its list — reported
+  // here as well, they appeared twice, under two different names.
+  const onReactFlow = activeLayer.layerId === 'reactflow';
+  const treeItems = onReactFlow ? buildNodeTree(nodes, nodeViews) : [];
+  if (onReactFlow && !isEqual(treeItems, previousTreeItemsRef.current)) {
     previousTreeItemsRef.current = treeItems;
     handleUpdateLayerTree('reactflow', treeItems, 'Base layer');
   }
@@ -410,6 +507,8 @@ const WhiteboardWhiteboard = ({
         treeCollection,
         onTreeOperation: handleTreeOperation,
         updateLayerTree: handleUpdateLayerTree,
+        updateLayerTrees: handleUpdateLayerTrees,
+        layerActions,
       }}
     >
       <div style={{ display: 'flex', height: '100%', position: 'relative' }}>
@@ -421,17 +520,23 @@ const WhiteboardWhiteboard = ({
             position: 'absolute',
             top: 0,
             bottom: 0,
-            // Flush against the left edge: the panel comes first, and the
-            // project sidebar is offset to sit to its right (see
-            // PROJECT_SIDEBAR_CLEARANCE and ui-base sidebar.css).
+            // Flush against the left edge of the page's content box, which
+            // EditorPage already indents past the project rail. Nothing about
+            // the rail is restated here: it is fixed, out of flow and hidden
+            // under 1000px, and every one of those is a fact this panel would
+            // otherwise have to track.
             left: 0,
             width: showLayersPanel
               ? LAYERS_PANEL_WIDTH
               : LAYERS_PANEL_COLLAPSED_WIDTH,
             transition: 'width 120ms ease',
             background: 'var(--surface-900)',
-            border: '1px solid var(--color-border, #e5e7eb)',
-            borderRadius: 6,
+            // Docked, not floating. It was drawn as a card — a border on all
+            // four sides and rounded corners — against a board that has no
+            // cards in it, so the panel read as three vertical bands: its own
+            // edge, the collapse strip, and the rule between them. One
+            // hairline where it actually meets the board says the same thing.
+            borderRight: '1px solid var(--color-border-muted)',
             overflow: 'hidden',
             zIndex: 20,
             display: 'flex',
@@ -447,8 +552,8 @@ const WhiteboardWhiteboard = ({
               width: 24,
               border: 'none',
               background: 'transparent',
+              color: 'var(--color-text-faint)',
               cursor: 'pointer',
-              borderLeft: '1px solid var(--color-border, #e5e7eb)',
             }}
           >
             {showLayersPanel ? '<' : '>'}
@@ -474,33 +579,36 @@ const WhiteboardWhiteboard = ({
             onContextMenu={handleContextualMenu}
             onContextMenuNewEdge={handleContextualMenuNewEdge}
             active={activeLayer.layerId === 'reactflow'}
-          />
-
-          {
-            // module defined layers - inactive by default
-          }
-          {layersProviders?.map((provider) => (
-            <div
-              key={provider.id}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                pointerEvents:
-                  activeLayer.layerId === provider.id ? 'auto' : 'none',
-                zIndex: provider.zIndexHint ?? 1,
-              }}
-            >
-              <provider.Component
-                viewId={viewId}
-                active={activeLayer.layerId === provider.id}
-                viewport={viewport}
-                payload={activeLayer.payload}
-              />
-            </div>
-          ))}
+          >
+            {
+              // The module layers, rendered inside the base layer's context
+              // rather than beside it — a node on the drawing surface needs
+              // the same space context and ReactFlow store as one on the
+              // canvas.
+            }
+            {layersProviders?.map((provider) => (
+              <div
+                key={provider.id}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  pointerEvents:
+                    activeLayer.layerId === provider.id ? 'auto' : 'none',
+                  zIndex: provider.zIndexHint ?? 1,
+                }}
+              >
+                <provider.Component
+                  viewId={viewId}
+                  active={activeLayer.layerId === provider.id}
+                  viewport={viewport}
+                  payload={activeLayer.payload}
+                />
+              </div>
+            ))}
+          </ReactFlowBaseLayer>
 
           <AvatarsRenderer avatarsStore={logics.as} />
 
@@ -535,6 +643,16 @@ const WhiteboardWhiteboard = ({
  * @returns
  */
 
+/**
+ * `children` are the other layers, rendered inside this one's context.
+ *
+ * Not nesting for its own sake: a node rendered on the drawing surface is
+ * still one of this board's nodes, and its component reaches for the space
+ * context (`useSpaceContext`, for its connectors) and for ReactFlow's store.
+ * Rendered as a sibling, the surface had neither, and clicking the canvas
+ * threw "Cannot destructure property 'spaceState' of null" and blanked the
+ * board.
+ */
 const ReactFlowBaseLayer = ({
   viewId,
   nodeTypes,
@@ -543,6 +661,7 @@ const ReactFlowBaseLayer = ({
   onContextMenu,
   onContextMenuNewEdge,
   active,
+  children,
 }: {
   viewId: string;
   nodeTypes: TNodeTypes;
@@ -555,6 +674,7 @@ const ReactFlowBaseLayer = ({
     clientPosition: TPosition
   ) => void;
   active: boolean;
+  children?: ReactNode;
 }) => {
   //
 
@@ -584,17 +704,23 @@ const ReactFlowBaseLayer = ({
 
   const [mode, setMode] = useState<WhiteboardMode>('default');
 
-  // Toggle pan-only mode with Shift+Z
+  /**
+   * Shift+Z toggles move mode.
+   *
+   * It used to be guarded by `active`, which is true only while ReactFlow is
+   * the surface — so with the drawing surface up, the shortcut did nothing.
+   * The same mistake as the mode bar, which used to vanish for the same
+   * reason: the mode belongs to the board, not to one of its layers. On the
+   * drawing surface it is what lets a node be selected and moved at all, since
+   * a live node otherwise keeps the pointer for itself.
+   *
+   * The updater form rather than reading `mode`: the handler is registered
+   * once and would otherwise close over the mode it was registered with.
+   */
   useHotkeys(
     'shift+z',
-    () => {
-      if (active) {
-        setMode(mode === 'move-node' ? 'default' : 'move-node');
-      }
-    },
-    {
-      preventDefault: true,
-    }
+    () => setMode((m) => (m === 'move-node' ? 'default' : 'move-node')),
+    { preventDefault: true }
   );
 
   /**
@@ -716,27 +842,45 @@ const ReactFlowBaseLayer = ({
   //
   return (
     <ReactflowLayerContext value={context}>
-      <ReactflowLayer
-        active={active}
-        viewId={viewId}
-        nodeComponent={Node}
-        edgeComponent={CustomStoryEdge}
-        spaceState={ss}
-        pointerTracker={pointerTracker}
-        onContextMenu={onContextMenu}
-        onContextMenuNewEdge={onContextMenuNewEdge}
-        onConnect={onConnect}
-        onDrop={onDrop}
-        viewport={viewport}
-      />
+      {/*
+        The canvas only when it is the surface. With the drawing surface up,
+        every node is already in the Excalidraw scene, and ReactFlow was
+        rendering all of them again underneath — 47 000 DOM nodes for 2000,
+        invisible, and a second viewport to keep in step with the first.
+
+        The context above stays either way: it carries the space state and
+        ReactFlow's store, which the node components reach for wherever they
+        are drawn.
+      */}
       {active && (
-        <ModeIndicator
-          mode={mode}
-          onModeChange={setMode}
+        <ReactflowLayer
+          active={active}
+          viewId={viewId}
+          nodeComponent={Node}
+          edgeComponent={CustomStoryEdge}
+          spaceState={ss}
+          pointerTracker={pointerTracker}
           onContextMenu={onContextMenu}
-          getViewport={viewport.getViewport}
+          onContextMenuNewEdge={onContextMenuNewEdge}
+          onConnect={onConnect}
+          onDrop={onDrop}
+          viewport={viewport}
         />
       )}
+      {/*
+        Rendered whichever layer is active. It used to be tied to `active`, so
+        the mode switch and the "+" that opens the node menu vanished the
+        moment the drawing surface came up — and with Excalidraw as the
+        default layer, that meant no way to add a Holistix node at all. The bar
+        belongs to the whiteboard, not to the ReactFlow layer; Excalidraw's own
+        toolbar sits above it and the two do not overlap.
+      */}
+      <ModeIndicator
+        mode={mode}
+        onModeChange={setMode}
+        onContextMenu={onContextMenu}
+        getViewport={viewport.getViewport}
+      />
       {edgeMenu && (
         <EdgeMenu
           eid={edgeMenu.edgeId}
@@ -746,6 +890,7 @@ const ReactFlowBaseLayer = ({
           }}
         />
       )}
+      {children}
     </ReactflowLayerContext>
   );
 };

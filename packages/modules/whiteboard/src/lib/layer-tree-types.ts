@@ -21,6 +21,27 @@ export type TLayerTreeData = {
   items: TLayerTreeItem[];
 };
 
+/**
+ * What can be done to a provider's layers, published by the provider itself.
+ *
+ * The panel draws the stack; it does not know how one is made. Creating a
+ * layer on the drawing surface is an Excalidraw event, and a panel that knew
+ * that would know one provider by name — so the provider hands over the two
+ * verbs and keeps the vocabulary.
+ *
+ * Absent means the provider has no such thing, and the panel then offers no
+ * control for it rather than a dead one.
+ */
+export type TLayerActions = {
+  addLayer?: () => void;
+  /** The whole stack, back to front. See the event for why not "move one". */
+  reorderLayers?: (layerIds: string[]) => void;
+  /** Put everything on this layer into the surface's selection. */
+  selectLayer?: (layerId: string) => void;
+  /** Bring the board to the thing a row names, by that row's id. */
+  focusItem?: (itemId: string) => void;
+};
+
 // Complete tree data structure for the layer panel
 export type TLayerTreeCollection = {
   layers: TLayerTreeData[];

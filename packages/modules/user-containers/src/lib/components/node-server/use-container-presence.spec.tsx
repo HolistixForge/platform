@@ -161,9 +161,10 @@ describe('useContainerPresence — who is here', () => {
       useContainerPresence(containerOn(PLATFORM))
     );
 
-    expect(
-      result.current.liveUsers.map((u: TF_User) => u.username)
-    ).toEqual(['local:ada', 'local:alan']);
+    expect(result.current.liveUsers.map((u: TF_User) => u.username)).toEqual([
+      'local:ada',
+      'local:alan',
+    ]);
   });
 
   it('should count a person once however many tabs they have open', () => {

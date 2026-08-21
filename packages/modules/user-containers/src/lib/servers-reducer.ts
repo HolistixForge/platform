@@ -38,10 +38,12 @@ import {
   TEventSelectRunner,
   TEventRunnerHealth,
   TEventStart,
+  TEventStop,
 } from './servers-events';
 import { TUserContainersExports } from '..';
 import { SharedMap } from '@holistix-forge/collab-engine';
 import { TRunnerPlacement } from './placement-shape';
+import { TRunnerConfig } from './runner';
 
 //
 
@@ -127,6 +129,8 @@ export class UserContainersReducer extends ReducerWithCollab<
         return this._runnerHealth(event, requestData);
       case 'user-container:start':
         return this._start(event, requestData);
+      case 'user-container:stop':
+        return this._stop(event, requestData);
 
       case 'reducers:periodic':
         return this._periodic(event, requestData);
@@ -654,6 +658,25 @@ export class UserContainersReducer extends ReducerWithCollab<
       ]);
     }
 
+    // The container itself, first.
+    //
+    // Everything below removes a *reference* to it — the credential, the OAuth
+    // client, the entry in shared state, the nginx route, the node on the
+    // whiteboard. None of that touches the thing that is running. Deleting a
+    // service therefore left it alive on the platform with nothing in the
+    // platform pointing at it: measured, four such containers holding 9.4 GB,
+    // and nineteen private networks for three containers, because the broker
+    // removes a network with the container it belongs to and was never asked.
+    //
+    // Asked before the references go, and allowed to fail loudly. Removing them
+    // first and swallowing the error is what produces an orphan while reporting
+    // success — which is precisely the state this is fixing. A broker that
+    // cannot remove a container is a thing to see, not to route around.
+    const runner = this.depsExports['user-containers'].getRunner(
+      container.runner?.id ?? ''
+    );
+    if (runner) await runner.stop(container);
+
     // The container is going; its credential should not outlive it. Rewritten
     // rather than left, because a token still in the file is one that would
     // still admit whatever presented it.
@@ -831,6 +854,44 @@ export class UserContainersReducer extends ReducerWithCollab<
       );
     }
 
+    // Moving a service means taking it off where it was.
+    //
+    // Nothing did. The new runner was written and the old one was never told,
+    // so the container it started went on running — and the two do not even
+    // recognise each other's: the broker labels `holistix.user_container`, the
+    // local runner `holistix.user_container_id` and `holistix.machine`, so
+    // `listOwned` returns nothing and the runner tries to create a container
+    // whose name is already taken. Measured on Apple `container`, moving a
+    // notebook from the platform to a laptop: `container with id
+    // holistix_notebook_uc_msiod already exists`, every ten seconds, for ever
+    // — a service that can never converge and never says why.
+    //
+    // Asked of the runner that had it, before the write, because after it the
+    // document no longer says who to ask.
+    //
+    // Failing softly, unlike the Ganymede check above: the old runner may be
+    // an engine that is now unreachable, and refusing the move would leave the
+    // service pinned to a machine nobody can reach. A container left behind is
+    // recoverable by hand; a placement that cannot be moved is not.
+    const previousRunnerId = container.runner?.id;
+    if (previousRunnerId && previousRunnerId !== runnerId) {
+      const previous =
+        this.depsExports['user-containers'].getRunner(previousRunnerId);
+      if (previous) {
+        try {
+          await previous.stop(container);
+        } catch (error) {
+          log(
+            EPriority.Warning,
+            'USER_CONTAINERS',
+            `Moving ${containerId} off ${previousRunnerId} failed, continuing: ${
+              (error as Error).message
+            }`
+          );
+        }
+      }
+    }
+
     // Runner data, not just the id: `start` writes what the runner reported
     // back here — the docker command, the broker's container id — and this used
     // to replace the whole object, so choosing a runner twice erased it.
@@ -931,29 +992,15 @@ export class UserContainersReducer extends ReducerWithCollab<
       domain
     );
 
-    const config = {
+    const config = this._runnerConfig({
       user_id,
       project_id,
-      frontend_fqdn: domain,
-      ganymede_fqdn: `ganymede.${domain}`,
-      gateway_fqdn: gatewayFqdn,
+      containerId,
       organization_id,
-      auth_guard_client_secret: authGuard?.client_secret,
-      // The one place the naming rule is applied for a container that will
-      // apply it again itself. See TRunnerConfig.service_label_prefix.
-      service_label_prefix: serviceLabel(containerId, [
-        this.spaceName(project_id),
-      ]),
-      vpn_secret: this.vpnSecrets.get(containerId),
-      // Only in local development, and only from the gateway's environment:
-      // this module cannot read process.env for itself.
-      // `host-gateway` rather than the bridge address: a platform container
-      // sits on a private network of its own, where the default bridge's
-      // gateway is not routable. Docker resolves this one from any network.
-      dev_host_ip: gatewayExports.environment?.devMode
-        ? 'host-gateway'
-        : undefined,
-    };
+      domain,
+      gatewayFqdn,
+      authGuard,
+    });
 
     // A rotation replaced the client, so the container must carry the new id.
     const startedContainer: TUserContainer =
@@ -971,10 +1018,67 @@ export class UserContainersReducer extends ReducerWithCollab<
     );
 
     // Merge runner result into container.runner in shared state
+    //
+    // `stopped_at` goes with it. A container left marked stopped after a
+    // successful start is one `placementsFor` keeps skipping, so a local
+    // service would be started here and reconciled away moments later — and
+    // the card would offer play for something that had just run.
+    const { stopped_at: _stopped, ...restarted } = startedContainer;
     sduc.set(containerId, {
-      ...startedContainer,
+      ...restarted,
+      // Stamped so the card can tell "starting" from "died in silence". Both
+      // look the same from the outside — no stop, no report — and they were
+      // shown the same, which made pressing play look like nothing happened.
+      started_at: new Date().toISOString(),
       runner: { ...startedContainer.runner, ...runnerResult },
     });
+  }
+
+  //
+
+  /**
+   * Stop a service without removing it.
+   */
+  async _stop(event: TEventStop, requestData: RequestData) {
+    const jwt = requestData.jwt as TJwtUser;
+    const user_id = jwt?.user?.id;
+    if (!user_id) {
+      throw new ForbiddenException([
+        { message: 'User authentication required' },
+      ]);
+    }
+
+    const containerId = event.user_container_id;
+    const collab = this.getCollab(requestData);
+    const sduc = collab.sharedData['user-containers:containers'];
+    const container = sduc.get(containerId);
+
+    if (!container) {
+      throw new NotFoundException([
+        { message: `Container ${containerId} not found` },
+      ]);
+    }
+
+    // Asked of the runner first, and the state written after. The other order
+    // marks a service stopped that is still serving, which is the one outcome
+    // nobody can act on: the card says stopped, the container answers, and
+    // there is no button left that would try again.
+    const runner = this.depsExports['user-containers'].getRunner(
+      container.runner?.id ?? ''
+    );
+    if (runner) await runner.stop(container);
+
+    // `httpServices` emptied here rather than left to the watchdog timeout.
+    // `_periodic` would clear them thirty seconds later anyway, and in those
+    // thirty seconds the gateway still proxies the service's FQDN to a VPN
+    // address nobody is on — which answers 502 rather than "stopped".
+    sduc.set(containerId, {
+      ...container,
+      httpServices: [],
+      stopped_at: new Date().toISOString(),
+    });
+
+    await this._updateNginx(requestData.project_id ?? '', sduc);
   }
 
   //
@@ -1124,6 +1228,63 @@ export class UserContainersReducer extends ReducerWithCollab<
    * Returns the client id actually in force — the caller must write it back to
    * shared state when it changed.
    */
+  /**
+   * Everything a container is told about the platform it belongs to.
+   *
+   * One builder, because there are two callers and they must not diverge:
+   * `_start`, when somebody presses start, and `placementsFor`, when a runner
+   * polls for what it should be running. They built the same object separately
+   * and drifted twice — first `auth_guard.client_id`, which broke sign-in after
+   * a gateway restart, then `gateway_dev`, without which a container's auth
+   * guard refuses the development platform's own TLS and the service answers
+   * 404. Both were a field added to one site and not the other, and neither is
+   * visible from either site alone.
+   *
+   * Read from `gateway.environment` and never from `process.env`: module
+   * packages are bundled with a browser `process` shim, so this file's
+   * environment is empty at runtime in the gateway.
+   */
+  private _runnerConfig(args: {
+    user_id: string;
+    project_id: string;
+    containerId: string;
+    organization_id: string;
+    domain: string;
+    gatewayFqdn: string;
+    authGuard?: { client_id: string; client_secret: string };
+  }): TRunnerConfig {
+    const devMode = this.depsExports.gateway.environment?.devMode;
+    return {
+      user_id: args.user_id,
+      project_id: args.project_id,
+      frontend_fqdn: args.domain,
+      ganymede_fqdn: `ganymede.${args.domain}`,
+      gateway_fqdn: args.gatewayFqdn,
+      organization_id: args.organization_id,
+      auth_guard_client_secret: args.authGuard?.client_secret,
+      // The one place the naming rule is applied for a container that will
+      // apply it again itself. See TRunnerConfig.service_label_prefix.
+      //
+      // Arrived on main while this construction was being pulled out of its
+      // two call sites — which is the very drift the extraction exists to
+      // stop. Kept here rather than at either caller so it cannot be added to
+      // one and forgotten at the other, the way `auth_guard.client_id` and
+      // `gateway_dev` both were.
+      service_label_prefix: serviceLabel(args.containerId, [
+        this.spaceName(args.project_id),
+      ]),
+      vpn_secret: this.vpnSecrets.get(args.containerId),
+      // `host-gateway` rather than the bridge address: a platform container
+      // sits on a private network of its own, where the default bridge's
+      // gateway is not routable. Docker resolves this one from any network.
+      dev_host_ip: devMode ? 'host-gateway' : undefined,
+      // The same flag, for the auth guard rather than for /etc/hosts: a
+      // development platform serves TLS nothing in a container trusts, and the
+      // guard refuses to start rather than talk to it.
+      gateway_dev: devMode,
+    };
+  }
+
   private async _authGuardSecretFor(
     container: TUserContainer,
     organizationId: string,
@@ -1203,7 +1364,13 @@ export class UserContainersReducer extends ReducerWithCollab<
     const mine = Array.from(sduc.copy().values()).filter(
       (c: TUserContainer) =>
         c?.runner?.id === 'local' &&
-        (c.runner as { machine_id?: string })?.machine_id === machine_id
+        (c.runner as { machine_id?: string })?.machine_id === machine_id &&
+        // A service somebody stopped is not a placement. This *is* how a local
+        // container stops: the runner reconciles against this list, and a
+        // container missing from it is one it removes — the same path that
+        // already handles a placement deleted from the whiteboard, rather than
+        // a second mechanism that would have to agree with it.
+        !c.stopped_at
     ) as TUserContainer[];
 
     const gatewayExports = this.depsExports.gateway;
@@ -1265,19 +1432,15 @@ export class UserContainersReducer extends ReducerWithCollab<
         domain
       );
 
-      const config = {
+      const config = this._runnerConfig({
         user_id,
         project_id,
-        frontend_fqdn: domain,
-        ganymede_fqdn: `ganymede.${domain}`,
-        gateway_fqdn: gatewayFqdn,
+        containerId,
         organization_id,
-        auth_guard_client_secret: authGuard?.client_secret,
-        vpn_secret: this.vpnSecrets.get(containerId),
-        dev_host_ip: gatewayExports.environment?.devMode
-          ? 'host-gateway'
-          : undefined,
-      };
+        domain,
+        gatewayFqdn,
+        authGuard,
+      });
 
       // A rotation replaced the OAuth client, so the container must carry the
       // new id — and so must the shared document.
@@ -1310,6 +1473,9 @@ export class UserContainersReducer extends ReducerWithCollab<
         user_container_id: containerId,
         name: spec.name,
         imageRef: spec.imageRef,
+        // From the registry, never from the container document: a tenant image
+        // must not be able to claim it is one of ours.
+        builtin: imageRegistry.isBuiltin(container.image_id),
         settings: spec.settings,
         capabilities: spec.capabilities,
         devices: spec.devices,

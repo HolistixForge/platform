@@ -1,176 +1,128 @@
 import { FC, useMemo } from 'react';
-import { useLayerContext } from '../layer-context';
-import { flattenLayerTreeCollection } from '../../layer-tree-utils';
+
 import {
   useAwareness,
   useAwarenessSelections,
 } from '@holistix-forge/collab/frontend';
 
-export const LayersTreePanel: FC<{
-  viewId: string;
-}> = ({ viewId }) => {
-  const { activeLayerId, activeLayerPayload, activateLayer, treeCollection } =
+import { useLayerContext } from '../layer-context';
+import { LayerTree } from './layer-tree';
+
+//
+
+/**
+ * The layers panel: wiring, and nothing else.
+ *
+ * Everything it used to do itself — flattening the tree, deciding a colour
+ * per row, working out which layer an item belonged to — is either gone or in
+ * `LayerTree`, which takes a collection and hands back clicks. Splitting them
+ * is what makes the drawing storyable: a shape can be typed out by hand,
+ * where a component that reaches for awareness and the layer registry cannot.
+ *
+ * One behaviour changed rather than moved. Only the ReactFlow layer used to
+ * be clickable, and only its nodes selectable — written when it was the only
+ * surface. It is not, and Excalidraw is the default one, so the panel spent
+ * most of its time listing things nobody could touch.
+ */
+export const LayersTreePanel: FC<{ viewId: string }> = ({ viewId }) => {
+  const { activeLayerId, activateLayer, treeCollection, layerActions } =
     useLayerContext();
 
   const { awareness } = useAwareness();
   const selections = useAwarenessSelections();
 
-  // Handle node selection
-  const handleNodeClick = (nodeId: string) => {
-    awareness.emitSelectionAwareness({
-      nodes: [nodeId],
-      viewId,
-    });
-  };
+  /**
+   * What this user has selected, in this view.
+   *
+   * Theirs alone: the panel says where *you* are. Everyone else's selections
+   * are already on the board, drawn around the thing itself, and repeating
+   * them here would make a busy board's panel unreadable.
+   */
+  const selectedIds = useMemo(() => {
+    const me = awareness.getUser()?.username;
+    if (!me) return [];
+    return Object.keys(selections).filter((id) =>
+      (selections[id] ?? []).some(
+        (u) => u.user.username === me && u.viewId === viewId
+      )
+    );
+  }, [selections, awareness, viewId]);
 
-  // Flatten tree items for rendering
-  const flattenedItems = useMemo(() => {
-    if (!treeCollection) return [];
-    return flattenLayerTreeCollection(treeCollection, activeLayerId);
-  }, [treeCollection, activeLayerId]);
+  if (!treeCollection) return null;
+
+  /**
+   * The one provider that owns a stack, today.
+   *
+   * Its verbs arrive with its layers rather than being reached for, so this
+   * panel never learns a provider's vocabulary — it only asks whether anyone
+   * offered a way to add, and shows the control if so. No offer, no control:
+   * a `+` that does nothing is worse than no `+`.
+   */
+  const stacked = Object.entries(layerActions ?? {}).find(
+    ([, actions]) => actions?.addLayer || actions?.reorderLayers
+  );
+  const [providerId, actions] = stacked ?? [];
+
+  /** The panel's ids carry their provider; the provider's verbs do not. */
+  const bare = (id: string) =>
+    providerId && id.startsWith(`${providerId}:`)
+      ? id.slice(providerId.length + 1)
+      : id;
 
   return (
-    <div style={{ padding: 12 }}>
-      <h3 style={{ margin: '8px 0' }}>Layers & Nodes</h3>
-      <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-        {flattenedItems.map((item) => {
-          const isActiveLayer =
-            item.type === 'layer' && item.id === activeLayerId;
-          const isClickable = item.type === 'layer' && item.id === 'reactflow';
-          const isNodeClickable = item.layerId === 'reactflow';
-          const indent = item.level * 16; // Indent based on level
-
-          // Check if this node is being edited (matches activeLayerPayload.nodeId)
-          const isBeingEdited =
-            item.type === 'node' &&
-            activeLayerPayload?.nodeId &&
-            item.id === activeLayerPayload.nodeId;
-
-          // Determine if this item belongs to the active layer
-          const belongsToActiveLayer = item.layerId === activeLayerId;
-
-          // Determine if this reactflow node is selected by current user in this view
-          const selectedByCurrentUser =
-            item.layerId === 'reactflow' &&
-            !!awareness.getUser() &&
-            !!(selections[item.id] || []).find(
-              (u) =>
-                u.user.username === awareness.getUser().username &&
-                u.viewId === viewId
-            );
-
-          // Style based on active state
-          const getItemStyle = () => {
-            if (isActiveLayer) {
-              // Active layer header - bright and colorful
-              return {
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
-                fontWeight: 700,
-                boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)',
-              };
-            } else if (isBeingEdited) {
-              // Node being edited - same style as active layer
-              return {
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
-                fontWeight: 600,
-                boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)',
-              };
-            } else if (belongsToActiveLayer) {
-              // Items in active layer - colorful but less intense
-              return {
-                background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                color: 'white',
-                fontWeight: 500,
-                boxShadow: '0 1px 4px rgba(240, 147, 251, 0.3)',
-              };
-            } else {
-              // Inactive layer items - grey and muted
-              return {
-                background: 'transparent',
-                color:
-                  item.type === 'layer' && item.id !== 'reactflow'
-                    ? 'var(--color-text-faint)'
-                    : 'var(--color-text-muted)',
-                fontWeight: item.type === 'layer' ? 400 : 300,
-                opacity:
-                  item.type === 'layer' && item.id !== 'reactflow' ? 0.4 : 0.7,
-              };
-            }
-          };
-
-          const itemStyle = getItemStyle();
-
-          return (
-            <div
-              key={item.id}
-              onClick={
-                isClickable
-                  ? () => activateLayer(item.id)
-                  : isNodeClickable
-                  ? () => handleNodeClick(item.id)
-                  : undefined
-              }
-              style={{
-                padding: '6px 12px',
-                marginLeft: `${indent}px`,
-                marginBottom: '2px',
-                cursor: isClickable || isNodeClickable ? 'pointer' : 'default',
-                borderRadius: '6px',
-                transition: 'all 0.2s ease',
-                fontSize: item.type === 'layer' ? '14px' : '12px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                // Additional highlight if this reactflow node is selected by me
-                ...(selectedByCurrentUser
-                  ? {
-                      outline: '2px solid var(--color-selection)',
-                      /* charter-exception: 25% tint of the selection colour,
-                         which has no token — the solid one would read as a
-                         second ring rather than a wash. */
-                      boxShadow: '0 0 0 2px rgba(59,130,246,0.25) inset',
-                    }
-                  : {}),
-                ...itemStyle,
-              }}
-            >
-              {/* Icon based on type */}
-              <span style={{ fontSize: '10px' }}>
-                {item.type === 'layer'
-                  ? '📁'
-                  : item.type === 'group'
-                  ? '📦'
-                  : '🔹'}
-              </span>
-
-              {/* Title */}
-              <span>{item.title}</span>
-
-              {/* Status indicators */}
-              {item.locked && (
-                <span
-                  style={{ fontSize: '10px' }}
-                  role="img"
-                  aria-label="locked"
-                >
-                  🔒
-                </span>
-              )}
-              {!item.visible && (
-                <span
-                  style={{ fontSize: '10px' }}
-                  role="img"
-                  aria-label="hidden"
-                >
-                  👁️‍🗨️
-                </span>
-              )}
-            </div>
-          );
-        })}
+    <div style={{ padding: 'var(--spacing-5)' }}>
+      <div className="layer-tree-head">
+        <h3 className="layer-tree-head__title">Layers</h3>
+        {actions?.addLayer && (
+          <button
+            type="button"
+            className="layer-tree-head__add"
+            title="New layer"
+            aria-label="New layer"
+            onClick={() => actions.addLayer?.()}
+          >
+            +
+          </button>
+        )}
       </div>
+
+      <LayerTree
+        collection={treeCollection}
+        activeLayerId={activeLayerId}
+        selectedIds={selectedIds}
+        // The provider, not the row.
+        //
+        // A row's id carries its provider — `excalidraw:layer-2` — and the
+        // board picks which layer renders by comparing the active id to a
+        // *provider* id. Handed the row's, nothing matched, the surface got
+        // `active={false}` and unmounted: clicking a layer in the panel made
+        // the whole board vanish. Which layer was clicked belongs in the
+        // payload, where the surface already looks for it.
+        onActivateLayer={(id) => {
+          if (providerId && id.startsWith(`${providerId}:`)) {
+            activateLayer(providerId, { layerId: bare(id) });
+            // And pick its contents up. Making a layer current and having
+            // nothing to show for it left the click looking like it missed;
+            // a layers panel is also how you grab a layer's worth of board.
+            actions?.selectLayer?.(bare(id));
+            return;
+          }
+          activateLayer(id);
+        }}
+        onSelect={(item) => {
+          awareness.emitSelectionAwareness({ nodes: [item.id], viewId });
+          // Selecting says which; this says where. The two are one click.
+          actions?.focusItem?.(item.id);
+        }}
+        onReorderLayers={
+          actions?.reorderLayers
+            ? (frontToBack) =>
+                // Flipped here, where both facts are known: the panel shows
+                // the stack front-first and the scene is painted back-first.
+                actions.reorderLayers?.([...frontToBack].reverse().map(bare))
+            : undefined
+        }
+      />
     </div>
   );
 };

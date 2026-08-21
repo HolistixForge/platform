@@ -16,6 +16,7 @@ import {
 import { HomePage } from './pages/home';
 import { ProjectRoot } from './pages/project/project-root';
 import { EditorPage } from './pages/project/editor/editor-page';
+import { ProjectResourcesPage } from './pages/project/resources/resources-page';
 import { OrganizationPermissionsPage } from './pages/organization/permissions-page';
 import { OrganizationDashboard } from './pages/organization/dashboard';
 import { CredentialsPage } from './pages/credentials';
@@ -42,6 +43,9 @@ export function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/p/:owner/:project_name" element={<ProjectRoot />}>
                 <Route path="editor" element={<EditorPage />} />
+                {/* A place in the project rather than a tab in the bar — see
+                    resources-page.tsx. */}
+                <Route path="resources" element={<ProjectResourcesPage />} />
               </Route>
 
               <Route

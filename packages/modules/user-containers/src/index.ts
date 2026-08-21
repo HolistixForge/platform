@@ -1,5 +1,6 @@
 import { UserContainersReducer } from './lib/servers-reducer';
 import { ContainerImageRegistry } from './lib/image-registry';
+import { ContainerStackRegistry } from './lib/stack-registry';
 import type { TModule } from '@holistix-forge/module';
 import type { TCollabBackendExports } from '@holistix-forge/collab';
 import type { TReducersBackendExports } from '@holistix-forge/reducers';
@@ -15,6 +16,15 @@ import { setPlacementProvider } from './lib/placement-provider';
 
 export type TUserContainersExports = {
   imageRegistry: ContainerImageRegistry;
+  /**
+   * Catalogue of multi-service stacks.
+   *
+   * Beside the image registry rather than inside it: a stack names images, it
+   * does not replace one, and every service it names is resolved through
+   * `imageRegistry` so a stack cannot reach an image its project could not
+   * have started alone.
+   */
+  stackRegistry: ContainerStackRegistry;
   registerContainerRunner: (
     id: string,
     containerRunner: ContainerRunner
@@ -105,6 +115,11 @@ export const moduleBackend: TModule<TRequired, TUserContainersExports> = {
     ];
     registry.register(builtinImages);
 
+    // Stacks resolve every service against the image catalogue above, so the
+    // two are built together and the stack registry is never handed a
+    // different one.
+    const stackRegistry = new ContainerStackRegistry(registry);
+
     const containerRunners: Map<string, ContainerRunner> = new Map();
 
     const registerContainerRunner: (
@@ -141,6 +156,7 @@ export const moduleBackend: TModule<TRequired, TUserContainersExports> = {
     // Export registry and images
     moduleExports({
       imageRegistry: registry,
+      stackRegistry,
       registerContainerRunner,
       getRunner: (id: string) => containerRunners.get(id),
       listRunnerIds: () => Array.from(containerRunners.keys()),

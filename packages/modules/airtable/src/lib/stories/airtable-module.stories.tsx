@@ -119,6 +119,22 @@ const ProxyCheckWrapper = ({ children }: { children: ReactNode }) => {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
+    // The same opt-in the notion story uses. Probing a proxy nobody started
+    // made the story show setup instructions instead of the module — the
+    // screenshot suite photographed the instructions, and the outcome depended
+    // on whether a process happened to be running. Set `AIRTABLE_STORY_PROXY`
+    // on the window to talk to a live proxy when you actually want to.
+    const wantsLiveProxy = Boolean(
+      (window as unknown as { AIRTABLE_STORY_PROXY?: boolean })
+        .AIRTABLE_STORY_PROXY
+    );
+
+    if (!wantsLiveProxy) {
+      setIsProxyRunning(true);
+      setIsChecking(false);
+      return;
+    }
+
     const checkProxy = async () => {
       try {
         const response = await fetch('http://localhost:3001/proxy', {
@@ -153,6 +169,7 @@ const ProxyCheckWrapper = ({ children }: { children: ReactNode }) => {
   return children;
 };
 
+const STORY_PROJECT_ID = 'story-project';
 //
 
 const collabConfig = {
@@ -223,6 +240,14 @@ const Story = () => {
       backendModules as { reducers: TReducersBackendExports },
       frontendModules as { reducers: TReducersFrontendExports }
     );
+
+    // The dispatcher refuses to send without one, and says so — "No project_id
+    // set" — from inside the browser dispatcher rather than from the story.
+    // `project-wrapper.tsx` sets it in the app; nothing set it here, so every
+    // event a module story dispatched was dropped on the floor.
+    (
+      frontendModules as { reducers: TReducersFrontendExports }
+    ).reducers.dispatcher.setProjectId(STORY_PROJECT_ID);
 
     return { backendModules, frontendModules };
   }, []);

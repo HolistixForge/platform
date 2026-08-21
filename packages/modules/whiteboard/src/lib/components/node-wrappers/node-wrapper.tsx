@@ -3,6 +3,7 @@ import {
   FC,
   useContext,
   MouseEvent,
+  useMemo,
   useRef,
   useState,
   ReactNode,
@@ -27,7 +28,11 @@ import { useDispatcher } from '@holistix-forge/reducers/frontend';
 import { TNodeContext } from '../apis/types/node';
 import { SelectionsAwareness } from './selection-awareness';
 import { useSpaceContext } from '../reactflow-layer-context';
-import { isNodeOpened, TNodeViewStatus } from '../../whiteboard-types';
+import {
+  isNodeOpened,
+  TNodeViewStatus,
+  TSelectingUsers,
+} from '../../whiteboard-types';
 import { SpaceNode } from '../to-rf-nodes';
 import { DisableZoomDragPan } from './disable-zoom-drag-pan';
 import { TWhiteboardEvent } from '../../whiteboard-events';
@@ -342,6 +347,88 @@ const NodeStatusDebugOverlay = (s: TNodeViewStatus & { zoom: number }) => {
       </div>
     );
   else return null;
+};
+
+//
+
+/** One shared empty array, so "nobody selected this" has a stable identity. */
+const EMPTY_SELECTION: TSelectingUsers = [];
+
+/**
+ * A node's context for a node rendered outside the ReactFlow canvas.
+ *
+ * `NodeWrapper` cannot be reused for this: it reads the zoom from ReactFlow's
+ * own store and the view from the ReactFlow layer's context, so it only exists
+ * where ReactFlow does. A node embedded in the drawing surface needs the same
+ * context and none of that — hence a second, smaller provider here, in the
+ * module that owns the context, rather than a copy of it in the caller.
+ *
+ * What it does not provide is the chrome: no header, no connectors, no resize
+ * handle. Inside the drawing surface those belong to the element that holds
+ * the node, not to the node.
+ */
+export const EmbeddedNodeContext = ({
+  id,
+  viewId,
+  zoom,
+  status,
+  children,
+}: {
+  id: string;
+  viewId: string;
+  zoom: number;
+  status: TNodeViewStatus;
+  children: ReactNode;
+}) => {
+  const dispatcher = useDispatcher<TWhiteboardEvent>();
+  const { awareness } = useAwareness();
+  const selections = useAwarenessSelections();
+  // `selections[id]` is absent for a node nobody has selected, and `|| []`
+  // would then hand out a new array on every render — enough on its own to
+  // defeat the memo below.
+  const selectingUsers = useMemo(
+    () => selections[id] ?? EMPTY_SELECTION,
+    [selections, id]
+  );
+
+  const selected = awareness.getUser()
+    ? selectingUsers.some(
+        (u) =>
+          u.user.username === awareness.getUser().username &&
+          u.viewId === viewId
+      )
+    : false;
+
+  // Memoised, and not a formality. A fresh value object on every render makes
+  // every consumer re-render on every render of this provider — and the nodes
+  // that go in here are the live ones, with their own polling and state. Built
+  // inline, it locked the tab up the moment a node first rendered inside the
+  // drawing surface.
+  const value = useMemo<TNodeContext>(() => {
+    const send = (type: TWhiteboardEvent['type']) => () =>
+      dispatcher.dispatch({ type, nid: id, viewId } as TWhiteboardEvent);
+
+    return {
+      id,
+      zoom,
+      viewId,
+      viewStatus: status,
+      isOpened: isNodeOpened(status),
+      selected,
+      selectingUsers,
+      open: send('whiteboard:open-node'),
+      close: send('whiteboard:close-node'),
+      reduce: send('whiteboard:reduce-node'),
+      expand: send('whiteboard:expand-node'),
+      filterOut: send('whiteboard:filter-out-node'),
+    };
+  }, [dispatcher, id, viewId, zoom, status, selected, selectingUsers]);
+
+  // No ReactFlow provider here any more. The drawing surface renders inside
+  // the base layer's `ReactflowLayerContext`, which supplies both the store
+  // these components reach for and the space context their connectors need —
+  // a provider here would shadow the real one with an empty store.
+  return <nodeContext.Provider value={value}>{children}</nodeContext.Provider>;
 };
 
 //

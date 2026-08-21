@@ -370,4 +370,47 @@ CREATE INDEX idx_credential_shares_org ON public.credential_shares(organization_
 CREATE INDEX idx_credential_shares_project ON public.credential_shares(project_id, is_active) WHERE share_scope = 'project';
 CREATE INDEX idx_credential_shares_resource ON public.credential_shares(resource_id, is_active) WHERE share_scope = 'resource';
 
+-- Where a project's collaborative state actually lives.
+--
+-- It used to be a JSON file under `/root/.local-dev/{env}/org-data/`, one per
+-- organization, rewritten whole on every save. That works while Ganymede is a
+-- process on the platform host and disappears the moment it is a container:
+-- measured on macOS, `ganymede-apple.sh restart` deletes and recreates the
+-- container, and 107 KB of nodes, edges, positions and permissions went with
+-- it — twice in one day, with every service still running and the whiteboard
+-- knowing nothing of them.
+--
+-- A volume would have stopped the disappearing and kept the rest: no
+-- transaction, so an interrupted write leaves a truncated file that is the only
+-- copy; no locking, so two gateways for one organization overwrite each other;
+-- nothing queryable without reading and parsing every file. This is the same
+-- database Ganymede already opens two lines above, in the same request.
+--
+-- `data` stays a document rather than becoming a table per node, for now. What
+-- a gateway saves is a CRDT snapshot whose shape the collaborative engine owns,
+-- and pinning it into columns is a decision about that engine, not about where
+-- bytes are kept. `jsonb` keeps it queryable in the meantime — a node's
+-- position is reachable with an index rather than by parsing a file.
+CREATE TABLE IF NOT EXISTS public.organization_state
+(
+    organization_id uuid NOT NULL,
+    -- Which gateway last wrote. Recorded rather than enforced: a second
+    -- gateway writing is a thing to notice, not to refuse, and refusing would
+    -- lose the state it was trying to save.
+    gateway_id uuid,
+    data jsonb NOT NULL,
+    -- The gateway's own timestamp, kept apart from ours: the two disagree when
+    -- a save is slow, and which one is meant matters when reading them back.
+    saved_at timestamp with time zone,
+    updated_at timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT organization_state_pkey PRIMARY KEY (organization_id),
+    CONSTRAINT fk_organization_state_organization_id FOREIGN KEY (organization_id)
+        REFERENCES public.organizations (organization_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_organization_state_updated_at
+    ON public.organization_state(updated_at);
+
 END;

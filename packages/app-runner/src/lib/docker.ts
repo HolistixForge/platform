@@ -26,6 +26,32 @@ export const LABEL_PROJECT = 'holistix.project';
 export const LABEL_CONTAINER = 'holistix.user_container_id';
 export const LABEL_MACHINE = 'holistix.machine';
 
+/**
+ * What the broker calls the same thing.
+ *
+ * Two writers, two spellings, one container: the broker labels
+ * `holistix.user_container`, this runner `holistix.user_container_id`. Both set
+ * `holistix.project`, so `listOwned` *did* return the broker's container — with
+ * no id on it. `planReconcile` drops anything it cannot name, concluded there
+ * was no container for the placement, and asked to create one whose name was
+ * already taken.
+ *
+ * Measured moving a notebook from the platform to a laptop: `container with id
+ * holistix_notebook_uc_msiod already exists`, every ten seconds, for ever.
+ *
+ * Read, never written. Unifying the two would be the tidier answer and it is
+ * not this one: the broker's spelling is on every container it has already
+ * started, and a runner that only understood the new one would go on being
+ * unable to adopt them. Recognising both costs one `??`.
+ */
+export const LABEL_CONTAINER_BROKER = 'holistix.user_container';
+
+/** The container id under whichever of the two spellings is present. */
+export const containerIdFromLabels = (
+  labels: Record<string, string> | undefined
+): string | undefined =>
+  labels?.[LABEL_CONTAINER] ?? labels?.[LABEL_CONTAINER_BROKER];
+
 export type TRunningContainer = {
   /** Docker's id. */
   id: string;
@@ -91,7 +117,7 @@ export const inspect = async (
     image: c.Config.Image,
     state: c.State.Status,
     project_id: c.Config.Labels?.[LABEL_PROJECT],
-    user_container_id: c.Config.Labels?.[LABEL_CONTAINER],
+    user_container_id: containerIdFromLabels(c.Config.Labels),
     networks: Object.keys(c.NetworkSettings.Networks ?? {}),
   }));
 };

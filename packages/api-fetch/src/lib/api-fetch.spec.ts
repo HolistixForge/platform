@@ -23,32 +23,35 @@ describe('ApiFetch', () => {
         [204, 'No Content'],
         [206, 'Partial Content'],
         [299, 'Custom 2xx'],
-      ])('should accept %d (%s) as successful response', async (statusCode, statusText) => {
-        const mockJson = { success: true, data: 'test-data' };
-        
-        mockFetch.mockResolvedValueOnce({
-          status: statusCode,
-          statusText,
-          json: jest.fn().mockResolvedValueOnce(mockJson),
-        });
+      ])(
+        'should accept %d (%s) as successful response',
+        async (statusCode, statusText) => {
+          const mockJson = { success: true, data: 'test-data' };
 
-        const request: TMyfetchRequest = {
-          method: 'GET',
-          url: '/test-endpoint',
-        };
+          mockFetch.mockResolvedValueOnce({
+            status: statusCode,
+            statusText,
+            json: jest.fn().mockResolvedValueOnce(mockJson),
+          });
 
-        const result = await apiFetch.fetch(request);
-
-        expect(result).toEqual(mockJson);
-        expect(mockFetch).toHaveBeenCalledTimes(1);
-        // Note: fullUri always adds "?" even without query params, and URLs may have double slashes
-        expect(mockFetch).toHaveBeenCalledWith(
-          expect.stringContaining('/test-endpoint'),
-          expect.objectContaining({
+          const request: TMyfetchRequest = {
             method: 'GET',
-          })
-        );
-      });
+            url: '/test-endpoint',
+          };
+
+          const result = await apiFetch.fetch(request);
+
+          expect(result).toEqual(mockJson);
+          expect(mockFetch).toHaveBeenCalledTimes(1);
+          // Note: fullUri always adds "?" even without query params, and URLs may have double slashes
+          expect(mockFetch).toHaveBeenCalledWith(
+            expect.stringContaining('/test-endpoint'),
+            expect.objectContaining({
+              method: 'GET',
+            })
+          );
+        }
+      );
     });
 
     // Test failure codes (non-2xx)
@@ -64,31 +67,71 @@ describe('ApiFetch', () => {
         [500, 'Internal Server Error'],
         [502, 'Bad Gateway'],
         [503, 'Service Unavailable'],
-      ])('should reject %d (%s) as failed response', async (statusCode, statusText) => {
-        const mockJson = { error: 'Error message', details: 'Error details' };
-        
-        mockFetch.mockResolvedValueOnce({
-          status: statusCode,
-          statusText,
-          json: jest.fn().mockResolvedValueOnce(mockJson),
-        });
+      ])(
+        'should reject %d (%s) as failed response',
+        async (statusCode, statusText) => {
+          const mockJson = { error: 'Error message', details: 'Error details' };
 
-        const request: TMyfetchRequest = {
-          method: 'GET',
-          url: '/test-endpoint',
-        };
+          mockFetch.mockResolvedValueOnce({
+            status: statusCode,
+            statusText,
+            json: jest.fn().mockResolvedValueOnce(mockJson),
+          });
+
+          const request: TMyfetchRequest = {
+            method: 'GET',
+            url: '/test-endpoint',
+          };
+
+          let thrownError;
+          try {
+            await apiFetch.fetch(request);
+          } catch (error) {
+            thrownError = error;
+          }
+
+          expect(thrownError).toBeDefined();
+          // The message names the failure. An uncaught rejection shows only this
+          // and a bundled stack, so a bare "API error" cannot be diagnosed.
+          // The double slash and the bare `?` are what `fullUri` builds today.
+          // Asserted as-is rather than tidied: this test is about the message
+          // naming the request, and the shape of the URI is a separate question.
+          expect((thrownError as any).message).toBe(
+            `API error: ${statusCode} GET https://api.example.com//test-endpoint?`
+          );
+          expect((thrownError as any).status).toBe(statusCode);
+          expect((thrownError as any).json).toEqual(mockJson);
+        }
+      );
+
+      it('keeps a credential out of the message it puts the URL in', async () => {
+        // Error messages are logged and shipped to the collector. Which route
+        // failed is worth carrying; the token that reached it is not.
+        mockFetch.mockResolvedValueOnce({
+          status: 401,
+          statusText: 'Unauthorized',
+          json: jest.fn().mockResolvedValueOnce({}),
+        });
 
         let thrownError;
         try {
-          await apiFetch.fetch(request);
+          await apiFetch.fetch({
+            method: 'GET',
+            url: '/collab/room-id',
+            queryParameters: {
+              token: 'eyJhbGciOi.secret.value',
+              project: 'p1',
+            },
+          });
         } catch (error) {
           thrownError = error;
         }
 
-        expect(thrownError).toBeDefined();
-        expect((thrownError as any).message).toBe('API error');
-        expect((thrownError as any).status).toBe(statusCode);
-        expect((thrownError as any).json).toEqual(mockJson);
+        const message = (thrownError as Error).message;
+        expect(message).toContain('token=REDACTED');
+        expect(message).not.toContain('secret');
+        // The rest of the query survives — it is what names the request.
+        expect(message).toContain('project=p1');
       });
     });
   });
@@ -96,7 +139,7 @@ describe('ApiFetch', () => {
   describe('URL construction', () => {
     it('should construct full URL from host and relative path', async () => {
       const mockJson = { success: true };
-      
+
       mockFetch.mockResolvedValueOnce({
         status: 200,
         statusText: 'OK',
@@ -120,7 +163,7 @@ describe('ApiFetch', () => {
 
     it('should handle query parameters', async () => {
       const mockJson = { success: true };
-      
+
       mockFetch.mockResolvedValueOnce({
         status: 200,
         statusText: 'OK',
@@ -142,7 +185,7 @@ describe('ApiFetch', () => {
 
     it('should handle path parameters', async () => {
       const mockJson = { success: true };
-      
+
       mockFetch.mockResolvedValueOnce({
         status: 200,
         statusText: 'OK',
@@ -166,7 +209,7 @@ describe('ApiFetch', () => {
     it('should send JSON body for POST requests', async () => {
       const mockJson = { success: true };
       const requestBody = { name: 'Test User', email: 'test@example.com' };
-      
+
       mockFetch.mockResolvedValueOnce({
         status: 201,
         statusText: 'Created',
@@ -193,7 +236,7 @@ describe('ApiFetch', () => {
 
     it('should send form-urlencoded body', async () => {
       const mockJson = { success: true };
-      
+
       mockFetch.mockResolvedValueOnce({
         status: 200,
         statusText: 'OK',
@@ -221,7 +264,7 @@ describe('ApiFetch', () => {
 
     it('should not send body for GET requests even with jsonBody', async () => {
       const mockJson = { success: true };
-      
+
       mockFetch.mockResolvedValueOnce({
         status: 200,
         statusText: 'OK',
@@ -243,7 +286,7 @@ describe('ApiFetch', () => {
     it('should add authorization headers when auth is provided', async () => {
       const mockJson = { success: true };
       const authHeaders = { authorization: 'Bearer test-token-123' };
-      
+
       const apiFetchWithAuth = new ApiFetch('https://api.example.com', {
         authorization: () => ({ headers: authHeaders }),
       });
@@ -267,7 +310,7 @@ describe('ApiFetch', () => {
 
     it('should include credentials when specified', async () => {
       const mockJson = { success: true };
-      
+
       const apiFetchWithCredentials = new ApiFetch('https://api.example.com', {
         credentials: 'include',
       });
@@ -293,7 +336,7 @@ describe('ApiFetch', () => {
   describe('custom headers', () => {
     it('should merge custom headers with existing headers', async () => {
       const mockJson = { success: true };
-      
+
       mockFetch.mockResolvedValueOnce({
         status: 200,
         statusText: 'OK',
@@ -322,7 +365,7 @@ describe('ApiFetch', () => {
   describe('real-world scenarios', () => {
     it('should handle POST with 201 Created', async () => {
       const mockJson = { id: 'user-123', created: true };
-      
+
       mockFetch.mockResolvedValueOnce({
         status: 201,
         statusText: 'Created',
@@ -355,7 +398,7 @@ describe('ApiFetch', () => {
 
     it('should handle PATCH with 202 Accepted', async () => {
       const mockJson = { id: 'user-123', updated: true };
-      
+
       mockFetch.mockResolvedValueOnce({
         status: 202,
         statusText: 'Accepted',
@@ -376,7 +419,7 @@ describe('ApiFetch', () => {
         error: 'Unauthorized',
         message: 'Invalid token',
       };
-      
+
       mockFetch.mockResolvedValueOnce({
         status: 401,
         statusText: 'Unauthorized',
@@ -413,7 +456,7 @@ describe('ApiFetch', () => {
   describe('host override', () => {
     it('should use custom host when provided', async () => {
       const mockJson = { success: true };
-      
+
       mockFetch.mockResolvedValueOnce({
         status: 200,
         statusText: 'OK',
@@ -434,4 +477,3 @@ describe('ApiFetch', () => {
     });
   });
 });
-

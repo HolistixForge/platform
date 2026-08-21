@@ -23,6 +23,23 @@ export type TRunnerPlacement = {
   name: string;
   /** Fully qualified image reference, resolved here rather than by the runner. */
   imageRef: string;
+  /**
+   * Whether `imageRef` names one of the platform's own images.
+   *
+   * The runner refuses an image that is not pinned to a digest, because a bare
+   * name reaching it means the resolution never happened and it would pull
+   * whatever that tag points at today. That rule is right for a tenant image —
+   * `registerForProject` will not accept one without `imageSha256` — and wrong
+   * for a built-in, which comes from this deployment's own catalogue and has no
+   * digest recorded. Applied to both, it refused every placement of the default
+   * terminal image: the first thing anybody tries on their own machine.
+   *
+   * So the distinction travels, rather than being guessed from the shape of the
+   * string. Set from the registry here and never from anything a caller sends —
+   * a tenant image cannot claim it, because `registerForProject` refuses an id
+   * that a built-in already holds. Same line the broker has always drawn.
+   */
+  builtin: boolean;
   /** Base64 `SETTINGS` blob — the container's entire configuration channel. */
   settings: string;
   capabilities: string[];

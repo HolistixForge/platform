@@ -138,6 +138,36 @@ describe('appleEngine.listOwned', () => {
     },
   ]);
 
+  // The broker spells the same label differently — `holistix.user_container`
+  // against this runner's `holistix.user_container_id`. Both set
+  // `holistix.project`, so its container was listed and came back with no id;
+  // `planReconcile` drops what it cannot name, decided there was no container
+  // for the placement, and asked to create one whose name was already taken.
+  // Measured moving a notebook off the platform: "already exists", every ten
+  // seconds, for ever.
+  it('recognises a container the broker started', async () => {
+    const exec: TDockerExec = async () =>
+      JSON.stringify([
+        {
+          configuration: {
+            id: 'holistix_notebook_uc_2',
+            labels: {
+              [LABEL_PROJECT]: 'proj-1',
+              'holistix.organization': 'org-1',
+              'holistix.user_container': 'uc_2',
+            },
+            image: { reference: 'ghcr.io/acme/nb@sha256:bbb' },
+          },
+          status: { state: 'running', networks: [] },
+        },
+      ]);
+
+    const owned = await appleEngine.listOwned(exec, 'proj-1');
+
+    expect(owned).toHaveLength(1);
+    expect(owned[0].user_container_id).toBe('uc_2');
+  });
+
   it('reads Apple’s own shape and keeps only this project', async () => {
     const exec: TDockerExec = async () => answer;
     const owned = await appleEngine.listOwned(exec, 'proj-1');

@@ -10,6 +10,8 @@ export type {
 
 export type { TApi_Project } from './lib/ganymede-api/types';
 
+export type { TApi_Runner } from './lib/ganymede-api/runners';
+
 export {
   GLOBAL_CLIENT_ID,
   GLOBAL_CLIENT_SECRET,

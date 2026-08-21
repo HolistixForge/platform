@@ -62,6 +62,31 @@ func (rp *ReverseProxy) ProxyRequest(w http.ResponseWriter, r *http.Request, aut
 				req.Header.Del("Upgrade")
 			}
 		},
+		// The service's own CORS answer is dropped, and the guard's stands.
+		//
+		// Both would otherwise reach the browser: this proxy copies upstream
+		// headers onto a response where the guard has already written its own,
+		// and a browser refuses a pair. Measured — JupyterLab is started with
+		// `--ServerApp.allow_origin='*'`, so the header arrived as
+		// `https://{platform}, *` and every call from the platform's page was
+		// blocked with "contains multiple values".
+		//
+		// The guard's is the one to keep. It names a single origin and allows
+		// credentials, which `*` cannot: the session cookie is what the guard
+		// authorizes on, and a wildcard forbids sending it.
+		ModifyResponse: func(resp *http.Response) error {
+			for _, h := range []string{
+				"Access-Control-Allow-Origin",
+				"Access-Control-Allow-Credentials",
+				"Access-Control-Allow-Methods",
+				"Access-Control-Allow-Headers",
+				"Access-Control-Expose-Headers",
+				"Access-Control-Max-Age",
+			} {
+				resp.Header.Del(h)
+			}
+			return nil
+		},
 		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {
 			log.Printf("[proxy] backend error for %s: %v", r.Host, err)
 			http.Error(w, "Bad Gateway", http.StatusBadGateway)

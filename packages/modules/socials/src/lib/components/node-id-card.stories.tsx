@@ -17,7 +17,7 @@ const IDCardStory = ({
 };
 
 const meta = {
-  title: 'Modules/Socials/Components/IDCard',
+  title: 'Modules/Socials/Components/Nodes/IDCard',
   component: IDCardStory,
   parameters: {
     layout: 'centered',

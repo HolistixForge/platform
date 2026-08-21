@@ -1,17 +1,38 @@
+/* The project rail, in two shapes.
+ *
+ * `dashboard` — a vertical bar docked to the left edge, full height. This is
+ * what a page with its own content wants: the rail owns a column and the page
+ * is indented past it.
+ *
+ * `island` — a floating rounded box, vertically centred. For a surface that
+ * has nothing to give up, where the rail sits over the content rather than
+ * beside it.
+ *
+ * Which one is a choice the page makes, so it is a prop. It used to be neither:
+ * one shape positioned from `--holistix-left-rail`, published only by the
+ * whiteboard's layers panel. Off the whiteboard the variable is unset, so the
+ * fallback applied — a guess at that panel's width — and the rail floated 255px
+ * into an empty page with nothing to its left. Measured on the Resources tab.
+ * A rail that is on every page cannot take its position from a panel that is
+ * on one. */
+:root {
+  --holistix-sidebar-width: 56px;
+}
+
 aside {
   background: var(--surface-700);
-  border-radius: 8px;
-  width: fit-content;
-  height: auto;
   position: fixed;
-  top: 50%;
-  /* Sits on the left rail, just right of the whiteboard layers panel. The
-     panel publishes its own width into --holistix-left-rail as it expands and
-     collapses (see whiteboard.tsx), so this follows it instead of holding a
-     constant offset. The transition matches the panel's own 120ms. */
-  left: var(--holistix-left-rail, 255px);
-  transition: left 120ms ease;
-  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  /* Fixed is not enough to stay on top. With no z-index the rail paints at
+     the same level as the page's own content, so anything positive above it
+     covers it — and the whiteboard's drawing surface is a full-screen canvas
+     at 10. The rail went on being there, correctly placed, entirely hidden.
+
+     `sticky` rather than a number: it is the tier for chrome that stays put
+     while content scrolls under it, which is what this is. Above every layer,
+     below dropdowns, modals and toasts, which should still open over it. */
+  z-index: var(--z-sticky);
 }
 
 aside ul {
@@ -19,10 +40,8 @@ aside ul {
   flex-direction: column;
   gap: 24px;
   list-style: none;
-  width: fit-content;
   margin: 0;
   padding: 16px 0;
-  position: relative;
 }
 
 aside ul li {
@@ -30,25 +49,97 @@ aside ul li {
   margin: 0;
   height: 32px;
   cursor: pointer;
+  position: relative;
 }
 
-aside ul:before {
+/* ---- reach --------------------------------------------------------------- */
+
+/* Out of reach from this page, and still there. Removing it instead would
+   change the rail's length by page, so the thing under a given position would
+   move — and a person navigating by muscle memory would click the wrong one. */
+aside ul li.sidebar-item-disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* ---- dashboard: a bar ---------------------------------------------------- */
+
+aside.sidebar--dashboard {
+  /* Below the header, down to the bottom. */
+  top: var(--header-height, 0px);
+  bottom: 0;
+  left: 0;
+  width: var(--holistix-sidebar-width);
+}
+
+/* Centred inside the full-height bar, which is where the icons sat when the
+   whole rail was an island and the only part of that look worth keeping.
+   Centring is on the bar now that it holds more than one list. */
+aside.sidebar--dashboard {
+  justify-content: center;
+}
+
+aside.sidebar--dashboard ul {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* One column, so the levels are told apart by a rule rather than by air.
+   `--color-border`, not `--color-border-muted`: the muted one resolves to the
+   same surface as the rail's own background, so the first rule drawn here was
+   present and invisible. Seen on the page, not read off the palette. */
+aside.sidebar--dashboard ul + ul {
+  border-top: 1px solid var(--color-border);
+}
+
+/* ---- island: a floating box ---------------------------------------------- */
+
+aside.sidebar--island {
+  top: 50%;
+  transform: translateY(-50%);
+  /* Its own variable, not the whiteboard's: an island is placed by whoever
+     asks for one, and defaults to sitting just inside the left edge rather
+     than at some other component's width. */
+  left: var(--holistix-island-left, 16px);
+  width: fit-content;
+  height: auto;
+  /* The aside is only the stack; each group is its own box. Over a canvas a
+     rule between two lists reads as one panel with a line in it, which is the
+     opposite of what the two levels are — so they are separated by air and by
+     their own edges instead. */
+  background: transparent;
+  gap: var(--spacing-6);
+  transition: left 120ms ease;
+}
+
+aside.sidebar--island ul {
+  width: fit-content;
+  background: var(--surface-700);
+  border-radius: 8px;
+}
+
+/* ---- shared -------------------------------------------------------------- */
+
+/* The active mark rides the active item.
+ *
+ * It used to be one `:before` on the list, offset from the top by an
+ * expression that restated the padding, the flex gap and the icon height —
+ * three numbers declared just above it, and wrong the moment any of them
+ * moved. Centring the list broke it outright, since it measures from the
+ * list's top edge and the items no longer start there.
+ *
+ * `:has()` asks the question directly instead: the item holding the active
+ * icon is the one that gets the mark. No arithmetic to keep in step, and it
+ * is right in both shapes. */
+aside ul li:has(svg.active):before {
   content: '';
   position: absolute;
   right: 0;
-  top: 0;
+  top: 4px; /* : centres a 24px mark on a 32px item */
   background: var(--white);
   width: 2px;
   height: 24px;
   border-radius: 8px;
-  transition: 0.4s;
-  top: calc(
-    (
-        var(--sidebar-active-item) * (32px + 24px)
-          /* : icon height + vertical flex gap */
-      ) + 16px /* : padding-top */ + (32px - 24px) / 2
-      /* : vertical center off 24px :before on 32px icon */
-  );
 }
 
 aside ul li svg {
@@ -62,8 +153,26 @@ aside ul li svg.active {
   opacity: 1;
 }
 
-@media (max-width: 1000px) {
+/* Below the app's own small-screen line, and not before.
+ *
+ * This was 1000px, which is a laptop. A window at 917 lost the rail outright
+ * — no island, no bar, nothing — and since a missing element leaves no trace,
+ * it read as a component that had stopped rendering. Two people looked for it
+ * in the wrong place.
+ *
+ * 640 is where the header already collapses and `.not-bellow-640` clears out
+ * (ui-views/mvp-ui-view/components/header.scss): the app's existing line for
+ * "there is no room for chrome here". A 56px rail carrying one item is worth
+ * 6% of a 917px window and is not what makes that window cramped. */
+@media (max-width: 640px) {
   aside {
     display: none !important;
+  }
+
+  /* Zeroed here rather than in every consumer: whoever clears the bar reads
+     this one value, so hiding the rail and reclaiming its column stay the same
+     decision. */
+  :root {
+    --holistix-sidebar-width: 0px;
   }
 }

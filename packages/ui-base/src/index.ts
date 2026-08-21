@@ -63,6 +63,7 @@ export { SliderFieldset } from './lib/form/form-fields/slider-fieldset';
 export { icons } from './lib/assets/icons';
 
 export { Sidebar } from './lib/sidebar/Sidebar';
+export type { SidebarVariant } from './lib/sidebar/Sidebar';
 
 export { Countdown } from './lib/countdown/countdown';
 

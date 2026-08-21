@@ -9,6 +9,7 @@ Welcome to the Holistix Forge documentation! This hub will guide you to the righ
 - 💻 **[Run the platform in a VM](guides/VM_DEVELOPMENT.md)** - Ansible-provisioned Ubuntu VM (replaces the dev container)
 - 🚀 **[Set up local development](guides/LOCAL_DEVELOPMENT.md)** - Multi-environment dev setup
 - 🏭 **[Production deployment](guides/PRODUCTION_DEPLOYMENT.md)** - Deploy on Ubuntu VPS
+- 🔌 **[Plug a local stack into the platform](guides/LOCAL_STACK.md)** - Several containers on your machine, one of them reachable from the project (part specification — read its status block)
 - 🌍 **[Put an environment on the internet](guides/PUBLIC_TUNNEL.md)** - One public URL, through a tunnel
 - 🤝 **[Contribute](../CONTRIBUTING.md)** - Development workflow and standards
 
@@ -67,6 +68,7 @@ doc/
 │
 ├── guides/                   # How-To Guides
 │   ├── LOCAL_DEVELOPMENT.md  - Multi-env local setup
+│   ├── LOCAL_STACK.md        - Multi-container local services, selective tunnelling
 │   ├── PUBLIC_TUNNEL.md      - Expose an environment on a public URL
 │   ├── TESTING_GUIDE.md      - Testing strategies & examples
 │   ├── MODULES_TESTING.md    - Module development & testing

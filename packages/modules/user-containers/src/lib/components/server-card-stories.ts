@@ -46,6 +46,8 @@ export const makeStoryArgs = (): StoryArgs => ({
     /**/
   },
   onSelectRunner: () => Promise.resolve(),
+  onStart: () => Promise.resolve(),
+  onStop: () => Promise.resolve(),
 });
 
 //

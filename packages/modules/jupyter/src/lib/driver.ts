@@ -16,7 +16,15 @@ import { makeVirtualOutputArea } from './output-area';
 //
 //
 
-type ResourceListener = (kernels: Kernel[], terminals: Terminal[]) => void;
+/**
+ * Exported because the manager has to keep the reference it subscribed in
+ * order to unsubscribe it again — which is what makes the driver's own
+ * listener count, and therefore its poll timer, follow the watchers.
+ */
+export type ResourceListener = (
+  kernels: Kernel[],
+  terminals: Terminal[]
+) => void;
 
 function deepEqualKernels(a: Kernel[], b: Kernel[]): boolean {
   return isEqual(a, b);
@@ -178,83 +186,149 @@ export class JupyterlabDriver {
     }
   };
 
-  private pollResources = async () => {
+  /**
+   * What the browser presents to this container.
+   *
+   * The guard recognises a browser two ways, and only one of them exists at any
+   * moment: a session cookie, which is there once that container's page has
+   * been opened, and a credential it validates and checks the permission for. A
+   * node on a whiteboard has opened nothing, so the cookie alone answers 401.
+   * Sending both means the answer does not depend on which.
+   *
+   * The token is the user's own, never the service's: the guard swaps in the
+   * token that opens the service upstream, after deciding this user may reach
+   * it.
+   */
+  private authorizedInit(): RequestInit {
+    const token = this.km.serverSettings.token;
+    return {
+      credentials: 'include',
+      headers: token ? { Authorization: `token ${token}` } : undefined,
+    };
+  }
+
+  /**
+   * The container's kernels, or null when the question could not be asked.
+   *
+   * Null and empty are different answers and used to be the same one: a single
+   * `try` wrapped both halves of the poll, so a refused request wrote an empty
+   * list into shared state and the project showed no terminals while three were
+   * running. A caller that cannot tell them apart cannot do anything sensible,
+   * so the distinction is in the type.
+   */
+  private async pollKernels(): Promise<unknown[] | null> {
     try {
-      // Poll kernels
       await this.km.refreshRunning();
-      const kernelModels = Array.from(await this.km.running());
-      const newKernels: Kernel[] = kernelModels.map((k: any) => ({
-        kernel_id: k.id,
+      return Array.from(await this.km.running());
+    } catch (error) {
+      console.error(
+        `[jupyter] polling kernels failed on ${this.km.serverSettings.baseUrl}`,
+        error
+      );
+      return null;
+    }
+  }
+
+  /** The container's terminals, or null when the question could not be asked. */
+  private async pollTerminals(): Promise<Terminal[] | null> {
+    const url = `${this.km.serverSettings.baseUrl}api/terminals`;
+    try {
+      const response = await fetch(url, this.authorizedInit());
+      if (!response.ok) {
+        // Named rather than swallowed. A 401 here is the guard refusing the
+        // credential, and it looked exactly like a container with nothing in
+        // it.
+        console.error(
+          `[jupyter] polling terminals answered ${response.status} on ${url}`
+        );
+        return null;
+      }
+      const terminals = await response.json();
+      return terminals.map((t: { name: string; last_activity?: string }) => ({
+        terminal_id: t.name,
+        sessionModel: { name: t.name },
+        last_activity: t.last_activity,
+      }));
+    } catch (error) {
+      console.error(`[jupyter] polling terminals failed on ${url}`, error);
+      return null;
+    }
+  }
+
+  /** Sessions, used only to name which notebook a kernel belongs to. */
+  private async pollSessions(): Promise<
+    { type?: string; kernel?: { id: string }; path?: string; name?: string }[]
+  > {
+    const url = `${this.km.serverSettings.baseUrl}api/sessions`;
+    try {
+      const response = await fetch(url, this.authorizedInit());
+      if (!response.ok) {
+        console.error(
+          `[jupyter] polling sessions answered ${response.status} on ${url}`
+        );
+        return [];
+      }
+      return await response.json();
+    } catch (error) {
+      console.error(`[jupyter] polling sessions failed on ${url}`, error);
+      return [];
+    }
+  }
+
+  private pollResources = async () => {
+    // Each half asks for itself and reports its own failure. One `try` around
+    // both meant a refusal anywhere produced an empty list, which is also what
+    // an idle container produces — and the shared state was overwritten with
+    // it.
+    const [kernelModels, terminals] = await Promise.all([
+      this.pollKernels(),
+      this.pollTerminals(),
+    ]);
+
+    // Nothing could be asked. Writing now would replace what is known with
+    // what could not be read.
+    if (kernelModels === null && terminals === null) return;
+
+    const newKernels: Kernel[] = (kernelModels ?? this.kernelResources).map(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (k: any) => ({
+        kernel_id: k.kernel_id ?? k.id,
         name: k.name,
         type: k.type,
         last_activity: k.last_activity,
         execution_state: k.execution_state || '',
         connections: k.connections || 0,
-        notebooks: [], // Initialize empty notebooks array
-      }));
+        notebooks: [],
+      })
+    );
 
-      // Poll terminals
-      let newTerminals: Terminal[] = [];
-
-      const terminalModels = await fetch(
-        `${this.km.serverSettings.baseUrl}api/terminals`,
-        {
-          headers: {
-            Authorization: `Bearer ${this.km.serverSettings.token}`,
-          },
-        }
-      );
-
-      const terminals = await terminalModels.json();
-      newTerminals = terminals.map((t: any) => ({
-        terminal_id: t.name,
-        sessionModel: { name: t.name },
-        last_activity: t.last_activity,
-      }));
-
-      // Fetch sessions to get notebook-kernel associations
-      const sessionsResponse = await fetch(
-        `${this.km.serverSettings.baseUrl}api/sessions`,
-        {
-          headers: {
-            Authorization: `Bearer ${this.km.serverSettings.token}`,
-          },
-        }
-      );
-      const sessions = await sessionsResponse.json();
-
-      // Associate notebooks with kernels based on sessions data
-      for (const session of sessions) {
-        if (session.type === 'notebook' && session.kernel) {
-          const kernel = newKernels.find(
-            (k) => k.kernel_id === session.kernel.id
-          );
-          if (kernel) {
-            kernel.notebooks.push({
-              path: session.path,
-              name: session.name,
-            });
-          }
-        }
+    // Only when the kernels are fresh: naming notebooks on a stale list would
+    // attach one run's sessions to another's kernels.
+    if (kernelModels !== null) {
+      for (const session of await this.pollSessions()) {
+        if (session.type !== 'notebook' || !session.kernel) continue;
+        const kernel = newKernels.find(
+          (k) => k.kernel_id === session.kernel?.id
+        );
+        if (kernel)
+          kernel.notebooks.push({
+            path: session.path ?? '',
+            name: session.name ?? '',
+          });
       }
+    }
 
-      // Only update and notify if changed
-      const kernelsChanged = !deepEqualKernels(
-        this.kernelResources,
-        newKernels
-      );
-      const terminalsChanged = !deepEqualTerminals(
-        this.terminalResources,
-        newTerminals
-      );
-      if (kernelsChanged || terminalsChanged) {
-        this.kernelResources = newKernels;
-        this.terminalResources = newTerminals;
-        this.notifyResourceListeners();
-      }
-    } catch (error) {
-      // Optionally log or handle polling errors
-      console.error('Polling Jupyter resources failed:', error);
+    const newTerminals = terminals ?? this.terminalResources;
+
+    const kernelsChanged = !deepEqualKernels(this.kernelResources, newKernels);
+    const terminalsChanged = !deepEqualTerminals(
+      this.terminalResources,
+      newTerminals
+    );
+    if (kernelsChanged || terminalsChanged) {
+      this.kernelResources = newKernels;
+      this.terminalResources = newTerminals;
+      this.notifyResourceListeners();
     }
   };
 }

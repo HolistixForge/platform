@@ -65,7 +65,11 @@ server {
     ssl_certificate ${CERT};
     ssl_certificate_key ${KEY};
 
-    root ${REPO_ROOT}/packages/app-frontend/dist;
+    # Quoted: a checkout on an external volume carries that volume's name, and
+    # those have spaces. Unquoted, nginx counts the words and refuses the whole
+    # configuration — "invalid number of arguments in root directive" — which
+    # names the directive and not the reason.
+    root "${REPO_ROOT}/packages/app-frontend/dist";
     index index.html;
 
     location / {

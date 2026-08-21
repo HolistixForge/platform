@@ -45,7 +45,7 @@ export const ModuleDataProvider = ({
   /** Module definitions (imported by app-frontend to avoid circular deps) */
   modules: {
     module: TModule<never, object>;
-    configKey?: 'collab' | 'reducers';
+    configKey?: 'collab' | 'reducers' | 'user-containers';
   }[];
   /** Children that will receive module exports */
   children: ReactNode;
@@ -94,6 +94,20 @@ export const ModuleDataProvider = ({
           ? configs.collabConfig
           : configKey === 'reducers'
           ? { fetch: configs.gatewayFetch }
+          : configKey === 'user-containers'
+          ? // What the browser presents to a container's auth guard.
+            //
+            // The guard authenticates a browser two ways: a session cookie,
+            // which exists only once that container's page has been opened,
+            // and a JWT it validates and checks the permission for. A terminal
+            // node on the whiteboard has never opened anything — so without
+            // this its first call answered 401 and the node sat on "Server is
+            // not reachable, will try again in 60 seconds".
+            //
+            // The user's own access token, never a service's: the guard swaps
+            // in the token that opens the service upstream, after it has
+            // decided this user may reach it.
+            { getAccessToken: () => ganymedeApi.getAccessToken() }
           : {},
     }));
 

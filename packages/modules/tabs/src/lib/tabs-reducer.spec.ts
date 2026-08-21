@@ -2,8 +2,13 @@
 /**
  * Tabs Reducer Tests
  *
- * Focused on project initialization: every project must end up with the
- * "Default Dashboard" and "Resources" tabs.
+ * Focused on project initialization: every project ends up with the
+ * "Default Dashboard" tab, and with no "Resources" tab.
+ *
+ * Resources is a place in the project rail now, not a board. It used to be
+ * created here for every project and put back whenever it went missing, which
+ * is why removing it takes a migration rather than a deletion: without one,
+ * the old tab comes back on the next start of every project that has it.
  */
 
 import { TabsReducer } from './tabs-reducer';
@@ -70,16 +75,13 @@ describe('TabsReducer - project:init', () => {
     reducer = new TabsReducer(depsExports as any);
   });
 
-  it('creates the dashboard and resources tabs for a fresh project', async () => {
+  it('creates only the dashboard tab for a fresh project', async () => {
     await reducer.reduce(initEvent, requestData);
 
     const tabs = store.get('unique') as TTabsTree;
 
-    expect(titles(tabs.tree)).toEqual([
-      DEFAULT_DASHBOARD_TAB_TITLE,
-      RESOURCES_TAB_TITLE,
-    ]);
-    expect(types(tabs.tree)).toEqual(['node-editor', 'resources-grid']);
+    expect(titles(tabs.tree)).toEqual([DEFAULT_DASHBOARD_TAB_TITLE]);
+    expect(types(tabs.tree)).toEqual(['node-editor']);
   });
 
   it('is idempotent - a second init does not duplicate tabs', async () => {
@@ -88,10 +90,10 @@ describe('TabsReducer - project:init', () => {
 
     const tabs = store.get('unique') as TTabsTree;
 
-    expect(tabs.tree.children).toHaveLength(2);
+    expect(tabs.tree.children).toHaveLength(1);
   });
 
-  it('restores the resources tab on a project that predates it', async () => {
+  it('retires the resources tab on a project that still has one', async () => {
     store.set('unique', {
       tree: {
         title: 'Root',
@@ -100,6 +102,11 @@ describe('TabsReducer - project:init', () => {
           {
             title: DEFAULT_DASHBOARD_TAB_TITLE,
             payload: { type: 'node-editor', viewId: 'view-1' },
+            children: [],
+          },
+          {
+            title: RESOURCES_TAB_TITLE,
+            payload: { type: 'resources-grid' },
             children: [],
           },
         ],
@@ -111,15 +118,44 @@ describe('TabsReducer - project:init', () => {
 
     const tabs = store.get('unique') as TTabsTree;
 
-    expect(titles(tabs.tree)).toEqual([
-      DEFAULT_DASHBOARD_TAB_TITLE,
-      RESOURCES_TAB_TITLE,
-    ]);
-    // existing user state is preserved
+    expect(titles(tabs.tree)).toEqual([DEFAULT_DASHBOARD_TAB_TITLE]);
+    // Someone who was not looking at it is left where they were.
     expect(tabs.actives['user-1']).toEqual([DEFAULT_DASHBOARD_TAB_TITLE]);
   });
 
-  it('does not add a second resources tab when one is nested in a group', async () => {
+  it('moves anyone who was looking at it to the tab that is left', async () => {
+    // A stale active path leaves the editor with no tab to render and nothing
+    // to say why — a blank page on the next visit, for that user only.
+    store.set('unique', {
+      tree: {
+        title: 'Root',
+        payload: { type: 'group' },
+        children: [
+          {
+            title: DEFAULT_DASHBOARD_TAB_TITLE,
+            payload: { type: 'node-editor', viewId: 'view-1' },
+            children: [],
+          },
+          {
+            title: RESOURCES_TAB_TITLE,
+            payload: { type: 'resources-grid' },
+            children: [],
+          },
+        ],
+      },
+      actives: { 'user-1': [RESOURCES_TAB_TITLE] },
+    });
+
+    await reducer.reduce(initEvent, requestData);
+
+    const tabs = store.get('unique') as TTabsTree;
+
+    expect(tabs.actives['user-1']).toEqual([DEFAULT_DASHBOARD_TAB_TITLE]);
+  });
+
+  it('finds it inside a group, where a drag could have put it', async () => {
+    // Filtered at the root only, a tab someone had dragged into a group would
+    // survive the migration and be restored-then-removed forever.
     store.set('unique', {
       tree: {
         title: 'Root',
@@ -134,6 +170,11 @@ describe('TabsReducer - project:init', () => {
                 payload: { type: 'resources-grid' },
                 children: [],
               },
+              {
+                title: 'Mine',
+                payload: { type: 'node-editor', viewId: 'view-2' },
+                children: [],
+              },
             ],
           },
         ],
@@ -145,11 +186,13 @@ describe('TabsReducer - project:init', () => {
 
     const tabs = store.get('unique') as TTabsTree;
 
-    expect(tabs.tree.children).toHaveLength(1);
     expect(titles(tabs.tree)).toEqual(['Group X']);
+    expect(tabs.tree.children[0].children.map((c) => c.title)).toEqual([
+      'Mine',
+    ]);
   });
 
-  it('keeps user created tabs untouched while restoring resources', async () => {
+  it('leaves a project that never had one alone', async () => {
     store.set('unique', {
       tree: {
         title: 'Root',
@@ -166,13 +209,46 @@ describe('TabsReducer - project:init', () => {
           },
         ],
       },
-      actives: {},
+      actives: { 'user-1': ['My Notebook'] },
     });
 
     await reducer.reduce(initEvent, requestData);
 
     const tabs = store.get('unique') as TTabsTree;
 
-    expect(titles(tabs.tree)).toEqual(['My Notebook', RESOURCES_TAB_TITLE]);
+    expect(titles(tabs.tree)).toEqual(['My Notebook']);
+    expect(tabs.actives['user-1']).toEqual(['My Notebook']);
+  });
+
+  it('keeps the tabs a user made while retiring the one it owns', async () => {
+    store.set('unique', {
+      tree: {
+        title: 'Root',
+        payload: { type: 'group' },
+        children: [
+          {
+            title: 'My Notebook',
+            payload: {
+              type: 'resource-ui',
+              user_container_id: 1,
+              service_name: 'jupyter',
+            },
+            children: [],
+          },
+          {
+            title: RESOURCES_TAB_TITLE,
+            payload: { type: 'resources-grid' },
+            children: [],
+          },
+        ],
+      },
+      actives: {},
+    });
+
+    await reducer.reduce(initEvent, requestData);
+
+    expect(titles((store.get('unique') as TTabsTree).tree)).toEqual([
+      'My Notebook',
+    ]);
   });
 });

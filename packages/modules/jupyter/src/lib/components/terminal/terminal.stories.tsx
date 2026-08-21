@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { EPriority, Logger } from '@holistix-forge/log';
 import {
@@ -16,11 +16,11 @@ import {
 
 import { TJupyterEvent } from '../../jupyter-events';
 import {
-  JupyterStoryInit,
+  JupyterStoryProviders,
   STORY_USER_CONTAINER_ID,
 } from '../../stories/module-stories-utils';
 import { JupyterTerminal } from './terminal';
-import { useJLsManager } from '../../jupyter-hooks';
+import { useWatchedResources } from '../../jupyter-hooks';
 import { TJupyterSharedData } from '../../jupyter-shared-model';
 import { TJupyterServerData } from '../../jupyter-types';
 
@@ -32,9 +32,9 @@ Logger.setPriority(EPriority.Debug);
 
 const StoryWrapper = () => {
   return (
-    <JupyterStoryInit>
+    <JupyterStoryProviders>
       <Terminals />
-    </JupyterStoryInit>
+    </JupyterStoryProviders>
   );
 };
 
@@ -42,7 +42,6 @@ const StoryWrapper = () => {
 
 const Terminals = () => {
   const dispatcher = useDispatcher<TJupyterEvent | TUserContainersEvents>();
-  const jmc = useJLsManager();
 
   const sd = useLocalSharedData<TUserContainersSharedData & TJupyterSharedData>(
     ['user-containers:containers', 'jupyter:servers'],
@@ -58,12 +57,15 @@ const Terminals = () => {
     (s: { name: string }) => s.name === 'jupyterlab'
   );
 
-  useEffect(() => {
-    if (server && service && jupyter) {
-      console.log({ jmc });
-      jmc.startPollingResources(server);
-    }
-  }, [jupyter, jmc, server, service]);
+  // Watched, and released — the same path the application takes, through the
+  // same hook. It used to call `startPollingResources` from an effect with no
+  // cleanup, which polled for the life of the page and stopped meaning
+  // anything once the timer followed the watchers rather than driver creation.
+  //
+  // The hook keys on the container id rather than on `server`, which is read
+  // from shared state and is a fresh object on every change — keying on it
+  // would tear the subscription down and rebuild it on every poll it causes.
+  useWatchedResources(service && jupyter ? server : undefined);
 
   const [terminalId, setTerminalId] = useState<string | null>(
     Object.keys(jupyter?.terminals || {})[0] || null
@@ -116,7 +118,7 @@ const Terminals = () => {
 //
 
 const meta = {
-  title: 'Modules/Jupyter/Components/Terminal',
+  title: 'Modules/Jupyter/Components/Nodes/Terminal',
   component: StoryWrapper,
   parameters: {
     layout: 'centered',

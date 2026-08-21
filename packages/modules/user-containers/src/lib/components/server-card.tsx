@@ -25,8 +25,14 @@ import {
 } from '@holistix-forge/ui-base';
 import { TF_User } from '@holistix-forge/types';
 
-import { UserContainerSystemInfo, serviceUrl } from '../servers-types';
+import {
+  UserContainerSystemInfo,
+  serviceUrl,
+  openableServices,
+} from '../servers-types';
 import { StatusLed } from './status-led';
+import { ConnectedMachinePicker } from './machine-picker-connected';
+import './platform-badge.scss';
 import { UseContainerProps } from './node-server/node-server';
 import { TContainerRunnerFrontend } from '../../frontend';
 
@@ -54,12 +60,116 @@ const CARD_BOX = {
  *
  */
 
-const isAlive = (last_watchdog_at: string | null) => {
+/** What the light on a card can say. */
+export type TLedColor = 'red' | 'yellow' | 'blue' | 'green';
+
+/**
+ * The colour a service takes once it is up, by where it runs.
+ *
+ * The light is not only "is it alive" — it is also "where". Blue is a
+ * machine somebody owns; green is the platform. Everything ran blue before,
+ * so a service on the platform looked like a service on a laptop, and the one
+ * fact the card most needed to carry was the one it did not.
+ *
+ * A runner nobody here knows still lights blue rather than going dark: it is
+ * running, and that is the more important half.
+ */
+const RUNNER_LED: Record<string, TLedColor> = {
+  local: 'blue',
+  platform: 'green',
+};
+
+/**
+ * How long a service has to come up before its silence means failure.
+ *
+ * Generous on purpose: an image that has to be pulled takes longer than one
+ * already on the machine, and a light that gives up early is worse than one
+ * that waits — the first says "broken" about something that is about to work.
+ */
+const STARTING_WINDOW_S = 90;
+
+/**
+ * The light on the card, in one place.
+ *
+ * Four states, and the order they are tested in is the whole of the logic:
+ *
+ *   red      stopped, or silent past the starting window
+ *   yellow   asked to start, nothing heard back yet
+ *   blue     running, on somebody's machine
+ *   green    running, on the platform
+ *
+ * Yellow comes before red because they describe the same absence of news.
+ * What separates them is only how long it has been going on.
+ */
+export const ledColor = (
+  container: {
+    last_watchdog_at: string | null;
+    stopped_at?: string;
+    started_at?: string;
+    runner?: { id?: string };
+  },
+  now: number = new Date().getTime()
+): TLedColor => {
+  const { alive } = isAlive(
+    container.last_watchdog_at,
+    container.stopped_at,
+    now
+  );
+
+  if (alive) return RUNNER_LED[container.runner?.id ?? ''] ?? 'blue';
+
+  // A stop is a decision, and it outranks a start that came before it.
+  if (container.stopped_at && container.started_at) {
+    if (
+      new Date(container.stopped_at).getTime() >=
+      new Date(container.started_at).getTime()
+    )
+      return 'red';
+  } else if (container.stopped_at) {
+    return 'red';
+  }
+
+  if (!container.started_at) return 'red';
+
+  const since = (now - new Date(container.started_at).getTime()) / 1000;
+  return since >= 0 && since < STARTING_WINDOW_S ? 'yellow' : 'red';
+};
+
+export const isAlive = (
+  last_watchdog_at: string | null,
+  stopped_at?: string,
+  now: number = new Date().getTime()
+) => {
+  // Somebody stopped it, and that is not something a watchdog can say.
+  //
+  // The watchdog only reports; it cannot report *not* running, so for the
+  // thirty seconds after a stop the last report is still recent and the card
+  // went on showing the service as alive — offering "stop" for a container the
+  // broker had already removed, and no way to start it again until the window
+  // elapsed. Clicking stop again then did nothing visible, because the broker
+  // answers 404 for a container that is gone and this platform reads that as
+  // success.
+  //
+  // `_start` clears `stopped_at`, so this is one field rather than two states
+  // that have to agree.
+  if (stopped_at) {
+    const stoppedFor = (now - new Date(stopped_at).getTime()) / 1000;
+    // Only while it is the newer fact. A container that was stopped and later
+    // started reports again, and its own report is what should win from then
+    // on — otherwise a stale `stopped_at` would keep a running service looking
+    // dead. `_start` already clears the field; this holds if it ever does not.
+    const reportedAfter =
+      last_watchdog_at &&
+      new Date(last_watchdog_at).getTime() > new Date(stopped_at).getTime();
+    if (!reportedAfter && stoppedFor >= 0)
+      return { alive: false, color: 'red' as const };
+  }
+
   if (!last_watchdog_at) return { alive: false, color: 'red' as const };
 
   const d = new Date(last_watchdog_at);
 
-  const dateDiffSecondes = (new Date().getTime() - d.getTime()) / 1000;
+  const dateDiffSecondes = (now - d.getTime()) / 1000;
 
   let alive = false;
 
@@ -165,6 +275,8 @@ export const UserContainerCardInternal = ({
   onDelete,
   onOpenService,
   onSelectRunner,
+  onStart,
+  onStop,
   runners,
   liveUsers,
   host,
@@ -190,6 +302,10 @@ export const UserContainerCardInternal = ({
 }) => {
   //
 
+  // Open only while somebody is choosing, so the query behind it does not run
+  // on every card of a project that has several.
+  const [pickingMachine, setPickingMachine] = useState(false);
+
   const deleteAction = useAction(
     async () => {
       await onDelete();
@@ -208,32 +324,44 @@ export const UserContainerCardInternal = ({
     setTags((prevState: Tag[]) => [...prevState, t]);
   };
 
-  const { alive, color } = isAlive(container.last_watchdog_at);
+  const { alive } = isAlive(container.last_watchdog_at, container.stopped_at);
+  const color = ledColor(container);
+  const onPlatform = container.runner.id === 'platform';
 
   /**
-   * Green is the platform, blue is somebody's machine.
+   * Whether the badge beside the run control is shown at all.
    *
-   * The same rule `notebook-card` follows, and the two cards sit in one grid:
-   * a green LED on one and a blue LED on the other has to mean the same thing
-   * on both, or it means nothing. It was blue for everything that answered,
-   * which said only "alive" — a fact the card states four other ways.
-   *
-   * Red still wins. A container nobody can reach is not a question about where
-   * it was placed.
+   * Only while the service is actually up — which is exactly when the light
+   * is blue or green, so the condition is written as that rather than as a
+   * second reading of the same facts. A badge on a stopped service answers
+   * "where would this run", which nobody asked; the runner picker below is
+   * already the place for that question.
    */
-  const ledColor = !alive
-    ? color
-    : container.runner.id === 'platform'
-    ? 'green'
-    : 'blue';
+  const running = color === 'blue' || color === 'green';
 
-  const firstServiceName =
-    container.httpServices.length > 0 && container.httpServices[0].name;
+  // The run control, wrapped the same way `deleteAction` is: a click on it
+  // reaches the gateway, and a gateway that refuses has to say so somewhere the
+  // person who clicked can see it. `useAction` is what the card already uses
+  // for that, and doing it by hand here would be a second convention.
+  const runAction = useAction(
+    async () => {
+      if (alive) await onStop();
+      else await onStart();
+    },
+    [alive, onStart, onStop],
+    {
+      errorLatchTime: 5000,
+    }
+  );
+
+  // Not `httpServices[0]`: the guard's internal names register too, and
+  // whichever wins the race would become what the card opens.
+  const openable = openableServices(container);
+
+  const firstServiceName = openable.length > 0 && openable[0].name;
 
   const firstServiceUrl =
-    container.httpServices.length > 0 &&
-    firstServiceName &&
-    serviceUrl(container, firstServiceName);
+    firstServiceName && serviceUrl(container, firstServiceName);
 
   // Terminal URL: use serviceUrl helper to construct proper FQDN-based URL
   const terminalService = container.httpServices.find(
@@ -308,7 +436,7 @@ export const UserContainerCardInternal = ({
         </div>
       )}
 
-      {host && (
+      {host && running && (
         <div
           className="absolute flex items-center"
           style={{
@@ -319,6 +447,20 @@ export const UserContainerCardInternal = ({
           }}
         >
           <UserAvatar size="small" {...host} host />
+        </div>
+      )}
+
+      {onPlatform && running && (
+        <div
+          className="absolute flex items-center"
+          style={{
+            left: '-20px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 20,
+          }}
+        >
+          <PlatformBadge />
         </div>
       )}
 
@@ -468,17 +610,23 @@ export const UserContainerCardInternal = ({
             from the watchdog, so a container whose watchdog has gone quiet
             offers play, and one still reporting offers stop.
 
-            No action is wired to them yet — neither is there on notebook-card,
-            which is the component this mirrors. `UseContainerProps` carries
-            `onDelete` and `onSelectRunner` and nothing to start or stop with,
-            so wiring these means adding to what the card is given, not to how
-            it draws. Left visible and inert rather than hidden, because the
-            control belonging here is itself the thing to see.
+            The callback goes on `ResourceButtons` itself, for the reason the
+            runner picker below spells out: `ButtonBase` opens its handler with
+            an unconditional `e.stopPropagation()`, so a handler on any wrapper
+            never fires and the click does not reach the card's own `onClick`
+            either. Drawn without one, this button did nothing at all and did
+            not open the service either — a control that looks alive.
+
+            `onSelectRunner` also starts the container, but as a consequence of
+            *choosing where it runs*: restarting a service should not require
+            pretending to move it, which is why `onStart` exists beside it.
           */}
           <ResourceButtons
+            {...runAction}
             size="small"
             type={alive ? 'stop' : 'play'}
             actionOriginId={alive ? 'container-stop' : 'container-play'}
+            ariaLabel={alive ? 'Stop this service' : 'Start this service'}
           />
 
           <div
@@ -500,7 +648,14 @@ export const UserContainerCardInternal = ({
             const label = active
               ? `Restart on ${runner.label}`
               : `Move to ${runner.label}`;
-            const select = () => onSelectRunner(runnerId);
+            // "local" is not one place. Every other runner is a single
+            // destination and goes straight through; this one asks which
+            // machine, because a placement that names none is refused by every
+            // enrolled runner and the service would sit there looking placed.
+            const select = () =>
+              runnerId === 'local'
+                ? Promise.resolve(setPickingMachine(true))
+                : onSelectRunner(runnerId);
             return (
               // The click is on the button itself, and the wrapper only
               // positions it.
@@ -576,12 +731,28 @@ export const UserContainerCardInternal = ({
       </div>
 
       <div className="absolute" style={{ right: '16px', bottom: '20px' }}>
-        <StatusLed color={ledColor} type="server-card" />
+        <StatusLed color={color} type="server-card" />
       </div>
 
       <div className="absolute" style={{ right: '36px', bottom: '19px' }}>
         {alive && container.system && <SystemInfo {...container.system} />}
       </div>
+
+      {/*
+        Mounted only while open: the picker polls Ganymede for this person's
+        machines, and a project with several cards would poll once per card for
+        a list nobody is looking at.
+      */}
+      {pickingMachine && (
+        <ConnectedMachinePicker
+          open
+          onOpenChange={setPickingMachine}
+          onPick={(machineId) => {
+            setPickingMachine(false);
+            onSelectRunner('local', machineId);
+          }}
+        />
+      )}
 
       <DialogControlled
         title="Are you sure ?"
@@ -681,6 +852,36 @@ const DockerCommand = ({ command }: { command: string }) => {
 };
 
 //
+/**
+ * Who — or what — is running this service, beside the run control.
+ *
+ * On a machine somebody owns, that slot holds their face: a round badge with
+ * a blue ring, so the card says whose laptop is doing the work before it says
+ * anything else. On the platform there is no one to show, and the slot was
+ * simply empty — which does not read as "nobody owns this", it reads as a
+ * card missing a piece.
+ *
+ * So the platform gets a face of its own: the same badge, the same ring, a
+ * cloud instead of a person and green instead of blue. Green because that is
+ * what the light says for the platform, and one fact should not be told in
+ * two colours.
+ *
+ * Shown only while the service is actually up, like the face it stands in
+ * for. On a stopped one it would answer "where would this run" — a question
+ * the runner picker below already owns, and one nobody asked.
+ */
+const PlatformBadge = () => (
+  <span
+    className="platform-badge"
+    title="Runs on the platform"
+    data-testid="platform-badge"
+  >
+    <icons.Cloud />
+  </span>
+);
+
+//
+
 const SystemInfo = ({
   cpu,
   memory,

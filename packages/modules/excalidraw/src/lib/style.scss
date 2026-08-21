@@ -3,19 +3,249 @@
   display: none;
 }
 
-// Keep Excalidraw's own floating UI on the same left rail as the project
-// sidebar, so it follows the whiteboard layers panel as that expands and
-// collapses rather than sitting under it.
+// ---- Excalidraw's chrome, in Holistix's colours ---------------------------
 //
-// The panel publishes its width into --holistix-left-rail (see
+// Excalidraw ships a light theme built for its own white canvas. Ours is a
+// dark board it floats over, so its toolbar, panels and dialogs arrived as
+// white slabs — the only bright thing on the screen, and reading as another
+// application rather than as part of this one.
+//
+// Retheming through its variables rather than by restyling its elements: the
+// names below are its public theming surface, while the class names under
+// them are not, and a rule written against `.App-toolbar__foo` breaks on an
+// upgrade with nothing to say so.
+//
+// Its own dark theme is not used, deliberately. `theme: 'dark'` works by
+// putting an invert filter over the canvas, which would flip every colour
+// anyone draws — pick white, get black — and undo the white default stroke
+// this layer sets. The chrome is dark; the canvas is left alone.
+.excalidraw-layer {
+  // Holistix's tokens, captured before entering Excalidraw's scope.
+  //
+  // Not a stylistic choice: Excalidraw defines `--color-selection` and
+  // `--color-success` on `.excalidraw` itself, so those names mean something
+  // else inside it. Read from out here, they are ours.
+  --hx-surface: var(--color-bg-surface);
+  --hx-elevated: var(--color-bg-elevated);
+  --hx-app: var(--color-bg-app);
+  --hx-input: var(--color-bg-input);
+  --hx-hover: var(--color-bg-hover);
+  --hx-text: var(--color-text);
+  --hx-text-muted: var(--color-text-muted);
+  --hx-text-faint: var(--color-text-faint);
+  --hx-on-color: var(--color-text-on-color);
+  --hx-border: var(--color-border);
+  --hx-border-muted: var(--color-border-muted);
+  --hx-accent: var(--color-accent);
+  --hx-accent-hover: var(--color-accent-hover);
+  --hx-accent-muted: var(--color-accent-muted);
+  --hx-accent-strong: var(--color-accent-strong);
+  --hx-danger: var(--color-error);
+  --hx-ok: var(--color-success);
+  --hx-link: var(--color-link);
+  --hx-shadow: var(--shadow-lg);
+
+  .excalidraw {
+    // Surfaces: islands, popups, dialogs, the sidebar.
+    --island-bg-color: var(--hx-elevated);
+    --default-bg-color: var(--hx-surface);
+    --popup-bg-color: var(--hx-elevated);
+    --popup-secondary-bg-color: var(--hx-surface);
+    --sidebar-bg-color: var(--hx-elevated);
+    --overlay-bg-color: var(--alpha-black-75);
+
+    // Excalidraw's own surface ramp, which its buttons and hovers read.
+    --color-surface-lowest: var(--hx-app);
+    --color-surface-low: var(--hx-surface);
+    --color-surface-mid: var(--hx-surface);
+    --color-surface-high: var(--hx-hover);
+    --color-surface-primary-container: var(--hx-accent-muted);
+    --color-on-primary-container: var(--hx-on-color);
+
+    // Text and icons. `--color-on-surface` is what `--icon-fill-color`
+    // resolves to, so every icon follows from it.
+    --text-primary-color: var(--hx-text);
+    --popup-text-color: var(--hx-text);
+    --popup-text-inverted-color: var(--hx-app);
+    --color-on-surface: var(--hx-text);
+    --color-muted: var(--hx-text-muted);
+    --color-muted-darker: var(--hx-text-faint);
+    --color-muted-darkest: var(--hx-text-faint);
+    --color-muted-background: var(--hx-surface);
+    --color-muted-background-darker: var(--hx-app);
+    --color-disabled: var(--hx-text-faint);
+    --keybinding-color: var(--hx-text-faint);
+    --link-color: var(--hx-link);
+
+    // Borders and separators.
+    --default-border-color: var(--hx-border);
+    --dialog-border-color: var(--hx-border);
+    --sidebar-border-color: var(--hx-border);
+    --color-border-outline: var(--hx-border);
+    --color-border-outline-variant: var(--hx-border-muted);
+    --input-border-color: var(--hx-border);
+
+    // Inputs.
+    --input-bg-color: var(--hx-input);
+    --input-hover-bg-color: var(--hx-hover);
+    --input-label-color: var(--hx-text-muted);
+    --placeholder: var(--hx-text-faint);
+
+    // The accent, which drives the selected tool, focus rings and links.
+    --color-primary: var(--hx-accent);
+    --color-primary-hover: var(--hx-accent-hover);
+    --color-primary-darker: var(--hx-accent-hover);
+    --color-primary-darkest: var(--hx-accent-strong);
+    --color-primary-light: var(--hx-accent-muted);
+    --color-primary-light-darker: var(--hx-accent-muted);
+    --color-brand-hover: var(--hx-accent-hover);
+    --color-brand-active: var(--hx-accent-strong);
+    --color-selection: var(--hx-accent);
+    --select-highlight-color: var(--hx-accent-strong);
+    --focus-highlight-color: var(--hx-accent-muted);
+
+    // Buttons.
+    --button-hover-bg: var(--hx-hover);
+    --button-active-bg: var(--hx-hover);
+    --button-active-border: var(--hx-accent-strong);
+    --button-destructive-bg-color: var(--hx-surface);
+    --button-destructive-color: var(--hx-danger);
+    --button-special-active-bg-color: var(--hx-surface);
+
+    // Status.
+    --color-danger: var(--hx-danger);
+    --color-danger-text: var(--hx-danger);
+    --color-success: var(--hx-ok);
+    --color-success-text: var(--hx-ok);
+
+    // Scrollbars, sliders, spinner.
+    --scrollbar-thumb: var(--hx-border);
+    --scrollbar-thumb-hover: var(--hx-text-faint);
+    --color-slider-track: var(--hx-surface);
+    --color-slider-thumb: var(--hx-accent);
+    --spinner-color: var(--hx-accent);
+
+    // Depth and type, so a panel sits in the page like ours do.
+    --shadow-island: var(--hx-shadow);
+    --ui-font: 'Roboto', sans-serif;
+  }
+
+  // A node's shadow has to be able to leave its box.
+  //
+  // Excalidraw clips every embed to its element — right for an embedded web
+  // page, which must not paint outside the rectangle someone drew. Ours are
+  // not pages: they are this application's own cards, and one of them glows
+  // on hover with 90px of blur. Clipped, the glow came out sliced off square
+  // on all four sides, which reads as a rendering fault rather than as a
+  // glow.
+  //
+  // Safe to lift here and nowhere else: `validateEmbeddable` admits one host
+  // and it is ours, so every embed inside this layer is a node we drew.
+  //
+  // No `!important` — measured, not assumed. Excalidraw's rule is two classes
+  // and this is three, so it wins on specificity despite loading first. That
+  // is not true of everything here: the menu entry below needed one.
+  .excalidraw .excalidraw__embeddable-container__inner {
+    overflow: visible;
+  }
+
+  // The dark-mode entry in Excalidraw's menu, removed.
+  //
+  // It sets `theme: 'dark'`, which works by putting an invert filter over the
+  // canvas — every colour anyone drew comes out flipped, and the white
+  // default stroke this layer sets comes out black. And the layer re-applies
+  // `theme: 'light'` whenever the collaborator list changes, so the toggle
+  // would appear to work and then undo itself when someone joined.
+  //
+  // A control that lies is worse than one that is not there, and the chrome
+  // it was for is already dark. Hooked on the test id rather than a class
+  // because it is the only stable handle Excalidraw gives this item; if an
+  // upgrade drops it the entry comes back, which is visible rather than
+  // silent.
+  //
+  // `!important` because the rule it has to beat —
+  // `.excalidraw .dropdown-menu .dropdown-menu-item-base` — has exactly the
+  // same specificity and its stylesheet is loaded after this one, the layer
+  // importing Excalidraw's CSS on mount. Measured, not assumed: without it
+  // the entry stayed visible. The alternative is naming two more of their
+  // internal classes to outweigh it, which is a worse bet on an upgrade.
+  .excalidraw [data-testid='toggle-dark-mode'] {
+    display: none !important;
+  }
+}
+
+// Keep Excalidraw's own floating UI clear of the whiteboard layers panel,
+// following it as it expands and collapses rather than sitting under it.
+//
+// The panel publishes where it ends into --holistix-left-rail (see
 // whiteboard.tsx); the fallback matches the panel's open width plus its gap.
-// Excalidraw positions these islands itself, which is why they are nudged from
-// the outside rather than laid out.
+// Both are measured from the page's content box, which is already indented
+// past the project rail — so the rail is not counted again here. Excalidraw
+// positions these islands itself, which is why they are nudged from the
+// outside rather than laid out.
 .excalidraw {
   .App-menu_top__left,
   .layer-ui__wrapper__top-left,
   .App-toolbar__extra-tools-dropdown {
     margin-left: var(--holistix-left-rail, 255px);
     transition: margin-left 120ms ease;
+  }
+
+  // Clearing the layers panel is not enough on a whiteboard: the project rail
+  // is an island there, floating over the canvas at exactly this offset. So
+  // the rule above puts Excalidraw's top-left column and the rail in the same
+  // place, and the rail paints above it — `--z-sticky` against a column with
+  // no stacking of its own.
+  //
+  // The menu button survives that. It is 36px tall in the corner and the rail
+  // is vertically centred, so the two never meet. The properties panel opens
+  // underneath it and is 564px tall — measured, with a shape tool active — and
+  // it runs the whole height of the rail: 40px of its left edge, the column
+  // holding one of every row's controls, sat under the icons and could not be
+  // clicked.
+  //
+  // So the panel is moved out from under the rail by the rail's own width. It
+  // keeps its place below the button rather than beside it: the panel is
+  // 200px and Excalidraw centres the shapes toolbar in the middle third of the
+  // canvas, which at 1280px starts at x=505 — a panel raised to the button's
+  // row would then run into it. Below the button there is no such row to
+  // share, at any width.
+  //
+  // On the section, not on `.App-menu__left`: the island inside it is
+  // `position: absolute`, so this is its static position, and the class it
+  // carries is shared with the mobile menu.
+  //
+  // Both sides key off `--holistix-left-rail`, so the clearance holds as the
+  // layers panel opens and collapses without being restated here.
+  .App-menu_top__left > .selected-shape-actions {
+    margin-left: var(--holistix-sidebar-width, 56px);
+  }
+
+  // The button's own menu, by the same amount and for the same reason. It is
+  // `position: absolute; left: 0` against the button's wrapper, so it opened
+  // flush with the button and its last two entries — 40px of them — ran under
+  // the rail's first icons. Easy to miss: the menu is short enough that it
+  // only reaches the rail at all because the rail is vertically centred.
+  .App-menu_top__left > *:first-child .dropdown-menu {
+    left: var(--holistix-sidebar-width, 56px);
+  }
+
+  // The zoom and undo controls, for the same reason and by the same amount.
+  //
+  // They were left out when the rule above was written, so they sat under the
+  // panel — the one piece of Excalidraw's chrome the panel could cover, and
+  // the one nobody thinks to look for because the rest had moved.
+  //
+  // Padding rather than margin: this element is `justify-content:
+  // space-between`, so a left margin would drag the right-hand group along
+  // with it and push the help button off the board.
+  //
+  // The class twice, to outweigh `.excalidraw .App-menu_bottom { padding: 0
+  // 1rem }` — same specificity as a single mention, and its stylesheet loads
+  // after this one, so the shorthand won and the padding never applied.
+  // Measured: the controls stayed at x=16, under the panel.
+  .App-menu_bottom.App-menu_bottom {
+    padding-left: calc(1rem + var(--holistix-left-rail, 255px));
+    transition: padding-left 120ms ease;
   }
 }

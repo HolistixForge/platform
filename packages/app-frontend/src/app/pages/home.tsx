@@ -22,6 +22,8 @@ import { NewProjectForm, NewOrganizationForm } from '@holistix-forge/ui-views';
 import { TApi_Project } from '@holistix-forge/types';
 
 import { HeaderLogic } from '../header/header-logic';
+import { PageFrame } from './page-frame';
+import { OrganizationSidebar } from './organization/sidebar';
 import { DeleteProjectFormLogic } from '../forms/new-project-form';
 
 //
@@ -33,24 +35,31 @@ export const HomePage = () => {
     <div>
       <HeaderLogic />
 
-      {ili ? (
-        <ProjectsList />
-      ) : (
-        <div
-          className="flex flex-col items-center justify-center"
-          style={{ height: 'calc(100vh - 80px)' }}
-        >
+      <PageFrame
+        rail="dashboard"
+        sidebar={(variant) => (
+          <OrganizationSidebar active="organizations" variant={variant} />
+        )}
+      >
+        {ili ? (
+          <ProjectsList />
+        ) : (
           <div
-            className="flex items-center"
-            style={{ gap: '8px', color: 'var(--neutral-5)' }}
+            className="flex flex-col items-center justify-center"
+            style={{ height: 'calc(100vh - 80px)' }}
           >
-            <InfoCircledIcon />
-            <p style={{ fontSize: 'var(--font-size-lg)' }}>
-              Log in to see your projects
-            </p>
+            <div
+              className="flex items-center"
+              style={{ gap: '8px', color: 'var(--neutral-5)' }}
+            >
+              <InfoCircledIcon />
+              <p style={{ fontSize: 'var(--font-size-lg)' }}>
+                Log in to see your projects
+              </p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </PageFrame>
     </div>
   );
 };

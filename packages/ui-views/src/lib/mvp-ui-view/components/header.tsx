@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { LockClosedIcon } from '@radix-ui/react-icons';
 
 import {
   icons,
@@ -200,9 +199,11 @@ export const Header = ({
                 className="not-bellow-640 flex items-center"
                 style={{ gap: '5px' }}
               >
-                <Link to="/account/credentials" title="Credentials Wallet">
-                  <ButtonIcon Icon={LockClosedIcon} />
-                </Link>
+                {/*
+                  No credentials padlock here. It is in the rail now, above
+                  the accesses — beside the other places a person goes, rather
+                  than beside the settings gear, where it read as a preference.
+                */}
                 <Link to="/account/settings" title="Settings">
                   <ButtonIcon Icon={icons.GearWheel} />
                 </Link>

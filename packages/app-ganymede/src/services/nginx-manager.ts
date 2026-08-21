@@ -162,7 +162,15 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
+        # $http_host, not $host: the port the client asked for, kept.
+        #
+        # $host drops it, and this is the first hop — so every backend behind
+        # this one that reflects its own address reflects it without a port,
+        # whatever the gateway does further in. Measured: the auth guard put
+        # \`https://jupyterlab.uc-….apollo.test/\` in its OAuth state and sent
+        # the user there after login, to a port nothing listens on, on a
+        # service that was running the whole time.
+        proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto https;

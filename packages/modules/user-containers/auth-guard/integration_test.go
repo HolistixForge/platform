@@ -25,13 +25,13 @@ import (
 
 // testEnv holds all the components needed for integration tests.
 type testEnv struct {
-	router        *proxy.Router
-	sessions      *auth.SessionStore
-	jwtValidator  *auth.JWTValidator
-	permChecker   *auth.PermissionChecker
-	oauthHandler  *auth.OAuthHandler
-	relayHandler  *auth.RelayHandler
-	middleware    *auth.Middleware
+	router       *proxy.Router
+	sessions     *auth.SessionStore
+	jwtValidator *auth.JWTValidator
+	permChecker  *auth.PermissionChecker
+	oauthHandler *auth.OAuthHandler
+	relayHandler *auth.RelayHandler
+	middleware   *auth.Middleware
 	reverseProxy *proxy.ReverseProxy
 	adminServer  *admin.Server
 	mainHandler  http.Handler
@@ -104,7 +104,7 @@ func setupTestEnv(t *testing.T) *testEnv {
 	cookieDomain := ".example.local"
 
 	router := proxy.NewRouter(baseFQDN, domain)
-	sessions := auth.NewSessionStore(1 * time.Hour)
+	sessions := auth.NewSessionStore(1*time.Hour, "")
 	jwtValidator := auth.NewJWTValidatorFromKey(publicKey)
 	permChecker := auth.NewPermissionChecker(gatewayServer.URL, "container-abc", gatewayServer.Client(), 1*time.Hour)
 
@@ -120,7 +120,7 @@ func setupTestEnv(t *testing.T) *testEnv {
 		PermChecker:  permChecker,
 	})
 
-	relayHandler := auth.NewRelayHandler("test-secret", sessions, cookieDomain, baseFQDN, oauthHandler)
+	relayHandler := auth.NewRelayHandler("test-secret", sessions, cookieDomain, baseFQDN, "", oauthHandler)
 	reverseProxy := proxy.NewReverseProxy(router, false)
 	adminSrv := admin.NewServer(router)
 
@@ -160,10 +160,10 @@ func setupTestEnv(t *testing.T) *testEnv {
 		oauthHandler:   oauthHandler,
 		relayHandler:   relayHandler,
 		middleware:     mw,
-		reverseProxy:  reverseProxy,
-		adminServer:   adminSrv,
-		mainHandler:   mainHandler,
-		privateKey:    privateKey,
+		reverseProxy:   reverseProxy,
+		adminServer:    adminSrv,
+		mainHandler:    mainHandler,
+		privateKey:     privateKey,
 		ganymedeServer: ganymedeServer,
 		gatewayServer:  gatewayServer,
 	}
